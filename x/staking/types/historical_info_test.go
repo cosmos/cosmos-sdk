@@ -5,23 +5,26 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
-var (
-	validators = []Validator{
-		NewValidator(valAddr1, pk1, Description{}),
-		NewValidator(valAddr2, pk2, Description{}),
-		NewValidator(valAddr3, pk3, Description{}),
+var header = tmproto.Header{
+	ChainID: "hello",
+	Height:  5,
+}
+
+func createValidators(t *testing.T) []Validator {
+	return []Validator{
+		teststaking.NewValidator(t, valAddr1, pk1),
+		teststaking.NewValidator(t, valAddr2, pk2),
+		teststaking.NewValidator(t, valAddr3, pk3),
 	}
-	header = tmproto.Header{
-		ChainID: "hello",
-		Height:  5,
-	}
-)
+}
 
 func TestHistoricalInfo(t *testing.T) {
+	validators := createValidators(t)
 	hi := NewHistoricalInfo(header, validators)
 	require.True(t, sort.IsSorted(Validators(hi.Valset)), "Validators are not sorted")
 
@@ -39,6 +42,7 @@ func TestHistoricalInfo(t *testing.T) {
 }
 
 func TestValidateBasic(t *testing.T) {
+	validators := createValidators(t)
 	hi := HistoricalInfo{
 		Header: header,
 	}

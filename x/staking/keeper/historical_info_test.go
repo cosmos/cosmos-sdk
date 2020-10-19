@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -21,7 +22,7 @@ func TestHistoricalInfo(t *testing.T) {
 	validators := make([]types.Validator, len(addrVals))
 
 	for i, valAddr := range addrVals {
-		validators[i] = types.NewValidator(valAddr, PKs[i], types.Description{})
+		validators[i] = teststaking.NewValidator(t, valAddr, PKs[i])
 	}
 
 	hi := types.NewHistoricalInfo(ctx.BlockHeader(), validators)
@@ -62,8 +63,8 @@ func TestTrackHistoricalInfo(t *testing.T) {
 		Height:  5,
 	}
 	valSet := []types.Validator{
-		types.NewValidator(addrVals[0], PKs[0], types.Description{}),
-		types.NewValidator(addrVals[1], PKs[1], types.Description{}),
+		teststaking.NewValidator(t, addrVals[0], PKs[0]),
+		teststaking.NewValidator(t, addrVals[1], PKs[1]),
 	}
 	hi4 := types.NewHistoricalInfo(h4, valSet)
 	hi5 := types.NewHistoricalInfo(h5, valSet)
@@ -77,10 +78,10 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	require.Equal(t, hi5, recv)
 
 	// Set last validators in keeper
-	val1 := types.NewValidator(addrVals[2], PKs[2], types.Description{})
+	val1 := teststaking.NewValidator(t, addrVals[2], PKs[2])
 	app.StakingKeeper.SetValidator(ctx, val1)
 	app.StakingKeeper.SetLastValidatorPower(ctx, val1.GetOperator(), 10)
-	val2 := types.NewValidator(addrVals[3], PKs[3], types.Description{})
+	val2 := teststaking.NewValidator(t, addrVals[3], PKs[3])
 	vals := []types.Validator{val1, val2}
 	sort.Sort(types.Validators(vals))
 	app.StakingKeeper.SetValidator(ctx, val2)
@@ -120,8 +121,8 @@ func TestGetAllHistoricalInfo(t *testing.T) {
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	valSet := []types.Validator{
-		types.NewValidator(addrVals[0], PKs[0], types.Description{}),
-		types.NewValidator(addrVals[1], PKs[1], types.Description{}),
+		teststaking.NewValidator(t, addrVals[0], PKs[0]),
+		teststaking.NewValidator(t, addrVals[1], PKs[1]),
 	}
 
 	header1 := tmproto.Header{ChainID: "HelloChain", Height: 10}

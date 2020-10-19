@@ -35,7 +35,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	types.RegisterQueryServer(queryHelper, querier)
 	queryClient := types.NewQueryClient(queryHelper)
 
-	addrs, _, validators := createValidators(ctx, app, []int64{9, 8, 7})
+	addrs, _, validators := createValidators(suite.T(), ctx, app, []int64{9, 8, 7})
 	header := tmproto.Header{
 		ChainID: "HelloChain",
 		Height:  5,

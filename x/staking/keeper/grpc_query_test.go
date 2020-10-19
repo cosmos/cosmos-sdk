@@ -3,11 +3,13 @@ package keeper_test
 import (
 	gocontext "context"
 	"fmt"
+	"testing"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -724,7 +726,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
 	}
 }
 
-func createValidators(ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
+func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 5, sdk.NewInt(300000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
 	pks := simapp.CreateTestPubKeys(5)
@@ -738,8 +740,8 @@ func createValidators(ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sd
 		app.GetSubspace(types.ModuleName),
 	)
 
-	val1 := types.NewValidator(valAddrs[0], pks[0], types.Description{})
-	val2 := types.NewValidator(valAddrs[1], pks[1], types.Description{})
+	val1 := teststaking.NewValidator(t, valAddrs[0], pks[0])
+	val2 := teststaking.NewValidator(t, valAddrs[1], pks[1])
 	vals := []types.Validator{val1, val2}
 
 	app.StakingKeeper.SetValidator(ctx, val1)

@@ -1283,7 +1283,7 @@ func TestTxGasLimits(t *testing.T) {
 				}
 			}()
 
-			count := tx.(*txTest).Counter
+			count := tx.(txTest).Counter
 			newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
 
 			return newCtx, nil
@@ -1293,7 +1293,7 @@ func TestTxGasLimits(t *testing.T) {
 
 	routerOpt := func(bapp *BaseApp) {
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			count := msg.(msgCounter).Counter
+			count := msg.(*msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
 			return &sdk.Result{}, nil
 		})
@@ -1368,7 +1368,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 				}
 			}()
 
-			count := tx.(*txTest).Counter
+			count := tx.(txTest).Counter
 			newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
 
 			return
@@ -1377,7 +1377,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 
 	routerOpt := func(bapp *BaseApp) {
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			count := msg.(msgCounter).Counter
+			count := msg.(*msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
 			return &sdk.Result{}, nil
 		})
@@ -1401,7 +1401,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 		failAfterDeliver  int
 	}{
 		{newTxCounter(0, 0), 0, 0, false, 0},
-		{newTxCounter(9, 1), 2, 0, false, 0},
+		{newTxCounter(9, 1), 2, 10, false, 0},
 		{newTxCounter(10, 0), 3, 10, false, 0},
 		{newTxCounter(10, 0), 10, 10, false, 0},
 		{newTxCounter(2, 7), 11, 9, false, 0},
@@ -1598,7 +1598,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 
 	routerOpt := func(bapp *BaseApp) {
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			count := msg.(msgCounter).Counter
+			count := msg.(*msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
 			return &sdk.Result{}, nil
 		})

@@ -10,8 +10,8 @@ The client type is not stored since it can be obtained through the client state.
 
 | Prefix | Path                                                                        | Value type     |
 |--------|-----------------------------------------------------------------------------|----------------|
-| "0/"   | "clients/{identifier}"                                                      | ClientState    |
-| "0/"   | "clients/{identifier}/consensusState/{height}"                              | ConsensusState |
+| "0/"   | "clients/{identifier}/clientState"                                          | ClientState    |
+| "0/"   | "clients/{identifier}/consensusStates/{height}"                             | ConsensusState |
 | "0/"   | "clients/{identifier}/connections"                                          | []string       |
 | "0/"   | "connections/{identifier}"                                                  | ConnectionEnd  |
 | "0/"   | "ports/{identifier}"                                                        | CapabilityKey  |

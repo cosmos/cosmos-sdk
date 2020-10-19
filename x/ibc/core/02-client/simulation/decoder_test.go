@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
-	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 func TestDecodeStore(t *testing.T) {
@@ -37,10 +36,6 @@ func TestDecodeStore(t *testing.T) {
 				Value: app.IBCKeeper.ClientKeeper.MustMarshalClientState(clientState),
 			},
 			{
-				Key:   host.FullKeyClientPath(clientID, host.KeyClientType()),
-				Value: []byte(ibctesting.Tendermint),
-			},
-			{
 				Key:   host.FullKeyClientPath(clientID, host.KeyConsensusState(height)),
 				Value: app.IBCKeeper.ClientKeeper.MustMarshalConsensusState(consState),
 			},
@@ -55,7 +50,6 @@ func TestDecodeStore(t *testing.T) {
 		expectedLog string
 	}{
 		{"ClientState", fmt.Sprintf("ClientState A: %v\nClientState B: %v", clientState, clientState)},
-		{"client type", fmt.Sprintf("Client type A: %s\nClient type B: %s", ibctesting.Tendermint, ibctesting.Tendermint)},
 		{"ConsensusState", fmt.Sprintf("ConsensusState A: %v\nConsensusState B: %v", consState, consState)},
 		{"other", ""},
 	}

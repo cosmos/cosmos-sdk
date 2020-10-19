@@ -265,7 +265,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 	// delete the validator by power index, as the key will change
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 
-	validator = validator.UpdateStatus(sdk.Bonded)
+	validator = validator.UpdateStatus(types.Bonded)
 
 	// save the now bonded validator record to the two referenced stores
 	k.SetValidator(ctx, validator)
@@ -288,11 +288,11 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 
 	// sanity check
-	if validator.Status != sdk.Bonded {
+	if validator.Status != types.Bonded {
 		panic(fmt.Sprintf("should not already be unbonded or unbonding, validator: %v\n", validator))
 	}
 
-	validator = validator.UpdateStatus(sdk.Unbonding)
+	validator = validator.UpdateStatus(types.Unbonding)
 
 	// set the unbonding completion time and completion height appropriately
 	validator.UnbondingTime = ctx.BlockHeader().Time.Add(params.UnbondingTime)
@@ -313,7 +313,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 
 // perform all the store operations for when a validator status becomes unbonded
 func (k Keeper) completeUnbondingValidator(ctx sdk.Context, validator types.Validator) types.Validator {
-	validator = validator.UpdateStatus(sdk.Unbonded)
+	validator = validator.UpdateStatus(types.Unbonded)
 	k.SetValidator(ctx, validator)
 
 	return validator

@@ -4,14 +4,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/exported"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // InitGenesis initialize default parameters
 // and the keeper's address to pubkey map
 func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.StakingKeeper, data *types.GenesisState) {
 	stakingKeeper.IterateValidators(ctx,
-		func(index int64, validator exported.ValidatorI) bool {
+		func(index int64, validator stakingtypes.ValidatorI) bool {
 			keeper.AddPubkey(ctx, validator.GetConsPubKey())
 			return false
 		},

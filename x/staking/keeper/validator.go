@@ -95,7 +95,7 @@ func (k Keeper) mustGetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAdd
 // set the main record holding validator details
 func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
-	bz := types.MustMarshalValidator(k.cdc, validator)
+	bz := types.MustMarshalValidator(k.cdc, &validator)
 	store.Set(types.GetValidatorKey(validator.GetOperator()), bz)
 }
 

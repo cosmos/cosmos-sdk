@@ -3,9 +3,11 @@ package types
 import (
 	"sort"
 
+	"github.com/tendermint/tendermint/crypto"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -21,8 +23,8 @@ func NewHistoricalInfo(header tmproto.Header, valSet Validators) HistoricalInfo 
 }
 
 // MustMarshalHistoricalInfo wll marshal historical info and panic on error
-func MustMarshalHistoricalInfo(cdc codec.BinaryMarshaler, hi HistoricalInfo) []byte {
-	return cdc.MustMarshalBinaryBare(&hi)
+func MustMarshalHistoricalInfo(cdc codec.BinaryMarshaler, hi *HistoricalInfo) []byte {
+	return cdc.MustMarshalBinaryBare(hi)
 }
 
 // MustUnmarshalHistoricalInfo wll unmarshal historical info and panic on error
@@ -52,5 +54,17 @@ func ValidateBasic(hi HistoricalInfo) error {
 		return sdkerrors.Wrap(ErrInvalidHistoricalInfo, "validator set is not sorted by address")
 	}
 
+	return nil
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (hi *HistoricalInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	// TODO: do we need to check all validators in Valset?
+	for i := range hi.Valset {
+		var pk crypto.PubKey
+		if err := unpacker.UnpackAny(hi.Valset[i].ConsensusPubkey, &pk); err != nil {
+			return err
+		}
+	}
 	return nil
 }

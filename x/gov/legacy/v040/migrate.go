@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v036"
+	v040distr "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	v034gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v034"
 	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v036"
 	v040gov "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -59,10 +61,30 @@ func migrateProposalStatus(oldProposalStatus v034gov.ProposalStatus) v040gov.Pro
 
 func migrateContent(oldContent v036gov.Content) *codectypes.Any {
 	switch oldContent := oldContent.(type) {
-	case *v040gov.TextProposal:
+	case v036gov.TextProposal:
 		{
+			protoProposal := &v040gov.TextProposal{
+				Title:       oldContent.Title,
+				Description: oldContent.Description,
+			}
 			// Convert the content into Any.
-			contentAny, err := codectypes.NewAnyWithValue(oldContent)
+			contentAny, err := codectypes.NewAnyWithValue(protoProposal)
+			if err != nil {
+				panic(err)
+			}
+
+			return contentAny
+		}
+	case v036distr.CommunityPoolSpendProposal:
+		{
+			protoProposal := &v040distr.CommunityPoolSpendProposal{
+				Title:       oldContent.Title,
+				Description: oldContent.Description,
+				Recipient:   oldContent.Recipient.String(),
+				Amount:      oldContent.Amount,
+			}
+			// Convert the content into Any.
+			contentAny, err := codectypes.NewAnyWithValue(protoProposal)
 			if err != nil {
 				panic(err)
 			}

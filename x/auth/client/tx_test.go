@@ -31,7 +31,7 @@ func TestParseQueryResponse(t *testing.T) {
 		Result:  &sdk.Result{Data: []byte("tx data"), Log: "log"},
 	}
 
-	bz, err := codec.ProtoMarshalJSON(simRes)
+	bz, err := codec.ProtoMarshalJSON(simRes, nil)
 	require.NoError(t, err)
 
 	res, err := authclient.ParseQueryResponse(bz)

@@ -182,7 +182,7 @@ Finally, each module should also implement the `RegisterQueryService` method as 
 
 Legacy queriers were queriers used before the introduction of Protobuf and gRPC in the SDK. They are present for existing modules, but will be deprecated in a future release of the SDK. If you are developing new modules, gRPC query services should be preferred, and you only need to implement the `LegacyQuerierHandler` interface if you wish to use legacy queriers.
 
-[`Queriers`](../building-modules/querier.md) are very similar to `handlers`, except they serve user queries to the state as opposed to processing transactions. A [query](../building-modules/messages-and-queries.md#queries) is initiated from an [interface](#application-interface) by an end-user who provides a `queryRoute` and some `data`. The query is then routed to the correct application's `querier` by `baseapp`'s `handleQueryCustom` method using `queryRoute`:
+[`Legacy queriers`](../building-modules/query-services.md#legacy-queriers) are very similar to `handlers`, except they serve user queries to the state as opposed to processing transactions. A [query](../building-modules/messages-and-queries.md#queries) is initiated from an [interface](#application-interface) by an end-user who provides a `queryRoute` and some `data`. The query is then routed to the correct application's `querier` by `baseapp`'s `handleQueryCustom` method using `queryRoute`:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/baseapp/abci.go#L388-L418
 
@@ -236,7 +236,7 @@ The SDK also provides a development endpoint to generate [Swagger](https://swagg
 
 #### Legacy API REST Endpoints
 
-The [module's Legacy REST interface](../building-modules/module-interfaces.md#rest) lets users generate transactions and query the state through REST calls to the application's Legacy API Service. REST routes are defined in a file `client/rest/rest.go`, which is composed of:
+The [module's Legacy REST interface](../building-modules/module-interfaces.md#legacy-rest) lets users generate transactions and query the state through REST calls to the application's Legacy API Service. REST routes are defined in a file `client/rest/rest.go`, which is composed of:
 
 - A `RegisterRoutes` function, which registers each route defined in the file. This function is called from the [main application's interface](#application-interfaces) for each module used within the application. The router used in the SDK is [Gorilla's mux](https://github.com/gorilla/mux).
 - Custom request type definitions for each query or transaction creation function that needs to be exposed. These custom request types build on the base `request` type of the Cosmos SDK:

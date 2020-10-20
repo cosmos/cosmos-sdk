@@ -226,7 +226,7 @@ func ValidateGenesis(data *types.GenesisState) error {
 	return data.Params.Validate()
 }
 
-func validateGenesisStateValidators(validators []types.Validator) (err error) {
+func validateGenesisStateValidators(validators []types.Validator) error {
 	addrMap := make(map[string]bool, len(validators))
 
 	for i := 0; i < len(validators); i++ {
@@ -256,5 +256,5 @@ func validateGenesisStateValidators(validators []types.Validator) (err error) {
 		addrMap[strKey] = true
 	}
 
-	return
+	return nil
 }

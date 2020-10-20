@@ -4,12 +4,11 @@ import (
 	gocontext "context"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
-
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -21,6 +20,11 @@ type QueryServiceTestHelper struct {
 	*GRPCQueryRouter
 	ctx sdk.Context
 }
+
+var (
+	_ gogogrpc.Server     = &QueryServiceTestHelper{}
+	_ gogogrpc.ClientConn = &QueryServiceTestHelper{}
+)
 
 // NewQueryServerTestHelper creates a new QueryServiceTestHelper that wraps
 // the provided sdk.Context
@@ -62,6 +66,3 @@ func (q *QueryServiceTestHelper) Invoke(_ gocontext.Context, method string, args
 func (q *QueryServiceTestHelper) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
 	return nil, fmt.Errorf("not supported")
 }
-
-var _ gogogrpc.Server = &QueryServiceTestHelper{}
-var _ gogogrpc.ClientConn = &QueryServiceTestHelper{}

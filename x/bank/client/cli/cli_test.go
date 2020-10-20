@@ -5,6 +5,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/client/tx"
+
+	"github.com/gogo/protobuf/grpc"
+	grpc2 "google.golang.org/grpc"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -290,6 +297,141 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bz.Bytes(), tc.respType), bz.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
+			}
+		})
+	}
+}
+
+// serviceMsgClientConn is an instance of grpc.ClientConn that is used to test building
+// transactions with MsgClient's. It is intended to be replaced by the work in
+// https://github.com/cosmos/cosmos-sdk/issues/7541 when that is ready.
+type serviceMsgClientConn struct {
+	msgs []sdk.Msg
+}
+
+func (t *serviceMsgClientConn) Invoke(_ context.Context, method string, args, _ interface{}, _ ...grpc2.CallOption) error {
+	req, ok := args.(sdk.MsgRequest)
+	if !ok {
+		return fmt.Errorf("%T should implement %T", args, (*sdk.MsgRequest)(nil))
+	}
+
+	err := req.ValidateBasic()
+	if err != nil {
+		return err
+	}
+
+	t.msgs = append(t.msgs, sdk.ServiceMsg{
+		MethodName: method,
+		Request:    req,
+	})
+
+	return nil
+}
+
+func (t *serviceMsgClientConn) NewStream(context.Context, *grpc2.StreamDesc, string, ...grpc2.CallOption) (grpc2.ClientStream, error) {
+	return nil, fmt.Errorf("not supported")
+}
+
+var _ grpc.ClientConn = &serviceMsgClientConn{}
+
+// newSendTxMsgServiceCmd is just for the purpose of testing ServiceMsg's in an end-to-end case. It is effectively
+// NewSendTxCmd but using MsgClient.
+func newSendTxMsgServiceCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use: "send [from_key_or_address] [to_address] [amount]",
+		Short: `Send funds from one account to another. Note, the'--from' flag is
+ignored as it is implied from [from_key_or_address].`,
+		Args: cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Flags().Set(flags.FlagFrom, args[0])
+
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			toAddr, err := sdk.AccAddressFromBech32(args[1])
+			if err != nil {
+				return err
+			}
+
+			coins, err := sdk.ParseCoins(args[2])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
+			svcMsgClientConn := &serviceMsgClientConn{}
+			bankMsgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = bankMsgClient.Send(context.Background(), msg)
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.msgs...)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// TestBankMsgService does a basic test of whether or not service Msg's as defined
+// in ADR 031 work in the most basic end-to-end case.
+func (s *IntegrationTestSuite) TestBankMsgService() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name           string
+		from, to       sdk.AccAddress
+		amount         sdk.Coins
+		args           []string
+		expectErr      bool
+		respType       proto.Message
+		expectedCode   uint32
+		rawLogContains string
+	}{
+		{
+			"valid transaction",
+			val.Address,
+			val.Address,
+			sdk.NewCoins(
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+			),
+			[]string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			&sdk.TxResponse{},
+			0,
+			"/cosmos.bank.v1beta1.Msg/Send", // indicates we are using ServiceMsg and not a regular Msg
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := val.ClientCtx
+
+			args := []string{tc.from.String(), tc.to.String(), tc.amount.String()}
+			args = append(args, tc.args...)
+
+			bz, err := clitestutil.ExecTestCLICmd(clientCtx, newSendTxMsgServiceCmd(), args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bz.Bytes(), tc.respType), bz.String())
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code)
+				s.Require().Contains(txResp.RawLog, tc.rawLogContains)
 			}
 		})
 	}

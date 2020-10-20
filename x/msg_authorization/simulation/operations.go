@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 	"strings"
 	"time"
@@ -211,7 +210,9 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgExecDelegated, "no coins"), nil, nil
 		}
 
-		fmt.Println("T1 = ", ctx.BlockHeader().Time)
+		if targetGrant.Expiration < ctx.BlockHeader().Time.Unix() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgExecDelegated, "grant expired"), nil, nil
+		}
 
 		granteespendableCoins := bk.SpendableCoins(ctx, granteeAccount.GetAddress())
 		fees, err := simtypes.RandomFees(r, ctx, granteespendableCoins)

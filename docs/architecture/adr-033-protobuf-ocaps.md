@@ -118,11 +118,11 @@ func (fooMsgServer *MsgServer) Bar(ctx context.Context, req *MsgBar) (*MsgBarRes
 ### `ModuleKey`s and `ModuleID`s
 
 A `ModuleKey` can be thought of as a "private key" for a module account and a `ModuleID` can be thought of as the
-corresponding "public key". From [ADR 028](), modules can have both a root module account and any number of sub-accounts
+corresponding "public key". From [the ADR 028 draft](https://github.com/cosmos/cosmos-sdk/pull/7086), modules can have both a root module account and any number of sub-accounts
 or derived accounts that can be used for different pools (ex. staking pools) or managed accounts (ex. group
 accounts). We can also think of module sub-accounts as similar to derived keys - there is a root key and then some
 derivation path. `ModuleID` is a simple struct which contains the module name and optional "derivation" path,
-and forms its address based on the `AddressHash` method from [ADR 028]():
+and forms its address based on the `AddressHash` method from [the ADR 028 draft](https://github.com/cosmos/cosmos-sdk/pull/7086):
 
 ```go
 type ModuleID struct {
@@ -192,8 +192,8 @@ checking permissions.
 ### `AppModule` Wiring and Requirements
 
 In [ADR 031](./adr-031-msg-service.md), the `AppModule.RegisterService(Configurator)` method was introduced. To support
-inter-module communication, we extend the `Configurator` interface to pass in the `ModuleKey` and to allow modules t
-specify their dependencies on other modules using `RequireServer`:
+inter-module communication, we extend the `Configurator` interface to pass in the `ModuleKey` and to allow modules to
+specify their dependencies on other modules using `RequireServer()`:
 
 
 ```go
@@ -208,11 +208,11 @@ type Configurator interface {
 
 The `ModuleKey` is passed to modules in the `RegisterService` method itself so that `RegisterServices` serves as a single
 entry point for configuring module services. This is intended to also have the side-effect of reducing boilerplate in
-app.go. For now, `ModuleKey`s will be created based on `AppModuleBasic.Name()`, but a more flexible system may be
+`app.go`. For now, `ModuleKey`s will be created based on `AppModuleBasic.Name()`, but a more flexible system may be
 introduced in the future. The `ModuleManager` will handle creation of module accounts behind the scenes.
 
-Because modules do not get direct access to each other any more, modules may have unfulfilled dependencies. To make sure
-that module dependencies are resolved at startup, the `Configurator.RequireServer` method is added. The `ModuleManager`
+Because modules do not get direct access to each other anymore, modules may have unfulfilled dependencies. To make sure
+that module dependencies are resolved at startup, the `Configurator.RequireServer` method should be added. The `ModuleManager`
 will make sure that all dependencies declared with `RequireServer` can be resolved before the app starts. An example
 module `foo` could declare it's dependency on `x/bank` like this:
 
@@ -227,29 +227,31 @@ func (am AppModule) RegisterServices(cfg Configurator) {
 
 ### Security Considerations
 
-In addition to checking for `ModuleKey` permissions, a few additional security precautions will need to be taken
+In addition to checking for `ModuleKey` permissions, a few additional security precautions will need to be taken by
+the underlying router infrastructure.
 
 #### Recursion and Re-entry
 
-Methods which call other methods which eventually call the method which called them are a potential security threat.
+Recursive or re-entrant method invocations pose a potential security threat. This can be a problem if Module A
+calls Module B and Module B calls module A again in the same call.
 
-A simple way for the router system to deal with this is to maintain a call stack which prevents a module from
-being referenced more than once in the call stack. A simple `map[string]interface{}` table in the router could be use to
-efficiently perform this security check.
+One basic way for the router system to deal with this is to maintain a call stack which prevents a module from
+being referenced more than once in the call stack so that there is no re-entry. A `map[string]interface{}` table
+in the router could be used to perform this security check.
 
 #### Queries
 
 Queries in Cosmos SDK are generally un-permissioned so allowing one module to query another module should not pose
-any major security threats assuming basic precautions are taken. The basic precautions that the router system will
+any major security threats assuming basic precautions are taken. The basic precaution that the router system will
 need to take is making sure that the `sdk.Context` passed to query methods does not allow writing to the store. This
-can be done with a cache wrapper.
+can be done for now with a `CacheMultiStore` as is currently done for `BaseApp` queries.
 
 ### Future Work
 
 Separate ADRs will address the use cases of:
 * unrestricted, "admin" access
-* dynamic interface handler routing (ex. `x/gov` `Content` routing)
-* inter-module hooks (as used in `x/staking/keeper/hooks.go`)
+* dynamic interface routing (ex. `x/gov` `Content` routing)
+* inter-module hooks (ex. `x/staking/keeper/hooks.go`)
 
 Other future improvements may include:
 * combining `StoreKey`s and `ModuleKey`s into a single interface so that modules have a single Ocaps handle
@@ -258,31 +260,28 @@ Other future improvements may include:
 
 ## Consequences
 
-> This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.
-
 ### Backwards Compatibility
 
-> All ADRs that introduce backwards incompatibilities must include a section describing these incompatibilities and their severity. The ADR must explain how the author proposes to deal with these incompatibilities. ADR submissions without a sufficient backwards compatibility treatise may be rejected outright.
-
+This ADR is intended to provide a pathway to a scenario where there is greater long term compatibility between modules.
+In the short-term, this will likely result in breaking certain `Keeper` interfaces which are too permissive and/or
+replacing `Keeper` interfaces altogether.
 
 ### Positive
 
-{positive consequences}
+- proper inter-module Ocaps
+- an alternative to keepers which can more easily lead to stable inter-module interfaces
 
 ### Negative
 
-{negative consequences}
+- modules which adopt this will need significant refactoring
 
 ### Neutral
 
-{neutral consequences}
-
-
 ## Test Cases [optional]
-
-Test cases for an implementation are mandatory for ADRs that are affecting consensus changes. Other ADRs can choose to include links to test cases if applicable.
-
 
 ## References
 
-- {reference link}
+- [ADR 021](./adr-021-protobuf-query-encoding.md)
+- [ADR 031](./adr-031-msg-service.md)
+- [ADR 028 draft](https://github.com/cosmos/cosmos-sdk/pull/7086)
+- [Object-Capability Model](../docs/core/ocap.md)

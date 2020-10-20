@@ -10,6 +10,7 @@ import (
 	v038distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v038"
 	v036genaccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v036"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v036"
 	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v036"
 	v038staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v038"
 )
@@ -18,10 +19,14 @@ import (
 func Migrate(appState types.AppMap, _ client.Context) types.AppMap {
 	v036Codec := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(v036Codec)
+	v036gov.RegisterLegacyAminoCodec(v036Codec)
+	v036distr.RegisterLegacyAminoCodec(v036Codec)
 
 	v038Codec := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(v038Codec)
 	v038auth.RegisterLegacyAminoCodec(v038Codec)
+	v036gov.RegisterLegacyAminoCodec(v038Codec)
+	v036distr.RegisterLegacyAminoCodec(v038Codec)
 
 	if appState[v036genaccounts.ModuleName] != nil {
 		// unmarshal relative source genesis application state

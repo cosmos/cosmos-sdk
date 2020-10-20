@@ -27,6 +27,7 @@ func Migrate(appState types.AppMap, _ client.Context) types.AppMap {
 	v036Codec := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(v036Codec)
 	v036gov.RegisterLegacyAminoCodec(v036Codec)
+	v036distr.RegisterLegacyAminoCodec(v036Codec)
 
 	// migrate genesis accounts state
 	if appState[v034genAccounts.ModuleName] != nil {

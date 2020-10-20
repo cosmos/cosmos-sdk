@@ -23,6 +23,7 @@ func NewHistoricalInfo(header tmproto.Header, valSet Validators) HistoricalInfo 
 }
 
 // MustMarshalHistoricalInfo wll marshal historical info and panic on error
+// TODO: why don't we use codec.LegacyAmino?
 func MustMarshalHistoricalInfo(cdc codec.BinaryMarshaler, hi *HistoricalInfo) []byte {
 	return cdc.MustMarshalBinaryBare(hi)
 }
@@ -59,7 +60,6 @@ func ValidateBasic(hi HistoricalInfo) error {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (hi *HistoricalInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	// TODO: do we need to check all validators in Valset?
 	for i := range hi.Valset {
 		var pk crypto.PubKey
 		if err := unpacker.UnpackAny(hi.Valset[i].ConsensusPubkey, &pk); err != nil {

@@ -356,15 +356,15 @@ func queryVotesOnProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		// as they're no longer in state.
 		params := types.NewQueryProposalVotesParams(proposalID, page, limit)
 
-		bz, err = clientCtx.LegacyAmino.MarshalJSON(params)
-		if rest.CheckBadRequestError(w, err) {
-			return
-		}
-
 		propStatus := proposal.Status
 		if !(propStatus == types.StatusVotingPeriod || propStatus == types.StatusDepositPeriod) {
 			res, err = gcutils.QueryVotesByTxQuery(clientCtx, params)
 		} else {
+			bz, err = clientCtx.LegacyAmino.MarshalJSON(params)
+			if rest.CheckBadRequestError(w, err) {
+				return
+			}
+
 			res, _, err = clientCtx.QueryWithData("custom/gov/votes", bz)
 		}
 

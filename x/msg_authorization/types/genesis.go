@@ -1,5 +1,9 @@
 package types
 
+import (
+	"github.com/cosmos/cosmos-sdk/codec/types"
+)
+
 // NewGenesisState creates new GenesisState object
 func NewGenesisState(entries []MsgGrantAuthorization) *GenesisState {
 	return &GenesisState{
@@ -15,4 +19,17 @@ func ValidateGenesis(data GenesisState) error {
 //
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{}
+}
+
+var _ types.UnpackInterfacesMessage = GenesisState{}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (data GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	for _, authorization := range data.Authorization {
+		err := authorization.UnpackInterfaces(unpacker)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

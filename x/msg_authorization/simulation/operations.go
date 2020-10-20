@@ -78,9 +78,6 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 
 		granter, _ := simtypes.RandomAcc(r, accs)
 		grantee, _ := simtypes.RandomAcc(r, accs)
-		if granter.Address.Equals(grantee.Address) {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantAuthorization, "same granter and grantee account"), nil, nil
-		}
 
 		account := ak.GetAccount(ctx, granter.Address)
 
@@ -112,7 +109,7 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantAuthorization, "unable to generate mock tx"), nil, err
 		}
 
-		_, _, err = app.Deliver(tx)
+		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
@@ -173,7 +170,7 @@ func SimulateMsgRevokeAuthorization(ak types.AccountKeeper, bk types.BankKeeper,
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgRevokeAuthorization, err.Error()), nil, err
 		}
 
-		_, _, err = app.Deliver(tx)
+		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 		return simtypes.NewOperationMsg(&msg, true, ""), nil, err
 	}
 }
@@ -248,7 +245,7 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgExecDelegated, err.Error()), nil, err
 		}
-		_, _, err = app.Deliver(tx)
+		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 		if err != nil {
 			if strings.Contains(err.Error(), "insufficient fee") {
 				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgExecDelegated, "insufficient fee"), nil, nil

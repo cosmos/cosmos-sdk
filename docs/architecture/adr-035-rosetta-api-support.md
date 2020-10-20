@@ -33,7 +33,7 @@ We will achieve these delivering on these principles by the following:
 
 ## Architecture
 
-### 1. The External Repo
+### The External Repo
 
 As section will describe the proposed external library, including the service implementation, plus the defined types and interfaces.
 

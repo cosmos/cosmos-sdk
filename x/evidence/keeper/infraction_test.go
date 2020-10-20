@@ -6,18 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 )
-
-func newTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) *stakingtypes.MsgCreateValidator {
-	commission := stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
-	return stakingtypes.NewMsgCreateValidator(
-		address, pubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt),
-		stakingtypes.Description{}, commission, sdk.OneInt(),
-	)
-}
 
 func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 	ctx := suite.ctx.WithIsCheckTx(false).WithBlockHeight(1)
@@ -25,13 +15,10 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 
 	power := int64(100)
 	stakingParams := suite.app.StakingKeeper.GetParams(ctx)
-	selfDelegation := sdk.TokensFromConsensusPower(power)
 	operatorAddr, val := valAddresses[0], pubkeys[0]
+	tstaking := teststaking.NewHelper(suite.T(), ctx, suite.app.StakingKeeper)
 
-	// create validator
-	res, err := staking.NewHandler(suite.app.StakingKeeper)(ctx, newTestMsgCreateValidator(operatorAddr, val, selfDelegation))
-	suite.NoError(err)
-	suite.NotNil(res)
+	selfDelegation := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, true)
 
 	// execute end-blocker and verify validator attributes
 	staking.EndBlocker(ctx, suite.app.StakingKeeper)
@@ -79,10 +66,9 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 	del, _ := suite.app.StakingKeeper.GetDelegation(ctx, sdk.AccAddress(operatorAddr), operatorAddr)
 	validator, _ := suite.app.StakingKeeper.GetValidator(ctx, operatorAddr)
 	totalBond := validator.TokensFromShares(del.GetShares()).TruncateInt()
-	msgUnbond := stakingtypes.NewMsgUndelegate(sdk.AccAddress(operatorAddr), operatorAddr, sdk.NewCoin(stakingParams.BondDenom, totalBond))
-	res, err = staking.NewHandler(suite.app.StakingKeeper)(ctx, msgUnbond)
-	suite.NoError(err)
-	suite.NotNil(res)
+	tstaking.Ctx = ctx
+	tstaking.Denom = stakingParams.BondDenom
+	tstaking.Undelegate(sdk.AccAddress(operatorAddr), operatorAddr, totalBond, true)
 }
 
 func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
@@ -91,13 +77,10 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
 
 	power := int64(100)
 	stakingParams := suite.app.StakingKeeper.GetParams(ctx)
-	amt := sdk.TokensFromConsensusPower(power)
 	operatorAddr, val := valAddresses[0], pubkeys[0]
+	tstaking := teststaking.NewHelper(suite.T(), ctx, suite.app.StakingKeeper)
 
-	// create validator
-	res, err := staking.NewHandler(suite.app.StakingKeeper)(ctx, newTestMsgCreateValidator(operatorAddr, val, amt))
-	suite.NoError(err)
-	suite.NotNil(res)
+	amt := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, true)
 
 	// execute end-blocker and verify validator attributes
 	staking.EndBlocker(ctx, suite.app.StakingKeeper)

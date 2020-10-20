@@ -130,8 +130,11 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 	return nil
 }
 
-// RegisterQueryService registers the gRPC query service for the ibc module.
+// RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
+	clienttypes.RegisterMsgServer(cfg.MsgServer(), am.keeper)
+	connectiontypes.RegisterMsgServer(cfg.MsgServer(), am.keeper)
+	channeltypes.RegisterMsgServer(cfg.MsgServer(), am.keeper)
 	types.RegisterQueryService(cfg.QueryServer(), am.keeper)
 }
 

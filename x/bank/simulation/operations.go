@@ -123,7 +123,7 @@ func sendMsgSend(
 		return err
 	}
 
-	_, _, err = app.Deliver(tx)
+	_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 	if err != nil {
 		return err
 	}
@@ -280,7 +280,7 @@ func sendMsgMultiSend(
 		return err
 	}
 
-	_, _, err = app.Deliver(tx)
+	_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 	if err != nil {
 		return err
 	}

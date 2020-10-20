@@ -37,7 +37,6 @@ func GetHistEntries(r *rand.Rand) uint32 {
 }
 
 // RandomizedGenState generates a random GenesisState for staking
-// TODO: this function should not panic
 func RandomizedGenState(simState *module.SimulationState) {
 	// params
 	var (

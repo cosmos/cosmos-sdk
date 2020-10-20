@@ -439,16 +439,16 @@ func (v *Validator) MinEqual(other *Validator) bool {
 		v.Tokens.Equal(other.Tokens) &&
 		v.DelegatorShares.Equal(other.DelegatorShares) &&
 		v.Description.Equal(other.Description) &&
-		v.Commission.Equal(other.Commission)
+		v.Commission.Equal(other.Commission) &&
+		v.Jailed == other.Jailed &&
+		v.MinSelfDelegation.Equal(other.MinSelfDelegation)
 }
 
 // Equal checks if the receiver equals the parameter
 func (v *Validator) Equal(v2 *Validator) bool {
 	return v.MinEqual(v2) &&
-		v.Jailed == v2.Jailed &&
 		v.UnbondingHeight == v2.UnbondingHeight &&
-		v.UnbondingTime.Equal(v2.UnbondingTime) &&
-		v.MinSelfDelegation.Equal(v2.MinSelfDelegation)
+		v.UnbondingTime.Equal(v2.UnbondingTime)
 }
 
 func (v Validator) IsJailed() bool        { return v.Jailed }

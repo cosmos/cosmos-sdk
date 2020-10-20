@@ -1,4 +1,4 @@
-# ADR 033: Protobuf Module Object Capabilities
+# ADR 033: Protobuf-based Inter-Module Object Capabilities
 
 ## Changelog
 

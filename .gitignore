@@ -5,8 +5,6 @@
 *.swl
 *.swm
 *.swn
-.vscode
-.idea
 *.pyc
 
 # private files
@@ -43,8 +41,10 @@ sim_log_file
 vagrant
 
 # IDE
-.idea/
+.idea
 *.iml
+.dir-locals.el
+.vscode
 
 # Graphviz
 dependency-graph.png

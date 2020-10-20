@@ -36,7 +36,10 @@ func TestHistoricalInfo(t *testing.T) {
 
 	recv, err := UnmarshalHistoricalInfo(ModuleCdc, value)
 	require.Nil(t, err, "Unmarshalling HistoricalInfo failed")
-	require.Equal(t, hi, recv, "Unmarshalled HistoricalInfo is different from original")
+	require.Equal(t, hi.Header, recv.Header)
+	for i := range hi.Valset {
+		require.True(t, hi.Valset[i].Equal(&recv.Valset[i]))
+	}
 	require.True(t, sort.IsSorted(Validators(hi.Valset)), "Validators are not sorted")
 }
 

@@ -495,3 +495,18 @@ func (v Validator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var pk crypto.PubKey
 	return unpacker.UnpackAny(v.ConsensusPubkey, &pk)
 }
+
+// Equals check if the receiver equals the parameter
+func (v *Validator) Equal(v2 *Validator) bool {
+	return v.OperatorAddress == v2.OperatorAddress &&
+		v.ConsensusPubkey.Equal(v2.ConsensusPubkey) &&
+		v.Jailed == v2.Jailed &&
+		v.Status == v2.Status &&
+		v.Tokens.Equal(v2.Tokens) &&
+		v.DelegatorShares.Equal(v2.DelegatorShares) &&
+		v.Description.Equal(v2.Description) &&
+		v.UnbondingHeight == v2.UnbondingHeight &&
+		v.UnbondingTime.Equal(v2.UnbondingTime) &&
+		v.Commission.Equal(v2.Commission) &&
+		v.MinSelfDelegation.Equal(v2.MinSelfDelegation)
+}

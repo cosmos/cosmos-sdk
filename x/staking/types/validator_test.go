@@ -210,8 +210,7 @@ func TestValidatorMarshalUnmarshalJSON(t *testing.T) {
 	got := &Validator{}
 	err = legacy.Cdc.UnmarshalJSON(js, got)
 	assert.NoError(t, err)
-	// TODO:	assert.Equal(t, validator, *got)
-	assert.Equal(t, validator.ConsensusPubkey, *got.ConsensusPubkey)
+	assert.True(t, validator.Equal(got))
 }
 
 func TestValidatorSetInitialCommission(t *testing.T) {

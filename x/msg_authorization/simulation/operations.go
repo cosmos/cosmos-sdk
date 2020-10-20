@@ -78,23 +78,20 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 
 		granter, _ := simtypes.RandomAcc(r, accs)
 		grantee, _ := simtypes.RandomAcc(r, accs)
-		if granter.Address.Equals(grantee.Address) {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantAuthorization, "same granter and grantee account"), nil, nil
-		}
 
 		account := ak.GetAccount(ctx, granter.Address)
 
 		spendableCoins := bk.SpendableCoins(ctx, account.GetAddress())
 		fees, err := simtypes.RandomFees(r, ctx, spendableCoins)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantAuthorization, ""), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantAuthorization, err.Error()), nil, err
 		}
 
 		msg, err := types.NewMsgGrantAuthorization(granter.Address, grantee.Address,
-			types.NewSendAuthorization(spendableCoins.Sub(fees)), time.Now().Add(1*time.Hour))
+			types.NewSendAuthorization(spendableCoins.Sub(fees)), ctx.BlockTime().Add(30*time.Hour))
 
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantAuthorization, "Error "), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantAuthorization, err.Error()), nil, err
 		}
 		txGen := simappparams.MakeEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
@@ -112,7 +109,7 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantAuthorization, "unable to generate mock tx"), nil, err
 		}
 
-		_, _, err = app.Deliver(tx)
+		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
@@ -173,7 +170,7 @@ func SimulateMsgRevokeAuthorization(ak types.AccountKeeper, bk types.BankKeeper,
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgRevokeAuthorization, err.Error()), nil, err
 		}
 
-		_, _, err = app.Deliver(tx)
+		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 		return simtypes.NewOperationMsg(&msg, true, ""), nil, err
 	}
 }
@@ -210,6 +207,10 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgExecDelegated, "no coins"), nil, nil
 		}
 
+		if targetGrant.Expiration < ctx.BlockHeader().Time.Unix() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgExecDelegated, "grant expired"), nil, nil
+		}
+
 		granteespendableCoins := bk.SpendableCoins(ctx, granteeAccount.GetAddress())
 		fees, err := simtypes.RandomFees(r, ctx, granteespendableCoins)
 		if err != nil {
@@ -244,8 +245,7 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgExecDelegated, err.Error()), nil, err
 		}
-
-		_, _, err = app.Deliver(tx)
+		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 		if err != nil {
 			if strings.Contains(err.Error(), "insufficient fee") {
 				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgExecDelegated, "insufficient fee"), nil, nil

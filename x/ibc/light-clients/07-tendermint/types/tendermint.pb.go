@@ -5,11 +5,6 @@ package types
 
 import (
 	fmt "fmt"
-	io "io"
-	math "math"
-	math_bits "math/bits"
-	time "time"
-
 	_go "github.com/confio/ics23/go"
 	types "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	types2 "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
@@ -21,6 +16,10 @@ import (
 	types1 "github.com/tendermint/tendermint/abci/types"
 	github_com_tendermint_tendermint_libs_bytes "github.com/tendermint/tendermint/libs/bytes"
 	types3 "github.com/tendermint/tendermint/proto/tendermint/types"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.

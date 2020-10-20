@@ -70,10 +70,12 @@ endif
 ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
   CGO_ENABLED=1
   BUILD_TAGS += rocksdb
+  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=rocksdb
 endif
 # handle boltdb
 ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
   BUILD_TAGS += boltdb
+  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=boltdb
 endif
 
 ifeq (,$(findstring nostrip,$(COSMOS_BUILD_OPTIONS)))
@@ -390,7 +392,7 @@ proto-check-breaking-docker:
 TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.0-rc5/proto/tendermint
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
-CONFIO_URL 		 = https://raw.githubusercontent.com/confio/ics23/v0.6.2
+CONFIO_URL 		 = https://raw.githubusercontent.com/confio/ics23/v0.6.3
 
 TM_CRYPTO_TYPES     = third_party/proto/tendermint/crypto
 TM_ABCI_TYPES       = third_party/proto/tendermint/abci

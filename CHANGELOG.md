@@ -39,10 +39,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Client Breaking
 
 * (x/staking) [\#7499](https://github.com/cosmos/cosmos-sdk/pull/7499) `BondStatus` is now a protobuf `enum` instead of an `int32`, and JSON serialized using its protobuf name, so expect names like `BOND_STATUS_UNBONDING` as opposed to `Unbonding`.
+* (x/evidence) [\#7538](https://github.com/cosmos/cosmos-sdk/pull/7538) The ABCI's `Result.Data` field of `MsgSubmitEvidence` does not contain the raw evidence's hash, but the encoded `MsgSubmitEvidenceResponse` struct.
 
 ### API Breaking
 
-* (AppModule) [\#7518](https://github.com/cosmos/cosmos-sdk/pull/7518) Rename `AppModule.RegisterQueryServices` to `AppModule.RegisterServices`, as this method now registers multiple services (the gRPC query service and the protobuf Msg service). A `Configurator` struct is used to hold the different services.
+* (AppModule) [\#7518](https://github.com/cosmos/cosmos-sdk/pull/7518) [\#7584](https://github.com/cosmos/cosmos-sdk/pull/7584) Rename `AppModule.RegisterQueryServices` to `AppModule.RegisterServices`, as this method now registers multiple services (the gRPC query service and the protobuf Msg service). A `Configurator` struct is used to hold the different services.
 
 ### Features
 

@@ -30,22 +30,16 @@ var (
 // NewMsgGrantAuthorization creates a new MsgGrantAuthorization
 //nolint:interfacer
 func NewMsgGrantAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, authorization Authorization, expiration time.Time) (*MsgGrantAuthorization, error) {
-	msg, ok := authorization.(proto.Message)
-	if !ok {
-		return nil, fmt.Errorf("cannot proto marshal %T", authorization)
+	m := &MsgGrantAuthorization{
+		Granter:    granter.String(),
+		Grantee:    grantee.String(),
+		Expiration: expiration,
 	}
-
-	any, err := types.NewAnyWithValue(msg)
+	err := m.SetAuthorization(authorization)
 	if err != nil {
 		return nil, err
 	}
-
-	return &MsgGrantAuthorization{
-		Granter:       granter.String(),
-		Grantee:       grantee.String(),
-		Authorization: any,
-		Expiration:    expiration,
-	}, nil
+	return m, nil
 }
 
 // Route implements Msg
@@ -84,12 +78,25 @@ func (msg MsgGrantAuthorization) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgGrantAuthorization) GetAuthorization() Authorization {
+func (msg *MsgGrantAuthorization) GetAuthorization() Authorization {
 	authorization, ok := msg.Authorization.GetCachedValue().(Authorization)
 	if !ok {
 		return nil
 	}
 	return authorization
+}
+
+func (msg *MsgGrantAuthorization) SetAuthorization(authorization Authorization) error {
+	m, ok := authorization.(proto.Message)
+	if !ok {
+		return fmt.Errorf("can't proto marshal %T", m)
+	}
+	any, err := types.NewAnyWithValue(m)
+	if err != nil {
+		return err
+	}
+	msg.Authorization = any
+	return nil
 }
 
 func (msg MsgExecAuthorized) UnpackInterfaces(unpacker types.AnyUnpacker) error {

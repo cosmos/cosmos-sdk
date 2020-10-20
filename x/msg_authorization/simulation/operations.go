@@ -216,11 +216,12 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgExecDelegated, "fee error"), nil, err
 		}
+		sendCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)))
 
 		execMsg := banktype.NewMsgSend(
 			granterAddr,
 			granteeAddr,
-			simtypes.RandSubsetCoins(r, granterspendableCoins),
+			sendCoins,
 		)
 
 		msg := types.NewMsgExecAuthorized(grantee.Address, []sdk.Msg{execMsg})

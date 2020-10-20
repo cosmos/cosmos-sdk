@@ -22,12 +22,6 @@ func NewHistoricalInfo(header tmproto.Header, valSet Validators) HistoricalInfo 
 	}
 }
 
-// MustMarshalHistoricalInfo wll marshal historical info and panic on error
-// TODO: why don't we use codec.LegacyAmino?
-func MustMarshalHistoricalInfo(cdc codec.BinaryMarshaler, hi *HistoricalInfo) []byte {
-	return cdc.MustMarshalBinaryBare(hi)
-}
-
 // MustUnmarshalHistoricalInfo wll unmarshal historical info and panic on error
 func MustUnmarshalHistoricalInfo(cdc codec.BinaryMarshaler, value []byte) HistoricalInfo {
 	hi, err := UnmarshalHistoricalInfo(cdc, value)

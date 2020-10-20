@@ -113,7 +113,7 @@ func (suite *KeeperTestSuite) TestGRPCValidator() {
 			res, err := queryClient.Validator(gocontext.Background(), req)
 			if tc.expPass {
 				suite.NoError(err)
-				suite.Equal(validator, res.Validator)
+				suite.True(validator.Equal(&res.Validator))
 			} else {
 				suite.Error(err)
 				suite.Nil(res)

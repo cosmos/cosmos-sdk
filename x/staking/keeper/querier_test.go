@@ -198,7 +198,7 @@ func TestQueryValidators(t *testing.T) {
 		err = cdc.UnmarshalJSON(res, &queriedValidator)
 		require.NoError(t, err)
 
-		require.Equal(t, validator, queriedValidator)
+		require.True(t, validator.Equal(&queriedValidator))
 	}
 }
 
@@ -275,8 +275,7 @@ func TestQueryDelegation(t *testing.T) {
 	var validator types.Validator
 	errRes = cdc.UnmarshalJSON(res, &validator)
 	require.NoError(t, errRes)
-
-	require.Equal(t, delValidators[0], validator)
+	require.True(t, validator.Equal(&delValidators[0]))
 
 	// error unknown request
 	query.Data = bz[:len(bz)-1]

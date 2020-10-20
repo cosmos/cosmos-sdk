@@ -16,7 +16,6 @@ import (
 
 func TestMigrate(t *testing.T) {
 	encodingConfig := simapp.MakeEncodingConfig()
-	v036distr.RegisterLegacyAminoCodec(encodingConfig.Amino)
 	clientCtx := client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).

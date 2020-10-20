@@ -26,8 +26,7 @@ func TestHistoricalInfo(t *testing.T) {
 	}
 
 	hi := types.NewHistoricalInfo(ctx.BlockHeader(), validators)
-
-	app.StakingKeeper.SetHistoricalInfo(ctx, 2, hi)
+	app.StakingKeeper.SetHistoricalInfo(ctx, 2, &hi)
 
 	recv, found := app.StakingKeeper.GetHistoricalInfo(ctx, 2)
 	require.True(t, found, "HistoricalInfo not found after set")
@@ -68,8 +67,8 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	}
 	hi4 := types.NewHistoricalInfo(h4, valSet)
 	hi5 := types.NewHistoricalInfo(h5, valSet)
-	app.StakingKeeper.SetHistoricalInfo(ctx, 4, hi4)
-	app.StakingKeeper.SetHistoricalInfo(ctx, 5, hi5)
+	app.StakingKeeper.SetHistoricalInfo(ctx, 4, &hi4)
+	app.StakingKeeper.SetHistoricalInfo(ctx, 5, &hi5)
 	recv, found := app.StakingKeeper.GetHistoricalInfo(ctx, 4)
 	require.True(t, found)
 	require.Equal(t, hi4, recv)
@@ -136,7 +135,7 @@ func TestGetAllHistoricalInfo(t *testing.T) {
 	expHistInfos := []types.HistoricalInfo{hist1, hist2, hist3}
 
 	for i, hi := range expHistInfos {
-		app.StakingKeeper.SetHistoricalInfo(ctx, int64(10+i), hi)
+		app.StakingKeeper.SetHistoricalInfo(ctx, int64(10+i), &hi)
 	}
 
 	infos := app.StakingKeeper.GetAllHistoricalInfo(ctx)

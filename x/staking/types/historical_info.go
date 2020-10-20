@@ -35,7 +35,6 @@ func MustUnmarshalHistoricalInfo(cdc codec.BinaryMarshaler, value []byte) Histor
 // UnmarshalHistoricalInfo will unmarshal historical info and return any error
 func UnmarshalHistoricalInfo(cdc codec.BinaryMarshaler, value []byte) (hi HistoricalInfo, err error) {
 	err = cdc.UnmarshalBinaryBare(value, &hi)
-
 	return hi, err
 }
 
@@ -69,7 +68,7 @@ func (hi *HistoricalInfo) Equal(hi2 *HistoricalInfo) bool {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (hi *HistoricalInfo) UnpackInterfaces(c codectypes.AnyUnpacker) error {
+func (hi HistoricalInfo) UnpackInterfaces(c codectypes.AnyUnpacker) error {
 	for i := range hi.Valset {
 		if err := hi.Valset[i].UnpackInterfaces(c); err != nil {
 			return err

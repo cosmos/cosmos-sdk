@@ -42,7 +42,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	}
 
 	hi := types.NewHistoricalInfo(header, validators)
-	app.StakingKeeper.SetHistoricalInfo(ctx, 5, hi)
+	app.StakingKeeper.SetHistoricalInfo(ctx, 5, &hi)
 
 	suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals = app, ctx, queryClient, addrs, validators
 }

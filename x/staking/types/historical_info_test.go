@@ -58,7 +58,6 @@ func TestValidateBasic(t *testing.T) {
 			validators[j] = it
 		})
 	}
-
 	hi = HistoricalInfo{
 		Header: header,
 		Valset: validators,

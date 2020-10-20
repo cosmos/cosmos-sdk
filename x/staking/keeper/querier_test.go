@@ -38,7 +38,7 @@ func TestNewQuerier(t *testing.T) {
 		Height:  5,
 	}
 	hi := types.NewHistoricalInfo(header, validators[:])
-	app.StakingKeeper.SetHistoricalInfo(ctx, 5, hi)
+	app.StakingKeeper.SetHistoricalInfo(ctx, 5, &hi)
 
 	query := abci.RequestQuery{
 		Path: "",
@@ -725,7 +725,7 @@ func TestQueryHistoricalInfo(t *testing.T) {
 		Height:  5,
 	}
 	hi := types.NewHistoricalInfo(header, vals)
-	app.StakingKeeper.SetHistoricalInfo(ctx, 5, hi)
+	app.StakingKeeper.SetHistoricalInfo(ctx, 5, &hi)
 
 	queryHistoricalParams := types.QueryHistoricalInfoRequest{Height: 4}
 	bz, errRes := cdc.MarshalJSON(queryHistoricalParams)

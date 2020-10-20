@@ -23,7 +23,6 @@ func createTestInput() (*codec.LegacyAmino, *simapp.SimApp, sdk.Context) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	appCodec := app.AppCodec()
-
 	app.StakingKeeper = keeper.NewKeeper(
 		appCodec,
 		app.GetKey(types.StoreKey),

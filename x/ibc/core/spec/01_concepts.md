@@ -132,7 +132,7 @@ The connection handshake occurs in 4 steps as defined in [ICS 03](https://github
 The handshake is expected to succeed if the connection identifier selected is not used and the
 version selected is supported. The connection identifier for the counterparty connection may 
 be left empty indicating that the counterparty may select its own identifier. The connection
-set set and stored in the INIT state upon success.
+is set and stored in the INIT state upon success.
 
 `ConnOpenTry` is a response to a chain executing `ConnOpenInit`. The executing chain will validate
 the chain level parameters the counterparty has stored such as its chainID and consensus parameters.
@@ -197,6 +197,36 @@ versions should have a unique version identifier.
 :::
 
 ## Channel Handshake
+
+The channel handshake occurs in 4 steps as defined in [ICS 04](https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics).
+
+`ChanOpenInit` is the first attempt to initialize a channel on top of an existing connection. 
+The handshake is expected to succeed if the channel identifier selected is not used and the
+version selected for the existing connection is a supported IBC version. The portID must correspond
+to a port already binded upon `InitChain`. The channel identifier for the counterparty channel 
+may be left empty indicating that the counterparty may select its own identifier. The channel is 
+set and stored in the INIT state upon success. The channel parameters `NextSequenceSend`, 
+`NextSequenceRecv`, and `NextSequenceAck` are all set to 1 and a channel capability is created 
+for the given portID and channelID path. 
+
+`ChanOpenTry` is a response to a chain executing `ChanOpenInit`. If the executing chain is callign
+`ChanOpenTry` after previously executing `ChanOpenInit` then the provided channel parameters must
+match the previously selected parameters. The connection the channel is created on top of must be
+an OPEN state and its IBC version must support the desired channel type being create (ORDERED,
+UNORDERED, etc). The executing chain will verify that the channel state of the counterparty is 
+in INIT. The executing chain will set and store the channel state in TRYOPEN. The channel 
+parameters `NextSequenceSend`, `NextSequenceRecv`, and `NextSequenceAck` are all set to 1 and 
+a channel capability is created for the given portID and channelID path. 
+
+`ChanOpenAck` may be called on a chain when the counterparty channel has entered TRYOPEN. A
+previous channel on the executing chain must exist be in either INIT or TRYOPEN state. If the 
+counterparty selected its own channel identifier, it will be validated in the basic validation 
+of `MsgChanOpenAck`. The executing chain verifies that the counterparty channel state is in 
+TRYOPEN. The channel is set and stored in the OPEN state upon success.
+
+`ChanOpenConfirm` is a response to a chain executing `ChanOpenAck`. The executing chain's 
+previous channel state must be in TRYOPEN. The executing chain verifies that the counterparty 
+channel state is OPEN. The channel is set and stored in the OPEN state upon success.
 
 ## Channel Version Negotiation
 
@@ -301,6 +331,17 @@ or timeout height with a 0 value indicates the timeout field may be ignored.
 Each packet is required to have at least one valid timeout field. 
 
 ## Closing Channels
+
+Closing a channel occurs in occurs in 2 handshake steps as defined in [ICS 04](https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics).
+
+`ChanCloseInit` will close a channel on the executing chain if the channel exists, it is not 
+already closed and the connection it exists upon is OPEN. Channels can only be closed by a 
+calling module or in the case of a packet timeout on an ORDERED channel.
+
+`ChanCloseConfirm` is a response to a counterparty channel executing `ChanCloseInit`. The channel
+on the executing chain will be closed if the channel exists, the channel is not already closed, 
+the connection the channel exists upon is OPEN and the executing chain successfully verifies
+that the counterparty channel has been closed.
 
 ## Port and Channel Capabilities
 

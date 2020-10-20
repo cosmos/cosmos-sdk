@@ -10,9 +10,9 @@ Proposed
 
 ## Abstract
 
-> "If you can't explain it simply, you don't understand it well enough." Provide a simplified and layman-accessible explanation of the ADR.
-> A short (~200 word) description of the issue being addressed.
-
+This ADR introduces a system for permissioned inter-module communication or object capabilites (Ocaps) leveraging the
+protobuf `Query` and `Msg` service definitions defined in [ADR 021](./adr-021-protobuf-query-encoding.md) and
+[ADR 031](./adr-031-msg-service.md).
 
 ## Context
 
@@ -40,20 +40,20 @@ However, these permissions don’t really do much. They control what modules can
 `BurnCoins` and `DelegateCoins***` methods, but for one there is no unique object capability token that controls access
 - just a simple string. So the `x/upgrade` module could mint tokens for the `x/staking` module simple by calling
 `MintCoins(“staking”)`. Furthermore, all modules which have access to these keeper methods, also have access to
-`SetBalance` negating any level of ocaps or even basic object-oriented encapsulation.
+`SetBalance` negating any other attempt at Ocaps and breaking even basic object-oriented encapsulation.
 
 ## Decision
 
-Starting from the work in [ADR 31](Protobuf Msg Services), we introduce the following inter-module communication system
+Starting from the work in [ADR 31](./adr-031-msg-service.md), we introduce the following inter-module communication system
 to replace the existing keeper paradigm. These two pieces together are intended to form the basis of a Cosmos SDK v1.0
 that provides the necessary stability and encapsulation guarantees that allow a thriving module ecosystem to emerge.
 
 ### New "Keeper" Paradigm
 
 In [ADR 021](./adr-021-protobuf-query-encoding.md), a mechanism for using protobuf service definitions to define queriers
-was introduced and in [ADR 31](), protobuf service definition representation of `Msg`s was added.
+was introduced and in [ADR 31](./adr-031-msg-service.md), a mechanism for using protobuf service to define `Msg`s was added.
 Protobuf service definitions generate two golang interfaces representing the client and server sides of a service plus
-some helper code. Ex:
+some helper code. Here is a minimal example for the bank `Send` `Msg`.
 
 ```go
 package bank
@@ -83,7 +83,7 @@ object capability system.
 
 This mechanism has the added benefits of:
 - reducing boilerplate through code generation, and
-- allowing for modules in other languages either through a VM like CosmWasm or sub-processes using gRPC 
+- allowing for modules in other languages either via a VM like CosmWasm or sub-processes using gRPC 
 
 ### Inter-module Communication
 
@@ -92,13 +92,13 @@ is needed. We introduce a new type, `ModuleKey`, to serve this role which we can
 corresponding to a module account.
 
 Whereas external clients use their private key to sign transactions containing `Msg`s where they are listed as signers,
-modules use their `ModuleKey` to send `Msg`s where they are listed as signers to other modules. For example, modules
-could use their `ModuleKey` to "sign" a `/cosmos.bank.Msg/Send` transaction to send coins from the module to another
+modules use their `ModuleKey` to send `Msg`s where they are listed as the sole signer to other modules. For example, modules
+could use their `ModuleKey` to "sign" a `/cosmos.bank.Msg/Send` transaction to send coins from the module's account to another
 account.
 
 `QueryClient`s could also be made with `ModuleKey`s, except that authentication isn't required.
 
-Ex:
+Here's an example of a hypothetical module `foo` interacting with `x/bank`:
 ```go
 package foo
 
@@ -137,16 +137,21 @@ func (key ModuleID) Address() []byte {
 
 In addition to being able to generate a `ModuleID` and address, a `ModuleKey` contains a special function closure called
 the `Invoker` which is the key to safe inter-module access. This function closure corresponds to the `Invoke` method in
-the `grpc.ClientConn` interface and under the hood is able to route messages to the approach `Msg` and `Query` handlers performing
-appropriate security checks on `Msg`s. This allows for even safer inter-module access than keeper's whose private member
-variables could be manipulated through reflection. Golang does not support reflection of a function closure's captured
-variables and direct manipulation of memory would be needed for a truly malicious module to bypass the `ModuleKey`
-security.
+the `grpc.ClientConn` interface and under the hood is able to route messages to the appropriate `Msg` and `Query` handlers
+performing appropriate security checks on `Msg`s. This allows for even safer inter-module access than keeper's whose
+private member variables could be manipulated through reflection. Golang does not support reflection on a function
+closure's captured variables and direct manipulation of memory would be needed for a truly malicious module to bypass
+the `ModuleKey` security.
 
 The two `ModuleKey` types are `RootModuleKey` and `DerivedModuleKey`:
 
 ```go
-func Invoker(method string) func(ctx context.Context, caller ModuleID, request, response interface{}, opts ...interface{}) error
+func Invoker(callInfo CallInfo) func(ctx context.Context, request, response interface{}, opts ...interface{}) error
+
+type CallInfo {
+  Method string
+  Caller ModuleID
+}
 
 type RootModuleKey struct {
   moduleName string
@@ -161,7 +166,7 @@ type DerivedModuleKey struct {
 ```
 
 A module can get access to a `DerivedModuleKey`, using the `Derive(path []byte)` method on `RootModuleKey` and then
-would use this key to authenticate `Msg`s from a sub-account:
+would use this key to authenticate `Msg`s from a sub-account. Ex:
 
 ```go
 package foo
@@ -175,19 +180,20 @@ func (fooMsgServer *MsgServer) Bar(ctx context.Context, req *MsgBar) (*MsgBarRes
 ```
 
 In this way, a module can gain permissioned access to a root account and any number of sub-accounts and send
-authenticated `Msg`s from these accounts. The `Invoker` `caller` parameter is used under the hood to
+authenticated `Msg`s from these accounts. The `Invoker` `callInfo.Caller` parameter is used under the hood to
 distinguish between different module accounts, but either way the function returned by `Invoker` only allows `Msg`s
 from either the root or a derived module account to pass through.
 
-Note that `Invoker` returns a function itself based on the method passed in. this will allow client implementations
-in the future that cache the invoke function for each method type avoiding the overhead of hash table method lookup,
-reducing the overhead of this inter-module communication method to bare minimum required for checking permissions.
+Note that `Invoker` itself returns a function closure based on the `CallInfo` passed in. This will allow client implementations
+in the future that cache the invoke function for each method type avoiding the overhead of hash table lookup.
+This would reduce the performance overhead of this inter-module communication method to the bare minimum required for
+checking permissions.
 
 ### `AppModule` Wiring and Requirements
 
-In [ADR 031](), the `AppModule.RegisterService(Configurator)` method was introduced. To support inter-module
-communication, we extend the `Configurator` interface to pass in the `ModuleKey` and to allow modules to specify
-their dependencies on other modules using `RequireServer`:
+In [ADR 031](./adr-031-msg-service.md), the `AppModule.RegisterService(Configurator)` method was introduced. To support
+inter-module communication, we extend the `Configurator` interface to pass in the `ModuleKey` and to allow modules t
+specify their dependencies on other modules using `RequireServer`:
 
 
 ```go
@@ -200,147 +206,59 @@ type Configurator interface {
 }
 ```
 
-The `ModuleKey` is passed to modules in the `RegisterService` method because this is the earliest point at which modules
-need it and this 
+The `ModuleKey` is passed to modules in the `RegisterService` method itself so that `RegisterServices` serves as a single
+entry point for configuring module services. This is intended to also have the side-effect of reducing boilerplate in
+app.go. For now, `ModuleKey`s will be created based on `AppModuleBasic.Name()`, but a more flexible system may be
+introduced in the future. The `ModuleManager` will handle creation of module accounts behind the scenes.
+
+Because modules do not get direct access to each other any more, modules may have unfulfilled dependencies. To make sure
+that module dependencies are resolved at startup, the `Configurator.RequireServer` method is added. The `ModuleManager`
+will make sure that all dependencies declared with `RequireServer` can be resolved before the app starts. An example
+module `foo` could declare it's dependency on `x/bank` like this:
+
+```go
+package foo
+
+func (am AppModule) RegisterServices(cfg Configurator) {
+  cfg.RequireServer((*bank.QueryServer)(nil))
+  cfg.RequireServer((*bank.MsgServer)(nil))
+}
+```
 
 ### Security Considerations
 
+In addition to checking for `ModuleKey` permissions, a few additional security precautions will need to be taken
+
+#### Recursion and Re-entry
+
+Methods which call other methods which eventually call the method which called them are a potential security threat.
+
+A simple way for the router system to deal with this is to maintain a call stack which prevents a module from
+being referenced more than once in the call stack. A simple `map[string]interface{}` table in the router could be use to
+efficiently perform this security check.
+
+#### Queries
+
 Queries in Cosmos SDK are generally un-permissioned so allowing one module to query another module should not pose
-any major security threats assuming basic precautions are taken. The basic precautions identified here are:
-- the `sdk.Context` which query methods have access to should not allow writing to the store
-- query methods should only be able to make queries against other modules, not send messages
-- query methods should not be able to make recursive calls to themselves
-
-We introduce a singleton `grpc.ClientConn` implementation as the var `sdk.ModuleQueryConn` for making inter-module
-queries. It would be used like this from within an example `MsgServer` implementation:
-
-Under the hood, a query router will be attached to the provided `context.Context` and `sdk.ModuleQueryConn`
-will retrieve that query router for routing queries.
-
-The attached query router will make sure the above security precautions are taken by:
-- disabling any ability for `QueryServer` methods to write to the store, 
-- disabling the ability for `QueryServer` methods to send `Msg`s to other modules,
-- keeping track of the call stack of method calls to disable recursion
-
-#### Module Keys
-
-```go
-func Invoker(ctx context.Context, caller ModuleID, method string, args, reply interface{}, opts ...grpc.CallOption) error
-
-type ModuleKey interface {
-  grpc.ClientConn
-  ID() ModuleID
-}
-
-type RootModuleKey struct {
-  moduleName string
-  invoker Invoker()
-}
-
-type DerivedModuleKey struct {
-  moduleName string
-  path []byte
-  msgInvoker Invoker()
-}
-
-```
-
-### Inter-Module Communication
-
-```go
-func (k keeper) DoSomething(ctx context.Context, req *MsgDoSomething) (*MsgDoSomethingResponse, error) {
-  // make a query
-  bankQueryClient := bank.NewQueryClient(sdk.ModuleQueryConn)
-  res, err := bankQueryClient.Balance(ctx, &QueryBalanceRequest{
-    Denom: "foo",
-    Address: ModuleKeyToBech32Address(k.moduleKey),
-  })
-  
-  // send a msg
-  bankMsgClient := bank.NewMsgClient(k.moduleKey)
-  res, err := bankMsgClient.Send(ctx, &MsgSend{
-    FromAddress: ModuleKeyToBech32Address(k.moduleKey),
-    ToAddress: ...,
-    Amount: ...,
-  })
-
-  // send a msg from a derived module account
-  derivedKey := k.moduleKey.DerivedKey([]byte("some-sub-pool"))
-  res, err := bankMsgClient.Send(ctx, &MsgSend{
-    FromAddress: ModuleKeyToBech32Address(derivedKey),
-    ToAddress: ...,
-    Amount: ...,
-  })
-}
-```
-
-### Hooks
-
-```proto
-service Hooks {
-  rpc AfterValidatorCreated(AfterValidatorCreatedRequest) returns (AfterValidatorCreatedResponse);
-}
-
-message AfterValidatorCreatedRequest {
-  string validator_address = 1;
-}
-
-message AfterValidatorCreatedResponse { }
-```
-
-
-```go
-func (k stakingKeeper) CreateValidator(ctx context.Context, req *MsgCreateValidator) (*MsgCreateValidatorResponse, error) {
-  ...
-
-  for moduleId := range k.modulesWithHook {
-    hookClient := NewHooksClient(moduleId)
-    _, _ := hooksClient.AfterValidatorCreated(ctx, &AfterValidatorCreatedRequest {ValidatorAddress: valAddr})
-  }
-  ...
-}
-```
-
-### Module Registration and Requirements
-
-```go
-type Configurator interface {
-  ModuleKey() RootModuleKey
-
-  MsgServer() grpc.Server
-  QueryServer() grpc.Server
-  HooksServer() grpc.Server
-
-  RequireMsgServer(msgServerInterface interface{})
-  RequireQueryServer(queryServerInterface interface{})
-}
-
-type Provisioner interface {
-  GetAdminMsgClientConn(msgServerInterface interface{}) grpc.ClientConn
-  GetPluginClientConn(pluginServerInterface interface{}) func(ModuleID) grpc.ClientConn
-}
-
-type Module interface {
-  Configure(Configurator)
-  Provision(Provisioner)
-}
-
-type ModuleManager interface {
-  GrantAdminAccess(module ModuleID, msgServerInterface interface{})
-  GrantPluginAccess(module ModuleID, pluginServerInterface interface{})
-}
-```
+any major security threats assuming basic precautions are taken. The basic precautions that the router system will
+need to take is making sure that the `sdk.Context` passed to query methods does not allow writing to the store. This
+can be done with a cache wrapper.
 
 ### Future Work
 
-A separate ADR will address the use cases of unrestricted, "admin" access and inter-module hooks
-(as used in `x/staking/keeper/hooks.go`).
+Separate ADRs will address the use cases of:
+* unrestricted, "admin" access
+* dynamic interface handler routing (ex. `x/gov` `Content` routing)
+* inter-module hooks (as used in `x/staking/keeper/hooks.go`)
 
+Other future improvements may include:
+* combining `StoreKey`s and `ModuleKey`s into a single interface so that modules have a single Ocaps handle
+* code generation which makes inter-module communication more performant
+* decoupling `ModuleKey` creation from `AppModuleBasic.Name()` so that app's can override root module account names
 
 ## Consequences
 
 > This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.
-
 
 ### Backwards Compatibility
 

@@ -1,39 +1,31 @@
-package ibc_test
+package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
-	ibc "github.com/cosmos/cosmos-sdk/x/ibc/core"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/keeper"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-const (
-	connectionID  = "connectionidone"
-	clientID      = "clientidone"
-	connectionID2 = "connectionidtwo"
-	clientID2     = "clientidtwo"
-
-	port1 = "firstport"
-	port2 = "secondport"
-
-	channel1 = "firstchannel"
-	channel2 = "secondchannel"
-
-	height = 10
-)
+const height = 10
 
 var (
 	timeoutHeight = clienttypes.NewHeight(0, 10000)
 	maxSequence   = uint64(10)
-	clientHeight  = clienttypes.NewHeight(0, 10)
 )
 
-type IBCTestSuite struct {
+type KeeperTestSuite struct {
 	suite.Suite
 
 	coordinator *ibctesting.Coordinator
@@ -43,7 +35,7 @@ type IBCTestSuite struct {
 }
 
 // SetupTest creates a coordinator with 2 test chains.
-func (suite *IBCTestSuite) SetupTest() {
+func (suite *KeeperTestSuite) SetupTest() {
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 
 	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
@@ -51,7 +43,7 @@ func (suite *IBCTestSuite) SetupTest() {
 }
 
 func TestIBCTestSuite(t *testing.T) {
-	suite.Run(t, new(IBCTestSuite))
+	suite.Run(t, new(KeeperTestSuite))
 }
 
 // tests the IBC handler receiving a packet on ordered and unordered channels.
@@ -59,7 +51,7 @@ func TestIBCTestSuite(t *testing.T) {
 // tests high level properties like ordering and basic sanity checks. More
 // rigorous testing of 'RecvPacket' and 'WriteReceipt' can be found in the
 // 04-channel/keeper/packet_test.go.
-func (suite *IBCTestSuite) TestHandleRecvPacket() {
+func (suite *KeeperTestSuite) TestHandleRecvPacket() {
 	var (
 		packet channeltypes.Packet
 	)
@@ -143,8 +135,6 @@ func (suite *IBCTestSuite) TestHandleRecvPacket() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest() // reset
 
-			handler := ibc.NewHandler(*suite.chainB.App.IBCKeeper)
-
 			tc.malleate()
 
 			// get proof of packet commitment from chainA
@@ -154,13 +144,13 @@ func (suite *IBCTestSuite) TestHandleRecvPacket() {
 			msg := channeltypes.NewMsgRecvPacket(packet, proof, proofHeight, suite.chainB.SenderAccount.GetAddress())
 
 			// ante-handle RecvPacket
-			_, err := handler(suite.chainB.GetContext(), msg)
+			_, err := keeper.Keeper.RecvPacket(*suite.chainB.App.IBCKeeper, sdk.WrapSDKContext(suite.chainB.GetContext()), msg)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
 
 				// replay should fail since state changes occur
-				_, err := handler(suite.chainB.GetContext(), msg)
+				_, err := keeper.Keeper.RecvPacket(*suite.chainB.App.IBCKeeper, sdk.WrapSDKContext(suite.chainB.GetContext()), msg)
 				suite.Require().Error(err)
 
 				// verify ack was written
@@ -179,7 +169,7 @@ func (suite *IBCTestSuite) TestHandleRecvPacket() {
 // occurs. It test high level properties like ordering and basic sanity
 // checks. More rigorous testing of 'AcknowledgePacket' and 'AcknowledgementExecuted'
 // can be found in the 04-channel/keeper/packet_test.go.
-func (suite *IBCTestSuite) TestHandleAcknowledgePacket() {
+func (suite *KeeperTestSuite) TestHandleAcknowledgePacket() {
 	var (
 		packet channeltypes.Packet
 	)
@@ -303,8 +293,6 @@ func (suite *IBCTestSuite) TestHandleAcknowledgePacket() {
 			suite.SetupTest() // reset
 			ibctesting.TestHash = ibctesting.MockAcknowledgement
 
-			handler := ibc.NewHandler(*suite.chainA.App.IBCKeeper)
-
 			tc.malleate()
 
 			packetKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
@@ -312,13 +300,13 @@ func (suite *IBCTestSuite) TestHandleAcknowledgePacket() {
 
 			msg := channeltypes.NewMsgAcknowledgement(packet, ibctesting.MockAcknowledgement, proof, proofHeight, suite.chainA.SenderAccount.GetAddress())
 
-			_, err := handler(suite.chainA.GetContext(), msg)
+			_, err := keeper.Keeper.Acknowledgement(*suite.chainA.App.IBCKeeper, sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
 
 				// replay should an error
-				_, err := handler(suite.chainA.GetContext(), msg)
+				_, err := keeper.Keeper.Acknowledgement(*suite.chainA.App.IBCKeeper, sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 				suite.Require().Error(err)
 
 				// verify packet commitment was deleted on source chain
@@ -337,7 +325,7 @@ func (suite *IBCTestSuite) TestHandleAcknowledgePacket() {
 // high level properties like ordering and basic sanity checks. More
 // rigorous testing of 'TimeoutPacket' and 'TimeoutExecuted' can be found in
 // the 04-channel/keeper/timeout_test.go.
-func (suite *IBCTestSuite) TestHandleTimeoutPacket() {
+func (suite *KeeperTestSuite) TestHandleTimeoutPacket() {
 	var (
 		packet    channeltypes.Packet
 		packetKey []byte
@@ -427,21 +415,19 @@ func (suite *IBCTestSuite) TestHandleTimeoutPacket() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest() // reset
 
-			handler := ibc.NewHandler(*suite.chainA.App.IBCKeeper)
-
 			tc.malleate()
 
 			proof, proofHeight := suite.chainB.QueryProof(packetKey)
 
 			msg := channeltypes.NewMsgTimeout(packet, 1, proof, proofHeight, suite.chainA.SenderAccount.GetAddress())
 
-			_, err := handler(suite.chainA.GetContext(), msg)
+			_, err := keeper.Keeper.Timeout(*suite.chainA.App.IBCKeeper, sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
 
 				// replay should return an error
-				_, err := handler(suite.chainA.GetContext(), msg)
+				_, err := keeper.Keeper.Timeout(*suite.chainA.App.IBCKeeper, sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 				suite.Require().Error(err)
 
 				// verify packet commitment was deleted on source chain
@@ -460,7 +446,7 @@ func (suite *IBCTestSuite) TestHandleTimeoutPacket() {
 // commitment occurs. It tests high level properties like ordering and basic
 // sanity checks. More rigorous testing of 'TimeoutOnClose' and
 //'TimeoutExecuted' can be found in the 04-channel/keeper/timeout_test.go.
-func (suite *IBCTestSuite) TestHandleTimeoutOnClosePacket() {
+func (suite *KeeperTestSuite) TestHandleTimeoutOnClosePacket() {
 	var (
 		packet              channeltypes.Packet
 		packetKey           []byte
@@ -608,8 +594,6 @@ func (suite *IBCTestSuite) TestHandleTimeoutOnClosePacket() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest() // reset
 
-			handler := ibc.NewHandler(*suite.chainA.App.IBCKeeper)
-
 			tc.malleate()
 
 			proof, proofHeight := suite.chainB.QueryProof(packetKey)
@@ -619,13 +603,13 @@ func (suite *IBCTestSuite) TestHandleTimeoutOnClosePacket() {
 
 			msg := channeltypes.NewMsgTimeoutOnClose(packet, 1, proof, proofClosed, proofHeight, suite.chainA.SenderAccount.GetAddress())
 
-			_, err := handler(suite.chainA.GetContext(), msg)
+			_, err := keeper.Keeper.TimeoutOnClose(*suite.chainA.App.IBCKeeper, sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
 
 				// replay should return an error
-				_, err := handler(suite.chainA.GetContext(), msg)
+				_, err := keeper.Keeper.TimeoutOnClose(*suite.chainA.App.IBCKeeper, sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 				suite.Require().Error(err)
 
 				// verify packet commitment was deleted on source chain
@@ -636,5 +620,142 @@ func (suite *IBCTestSuite) TestHandleTimeoutOnClosePacket() {
 				suite.Require().Error(err)
 			}
 		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestUpgradeClient() {
+	var (
+		clientA        string
+		upgradedClient exported.ClientState
+		upgradeHeight  exported.Height
+		msg            *clienttypes.MsgUpgradeClient
+	)
+
+	newClientHeight := clienttypes.NewHeight(1, 1)
+
+	cases := []struct {
+		name    string
+		setup   func()
+		expPass bool
+	}{
+		{
+			name: "successful upgrade",
+			setup: func() {
+
+				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod+ibctesting.TrustingPeriod, ibctesting.MaxClockDrift, newClientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
+
+				// upgrade Height is at next block
+				upgradeHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
+
+				// zero custom fields and store in upgrade store
+				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(upgradeHeight.GetVersionHeight()), upgradedClient)
+
+				// commit upgrade store changes and update clients
+
+				suite.coordinator.CommitBlock(suite.chainB)
+				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
+				suite.Require().NoError(err)
+
+				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
+				suite.Require().True(found)
+
+				proofUpgrade, _ := suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(upgradeHeight.GetVersionHeight())), cs.GetLatestHeight().GetVersionHeight())
+
+				msg, err = clienttypes.NewMsgUpgradeClient(clientA, upgradedClient, upgradeHeight, proofUpgrade, suite.chainA.SenderAccount.GetAddress())
+				suite.Require().NoError(err)
+			},
+			expPass: true,
+		},
+		{
+			name: "invalid upgrade: msg.ClientState does not contain valid clientstate",
+			setup: func() {
+
+				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
+				suite.Require().True(found)
+
+				// upgrade Height is at next block
+				upgradeHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
+
+				proofUpgrade, _ := suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(upgradeHeight.GetVersionHeight())), cs.GetLatestHeight().GetVersionHeight())
+
+				consState := ibctmtypes.NewConsensusState(time.Now(), commitmenttypes.NewMerkleRoot([]byte("app_hash")), []byte("next_vals_hash"))
+				consAny, err := clienttypes.PackConsensusState(consState)
+				suite.Require().NoError(err)
+
+				height, _ := upgradeHeight.(clienttypes.Height)
+
+				msg = &clienttypes.MsgUpgradeClient{ClientId: clientA, ClientState: consAny, UpgradeHeight: &height, ProofUpgrade: proofUpgrade, Signer: suite.chainA.SenderAccount.GetAddress().String()}
+			},
+			expPass: false,
+		},
+		{
+			name: "invalid clientstate",
+			setup: func() {
+
+				upgradedClient = ibctmtypes.NewClientState("", ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod+ibctesting.TrustingPeriod, ibctesting.MaxClockDrift, newClientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
+
+				// upgrade Height is at next block
+				upgradeHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
+
+				// zero custom fields and store in upgrade store
+				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(upgradeHeight.GetVersionHeight()), upgradedClient)
+
+				// commit upgrade store changes and update clients
+
+				suite.coordinator.CommitBlock(suite.chainB)
+				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
+				suite.Require().NoError(err)
+
+				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
+				suite.Require().True(found)
+
+				proofUpgrade, _ := suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(upgradeHeight.GetVersionHeight())), cs.GetLatestHeight().GetVersionHeight())
+
+				msg, err = clienttypes.NewMsgUpgradeClient(clientA, upgradedClient, upgradeHeight, proofUpgrade, suite.chainA.SenderAccount.GetAddress())
+				suite.Require().NoError(err)
+			},
+			expPass: false,
+		},
+		{
+			name: "VerifyUpgrade fails",
+			setup: func() {
+
+				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod+ibctesting.TrustingPeriod, ibctesting.MaxClockDrift, newClientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
+
+				// upgrade Height is at next block
+				upgradeHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
+
+				// zero custom fields and store in upgrade store
+				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(upgradeHeight.GetVersionHeight()), upgradedClient)
+
+				// commit upgrade store changes and update clients
+
+				suite.coordinator.CommitBlock(suite.chainB)
+				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
+				suite.Require().NoError(err)
+
+				msg, err = clienttypes.NewMsgUpgradeClient(clientA, upgradedClient, upgradeHeight, nil, suite.chainA.SenderAccount.GetAddress())
+				suite.Require().NoError(err)
+			},
+			expPass: false,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		clientA, _ = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+
+		tc.setup()
+
+		_, err := keeper.Keeper.UpgradeClient(*suite.chainA.App.IBCKeeper, sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+
+		if tc.expPass {
+			suite.Require().NoError(err, "upgrade handler failed on valid case: %s", tc.name)
+			newClient, ok := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
+			suite.Require().True(ok)
+			suite.Require().Equal(upgradedClient, newClient)
+		} else {
+			suite.Require().Error(err, "upgrade handler passed on invalid case: %s", tc.name)
+		}
 	}
 }

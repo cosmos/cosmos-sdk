@@ -15,8 +15,6 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgDelegate{}, "cosmos-sdk/MsgDelegate", nil)
 	cdc.RegisterConcrete(&MsgUndelegate{}, "cosmos-sdk/MsgUndelegate", nil)
 	cdc.RegisterConcrete(&MsgBeginRedelegate{}, "cosmos-sdk/MsgBeginRedelegate", nil)
-	// TODO: do we need this?
-	// cdc.RegisterConcrete(&Validator{}, "cosmos-sdk/Validator", nil)
 }
 
 // RegisterInterfaces registers the x/staking interfaces types with the interface registry

@@ -185,6 +185,7 @@ func (k Keeper) UpdateValidatorCommission(ctx sdk.Context,
 
 // remove the validator record and associated indexes
 // except for the bonded validator index which is only handled in ApplyAndReturnTendermintUpdates
+// TODO, this function panics, and it's not good.
 func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	// first retrieve the old validator record
 	validator, found := k.GetValidator(ctx, address)
@@ -202,7 +203,6 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 
 	valConsAddr, err := validator.GetConsAddr()
 	if err != nil {
-		// TODO, this function shouldn't panic
 		panic(err)
 	}
 

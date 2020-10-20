@@ -3,7 +3,6 @@ package types
 import (
 	"sort"
 
-	"github.com/tendermint/tendermint/crypto"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -53,10 +52,9 @@ func ValidateBasic(hi HistoricalInfo) error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (hi *HistoricalInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (hi *HistoricalInfo) UnpackInterfaces(c codectypes.AnyUnpacker) error {
 	for i := range hi.Valset {
-		var pk crypto.PubKey
-		if err := unpacker.UnpackAny(hi.Valset[i].ConsensusPubkey, &pk); err != nil {
+		if err := hi.Valset[i].UnpackInterfaces(c); err != nil {
 			return err
 		}
 	}

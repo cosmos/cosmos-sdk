@@ -2,7 +2,6 @@ package types
 
 import (
 	"math/rand"
-	"reflect"
 	"sort"
 	"testing"
 
@@ -271,7 +270,7 @@ func TestValidatorsSortDeterminism(t *testing.T) {
 		})
 
 		Validators(vals).Sort()
-		require.True(t, reflect.DeepEqual(sortedVals, vals), "Validator sort returned different slices")
+		require.Equal(t, sortedVals, vals, "Validator sort returned different slices")
 	}
 }
 

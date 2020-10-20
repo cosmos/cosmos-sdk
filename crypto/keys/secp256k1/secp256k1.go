@@ -211,7 +211,7 @@ func (pubKey *PubKey) AsTmPubKey() crypto.PubKey {
 	return tmesecp256k1.PubKey(pubKey.Key)
 }
 
-// FromTmEd25519 converts a Tendermint ED25519 pubkey into our own Secp256k1
+// FromTmSecp256k1 converts a Tendermint Secp256k1 pubkey into our own Secp256k1
 // PubKey.
 func FromTmSecp256k1(pubKey crypto.PubKey) (*PubKey, error) {
 	tmPk, ok := pubKey.(tmesecp256k1.PubKey)

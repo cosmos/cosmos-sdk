@@ -432,14 +432,23 @@ func (v Validator) RemoveDelShares(delShares sdk.Dec) (Validator, sdk.Int) {
 
 // MinEqual defines a more minimum set of equality conditions when comparing two
 // validators.
-func (v Validator) MinEqual(other Validator) bool {
-	return v.ConsensusPubkey == other.ConsensusPubkey &&
-		(v.OperatorAddress == other.OperatorAddress) &&
+func (v *Validator) MinEqual(other *Validator) bool {
+	return v.ConsensusPubkey.Equal(other.ConsensusPubkey) &&
+		v.OperatorAddress == other.OperatorAddress &&
 		v.Status == other.Status &&
 		v.Tokens.Equal(other.Tokens) &&
 		v.DelegatorShares.Equal(other.DelegatorShares) &&
-		v.Description == other.Description &&
+		v.Description.Equal(other.Description) &&
 		v.Commission.Equal(other.Commission)
+}
+
+// Equal checks if the receiver equals the parameter
+func (v *Validator) Equal(v2 *Validator) bool {
+	return v.MinEqual(v2) &&
+		v.Jailed == v2.Jailed &&
+		v.UnbondingHeight == v2.UnbondingHeight &&
+		v.UnbondingTime.Equal(v2.UnbondingTime) &&
+		v.MinSelfDelegation.Equal(v2.MinSelfDelegation)
 }
 
 func (v Validator) IsJailed() bool        { return v.Jailed }
@@ -494,19 +503,4 @@ func (v Validator) GetDelegatorShares() sdk.Dec   { return v.DelegatorShares }
 func (v Validator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var pk crypto.PubKey
 	return unpacker.UnpackAny(v.ConsensusPubkey, &pk)
-}
-
-// Equals check if the receiver equals the parameter
-func (v *Validator) Equal(v2 *Validator) bool {
-	return v.OperatorAddress == v2.OperatorAddress &&
-		v.ConsensusPubkey.Equal(v2.ConsensusPubkey) &&
-		v.Jailed == v2.Jailed &&
-		v.Status == v2.Status &&
-		v.Tokens.Equal(v2.Tokens) &&
-		v.DelegatorShares.Equal(v2.DelegatorShares) &&
-		v.Description.Equal(v2.Description) &&
-		v.UnbondingHeight == v2.UnbondingHeight &&
-		v.UnbondingTime.Equal(v2.UnbondingTime) &&
-		v.Commission.Equal(v2.Commission) &&
-		v.MinSelfDelegation.Equal(v2.MinSelfDelegation)
 }

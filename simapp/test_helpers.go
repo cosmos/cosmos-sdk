@@ -93,7 +93,9 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	bondAmt := sdk.NewInt(1000000)
 
 	for _, val := range valSet.Validators {
-		pkAny, err := codectypes.PackAny(val.PubKey)
+		pk, err := ed25519.FromTmEd25519(val.PubKey)
+		require.NoError(t, err)
+		pkAny, err := codectypes.PackAny(pk)
 		require.NoError(t, err)
 		validator := stakingtypes.Validator{
 			OperatorAddress:   sdk.ValAddress(val.Address).String(),

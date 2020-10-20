@@ -7,12 +7,15 @@ import (
 
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
+	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
+	tmsecp256k1 "github.com/tendermint/tendermint/crypto/secp256k1"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/privval"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 )
 
 // ExportGenesisFile creates and writes the genesis configuration to disk. An
@@ -70,9 +73,17 @@ func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey 
 		return "", nil, err
 	}
 
-	valPubKey, err = ed25519.FromTmEd25519(tmValPubKey)
-	if err != nil {
-		return "", nil, err
+	switch pk := tmValPubKey.(type) {
+	case tmed25519.PubKey:
+		valPubKey, err = ed25519.FromTmEd25519(pk)
+		if err != nil {
+			return "", nil, err
+		}
+	case tmsecp256k1.PubKey:
+		valPubKey, err = secp256k1.FromTmSecp256k1(pk)
+		if err != nil {
+			return "", nil, err
+		}
 	}
 
 	return nodeID, valPubKey, nil

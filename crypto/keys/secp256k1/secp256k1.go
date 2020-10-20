@@ -9,13 +9,13 @@ import (
 	"math/big"
 
 	secp256k1 "github.com/btcsuite/btcd/btcec"
+	"github.com/tendermint/tendermint/crypto"
+	tmesecp256k1 "github.com/tendermint/tendermint/crypto/secp256k1"
 	"golang.org/x/crypto/ripemd160" // nolint: staticcheck // necessary for Bitcoin address format
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
-
-	"github.com/tendermint/tendermint/crypto"
 )
 
 var _ cryptotypes.PrivKey = &PrivKey{}
@@ -141,6 +141,7 @@ func GenPrivKeyFromSecret(secret []byte) *PrivKey {
 
 var _ cryptotypes.PubKey = &PubKey{}
 var _ codec.AminoMarshaler = &PubKey{}
+var _ cryptotypes.IntoTmPubKey = &PubKey{}
 
 // PubKeySize is comprised of 32 bytes for one field element
 // (the x-coordinate), plus one byte for the parity of the y-coordinate.
@@ -203,4 +204,20 @@ func (pubKey PubKey) MarshalAminoJSON() ([]byte, error) {
 // UnmarshalAminoJSON overrides Amino JSON marshalling.
 func (pubKey *PubKey) UnmarshalAminoJSON(bz []byte) error {
 	return pubKey.UnmarshalAmino(bz)
+}
+
+// AsTmPubKey converts our own PubKey into a Tendermint Secp256k1 pubkey.
+func (pubKey *PubKey) AsTmPubKey() crypto.PubKey {
+	return tmesecp256k1.PubKey(pubKey.Key)
+}
+
+// FromTmEd25519 converts a Tendermint ED25519 pubkey into our own Secp256k1
+// PubKey.
+func FromTmSecp256k1(pubKey crypto.PubKey) (*PubKey, error) {
+	tmPk, ok := pubKey.(tmesecp256k1.PubKey)
+	if !ok {
+		return nil, fmt.Errorf("expected %T, got %T", tmesecp256k1.PubKey{}, pubKey)
+	}
+
+	return &PubKey{Key: []byte(tmPk)}, nil
 }

@@ -25,12 +25,12 @@ import (
 // GenAppStateFromConfig gets the genesis app state from the config
 func GenAppStateFromConfig(cdc codec.JSONMarshaler, txEncodingConfig client.TxEncodingConfig,
 	config *cfg.Config, initCfg types.InitConfig, genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator,
-	validateMsgInGenesisFn types.ValidateMsgInGenesis,
+	validateGenesisMsgFn types.ValidateGenesisMsg,
 ) (appState json.RawMessage, err error) {
 
 	// process genesis transactions, else create default genesis.json
 	appGenTxs, persistentPeers, err := CollectTxs(
-		cdc, txEncodingConfig.TxJSONDecoder(), config.Moniker, initCfg.GenTxsDir, genDoc, genBalIterator, validateMsgInGenesisFn,
+		cdc, txEncodingConfig.TxJSONDecoder(), config.Moniker, initCfg.GenTxsDir, genDoc, genBalIterator, validateGenesisMsgFn,
 	)
 	if err != nil {
 		return appState, err
@@ -69,7 +69,7 @@ func GenAppStateFromConfig(cdc codec.JSONMarshaler, txEncodingConfig client.TxEn
 // CollectTxs processes and validates application's genesis Txs and returns
 // the list of appGenTxs, and persistent peers required to generate genesis.json.
 func CollectTxs(cdc codec.JSONMarshaler, txJSONDecoder sdk.TxDecoder, moniker, genTxsDir string,
-	genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator, validateMsgInGenesisFn types.ValidateMsgInGenesis,
+	genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator, validateGenesisMsgFn types.ValidateGenesisMsg,
 ) (appGenTxs []sdk.Tx, persistentPeers string, err error) {
 	// prepare a map of all balances in genesis state to then validate
 	// against the validators addresses
@@ -138,7 +138,7 @@ func CollectTxs(cdc codec.JSONMarshaler, txJSONDecoder sdk.TxDecoder, moniker, g
 		}
 
 		// message validation for initial transaction
-		appGenTxs, persistentPeers, addressesIPs, err = validateMsgInGenesisFn(msgs[0], balancesMap, appGenTxs,
+		appGenTxs, persistentPeers, addressesIPs, err = validateGenesisMsgFn(msgs[0], balancesMap, appGenTxs,
 			persistentPeers, addressesIPs, nodeAddrIP, moniker,
 		)
 		if err != nil {

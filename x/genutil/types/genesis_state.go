@@ -120,6 +120,6 @@ func ValidateGenesis(genesisState *GenesisState, txJSONDecoder sdk.TxDecoder) er
 	return nil
 }
 
-type ValidateMsgInGenesis func(msg sdk.Msg, balancesMap map[string]bankexported.GenesisBalance, appGenTxs []sdk.Tx,
+type ValidateGenesisMsg func(msg sdk.Msg, balancesMap map[string]bankexported.GenesisBalance, appGenTxs []sdk.Tx,
 	persistentPeers string, addressesIPs []string, nodeAddrIP string, moniker string,
 ) (genTxs []sdk.Tx, perPeers string, ips []string, err error)

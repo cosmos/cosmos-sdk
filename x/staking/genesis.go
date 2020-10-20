@@ -301,8 +301,8 @@ func ValidateAccountParamsInGenesis(
 	return nil
 }
 
-// ValidateMsgInGenesis is used in collect-gentx to verify a genesis message
-func ValidateMsgInGenesis(msg sdk.Msg, balancesMap map[string]bankexported.GenesisBalance, appGenTxs []sdk.Tx,
+// ValidateGenesisMsg is used in collect-gentx to verify a genesis message
+func ValidateGenesisMsg(msg sdk.Msg, balancesMap map[string]bankexported.GenesisBalance, appGenTxs []sdk.Tx,
 	persistentPeers string, addressesIPs []string, nodeAddrIP string, moniker string,
 ) (genTxs []sdk.Tx, perPeers string, ips []string, err error) {
 	createValMsg := msg.(*types.MsgCreateValidator)

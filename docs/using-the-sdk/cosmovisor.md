@@ -84,58 +84,71 @@ for those who wish to sync a fullnode from start.
 The `DAEMON` specific code and operations (e.g. tendermint config, the application db, syncing blocks, etc) are performed as normal.
 Application binaries' directives such as command-line flags and environment variables work normally.
 
-## Example
+## Example: simd
 
-1) Install cosmovisor 
-`go get github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor`
+The following instructions provide a demonstration of `cosmovisor`'s integration with the `simd` application
+shipped along the Cosmos SDK's source code.
 
-2) Compile simd from sdk
+First compile `simd`:
+
 ```
 cd cosmos-sdk/
 make build
 ```
 
-3) Setup simd node using following instructions
+Create a new key and setup the `simd` node:
+
 ```
 rm -rf $HOME/.simapp
-
+./build/simd keys --keyring-backend=test add validator
 ./build/simd init testing --chain-id test
-
-./build/simd add-genesis-account $(./build/simd keys show validator -a) 1000000000stake,1000000000validatortoken
-
+./build/simd add-genesis-account --keyring-backend=test $(./build/simd keys --keyring-backend=test show validator -a) 1000000000stake,1000000000validatortoken
 ./build/simd gentx validator --chain-id test
-
 ./build/simd collect-gentxs
 ```
 
-4) Set the required environment variables:
+Set the required environment variables:
+
 ```
 export DAEMON_NAME=simd         # binary name
 export DAEMON_HOME=$HOME/.simapp  # daemon's home directory
 ```
 
-5) Create the cosmovisor’s genesis sub-directories and deploy the binary:
+Create the `cosmovisor`’s genesis folders and deploy the binary:
+
 ```
 mkdir -p $DAEMON_HOME/cosmovisor/genesis/bin
 cp ./build/simd $DAEMON_HOME/cosmovisor/genesis/bin
 ```
 
-6) Change `voting_params.voting_period` in `.gaiad/config/genesis.json` to a reduced time ~5 minutes(300s)
+For the sake of this demonstration, we would amend `voting_params.voting_period` in `.simapp/config/genesis.json` to a reduced time ~5 minutes (300s) and eventually launch `cosmosvisor`:
 
-7) Start the daemon using cosmovisor
-`cosmovisor start`
+```
+cosmovisor start
+```
 
-8) Submit a software upgrade proposal
-`./build/simd tx gov submit-proposal software-upgrade test1 --title "test1" --description "upgrade"  --from validator --upgrade-height 100 --deposit 10000000stake -y --chain-id test`
- 
-9) Query the proposal to ensure proposal has been created
-`./build/simd query gov proposal 1`
- 
-10) Vote for the proposal with yes
+Submit a software upgrade proposal:
 
- `./build/simd tx gov vote 1 yes --from validator -y --chain-id test`
+```
+./build/simd tx gov submit-proposal software-upgrade test1 --title "upgrade-demo" --description "upgrade"  --from validator --upgrade-height 100 --deposit 10000000stake -y --chain-id test
+```
  
-11) Add the following code snippet to sdk/simapp/app.go
+Query the proposal to ensure it was correctly broadcast and added to a block:
+
+```
+./build/simd query gov proposal 1
+```
+ 
+Submit a `Yes` vote for the upgrade proposal:
+
+```
+./build/simd tx gov vote 1 yes --from validator -y --chain-id test
+```
+
+For the sake of this demonstration, we will hardcode a modification in `simapp` to simulate a code change.
+In `simapp/app.go`, find the line containing the upgrade Keeper initialisation, it should look like
+`app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath)`.
+After that line, add the following snippet:
 
  ```
  app.UpgradeKeeper.SetUpgradeHandler("test1", func(ctx sdk.Context, plan upgradetypes.Plan) {
@@ -151,12 +164,11 @@ cp ./build/simd $DAEMON_HOME/cosmovisor/genesis/bin
 	})
 ```
 
-12) Comple a new binary using the updated app.go and move it to cosmosvisor/upgrades/<upgrade name>/bin
+Now recompile a new binary and place it in `$DAEMON_HOME/cosmosvisor/upgrades/test1/bin`:
 
 ```
 make build
-mkdir -p $DAEMON_HOME/cosmovisor/genesis/bin
 cp ./build/simd $DAEMON_HOME/cosmovisor/upgrades/test1/bin
 ```
 
-13)The upgrade should occur automatically at height 100
+The upgrade will occur automatically at height 100.

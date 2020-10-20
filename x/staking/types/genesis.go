@@ -36,7 +36,7 @@ func GetGenesisStateFromAppState(cdc codec.JSONMarshaler, appState map[string]js
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (g *GenesisState) UnpackInterfaces(c codectypes.AnyUnpacker) error {
+func (g GenesisState) UnpackInterfaces(c codectypes.AnyUnpacker) error {
 	for i := range g.Validators {
 		if err := g.Validators[i].UnpackInterfaces(c); err != nil {
 			return err

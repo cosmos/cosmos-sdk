@@ -101,7 +101,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	stakingGenesis := types.NewGenesisState(params, validators, delegations)
 
-	bz, err := json.MarshalIndent(&stakingGenesis, "", " ")
+	bz, err := json.MarshalIndent(&stakingGenesis.Params, "", " ")
 	if err != nil {
 		panic(err)
 	}

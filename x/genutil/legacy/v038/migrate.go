@@ -19,14 +19,14 @@ import (
 func Migrate(appState types.AppMap, _ client.Context) types.AppMap {
 	v036Codec := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(v036Codec)
-	v036distr.RegisterLegacyAminoCodec(v036Codec)
 	v036gov.RegisterLegacyAminoCodec(v036Codec)
+	v036distr.RegisterLegacyAminoCodec(v036Codec)
 
 	v038Codec := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(v038Codec)
 	v038auth.RegisterLegacyAminoCodec(v038Codec)
-	v036distr.RegisterLegacyAminoCodec(v038Codec)
 	v036gov.RegisterLegacyAminoCodec(v038Codec)
+	v036distr.RegisterLegacyAminoCodec(v038Codec)
 
 	if appState[v036genaccounts.ModuleName] != nil {
 		// unmarshal relative source genesis application state

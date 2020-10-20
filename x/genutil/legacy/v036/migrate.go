@@ -9,7 +9,6 @@ import (
 	v036bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v036"
 	v034distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v034"
 	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v036"
-	v036distribution "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v036"
 	v034genAccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v034"
 	v036genAccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v036"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -28,7 +27,7 @@ func Migrate(appState types.AppMap, _ client.Context) types.AppMap {
 	v036Codec := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(v036Codec)
 	v036gov.RegisterLegacyAminoCodec(v036Codec)
-	v036distribution.RegisterLegacyAminoCodec(v036Codec)
+	v036distr.RegisterLegacyAminoCodec(v036Codec)
 
 	// migrate genesis accounts state
 	if appState[v034genAccounts.ModuleName] != nil {

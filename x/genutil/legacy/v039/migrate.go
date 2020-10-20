@@ -19,14 +19,14 @@ func Migrate(appState types.AppMap, _ client.Context) types.AppMap {
 	v038Codec := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(v038Codec)
 	v038auth.RegisterLegacyAminoCodec(v038Codec)
-	v036distr.RegisterLegacyAminoCodec(v038Codec)
 	v036gov.RegisterLegacyAminoCodec(v038Codec)
+	v036distr.RegisterLegacyAminoCodec(v038Codec)
 
 	v039Codec := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(v039Codec)
 	v039auth.RegisterLegacyAminoCodec(v039Codec)
-	v036distr.RegisterLegacyAminoCodec(v039Codec)
 	v036gov.RegisterLegacyAminoCodec(v039Codec)
+	v036distr.RegisterLegacyAminoCodec(v039Codec)
 
 	// migrate x/auth state (JSON serialization only)
 	if appState[v038auth.ModuleName] != nil {

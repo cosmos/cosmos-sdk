@@ -39,8 +39,8 @@ func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 	v039Codec := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(v039Codec)
 	v039auth.RegisterLegacyAminoCodec(v039Codec)
-	v036distr.RegisterLegacyAminoCodec(v039Codec)
 	v036gov.RegisterLegacyAminoCodec(v039Codec)
+	v036distr.RegisterLegacyAminoCodec(v039Codec)
 
 	v040Codec := clientCtx.JSONMarshaler
 

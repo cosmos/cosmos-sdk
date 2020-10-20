@@ -59,7 +59,7 @@ func TestUpdateDescription(t *testing.T) {
 func TestABCIValidatorUpdate(t *testing.T) {
 	validator := newValidator(t, valAddr1, pk1)
 	abciVal := validator.ABCIValidatorUpdate()
-	consPk, err := validator.GetConsPubKey()
+	consPk, err := validator.TmConsPubKey()
 	require.NoError(t, err)
 	pk, err := encoding.PubKeyToProto(consPk)
 	require.NoError(t, err)
@@ -70,7 +70,7 @@ func TestABCIValidatorUpdate(t *testing.T) {
 func TestABCIValidatorUpdateZero(t *testing.T) {
 	validator := newValidator(t, valAddr1, pk1)
 	abciVal := validator.ABCIValidatorUpdateZero()
-	consPk, err := validator.GetConsPubKey()
+	consPk, err := validator.TmConsPubKey()
 	require.NoError(t, err)
 	pk, err := encoding.PubKeyToProto(consPk)
 	require.NoError(t, err)

@@ -25,10 +25,10 @@ func (k Keeper) AfterValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _
 	}
 }
 
-// When a validator is created, add the address-pubkey relation.
+// AfterValidatorCreated adds the address-pubkey relation when a validator is created.
 func (k Keeper) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error {
 	validator := k.sk.Validator(ctx, valAddr)
-	consPk, err := validator.GetConsPubKey()
+	consPk, err := validator.TmConsPubKey()
 	if err != nil {
 		return err
 	}
@@ -36,7 +36,7 @@ func (k Keeper) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) e
 	return nil
 }
 
-// When a validator is removed, delete the address-pubkey relation.
+// AfterValidatorRemoved deletes the address-pubkey relation when a validator is removed,
 func (k Keeper) AfterValidatorRemoved(ctx sdk.Context, address sdk.ConsAddress) {
 	k.deleteAddrPubkeyRelation(ctx, crypto.Address(address))
 }

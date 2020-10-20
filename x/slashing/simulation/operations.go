@@ -65,7 +65,7 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnjail, "validator is not jailed"), nil, nil
 		}
 
-		cons, err := validator.GetConsPubKey()
+		cons, err := validator.TmConsPubKey()
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnjail, "unable to get validator consensus key"), nil, err
 		}

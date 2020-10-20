@@ -238,7 +238,7 @@ func (d Description) EnsureLength() (Description, error) {
 // ABCIValidatorUpdate returns an abci.ValidatorUpdate from a staking validator type
 // with the full validator power
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
-	consPk, err := v.GetConsPubKey()
+	consPk, err := v.TmConsPubKey()
 	if err != nil {
 		panic(err)
 	}
@@ -256,7 +256,7 @@ func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 // ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staking validator type
 // with zero power used for validator updates.
 func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
-	consPk, err := v.GetConsPubKey()
+	consPk, err := v.TmConsPubKey()
 	if err != nil {
 		panic(err)
 	}
@@ -273,7 +273,7 @@ func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 
 // ToTmValidator casts an SDK validator to a tendermint type Validator.
 func (v Validator) ToTmValidator() (*tmtypes.Validator, error) {
-	consPk, err := v.GetConsPubKey()
+	consPk, err := v.TmConsPubKey()
 	if err != nil {
 		return nil, err
 	}
@@ -466,8 +466,8 @@ func (v Validator) GetOperator() sdk.ValAddress {
 	return addr
 }
 
-// GetConsPubKey casts Validator.ConsensusPubkey to crypto.PubKey
-func (v Validator) GetConsPubKey() (crypto.PubKey, error) {
+// TmConsPubKey casts Validator.ConsensusPubkey to crypto.PubKey
+func (v Validator) TmConsPubKey() (crypto.PubKey, error) {
 	pk, ok := v.ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "Expecting crypto.PubKey, got %T", pk)
@@ -481,12 +481,12 @@ func (v Validator) GetConsPubKey() (crypto.PubKey, error) {
 	if intoTmPk, ok := pk.(cryptotypes.IntoTmPubKey); ok {
 		return intoTmPk.AsTmPubKey(), nil
 	}
-	return pk, nil
+	return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "Logic error: ConsensusPubkey must be an SDK key and SDK PubKey types must be convertible to tendermint PubKey; got: %T", pk)
 }
 
 // GetConsAddr extracts Consensus key address
 func (v Validator) GetConsAddr() (sdk.ConsAddress, error) {
-	pk, err := v.GetConsPubKey()
+	pk, err := v.TmConsPubKey()
 	if err != nil {
 		return sdk.ConsAddress{}, err
 	}

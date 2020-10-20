@@ -3,6 +3,7 @@ package types
 import (
 	"sort"
 
+	"github.com/gogo/protobuf/proto"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -53,7 +54,7 @@ func ValidateBasic(hi HistoricalInfo) error {
 
 // Equal checks if receiver is equal to the parameter
 func (hi *HistoricalInfo) Equal(hi2 *HistoricalInfo) bool {
-	if hi.Header.String() != hi2.Header.String() {
+	if !proto.Equal(&hi.Header, &hi2.Header) {
 		return false
 	}
 	if len(hi.Valset) != len(hi2.Valset) {

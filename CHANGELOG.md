@@ -39,8 +39,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Client Breaking Changes
 
 * __Modules__
-  * (x/staking) [\#7499](https://github.com/cosmos/cosmos-sdk/pull/7499) `BondStatus` is now a protobuf `enum` instead of an `int32`, and JSON serialized using its protobuf name, so expect names like `BOND_STATUS_UNBONDING` as opposed to `Unbonding`.
-  * (x/evidence) [\#7538](https://github.com/cosmos/cosmos-sdk/pull/7538) The ABCI's `Result.Data` field of `MsgSubmitEvidence` does not contain the raw evidence's hash, but the encoded `MsgSubmitEvidenceResponse` struct.
+  * (x/staking) [\#7499](https://github.com/cosmos/cosmos-sdk/pull/7499) `BondStatus` is now a protobuf `enum` instead
+    of an `int32`, and JSON serialized using its protobuf name, so expect names like `BOND_STATUS_UNBONDING` as opposed
+    to `Unbonding`.
+  * (x/staking) [\#7556](https://github.com/cosmos/cosmos-sdk/pull/7556) The ABCI's `Result.Data` field for
+    `MsgBeginRedelegate` and `MsgUndelegate` responses does not contain custom binary marshaled `completionTime`, but the
+    protobuf encoded `MsgBeginRedelegateResponse` and `MsgUndelegateResponse` structs respectively
+  * (x/evidence) [\#7538](https://github.com/cosmos/cosmos-sdk/pull/7538) The ABCI's `Result.Data` field for
+    `MsgSubmitEvidence` responses does not contain the raw evidence's hash, but the protobuf encoded
+    `MsgSubmitEvidenceResponse` struct.
+  * (x/gov) [\#7533](https://github.com/cosmos/cosmos-sdk/pull/7533) The ABCI's `Result.Data` field for
+    `MsgSubmitProposal` responses does not contain a raw binary encoding of the `proposalID`, but the protobuf encoded
+    `MsgSubmitSubmitProposalResponse` struct.
 
 ### API Breaking
 

@@ -146,7 +146,8 @@ func interceptConfigs(rootViper *viper.Viper) (*tmcfg.Config, error) {
 
 	conf := tmcfg.DefaultConfig()
 
-	if _, err := os.Stat(configFile); os.IsNotExist(err) {
+	switch _, err := os.Stat(configFile); {
+	case os.IsNotExist(err):
 		tmcfg.EnsureRoot(rootDir)
 
 		if err = conf.ValidateBasic(); err != nil {
@@ -158,7 +159,11 @@ func interceptConfigs(rootViper *viper.Viper) (*tmcfg.Config, error) {
 		conf.P2P.SendRate = 5120000
 		conf.Consensus.TimeoutCommit = 5 * time.Second
 		tmcfg.WriteConfigFile(configFile, conf)
-	} else {
+
+	case err != nil:
+		return nil, err
+
+	default:
 		rootViper.SetConfigType("toml")
 		rootViper.SetConfigName("config")
 		rootViper.AddConfigPath(configPath)

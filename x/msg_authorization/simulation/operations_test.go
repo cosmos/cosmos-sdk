@@ -130,7 +130,7 @@ func (suite *SimTestSuite) TestSimulateExecAuthorization() {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
 	initAmt := sdk.TokensFromConsensusPower(200000)
-	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
+	initCoins := sdk.NewCoins(sdk.NewCoin("foo", initAmt))
 
 	granter := accounts[0]
 	grantee := accounts[1]

@@ -51,6 +51,22 @@ func ValidateBasic(hi HistoricalInfo) error {
 	return nil
 }
 
+// Equal checks if receiver is equal to the parameter
+func (hi *HistoricalInfo) Equal(hi2 *HistoricalInfo) bool {
+	if hi.Header.String() != hi2.Header.String() {
+		return false
+	}
+	if len(hi.Valset) != len(hi2.Valset) {
+		return false
+	}
+	for i := range hi.Valset {
+		if !hi.Valset[i].Equal(&hi2.Valset[i]) {
+			return false
+		}
+	}
+	return true
+}
+
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (hi *HistoricalInfo) UnpackInterfaces(c codectypes.AnyUnpacker) error {
 	for i := range hi.Valset {

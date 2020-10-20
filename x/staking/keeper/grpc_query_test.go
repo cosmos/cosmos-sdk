@@ -575,7 +575,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryHistoricalInfo() {
 			if tc.expPass {
 				suite.NoError(err)
 				suite.NotNil(res)
-				suite.Equal(&hi, res.Hist)
+				suite.True(hi.Equal(res.Hist))
 			} else {
 				suite.Error(err)
 				suite.Nil(res)

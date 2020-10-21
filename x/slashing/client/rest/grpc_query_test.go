@@ -1,7 +1,6 @@
 package rest_test
 
 import (
-	"encoding/base64"
 	"fmt"
 	"testing"
 	"time"
@@ -46,9 +45,7 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
-	// TODO: need to pass bech32 string instead of base64 encoding string
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	consAddrBase64 := base64.URLEncoding.EncodeToString(sdk.ConsAddress(val.PubKey.Address()))
+	consAddr := sdk.ConsAddress(val.PubKey.Address()).String()
 
 	testCases := []struct {
 		name     string
@@ -69,7 +66,7 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 			&types.QuerySigningInfosResponse{
 				Info: []types.ValidatorSigningInfo{
 					{
-						Address:     sdk.ConsAddress(val.PubKey.Address()),
+						Address:     sdk.ConsAddress(val.PubKey.Address()).String(),
 						JailedUntil: time.Unix(0, 0),
 					},
 				},
@@ -80,7 +77,7 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 		},
 		{
 			"get signing info (height specific)",
-			fmt.Sprintf("%s/cosmos/slashing/v1beta1/signing_infos/%s", baseURL, consAddrBase64),
+			fmt.Sprintf("%s/cosmos/slashing/v1beta1/signing_infos/%s", baseURL, consAddr),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
@@ -88,7 +85,7 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 			&types.QuerySigningInfoResponse{},
 			&types.QuerySigningInfoResponse{
 				ValSigningInfo: types.ValidatorSigningInfo{
-					Address:     sdk.ConsAddress(val.PubKey.Address()),
+					Address:     sdk.ConsAddress(val.PubKey.Address()).String(),
 					JailedUntil: time.Unix(0, 0),
 				},
 			},

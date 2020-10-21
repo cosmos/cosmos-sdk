@@ -187,7 +187,14 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	var newStores = make(map[types.StoreKey]types.CommitKVStore)
 
 	for key, storeParams := range rs.storesParams {
-		store, err := rs.loadCommitStoreFromParams(key, rs.getCommitID(infos, key.Name()), storeParams)
+		commitID := rs.getCommitID(infos, key.Name())
+
+		// If it has been added, set the initial version
+		if upgrades.IsAdded(key.Name()) {
+			storeParams.initialVersion = uint64(ver) + 1
+		}
+
+		store, err := rs.loadCommitStoreFromParams(key, commitID, storeParams)
 		if err != nil {
 			return errors.Wrap(err, "failed to load store")
 		}
@@ -813,7 +820,15 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		panic("recursive MultiStores not yet supported")
 
 	case types.StoreTypeIAVL:
-		store, err := iavl.LoadStore(db, id, rs.lazyLoading)
+		var store types.CommitKVStore
+		var err error
+
+		if params.initialVersion == 0 {
+			store, err = iavl.LoadStore(db, id, rs.lazyLoading)
+		} else {
+			store, err = iavl.LoadStoreWithInitialVersion(db, id, rs.lazyLoading, params.initialVersion)
+		}
+
 		if err != nil {
 			return nil, err
 		}
@@ -868,9 +883,10 @@ func (rs *Store) buildCommitInfo(version int64) *types.CommitInfo {
 }
 
 type storeParams struct {
-	key types.StoreKey
-	db  dbm.DB
-	typ types.StoreType
+	key            types.StoreKey
+	db             dbm.DB
+	typ            types.StoreType
+	initialVersion uint64
 }
 
 func getLatestVersion(db dbm.DB) int64 {

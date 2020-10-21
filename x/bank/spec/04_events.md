@@ -11,7 +11,7 @@ The bank module emits the following events:
 ### MsgSend
 
 | Type     | Attribute Key | Attribute Value    |
-|----------|---------------|--------------------|
+| -------- | ------------- | ------------------ |
 | transfer | recipient     | {recipientAddress} |
 | transfer | amount        | {amount}           |
 | message  | module        | bank               |
@@ -21,7 +21,7 @@ The bank module emits the following events:
 ### MsgMultiSend
 
 | Type     | Attribute Key | Attribute Value    |
-|----------|---------------|--------------------|
+| -------- | ------------- | ------------------ |
 | transfer | recipient     | {recipientAddress} |
 | transfer | amount        | {amount}           |
 | message  | module        | bank               |

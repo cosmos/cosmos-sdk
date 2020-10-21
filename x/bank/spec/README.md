@@ -24,7 +24,7 @@ This module will be used in the Cosmos Hub.
 
 ## Supply
 
-The `supply` module:
+The `supply` functionality:
 
 - passively tracks the total supply of coins within a chain,
 - provides a pattern for modules to hold/interact with `Coins`, and
@@ -39,10 +39,10 @@ proposal is vetoed).
 
 ## Module Accounts
 
-The supply module introduces a new type of `auth.Account` which can be used by
-modules to allocate tokens and in special cases mint or burn tokens.  At a base
+The supply functionality introduces a new type of `auth.Account` which can be used by
+modules to allocate tokens and in special cases mint or burn tokens. At a base
 level these module accounts are capable of sending/receiving tokens to and from
-`auth.Account`s and other module accounts.  This design replaces previous
+`auth.Account`s and other module accounts. This design replaces previous
 alternative designs where, to hold tokens, modules would burn the incoming
 tokens from the sender account, and then track those tokens internally. Later,
 in order to send tokens, the module would need to effectively mint tokens
@@ -62,7 +62,7 @@ type ModuleAccount interface {
 ```
 
 > **WARNING!**
-Any module or message handler that allows either direct or indirect sending of funds must explicitly guarantee those funds cannot be sent to module accounts (unless allowed).
+> Any module or message handler that allows either direct or indirect sending of funds must explicitly guarantee those funds cannot be sent to module accounts (unless allowed).
 
 The supply `Keeper` also introduces new wrapper functions for the auth `Keeper`
 and the bank `Keeper` that are related to `ModuleAccount`s in order to be able
@@ -91,12 +91,12 @@ The available permissions are:
 
 1. **[State](01_state.md)**
 2. **[Keepers](02_keepers.md)**
-    - [Common Types](02_keepers.md#common-types)
-    - [BaseKeeper](02_keepers.md#basekeeper)
-    - [SendKeeper](02_keepers.md#sendkeeper)
-    - [ViewKeeper](02_keepers.md#viewkeeper)
+   - [Common Types](02_keepers.md#common-types)
+   - [BaseKeeper](02_keepers.md#basekeeper)
+   - [SendKeeper](02_keepers.md#sendkeeper)
+   - [ViewKeeper](02_keepers.md#viewkeeper)
 3. **[Messages](03_messages.md)**
-    - [MsgSend](03_messages.md#msgsend)
+   - [MsgSend](03_messages.md#msgsend)
 4. **[Events](04_events.md)**
-    - [Handlers](04_events.md#handlers)
+   - [Handlers](04_events.md#handlers)
 5. **[Parameters](05_params.md)**

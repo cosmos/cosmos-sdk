@@ -132,7 +132,28 @@ func (w *wrapper) GetFee() sdk.Coins {
 }
 
 func (w *wrapper) FeePayer() sdk.AccAddress {
+	feePayer := w.tx.AuthInfo.Fee.Payer
+	if feePayer != "" {
+		payerAddr, err := sdk.AccAddressFromBech32(feePayer)
+		if err != nil {
+			panic(err)
+		}
+		return payerAddr
+	}
+	// use first signer as default if no payer specified
 	return w.GetSigners()[0]
+}
+
+func (w *wrapper) FeeGranter() sdk.AccAddress {
+	feePayer := w.tx.AuthInfo.Fee.Granter
+	if feePayer != "" {
+		granterAddr, err := sdk.AccAddressFromBech32(feePayer)
+		if err != nil {
+			panic(err)
+		}
+		return granterAddr
+	}
+	return nil
 }
 
 func (w *wrapper) GetMemo() string {
@@ -184,10 +205,27 @@ func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
 
 	for i, msg := range msgs {
 		var err error
-		anys[i], err = codectypes.NewAnyWithValue(msg)
-		if err != nil {
-			return err
+		switch msg := msg.(type) {
+		case sdk.ServiceMsg:
+			{
+				bz, err := proto.Marshal(msg.Request)
+				if err != nil {
+					return err
+				}
+				anys[i] = &codectypes.Any{
+					TypeUrl: msg.MethodName,
+					Value:   bz,
+				}
+			}
+		default:
+			{
+				anys[i], err = codectypes.NewAnyWithValue(msg)
+				if err != nil {
+					return err
+				}
+			}
 		}
+
 	}
 
 	w.tx.Body.Messages = anys
@@ -230,6 +268,28 @@ func (w *wrapper) SetFeeAmount(coins sdk.Coins) {
 	}
 
 	w.tx.AuthInfo.Fee.Amount = coins
+
+	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
+	w.authInfoBz = nil
+}
+
+func (w *wrapper) SetFeePayer(feePayer sdk.AccAddress) {
+	if w.tx.AuthInfo.Fee == nil {
+		w.tx.AuthInfo.Fee = &tx.Fee{}
+	}
+
+	w.tx.AuthInfo.Fee.Payer = feePayer.String()
+
+	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
+	w.authInfoBz = nil
+}
+
+func (w *wrapper) SetFeeGranter(feeGranter sdk.AccAddress) {
+	if w.tx.AuthInfo.Fee == nil {
+		w.tx.AuthInfo.Fee = &tx.Fee{}
+	}
+
+	w.tx.AuthInfo.Fee.Granter = feeGranter.String()
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil

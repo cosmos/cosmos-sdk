@@ -8,10 +8,12 @@ order: 3
 
 Evidence is submitted through a `MsgSubmitEvidence` message:
 
-```go
-type MsgSubmitEvidence struct {
-  Evidence  Evidence
-  Submitter AccAddress
+```protobuf
+// MsgSubmitEvidence represents a message that supports submitting arbitrary
+// Evidence of misbehavior such as equivocation or counterfactual signing.
+message MsgSubmitEvidence {
+  string              submitter = 1;
+  google.protobuf.Any evidence  = 2;
 }
 ```
 

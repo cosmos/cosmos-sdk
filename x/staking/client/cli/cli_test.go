@@ -3,6 +3,7 @@
 package cli_test
 
 import (
+	"context"
 	json "encoding/json"
 	"fmt"
 	"strings"
@@ -10,12 +11,14 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
+	"github.com/tendermint/tendermint/proto/tendermint/crypto"
+	"github.com/tendermint/tendermint/rpc/client/http"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,6 +38,10 @@ type IntegrationTestSuite struct {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
+
+	if testing.Short() {
+		s.T().Skip("skipping test in unit-tests mode.")
+	}
 
 	cfg := network.DefaultConfig()
 	cfg.NumValidators = 2
@@ -234,7 +241,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidator() {
 			} else {
 				var result types.Validator
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
-				s.Require().Equal(val.ValAddress, result.OperatorAddress)
+				s.Require().Equal(val.ValAddress.String(), result.OperatorAddress)
 			}
 		})
 	}
@@ -317,8 +324,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegation() {
 			&types.DelegationResponse{},
 			&types.DelegationResponse{
 				Delegation: types.Delegation{
-					DelegatorAddress: val.Address,
-					ValidatorAddress: val2.ValAddress,
+					DelegatorAddress: val.Address.String(),
+					ValidatorAddress: val2.ValAddress.String(),
 					Shares:           sdk.NewDec(10),
 				},
 				Balance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)),
@@ -498,7 +505,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryUnbondingDelegations() {
 
 				s.Require().NoError(err)
 				s.Require().Len(ubds.UnbondingResponses, 1)
-				s.Require().Equal(ubds.UnbondingResponses[0].DelegatorAddress, val.Address)
+				s.Require().Equal(ubds.UnbondingResponses[0].DelegatorAddress, val.Address.String())
 			}
 		})
 	}
@@ -556,8 +563,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryUnbondingDelegation() {
 
 				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &ubd)
 				s.Require().NoError(err)
-				s.Require().Equal(ubd.DelegatorAddress, val.Address)
-				s.Require().Equal(ubd.ValidatorAddress, val.ValAddress)
+				s.Require().Equal(ubd.DelegatorAddress, val.Address.String())
+				s.Require().Equal(ubd.ValidatorAddress, val.ValAddress.String())
 				s.Require().Len(ubd.Entries, 1)
 			}
 		})
@@ -606,7 +613,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorUnbondingDelegations() {
 
 				s.Require().NoError(err)
 				s.Require().Len(ubds.UnbondingResponses, 1)
-				s.Require().Equal(ubds.UnbondingResponses[0].DelegatorAddress, val.Address)
+				s.Require().Equal(ubds.UnbondingResponses[0].DelegatorAddress, val.Address.String())
 			}
 		})
 	}
@@ -656,9 +663,9 @@ func (s *IntegrationTestSuite) TestGetCmdQueryRedelegations() {
 				s.Require().NoError(err)
 
 				s.Require().Len(redelegations.RedelegationResponses, 1)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress)
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress.String())
 			}
 		})
 	}
@@ -732,9 +739,9 @@ func (s *IntegrationTestSuite) TestGetCmdQueryRedelegation() {
 				s.Require().NoError(err)
 
 				s.Require().Len(redelegations.RedelegationResponses, 1)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress)
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress.String())
 			}
 		})
 	}
@@ -784,9 +791,9 @@ func (s *IntegrationTestSuite) TestGetCmdQueryRedelegationsFrom() {
 				s.Require().NoError(err)
 
 				s.Require().Len(redelegations.RedelegationResponses, 1)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress)
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress.String())
 			}
 		})
 	}
@@ -1257,6 +1264,75 @@ func (s *IntegrationTestSuite) TestNewCmdUnbond() {
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 			}
 		})
+	}
+}
+
+// TestBlockResults tests that the validator updates correctly show when
+// calling the /block_results RPC endpoint.
+// ref: https://github.com/cosmos/cosmos-sdk/issues/7401.
+func (s *IntegrationTestSuite) TestBlockResults() {
+	require := s.Require()
+	val := s.network.Validators[0]
+
+	// Create new account in the keyring.
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewDelegator", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	require.NoError(err)
+	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+
+	// Send some funds to the new account.
+	_, err = banktestutil.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		newAddr,
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	)
+	require.NoError(err)
+
+	// Use CLI to create a delegation from the new account to validator `val`.
+	delHeight, err := s.network.LatestHeight()
+	require.NoError(err)
+	cmd := cli.NewDelegateCmd()
+	_, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, []string{
+		val.ValAddress.String(),
+		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	})
+	require.NoError(err)
+
+	// Create a HTTP rpc client.
+	rpcClient, err := http.New(val.RPCAddress, "/websocket")
+
+	// Loop until we find a block result with the correct validator updates.
+	// By experience, it happens around 2 blocks after `delHeight`.
+	for {
+		latestHeight, err := s.network.LatestHeight()
+		require.NoError(err)
+
+		// Wait maximum 10 blocks, or else fail test.
+		if latestHeight > delHeight+10 {
+			s.Fail("timeout reached")
+		}
+
+		res, err := rpcClient.BlockResults(context.Background(), &latestHeight)
+		require.NoError(err)
+
+		if len(res.ValidatorUpdates) > 0 {
+			valUpdate := res.ValidatorUpdates[0]
+			require.Equal(
+				valUpdate.GetPubKey().Sum.(*crypto.PublicKey_Ed25519).Ed25519,
+				val.PubKey.Bytes(),
+			)
+
+			// We got our validator update, test passed.
+			break
+		}
+
+		s.network.WaitForNextBlock()
 	}
 }
 

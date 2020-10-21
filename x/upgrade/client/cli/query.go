@@ -47,7 +47,7 @@ func GetCurrentPlanCmd() *cobra.Command {
 				return err
 			}
 
-			if len(res.Plan.Name) == 0 {
+			if res.Plan == nil {
 				return fmt.Errorf("no upgrade scheduled")
 			}
 
@@ -92,7 +92,7 @@ func GetAppliedPlanCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			headers, err := node.BlockchainInfo(res.Height, res.Height)
+			headers, err := node.BlockchainInfo(context.Background(), res.Height, res.Height)
 			if err != nil {
 				return err
 			}

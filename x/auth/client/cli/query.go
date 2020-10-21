@@ -49,7 +49,7 @@ func QueryParamsCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Long: strings.TrimSpace(`Query the current auth parameters:
 
-$ <appcli> query auth params
+$ <appd> query auth params
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -93,7 +93,7 @@ func GetAccountCmd() *cobra.Command {
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.Account(context.Background(), &types.QueryAccountRequest{Address: key})
+			res, err := queryClient.Account(context.Background(), &types.QueryAccountRequest{Address: key.String()})
 			if err != nil {
 				return err
 			}

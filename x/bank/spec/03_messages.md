@@ -7,9 +7,11 @@ order: 3
 ## MsgSend
 
 ```go
-type MsgSend struct {
-  Inputs  []Input
-  Outputs []Output
+// MsgSend represents a message to send coins from one account to another.
+message MsgSend {
+  string   from_address                    = 1;
+  string   to_address                      = 2;
+  repeated cosmos.base.v1beta1.Coin amount = 3;
 }
 ```
 

@@ -2,9 +2,10 @@ package mock
 
 import (
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 )
 
 var _ tmtypes.PrivValidator = PV{}

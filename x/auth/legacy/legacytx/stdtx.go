@@ -3,14 +3,15 @@ package legacytx
 import (
 	"fmt"
 
+	"github.com/tendermint/tendermint/crypto"
+	"gopkg.in/yaml.v2"
+
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/tendermint/tendermint/crypto"
-	"gopkg.in/yaml.v2"
 )
 
 // Interface implementation checks
@@ -261,6 +262,11 @@ func (tx StdTx) FeePayer() sdk.AccAddress {
 		return tx.GetSigners()[0]
 	}
 	return sdk.AccAddress{}
+}
+
+// FeeGranter always returns nil for StdTx
+func (tx StdTx) FeeGranter() sdk.AccAddress {
+	return nil
 }
 
 func (tx StdTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {

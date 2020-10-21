@@ -1,12 +1,14 @@
 package tx
 
 import (
-	fmt "fmt"
+	"fmt"
+	"strings"
+
+	"github.com/tendermint/tendermint/crypto"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 // MaxGasWanted defines the max gas allowed.
@@ -25,7 +27,15 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 	anys := t.Body.Messages
 	res := make([]sdk.Msg, len(anys))
 	for i, any := range anys {
-		msg := any.GetCachedValue().(sdk.Msg)
+		var msg sdk.Msg
+		if isServiceMsg(any.TypeUrl) {
+			msg = sdk.ServiceMsg{
+				MethodName: any.TypeUrl,
+				Request:    any.GetCachedValue().(sdk.MsgRequest),
+			}
+		} else {
+			msg = any.GetCachedValue().(sdk.Msg)
+		}
 		res[i] = msg
 	}
 	return res
@@ -66,6 +76,13 @@ func (t *Tx) ValidateBasic() error {
 		)
 	}
 
+	if fee.Payer != "" {
+		_, err := sdk.AccAddressFromBech32(fee.Payer)
+		if err != nil {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid fee payer address (%s)", err)
+		}
+	}
+
 	sigs := t.Signatures
 
 	if len(sigs) == 0 {
@@ -83,6 +100,8 @@ func (t *Tx) ValidateBasic() error {
 }
 
 // GetSigners retrieves all the signers of a tx.
+// This includes all unique signers of the messages (in order),
+// as well as the FeePayer (if specified and not already included).
 func (t *Tx) GetSigners() []sdk.AccAddress {
 	var signers []sdk.AccAddress
 	seen := map[string]bool{}
@@ -94,6 +113,17 @@ func (t *Tx) GetSigners() []sdk.AccAddress {
 				seen[addr.String()] = true
 			}
 		}
+	}
+
+	// ensure any specified fee payer is included in the required signers (at the end)
+	feePayer := t.AuthInfo.Fee.Payer
+	if feePayer != "" && !seen[feePayer] {
+		payerAddr, err := sdk.AccAddressFromBech32(feePayer)
+		if err != nil {
+			panic(err)
+		}
+		signers = append(signers, payerAddr)
+		seen[feePayer] = true
 	}
 
 	return signers
@@ -117,12 +147,23 @@ func (t *Tx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, any := range m.Messages {
-		var msg sdk.Msg
-		err := unpacker.UnpackAny(any, &msg)
-		if err != nil {
-			return err
+		// If the any's typeUrl contains 2 slashes, then we unpack the any into
+		// a ServiceMsg struct as per ADR-031.
+		if isServiceMsg(any.TypeUrl) {
+			var req sdk.MsgRequest
+			err := unpacker.UnpackAny(any, &req)
+			if err != nil {
+				return err
+			}
+		} else {
+			var msg sdk.Msg
+			err := unpacker.UnpackAny(any, &msg)
+			if err != nil {
+				return err
+			}
 		}
 	}
+
 	return nil
 }
 
@@ -146,4 +187,10 @@ func (m *SignerInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface("cosmos.tx.v1beta1.Tx", (*sdk.Tx)(nil))
 	registry.RegisterImplementations((*sdk.Tx)(nil), &Tx{})
+}
+
+// isServiceMsg checks if a type URL corresponds to a service method name,
+// i.e. /cosmos.bank.Msg/Send vs /cosmos.bank.MsgSend
+func isServiceMsg(typeURL string) bool {
+	return strings.Count(typeURL, "/") >= 2
 }

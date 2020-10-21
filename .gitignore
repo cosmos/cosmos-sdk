@@ -5,9 +5,11 @@
 *.swl
 *.swm
 *.swn
-.vscode
-.idea
 *.pyc
+
+# private files
+private[.-]*
+private
 
 # Build
 vendor
@@ -19,6 +21,7 @@ docs/modules
 dist
 tools-stamp
 proto-tools-stamp
+buf-stamp
 artifacts
 
 # Data - ideally these don't exist
@@ -38,8 +41,10 @@ sim_log_file
 vagrant
 
 # IDE
-.idea/
+.idea
 *.iml
+.dir-locals.el
+.vscode
 
 # Graphviz
 dependency-graph.png

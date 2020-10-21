@@ -50,7 +50,7 @@ func (s *IntegrationTestSuite) TestGRPCServer() {
 	s.Require().NoError(err)
 
 	// gRPC query to test service should work
-	testClient := testdata.NewTestServiceClient(conn)
+	testClient := testdata.NewQueryClient(conn)
 	testRes, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
 	s.Require().NoError(err)
 	s.Require().Equal("hello", testRes.Message)
@@ -61,7 +61,7 @@ func (s *IntegrationTestSuite) TestGRPCServer() {
 	var header metadata.MD
 	bankRes, err := bankClient.Balance(
 		context.Background(),
-		&banktypes.QueryBalanceRequest{Address: val0.Address, Denom: denom},
+		&banktypes.QueryBalanceRequest{Address: val0.Address.String(), Denom: denom},
 		grpc.Header(&header), // Also fetch grpc header
 	)
 	s.Require().NoError(err)
@@ -75,7 +75,7 @@ func (s *IntegrationTestSuite) TestGRPCServer() {
 	// Request metadata should work
 	bankRes, err = bankClient.Balance(
 		metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, "1"), // Add metadata to request
-		&banktypes.QueryBalanceRequest{Address: val0.Address, Denom: denom},
+		&banktypes.QueryBalanceRequest{Address: val0.Address.String(), Denom: denom},
 		grpc.Header(&header),
 	)
 	blockHeight = header.Get(grpctypes.GRPCBlockHeightHeader)

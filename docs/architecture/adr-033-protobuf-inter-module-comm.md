@@ -193,6 +193,15 @@ in the future that cache the invoke function for each method type avoiding the o
 This would reduce the performance overhead of this inter-module communication method to the bare minimum required for
 checking permissions.
 
+Below is a rough sketch of the implementation of `grpc.ClientConn.Invoke` for `RootModuleKey`:
+
+```go
+func (key RootModuleKey) Invoke(ctx context.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error {
+  f := key.invoker(CallInfo {Method: method, Caller: ModuleID {ModuleName: key.moduleName}})
+  return f(ctx, args, reply)
+}
+```
+
 ### `AppModule` Wiring and Requirements
 
 In [ADR 031](./adr-031-msg-service.md), the `AppModule.RegisterService(Configurator)` method was introduced. To support

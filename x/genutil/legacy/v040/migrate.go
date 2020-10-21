@@ -11,8 +11,9 @@ import (
 	v040bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v040"
 	v039crisis "github.com/cosmos/cosmos-sdk/x/crisis/legacy/v039"
 	v040crisis "github.com/cosmos/cosmos-sdk/x/crisis/legacy/v040"
-	v038distribution "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v038"
-	v040distribution "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v040"
+	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v036"
+	v038distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v038"
+	v040distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v040"
 	v038evidence "github.com/cosmos/cosmos-sdk/x/evidence/legacy/v038"
 	v040evidence "github.com/cosmos/cosmos-sdk/x/evidence/legacy/v040"
 	v039genutil "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v039"
@@ -38,6 +39,8 @@ func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 	v039Codec := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(v039Codec)
 	v039auth.RegisterLegacyAminoCodec(v039Codec)
+	v036gov.RegisterLegacyAminoCodec(v039Codec)
+	v036distr.RegisterLegacyAminoCodec(v039Codec)
 
 	v040Codec := clientCtx.JSONMarshaler
 
@@ -94,17 +97,17 @@ func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 	}
 
 	// Migrate x/distribution.
-	if appState[v038distribution.ModuleName] != nil {
+	if appState[v038distr.ModuleName] != nil {
 		// unmarshal relative source genesis application state
-		var distributionGenState v038distribution.GenesisState
-		v039Codec.MustUnmarshalJSON(appState[v038distribution.ModuleName], &distributionGenState)
+		var distributionGenState v038distr.GenesisState
+		v039Codec.MustUnmarshalJSON(appState[v038distr.ModuleName], &distributionGenState)
 
 		// delete deprecated x/distribution genesis state
-		delete(appState, v038distribution.ModuleName)
+		delete(appState, v038distr.ModuleName)
 
 		// Migrate relative source genesis application state and marshal it into
 		// the respective key.
-		appState[v040distribution.ModuleName] = v040Codec.MustMarshalJSON(v040distribution.Migrate(distributionGenState))
+		appState[v040distr.ModuleName] = v040Codec.MustMarshalJSON(v040distr.Migrate(distributionGenState))
 	}
 
 	// Migrate x/evidence.

@@ -18,7 +18,7 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestCoinSend() {
-	encodingConfig := simapp.MakeEncodingConfigTest()
+	encodingConfig := simapp.MakeEncodingConfigTests()
 	authclient.Codec = encodingConfig.Marshaler
 
 	val := s.network.Validators[0]

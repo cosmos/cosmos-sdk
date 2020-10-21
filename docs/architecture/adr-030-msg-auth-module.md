@@ -1,4 +1,4 @@
-# ADR 030: Msg Authorization Module
+# ADR 030: Authorization Module
 
 ## Changelog
 
@@ -11,7 +11,7 @@ Accepted
 
 ## Abstract
 
-This ADR defines the `msg_authorization` module which allows accounts to grant authorizations to perform actions
+This ADR defines the `authz` module which allows accounts to grant authorizations to perform actions
 on behalf of that account to other accounts.
 
 ## Context
@@ -33,7 +33,7 @@ implementation is based on work done by the [Gaian's team at Hackatom Berlin 201
 
 ## Decision
 
-We will create a module named `msg_authorization` which provides support for
+We will create a module named `authz` which provides support for
 granting arbitrary capabilities from one account (the granter) to another account (the grantee). Authorizations
 must be granted for a particular `Msg` service methods one by one using an implementation
 of `Authorization`.

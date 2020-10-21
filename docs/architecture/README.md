@@ -57,4 +57,4 @@ Please add a entry below in your Pull Request for an ADR.
 - [ADR 029: Fee Grant Module](./adr-029-fee-grant-module.md)
 - [ADR 031: Protobuf Msg Services](./adr-031-msg-service.md)
 - [ADR 032: Typed Events](./adr-032-typed-events.md)
-- [ADR 033: Protobuf-based Inter-Module Object Capabilities](./adr-033-protobuf-ocaps.md)
+- [ADR 033: Protobuf-based Inter-Module Communication](./adr-033-protobuf-inter-module-comm.md)

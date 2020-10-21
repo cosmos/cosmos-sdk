@@ -1,4 +1,4 @@
-# ADR 033: Protobuf-based Inter-Module Object Capabilities
+# ADR 033: Protobuf-based Inter-Module Communication
 
 ## Changelog
 
@@ -10,9 +10,12 @@ Proposed
 
 ## Abstract
 
-This ADR introduces a system for permissioned inter-module communication or object capabilites (Ocaps) leveraging the
-protobuf `Query` and `Msg` service definitions defined in [ADR 021](./adr-021-protobuf-query-encoding.md) and
-[ADR 031](./adr-031-msg-service.md).
+This ADR introduces a system for permissioned inter-module communication leveraging the protobuf `Query` and `Msg`
+service definitions defined in [ADR 021](./adr-021-protobuf-query-encoding.md) and
+[ADR 031](./adr-031-msg-service.md) which provides:
+- stable module interfaces to eventually replace the keeper paradigm based on protobuf
+- stronger inter-module object capabilities guarantees
+- module accounts and sub-account authorization
 
 ## Context
 
@@ -23,11 +26,12 @@ In the current Cosmos SDK documentation on the [Object-Capability Model](../docs
 There is currently not a thriving ecosystem of Cosmos SDK modules. We hypothesize that this is in part due to:
 1. lack of a stable v1.0 Cosmos SDK to build modules off of. Module interfaces are changing, sometimes dramatically, from
 point release to point release, often for good reasons, but this does not create a stable foundation to build on.
-2. lack of a properly implemented object capability or even object-oriented encapsulation system.
+2. lack of a properly implemented object capability or even object-oriented encapsulation system which makes refactors
+of module keeper interfaces inevitable because the current interfaces are poorly constrained.
 
 ### `x/bank` Case Study
 
-We use `x/bank as a case study` of this.
+We use `x/bank` of this.
 
 Currently the `x/bank` keeper gives pretty much unrestricted access to any module which references it. For instance, the
 `SetBalance` method allows the caller to set the balance of any account to anything, bypassing even proper tracking of supply.

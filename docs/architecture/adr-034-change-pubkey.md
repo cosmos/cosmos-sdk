@@ -16,7 +16,7 @@ Transferring all the assets of an account to a new account with the updated pubk
 
 ## Decision
 
-We propose the creation of a new feature called `changepubkey` that is an extension to `auth` that allows accounts to update the public key associated with their account, while keeping the address the same.
+We propose the creation of a new feature  to `x/auth` that allows accounts to update the public key associated with their account, while keeping the address the same.
 
 This is possible because the Cosmos SDK `StdAccount` stores the public key for an account in state, instead of making the assumption that the public key is included in the transaction (whether explicitly or implicitly through the signature) as in other blockchains such as Bitcoin and Ethereum.  Because the public key is stored on chain, it is okay for the public key to not hash to the address of an account, as the address is not pertinent to the signature checking process.
 
@@ -24,12 +24,8 @@ To build this system, we design a new Msg type as follows:
 
 ```protobuf
 message MsgChangePubKey {
-  bytes address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
-  ];
-  bytes pub_key = 2 [
-    (gogoproto.jsontag) = "public_key,omitempty", (gogoproto.moretags) = "yaml:\"public_key\""
-  ];
+  string address = 1;
+  google.protobuf.Any pub_key = 2;
 }
 ```
 
@@ -78,4 +74,3 @@ Breaks the current assumed relationship between address and pubkeys as H(pubkey)
 * Will require that PubKeys for an account are included in the genesis exports.
 
 ## References
-

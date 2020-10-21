@@ -19,6 +19,6 @@ func (cap GenericAuthorization) MethodName() string {
 	return cap.MessageName
 }
 
-func (cap GenericAuthorization) Accept(msg sdk.Msg, block tmproto.Header) (allow bool, updated Authorization, delete bool) {
+func (cap GenericAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (allow bool, updated Authorization, delete bool) {
 	return true, &cap, false
 }

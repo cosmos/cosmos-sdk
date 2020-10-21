@@ -78,8 +78,8 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	val := s.network.Validators[0]
 	grantee := s.grantee
 
-	twoHours := 60 * 2  // In seconds
-	pastHour := 60 * -1 // In seconds
+	twoHours := 3600 * 2  // In seconds
+	pastHour := 3600 * -1 // In seconds
 
 	testCases := []struct {
 		name         string
@@ -177,7 +177,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 	val := s.network.Validators[0]
 
 	grantee := s.grantee
-	twoHours := 60 * 2 // In seconds
+	twoHours := 3600 * 2 // In seconds
 	viper.Set(cli.FlagExpiration, twoHours)
 
 	_, err := execGrantSendAuthorization(
@@ -277,7 +277,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 	val := s.network.Validators[0]
 
 	grantee := s.grantee
-	twoHours := 60 * 2 // In seconds
+	twoHours := 3600 * 2 // In seconds
 
 	viper.Set(cli.FlagExpiration, twoHours)
 

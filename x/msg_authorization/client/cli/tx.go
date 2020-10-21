@@ -144,12 +144,19 @@ func NewCmdSendAs() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			msg := types.NewMsgExecAuthorized(grantee, stdTx.GetMsgs())
+			msgs := stdTx.GetMsgs()
+			serviceMsgs := make([]sdk.ServiceMsg, len(msgs))
+			for i, msg := range msgs {
+				serviceMsgs[i] = sdk.ServiceMsg{
+					MethodName: msg.Type(),
+					Request:    msg,
+				}
+			}
 
+			msg := types.NewMsgExecAuthorized(grantee, serviceMsgs)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
 	}

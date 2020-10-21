@@ -10,7 +10,7 @@ import (
 
 type Keeper interface {
 	//DispatchActions executes the provided messages via authorization grants from the message signer to the grantee
-	DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) sdk.Result
+	DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.ServiceMsg) sdk.Result
 
 	// Grants the provided authorization to the grantee on the granter's account with the provided expiration time
 	// If there is an existing authorization grant for the same sdk.Msg type, this grant overwrites that.

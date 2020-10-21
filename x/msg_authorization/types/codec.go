@@ -5,11 +5,13 @@ import (
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // RegisterLegacyAminoCodec registers concrete types and interfaces on the given codec.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*Authorization)(nil), nil)
+	cdc.RegisterInterface((*sdk.MsgRequest)(nil), nil)
 	cdc.RegisterConcrete(&MsgGrantAuthorization{}, "cosmos-sdk/MsgGrantAuthorization", nil)
 	cdc.RegisterConcrete(&MsgRevokeAuthorization{}, "cosmos-sdk/MsgRevokeAuthorization", nil)
 	cdc.RegisterConcrete(&MsgExecAuthorized{}, "cosmos-sdk/MsgExecAuthorized", nil)
@@ -25,17 +27,14 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgExecAuthorized{},
 	)
 
-	// registry.RegisterImplementations((*Authorization)(nil),
-	// 	&SendAuthorization{},
-	// 	&GenericAuthorization{},
-	// )
-
 	registry.RegisterInterface(
 		"cosmos.msg_authorization.v1beta1.Authorization",
 		(*Authorization)(nil),
 		&SendAuthorization{},
 		&GenericAuthorization{},
 	)
+
+	registry.RegisterInterface("cosmos.base.v1beta1.ServiceMsg", (*sdk.MsgRequest)(nil), &banktypes.MsgSend{})
 }
 
 var (

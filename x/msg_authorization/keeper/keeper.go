@@ -81,39 +81,39 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 
 // DispatchActions attempts to execute the provided messages via authorization
 // grants from the message signer to the grantee.
-func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) (*sdk.Result, error) {
+func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, serviceMsgs []sdk.ServiceMsg) (*sdk.Result, error) {
 	var msgResult *sdk.Result
 	var err error
-	for _, msg := range msgs {
-		signers := msg.GetSigners()
+	for _, serviceMsg := range serviceMsgs {
+		signers := serviceMsg.GetSigners()
 		if len(signers) != 1 {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "authorization can be given to msg with only one signer")
 		}
 		granter := signers[0]
 		if !bytes.Equal(granter, grantee) {
-			authorization, _ := k.GetAuthorization(ctx, grantee, granter, proto.MessageName(msg))
+			authorization, _ := k.GetAuthorization(ctx, grantee, granter, serviceMsg.MethodName)
 			if authorization == nil {
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
 			}
-			allow, updated, del := authorization.Accept(msg, ctx.BlockHeader())
+			allow, updated, del := authorization.Accept(serviceMsg, ctx.BlockHeader())
 			if !allow {
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
 			}
 			if del {
-				k.Revoke(ctx, grantee, granter, msg.Type())
+				k.Revoke(ctx, grantee, granter, serviceMsg.Type())
 			} else if updated != nil {
 				k.update(ctx, grantee, granter, updated)
 			}
 		}
-		handler := k.router.GetRoute(msg.Route())
+		handler := k.router.GetRoute(serviceMsg.Route())
 
 		if handler == nil {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", msg.Route())
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", serviceMsg.Route())
 		}
 
-		msgResult, err = handler(ctx, msg)
+		msgResult, err = handler(ctx, serviceMsg)
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "failed to execute message; message %s", proto.MessageName(msg))
+			return nil, sdkerrors.Wrapf(err, "failed to execute message; message %s", serviceMsg.MethodName)
 		}
 	}
 

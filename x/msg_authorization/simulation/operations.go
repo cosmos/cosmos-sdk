@@ -218,13 +218,16 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 		}
 		sendCoins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)))
 
-		execMsg := banktype.NewMsgSend(
-			granterAddr,
-			granteeAddr,
-			sendCoins,
-		)
+		execMsg := sdk.ServiceMsg{
+			MethodName: types.SendAuthorization{}.MethodName(),
+			Request: banktype.NewMsgSend(
+				granterAddr,
+				granteeAddr,
+				sendCoins,
+			),
+		}
 
-		msg := types.NewMsgExecAuthorized(grantee.Address, []sdk.Msg{execMsg})
+		msg := types.NewMsgExecAuthorized(grantee.Address, []sdk.ServiceMsg{execMsg})
 		sendGrant := targetGrant.Authorization.GetCachedValue().(*types.SendAuthorization)
 		allow, _, _ := sendGrant.Accept(execMsg, ctx.BlockHeader())
 		if !allow {

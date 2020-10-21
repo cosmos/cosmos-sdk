@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/gogo/protobuf/proto"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
@@ -20,12 +19,12 @@ func NewSendAuthorization(spendLimit sdk.Coins) *SendAuthorization {
 }
 
 func (authorization SendAuthorization) MethodName() string {
-	return proto.MessageName(&bank.MsgSend{})
+	return "/cosmos.bank.v1beta1.Msg/Send"
 }
 
-func (authorization SendAuthorization) Accept(msg sdk.Msg, block tmproto.Header) (allow bool, updated Authorization, delete bool) {
-	if reflect.TypeOf(msg) == reflect.TypeOf(&bank.MsgSend{}) {
-		msg := msg.(*bank.MsgSend)
+func (authorization SendAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (allow bool, updated Authorization, delete bool) {
+	if reflect.TypeOf(msg.Request) == reflect.TypeOf(&bank.MsgSend{}) {
+		msg := msg.Request.(*bank.MsgSend)
 		limitLeft, isNegative := authorization.SpendLimit.SafeSub(msg.Amount)
 		if isNegative {
 			return false, nil, false

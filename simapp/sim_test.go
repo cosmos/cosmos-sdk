@@ -27,6 +27,7 @@ import (
 	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
 	ibchost "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	msgauthtypes "github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -175,6 +176,7 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[capabilitytypes.StoreKey], newApp.keys[capabilitytypes.StoreKey], [][]byte{}},
 		{app.keys[ibchost.StoreKey], newApp.keys[ibchost.StoreKey], [][]byte{}},
 		{app.keys[ibctransfertypes.StoreKey], newApp.keys[ibctransfertypes.StoreKey], [][]byte{}},
+		{app.keys[msgauthtypes.StoreKey], newApp.keys[msgauthtypes.StoreKey], [][]byte{}},
 	}
 
 	for _, skp := range storeKeysPrefixes {

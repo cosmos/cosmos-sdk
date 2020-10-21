@@ -22,16 +22,21 @@ func TestMsgExecAuthorized(t *testing.T) {
 	tests := []struct {
 		title      string
 		grantee    sdk.AccAddress
-		msgs       []sdk.Msg
+		msgs       []sdk.ServiceMsg
 		expectPass bool
 	}{
-		{"nil grantee address", nil, []sdk.Msg{}, false},
-		{"valid test", grantee, []sdk.Msg{}, true},
-		{"valid test: msg type", grantee, []sdk.Msg{&banktypes.MsgSend{
-			Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
-			FromAddress: granter.String(),
-			ToAddress:   grantee.String(),
-		}}, true},
+		{"nil grantee address", nil, []sdk.ServiceMsg{}, false},
+		{"valid test", grantee, []sdk.ServiceMsg{}, true},
+		{"valid test: msg type", grantee, []sdk.ServiceMsg{
+			{
+				MethodName: types.SendAuthorization{}.MethodName(),
+				Request: &banktypes.MsgSend{
+					Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
+					FromAddress: granter.String(),
+					ToAddress:   grantee.String(),
+				},
+			},
+		}, true},
 	}
 	for i, tc := range tests {
 		msg := types.NewMsgExecAuthorized(tc.grantee, tc.msgs)
@@ -111,7 +116,7 @@ func TestMsgGrantAuthorizationGetSignBytes(t *testing.T) {
 }
 
 func TestMsgRevokeAuthorizationGetSignBytes(t *testing.T) {
-	expected := `{"type":"cosmos-sdk/MsgRevokeAuthorization","value":{"authorization_msg_type":"cosmos.bank.v1beta1.MsgSend","grantee":"cosmos1ta047h6lta0kwunpde6x2e2lta047h6l22453t","granter":"cosmos1ta047h6lta0kwunpde6x2ujlta047h6l3ksxz2"}}`
+	expected := `{"type":"cosmos-sdk/MsgRevokeAuthorization","value":{"authorization_msg_type":"/cosmos.bank.v1beta1.Msg/Send","grantee":"cosmos1ta047h6lta0kwunpde6x2e2lta047h6l22453t","granter":"cosmos1ta047h6lta0kwunpde6x2ujlta047h6l3ksxz2"}}`
 	msg := types.NewMsgRevokeAuthorization(
 		granter, grantee, types.SendAuthorization{}.MethodName(),
 	)
@@ -120,13 +125,16 @@ func TestMsgRevokeAuthorizationGetSignBytes(t *testing.T) {
 }
 
 func TestMsgExecAuthorizedGetSignBytes(t *testing.T) {
-	expected := `{"type":"cosmos-sdk/MsgExecAuthorized","value":{"grantee":"cosmos1ta047h6lta0kwunpde6x2e2lta047h6l22453t","msgs":[{"amount":[{"amount":"2","denom":"steak"}],"from_address":"cosmos1ta047h6lta0kwunpde6x2ujlta047h6l3ksxz2","to_address":"cosmos1ta047h6lta0kwunpde6x2e2lta047h6l22453t"}]}}`
+	expected := `{"type":"cosmos-sdk/MsgExecAuthorized","value":{"grantee":"cosmos1ta047h6lta0kwunpde6x2e2lta047h6l22453t","msgs":[{"MethodName":"/cosmos.bank.v1beta1.Msg/Send","Request":{"type":"cosmos-sdk/MsgSend","value":{"amount":[{"amount":"2","denom":"steak"}],"from_address":"cosmos1ta047h6lta0kwunpde6x2ujlta047h6l3ksxz2","to_address":"cosmos1ta047h6lta0kwunpde6x2e2lta047h6l22453t"}}}]}}`
 	msg := types.NewMsgExecAuthorized(
-		grantee, []sdk.Msg{
-			&banktypes.MsgSend{
-				Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
-				FromAddress: granter.String(),
-				ToAddress:   grantee.String(),
+		grantee, []sdk.ServiceMsg{
+			{
+				MethodName: types.SendAuthorization{}.MethodName(),
+				Request: &banktypes.MsgSend{
+					Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
+					FromAddress: granter.String(),
+					ToAddress:   grantee.String(),
+				},
 			},
 		},
 	)

@@ -45,6 +45,7 @@ func (AppModuleBasic) Name() string {
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	types.RegisterMsgServer(cfg.MsgServer(), am.keeper)
 }
 
 // RegisterLegacyAminoCodec registers the msg_authorization module's types for the given codec.

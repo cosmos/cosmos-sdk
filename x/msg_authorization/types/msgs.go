@@ -173,15 +173,14 @@ func (msg MsgRevokeAuthorization) String() string {
 
 // NewMsgExecAuthorized creates a new MsgExecAuthorized
 //nolint:interfacer
-func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExecAuthorized {
+func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.ServiceMsg) MsgExecAuthorized {
 	msgsAny := make([]*types.Any, len(msgs))
 	for i, msg := range msgs {
-		msg1, ok := msg.(proto.Message)
-		if !ok {
-			panic(fmt.Errorf("cannot proto marshal %T", msg1))
-		}
-
-		any, err := types.NewAnyWithValue(msg1)
+		// msg1, ok := msg.(proto.Message)
+		// if !ok {
+		// 	panic(fmt.Errorf("cannot proto marshal %T", msg1))
+		// }
+		any, err := types.NewAnyWithValue(&msg)
 		if err != nil {
 			panic(err)
 		}
@@ -195,10 +194,10 @@ func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExecAuthori
 }
 
 // GetMsgs Unpacks any messages
-func (msg MsgExecAuthorized) GetMsgs() ([]sdk.Msg, error) {
-	msgs := make([]sdk.Msg, len(msg.Msgs))
+func (msg MsgExecAuthorized) GetMsgs() ([]sdk.ServiceMsg, error) {
+	msgs := make([]sdk.ServiceMsg, len(msg.Msgs))
 	for i, msgAny := range msg.Msgs {
-		msg1, ok := msgAny.GetCachedValue().(sdk.Msg)
+		msg1, ok := msgAny.GetCachedValue().(sdk.ServiceMsg)
 		if !ok {
 			return nil, fmt.Errorf("cannot proto marshal %T", msg1)
 		}

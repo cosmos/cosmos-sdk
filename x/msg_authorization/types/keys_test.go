@@ -5,13 +5,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
 )
 
 var granter = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 var grantee = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
-var msgType = banktypes.MsgSend{}.Type()
+var msgType = SendAuthorization{}.MethodName()
 
 func TestGrantkey(t *testing.T) {
 	actor := GetActorAuthorizationKey(grantee, granter, msgType)

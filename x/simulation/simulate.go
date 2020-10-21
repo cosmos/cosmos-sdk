@@ -14,7 +14,9 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	simapparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
@@ -23,11 +25,16 @@ const AverageBlockTime = 6 * time.Second
 // initialize the chain for the simulation
 func initChain(
 	r *rand.Rand, params Params, accounts []simulation.Account, app *baseapp.BaseApp,
-	appStateFn simulation.AppStateFn, config simulation.Config,
+	appStateFn simulation.AppStateFn, config simulation.Config, mbm module.BasicManager,
 ) (mockValidators, time.Time, []simulation.Account, string) {
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
 
-	consensusParams := RandomConsensusParams(r, appState)
+	// we would like to use simapp version, but this creates import cycles:
+	//     simapp -> x/module -> x/module/simulation -> x/simulation -> simapp
+	// 	cdc := simapp.MakeEncodingConfigTests().Marshaler
+	ec := simapparams.MakeEncodingConfig()
+	ec.RegisterCodecsTests(mbm)
+	consensusParams := randomConsensusParams(r, appState, ec.Marshaler)
 
 	req := abci.RequestInitChain{
 		AppStateBytes:   appState,
@@ -52,6 +59,7 @@ func SimulateFromSeed(
 	ops WeightedOperations,
 	blockedAddrs map[string]bool,
 	config simulation.Config,
+	mbm module.BasicManager,
 ) (stopEarly bool, exportedParams Params, err error) {
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, _, b := getTestingMode(tb)
@@ -67,7 +75,7 @@ func SimulateFromSeed(
 
 	// Second variable to keep pending validator set (delayed one block since
 	// TM 0.24) Initially this is the same as the initial validator set
-	validators, genesisTimestamp, accs, chainID := initChain(r, params, accs, app, appStateFn, config)
+	validators, genesisTimestamp, accs, chainID := initChain(r, params, accs, app, appStateFn, config, mbm)
 	if len(accs) == 0 {
 		return true, params, fmt.Errorf("must have greater than zero genesis accounts")
 	}

@@ -18,7 +18,7 @@ import (
 )
 
 func NewTestTxConfig() client.TxConfig {
-	cfg := simapp.MakeEncodingConfig()
+	cfg := simapp.MakeEncodingConfigTests()
 	return cfg.TxConfig
 }
 

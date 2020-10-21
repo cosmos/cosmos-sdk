@@ -28,10 +28,11 @@ There are several required and optional flags for transaction creation. The `--f
 
 Additionally, there are several [flags](../interfaces/cli.md) users can use to indicate how much they are willing to pay in [fees](./gas-fees.md):
 
-* `--gas` refers to how much [gas](./gas-fees.md), which represents computational resources, `Tx` consumes. Gas is dependent on the transaction and is not precisely calculated until execution, but can be estimated by providing `auto` as the value for `--gas`.
-* `--gas-adjustment` (optional) can be used to scale `gas` up in order to avoid underestimating. For example, users can specify their gas adjustment as 1.5 to use 1.5 times the estimated gas.
-* `--gas-prices` specifies how much the user is willing pay per unit of gas, which can be one or multiple denominations of tokens. For example, `--gas-prices=0.025uatom, 0.025upho` means the user is willing to pay 0.025uatom AND 0.025upho per unit of gas.
-* `--fees` specifies how much in fees the user is willing to pay in total.
+- `--gas` refers to how much [gas](./gas-fees.md), which represents computational resources, `Tx` consumes. Gas is dependent on the transaction and is not precisely calculated until execution, but can be estimated by providing `auto` as the value for `--gas`.
+- `--gas-adjustment` (optional) can be used to scale `gas` up in order to avoid underestimating. For example, users can specify their gas adjustment as 1.5 to use 1.5 times the estimated gas.
+- `--gas-prices` specifies how much the user is willing pay per unit of gas, which can be one or multiple denominations of tokens. For example, `--gas-prices=0.025uatom, 0.025upho` means the user is willing to pay 0.025uatom AND 0.025upho per unit of gas.
+- `--fees` specifies how much in fees the user is willing to pay in total.
+- `--timeout-height` specifies a block timeout height to prevent the tx from being committed past a certain height.
 
 The ultimate value of the fees paid is equal to the gas multiplied by the gas prices. In other words, `fees = ceil(gas * gasPrices)`. Thus, since fees can be calculated using gas prices and vice versa, the users specify only one of the two.
 
@@ -42,7 +43,7 @@ Later, validators decide whether or not to include the transaction in their bloc
 Users of application `app` can enter the following command into their CLI to generate a transaction to send 1000uatom from a `senderAddress` to a `recipientAddress`. It specifies how much gas they are willing to pay: an automatic estimate scaled up by 1.5 times, with a gas price of 0.025uatom per unit gas.
 
 ```bash
-appcli tx send <recipientAddress> 1000uatom --from <senderAddress> --gas auto --gas-adjustment 1.5 --gas-prices 0.025uatom
+appd tx send <recipientAddress> 1000uatom --from <senderAddress> --gas auto --gas-adjustment 1.5 --gas-prices 0.025uatom
 ```
 
 #### Other Transaction Creation Methods
@@ -60,11 +61,11 @@ Each full-node (running Tendermint) that receives a `Tx` sends an [ABCI message]
 The full-nodes perform stateless, then stateful checks on `Tx` during `CheckTx`, with the goal to
 identify and reject an invalid transaction as early on as possible to avoid wasted computation.
 
-***Stateless*** checks do not require nodes to access state - light clients or offline nodes can do
+**_Stateless_** checks do not require nodes to access state - light clients or offline nodes can do
 them - and are thus less computationally expensive. Stateless checks include making sure addresses
 are not empty, enforcing nonnegative numbers, and other logic specified in the definitions.
 
-***Stateful*** checks validate transactions and messages based on a committed state. Examples
+**_Stateful_** checks validate transactions and messages based on a committed state. Examples
 include checking that the relevant values exist and are able to be transacted with, the address
 has sufficient funds, and the sender is authorized or has the correct ownership to transact.
 At any given moment, full-nodes typically have [multiple versions](../core/baseapp.md#volatile-states)
@@ -140,39 +141,39 @@ locally, this process yields a single, unambiguous result, since the messages' s
 explicitly ordered in the block proposal.
 
 ```
-		-----------------------		
+		-----------------------
 		|Receive Block Proposal|
-		-----------------------		
-		          |		
+		-----------------------
+		          |
 			  v
-		-----------------------		
-		| BeginBlock	      |        
-		-----------------------		
-		          |		
-			  v			
-		-----------------------		    
-		| DeliverTx(tx0)      |  
-		| DeliverTx(tx1)      |   	  
-		| DeliverTx(tx2)      |  
-		| DeliverTx(tx3)      |  
-		|	.	      |  
+		-----------------------
+		| BeginBlock	      |
+		-----------------------
+		          |
+			  v
+		-----------------------
+		| DeliverTx(tx0)      |
+		| DeliverTx(tx1)      |
+		| DeliverTx(tx2)      |
+		| DeliverTx(tx3)      |
 		|	.	      |
 		|	.	      |
-		-----------------------		
-		          |			
-			  v			
+		|	.	      |
 		-----------------------
-		| EndBlock	      |         
+		          |
+			  v
 		-----------------------
-		          |			
-			  v			
+		| EndBlock	      |
 		-----------------------
-		| Consensus	      |         
+		          |
+			  v
 		-----------------------
-		          |			
-			  v			
+		| Consensus	      |
 		-----------------------
-		| Commit	      |         
+		          |
+			  v
+		-----------------------
+		| Commit	      |
 		-----------------------
 ```
 
@@ -184,30 +185,29 @@ to during consensus. Under the hood, `DeliverTx` is almost identical to `CheckTx
 [`runTx`](../core/baseapp.md#runtx) function in deliver mode instead of check mode.
 Instead of using their `checkState`, full-nodes use `deliverState`:
 
-* **Decoding:** Since `DeliverTx` is an ABCI call, `Tx` is received in the encoded `[]byte` form.
-Nodes first unmarshal the transaction, then call `runTx` in `runTxModeDeliver`, which is very
-similar to `CheckTx` but also executes and writes state changes.
+- **Decoding:** Since `DeliverTx` is an ABCI call, `Tx` is received in the encoded `[]byte` form.
+  Nodes first unmarshal the transaction, using the [`TxConfig`](./app-anatomy#register-codec) defined in the app, then call `runTx` in `runTxModeDeliver`, which is very similar to `CheckTx` but also executes and writes state changes.
 
-* **Checks:** Full-nodes call `validateBasicMsgs` and the `AnteHandler` again. This second check
-happens because they may not have seen the same transactions during the addition to Mempool stage\
-and a malicious proposer may have included invalid ones. One difference here is that the
-`AnteHandler` will not compare `gas-prices` to the node's `min-gas-prices` since that value is local
-to each node - differing values across nodes would yield nondeterministic results.
+- **Checks:** Full-nodes call `validateBasicMsgs` and the `AnteHandler` again. This second check
+  happens because they may not have seen the same transactions during the addition to Mempool stage\
+  and a malicious proposer may have included invalid ones. One difference here is that the
+  `AnteHandler` will not compare `gas-prices` to the node's `min-gas-prices` since that value is local
+  to each node - differing values across nodes would yield nondeterministic results.
 
-* **Route and Handler:** While `CheckTx` would have exited, `DeliverTx` continues to run
-[`runMsgs`](../core/baseapp.md#runtx-and-runmsgs) to fully execute each `Msg` within the transaction.
-Since the transaction may have messages from different modules, `baseapp` needs to know which module
-to find the appropriate Handler. Thus, the `route` function is called via the [module manager](../building-modules/module-manager.md) to
-retrieve the route name and find the [`Handler`](../building-modules/handler.md) within the module.
+- **Route and Handler:** While `CheckTx` would have exited, `DeliverTx` continues to run
+  [`runMsgs`](../core/baseapp.md#runtx-and-runmsgs) to fully execute each `Msg` within the transaction.
+  Since the transaction may have messages from different modules, `baseapp` needs to know which module
+  to find the appropriate Handler. Thus, the `route` function is called via the [module manager](../building-modules/module-manager.md) to
+  retrieve the route name and find the [`Handler`](../building-modules/handler.md) within the module.
 
-* **Handler:** The `handler`, a step up from `AnteHandler`, is responsible for executing each
-message in the `Tx` and causes state transitions to persist in `deliverTxState`. It is defined
-within a `Msg`'s module and writes to the appropriate stores within the module.
+- **Handler:** The `handler`, a step up from `AnteHandler`, is responsible for executing each
+  message in the `Tx` and causes state transitions to persist in `deliverTxState`. It is defined
+  within a `Msg`'s module and writes to the appropriate stores within the module.
 
-* **Gas:** While a `Tx` is being delivered, a `GasMeter` is used to keep track of how much
-gas is being used; if execution completes, `GasUsed` is set and returned in the
-`abci.ResponseDeliverTx`. If execution halts because `BlockGasMeter` or `GasMeter` has run out or something else goes
-wrong, a deferred function at the end appropriately errors or panics.
+- **Gas:** While a `Tx` is being delivered, a `GasMeter` is used to keep track of how much
+  gas is being used; if execution completes, `GasUsed` is set and returned in the
+  `abci.ResponseDeliverTx`. If execution halts because `BlockGasMeter` or `GasMeter` has run out or something else goes
+  wrong, a deferred function at the end appropriately errors or panics.
 
 If there are any failed state changes resulting from a `Tx` being invalid or `GasMeter` running out,
 the transaction processing terminates and any state changes are reverted. Invalid transactions in a
@@ -219,14 +219,14 @@ The final step is for nodes to commit the block and state changes. Validator nod
 perform the previous step of executing state transitions in order to validate the transactions,
 then sign the block to confirm it. Full nodes that are not validators do not
 participate in consensus - i.e. they cannot vote - but listen for votes to understand whether or
-not they should commit the state changes. 
+not they should commit the state changes.
 
-When they receive enough validator votes (2/3+ *precommits* weighted by voting power), full nodes commit to a new block to be added to the blockchain and
+When they receive enough validator votes (2/3+ _precommits_ weighted by voting power), full nodes commit to a new block to be added to the blockchain and
 finalize the state transitions in the application layer. A new state root is generated to serve as
 a merkle proof for the state transitions. Applications use the [`Commit`](../core/baseapp.md#commit)
 ABCI method inherited from [Baseapp](../core/baseapp.md); it syncs all the state transitions by
 writing the `deliverState` into the application's internal state. As soon as the state changes are
-committed, `checkState`  start afresh from the most recently committed state and `deliverState`
+committed, `checkState` start afresh from the most recently committed state and `deliverState`
 resets to `nil` in order to be consistent and reflect the changes.
 
 Note that not all blocks have the same number of transactions and it is possible for consensus to

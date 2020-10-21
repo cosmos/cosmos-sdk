@@ -82,15 +82,18 @@ func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context,
 	require.True(t, len(addrs) <= len(pubkeys), "Not enough pubkeys specified at top of file.")
 
 	for i := 0; i < len(addrs); i++ {
-
 		valTokens := sdk.TokensFromConsensusPower(powerAmt[i])
-		valCreateMsg := stakingtypes.NewMsgCreateValidator(
+		valCreateMsg, err := stakingtypes.NewMsgCreateValidator(
 			addrs[i], pubkeys[i], sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			TestDescription, TestCommissionRates, sdk.OneInt(),
 		)
-
-		res, err := stakingHandler(ctx, valCreateMsg)
 		require.NoError(t, err)
-		require.NotNil(t, res)
+		handleAndCheck(t, stakingHandler, ctx, valCreateMsg)
 	}
+}
+
+func handleAndCheck(t *testing.T, h sdk.Handler, ctx sdk.Context, msg sdk.Msg) {
+	res, err := h(ctx, msg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 }

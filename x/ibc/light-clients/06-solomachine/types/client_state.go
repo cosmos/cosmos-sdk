@@ -439,10 +439,10 @@ func produceVerificationArgs(
 	}
 
 	latestSequence := cs.GetLatestHeight().GetVersionHeight()
-	if latestSequence < sequence {
+	if latestSequence != sequence {
 		return nil, 0, 0, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
-			"client state sequence < proof sequence (%d < %d)", latestSequence, sequence,
+			"client state sequence != proof sequence (%d != %d)", latestSequence, sequence,
 		)
 	}
 

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/gogo/protobuf/jsonpb"
+
 	"github.com/gogo/protobuf/proto"
 )
 
@@ -24,6 +26,7 @@ type AnyUnpacker interface {
 // implementations that can be safely unpacked from Any
 type InterfaceRegistry interface {
 	AnyUnpacker
+	jsonpb.AnyResolver
 
 	// RegisterInterface associates protoName as the public name for the
 	// interface passed in as iface. This is to be used primarily to create
@@ -42,6 +45,17 @@ type InterfaceRegistry interface {
 	// Ex:
 	//  registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSend{}, &MsgMultiSend{})
 	RegisterImplementations(iface interface{}, impls ...proto.Message)
+
+	// RegisterCustomTypeURL allows a protobuf message to be registered as a
+	// google.protobuf.Any with a custom typeURL (besides its own canonical
+	// typeURL). iface should be an interface as type, as in RegisterInterface
+	// and RegisterImplementations.
+	//
+	// Ex:
+	// This will allow us to pack service methods in Any's using the full method name
+	// as the type URL and the request body as the value, and allow us to unpack
+	// such packed methods using the normal UnpackAny method for the interface iface.
+	RegisterCustomTypeURL(iface interface{}, typeURL string, impl proto.Message)
 
 	// ListAllInterfaces list the type URLs of all registered interfaces.
 	ListAllInterfaces() []string
@@ -78,6 +92,7 @@ type UnpackInterfacesMessage interface {
 type interfaceRegistry struct {
 	interfaceNames map[string]reflect.Type
 	interfaceImpls map[reflect.Type]interfaceMap
+	typeURLMap     map[string]reflect.Type
 }
 
 type interfaceMap = map[string]reflect.Type
@@ -87,6 +102,7 @@ func NewInterfaceRegistry() InterfaceRegistry {
 	return &interfaceRegistry{
 		interfaceNames: map[string]reflect.Type{},
 		interfaceImpls: map[reflect.Type]interfaceMap{},
+		typeURLMap:     map[string]reflect.Type{},
 	}
 }
 
@@ -100,20 +116,30 @@ func (registry *interfaceRegistry) RegisterInterface(protoName string, iface int
 }
 
 func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, impls ...proto.Message) {
+	for _, impl := range impls {
+		typeURL := "/" + proto.MessageName(impl)
+		registry.registerImpl(iface, typeURL, impl)
+	}
+}
+
+func (registry *interfaceRegistry) RegisterCustomTypeURL(iface interface{}, typeURL string, impl proto.Message) {
+	registry.registerImpl(iface, typeURL, impl)
+}
+
+func (registry *interfaceRegistry) registerImpl(iface interface{}, typeURL string, impl proto.Message) {
 	ityp := reflect.TypeOf(iface).Elem()
 	imap, found := registry.interfaceImpls[ityp]
 	if !found {
 		imap = map[string]reflect.Type{}
 	}
 
-	for _, impl := range impls {
-		implType := reflect.TypeOf(impl)
-		if !implType.AssignableTo(ityp) {
-			panic(fmt.Errorf("type %T doesn't actually implement interface %+v", impl, ityp))
-		}
-
-		imap["/"+proto.MessageName(impl)] = implType
+	implType := reflect.TypeOf(impl)
+	if !implType.AssignableTo(ityp) {
+		panic(fmt.Errorf("type %T doesn't actually implement interface %+v", impl, ityp))
 	}
+
+	imap[typeURL] = implType
+	registry.typeURLMap[typeURL] = implType
 
 	registry.interfaceImpls[ityp] = imap
 }
@@ -146,6 +172,11 @@ func (registry *interfaceRegistry) ListImplementations(ifaceName string) []strin
 }
 
 func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error {
+	// here we gracefully handle the case in which `any` itself is `nil`, which may occur in message decoding
+	if any == nil {
+		return nil
+	}
+
 	if any.TypeUrl == "" {
 		// if TypeUrl is empty return nil because without it we can't actually unpack anything
 		return nil
@@ -196,6 +227,23 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 	any.cachedValue = msg
 
 	return nil
+}
+
+// Resolve returns the proto message given its typeURL. It works with types
+// registered with RegisterInterface/RegisterImplementations, as well as those
+// registered with RegisterWithCustomTypeURL.
+func (registry *interfaceRegistry) Resolve(typeURL string) (proto.Message, error) {
+	typ, found := registry.typeURLMap[typeURL]
+	if !found {
+		return nil, fmt.Errorf("unable to resolve type URL %s", typeURL)
+	}
+
+	msg, ok := reflect.New(typ.Elem()).Interface().(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("can't resolve type URL %s", typeURL)
+	}
+
+	return msg, nil
 }
 
 // UnpackInterfaces is a convenience function that calls UnpackInterfaces

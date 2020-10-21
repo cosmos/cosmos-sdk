@@ -47,6 +47,7 @@ func convertBaseVestingAccount(old *v039auth.BaseVestingAccount) *v040vesting.Ba
 // it to v0.40 x/auth genesis state. The migration includes:
 //
 // - Removing coins from account encoding.
+// - Re-encode in v0.40 GenesisState.
 func Migrate(authGenState v039auth.GenesisState) *v040auth.GenesisState {
 	// Convert v0.39 accounts to v0.40 ones.
 	var v040Accounts = make([]v040auth.GenesisAccount, len(authGenState.Accounts))

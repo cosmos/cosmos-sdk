@@ -90,8 +90,8 @@ func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string,
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		keySplit := strings.Split(string(iterator.Key()), "/")
-		// consensus key is in the format "clients/<clientID>/consensusState/<height>"
-		if len(keySplit) != 4 || keySplit[2] != "consensusState" {
+		// consensus key is in the format "clients/<clientID>/consensusStates/<height>"
+		if len(keySplit) != 4 || keySplit[2] != string(host.KeyConsensusStatesPrefix) {
 			continue
 		}
 		clientID := keySplit[1]

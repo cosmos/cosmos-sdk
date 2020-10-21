@@ -11,7 +11,7 @@ Proposed
 ## Abstract
 
 This ADR defines a canonical 20-byte address format for new public key algorithms, multisig public keys, and module
-accounts using string prefixes and blake2b hashing.
+accounts using string prefixes.
 
 ## Context
 
@@ -75,7 +75,7 @@ func AddressHash(prefix string, contents []byte) []byte {
 		preImage = append(preImage, 0)
 		preImage = append(preImage, contents...)
 	}
-	return blake2b.Sum256(preImage)[:20]
+	return sha256.Sum256(preImage)[:20]
 }
 ```
 
@@ -88,9 +88,6 @@ or managed accounts (ex. different accounts managed by the `group` module).
 
 In the `preImage`, the byte value `0` is used as the separator between `prefix` and `contents`. This is a logical
 choice given that `0` is an invalid value for a string character and is commonly used as a null terminator.
-
-We use a 256-bit `blake2b` hash instead of `sha256` because it is generally considered more secure. Blake hashes
-are considered "random oracle indifferentiable", a stronger property which `sha256` does not have.
 
 ### Canonical Public Key Address Prefixes
 

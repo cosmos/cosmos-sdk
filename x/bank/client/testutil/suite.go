@@ -3,7 +3,6 @@ package testutil
 import (
 	"context"
 	"fmt"
-	"testing"
 
 	"github.com/spf13/cobra"
 
@@ -24,7 +23,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -209,7 +207,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmdGenOnly() {
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	}
 
-	bz, err := banktestutil.MsgSendExec(clientCtx, from, to, amount, args...)
+	bz, err := MsgSendExec(clientCtx, from, to, amount, args...)
 	s.Require().NoError(err)
 	tx, err := s.cfg.TxConfig.TxJSONDecoder()(bz.Bytes())
 	s.Require().NoError(err)
@@ -288,7 +286,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 
-			bz, err := banktestutil.MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
+			bz, err := MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -435,10 +433,6 @@ func (s *IntegrationTestSuite) TestBankMsgService() {
 			}
 		})
 	}
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }
 
 func NewCoin(denom string, amount sdk.Int) *sdk.Coin {

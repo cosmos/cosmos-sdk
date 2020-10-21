@@ -1,22 +1,26 @@
 // +build norace
 
-package testutil
+package cli_test
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"strings"
+	"testing"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
+	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/client/testutil"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -27,10 +31,6 @@ type IntegrationTestSuite struct {
 	network *testnet.Network
 }
 
-func NewIntegrationTestSuite(cfg testnet.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
-}
-
 // SetupTest creates a new network for _each_ integration test. We create a new
 // network for each test because there are some state modifications that are
 // needed to be made in order to make useful queries. However, we don't want
@@ -38,8 +38,9 @@ func NewIntegrationTestSuite(cfg testnet.Config) *IntegrationTestSuite {
 func (s *IntegrationTestSuite) SetupTest() {
 	s.T().Log("setting up integration test suite")
 
-	cfg := s.cfg
+	cfg := testnet.DefaultConfig()
 	genesisState := cfg.GenesisState
+	cfg.NumValidators = 1
 
 	var mintData minttypes.GenesisState
 	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[minttypes.ModuleName], &mintData))
@@ -502,7 +503,10 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 
-			bz, err := MsgWithdrawDelegatorRewardExec(clientCtx, tc.valAddr, tc.args...)
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+			bz, err := distrtestutil.MsgWithdrawDelegatorRewardExec(clientCtx, tc.valAddr, tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -761,4 +765,8 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 			}
 		})
 	}
+}
+
+func TestIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationTestSuite))
 }

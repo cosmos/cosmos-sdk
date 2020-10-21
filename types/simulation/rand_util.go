@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"math/rand"
 	"time"
+	"unsafe"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -27,17 +28,15 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 		if remain == 0 {
 			cache, remain = r.Int63(), letterIdxMax
 		}
-
 		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
 			b[i] = letterBytes[idx]
 			i--
 		}
-
 		cache >>= letterIdxBits
 		remain--
 	}
 
-	return string(b)
+	return *(*string)(unsafe.Pointer(&b))
 }
 
 // RandPositiveInt get a rand positive sdk.Int

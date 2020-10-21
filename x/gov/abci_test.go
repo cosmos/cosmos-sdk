@@ -4,8 +4,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,10 +18,10 @@ import (
 
 func TestTickExpiredDepositPeriod(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
-	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	govHandler := gov.NewHandler(app.GovKeeper)
@@ -68,10 +70,10 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 
 func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
-	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	govHandler := gov.NewHandler(app.GovKeeper)
@@ -145,10 +147,10 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 
 func TestTickPassedDepositPeriod(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
-	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	govHandler := gov.NewHandler(app.GovKeeper)
@@ -171,7 +173,11 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	proposalID := types.GetProposalIDFromBytes(res.Data)
+	var proposalData types.MsgSubmitProposalResponse
+	err = proto.Unmarshal(res.Data, &proposalData)
+	require.NoError(t, err)
+
+	proposalID := proposalData.ProposalId
 
 	inactiveQueue = app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
@@ -198,12 +204,12 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 
 func TestTickPassedVotingPeriod(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
 	SortAddresses(addrs)
 
-	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	govHandler := gov.NewHandler(app.GovKeeper)
@@ -223,7 +229,11 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	proposalID := types.GetProposalIDFromBytes(res.Data)
+	var proposalData types.MsgSubmitProposalResponse
+	err = proto.Unmarshal(res.Data, &proposalData)
+	require.NoError(t, err)
+
+	proposalID := proposalData.ProposalId
 
 	newHeader := ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
@@ -262,7 +272,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 func TestProposalPassedEndblocker(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
 	SortAddresses(addrs)
@@ -270,7 +280,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	handler := gov.NewHandler(app.GovKeeper)
 	stakingHandler := staking.NewHandler(app.StakingKeeper)
 
-	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	valAddr := sdk.ValAddress(addrs[0])
@@ -286,11 +296,9 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	require.NoError(t, err)
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10))}
-	newDepositMsg := types.NewMsgDeposit(addrs[0], proposal.ProposalID, proposalCoins)
+	newDepositMsg := types.NewMsgDeposit(addrs[0], proposal.ProposalId, proposalCoins)
 
-	res, err := handler(ctx, newDepositMsg)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	handleAndCheck(t, handler, ctx, newDepositMsg)
 
 	macc = app.GovKeeper.GetGovernanceAccount(ctx)
 	require.NotNil(t, macc)
@@ -299,7 +307,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	deposits := initialModuleAccCoins.Add(proposal.TotalDeposit...).Add(proposalCoins...)
 	require.True(t, moduleAccCoins.IsEqual(deposits))
 
-	err = app.GovKeeper.AddVote(ctx, proposal.ProposalID, addrs[0], types.OptionYes)
+	err = app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[0], types.OptionYes)
 	require.NoError(t, err)
 
 	newHeader := ctx.BlockHeader()
@@ -315,15 +323,13 @@ func TestProposalPassedEndblocker(t *testing.T) {
 
 func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrs(app, ctx, 1, valTokens)
 
 	SortAddresses(addrs)
 
-	handler := gov.NewHandler(app.GovKeeper)
 	stakingHandler := staking.NewHandler(app.StakingKeeper)
-
-	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	valAddr := sdk.ValAddress(addrs[0])
@@ -338,13 +344,11 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	require.NoError(t, err)
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10)))
-	newDepositMsg := types.NewMsgDeposit(addrs[0], proposal.ProposalID, proposalCoins)
+	newDepositMsg := types.NewMsgDeposit(addrs[0], proposal.ProposalId, proposalCoins)
 
-	res, err := handler(ctx, newDepositMsg)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	handleAndCheck(t, gov.NewHandler(app.GovKeeper), ctx, newDepositMsg)
 
-	err = app.GovKeeper.AddVote(ctx, proposal.ProposalID, addrs[0], types.OptionYes)
+	err = app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[0], types.OptionYes)
 	require.NoError(t, err)
 
 	newHeader := ctx.BlockHeader()

@@ -18,7 +18,7 @@ func NormalizeVoteOption(option string) string {
 		return types.OptionNoWithVeto.String()
 
 	default:
-		return ""
+		return option
 	}
 }
 
@@ -44,6 +44,7 @@ func NormalizeProposalStatus(status string) string {
 		return "Passed"
 	case "Rejected", "rejected":
 		return "Rejected"
+	default:
+		return status
 	}
-	return ""
 }

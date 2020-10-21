@@ -1,0 +1,155 @@
+syntax = "proto3";
+package cosmos.distribution.v1beta1;
+
+option go_package            = "github.com/cosmos/cosmos-sdk/x/distribution/types";
+option (gogoproto.equal_all) = true;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/distribution/v1beta1/distribution.proto";
+
+// DelegatorWithdrawInfo is the address for where distributions rewards are
+// withdrawn to by default this struct is only used at genesis to feed in
+// default withdraw addresses.
+message DelegatorWithdrawInfo {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // delegator_address is the address of the delegator.
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+
+  // withdraw_address is the address to withdraw the delegation rewards to.
+  string withdraw_address = 2 [(gogoproto.moretags) = "yaml:\"withdraw_address\""];
+}
+
+// ValidatorOutstandingRewardsRecord is used for import/export via genesis json.
+message ValidatorOutstandingRewardsRecord {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // validator_address is the address of the validator.
+  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+
+  // outstanding_rewards represents the oustanding rewards of a validator.
+  repeated cosmos.base.v1beta1.DecCoin outstanding_rewards = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable)     = false,
+    (gogoproto.moretags)     = "yaml:\"outstanding_rewards\""
+  ];
+}
+
+// ValidatorAccumulatedCommissionRecord is used for import / export via genesis
+// json.
+message ValidatorAccumulatedCommissionRecord {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // validator_address is the address of the validator.
+  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+
+  // accumulated is the accumulated commission of a validator.
+  ValidatorAccumulatedCommission accumulated = 2
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"accumulated\""];
+}
+
+// ValidatorHistoricalRewardsRecord is used for import / export via genesis
+// json.
+message ValidatorHistoricalRewardsRecord {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // validator_address is the address of the validator.
+  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+
+  // period defines the period the historical rewards apply to.
+  uint64 period = 2;
+
+  // rewards defines the historical rewards of a validator.
+  ValidatorHistoricalRewards rewards = 3 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"rewards\""];
+}
+
+// ValidatorCurrentRewardsRecord is used for import / export via genesis json.
+message ValidatorCurrentRewardsRecord {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // validator_address is the address of the validator.
+  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+
+  // rewards defines the current rewards of a validator.
+  ValidatorCurrentRewards rewards = 2 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"rewards\""];
+}
+
+// DelegatorStartingInfoRecord used for import / export via genesis json.
+message DelegatorStartingInfoRecord {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // delegator_address is the address of the delegator.
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+
+  // validator_address is the address of the validator.
+  string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+
+  // starting_info defines the starting info of a delegator.
+  DelegatorStartingInfo starting_info = 3
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"starting_info\""];
+}
+
+// ValidatorSlashEventRecord is used for import / export via genesis json.
+message ValidatorSlashEventRecord {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // validator_address is the address of the validator.
+  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  // height defines the block height at which the slash event occured.
+  uint64 height = 2;
+  // period is the period of the slash event.
+  uint64 period = 3;
+  // validator_slash_event describes the slash event.
+  ValidatorSlashEvent validator_slash_event = 4 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"event\""];
+}
+
+// GenesisState defines the distribution module's genesis state.
+message GenesisState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // params defines all the paramaters of the module.
+  Params params = 1 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"params\""];
+
+  // fee_pool defines the fee pool at genesis.
+  FeePool fee_pool = 2 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"fee_pool\""];
+
+  // fee_pool defines the delegator withdraw infos at genesis.
+  repeated DelegatorWithdrawInfo delegator_withdraw_infos = 3
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"delegator_withdraw_infos\""];
+
+  // fee_pool defines the previous proposer at genesis.
+  string previous_proposer = 4 [(gogoproto.moretags) = "yaml:\"previous_proposer\""];
+
+  // fee_pool defines the outstanding rewards of all validators at genesis.
+  repeated ValidatorOutstandingRewardsRecord outstanding_rewards = 5
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"outstanding_rewards\""];
+
+  // fee_pool defines the accumulated commisions of all validators at genesis.
+  repeated ValidatorAccumulatedCommissionRecord validator_accumulated_commissions = 6
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"validator_accumulated_commissions\""];
+
+  // fee_pool defines the historical rewards of all validators at genesis.
+  repeated ValidatorHistoricalRewardsRecord validator_historical_rewards = 7
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"validator_historical_rewards\""];
+
+  // fee_pool defines the current rewards of all validators at genesis.
+  repeated ValidatorCurrentRewardsRecord validator_current_rewards = 8
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"validator_current_rewards\""];
+
+  // fee_pool defines the delegator starting infos at genesis.
+  repeated DelegatorStartingInfoRecord delegator_starting_infos = 9
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"delegator_starting_infos\""];
+
+  // fee_pool defines the validator slash events at genesis.
+  repeated ValidatorSlashEventRecord validator_slash_events = 10
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"validator_slash_events\""];
+}

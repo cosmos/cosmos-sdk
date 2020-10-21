@@ -8,10 +8,10 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/ledger"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -53,23 +53,17 @@ consisting of all the keys provided by name and multisig threshold.`,
 
 func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	var info keyring.Info
-
-	backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-	homeDir, _ := cmd.Flags().GetString(flags.FlagHome)
-	kb, err := keyring.New(sdk.KeyringServiceName(), backend, homeDir, cmd.InOrStdin())
-	if err != nil {
-		return err
-	}
+	clientCtx := client.GetClientContextFromCmd(cmd)
 
 	if len(args) == 1 {
-		info, err = fetchKey(kb, args[0])
+		info, err = fetchKey(clientCtx.Keyring, args[0])
 		if err != nil {
 			return fmt.Errorf("%s is not a valid name or address: %v", args[0], err)
 		}
 	} else {
 		pks := make([]tmcrypto.PubKey, len(args))
 		for i, keyref := range args {
-			info, err := fetchKey(kb, keyref)
+			info, err := fetchKey(clientCtx.Keyring, keyref)
 			if err != nil {
 				return fmt.Errorf("%s is not a valid name or address: %v", keyref, err)
 			}
@@ -83,7 +77,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 			return err
 		}
 
-		multikey := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
+		multikey := multisig.NewLegacyAminoPubKey(multisigThreshold, pks)
 		info = keyring.NewMultiInfo(defaultMultiSigKeyName, multikey)
 	}
 
@@ -140,7 +134,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 			return nil
 		}
 
-		return crypto.LedgerShowAddress(*hdpath, info.GetPubKey(), sdk.GetConfig().GetBech32AccountAddrPrefix())
+		return ledger.ShowAddress(*hdpath, info.GetPubKey(), sdk.GetConfig().GetBech32AccountAddrPrefix())
 	}
 
 	return nil

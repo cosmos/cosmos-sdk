@@ -4,7 +4,7 @@ order: 4
 
 # REST Interface
 
-This document describes how to create a REST interface for an SDK **application**. A separate document for creating a [**module**](../building-modules/intro.md) REST interface can be found [here](#../module-interfaces.md#rest). {synopsis}
+This document describes how to create a REST interface for an SDK **application**. A separate document for creating a [**module**](../building-modules/intro.md) REST interface can be found [here](#../module-interfaces.md#legacy-rest). {synopsis}
 
 ## Pre-requisite Readings
 
@@ -22,10 +22,8 @@ rootCmd.AddCommand(rest.ServeCommand(cdc, registerRoutes))
 Users will then be able to use the application CLI to start a new REST server, a local server through which they can securely interact with the application without downloading the entire state. The command entered by users would look something like this:
 
 ```bash
-appcli rest-server --chain-id <chainID> --trust-node
+appcli rest-server --chain-id <chainID>
 ```
-
-Note that if `trust-node` is set to `false`, the REST server will verify the query proof against the merkle root (contained in the block header).
 
 ## REST Server
 
@@ -43,7 +41,7 @@ In order to enable the REST Server in an SDK application, the `rest.ServeCommand
 
 ## Registering Routes
 
-To include routes for each module in an application, the CLI must have some kind of function to register routes in its REST Server. This function is called `RegisterRoutes()`, and is utilized by the `ServeCommand` and must include routes for each of the application's modules. Since each module used by an SDK application implements a [`RegisterRESTRoutes`](../building-modules/module-interfaces.md#rest) function, application developers simply use the [Module Manager](../building-modules/module-manager.md) to call this function for each module (this is done in the [application's constructor](../basics/app-anatomy.md#constructor-function)).
+To include routes for each module in an application, the CLI must have some kind of function to register routes in its REST Server. This function is called `RegisterRoutes()`, and is utilized by the `ServeCommand` and must include routes for each of the application's modules. Since each module used by an SDK application implements a [`RegisterRESTRoutes`](../building-modules/module-interfaces.md#legacy-rest) function, application developers simply use the [Module Manager](../building-modules/module-manager.md) to call this function for each module (this is done in the [application's constructor](../basics/app-anatomy.md#constructor-function)).
 
 At the bare minimum, a `RegisterRoutes()` function should use the SDK client package `RegisterRoutes()` function to be able to route RPC calls, and instruct the application Module Manager to call `RegisterRESTRoutes()` for all of its modules. This is done in the `main.go` file of the CLI (typically located in `./cmd/appcli/main.go`).
 
@@ -68,5 +66,5 @@ rootCmd.AddCommand(rest.ServeCommand(cdc, registerRoutes))
 gaiacli rest-server --chain-id=test \
     --laddr=tcp://localhost:1317 \
     --node tcp://localhost:26657 \
-    --trust-node=true --unsafe-cors
+    --unsafe-cors
 ```

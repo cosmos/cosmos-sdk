@@ -4,7 +4,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha512"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -100,14 +99,10 @@ func NewParamsFromPath(path string) (*BIP44Params, error) {
 
 func hardenedInt(field string) (uint32, error) {
 	field = strings.TrimSuffix(field, "'")
-	i, err := strconv.Atoi(field)
 
+	i, err := strconv.ParseUint(field, 10, 32)
 	if err != nil {
 		return 0, err
-	}
-
-	if i < 0 {
-		return 0, fmt.Errorf("fields must not be negative. got %d", i)
 	}
 
 	return uint32(i), nil
@@ -166,7 +161,7 @@ func ComputeMastersFromSeed(seed []byte) (secret [32]byte, chainCode [32]byte) {
 
 // DerivePrivateKeyForPath derives the private key by following the BIP 32/44 path from privKeyBytes,
 // using the given chainCode.
-func DerivePrivateKeyForPath(privKeyBytes [32]byte, chainCode [32]byte, path string) ([32]byte, error) {
+func DerivePrivateKeyForPath(privKeyBytes, chainCode [32]byte, path string) ([]byte, error) {
 	data := privKeyBytes
 	parts := strings.Split(path, "/")
 
@@ -178,24 +173,19 @@ func DerivePrivateKeyForPath(privKeyBytes [32]byte, chainCode [32]byte, path str
 			part = part[:len(part)-1]
 		}
 
-		idx, err := strconv.Atoi(part)
-
+		idx, err := strconv.ParseUint(part, 10, 32)
 		if err != nil {
-			return [32]byte{}, fmt.Errorf("invalid BIP 32 path: %s", err)
-		}
-
-		if idx < 0 {
-			return [32]byte{}, errors.New("invalid BIP 32 path: index negative ot too large")
+			return []byte{}, fmt.Errorf("invalid BIP 32 path: %s", err)
 		}
 
 		data, chainCode = derivePrivateKey(data, chainCode, uint32(idx), harden)
 	}
 
-	var derivedKey [32]byte
-	n := copy(derivedKey[:], data[:])
+	derivedKey := make([]byte, 32)
+	n := copy(derivedKey, data[:])
 
 	if n != 32 || len(data) != 32 {
-		return [32]byte{}, fmt.Errorf("expected a (secp256k1) key of length 32, got length: %v", len(data))
+		return []byte{}, fmt.Errorf("expected a (secp256k1) key of length 32, got length: %v", len(data))
 	}
 
 	return derivedKey, nil

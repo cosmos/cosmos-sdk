@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -50,16 +50,16 @@ func TestInitGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	// initialize the validators
-	validators[0].OperatorAddress = sdk.ValAddress(addrs[0])
+	validators[0].OperatorAddress = sdk.ValAddress(addrs[0]).String()
 	validators[0].ConsensusPubkey = pk0
 	validators[0].Description = types.NewDescription("hoop", "", "", "", "")
-	validators[0].Status = sdk.Bonded
+	validators[0].Status = types.Bonded
 	validators[0].Tokens = valTokens
 	validators[0].DelegatorShares = valTokens.ToDec()
-	validators[1].OperatorAddress = sdk.ValAddress(addrs[1])
+	validators[1].OperatorAddress = sdk.ValAddress(addrs[1]).String()
 	validators[1].ConsensusPubkey = pk1
 	validators[1].Description = types.NewDescription("bloop", "", "", "", "")
-	validators[1].Status = sdk.Bonded
+	validators[1].Status = types.Bonded
 	validators[1].Tokens = valTokens
 	validators[1].DelegatorShares = valTokens.ToDec()
 
@@ -79,11 +79,11 @@ func TestInitGenesis(t *testing.T) {
 	// now make sure the validators are bonded and intra-tx counters are correct
 	resVal, found := app.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addrs[0]))
 	require.True(t, found)
-	require.Equal(t, sdk.Bonded, resVal.Status)
+	require.Equal(t, types.Bonded, resVal.Status)
 
 	resVal, found = app.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addrs[1]))
 	require.True(t, found)
-	require.Equal(t, sdk.Bonded, resVal.Status)
+	require.Equal(t, types.Bonded, resVal.Status)
 
 	abcivals := make([]abci.ValidatorUpdate, len(vals))
 	for i, val := range validators {
@@ -107,7 +107,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 		validators[i] = types.NewValidator(sdk.ValAddress(addrs[i]),
 			PKs[i], types.NewDescription(fmt.Sprintf("#%d", i), "", "", "", ""))
 
-		validators[i].Status = sdk.Bonded
+		validators[i].Status = types.Bonded
 
 		tokens := sdk.TokensFromConsensusPower(1)
 		if i < 100 {
@@ -153,7 +153,7 @@ func TestValidateGenesis(t *testing.T) {
 		{"jailed and bonded validator", func(data *types.GenesisState) {
 			data.Validators = genValidators1
 			data.Validators[0].Jailed = true
-			data.Validators[0].Status = sdk.Bonded
+			data.Validators[0].Status = types.Bonded
 		}, true},
 	}
 
@@ -161,7 +161,7 @@ func TestValidateGenesis(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			genesisState := types.DefaultGenesisState()
-			tt.mutate(&genesisState)
+			tt.mutate(genesisState)
 			if tt.wantErr {
 				assert.Error(t, staking.ValidateGenesis(genesisState))
 			} else {

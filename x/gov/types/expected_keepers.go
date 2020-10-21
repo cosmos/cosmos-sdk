@@ -3,7 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	stakingexported "github.com/cosmos/cosmos-sdk/x/staking/exported"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // ParamSubspace defines the expected Subspace interface for parameters (noalias)
@@ -16,13 +16,13 @@ type ParamSubspace interface {
 type StakingKeeper interface {
 	// iterate through bonded validators by operator address, execute func for each validator
 	IterateBondedValidatorsByPower(
-		sdk.Context, func(index int64, validator stakingexported.ValidatorI) (stop bool),
+		sdk.Context, func(index int64, validator stakingtypes.ValidatorI) (stop bool),
 	)
 
 	TotalBondedTokens(sdk.Context) sdk.Int // total bonded tokens within the validator set
 	IterateDelegations(
 		ctx sdk.Context, delegator sdk.AccAddress,
-		fn func(index int64, delegation stakingexported.DelegationI) (stop bool),
+		fn func(index int64, delegation stakingtypes.DelegationI) (stop bool),
 	)
 }
 

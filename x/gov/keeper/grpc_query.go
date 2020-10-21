@@ -3,12 +3,13 @@ package keeper
 import (
 	"context"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 var _ types.QueryServer = Keeper{}
@@ -41,7 +42,7 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 	store := ctx.KVStore(q.storeKey)
 	proposalStore := prefix.NewStore(store, types.ProposalsKeyPrefix)
 
-	res, err := query.FilteredPaginate(proposalStore, req.Req, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(proposalStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var p types.Proposal
 		if err := q.cdc.UnmarshalBinaryBare(value, &p); err != nil {
 			return false, status.Error(codes.Internal, err.Error())
@@ -56,12 +57,21 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 
 		// match voter address (if supplied)
 		if len(req.Voter) > 0 {
-			_, matchVoter = q.GetVote(ctx, p.ProposalID, req.Voter)
+			voter, err := sdk.AccAddressFromBech32(req.Voter)
+			if err != nil {
+				return false, err
+			}
+
+			_, matchVoter = q.GetVote(ctx, p.ProposalId, voter)
 		}
 
 		// match depositor (if supplied)
 		if len(req.Depositor) > 0 {
-			_, matchDepositor = q.GetDeposit(ctx, p.ProposalID, req.Depositor)
+			depositor, err := sdk.AccAddressFromBech32(req.Depositor)
+			if err != nil {
+				return false, err
+			}
+			_, matchDepositor = q.GetDeposit(ctx, p.ProposalId, depositor)
 		}
 
 		if matchVoter && matchDepositor && matchStatus {
@@ -79,7 +89,7 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryProposalsResponse{Proposals: filteredProposals, Res: res}, nil
+	return &types.QueryProposalsResponse{Proposals: filteredProposals, Pagination: pageRes}, nil
 }
 
 // Vote returns Voted information based on proposalID, voterAddr
@@ -92,13 +102,17 @@ func (q Keeper) Vote(c context.Context, req *types.QueryVoteRequest) (*types.Que
 		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
-	if req.Voter == nil {
+	if req.Voter == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty voter address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	vote, found := q.GetVote(ctx, req.ProposalId, req.Voter)
+	voter, err := sdk.AccAddressFromBech32(req.Voter)
+	if err != nil {
+		return nil, err
+	}
+	vote, found := q.GetVote(ctx, req.ProposalId, voter)
 	if !found {
 		return nil, status.Errorf(codes.InvalidArgument,
 			"voter: %v not found for proposal: %v", req.Voter, req.ProposalId)
@@ -123,7 +137,7 @@ func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.Q
 	store := ctx.KVStore(q.storeKey)
 	votesStore := prefix.NewStore(store, types.VotesKey(req.ProposalId))
 
-	res, err := query.Paginate(votesStore, req.Req, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(votesStore, req.Pagination, func(key []byte, value []byte) error {
 		var vote types.Vote
 		if err := q.cdc.UnmarshalBinaryBare(value, &vote); err != nil {
 			return err
@@ -137,7 +151,7 @@ func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.Q
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryVotesResponse{Votes: votes, Res: res}, nil
+	return &types.QueryVotesResponse{Votes: votes, Pagination: pageRes}, nil
 }
 
 // Params queries all params
@@ -177,13 +191,17 @@ func (q Keeper) Deposit(c context.Context, req *types.QueryDepositRequest) (*typ
 		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
-	if req.Depositor == nil {
+	if req.Depositor == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty depositor address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	deposit, found := q.GetDeposit(ctx, req.ProposalId, req.Depositor)
+	depositor, err := sdk.AccAddressFromBech32(req.Depositor)
+	if err != nil {
+		return nil, err
+	}
+	deposit, found := q.GetDeposit(ctx, req.ProposalId, depositor)
 	if !found {
 		return nil, status.Errorf(codes.InvalidArgument,
 			"depositer: %v not found for proposal: %v", req.Depositor, req.ProposalId)
@@ -208,7 +226,7 @@ func (q Keeper) Deposits(c context.Context, req *types.QueryDepositsRequest) (*t
 	store := ctx.KVStore(q.storeKey)
 	depositStore := prefix.NewStore(store, types.DepositsKey(req.ProposalId))
 
-	res, err := query.Paginate(depositStore, req.Req, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key []byte, value []byte) error {
 		var deposit types.Deposit
 		if err := q.cdc.UnmarshalBinaryBare(value, &deposit); err != nil {
 			return err
@@ -222,7 +240,7 @@ func (q Keeper) Deposits(c context.Context, req *types.QueryDepositsRequest) (*t
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryDepositsResponse{Deposits: deposits, Res: res}, nil
+	return &types.QueryDepositsResponse{Deposits: deposits, Pagination: pageRes}, nil
 }
 
 // TallyResult queries the tally of a proposal vote

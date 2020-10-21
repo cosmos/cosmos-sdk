@@ -4,24 +4,23 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestGRPCRouter(t *testing.T) {
 	qr := NewGRPCQueryRouter()
 	interfaceRegistry := testdata.NewTestInterfaceRegistry()
-	qr.SetAnyUnpacker(interfaceRegistry)
-	testdata.RegisterTestServiceServer(qr, testdata.TestServiceImpl{})
+	qr.SetInterfaceRegistry(interfaceRegistry)
+	testdata.RegisterQueryServer(qr, testdata.QueryImpl{})
 	helper := &QueryServiceTestHelper{
 		GRPCQueryRouter: qr,
-		ctx:             sdk.Context{},
+		ctx:             sdk.Context{}.WithContext(context.Background()),
 	}
-	client := testdata.NewTestServiceClient(helper)
+	client := testdata.NewQueryClient(helper)
 
 	res, err := client.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
 	require.Nil(t, err)

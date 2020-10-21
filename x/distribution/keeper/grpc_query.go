@@ -3,14 +3,15 @@ package keeper
 import (
 	"context"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/exported"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var _ types.QueryServer = Keeper{}
@@ -30,12 +31,17 @@ func (k Keeper) ValidatorOutstandingRewards(c context.Context, req *types.QueryV
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	if req.ValidatorAddress.Empty() {
+	if req.ValidatorAddress == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty validator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	rewards := k.GetValidatorOutstandingRewards(ctx, req.ValidatorAddress)
+
+	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	rewards := k.GetValidatorOutstandingRewards(ctx, valAdr)
 
 	return &types.QueryValidatorOutstandingRewardsResponse{Rewards: rewards}, nil
 }
@@ -46,12 +52,17 @@ func (k Keeper) ValidatorCommission(c context.Context, req *types.QueryValidator
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	if req.ValidatorAddress.Empty() {
+	if req.ValidatorAddress == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty validator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	commission := k.GetValidatorAccumulatedCommission(ctx, req.ValidatorAddress)
+
+	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	commission := k.GetValidatorAccumulatedCommission(ctx, valAdr)
 
 	return &types.QueryValidatorCommissionResponse{Commission: commission}, nil
 }
@@ -62,7 +73,7 @@ func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSla
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	if req.ValidatorAddress.Empty() {
+	if req.ValidatorAddress == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty validator address")
 	}
 
@@ -73,9 +84,13 @@ func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSla
 	ctx := sdk.UnwrapSDKContext(c)
 	events := make([]types.ValidatorSlashEvent, 0)
 	store := ctx.KVStore(k.storeKey)
-	slashesStore := prefix.NewStore(store, types.GetValidatorSlashEventPrefix(req.ValidatorAddress))
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid validator address")
+	}
+	slashesStore := prefix.NewStore(store, types.GetValidatorSlashEventPrefix(valAddr))
 
-	res, err := query.FilteredPaginate(slashesStore, req.Req, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(slashesStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var result types.ValidatorSlashEvent
 		err := k.cdc.UnmarshalBinaryBare(value, &result)
 
@@ -94,10 +109,10 @@ func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSla
 	})
 
 	if err != nil {
-		return &types.QueryValidatorSlashesResponse{}, err
+		return nil, err
 	}
 
-	return &types.QueryValidatorSlashesResponse{Slashes: events, Res: res}, nil
+	return &types.QueryValidatorSlashesResponse{Slashes: events, Pagination: pageRes}, nil
 }
 
 // DelegationRewards the total rewards accrued by a delegation
@@ -106,22 +121,31 @@ func (k Keeper) DelegationRewards(c context.Context, req *types.QueryDelegationR
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	if req.DelegatorAddress.Empty() {
+	if req.DelegatorAddress == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty delegator address")
 	}
 
-	if req.ValidatorAddress.Empty() {
+	if req.ValidatorAddress == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty validator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	val := k.stakingKeeper.Validator(ctx, req.ValidatorAddress)
-	if val == nil {
-		return nil, sdkerrors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress.String())
+	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
 	}
 
-	del := k.stakingKeeper.Delegation(ctx, req.DelegatorAddress, req.ValidatorAddress)
+	val := k.stakingKeeper.Validator(ctx, valAdr)
+	if val == nil {
+		return nil, sdkerrors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
+	}
+
+	delAdr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	del := k.stakingKeeper.Delegation(ctx, delAdr, valAdr)
 	if del == nil {
 		return nil, types.ErrNoDelegationExists
 	}
@@ -138,7 +162,7 @@ func (k Keeper) DelegationTotalRewards(c context.Context, req *types.QueryDelega
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	if req.DelegatorAddress.Empty() {
+	if req.DelegatorAddress == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty delegator address")
 	}
 
@@ -147,9 +171,14 @@ func (k Keeper) DelegationTotalRewards(c context.Context, req *types.QueryDelega
 	total := sdk.DecCoins{}
 	var delRewards []types.DelegationDelegatorReward
 
+	delAdr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
 	k.stakingKeeper.IterateDelegations(
-		ctx, req.DelegatorAddress,
-		func(_ int64, del exported.DelegationI) (stop bool) {
+		ctx, delAdr,
+		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
 			valAddr := del.GetValidatorAddr()
 			val := k.stakingKeeper.Validator(ctx, valAddr)
 			endingPeriod := k.IncrementValidatorPeriod(ctx, val)
@@ -170,18 +199,21 @@ func (k Keeper) DelegatorValidators(c context.Context, req *types.QueryDelegator
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	if req.DelegatorAddress.Empty() {
+	if req.DelegatorAddress == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty delegator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-
-	var validators []sdk.ValAddress
+	delAdr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	var validators []string
 
 	k.stakingKeeper.IterateDelegations(
-		ctx, req.DelegatorAddress,
-		func(_ int64, del exported.DelegationI) (stop bool) {
-			validators = append(validators, del.GetValidatorAddr())
+		ctx, delAdr,
+		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
+			validators = append(validators, del.GetValidatorAddr().String())
 			return false
 		},
 	)
@@ -195,14 +227,18 @@ func (k Keeper) DelegatorWithdrawAddress(c context.Context, req *types.QueryDele
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	if req.DelegatorAddress.Empty() {
+	if req.DelegatorAddress == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty delegator address")
+	}
+	delAdr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
+	if err != nil {
+		return nil, err
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, req.DelegatorAddress)
+	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, delAdr)
 
-	return &types.QueryDelegatorWithdrawAddressResponse{WithdrawAddress: withdrawAddr}, nil
+	return &types.QueryDelegatorWithdrawAddressResponse{WithdrawAddress: withdrawAddr.String()}, nil
 }
 
 // CommunityPool queries the community pool coins

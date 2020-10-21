@@ -3,6 +3,7 @@
 package keys
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -10,6 +11,7 @@ import (
 
 	"github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -34,28 +36,28 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	config.SetBech32PrefixForConsensusNode(bech32PrefixConsAddr, bech32PrefixConsPub)
 
 	cmd := AddKeyCommand()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 
 	// Prepare a keybase
-	kbHome, kbCleanUp := testutil.NewTestCaseDir(t)
-	require.NotNil(t, kbHome)
-	t.Cleanup(kbCleanUp)
+	kbHome := t.TempDir()
+
+	clientCtx := client.Context{}.WithKeyringDir(kbHome)
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	cmd.SetArgs([]string{
 		"keyname1",
-		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=true", flags.FlagUseLedger),
 		fmt.Sprintf("--%s=0", flagAccount),
 		fmt.Sprintf("--%s=0", flagIndex),
 		fmt.Sprintf("--%s=330", flagCoinType),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
-		fmt.Sprintf("--%s=%s", flagKeyAlgo, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	mockIn.Reset("test1234\ntest1234\n")
-	require.NoError(t, cmd.Execute())
+	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	// Now check that it has been stored properly
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
@@ -84,26 +86,25 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 
 func Test_runAddCmdLedger(t *testing.T) {
 	cmd := AddKeyCommand()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
-	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 
-	// Prepare a keybase
-	kbHome, kbCleanUp := testutil.NewTestCaseDir(t)
-	require.NotNil(t, kbHome)
-	t.Cleanup(kbCleanUp)
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
+	kbHome := t.TempDir()
+
+	clientCtx := client.Context{}.WithKeyringDir(kbHome)
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	cmd.SetArgs([]string{
 		"keyname1",
-		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=true", flags.FlagUseLedger),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
-		fmt.Sprintf("--%s=%s", flagKeyAlgo, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
 		fmt.Sprintf("--%s=%d", flagCoinType, sdk.CoinType),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	mockIn.Reset("test1234\ntest1234\n")
 
-	require.NoError(t, cmd.Execute())
+	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	// Now check that it has been stored properly
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)

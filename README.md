@@ -49,7 +49,7 @@ It is being used to build [`Gaia`](https://github.com/cosmos/gaia), the first im
 **WARNING**: The SDK has mostly stabilized, but we are still making some
 breaking changes.
 
-**Note**: Requires [Go 1.14+](https://golang.org/dl/)
+**Note**: Requires [Go 1.15+](https://golang.org/dl/)
 
 ## Quick Start
 
@@ -63,9 +63,9 @@ For more, please go to the [Cosmos SDK Docs](./docs/).
 
 The Cosmos Hub application, `gaia`, has moved to its [own repository](https://github.com/cosmos/gaia). Go there to join the Cosmos Hub mainnet and more.
 
-## Scaffolding
+## Starport
 
-If you are starting a new app or a new module we provide a [scaffolding tool](https://github.com/cosmos/scaffold) to help you get started and speed up development. If you have any questions or find a bug, feel free to open an issue in the repo.
+If you are starting a new app or a new module you can use [Starport](https://github.com/tendermint/starport) to help you get started and speed up development. If you have any questions or find a bug, feel free to open an issue in the repo.
 
 ## Disambiguation
 

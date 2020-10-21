@@ -10,8 +10,8 @@ import (
 
 func TestAssertValidKey(t *testing.T) {
 	t.Parallel()
-	require.NotPanics(t, func() { types.AssertValidKey([]byte{}) })
 	require.NotPanics(t, func() { types.AssertValidKey([]byte{0x01}) })
+	require.Panics(t, func() { types.AssertValidKey([]byte{}) })
 	require.Panics(t, func() { types.AssertValidKey(nil) })
 }
 

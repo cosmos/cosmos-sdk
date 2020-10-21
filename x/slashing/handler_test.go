@@ -6,47 +6,42 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
-
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	"github.com/cosmos/cosmos-sdk/x/slashing/testslashing"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestCannotUnjailUnlessJailed(t *testing.T) {
 	// initial setup
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
-
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	pks := simapp.CreateTestPubKeys(1)
 	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, sdk.TokensFromConsensusPower(200))
 
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 	slh := slashing.NewHandler(app.SlashingKeeper)
-	amt := sdk.TokensFromConsensusPower(100)
 	addr, val := sdk.ValAddress(pks[0].Address()), pks[0]
 
-	msg := keeper.NewTestMsgCreateValidator(addr, val, amt)
-	res, err := staking.NewHandler(app.StakingKeeper)(ctx, msg)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-
+	amt := tstaking.CreateValidatorWithValPower(addr, val, 100, true)
 	staking.EndBlocker(ctx, app.StakingKeeper)
-
 	require.Equal(
 		t, app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr)),
-		sdk.Coins{sdk.NewCoin(app.StakingKeeper.GetParams(ctx).BondDenom, keeper.InitTokens.Sub(amt))},
+		sdk.Coins{sdk.NewCoin(app.StakingKeeper.GetParams(ctx).BondDenom, InitTokens.Sub(amt))},
 	)
 	require.Equal(t, amt, app.StakingKeeper.Validator(ctx, addr).GetBondedTokens())
 
 	// assert non-jailed validator can't be unjailed
-	res, err = slh(ctx, types.NewMsgUnjail(addr))
+	res, err := slh(ctx, types.NewMsgUnjail(addr))
 	require.Error(t, err)
 	require.Nil(t, res)
 	require.True(t, errors.Is(types.ErrValidatorNotJailed, err))
@@ -55,37 +50,29 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 	// initial setup
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	pks := simapp.CreateTestPubKeys(1)
 	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, sdk.TokensFromConsensusPower(200))
 
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 	slh := slashing.NewHandler(app.SlashingKeeper)
-	amtInt := int64(100)
-	addr, val, amt := sdk.ValAddress(pks[0].Address()), pks[0], sdk.TokensFromConsensusPower(amtInt)
-	msg := keeper.NewTestMsgCreateValidator(addr, val, amt)
+	addr, val := sdk.ValAddress(pks[0].Address()), pks[0]
+	amt := sdk.TokensFromConsensusPower(100)
+	msg := tstaking.CreateValidatorMsg(addr, val, amt.Int64())
 	msg.MinSelfDelegation = amt
-
-	res, err := staking.NewHandler(app.StakingKeeper)(ctx, msg)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	tstaking.Handle(msg, true)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
-
 	require.Equal(
 		t, app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr)),
-		sdk.Coins{sdk.NewCoin(app.StakingKeeper.GetParams(ctx).BondDenom, keeper.InitTokens.Sub(amt))},
+		sdk.Coins{sdk.NewCoin(app.StakingKeeper.GetParams(ctx).BondDenom, InitTokens.Sub(amt))},
 	)
 
-	unbondAmt := sdk.NewCoin(app.StakingKeeper.GetParams(ctx).BondDenom, sdk.OneInt())
-	undelegateMsg := stakingtypes.NewMsgUndelegate(sdk.AccAddress(addr), addr, unbondAmt)
-	res, err = staking.NewHandler(app.StakingKeeper)(ctx, undelegateMsg)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-
+	tstaking.Undelegate(sdk.AccAddress(addr), addr, sdk.OneInt(), true)
 	require.True(t, app.StakingKeeper.Validator(ctx, addr).IsJailed())
 
 	// assert non-jailed validator can't be unjailed
-	res, err = slh(ctx, types.NewMsgUnjail(addr))
+	res, err := slh(ctx, types.NewMsgUnjail(addr))
 	require.Error(t, err)
 	require.Nil(t, res)
 	require.True(t, errors.Is(types.ErrSelfDelegationTooLowToUnjail, err))
@@ -94,26 +81,18 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 func TestJailedValidatorDelegations(t *testing.T) {
 	// initial setup
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{Time: time.Unix(0, 0)})
-
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Unix(0, 0)})
 	pks := simapp.CreateTestPubKeys(3)
-	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, sdk.TokensFromConsensusPower(20))
-	app.SlashingKeeper.SetParams(ctx, keeper.TestParams())
 
+	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, sdk.TokensFromConsensusPower(20))
+	app.SlashingKeeper.SetParams(ctx, testslashing.TestParams())
+
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 	stakingParams := app.StakingKeeper.GetParams(ctx)
 	app.StakingKeeper.SetParams(ctx, stakingParams)
-
-	// create a validator
-	bondAmount := sdk.TokensFromConsensusPower(10)
-	valPubKey := pks[1]
 	valAddr, consAddr := sdk.ValAddress(pks[1].Address()), sdk.ConsAddress(pks[0].Address())
 
-	msgCreateVal := keeper.NewTestMsgCreateValidator(valAddr, valPubKey, bondAmount)
-	res, err := staking.NewHandler(app.StakingKeeper)(ctx, msgCreateVal)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-
-	// end block
+	amt := tstaking.CreateValidatorWithValPower(valAddr, pks[1], 10, true)
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
 	// set dummy signing info
@@ -122,20 +101,12 @@ func TestJailedValidatorDelegations(t *testing.T) {
 
 	// delegate tokens to the validator
 	delAddr := sdk.AccAddress(pks[2].Address())
-	msgDelegate := keeper.NewTestMsgDelegate(delAddr, valAddr, bondAmount)
-	res, err = staking.NewHandler(app.StakingKeeper)(ctx, msgDelegate)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-
-	unbondAmt := sdk.NewCoin(app.StakingKeeper.GetParams(ctx).BondDenom, bondAmount)
+	tstaking.Delegate(delAddr, valAddr, amt.Int64())
 
 	// unbond validator total self-delegations (which should jail the validator)
-	msgUndelegate := stakingtypes.NewMsgUndelegate(sdk.AccAddress(valAddr), valAddr, unbondAmt)
-	res, err = staking.NewHandler(app.StakingKeeper)(ctx, msgUndelegate)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-
-	_, err = app.StakingKeeper.CompleteUnbonding(ctx, sdk.AccAddress(valAddr), valAddr)
+	valAcc := sdk.AccAddress(valAddr)
+	tstaking.Undelegate(valAcc, valAddr, amt, true)
+	_, err := app.StakingKeeper.CompleteUnbonding(ctx, sdk.AccAddress(valAddr), valAddr)
 	require.Nil(t, err, "expected complete unbonding validator to be ok, got: %v", err)
 
 	// verify validator still exists and is jailed
@@ -144,15 +115,12 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	require.True(t, validator.IsJailed())
 
 	// verify the validator cannot unjail itself
-	res, err = slashing.NewHandler(app.SlashingKeeper)(ctx, types.NewMsgUnjail(valAddr))
+	res, err := slashing.NewHandler(app.SlashingKeeper)(ctx, types.NewMsgUnjail(valAddr))
 	require.Error(t, err)
 	require.Nil(t, res)
 
 	// self-delegate to validator
-	msgSelfDelegate := keeper.NewTestMsgDelegate(sdk.AccAddress(valAddr), valAddr, bondAmount)
-	res, err = staking.NewHandler(app.StakingKeeper)(ctx, msgSelfDelegate)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	tstaking.Delegate(valAcc, valAddr, amt.Int64())
 
 	// verify the validator can now unjail itself
 	res, err = slashing.NewHandler(app.SlashingKeeper)(ctx, types.NewMsgUnjail(valAddr))
@@ -164,7 +132,7 @@ func TestInvalidMsg(t *testing.T) {
 	k := keeper.Keeper{}
 	h := slashing.NewHandler(k)
 
-	res, err := h(sdk.NewContext(nil, abci.Header{}, false, nil), testdata.NewTestMsg())
+	res, err := h(sdk.NewContext(nil, tmproto.Header{}, false, nil), testdata.NewTestMsg())
 	require.Error(t, err)
 	require.Nil(t, res)
 	require.True(t, strings.Contains(err.Error(), "unrecognized slashing message type"))
@@ -175,27 +143,22 @@ func TestInvalidMsg(t *testing.T) {
 func TestHandleAbsentValidator(t *testing.T) {
 	// initial setup
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{Time: time.Unix(0, 0)})
-
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Unix(0, 0)})
 	pks := simapp.CreateTestPubKeys(1)
 	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, sdk.TokensFromConsensusPower(200))
-	app.SlashingKeeper.SetParams(ctx, keeper.TestParams())
+	app.SlashingKeeper.SetParams(ctx, testslashing.TestParams())
 
 	power := int64(100)
-	amt := sdk.TokensFromConsensusPower(power)
 	addr, val := sdk.ValAddress(pks[0].Address()), pks[0]
-	sh := staking.NewHandler(app.StakingKeeper)
 	slh := slashing.NewHandler(app.SlashingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
-	res, err := sh(ctx, keeper.NewTestMsgCreateValidator(addr, val, amt))
-	require.NoError(t, err)
-	require.NotNil(t, res)
-
+	amt := tstaking.CreateValidatorWithValPower(addr, val, power, true)
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
 	require.Equal(
 		t, app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr)),
-		sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.GetParams(ctx).BondDenom, keeper.InitTokens.Sub(amt))),
+		sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.GetParams(ctx).BondDenom, InitTokens.Sub(amt))),
 	)
 	require.Equal(t, amt, app.StakingKeeper.Validator(ctx, addr).GetBondedTokens())
 
@@ -230,7 +193,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// validator should be bonded still
 	validator, _ := app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Bonded, validator.GetStatus())
+	require.Equal(t, stakingtypes.Bonded, validator.GetStatus())
 
 	bondPool := app.StakingKeeper.GetBondedPool(ctx)
 	require.True(sdk.IntEq(t, amt, app.BankKeeper.GetBalance(ctx, bondPool.GetAddress(), app.StakingKeeper.BondDenom(ctx)).Amount))
@@ -249,7 +212,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// validator should have been jailed
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Unbonding, validator.GetStatus())
+	require.Equal(t, stakingtypes.Unbonding, validator.GetStatus())
 
 	slashAmt := amt.ToDec().Mul(app.SlashingKeeper.SlashFractionDowntime(ctx)).RoundInt64()
 
@@ -273,12 +236,12 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, amt.Int64()-slashAmt, validator.GetTokens().Int64())
 
 	// unrevocation should fail prior to jail expiration
-	res, err = slh(ctx, types.NewMsgUnjail(addr))
+	res, err := slh(ctx, types.NewMsgUnjail(addr))
 	require.Error(t, err)
 	require.Nil(t, res)
 
 	// unrevocation should succeed after jail expiration
-	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(app.SlashingKeeper.DowntimeJailDuration(ctx))})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(1, 0).Add(app.SlashingKeeper.DowntimeJailDuration(ctx))})
 	res, err = slh(ctx, types.NewMsgUnjail(addr))
 	require.NoError(t, err)
 	require.NotNil(t, res)
@@ -288,7 +251,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// validator should be rebonded now
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Bonded, validator.GetStatus())
+	require.Equal(t, stakingtypes.Bonded, validator.GetStatus())
 
 	// validator should have been slashed
 	require.Equal(t, amt.Int64()-slashAmt, app.BankKeeper.GetBalance(ctx, bondPool.GetAddress(), app.StakingKeeper.BondDenom(ctx)).Amount.Int64())
@@ -305,7 +268,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeight(height)
 	app.SlashingKeeper.HandleValidatorSignature(ctx, val.Address(), power, false)
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Bonded, validator.GetStatus())
+	require.Equal(t, stakingtypes.Bonded, validator.GetStatus())
 
 	// 500 signed blocks
 	nextHeight := height + app.SlashingKeeper.MinSignedPerWindow(ctx) + 1
@@ -328,5 +291,5 @@ func TestHandleAbsentValidator(t *testing.T) {
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Unbonding, validator.GetStatus())
+	require.Equal(t, stakingtypes.Unbonding, validator.GetStatus())
 }

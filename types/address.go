@@ -9,10 +9,15 @@ import (
 	"strings"
 
 	"github.com/tendermint/tendermint/crypto"
+	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
 	yaml "gopkg.in/yaml.v2"
 
-	tmamino "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -111,7 +116,7 @@ func VerifyAddressFormat(bz []byte) error {
 		return verifier(bz)
 	}
 	if len(bz) != AddrLen {
-		return errors.New("incorrect address length")
+		return fmt.Errorf("incorrect address length (expected: %d, actual: %d)", AddrLen, len(bz))
 	}
 	return nil
 }
@@ -119,7 +124,7 @@ func VerifyAddressFormat(bz []byte) error {
 // AccAddressFromBech32 creates an AccAddress from a Bech32 string.
 func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 	if len(strings.TrimSpace(address)) == 0 {
-		return AccAddress{}, nil
+		return AccAddress{}, errors.New("empty address string is not allowed")
 	}
 
 	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
@@ -183,8 +188,13 @@ func (aa AccAddress) MarshalYAML() (interface{}, error) {
 func (aa *AccAddress) UnmarshalJSON(data []byte) error {
 	var s string
 	err := json.Unmarshal(data, &s)
+
 	if err != nil {
 		return err
+	}
+	if s == "" {
+		*aa = AccAddress{}
+		return nil
 	}
 
 	aa2, err := AccAddressFromBech32(s)
@@ -202,6 +212,10 @@ func (aa *AccAddress) UnmarshalYAML(data []byte) error {
 	err := yaml.Unmarshal(data, &s)
 	if err != nil {
 		return err
+	}
+	if s == "" {
+		*aa = AccAddress{}
+		return nil
 	}
 
 	aa2, err := AccAddressFromBech32(s)
@@ -264,7 +278,7 @@ func ValAddressFromHex(address string) (addr ValAddress, err error) {
 // ValAddressFromBech32 creates a ValAddress from a Bech32 string.
 func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 	if len(strings.TrimSpace(address)) == 0 {
-		return ValAddress{}, nil
+		return ValAddress{}, errors.New("empty address string is not allowed")
 	}
 
 	bech32PrefixValAddr := GetConfig().GetBech32ValidatorAddrPrefix()
@@ -332,6 +346,10 @@ func (va *ValAddress) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
+	if s == "" {
+		*va = ValAddress{}
+		return nil
+	}
 
 	va2, err := ValAddressFromBech32(s)
 	if err != nil {
@@ -349,6 +367,10 @@ func (va *ValAddress) UnmarshalYAML(data []byte) error {
 	err := yaml.Unmarshal(data, &s)
 	if err != nil {
 		return err
+	}
+	if s == "" {
+		*va = ValAddress{}
+		return nil
 	}
 
 	va2, err := ValAddressFromBech32(s)
@@ -411,7 +433,7 @@ func ConsAddressFromHex(address string) (addr ConsAddress, err error) {
 // ConsAddressFromBech32 creates a ConsAddress from a Bech32 string.
 func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
 	if len(strings.TrimSpace(address)) == 0 {
-		return ConsAddress{}, nil
+		return ConsAddress{}, errors.New("empty address string is not allowed")
 	}
 
 	bech32PrefixConsAddr := GetConfig().GetBech32ConsensusAddrPrefix()
@@ -484,6 +506,10 @@ func (ca *ConsAddress) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
+	if s == "" {
+		*ca = ConsAddress{}
+		return nil
+	}
 
 	ca2, err := ConsAddressFromBech32(s)
 	if err != nil {
@@ -501,6 +527,10 @@ func (ca *ConsAddress) UnmarshalYAML(data []byte) error {
 	err := yaml.Unmarshal(data, &s)
 	if err != nil {
 		return err
+	}
+	if s == "" {
+		*ca = ConsAddress{}
+		return nil
 	}
 
 	ca2, err := ConsAddressFromBech32(s)
@@ -601,7 +631,18 @@ func Bech32ifyPubKey(pkt Bech32PubKeyType, pubkey crypto.PubKey) (string, error)
 
 	}
 
-	return bech32.ConvertAndEncode(bech32Prefix, pubkey.Bytes())
+	// This piece of code is to keep backwards-compatibility.
+	// For ed25519 keys, our own ed25519 is registered in Amino under a
+	// different name than TM's ed25519. But since users are already using
+	// TM's ed25519 bech32 encoding, we explicitly say to bech32-encode our own
+	// ed25519 the same way as TM's ed25519.
+	// TODO: Remove Bech32ifyPubKey and all usages (cosmos/cosmos-sdk/issues/#7357)
+	pkToMarshal := pubkey
+	if ed25519Pk, ok := pubkey.(*ed25519.PubKey); ok {
+		pkToMarshal = ed25519Pk.AsTmPubKey()
+	}
+
+	return bech32.ConvertAndEncode(bech32Prefix, legacy.Cdc.MustMarshalBinaryBare(pkToMarshal))
 }
 
 // MustBech32ifyPubKey calls Bech32ifyPubKey except it panics on error.
@@ -636,12 +677,32 @@ func GetPubKeyFromBech32(pkt Bech32PubKeyType, pubkeyStr string) (crypto.PubKey,
 		return nil, err
 	}
 
-	pk, err := tmamino.PubKeyFromBytes(bz)
+	aminoPk, err := cryptocodec.PubKeyFromBytes(bz)
 	if err != nil {
 		return nil, err
 	}
 
-	return pk, nil
+	var protoPk crypto.PubKey
+	switch aminoPk.(type) {
+
+	// We are bech32ifying some secp256k1 keys in tests.
+	case *secp256k1.PubKey:
+		protoPk = aminoPk
+	case *ed25519.PubKey:
+		protoPk = aminoPk
+
+	// Real-life case.
+	case tmed25519.PubKey:
+		protoPk = &ed25519.PubKey{
+			Key: aminoPk.Bytes(),
+		}
+
+	default:
+		// We only allow ed25519 pubkeys to be bech32-ed right now.
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "bech32 pubkey does not support %T", aminoPk)
+	}
+
+	return protoPk, nil
 }
 
 // MustGetPubKeyFromBech32 calls GetPubKeyFromBech32 except it panics on error.

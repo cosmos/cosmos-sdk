@@ -2,7 +2,7 @@ package types
 
 // Check if the key is valid(key is not nil)
 func AssertValidKey(key []byte) {
-	if key == nil {
+	if len(key) == 0 {
 		panic("key is nil")
 	}
 }

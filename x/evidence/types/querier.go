@@ -18,8 +18,8 @@ func NewQueryEvidenceRequest(hash tmbytes.HexBytes) *QueryEvidenceRequest {
 }
 
 // NewQueryAllEvidenceRequest creates a new instance of QueryAllEvidenceRequest.
-func NewQueryAllEvidenceRequest(req *query.PageRequest) *QueryAllEvidenceRequest {
-	return &QueryAllEvidenceRequest{Req: req}
+func NewQueryAllEvidenceRequest(pageReq *query.PageRequest) *QueryAllEvidenceRequest {
+	return &QueryAllEvidenceRequest{Pagination: pageReq}
 }
 
 // QueryAllEvidenceParams defines the parameters necessary for querying for all Evidence.

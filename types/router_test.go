@@ -1,37 +1,51 @@
-package types
+package types_test
 
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestNilRoute(t *testing.T) {
+type routeTestSuite struct {
+	suite.Suite
+}
+
+func TestRouteTestSuite(t *testing.T) {
+	suite.Run(t, new(routeTestSuite))
+}
+
+func (s *routeTestSuite) SetupSuite() {
+	s.T().Parallel()
+}
+
+func (s *routeTestSuite) TestNilRoute() {
 	tests := []struct {
 		name     string
-		route    Route
+		route    sdk.Route
 		expected bool
 	}{
 		{
 			name:     "all empty",
-			route:    NewRoute("", nil),
+			route:    sdk.NewRoute("", nil),
 			expected: true,
 		},
 		{
 			name:     "only path",
-			route:    NewRoute("some", nil),
+			route:    sdk.NewRoute("some", nil),
 			expected: true,
 		},
 		{
 			name: "only handler",
-			route: NewRoute("", func(ctx Context, msg Msg) (*Result, error) {
+			route: sdk.NewRoute("", func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 				return nil, nil
 			}),
 			expected: true,
 		},
 		{
 			name: "correct route",
-			route: NewRoute("some", func(ctx Context, msg Msg) (*Result, error) {
+			route: sdk.NewRoute("some", func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 				return nil, nil
 			}),
 			expected: false,
@@ -39,9 +53,6 @@ func TestNilRoute(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.expected, tt.route.Empty())
-		})
+		s.Require().Equal(tt.expected, tt.route.Empty())
 	}
 }

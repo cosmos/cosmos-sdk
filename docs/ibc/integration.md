@@ -21,7 +21,6 @@ Integrating the IBC module to your SDK-based application is straighforward. The 
 - Add the modules to the module `Manager`
 - Add modules to `Begin/EndBlockers` and `InitGenesis`
 - Update the module `SimulationManager` to enable simulations
-- Add IBC `Keeper` to the `AnteHandler`
 
 ### Module `BasicManager` and `ModuleAccount` permissions
 
@@ -121,7 +120,7 @@ IBC needs to know which module is bound to which port so that it can route packe
 appropriate module and call the appropriate callbacks. The port to module name mapping is handled by
 IBC's port `Keeper`. However, the mapping from module name to the relevant callbacks is accomplished
 by the port
-[`Router`](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc//05-port/types/router.go) on the
+[`Router`](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc//core/05-port/types/router.go) on the
 IBC module.
 
 Adding the module routes allows the IBC handler to call the appropriate callback when processing a
@@ -205,7 +204,7 @@ past historical info at any given height in order to verify the light client `Co
 connection handhake.
 
 The IBC module also has
-[`BeginBlock`](https://github.com/cosmos/cosmos-sdk/blob/master/x/ibc/02-client/abci.go) logic as
+[`BeginBlock`](https://github.com/cosmos/cosmos-sdk/blob/master/x/ibc/core/02-client/abci.go) logic as
 well. This is optional as it is only required if your application uses the [localhost
 client](https://github.com/cosmos/ics/blob/master/spec/ics-009-loopback-client) to connect two
 different modules from the same chain.
@@ -243,28 +242,6 @@ func NewApp(...args) *App {
 ::: warning
 **IMPORTANT**: The capability module **must** be declared first in `SetOrderInitGenesis`
 :::
-
-### IBC AnteHandler
-
-The IBC module defines `ProofVerificationDecorator` that handles messages that contains application
-specific packet types. This is mostly to perform stateful packet execution. For more context, please
-refer to [ADR 15 - IBC Packet Receiver](./../architecture/adr-015-ibc-packet-receiver.md).
-
-```go
-// app.go
-func NewApp(...args) *App {
-  // .. continuation from above
-
-  app.SetAnteHandler(
-    ante.NewAnteHandler(
-      app.AccountKeeper, app.BankKeeper, *app.IBCKeeper, ante.DefaultSigVerificationGasConsumer,
-    ),
-  )
-
-  // ...
-  return app
-}
-```
 
 That's it! You have now wired up the IBC module and are now able to send fungible tokens across
 different chains. If you want to have a broader view of the changes take a look into the SDK's

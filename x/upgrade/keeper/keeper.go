@@ -8,8 +8,8 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"strconv"
+	"strings"
 
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -19,6 +19,9 @@ import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	ibcexported "github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // UpgradeInfoFileName file to store upgrade information
@@ -28,12 +31,12 @@ type Keeper struct {
 	homePath           string
 	skipUpgradeHeights map[int64]bool
 	storeKey           sdk.StoreKey
-	cdc                codec.Marshaler
+	cdc                codec.BinaryMarshaler
 	upgradeHandlers    map[string]types.UpgradeHandler
 }
 
 // NewKeeper constructs an upgrade Keeper
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.Marshaler, homePath string) Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, homePath string) Keeper {
 	return Keeper{
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
@@ -53,6 +56,8 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
 // If there is another Plan already scheduled, it will overwrite it
 // (implicitly cancelling the current plan)
+// ScheduleUpgrade will also write the upgraded client to the upgraded client path
+// if an upgraded client is specified in the plan
 func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 	if err := plan.ValidateBasic(); err != nil {
 		return err
@@ -70,11 +75,90 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "upgrade with name %s has already been completed", plan.Name)
 	}
 
-	bz := k.cdc.MustMarshalBinaryBare(&plan)
 	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshalBinaryBare(&plan)
 	store.Set(types.PlanKey(), bz)
 
+	if plan.UpgradedClientState == nil {
+		// if latest UpgradedClientState is nil, but upgraded client exists in store,
+		// then delete client state from store.
+		_, height, _ := k.GetUpgradedClient(ctx)
+		if height != 0 {
+			store.Delete(types.UpgradedClientKey(height))
+		}
+		return nil
+	}
+
+	// Set UpgradedClientState in store
+	clientState, err := clienttypes.UnpackClientState(plan.UpgradedClientState)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "could not unpack clientstate: %v", err)
+	}
+	// deletes any previously stored upgraded client and sets the new upgraded client in
+	return k.SetUpgradedClient(ctx, plan.Height, clientState)
+}
+
+// SetUpgradedClient sets the expected upgraded client for the next version of this chain
+func (k Keeper) SetUpgradedClient(ctx sdk.Context, upgradeHeight int64, cs ibcexported.ClientState) error {
+	store := ctx.KVStore(k.storeKey)
+
+	// delete any previously stored upgraded client before setting a new one
+	// since there should only ever be one upgraded client in the store at any given time
+	_, setHeight, _ := k.GetUpgradedClient(ctx)
+	if setHeight != 0 {
+		store.Delete(types.UpgradedClientKey(setHeight))
+	}
+
+	// zero out any custom fields before setting
+	cs = cs.ZeroCustomFields()
+	bz, err := clienttypes.MarshalClientState(k.cdc, cs)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "could not marshal clientstate: %v", err)
+	}
+
+	store.Set(types.UpgradedClientKey(upgradeHeight), bz)
 	return nil
+}
+
+// GetUpgradedClient gets the expected upgraded client for the next version of this chain
+// along with the planned upgrade height
+// Since there is only ever one upgraded client in store, we do not need to know key beforehand
+func (k Keeper) GetUpgradedClient(ctx sdk.Context) (ibcexported.ClientState, int64, error) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, []byte(types.KeyUpgradedClient))
+	var (
+		count, height int
+		bz            []byte
+	)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		count++
+		// we must panic if the upgraded clients in store is ever more than one since
+		// that would break upgrade functionality and chain must halt and fix issue manually
+		if count > 1 {
+			panic("more than 1 upgrade client stored in state")
+		}
+
+		keySplit := strings.Split(string(iterator.Key()), "/")
+		var err error
+		height, err = strconv.Atoi(keySplit[len(keySplit)-1])
+		if err != nil {
+			return nil, 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "could not parse upgrade height from key: %s", err)
+		}
+
+		bz = iterator.Value()
+	}
+
+	if count == 0 {
+		return nil, 0, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "upgrade client not found in store")
+	}
+
+	clientState, err := clienttypes.UnmarshalClientState(k.cdc, bz)
+	if err != nil {
+		return nil, 0, err
+	}
+	return clientState, int64(height), nil
 }
 
 // GetDoneHeight returns the height at which the given upgrade was executed
@@ -179,23 +263,31 @@ func (k Keeper) getHomeDir() string {
 	return k.homePath
 }
 
-// ReadUpgradeInfoFromDisk returns the name and height of the upgrade
-// which is written to disk by the old binary when panic'ing
-// if there's an error in reading the info,
-// it assumes that the upgrade info is not available
-func (k Keeper) ReadUpgradeInfoFromDisk() (upgradeInfo store.UpgradeInfo) {
+// ReadUpgradeInfoFromDisk returns the name and height of the upgrade which is
+// written to disk by the old binary when panicking. An error is returned if
+// the upgrade path directory cannot be created or if the file exists and
+// cannot be read or if the upgrade info fails to unmarshal.
+func (k Keeper) ReadUpgradeInfoFromDisk() (store.UpgradeInfo, error) {
+	var upgradeInfo store.UpgradeInfo
+
 	upgradeInfoPath, err := k.GetUpgradeInfoPath()
-	// if error in reading the path, assume there are no upgrades
 	if err != nil {
-		return upgradeInfo
+		return upgradeInfo, err
 	}
 
 	data, err := ioutil.ReadFile(upgradeInfoPath)
-	// if error in reading the file, assume there are no upgrades
 	if err != nil {
-		return upgradeInfo
+		// if file does not exist, assume there are no upgrades
+		if os.IsNotExist(err) {
+			return upgradeInfo, nil
+		}
+
+		return upgradeInfo, err
 	}
 
-	json.Unmarshal(data, &upgradeInfo)
-	return
+	if err := json.Unmarshal(data, &upgradeInfo); err != nil {
+		return upgradeInfo, err
+	}
+
+	return upgradeInfo, nil
 }

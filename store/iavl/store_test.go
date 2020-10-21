@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 var (
@@ -49,6 +50,62 @@ func newAlohaTree(t *testing.T, db dbm.DB) (*iavl.MutableTree, types.CommitID) {
 	return tree, types.CommitID{Version: ver, Hash: hash}
 }
 
+func TestLoadStore(t *testing.T) {
+	db := dbm.NewMemDB()
+	tree, _ := newAlohaTree(t, db)
+	store := UnsafeNewStore(tree)
+
+	// Create non-pruned height H
+	require.True(t, tree.Set([]byte("hello"), []byte("hallo")))
+	hash, verH, err := tree.SaveVersion()
+	cIDH := types.CommitID{Version: verH, Hash: hash}
+	require.Nil(t, err)
+
+	// Create pruned height Hp
+	require.True(t, tree.Set([]byte("hello"), []byte("hola")))
+	hash, verHp, err := tree.SaveVersion()
+	cIDHp := types.CommitID{Version: verHp, Hash: hash}
+	require.Nil(t, err)
+
+	// TODO: Prune this height
+
+	// Create current height Hc
+	require.True(t, tree.Set([]byte("hello"), []byte("ciao")))
+	hash, verHc, err := tree.SaveVersion()
+	cIDHc := types.CommitID{Version: verHc, Hash: hash}
+	require.Nil(t, err)
+
+	// Querying an existing store at some previous non-pruned height H
+	hStore, err := store.GetImmutable(verH)
+	require.NoError(t, err)
+	require.Equal(t, string(hStore.Get([]byte("hello"))), "hallo")
+
+	// Querying an existing store at some previous pruned height Hp
+	hpStore, err := store.GetImmutable(verHp)
+	require.NoError(t, err)
+	require.Equal(t, string(hpStore.Get([]byte("hello"))), "hola")
+
+	// Querying an existing store at current height Hc
+	hcStore, err := store.GetImmutable(verHc)
+	require.NoError(t, err)
+	require.Equal(t, string(hcStore.Get([]byte("hello"))), "ciao")
+
+	// Querying a new store at some previous non-pruned height H
+	newHStore, err := LoadStore(db, cIDH, false)
+	require.NoError(t, err)
+	require.Equal(t, string(newHStore.Get([]byte("hello"))), "hallo")
+
+	// Querying a new store at some previous pruned height Hp
+	newHpStore, err := LoadStore(db, cIDHp, false)
+	require.NoError(t, err)
+	require.Equal(t, string(newHpStore.Get([]byte("hello"))), "hola")
+
+	// Querying a new store at current height H
+	newHcStore, err := LoadStore(db, cIDHc, false)
+	require.NoError(t, err)
+	require.Equal(t, string(newHcStore.Get([]byte("hello"))), "ciao")
+}
+
 func TestGetImmutable(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, cID := newAlohaTree(t, db)
@@ -60,7 +117,7 @@ func TestGetImmutable(t *testing.T) {
 	require.Nil(t, err)
 
 	_, err = store.GetImmutable(cID.Version + 1)
-	require.Error(t, err)
+	require.NoError(t, err)
 
 	newStore, err := store.GetImmutable(cID.Version - 1)
 	require.NoError(t, err)
@@ -72,7 +129,7 @@ func TestGetImmutable(t *testing.T) {
 
 	res := newStore.Query(abci.RequestQuery{Data: []byte("hello"), Height: cID.Version, Path: "/key", Prove: true})
 	require.Equal(t, res.Value, []byte("adios"))
-	require.NotNil(t, res.Proof)
+	require.NotNil(t, res.ProofOps)
 
 	require.Panics(t, func() { newStore.Set(nil, nil) })
 	require.Panics(t, func() { newStore.Delete(nil) })
@@ -131,6 +188,10 @@ func TestIAVLStoreNoNilSet(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newAlohaTree(t, db)
 	iavlStore := UnsafeNewStore(tree)
+
+	require.Panics(t, func() { iavlStore.Set(nil, []byte("value")) }, "setting a nil key should panic")
+	require.Panics(t, func() { iavlStore.Set([]byte(""), []byte("value")) }, "setting an empty key should panic")
+
 	require.Panics(t, func() { iavlStore.Set([]byte("key"), nil) }, "setting a nil value should panic")
 }
 
@@ -404,18 +465,28 @@ func TestIAVLStoreQuery(t *testing.T) {
 	v3 := []byte("val3")
 
 	ksub := []byte("key")
-	KVs0 := []types.KVPair{}
-	KVs1 := []types.KVPair{
-		{Key: k1, Value: v1},
-		{Key: k2, Value: v2},
+	KVs0 := kv.Pairs{}
+	KVs1 := kv.Pairs{
+		Pairs: []kv.Pair{
+			{Key: k1, Value: v1},
+			{Key: k2, Value: v2},
+		},
 	}
-	KVs2 := []types.KVPair{
-		{Key: k1, Value: v3},
-		{Key: k2, Value: v2},
+	KVs2 := kv.Pairs{
+		Pairs: []kv.Pair{
+			{Key: k1, Value: v3},
+			{Key: k2, Value: v2},
+		},
 	}
-	valExpSubEmpty := cdc.MustMarshalBinaryBare(KVs0)
-	valExpSub1 := cdc.MustMarshalBinaryBare(KVs1)
-	valExpSub2 := cdc.MustMarshalBinaryBare(KVs2)
+
+	valExpSubEmpty, err := KVs0.Marshal()
+	require.NoError(t, err)
+
+	valExpSub1, err := KVs1.Marshal()
+	require.NoError(t, err)
+
+	valExpSub2, err := KVs2.Marshal()
+	require.NoError(t, err)
 
 	cid := iavlStore.Commit()
 	ver := cid.Version
@@ -509,5 +580,56 @@ func BenchmarkIAVLIteratorNext(b *testing.B) {
 		for j := 0; j < treeSize; j++ {
 			iter.Next()
 		}
+	}
+}
+
+func TestSetInitialVersion(t *testing.T) {
+	testCases := []struct {
+		name     string
+		storeFn  func(db *dbm.MemDB) *Store
+		expPanic bool
+	}{
+		{
+			"works with a mutable tree",
+			func(db *dbm.MemDB) *Store {
+				tree, err := iavl.NewMutableTree(db, cacheSize)
+				require.NoError(t, err)
+				store := UnsafeNewStore(tree)
+
+				return store
+			}, false,
+		},
+		{
+			"throws error on immutable tree",
+			func(db *dbm.MemDB) *Store {
+				tree, err := iavl.NewMutableTree(db, cacheSize)
+				require.NoError(t, err)
+				store := UnsafeNewStore(tree)
+				_, version, err := store.tree.SaveVersion()
+				require.NoError(t, err)
+				require.Equal(t, int64(1), version)
+				store, err = store.GetImmutable(1)
+				require.NoError(t, err)
+
+				return store
+			}, true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			db := dbm.NewMemDB()
+			store := tc.storeFn(db)
+
+			if tc.expPanic {
+				require.Panics(t, func() { store.SetInitialVersion(5) })
+			} else {
+				store.SetInitialVersion(5)
+				cid := store.Commit()
+				require.Equal(t, int64(5), cid.GetVersion())
+			}
+		})
 	}
 }

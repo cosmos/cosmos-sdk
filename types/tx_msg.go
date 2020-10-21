@@ -62,12 +62,21 @@ type (
 		GetGas() uint64
 		GetFee() Coins
 		FeePayer() AccAddress
+		FeeGranter() AccAddress
 	}
 
 	// Tx must have GetMemo() method to use ValidateMemoDecorator
 	TxWithMemo interface {
 		Tx
 		GetMemo() string
+	}
+
+	// TxWithTimeoutHeight extends the Tx interface by allowing a transaction to
+	// set a height timeout.
+	TxWithTimeoutHeight interface {
+		Tx
+
+		GetTimeoutHeight() uint64
 	}
 )
 
@@ -76,5 +85,3 @@ type TxDecoder func(txBytes []byte) (Tx, error)
 
 // TxEncoder marshals transaction to bytes
 type TxEncoder func(tx Tx) ([]byte, error)
-
-//__________________________________________________________

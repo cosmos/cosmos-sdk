@@ -22,11 +22,8 @@ WORKDIR /go/src/github.com/cosmos/cosmos-sdk
 # Add source files
 COPY . .
 
-# build Cosmos SDK, remove packages
-RUN make tools && \
-    make build-simd && \
-    cp ./build/sim* /go/bin
-# make build-sim-linux ??
+# install simapp, remove packages
+RUN make build-linux
 
 
 # Final image
@@ -37,9 +34,9 @@ RUN apk add --update ca-certificates
 WORKDIR /root
 
 # Copy over binaries from the build-env
-COPY --from=build-env /go/bin/simd /usr/bin/simd
+COPY --from=build-env /go/src/github.com/cosmos/cosmos-sdk/build/simd /usr/bin/simd
 
-EXPOSE 26656 26657 1317
+EXPOSE 26656 26657 1317 9090
 
 # Run simd by default, omit entrypoint to ease using container with simcli
 CMD ["simd"]

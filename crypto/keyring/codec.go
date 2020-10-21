@@ -7,17 +7,17 @@ import (
 )
 
 // CryptoCdc defines the codec required for keys and info
-var CryptoCdc *codec.Codec
+var CryptoCdc *codec.LegacyAmino
 
 func init() {
-	CryptoCdc = codec.New()
+	CryptoCdc = codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(CryptoCdc)
-	RegisterCodec(CryptoCdc)
+	RegisterLegacyAminoCodec(CryptoCdc)
 	CryptoCdc.Seal()
 }
 
-// RegisterCodec registers concrete types and interfaces on the given codec.
-func RegisterCodec(cdc *codec.Codec) {
+// RegisterLegacyAminoCodec registers concrete types and interfaces on the given codec.
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*Info)(nil), nil)
 	cdc.RegisterConcrete(hd.BIP44Params{}, "crypto/keys/hd/BIP44Params", nil)
 	cdc.RegisterConcrete(localInfo{}, "crypto/keys/localInfo", nil)

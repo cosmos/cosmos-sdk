@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -99,12 +99,4 @@ func ValidateChanges(changes []ParamChange) error {
 	}
 
 	return nil
-}
-
-// NewQueryParametersRequest returns the new instance of QueryParametersRequest
-func NewQueryParametersRequest(ss, key string) *QueryParametersRequest {
-	return &QueryParametersRequest{
-		Subspace: ss,
-		Key:      key,
-	}
 }

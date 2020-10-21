@@ -4,12 +4,11 @@ import (
 	gocontext "context"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
-
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -22,11 +21,16 @@ type QueryServiceTestHelper struct {
 	ctx sdk.Context
 }
 
+var (
+	_ gogogrpc.Server     = &QueryServiceTestHelper{}
+	_ gogogrpc.ClientConn = &QueryServiceTestHelper{}
+)
+
 // NewQueryServerTestHelper creates a new QueryServiceTestHelper that wraps
 // the provided sdk.Context
-func NewQueryServerTestHelper(ctx sdk.Context, anyUnpacker types.AnyUnpacker) *QueryServiceTestHelper {
+func NewQueryServerTestHelper(ctx sdk.Context, interfaceRegistry types.InterfaceRegistry) *QueryServiceTestHelper {
 	qrt := NewGRPCQueryRouter()
-	qrt.SetAnyUnpacker(anyUnpacker)
+	qrt.SetInterfaceRegistry(interfaceRegistry)
 	return &QueryServiceTestHelper{GRPCQueryRouter: qrt, ctx: ctx}
 }
 
@@ -51,8 +55,8 @@ func (q *QueryServiceTestHelper) Invoke(_ gocontext.Context, method string, args
 		return err
 	}
 
-	if q.anyUnpacker != nil {
-		return types.UnpackInterfaces(reply, q.anyUnpacker)
+	if q.interfaceRegistry != nil {
+		return types.UnpackInterfaces(reply, q.interfaceRegistry)
 	}
 
 	return nil
@@ -62,6 +66,3 @@ func (q *QueryServiceTestHelper) Invoke(_ gocontext.Context, method string, args
 func (q *QueryServiceTestHelper) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
 	return nil, fmt.Errorf("not supported")
 }
-
-var _ gogogrpc.Server = &QueryServiceTestHelper{}
-var _ gogogrpc.ClientConn = &QueryServiceTestHelper{}

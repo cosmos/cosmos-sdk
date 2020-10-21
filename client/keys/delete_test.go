@@ -1,11 +1,13 @@
 package keys
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -14,8 +16,10 @@ import (
 )
 
 func Test_runDeleteCmd(t *testing.T) {
+	// Now add a temporary keybase
+	kbHome := t.TempDir()
 	cmd := DeleteKeyCommand()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands(kbHome).PersistentFlags())
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	yesF, _ := cmd.Flags().GetBool(flagYes)
@@ -26,9 +30,6 @@ func Test_runDeleteCmd(t *testing.T) {
 
 	fakeKeyName1 := "runDeleteCmd_Key1"
 	fakeKeyName2 := "runDeleteCmd_Key2"
-	// Now add a temporary keybase
-	kbHome, cleanUp := testutil.NewTestCaseDir(t)
-	t.Cleanup(cleanUp)
 
 	path := sdk.GetConfig().GetFullFundraiserPath()
 
@@ -42,7 +43,11 @@ func Test_runDeleteCmd(t *testing.T) {
 	require.NoError(t, err)
 
 	cmd.SetArgs([]string{"blah", fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome)})
-	err = cmd.Execute()
+
+	clientCtx := client.Context{}.WithKeyring(kb)
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+
+	err = cmd.ExecuteContext(ctx)
 	require.Error(t, err)
 	require.Equal(t, "The specified item could not be found in the keyring", err.Error())
 

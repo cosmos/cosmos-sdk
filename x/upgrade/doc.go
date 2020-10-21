@@ -75,7 +75,11 @@ Here is a sample code to set store migrations with an upgrade:
 		// upgrade changes here
 	})
 
-	upgradeInfo := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	if err != nil {
+		// handle error
+	}
+
 	if upgradeInfo.Name == "my-fancy-upgrade" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := store.StoreUpgrades{
 			Renamed: []store.StoreRename{{

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 
 	"github.com/tendermint/tendermint/crypto"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 // DONTCOVER
@@ -16,7 +18,7 @@ type (
 	// targeted one.
 	//
 	// TODO: MigrationCallback should also return an error upon failure.
-	MigrationCallback func(AppMap) AppMap
+	MigrationCallback func(AppMap, client.Context) AppMap
 
 	// MigrationMap defines a mapping from a version to a MigrationCallback.
 	MigrationMap map[string]MigrationCallback

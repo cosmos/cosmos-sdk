@@ -115,7 +115,7 @@ func (suite *KeeperTestSuite) TestQueryAllEvidence() {
 			true,
 			func(res *types.QueryAllEvidenceResponse) {
 				suite.Equal(len(res.Evidence), 50)
-				suite.NotNil(res.Res.NextKey)
+				suite.NotNil(res.Pagination.NextKey)
 			},
 		},
 	}

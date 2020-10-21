@@ -1,25 +1,19 @@
 package client
 
 import (
-	"bufio"
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"gopkg.in/yaml.v2"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
-	yaml "gopkg.in/yaml.v2"
-
-	"github.com/tendermint/tendermint/libs/cli"
-	tmlite "github.com/tendermint/tendermint/lite"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -38,142 +32,21 @@ type Context struct {
 	OutputFormat      string
 	Height            int64
 	HomeDir           string
+	KeyringDir        string
 	From              string
 	BroadcastMode     string
 	FromName          string
-	TrustNode         bool
 	UseLedger         bool
 	Simulate          bool
 	GenerateOnly      bool
 	Offline           bool
 	SkipConfirm       bool
-	TxGenerator       TxGenerator
+	TxConfig          TxConfig
 	AccountRetriever  AccountRetriever
 	NodeURI           string
-	Verifier          tmlite.Verifier
 
 	// TODO: Deprecated (remove).
-	Codec *codec.Codec
-}
-
-// TODO: Remove all New* and Init* methods.
-
-// NewContextWithInputAndFrom returns a new initialized Context with parameters from the
-// command line using Viper. It takes a io.Reader and and key name or address and populates
-// the FromName and  FromAddress field accordingly. It will also create Tendermint verifier
-// using  the chain ID, home directory and RPC URI provided by the command line. If using
-// a Context in tests or any non CLI-based environment, the verifier will not be created
-// and will be set as nil because FlagTrustNode must be set.
-func NewContextWithInputAndFrom(input io.Reader, from string) Context {
-	ctx := Context{}
-	return ctx.InitWithInputAndFrom(input, from)
-}
-
-// NewContextWithFrom returns a new initialized Context with parameters from the
-// command line using Viper. It takes a key name or address and populates the FromName and
-// FromAddress field accordingly. It will also create Tendermint verifier using
-// the chain ID, home directory and RPC URI provided by the command line. If using
-// a Context in tests or any non CLI-based environment, the verifier will not
-// be created and will be set as nil because FlagTrustNode must be set.
-func NewContextWithFrom(from string) Context {
-	return NewContextWithInputAndFrom(os.Stdin, from)
-}
-
-// NewContext returns a new initialized Context with parameters from the
-// command line using Viper.
-func NewContext() Context { return NewContextWithFrom(viper.GetString(flags.FlagFrom)) }
-
-// InitWithInputAndFrom returns a new Context re-initialized from an existing
-// Context with a new io.Reader and from parameter
-func (ctx Context) InitWithInputAndFrom(input io.Reader, from string) Context {
-	input = bufio.NewReader(input)
-
-	var (
-		nodeURI string
-		rpc     rpcclient.Client
-		err     error
-	)
-
-	offline := viper.GetBool(flags.FlagOffline)
-	if !offline {
-		nodeURI = viper.GetString(flags.FlagNode)
-		if nodeURI != "" {
-			rpc, err = rpchttp.New(nodeURI, "/websocket")
-			if err != nil {
-				fmt.Printf("failted to get client: %v\n", err)
-				os.Exit(1)
-			}
-		}
-	}
-
-	trustNode := viper.GetBool(flags.FlagTrustNode)
-
-	ctx.Client = rpc
-	ctx.ChainID = viper.GetString(flags.FlagChainID)
-	ctx.Input = input
-	ctx.Output = os.Stdout
-	ctx.NodeURI = nodeURI
-	ctx.From = viper.GetString(flags.FlagFrom)
-	ctx.OutputFormat = viper.GetString(cli.OutputFlag)
-	ctx.Height = viper.GetInt64(flags.FlagHeight)
-	ctx.TrustNode = trustNode
-	ctx.UseLedger = viper.GetBool(flags.FlagUseLedger)
-	ctx.BroadcastMode = viper.GetString(flags.FlagBroadcastMode)
-	ctx.Simulate = viper.GetBool(flags.FlagDryRun)
-	ctx.Offline = offline
-	ctx.SkipConfirm = viper.GetBool(flags.FlagSkipConfirmation)
-	ctx.HomeDir = viper.GetString(flags.FlagHome)
-	ctx.GenerateOnly = viper.GetBool(flags.FlagGenerateOnly)
-
-	backend := viper.GetString(flags.FlagKeyringBackend)
-	if len(backend) == 0 {
-		backend = keyring.BackendMemory
-	}
-
-	kr, err := newKeyringFromFlags(ctx, backend)
-	if err != nil {
-		panic(fmt.Errorf("couldn't acquire keyring: %v", err))
-	}
-
-	fromAddress, fromName, err := GetFromFields(kr, from, ctx.GenerateOnly)
-	if err != nil {
-		fmt.Printf("failed to get from fields: %v\n", err)
-		os.Exit(1)
-	}
-
-	ctx.Keyring = kr
-	ctx.FromAddress = fromAddress
-	ctx.FromName = fromName
-
-	if offline {
-		return ctx
-	}
-
-	// create a verifier for the specific chain ID and RPC client
-	verifier, err := CreateVerifier(ctx, DefaultVerifierCacheSize)
-	if err != nil && !trustNode {
-		fmt.Printf("failed to create verifier: %s\n", err)
-		os.Exit(1)
-	}
-
-	ctx.Verifier = verifier
-	return ctx
-}
-
-// InitWithFrom returns a new Context re-initialized from an existing
-// Context with a new from parameter
-func (ctx Context) InitWithFrom(from string) Context {
-	return ctx.InitWithInputAndFrom(os.Stdin, from)
-}
-
-// Init returns a new Context re-initialized from an existing
-// Context with parameters from the command line using Viper.
-func (ctx Context) Init() Context { return ctx.InitWithFrom(viper.GetString(flags.FlagFrom)) }
-
-// InitWithInput returns a new Context re-initialized from an existing
-// Context with a new io.Reader and from parameter
-func (ctx Context) InitWithInput(input io.Reader) Context {
-	return ctx.InitWithInputAndFrom(input, viper.GetString(flags.FlagFrom))
+	LegacyAmino *codec.LegacyAmino
 }
 
 // WithKeyring returns a copy of the context with an updated keyring.
@@ -194,10 +67,10 @@ func (ctx Context) WithJSONMarshaler(m codec.JSONMarshaler) Context {
 	return ctx
 }
 
-// WithCodec returns a copy of the context with an updated codec.
+// WithLegacyAmino returns a copy of the context with an updated LegacyAmino codec.
 // TODO: Deprecated (remove).
-func (ctx Context) WithCodec(cdc *codec.Codec) Context {
-	ctx.Codec = cdc
+func (ctx Context) WithLegacyAmino(cdc *codec.LegacyAmino) Context {
+	ctx.LegacyAmino = cdc
 	return ctx
 }
 
@@ -210,12 +83,6 @@ func (ctx Context) WithOutput(w io.Writer) Context {
 // WithFrom returns a copy of the context with an updated from address or name.
 func (ctx Context) WithFrom(from string) Context {
 	ctx.From = from
-	return ctx
-}
-
-// WithTrustNode returns a copy of the context with an updated TrustNode flag.
-func (ctx Context) WithTrustNode(trustNode bool) Context {
-	ctx.TrustNode = trustNode
 	return ctx
 }
 
@@ -256,12 +123,6 @@ func (ctx Context) WithUseLedger(useLedger bool) Context {
 	return ctx
 }
 
-// WithVerifier returns a copy of the context with an updated Verifier.
-func (ctx Context) WithVerifier(verifier tmlite.Verifier) Context {
-	ctx.Verifier = verifier
-	return ctx
-}
-
 // WithChainID returns a copy of the context with an updated chain ID.
 func (ctx Context) WithChainID(chainID string) Context {
 	ctx.ChainID = chainID
@@ -271,6 +132,12 @@ func (ctx Context) WithChainID(chainID string) Context {
 // WithHomeDir returns a copy of the Context with HomeDir set.
 func (ctx Context) WithHomeDir(dir string) Context {
 	ctx.HomeDir = dir
+	return ctx
+}
+
+// WithKeyringDir returns a copy of the Context with KeyringDir set.
+func (ctx Context) WithKeyringDir(dir string) Context {
+	ctx.KeyringDir = dir
 	return ctx
 }
 
@@ -319,9 +186,9 @@ func (ctx Context) WithSkipConfirmation(skip bool) Context {
 	return ctx
 }
 
-// WithTxGenerator returns the context with an updated TxGenerator
-func (ctx Context) WithTxGenerator(generator TxGenerator) Context {
-	ctx.TxGenerator = generator
+// WithTxConfig returns the context with an updated TxConfig
+func (ctx Context) WithTxConfig(generator TxConfig) Context {
+	ctx.TxConfig = generator
 	return ctx
 }
 
@@ -337,21 +204,45 @@ func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceR
 	return ctx
 }
 
+// PrintString prints the raw string to ctx.Output or os.Stdout
+func (ctx Context) PrintString(str string) error {
+	writer := ctx.Output
+	if writer == nil {
+		writer = os.Stdout
+	}
+
+	_, err := writer.Write([]byte(str))
+	return err
+}
+
 // PrintOutput outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
 // either text or json. If text, toPrint will be YAML encoded. Otherwise, toPrint
 // will be JSON encoded using ctx.JSONMarshaler. An error is returned upon failure.
-func (ctx Context) PrintOutput(toPrint interface{}) error {
+func (ctx Context) PrintOutput(toPrint proto.Message) error {
 	// always serialize JSON initially because proto json can't be directly YAML encoded
 	out, err := ctx.JSONMarshaler.MarshalJSON(toPrint)
 	if err != nil {
 		return err
 	}
+	return ctx.printOutput(out)
+}
 
+// PrintOutputLegacy is a variant of PrintOutput that doesn't require a proto type
+// and uses amino JSON encoding. It will be removed in the near future!
+func (ctx Context) PrintOutputLegacy(toPrint interface{}) error {
+	out, err := ctx.LegacyAmino.MarshalJSON(toPrint)
+	if err != nil {
+		return err
+	}
+	return ctx.printOutput(out)
+}
+
+func (ctx Context) printOutput(out []byte) error {
 	if ctx.OutputFormat == "text" {
 		// handle text format by decoding and re-encoding JSON as YAML
 		var j interface{}
 
-		err = json.Unmarshal(out, &j)
+		err := json.Unmarshal(out, &j)
 		if err != nil {
 			return err
 		}
@@ -367,7 +258,7 @@ func (ctx Context) PrintOutput(toPrint interface{}) error {
 		writer = os.Stdout
 	}
 
-	_, err = writer.Write(out)
+	_, err := writer.Write(out)
 	if err != nil {
 		return err
 	}
@@ -418,8 +309,8 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddres
 
 func newKeyringFromFlags(ctx Context, backend string) (keyring.Keyring, error) {
 	if ctx.GenerateOnly {
-		return keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, ctx.HomeDir, ctx.Input)
+		return keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, ctx.KeyringDir, ctx.Input)
 	}
 
-	return keyring.New(sdk.KeyringServiceName(), backend, ctx.HomeDir, ctx.Input)
+	return keyring.New(sdk.KeyringServiceName(), backend, ctx.KeyringDir, ctx.Input)
 }

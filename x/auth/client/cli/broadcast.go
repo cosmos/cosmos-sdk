@@ -21,7 +21,7 @@ flag and signed with the sign command. Read a transaction from [file_path] and
 broadcast it to a node. If you supply a dash (-) argument in place of an input
 filename, the command reads from standard input.
 
-$ <appcli> tx broadcast ./mytxn.json
+$ <appd> tx broadcast ./mytxn.json
 `),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -36,7 +36,7 @@ $ <appcli> tx broadcast ./mytxn.json
 				return err
 			}
 
-			txBytes, err := clientCtx.TxGenerator.TxEncoder()(stdTx)
+			txBytes, err := clientCtx.TxConfig.TxEncoder()(stdTx)
 			if err != nil {
 				return err
 			}

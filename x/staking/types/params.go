@@ -87,7 +87,7 @@ func (p Params) String() string {
 }
 
 // unmarshal the current staking params value from store key or panic
-func MustUnmarshalParams(cdc *codec.Codec, value []byte) Params {
+func MustUnmarshalParams(cdc *codec.LegacyAmino, value []byte) Params {
 	params, err := UnmarshalParams(cdc, value)
 	if err != nil {
 		panic(err)
@@ -97,7 +97,7 @@ func MustUnmarshalParams(cdc *codec.Codec, value []byte) Params {
 }
 
 // unmarshal the current staking params value from store key
-func UnmarshalParams(cdc *codec.Codec, value []byte) (params Params, err error) {
+func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err error) {
 	err = cdc.UnmarshalBinaryBare(value, &params)
 	if err != nil {
 		return

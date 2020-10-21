@@ -24,7 +24,7 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc *codec.Codec, ak types.AccountKeeper, bk keeper.Keeper,
+	appParams simtypes.AppParams, cdc codec.JSONMarshaler, ak types.AccountKeeper, bk keeper.Keeper,
 ) simulation.WeightedOperations {
 
 	var weightMsgSend, weightMsgMultiSend int
@@ -93,7 +93,12 @@ func sendMsgSend(
 		err  error
 	)
 
-	account := ak.GetAccount(ctx, msg.FromAddress)
+	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return err
+	}
+
+	account := ak.GetAccount(ctx, from)
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 	coins, hasNeg := spendable.SafeSub(msg.Amount)
@@ -103,7 +108,7 @@ func sendMsgSend(
 			return err
 		}
 	}
-	txGen := simappparams.MakeEncodingConfig().TxGenerator
+	txGen := simappparams.MakeEncodingConfig().TxConfig
 	tx, err := helpers.GenTx(
 		txGen,
 		[]sdk.Msg{msg},
@@ -118,7 +123,7 @@ func sendMsgSend(
 		return err
 	}
 
-	_, _, err = app.Deliver(tx)
+	_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 	if err != nil {
 		return err
 	}
@@ -229,7 +234,11 @@ func sendMsgMultiSend(
 	sequenceNumbers := make([]uint64, len(msg.Inputs))
 
 	for i := 0; i < len(msg.Inputs); i++ {
-		acc := ak.GetAccount(ctx, msg.Inputs[i].Address)
+		addr, err := sdk.AccAddressFromBech32(msg.Inputs[i].Address)
+		if err != nil {
+			panic(err)
+		}
+		acc := ak.GetAccount(ctx, addr)
 		accountNumbers[i] = acc.GetAccountNumber()
 		sequenceNumbers[i] = acc.GetSequence()
 	}
@@ -239,8 +248,13 @@ func sendMsgMultiSend(
 		err  error
 	)
 
+	addr, err := sdk.AccAddressFromBech32(msg.Inputs[0].Address)
+	if err != nil {
+		panic(err)
+	}
+
 	// feePayer is the first signer, i.e. first input address
-	feePayer := ak.GetAccount(ctx, msg.Inputs[0].Address)
+	feePayer := ak.GetAccount(ctx, addr)
 	spendable := bk.SpendableCoins(ctx, feePayer.GetAddress())
 
 	coins, hasNeg := spendable.SafeSub(msg.Inputs[0].Coins)
@@ -251,7 +265,7 @@ func sendMsgMultiSend(
 		}
 	}
 
-	txGen := simappparams.MakeEncodingConfig().TxGenerator
+	txGen := simappparams.MakeEncodingConfig().TxConfig
 	tx, err := helpers.GenTx(
 		txGen,
 		[]sdk.Msg{msg},
@@ -266,7 +280,7 @@ func sendMsgMultiSend(
 		return err
 	}
 
-	_, _, err = app.Deliver(tx)
+	_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 	if err != nil {
 		return err
 	}

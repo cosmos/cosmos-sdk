@@ -43,14 +43,14 @@ func TestDelegation(t *testing.T) {
 	app.StakingKeeper.SetDelegation(ctx, bond1to1)
 	resBond, found := app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
 	require.True(t, found)
-	require.True(t, bond1to1.Equal(resBond))
+	require.Equal(t, bond1to1, resBond)
 
 	// modify a records, save, and retrieve
 	bond1to1.Shares = sdk.NewDec(99)
 	app.StakingKeeper.SetDelegation(ctx, bond1to1)
 	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
 	require.True(t, found)
-	require.True(t, bond1to1.Equal(resBond))
+	require.Equal(t, bond1to1, resBond)
 
 	// add some more records
 	bond1to2 := types.NewDelegation(addrDels[0], valAddrs[1], sdk.NewDec(9))
@@ -67,26 +67,26 @@ func TestDelegation(t *testing.T) {
 	// test all bond retrieve capabilities
 	resBonds := app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[0], 5)
 	require.Equal(t, 3, len(resBonds))
-	require.True(t, bond1to1.Equal(resBonds[0]))
-	require.True(t, bond1to2.Equal(resBonds[1]))
-	require.True(t, bond1to3.Equal(resBonds[2]))
+	require.Equal(t, bond1to1, resBonds[0])
+	require.Equal(t, bond1to2, resBonds[1])
+	require.Equal(t, bond1to3, resBonds[2])
 	resBonds = app.StakingKeeper.GetAllDelegatorDelegations(ctx, addrDels[0])
 	require.Equal(t, 3, len(resBonds))
 	resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[0], 2)
 	require.Equal(t, 2, len(resBonds))
 	resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.Equal(t, 3, len(resBonds))
-	require.True(t, bond2to1.Equal(resBonds[0]))
-	require.True(t, bond2to2.Equal(resBonds[1]))
-	require.True(t, bond2to3.Equal(resBonds[2]))
+	require.Equal(t, bond2to1, resBonds[0])
+	require.Equal(t, bond2to2, resBonds[1])
+	require.Equal(t, bond2to3, resBonds[2])
 	allBonds := app.StakingKeeper.GetAllDelegations(ctx)
 	require.Equal(t, 6, len(allBonds))
-	require.True(t, bond1to1.Equal(allBonds[0]))
-	require.True(t, bond1to2.Equal(allBonds[1]))
-	require.True(t, bond1to3.Equal(allBonds[2]))
-	require.True(t, bond2to1.Equal(allBonds[3]))
-	require.True(t, bond2to2.Equal(allBonds[4]))
-	require.True(t, bond2to3.Equal(allBonds[5]))
+	require.Equal(t, bond1to1, allBonds[0])
+	require.Equal(t, bond1to2, allBonds[1])
+	require.Equal(t, bond1to3, allBonds[2])
+	require.Equal(t, bond2to1, allBonds[3])
+	require.Equal(t, bond2to2, allBonds[4])
+	require.Equal(t, bond2to3, allBonds[5])
 
 	resVals := app.StakingKeeper.GetDelegatorValidators(ctx, addrDels[0], 3)
 	require.Equal(t, 3, len(resVals))
@@ -112,8 +112,8 @@ func TestDelegation(t *testing.T) {
 	require.False(t, found)
 	resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.Equal(t, 2, len(resBonds))
-	require.True(t, bond2to1.Equal(resBonds[0]))
-	require.True(t, bond2to2.Equal(resBonds[1]))
+	require.Equal(t, bond2to1, resBonds[0])
+	require.Equal(t, bond2to2, resBonds[1])
 
 	resBonds = app.StakingKeeper.GetAllDelegatorDelegations(ctx, addrDels[1])
 	require.Equal(t, 2, len(resBonds))
@@ -140,7 +140,7 @@ func TestUnbondingDelegation(t *testing.T) {
 		delAddrs[0],
 		valAddrs[0],
 		0,
-		time.Unix(0, 0),
+		time.Unix(0, 0).UTC(),
 		sdk.NewInt(5),
 	)
 
@@ -148,7 +148,7 @@ func TestUnbondingDelegation(t *testing.T) {
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 	resUnbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, delAddrs[0], valAddrs[0])
 	require.True(t, found)
-	require.True(t, ubd.Equal(resUnbond))
+	require.Equal(t, ubd, resUnbond)
 
 	// modify a records, save, and retrieve
 	ubd.Entries[0].Balance = sdk.NewInt(21)
@@ -162,7 +162,7 @@ func TestUnbondingDelegation(t *testing.T) {
 
 	resUnbond, found = app.StakingKeeper.GetUnbondingDelegation(ctx, delAddrs[0], valAddrs[0])
 	require.True(t, found)
-	require.True(t, ubd.Equal(resUnbond))
+	require.Equal(t, ubd, resUnbond)
 
 	// delete a record
 	app.StakingKeeper.RemoveUnbondingDelegation(ctx, ubd)
@@ -367,7 +367,7 @@ func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
 	require.Equal(t, sdk.TokensFromConsensusPower(14), validator.Tokens)
-	require.Equal(t, sdk.Unbonding, validator.Status)
+	require.Equal(t, types.Unbonding, validator.Status)
 	require.True(t, validator.Jailed)
 }
 
@@ -528,12 +528,12 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 
 	// unbond the validator
 	ctx = ctx.WithBlockTime(validator.UnbondingTime)
-	app.StakingKeeper.UnbondAllMatureValidatorQueue(ctx)
+	app.StakingKeeper.UnbondAllMatureValidators(ctx)
 
 	// Make sure validator is still in state because there is still an outstanding delegation
 	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
-	require.Equal(t, validator.Status, sdk.Unbonded)
+	require.Equal(t, validator.Status, types.Unbonded)
 
 	// unbond some of the other delegation's shares
 	unbondTokens := sdk.TokensFromConsensusPower(6)
@@ -615,11 +615,11 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 	// validator should still be in state and still be in unbonding state
 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
-	require.Equal(t, validator.Status, sdk.Unbonding)
+	require.Equal(t, validator.Status, types.Unbonding)
 
 	// unbond the validator
 	ctx = ctx.WithBlockTime(validator.UnbondingTime)
-	app.StakingKeeper.UnbondAllMatureValidatorQueue(ctx)
+	app.StakingKeeper.UnbondAllMatureValidators(ctx)
 
 	// validator should now be deleted from state
 	_, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
@@ -645,12 +645,12 @@ func TestGetRedelegationsFromSrcValidator(t *testing.T) {
 	// get the redelegations one time
 	redelegations := app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
 	require.Equal(t, 1, len(redelegations))
-	require.True(t, redelegations[0].Equal(resBond))
+	require.Equal(t, redelegations[0], resBond)
 
 	// get the redelegations a second time, should be exactly the same
 	redelegations = app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
 	require.Equal(t, 1, len(redelegations))
-	require.True(t, redelegations[0].Equal(resBond))
+	require.Equal(t, redelegations[0], resBond)
 }
 
 // tests Get/Set/Remove/Has UnbondingDelegation
@@ -661,7 +661,7 @@ func TestRedelegation(t *testing.T) {
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
-		time.Unix(0, 0), sdk.NewInt(5),
+		time.Unix(0, 0).UTC(), sdk.NewInt(5),
 		sdk.NewDec(5))
 
 	// test shouldn't have and redelegations
@@ -675,15 +675,15 @@ func TestRedelegation(t *testing.T) {
 
 	redelegations := app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
 	require.Equal(t, 1, len(redelegations))
-	require.True(t, redelegations[0].Equal(resRed))
+	require.Equal(t, redelegations[0], resRed)
 
 	redelegations = app.StakingKeeper.GetRedelegations(ctx, addrDels[0], 5)
 	require.Equal(t, 1, len(redelegations))
-	require.True(t, redelegations[0].Equal(resRed))
+	require.Equal(t, redelegations[0], resRed)
 
 	redelegations = app.StakingKeeper.GetAllRedelegations(ctx, addrDels[0], nil, nil)
 	require.Equal(t, 1, len(redelegations))
-	require.True(t, redelegations[0].Equal(resRed))
+	require.Equal(t, redelegations[0], resRed)
 
 	// check if has the redelegation
 	has = app.StakingKeeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1])
@@ -695,15 +695,15 @@ func TestRedelegation(t *testing.T) {
 
 	resRed, found = app.StakingKeeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
-	require.True(t, rd.Equal(resRed))
+	require.Equal(t, rd, resRed)
 
 	redelegations = app.StakingKeeper.GetRedelegationsFromSrcValidator(ctx, addrVals[0])
 	require.Equal(t, 1, len(redelegations))
-	require.True(t, redelegations[0].Equal(resRed))
+	require.Equal(t, redelegations[0], resRed)
 
 	redelegations = app.StakingKeeper.GetRedelegations(ctx, addrDels[0], 5)
 	require.Equal(t, 1, len(redelegations))
-	require.True(t, redelegations[0].Equal(resRed))
+	require.Equal(t, redelegations[0], resRed)
 
 	// delete a record
 	app.StakingKeeper.RemoveRedelegation(ctx, rd)
@@ -780,7 +780,7 @@ func TestRedelegationMaxEntries(t *testing.T) {
 	require.Equal(t, valTokens, issuedShares.RoundInt())
 
 	validator2 = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator2, true)
-	require.Equal(t, sdk.Bonded, validator2.Status)
+	require.Equal(t, types.Bonded, validator2.Status)
 
 	maxEntries := app.StakingKeeper.MaxEntries(ctx)
 
@@ -841,7 +841,7 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	validator2, issuedShares = validator2.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares.RoundInt())
 	validator2 = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator2, true)
-	require.Equal(t, sdk.Bonded, validator2.Status)
+	require.Equal(t, types.Bonded, validator2.Status)
 
 	// create a second delegation to validator 1
 	delTokens := sdk.TokensFromConsensusPower(10)
@@ -862,7 +862,7 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
 	require.Equal(t, valTokens, validator.Tokens)
-	require.Equal(t, sdk.Unbonding, validator.Status)
+	require.Equal(t, types.Unbonding, validator.Status)
 }
 
 func TestRedelegateFromUnbondingValidator(t *testing.T) {
@@ -992,7 +992,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	validator2, issuedShares = validator2.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares.RoundInt())
 	validator2 = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator2, true)
-	require.Equal(t, sdk.Bonded, validator2.Status)
+	require.Equal(t, types.Bonded, validator2.Status)
 
 	ctx = ctx.WithBlockHeight(10)
 	ctx = ctx.WithBlockTime(time.Unix(333, 0))

@@ -103,7 +103,7 @@ rm -rf $HOME/.simapp
 ./build/simd keys --keyring-backend=test add validator
 ./build/simd init testing --chain-id test
 ./build/simd add-genesis-account --keyring-backend=test $(./build/simd keys --keyring-backend=test show validator -a) 1000000000stake,1000000000validatortoken
-./build/simd gentx validator --chain-id test
+./build/simd gentx --keyring-backend test --chain-id test validator
 ./build/simd collect-gentxs
 ```
 
@@ -130,7 +130,7 @@ cosmovisor start
 Submit a software upgrade proposal:
 
 ```
-./build/simd tx gov submit-proposal software-upgrade test1 --title "upgrade-demo" --description "upgrade"  --from validator --upgrade-height 100 --deposit 10000000stake -y --chain-id test
+./build/simd tx gov submit-proposal software-upgrade test1 --title "upgrade-demo" --description "upgrade"  --from validator --upgrade-height 100 --deposit 10000000stake --chain-id test --keyring-backend test -y
 ```
  
 Query the proposal to ensure it was correctly broadcast and added to a block:
@@ -142,7 +142,7 @@ Query the proposal to ensure it was correctly broadcast and added to a block:
 Submit a `Yes` vote for the upgrade proposal:
 
 ```
-./build/simd tx gov vote 1 yes --from validator -y --chain-id test
+./build/simd tx gov vote 1 yes --from validator --keyring-backend test --chain-id test -y
 ```
 
 For the sake of this demonstration, we will hardcode a modification in `simapp` to simulate a code change.

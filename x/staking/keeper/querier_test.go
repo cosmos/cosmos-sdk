@@ -246,7 +246,7 @@ func TestQueryDelegation(t *testing.T) {
 	res, err := querier(ctx, []string{types.QueryDelegatorValidators}, query)
 	require.NoError(t, err)
 
-	var validatorsResp []types.Validator
+	var validatorsResp types.Validators
 	errRes = cdc.UnmarshalJSON(res, &validatorsResp)
 	require.NoError(t, errRes)
 

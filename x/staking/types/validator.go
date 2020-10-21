@@ -123,6 +123,16 @@ func (v Validators) Swap(i, j int) {
 	v[j] = it
 }
 
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (v Validators) UnpackInterfaces(c codectypes.AnyUnpacker) error {
+	for i := range v {
+		if err := v[i].UnpackInterfaces(c); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // return the redelegation
 func MustMarshalValidator(cdc codec.BinaryMarshaler, validator *Validator) []byte {
 	return cdc.MustMarshalBinaryBare(validator)

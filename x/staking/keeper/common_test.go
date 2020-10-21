@@ -6,6 +6,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -31,7 +32,10 @@ func createTestInput() (*codec.LegacyAmino, *simapp.SimApp, sdk.Context) {
 		app.GetSubspace(types.ModuleName),
 	)
 
-	return codec.NewLegacyAmino(), app, ctx
+	amino := codec.NewLegacyAmino()
+	cryptocodec.RegisterCrypto(amino)
+
+	return amino, app, ctx
 }
 
 // intended to be used with require/assert:  require.True(ValEq(...))

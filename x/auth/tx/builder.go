@@ -212,7 +212,7 @@ func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
 				if err != nil {
 					return err
 				}
-				anys[i] = &codectypes.Any{
+				anys[i] = any & codectypes.Any{
 					TypeUrl: msg.MethodName,
 					Value:   bz,
 				}

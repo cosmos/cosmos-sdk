@@ -29,6 +29,7 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 	for i, any := range anys {
 		var msg sdk.Msg
 		if isServiceMsg(any.TypeUrl) {
+			fmt.Println("GetMsgs any=", any)
 			msg = sdk.ServiceMsg{
 				MethodName: any.TypeUrl,
 				Request:    any.GetCachedValue().(sdk.MsgRequest),

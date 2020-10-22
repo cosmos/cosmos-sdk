@@ -383,7 +383,7 @@ func queryVotesOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		if !(propStatus == types.StatusVotingPeriod || propStatus == types.StatusDepositPeriod) {
 			res, err = gcutils.QueryVotesByTxQuery(cliCtx, params)
 		} else {
-			bz, err := cliCtx.Codec.MarshalJSON(params)
+			bz, err = cliCtx.Codec.MarshalJSON(params)
 			if err != nil {
 				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 				return

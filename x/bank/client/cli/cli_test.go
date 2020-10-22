@@ -9,9 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
-	"github.com/gogo/protobuf/grpc"
-	grpc2 "google.golang.org/grpc"
-
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -302,38 +299,6 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 	}
 }
 
-// serviceMsgClientConn is an instance of grpc.ClientConn that is used to test building
-// transactions with MsgClient's. It is intended to be replaced by the work in
-// https://github.com/cosmos/cosmos-sdk/issues/7541 when that is ready.
-type serviceMsgClientConn struct {
-	msgs []sdk.Msg
-}
-
-func (t *serviceMsgClientConn) Invoke(_ context.Context, method string, args, _ interface{}, _ ...grpc2.CallOption) error {
-	req, ok := args.(sdk.MsgRequest)
-	if !ok {
-		return fmt.Errorf("%T should implement %T", args, (*sdk.MsgRequest)(nil))
-	}
-
-	err := req.ValidateBasic()
-	if err != nil {
-		return err
-	}
-
-	t.msgs = append(t.msgs, sdk.ServiceMsg{
-		MethodName: method,
-		Request:    req,
-	})
-
-	return nil
-}
-
-func (t *serviceMsgClientConn) NewStream(context.Context, *grpc2.StreamDesc, string, ...grpc2.CallOption) (grpc2.ClientStream, error) {
-	return nil, fmt.Errorf("not supported")
-}
-
-var _ grpc.ClientConn = &serviceMsgClientConn{}
-
 // newSendTxMsgServiceCmd is just for the purpose of testing ServiceMsg's in an end-to-end case. It is effectively
 // NewSendTxCmd but using MsgClient.
 func newSendTxMsgServiceCmd() *cobra.Command {
@@ -361,15 +326,15 @@ ignored as it is implied from [from_key_or_address].`,
 				return err
 			}
 
+			txBuilder := clientCtx.TxConfig.NewTxBuilder()
 			msg := types.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
-			svcMsgClientConn := &serviceMsgClientConn{}
-			bankMsgClient := types.NewMsgClient(svcMsgClientConn)
+			bankMsgClient := types.NewMsgClient(txBuilder)
 			_, err = bankMsgClient.Send(context.Background(), msg)
 			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.msgs...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), txBuilder.GetTx().GetMsgs()...)
 		},
 	}
 

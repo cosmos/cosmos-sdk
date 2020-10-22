@@ -15,7 +15,7 @@ import (
 )
 
 func TestMigrate(t *testing.T) {
-	encodingConfig := simapp.MakeEncodingConfigTests()
+	encodingConfig := simapp.MakeEncodingConfig()
 	clientCtx := client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).

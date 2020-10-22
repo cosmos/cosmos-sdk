@@ -47,7 +47,7 @@ func (suite *GenTxTestSuite) SetupTest() {
 	app := simapp.Setup(checkTx)
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{})
 	suite.app = app
-	suite.encodingConfig = simapp.MakeEncodingConfigTests()
+	suite.encodingConfig = simapp.MakeEncodingConfig()
 
 	var err error
 	amount := sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)

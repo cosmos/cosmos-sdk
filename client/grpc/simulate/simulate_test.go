@@ -39,7 +39,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	app.BankKeeper.SetParams(sdkCtx, banktypes.DefaultParams())
 
 	// Set up TxConfig.
-	encodingConfig := simapp.MakeEncodingConfigTests()
+	encodingConfig := simapp.MakeEncodingConfig()
 	clientCtx := client.Context{}.WithTxConfig(encodingConfig.TxConfig)
 
 	// Create new simulation server.

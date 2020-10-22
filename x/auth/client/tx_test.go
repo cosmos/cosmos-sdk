@@ -55,7 +55,7 @@ func TestDefaultTxEncoder(t *testing.T) {
 
 func TestReadTxFromFile(t *testing.T) {
 	t.Parallel()
-	encodingConfig := simapp.MakeEncodingConfigTests()
+	encodingConfig := simapp.MakeEncodingConfig()
 
 	txCfg := encodingConfig.TxConfig
 	clientCtx := client.Context{}
@@ -90,7 +90,7 @@ func TestReadTxFromFile(t *testing.T) {
 
 func TestBatchScanner_Scan(t *testing.T) {
 	t.Parallel()
-	encodingConfig := simapp.MakeEncodingConfigTests()
+	encodingConfig := simapp.MakeEncodingConfig()
 
 	txGen := encodingConfig.TxConfig
 	clientCtx := client.Context{}

@@ -147,7 +147,7 @@ func TestGetPaginatedVotes(t *testing.T) {
 				cdc        = newTestCodec()
 			)
 
-			encodingConfig := simapp.MakeEncodingConfigTests()
+			encodingConfig := simapp.MakeEncodingConfig()
 			cli := TxSearchMock{txs: marshalled}
 			clientCtx := client.Context{}.
 				WithLegacyAmino(cdc).

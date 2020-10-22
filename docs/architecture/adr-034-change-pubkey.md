@@ -31,16 +31,6 @@ message MsgChangePubKey {
 
 As an example, account pubkey change message can be defined as follows.
 
-```json
-{
-    "type": "cosmos-sdk/StdTx",
-    "value": {
-        "address": "cosmos1wf5h7meplxu3sc6rk2agavkdsmlsen7rgsasxk",
-        "public_key": "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv"
-    },
-    "signature": "a9n7pIqCUuYJTCm7ZBv1cqqlM3uYyX/7SnaSXA8zrG0CBWP6p55pTFFHYn39tVvFtRbGE7gXF1qCiaOilJ8NtQ=="
-}
-```
 
 Here, the signature is signed for the public key thats current in-state for account `cosmos1wf5h7meplxu3sc6rk2agavkdsmlsen7rgsasxk`, as normally done in the ante-handler.
 

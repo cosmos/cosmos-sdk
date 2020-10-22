@@ -81,7 +81,7 @@ func TestFullAppSimulation(t *testing.T) {
 		SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
-		ModuleBasics,
+		app.AppCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked
@@ -119,7 +119,8 @@ func TestAppImportExport(t *testing.T) {
 		SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
-		ModuleBasics)
+		app.AppCodec(),
+	)
 
 	// export state and simParams before the simulation error is checked
 	err = CheckExportSimulation(app, config, simParams)
@@ -215,7 +216,8 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
-		ModuleBasics)
+		app.AppCodec(),
+	)
 
 	// export state and simParams before the simulation error is checked
 	err = CheckExportSimulation(app, config, simParams)
@@ -262,7 +264,8 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		SimulationOperations(newApp, newApp.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
-		ModuleBasics)
+		app.AppCodec(),
+	)
 	require.NoError(t, err)
 }
 
@@ -312,7 +315,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				SimulationOperations(app, app.AppCodec(), config),
 				app.ModuleAccountAddrs(),
 				config,
-				ModuleBasics,
+				app.AppCodec(),
 			)
 			require.NoError(t, err)
 

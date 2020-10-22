@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
@@ -54,7 +53,6 @@ func SimulateFromSeed(
 	ops WeightedOperations,
 	blockedAddrs map[string]bool,
 	config simulation.Config,
-	mbm module.BasicManager,
 	marshaler codec.Marshaler,
 ) (stopEarly bool, exportedParams Params, err error) {
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.

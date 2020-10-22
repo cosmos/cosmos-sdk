@@ -19,7 +19,9 @@ ADR creation is an **iterative** process. Instead of trying to solve all decisio
 
 1. If a _proposed_ ADR is merged, then it should clearly document outstanding issues either in ADR document notes or in a GitHub Issue.
 
-1. The PR SHOULD always be merged. In the case of a faulty ADR, we still want to  merge it with a _rejected_ status. The only time the ADR SHOULD NOT be merged is if the author abandons it.
+1. The PR SHOULD always be merged. In the case of a faulty ADR, we still prefer to  merge it with a _rejected_ status. The only time the ADR SHOULD NOT be merged is if the author abandons it.
+
+1. Merged ADRs SHOULD NOT be pruned.
 
 
 ### ADR status

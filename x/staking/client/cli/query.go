@@ -114,35 +114,20 @@ $ %s query staking validators
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
 
-			// Query all validators by quering validators for all statuses.
-			bonded, err := queryClient.Validators(context.Background(), &types.QueryValidatorsRequest{
-				Status: types.BondStatusBonded,
-			})
-			if err != nil {
-				return err
-			}
-			unbonded, err := queryClient.Validators(context.Background(), &types.QueryValidatorsRequest{
-				Status: types.BondStatusUnbonded,
-			})
-			if err != nil {
-				return err
-			}
-			unbonding, err := queryClient.Validators(context.Background(), &types.QueryValidatorsRequest{
-				Status: types.BondStatusUnbonding,
+			result, err := queryClient.Validators(context.Background(), &types.QueryValidatorsRequest{
+				// Leaving status empty on purpose to query all validators.
+				Pagination: pageReq,
 			})
 			if err != nil {
 				return err
 			}
 
-			validators := types.Validators{}
-			validators = append(validators, bonded.Validators...)
-			validators = append(validators, unbonded.Validators...)
-			validators = append(validators, unbonding.Validators...)
-
-			return clientCtx.PrintOutput(&types.QueryValidatorsResponse{
-				Validators: validators,
-			})
+			return clientCtx.PrintOutput(result)
 		},
 	}
 

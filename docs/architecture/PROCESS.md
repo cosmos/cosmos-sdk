@@ -34,7 +34,7 @@ DRAFT -> PROPOSED -> LAST CALL yyyy-mm-dd -> ACCEPTED | REJECTED -> SUPERSEEDED 
 
 
 + `DRAFT`: [optional] an ADR which is work in progress, not being ready for a general review. This is to present an early work and get an early feedback in a Draft Pull Request form.
-+ `PROPOSED`: and ADR covering a full solution architecture.
++ `PROPOSED`: an ADR covering a full solution architecture.
 + `LAST CALL <date for the last call>`: [optional] clear notify that we are close to accept updates
 + `ACCEPTED`: ADR which will represent a currently implemented or to be implemented architecture design.
 + `SUPERSEEDED by ADR-xxx`: ADR which has been superseded by a new ADR.

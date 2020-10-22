@@ -1,6 +1,8 @@
 package client
 
 import (
+	gogogrpc "github.com/gogo/protobuf/grpc"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -34,6 +36,7 @@ type (
 	// signatures, and provide canonical bytes to sign over. The transaction must
 	// also know how to encode itself.
 	TxBuilder interface {
+		gogogrpc.ClientConn
 		GetTx() signing.Tx
 
 		SetMsgs(msgs ...sdk.Msg) error

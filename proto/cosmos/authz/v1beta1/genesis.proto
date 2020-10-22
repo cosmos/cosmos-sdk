@@ -1,0 +1,12 @@
+syntax = "proto3";
+package cosmos.authz.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/authz/v1beta1/tx.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/authz/types";
+
+// GenesisState defines the authz module's genesis state.
+message GenesisState {
+    repeated MsgGrantAuthorization authorization = 1 [(gogoproto.nullable) = false];
+}

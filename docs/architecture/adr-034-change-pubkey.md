@@ -16,7 +16,7 @@ Transferring all the assets of an account to a new account with the updated pubk
 
 ## Decision
 
-We propose the creation of a new feature  to `x/auth` that allows accounts to update the public key associated with their account, while keeping the address the same.  This feature can be enabled using an `EnableChangePubKey` param.
+We propose the addition of a new feature to `x/auth` that allows accounts to update the public key associated with their account, while keeping the address the same.  This feature can be enabled using an `EnableChangePubKey` param.
 
 This is possible because the Cosmos SDK `StdAccount` stores the public key for an account in state, instead of making the assumption that the public key is included in the transaction (whether explicitly or implicitly through the signature) as in other blockchains such as Bitcoin and Ethereum.  Because the public key is stored on chain, it is okay for the public key to not hash to the address of an account, as the address is not pertinent to the signature checking process.
 
@@ -33,7 +33,7 @@ The MsgChangePubKey transaction needs to be signed by the existing pubkey in sta
 
 Once, approved, the handler for this message type, which takes in the AccountKeeper, will update the in-state pubkey for the account and replace it with the pubkey from the Msg.
 
-Because an account can no longer be pruned from state once its pubkey has changed, we can charge an additional gas fee for this operation to compensate for this this externality (this bound gas amount is configured as parameter `PubKeyChangeCost`). The bonus gas is charged inside handler, using the `ConsumeGas` function.
+Because an account can no longer be pruned from state once its pubkey has changed, we can charge an additional gas fee for this operation to compensate for this this externality (this bound gas amount is configured as parameter `PubKeyChangeCost`). The bonus gas is charged inside the handler, using the `ConsumeGas` function.
 
 ```go
 	amount := ak.GetParams(ctx).PubKeyChangeCost

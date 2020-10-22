@@ -60,7 +60,6 @@ message MsgExecAuthorized {
 
     string grantee = 1;
     repeated google.protobuf.Any msgs = 2 [
-        (cosmos_proto.accepts_interface) = "github.com/cosmos/cosmos-sdk/types.Msg",
         (gogoproto.moretags) = "yaml:\"msgs\""
     ];
 }

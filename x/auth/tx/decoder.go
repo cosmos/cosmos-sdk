@@ -2,6 +2,7 @@ package tx
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/codec/unknownproto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -9,12 +10,12 @@ import (
 )
 
 // DefaultTxDecoder returns a default protobuf TxDecoder using the provided Marshaler.
-func DefaultTxDecoder(cdc codec.Marshaler) sdk.TxDecoder {
+func DefaultTxDecoder(cdc codec.Marshaler, interfaceRegistry cdctypes.InterfaceRegistry) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		var raw tx.TxRaw
 
 		// reject all unknown proto fields in the root TxRaw
-		err := unknownproto.RejectUnknownFieldsStrict(txBytes, &raw, cdc.InterfaceRegistry())
+		err := unknownproto.RejectUnknownFieldsStrict(txBytes, &raw, interfaceRegistry)
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
@@ -27,7 +28,7 @@ func DefaultTxDecoder(cdc codec.Marshaler) sdk.TxDecoder {
 		var body tx.TxBody
 
 		// allow non-critical unknown fields in TxBody
-		txBodyHasUnknownNonCriticals, err := unknownproto.RejectUnknownFields(raw.BodyBytes, &body, true, cdc.InterfaceRegistry())
+		txBodyHasUnknownNonCriticals, err := unknownproto.RejectUnknownFields(raw.BodyBytes, &body, true, interfaceRegistry)
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
@@ -40,7 +41,7 @@ func DefaultTxDecoder(cdc codec.Marshaler) sdk.TxDecoder {
 		var authInfo tx.AuthInfo
 
 		// reject all unknown proto fields in AuthInfo
-		err = unknownproto.RejectUnknownFieldsStrict(raw.AuthInfoBytes, &authInfo, cdc.InterfaceRegistry())
+		err = unknownproto.RejectUnknownFieldsStrict(raw.AuthInfoBytes, &authInfo, interfaceRegistry)
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}

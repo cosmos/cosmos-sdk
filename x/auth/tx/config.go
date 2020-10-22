@@ -6,6 +6,7 @@ import (
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,10 +24,10 @@ type config struct {
 
 // NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and sign modes. The
 // first enabled sign mode will become the default sign mode.
-func NewTxConfig(protoCodec codec.Marshaler, enabledSignModes []signingtypes.SignMode) client.TxConfig {
+func NewTxConfig(protoCodec codec.Marshaler, enabledSignModes []signingtypes.SignMode, interfaceRegistry cdctypes.InterfaceRegistry) client.TxConfig {
 	return &config{
 		handler:     makeSignModeHandler(enabledSignModes),
-		decoder:     DefaultTxDecoder(protoCodec),
+		decoder:     DefaultTxDecoder(protoCodec, interfaceRegistry),
 		encoder:     DefaultTxEncoder(),
 		jsonDecoder: DefaultJSONTxDecoder(protoCodec),
 		jsonEncoder: DefaultJSONTxEncoder(protoCodec),

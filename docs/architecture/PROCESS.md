@@ -9,7 +9,7 @@
 
 ## ADR life cycle
 
-ADR creation is an **iterative** process. Instead of trying to solve all decisions in a single ADR pull request, we MUST firstly understand the problem and collect a feedback through a GitHub Issue.
+ADR creation is an **iterative** process. Instead of trying to solve all decisions in a single ADR pull request, we MUST firstly understand the problem and collect feedback through a GitHub Issue.
 
 1. Every proposal SHOULD start with a new GitHub Issue or be a result of existing Issues. The Issue should contain just a brief proposal summary.
 

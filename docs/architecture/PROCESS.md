@@ -25,7 +25,7 @@ ADR creation is an **iterative** process. Instead of trying to solve all decisio
 ### ADR status
 
 ```
-DRAFT -> PROPOSED -> LAST CALL yyyy-mm-dd -> FINAL | REJECTED -> SUPERSEEDED by ADR-xxx
+DRAFT -> PROPOSED -> LAST CALL yyyy-mm-dd -> ACCEPTED | REJECTED -> SUPERSEEDED by ADR-xxx
                   \        |
                    \       |
                     v      v

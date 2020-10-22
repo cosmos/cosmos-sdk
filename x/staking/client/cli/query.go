@@ -113,22 +113,36 @@ $ %s query staking validators
 				return err
 			}
 
-			resKVs, _, err := clientCtx.QuerySubspace(types.ValidatorsKey, types.StoreKey)
+			queryClient := types.NewQueryClient(clientCtx)
+
+			// Query all validators by quering validators for all statuses.
+			bonded, err := queryClient.Validators(context.Background(), &types.QueryValidatorsRequest{
+				Status: types.BondStatusBonded,
+			})
+			if err != nil {
+				return err
+			}
+			unbonded, err := queryClient.Validators(context.Background(), &types.QueryValidatorsRequest{
+				Status: types.BondStatusUnbonded,
+			})
+			if err != nil {
+				return err
+			}
+			unbonding, err := queryClient.Validators(context.Background(), &types.QueryValidatorsRequest{
+				Status: types.BondStatusUnbonding,
+			})
 			if err != nil {
 				return err
 			}
 
-			var validators types.Validators
-			for _, kv := range resKVs {
-				validator, err := types.UnmarshalValidator(types.ModuleCdc, kv.Value)
-				if err != nil {
-					return err
-				}
+			validators := types.Validators{}
+			validators = append(validators, bonded.Validators...)
+			validators = append(validators, unbonded.Validators...)
+			validators = append(validators, unbonding.Validators...)
 
-				validators = append(validators, validator)
-			}
-
-			return clientCtx.PrintOutputLegacy(validators)
+			return clientCtx.PrintOutput(&types.QueryValidatorsResponse{
+				Validators: validators,
+			})
 		},
 	}
 

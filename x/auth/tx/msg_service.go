@@ -16,11 +16,6 @@ func (w *wrapper) Invoke(_ gocontext.Context, method string, args, reply interfa
 		return fmt.Errorf("%T should implement %T", args, (*sdk.MsgRequest)(nil))
 	}
 
-	err := req.ValidateBasic()
-	if err != nil {
-		return err
-	}
-
 	w.SetMsgs(sdk.ServiceMsg{
 		MethodName: method,
 		Request:    req,

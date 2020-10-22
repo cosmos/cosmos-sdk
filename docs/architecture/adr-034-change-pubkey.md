@@ -29,10 +29,7 @@ message MsgChangePubKey {
 }
 ```
 
-As an example, account pubkey change message can be defined as follows.
-
-
-Here, the signature is signed for the public key thats current in-state for account `cosmos1wf5h7meplxu3sc6rk2agavkdsmlsen7rgsasxk`, as normally done in the ante-handler.
+The MsgChangePubKey transaction needs to be signed by the existing pubkey in state.
 
 Once, approved, the handler for this message type, which takes in the AccountKeeper, will update the in-state pubkey for the account and replace it with the pubkey from the Msg.
 

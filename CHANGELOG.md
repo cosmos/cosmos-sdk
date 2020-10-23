@@ -54,6 +54,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (codec) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) `InterfaceRegistry` now inherits `jsonpb.AnyResolver`, and has a `RegisterCustomTypeURL` method to support ADR 031 packing of `Any`s. `AnyResolver` is now a required parameter to `RejectUnknownFields`.
 * (baseapp) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) Add `ServiceMsgRouter` to BaseApp to handle routing of protobuf service `Msg`s. The two new types defined in ADR 031, `sdk.ServiceMsg` and `sdk.MsgRequest` are introduced with this router.
+* (client) [\#7630](https://github.com/cosmos/cosmos-sdk/pull/7630) `TxBuilder` extends `grpc.ClientConn` to be able to create txs with ADR 031 service `Msg`s.
 
 ### Bug Fixes
 

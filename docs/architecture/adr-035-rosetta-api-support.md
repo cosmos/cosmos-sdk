@@ -18,7 +18,7 @@ The driving principles of the proposed design are:
 
 1. **Extensibility:** it must be as riskless and painless as possible for application developers to set-up network configurations to expose Rosetta API-compliant services.
 2. **Long term support:** This proposal aims to provide support for all the supported Cosmos SDK release series.
-3. **Cost-efficiency:** Backporting features from `master` to the various stable branches of Cosmos SDK is a cost that needs to be reduced.
+3. **Cost-efficiency:** Backporting changes to Rosetta API specifications from `master` to the various stable branches of Cosmos SDK is a cost that needs to be reduced.
 
 We will achieve these delivering on these principles by the following:
 

@@ -48,13 +48,13 @@ func (l launchpad) AccountBalance(ctx context.Context, request *types.AccountBal
 func convertCoinsToRosettaBalances(coins []sdk.Coin) []*types.Amount {
 	amounts := make([]*types.Amount, len(coins))
 
-	for _, coin := range coins {
-		amounts = append(amounts, &types.Amount{
+	for i, coin := range coins {
+		amounts[i] = &types.Amount{
 			Value: coin.Amount.String(),
 			Currency: &types.Currency{
 				Symbol: coin.Denom,
 			},
-		})
+		}
 	}
 
 	return amounts

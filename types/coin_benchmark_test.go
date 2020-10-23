@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 )
 
@@ -12,10 +13,12 @@ func BenchmarkCoinsAdditionIntersect(b *testing.B) {
 			coinsB := Coins(make([]Coin, numCoinsB))
 
 			for i := 0; i < numCoinsA; i++ {
-				coinsA[i] = NewCoin("COINZ_"+string(i), NewInt(int64(i)))
+				num := strconv.Itoa(i)
+				coinsA[i] = NewCoin("COINZ_"+num, NewInt(int64(i)))
 			}
 			for i := 0; i < numCoinsB; i++ {
-				coinsB[i] = NewCoin("COINZ_"+string(i), NewInt(int64(i)))
+				num := strconv.Itoa(i)
+				coinsB[i] = NewCoin("COINZ_"+num, NewInt(int64(i)))
 			}
 
 			b.ResetTimer()
@@ -41,10 +44,12 @@ func BenchmarkCoinsAdditionNoIntersect(b *testing.B) {
 			coinsB := Coins(make([]Coin, numCoinsB))
 
 			for i := 0; i < numCoinsA; i++ {
-				coinsA[i] = NewCoin("COINZ_"+string(numCoinsB+i), NewInt(int64(i)))
+				num := strconv.Itoa(numCoinsB + i)
+				coinsA[i] = NewCoin("COINZ_"+num, NewInt(int64(i)))
 			}
 			for i := 0; i < numCoinsB; i++ {
-				coinsB[i] = NewCoin("COINZ_"+string(i), NewInt(int64(i)))
+				num := strconv.Itoa(i)
+				coinsB[i] = NewCoin("COINZ_"+num, NewInt(int64(i)))
 			}
 
 			b.ResetTimer()

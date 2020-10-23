@@ -86,10 +86,10 @@ func (l launchpad) NetworkStatus(ctx context.Context, _ *types.NetworkRequest) (
 	}
 
 	peers := make([]*types.Peer, len(netInfo.Peers))
-	for _, p := range netInfo.Peers {
-		peers = append(peers, &types.Peer{
+	for i, p := range netInfo.Peers {
+		peers[i] = &types.Peer{
 			PeerID: p.NodeInfo.ID,
-		})
+		}
 	}
 
 	height, err := strconv.ParseUint(latestBlock.Block.Header.Height, 10, 64)

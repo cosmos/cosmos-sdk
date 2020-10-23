@@ -21,14 +21,14 @@ func (l launchpad) Mempool(ctx context.Context, request *types.NetworkRequest) (
 	}
 
 	txsResp := make([]*types.TransactionIdentifier, len(txs.Txs))
-	for _, tx := range txs.Txs {
+	for i, tx := range txs.Txs {
 		decodeString, err := base64.StdEncoding.DecodeString(tx)
 		if err != nil {
 			return nil, ErrInterpreting
 		}
 
 		txID := &types.TransactionIdentifier{Hash: hex.EncodeToString(tmtypes.Tx(decodeString).Hash())}
-		txsResp = append(txsResp, txID)
+		txsResp[i] = txID
 	}
 
 	return &types.MempoolResponse{

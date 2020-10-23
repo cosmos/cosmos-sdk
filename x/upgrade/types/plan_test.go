@@ -38,7 +38,7 @@ func TestPlanString(t *testing.T) {
 				Info: "https://foo.bar",
 				Time: mustParseTime("2019-07-08T11:33:55Z"),
 			},
-			expect: "Upgrade Plan\n  Name: due_time\n  Time: 2019-07-08T11:33:55Z\n  Info: https://foo.bar\n  Upgraded IBC Client: no upgraded client provided",
+			expect: "Upgrade Plan\n  Name: due_time\n  Time: 2019-07-08T11:33:55Z\n  Info: https://foo.bar.\n  Upgraded IBC Client: no upgraded client provided",
 		},
 		"with height": {
 			p: Plan{
@@ -46,7 +46,7 @@ func TestPlanString(t *testing.T) {
 				Info:   "https://foo.bar/baz",
 				Height: 7890,
 			},
-			expect: "Upgrade Plan\n  Name: by height\n  Height: 7890\n  Info: https://foo.bar/baz\n  Upgraded IBC Client: no upgraded client provided",
+			expect: "Upgrade Plan\n  Name: by height\n  Height: 7890\n  Info: https://foo.bar/baz.\n  Upgraded IBC Client: no upgraded client provided",
 		},
 		"with IBC client": {
 			p: Plan{
@@ -55,14 +55,14 @@ func TestPlanString(t *testing.T) {
 				Height:              7890,
 				UpgradedClientState: cs,
 			},
-			expect: fmt.Sprintf("Upgrade Plan\n  Name: by height\n  Height: 7890\n  Info: https://foo.bar/baz\n  Upgraded IBC Client: %s", &ibctmtypes.ClientState{}),
+			expect: fmt.Sprintf("Upgrade Plan\n  Name: by height\n  Height: 7890\n  Info: https://foo.bar/baz.\n  Upgraded IBC Client: %s", &ibctmtypes.ClientState{}),
 		},
 
 		"neither": {
 			p: Plan{
 				Name: "almost-empty",
 			},
-			expect: "Upgrade Plan\n  Name: almost-empty\n  Height: 0\n  Info: \n  Upgraded IBC Client: no upgraded client provided",
+			expect: "Upgrade Plan\n  Name: almost-empty\n  Height: 0\n  Info: .\n  Upgraded IBC Client: no upgraded client provided",
 		},
 	}
 

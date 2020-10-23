@@ -12,10 +12,10 @@ import (
 )
 
 type Options struct {
-	// CosmosEndpoint is the endpoint that exposes the cosmos rpc in a cosmos app.
-	CosmosEndpoint string
+	// AppEndpoint is the endpoint that exposes the cosmos rpc in a cosmos app.
+	AppEndpoint string
 
-	// CosmosEndpoint is the endpoint that exposes the tendermint rpc in a cosmos app.
+	// TendermintEndpoint is the endpoint that exposes the tendermint rpc in a cosmos app.
 	TendermintEndpoint string
 
 	// Blockchain represents the name of the blockchain, it is used for NetworkList endpoint.
@@ -52,9 +52,9 @@ type launchpad struct {
 	properties properties
 }
 
-// NewLaunchpadNetwork returns a configured network to work in a Launchpad version.
-func NewLaunchpadNetwork(options Options) service.Network {
-	cosmosClient := cosmos.NewClient(fmt.Sprintf("http://%s", options.CosmosEndpoint))
+// NewNetwork returns a configured network to work in a Launchpad version.
+func NewNetwork(options Options) service.Network {
+	cosmosClient := cosmos.NewClient(fmt.Sprintf("http://%s", options.AppEndpoint))
 	tendermintClient := tendermint.NewClient(fmt.Sprintf("http://%s", options.TendermintEndpoint))
 
 	return service.Network{

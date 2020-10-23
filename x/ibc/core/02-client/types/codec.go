@@ -44,15 +44,6 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	)
 }
 
-var (
-	// SubModuleCdc references the global x/ibc/core/02-client module codec. Note, the codec should
-	// ONLY be used in certain instances of tests and for JSON encoding.
-	//
-	// The actual codec used for serialization should be provided to x/ibc/core/02-client and
-	// defined at the application level.
-	SubModuleCdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
-)
-
 // PackClientState constructs a new Any packed with the given client state value. It returns
 // an error if the client state can't be casted to a protobuf message or if the concrete
 // implemention is not registered to the protobuf codec.

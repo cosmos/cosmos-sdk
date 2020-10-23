@@ -57,14 +57,16 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 func (s IntegrationTestSuite) TestSimulateService() {
 	// Create an account with some funds.
+	require := s.Require()
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	acc1 := s.app.AccountKeeper.NewAccountWithAddress(s.sdkCtx, addr1)
 	err := acc1.SetAccountNumber(0)
-	s.Require().NoError(err)
+	require.NoError(err)
 	s.app.AccountKeeper.SetAccount(s.sdkCtx, acc1)
-	s.app.BankKeeper.SetBalances(s.sdkCtx, addr1, sdk.Coins{
+	err = s.app.BankKeeper.SetBalances(s.sdkCtx, addr1, sdk.Coins{
 		sdk.NewInt64Coin("atom", 10000000),
 	})
+	require.NoError(err)
 
 	// Create a test x/bank MsgSend.
 	coins := sdk.NewCoins(sdk.NewInt64Coin("atom", 10))
@@ -77,7 +79,8 @@ func (s IntegrationTestSuite) TestSimulateService() {
 
 	// Create a txBuilder.
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
-	txBuilder.SetMsgs(msg)
+	err = txBuilder.SetMsgs(msg)
+	require.NoError(err)
 	txBuilder.SetMemo(memo)
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
@@ -89,29 +92,30 @@ func (s IntegrationTestSuite) TestSimulateService() {
 			Signature: nil,
 		},
 	}
-	txBuilder.SetSignatures(sigV2)
+	err = txBuilder.SetSignatures(sigV2)
+	require.NoError(err)
 	// 2nd round: actually sign
 	sigV2, err = tx.SignWithPrivKey(
 		s.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
 		authsigning.SignerData{ChainID: s.sdkCtx.ChainID(), AccountNumber: accNum, Sequence: accSeq},
 		txBuilder, priv1, s.clientCtx.TxConfig, accSeq,
 	)
-	txBuilder.SetSignatures(sigV2)
-
+	err = txBuilder.SetSignatures(sigV2)
+	require.NoError(err)
 	any, ok := txBuilder.(codectypes.IntoAny)
-	s.Require().True(ok)
+	require.True(ok)
 	cached := any.AsAny().GetCachedValue()
 	txTx, ok := cached.(*txtypes.Tx)
-	s.Require().True(ok)
+	require.True(ok)
 	res, err := s.queryClient.Simulate(
 		context.Background(),
 		&simulate.SimulateRequest{Tx: txTx},
 	)
-	s.Require().NoError(err)
+	require.NoError(err)
 
 	// Check the result and gas used are correct.
-	s.Require().Equal(len(res.GetResult().GetEvents()), 4) // 1 transfer, 3 messages.
-	s.Require().True(res.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
+	require.Equal(len(res.GetResult().GetEvents()), 4) // 1 transfer, 3 messages.
+	require.True(res.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
 }
 
 func TestSimulateTestSuite(t *testing.T) {

@@ -76,11 +76,7 @@ func AddQueryFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to Tendermint RPC interface for this chain")
 	cmd.Flags().Int64(FlagHeight, 0, "Use a specific height to query state at (this can error if the node is pruning state)")
 	cmd.Flags().StringP(tmcli.OutputFlag, "o", "text", "Output format (text|json)")
-
-	err := cmd.MarkFlagRequired(FlagChainID)
-	if err != nil {
-		panic(fmt.Sprintf("Can't make a err"))
-	}
+	markFlagRequired(cmd, FlagChainID)
 
 	cmd.SetErr(cmd.ErrOrStderr())
 	cmd.SetOut(cmd.OutOrStdout())
@@ -110,7 +106,7 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	// --gas can accept integers and "auto"
 	cmd.Flags().String(FlagGas, "", fmt.Sprintf("gas limit to set per-transaction; set to %q to calculate sufficient gas automatically (default %d)", GasFlagAuto, DefaultGasLimit))
 
-	cmd.MarkFlagRequired(FlagChainID)
+	markFlagRequired(cmd, FlagChainID)
 
 	cmd.SetErr(cmd.ErrOrStderr())
 	cmd.SetOut(cmd.OutOrStdout())
@@ -158,5 +154,12 @@ func ParseGasSetting(gasStr string) (GasSetting, error) {
 		}
 
 		return GasSetting{false, gas}, nil
+	}
+}
+
+func markFlagRequired(cmd *cobra.Command, name string) {
+	err := cmd.MarkFlagRequired(name)
+	if err != nil {
+		panic(fmt.Sprintf("Can't make a %q falg required; err: %s", name, err))
 	}
 }

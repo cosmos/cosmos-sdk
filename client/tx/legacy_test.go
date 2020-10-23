@@ -108,6 +108,22 @@ func (s *TestSuite) TestConvertTxToStdTx() {
 	s.Require().Equal(sig.PubKey, stdTx.Signatures[0].PubKey)
 	s.Require().Equal(sig.Data.(*signing2.SingleSignatureData).Signature, stdTx.Signatures[0].Signature)
 
+	err = protoBuilder.SetSignatures(signing2.SignatureV2{
+		PubKey: pub1,
+		Data: &signing2.SingleSignatureData{
+			SignMode:  signing2.SignMode_SIGN_MODE_DIRECT,
+			Signature: []byte("dummy"),
+		},
+	})
+	s.Require().NoError(err)
+	stdTx, err = tx2.ConvertTxToStdTx(s.encCfg.Amino, protoBuilder.GetTx())
+	s.Require().NoError(err)
+	s.Require().Equal(memo, stdTx.Memo)
+	s.Require().Equal(gas, stdTx.Fee.Gas)
+	s.Require().Equal(fee, stdTx.Fee.Amount)
+	s.Require().Equal(msg, stdTx.Msgs[0])
+	s.Require().Empty(stdTx.Signatures)
+
 	// std tx
 	aminoBuilder := s.aminoCfg.NewTxBuilder()
 	buildTestTx(s.T(), aminoBuilder)

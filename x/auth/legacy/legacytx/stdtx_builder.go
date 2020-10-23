@@ -27,6 +27,12 @@ func (s *StdTxBuilder) GetTx() authsigning.Tx {
 	return s.StdTx
 }
 
+// AppendMsgs implements TxBuilder.AppendMsgs
+func (s *StdTxBuilder) AppendMsgs(msgs ...sdk.Msg) error {
+	s.Msgs = append(s.Msgs, msgs...)
+	return nil
+}
+
 // SetMsgs implements TxBuilder.SetMsgs
 func (s *StdTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
 	s.Msgs = msgs

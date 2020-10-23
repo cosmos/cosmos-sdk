@@ -68,7 +68,7 @@ func NewAnyWithValue(value proto.Message) (*Any, error) {
 	return any, nil
 }
 
-// NewAnyWithWithTypeURL constructs a new Any packed with the value provided
+// NewAnyWithTypeURL constructs a new Any packed with the value provided
 // and a custom TypeURL. It returns an error if that value couldn't be packed.
 // This also cachesthe packed value so that it can be retrieved from
 // GetCachedValue without unmarshaling.
@@ -76,7 +76,7 @@ func NewAnyWithValue(value proto.Message) (*Any, error) {
 // Ex:
 // This will allow us to pack service methods in Any's using the full method name
 // as the type URL and the request body as the value.
-func NewAnyWithWithTypeURL(typeURL string, value proto.Message) (*Any, error) {
+func NewAnyWithTypeURL(typeURL string, value proto.Message) (*Any, error) {
 	any := &Any{}
 
 	err := any.PackWithCustomTypeURL(typeURL, value)

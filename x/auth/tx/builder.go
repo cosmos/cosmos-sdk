@@ -200,7 +200,8 @@ func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 	return res, nil
 }
 
-func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
+// AppendMsgs implemented the TxBuilder.AppendMsgs method.
+func (w *wrapper) AppendMsgs(msgs ...sdk.Msg) error {
 	anys := make([]*codectypes.Any, len(msgs))
 
 	for i, msg := range msgs {
@@ -208,7 +209,7 @@ func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
 		switch msg := msg.(type) {
 		case sdk.ServiceMsg:
 			{
-				anys[i], err = codectypes.NewAnyWithWithTypeURL(msg.MethodName, msg.Request)
+				anys[i], err = codectypes.NewAnyWithTypeURL(msg.MethodName, msg.Request)
 				if err != nil {
 					return err
 				}
@@ -224,12 +225,19 @@ func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
 
 	}
 
-	w.tx.Body.Messages = anys
+	w.tx.Body.Messages = append(w.tx.Body.Messages, anys...)
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
 	w.bodyBz = nil
 
 	return nil
+}
+
+// AppendMsgs implemented the TxBuilder.SetMsgs method.
+func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
+	w.tx.Body.Messages = make([]*codectypes.Any, len(msgs))
+
+	return w.AppendMsgs(msgs...)
 }
 
 // SetTimeoutHeight sets the transaction's height timeout.

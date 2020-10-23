@@ -253,19 +253,34 @@ func makeBatchMultisigCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []stri
 			return errors.Wrap(err, "error getting keybase multisig account")
 		}
 		if multisigInfo.GetType() != keyring.TypeMulti {
-			return fmt.Errorf("%q must be of type %s: %s", args[1], crkeys.TypeMulti, multisigInfo.GetType())
+			return fmt.Errorf("%q must be of type %s: %s", args[1], keyring.TypeMulti, multisigInfo.GetType())
 		}
 
 		multisigPub := multisigInfo.GetPubKey().(*kmultisig.LegacyAminoPubKey)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 		var signatureBatch [][]signingtypes.SignatureV2
 		for i := 2; i < len(args); i++ {
-			signatures, err := utils.ReadSignaturesFromFile(cdc, args[i])
+			sigs, err := unmarshalSignatureJSON(clientCtx, args[i])
 			if err != nil {
-				return errors.Wrap(err, fmt.Sprintf("error getting signatures from file %s", args[i]))
+				return err
 			}
 
-			signatureBatch = append(signatureBatch, signatures)
+			signingData := signing.SignerData{
+				ChainID:       txFactory.ChainID(),
+				AccountNumber: txFactory.AccountNumber(),
+				Sequence:      txFactory.Sequence(),
+			}
+
+			for _, sig := range sigs {
+				err = signing.VerifySignature(sig.PubKey, signingData, sig.Data, txCfg.SignModeHandler(), txBuilder.GetTx())
+				if err != nil {
+					return fmt.Errorf("couldn't verify signature: %w", err)
+				}
+
+				if err := multisig.AddSignatureV2(multisigSig, sig, multisigPub.GetPubKeys()); err != nil {
+					return err
+				}
+			}
 		}
 
 		if !clientCtx.Offline {

@@ -95,7 +95,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	for _, val := range valSet.Validators {
 		// Currently validator requires tmcrypto.ed25519 keys, which don't support
 		// our Marshaling interfaces, so we need to pack them into our version of ed25519.
-		// There is ongonig work to add secp256k1 keys.
+		// There is ongoing work to add secp256k1 keys (https://github.com/cosmos/cosmos-sdk/pull/7604).
 		pk, err := ed25519.FromTmEd25519(val.PubKey)
 		require.NoError(t, err)
 		pkAny, err := codectypes.PackAny(pk)

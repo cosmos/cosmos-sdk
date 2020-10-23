@@ -39,6 +39,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
+		app.AppCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked
@@ -83,6 +84,7 @@ func BenchmarkInvariants(b *testing.B) {
 		SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
+		app.AppCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked

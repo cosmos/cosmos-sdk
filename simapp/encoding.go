@@ -1,13 +1,13 @@
 package simapp
 
 import (
-	"github.com/cosmos/cosmos-sdk/simapp/params"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/std"
 )
 
 // MakeEncodingConfig creates an EncodingConfig for testing
-func MakeEncodingConfig() params.EncodingConfig {
-	encodingConfig := params.MakeEncodingConfig()
+func MakeEncodingConfig() simappparams.EncodingConfig {
+	encodingConfig := simappparams.MakeEncodingConfig()
 	std.RegisterLegacyAminoCodec(encodingConfig.Amino)
 	std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 	ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)

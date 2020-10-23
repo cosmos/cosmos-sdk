@@ -50,6 +50,8 @@ func CopyTx(tx signing.Tx, builder client.TxBuilder, ignoreSignatureError bool) 
 	err = builder.SetSignatures(sigs...)
 	if err != nil {
 		if ignoreSignatureError {
+			// we call SetSignatures() agan with no args to clear any signatures in case the
+			// previous call to SetSignatures() had any partial side-effects
 			_ = builder.SetSignatures()
 		} else {
 			return err

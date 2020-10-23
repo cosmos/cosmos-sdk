@@ -8,12 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/encoding"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	encoding "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -284,7 +283,7 @@ func TestValidatorToTm(t *testing.T) {
 		val.Status = Bonded
 		val.Tokens = sdk.NewInt(rand.Int63())
 		vals[i] = val
-		expected[i] = tmtypes.NewValidator(pk.(cryptotypes.IntoTmPubKey).AsTmPubKey(), val.ConsensusPower())
+		expected[i] = tmtypes.NewValidator(pk, val.ConsensusPower())
 	}
 	vs, err := vals.ToTmValidators()
 	require.NoError(t, err)

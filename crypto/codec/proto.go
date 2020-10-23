@@ -1,7 +1,10 @@
 package codec
 
 import (
+	"fmt"
+
 	tmcrypto "github.com/tendermint/tendermint/crypto"
+	protocrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -24,4 +27,26 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*cryptotypes.PubKey)(nil), &ed25519.PubKey{})
 	registry.RegisterImplementations((*cryptotypes.PubKey)(nil), &secp256k1.PubKey{})
 	registry.RegisterImplementations((*cryptotypes.PubKey)(nil), &multisig.LegacyAminoPubKey{})
+}
+
+func PubKeyToProto(k cryptotypes.PubKey) (protocrypto.PublicKey, error) {
+	var kp protocrypto.PublicKey
+	switch k := k.(type) {
+	case *ed25519.PubKey:
+		kp = protocrypto.PublicKey{
+			Sum: &protocrypto.PublicKey_Ed25519{
+				Ed25519: k.Key,
+			},
+		}
+	case *secp256k1.PubKey:
+		kp = protocrypto.PublicKey{
+			Sum: &protocrypto.PublicKey_Secp256K1{
+				Secp256K1: k.Key,
+			},
+		}
+	default:
+		return kp, fmt.Errorf("toproto: key type %v is not supported", k)
+	}
+
+	return kp, nil
 }

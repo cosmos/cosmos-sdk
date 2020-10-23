@@ -22,9 +22,3 @@ type PrivKey interface {
 type (
 	Address = tmcrypto.Address
 )
-
-// IntoTmPubKey allows our own PubKey types be converted into Tendermint's
-// pubkey types.
-type IntoTmPubKey interface {
-	AsTmPubKey() tmcrypto.PubKey
-}

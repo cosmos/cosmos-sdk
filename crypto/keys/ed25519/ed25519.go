@@ -150,7 +150,6 @@ func GenPrivKeyFromSecret(secret []byte) *PrivKey {
 
 var _ cryptotypes.PubKey = &PubKey{}
 var _ codec.AminoMarshaler = &PubKey{}
-var _ cryptotypes.IntoTmPubKey = &PubKey{}
 
 // Address is the SHA256-20 of the raw pubkey bytes.
 func (pubKey *PubKey) Address() crypto.Address {
@@ -215,11 +214,6 @@ func (pubKey PubKey) MarshalAminoJSON() ([]byte, error) {
 // UnmarshalAminoJSON overrides Amino JSON marshalling.
 func (pubKey *PubKey) UnmarshalAminoJSON(bz []byte) error {
 	return pubKey.UnmarshalAmino(bz)
-}
-
-// AsTmPubKey converts our own PubKey into a Tendermint ED25519 pubkey.
-func (pubKey *PubKey) AsTmPubKey() crypto.PubKey {
-	return tmed25519.PubKey(pubKey.Key)
 }
 
 // FromTmEd25519 converts a Tendermint ED25519 pubkey into our own ED25519

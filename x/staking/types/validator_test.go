@@ -313,8 +313,7 @@ func mkValidator(tokens int64, shares sdk.Dec) Validator {
 	}
 }
 
-// copy of newValidator. Unfortunately we can't use it because
-// of an import cycle
+// Creates a new validators and asserts the error check.
 func newValidator(t *testing.T, operator sdk.ValAddress, pubKey crypto.PubKey) Validator {
 	v, err := NewValidator(operator, pubKey, Description{})
 	require.NoError(t, err)

@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
@@ -51,14 +50,8 @@ var (
 	//
 	// The actual codec used for serialization should be provided to x/ibc/core/02-client and
 	// defined at the application level.
-	SubModuleCdc *codec.ProtoCodec
+	SubModuleCdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 )
-
-func init() {
-	ir := codectypes.NewInterfaceRegistry()
-	std.RegisterInterfaces(ir)
-	SubModuleCdc = codec.NewProtoCodec(ir)
-}
 
 // PackClientState constructs a new Any packed with the given client state value. It returns
 // an error if the client state can't be casted to a protobuf message or if the concrete

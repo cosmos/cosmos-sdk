@@ -35,59 +35,6 @@ func TestTypesTestSuite(t *testing.T) {
 	suite.Run(t, new(TypesTestSuite))
 }
 
-func (suite *TypesTestSuite) TestMarshalMsgCreateClientSignBytes() {
-	var (
-		msg *types.MsgCreateClient
-		err error
-	)
-
-	testCases := []struct {
-		name     string
-		malleate func()
-	}{
-		{
-			"solo machine client", func() {
-				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 2)
-				msg, err = types.NewMsgCreateClient(soloMachine.ClientID, soloMachine.ClientState(), soloMachine.ConsensusState(), suite.chainA.SenderAccount.GetAddress())
-				suite.Require().NoError(err)
-			},
-		},
-		{
-			"tendermint client", func() {
-				tendermintClient := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
-				msg, err = types.NewMsgCreateClient("tendermint", tendermintClient, suite.chainA.CurrentTMClientHeader().ConsensusState(), suite.chainA.SenderAccount.GetAddress())
-				suite.Require().NoError(err)
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
-
-			tc.malleate()
-
-			cdc := suite.chainA.App.AppCodec()
-
-			// marshal message
-			bz, err := cdc.MarshalJSON(msg)
-			suite.Require().NoError(err)
-
-			// unmarshal message
-			newMsg := &types.MsgCreateClient{}
-			err = cdc.UnmarshalJSON(bz, newMsg)
-			suite.Require().NoError(err)
-			bz = newMsg.GetSignBytes()
-			suite.Require().NotEmpty(bz)
-
-			suite.Require().True(proto.Equal(msg, newMsg))
-		})
-	}
-
-}
-
 // tests that different clients within MsgCreateClient can be marshaled
 // and unmarshaled.
 func (suite *TypesTestSuite) TestMarshalMsgCreateClient() {

@@ -27,9 +27,8 @@ func Test_runExportCmd(t *testing.T) {
 	// create a key
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
 	require.NoError(t, err)
-	t.Cleanup(func() {
-		kb.Delete("keyname1") // nolint:errcheck
-	})
+
+	t.Cleanup(kbCleanup(t, kb, "keyname1"))
 
 	path := sdk.GetConfig().GetFullFundraiserPath()
 	_, err = kb.NewAccount("keyname1", testutil.TestMnemonic, "", path, hd.Secp256k1)

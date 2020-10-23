@@ -31,30 +31,30 @@ func getLegacyKeyBaseFromDir(rootDir string, opts ...cryptokeyring.KeybaseOption
 	return cryptokeyring.NewLegacy(defaultKeyDBName, filepath.Join(rootDir, "keys"), opts...)
 }
 
-func printKeyInfo(w io.Writer, keyInfo cryptokeyring.Info, bechKeyOut bechKeyOutFn, output string) {
+func printKeyInfo(w io.Writer, keyInfo cryptokeyring.Info, bechKeyOut bechKeyOutFn, output string) error {
 	ko, err := bechKeyOut(keyInfo)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	switch output {
 	case OutputFormatText:
-		printTextInfos(w, []cryptokeyring.KeyOutput{ko})
+		err = printTextInfos(w, []cryptokeyring.KeyOutput{ko})
 
 	case OutputFormatJSON:
-		out, err := KeysCdc.MarshalJSON(ko)
-		if err != nil {
-			panic(err)
+		out, err2 := KeysCdc.MarshalJSON(ko)
+		if err2 != nil {
+			return err2
 		}
-
-		fmt.Fprintln(w, string(out))
+		_, err = fmt.Fprintln(w, string(out))
 	}
+	return err
 }
 
-func printInfos(w io.Writer, infos []cryptokeyring.Info, output string) {
+func printInfos(w io.Writer, infos []cryptokeyring.Info, output string) error {
 	kos, err := cryptokeyring.Bech32KeysOutput(infos)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	switch output {
@@ -64,35 +64,38 @@ func printInfos(w io.Writer, infos []cryptokeyring.Info, output string) {
 	case OutputFormatJSON:
 		out, err := KeysCdc.MarshalJSON(kos)
 		if err != nil {
-			panic(err)
+			return err
 		}
-
-		fmt.Fprintf(w, "%s", out)
+		if _, err := fmt.Fprintf(w, "%s", out); err != nil {
+			return err
+		}
 	}
+	return err
 }
 
-func printTextInfos(w io.Writer, kos []cryptokeyring.KeyOutput) {
+func printTextInfos(w io.Writer, kos []cryptokeyring.KeyOutput) error {
 	out, err := yaml.Marshal(&kos)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	fmt.Fprintln(w, string(out))
+	_, err = fmt.Fprintln(w, string(out))
+	return err
 }
 
-func printKeyAddress(w io.Writer, info cryptokeyring.Info, bechKeyOut bechKeyOutFn) {
+func printKeyAddress(w io.Writer, info cryptokeyring.Info, bechKeyOut bechKeyOutFn) error {
 	ko, err := bechKeyOut(info)
 	if err != nil {
 		panic(err)
 	}
-
-	fmt.Fprintln(w, ko.Address)
+	_, err = fmt.Fprintln(w, ko.Address)
+	return err
 }
 
-func printPubKey(w io.Writer, info cryptokeyring.Info, bechKeyOut bechKeyOutFn) {
+func printPubKey(w io.Writer, info cryptokeyring.Info, bechKeyOut bechKeyOutFn) error {
 	ko, err := bechKeyOut(info)
 	if err != nil {
-		panic(err)
+		return err
 	}
-
-	fmt.Fprintln(w, ko.PubKey)
+	_, err = fmt.Fprintln(w, ko.Address)
+	return err
 }

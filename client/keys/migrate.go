@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // migratePassphrase is used as a no-op migration key passphrase as a passphrase
@@ -49,7 +50,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	defer legacyKb.Close()
+	defer sdkerrors.CallbackLog(legacyKb.Close)
 
 	// fetch list of keys from legacy keybase
 	oldKeys, err := legacyKb.List()
@@ -71,7 +72,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 			return errors.Wrap(err, "failed to create temporary directory for dryrun migration")
 		}
 
-		defer os.RemoveAll(tmpDir)
+		defer sdkerrors.CallbackLog(func() error { return os.RemoveAll(tmpDir) })
 
 		migrator, err = keyring.NewInfoImporter(keyringServiceName, "test", tmpDir, buf)
 	} else {

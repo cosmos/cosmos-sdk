@@ -298,18 +298,21 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 
 func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemonic string) error {
 	output, _ := cmd.Flags().GetString(cli.OutputFlag)
+	stderr := cmd.ErrOrStderr()
 
 	switch output {
 	case OutputFormatText:
 		cmd.PrintErrln()
-		printKeyInfo(cmd.OutOrStdout(), info, keyring.Bech32KeyOutput, output)
+		if err := printKeyInfo(cmd.OutOrStdout(), info, keyring.Bech32KeyOutput, output); err != nil {
+			return err
+		}
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {
-			fmt.Fprintln(cmd.ErrOrStderr(), "\n**Important** write this mnemonic phrase in a safe place.")
-			fmt.Fprintln(cmd.ErrOrStderr(), "It is the only way to recover your account if you ever forget your password.")
-			fmt.Fprintln(cmd.ErrOrStderr(), "")
-			fmt.Fprintln(cmd.ErrOrStderr(), mnemonic)
+			msg := "\n**Important** write this mnemonic phrase in a safe place.\nIt is the only way to recover your account if you ever forget your password.\n\n" + mnemonic
+			if _, err := fmt.Fprintln(stderr, msg); err != nil {
+				return err
+			}
 		}
 	case OutputFormatJSON:
 		out, err := keyring.Bech32KeyOutput(info)

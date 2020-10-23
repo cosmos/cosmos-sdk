@@ -60,11 +60,7 @@ func Test_runShowCmd(t *testing.T) {
 
 	fakeKeyName1 := "runShowCmd_Key1"
 	fakeKeyName2 := "runShowCmd_Key2"
-
-	t.Cleanup(func() {
-		kb.Delete("runShowCmd_Key1")
-		kb.Delete("runShowCmd_Key2")
-	})
+	t.Cleanup(kbCleanup(t, kb, fakeKeyName1, fakeKeyName2))
 
 	path := hd.NewFundraiserParams(1, sdk.CoinType, 0).String()
 	_, err = kb.NewAccount(fakeKeyName1, testutil.TestMnemonic, "", path, hd.Secp256k1)

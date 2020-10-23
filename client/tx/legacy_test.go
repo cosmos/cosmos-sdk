@@ -43,7 +43,7 @@ func buildTestTx(t *testing.T, builder client.TxBuilder) {
 	builder.SetMemo(memo)
 	builder.SetGasLimit(gas)
 	builder.SetFeeAmount(fee)
-	err := builder.SetMsgs(msg)
+	err := builder.AppendMsgs(msg)
 	require.NoError(t, err)
 	err = builder.SetSignatures(sig)
 	require.NoError(t, err)

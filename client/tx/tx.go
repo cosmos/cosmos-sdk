@@ -234,7 +234,7 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (client.TxBuilder, error) {
 
 	tx := txf.txConfig.NewTxBuilder()
 
-	if err := tx.SetMsgs(msgs...); err != nil {
+	if err := tx.AppendMsgs(msgs...); err != nil {
 		return nil, err
 	}
 

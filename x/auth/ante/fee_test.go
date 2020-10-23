@@ -23,7 +23,7 @@ func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 	msg := testdata.NewTestMsg(addr1)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
+	suite.Require().NoError(suite.txBuilder.AppendMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
@@ -72,7 +72,7 @@ func (suite *AnteTestSuite) TestDeductFees() {
 	msg := testdata.NewTestMsg(addr1)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
+	suite.Require().NoError(suite.txBuilder.AppendMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 

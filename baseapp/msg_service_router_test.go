@@ -36,7 +36,7 @@ func TestMsgService(t *testing.T) {
 	txBuilder := encCfg.TxConfig.NewTxBuilder()
 	txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
-	err := txBuilder.SetMsgs(msg)
+	err := txBuilder.AppendMsgs(msg)
 	require.NoError(t, err)
 
 	// First round: we gather all the signer infos. We use the "set empty

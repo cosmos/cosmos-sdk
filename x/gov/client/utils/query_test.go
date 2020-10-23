@@ -156,7 +156,7 @@ func TestGetPaginatedVotes(t *testing.T) {
 
 			for i := range tc.msgs {
 				txBuilder := clientCtx.TxConfig.NewTxBuilder()
-				err := txBuilder.SetMsgs(tc.msgs[i]...)
+				err := txBuilder.AppendMsgs(tc.msgs[i]...)
 				require.NoError(t, err)
 
 				tx, err := clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())

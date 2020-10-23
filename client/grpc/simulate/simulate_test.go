@@ -77,7 +77,7 @@ func (s IntegrationTestSuite) TestSimulateService() {
 
 	// Create a txBuilder.
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
-	txBuilder.SetMsgs(msg)
+	txBuilder.AppendMsgs(msg)
 	txBuilder.SetMemo(memo)
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)

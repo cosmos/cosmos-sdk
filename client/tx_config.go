@@ -40,7 +40,6 @@ type (
 		GetTx() signing.Tx
 
 		AppendMsgs(msg ...sdk.Msg) error
-		SetMsgs(msgs ...sdk.Msg) error
 		SetSignatures(signatures ...signingtypes.SignatureV2) error
 		SetMemo(memo string)
 		SetFeeAmount(amount sdk.Coins)

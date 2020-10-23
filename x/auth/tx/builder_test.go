@@ -84,7 +84,7 @@ func TestTxBuilder(t *testing.T) {
 
 	t.Log("verify that calling the SetMsgs, SetMemo results in the correct getBodyBytes")
 	require.NotEqual(t, bodyBytes, txBuilder.getBodyBytes())
-	err = txBuilder.SetMsgs(msgs...)
+	err = txBuilder.AppendMsgs(msgs...)
 	require.NoError(t, err)
 	require.NotEqual(t, bodyBytes, txBuilder.getBodyBytes())
 	txBuilder.SetMemo(memo)
@@ -155,7 +155,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 		Sequence: 0, // Arbitrary account sequence
 	}
 
-	err := txBuilder.SetMsgs(msgs...)
+	err := txBuilder.AppendMsgs(msgs...)
 	require.NoError(t, err)
 	txBuilder.SetGasLimit(200000)
 	err = txBuilder.SetSignatures(sig1, sig2)
@@ -176,7 +176,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 	require.Equal(t, sdkerrors.ErrNoSignatures.ABCICode(), code)
 
 	// require to fail with nil values for tx, authinfo
-	err = txBuilder.SetMsgs(msgs...)
+	err = txBuilder.AppendMsgs(msgs...)
 	require.NoError(t, err)
 	err = txBuilder.ValidateBasic()
 	require.Error(t, err)
@@ -276,7 +276,7 @@ func TestBuilderFeePayer(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// setup basic tx
 			txBuilder := newBuilder()
-			err := txBuilder.SetMsgs(msgs...)
+			err := txBuilder.AppendMsgs(msgs...)
 			require.NoError(t, err)
 			txBuilder.SetGasLimit(200000)
 			txBuilder.SetFeeAmount(feeAmount)
@@ -300,7 +300,7 @@ func TestBuilderFeeGranter(t *testing.T) {
 	msgs := []sdk.Msg{msg1}
 
 	txBuilder := newBuilder()
-	err := txBuilder.SetMsgs(msgs...)
+	err := txBuilder.AppendMsgs(msgs...)
 	require.NoError(t, err)
 	txBuilder.SetGasLimit(200000)
 	txBuilder.SetFeeAmount(feeAmount)

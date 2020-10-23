@@ -33,12 +33,6 @@ func (s *StdTxBuilder) AppendMsgs(msgs ...sdk.Msg) error {
 	return nil
 }
 
-// SetMsgs implements TxBuilder.SetMsgs
-func (s *StdTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
-	s.Msgs = msgs
-	return nil
-}
-
 // SetSignatures implements TxBuilder.SetSignatures.
 func (s *StdTxBuilder) SetSignatures(signatures ...signing.SignatureV2) error {
 	sigs := make([]StdSignature, len(signatures))

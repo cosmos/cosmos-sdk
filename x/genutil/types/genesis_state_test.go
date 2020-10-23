@@ -47,7 +47,7 @@ func TestValidateGenesisMultipleMessages(t *testing.T) {
 
 	txGen := simapp.MakeEncodingConfig().TxConfig
 	txBuilder := txGen.NewTxBuilder()
-	require.NoError(t, txBuilder.SetMsgs(msg1, msg2))
+	require.NoError(t, txBuilder.AppendMsgs(msg1, msg2))
 
 	tx := txBuilder.GetTx()
 	genesisState := types.NewGenesisStateFromTx(txGen.TxJSONEncoder(), []sdk.Tx{tx})
@@ -63,7 +63,7 @@ func TestValidateGenesisBadMessage(t *testing.T) {
 
 	txGen := simapp.MakeEncodingConfig().TxConfig
 	txBuilder := txGen.NewTxBuilder()
-	err := txBuilder.SetMsgs(msg1)
+	err := txBuilder.AppendMsgs(msg1)
 	require.NoError(t, err)
 
 	tx := txBuilder.GetTx()

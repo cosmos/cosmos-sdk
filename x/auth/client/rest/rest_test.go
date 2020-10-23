@@ -193,7 +193,7 @@ func (s *IntegrationTestSuite) createTestStdTx(val *network.Validator, sequence 
 	txBuilder := txConfig.NewTxBuilder()
 	feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
 	gasLimit := testdata.NewTestGasLimit()
-	txBuilder.SetMsgs(msg)
+	txBuilder.AppendMsgs(msg)
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
 	txBuilder.SetMemo("foobar")

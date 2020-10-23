@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/staking) [\#7499](https://github.com/cosmos/cosmos-sdk/pull/7499) `BondStatus` is now a protobuf `enum` instead of an `int32`, and JSON serialized using its protobuf name, so expect names like `BOND_STATUS_UNBONDING` as opposed to `Unbonding`.
 * (x/evidence) [\#7538](https://github.com/cosmos/cosmos-sdk/pull/7538) The ABCI's `Result.Data` field of `MsgSubmitEvidence` does not contain the raw evidence's hash, but the encoded `MsgSubmitEvidenceResponse` struct.
+* (client) [\#7630](https://github.com/cosmos/cosmos-sdk/pull/7630) `TxBuilder`'s `SetMsgs` method has been converted to `AppendMsgs`. Moreover, `TxBuilder` extends `grpc.ClientConn` to be able to create txs with ADR 031 service `Msg`s.
 
 ### API Breaking
 
@@ -54,7 +55,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (codec) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) `InterfaceRegistry` now inherits `jsonpb.AnyResolver`, and has a `RegisterCustomTypeURL` method to support ADR 031 packing of `Any`s. `AnyResolver` is now a required parameter to `RejectUnknownFields`.
 * (baseapp) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) Add `ServiceMsgRouter` to BaseApp to handle routing of protobuf service `Msg`s. The two new types defined in ADR 031, `sdk.ServiceMsg` and `sdk.MsgRequest` are introduced with this router.
-* (client) [\#7630](https://github.com/cosmos/cosmos-sdk/pull/7630) `TxBuilder` extends `grpc.ClientConn` to be able to create txs with ADR 031 service `Msg`s.
 
 ### Bug Fixes
 

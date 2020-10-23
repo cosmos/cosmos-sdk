@@ -69,7 +69,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetMsgs() {
 
 	txBuilder := s.TxConfig.NewTxBuilder()
 
-	err := txBuilder.SetMsgs(msgs...)
+	err := txBuilder.AppendMsgs(msgs...)
 	s.Require().NoError(err)
 	tx := txBuilder.GetTx()
 	s.Require().Equal(msgs, tx.GetMsgs())
@@ -89,7 +89,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	msg := testdata.NewTestMsg(addr)
 	msigAddr := sdk.AccAddress(multisigPk.Address())
 	msg2 := testdata.NewTestMsg(msigAddr)
-	err := txBuilder.SetMsgs(msg, msg2)
+	err := txBuilder.AppendMsgs(msg, msg2)
 	s.Require().NoError(err)
 
 	// check that validation fails
@@ -245,7 +245,7 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
 	txBuilder.SetMemo(memo)
-	err := txBuilder.SetMsgs(msg)
+	err := txBuilder.AppendMsgs(msg)
 	s.Require().NoError(err)
 	err = txBuilder.SetSignatures(sig)
 	s.Require().NoError(err)
@@ -301,7 +301,7 @@ func (s *TxConfigTestSuite) TestWrapTxBuilder() {
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
 	txBuilder.SetMemo(memo)
-	err := txBuilder.SetMsgs(msg)
+	err := txBuilder.AppendMsgs(msg)
 	s.Require().NoError(err)
 
 	newTxBldr, err := s.TxConfig.WrapTxBuilder(txBuilder.GetTx())

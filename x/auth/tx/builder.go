@@ -233,13 +233,6 @@ func (w *wrapper) AppendMsgs(msgs ...sdk.Msg) error {
 	return nil
 }
 
-// AppendMsgs implemented the TxBuilder.SetMsgs method.
-func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
-	w.tx.Body.Messages = make([]*codectypes.Any, len(msgs))
-
-	return w.AppendMsgs(msgs...)
-}
-
 // SetTimeoutHeight sets the transaction's height timeout.
 func (w *wrapper) SetTimeoutHeight(height uint64) {
 	w.tx.Body.TimeoutHeight = height

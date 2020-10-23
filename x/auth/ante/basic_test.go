@@ -24,7 +24,7 @@ func (suite *AnteTestSuite) TestValidateBasic() {
 	msg := testdata.NewTestMsg(addr1)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
+	suite.Require().NoError(suite.txBuilder.AppendMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
@@ -65,7 +65,7 @@ func (suite *AnteTestSuite) TestValidateMemo() {
 	msg := testdata.NewTestMsg(addr1)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
+	suite.Require().NoError(suite.txBuilder.AppendMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
@@ -115,7 +115,7 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
-			suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
+			suite.Require().NoError(suite.txBuilder.AppendMsgs(msg))
 			suite.txBuilder.SetFeeAmount(feeAmount)
 			suite.txBuilder.SetGasLimit(gasLimit)
 			suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
@@ -207,7 +207,7 @@ func (suite *AnteTestSuite) TestTxHeightTimeoutDecorator() {
 		suite.Run(tc.name, func() {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
-			suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
+			suite.Require().NoError(suite.txBuilder.AppendMsgs(msg))
 
 			suite.txBuilder.SetFeeAmount(feeAmount)
 			suite.txBuilder.SetGasLimit(gasLimit)

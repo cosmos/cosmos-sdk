@@ -344,7 +344,12 @@ func (chain *TestChain) GetValsAtHeight(height int64) (*tmtypes.ValidatorSet, bo
 	}
 
 	valSet := stakingtypes.Validators(histInfo.Valset)
-	return tmtypes.NewValidatorSet(valSet.ToTmValidators()), true
+
+	tmValidators, err := valSet.ToTmValidators()
+	if err != nil {
+		panic(err)
+	}
+	return tmtypes.NewValidatorSet(tmValidators), true
 }
 
 // GetConnection retrieves an IBC Connection for the provided TestConnection. The

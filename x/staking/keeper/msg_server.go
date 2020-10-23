@@ -67,7 +67,10 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 		}
 	}
 
-	validator := types.NewValidator(valAddr, pk, msg.Description)
+	validator, err := types.NewValidator(valAddr, pk, msg.Description)
+	if err != nil {
+		return nil, err
+	}
 	commission := types.NewCommissionWithTime(
 		msg.Commission.Rate, msg.Commission.MaxRate,
 		msg.Commission.MaxChangeRate, ctx.BlockHeader().Time,

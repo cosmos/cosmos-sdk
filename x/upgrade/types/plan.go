@@ -28,7 +28,7 @@ func (p Plan) String() string {
 	return fmt.Sprintf(`Upgrade Plan
   Name: %s
   %s
-  Info: %s
+  Info: %s.
   Upgraded IBC Client: %s`, p.Name, dueUp, p.Info, upgradedClientStr)
 }
 

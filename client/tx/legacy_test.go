@@ -108,7 +108,7 @@ func (s *TestSuite) TestConvertTxToStdTx() {
 	s.Require().Equal(sig.PubKey, stdTx.Signatures[0].PubKey)
 	s.Require().Equal(sig.Data.(*signing2.SingleSignatureData).Signature, stdTx.Signatures[0].Signature)
 
-	// sign mode direct should fail gracefully
+	// SIGN_MODE_DIRECT should fall back to an unsigned tx
 	err = protoBuilder.SetSignatures(signing2.SignatureV2{
 		PubKey: pub1,
 		Data: &signing2.SingleSignatureData{

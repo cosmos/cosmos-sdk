@@ -2,8 +2,10 @@ package staking
 
 import (
 	"fmt"
+	"log"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -146,7 +148,11 @@ func InitGenesis(
 			res = append(res, update)
 		}
 	} else {
-		res = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+		var err error
+		res, err = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	return res
@@ -190,11 +196,16 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 }
 
 // WriteValidators returns a slice of bonded genesis validators.
-func WriteValidators(ctx sdk.Context, keeper keeper.Keeper) (vals []tmtypes.GenesisValidator) {
+func WriteValidators(ctx sdk.Context, keeper keeper.Keeper) (vals []tmtypes.GenesisValidator, err error) {
 	keeper.IterateLastValidators(ctx, func(_ int64, validator types.ValidatorI) (stop bool) {
+		var consPk crypto.PubKey
+		consPk, err = validator.TmConsPubKey()
+		if err != nil {
+			return true
+		}
 		vals = append(vals, tmtypes.GenesisValidator{
-			Address: validator.GetConsAddr().Bytes(),
-			PubKey:  validator.GetConsPubKey(),
+			Address: sdk.ConsAddress(consPk.Address()).Bytes(),
+			PubKey:  consPk,
 			Power:   validator.GetConsensusPower(),
 			Name:    validator.GetMoniker(),
 		})
@@ -215,19 +226,27 @@ func ValidateGenesis(data *types.GenesisState) error {
 	return data.Params.Validate()
 }
 
-func validateGenesisStateValidators(validators []types.Validator) (err error) {
+func validateGenesisStateValidators(validators []types.Validator) error {
 	addrMap := make(map[string]bool, len(validators))
 
 	for i := 0; i < len(validators); i++ {
 		val := validators[i]
-		strKey := string(val.GetConsPubKey().Bytes())
+		consPk, err := val.TmConsPubKey()
+		if err != nil {
+			return err
+		}
+		consAddr, err := val.GetConsAddr()
+		if err != nil {
+			return err
+		}
+		strKey := string(consPk.Bytes())
 
 		if _, ok := addrMap[strKey]; ok {
-			return fmt.Errorf("duplicate validator in genesis state: moniker %v, address %v", val.Description.Moniker, val.GetConsAddr())
+			return fmt.Errorf("duplicate validator in genesis state: moniker %v, address %v", val.Description.Moniker, consAddr)
 		}
 
 		if val.Jailed && val.IsBonded() {
-			return fmt.Errorf("validator is bonded and jailed in genesis state: moniker %v, address %v", val.Description.Moniker, val.GetConsAddr())
+			return fmt.Errorf("validator is bonded and jailed in genesis state: moniker %v, address %v", val.Description.Moniker, consAddr)
 		}
 
 		if val.DelegatorShares.IsZero() && !val.IsUnbonding() {
@@ -237,5 +256,5 @@ func validateGenesisStateValidators(validators []types.Validator) (err error) {
 		addrMap[strKey] = true
 	}
 
-	return
+	return nil
 }

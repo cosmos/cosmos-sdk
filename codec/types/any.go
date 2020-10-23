@@ -79,8 +79,7 @@ func NewAnyWithValue(value proto.Message) (*Any, error) {
 func NewAnyWithTypeURL(typeURL string, value proto.Message) (*Any, error) {
 	any := &Any{}
 
-	err := any.PackWithCustomTypeURL(typeURL, value)
-	if err != nil {
+	if err := any.PackWithCustomTypeURL(typeURL, value); err != nil {
 		return nil, err
 	}
 

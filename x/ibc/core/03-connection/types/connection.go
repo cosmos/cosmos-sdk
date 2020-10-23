@@ -1,6 +1,7 @@
 package types
 
 import (
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
@@ -10,7 +11,7 @@ import (
 var _ exported.ConnectionI = (*ConnectionEnd)(nil)
 
 // NewConnectionEnd creates a new ConnectionEnd instance.
-func NewConnectionEnd(state State, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
+func NewConnectionEnd(state State, clientID string, counterparty Counterparty, versions []codectypes.Any) ConnectionEnd {
 	return ConnectionEnd{
 		ClientId:     clientID,
 		Versions:     versions,

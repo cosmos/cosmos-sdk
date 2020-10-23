@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
 var (
@@ -23,6 +24,8 @@ var (
 		DefaultIBCVersionIdentifier: false,
 	}
 )
+
+var _ exported.Version = &Version{}
 
 // NewVersion returns a new instance of Version.
 func NewVersion(identifier string, features []string) Version {
@@ -228,7 +231,7 @@ func GetFeatureSetIntersection(sourceFeatureSet, counterpartyFeatureSet []string
 // proposed version is supported by this chain. If the feature set is
 // empty it verifies that this is allowed for the specified version
 // identifier.
-func (version Version) VerifyProposedVersion(proposedVersion Version) error {
+func (version Version) VerifyProposedVersion(proposedVersion exported.Version) error {
 	if proposedVersion.GetIdentifier() != version.GetIdentifier() {
 		return sdkerrors.Wrapf(
 			ErrVersionNegotiationFailed,

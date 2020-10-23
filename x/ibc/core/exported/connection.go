@@ -16,3 +16,10 @@ type CounterpartyConnectionI interface {
 	GetPrefix() Prefix
 	ValidateBasic() error
 }
+
+// Version defines an IBC version used in connection handshake negotiation.
+type Version interface {
+	GetIdentifier() string
+	GetFeatures() []string
+	VerifyProposedVersion(Version) error
+}

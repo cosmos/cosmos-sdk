@@ -10,6 +10,7 @@ import (
 )
 
 // Invoke implements the grpc ClientConn.Invoke method.
+// TODO Full amino support still needs to be added as part of https://github.com/cosmos/cosmos-sdk/issues/7541.
 func (s *StdTxBuilder) Invoke(_ gocontext.Context, method string, args, reply interface{}, _ ...grpc.CallOption) error {
 	req, ok := args.(sdk.MsgRequest)
 	if !ok {

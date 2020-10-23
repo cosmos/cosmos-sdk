@@ -77,7 +77,10 @@ func AddQueryFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().Int64(FlagHeight, 0, "Use a specific height to query state at (this can error if the node is pruning state)")
 	cmd.Flags().StringP(tmcli.OutputFlag, "o", "text", "Output format (text|json)")
 
-	cmd.MarkFlagRequired(FlagChainID)
+	err := cmd.MarkFlagRequired(FlagChainID)
+	if err != nil {
+		panic(fmt.Sprintf("Can't make a err"))
+	}
 
 	cmd.SetErr(cmd.ErrOrStderr())
 	cmd.SetOut(cmd.OutOrStdout())

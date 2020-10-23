@@ -39,39 +39,32 @@ var (
 
 type paramStore struct {
 	db *dbm.MemDB
+	t  *testing.T
 }
 
 func (ps *paramStore) Set(_ sdk.Context, key []byte, value interface{}) {
 	bz, err := json.Marshal(value)
-	if err != nil {
-		panic(err)
-	}
-
-	ps.db.Set(key, bz)
+	require.NoError(ps.t, err)
+	err = ps.db.Set(key, bz)
+	require.NoError(ps.t, err)
 }
 
 func (ps *paramStore) Has(_ sdk.Context, key []byte) bool {
 	ok, err := ps.db.Has(key)
-	if err != nil {
-		panic(err)
-	}
-
+	require.NoError(ps.t, err)
 	return ok
 }
 
 func (ps *paramStore) Get(_ sdk.Context, key []byte, ptr interface{}) {
 	bz, err := ps.db.Get(key)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(ps.t, err)
 
 	if len(bz) == 0 {
 		return
 	}
 
-	if err := json.Unmarshal(bz, ptr); err != nil {
-		panic(err)
-	}
+	err = json.Unmarshal(bz, ptr)
+	require.NoError(ps.t, err)
 }
 
 func defaultLogger() log.Logger {
@@ -112,7 +105,7 @@ func setupBaseApp(t *testing.T, options ...func(*BaseApp)) *BaseApp {
 	require.Equal(t, t.Name(), app.Name())
 
 	app.MountStores(capKey1, capKey2)
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.SetParamStore(&paramStore{db: dbm.NewMemDB(), t: t})
 
 	// stores are mounted
 	err := app.LoadLatestVersion()
@@ -139,7 +132,7 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), snapshotDir)
 	require.NoError(t, err)
 	teardown := func() {
-		os.RemoveAll(snapshotDir)
+		require.NoError(t, os.RemoveAll(snapshotDir))
 	}
 
 	app := setupBaseApp(t, append(options,
@@ -1489,7 +1482,10 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 	{
 		tx := newTxCounter(0, 0)
 
-		require.PanicsWithValue(t, customPanicMsg, func() { app.Deliver(aminoTxEncoder(), tx) })
+		require.PanicsWithValue(t, customPanicMsg, func() {
+			_, _, err := app.Deliver(aminoTxEncoder(), tx)
+			require.Error(t, err)
+		})
 	}
 }
 
@@ -2016,7 +2012,7 @@ func TestBaseApp_EndBlock(t *testing.T) {
 	}
 
 	app := NewBaseApp(name, logger, db, nil)
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.SetParamStore(&paramStore{db: dbm.NewMemDB(), t: t})
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: cp,
 	})

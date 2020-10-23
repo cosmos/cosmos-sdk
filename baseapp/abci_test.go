@@ -101,8 +101,8 @@ func TestGetBlockRentionHeight(t *testing.T) {
 
 	for name, tc := range testCases {
 		tc := tc
-
-		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+		ps := paramStore{db: dbm.NewMemDB(), t: t}
+		tc.bapp.SetParamStore(&ps)
 		tc.bapp.InitChain(abci.RequestInitChain{
 			ConsensusParams: &abci.ConsensusParams{
 				Evidence: &tmprototypes.EvidenceParams{
@@ -112,6 +112,7 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		})
 
 		t.Run(name, func(t *testing.T) {
+			ps.t = t
 			require.Equal(t, tc.expected, tc.bapp.GetBlockRetentionHeight(tc.commitHeight))
 		})
 	}

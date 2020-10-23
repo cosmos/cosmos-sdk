@@ -1,7 +1,7 @@
 run:
   tests: false
 #   # timeout for analysis, e.g. 30s, 5m, default is 1m
-#   timeout: 5m
+  timeout: 4m
 
 linters:
   disable-all: true
@@ -10,7 +10,7 @@ linters:
     - deadcode
     - depguard
     - dogsled
-    # - errcheck
+    - errcheck
     - goconst
     - gocritic
     - gofmt

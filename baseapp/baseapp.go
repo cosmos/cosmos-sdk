@@ -426,7 +426,6 @@ func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *abci.ConsensusPara
 	if app.paramStore == nil {
 		panic("cannot store consensus params with no params store set")
 	}
-
 	if cp == nil {
 		return
 	}

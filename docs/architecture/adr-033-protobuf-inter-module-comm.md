@@ -1,4 +1,4 @@
-# ADR 033: Protobuf-based Inter-Module Communication
+# ADR 033: Protobuf-based Inter-Module RPC
 
 ## Changelog
 
@@ -259,12 +259,15 @@ any major security threats assuming basic precautions are taken. The basic preca
 need to take is making sure that the `sdk.Context` passed to query methods does not allow writing to the store. This
 can be done for now with a `CacheMultiStore` as is currently done for `BaseApp` queries.
 
-### Future Work
+### Authorization
 
-Separate ADRs will address the use cases of:
-* unrestricted, "admin" access
-* dynamic interface routing (ex. `x/gov` `Content` routing)
-* inter-module hooks (ex. `x/staking/keeper/hooks.go`)
+TODO
+
+### Hooks
+
+TODO
+
+### Future Work
 
 Other future improvements may include:
 * combining `StoreKey`s and `ModuleKey`s into a single interface so that modules have a single Ocaps handle
@@ -281,8 +284,8 @@ replacing `Keeper` interfaces altogether.
 
 ### Positive
 
-- proper inter-module Ocaps
 - an alternative to keepers which can more easily lead to stable inter-module interfaces
+- proper inter-module Ocaps
 
 ### Negative
 

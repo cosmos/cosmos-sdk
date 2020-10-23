@@ -103,7 +103,7 @@ func TestRemoveTokens(t *testing.T) {
 }
 
 func TestAddTokensValidatorBonded(t *testing.T) {
-	validator := newValidator(t, sdk.ValAddress(pk1.Address().Bytes()), pk1)
+	validator := newValidator(t, valAddr1, pk1)
 	validator = validator.UpdateStatus(Bonded)
 	validator, delShares := validator.AddTokensFromDel(sdk.NewInt(10))
 
@@ -113,7 +113,7 @@ func TestAddTokensValidatorBonded(t *testing.T) {
 }
 
 func TestAddTokensValidatorUnbonding(t *testing.T) {
-	validator := newValidator(t, sdk.ValAddress(pk1.Address().Bytes()), pk1)
+	validator := newValidator(t, valAddr1, pk1)
 	validator = validator.UpdateStatus(Unbonding)
 	validator, delShares := validator.AddTokensFromDel(sdk.NewInt(10))
 
@@ -125,7 +125,7 @@ func TestAddTokensValidatorUnbonding(t *testing.T) {
 
 func TestAddTokensValidatorUnbonded(t *testing.T) {
 
-	validator := newValidator(t, sdk.ValAddress(pk1.Address().Bytes()), pk1)
+	validator := newValidator(t, valAddr1, pk1)
 	validator = validator.UpdateStatus(Unbonded)
 	validator, delShares := validator.AddTokensFromDel(sdk.NewInt(10))
 
@@ -138,7 +138,7 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 // TODO refactor to make simpler like the AddToken tests above
 func TestRemoveDelShares(t *testing.T) {
 	valA := Validator{
-		OperatorAddress: sdk.ValAddress(pk1.Address().Bytes()).String(),
+		OperatorAddress: valAddr1.String(),
 		ConsensusPubkey: pk1Any,
 		Status:          Bonded,
 		Tokens:          sdk.NewInt(100),
@@ -159,7 +159,7 @@ func TestRemoveDelShares(t *testing.T) {
 }
 
 func TestAddTokensFromDel(t *testing.T) {
-	validator := newValidator(t, sdk.ValAddress(pk1.Address().Bytes()), pk1)
+	validator := newValidator(t, valAddr1, pk1)
 
 	validator, shares := validator.AddTokensFromDel(sdk.NewInt(6))
 	require.True(sdk.DecEq(t, sdk.NewDec(6), shares))
@@ -173,7 +173,7 @@ func TestAddTokensFromDel(t *testing.T) {
 }
 
 func TestUpdateStatus(t *testing.T) {
-	validator := newValidator(t, sdk.ValAddress(pk1.Address().Bytes()), pk1)
+	validator := newValidator(t, valAddr1, pk1)
 	validator, _ = validator.AddTokensFromDel(sdk.NewInt(100))
 	require.Equal(t, Unbonded, validator.Status)
 	require.Equal(t, int64(100), validator.Tokens.Int64())
@@ -304,8 +304,7 @@ func TestBondStatus(t *testing.T) {
 
 func mkValidator(tokens int64, shares sdk.Dec) Validator {
 	return Validator{
-		// TODO: use valAddr1
-		OperatorAddress: sdk.ValAddress(pk1.Address().Bytes()).String(),
+		OperatorAddress: valAddr1.String(),
 		ConsensusPubkey: pk1Any,
 		Status:          Bonded,
 		Tokens:          sdk.NewInt(tokens),

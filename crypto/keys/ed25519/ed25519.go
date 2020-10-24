@@ -1,6 +1,7 @@
 package ed25519
 
 import (
+	"crypto/ed25519"
 	"crypto/subtle"
 	"fmt"
 	"io"
@@ -8,7 +9,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	"golang.org/x/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

@@ -1,6 +1,7 @@
 package ed25519
 
 import (
+	stded25519 "crypto/ed25519"
 	"encoding/base64"
 	"testing"
 
@@ -12,7 +13,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	stded25519 "golang.org/x/crypto/ed25519"
 )
 
 func TestSignAndValidateEd25519(t *testing.T) {

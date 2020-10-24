@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -48,6 +49,7 @@ func (s *IntegrationTestSuite) TestGRPCServer() {
 		grpc.WithInsecure(), // Or else we get "no transport security set"
 	)
 	s.Require().NoError(err)
+	defer conn.Close()
 
 	// gRPC query to test service should work
 	testClient := testdata.NewQueryClient(conn)
@@ -97,6 +99,39 @@ func (s *IntegrationTestSuite) TestGRPCServer() {
 	}
 	// Make sure the following services are present
 	s.Require().True(servicesMap["cosmos.bank.v1beta1.Query"])
+}
+
+// Test and enforce that we upfront reject any connections to baseapp containing
+// invalid initial x-cosmos-block-height that aren't positive  and in the range [0, max(int64)]
+// See issue https://github.com/cosmos/cosmos-sdk/issues/7662.
+func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
+	t := s.T()
+	val0 := s.network.Validators[0]
+
+	// We should reject connections with invalid block heights off the bat.
+	invalidHeightStrs := []string{
+		"-1",
+		"9223372036854775808", // > max(int64) by 1
+		"-10",
+		"18446744073709551615", // max uint64, which is  > max(int64)
+		"-9223372036854775809", // Out of the range of for negative int64
+	}
+	for _, invalidHeightStr := range invalidHeightStrs {
+		t.Run(invalidHeightStr, func(t *testing.T) {
+			conn, err := grpc.Dial(
+				val0.AppConfig.GRPC.Address,
+				grpc.WithInsecure(), // Or else we get "no transport security set"
+			)
+			defer conn.Close()
+
+			testClient := testdata.NewQueryClient(conn)
+			ctx := metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, invalidHeightStr)
+			testRes, err := testClient.Echo(ctx, &testdata.EchoRequest{Message: "hello"})
+			require.Error(t, err)
+			require.Nil(t, testRes)
+			require.Contains(t, err.Error(), "value out of range")
+		})
+	}
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

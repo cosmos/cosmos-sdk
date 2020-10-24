@@ -9,6 +9,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/sr25519"
+	stded25519 "golang.org/x/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -19,17 +20,28 @@ func TestSignAndValidateEd25519(t *testing.T) {
 	privKey := ed25519.GenPrivKey()
 	pubKey := privKey.PubKey()
 
-	msg := crypto.CRandBytes(128)
+	msg := crypto.CRandBytes(1000)
 	sig, err := privKey.Sign(msg)
 	require.Nil(t, err)
 
 	// Test the signature
 	assert.True(t, pubKey.VerifySignature(msg, sig))
 
+	// ----
+	// Test cross packages verification
+	stdPrivKey := stded25519.PrivateKey(privKey.Key)
+	stdPubKey := stdPrivKey.Public().(stded25519.PublicKey)
+
+	assert.Equal(t, stdPubKey, pubKey.(*ed25519.PubKey).Key)
+	assert.Equal(t, stdPrivKey, privKey.Key)
+	assert.True(t, stded25519.Verify(stdPubKey, msg, sig))
+	sig2 := stded25519.Sign(stdPrivKey, msg)
+	assert.True(t, pubKey.VerifySignature(msg, sig2))
+
+	// ----
 	// Mutate the signature, just one bit.
 	// TODO: Replace this with a much better fuzzer, tendermint/ed25519/issues/10
 	sig[7] ^= byte(0x01)
-
 	assert.False(t, pubKey.VerifySignature(msg, sig))
 }
 

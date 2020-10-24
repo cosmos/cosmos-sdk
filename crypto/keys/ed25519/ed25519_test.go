@@ -1,4 +1,4 @@
-package ed25519_test
+package ed25519
 
 import (
 	"encoding/base64"
@@ -9,15 +9,14 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/sr25519"
-	stded25519 "golang.org/x/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	stded25519 "golang.org/x/crypto/ed25519"
 )
 
 func TestSignAndValidateEd25519(t *testing.T) {
-	privKey := ed25519.GenPrivKey()
+	privKey := GenPrivKey()
 	pubKey := privKey.PubKey()
 
 	msg := crypto.CRandBytes(1000)
@@ -32,7 +31,7 @@ func TestSignAndValidateEd25519(t *testing.T) {
 	stdPrivKey := stded25519.PrivateKey(privKey.Key)
 	stdPubKey := stdPrivKey.Public().(stded25519.PublicKey)
 
-	assert.Equal(t, stdPubKey, pubKey.(*ed25519.PubKey).Key)
+	assert.Equal(t, stdPubKey, pubKey.(*PubKey).Key)
 	assert.Equal(t, stdPrivKey, privKey.Key)
 	assert.True(t, stded25519.Verify(stdPubKey, msg, sig))
 	sig2 := stded25519.Sign(stdPrivKey, msg)
@@ -46,7 +45,7 @@ func TestSignAndValidateEd25519(t *testing.T) {
 }
 
 func TestPubKeyEquals(t *testing.T) {
-	ed25519PubKey := ed25519.GenPrivKey().PubKey().(*ed25519.PubKey)
+	ed25519PubKey := GenPrivKey().PubKey().(*PubKey)
 
 	testCases := []struct {
 		msg      string
@@ -57,13 +56,13 @@ func TestPubKeyEquals(t *testing.T) {
 		{
 			"different bytes",
 			ed25519PubKey,
-			ed25519.GenPrivKey().PubKey(),
+			GenPrivKey().PubKey(),
 			false,
 		},
 		{
 			"equals",
 			ed25519PubKey,
-			&ed25519.PubKey{
+			&PubKey{
 				Key: ed25519PubKey.Key,
 			},
 			true,
@@ -85,7 +84,7 @@ func TestPubKeyEquals(t *testing.T) {
 }
 
 func TestPrivKeyEquals(t *testing.T) {
-	ed25519PrivKey := ed25519.GenPrivKey()
+	ed25519PrivKey := GenPrivKey()
 
 	testCases := []struct {
 		msg      string
@@ -96,13 +95,13 @@ func TestPrivKeyEquals(t *testing.T) {
 		{
 			"different bytes",
 			ed25519PrivKey,
-			ed25519.GenPrivKey(),
+			GenPrivKey(),
 			false,
 		},
 		{
 			"equals",
 			ed25519PrivKey,
-			&ed25519.PrivKey{
+			&PrivKey{
 				Key: ed25519PrivKey.Key,
 			},
 			true,
@@ -125,8 +124,8 @@ func TestPrivKeyEquals(t *testing.T) {
 
 func TestMarshalAmino(t *testing.T) {
 	aminoCdc := codec.NewLegacyAmino()
-	privKey := ed25519.GenPrivKey()
-	pubKey := privKey.PubKey().(*ed25519.PubKey)
+	privKey := GenPrivKey()
+	pubKey := privKey.PubKey().(*PubKey)
 
 	testCases := []struct {
 		desc      string
@@ -138,14 +137,14 @@ func TestMarshalAmino(t *testing.T) {
 		{
 			"ed25519 private key",
 			privKey,
-			&ed25519.PrivKey{},
+			&PrivKey{},
 			append([]byte{64}, privKey.Bytes()...), // Length-prefixed.
 			"\"" + base64.StdEncoding.EncodeToString(privKey.Bytes()) + "\"",
 		},
 		{
 			"ed25519 public key",
 			pubKey,
-			&ed25519.PubKey{},
+			&PubKey{},
 			append([]byte{32}, pubKey.Bytes()...), // Length-prefixed.
 			"\"" + base64.StdEncoding.EncodeToString(pubKey.Bytes()) + "\"",
 		},
@@ -182,8 +181,8 @@ func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
 	tmPrivKey := tmed25519.GenPrivKey()
 	tmPubKey := tmPrivKey.PubKey()
 	// Create our own keys, with the same private key as Tendermint's.
-	privKey := &ed25519.PrivKey{Key: []byte(tmPrivKey)}
-	pubKey := privKey.PubKey().(*ed25519.PubKey)
+	privKey := &PrivKey{Key: []byte(tmPrivKey)}
+	pubKey := privKey.PubKey().(*PubKey)
 
 	testCases := []struct {
 		desc      string

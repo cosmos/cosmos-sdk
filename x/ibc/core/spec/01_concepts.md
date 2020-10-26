@@ -30,7 +30,7 @@ will simply return an error on `VerifyUpgrade`.
 
 ## Client Misbehaviour
 
-IBC clients must freeze when the counterparty chain becomes malicious and 
+IBC clients must freeze when the counterparty chain becomes byzantine and 
 takes actions that could fool the light client into accepting invalid state 
 transitions. Thus, relayers are able to submit Misbehaviour proofs that prove 
 that a counterparty chain has signed two Headers for the same height. This 
@@ -363,10 +363,10 @@ A valid identifier must conatin only alphanumeric characters or the
 following list of allowed characters: 
 ".", "\_", "+", "-", "#", "[", "]", "<", ">" 
 
-Client identifiers must contain between 9 and 64 characters.
-Connection identifiers must contain between 10 and 64 characters.
-Channel identifiers must contain between 10 and 64 characters.
-Port identifiers must contain between 2 and 64 characters.
+- Client identifiers must contain between 9 and 64 characters.
+- Connection identifiers must contain between 10 and 64 characters.
+- Channel identifiers must contain between 10 and 64 characters.
+- Port identifiers must contain between 2 and 64 characters.
 
 ## Proofs
 

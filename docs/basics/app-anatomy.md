@@ -154,7 +154,21 @@ Module developers create custom `Msg`s when they build their own module. The gen
 
 These two `Msg`s are processed by the `Msg` service of the `x/bank` module, which ultimately calls the `keeper` of the `x/auth` module in order to update the state.
 
-Finally, each module should also implement the `RegisterServices` method as part of the [`AppModule` interface](#application-module-interface). This method should call the `RegisterMsgServer` function provided by the generated Protobuf code.
+Each module should also implement the `RegisterServices` method as part of the [`AppModule` interface](#application-module-interface). This method should call the `RegisterMsgServer` function provided by the generated Protobuf code.
+
+#### Handlers
+
+The [handler](../building-modules/handler.md) refers to the part of the module responsible for processing the `Msgg` after it is routed by `baseapp`. Handler functions of modules are only executed if the transaction is relayed from Tendermint by the `DeliverTx` ABCI message. If the transaction is relayed by `CheckTx`, only stateless checks and fee-related stateful checks are performed. To better understand the difference between `DeliverTx`and `CheckTx`, as well as the difference between stateful and stateless checks, click [here](./tx-lifecycle.md).
+
+The `handler` of a module is generally defined in a file called `handler.go` and consists of:
+
+- A **switch function** `NewHandler` to route the message to the appropriate `handler` function. This function returns a `handler` function, and is registered in the [`AppModule`](#application-module-interface) to be used in the application's module manager to initialize the [application's router](../core/baseapp.md#routing). Next is an example from `x/bank`:
+  +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/bank/handler.go#L10-L30
+- **One handler function for each message type defined by the module**. Developers write the message processing logic in these functions. This generally involves doing stateful checks to ensure the message is valid and calling [`keeper`](#keeper)'s methods to update the state.
+
+Handler functions return a result of type `sdk.Result`, which informs the application on whether the message was successfully processed:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/types/result.go#L15-L40
 
 ### gRPC `Query` Services
 
@@ -176,20 +190,10 @@ The application handles the transaction almost like with `Msg` service `Msg`s, o
 
 1. Upon receiving the transaction, the application first unmarshalls it from `[]bytes`.
 2. Then, it verifies a few things about the transaction like [fee payment and signatures](#gas-fees.md#antehandler) before extracting the message(s) contained in the transaction.
-3. With the `Type()` method of the legacy `Msg`, `baseapp` is able to route it to the appropriate module's [legacy `Msg` handler](#legacy-msg-handler) in order for it to be processed.
+3. With the `Type()` method of the legacy `Msg`, `baseapp` is able to route it to the appropriate module's [legacy `Msg` handler](#handler) in order for it to be processed.
 4. If the message is successfully processed, the state is updated.
 
-The [legacy `Msg` handler](../building-modules/handler.md) refers to the part of the module responsible for processing the `message` after it is routed by `baseapp`. `handler` functions of modules are only executed if the transaction is relayed from Tendermint by the `DeliverTx` ABCI message. If the transaction is relayed by `CheckTx`, only stateless checks and fee-related stateful checks are performed. To better understand the difference between `DeliverTx`and `CheckTx`, as well as the difference between stateful and stateless checks, click [here](./tx-lifecycle.md).
-
-The `handler` of a module is generally defined in a file called `handler.go` and consists of:
-
-- A **switch function** `NewHandler` to route the message to the appropriate `handler` function. This function returns a `handler` function, and is registered in the [`AppModule`](#application-module-interface) to be used in the application's module manager to initialize the [application's router](../core/baseapp.md#routing). Next is an example of such a switch from the [nameservice tutorial](https://github.com/cosmos/sdk-tutorials/tree/master/nameservice)
-  +++ https://github.com/cosmos/sdk-tutorials/blob/master/nameservice/x/nameservice/handler.go#L12-L26
-- **One handler function for each message type defined by the module**. Developers write the message processing logic in these functions. This generally involves doing stateful checks to ensure the message is valid and calling [`keeper`](#keeper)'s methods to update the state.
-
-Handler functions return a result of type `sdk.Result`, which informs the application on whether the message was successfully processed:
-
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/types/result.go#L15-L40
+New `Msg` services are compatible with legacy `Msg`s in terms of how `Msg`s are handled, please refer to the [handler](#handlers) section for more information.
 
 ### Legacy Query Routes
 

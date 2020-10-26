@@ -32,7 +32,7 @@ func TestRegisterService(t *testing.T) {
 		)
 	})
 
-	// Register testdata Msg services, and rerun `RegisterMsgServer`.
+	// Register testdata Msg services, and rerun `RegisterService`.
 	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
 	require.NotPanics(t, func() {
 		testdata.RegisterMsgServer(

@@ -99,8 +99,7 @@ func (s IntegrationTestSuite) TestSimulateService() {
 		authsigning.SignerData{ChainID: s.sdkCtx.ChainID(), AccountNumber: accNum, Sequence: accSeq},
 		txBuilder, priv1, s.clientCtx.TxConfig, accSeq,
 	)
-	err = txBuilder.SetSignatures(sigV2)
-	require.NoError(err)
+	require.NoError(txBuilder.SetSignatures(sigV2))
 	any, ok := txBuilder.(codectypes.IntoAny)
 	require.True(ok)
 	cached := any.AsAny().GetCachedValue()

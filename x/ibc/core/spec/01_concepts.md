@@ -21,7 +21,8 @@ to `CheckHeaderAndUpdateState` is responsible for verifying the header against p
 stored state. The function should also return the updated client state and consensus state 
 if the header is considered a valid update. A light client, such as Tendermint, may have
 client specific parameters like `TrustLevel` which must be considered valid in relation
-to the `Header`.
+to the `Header`. The update height is not necessarily the lastest height of the light
+client. Updates may fill in missing consensus state heights.
 
 Clients may be upgraded. The upgrade should be verified using `VerifyUpgrade`. It is not
 a requirement to allow for light client upgrades. For example, the solo machine client 
@@ -266,6 +267,13 @@ Implementations which do not feel they would benefit from versioning can do
 basic string matching using a single compatible version.
 
 ## Sending, Receiving, Acknowledging Packets
+
+Terminology:
+**Packet Commitment** A hash of the packet stored on the sending chain.
+**Packet Receipt** A single bit indicating that a packet has been received. 
+Used for timeouts. 
+**Acknowledgement** Data written to indicate the result of receiving a packet.
+Typically conveying either success or failure of the receive.
 
 A packet may be associated with one of the following states:
 - the packet does not exist (ie it has not been sent)

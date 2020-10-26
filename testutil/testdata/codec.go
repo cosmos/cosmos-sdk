@@ -30,6 +30,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*HasHasAnimalI)(nil),
 		&HasHasAnimal{},
 	)
+
+	sdk.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 func NewTestAmino() *amino.Codec {

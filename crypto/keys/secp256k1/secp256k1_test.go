@@ -1,4 +1,4 @@
-package secp256k1_test
+package secp256k1
 
 import (
 	"encoding/base64"
@@ -6,17 +6,14 @@ import (
 	"math/big"
 	"testing"
 
+	secp256k1 "github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil/base58"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/sr25519"
 
-	underlyingSecp256k1 "github.com/btcsuite/btcd/btcec"
-
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -41,30 +38,41 @@ func TestPubKeySecp256k1Address(t *testing.T) {
 		addrBbz, _, _ := base58.CheckDecode(d.addr)
 		addrB := crypto.Address(addrBbz)
 
-		var priv secp256k1.PrivKey = secp256k1.PrivKey{Key: privB}
+		var priv PrivKey = PrivKey{Key: privB}
 
 		pubKey := priv.PubKey()
-		pubT, _ := pubKey.(*secp256k1.PubKey)
+		pubT, _ := pubKey.(*PubKey)
 
 		addr := pubKey.Address()
-		assert.Equal(t, pubT, &secp256k1.PubKey{Key: pubB}, "Expected pub keys to match")
+		assert.Equal(t, pubT, &PubKey{Key: pubB}, "Expected pub keys to match")
 		assert.Equal(t, addr, addrB, "Expected addresses to match")
 	}
 }
 
 func TestSignAndValidateSecp256k1(t *testing.T) {
-	privKey := secp256k1.GenPrivKey()
+	privKey := GenPrivKey()
 	pubKey := privKey.PubKey()
 
-	msg := crypto.CRandBytes(128)
+	msg := crypto.CRandBytes(1000)
 	sig, err := privKey.Sign(msg)
 	require.Nil(t, err)
-
 	assert.True(t, pubKey.VerifySignature(msg, sig))
 
+	// ----
+	// Test cross packages verification
+	btcPrivKey, btcPubKey := secp256k1.PrivKeyFromBytes(secp256k1.S256(), privKey.Key)
+	btcSig, err := secp256k1.ParseSignature(sig, secp256k1.S256())
+	require.NoError(t, err)
+	msgHash := crypto.Sha256(msg)
+	assert.True(t, btcSig.Verify(msgHash, btcPubKey))
+
+	sig2, err := btcPrivKey.Sign(msgHash)
+	require.NoError(t, err)
+	pubKey.VerifySignature(msg, sig2.Serialize())
+
+	// ----
 	// Mutate the signature, just one bit.
 	sig[3] ^= byte(0x01)
-
 	assert.False(t, pubKey.VerifySignature(msg, sig))
 }
 
@@ -79,7 +87,7 @@ func TestSecp256k1LoadPrivkeyAndSerializeIsIdentity(t *testing.T) {
 
 		// This function creates a private and public key in the underlying libraries format.
 		// The private key is basically calling new(big.Int).SetBytes(pk), which removes leading zero bytes
-		priv, _ := underlyingSecp256k1.PrivKeyFromBytes(underlyingSecp256k1.S256(), privKeyBytes[:])
+		priv, _ := secp256k1.PrivKeyFromBytes(secp256k1.S256(), privKeyBytes[:])
 		// this takes the bytes returned by `(big int).Bytes()`, and if the length is less than 32 bytes,
 		// pads the bytes from the left with zero bytes. Therefore these two functions composed
 		// result in the identity function on privKeyBytes, hence the following equality check
@@ -91,7 +99,7 @@ func TestSecp256k1LoadPrivkeyAndSerializeIsIdentity(t *testing.T) {
 
 func TestGenPrivKeyFromSecret(t *testing.T) {
 	// curve oder N
-	N := underlyingSecp256k1.S256().N
+	N := secp256k1.S256().N
 	tests := []struct {
 		name   string
 		secret []byte
@@ -109,7 +117,7 @@ func TestGenPrivKeyFromSecret(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			gotPrivKey := secp256k1.GenPrivKeyFromSecret(tt.secret)
+			gotPrivKey := GenPrivKeyFromSecret(tt.secret)
 			require.NotNil(t, gotPrivKey)
 			// interpret as a big.Int and make sure it is a valid field element:
 			fe := new(big.Int).SetBytes(gotPrivKey.Key[:])
@@ -120,7 +128,7 @@ func TestGenPrivKeyFromSecret(t *testing.T) {
 }
 
 func TestPubKeyEquals(t *testing.T) {
-	secp256K1PubKey := secp256k1.GenPrivKey().PubKey().(*secp256k1.PubKey)
+	secp256K1PubKey := GenPrivKey().PubKey().(*PubKey)
 
 	testCases := []struct {
 		msg      string
@@ -131,13 +139,13 @@ func TestPubKeyEquals(t *testing.T) {
 		{
 			"different bytes",
 			secp256K1PubKey,
-			secp256k1.GenPrivKey().PubKey(),
+			GenPrivKey().PubKey(),
 			false,
 		},
 		{
 			"equals",
 			secp256K1PubKey,
-			&secp256k1.PubKey{
+			&PubKey{
 				Key: secp256K1PubKey.Key,
 			},
 			true,
@@ -159,7 +167,7 @@ func TestPubKeyEquals(t *testing.T) {
 }
 
 func TestPrivKeyEquals(t *testing.T) {
-	secp256K1PrivKey := secp256k1.GenPrivKey()
+	secp256K1PrivKey := GenPrivKey()
 
 	testCases := []struct {
 		msg      string
@@ -170,13 +178,13 @@ func TestPrivKeyEquals(t *testing.T) {
 		{
 			"different bytes",
 			secp256K1PrivKey,
-			secp256k1.GenPrivKey(),
+			GenPrivKey(),
 			false,
 		},
 		{
 			"equals",
 			secp256K1PrivKey,
-			&secp256k1.PrivKey{
+			&PrivKey{
 				Key: secp256K1PrivKey.Key,
 			},
 			true,
@@ -199,8 +207,8 @@ func TestPrivKeyEquals(t *testing.T) {
 
 func TestMarshalAmino(t *testing.T) {
 	aminoCdc := codec.NewLegacyAmino()
-	privKey := secp256k1.GenPrivKey()
-	pubKey := privKey.PubKey().(*secp256k1.PubKey)
+	privKey := GenPrivKey()
+	pubKey := privKey.PubKey().(*PubKey)
 
 	testCases := []struct {
 		desc      string
@@ -212,14 +220,14 @@ func TestMarshalAmino(t *testing.T) {
 		{
 			"secp256k1 private key",
 			privKey,
-			&secp256k1.PrivKey{},
+			&PrivKey{},
 			append([]byte{32}, privKey.Bytes()...), // Length-prefixed.
 			"\"" + base64.StdEncoding.EncodeToString(privKey.Bytes()) + "\"",
 		},
 		{
 			"secp256k1 public key",
 			pubKey,
-			&secp256k1.PubKey{},
+			&PubKey{},
 			append([]byte{33}, pubKey.Bytes()...), // Length-prefixed.
 			"\"" + base64.StdEncoding.EncodeToString(pubKey.Bytes()) + "\"",
 		},

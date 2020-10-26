@@ -1,7 +1,6 @@
 package types
 
 import (
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
@@ -11,7 +10,7 @@ import (
 var _ exported.ConnectionI = (*ConnectionEnd)(nil)
 
 // NewConnectionEnd creates a new ConnectionEnd instance.
-func NewConnectionEnd(state State, clientID string, counterparty Counterparty, versions []codectypes.Any) ConnectionEnd {
+func NewConnectionEnd(state State, clientID string, counterparty Counterparty, versions []*Version) ConnectionEnd {
 	return ConnectionEnd{
 		ClientId:     clientID,
 		Versions:     versions,
@@ -36,8 +35,12 @@ func (c ConnectionEnd) GetCounterparty() exported.CounterpartyConnectionI {
 }
 
 // GetVersions implements the Connection interface
-func (c ConnectionEnd) GetVersions() []string {
-	return c.Versions
+func (c ConnectionEnd) GetVersions() []exported.Version {
+	versions := make([]exported.Version, len(c.Versions))
+	for i := range c.Versions {
+		versions[i] = c.Versions[i]
+	}
+	return versions
 }
 
 // ValidateBasic implements the Connection interface.

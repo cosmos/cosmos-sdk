@@ -53,7 +53,7 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 				return err
 			}
 
-			var encodedVersion string
+			var version *types.Version
 			versionIdentifier, _ := cmd.Flags().GetString(flagVersionIdentifier)
 
 			if versionIdentifier != "" {
@@ -64,16 +64,12 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 					features = strings.Split(versionFeatures, ",")
 				}
 
-				version := types.NewVersion(versionIdentifier, features)
-				encodedVersion, err = version.Encode()
-				if err != nil {
-					return err
-				}
+				version = types.NewVersion(versionIdentifier, features)
 			}
 
 			msg := types.NewMsgConnectionOpenInit(
 				connectionID, clientID, counterpartyConnectionID, counterpartyClientID,
-				counterpartyPrefix, encodedVersion, clientCtx.GetFromAddress(),
+				counterpartyPrefix, version, clientCtx.GetFromAddress(),
 			)
 
 			if err := msg.ValidateBasic(); err != nil {

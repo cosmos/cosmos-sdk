@@ -28,8 +28,8 @@ var (
 var _ exported.Version = &Version{}
 
 // NewVersion returns a new instance of Version.
-func NewVersion(identifier string, features []string) Version {
-	return Version{
+func NewVersion(identifier string, features []string) *Version {
+	return &Version{
 		Identifier: identifier,
 		Features:   features,
 	}
@@ -47,12 +47,10 @@ func (version Version) GetFeatures() []string {
 
 // ValidateVersion does basic validation of the version identifier and
 // features. It unmarshals the version string into a Version object.
-func ValidateVersion(encodedVersion string) error {
-	var version Version
-	if err := SubModuleCdc.UnmarshalBinaryBare([]byte(encodedVersion), &version); err != nil {
-		return sdkerrors.Wrapf(err, "failed to unmarshal version string %s", encodedVersion)
+func ValidateVersion(version *Version) error {
+	if version == nil {
+		return sdkerrors.Wrap(ErrInvalidVersion, "version cannot be nil")
 	}
-
 	if strings.TrimSpace(version.Identifier) == "" {
 		return sdkerrors.Wrap(ErrInvalidVersion, "version identifier cannot be blank")
 	}
@@ -65,89 +63,18 @@ func ValidateVersion(encodedVersion string) error {
 	return nil
 }
 
-// Encode proto encodes the version and returns the bytes as a string.
-func (version Version) Encode() (string, error) {
-	encodedVersion, err := SubModuleCdc.MarshalBinaryBare(&version)
-	if err != nil {
-		return "", err
-	}
-
-	return string(encodedVersion), nil
-}
-
-// EncodeVersions iterates over the provided versions and marshals each
-// into proto encoded strings. This represents the stored value of the version
-// in the connection end as well as the value passed over the wire.
-func EncodeVersions(versions []Version) ([]string, error) {
-	encodedVersions := make([]string, len(versions))
-
-	for i, version := range versions {
-		ver, err := version.Encode()
-		if err != nil {
-			return nil, err
-		}
-
-		encodedVersions[i] = ver
-	}
-
-	return encodedVersions, nil
-}
-
-// DecodeVersion unmarshals a proto encoded version into a Version struct.
-func DecodeVersion(encodedVersion string) (Version, error) {
-	var version Version
-	if err := SubModuleCdc.UnmarshalBinaryBare([]byte(encodedVersion), &version); err != nil {
-		return Version{}, sdkerrors.Wrapf(err, "failed to unmarshal version string %s", encodedVersion)
-	}
-
-	return version, nil
-}
-
-// DecodeVersions returns the supplied list of proto encoded version strings
-// as unmarshalled Version structs.
-func DecodeVersions(encodedVersions []string) ([]Version, error) {
-	versions := make([]Version, len(encodedVersions))
-
-	for i, encodedVersion := range encodedVersions {
-		version, err := DecodeVersion(encodedVersion)
-		if err != nil {
-			return nil, err
-		}
-
-		versions[i] = version
-	}
-
-	return versions, nil
-}
-
 // GetCompatibleVersions returns a descending ordered set of compatible IBC
 // versions for the caller chain's connection end. The latest supported
 // version should be first element and the set should descend to the oldest
 // supported version.
-func GetCompatibleVersions() []Version {
-	return []Version{DefaultIBCVersion}
-}
-
-// GetCompatibleEncodedVersions returns the return value from GetCompatibleVersions
-// as a proto encoded string.
-func GetCompatibleEncodedVersions() []string {
-	versions, err := EncodeVersions(GetCompatibleVersions())
-	if err != nil {
-		panic(err) // should not occur with properly set hardcoded versions
-	}
-
-	return versions
+func GetCompatibleVersions() []exported.Version {
+	return []exported.Version{DefaultIBCVersion}
 }
 
 // IsSupportedVersion returns true if the proposed version has a matching version
 // identifier and its entire feature set is supported or the version identifier
 // supports an empty feature set.
-func IsSupportedVersion(encodedProposedVersion string) bool {
-	proposedVersion, err := DecodeVersion(encodedProposedVersion)
-	if err != nil {
-		return false
-	}
-
+func IsSupportedVersion(proposedVersion *Version) bool {
 	supportedVersion, found := FindSupportedVersion(proposedVersion, GetCompatibleVersions())
 	if !found {
 		return false
@@ -163,13 +90,13 @@ func IsSupportedVersion(encodedProposedVersion string) bool {
 // FindSupportedVersion returns the version with a matching version identifier
 // if it exists. The returned boolean is true if the version is found and
 // false otherwise.
-func FindSupportedVersion(version Version, supportedVersions []Version) (Version, bool) {
+func FindSupportedVersion(version exported.Version, supportedVersions []exported.Version) (exported.Version, bool) {
 	for _, supportedVersion := range supportedVersions {
 		if version.GetIdentifier() == supportedVersion.GetIdentifier() {
 			return supportedVersion, true
 		}
 	}
-	return Version{}, false
+	return nil, false
 }
 
 // PickVersion iterates over the descending ordered set of compatible IBC
@@ -183,33 +110,22 @@ func FindSupportedVersion(version Version, supportedVersions []Version) (Version
 //
 // CONTRACT: PickVersion must only provide a version that is in the
 // intersection of the supported versions and the counterparty versions.
-func PickVersion(encodedSupportedVersions, encodedCounterpartyVersions []string) (string, error) {
-	supportedVersions, err := DecodeVersions(encodedSupportedVersions)
-	if err != nil {
-		return "", sdkerrors.Wrapf(err, "failed to unmarshal supported versions (%s) when attempting to pick compatible version", encodedSupportedVersions)
-	}
-
-	counterpartyVersions, err := DecodeVersions(encodedCounterpartyVersions)
-	if err != nil {
-		return "", sdkerrors.Wrapf(err, "failed to unmarshal counterparty versions (%s) when attempting to pick compatible version", encodedCounterpartyVersions)
-	}
-
+func PickVersion(supportedVersions, counterpartyVersions []exported.Version) (*Version, error) {
 	for _, supportedVersion := range supportedVersions {
 		// check if the source version is supported by the counterparty
 		if counterpartyVersion, found := FindSupportedVersion(supportedVersion, counterpartyVersions); found {
-
 			featureSet := GetFeatureSetIntersection(supportedVersion.GetFeatures(), counterpartyVersion.GetFeatures())
 			if len(featureSet) == 0 && !allowNilFeatureSet[supportedVersion.GetIdentifier()] {
 				continue
 			}
 
-			return NewVersion(supportedVersion.GetIdentifier(), featureSet).Encode()
+			return NewVersion(supportedVersion.GetIdentifier(), featureSet), nil
 		}
 	}
 
-	return "", sdkerrors.Wrapf(
+	return nil, sdkerrors.Wrapf(
 		ErrVersionNegotiationFailed,
-		"failed to find a matching counterparty version (%s) from the supported version list (%s)", counterpartyVersions, supportedVersions,
+		"failed to find a matching counterparty version (%v) from the supported version list (%v)", counterpartyVersions, supportedVersions,
 	)
 }
 
@@ -260,12 +176,7 @@ func (version Version) VerifyProposedVersion(proposedVersion exported.Version) e
 
 // VerifySupportedFeature takes in a version and feature string and returns
 // true if the feature is supported by the version and false otherwise.
-func VerifySupportedFeature(encodedVersion, feature string) bool {
-	version, err := DecodeVersion(encodedVersion)
-	if err != nil {
-		return false
-	}
-
+func VerifySupportedFeature(version exported.Version, feature string) bool {
 	for _, f := range version.GetFeatures() {
 		if f == feature {
 			return true

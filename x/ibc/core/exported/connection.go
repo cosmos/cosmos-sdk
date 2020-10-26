@@ -5,7 +5,7 @@ type ConnectionI interface {
 	GetClientID() string
 	GetState() int32
 	GetCounterparty() CounterpartyConnectionI
-	GetVersions() []string
+	GetVersions() []Version
 	ValidateBasic() error
 }
 

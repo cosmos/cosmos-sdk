@@ -11,6 +11,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
+func assertNoErr(b *testing.B, err error) {
+	if err != nil {
+		b.Fatal(err)
+	}
+}
+
 // Profile with:
 // /usr/local/go/bin/go test -benchmem -run=^$ github.com/cosmos/cosmos-sdk/simapp -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
 func BenchmarkFullAppSimulation(b *testing.B) {
@@ -20,11 +26,8 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	}
 
 	defer func() {
-		db.Close()
-		err = os.RemoveAll(dir)
-		if err != nil {
-			b.Fatal(err)
-		}
+		assertNoErr(b, db.Close())
+		assertNoErr(b, os.RemoveAll(dir))
 	}()
 
 	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeTestEncodingConfig(), interBlockCacheOpt())
@@ -65,11 +68,8 @@ func BenchmarkInvariants(b *testing.B) {
 	config.AllInvariants = false
 
 	defer func() {
-		db.Close()
-		err = os.RemoveAll(dir)
-		if err != nil {
-			b.Fatal(err)
-		}
+		assertNoErr(b, db.Close())
+		assertNoErr(b, os.RemoveAll(dir))
 	}()
 
 	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeTestEncodingConfig(), interBlockCacheOpt())

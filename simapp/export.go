@@ -2,12 +2,12 @@ package simapp
 
 import (
 	"encoding/json"
-	"log"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -47,7 +47,7 @@ func (app *SimApp) ExportAppStateAndValidators(
 // prepare for fresh start at zero height
 // NOTE zero height genesis is a temporary feature which will be deprecated
 //      in favour of export at a block height
-func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []string) {
+func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []string) error {
 	applyAllowedAddrs := false
 
 	// check if there is a allowed address list
@@ -60,7 +60,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 	for _, addr := range jailAllowedAddrs {
 		_, err := sdk.ValAddressFromBech32(addr)
 		if err != nil {
-			log.Fatal(err)
+			return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "Can't parse to a validator address, addr=%s, err: %v", addr, err)
 		}
 		allowedAddrsMap[addr] = true
 	}
@@ -78,17 +78,20 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 
 	// withdraw all delegator rewards
 	dels := app.StakingKeeper.GetAllDelegations(ctx)
-	for _, delegation := range dels {
-		valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+	for _, d := range dels {
+		valAddr, err := sdk.ValAddressFromBech32(d.ValidatorAddress)
 		if err != nil {
-			panic(err)
+			return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "Can't parse to a validator address, addr=%s, err: %v", d.ValidatorAddress, err)
 		}
 
-		delAddr, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
+		delAddr, err := sdk.AccAddressFromBech32(d.DelegatorAddress)
 		if err != nil {
-			panic(err)
+			return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "Can't parse to a validator address, addr=%s, err: %v", d.DelegatorAddress, err)
 		}
-		_, _ = app.DistrKeeper.WithdrawDelegationRewards(ctx, delAddr, valAddr)
+		_, err = app.DistrKeeper.WithdrawDelegationRewards(ctx, delAddr, valAddr)
+		if err != nil {
+			return sdkerrors.Wrap(err, "")
+		}
 	}
 
 	// clear validator slash events
@@ -172,11 +175,13 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 		counter++
 	}
 
-	iter.Close()
+	if err := iter.Close(); err != nil {
+		return err
+	}
 
 	_, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	/* Handle slashing state. */
@@ -190,4 +195,5 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 			return false
 		},
 	)
+	return nil
 }

@@ -29,7 +29,7 @@ func Test_runImportCmd(t *testing.T) {
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	require.NoError(t, err)
-	t.Cleanup(kbCleanup(t, kb, "keyname1"))
+	t.Cleanup(cleanupKeys(t, kb, "keyname1"))
 
 	keyfile := filepath.Join(kbHome, "key.asc")
 	armoredKey := `-----BEGIN TENDERMINT PRIVATE KEY-----

@@ -16,7 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func kbCleanup(t *testing.T, kb keyring.Keyring, keys ...string) func() {
+func cleanupKeys(t *testing.T, kb keyring.Keyring, keys ...string) func() {
 	return func() {
 		for _, k := range keys {
 			if err := kb.Delete(k); err != nil {
@@ -44,7 +44,7 @@ func Test_runListCmd(t *testing.T) {
 	_, err = kb.NewAccount("something", testutil.TestMnemonic, "", path, hd.Secp256k1)
 	require.NoError(t, err)
 
-	t.Cleanup(kbCleanup(t, kb, "something"))
+	t.Cleanup(cleanupKeys(t, kb, "something"))
 
 	type args struct {
 		cmd  *cobra.Command

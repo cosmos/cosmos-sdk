@@ -11,7 +11,7 @@ import (
 )
 
 // RegisterMsgServiceDesc registers all type_urls from Msg services described
-// in `sd` inside the registry.
+// in `sd` into the registry.
 func RegisterMsgServiceDesc(registry types.InterfaceRegistry, sd *grpc.ServiceDesc) {
 	// Adds a top-level type_url based on the Msg service name.
 	for _, method := range sd.Methods {

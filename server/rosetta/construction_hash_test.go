@@ -19,7 +19,6 @@ func TestLaunchpad_ConstructionHash(t *testing.T) {
 	properties := properties{
 		Blockchain: "TheBlockchain",
 		Network:    "TheNetwork",
-		AddrPrefix: "cosmos",
 	}
 	cdc := simapp.MakeCodec()
 	adapter := newAdapter(cdc, cosmos.NewClient("", cdc), tendermint.NewClient(""), properties)

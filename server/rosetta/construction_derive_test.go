@@ -19,7 +19,6 @@ func TestLaunchpad_ConstructionDerive(t *testing.T) {
 	properties := properties{
 		Blockchain: "TheBlockchain",
 		Network:    "TheNetwork",
-		AddrPrefix: "test",
 	}
 
 	adapter := newAdapter(nil, cosmos.NewClient("", nil), tendermint.NewClient(""), properties)

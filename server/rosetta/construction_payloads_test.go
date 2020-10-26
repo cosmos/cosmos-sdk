@@ -63,7 +63,6 @@ func TestGetSenderByOperations(t *testing.T) {
 	properties := properties{
 		Blockchain: "TheBlockchain",
 		Network:    "TheNetwork",
-		AddrPrefix: "test",
 	}
 	_ = newAdapter(nil, cosmos.NewClient("", nil), tendermint.NewClient(""), properties)
 	ops := []*types.Operation{
@@ -114,7 +113,6 @@ func TestLaunchpad_ConstructionPayloads(t *testing.T) {
 	properties := properties{
 		Blockchain: "TheBlockchain",
 		Network:    "TheNetwork",
-		AddrPrefix: "test",
 	}
 	cdc := simapp.MakeCodec()
 	adapter := newAdapter(cdc, cosmos.NewClient("", cdc), tendermint.NewClient(""), properties)

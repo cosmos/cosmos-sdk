@@ -20,7 +20,6 @@ func TestLaunchpad_ConstructionMetadata(t *testing.T) {
 	properties := properties{
 		Blockchain: "TheBlockchain",
 		Network:    "TheNetwork",
-		AddrPrefix: "test",
 	}
 
 	networkIdentifier := types.NetworkIdentifier{

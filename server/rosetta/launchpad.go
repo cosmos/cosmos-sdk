@@ -39,9 +39,6 @@ type properties struct {
 	// Network represents the name of the network, it is used for NetworkList endpoint.
 	Network string
 
-	// AddrPrefix is the prefix used for bech32 addresses.
-	AddrPrefix string
-
 	// Offline mode forces to run without querying the node. Some endpoints won't work.
 	OfflineMode bool
 }
@@ -72,7 +69,6 @@ func NewNetwork(cdc *codec.Codec, options Options) service.Network {
 			properties{
 				Blockchain:  options.Blockchain,
 				Network:     options.Network,
-				AddrPrefix:  options.AddrPrefix,
 				OfflineMode: options.OfflineMode,
 			},
 		),

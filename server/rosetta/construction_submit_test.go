@@ -46,7 +46,6 @@ func TestLaunchpad_ConstructionSubmit(t *testing.T) {
 	properties := properties{
 		Blockchain: "TheBlockchain",
 		Network:    "TheNetwork",
-		AddrPrefix: "test",
 	}
 
 	adapter := newAdapter(nil, m, tendermint.NewClient(""), properties)

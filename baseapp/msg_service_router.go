@@ -45,6 +45,8 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 		fqMethod := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
 		methodHandler := method.Handler
 
+		// Check that the service Msg fully-qualified method name has already
+		// been registered (via RegisterInterfaces).
 		serviceMsg, err := msr.interfaceRegistry.Resolve(fqMethod)
 		if err != nil || serviceMsg == nil {
 			panic(

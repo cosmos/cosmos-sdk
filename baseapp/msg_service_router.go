@@ -45,21 +45,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 		fqMethod := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
 		methodHandler := method.Handler
 
-		// NOTE: This is how we pull the concrete request type for each handler for registering in the InterfaceRegistry.
-		// This approach is maybe a bit hacky, but less hacky than reflecting on the handler object itself.
-		// We use a no-op interceptor to avoid actually calling into the handler itself.
-		_, _ = methodHandler(nil, context.Background(), func(i interface{}) error {
-			msg, ok := i.(proto.Message)
-			if !ok {
-				// We panic here because there is no other alternative and the app cannot be initialized correctly
-				// this should only happen if there is a problem with code generation in which case the app won't
-				// work correctly anyway.
-				panic(fmt.Errorf("can't register request type %T for service method %s", i, fqMethod))
-			}
-
-			msr.interfaceRegistry.RegisterCustomTypeURL((*sdk.MsgRequest)(nil), fqMethod, msg)
-			return nil
-		}, noopInterceptor)
+		sdk.RegisterMsgServiceDesc(msr.interfaceRegistry, sd)
 
 		msr.routes[fqMethod] = func(ctx sdk.Context, req sdk.MsgRequest) (*sdk.Result, error) {
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
@@ -87,11 +73,6 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 // SetInterfaceRegistry sets the interface registry for the router.
 func (msr *MsgServiceRouter) SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) {
 	msr.interfaceRegistry = interfaceRegistry
-}
-
-// gRPC NOOP interceptor
-func noopInterceptor(_ context.Context, _ interface{}, _ *grpc.UnaryServerInfo, _ grpc.UnaryHandler) (interface{}, error) {
-	return nil, nil
 }
 
 func noopDecoder(_ interface{}) error { return nil }

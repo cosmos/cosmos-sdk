@@ -28,6 +28,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*exported.SupplyI)(nil),
 		&Supply{},
 	)
+
+	sdk.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 var (

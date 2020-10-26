@@ -1,6 +1,7 @@
 package secp256k1
 
 import (
+	"crypto/ecdsa"
 	"encoding/base64"
 	"encoding/hex"
 	"math/big"
@@ -60,11 +61,19 @@ func TestSignAndValidateSecp256k1(t *testing.T) {
 
 	// ----
 	// Test cross packages verification
-	btcPrivKey, btcPubKey := secp256k1.PrivKeyFromBytes(secp256k1.S256(), privKey.Key)
-	btcSig, err := secp256k1.ParseSignature(sig, secp256k1.S256())
-	require.NoError(t, err)
 	msgHash := crypto.Sha256(msg)
-	assert.True(t, btcSig.Verify(msgHash, btcPubKey))
+	btcPrivKey, btcPubKey := secp256k1.PrivKeyFromBytes(secp256k1.S256(), privKey.Key)
+	// This fails: malformed signature: no header magic
+	//   btcSig, err := secp256k1.ParseSignature(sig, secp256k1.S256())
+	//   require.NoError(t, err)
+	//   assert.True(t, btcSig.Verify(msgHash, btcPubKey))
+	// So we do a hacky way:
+	r := new(big.Int)
+	s := new(big.Int)
+	r.SetBytes(sig[:32])
+	s.SetBytes(sig[32:])
+	ok := ecdsa.Verify(btcPubKey.ToECDSA(), msgHash, r, s)
+	require.True(t, ok)
 
 	sig2, err := btcPrivKey.Sign(msgHash)
 	require.NoError(t, err)

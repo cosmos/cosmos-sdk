@@ -10,6 +10,8 @@ import (
 // Any.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgTransfer{})
+
+	sdk.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 var (

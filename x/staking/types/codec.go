@@ -26,6 +26,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgUndelegate{},
 		&MsgBeginRedelegate{},
 	)
+
+	sdk.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 var (

@@ -23,6 +23,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*exported.Evidence)(nil),
 		&Equivocation{},
 	)
+
+	sdk.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 var (

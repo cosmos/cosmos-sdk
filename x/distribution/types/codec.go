@@ -30,6 +30,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*govtypes.Content)(nil),
 		&CommunityPoolSpendProposal{},
 	)
+
+	sdk.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 var (

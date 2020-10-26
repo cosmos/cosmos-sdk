@@ -28,6 +28,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*Content)(nil),
 		&TextProposal{},
 	)
+
+	sdk.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 // RegisterProposalTypeCodec registers an external proposal content type defined

@@ -248,7 +248,6 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 			} else {
 				var result sdk.TxResponse
 				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
-				fmt.Println(result)
 				s.Require().NotNil(result.Height)
 			}
 		})

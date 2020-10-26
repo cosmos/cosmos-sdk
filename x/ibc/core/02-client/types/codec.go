@@ -41,6 +41,8 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&MsgUpdateClient{},
 		&MsgSubmitMisbehaviour{},
 	)
+
+	sdk.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 // PackClientState constructs a new Any packed with the given client state value. It returns

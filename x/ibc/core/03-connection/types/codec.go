@@ -33,6 +33,8 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&MsgConnectionOpenAck{},
 		&MsgConnectionOpenConfirm{},
 	)
+
+	sdk.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 var (

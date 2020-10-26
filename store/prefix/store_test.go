@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	dbm "github.com/tendermint/tm-db"
+	"github.com/zeebo/assert"
 
 	tiavl "github.com/cosmos/iavl"
 
@@ -121,8 +122,8 @@ func TestPrefixStoreIterate(t *testing.T) {
 		pIter.Next()
 	}
 
-	bIter.Close()
-	pIter.Close()
+	assert.NoError(t, bIter.Close())
+	assert.NoError(t, pIter.Close())
 }
 
 func incFirstByte(bz []byte) {
@@ -175,7 +176,7 @@ func TestPrefixStoreIteratorEdgeCase(t *testing.T) {
 
 	checkInvalid(t, iter)
 
-	iter.Close()
+	assert.NoError(t, iter.Close())
 }
 
 func TestPrefixStoreReverseIteratorEdgeCase(t *testing.T) {
@@ -204,8 +205,7 @@ func TestPrefixStoreReverseIteratorEdgeCase(t *testing.T) {
 	checkNext(t, iter, false)
 
 	checkInvalid(t, iter)
-
-	iter.Close()
+	assert.NoError(t, iter.Close())
 
 	db = dbm.NewMemDB()
 	baseStore = dbadapter.Store{DB: db}
@@ -232,7 +232,7 @@ func TestPrefixStoreReverseIteratorEdgeCase(t *testing.T) {
 
 	checkInvalid(t, iter)
 
-	iter.Close()
+	assert.NoError(t, iter.Close())
 }
 
 // Tests below are ported from https://github.com/tendermint/tendermint/blob/master/libs/db/prefix_db_test.go
@@ -331,7 +331,7 @@ func TestPrefixDBIterator1(t *testing.T) {
 	checkItem(t, itr, bz("3"), bz("value3"))
 	checkNext(t, itr, false)
 	checkInvalid(t, itr)
-	itr.Close()
+	assert.NoError(t, itr.Close())
 }
 
 func TestPrefixDBIterator2(t *testing.T) {
@@ -341,7 +341,7 @@ func TestPrefixDBIterator2(t *testing.T) {
 	itr := pstore.Iterator(nil, bz(""))
 	checkDomain(t, itr, nil, bz(""))
 	checkInvalid(t, itr)
-	itr.Close()
+	assert.NoError(t, itr.Close())
 }
 
 func TestPrefixDBIterator3(t *testing.T) {
@@ -359,7 +359,7 @@ func TestPrefixDBIterator3(t *testing.T) {
 	checkItem(t, itr, bz("3"), bz("value3"))
 	checkNext(t, itr, false)
 	checkInvalid(t, itr)
-	itr.Close()
+	assert.NoError(t, itr.Close())
 }
 
 func TestPrefixDBIterator4(t *testing.T) {
@@ -369,7 +369,7 @@ func TestPrefixDBIterator4(t *testing.T) {
 	itr := pstore.Iterator(bz(""), bz(""))
 	checkDomain(t, itr, bz(""), bz(""))
 	checkInvalid(t, itr)
-	itr.Close()
+	assert.NoError(t, itr.Close())
 }
 
 func TestPrefixDBReverseIterator1(t *testing.T) {
@@ -387,7 +387,7 @@ func TestPrefixDBReverseIterator1(t *testing.T) {
 	checkItem(t, itr, bz(""), bz("value"))
 	checkNext(t, itr, false)
 	checkInvalid(t, itr)
-	itr.Close()
+	assert.NoError(t, itr.Close())
 }
 
 func TestPrefixDBReverseIterator2(t *testing.T) {
@@ -405,7 +405,7 @@ func TestPrefixDBReverseIterator2(t *testing.T) {
 	checkItem(t, itr, bz(""), bz("value"))
 	checkNext(t, itr, false)
 	checkInvalid(t, itr)
-	itr.Close()
+	assert.NoError(t, itr.Close())
 }
 
 func TestPrefixDBReverseIterator3(t *testing.T) {
@@ -415,7 +415,7 @@ func TestPrefixDBReverseIterator3(t *testing.T) {
 	itr := pstore.ReverseIterator(nil, bz(""))
 	checkDomain(t, itr, nil, bz(""))
 	checkInvalid(t, itr)
-	itr.Close()
+	assert.NoError(t, itr.Close())
 }
 
 func TestPrefixDBReverseIterator4(t *testing.T) {
@@ -424,5 +424,5 @@ func TestPrefixDBReverseIterator4(t *testing.T) {
 
 	itr := pstore.ReverseIterator(bz(""), bz(""))
 	checkInvalid(t, itr)
-	itr.Close()
+	assert.NoError(t, itr.Close())
 }

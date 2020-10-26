@@ -323,7 +323,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		for ; iterator.Valid(); iterator.Next() {
 			pairs.Pairs = append(pairs.Pairs, kv.Pair{Key: iterator.Key(), Value: iterator.Value()})
 		}
-		iterator.Close()
+		sdkerrors.LogError(iterator.Close())
 
 		bz, err := pairs.Marshal()
 		if err != nil {

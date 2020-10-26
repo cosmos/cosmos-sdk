@@ -4,6 +4,7 @@ import (
 	"bytes"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	sdkkv "github.com/cosmos/cosmos-sdk/types/kv"
 )
 
@@ -13,7 +14,7 @@ func First(st KVStore, start, end []byte) (kv sdkkv.Pair, ok bool) {
 	if !iter.Valid() {
 		return kv, false
 	}
-	defer iter.Close()
+	defer sdkerrors.CallbackLog(iter.Close)
 
 	return sdkkv.Pair{Key: iter.Key(), Value: iter.Value()}, true
 }
@@ -27,7 +28,7 @@ func Last(st KVStore, start, end []byte) (kv sdkkv.Pair, ok bool) {
 		}
 		return kv, false
 	}
-	defer iter.Close()
+	defer sdkerrors.CallbackLog(iter.Close)
 
 	if bytes.Equal(iter.Key(), end) {
 		// Skip this one, end is exclusive.

@@ -191,9 +191,8 @@ func writeOperation(w io.Writer, op operation, tc types.TraceContext, key, value
 		panic(errors.Wrap(err, "failed to serialize trace operation"))
 	}
 
+	raw = append(raw, '\n')
 	if _, err := w.Write(raw); err != nil {
 		panic(errors.Wrap(err, "failed to write trace operation"))
 	}
-
-	io.WriteString(w, "\n")
 }

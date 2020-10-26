@@ -3,6 +3,7 @@ package types_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	dbm "github.com/tendermint/tm-db"
 
@@ -89,7 +90,9 @@ func TestPaginatedIterator(t *testing.T) {
 			} else {
 				iter = types.KVStorePrefixIteratorPaginated(kvs, nil, tc.page, tc.limit)
 			}
-			defer iter.Close()
+			defer func() {
+				assert.NoError(t, iter.Close())
+			}()
 
 			result := [][]byte{}
 			for ; iter.Valid(); iter.Next() {
@@ -106,14 +109,13 @@ func TestPaginatedIteratorPanicIfInvalid(t *testing.T) {
 	kvs := newMemTestKVStore(t)
 
 	iter := types.KVStorePrefixIteratorPaginated(kvs, nil, 1, 1)
-	defer iter.Close()
 	require.False(t, iter.Valid())
 	require.Panics(t, func() { iter.Next() }) // "iterator is empty"
-
+	assert.NoError(t, iter.Close())
 	kvs.Set([]byte{1}, []byte{})
 
 	iter = types.KVStorePrefixIteratorPaginated(kvs, nil, 1, 0)
-	defer iter.Close()
 	require.False(t, iter.Valid())
 	require.Panics(t, func() { iter.Next() }) // "not empty but limit is zero"
+	assert.NoError(t, iter.Close())
 }

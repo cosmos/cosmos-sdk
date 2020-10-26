@@ -255,7 +255,9 @@ func deleteKVStore(kv types.KVStore) error {
 		keys = append(keys, itr.Key())
 		itr.Next()
 	}
-	itr.Close()
+	if err := itr.Close(); err != nil {
+		return err
+	}
 
 	for _, k := range keys {
 		kv.Delete(k)
@@ -271,7 +273,9 @@ func moveKVStoreData(oldDB types.KVStore, newDB types.KVStore) error {
 		newDB.Set(itr.Key(), itr.Value())
 		itr.Next()
 	}
-	itr.Close()
+	if err := itr.Close(); err != nil {
+		return err
+	}
 
 	// then delete the old store
 	return deleteKVStore(oldDB)
@@ -619,7 +623,7 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 		// Set up a stream pipeline to serialize snapshot nodes:
 		// ExportNode -> delimited Protobuf -> zlib -> buffer -> chunkWriter -> chan io.ReadCloser
 		chunkWriter := snapshots.NewChunkWriter(ch, snapshotChunkSize)
-		defer chunkWriter.Close()
+		defer sdkerrors.CallbackLog(chunkWriter.Close)
 		bufWriter := bufio.NewWriterSize(chunkWriter, snapshotBufferSize)
 		defer func() {
 			if err := bufWriter.Flush(); err != nil {
@@ -720,14 +724,14 @@ func (rs *Store) Restore(
 	// Set up a restore stream pipeline
 	// chan io.ReadCloser -> chunkReader -> zlib -> delimited Protobuf -> ExportNode
 	chunkReader := snapshots.NewChunkReader(chunks)
-	defer chunkReader.Close()
+	defer sdkerrors.CallbackLog(chunkReader.Close)
 	zReader, err := zlib.NewReader(chunkReader)
 	if err != nil {
 		return sdkerrors.Wrap(err, "zlib failure")
 	}
-	defer zReader.Close()
+	defer sdkerrors.CallbackLog(zReader.Close)
 	protoReader := protoio.NewDelimitedReader(zReader, snapshotMaxItemSize)
-	defer protoReader.Close()
+	defer sdkerrors.CallbackLog(protoReader.Close)
 
 	// Import nodes into stores. The first item is expected to be a SnapshotItem containing
 	// a SnapshotStoreItem, telling us which store to import into. The following items will contain
@@ -955,7 +959,10 @@ func setCommitInfo(batch dbm.Batch, version int64, cInfo *types.CommitInfo) {
 	}
 
 	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, version)
-	batch.Set([]byte(cInfoKey), bz)
+	err = batch.Set([]byte(cInfoKey), bz)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func setLatestVersion(batch dbm.Batch, version int64) {
@@ -964,7 +971,10 @@ func setLatestVersion(batch dbm.Batch, version int64) {
 		panic(err)
 	}
 
-	batch.Set([]byte(latestVersionKey), bz)
+	err = batch.Set([]byte(latestVersionKey), bz)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func setPruningHeights(batch dbm.Batch, pruneHeights []int64) {
@@ -975,7 +985,10 @@ func setPruningHeights(batch dbm.Batch, pruneHeights []int64) {
 		bz = append(bz, buf...)
 	}
 
-	batch.Set([]byte(pruneHeightsKey), bz)
+	err := batch.Set([]byte(pruneHeightsKey), bz)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func getPruningHeights(db dbm.DB) ([]int64, error) {
@@ -1000,7 +1013,7 @@ func getPruningHeights(db dbm.DB) ([]int64, error) {
 
 func flushMetadata(db dbm.DB, version int64, cInfo *types.CommitInfo, pruneHeights []int64) {
 	batch := db.NewBatch()
-	defer batch.Close()
+	defer sdkerrors.CallbackLog(batch.Close)
 
 	setCommitInfo(batch, version, cInfo)
 	setLatestVersion(batch, version)

@@ -544,7 +544,7 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 	// This checksum test makes sure that the byte stream remains identical. If the test fails
 	// without having changed the data (e.g. because the Protobuf or zlib encoding changes),
 	// snapshottypes.CurrentFormat must be bumped.
-	store := newMultiStoreWithGeneratedData(dbm.NewMemDB(), 5, 10000)
+	store := newMultiStoreWithGeneratedData(t, dbm.NewMemDB(), 5, 10000)
 	version := uint64(store.LastCommitID().Version)
 
 	testcases := []struct {
@@ -579,7 +579,7 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 }
 
 func TestMultistoreSnapshot_Errors(t *testing.T) {
-	store := newMultiStoreWithMixedMountsAndBasicData(dbm.NewMemDB())
+	store := newMultiStoreWithMixedMountsAndBasicData(t, dbm.NewMemDB())
 
 	testcases := map[string]struct {
 		height     uint64
@@ -604,7 +604,7 @@ func TestMultistoreSnapshot_Errors(t *testing.T) {
 }
 
 func TestMultistoreRestore_Errors(t *testing.T) {
-	store := newMultiStoreWithMixedMounts(dbm.NewMemDB())
+	store := newMultiStoreWithMixedMounts(t, dbm.NewMemDB())
 
 	testcases := map[string]struct {
 		height     uint64
@@ -628,8 +628,8 @@ func TestMultistoreRestore_Errors(t *testing.T) {
 }
 
 func TestMultistoreSnapshotRestore(t *testing.T) {
-	source := newMultiStoreWithMixedMountsAndBasicData(dbm.NewMemDB())
-	target := newMultiStoreWithMixedMounts(dbm.NewMemDB())
+	source := newMultiStoreWithMixedMountsAndBasicData(t, dbm.NewMemDB())
+	target := newMultiStoreWithMixedMounts(t, dbm.NewMemDB())
 	version := uint64(source.LastCommitID().Version)
 	require.EqualValues(t, 3, version)
 
@@ -657,7 +657,7 @@ func TestSetInitialVersion(t *testing.T) {
 	db := dbm.NewMemDB()
 	multi := newMultiStoreWithMounts(db, types.PruneNothing)
 
-	multi.SetInitialVersion(5)
+	require.NoError(t, multi.SetInitialVersion(5))
 	require.Equal(t, int64(5), multi.initialVersion)
 
 	multi.Commit()
@@ -682,7 +682,7 @@ func BenchmarkMultistoreSnapshotRestore1M(b *testing.B) {
 
 func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
 	b.StopTimer()
-	source := newMultiStoreWithGeneratedData(dbm.NewMemDB(), stores, storeKeys)
+	source := newMultiStoreWithGeneratedData(b, dbm.NewMemDB(), stores, storeKeys)
 	version := source.LastCommitID().Version
 	require.EqualValues(b, 1, version)
 	b.StartTimer()
@@ -709,7 +709,7 @@ func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
 
 func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys uint64) {
 	b.StopTimer()
-	source := newMultiStoreWithGeneratedData(dbm.NewMemDB(), stores, storeKeys)
+	source := newMultiStoreWithGeneratedData(b, dbm.NewMemDB(), stores, storeKeys)
 	version := uint64(source.LastCommitID().Version)
 	require.EqualValues(b, 1, version)
 	b.StartTimer()
@@ -745,19 +745,19 @@ func newMultiStoreWithMounts(db dbm.DB, pruningOpts types.PruningOptions) *Store
 	return store
 }
 
-func newMultiStoreWithMixedMounts(db dbm.DB) *Store {
+func newMultiStoreWithMixedMounts(t *testing.T, db dbm.DB) *Store {
 	store := NewStore(db)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl3"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewTransientStoreKey("trans1"), types.StoreTypeTransient, nil)
-	store.LoadLatestVersion()
+	require.NoError(t, store.LoadLatestVersion())
 
 	return store
 }
 
-func newMultiStoreWithMixedMountsAndBasicData(db dbm.DB) *Store {
-	store := newMultiStoreWithMixedMounts(db)
+func newMultiStoreWithMixedMountsAndBasicData(t *testing.T, db dbm.DB) *Store {
+	store := newMultiStoreWithMixedMounts(t, db)
 	store1 := store.getStoreByName("iavl1").(types.CommitKVStore)
 	store2 := store.getStoreByName("iavl2").(types.CommitKVStore)
 	trans1 := store.getStoreByName("trans1").(types.KVStore)
@@ -782,7 +782,7 @@ func newMultiStoreWithMixedMountsAndBasicData(db dbm.DB) *Store {
 	return store
 }
 
-func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *Store {
+func newMultiStoreWithGeneratedData(t testing.TB, db dbm.DB, stores uint8, storeKeys uint64) *Store {
 	multiStore := NewStore(db)
 	r := rand.New(rand.NewSource(49872768940)) // Fixed seed for deterministic tests
 
@@ -792,7 +792,9 @@ func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *
 		multiStore.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
 		keys = append(keys, key)
 	}
-	multiStore.LoadLatestVersion()
+	if err := multiStore.LoadLatestVersion(); err != nil {
+		t.Fatal(err)
+	}
 
 	for _, key := range keys {
 		store := multiStore.stores[key].(*iavl.Store)
@@ -809,8 +811,9 @@ func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *
 	}
 
 	multiStore.Commit()
-	multiStore.LoadLatestVersion()
-
+	if err := multiStore.LoadLatestVersion(); err != nil {
+		t.Fatal(err)
+	}
 	return multiStore
 }
 

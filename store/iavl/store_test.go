@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
+	"github.com/zeebo/assert"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -330,7 +331,7 @@ func TestIAVLPrefixIterator(t *testing.T) {
 		require.EqualValues(t, value, expectedKey)
 		i++
 	}
-	iter.Close()
+	assert.NoError(t, iter.Close())
 	require.Equal(t, len(expected), i)
 
 	iter = types.KVStorePrefixIterator(iavlStore, []byte{byte(55), byte(255), byte(255)})
@@ -346,7 +347,7 @@ func TestIAVLPrefixIterator(t *testing.T) {
 		require.EqualValues(t, value, []byte("test4"))
 		i++
 	}
-	iter.Close()
+	assert.NoError(t, iter.Close())
 	require.Equal(t, len(expected), i)
 
 	iter = types.KVStorePrefixIterator(iavlStore, []byte{byte(255), byte(255)})
@@ -362,7 +363,7 @@ func TestIAVLPrefixIterator(t *testing.T) {
 		require.EqualValues(t, value, []byte("test4"))
 		i++
 	}
-	iter.Close()
+	assert.NoError(t, iter.Close())
 	require.Equal(t, len(expected), i)
 }
 

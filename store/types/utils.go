@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
@@ -20,12 +21,10 @@ func KVStoreReversePrefixIterator(kvs KVStore, prefix []byte) Iterator {
 // that differ from one another. It also skips value comparison for a set of provided prefixes.
 func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []kv.Pair) {
 	iterA := a.Iterator(nil, nil)
-
-	defer iterA.Close()
+	defer sdkerrors.CallbackLog(iterA.Close)
 
 	iterB := b.Iterator(nil, nil)
-
-	defer iterB.Close()
+	defer sdkerrors.CallbackLog(iterB.Close)
 
 	for {
 		if !iterA.Valid() && !iterB.Valid() {

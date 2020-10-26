@@ -35,7 +35,9 @@ func benchmarkCacheKVStoreIterator(numKVs int, b *testing.B) {
 		for _ = iter.Key(); iter.Valid(); iter.Next() {
 		}
 
-		iter.Close()
+		if err := iter.Close(); err != nil {
+			b.Fatal(err)
+		}
 	}
 }
 

@@ -1,11 +1,11 @@
 package types
 
 import (
-	context "context"
-	fmt "fmt"
+	"context"
+	"fmt"
 
-	proto "github.com/gogo/protobuf/proto"
-	grpc "google.golang.org/grpc"
+	"github.com/gogo/protobuf/proto"
+	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )

@@ -63,8 +63,7 @@ func (ps *paramStore) Get(_ sdk.Context, key []byte, ptr interface{}) {
 		return
 	}
 
-	err = json.Unmarshal(bz, ptr)
-	require.NoError(ps.t, err)
+	require.NoError(ps.t, json.Unmarshal(bz, ptr))
 }
 
 func defaultLogger() log.Logger {

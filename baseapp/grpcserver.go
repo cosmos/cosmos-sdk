@@ -3,10 +3,8 @@ package baseapp
 import (
 	"context"
 	"strconv"
-	"testing"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
-	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -20,7 +18,7 @@ import (
 func (app *BaseApp) GRPCQueryRouter() *GRPCQueryRouter { return app.grpcQueryRouter }
 
 // RegisterGRPCServer registers gRPC services directly with the gRPC server.
-func (app *BaseApp) RegisterGRPCServer(t *testing.T, server gogogrpc.Server) {
+func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 	// Define an interceptor for all gRPC queries: this interceptor will create
 	// a new sdk.Context, and pass it into the query handler.
 	interceptor := func(grpcCtx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
@@ -54,8 +52,9 @@ func (app *BaseApp) RegisterGRPCServer(t *testing.T, server gogogrpc.Server) {
 			height = sdkCtx.BlockHeight() // If height was not set in the request, set it to the latest
 		}
 		md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
-		err = grpc.SetHeader(grpcCtx, md)
-		require.NoError(t, err)
+		if err = grpc.SetHeader(grpcCtx, md); err != nil {
+			app.logger.Error("Can't set gRPC header", "err", err)
+		}
 
 		return handler(grpcCtx, req)
 	}

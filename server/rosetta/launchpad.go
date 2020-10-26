@@ -25,9 +25,6 @@ type Options struct {
 	// Network represents the name of the network, it is used for NetworkList endpoint.
 	Network string
 
-	// AddrPrefix is the prefix used for bech32 addresses.
-	AddrPrefix string
-
 	// Offline mode forces to run without querying the node. Some endpoints won't work.
 	OfflineMode bool
 }

@@ -16,7 +16,6 @@ const (
 	flagNetwork       = "network"
 	flagTendermintRpc = "tendermint-rpc"
 	flagAppRpc        = "app-rpc"
-	flagBech32Prefix  = "bech32-prefix"
 	flagOfflineMode   = "offline"
 )
 
@@ -51,7 +50,6 @@ func RosettaCommand(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().String(flagNetwork, "network", "Network's identifier (e.g. cosmos-hub-3, testnet-1, etc)")
 	cmd.Flags().String(flagAppRpc, "localhost:1317", "Application's RPC endpoint.")
 	cmd.Flags().String(flagTendermintRpc, "localhost:26657", "Tendermint's RPC endpoint.")
-	cmd.Flags().String(flagBech32Prefix, "cosmos", "Bech32 prefix of address (e.g. cosmos, iaa, xrn:)")
 	cmd.Flags().Bool(flagOfflineMode, false, "Flag that forces the rosetta service to run in offline mode, some endpoints won't work.")
 
 	return cmd
@@ -78,14 +76,9 @@ func getRosettaOptionsFromFlags(flags *flag.FlagSet) (rosetta.Options, error) {
 		return rosetta.Options{}, fmt.Errorf("invalid tendermint rpc value: %w", err)
 	}
 
-	bech32Prefix, err := flags.GetString(flagBech32Prefix)
-	if err != nil {
-		return rosetta.Options{}, fmt.Errorf("invalid bech32 prefix value: %w", err)
-	}
-
 	offline, err := flags.GetBool(flagOfflineMode)
 	if err != nil {
-		return rosetta.Options{}, fmt.Errorf("invalid bech32 prefix value: %w", err)
+		return rosetta.Options{}, fmt.Errorf("invalid offline value: %w", err)
 	}
 
 	return rosetta.Options{
@@ -93,7 +86,6 @@ func getRosettaOptionsFromFlags(flags *flag.FlagSet) (rosetta.Options, error) {
 		TendermintEndpoint: tendermintRpc,
 		Blockchain:         blockchain,
 		Network:            network,
-		AddrPrefix:         bech32Prefix,
 		OfflineMode:        offline,
 	}, nil
 }

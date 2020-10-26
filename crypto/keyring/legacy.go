@@ -65,7 +65,7 @@ func (kb dbKeybase) List() ([]Info, error) {
 		return nil, err
 	}
 
-	defer iter.Close()
+	defer sdkerrors.CallbackLog(iter.Close)
 
 	for ; iter.Valid(); iter.Next() {
 		key := string(iter.Key())

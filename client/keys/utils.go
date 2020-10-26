@@ -59,16 +59,14 @@ func printInfos(w io.Writer, infos []cryptokeyring.Info, output string) error {
 
 	switch output {
 	case OutputFormatText:
-		printTextInfos(w, kos)
+		err = printTextInfos(w, kos)
 
 	case OutputFormatJSON:
 		out, err := KeysCdc.MarshalJSON(kos)
 		if err != nil {
 			return err
 		}
-		if _, err := fmt.Fprintf(w, "%s", out); err != nil {
-			return err
-		}
+		_, err = fmt.Fprintf(w, "%s", out)
 	}
 	return err
 }

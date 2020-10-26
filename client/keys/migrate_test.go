@@ -7,6 +7,7 @@ import (
 
 	"github.com/otiai10/copy"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -25,7 +26,7 @@ func Test_runMigrateCmd(t *testing.T) {
 	clientCtx := client.Context{}.WithKeyringDir(kbHome)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
-	copy.Copy("testdata", kbHome)
+	require.NoError(t, copy.Copy("testdata", kbHome))
 	cmd.SetArgs([]string{
 		"keyname1",
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),

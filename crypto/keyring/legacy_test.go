@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/otiai10/copy"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -27,7 +28,7 @@ func TestLegacyKeybase(t *testing.T) {
 
 	kb, err := keyring.NewLegacy("keys", filepath.Join(dir, "keys"))
 	require.NoError(t, err)
-	t.Cleanup(func() { kb.Close() })
+	t.Cleanup(func() { assert.NoError(t, kb.Close()) })
 
 	keys, err := kb.List()
 	require.NoError(t, err)

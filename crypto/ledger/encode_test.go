@@ -30,7 +30,7 @@ func checkAminoJSON(t *testing.T, src interface{}, dst interface{}, isNil bool) 
 
 // nolint: govet
 func ExamplePrintRegisteredTypes() {
-	cdc.PrintTypes(os.Stdout)
+	cdc.PrintTypes(os.Stdout) // nolint: errcheck
 	// | Type | Name | Prefix | Length | Notes |
 	// | ---- | ---- | ------ | ----- | ------ |
 	// | PrivKeyLedgerSecp256k1 | tendermint/PrivKeyLedgerSecp256k1 | 0x10CAB393 | variable |  |

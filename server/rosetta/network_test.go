@@ -26,7 +26,7 @@ func TestLaunchpad_NetworkList(t *testing.T) {
 		Network:    "TheNetwork",
 	}
 
-	adapter := newAdapter(cosmos.NewClient(""), tendermint.NewClient(""), properties)
+	adapter := newAdapter(nil, cosmos.NewClient("", nil), tendermint.NewClient(""), properties)
 
 	list, err := adapter.NetworkList(context.Background(), nil)
 	require.Nil(t, err)
@@ -43,7 +43,7 @@ func TestLaunchpad_NetworkList_FailsOfflineMode(t *testing.T) {
 		OfflineMode: true,
 	}
 
-	adapter := newAdapter(cosmos.NewClient(""), tendermint.NewClient(""), properties)
+	adapter := newAdapter(nil, cosmos.NewClient("", nil), tendermint.NewClient(""), properties)
 
 	_, err := adapter.NetworkList(context.Background(), nil)
 	require.Equal(t, err, ErrEndpointDisabledOfflineMode)
@@ -67,7 +67,7 @@ func TestLaunchpad_NetworkOptions(t *testing.T) {
 		Network:    "TheNetwork",
 	}
 
-	adapter := newAdapter(m, tendermint.NewClient(""), properties)
+	adapter := newAdapter(nil, m, tendermint.NewClient(""), properties)
 
 	options, err := adapter.NetworkOptions(context.Background(), nil)
 	require.Nil(t, err)
@@ -103,7 +103,7 @@ func TestLaunchpad_NetworkOptions_FailsOfflineMode(t *testing.T) {
 		OfflineMode: true,
 	}
 
-	adapter := newAdapter(cosmos.NewClient(""), tendermint.NewClient(""), properties)
+	adapter := newAdapter(nil, cosmos.NewClient("", nil), tendermint.NewClient(""), properties)
 
 	_, err := adapter.NetworkOptions(context.Background(), nil)
 	require.Equal(t, err, ErrEndpointDisabledOfflineMode)
@@ -169,7 +169,8 @@ func TestLaunchpad_NetworkStatus(t *testing.T) {
 	}
 
 	adapter := newAdapter(
-		cosmos.NewClient(""),
+		nil,
+		cosmos.NewClient("", nil),
 		&mt,
 		properties,
 	)
@@ -207,7 +208,8 @@ func TestLaunchpad_NetworkStatus_FailsOfflineMode(t *testing.T) {
 	}
 
 	adapter := newAdapter(
-		cosmos.NewClient(""),
+		nil,
+		cosmos.NewClient("", nil),
 		tendermint.NewClient(""),
 		properties,
 	)

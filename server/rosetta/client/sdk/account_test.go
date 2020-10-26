@@ -3,6 +3,8 @@ package sdk
 import (
 	"context"
 
+	"github.com/tendermint/go-amino"
+
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -21,7 +23,8 @@ func TestAuthAccountClient(t *testing.T) {
 	}))
 	defer s.Close()
 
-	client := NewClient(s.URL)
+	cdc := amino.NewCodec()
+	client := NewClient(s.URL, cdc)
 
 	addr := "cosmos15lc6l4nm3s9ya5an5vnv9r6na437ajpznkplhx"
 	res, err := client.GetAuthAccount(context.Background(), addr, 0)

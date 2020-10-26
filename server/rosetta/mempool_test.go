@@ -25,7 +25,7 @@ func TestLaunchpad_Mempool(t *testing.T) {
 			},
 		}, nil, nil)
 
-	adapter := newAdapter(cosmos.NewClient(""), m, properties{})
+	adapter := newAdapter(nil, cosmos.NewClient("", nil), m, properties{})
 
 	mempool, err := adapter.Mempool(context.Background(), &types.NetworkRequest{})
 	require.Nil(t, err)
@@ -41,7 +41,7 @@ func TestLaunchpad_Mempool_FailsOfflineMode(t *testing.T) {
 	properties := properties{
 		OfflineMode: true,
 	}
-	adapter := newAdapter(cosmos.NewClient(""), tendermint.NewClient(""), properties)
+	adapter := newAdapter(nil, cosmos.NewClient("", nil), tendermint.NewClient(""), properties)
 
 	_, err := adapter.Mempool(context.Background(), &types.NetworkRequest{})
 	require.Equal(t, ErrEndpointDisabledOfflineMode, err)
@@ -58,7 +58,7 @@ func TestLaunchpad_MempoolTransaction(t *testing.T) {
 		},
 			nil, nil)
 
-	adapter := newAdapter(cosmos.NewClient(""), ma, properties{})
+	adapter := newAdapter(nil, cosmos.NewClient("", nil), ma, properties{})
 	res, err := adapter.MempoolTransaction(context.Background(), &types.MempoolTransactionRequest{
 		TransactionIdentifier: &types.TransactionIdentifier{Hash: "ABCTHEHASH"},
 	})
@@ -72,7 +72,7 @@ func TestLaunchpad_MempoolTransaction_FailsOfflineMode(t *testing.T) {
 	properties := properties{
 		OfflineMode: true,
 	}
-	adapter := newAdapter(cosmos.NewClient(""), tendermint.NewClient(""), properties)
+	adapter := newAdapter(nil, cosmos.NewClient("", nil), tendermint.NewClient(""), properties)
 	_, err := adapter.MempoolTransaction(context.Background(), &types.MempoolTransactionRequest{
 		TransactionIdentifier: &types.TransactionIdentifier{Hash: "ABCTHEHASH"},
 	})

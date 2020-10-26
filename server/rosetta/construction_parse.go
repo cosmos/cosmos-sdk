@@ -11,10 +11,6 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
-const (
-	Memo = "memo"
-)
-
 // ConstructionParse implements the /construction/parse endpoint.
 func (l launchpad) ConstructionParse(ctx context.Context, request *types.ConstructionParseRequest) (*types.ConstructionParseResponse, *types.Error) {
 	rawTx, err := hex.DecodeString(request.Transaction)
@@ -23,7 +19,7 @@ func (l launchpad) ConstructionParse(ctx context.Context, request *types.Constru
 	}
 
 	var stdTx auth.StdTx
-	err = Codec.UnmarshalJSON(rawTx, &stdTx)
+	err = l.cdc.UnmarshalJSON(rawTx, &stdTx)
 	if err != nil {
 		return nil, ErrInvalidTransaction
 	}

@@ -16,7 +16,7 @@ func TestLaunchpad_ConstructionParse(t *testing.T) {
 		Blockchain: "TheBlockchain",
 		Network:    "TheNetwork",
 	}
-	adapter := newAdapter(cosmos.NewClient(""), tendermint.NewClient(""), properties)
+	adapter := newAdapter(nil, cosmos.NewClient("", nil), tendermint.NewClient(""), properties)
 
 	cases := []struct {
 		name  string

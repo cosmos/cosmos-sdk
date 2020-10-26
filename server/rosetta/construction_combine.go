@@ -22,7 +22,7 @@ func (l launchpad) ConstructionCombine(ctx context.Context, r *types.Constructio
 	}
 
 	var stdTx auth.StdTx
-	err = Codec.UnmarshalJSON(bz, &stdTx)
+	err = l.cdc.UnmarshalJSON(bz, &stdTx)
 	if err != nil {
 		return nil, rosetta.WrapError(ErrInvalidTransaction, fmt.Sprintf("unable to unmarshal tx: %s", err.Error()))
 	}
@@ -49,7 +49,7 @@ func (l launchpad) ConstructionCombine(ctx context.Context, r *types.Constructio
 	}
 
 	stdTx.Signatures = sigs
-	txBytes, err := Codec.MarshalJSON(stdTx)
+	txBytes, err := l.cdc.MarshalJSON(stdTx)
 	if err != nil {
 		return nil, rosetta.WrapError(ErrInvalidTransaction, "unable to marshal signed tx")
 	}

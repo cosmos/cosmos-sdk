@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
+
 	cosmos "github.com/cosmos/cosmos-sdk/server/rosetta/client/sdk"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -50,7 +52,7 @@ func TestPayloadsEndpoint_Errors(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			adapter := newAdapter(cosmos.NewClient(""), tendermint.NewClient(""), properties{})
+			adapter := newAdapter(nil, cosmos.NewClient("", nil), tendermint.NewClient(""), properties{})
 			_, err := adapter.ConstructionPayloads(context.Background(), tt.req)
 			require.Equal(t, err, tt.expectedErr)
 		})
@@ -63,7 +65,7 @@ func TestGetSenderByOperations(t *testing.T) {
 		Network:    "TheNetwork",
 		AddrPrefix: "test",
 	}
-	_ = newAdapter(cosmos.NewClient(""), tendermint.NewClient(""), properties)
+	_ = newAdapter(nil, cosmos.NewClient("", nil), tendermint.NewClient(""), properties)
 	ops := []*types.Operation{
 		{
 			Account: &types.AccountIdentifier{
@@ -114,7 +116,8 @@ func TestLaunchpad_ConstructionPayloads(t *testing.T) {
 		Network:    "TheNetwork",
 		AddrPrefix: "test",
 	}
-	adapter := newAdapter(cosmos.NewClient(""), tendermint.NewClient(""), properties)
+	cdc := simapp.MakeCodec()
+	adapter := newAdapter(cdc, cosmos.NewClient("", cdc), tendermint.NewClient(""), properties)
 
 	feeMultiplier := float64(200000)
 	senderAddr := "test1khy4gsp06srvu3u65uyhrax7tnj2atezfqnfan"

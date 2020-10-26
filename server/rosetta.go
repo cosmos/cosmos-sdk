@@ -3,6 +3,8 @@ package server
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -19,7 +21,7 @@ const (
 )
 
 // RosettaCommand will start the application Rosetta API service as a blocking process.
-func RosettaCommand() *cobra.Command {
+func RosettaCommand(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "rosetta",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -30,8 +32,11 @@ func RosettaCommand() *cobra.Command {
 
 			s, err := service.New(
 				service.Options{Port: 8080},
-				rosetta.NewNetwork(options),
+				rosetta.NewNetwork(cdc, options),
 			)
+			if err != nil {
+				panic(err)
+			}
 
 			err = s.Start()
 			if err != nil {

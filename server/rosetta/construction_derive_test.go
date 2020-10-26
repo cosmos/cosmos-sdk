@@ -22,7 +22,7 @@ func TestLaunchpad_ConstructionDerive(t *testing.T) {
 		AddrPrefix: "test",
 	}
 
-	adapter := newAdapter(cosmos.NewClient(""), tendermint.NewClient(""), properties)
+	adapter := newAdapter(nil, cosmos.NewClient("", nil), tendermint.NewClient(""), properties)
 	deriveResp, deriveErr := adapter.ConstructionDerive(context.Background(), &types.ConstructionDeriveRequest{
 		PublicKey: &types.PublicKey{
 			Bytes:     data,

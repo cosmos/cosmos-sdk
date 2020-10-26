@@ -20,12 +20,12 @@ func (l launchpad) ConstructionHash(ctx context.Context, req *types.Construction
 	}
 
 	var stdTx auth.StdTx
-	err = Codec.UnmarshalJSON(bz, &stdTx)
+	err = l.cdc.UnmarshalJSON(bz, &stdTx)
 	if err != nil {
 		return nil, rosetta.WrapError(ErrInvalidTransaction, "invalid tx")
 	}
 
-	txBytes, err := Codec.MarshalBinaryLengthPrefixed(stdTx)
+	txBytes, err := l.cdc.MarshalBinaryLengthPrefixed(stdTx)
 	if err != nil {
 		return nil, rosetta.WrapError(ErrInvalidTransaction, "invalid tx")
 	}

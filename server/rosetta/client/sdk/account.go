@@ -26,7 +26,7 @@ func (c Client) GetAuthAccount(ctx context.Context, address string, height int64
 		return types.AccountResponse{}, err
 	}
 
-	if err = types.Codec.UnmarshalJSON(btes, &accRes); err != nil {
+	if err = c.cdc.UnmarshalJSON(btes, &accRes); err != nil {
 		return types.AccountResponse{}, err
 	}
 

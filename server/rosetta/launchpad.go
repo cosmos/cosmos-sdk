@@ -3,6 +3,8 @@ package rosetta
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 	"github.com/tendermint/cosmos-rosetta-gateway/service"
 
@@ -49,12 +51,13 @@ type launchpad struct {
 	tendermint TendermintClient
 	cosmos     SdkClient
 
+	cdc        *codec.Codec
 	properties properties
 }
 
 // NewNetwork returns a configured network to work in a Launchpad version.
-func NewNetwork(options Options) service.Network {
-	cosmosClient := cosmos.NewClient(fmt.Sprintf("http://%s", options.AppEndpoint))
+func NewNetwork(cdc *codec.Codec, options Options) service.Network {
+	cosmosClient := cosmos.NewClient(fmt.Sprintf("http://%s", options.AppEndpoint), cdc)
 	tendermintClient := tendermint.NewClient(fmt.Sprintf("http://%s", options.TendermintEndpoint))
 
 	return service.Network{
@@ -64,6 +67,7 @@ func NewNetwork(options Options) service.Network {
 			SupportedOperations: []string{OperationTransfer},
 		},
 		Adapter: newAdapter(
+			cdc,
 			cosmosClient,
 			tendermintClient,
 			properties{
@@ -76,7 +80,7 @@ func NewNetwork(options Options) service.Network {
 	}
 }
 
-func newAdapter(cosmos SdkClient, tendermint TendermintClient, options properties) rosetta.Adapter {
+func newAdapter(cdc *codec.Codec, cosmos SdkClient, tendermint TendermintClient, options properties) rosetta.Adapter {
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount(
 		options.AddrPrefix,
@@ -86,5 +90,6 @@ func newAdapter(cosmos SdkClient, tendermint TendermintClient, options propertie
 		cosmos:     cosmos,
 		tendermint: tendermint,
 		properties: options,
+		cdc: cdc,
 	}
 }

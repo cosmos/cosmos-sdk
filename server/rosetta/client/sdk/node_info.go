@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/rpc"
-	"github.com/cosmos/cosmos-sdk/server/rosetta/client/sdk/types"
 )
 
 func (c Client) GetNodeInfo(ctx context.Context) (rpc.NodeInfoResponse, error) {
@@ -25,7 +24,7 @@ func (c Client) GetNodeInfo(ctx context.Context) (rpc.NodeInfoResponse, error) {
 	}
 
 	var infoRes rpc.NodeInfoResponse
-	if err = types.Codec.UnmarshalJSON(btes, &infoRes); err != nil {
+	if err = c.cdc.UnmarshalJSON(btes, &infoRes); err != nil {
 		return infoRes, err
 	}
 

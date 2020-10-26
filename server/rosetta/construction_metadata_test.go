@@ -67,7 +67,7 @@ func TestLaunchpad_ConstructionMetadata(t *testing.T) {
 		OptionGas:        &feeMultiplier,
 	}
 
-	adapter := newAdapter(m, mt, properties)
+	adapter := newAdapter(nil, m, mt, properties)
 	metaResp, err := adapter.ConstructionMetadata(context.Background(), &types.ConstructionMetadataRequest{
 		NetworkIdentifier: &networkIdentifier,
 		Options:           options,
@@ -93,7 +93,7 @@ func TestLaunchpad_ConstructionMetadata_FailsOfflineMode(t *testing.T) {
 		OptionGas:     &feeMultiplier,
 	}
 
-	adapter := newAdapter(cosmos.NewClient(""), tendermint.NewClient(""), properties)
+	adapter := newAdapter(nil, cosmos.NewClient("", nil), tendermint.NewClient(""), properties)
 	_, err := adapter.ConstructionMetadata(context.Background(), &types.ConstructionMetadataRequest{
 		Options: options,
 	})

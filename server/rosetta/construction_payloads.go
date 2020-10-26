@@ -45,7 +45,7 @@ func (l launchpad) ConstructionPayloads(ctx context.Context, req *types.Construc
 	signBytes := auth.StdSignBytes(
 		metadata.ChainID, metadata.AccountNumber, metadata.Sequence, tx.Fee, tx.Msgs, tx.Memo,
 	)
-	txBytes, err := Codec.MarshalJSON(tx)
+	txBytes, err := l.cdc.MarshalJSON(tx)
 	if err != nil {
 		return nil, rosetta.WrapError(ErrInvalidRequest, err.Error())
 	}

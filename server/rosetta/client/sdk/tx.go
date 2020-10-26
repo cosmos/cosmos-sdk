@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -28,8 +27,7 @@ func (c Client) GetTx(ctx context.Context, hash string) (sdk.TxResponse, error) 
 	}
 
 	var txRes sdk.TxResponse
-	codec := simapp.MakeCodec()
-	if err = codec.UnmarshalJSON(btes, &txRes); err != nil {
+	if err = c.cdc.UnmarshalJSON(btes, &txRes); err != nil {
 		return sdk.TxResponse{}, err
 	}
 
@@ -51,8 +49,7 @@ func (c Client) PostTx(ctx context.Context, bz []byte) (sdk.TxResponse, error) {
 	}
 
 	var txRes sdk.TxResponse
-	codec := simapp.MakeCodec()
-	if err = codec.UnmarshalJSON(btes, &txRes); err != nil {
+	if err = c.cdc.UnmarshalJSON(btes, &txRes); err != nil {
 		return sdk.TxResponse{}, err
 	}
 

@@ -93,7 +93,7 @@ func TestLaunchpad_Block(t *testing.T) {
 		Network:    "TheNetwork",
 	}
 
-	adapter := newAdapter(mc, ma, properties)
+	adapter := newAdapter(nil, mc, ma, properties)
 
 	var h int64 = 1
 	block, blockErr := adapter.Block(context.Background(), &types.BlockRequest{
@@ -234,7 +234,7 @@ func TestLaunchpad_BlockTransaction(t *testing.T) {
 		Network:    "TheNetwork",
 	}
 
-	adapter := newAdapter(mc, tendermint.NewClient(""), properties)
+	adapter := newAdapter(nil, mc, tendermint.NewClient(""), properties)
 
 	tx, txErr := adapter.BlockTransaction(context.Background(), &types.BlockTransactionRequest{
 		TransactionIdentifier: &types.TransactionIdentifier{
@@ -307,7 +307,7 @@ func TestLaunchpad_BlockTransactionWithError(t *testing.T) {
 		Network:    "TheNetwork",
 	}
 
-	adapter := newAdapter(mc, tendermint.NewClient(""), properties)
+	adapter := newAdapter(nil, mc, tendermint.NewClient(""), properties)
 	tx, txErr := adapter.BlockTransaction(context.Background(), &types.BlockTransactionRequest{
 		TransactionIdentifier: &types.TransactionIdentifier{
 			Hash: "1",
@@ -325,7 +325,7 @@ func TestLaunchpad_Block_DoesNotWorkOfflineMode(t *testing.T) {
 		OfflineMode: true,
 	}
 
-	adapter := newAdapter(cosmos.NewClient(""), tendermint.NewClient(""), properties)
+	adapter := newAdapter(nil, cosmos.NewClient("", nil), tendermint.NewClient(""), properties)
 
 	var height int64 = 1
 	_, err := adapter.Block(context.Background(), &types.BlockRequest{
@@ -343,7 +343,7 @@ func TestLaunchpad_BlockTransaction_FailsOfflineMode(t *testing.T) {
 		OfflineMode: true,
 	}
 
-	adapter := newAdapter(cosmos.NewClient(""), tendermint.NewClient(""), properties)
+	adapter := newAdapter(nil, cosmos.NewClient("", nil), tendermint.NewClient(""), properties)
 	_, txErr := adapter.BlockTransaction(context.Background(), &types.BlockTransactionRequest{
 		TransactionIdentifier: &types.TransactionIdentifier{
 			Hash: "1",

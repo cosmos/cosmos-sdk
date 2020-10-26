@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/tendermint/go-amino"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,7 +22,8 @@ func TestGetNodeInfo(t *testing.T) {
 	}))
 	defer s.Close()
 
-	client := NewClient(s.URL)
+	cdc := amino.NewCodec()
+	client := NewClient(s.URL, cdc)
 
 	moniker := "mynode"
 	res, err := client.GetNodeInfo(context.Background())

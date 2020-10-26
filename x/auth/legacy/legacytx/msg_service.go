@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Invoke implements the grpc ClientConn.Invoke method.
@@ -14,7 +15,7 @@ import (
 func (s *StdTxBuilder) Invoke(_ gocontext.Context, method string, args, reply interface{}, _ ...grpc.CallOption) error {
 	req, ok := args.(sdk.MsgRequest)
 	if !ok {
-		return fmt.Errorf("%T should implement %T", args, (*sdk.MsgRequest)(nil))
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "%T should implement %T", args, (*sdk.MsgRequest)(nil))
 	}
 
 	s.AppendMsgs(sdk.ServiceMsg{

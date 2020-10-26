@@ -79,17 +79,13 @@ func NewAnyWithValue(value proto.Message) (*Any, error) {
 func NewAnyWithTypeURL(typeURL string, value proto.Message) (*Any, error) {
 	any := &Any{}
 
-	if err := any.PackWithCustomTypeURL(typeURL, value); err != nil {
-		return nil, err
-	}
-
-	return any, nil
+	return any, any.packWithCustomTypeURL(typeURL, value)
 }
 
 // PackWithCustomTypeURL packs the value x in the Any or returns an error,
 // allowing for a custom TypeUrl. This also caches the packed value so that it
 // can be retrieved fromGetCachedValue without unmarshaling.
-func (any *Any) PackWithCustomTypeURL(typeURL string, x proto.Message) error {
+func (any *Any) packWithCustomTypeURL(typeURL string, x proto.Message) error {
 	any.TypeUrl = typeURL
 	bz, err := proto.Marshal(x)
 	if err != nil {
@@ -106,7 +102,7 @@ func (any *Any) PackWithCustomTypeURL(typeURL string, x proto.Message) error {
 // the packed value so that it can be retrieved from GetCachedValue without
 // unmarshaling
 func (any *Any) Pack(x proto.Message) error {
-	return any.PackWithCustomTypeURL("/"+proto.MessageName(x), x)
+	return any.packWithCustomTypeURL("/"+proto.MessageName(x), x)
 }
 
 // UnsafePackAny packs the value x in the Any and instead of returning the error

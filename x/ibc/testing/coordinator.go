@@ -547,14 +547,6 @@ func (coord *Coordinator) ChanOpenInitOnBothChains(
 	}
 	coord.IncrementTime()
 
-	// update source client on counterparty connection
-	if err := coord.UpdateClient(
-		counterparty, source,
-		counterpartyConnection.ClientID, Tendermint,
-	); err != nil {
-		return sourceChannel, counterpartyChannel, err
-	}
-
 	// initialize channel on counterparty
 	if err := counterparty.ChanOpenInit(counterpartyChannel, sourceChannel, order, counterpartyConnection.ID); err != nil {
 		return sourceChannel, counterpartyChannel, err
@@ -565,6 +557,14 @@ func (coord *Coordinator) ChanOpenInitOnBothChains(
 	if err := coord.UpdateClient(
 		source, counterparty,
 		connection.ClientID, Tendermint,
+	); err != nil {
+		return sourceChannel, counterpartyChannel, err
+	}
+
+	// update source client on counterparty connection
+	if err := coord.UpdateClient(
+		counterparty, source,
+		counterpartyConnection.ClientID, Tendermint,
 	); err != nil {
 		return sourceChannel, counterpartyChannel, err
 	}

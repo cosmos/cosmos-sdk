@@ -10,7 +10,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// Invoke implements the grpc ClientConn.Invoke method. This is to that we can
+// Invoke implements the grpc ClientConn.Invoke method. This is so that we can
 // use ADR-031 service `Msg`s with StdTxBuilder.
 // TODO Full amino support still needs to be added as part of https://github.com/cosmos/cosmos-sdk/issues/7541.
 func (s *StdTxBuilder) Invoke(_ gocontext.Context, method string, args, reply interface{}, _ ...grpc.CallOption) error {

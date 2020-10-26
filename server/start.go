@@ -26,6 +26,7 @@ import (
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Tendermint full-node start flags
@@ -96,9 +97,12 @@ which accepts a path for the resulting pprof file.
 
 			// Bind flags to the Context's Viper so the app construction can set
 			// options accordingly.
-			serverCtx.Viper.BindPFlags(cmd.Flags())
+			err := serverCtx.Viper.BindPFlags(cmd.Flags())
+			if err != nil {
+				return err
+			}
 
-			_, err := GetPruningOptionsFromFlags(serverCtx.Viper)
+			_, err = GetPruningOptionsFromFlags(serverCtx.Viper)
 			return err
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
@@ -270,7 +274,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		}
 	}
 
-	var cpuProfileCleanup func()
+	var cpuProfileCleanup func() error
 
 	if cpuProfile := ctx.Viper.GetString(flagCPUProfile); cpuProfile != "" {
 		f, err := os.Create(cpuProfile)
@@ -283,10 +287,10 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			return err
 		}
 
-		cpuProfileCleanup = func() {
+		cpuProfileCleanup = func() error {
 			ctx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
 			pprof.StopCPUProfile()
-			f.Close()
+			return f.Close()
 		}
 	}
 
@@ -296,7 +300,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		}
 
 		if cpuProfileCleanup != nil {
-			cpuProfileCleanup()
+			sdkerrors.LogError(cpuProfileCleanup())
 		}
 
 		if apiSrv != nil {

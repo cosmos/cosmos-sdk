@@ -79,8 +79,12 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 	basename := path.Base(executableName)
 
 	// Configure the viper instance
-	serverCtx.Viper.BindPFlags(cmd.Flags())
-	serverCtx.Viper.BindPFlags(cmd.PersistentFlags())
+	if err = serverCtx.Viper.BindPFlags(cmd.Flags()); err != nil {
+		return err
+	}
+	if err = serverCtx.Viper.BindPFlags(cmd.PersistentFlags()); err != nil {
+		return err
+	}
 	serverCtx.Viper.SetEnvPrefix(basename)
 	serverCtx.Viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
 	serverCtx.Viper.AutomaticEnv()

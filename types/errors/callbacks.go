@@ -18,3 +18,10 @@ func CallbackLog(f Callback) func() {
 		}
 	}
 }
+
+// LogError logs an error if it's not nil
+func LogError(err error) {
+	if err != nil {
+		logger.Println(err)
+	}
+}

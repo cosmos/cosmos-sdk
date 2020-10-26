@@ -19,6 +19,7 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -92,9 +93,16 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	bondAmt := sdk.NewInt(1000000)
 
 	for _, val := range valSet.Validators {
+		// Currently validator requires tmcrypto.ed25519 keys, which don't support
+		// our Marshaling interfaces, so we need to pack them into our version of ed25519.
+		// There is ongoing work to add secp256k1 keys (https://github.com/cosmos/cosmos-sdk/pull/7604).
+		pk, err := ed25519.FromTmEd25519(val.PubKey)
+		require.NoError(t, err)
+		pkAny, err := codectypes.PackAny(pk)
+		require.NoError(t, err)
 		validator := stakingtypes.Validator{
 			OperatorAddress:   sdk.ValAddress(val.Address).String(),
-			ConsensusPubkey:   sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, val.PubKey),
+			ConsensusPubkey:   pkAny,
 			Jailed:            false,
 			Status:            stakingtypes.Bonded,
 			Tokens:            bondAmt,
@@ -320,12 +328,12 @@ func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, balances sdk.C
 // the parameter 'expPass' against the result. A corresponding result is
 // returned.
 func SignCheckDeliver(
-	t *testing.T, txGen client.TxConfig, app *bam.BaseApp, header tmproto.Header, msgs []sdk.Msg,
+	t *testing.T, txCfg client.TxConfig, app *bam.BaseApp, header tmproto.Header, msgs []sdk.Msg,
 	chainID string, accNums, accSeqs []uint64, expSimPass, expPass bool, priv ...crypto.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
 
 	tx, err := helpers.GenTx(
-		txGen,
+		txCfg,
 		msgs,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
 		helpers.DefaultGenTxGas,
@@ -335,11 +343,11 @@ func SignCheckDeliver(
 		priv...,
 	)
 	require.NoError(t, err)
-	txBytes, err := txGen.TxEncoder()(tx)
+	txBytes, err := txCfg.TxEncoder()(tx)
 	require.Nil(t, err)
 
 	// Must simulate now as CheckTx doesn't run Msgs anymore
-	_, res, err := app.Simulate(txBytes, tx)
+	_, res, err := app.Simulate(txBytes)
 
 	if expSimPass {
 		require.NoError(t, err)
@@ -351,7 +359,7 @@ func SignCheckDeliver(
 
 	// Simulate a sending a transaction and committing a block
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	gInfo, res, err := app.Deliver(tx)
+	gInfo, res, err := app.Deliver(txCfg.TxEncoder(), tx)
 
 	if expPass {
 		require.NoError(t, err)

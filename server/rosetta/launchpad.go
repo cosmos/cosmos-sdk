@@ -10,7 +10,6 @@ import (
 
 	cosmos "github.com/cosmos/cosmos-sdk/server/rosetta/client/sdk"
 	"github.com/cosmos/cosmos-sdk/server/rosetta/client/tendermint"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type Options struct {
@@ -81,15 +80,10 @@ func NewNetwork(cdc *codec.Codec, options Options) service.Network {
 }
 
 func newAdapter(cdc *codec.Codec, cosmos SdkClient, tendermint TendermintClient, options properties) rosetta.Adapter {
-	config := sdk.GetConfig()
-	config.SetBech32PrefixForAccount(
-		options.AddrPrefix,
-		options.AddrPrefix+sdk.PrefixPublic)
-
 	return &launchpad{
 		cosmos:     cosmos,
 		tendermint: tendermint,
 		properties: options,
-		cdc: cdc,
+		cdc:        cdc,
 	}
 }

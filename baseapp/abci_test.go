@@ -112,7 +112,9 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		})
 
 		t.Run(name, func(t *testing.T) {
-			ps.t = t
+			ps2 := ps // copy ps to enable parallel testing if we will need them
+			ps2.t = t
+			tc.bapp.SetParamStore(&ps2)
 			require.Equal(t, tc.expected, tc.bapp.GetBlockRetentionHeight(tc.commitHeight))
 		})
 	}

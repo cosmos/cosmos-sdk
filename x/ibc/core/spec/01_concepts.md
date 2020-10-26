@@ -318,6 +318,11 @@ burned funds being refunded.
 Relayers are responsible for reconstructing packets between the sending, 
 receiving, and acknowledging of packets. 
 
+IBC applications sending and receiving packets are expected to appropriately
+handle data contained within a packet. For example, cross-chain token 
+transfers will unmarshal the data into proto definitions representing
+a token transfer. 
+
 Future optimizations may allow for storage cleanup of stored packet 
 commitments and acknowledgements that no longer provide any usefulness. 
 This may be from packets that have completed their life cycles or from

@@ -6,13 +6,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 func TestValidateVersion(t *testing.T) {
 	testCases := []struct {
 		name    string
-		version types.Version
+		version *types.Version
 		expPass bool
 	}{
 		{"valid version", types.DefaultIBCVersion, true},
@@ -22,37 +23,10 @@ func TestValidateVersion(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		encodedVersion, err := tc.version.Encode()
-		require.NoError(t, err, "test case %d failed to marshal version string: %s", i, tc.name)
-
-		err = types.ValidateVersion(encodedVersion)
+		err := types.ValidateVersion(tc.version)
 
 		if tc.expPass {
 			require.NoError(t, err, "valid test case %d failed: %s", i, tc.name)
-		} else {
-			require.Error(t, err, "invalid test case %d passed: %s", i, tc.name)
-		}
-	}
-}
-
-func TestDecodeVersion(t *testing.T) {
-	testCases := []struct {
-		name       string
-		version    string
-		expVersion types.Version
-		expPass    bool
-	}{
-		{"valid version", ibctesting.ConnectionVersion, types.DefaultIBCVersion, true},
-		{"invalid version", "not a proto encoded version", types.Version{}, false},
-		{"empty string", "       ", types.Version{}, false},
-	}
-
-	for i, tc := range testCases {
-		version, err := types.DecodeVersion(tc.version)
-
-		if tc.expPass {
-			require.NoError(t, err, "valid test case %d failed: %s", i, tc.name)
-			require.Equal(t, tc.expVersion, version)
 		} else {
 			require.Error(t, err, "invalid test case %d passed: %s", i, tc.name)
 		}
@@ -62,17 +36,17 @@ func TestDecodeVersion(t *testing.T) {
 func TestIsSupportedVersion(t *testing.T) {
 	testCases := []struct {
 		name    string
-		version types.Version
+		version *types.Version
 		expPass bool
 	}{
 		{
 			"version is supported",
-			types.GetCompatibleVersions()[0],
+			types.ExportedToProto(types.GetCompatibleVersions())[0],
 			true,
 		},
 		{
 			"version is not supported",
-			types.Version{},
+			&types.Version{},
 			false,
 		},
 		{
@@ -82,31 +56,25 @@ func TestIsSupportedVersion(t *testing.T) {
 		},
 	}
 
-	// test that a version that cannot be decoded does not pass
-	require.False(t, types.IsSupportedVersion("1.0"))
-
 	for _, tc := range testCases {
-		encodedVersion, err := tc.version.Encode()
-		require.NoError(t, err)
-
-		require.Equal(t, tc.expPass, types.IsSupportedVersion(encodedVersion))
+		require.Equal(t, tc.expPass, types.IsSupportedVersion(tc.version))
 	}
 }
 
 func TestFindSupportedVersion(t *testing.T) {
 	testCases := []struct {
 		name              string
-		version           types.Version
-		supportedVersions []types.Version
-		expVersion        types.Version
+		version           *types.Version
+		supportedVersions []exported.Version
+		expVersion        *types.Version
 		expFound          bool
 	}{
 		{"valid supported version", types.DefaultIBCVersion, types.GetCompatibleVersions(), types.DefaultIBCVersion, true},
-		{"empty (invalid) version", types.Version{}, types.GetCompatibleVersions(), types.Version{}, false},
-		{"empty supported versions", types.DefaultIBCVersion, []types.Version{}, types.Version{}, false},
-		{"desired version is last", types.DefaultIBCVersion, []types.Version{types.NewVersion("1.1", nil), types.NewVersion("2", []string{"ORDER_UNORDERED"}), types.NewVersion("3", nil), types.DefaultIBCVersion}, types.DefaultIBCVersion, true},
+		{"empty (invalid) version", &types.Version{}, types.GetCompatibleVersions(), &types.Version{}, false},
+		{"empty supported versions", types.DefaultIBCVersion, []exported.Version{}, &types.Version{}, false},
+		{"desired version is last", types.DefaultIBCVersion, []exported.Version{types.NewVersion("1.1", nil), types.NewVersion("2", []string{"ORDER_UNORDERED"}), types.NewVersion("3", nil), types.DefaultIBCVersion}, types.DefaultIBCVersion, true},
 		{"desired version identifier with different feature set", types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"ORDER_DAG"}), types.GetCompatibleVersions(), types.DefaultIBCVersion, true},
-		{"version not supported", types.NewVersion("2", []string{"ORDER_DAG"}), types.GetCompatibleVersions(), types.Version{}, false},
+		{"version not supported", types.NewVersion("2", []string{"ORDER_DAG"}), types.GetCompatibleVersions(), &types.Version{}, false},
 	}
 
 	for i, tc := range testCases {

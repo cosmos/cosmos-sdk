@@ -185,6 +185,28 @@ func VerifySupportedFeature(version exported.Version, feature string) bool {
 	return false
 }
 
+// ExportedToProto casts a slice of the Version interface to a slice
+// of the Version proto definition.
+func ExportedToProto(exportedVersions []exported.Version) []*Version {
+	versions := make([]*Version, len(exportedVersions))
+	for i := range exportedVersions {
+		versions[i] = exportedVersions[i].(*Version)
+	}
+
+	return versions
+}
+
+// ProtoToExported converts a slice of the Version proto definition to
+// the Version interface.
+func ProtoToExported(versions []*Version) []exported.Version {
+	exportedVersions := make([]exported.Version, len(versions))
+	for i := range versions {
+		exportedVersions[i] = versions[i]
+	}
+
+	return exportedVersions
+}
+
 // contains returns true if the provided string element exists within the
 // string set.
 func contains(elem string, set []string) bool {

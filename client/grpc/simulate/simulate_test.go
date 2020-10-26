@@ -91,8 +91,7 @@ func (s IntegrationTestSuite) TestSimulateService() {
 			Signature: nil,
 		},
 	}
-	err = txBuilder.SetSignatures(sigV2)
-	require.NoError(err)
+	require.NoError(txBuilder.SetSignatures(sigV2))
 	// 2nd round: actually sign
 	sigV2, err = tx.SignWithPrivKey(
 		s.clientCtx.TxConfig.SignModeHandler().DefaultMode(),

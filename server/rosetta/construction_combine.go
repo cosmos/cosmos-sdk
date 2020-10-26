@@ -28,7 +28,7 @@ func (l launchpad) ConstructionCombine(ctx context.Context, r *types.Constructio
 	}
 
 	sigs := make([]auth.StdSignature, len(r.Signatures))
-	for _, signature := range r.Signatures {
+	for i, signature := range r.Signatures {
 		if signature.PublicKey.CurveType != "secp256k1" {
 			return nil, ErrUnsupportedCurve
 		}
@@ -45,7 +45,7 @@ func (l launchpad) ConstructionCombine(ctx context.Context, r *types.Constructio
 			PubKey:    compressedPublicKey,
 			Signature: signature.Bytes,
 		}
-		sigs = append(sigs, sign)
+		sigs[i] = sign
 	}
 
 	stdTx.Signatures = sigs

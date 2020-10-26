@@ -8,7 +8,6 @@ import (
 	grpc "google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // RegisterMsgServiceDesc registers all type_urls from Msg services described
@@ -31,7 +30,7 @@ func RegisterMsgServiceDesc(registry types.InterfaceRegistry, sd *grpc.ServiceDe
 				panic(fmt.Errorf("can't register request type %T for service method %s", i, fqMethod))
 			}
 
-			registry.RegisterCustomTypeURL((*sdk.MsgRequest)(nil), fqMethod, msg)
+			registry.RegisterCustomTypeURL((*MsgRequest)(nil), fqMethod, msg)
 			return nil
 		}, noopInterceptor)
 

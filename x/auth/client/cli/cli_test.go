@@ -1,5 +1,3 @@
-// +build norace
-
 package cli_test
 
 import (
@@ -176,7 +174,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 
 	// Send coins.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
-	out, err := bankcli.MsgSendExec(
+	out, err := bankcli.ServiceMsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		account2.GetAddress(),

@@ -3,11 +3,13 @@ package keeper_test
 import (
 	gocontext "context"
 	"fmt"
+	"testing"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -111,7 +113,7 @@ func (suite *KeeperTestSuite) TestGRPCValidator() {
 			res, err := queryClient.Validator(gocontext.Background(), req)
 			if tc.expPass {
 				suite.NoError(err)
-				suite.Equal(validator, res.Validator)
+				suite.True(validator.Equal(&res.Validator))
 			} else {
 				suite.Error(err)
 				suite.Nil(res)
@@ -573,7 +575,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryHistoricalInfo() {
 			if tc.expPass {
 				suite.NoError(err)
 				suite.NotNil(res)
-				suite.Equal(&hi, res.Hist)
+				suite.True(hi.Equal(res.Hist))
 			} else {
 				suite.Error(err)
 				suite.Nil(res)
@@ -591,12 +593,12 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 	delAmount := sdk.TokensFromConsensusPower(1)
 	_, err := app.StakingKeeper.Delegate(ctx, addrAcc1, delAmount, types.Unbonded, val1, true)
 	suite.NoError(err)
-	_ = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	applyValidatorSetUpdates(suite.T(), ctx, app.StakingKeeper, -1)
 
 	rdAmount := sdk.TokensFromConsensusPower(1)
 	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc1, val1.GetOperator(), val2.GetOperator(), rdAmount.ToDec())
 	suite.NoError(err)
-	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	applyValidatorSetUpdates(suite.T(), ctx, app.StakingKeeper, -1)
 
 	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc1, val1.GetOperator(), val2.GetOperator())
 	suite.True(found)
@@ -683,7 +685,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
 	undelAmount := sdk.TokensFromConsensusPower(2)
 	_, err := app.StakingKeeper.Undelegate(ctx, addrAcc1, val1.GetOperator(), undelAmount.ToDec())
 	suite.NoError(err)
-	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	applyValidatorSetUpdates(suite.T(), ctx, app.StakingKeeper, -1)
 
 	var req *types.QueryValidatorUnbondingDelegationsRequest
 	testCases := []struct {
@@ -724,7 +726,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
 	}
 }
 
-func createValidators(ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
+func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 5, sdk.NewInt(300000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
 	pks := simapp.CreateTestPubKeys(5)
@@ -738,8 +740,8 @@ func createValidators(ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sd
 		app.GetSubspace(types.ModuleName),
 	)
 
-	val1 := types.NewValidator(valAddrs[0], pks[0], types.Description{})
-	val2 := types.NewValidator(valAddrs[1], pks[1], types.Description{})
+	val1 := teststaking.NewValidator(t, valAddrs[0], pks[0])
+	val2 := teststaking.NewValidator(t, valAddrs[1], pks[1])
 	vals := []types.Validator{val1, val2}
 
 	app.StakingKeeper.SetValidator(ctx, val1)
@@ -752,7 +754,7 @@ func createValidators(ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sd
 	_, _ = app.StakingKeeper.Delegate(ctx, addrs[0], sdk.TokensFromConsensusPower(powers[0]), types.Unbonded, val1, true)
 	_, _ = app.StakingKeeper.Delegate(ctx, addrs[1], sdk.TokensFromConsensusPower(powers[1]), types.Unbonded, val2, true)
 	_, _ = app.StakingKeeper.Delegate(ctx, addrs[0], sdk.TokensFromConsensusPower(powers[2]), types.Unbonded, val2, true)
-	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
 
 	return addrs, valAddrs, vals
 }

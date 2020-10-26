@@ -222,7 +222,7 @@ $(TEST_TARGETS): run-tests
 
 # check-* compiles and collects tests without running them
 # note: go test -c doesn't support multiple packages yet (https://github.com/golang/go/issues/15513)
-CHECK_TEST_TARGETS := test-unit test-unit-amino
+CHECK_TEST_TARGETS := check-test-unit check-test-unit-amino
 check-test-unit: test-unit
 check-test-unit-amino: test-unit-amino
 $(CHECK_TEST_TARGETS): EXTRA_ARGS=-run=none

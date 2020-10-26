@@ -54,10 +54,10 @@ func setupStore(t *testing.T) (*snapshots.Store, func()) {
 func TestNewStore(t *testing.T) {
 	tempdir, err := ioutil.TempDir("", "snapshots")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempdir)
 
 	_, err = snapshots.NewStore(db.NewMemDB(), tempdir)
-	require.NoError(t, err)
+	assert.NoError(t, err)
+	assert.NoError(t, os.RemoveAll(tempdir))
 }
 
 func TestNewStore_ErrNoDir(t *testing.T) {
@@ -69,7 +69,7 @@ func TestNewStore_ErrDirFailure(t *testing.T) {
 	tempfile, err := ioutil.TempFile("", "snapshots")
 	require.NoError(t, err)
 	defer func() {
-		os.RemoveAll(tempfile.Name())
+		assert.NoError(t, os.RemoveAll(tempfile.Name()))
 		tempfile.Close()
 	}()
 	tempdir := filepath.Join(tempfile.Name(), "subdir")
@@ -100,7 +100,10 @@ func TestStore_Delete(t *testing.T) {
 
 	// Deleting a snapshot being saved should error
 	ch := make(chan io.ReadCloser)
-	go store.Save(9, 1, ch)
+	go func() {
+		_, err := store.Save(9, 1, ch)
+		assert.NoError(t, err)
+	}()
 
 	time.Sleep(10 * time.Millisecond)
 	err = store.Delete(9, 1)
@@ -356,7 +359,11 @@ func TestStore_Save(t *testing.T) {
 	// Saving a snapshot should error if a snapshot is already in progress for the same height,
 	// regardless of format. However, a different height should succeed.
 	ch = make(chan io.ReadCloser)
-	go store.Save(7, 1, ch)
+	go func() {
+		_, err := store.Save(7, 1, ch)
+		assert.NoError(t, err)
+	}()
+
 	time.Sleep(10 * time.Millisecond)
 	_, err = store.Save(7, 2, makeChunks(nil))
 	require.Error(t, err)

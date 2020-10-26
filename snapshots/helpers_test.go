@@ -118,7 +118,7 @@ func setupBusyManager(t *testing.T) (*snapshots.Manager, func()) {
 
 	closer := func() {
 		hung.Close()
-		os.RemoveAll(tempdir)
+		require.NoError(t, os.RemoveAll(tempdir))
 	}
 	return mgr, closer
 }

@@ -98,7 +98,7 @@ func (s *Store) GetLatest() (*types.Snapshot, error) {
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to find latest snapshot")
 	}
-	defer iter.Close()
+	defer sdkerrors.CallbackLog(iter.Close)
 
 	var snapshot *types.Snapshot
 	if iter.Valid() {
@@ -121,7 +121,7 @@ func (s *Store) List() ([]*types.Snapshot, error) {
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to list snapshots")
 	}
-	defer iter.Close()
+	defer sdkerrors.CallbackLog(iter.Close)
 
 	snapshots := make([]*types.Snapshot, 0)
 	for ; iter.Valid(); iter.Next() {
@@ -158,17 +158,16 @@ func (s *Store) Load(height uint64, format uint32) (*types.Snapshot, <-chan io.R
 			ch <- pr
 			chunk, err := s.loadChunkFile(height, format, i)
 			if err != nil {
-				pw.CloseWithError(err)
+				sdkerrors.LogError(pw.CloseWithError(err))
 				return
 			}
-			defer chunk.Close()
+			defer sdkerrors.CallbackLog(chunk.Close)
 			_, err = io.Copy(pw, chunk)
 			if err != nil {
-				pw.CloseWithError(err)
+				sdkerrors.LogError(pw.CloseWithError(err))
 				return
 			}
-			chunk.Close()
-			pw.Close()
+			sdkerrors.CallbackLog(pw.Close)
 		}
 	}()
 
@@ -202,7 +201,7 @@ func (s *Store) Prune(retain uint32) (uint64, error) {
 	if err != nil {
 		return 0, sdkerrors.Wrap(err, "failed to prune snapshots")
 	}
-	defer iter.Close()
+	defer sdkerrors.CallbackLog(iter.Close)
 
 	pruned := uint64(0)
 	prunedHeights := make(map[uint64]bool)
@@ -280,7 +279,7 @@ func (s *Store) Save(
 	snapshotHasher := sha256.New()
 	chunkHasher := sha256.New()
 	for chunkBody := range chunks {
-		defer chunkBody.Close() // nolint: staticcheck
+		defer sdkerrors.CallbackLog(chunkBody.Close) // nolint: staticcheck
 		dir := s.pathSnapshot(height, format)
 		err = os.MkdirAll(dir, 0755)
 		if err != nil {
@@ -291,7 +290,7 @@ func (s *Store) Save(
 		if err != nil {
 			return nil, sdkerrors.Wrapf(err, "failed to create snapshot chunk file %q", path)
 		}
-		defer file.Close() // nolint: staticcheck
+		defer sdkerrors.CallbackLog(file.Close) // nolint: staticcheck
 		chunkHasher.Reset()
 		_, err = io.Copy(io.MultiWriter(file, chunkHasher, snapshotHasher), chunkBody)
 		if err != nil {

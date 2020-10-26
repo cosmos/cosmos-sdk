@@ -142,9 +142,13 @@ func (m *Manager) LoadChunk(height uint64, format uint32, chunk uint32) ([]byte,
 	if reader == nil {
 		return nil, nil
 	}
-	defer reader.Close()
 
-	return ioutil.ReadAll(reader)
+	data, err := ioutil.ReadAll(reader)
+	err2 := reader.Close()
+	if err != nil {
+		err = err2
+	}
+	return data, err
 }
 
 // Prune prunes snapshots, if no other operations are in progress.

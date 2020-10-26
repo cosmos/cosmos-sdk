@@ -133,7 +133,7 @@ func TestChunkReader(t *testing.T) {
 	pr, pw := io.Pipe()
 	pch := make(chan io.ReadCloser, 1)
 	pch <- pr
-	pw.CloseWithError(theErr)
+	assert.NoError(t, pw.CloseWithError(theErr))
 
 	chunkReader = snapshots.NewChunkReader(pch)
 	buf = make([]byte, 4)

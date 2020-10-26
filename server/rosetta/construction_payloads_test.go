@@ -69,7 +69,7 @@ func TestGetSenderByOperations(t *testing.T) {
 	ops := []*types.Operation{
 		{
 			Account: &types.AccountIdentifier{
-				Address: "test15tltvs59rt88geyenetv3klavlq2z30f47lymx",
+				Address: "cosmos15tltvs59rt88geyenetv3klavlq2z30fe8z6hj",
 			},
 			Type: OperationTransfer,
 			Amount: &types.Amount{
@@ -83,7 +83,7 @@ func TestGetSenderByOperations(t *testing.T) {
 		},
 		{
 			Account: &types.AccountIdentifier{
-				Address: "test16xyempempp92x9hyzz9wrgf94r6j9h5frruc2c",
+				Address: "cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv",
 			},
 			Type: OperationTransfer,
 			Amount: &types.Amount{
@@ -120,7 +120,7 @@ func TestLaunchpad_ConstructionPayloads(t *testing.T) {
 	adapter := newAdapter(cdc, cosmos.NewClient("", cdc), tendermint.NewClient(""), properties)
 
 	feeMultiplier := float64(200000)
-	senderAddr := "test1khy4gsp06srvu3u65uyhrax7tnj2atezfqnfan"
+	senderAddr := "cosmos1khy4gsp06srvu3u65uyhrax7tnj2atez9ewh38"
 	req := &types.ConstructionPayloadsRequest{
 		Operations: []*types.Operation{
 			{
@@ -144,7 +144,7 @@ func TestLaunchpad_ConstructionPayloads(t *testing.T) {
 				},
 				Type: OperationTransfer,
 				Account: &types.AccountIdentifier{
-					Address: "test13qmcwpacu0zvsr7edpmasyn99pmcztvjmj94sk",
+					Address: "cosmos13qmcwpacu0zvsr7edpmasyn99pmcztvjhtctuz",
 				},
 				Amount: &types.Amount{
 					Value: "5619726348293826415",

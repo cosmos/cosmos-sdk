@@ -26,7 +26,7 @@ func TestLaunchpad_ConstructionPreprocess(t *testing.T) {
 			Type:                "Transfer",
 			Status:              "Success",
 			Account: &types.AccountIdentifier{
-				Address: "test12qqzw4tqu32anlcx0a3hupvgdhaf4cc87unhge",
+				Address: "cosmos12qqzw4tqu32anlcx0a3hupvgdhaf4cc8j9wfyd",
 			},
 			Amount: &types.Amount{
 				Value: "-10",
@@ -42,7 +42,7 @@ func TestLaunchpad_ConstructionPreprocess(t *testing.T) {
 			Type:   "Transfer",
 			Status: "Success",
 			Account: &types.AccountIdentifier{
-				Address: "test10rpmm9ur87le39hehteha37sg5awdsnskwp6qs",
+				Address: "cosmos10rpmm9ur87le39hehteha37sg5awdsns6huyvy",
 			},
 			Amount: &types.Amount{
 				Value: "10",
@@ -55,7 +55,7 @@ func TestLaunchpad_ConstructionPreprocess(t *testing.T) {
 	feeMultiplier := float64(200000)
 
 	expOptions := map[string]interface{}{
-		OptionAddress: "test12qqzw4tqu32anlcx0a3hupvgdhaf4cc87unhge",
+		OptionAddress: "cosmos12qqzw4tqu32anlcx0a3hupvgdhaf4cc8j9wfyd",
 		OptionGas:     200000,
 	}
 

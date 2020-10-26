@@ -20,7 +20,7 @@ func kbCleanup(t *testing.T, kb keyring.Keyring, keys ...string) func() {
 	return func() {
 		for _, k := range keys {
 			if err := kb.Delete(k); err != nil {
-				t.Log("Can't delete KB key ", k, err)
+				t.Log("can't delete KB key ", k, err)
 			}
 		}
 	}

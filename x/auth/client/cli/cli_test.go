@@ -172,9 +172,11 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
 	s.Require().NoError(err)
 
-	// Send coins.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
-	out, err := bankcli.ServiceMsgSendExec(
+
+	// Send coins, try both with legacy Msg and with Msg service.
+	// Legacy Msg.
+	legacyMsgOut, err := bankcli.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		account2.GetAddress(),
@@ -185,7 +187,21 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 	)
 	s.Require().NoError(err)
+	var legacyMsgTxRes sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(legacyMsgOut.Bytes(), &legacyMsgTxRes))
 
+	// Service Msg.
+	out, err := bankcli.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		account2.GetAddress(),
+		sdk.NewCoins(sendTokens),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+	)
+	s.Require().NoError(err)
 	var txRes sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txRes))
 
@@ -207,7 +223,12 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 			true,
 		},
 		{
-			"happy case",
+			"happy case (legacy Msg)",
+			[]string{legacyMsgTxRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+		},
+		{
+			"happy case (service Msg)",
 			[]string{txRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 		},
@@ -227,6 +248,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 			} else {
 				var result sdk.TxResponse
 				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+				fmt.Println(result)
 				s.Require().NotNil(result.Height)
 			}
 		})

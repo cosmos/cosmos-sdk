@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
@@ -24,7 +25,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&Equivocation{},
 	)
 
-	sdk.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+	module.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 var (

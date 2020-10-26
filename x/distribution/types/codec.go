@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -31,7 +32,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&CommunityPoolSpendProposal{},
 	)
 
-	sdk.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+	module.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 var (

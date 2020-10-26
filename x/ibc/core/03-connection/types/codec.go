@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
@@ -34,7 +35,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&MsgConnectionOpenConfirm{},
 	)
 
-	sdk.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+	module.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 var (

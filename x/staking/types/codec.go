@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/staking interfaces and concrete types
@@ -27,7 +28,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgBeginRedelegate{},
 	)
 
-	sdk.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+	module.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 var (

@@ -1,4 +1,4 @@
-package types
+package module
 
 import (
 	"context"
@@ -7,12 +7,13 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // RegisterMsgServiceDesc registers all type_urls from Msg services described
 // in `sd` into the registry.
-func RegisterMsgServiceDesc(registry types.InterfaceRegistry, sd *grpc.ServiceDesc) {
+func RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.ServiceDesc) {
 	// Adds a top-level type_url based on the Msg service name.
 	for _, method := range sd.Methods {
 		fqMethod := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
@@ -30,7 +31,7 @@ func RegisterMsgServiceDesc(registry types.InterfaceRegistry, sd *grpc.ServiceDe
 				panic(fmt.Errorf("can't register request type %T for service method %s", i, fqMethod))
 			}
 
-			registry.RegisterCustomTypeURL((*MsgRequest)(nil), fqMethod, msg)
+			registry.RegisterCustomTypeURL((*sdk.MsgRequest)(nil), fqMethod, msg)
 			return nil
 		}, noopInterceptor)
 

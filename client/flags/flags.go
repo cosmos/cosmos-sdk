@@ -158,8 +158,7 @@ func ParseGasSetting(gasStr string) (GasSetting, error) {
 }
 
 func markFlagRequired(cmd *cobra.Command, name string) {
-	err := cmd.MarkFlagRequired(name)
-	if err != nil {
+	if err := cmd.MarkFlagRequired(name); err != nil {
 		panic(fmt.Sprintf("Can't make a %q falg required; err: %s", name, err))
 	}
 }

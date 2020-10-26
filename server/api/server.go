@@ -56,6 +56,7 @@ func New(clientCtx client.Context, logger log.Logger) *Server {
 		EmitDefaults: true,
 		Indent:       "  ",
 		OrigName:     true,
+		AnyResolver:  clientCtx.InterfaceRegistry,
 	}
 
 	return &Server{

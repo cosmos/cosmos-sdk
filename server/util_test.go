@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -442,5 +443,28 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigDefault(t *testing.T) {
 
 	if "tcp://127.0.0.1:26657" != serverCtx.Config.RPC.ListenAddress {
 		t.Error("RPCListenAddress is not using default")
+	}
+}
+
+// Ensure that if interceptConfigs encounters any error other than non-existen errors
+// that we correctly return the offending error, for example a permission error.
+// See https://github.com/cosmos/cosmos-sdk/issues/7578
+func TestInterceptConfigsWithBadPermissions(t *testing.T) {
+	tempDir := t.TempDir()
+	subDir := filepath.Join(tempDir, "nonPerms")
+	if err := os.Mkdir(subDir, 0600); err != nil {
+		t.Fatalf("Failed to create sub directory: %v", err)
+	}
+	cmd := StartCmd(nil, "/foobar")
+	if err := cmd.Flags().Set(flags.FlagHome, subDir); err != nil {
+		t.Fatalf("Could not set home flag [%T] %v", err, err)
+	}
+
+	cmd.PreRunE = preRunETestImpl
+
+	serverCtx := &Context{}
+	ctx := context.WithValue(context.Background(), ServerContextKey, serverCtx)
+	if err := cmd.ExecuteContext(ctx); !os.IsPermission(err) {
+		t.Fatalf("Failed to catch permissions error, got: [%T] %v", err, err)
 	}
 }

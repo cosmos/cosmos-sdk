@@ -14,7 +14,7 @@ counterparty state. A light client can be created by any user submitting a clien
 identifier and a valid initial `ClientState` and `ConsensusState`. The client identifier
 must not already be used. Clients are given a client identifier prefixed store to
 store their associated client state and consensus states. Consensus states are 
-stored using its associated height. 
+stored using their associated height. 
 
 Clients can be updated by any user submitting a valid `Header`. The client state callback
 to `CheckHeaderAndUpdateState` is responsible for verifying the header against previously
@@ -138,22 +138,23 @@ is set and stored in the INIT state upon success.
 the chain level parameters the counterparty has stored such as its chainID and consensus parameters.
 The executing chain will also verify that if a previous connection exists for the specified
 connection identifier that all the parameters match and its previous state was in INIT. This
-may occur when both chains execute `ConnOpenInit` simultaneously. The connection state of the 
-counterparty will be verified. It is expected to be in INIT. The `ClientState` and `ConsensusState` 
-the counterparty stores for the executing chain will also be verified. The executing chain
-will select a version from the intersection of its supported versions and the versions set 
-by the counterparty. The connection is set and stored in the TRYOPEN state upon success. 
+may occur when both chains execute `ConnOpenInit` simultaneously. The executing chain will verify
+that the counterparty created a connection in INIT state. The executing chain will also verify 
+The `ClientState` and `ConsensusState` the counterparty stores for the executing chain. The 
+executing chain will select a version from the intersection of its supported versions and the 
+versions set by the counterparty. The connection is set and stored in the TRYOPEN state upon 
+success. 
 
 `ConnOpenAck` may be called on a chain when the counterparty connection has entered TRYOPEN. A
 previous connection on the executing chain must exist in either INIT or TRYOPEN. The executing
 chain will verify the version the counterparty selected. If the counterparty selected its own 
-connection identifier, it will be validate in the basic validation of a `MsgConnOpenAck`. The
-counterparty connection state is verified along with the `ClientState` and `ConsensusState`
+connection identifier, it will be validated in the basic validation of a `MsgConnOpenAck`. 
+The counterparty connection state is verified along with the `ClientState` and `ConsensusState`
 stored for the executing chain. The connection is set and stored in the OPEN state upon success.
 
 `ConnOpenConfirm` is a response to a chain executing `ConnOpenAck`. The executing chain's connection
-must be in TRYOPEN. The counterparty connection state is verified. The connection is set and stored
-in the OPEN state upon success.
+must be in TRYOPEN. The counterparty connection state is verified to be in the OPEN state. The 
+connection is set and stored in the OPEN state upon success.
 
 ## Connection Version Negotiation
 
@@ -209,14 +210,15 @@ set and stored in the INIT state upon success. The channel parameters `NextSeque
 `NextSequenceRecv`, and `NextSequenceAck` are all set to 1 and a channel capability is created 
 for the given portID and channelID path. 
 
-`ChanOpenTry` is a response to a chain executing `ChanOpenInit`. If the executing chain is callign
+`ChanOpenTry` is a response to a chain executing `ChanOpenInit`. If the executing chain is calling
 `ChanOpenTry` after previously executing `ChanOpenInit` then the provided channel parameters must
 match the previously selected parameters. The connection the channel is created on top of must be
-an OPEN state and its IBC version must support the desired channel type being create (ORDERED,
+an OPEN state and its IBC version must support the desired channel type being created (ORDERED,
 UNORDERED, etc). The executing chain will verify that the channel state of the counterparty is 
 in INIT. The executing chain will set and store the channel state in TRYOPEN. The channel 
 parameters `NextSequenceSend`, `NextSequenceRecv`, and `NextSequenceAck` are all set to 1 and 
-a channel capability is created for the given portID and channelID path. 
+a channel capability is created for the given portID and channelID path only if the channel
+did not previously exist. 
 
 `ChanOpenAck` may be called on a chain when the counterparty channel has entered TRYOPEN. A
 previous channel on the executing chain must exist be in either INIT or TRYOPEN state. If the 
@@ -266,18 +268,17 @@ basic string matching using a single compatible version.
 ## Sending, Receiving, Acknowledging Packets
 
 A packet may be associated with one of the following states:
-- packet does not exist (ie it has not been sent)
-- packet has been sent but not received (the packet commitment exists on the 
+- the packet does not exist (ie it has not been sent)
+- the packet has been sent but not received (the packet commitment exists on the 
 sending chain, but no receipt exists on the receiving chain)
-- packet has been received but not acknowledged (packet commitment exists 
+- the packet has been received but not acknowledged (packet commitment exists 
 on the sending chain, a receipt exists on the receiving chain, but no acknowledgement
 exists on the receiving chain)
-- packet has been acknowledgement but the acknowledgement has not been relayed 
+- the packet has been acknowledgement but the acknowledgement has not been relayed 
 (the packet commitment exists on the sending chain, the receipt and acknowledgement
 exist on the receiving chain)
-- packet has completed its life cycle (the packet commitment does not exist on
+- the packet has completed its life cycle (the packet commitment does not exist on
 the sending chain, but a receipt and acknowledgement exist on the receiving chain)
-
 
 Sending of a packet is initiated by a call to the `ChannelKeeper.SendPacket` 
 function by an application module. Packets being sent will be verified for
@@ -294,8 +295,8 @@ light client does not include the packet commitment. The receiving chain
 is responsible for verifying that the counterparty set the hash of the 
 packet. If verification of the packet to be received is successful, the
 receiving chain should store a receipt of the packet and call application
-logic if necessary. An acknowledgement may be stored at this time or at 
-another point in the future aynchronously. 
+logic if necessary. An acknowledgement may be stored at this time (synchonously)
+or at another point in the future (aynchronously). 
 
 Acknowledgements written on the receiving chain may be verified on the 
 sending chain. If the sending chain successfully verifies the acknowledgement

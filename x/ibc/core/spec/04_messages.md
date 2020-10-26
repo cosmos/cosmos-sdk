@@ -29,8 +29,8 @@ This message is expected to fail if:
 - `Signer` is empty
 - A light client with the provided id and type already exist
 
-The message creates and stores a light client with the given ID and an initial consensus state
-for the light client.
+The message creates and stores a light client with an initial consensus state for the given client
+identifier.
 
 ### MsgUpdateClient
 
@@ -50,8 +50,8 @@ This message is expected to fail if:
 - `Header` is empty or invalid
 - `Signer` is empty
 - A `ClientState` hasn't been created for the given ID
-- the client is frozen due to misbehaviour and cannot be updated
-- the header fails to provide a valid update for the client
+- The client is frozen due to misbehaviour and cannot be updated
+- The header fails to provide a valid update for the client
 
 The message validates the header and updates the client state and consensus state for the 
 header height.
@@ -75,8 +75,8 @@ This message is expected to fail if:
 - `ProofUpgrade` is empty
 - `Signer` is empty
 - A `ClientState` hasn't been created for the given ID
-- the client is frozen due to misbehaviour and cannot be upgraded
-- the upgrade proof fails 
+- The client is frozen due to misbehaviour and cannot be upgraded
+- The upgrade proof fails 
 
 The message upgrades the client state and consensus state upon successful validation of a
 chain upgrade. 
@@ -455,7 +455,7 @@ This message is expected to fail if:
 - `Packet` fails basic validation
 - `Proof` does not prove that the packet has not been received on the counterparty chain.
 
-The message times out a packet sent on chain A and never received on chain B.
+The message times out a packet that was sent on chain A and never received on chain B.
 
 ### MsgTimeoutOnClose
 
@@ -484,7 +484,7 @@ This message is expected to fail if:
 - `Proof` does not prove that the packet has not been received on the counterparty chain.
 - `ProofClose` does not prove that the counterparty channel end has been closed.
 
-The message times out a packet that sent on chain A and never received on chain B.
+The message times out a packet that was sent on chain A and never received on chain B.
 
 ### MsgAcknowledgement
 
@@ -509,4 +509,4 @@ This message is expected to fail if:
 - `Acknowledgement` is empty
 - `Proof` does not prove that the counterparty received the `Packet`.
 
-The message acknowledges that the packet sent from chainA A was received on chain B.
+The message acknowledges that the packet sent from chainA was received on chain B.

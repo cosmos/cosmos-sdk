@@ -35,7 +35,7 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 		}, true},
 		{"success with non empty version", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
-			version = types.ExportedToProto(types.GetCompatibleVersions())[0]
+			version = types.ExportedVersionsToProto(types.GetCompatibleVersions())[0]
 		}, true},
 		{"connection already exists", func() {
 			clientA, clientB, _, _ = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
@@ -662,7 +662,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 		tc := tc
 		suite.Run(tc.msg, func() {
 			suite.SetupTest()                                                 // reset
-			version = types.ExportedToProto(types.GetCompatibleVersions())[0] // must be explicitly changed in malleate
+			version = types.ExportedVersionsToProto(types.GetCompatibleVersions())[0] // must be explicitly changed in malleate
 			consensusHeight = clienttypes.ZeroHeight()                        // must be explicitly changed in malleate
 			counterpartyConnectionID = ""                                     // must be explicitly changed in malleate
 

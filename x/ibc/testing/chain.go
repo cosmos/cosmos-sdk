@@ -76,7 +76,7 @@ var (
 
 	UpgradePath = fmt.Sprintf("%s/%s", "upgrade", "upgradedClient")
 
-	ConnectionVersion = connectiontypes.ExportedToProto(connectiontypes.GetCompatibleVersions())[0]
+	ConnectionVersion = connectiontypes.ExportedVersionsToProto(connectiontypes.GetCompatibleVersions())[0]
 
 	MockAcknowledgement = mock.MockAcknowledgement
 	MockCommitment      = mock.MockCommitment

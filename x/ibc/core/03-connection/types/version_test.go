@@ -41,7 +41,7 @@ func TestIsSupportedVersion(t *testing.T) {
 	}{
 		{
 			"version is supported",
-			types.ExportedToProto(types.GetCompatibleVersions())[0],
+			types.ExportedVersionsToProto(types.GetCompatibleVersions())[0],
 			true,
 		},
 		{

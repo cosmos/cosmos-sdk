@@ -185,9 +185,9 @@ func GetFeatureSetIntersection(sourceFeatureSet, counterpartyFeatureSet []string
 	return featureSet
 }
 
-// ExportedToProto casts a slice of the Version interface to a slice
+// ExportedVersionsToProto casts a slice of the Version interface to a slice
 // of the Version proto definition.
-func ExportedToProto(exportedVersions []exported.Version) []*Version {
+func ExportedVersionsToProto(exportedVersions []exported.Version) []*Version {
 	versions := make([]*Version, len(exportedVersions))
 	for i := range exportedVersions {
 		versions[i] = exportedVersions[i].(*Version)
@@ -196,9 +196,9 @@ func ExportedToProto(exportedVersions []exported.Version) []*Version {
 	return versions
 }
 
-// ProtoToExported converts a slice of the Version proto definition to
+// ProtoVersionsToExported converts a slice of the Version proto definition to
 // the Version interface.
-func ProtoToExported(versions []*Version) []exported.Version {
+func ProtoVersionsToExported(versions []*Version) []exported.Version {
 	exportedVersions := make([]exported.Version, len(versions))
 	for i := range versions {
 		exportedVersions[i] = versions[i]

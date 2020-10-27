@@ -1,7 +1,6 @@
 package simapp
 
 import (
-	"context"
 	"io"
 	"net/http"
 	"os"
@@ -552,7 +551,7 @@ func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICon
 	// Register legacy tx routes.
 	authrest.RegisterTxRoutes(clientCtx, apiSvr.Router)
 	// Register new tx routes from grpc-gateway.
-	tx.RegisterServiceHandlerClient(context.Background(), apiSvr.GRPCRouter, tx.NewServiceClient(clientCtx))
+	tx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCRouter)
 
 	// Register legacy and grpc-gateway routes for all modules.
 	ModuleBasics.RegisterRESTRoutes(clientCtx, apiSvr.Router)

@@ -27,17 +27,26 @@ func (k Keeper) Transfer(goCtx context.Context, msg *types.MsgTransfer) (*types.
 
 	k.Logger(ctx).Info("IBC fungible token transfer", "token", msg.Token.Denom, "amount", msg.Token.Amount.String(), "sender", msg.Sender, "receiver", msg.Receiver)
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeTransfer,
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeKeyReceiver, msg.Receiver),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	})
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventTransfer{
+			Sender:   msg.Sender,
+			Receiver: msg.Receiver,
+		},
+	); err != nil {
+		return nil, err
+	}
+
+	// ctx.EventManager().EmitEvents(sdk.Events{
+	// 	sdk.NewEvent(
+	// 		types.EventTypeTransfer,
+	// 		sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+	// 		sdk.NewAttribute(types.AttributeKeyReceiver, msg.Receiver),
+	// 	),
+	// 	sdk.NewEvent(
+	// 		sdk.EventTypeMessage,
+	// 		sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+	// 	),
+	// })
 
 	return &types.MsgTransferResponse{}, nil
 }

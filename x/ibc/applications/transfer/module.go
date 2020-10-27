@@ -311,16 +311,17 @@ func (am AppModule) OnRecvPacket(
 		acknowledgement = channeltypes.NewErrorAcknowledgement(err.Error())
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypePacket,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(types.AttributeKeyReceiver, data.Receiver),
-			sdk.NewAttribute(types.AttributeKeyDenom, data.Denom),
-			sdk.NewAttribute(types.AttributeKeyAmount, fmt.Sprintf("%d", data.Amount)),
-			sdk.NewAttribute(types.AttributeKeyAckSuccess, fmt.Sprintf("%t", err != nil)),
-		),
+	err = ctx.EventManager().EmitTypedEvent(
+		&types.EventOnRecvPacket{
+			Receiver: data.Receiver,
+			Denom:    data.Denom,
+			Amount:   data.Amount,
+			Success:  err != nil,
+		},
 	)
+	if err != nil {
+		acknowledgement = channeltypes.NewErrorAcknowledgement(err.Error())
+	}
 
 	// NOTE: acknowledgement will be written synchronously during IBC handler execution.
 	return &sdk.Result{
@@ -347,32 +348,34 @@ func (am AppModule) OnAcknowledgementPacket(
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypePacket,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(types.AttributeKeyReceiver, data.Receiver),
-			sdk.NewAttribute(types.AttributeKeyDenom, data.Denom),
-			sdk.NewAttribute(types.AttributeKeyAmount, fmt.Sprintf("%d", data.Amount)),
-			sdk.NewAttribute(types.AttributeKeyAck, fmt.Sprintf("%v", ack)),
-		),
-	)
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventOnAcknowledgementPacket{
+			Receiver:        data.Receiver,
+			Denom:           data.Denom,
+			Amount:          data.Amount,
+			Acknowledgement: ack,
+		},
+	); err != nil {
+		return nil, err
+	}
 
 	switch resp := ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Result:
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypePacket,
-				sdk.NewAttribute(types.AttributeKeyAckSuccess, string(resp.Result)),
-			),
-		)
+		if err := ctx.EventManager().EmitTypedEvent(
+			&types.EventAcknowledgementSuccess{
+				Success: resp.Result,
+			},
+		); err != nil {
+			return nil, err
+		}
 	case *channeltypes.Acknowledgement_Error:
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypePacket,
-				sdk.NewAttribute(types.AttributeKeyAckError, resp.Error),
-			),
-		)
+		if err := ctx.EventManager().EmitTypedEvent(
+			&types.EventAcknowledgementError{
+				Error: resp.Error,
+			},
+		); err != nil {
+			return nil, err
+		}
 	}
 
 	return &sdk.Result{
@@ -394,15 +397,15 @@ func (am AppModule) OnTimeoutPacket(
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeTimeout,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(types.AttributeKeyRefundReceiver, data.Sender),
-			sdk.NewAttribute(types.AttributeKeyRefundDenom, data.Denom),
-			sdk.NewAttribute(types.AttributeKeyRefundAmount, fmt.Sprintf("%d", data.Amount)),
-		),
-	)
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventOnTimeoutPacket{
+			RefundReceiver: data.Sender,
+			RefundDenom:    data.Denom,
+			RefundAmount:   data.Amount,
+		},
+	); err != nil {
+		return nil, err
+	}
 
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),

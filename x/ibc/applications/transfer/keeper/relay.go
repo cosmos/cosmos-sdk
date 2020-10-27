@@ -260,13 +260,14 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	}
 
 	voucherDenom := denomTrace.IBCDenom()
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeDenomTrace,
-			sdk.NewAttribute(types.AttributeKeyTraceHash, traceHash.String()),
-			sdk.NewAttribute(types.AttributeKeyDenom, voucherDenom),
-		),
-	)
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventDenominationTrace{
+			TraceHash: traceHash,
+			Denom:     voucherDenom,
+		},
+	); err != nil {
+		return err
+	}
 
 	voucher := sdk.NewCoin(voucherDenom, sdk.NewIntFromUint64(data.Amount))
 

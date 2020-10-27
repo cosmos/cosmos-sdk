@@ -27,8 +27,6 @@ func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 
 func queryEvidenceHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		vars := mux.Vars(r)
 		evidenceHash := vars[RestParamEvidenceHash]
 
@@ -68,8 +66,6 @@ func queryEvidenceHandler(clientCtx client.Context) http.HandlerFunc {
 
 func queryAllEvidenceHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
 		if rest.CheckBadRequestError(w, err) {
 			return

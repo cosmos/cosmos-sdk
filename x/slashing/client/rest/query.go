@@ -32,8 +32,6 @@ func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 // http request handler to query signing info
 func signingInfoHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		vars := mux.Vars(r)
 		pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, vars["validatorPubKey"])
 		if rest.CheckBadRequestError(w, err) {
@@ -66,8 +64,6 @@ func signingInfoHandlerFn(clientCtx client.Context) http.HandlerFunc {
 // http request handler to query signing info
 func signingInfoHandlerListFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
 		if rest.CheckBadRequestError(w, err) {
 			return
@@ -97,8 +93,6 @@ func signingInfoHandlerListFn(clientCtx client.Context) http.HandlerFunc {
 
 func queryParamsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
 		if !ok {
 			return

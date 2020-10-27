@@ -16,7 +16,6 @@ import (
 // account balances or a specific balance by denomination.
 func QueryBalancesRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
 		w.Header().Set("Content-Type", "application/json")
 
 		vars := mux.Vars(r)
@@ -64,8 +63,6 @@ func QueryBalancesRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 // HTTP request handler to query the total supply of coins
 func totalSupplyHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
 		if rest.CheckBadRequestError(w, err) {
 			return
@@ -97,8 +94,6 @@ func totalSupplyHandlerFn(clientCtx client.Context) http.HandlerFunc {
 // HTTP request handler to query the supply of a single denom
 func supplyOfHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		denom := mux.Vars(r)["denom"]
 		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
 		if !ok {

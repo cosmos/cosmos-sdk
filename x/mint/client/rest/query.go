@@ -30,8 +30,6 @@ func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 
 func queryParamsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParameters)
 
 		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
@@ -51,8 +49,6 @@ func queryParamsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 func queryInflationHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryInflation)
 
 		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
@@ -72,8 +68,6 @@ func queryInflationHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 func queryAnnualProvisionsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAnnualProvisions)
 
 		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)

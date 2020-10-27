@@ -63,8 +63,6 @@ func registerTxHandlers(clientCtx client.Context, r *mux.Router) {
 
 func newWithdrawDelegatorRewardsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		var req withdrawRewardsReq
 		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
@@ -92,8 +90,6 @@ func newWithdrawDelegatorRewardsHandlerFn(clientCtx client.Context) http.Handler
 
 func newWithdrawDelegationRewardsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		var req withdrawRewardsReq
 		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
@@ -126,8 +122,6 @@ func newWithdrawDelegationRewardsHandlerFn(clientCtx client.Context) http.Handle
 
 func newSetDelegatorWithdrawalAddrHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		var req setWithdrawalAddrReq
 		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
@@ -155,8 +149,6 @@ func newSetDelegatorWithdrawalAddrHandlerFn(clientCtx client.Context) http.Handl
 
 func newWithdrawValidatorRewardsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		var req withdrawRewardsReq
 		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
@@ -185,8 +177,6 @@ func newWithdrawValidatorRewardsHandlerFn(clientCtx client.Context) http.Handler
 
 func newFundCommunityPoolHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		var req fundCommunityPoolReq
 		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return

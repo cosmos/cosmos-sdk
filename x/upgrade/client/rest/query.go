@@ -23,8 +23,6 @@ func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 
 func getCurrentPlanHandler(clientCtx client.Context) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, request *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		// ignore height for now
 		res, _, err := clientCtx.Query(fmt.Sprintf("custom/%s/%s", types.QuerierKey, types.QueryCurrent))
 		if rest.CheckInternalServerError(w, err) {
@@ -47,8 +45,6 @@ func getCurrentPlanHandler(clientCtx client.Context) func(http.ResponseWriter, *
 
 func getDonePlanHandler(clientCtx client.Context) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		name := mux.Vars(r)["name"]
 
 		params := types.QueryAppliedPlanRequest{Name: name}

@@ -60,8 +60,6 @@ func ProposalCancelRESTHandler(clientCtx client.Context) govrest.ProposalRESTHan
 
 func newPostPlanHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		var req PlanRequest
 
 		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
@@ -102,8 +100,6 @@ func newPostPlanHandler(clientCtx client.Context) http.HandlerFunc {
 
 func newCancelPlanHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		var req CancelRequest
 
 		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {

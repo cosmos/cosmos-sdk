@@ -38,8 +38,6 @@ func queryTxs(clientCtx client.Context, action string, delegatorAddr string) (*s
 
 func queryBonds(clientCtx client.Context, endpoint string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		vars := mux.Vars(r)
 		bech32delegator := vars["delegatorAddr"]
 		bech32validator := vars["validatorAddr"]
@@ -78,8 +76,6 @@ func queryBonds(clientCtx client.Context, endpoint string) http.HandlerFunc {
 
 func queryDelegator(clientCtx client.Context, endpoint string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		vars := mux.Vars(r)
 		bech32delegator := vars["delegatorAddr"]
 
@@ -112,8 +108,6 @@ func queryDelegator(clientCtx client.Context, endpoint string) http.HandlerFunc 
 
 func queryValidator(clientCtx client.Context, endpoint string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		vars := mux.Vars(r)
 		bech32validatorAddr := vars["validatorAddr"]
 

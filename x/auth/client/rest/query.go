@@ -19,8 +19,6 @@ import (
 // query accountREST Handler
 func QueryAccountRequestHandlerFn(storeName string, clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		vars := mux.Vars(r)
 		bech32addr := vars["address"]
 
@@ -60,8 +58,6 @@ func QueryAccountRequestHandlerFn(storeName string, clientCtx client.Context) ht
 // otherwise the transactions are searched for by events.
 func QueryTxsRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		err := r.ParseForm()
 		if err != nil {
 			rest.WriteErrorResponse(
@@ -114,8 +110,6 @@ func QueryTxsRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 // by hash in a committed block.
 func QueryTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		vars := mux.Vars(r)
 		hashHexStr := vars["hash"]
 
@@ -152,8 +146,6 @@ func QueryTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 func queryParamsHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
 		if !ok {
 			return

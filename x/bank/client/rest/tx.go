@@ -22,8 +22,6 @@ type SendReq struct {
 // transaction.
 func NewSendRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client.AddDeprecationHeaders(w)
-
 		vars := mux.Vars(r)
 		bech32Addr := vars["address"]
 

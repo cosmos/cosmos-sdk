@@ -5,7 +5,6 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
-import "ibc/core/commitment/v1/commitment.proto";
 import "ibc/core/client/v1/client.proto";
 import "ibc/core/connection/v1/connection.proto";
 
@@ -23,7 +22,6 @@ service Msg {
   // ConnectionOpenConfirm defines a rpc handler method for MsgConnectionOpenConfirm.
   rpc ConnectionOpenConfirm(MsgConnectionOpenConfirm) returns (MsgConnectionOpenConfirmResponse);
 }
-
 
 // MsgConnectionOpenInit defines the msg sent by an account on Chain A to
 // initialize a connection with Chain B.
@@ -78,7 +76,7 @@ message MsgConnectionOpenAck {
 
   string              connection_id              = 1 [(gogoproto.moretags) = "yaml:\"connection_id\""];
   string              counterparty_connection_id = 2 [(gogoproto.moretags) = "yaml:\"counterparty_connection_id\""];
-  Version              version                    = 3;
+  Version             version                    = 3;
   google.protobuf.Any client_state               = 4 [(gogoproto.moretags) = "yaml:\"client_state\""];
   ibc.core.client.v1.Height proof_height         = 5
       [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];

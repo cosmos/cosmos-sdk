@@ -4,9 +4,7 @@ package ibc.core.connection.v1;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types";
 
 import "gogoproto/gogo.proto";
-import "google/protobuf/any.proto";
 import "ibc/core/commitment/v1/commitment.proto";
-import "ibc/core/client/v1/client.proto";
 
 // ICS03 - Connection Data Structures as defined in
 // https://github.com/cosmos/ics/tree/master/spec/ics-003-connection-semantics#data-structures

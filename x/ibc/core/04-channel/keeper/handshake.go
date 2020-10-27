@@ -187,16 +187,33 @@ func (k Keeper) ChanOpenTry(
 		return nil, err
 	}
 
-	k.SetChannel(ctx, portID, desiredChannelID, channel)
+	var (
+		capKey *capabilitytypes.Capability
+		err    error
+	)
 
-	capKey, err := k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, desiredChannelID))
-	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, desiredChannelID)
+	// Only create a capability and set the sequences if the previous channel does not exist
+	_, found = k.GetChannel(ctx, portID, desiredChannelID)
+	if !found {
+		capKey, err = k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, desiredChannelID))
+		if err != nil {
+			return nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, desiredChannelID)
+		}
+
+		k.SetNextSequenceSend(ctx, portID, desiredChannelID, 1)
+		k.SetNextSequenceRecv(ctx, portID, desiredChannelID, 1)
+		k.SetNextSequenceAck(ctx, portID, desiredChannelID, 1)
+	} else {
+		// capability initialized in ChanOpenInit
+		capKey, found = k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, desiredChannelID))
+		if !found {
+			return nil, sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound,
+				"capability not found for existing channel, portID (%s) channelID (%s)", portID, desiredChannelID,
+			)
+		}
 	}
 
-	k.SetNextSequenceSend(ctx, portID, desiredChannelID, 1)
-	k.SetNextSequenceRecv(ctx, portID, desiredChannelID, 1)
-	k.SetNextSequenceAck(ctx, portID, desiredChannelID, 1)
+	k.SetChannel(ctx, portID, desiredChannelID, channel)
 
 	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", desiredChannelID, "previous-state", previousChannel.State.String(), "new-state", "TRYOPEN")
 
@@ -364,7 +381,7 @@ func (k Keeper) ChanOpenConfirm(
 //
 // This section defines the set of functions required to close a channel handshake
 // as defined in https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#closing-handshake
-
+//
 // ChanCloseInit is called by either module to close their end of the channel. Once
 // closed, channels cannot be reopened.
 func (k Keeper) ChanCloseInit(

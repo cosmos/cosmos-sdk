@@ -2,7 +2,6 @@ package tx_test
 
 import (
 	"context"
-	"encoding/hex"
 	fmt "fmt"
 	"testing"
 
@@ -122,17 +121,15 @@ func (s IntegrationTestSuite) TestGetTx() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Query the tx via gRPC.
-	hash, err := hex.DecodeString(txRes.TxHash)
-	s.Require().NoError(err)
 	grpcRes, err := s.queryClient.GetTx(
 		context.Background(),
-		&tx.GetTxRequest{Hash: hash},
+		&tx.GetTxRequest{Hash: txRes.TxHash},
 	)
 	s.Require().NoError(err)
 	s.Require().Equal("foobar", grpcRes.Tx.Body.Memo)
 
 	// Query the tx via grpc-gateway.
-	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/getTx/%s", val.APIAddress, val.Address.String()))
+	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/getTx/%s", val.APIAddress, txRes.TxHash))
 	s.Require().NoError(err)
 
 	fmt.Println(string(restRes))

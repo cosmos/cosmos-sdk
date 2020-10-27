@@ -2,6 +2,7 @@ package tx
 
 import (
 	"context"
+	"encoding/hex"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -60,9 +61,15 @@ func (s txServer) Simulate(ctx context.Context, req *SimulateRequest) (*Simulate
 
 // GetTx implements the ServiceServer.GetTx RPC method.
 func (s txServer) GetTx(ctx context.Context, req *GetTxRequest) (*GetTxResponse, error) {
+	// We get hash as a hex string in the request, convert it to bytes.
+	hash, err := hex.DecodeString(req.Hash)
+	if err != nil {
+		return nil, err
+	}
+
 	// TODO We should also check the proof flag in gRPC header.
 	// https://github.com/cosmos/cosmos-sdk/issues/7036.
-	result, err := s.clientCtx.Client.Tx(ctx, req.Hash, false)
+	result, err := s.clientCtx.Client.Tx(ctx, hash, false)
 	if err != nil {
 		return nil, err
 	}

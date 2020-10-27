@@ -38,8 +38,8 @@ message SimulateResponse {
 // GetTx is the request type for the Service.GetTx
 // RPC method.
 message GetTxRequest {
-    // hash is the tx hash to query.
-   bytes hash = 1;
+    // hash is the tx hash to query, encoded as a hex string.
+   string hash = 1;
 }
   
 // GetTxResponse is the response type for the Service.GetTx method.

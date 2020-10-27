@@ -42,7 +42,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	clientCtx := client.Context{}.WithTxConfig(encodingConfig.TxConfig)
 
 	// Create new simulation server.
-	srv := tx.NewTxServer(app.BaseApp.Simulate, encodingConfig.InterfaceRegistry)
+	srv := tx.NewTxServer(clientCtx.Client, app.BaseApp.Simulate, encodingConfig.InterfaceRegistry)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(sdkCtx, app.InterfaceRegistry())
 	tx.RegisterServiceServer(queryHelper, srv)

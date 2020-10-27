@@ -14,8 +14,8 @@ service Service {
         option (google.api.http).post = "/cosmos/tx/v1beta1/simulate";
     }
     // Simulate simulates executing a transaction for estimating gas usage.
-    rpc TxByHash(TxByHashRequest) returns (TxByHashResponse) {
-        option (google.api.http).get = "/cosmos/tx/v1beta1/txByHash";
+    rpc GetTx(GetTxRequest) returns (GetTxResponse) {
+        option (google.api.http).get = "/cosmos/tx/v1beta1/getTx";
     }
 }
 
@@ -35,15 +35,15 @@ message SimulateResponse {
     cosmos.base.abci.v1beta1.Result result = 2;
 }
 
-// TxByHash is the request type for the Service.TxByHash
+// GetTx is the request type for the Service.GetTx
 // RPC method.
-message TxByHashRequest {
+message GetTxRequest {
     // hash is the tx hash to query.
    bytes hash = 1;
 }
   
-// TxByHashResponse is the response type for the Service.TxByHash method.
-message TxByHashResponse {
+// GetTxResponse is the response type for the Service.GetTx method.
+message GetTxResponse {
     // tx is the queried transaction.
     cosmos.tx.v1beta1.Tx tx = 1;
 }

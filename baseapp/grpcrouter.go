@@ -5,6 +5,7 @@ import (
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/proto"
@@ -111,13 +112,14 @@ func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry codectypes.In
 	)
 }
 
-// RegisterSimulateService registers the simulate service on the gRPC router.
-func (qrt *GRPCQueryRouter) RegisterSimulateService(
+// RegisterTxService registers the tx service on the gRPC router.
+func (qrt *GRPCQueryRouter) RegisterTxService(
+	rpcClient rpcclient.Client,
 	simulateFn tx.BaseAppSimulateFn,
 	interfaceRegistry codectypes.InterfaceRegistry,
 ) {
 	tx.RegisterServiceServer(
 		qrt,
-		tx.NewTxServer(simulateFn, interfaceRegistry),
+		tx.NewTxServer(rpcClient, simulateFn, interfaceRegistry),
 	)
 }

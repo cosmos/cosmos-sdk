@@ -32,7 +32,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // SimulateRequest is the request type for the Service.Simulate
 // RPC method.
 type SimulateRequest struct {
-	// tx is the transaction to tx.
+	// tx is the transaction to simulate.
 	Tx *Tx `protobuf:"bytes,1,opt,name=tx,proto3" json:"tx,omitempty"`
 }
 
@@ -132,25 +132,25 @@ func (m *SimulateResponse) GetResult() *types.Result {
 	return nil
 }
 
-// TxByHash is the request type for the Service.TxByHash
+// GetTx is the request type for the Service.GetTx
 // RPC method.
-type TxByHashRequest struct {
+type GetTxRequest struct {
 	// hash is the tx hash to query.
 	Hash []byte `protobuf:"bytes,1,opt,name=hash,proto3" json:"hash,omitempty"`
 }
 
-func (m *TxByHashRequest) Reset()         { *m = TxByHashRequest{} }
-func (m *TxByHashRequest) String() string { return proto.CompactTextString(m) }
-func (*TxByHashRequest) ProtoMessage()    {}
-func (*TxByHashRequest) Descriptor() ([]byte, []int) {
+func (m *GetTxRequest) Reset()         { *m = GetTxRequest{} }
+func (m *GetTxRequest) String() string { return proto.CompactTextString(m) }
+func (*GetTxRequest) ProtoMessage()    {}
+func (*GetTxRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_e0b00a618705eca7, []int{2}
 }
-func (m *TxByHashRequest) XXX_Unmarshal(b []byte) error {
+func (m *GetTxRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *TxByHashRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *GetTxRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_TxByHashRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_GetTxRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -160,43 +160,43 @@ func (m *TxByHashRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, err
 		return b[:n], nil
 	}
 }
-func (m *TxByHashRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_TxByHashRequest.Merge(m, src)
+func (m *GetTxRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetTxRequest.Merge(m, src)
 }
-func (m *TxByHashRequest) XXX_Size() int {
+func (m *GetTxRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *TxByHashRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_TxByHashRequest.DiscardUnknown(m)
+func (m *GetTxRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetTxRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_TxByHashRequest proto.InternalMessageInfo
+var xxx_messageInfo_GetTxRequest proto.InternalMessageInfo
 
-func (m *TxByHashRequest) GetHash() []byte {
+func (m *GetTxRequest) GetHash() []byte {
 	if m != nil {
 		return m.Hash
 	}
 	return nil
 }
 
-// TxByHashResponse is the response type for the Service.TxByHash method.
-type TxByHashResponse struct {
+// GetTxResponse is the response type for the Service.GetTx method.
+type GetTxResponse struct {
 	// tx is the queried transaction.
 	Tx *Tx `protobuf:"bytes,1,opt,name=tx,proto3" json:"tx,omitempty"`
 }
 
-func (m *TxByHashResponse) Reset()         { *m = TxByHashResponse{} }
-func (m *TxByHashResponse) String() string { return proto.CompactTextString(m) }
-func (*TxByHashResponse) ProtoMessage()    {}
-func (*TxByHashResponse) Descriptor() ([]byte, []int) {
+func (m *GetTxResponse) Reset()         { *m = GetTxResponse{} }
+func (m *GetTxResponse) String() string { return proto.CompactTextString(m) }
+func (*GetTxResponse) ProtoMessage()    {}
+func (*GetTxResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_e0b00a618705eca7, []int{3}
 }
-func (m *TxByHashResponse) XXX_Unmarshal(b []byte) error {
+func (m *GetTxResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *TxByHashResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *GetTxResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_TxByHashResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_GetTxResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -206,19 +206,19 @@ func (m *TxByHashResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, er
 		return b[:n], nil
 	}
 }
-func (m *TxByHashResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_TxByHashResponse.Merge(m, src)
+func (m *GetTxResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetTxResponse.Merge(m, src)
 }
-func (m *TxByHashResponse) XXX_Size() int {
+func (m *GetTxResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *TxByHashResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_TxByHashResponse.DiscardUnknown(m)
+func (m *GetTxResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetTxResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_TxByHashResponse proto.InternalMessageInfo
+var xxx_messageInfo_GetTxResponse proto.InternalMessageInfo
 
-func (m *TxByHashResponse) GetTx() *Tx {
+func (m *GetTxResponse) GetTx() *Tx {
 	if m != nil {
 		return m.Tx
 	}
@@ -228,39 +228,39 @@ func (m *TxByHashResponse) GetTx() *Tx {
 func init() {
 	proto.RegisterType((*SimulateRequest)(nil), "cosmos.tx.v1beta1.SimulateRequest")
 	proto.RegisterType((*SimulateResponse)(nil), "cosmos.tx.v1beta1.SimulateResponse")
-	proto.RegisterType((*TxByHashRequest)(nil), "cosmos.tx.v1beta1.TxByHashRequest")
-	proto.RegisterType((*TxByHashResponse)(nil), "cosmos.tx.v1beta1.TxByHashResponse")
+	proto.RegisterType((*GetTxRequest)(nil), "cosmos.tx.v1beta1.GetTxRequest")
+	proto.RegisterType((*GetTxResponse)(nil), "cosmos.tx.v1beta1.GetTxResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/tx/v1beta1/service.proto", fileDescriptor_e0b00a618705eca7) }
 
 var fileDescriptor_e0b00a618705eca7 = []byte{
-	// 393 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x92, 0xcf, 0x4b, 0xe3, 0x40,
-	0x14, 0xc7, 0x9b, 0xb0, 0xb4, 0x65, 0x76, 0xa1, 0xdd, 0x81, 0x85, 0x92, 0xdd, 0xcd, 0x76, 0x53,
-	0x0a, 0x5e, 0xcc, 0xd0, 0x7a, 0xa9, 0x20, 0x08, 0xbd, 0xa8, 0xd7, 0xb4, 0x27, 0x2f, 0x32, 0x89,
-	0xd3, 0x24, 0xd8, 0x66, 0x62, 0xe7, 0xa5, 0x4c, 0xaf, 0x1e, 0x3d, 0x09, 0xfe, 0x53, 0x1e, 0x0b,
-	0x5e, 0x3c, 0x4a, 0xeb, 0xbf, 0x21, 0x48, 0x93, 0x8c, 0x85, 0x36, 0x8a, 0xa7, 0x4c, 0xc8, 0xe7,
-	0xfb, 0xe3, 0xbd, 0x0c, 0xfa, 0xe7, 0x71, 0x31, 0xe1, 0x82, 0x80, 0x24, 0xb3, 0x8e, 0xcb, 0x80,
-	0x76, 0x88, 0x60, 0xd3, 0x59, 0xe8, 0x31, 0x3b, 0x9e, 0x72, 0xe0, 0xf8, 0x67, 0x06, 0xd8, 0x20,
-	0xed, 0x1c, 0x30, 0xfe, 0xf8, 0x9c, 0xfb, 0x63, 0x46, 0x68, 0x1c, 0x12, 0x1a, 0x45, 0x1c, 0x28,
-	0x84, 0x3c, 0x12, 0x99, 0xc0, 0x68, 0xe5, 0x8e, 0x2e, 0x15, 0x8c, 0x50, 0xd7, 0x0b, 0xdf, 0x8d,
-	0xd7, 0x2f, 0x39, 0x64, 0xec, 0xc6, 0x82, 0xcc, 0xbe, 0x59, 0x3d, 0x54, 0x1b, 0x84, 0x93, 0x64,
-	0x4c, 0x81, 0x39, 0xec, 0x3a, 0x61, 0x02, 0x70, 0x1b, 0xe9, 0x20, 0x1b, 0x5a, 0x53, 0xdb, 0xfb,
-	0xde, 0xfd, 0x65, 0xef, 0x34, 0xb2, 0x87, 0xd2, 0xd1, 0x41, 0x5a, 0xb7, 0x1a, 0xaa, 0x6f, 0xa4,
-	0x22, 0xe6, 0x91, 0x60, 0xf8, 0x08, 0x55, 0x7d, 0x2a, 0x2e, 0xc2, 0x68, 0xc4, 0x73, 0x87, 0xff,
-	0xca, 0x61, 0x5d, 0xd1, 0x4e, 0x5b, 0x29, 0xa3, 0x13, 0x2a, 0xce, 0xa2, 0x11, 0x77, 0x2a, 0x7e,
-	0x76, 0xc0, 0x3d, 0x54, 0x9e, 0x32, 0x91, 0x8c, 0xa1, 0xa1, 0xa7, 0xda, 0xe6, 0xc7, 0x5a, 0x27,
-	0xe5, 0x9c, 0x9c, 0xb7, 0xda, 0xa8, 0x36, 0x94, 0xfd, 0xf9, 0x29, 0x15, 0x81, 0x1a, 0x03, 0xa3,
-	0x6f, 0x01, 0x15, 0x41, 0x5a, 0xe3, 0x87, 0x93, 0x9e, 0xad, 0x43, 0x54, 0xdf, 0x60, 0x79, 0xe5,
-	0xaf, 0x8d, 0xdb, 0x7d, 0xd5, 0x50, 0x65, 0x90, 0xfd, 0x2c, 0x2c, 0x51, 0x55, 0x4d, 0x8e, 0xad,
-	0x02, 0xc9, 0xd6, 0x46, 0x8d, 0xd6, 0xa7, 0x4c, 0xd6, 0xc3, 0x6a, 0xdd, 0x3c, 0xbe, 0xdc, 0xeb,
-	0x7f, 0xad, 0xdf, 0xa4, 0xe0, 0x96, 0xa8, 0x34, 0x89, 0xaa, 0x6a, 0x80, 0xc2, 0xe4, 0xad, 0x25,
-	0x14, 0x26, 0x6f, 0x6f, 0x40, 0x25, 0xe3, 0xa2, 0x64, 0xc8, 0xe1, 0xfe, 0xf1, 0xc3, 0xd2, 0xd4,
-	0x16, 0x4b, 0x53, 0x7b, 0x5e, 0x9a, 0xda, 0xdd, 0xca, 0x2c, 0x2d, 0x56, 0x66, 0xe9, 0x69, 0x65,
-	0x96, 0xce, 0xdb, 0x7e, 0x08, 0x41, 0xe2, 0xda, 0x1e, 0x9f, 0x28, 0x83, 0xec, 0xb1, 0x2f, 0x2e,
-	0xaf, 0x08, 0xcc, 0x63, 0xb6, 0x76, 0x74, 0xcb, 0xe9, 0x85, 0x3b, 0x78, 0x0b, 0x00, 0x00, 0xff,
-	0xff, 0x84, 0x84, 0xcd, 0xc1, 0x05, 0x03, 0x00, 0x00,
+	// 398 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x92, 0xcf, 0x6a, 0xdb, 0x30,
+	0x1c, 0xc7, 0x63, 0xb3, 0x25, 0x41, 0xcb, 0xd8, 0x26, 0x18, 0x04, 0x6f, 0x73, 0x3c, 0x85, 0xc0,
+	0x2e, 0xb3, 0x48, 0x06, 0x23, 0x87, 0xc1, 0xa0, 0x97, 0xd0, 0xab, 0x93, 0x53, 0x2f, 0x45, 0x76,
+	0x15, 0xc7, 0xd4, 0xb1, 0xdc, 0x48, 0x0e, 0xea, 0xb5, 0xc7, 0x9e, 0x0a, 0x7d, 0xa9, 0x1e, 0x03,
+	0xbd, 0xf4, 0x58, 0x92, 0xbe, 0x40, 0xdf, 0xa0, 0x58, 0x96, 0xdb, 0xd2, 0x38, 0xa5, 0x27, 0xcb,
+	0xf8, 0xf3, 0xfd, 0xf3, 0xb3, 0x7e, 0xa0, 0x13, 0x30, 0x3e, 0x67, 0x1c, 0x0b, 0x89, 0x97, 0x7d,
+	0x9f, 0x0a, 0xd2, 0xc7, 0x9c, 0x2e, 0x96, 0x51, 0x40, 0xdd, 0x74, 0xc1, 0x04, 0x83, 0x5f, 0x0a,
+	0xc0, 0x15, 0xd2, 0xd5, 0x80, 0xf5, 0x3d, 0x64, 0x2c, 0x8c, 0x29, 0x26, 0x69, 0x84, 0x49, 0x92,
+	0x30, 0x41, 0x44, 0xc4, 0x12, 0x5e, 0x08, 0xac, 0xae, 0x76, 0xf4, 0x09, 0xa7, 0x98, 0xf8, 0x41,
+	0xf4, 0x68, 0x9c, 0xbf, 0x68, 0xc8, 0xda, 0x8e, 0x15, 0xb2, 0xf8, 0x86, 0x86, 0xe0, 0xd3, 0x38,
+	0x9a, 0x67, 0x31, 0x11, 0xd4, 0xa3, 0x27, 0x19, 0xe5, 0x02, 0xf6, 0x80, 0x29, 0x64, 0xdb, 0x70,
+	0x8c, 0x5f, 0x1f, 0x06, 0x5f, 0xdd, 0xad, 0x46, 0xee, 0x44, 0x7a, 0xa6, 0x90, 0xe8, 0xdc, 0x00,
+	0x9f, 0x9f, 0xa4, 0x3c, 0x65, 0x09, 0xa7, 0xf0, 0x1f, 0x68, 0x86, 0x84, 0x1f, 0x46, 0xc9, 0x94,
+	0x69, 0x87, 0x9f, 0xa5, 0x43, 0x5e, 0xd1, 0x55, 0xad, 0x4a, 0xa3, 0x11, 0xe1, 0xfb, 0xc9, 0x94,
+	0x79, 0x8d, 0xb0, 0x38, 0xc0, 0x21, 0xa8, 0x2f, 0x28, 0xcf, 0x62, 0xd1, 0x36, 0x95, 0xd6, 0xd9,
+	0xad, 0xf5, 0x14, 0xe7, 0x69, 0x1e, 0x21, 0xd0, 0x1a, 0x51, 0x31, 0x91, 0xe5, 0x0c, 0x10, 0xbc,
+	0x9b, 0x11, 0x3e, 0x53, 0x1d, 0x5a, 0x9e, 0x3a, 0xa3, 0xbf, 0xe0, 0xa3, 0x66, 0x74, 0xd9, 0xb7,
+	0x0d, 0x3a, 0xb8, 0x37, 0x40, 0x63, 0x5c, 0x5c, 0x13, 0x94, 0xa0, 0x59, 0xce, 0x0c, 0x51, 0x85,
+	0xe4, 0xc5, 0xbf, 0xb4, 0xba, 0xaf, 0x32, 0x45, 0x0f, 0xd4, 0x3d, 0xbb, 0xbe, 0xbb, 0x34, 0x7f,
+	0xa0, 0x6f, 0xb8, 0x62, 0x3f, 0xca, 0xb4, 0x18, 0xbc, 0x57, 0xed, 0x61, 0xa7, 0xc2, 0xf2, 0xf9,
+	0xec, 0x96, 0xb3, 0x1b, 0xd0, 0x81, 0x8e, 0x0a, 0xb4, 0x60, 0xbb, 0x22, 0x30, 0xcc, 0xc9, 0xbd,
+	0xff, 0x57, 0x6b, 0xdb, 0x58, 0xad, 0x6d, 0xe3, 0x76, 0x6d, 0x1b, 0x17, 0x1b, 0xbb, 0xb6, 0xda,
+	0xd8, 0xb5, 0x9b, 0x8d, 0x5d, 0x3b, 0xe8, 0x85, 0x91, 0x98, 0x65, 0xbe, 0x1b, 0xb0, 0x79, 0xa9,
+	0x2e, 0x1e, 0xbf, 0xf9, 0xd1, 0x31, 0x16, 0xa7, 0x29, 0xcd, 0xed, 0xfc, 0xba, 0x5a, 0xaf, 0x3f,
+	0x0f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x1d, 0xfd, 0xe9, 0xb9, 0xf3, 0x02, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -278,7 +278,7 @@ type ServiceClient interface {
 	// Simulate simulates executing a transaction for estimating gas usage.
 	Simulate(ctx context.Context, in *SimulateRequest, opts ...grpc.CallOption) (*SimulateResponse, error)
 	// Simulate simulates executing a transaction for estimating gas usage.
-	TxByHash(ctx context.Context, in *TxByHashRequest, opts ...grpc.CallOption) (*TxByHashResponse, error)
+	GetTx(ctx context.Context, in *GetTxRequest, opts ...grpc.CallOption) (*GetTxResponse, error)
 }
 
 type serviceClient struct {
@@ -298,9 +298,9 @@ func (c *serviceClient) Simulate(ctx context.Context, in *SimulateRequest, opts 
 	return out, nil
 }
 
-func (c *serviceClient) TxByHash(ctx context.Context, in *TxByHashRequest, opts ...grpc.CallOption) (*TxByHashResponse, error) {
-	out := new(TxByHashResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.Service/TxByHash", in, out, opts...)
+func (c *serviceClient) GetTx(ctx context.Context, in *GetTxRequest, opts ...grpc.CallOption) (*GetTxResponse, error) {
+	out := new(GetTxResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.Service/GetTx", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -312,7 +312,7 @@ type ServiceServer interface {
 	// Simulate simulates executing a transaction for estimating gas usage.
 	Simulate(context.Context, *SimulateRequest) (*SimulateResponse, error)
 	// Simulate simulates executing a transaction for estimating gas usage.
-	TxByHash(context.Context, *TxByHashRequest) (*TxByHashResponse, error)
+	GetTx(context.Context, *GetTxRequest) (*GetTxResponse, error)
 }
 
 // UnimplementedServiceServer can be embedded to have forward compatible implementations.
@@ -322,8 +322,8 @@ type UnimplementedServiceServer struct {
 func (*UnimplementedServiceServer) Simulate(ctx context.Context, req *SimulateRequest) (*SimulateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Simulate not implemented")
 }
-func (*UnimplementedServiceServer) TxByHash(ctx context.Context, req *TxByHashRequest) (*TxByHashResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method TxByHash not implemented")
+func (*UnimplementedServiceServer) GetTx(ctx context.Context, req *GetTxRequest) (*GetTxResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTx not implemented")
 }
 
 func RegisterServiceServer(s grpc1.Server, srv ServiceServer) {
@@ -348,20 +348,20 @@ func _Service_Simulate_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Service_TxByHash_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(TxByHashRequest)
+func _Service_GetTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTxRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ServiceServer).TxByHash(ctx, in)
+		return srv.(ServiceServer).GetTx(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.tx.v1beta1.Service/TxByHash",
+		FullMethod: "/cosmos.tx.v1beta1.Service/GetTx",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServiceServer).TxByHash(ctx, req.(*TxByHashRequest))
+		return srv.(ServiceServer).GetTx(ctx, req.(*GetTxRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -375,8 +375,8 @@ var _Service_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Service_Simulate_Handler,
 		},
 		{
-			MethodName: "TxByHash",
-			Handler:    _Service_TxByHash_Handler,
+			MethodName: "GetTx",
+			Handler:    _Service_GetTx_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -465,7 +465,7 @@ func (m *SimulateResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *TxByHashRequest) Marshal() (dAtA []byte, err error) {
+func (m *GetTxRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -475,12 +475,12 @@ func (m *TxByHashRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *TxByHashRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *GetTxRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *TxByHashRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *GetTxRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -495,7 +495,7 @@ func (m *TxByHashRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *TxByHashResponse) Marshal() (dAtA []byte, err error) {
+func (m *GetTxResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -505,12 +505,12 @@ func (m *TxByHashResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *TxByHashResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *GetTxResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *TxByHashResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *GetTxResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -571,7 +571,7 @@ func (m *SimulateResponse) Size() (n int) {
 	return n
 }
 
-func (m *TxByHashRequest) Size() (n int) {
+func (m *GetTxRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -584,7 +584,7 @@ func (m *TxByHashRequest) Size() (n int) {
 	return n
 }
 
-func (m *TxByHashResponse) Size() (n int) {
+func (m *GetTxResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -817,7 +817,7 @@ func (m *SimulateResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *TxByHashRequest) Unmarshal(dAtA []byte) error {
+func (m *GetTxRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -840,10 +840,10 @@ func (m *TxByHashRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: TxByHashRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: GetTxRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: TxByHashRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: GetTxRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -904,7 +904,7 @@ func (m *TxByHashRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *TxByHashResponse) Unmarshal(dAtA []byte) error {
+func (m *GetTxResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -927,10 +927,10 @@ func (m *TxByHashResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: TxByHashResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: GetTxResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: TxByHashResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: GetTxResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

@@ -2,7 +2,9 @@ package tx
 
 import (
 	"context"
+	fmt "fmt"
 
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -14,13 +16,15 @@ import (
 type BaseAppSimulateFn func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error)
 
 type txServer struct {
+	rpcClient         rpcclient.Client
 	simulate          BaseAppSimulateFn
 	interfaceRegistry codectypes.InterfaceRegistry
 }
 
 // NewTxServer creates a new TxService server.
-func NewTxServer(simulate BaseAppSimulateFn, interfaceRegistry codectypes.InterfaceRegistry) ServiceServer {
+func NewTxServer(rpcClient rpcclient.Client, simulate BaseAppSimulateFn, interfaceRegistry codectypes.InterfaceRegistry) ServiceServer {
 	return txServer{
+		rpcClient:         rpcClient,
 		simulate:          simulate,
 		interfaceRegistry: interfaceRegistry,
 	}
@@ -54,8 +58,15 @@ func (s txServer) Simulate(ctx context.Context, req *SimulateRequest) (*Simulate
 	}, nil
 }
 
-// TxByHash implements the ServiceServer.TxByHash RPC method.
-func (s txServer) TxByHash(ctx context.Context, req *TxByHashRequest) (*TxByHashResponse, error) {
-	// TODO
+// GetTx implements the ServiceServer.GetTx RPC method.
+func (s txServer) GetTx(ctx context.Context, req *GetTxRequest) (*GetTxResponse, error) {
+	// TODO We should also check the proof flag in gRPC header.
+	// https://github.com/cosmos/cosmos-sdk/issues/7036.
+	result, err := s.rpcClient.Tx(ctx, req.Hash, false)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(result)
 	return nil, nil
 }

@@ -123,6 +123,33 @@ func (v Validators) Swap(i, j int) {
 	v[j] = it
 }
 
+// ValidatorsByVotingPower implements sort.Interface for []Validator based on
+// the VotingPower and Address fields.
+// Copied from tendermint/types/validator_set.go
+type ValidatorsByVotingPower []Validator
+
+func (valz ValidatorsByVotingPower) Len() int { return len(valz) }
+
+func (valz ValidatorsByVotingPower) Less(i, j int) bool {
+	if valz[i].ConsensusPower() == valz[j].ConsensusPower() {
+		var addrI, addrJ []byte
+		pkI, errI := valz[i].TmConsPubKey()
+		pkJ, errJ := valz[j].TmConsPubKey()
+		// If errors are nil, sort by address,
+		// otherwise don't sort by address and just return false
+		if errI == nil && errJ == nil {
+			addrI = pkI.Address().Bytes()
+			addrJ = pkJ.Address().Bytes()
+		}
+		return bytes.Compare(addrI, addrJ) == -1
+	}
+	return valz[i].ConsensusPower() > valz[j].ConsensusPower()
+}
+
+func (valz ValidatorsByVotingPower) Swap(i, j int) {
+	valz[i], valz[j] = valz[j], valz[i]
+}
+
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (v Validators) UnpackInterfaces(c codectypes.AnyUnpacker) error {
 	for i := range v {

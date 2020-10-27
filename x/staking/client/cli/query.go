@@ -113,22 +113,21 @@ $ %s query staking validators
 				return err
 			}
 
-			resKVs, _, err := clientCtx.QuerySubspace(types.ValidatorsKey, types.StoreKey)
+			queryClient := types.NewQueryClient(clientCtx)
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			var validators types.Validators
-			for _, kv := range resKVs {
-				validator, err := types.UnmarshalValidator(types.ModuleCdc, kv.Value)
-				if err != nil {
-					return err
-				}
-
-				validators = append(validators, validator)
+			result, err := queryClient.Validators(context.Background(), &types.QueryValidatorsRequest{
+				// Leaving status empty on purpose to query all validators.
+				Pagination: pageReq,
+			})
+			if err != nil {
+				return err
 			}
 
-			return clientCtx.PrintOutputLegacy(validators)
+			return clientCtx.PrintOutput(result)
 		},
 	}
 

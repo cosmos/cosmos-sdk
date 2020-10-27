@@ -33,8 +33,10 @@ func (k Keeper) Unjail(ctx sdk.Context, validatorAddr sdk.ValAddress) error {
 		return types.ErrValidatorNotJailed
 	}
 
-	consAddr := sdk.ConsAddress(validator.GetConsPubKey().Address())
-
+	consAddr, err := validator.GetConsAddr()
+	if err != nil {
+		return err
+	}
 	// If the validator has a ValidatorSigningInfo object that signals that the
 	// validator was bonded and so we must check that the validator is not tombstoned
 	// and can be unjailed at the current block.

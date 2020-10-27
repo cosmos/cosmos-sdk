@@ -26,7 +26,8 @@ client. Updates may fill in missing consensus state heights.
 
 Clients may be upgraded. The upgrade should be verified using `VerifyUpgrade`. It is not
 a requirement to allow for light client upgrades. For example, the solo machine client 
-will simply return an error on `VerifyUpgrade`.
+will simply return an error on `VerifyUpgrade`. Clients which implement upgrades
+are expected to account for, but not necessarily support, planned and unpllaned upgrades.
 
 ## Client Misbehaviour
 
@@ -323,10 +324,10 @@ handle data contained within a packet. For example, cross-chain token
 transfers will unmarshal the data into proto definitions representing
 a token transfer. 
 
-Future optimizations may allow for storage cleanup of stored packet 
-commitments and acknowledgements that no longer provide any usefulness. 
-This may be from packets that have completed their life cycles or from
-channels which do not require written acknowledgements. 
+Future optimizations may allow for storage cleanup. Stored packet 
+commitments could be removed from channels which do not require 
+written acknowledgements and acknowledgements could be removed
+when a packet has completed its life cycle.
 
 ## Timing out Packets
 
@@ -360,6 +361,8 @@ that the counterparty channel has been closed.
 ## Port and Channel Capabilities
 
 ## Hostname Validation
+
+Hostname validation is implemented as defined in [ICS 24](https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements).
 
 The 24-host sub-module parses and validates identifiers. It also builds 
 the key paths used to store IBC related information. 

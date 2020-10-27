@@ -153,6 +153,12 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			suite.chainB.CreatePortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
 			portCap = suite.chainB.GetPortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
 		}, true},
+		{"success with crossing hello", func() {
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+			suite.coordinator.ChanOpenInitOnBothChains(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
+
+			portCap = suite.chainB.GetPortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
+		}, true},
 		{"success with empty counterparty chosen channel id", func() {
 			var clientA, clientB string
 			clientA, clientB, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)

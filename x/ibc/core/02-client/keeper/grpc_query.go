@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -151,7 +152,7 @@ func (q Keeper) ConsensusStates(c context.Context, req *types.QueryConsensusStat
 	ctx := sdk.UnwrapSDKContext(c)
 
 	consensusStates := []types.ConsensusStateWithHeight{}
-	store := prefix.NewStore(ctx.KVStore(q.storeKey), host.FullKeyClientPath(req.ClientId, []byte("consensusState/")))
+	store := prefix.NewStore(ctx.KVStore(q.storeKey), host.FullKeyClientPath(req.ClientId, []byte(fmt.Sprintf("%s/", host.KeyConsensusStatesPrefix))))
 
 	pageRes, err := query.Paginate(store, req.Pagination, func(key, value []byte) error {
 		height, err := types.ParseHeight(string(key))

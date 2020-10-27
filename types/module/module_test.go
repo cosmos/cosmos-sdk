@@ -162,10 +162,10 @@ func TestManager_RegisterRoutes(t *testing.T) {
 	mockAppModule1.EXPECT().QuerierRoute().Times(2).Return("querierRoute1")
 	mockAppModule2.EXPECT().QuerierRoute().Times(1).Return("")
 	handler3 := sdk.Querier(nil)
-	mockAppModule1.EXPECT().NewQuerierHandler().Times(1).Return(handler3)
+	amino := codec.NewLegacyAmino()
+	mockAppModule1.EXPECT().LegacyQuerierHandler(amino).Times(1).Return(handler3)
 	queryRouter.EXPECT().AddRoute(gomock.Eq("querierRoute1"), gomock.Eq(handler3)).Times(1)
 
-	amino := codec.NewLegacyAmino()
 	mm.RegisterRoutes(router, queryRouter, amino)
 }
 
@@ -181,11 +181,13 @@ func TestManager_RegisterQueryServices(t *testing.T) {
 	require.NotNil(t, mm)
 	require.Equal(t, 2, len(mm.Modules))
 
+	msgRouter := mocks.NewMockServer(mockCtrl)
 	queryRouter := mocks.NewMockServer(mockCtrl)
-	mockAppModule1.EXPECT().RegisterQueryService(queryRouter).Times(1)
-	mockAppModule2.EXPECT().RegisterQueryService(queryRouter).Times(1)
+	cfg := module.NewConfigurator(msgRouter, queryRouter)
+	mockAppModule1.EXPECT().RegisterServices(cfg).Times(1)
+	mockAppModule2.EXPECT().RegisterServices(cfg).Times(1)
 
-	mm.RegisterQueryServices(queryRouter)
+	mm.RegisterServices(cfg)
 }
 
 func TestManager_InitGenesis(t *testing.T) {

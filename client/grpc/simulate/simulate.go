@@ -8,11 +8,10 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 // BaseAppSimulateFn is the signature of the Baseapp#Simulate function.
-type BaseAppSimulateFn func(txBytes []byte, txtypes sdk.Tx) (sdk.GasInfo, *sdk.Result, error)
+type BaseAppSimulateFn func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error)
 
 type simulateServer struct {
 	simulate          BaseAppSimulateFn
@@ -39,13 +38,12 @@ func (s simulateServer) Simulate(ctx context.Context, req *SimulateRequest) (*Si
 	if err != nil {
 		return nil, err
 	}
-	txBuilder := authtx.WrapTx(req.Tx)
 	txBytes, err := req.Tx.Marshal()
 	if err != nil {
 		return nil, err
 	}
 
-	gasInfo, result, err := s.simulate(txBytes, txBuilder.GetTx())
+	gasInfo, result, err := s.simulate(txBytes)
 	if err != nil {
 		return nil, err
 	}

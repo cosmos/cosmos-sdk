@@ -15,12 +15,12 @@ func TestGRPCRouter(t *testing.T) {
 	qr := NewGRPCQueryRouter()
 	interfaceRegistry := testdata.NewTestInterfaceRegistry()
 	qr.SetInterfaceRegistry(interfaceRegistry)
-	testdata.RegisterTestServiceServer(qr, testdata.TestServiceImpl{})
+	testdata.RegisterQueryServer(qr, testdata.QueryImpl{})
 	helper := &QueryServiceTestHelper{
 		GRPCQueryRouter: qr,
 		ctx:             sdk.Context{}.WithContext(context.Background()),
 	}
-	client := testdata.NewTestServiceClient(helper)
+	client := testdata.NewQueryClient(helper)
 
 	res, err := client.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
 	require.Nil(t, err)

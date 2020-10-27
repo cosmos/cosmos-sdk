@@ -94,7 +94,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	validator := tmtypes.NewValidator(pubKey.(cryptotypes.IntoTmPubKey).AsTmPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	suite.valSetHash = suite.valSet.Hash()
-	suite.header = ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeightMinus1, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	suite.header = suite.chainA.CreateTMClientHeader(testChainID, int64(testClientHeight.VersionHeight), testClientHeightMinus1, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.consensusState = ibctmtypes.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot([]byte("hash")), suite.valSetHash)
 
 	var validators stakingtypes.Validators
@@ -102,12 +102,15 @@ func (suite *KeeperTestSuite) SetupTest() {
 		privVal := ibctestingmock.NewPV()
 		pk, err := privVal.GetPubKey()
 		suite.Require().NoError(err)
-		val := stakingtypes.NewValidator(sdk.ValAddress(pk.Address()), pk, stakingtypes.Description{})
-		val.Status = sdk.Bonded
+		val, err := stakingtypes.NewValidator(sdk.ValAddress(pk.Address()), pk, stakingtypes.Description{})
+		suite.Require().NoError(err)
+
+		val.Status = stakingtypes.Bonded
 		val.Tokens = sdk.NewInt(rand.Int63())
 		validators = append(validators, val)
 
-		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), stakingtypes.NewHistoricalInfo(suite.ctx.BlockHeader(), validators))
+		hi := stakingtypes.NewHistoricalInfo(suite.ctx.BlockHeader(), validators)
+		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), &hi)
 	}
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, app.InterfaceRegistry())
@@ -319,7 +322,7 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 
 	testClientHeightPlus5 := types.NewHeight(0, height+5)
 
-	header := ibctmtypes.CreateTestHeader(testClientID, testClientHeightPlus5, testClientHeight, suite.header.Header.Time.Add(time.Minute),
+	header := suite.chainA.CreateTMClientHeader(testClientID, int64(testClientHeightPlus5.VersionHeight), testClientHeight, suite.header.Header.Time.Add(time.Minute),
 		suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 
 	// mock update functionality

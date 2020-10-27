@@ -39,7 +39,7 @@ A transaction is created by an end-user through one of the possible [interfaces]
 
 Application developers create entrypoints to the application by creating a [command-line interface](../interfaces/cli.md) and/or [REST interface](../interfaces/rest.md), typically found in the application's `./cmd` folder. These interfaces allow users to interact with the application through command-line or through HTTP requests.
 
-For the [command-line interface](../building-modules/module-interfaces.md#cli), module developers create subcommands to add as children to the application top-level transaction command `TxCmd`. For [HTTP requests](../building-modules/module-interfaces.md#rest), module developers specify acceptable request types, register REST routes, and create HTTP Request Handlers.
+For the [command-line interface](../building-modules/module-interfaces.md#cli), module developers create subcommands to add as children to the application top-level transaction command `TxCmd`. For [HTTP requests](../building-modules/module-interfaces.md#legacy-rest), module developers specify acceptable request types, register REST routes, and create HTTP Request Handlers.
 
 When users interact with the application's interfaces, they invoke the underlying modules' handlers or command functions, directly creating messages.
 

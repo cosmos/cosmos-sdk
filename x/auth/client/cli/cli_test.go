@@ -193,7 +193,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(legacyMsgOut.Bytes(), &legacyMsgTxRes))
 
 	// Service Msg.
-	out, err := bankcli.MsgSendExec(
+	out, err := bankcli.ServiceMsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		account2.GetAddress(),
@@ -210,29 +210,34 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	testCases := []struct {
-		name      string
-		args      []string
-		expectErr bool
+		name           string
+		args           []string
+		expectErr      bool
+		rawLogContains string
 	}{
 		{
 			"with invalid hash",
 			[]string{"somethinginvalid", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			true,
+			"",
 		},
 		{
 			"with valid and not existing hash",
 			[]string{"C7E7D3A86A17AB3A321172239F3B61357937AF0F25D9FA4D2F4DCCAD9B0D7747", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			true,
+			"",
 		},
 		{
 			"happy case (legacy Msg)",
 			[]string{legacyMsgTxRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
+			"",
 		},
 		{
 			"happy case (service Msg)",
 			[]string{txRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
+			"/cosmos.bank.v1beta1.Msg/Send",
 		},
 	}
 
@@ -251,6 +256,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 				var result sdk.TxResponse
 				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
 				s.Require().NotNil(result.Height)
+				s.Require().Contains(result.RawLog, tc.rawLogContains)
 			}
 		})
 	}

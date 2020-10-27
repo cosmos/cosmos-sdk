@@ -267,7 +267,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 	var grpcSrv *grpc.Server
 	if config.GRPC.Enable {
-		// Create a new server, and attach it to the app's gRPC router.
 		grpcSrv, err = servergrpc.StartGRPCServer(app, config.GRPC.Address)
 		if err != nil {
 			return err

@@ -90,8 +90,6 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 
 	if val.AppConfig.GRPC.Enable {
-
-		// Create a new server, and attach it to the app's gRPC router.
 		grpcSrv, err := servergrpc.StartGRPCServer(app, val.AppConfig.GRPC.Address)
 		if err != nil {
 			return err

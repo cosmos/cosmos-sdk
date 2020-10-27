@@ -129,7 +129,7 @@ func (s IntegrationTestSuite) TestGetTx() {
 	s.Require().Equal("foobar", grpcRes.Tx.Body.Memo)
 
 	// Query the tx via grpc-gateway.
-	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/getTx/%s", val.APIAddress, txRes.TxHash))
+	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/tx/%s", val.APIAddress, txRes.TxHash))
 	s.Require().NoError(err)
 
 	fmt.Println(string(restRes))

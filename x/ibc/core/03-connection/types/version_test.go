@@ -79,46 +79,41 @@ func TestFindSupportedVersion(t *testing.T) {
 
 	for i, tc := range testCases {
 		version, found := types.FindSupportedVersion(tc.version, tc.supportedVersions)
-
-		require.Equal(t, tc.expVersion.GetIdentifier(), version.GetIdentifier(), "test case %d: %s", i, tc.name)
-		require.Equal(t, tc.expFound, found, "test case %d: %s", i, tc.name)
+		if tc.expFound {
+			require.Equal(t, tc.expVersion.GetIdentifier(), version.GetIdentifier(), "test case %d: %s", i, tc.name)
+			require.True(t, found, "test case %d: %s", i, tc.name)
+		} else {
+			require.False(t, found, "test case: %s", tc.name)
+			require.Nil(t, version, "test case: %s", tc.name)
+		}
 	}
 }
 
 func TestPickVersion(t *testing.T) {
 	testCases := []struct {
 		name                 string
-		supportedVersions    []types.Version
-		counterpartyVersions []types.Version
-		expVer               types.Version
+		supportedVersions    []exported.Version
+		counterpartyVersions []exported.Version
+		expVer               *types.Version
 		expPass              bool
 	}{
 		{"valid default ibc version", types.GetCompatibleVersions(), types.GetCompatibleVersions(), types.DefaultIBCVersion, true},
-		{"valid version in counterparty versions", types.GetCompatibleVersions(), []types.Version{types.NewVersion("version1", nil), types.NewVersion("2.0.0", []string{"ORDER_UNORDERED-ZK"}), types.DefaultIBCVersion}, types.DefaultIBCVersion, true},
-		{"valid identifier match but empty feature set not allowed", types.GetCompatibleVersions(), []types.Version{types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"DAG", "ORDERED-ZK", "UNORDERED-zk]"})}, types.NewVersion(types.DefaultIBCVersionIdentifier, nil), false},
-		{"empty counterparty versions", types.GetCompatibleVersions(), []types.Version{}, types.Version{}, false},
-		{"non-matching counterparty versions", types.GetCompatibleVersions(), []types.Version{types.NewVersion("2.0.0", nil)}, types.Version{}, false},
-		{"non-matching counterparty versions (uses ordered channels only) contained in supported versions (uses unordered channels only)", []types.Version{types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"ORDER_UNORDERED"})}, []types.Version{types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"ORDER_ORDERED"})}, types.Version{}, false},
+		{"valid version in counterparty versions", types.GetCompatibleVersions(), []exported.Version{types.NewVersion("version1", nil), types.NewVersion("2.0.0", []string{"ORDER_UNORDERED-ZK"}), types.DefaultIBCVersion}, types.DefaultIBCVersion, true},
+		{"valid identifier match but empty feature set not allowed", types.GetCompatibleVersions(), []exported.Version{types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"DAG", "ORDERED-ZK", "UNORDERED-zk]"})}, types.NewVersion(types.DefaultIBCVersionIdentifier, nil), false},
+		{"empty counterparty versions", types.GetCompatibleVersions(), []exported.Version{}, &types.Version{}, false},
+		{"non-matching counterparty versions", types.GetCompatibleVersions(), []exported.Version{types.NewVersion("2.0.0", nil)}, &types.Version{}, false},
+		{"non-matching counterparty versions (uses ordered channels only) contained in supported versions (uses unordered channels only)", []exported.Version{types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"ORDER_UNORDERED"})}, []exported.Version{types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"ORDER_ORDERED"})}, &types.Version{}, false},
 	}
 
 	for i, tc := range testCases {
-		encodedSupportedVersions, err := types.EncodeVersions(tc.supportedVersions)
-		require.NoError(t, err)
-
-		encodedCounterpartyVersions, err := types.EncodeVersions(tc.counterpartyVersions)
-		require.NoError(t, err)
-
-		encodedVersion, err := types.PickVersion(encodedSupportedVersions, encodedCounterpartyVersions)
+		version, err := types.PickVersion(tc.supportedVersions, tc.counterpartyVersions)
 
 		if tc.expPass {
 			require.NoError(t, err, "valid test case %d failed: %s", i, tc.name)
-
-			version, err := types.DecodeVersion(encodedVersion)
-			require.NoError(t, err)
-			require.Equal(t, tc.expVer, version, "valid test case %d falied: %s", i, tc.name)
 		} else {
 			require.Error(t, err, "invalid test case %d passed: %s", i, tc.name)
-			require.Equal(t, "", encodedVersion, "invalid test case %d passed: %s", i, tc.name)
+			var emptyVersion *types.Version
+			require.Equal(t, emptyVersion, version, "invalid test case %d passed: %s", i, tc.name)
 		}
 	}
 }
@@ -126,8 +121,8 @@ func TestPickVersion(t *testing.T) {
 func TestVerifyProposedVersion(t *testing.T) {
 	testCases := []struct {
 		name             string
-		proposedVersion  types.Version
-		supportedVersion types.Version
+		proposedVersion  *types.Version
+		supportedVersion *types.Version
 		expPass          bool
 	}{
 		{"entire feature set supported", types.DefaultIBCVersion, types.NewVersion("1", []string{"ORDER_ORDERED", "ORDER_UNORDERED", "ORDER_DAG"}), true},
@@ -150,12 +145,11 @@ func TestVerifyProposedVersion(t *testing.T) {
 }
 
 func TestVerifySupportedFeature(t *testing.T) {
-	nilFeatures, err := types.NewVersion(types.DefaultIBCVersionIdentifier, nil).Encode()
-	require.NoError(t, err)
+	nilFeatures := types.NewVersion(types.DefaultIBCVersionIdentifier, nil)
 
 	testCases := []struct {
 		name    string
-		version string
+		version *types.Version
 		feature string
 		expPass bool
 	}{
@@ -163,7 +157,6 @@ func TestVerifySupportedFeature(t *testing.T) {
 		{"check UNORDERED supported", ibctesting.ConnectionVersion, "ORDER_UNORDERED", true},
 		{"check DAG unsupported", ibctesting.ConnectionVersion, "ORDER_DAG", false},
 		{"check empty feature set returns false", nilFeatures, "ORDER_ORDERED", false},
-		{"failed to unmarshal version", "not an encoded version", "ORDER_ORDERED", false},
 	}
 
 	for i, tc := range testCases {

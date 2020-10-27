@@ -3,6 +3,8 @@ package keeper
 import (
 	"bytes"
 
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -225,15 +227,15 @@ func (k Keeper) ConnOpenAck(
 	case connection.State == types.INIT && !types.IsSupportedVersion(version):
 		return sdkerrors.Wrapf(
 			types.ErrInvalidConnectionState,
-			"connection state is in INIT but the provided encoded version is not supported %s", version,
+			"connection state is in INIT but the provided version is not supported %s", version,
 		)
 
-	// if the connection is in TRYOPEN then the encoded version must be the only set version in the
+	// if the connection is in TRYOPEN then the version must be the only set version in the
 	// retreived connection state.
-	case connection.State == types.TRYOPEN && (len(connection.Versions) != 1 || connection.Versions[0] != version):
+	case connection.State == types.TRYOPEN && (len(connection.Versions) != 1 || !proto.Equal(connection.Versions[0], version)):
 		return sdkerrors.Wrapf(
 			types.ErrInvalidConnectionState,
-			"connection state is in TRYOPEN but the provided encoded version (%s) is not set in the previous connection %s", version, connection,
+			"connection state is in TRYOPEN but the provided version (%s) is not set in the previous connection versions %s", version, connection.Versions,
 		)
 	}
 

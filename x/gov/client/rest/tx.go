@@ -117,7 +117,7 @@ func newVoteHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := types.NewMsgVote(req.Voter, proposalID, voteOption)
+		msg := types.NewMsgVote(req.Voter, proposalID, []types.SubVote{types.NewSubVote(voteOption, 1)})
 		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}

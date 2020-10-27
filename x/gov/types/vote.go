@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 
 	yaml "gopkg.in/yaml.v2"
@@ -10,8 +11,8 @@ import (
 
 // NewVote creates a new Vote instance
 //nolint:interfacer
-func NewVote(proposalID uint64, voter sdk.AccAddress, option VoteOption) Vote {
-	return Vote{proposalID, voter.String(), option}
+func NewVote(proposalID uint64, voter sdk.AccAddress, subvotes []SubVote) Vote {
+	return Vote{proposalID, voter.String(), subvotes}
 }
 
 func (v Vote) String() string {
@@ -43,7 +44,7 @@ func (v Votes) String() string {
 	}
 	out := fmt.Sprintf("Votes for Proposal %d:", v[0].ProposalId)
 	for _, vot := range v {
-		out += fmt.Sprintf("\n  %s: %s", vot.Voter, vot.Option)
+		out += fmt.Sprintf("\n  %s: %s", vot.Voter, vot.SubVotes)
 	}
 	return out
 }
@@ -51,6 +52,25 @@ func (v Votes) String() string {
 // Empty returns whether a vote is empty.
 func (v Vote) Empty() bool {
 	return v.String() == Vote{}.String()
+}
+
+// NewSubVote creates a new Vote instance
+//nolint:interfacer
+func NewSubVote(option VoteOption, rate int64) SubVote {
+	return SubVote{option, sdk.NewDec(rate)}
+}
+
+func (v SubVote) String() string {
+	out, _ := json.Marshal(v)
+	return string(out)
+}
+
+// ValidSubVote returns true if the sub vote is valid and false otherwise.
+func ValidSubVote(subvote SubVote) bool {
+	if !subvote.Rate.IsPositive() {
+		return false
+	}
+	return ValidVoteOption(subvote.Option)
 }
 
 // VoteOptionFromString returns a VoteOption from a string. It returns an error

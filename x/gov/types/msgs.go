@@ -177,8 +177,8 @@ func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
 
 // NewMsgVote creates a message to cast a vote on an active proposal
 //nolint:interfacer
-func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) *MsgVote {
-	return &MsgVote{proposalID, voter.String(), option}
+func NewMsgVote(voter sdk.AccAddress, proposalID uint64, subVotes []SubVote) *MsgVote {
+	return &MsgVote{proposalID, voter.String(), subVotes}
 }
 
 // Route implements Msg
@@ -192,8 +192,10 @@ func (msg MsgVote) ValidateBasic() error {
 	if msg.Voter == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Voter)
 	}
-	if !ValidVoteOption(msg.Option) {
-		return sdkerrors.Wrap(ErrInvalidVote, msg.Option.String())
+	for _, subvote := range msg.SubVotes {
+		if !ValidSubVote(subvote) {
+			return sdkerrors.Wrap(ErrInvalidVote, subvote.String())
+		}
 	}
 
 	return nil

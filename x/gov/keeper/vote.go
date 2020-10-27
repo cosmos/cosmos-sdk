@@ -9,7 +9,7 @@ import (
 )
 
 // AddVote adds a vote on a specific proposal
-func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, option types.VoteOption) error {
+func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, subvotes []types.SubVote) error {
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
 		return sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
@@ -22,7 +22,7 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 		return sdkerrors.Wrap(types.ErrInvalidVote, option.String())
 	}
 
-	vote := types.NewVote(proposalID, voterAddr, option)
+	vote := types.NewVote(proposalID, voterAddr, subvotes)
 	keeper.SetVote(ctx, vote)
 
 	ctx.EventManager().EmitEvent(

@@ -29,6 +29,15 @@ enum VoteOption {
   VOTE_OPTION_NO_WITH_VETO = 4 [(gogoproto.enumvalue_customname) = "OptionNoWithVeto"];
 }
 
+message SubVote {
+  VoteOption option = 1;
+  string rate = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false,
+    (gogoproto.moretags)   = "yaml:\"rate\""
+  ];
+}
+
 // TextProposal defines a standard text proposal whose changes need to be
 // manually updated in case of approval.
 message TextProposal {
@@ -119,9 +128,9 @@ message Vote {
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.equal)            = false;
 
-  uint64              proposal_id  = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
-  string              voter        = 2;
-  repeated VoteOption options      = 3;
+  uint64           proposal_id  = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
+  string           voter        = 2;
+  repeated SubVote sub_votes    = 3 [(gogoproto.nullable) = false];
 }
 
 // DepositParams defines the params for deposits on governance proposals.

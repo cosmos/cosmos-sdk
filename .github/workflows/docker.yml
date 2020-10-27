@@ -2,6 +2,7 @@ name: Build & Push
 # Build & Push builds the simapp docker image on every push to master and
 # and pushes the image to https://hub.docker.com/r/interchainio/simapp/tags
 on:
+  pull_request:
   push:
     branches:
       - master
@@ -33,6 +34,7 @@ jobs:
           TAGS="${DOCKER_IMAGE}:${VERSION}"
           if [[ $VERSION =~ ^v[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
             TAGS="$TAGS,${DOCKER_IMAGE}:${VERSION}"
+          fi
           echo ::set-output name=version::${VERSION}
           echo ::set-output name=tags::${TAGS}
           echo ::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')

@@ -11,6 +11,13 @@ import (
 	"github.com/gogo/protobuf/proto"
 )
 
+// ProtoCodecMarshaler defines an interface for codecs that utilize Protobuf for both
+// binary and JSON encoding.
+type ProtoCodecMarshaler interface {
+	Marshaler
+	InterfaceRegistry() types.InterfaceRegistry
+}
+
 // ProtoCodec defines a codec that utilizes Protobuf for both binary and JSON
 // encoding.
 type ProtoCodec struct {
@@ -18,6 +25,7 @@ type ProtoCodec struct {
 }
 
 var _ Marshaler = &ProtoCodec{}
+var _ ProtoCodecMarshaler = &ProtoCodec{}
 
 // NewProtoCodec returns a reference to a new ProtoCodec
 func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {

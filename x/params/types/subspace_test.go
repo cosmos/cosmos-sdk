@@ -34,7 +34,7 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	ms.MountStoreWithDB(tkey, sdk.StoreTypeTransient, db)
 	suite.NoError(ms.LoadLatestVersion())
 
-	encCfg := simapp.MakeEncodingConfig()
+	encCfg := simapp.MakeTestEncodingConfig()
 	ss := types.NewSubspace(encCfg.Marshaler, encCfg.Amino, key, tkey, "testsubspace")
 
 	suite.cdc = encCfg.Marshaler

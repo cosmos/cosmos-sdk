@@ -1,0 +1,28 @@
+{
+  "node_info": {
+    "protocol_version": {
+      "p2p": "7",
+      "block": "10",
+      "app": "0"
+    },
+    "id": "f88e6f644615a03fa9a6d493cc1517d47b69e714",
+    "listen_addr": "tcp://0.0.0.0:26656",
+    "network": "blog",
+    "version": "0.33.7",
+    "channels": "4020212223303800",
+    "moniker": "mynode",
+    "other": {
+      "tx_index": "on",
+      "rpc_address": "tcp://127.0.0.1:26657"
+    }
+  },
+  "application_version": {
+    "name": "",
+    "server_name": "\u003cappd\u003e",
+    "client_name": "\u003cappcli\u003e",
+    "version": "",
+    "commit": "",
+    "build_tags": "",
+    "go": "go version go1.15.2 linux/amd64"
+  }
+}

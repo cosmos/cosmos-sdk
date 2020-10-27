@@ -7,9 +7,6 @@ import (
 	"os"
 	"runtime/pprof"
 
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
-	"github.com/tendermint/cosmos-rosetta-gateway/service"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/abci/server"
@@ -40,8 +37,6 @@ const (
 	FlagPruningKeepRecent = "pruning-keep-recent"
 	FlagPruningKeepEvery  = "pruning-keep-every"
 	FlagPruningInterval   = "pruning-interval"
-
-	FlagRosettaAPI = "rosetta"
 )
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -108,7 +103,6 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Uint64(FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint64(FlagPruningKeepEvery, 0, "Offset heights to keep on disk after 'keep-every' (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint64(FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
-	cmd.Flags().Bool(FlagRosettaAPI, false, "Enable the Rosetta API")
 	viper.BindPFlag(FlagTrace, cmd.Flags().Lookup(FlagTrace))
 	viper.BindPFlag(FlagPruning, cmd.Flags().Lookup(FlagPruning))
 	viper.BindPFlag(FlagPruningKeepRecent, cmd.Flags().Lookup(FlagPruningKeepRecent))
@@ -218,27 +212,6 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 			ctx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
 			pprof.StopCPUProfile()
 			f.Close()
-		}
-	}
-
-	if viper.GetBool(FlagRosettaAPI) {
-		options, err := getRosettaOptionsFromFlags(cmd.Flags())
-		if err != nil {
-			return nil, err
-		}
-
-		ctx.Logger.Info("starting Rosetta API")
-		s, err := service.New(
-			service.Options{Port: 8080},
-			rosetta.NewNetwork(cdc, options),
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		err = s.Start()
-		if err != nil {
-			return nil, err
 		}
 	}
 

@@ -1,0 +1,49 @@
+syntax = "proto3";
+package cosmos.tx.v1beta1;
+
+import "google/api/annotations.proto";
+import "cosmos/base/abci/v1beta1/abci.proto";
+import "cosmos/tx/v1beta1/tx.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
+
+// Service defines a gRPC service for simulating transactions.
+service Service {
+    // Simulate simulates executing a transaction for estimating gas usage.
+    rpc Simulate(SimulateRequest) returns (SimulateResponse) {
+        option (google.api.http).post = "/cosmos/tx/v1beta1/simulate";
+    }
+    // Simulate simulates executing a transaction for estimating gas usage.
+    rpc TxByHash(TxByHashRequest) returns (TxByHashResponse) {
+        option (google.api.http).get = "/cosmos/tx/v1beta1/txByHash";
+    }
+}
+
+// SimulateRequest is the request type for the Service.Simulate
+// RPC method.
+message SimulateRequest {
+    // tx is the transaction to simulate.
+    cosmos.tx.v1beta1.Tx tx = 1;
+}
+  
+// SimulateResponse is the response type for the
+// Service.SimulateRPC method.
+message SimulateResponse {
+    // gas_info is the information about gas used in the simulation.
+    cosmos.base.abci.v1beta1.GasInfo gas_info = 1;
+    // result is the result of the simulation.
+    cosmos.base.abci.v1beta1.Result result = 2;
+}
+
+// TxByHash is the request type for the Service.TxByHash
+// RPC method.
+message TxByHashRequest {
+    // hash is the tx hash to query.
+   bytes hash = 1;
+}
+  
+// TxByHashResponse is the response type for the Service.TxByHash method.
+message TxByHashResponse {
+    // tx is the queried transaction.
+    cosmos.tx.v1beta1.Tx tx = 1;
+}

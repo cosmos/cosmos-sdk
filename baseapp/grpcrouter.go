@@ -10,9 +10,9 @@ import (
 	"google.golang.org/grpc/encoding/proto"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
-	"github.com/cosmos/cosmos-sdk/client/grpc/simulate"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 var protoCodec = encoding.GetCodec(proto.Name)
@@ -113,11 +113,11 @@ func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry codectypes.In
 
 // RegisterSimulateService registers the simulate service on the gRPC router.
 func (qrt *GRPCQueryRouter) RegisterSimulateService(
-	simulateFn simulate.BaseAppSimulateFn,
+	simulateFn tx.BaseAppSimulateFn,
 	interfaceRegistry codectypes.InterfaceRegistry,
 ) {
-	simulate.RegisterSimulateServiceServer(
+	tx.RegisterServiceServer(
 		qrt,
-		simulate.NewSimulateServer(simulateFn, interfaceRegistry),
+		tx.NewTxServer(simulateFn, interfaceRegistry),
 	)
 }

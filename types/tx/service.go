@@ -1,4 +1,4 @@
-package simulate
+package tx
 
 import (
 	"context"
@@ -13,23 +13,23 @@ import (
 // BaseAppSimulateFn is the signature of the Baseapp#Simulate function.
 type BaseAppSimulateFn func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error)
 
-type simulateServer struct {
+type txServer struct {
 	simulate          BaseAppSimulateFn
 	interfaceRegistry codectypes.InterfaceRegistry
 }
 
-// NewSimulateServer creates a new SimulateServer.
-func NewSimulateServer(simulate BaseAppSimulateFn, interfaceRegistry codectypes.InterfaceRegistry) SimulateServiceServer {
-	return simulateServer{
+// NewTxServer creates a new TxService server.
+func NewTxServer(simulate BaseAppSimulateFn, interfaceRegistry codectypes.InterfaceRegistry) ServiceServer {
+	return txServer{
 		simulate:          simulate,
 		interfaceRegistry: interfaceRegistry,
 	}
 }
 
-var _ SimulateServiceServer = simulateServer{}
+var _ ServiceServer = txServer{}
 
-// Simulate implements the SimulateService.Simulate RPC method.
-func (s simulateServer) Simulate(ctx context.Context, req *SimulateRequest) (*SimulateResponse, error) {
+// Simulate implements the ServiceServer.Simulate RPC method.
+func (s txServer) Simulate(ctx context.Context, req *SimulateRequest) (*SimulateResponse, error) {
 	if req.Tx == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
 	}
@@ -52,4 +52,10 @@ func (s simulateServer) Simulate(ctx context.Context, req *SimulateRequest) (*Si
 		GasInfo: &gasInfo,
 		Result:  result,
 	}, nil
+}
+
+// TxByHash implements the ServiceServer.TxByHash RPC method.
+func (s txServer) TxByHash(ctx context.Context, req *TxByHashRequest) (*TxByHashResponse, error) {
+	// TODO
+	return nil, nil
 }

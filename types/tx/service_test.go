@@ -1,4 +1,4 @@
-package simulate_test
+package tx_test
 
 import (
 	"context"
@@ -9,13 +9,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/grpc/simulate"
-	"github.com/cosmos/cosmos-sdk/client/tx"
+	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -27,7 +26,7 @@ type IntegrationTestSuite struct {
 
 	app         *simapp.SimApp
 	clientCtx   client.Context
-	queryClient simulate.SimulateServiceClient
+	queryClient tx.ServiceClient
 	sdkCtx      sdk.Context
 }
 
@@ -43,11 +42,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	clientCtx := client.Context{}.WithTxConfig(encodingConfig.TxConfig)
 
 	// Create new simulation server.
-	srv := simulate.NewSimulateServer(app.BaseApp.Simulate, encodingConfig.InterfaceRegistry)
+	srv := tx.NewTxServer(app.BaseApp.Simulate, encodingConfig.InterfaceRegistry)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(sdkCtx, app.InterfaceRegistry())
-	simulate.RegisterSimulateServiceServer(queryHelper, srv)
-	queryClient := simulate.NewSimulateServiceClient(queryHelper)
+	tx.RegisterServiceServer(queryHelper, srv)
+	queryClient := tx.NewServiceClient(queryHelper)
 
 	s.app = app
 	s.clientCtx = clientCtx
@@ -91,7 +90,7 @@ func (s IntegrationTestSuite) TestSimulateService() {
 	}
 	txBuilder.SetSignatures(sigV2)
 	// 2nd round: actually sign
-	sigV2, err = tx.SignWithPrivKey(
+	sigV2, err = clienttx.SignWithPrivKey(
 		s.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
 		authsigning.SignerData{ChainID: s.sdkCtx.ChainID(), AccountNumber: accNum, Sequence: accSeq},
 		txBuilder, priv1, s.clientCtx.TxConfig, accSeq,
@@ -101,11 +100,11 @@ func (s IntegrationTestSuite) TestSimulateService() {
 	any, ok := txBuilder.(codectypes.IntoAny)
 	s.Require().True(ok)
 	cached := any.AsAny().GetCachedValue()
-	txTx, ok := cached.(*txtypes.Tx)
+	txTx, ok := cached.(*tx.Tx)
 	s.Require().True(ok)
 	res, err := s.queryClient.Simulate(
 		context.Background(),
-		&simulate.SimulateRequest{Tx: txTx},
+		&tx.SimulateRequest{Tx: txTx},
 	)
 	s.Require().NoError(err)
 

@@ -15,7 +15,7 @@ import (
 )
 
 func TestGetCommandEncode(t *testing.T) {
-	encodingConfig := simappparams.MakeEncodingConfig()
+	encodingConfig := simappparams.MakeTestEncodingConfig()
 
 	cmd := GetEncodeCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
@@ -49,7 +49,7 @@ func TestGetCommandEncode(t *testing.T) {
 }
 
 func TestGetCommandDecode(t *testing.T) {
-	encodingConfig := simappparams.MakeEncodingConfig()
+	encodingConfig := simappparams.MakeTestEncodingConfig()
 
 	clientCtx := client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig).

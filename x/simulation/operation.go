@@ -132,7 +132,7 @@ func NewWeightedOperation(weight int, op simulation.Operation) WeightedOperation
 	}
 }
 
-// WeightedOperations is the group of all weighted operations to tx.
+// WeightedOperations is the group of all weighted operations to simulate.
 type WeightedOperations []simulation.WeightedOperation
 
 func (ops WeightedOperations) totalWeight() int {

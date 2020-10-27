@@ -293,7 +293,7 @@ func CalculateGas(
 		return tx.SimulateResponse{}, 0, err
 	}
 
-	bz, _, err := queryFunc("/cosmos.base.tx.v1beta1.SimulateService/Simulate", txBytes)
+	bz, _, err := queryFunc("/cosmos.tx.v1beta1.Service/Simulate", txBytes)
 	if err != nil {
 		return tx.SimulateResponse{}, 0, err
 	}

@@ -49,6 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `Validator` update. Methods changed in `ValidatorI` (as described above) and `ToTmValidator` return error.
   * `Validator.ConsensusPubkey` type changed from `string` to `codectypes.Any`.
   * `MsgCreateValidator.Pubkey` type changed from `string` to `codectypes.Any`.
+* Deprecating and renaming `MakeEncodingConfig` to `MakeTestEncodingConfig` (both in `simapp` and `simapp/params` packages).
 
 ### Features
 

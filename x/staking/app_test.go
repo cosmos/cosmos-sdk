@@ -71,7 +71,7 @@ func TestStakingMsgs(t *testing.T) {
 	require.NoError(t, err)
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
-	txGen := simapp.MakeEncodingConfig().TxConfig
+	txGen := simapp.MakeTestEncodingConfig().TxConfig
 	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
 	require.NoError(t, err)
 	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin.Sub(bondCoin)})

@@ -22,6 +22,8 @@ type EncodeResp struct {
 // and responds with base64-encoded bytes.
 func EncodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		var req legacytx.StdTx
 
 		body, err := ioutil.ReadAll(r.Body)

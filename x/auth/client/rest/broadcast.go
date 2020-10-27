@@ -22,6 +22,8 @@ type BroadcastReq struct {
 // broadcasted via a sync|async|block mechanism.
 func BroadcastTxRequest(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		var req BroadcastReq
 
 		body, err := ioutil.ReadAll(r.Body)

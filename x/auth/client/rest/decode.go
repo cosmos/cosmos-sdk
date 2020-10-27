@@ -29,6 +29,8 @@ type (
 // and responds with a json-formatted transaction.
 func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		var req DecodeReq
 
 		body, err := ioutil.ReadAll(r.Body)

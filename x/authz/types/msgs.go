@@ -102,7 +102,7 @@ func (msg *MsgGrantAuthorization) SetAuthorization(authorization Authorization) 
 
 func (msg MsgExecAuthorized) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, x := range msg.Msgs {
-		var msgExecAuthorized sdk.Msg
+		var msgExecAuthorized sdk.MsgRequest
 		err := unpacker.UnpackAny(x, &msgExecAuthorized)
 		if err != nil {
 			return err

@@ -145,7 +145,7 @@ func (s *TestSuite) TestKeeperFees() {
 
 	msgs := types.NewMsgExecAuthorized(granteeAddr, []sdk.ServiceMsg{
 		{
-			MethodName: types.SendAuthorization{}.MethodName(),
+			MethodName: proto.MessageName(&banktypes.MsgSend{}),
 			Request: &banktypes.MsgSend{
 				Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
 				FromAddress: granterAddr.String(),
@@ -153,6 +153,8 @@ func (s *TestSuite) TestKeeperFees() {
 			},
 		},
 	})
+
+	s.Require().NoError(msgs.UnpackInterfaces(app.AppCodec()))
 
 	s.T().Log("verify dispatch fails with invalid authorization")
 	executeMsgs, err := msgs.GetMsgs()

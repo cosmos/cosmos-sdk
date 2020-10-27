@@ -79,7 +79,7 @@ func TestLaunchpad_AccountBalanceDoesNotWorkOfflineMode(t *testing.T) {
 		OfflineMode: true,
 	}
 
-	adapter := newAdapter(nil,cosmos.NewClient("", nil), tendermint.NewClient(""), properties)
+	adapter := newAdapter(nil, cosmos.NewClient("", nil), tendermint.NewClient(""), properties)
 	_, err := adapter.AccountBalance(context.Background(), &types.AccountBalanceRequest{
 		AccountIdentifier: &types.AccountIdentifier{
 			Address: "cosmos15f92rjkapauptyw6lt94rlwq4dcg99nncwc8na",

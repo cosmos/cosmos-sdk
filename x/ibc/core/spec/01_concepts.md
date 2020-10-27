@@ -299,13 +299,13 @@ A message should be sent to the receving chain indicating that the packet
 has been committed on the sending chain and should be received on the 
 receiving chain. The light client on the receiving chain, which verifies
 the sending chain's state, should be updated to the lastest sending chain
-state if possible. The verification will fail if the lastest state of the
+state if possible. The verification will fail if the latest state of the
 light client does not include the packet commitment. The receiving chain
 is responsible for verifying that the counterparty set the hash of the 
 packet. If verification of the packet to be received is successful, the
 receiving chain should store a receipt of the packet and call application
-logic if necessary. An acknowledgement may be stored at this time (synchonously)
-or at another point in the future (aynchronously). 
+logic if necessary. An acknowledgement may be processed and stored at this time (synchronously)
+or at another point in the future (asynchronously). 
 
 Acknowledgements written on the receiving chain may be verified on the 
 sending chain. If the sending chain successfully verifies the acknowledgement
@@ -331,7 +331,7 @@ when a packet has completed its life cycle.
 
 ## Timing out Packets
 
-A packet may be timed out on the receiving chain if the packet timeouts have
+A packet may be timed out on the receiving chain if the packet timeout height or timestamp has
 been surpassed on the receving chain or the channel has closed. A timed out
 packet can only occur if the packet has never been received on the receiving 
 chain. ORDERED channels will verify that the packet sequence is greater than 

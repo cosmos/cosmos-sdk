@@ -11,7 +11,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 )
 
-// ProtoCodecMarshaler defines and interface for codecs that utilize Protobuf for both
+// ProtoCodecMarshaler defines an interface for codecs that utilize Protobuf for both
 // binary and JSON encoding.
 type ProtoCodecMarshaler interface {
 	Marshaler

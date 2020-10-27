@@ -48,7 +48,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 		// Check that the service Msg fully-qualified method name has already
 		// been registered (via RegisterInterfaces). If the user registers a
 		// services without registering the service Msg types, there might be
-		// some unexpected behavior down the road. So we prefer to panic here
+		// some unexpected behavior down the road. Since we can't return an error (`Server.RegisterService` interface restriction) we panic.
 		// (at startup).
 		serviceMsg, err := msr.interfaceRegistry.Resolve(fqMethod)
 		if err != nil || serviceMsg == nil {

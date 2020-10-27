@@ -15,7 +15,7 @@ service Service {
     }
     // Simulate simulates executing a transaction for estimating gas usage.
     rpc GetTx(GetTxRequest) returns (GetTxResponse) {
-        option (google.api.http).get = "/cosmos/tx/v1beta1/getTx";
+        option (google.api.http).get = "/cosmos/tx/v1beta1/getTx/{hash}";
     }
 }
 

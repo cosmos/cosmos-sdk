@@ -2,29 +2,29 @@ package tx
 
 import (
 	"context"
-	fmt "fmt"
 
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // BaseAppSimulateFn is the signature of the Baseapp#Simulate function.
 type BaseAppSimulateFn func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error)
 
 type txServer struct {
-	rpcClient         rpcclient.Client
+	clientCtx         client.Context
 	simulate          BaseAppSimulateFn
 	interfaceRegistry codectypes.InterfaceRegistry
 }
 
 // NewTxServer creates a new TxService server.
-func NewTxServer(rpcClient rpcclient.Client, simulate BaseAppSimulateFn, interfaceRegistry codectypes.InterfaceRegistry) ServiceServer {
+func NewTxServer(clientCtx client.Context, simulate BaseAppSimulateFn, interfaceRegistry codectypes.InterfaceRegistry) ServiceServer {
 	return txServer{
-		rpcClient:         rpcClient,
+		clientCtx:         clientCtx,
 		simulate:          simulate,
 		interfaceRegistry: interfaceRegistry,
 	}
@@ -62,11 +62,47 @@ func (s txServer) Simulate(ctx context.Context, req *SimulateRequest) (*Simulate
 func (s txServer) GetTx(ctx context.Context, req *GetTxRequest) (*GetTxResponse, error) {
 	// TODO We should also check the proof flag in gRPC header.
 	// https://github.com/cosmos/cosmos-sdk/issues/7036.
-	result, err := s.rpcClient.Tx(ctx, req.Hash, false)
+	result, err := s.clientCtx.Client.Tx(ctx, req.Hash, false)
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Println(result)
-	return nil, nil
+	sdkTx, err := s.clientCtx.TxConfig.TxDecoder()(result.Tx)
+	if err != nil {
+		return nil, err
+	}
+
+	txBuilder, ok := sdkTx.(client.TxBuilder)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (client.TxBuilder)(nil), sdkTx)
+	}
+	// Convert the txBuilder to a tx.Tx.
+	protoTx, err := TxBuilderToProtoTx(txBuilder)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GetTxResponse{
+		Tx: protoTx,
+	}, nil
+}
+
+// TxBuilderToProtoTx convert a txBuilder into a proto tx.Tx.
+func TxBuilderToProtoTx(txBuilder client.TxBuilder) (*Tx, error) {
+	intoAnyTx, ok := txBuilder.(codectypes.IntoAny)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (codectypes.IntoAny)(nil), intoAnyTx)
+	}
+
+	any := intoAnyTx.AsAny().GetCachedValue()
+	if any == nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "any's cached value is empty")
+	}
+
+	protoTx, ok := any.(*Tx)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (codectypes.IntoAny)(nil), intoAnyTx)
+	}
+
+	return protoTx, nil
 }

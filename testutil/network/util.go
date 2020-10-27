@@ -84,6 +84,10 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 
 	if val.AppConfig.GRPC.Enable {
+		// Add the tx service in the gRPC router.
+		app.RegisterTxService(val.ClientCtx)
+
+		// Create a new server, and attach it to the app's gRPC router.
 		grpcSrv, err := servergrpc.StartGRPCServer(app, val.AppConfig.GRPC.Address)
 		if err != nil {
 			return err

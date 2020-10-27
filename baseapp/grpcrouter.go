@@ -5,11 +5,11 @@ import (
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/proto"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -114,12 +114,12 @@ func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry codectypes.In
 
 // RegisterTxService registers the tx service on the gRPC router.
 func (qrt *GRPCQueryRouter) RegisterTxService(
-	rpcClient rpcclient.Client,
+	clientCtx client.Context,
 	simulateFn tx.BaseAppSimulateFn,
 	interfaceRegistry codectypes.InterfaceRegistry,
 ) {
 	tx.RegisterServiceServer(
 		qrt,
-		tx.NewTxServer(rpcClient, simulateFn, interfaceRegistry),
+		tx.NewTxServer(clientCtx, simulateFn, interfaceRegistry),
 	)
 }

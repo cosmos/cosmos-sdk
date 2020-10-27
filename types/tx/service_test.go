@@ -2,109 +2,93 @@ package tx_test
 
 import (
 	"context"
+	"encoding/hex"
+	fmt "fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	app         *simapp.SimApp
-	clientCtx   client.Context
+	cfg     network.Config
+	network *network.Network
+
 	queryClient tx.ServiceClient
-	sdkCtx      sdk.Context
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
-	app := simapp.Setup(true)
-	sdkCtx := app.BaseApp.NewContext(true, tmproto.Header{})
+	s.T().Log("setting up integration test suite")
 
-	app.AccountKeeper.SetParams(sdkCtx, authtypes.DefaultParams())
-	app.BankKeeper.SetParams(sdkCtx, banktypes.DefaultParams())
+	cfg := network.DefaultConfig()
+	cfg.NumValidators = 1
 
-	// Set up TxConfig.
-	encodingConfig := simapp.MakeTestEncodingConfig()
-	clientCtx := client.Context{}.WithTxConfig(encodingConfig.TxConfig)
+	s.cfg = cfg
+	s.network = network.New(s.T(), cfg)
 
-	// Create new simulation server.
-	srv := tx.NewTxServer(clientCtx.Client, app.BaseApp.Simulate, encodingConfig.InterfaceRegistry)
+	s.Require().NotNil(s.network)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(sdkCtx, app.InterfaceRegistry())
-	tx.RegisterServiceServer(queryHelper, srv)
-	queryClient := tx.NewServiceClient(queryHelper)
+	_, err := s.network.WaitForHeight(1)
+	s.Require().NoError(err)
 
-	s.app = app
-	s.clientCtx = clientCtx
-	s.queryClient = queryClient
-	s.sdkCtx = sdkCtx
+	s.queryClient = tx.NewServiceClient(s.network.Validators[0].ClientCtx)
 }
 
-func (s IntegrationTestSuite) TestSimulateService() {
-	// Create an account with some funds.
-	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	acc1 := s.app.AccountKeeper.NewAccountWithAddress(s.sdkCtx, addr1)
-	err := acc1.SetAccountNumber(0)
-	s.Require().NoError(err)
-	s.app.AccountKeeper.SetAccount(s.sdkCtx, acc1)
-	s.app.BankKeeper.SetBalances(s.sdkCtx, addr1, sdk.Coins{
-		sdk.NewInt64Coin("atom", 10000000),
-	})
+func (s *IntegrationTestSuite) TearDownSuite() {
+	s.T().Log("tearing down integration test suite")
+	s.network.Cleanup()
+}
 
-	// Create a test x/bank MsgSend.
-	coins := sdk.NewCoins(sdk.NewInt64Coin("atom", 10))
-	_, _, addr2 := testdata.KeyTestPubAddr()
-	msg := banktypes.NewMsgSend(addr1, addr2, coins)
-	feeAmount := testdata.NewTestFeeAmount()
+func (s IntegrationTestSuite) TestSimulate() {
+	val := s.network.Validators[0]
+
+	// prepare txBuilder with msg
+	txBuilder := val.ClientCtx.TxConfig.NewTxBuilder()
+	feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
 	gasLimit := testdata.NewTestGasLimit()
-	memo := "foo"
-	accSeq, accNum := uint64(0), uint64(0)
-
-	// Create a txBuilder.
-	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
-	txBuilder.SetMsgs(msg)
-	txBuilder.SetMemo(memo)
+	s.Require().NoError(
+		txBuilder.SetMsgs(&banktypes.MsgSend{
+			FromAddress: val.Address.String(),
+			ToAddress:   val.Address.String(),
+			Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
+		}),
+	)
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
-	// 1st round: set empty signature
-	sigV2 := signing.SignatureV2{
-		PubKey: priv1.PubKey(),
-		Data: &signing.SingleSignatureData{
-			SignMode:  s.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
-			Signature: nil,
-		},
-	}
-	txBuilder.SetSignatures(sigV2)
-	// 2nd round: actually sign
-	sigV2, err = clienttx.SignWithPrivKey(
-		s.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
-		authsigning.SignerData{ChainID: s.sdkCtx.ChainID(), AccountNumber: accNum, Sequence: accSeq},
-		txBuilder, priv1, s.clientCtx.TxConfig, accSeq,
-	)
-	txBuilder.SetSignatures(sigV2)
+	txBuilder.SetMemo("foobar")
 
-	any, ok := txBuilder.(codectypes.IntoAny)
-	s.Require().True(ok)
-	cached := any.AsAny().GetCachedValue()
-	txTx, ok := cached.(*tx.Tx)
-	s.Require().True(ok)
+	// setup txFactory
+	txFactory := clienttx.Factory{}.
+		WithChainID(val.ClientCtx.ChainID).
+		WithKeybase(val.ClientCtx.Keyring).
+		WithTxConfig(val.ClientCtx.TxConfig).
+		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
+
+	// Sign Tx.
+	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false)
+	s.Require().NoError(err)
+
+	// Convert the txBuilder to a tx.Tx.
+	protoTx, err := tx.TxBuilderToProtoTx(txBuilder)
+	s.Require().NoError(err)
+
+	// Run the simulate gRPC query.
 	res, err := s.queryClient.Simulate(
 		context.Background(),
-		&tx.SimulateRequest{Tx: txTx},
+		&tx.SimulateRequest{Tx: protoTx},
 	)
 	s.Require().NoError(err)
 
@@ -113,6 +97,48 @@ func (s IntegrationTestSuite) TestSimulateService() {
 	s.Require().True(res.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
 }
 
-func TestSimulateTestSuite(t *testing.T) {
+func (s IntegrationTestSuite) TestGetTx() {
+	val := s.network.Validators[0]
+
+	// Create a new MsgSend tx from val to itself.
+	out, err := bankcli.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		val.Address,
+		sdk.NewCoins(
+			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+		fmt.Sprintf("--%s=foobar", flags.FlagMemo),
+	)
+	s.Require().NoError(err)
+	var txRes sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txRes))
+	s.Require().Equal(uint32(0), txRes.Code)
+
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// Query the tx via gRPC.
+	hash, err := hex.DecodeString(txRes.TxHash)
+	s.Require().NoError(err)
+	grpcRes, err := s.queryClient.GetTx(
+		context.Background(),
+		&tx.GetTxRequest{Hash: hash},
+	)
+	s.Require().NoError(err)
+	s.Require().Equal("foobar", grpcRes.Tx.Body.Memo)
+
+	// Query the tx via grpc-gateway.
+	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/getTx/%s", val.APIAddress, val.Address.String()))
+	s.Require().NoError(err)
+
+	fmt.Println(string(restRes))
+	s.Require().True(false)
+}
+
+func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }

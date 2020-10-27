@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -176,17 +177,19 @@ func (msg MsgRevokeAuthorization) String() string {
 func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.ServiceMsg) MsgExecAuthorized {
 	msgsAny := make([]*types.Any, len(msgs))
 	for i, msg := range msgs {
-		// msg1, ok := msg.(proto.Message)
-		// if !ok {
-		// 	panic(fmt.Errorf("cannot proto marshal %T", msg1))
-		// }
-		any, err := types.NewAnyWithValue(&msg)
+		bz, err := proto.Marshal(msg.Request)
 		if err != nil {
 			panic(err)
 		}
 
-		msgsAny[i] = any
+		anyMsg := &codectypes.Any{
+			TypeUrl: msg.MethodName,
+			Value:   bz,
+		}
+
+		msgsAny[i] = anyMsg
 	}
+
 	return MsgExecAuthorized{
 		Grantee: grantee.String(),
 		Msgs:    msgsAny,
@@ -197,12 +200,14 @@ func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.ServiceMsg) MsgExec
 func (msg MsgExecAuthorized) GetMsgs() ([]sdk.ServiceMsg, error) {
 	msgs := make([]sdk.ServiceMsg, len(msg.Msgs))
 	for i, msgAny := range msg.Msgs {
-		msg1, ok := msgAny.GetCachedValue().(sdk.ServiceMsg)
-		if !ok {
-			return nil, fmt.Errorf("cannot proto marshal %T", msg1)
+		msg1 := sdk.ServiceMsg{
+			MethodName: msgAny.TypeUrl,
+			Request:    msgAny.GetCachedValue().(sdk.MsgRequest),
 		}
+
 		msgs[i] = msg1
 	}
+
 	return msgs, nil
 }
 

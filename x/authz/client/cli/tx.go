@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	proto "github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -148,7 +149,7 @@ func NewCmdSendAs() *cobra.Command {
 			serviceMsgs := make([]sdk.ServiceMsg, len(msgs))
 			for i, msg := range msgs {
 				serviceMsgs[i] = sdk.ServiceMsg{
-					MethodName: msg.Type(),
+					MethodName: proto.MessageName(msg),
 					Request:    msg,
 				}
 			}

@@ -362,7 +362,11 @@ proto-gen:
 	@./scripts/protocgen.sh
 
 proto-format:
+	@echo "Formatting Protobuf files"
+	docker run -v $(shell pwd):/workspace \
+	--workdir /workspace tendermintdev/docker-build-proto \
 	find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \;
+.PHONY: proto-format
 
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
 proto-gen-any:

@@ -2,7 +2,7 @@ package tx_test
 
 import (
 	"context"
-	fmt "fmt"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -131,9 +131,9 @@ func (s IntegrationTestSuite) TestGetTx() {
 	// Query the tx via grpc-gateway.
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/tx/%s", val.APIAddress, txRes.TxHash))
 	s.Require().NoError(err)
-
-	fmt.Println(string(restRes))
-	s.Require().True(false)
+	var getTxRes tx.GetTxResponse
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getTxRes))
+	s.Require().Equal("foobar", getTxRes.Tx.Body.Memo)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

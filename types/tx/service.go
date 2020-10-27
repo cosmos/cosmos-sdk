@@ -95,7 +95,7 @@ func (s txServer) GetTx(ctx context.Context, req *GetTxRequest) (*GetTxResponse,
 }
 
 // TxBuilderToProtoTx convert a txBuilder into a proto tx.Tx.
-func TxBuilderToProtoTx(txBuilder client.TxBuilder) (*Tx, error) {
+func TxBuilderToProtoTx(txBuilder client.TxBuilder) (*Tx, error) { // nolint
 	intoAnyTx, ok := txBuilder.(codectypes.IntoAny)
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (codectypes.IntoAny)(nil), intoAnyTx)

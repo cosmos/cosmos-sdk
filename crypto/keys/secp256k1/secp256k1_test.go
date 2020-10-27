@@ -7,7 +7,7 @@ import (
 	"math/big"
 	"testing"
 
-	secp256k1 "github.com/btcsuite/btcd/btcec"
+	btcSecp256k1 "github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil/base58"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -62,7 +62,7 @@ func TestSignAndValidateSecp256k1(t *testing.T) {
 	// ----
 	// Test cross packages verification
 	msgHash := crypto.Sha256(msg)
-	btcPrivKey, btcPubKey := secp256k1.PrivKeyFromBytes(secp256k1.S256(), privKey.Key)
+	btcPrivKey, btcPubKey := btcSecp256k1.PrivKeyFromBytes(btcSecp256k1.S256(), privKey.Key)
 	// This fails: malformed signature: no header magic
 	//   btcSig, err := secp256k1.ParseSignature(sig, secp256k1.S256())
 	//   require.NoError(t, err)
@@ -96,7 +96,7 @@ func TestSecp256k1LoadPrivkeyAndSerializeIsIdentity(t *testing.T) {
 
 		// This function creates a private and public key in the underlying libraries format.
 		// The private key is basically calling new(big.Int).SetBytes(pk), which removes leading zero bytes
-		priv, _ := secp256k1.PrivKeyFromBytes(secp256k1.S256(), privKeyBytes[:])
+		priv, _ := btcSecp256k1.PrivKeyFromBytes(btcSecp256k1.S256(), privKeyBytes[:])
 		// this takes the bytes returned by `(big int).Bytes()`, and if the length is less than 32 bytes,
 		// pads the bytes from the left with zero bytes. Therefore these two functions composed
 		// result in the identity function on privKeyBytes, hence the following equality check
@@ -108,7 +108,7 @@ func TestSecp256k1LoadPrivkeyAndSerializeIsIdentity(t *testing.T) {
 
 func TestGenPrivKeyFromSecret(t *testing.T) {
 	// curve oder N
-	N := secp256k1.S256().N
+	N := btcSecp256k1.S256().N
 	tests := []struct {
 		name   string
 		secret []byte

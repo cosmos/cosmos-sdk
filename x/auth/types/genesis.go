@@ -9,9 +9,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 var _ types.UnpackInterfacesMessage = GenesisState{}
+
+// RandomGenesisAccountsFn defines the function required to generate custom account types
+type RandomGenesisAccountsFn func(simState *module.SimulationState) GenesisAccounts
 
 // NewGenesisState - Create a new genesis state
 func NewGenesisState(params Params, accounts GenesisAccounts) *GenesisState {

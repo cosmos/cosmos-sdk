@@ -100,8 +100,10 @@ func (am AppModule) Route() sdk.Route {
 // functionality.
 func (AppModule) QuerierRoute() string { return "" }
 
-// RegisterQueryService performs a no-op.
-func (am AppModule) RegisterServices(_ module.Configurator) {}
+// RegisterServices registers module services.
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), NewMsgServerImpl(am.accountKeeper, am.bankKeeper))
+}
 
 // LegacyQuerierHandler performs a no-op.
 func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {

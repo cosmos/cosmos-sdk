@@ -46,7 +46,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 		methodHandler := method.Handler
 
 		// Check that the service Msg fully-qualified method name has already
-		// been registered (via RegisterInterfaces). If the user registers the
+		// been registered (via RegisterInterfaces). If the user registers a
 		// services without registering the service Msg types, there might be
 		// some unexpected behavior down the road. So we prefer to panic here
 		// (at startup).

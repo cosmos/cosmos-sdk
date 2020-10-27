@@ -293,6 +293,7 @@ func CalculateGas(
 		return tx.SimulateResponse{}, 0, err
 	}
 
+	// TODO This should use the generated queryClient.
 	bz, _, err := queryFunc("/cosmos.tx.v1beta1.Service/Simulate", txBytes)
 	if err != nil {
 		return tx.SimulateResponse{}, 0, err

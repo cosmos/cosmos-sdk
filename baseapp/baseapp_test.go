@@ -1480,11 +1480,11 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 	// Transaction should panic with custom handler above
 	{
 		tx := newTxCounter(0, 0)
-
+		var err error
 		require.PanicsWithValue(t, customPanicMsg, func() {
-			_, _, err := app.Deliver(aminoTxEncoder(), tx)
-			require.Error(t, err)
+			_, _, err = app.Deliver(aminoTxEncoder(), tx)
 		})
+		require.Error(t, err)
 	}
 }
 

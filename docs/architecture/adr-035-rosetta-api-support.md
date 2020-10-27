@@ -147,7 +147,7 @@ As stated at the start, application developers will have two methods for invocat
 1. Shared process for both application and API
 2. Standalone API service
 
-#### Shared Process
+#### Shared Process (Only Stargate)
 
 Rosetta API service could run within the same execution process as the application. New configuration option and command line flags would be provided to support this:
 

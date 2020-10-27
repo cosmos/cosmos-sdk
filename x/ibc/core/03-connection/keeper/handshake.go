@@ -3,6 +3,8 @@ package keeper
 import (
 	"bytes"
 
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -37,7 +39,7 @@ func (k Keeper) ConnOpenInit(
 	}
 
 	// connection defines chain A's ConnectionEnd
-	connection := types.NewConnectionEnd(types.INIT, clientID, counterparty, versions)
+	connection := types.NewConnectionEnd(types.INIT, clientID, counterparty, types.ExportedToProto(versions))
 	k.SetConnection(ctx, connectionID, connection)
 
 	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
@@ -105,7 +107,7 @@ func (k Keeper) ConnOpenTry(
 	// NOTE: chain A's counterparty is chain B (i.e where this code is executed)
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(clientID, counterpartyChosenConnectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
-	expectedConnection := types.NewConnectionEnd(types.INIT, counterparty.ClientId, expectedCounterparty, counterpartyVersions)
+	expectedConnection := types.NewConnectionEnd(types.INIT, counterparty.ClientId, expectedCounterparty, types.ExportedToProto(counterpartyVersions))
 
 	// If connection already exists for desiredConnectionID, ensure that the existing connection's
 	// counterparty is chainA and connection is on INIT stage.
@@ -225,15 +227,15 @@ func (k Keeper) ConnOpenAck(
 	case connection.State == types.INIT && !types.IsSupportedVersion(version):
 		return sdkerrors.Wrapf(
 			types.ErrInvalidConnectionState,
-			"connection state is in INIT but the provided encoded version is not supported %s", version,
+			"connection state is in INIT but the provided version is not supported %s", version,
 		)
 
-	// if the connection is in TRYOPEN then the encoded version must be the only set version in the
+	// if the connection is in TRYOPEN then the version must be the only set version in the
 	// retreived connection state.
-	case connection.State == types.TRYOPEN && (len(connection.Versions) != 1 || connection.Versions[0] != version):
+	case connection.State == types.TRYOPEN && (len(connection.Versions) != 1 || !proto.Equal(connection.Versions[0], version)):
 		return sdkerrors.Wrapf(
 			types.ErrInvalidConnectionState,
-			"connection state is in TRYOPEN but the provided encoded version (%s) is not set in the previous connection %s", version, connection,
+			"connection state is in TRYOPEN but the provided version (%s) is not set in the previous connection versions %s", version, connection.Versions,
 		)
 	}
 

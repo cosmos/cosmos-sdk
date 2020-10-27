@@ -36,11 +36,7 @@ func (c ConnectionEnd) GetCounterparty() exported.CounterpartyConnectionI {
 
 // GetVersions implements the Connection interface
 func (c ConnectionEnd) GetVersions() []exported.Version {
-	versions := make([]exported.Version, len(c.Versions))
-	for i := range c.Versions {
-		versions[i] = c.Versions[i]
-	}
-	return versions
+	return ProtoToExported(c.Versions)
 }
 
 // ValidateBasic implements the Connection interface.

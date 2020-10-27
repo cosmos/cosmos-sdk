@@ -27,7 +27,7 @@ client. Updates may fill in missing consensus state heights.
 Clients may be upgraded. The upgrade should be verified using `VerifyUpgrade`. It is not
 a requirement to allow for light client upgrades. For example, the solo machine client 
 will simply return an error on `VerifyUpgrade`. Clients which implement upgrades
-are expected to account for, but not necessarily support, planned and unpllaned upgrades.
+are expected to account for, but not necessarily support, planned and unplanned upgrades.
 
 ## Client Misbehaviour
 
@@ -325,8 +325,8 @@ transfers will unmarshal the data into proto definitions representing
 a token transfer. 
 
 Future optimizations may allow for storage cleanup. Stored packet 
-commitments could be removed from channels which do not require 
-written acknowledgements and acknowledgements could be removed
+commitments could be removed from channels which do not write
+packet acknowledgements and acknowledgements could be removed
 when a packet has completed its life cycle.
 
 ## Timing out Packets

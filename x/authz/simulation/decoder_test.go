@@ -1,0 +1,50 @@
+package simulation_test
+
+import (
+	"fmt"
+	"testing"
+	"time"
+
+	"github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
+	"github.com/cosmos/cosmos-sdk/x/authz/types"
+)
+
+func TestDecodeStore(t *testing.T) {
+	cdc, _ := simapp.MakeCodecs()
+	dec := simulation.NewDecodeStore(cdc)
+
+	grant, _ := types.NewAuthorizationGrant(types.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("foo", 123))), time.Now().Unix())
+	grantBz, err := cdc.MarshalBinaryBare(&grant)
+	require.NoError(t, err)
+	kvPairs := kv.Pairs{
+		Pairs: []kv.Pair{
+			{Key: []byte(types.GrantKey), Value: grantBz},
+			{Key: []byte{0x99}, Value: []byte{0x99}},
+		},
+	}
+
+	tests := []struct {
+		name        string
+		expectedLog string
+	}{
+		{"Grant", fmt.Sprintf("%v\n%v", grant, grant)},
+		{"other", ""},
+	}
+
+	for i, tt := range tests {
+		i, tt := i, tt
+		t.Run(tt.name, func(t *testing.T) {
+			switch i {
+			case len(tests) - 1:
+				require.Panics(t, func() { dec(kvPairs.Pairs[i], kvPairs.Pairs[i]) }, tt.name)
+			default:
+				require.Equal(t, tt.expectedLog, dec(kvPairs.Pairs[i], kvPairs.Pairs[i]), tt.name)
+			}
+		})
+	}
+}

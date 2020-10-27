@@ -84,9 +84,9 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	msgauth "github.com/cosmos/cosmos-sdk/x/msg_authorization"
-	msgauthkeeper "github.com/cosmos/cosmos-sdk/x/msg_authorization/keeper"
-	msgauthtypes "github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
+	msgauth "github.com/cosmos/cosmos-sdk/x/authz"
+	msgauthkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	msgauthtypes "github.com/cosmos/cosmos-sdk/x/authz/types"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"

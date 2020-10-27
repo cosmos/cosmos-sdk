@@ -28,6 +28,8 @@ func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 
 func queryParamsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		vars := mux.Vars(r)
 		paramType := vars[RestParamsType]
 
@@ -48,6 +50,8 @@ func queryParamsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 func queryProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		vars := mux.Vars(r)
 		strProposalID := vars[RestProposalID]
 
@@ -86,6 +90,8 @@ func queryProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 func queryDepositsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		vars := mux.Vars(r)
 		strProposalID := vars[RestProposalID]
 
@@ -135,6 +141,8 @@ func queryDepositsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 func queryProposerHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		vars := mux.Vars(r)
 		strProposalID := vars[RestProposalID]
 
@@ -159,6 +167,8 @@ func queryProposerHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 func queryDepositHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		vars := mux.Vars(r)
 		strProposalID := vars[RestProposalID]
 		bechDepositorAddr := vars[RestDepositor]
@@ -235,6 +245,8 @@ func queryDepositHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 func queryVoteHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		vars := mux.Vars(r)
 		strProposalID := vars[RestProposalID]
 		bechVoterAddr := vars[RestVoter]
@@ -313,6 +325,8 @@ func queryVoteHandlerFn(clientCtx client.Context) http.HandlerFunc {
 // todo: Split this functionality into helper functions to remove the above
 func queryVotesOnProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		_, page, limit, err := rest.ParseHTTPArgs(r)
 		if rest.CheckBadRequestError(w, err) {
 			return
@@ -379,6 +393,8 @@ func queryVotesOnProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 // HTTP request handler to query list of governance proposals
 func queryProposalsWithParameterFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
 		if rest.CheckBadRequestError(w, err) {
 			return
@@ -436,6 +452,8 @@ func queryProposalsWithParameterFn(clientCtx client.Context) http.HandlerFunc {
 // todo: Split this functionality into helper functions to remove the above
 func queryTallyOnProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		vars := mux.Vars(r)
 		strProposalID := vars[RestProposalID]
 

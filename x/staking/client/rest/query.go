@@ -119,6 +119,8 @@ func delegatorUnbondingDelegationsHandlerFn(cliCtx client.Context) http.HandlerF
 // HTTP request handler to query all staking txs (msgs) from a delegator
 func delegatorTxsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		var typesQuerySlice []string
 
 		vars := mux.Vars(r)
@@ -196,6 +198,8 @@ func unbondingDelegationHandlerFn(cliCtx client.Context) http.HandlerFunc {
 // HTTP request handler to query redelegations
 func redelegationsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		var params types.QueryRedelegationParams
 
 		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
@@ -267,6 +271,8 @@ func delegatorValidatorHandlerFn(cliCtx client.Context) http.HandlerFunc {
 // HTTP request handler to query list of validators
 func validatorsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
 		if rest.CheckBadRequestError(w, err) {
 			return
@@ -319,6 +325,8 @@ func validatorUnbondingDelegationsHandlerFn(cliCtx client.Context) http.HandlerF
 // HTTP request handler to query historical info at a given height
 func historicalInfoHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		vars := mux.Vars(r)
 		heightStr := vars["height"]
 
@@ -348,6 +356,8 @@ func historicalInfoHandlerFn(clientCtx client.Context) http.HandlerFunc {
 // HTTP request handler to query the pool information
 func poolHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
 		if !ok {
 			return
@@ -366,6 +376,8 @@ func poolHandlerFn(clientCtx client.Context) http.HandlerFunc {
 // HTTP request handler to query the staking params values
 func paramsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
 		if !ok {
 			return

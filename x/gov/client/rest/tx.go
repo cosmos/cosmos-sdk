@@ -26,6 +26,8 @@ func registerTxHandlers(clientCtx client.Context, r *mux.Router, phs []ProposalR
 
 func newPostProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		var req PostProposalReq
 		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
@@ -53,6 +55,8 @@ func newPostProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 func newDepositHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		vars := mux.Vars(r)
 		strProposalID := vars[RestProposalID]
 
@@ -88,6 +92,8 @@ func newDepositHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 func newVoteHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		vars := mux.Vars(r)
 		strProposalID := vars[RestProposalID]
 

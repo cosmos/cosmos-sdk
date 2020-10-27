@@ -68,6 +68,8 @@ func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 // HTTP request handler to query the total rewards balance from all delegations
 func delegatorRewardsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
 		if !ok {
 			return
@@ -99,6 +101,8 @@ func delegatorRewardsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 // HTTP request handler to query a delegation rewards
 func delegationRewardsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		clientCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, clientCtx, r)
 		if !ok {
 			return
@@ -121,6 +125,8 @@ func delegationRewardsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 // HTTP request handler to query a delegation rewards
 func delegatorWithdrawalAddrHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		delegatorAddr, ok := checkDelegatorAddressVar(w, r)
 		if !ok {
 			return

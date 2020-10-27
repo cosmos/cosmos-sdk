@@ -26,6 +26,8 @@ type UnjailReq struct {
 // transaction.
 func NewUnjailRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		vars := mux.Vars(r)
 		bech32Validator := vars["validatorAddr"]
 

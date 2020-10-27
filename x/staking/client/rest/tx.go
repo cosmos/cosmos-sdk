@@ -57,6 +57,8 @@ type (
 
 func newPostDelegationsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		var req DelegateRequest
 		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
@@ -88,6 +90,8 @@ func newPostDelegationsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 func newPostRedelegationsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		var req RedelegateRequest
 		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
@@ -119,6 +123,8 @@ func newPostRedelegationsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 func newPostUnbondingDelegationsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		client.AddDeprecationHeaders(w)
+
 		var req UndelegateRequest
 		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return

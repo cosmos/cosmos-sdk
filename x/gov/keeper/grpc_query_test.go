@@ -713,7 +713,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposits() {
 func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
 
-	addrs, _ := createValidators(ctx, app, []int64{5, 5, 5})
+	addrs, _ := createValidators(suite.T(), ctx, app, []int64{5, 5, 5})
 
 	var (
 		req      *types.QueryTallyResultRequest

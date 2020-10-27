@@ -79,6 +79,8 @@ Rosetta API services use Blockchain and Network as identifiers, e.g. the develop
 
 `SupportedOperations` contains the transaction types that are supported by the library. At the present time, only `Transfer` is supported. Additional operations will be added in due time.
 
+We will map Msg type name as the operation.
+
 #### Interfaces
 
 Every SDK version uses a different format to connect (rpc, gRpc, etc), we have abstracted this in what is called the Adapter. This is an interface
@@ -209,7 +211,7 @@ func NewRosettaServiceCmd() *cobra.Command {
 
 ## Status
 
-Accepted
+Proposed
 
 ## Consequences
 

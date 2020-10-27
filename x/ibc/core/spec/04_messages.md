@@ -29,9 +29,8 @@ This message is expected to fail if:
 - `Signer` is empty
 - A light client with the provided id and type already exist
 
-The message creates and stores a light client with the given ID and consensus type,
-stores the validator set as the `Commiter` of the given consensus state and stores
-both the consensus state and its commitment root (i.e app hash).
+The message creates and stores a light client with an initial consensus state for the given client
+identifier.
 
 ### MsgUpdateClient
 
@@ -51,11 +50,36 @@ This message is expected to fail if:
 - `Header` is empty or invalid
 - `Signer` is empty
 - A `ClientState` hasn't been created for the given ID
-- the header's client type is different from the registered one
-- the client is frozen due to misbehaviour and cannot be updated
+- The client is frozen due to misbehaviour and cannot be updated
+- The header fails to provide a valid update for the client
 
-The message validates the header and updates the consensus state with the new
-height, commitment root and validator sets, which are then stored.
+The message validates the header and updates the client state and consensus state for the 
+header height.
+
+### MsgUpgradeClient
+```go
+type MsgUpgradeClient struct {
+	ClientId      string 
+	ClientState   *types.Any // proto-packed client state
+	UpgradeHeight *Height 
+	ProofUpgrade  []byte 
+	Signer        string 
+}
+```
+
+This message is expected to fail if:
+
+- `ClientId` is invalid (not alphanumeric or not within 10-20 characters)
+- `ClientState` is empty or invalid
+- `UpgradeHeight` is empty or zero
+- `ProofUpgrade` is empty
+- `Signer` is empty
+- A `ClientState` hasn't been created for the given ID
+- The client is frozen due to misbehaviour and cannot be upgraded
+- The upgrade proof fails 
+
+The message upgrades the client state and consensus state upon successful validation of a
+chain upgrade. 
 
 ### MsgSubmitMisbehaviour
 
@@ -77,8 +101,7 @@ This message is expected to fail if:
 - A `ClientState` hasn't been created for the given ID
 - `Misbehaviour` check failed
 
-The message validates the header and updates the consensus state with the new
-height, commitment root and validator sets, which are then stored.
+The message verifies the misbehaviour and freezes the client. 
 
 ## ICS 03 - Connection
 
@@ -432,7 +455,7 @@ This message is expected to fail if:
 - `Packet` fails basic validation
 - `Proof` does not prove that the packet has not been received on the counterparty chain.
 
-The message times out a packet on chain B.
+The message times out a packet that was sent on chain A and never received on chain B.
 
 ### MsgTimeoutOnClose
 
@@ -461,7 +484,7 @@ This message is expected to fail if:
 - `Proof` does not prove that the packet has not been received on the counterparty chain.
 - `ProofClose` does not prove that the counterparty channel end has been closed.
 
-The message times out a packet on chain B.
+The message times out a packet that was sent on chain A and never received on chain B.
 
 ### MsgAcknowledgement
 
@@ -486,4 +509,4 @@ This message is expected to fail if:
 - `Acknowledgement` is empty
 - `Proof` does not prove that the counterparty received the `Packet`.
 
-The message receives a packet on chain A.
+The message acknowledges that the packet sent from chainA was received on chain B.

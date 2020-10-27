@@ -153,7 +153,7 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 		Time:    globalStartTime,
 	}
 
-	txConfig := simapp.MakeEncodingConfig().TxConfig
+	txConfig := simapp.MakeTestEncodingConfig().TxConfig
 
 	// create an account to send transactions from
 	chain := &TestChain{

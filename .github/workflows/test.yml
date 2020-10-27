@@ -202,6 +202,10 @@ jobs:
             go.sum
       - uses: actions/download-artifact@v2
         with:
+          name: "${{ github.sha }}-00-race-output"
+        if: env.GIT_DIFF
+      - uses: actions/download-artifact@v2
+        with:
           name: "${{ github.sha }}-01-race-output"
         if: env.GIT_DIFF
       - uses: actions/download-artifact@v2
@@ -211,10 +215,6 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: "${{ github.sha }}-03-race-output"
-        if: env.GIT_DIFF
-      - uses: actions/download-artifact@v2
-        with:
-          name: "${{ github.sha }}-04-race-output"
         if: env.GIT_DIFF
       - uses: actions/cache@v2.1.2
         with:

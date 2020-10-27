@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -24,7 +25,8 @@ func RegisterRoutes(clientCtx client.Context, r *mux.Router, storeName string) {
 }
 
 // RegisterTxRoutes registers all transaction routes on the provided router.
-func RegisterTxRoutes(clientCtx client.Context, r *mux.Router) {
+func RegisterTxRoutes(clientCtx client.Context, rtr *mux.Router) {
+	r := rest.WithHTTPDeprecationHeaders(rtr)
 	r.HandleFunc("/txs/{hash}", QueryTxRequestHandlerFn(clientCtx)).Methods("GET")
 	r.HandleFunc("/txs", QueryTxsRequestHandlerFn(clientCtx)).Methods("GET")
 	r.HandleFunc("/txs", BroadcastTxRequest(clientCtx)).Methods("POST")

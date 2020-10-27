@@ -30,8 +30,7 @@ package module
 
 import (
 	"encoding/json"
-	"net/http"
-
+	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
@@ -109,19 +108,10 @@ func (bm BasicManager) ValidateGenesis(cdc codec.JSONMarshaler, txEncCfg client.
 	return nil
 }
 
-func addDeprecationHeaders(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Deprecation", "true")
-		w.Header().Set("Link", "<https://docs.cosmos.network/v0.40/interfaces/rest.html>; rel=\"deprecation\"")
-		h.ServeHTTP(w, r)
-	})
-}
-
 // RegisterRESTRoutes registers all module rest routes
 func (bm BasicManager) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
-	rtr.Use(addDeprecationHeaders)
 	for _, b := range bm {
-		b.RegisterRESTRoutes(clientCtx, rtr)
+		b.RegisterRESTRoutes(clientCtx, rest.WithHTTPDeprecationHeaders(rtr))
 	}
 }
 

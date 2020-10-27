@@ -39,6 +39,21 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Client Breaking
 
 * (x/staking) [\#7499](https://github.com/cosmos/cosmos-sdk/pull/7499) `BondStatus` is now a protobuf `enum` instead of an `int32`, and JSON serialized using its protobuf name, so expect names like `BOND_STATUS_UNBONDING` as opposed to `Unbonding`.
+* (x/evidence) [\#7538](https://github.com/cosmos/cosmos-sdk/pull/7538) The ABCI's `Result.Data` field of `MsgSubmitEvidence` does not contain the raw evidence's hash, but the encoded `MsgSubmitEvidenceResponse` struct.
+
+### API Breaking
+
+* (AppModule) [\#7518](https://github.com/cosmos/cosmos-sdk/pull/7518) [\#7584](https://github.com/cosmos/cosmos-sdk/pull/7584) Rename `AppModule.RegisterQueryServices` to `AppModule.RegisterServices`, as this method now registers multiple services (the gRPC query service and the protobuf Msg service). A `Configurator` struct is used to hold the different services.
+* (x/staking/types) [\#7447](https://github.com/cosmos/cosmos-sdk/issues/7447) Remove bech32 PubKey support:
+  * `ValidatorI` interface update. `GetConsPubKey` renamed to `TmConsPubKey` (consensus public key must be a tendermint key). `TmConsPubKey`, `GetConsAddr` methods return error.
+  * `Validator` update. Methods changed in `ValidatorI` (as described above) and `ToTmValidator` return error.
+  * `Validator.ConsensusPubkey` type changed from `string` to `codectypes.Any`.
+  * `MsgCreateValidator.Pubkey` type changed from `string` to `codectypes.Any`.
+
+### Features
+
+* (codec) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) `InterfaceRegistry` now inherits `jsonpb.AnyResolver`, and has a `RegisterCustomTypeURL` method to support ADR 031 packing of `Any`s. `AnyResolver` is now a required parameter to `RejectUnknownFields`.
+* (baseapp) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) Add `ServiceMsgRouter` to BaseApp to handle routing of protobuf service `Msg`s. The two new types defined in ADR 031, `sdk.ServiceMsg` and `sdk.MsgRequest` are introduced with this router.
 
 ### Bug Fixes
 
@@ -155,7 +170,7 @@ of the Cosmos SDK since launch. Please read through this changelog and [release 
     * `NewAnteHandler` and `NewSigVerificationDecorator` both now take a `SignModeHandler` parameter.
     * `SignatureVerificationGasConsumer` now has the signature: `func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error`.
     * The `SigVerifiableTx` interface now has a `GetSignaturesV2() ([]signing.SignatureV2, error)` method and no longer has the `GetSignBytes` method.
-    
+
 ### State Machine Breaking
 
 * __General__
@@ -348,7 +363,7 @@ falling below their minimum self-delegation and never having been bonded. The va
 
 * (x/auth) [\#6861](https://github.com/cosmos/cosmos-sdk/pull/6861) Remove public key Bech32 encoding for all account types for JSON serialization, instead relying on direct Amino encoding. In addition, JSON serialization utilizes Amino instead of the Go stdlib, so integers are treated as strings.
 
-### Improvements 
+### Improvements
 
 * (client) [\#6853](https://github.com/cosmos/cosmos-sdk/pull/6853) Add --unsafe-cors flag.
 

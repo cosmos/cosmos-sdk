@@ -98,7 +98,11 @@ func NewAppModule(accountKeeper types.AccountKeeper,
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	return InitGenesis(ctx, am.stakingKeeper, am.deliverTx, genesisState, am.txEncodingConfig)
+	validators, err := InitGenesis(ctx, am.stakingKeeper, am.deliverTx, genesisState, am.txEncodingConfig)
+	if err != nil {
+		panic(err)
+	}
+	return validators
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the genutil

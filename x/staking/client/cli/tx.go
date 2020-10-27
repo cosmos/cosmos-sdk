@@ -343,9 +343,12 @@ func NewBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 		return txf, nil, types.ErrMinSelfDelegationInvalid
 	}
 
-	msg := types.NewMsgCreateValidator(
+	msg, err := types.NewMsgCreateValidator(
 		sdk.ValAddress(valAddr), pk, amount, description, commissionRates, minSelfDelegation,
 	)
+	if err != nil {
+		return txf, nil, err
+	}
 	if err := msg.ValidateBasic(); err != nil {
 		return txf, nil, err
 	}
@@ -550,10 +553,12 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 		return txBldr, nil, types.ErrMinSelfDelegationInvalid
 	}
 
-	msg := types.NewMsgCreateValidator(
+	msg, err := types.NewMsgCreateValidator(
 		sdk.ValAddress(valAddr), pk, amount, description, commissionRates, minSelfDelegation,
 	)
-
+	if err != nil {
+		return txBldr, msg, err
+	}
 	if generateOnly {
 		ip := config.IP
 		nodeID := config.NodeID

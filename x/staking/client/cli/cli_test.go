@@ -4,7 +4,6 @@ package cli_test
 
 import (
 	"context"
-	json "encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -277,9 +276,9 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidators() {
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			s.Require().NoError(err)
 
-			var result []types.Validator
-			s.Require().NoError(json.Unmarshal(out.Bytes(), &result))
-			s.Require().Equal(len(s.network.Validators), len(result))
+			var result types.QueryValidatorsResponse
+			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().Equal(len(s.network.Validators), len(result.Validators))
 		})
 	}
 }

@@ -94,9 +94,9 @@ type AppModule struct {
 	accountKeeper types.AccountKeeper
 }
 
-// RegisterQueryService registers a GRPC query service to respond to the
-// module-specific GRPC queries.
+// RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 

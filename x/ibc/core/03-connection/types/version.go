@@ -63,6 +63,48 @@ func ValidateVersion(version *Version) error {
 	return nil
 }
 
+// VerifyProposedVersion verifies that the entire feature set in the
+// proposed version is supported by this chain. If the feature set is
+// empty it verifies that this is allowed for the specified version
+// identifier.
+func (version Version) VerifyProposedVersion(proposedVersion exported.Version) error {
+	if proposedVersion.GetIdentifier() != version.GetIdentifier() {
+		return sdkerrors.Wrapf(
+			ErrVersionNegotiationFailed,
+			"proposed version identifier does not equal supported version identifier (%s != %s)", proposedVersion.GetIdentifier(), version.GetIdentifier(),
+		)
+	}
+
+	if len(proposedVersion.GetFeatures()) == 0 && !allowNilFeatureSet[proposedVersion.GetIdentifier()] {
+		return sdkerrors.Wrapf(
+			ErrVersionNegotiationFailed,
+			"nil feature sets are not supported for version identifier (%s)", proposedVersion.GetIdentifier(),
+		)
+	}
+
+	for _, proposedFeature := range proposedVersion.GetFeatures() {
+		if !contains(proposedFeature, version.GetFeatures()) {
+			return sdkerrors.Wrapf(
+				ErrVersionNegotiationFailed,
+				"proposed feature (%s) is not a supported feature set (%s)", proposedFeature, version.GetFeatures(),
+			)
+		}
+	}
+
+	return nil
+}
+
+// VerifySupportedFeature takes in a version and feature string and returns
+// true if the feature is supported by the version and false otherwise.
+func VerifySupportedFeature(version exported.Version, feature string) bool {
+	for _, f := range version.GetFeatures() {
+		if f == feature {
+			return true
+		}
+	}
+	return false
+}
+
 // GetCompatibleVersions returns a descending ordered set of compatible IBC
 // versions for the caller chain's connection end. The latest supported
 // version should be first element and the set should descend to the oldest
@@ -141,48 +183,6 @@ func GetFeatureSetIntersection(sourceFeatureSet, counterpartyFeatureSet []string
 	}
 
 	return featureSet
-}
-
-// VerifyProposedVersion verifies that the entire feature set in the
-// proposed version is supported by this chain. If the feature set is
-// empty it verifies that this is allowed for the specified version
-// identifier.
-func (version Version) VerifyProposedVersion(proposedVersion exported.Version) error {
-	if proposedVersion.GetIdentifier() != version.GetIdentifier() {
-		return sdkerrors.Wrapf(
-			ErrVersionNegotiationFailed,
-			"proposed version identifier does not equal supported version identifier (%s != %s)", proposedVersion.GetIdentifier(), version.GetIdentifier(),
-		)
-	}
-
-	if len(proposedVersion.GetFeatures()) == 0 && !allowNilFeatureSet[proposedVersion.GetIdentifier()] {
-		return sdkerrors.Wrapf(
-			ErrVersionNegotiationFailed,
-			"nil feature sets are not supported for version identifier (%s)", proposedVersion.GetIdentifier(),
-		)
-	}
-
-	for _, proposedFeature := range proposedVersion.GetFeatures() {
-		if !contains(proposedFeature, version.GetFeatures()) {
-			return sdkerrors.Wrapf(
-				ErrVersionNegotiationFailed,
-				"proposed feature (%s) is not a supported feature set (%s)", proposedFeature, version.GetFeatures(),
-			)
-		}
-	}
-
-	return nil
-}
-
-// VerifySupportedFeature takes in a version and feature string and returns
-// true if the feature is supported by the version and false otherwise.
-func VerifySupportedFeature(version exported.Version, feature string) bool {
-	for _, f := range version.GetFeatures() {
-		if f == feature {
-			return true
-		}
-	}
-	return false
 }
 
 // ExportedToProto casts a slice of the Version interface to a slice

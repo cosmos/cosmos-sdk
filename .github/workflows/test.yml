@@ -180,12 +180,12 @@ jobs:
         if: env.GIT_DIFF
       - name: test & coverage report creation
         run: |
-          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -race -tags='cgo ledger test_ledger_mock'
+          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -race -tags='cgo ledger test_ledger_mock'  > ${{ matrix.part }}-race-output.txt
         if: env.GIT_DIFF
       - uses: actions/upload-artifact@v2
         with:
           name: "${{ github.sha }}-${{ matrix.part }}-race-output"
-          path: ./${{ matrix.part }}profile.out
+          path: ./${{ matrix.part }}-race-output.txt
 
   race-detector-report:
     runs-on: ubuntu-latest
@@ -222,7 +222,7 @@ jobs:
           key: ${{ runner.os }}-go-tparse-binary
         if: env.GIT_DIFF
       - name: Generate test report (go test -race)
-        run: cat xa*-race-output.txt | ~/go/bin/tparse
+        run: cat ./*-race-output.txt | ~/go/bin/tparse
         if: env.GIT_DIFF
 
   liveness-test:

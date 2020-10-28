@@ -52,7 +52,8 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	initBond := tstaking.CreateValidatorWithValPower(validatorAddr, PKs[0], initPower, true)
 
 	// must end-block
-	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	updates, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(updates))
 
 	// verify the self-delegation exists
@@ -71,7 +72,8 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	tstaking.CreateValidatorWithValPower(validatorAddr3, PKs[2], initPower, true)
 
 	// must end-block
-	updates = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	updates, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(updates))
 
 	// slash and jail the first validator
@@ -104,7 +106,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	res := tstaking.Undelegate(sdk.AccAddress(validatorAddr), validatorAddr, totalBond, true)
 
 	var resData types.MsgUndelegateResponse
-	err := proto.Unmarshal(res.Data, &resData)
+	err = proto.Unmarshal(res.Data, &resData)
 	require.NoError(t, err)
 
 	ctx = ctx.WithBlockTime(resData.CompletionTime)
@@ -130,7 +132,9 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 
 	validator := tstaking.CheckValidator(addr1, types.Bonded, false)
 	assert.Equal(t, addr1.String(), validator.OperatorAddress)
-	assert.Equal(t, pk1.(cryptotypes.IntoTmPubKey).AsTmPubKey(), validator.GetConsPubKey())
+	consKey, err := validator.TmConsPubKey()
+	require.NoError(t, err)
+	assert.Equal(t, pk1.(cryptotypes.IntoTmPubKey).AsTmPubKey(), consKey)
 	assert.Equal(t, valTokens, validator.BondedTokens())
 	assert.Equal(t, valTokens.ToDec(), validator.DelegatorShares)
 	assert.Equal(t, types.Description{}, validator.Description)
@@ -145,12 +149,15 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	tstaking.CreateValidator(addr2, pk2, valTokens.Int64(), true)
 
 	// must end-block
-	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	updates, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(updates))
 
 	validator = tstaking.CheckValidator(addr2, types.Bonded, false)
 	assert.Equal(t, addr2.String(), validator.OperatorAddress)
-	assert.Equal(t, pk2.(cryptotypes.IntoTmPubKey).AsTmPubKey(), validator.GetConsPubKey())
+	consPk, err := validator.TmConsPubKey()
+	require.NoError(t, err)
+	assert.Equal(t, pk2.(cryptotypes.IntoTmPubKey).AsTmPubKey(), consPk)
 	assert.True(sdk.IntEq(t, valTokens, validator.Tokens))
 	assert.True(sdk.DecEq(t, valTokens.ToDec(), validator.DelegatorShares))
 	assert.Equal(t, types.Description{}, validator.Description)
@@ -182,7 +189,8 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	bondAmount := tstaking.CreateValidatorWithValPower(valAddr, valConsPubKey, 10, true)
 
 	// must end-block
-	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	updates, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(updates))
 
 	// verify the validator exists and has the correct attributes
@@ -202,7 +210,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	res := tstaking.Undelegate(sdk.AccAddress(valAddr), valAddr, bondAmount, true)
 
 	var resData types.MsgUndelegateResponse
-	err := proto.Unmarshal(res.Data, &resData)
+	err = proto.Unmarshal(res.Data, &resData)
 	require.NoError(t, err)
 
 	ctx = ctx.WithBlockTime(resData.CompletionTime)
@@ -320,7 +328,8 @@ func TestEditValidatorDecreaseMinSelfDelegation(t *testing.T) {
 	tstaking.Handle(msgCreateValidator, true)
 
 	// must end-block
-	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	updates, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(updates))
 
 	// verify the self-delegation exists
@@ -350,7 +359,8 @@ func TestEditValidatorIncreaseMinSelfDelegationBeyondCurrentBond(t *testing.T) {
 	tstaking.Handle(msgCreateValidator, true)
 
 	// must end-block
-	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	updates, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(updates))
 
 	// verify the self-delegation exists
@@ -1022,7 +1032,8 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	tstaking.Delegate(del, valA, valTokens.Int64())
 
 	// apply Tendermint updates
-	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	updates, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.NoError(t, err)
 	require.Equal(t, 2, len(updates))
 
 	// a block passes
@@ -1044,7 +1055,8 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	require.Equal(t, sdk.NewDecFromInt(redAmt.Amount), delegation.Shares)
 
 	// must apply validator updates
-	updates = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	updates, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.NoError(t, err)
 	require.Equal(t, 2, len(updates))
 
 	// slash the validator by half

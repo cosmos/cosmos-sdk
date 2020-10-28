@@ -53,7 +53,7 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	suite.ctx = suite.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
-	encodingConfig := simapp.MakeEncodingConfig()
+	encodingConfig := simapp.MakeTestEncodingConfig()
 	// We're using TestMsg encoding in some tests, so register it here.
 	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
 	testdata.RegisterInterfaces(encodingConfig.InterfaceRegistry)

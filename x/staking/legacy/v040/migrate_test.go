@@ -15,7 +15,7 @@ import (
 )
 
 func TestMigrate(t *testing.T) {
-	encodingConfig := simapp.MakeEncodingConfig()
+	encodingConfig := simapp.MakeTestEncodingConfig()
 	clientCtx := client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
@@ -43,7 +43,7 @@ func TestMigrate(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make sure about:
-	// - consensus_pubkey: should be bech32 pubkey
+	// - consensus_pubkey: should be an any
 	// - validator's status should be 1 (new unbonded)
 	expected := `{
   "delegations": [],
@@ -69,7 +69,10 @@ func TestMigrate(t *testing.T) {
         },
         "update_time": "0001-01-01T00:00:00Z"
       },
-      "consensus_pubkey": "cosmosvalconspub1zcjduepq9ymett3nlv6fytn7lqxzd3q3ckvd79eqlcf3wkhgamcl4rzghesq83ecpx",
+      "consensus_pubkey": {
+        "@type": "/cosmos.crypto.ed25519.PubKey",
+        "key": "KTeVrjP7NJIufvgMJsQRxZjfFyD+Exda6O7x+oxIvmA="
+      },
       "delegator_shares": "0",
       "description": {
         "details": "",

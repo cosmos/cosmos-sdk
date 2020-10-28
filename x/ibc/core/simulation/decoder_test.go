@@ -30,7 +30,7 @@ func TestDecodeStore(t *testing.T) {
 	}
 	connection := connectiontypes.ConnectionEnd{
 		ClientId: "clientidone",
-		Versions: []string{"1.0"},
+		Versions: []*connectiontypes.Version{connectiontypes.NewVersion("1", nil)},
 	}
 	channel := channeltypes.Channel{
 		State:   channeltypes.OPEN,

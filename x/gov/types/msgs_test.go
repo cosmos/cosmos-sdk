@@ -109,7 +109,7 @@ func TestMsgVote(t *testing.T) {
 	}
 
 	for i, tc := range tests {
-		msg := NewMsgVote(tc.voterAddr, tc.proposalID, tc.option)
+		msg := NewMsgVote(tc.voterAddr, tc.proposalID, SubVotes{NewSubVote(tc.option, 1)})
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", i)
 		} else {

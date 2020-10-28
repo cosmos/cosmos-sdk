@@ -10,6 +10,7 @@ const (
 
 	AttributeKeyProposalResult     = "proposal_result"
 	AttributeKeyOption             = "option"
+	AttributeKeySubVotes           = "sub_votes"
 	AttributeKeyProposalID         = "proposal_id"
 	AttributeKeyVotingPeriodStart  = "voting_period_start"
 	AttributeValueCategory         = "governance"

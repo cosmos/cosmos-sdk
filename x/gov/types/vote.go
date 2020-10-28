@@ -65,6 +65,14 @@ func (v SubVote) String() string {
 	return string(out)
 }
 
+// SubVotes describes array of SubVote
+type SubVotes []SubVote
+
+func (v SubVotes) String() string {
+	out, _ := json.Marshal(v)
+	return string(out)
+}
+
 // ValidSubVote returns true if the sub vote is valid and false otherwise.
 func ValidSubVote(subvote SubVote) bool {
 	if !subvote.Rate.IsPositive() {

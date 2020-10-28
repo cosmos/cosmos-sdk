@@ -281,7 +281,7 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k kee
 		}
 
 		option := randomVotingOption(r)
-		msg := types.NewMsgVote(simAccount.Address, proposalID, option)
+		msg := types.NewMsgVote(simAccount.Address, proposalID, types.SubVotes{types.NewSubVote(option, 1)})
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())

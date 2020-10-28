@@ -12,19 +12,19 @@ type ValidatorGovInfo struct {
 	BondedTokens        sdk.Int        // Power of a Validator
 	DelegatorShares     sdk.Dec        // Total outstanding delegator shares
 	DelegatorDeductions sdk.Dec        // Delegator deductions from validator's delegators voting independently
-	Vote                VoteOption     // Vote of the validator
+	Vote                SubVotes       // Vote of the validator
 }
 
 // NewValidatorGovInfo creates a ValidatorGovInfo instance
 func NewValidatorGovInfo(address sdk.ValAddress, bondedTokens sdk.Int, delegatorShares,
-	delegatorDeductions sdk.Dec, vote VoteOption) ValidatorGovInfo {
+	delegatorDeductions sdk.Dec, subvotes SubVotes) ValidatorGovInfo {
 
 	return ValidatorGovInfo{
 		Address:             address,
 		BondedTokens:        bondedTokens,
 		DelegatorShares:     delegatorShares,
 		DelegatorDeductions: delegatorDeductions,
-		Vote:                vote,
+		Vote:                subvotes,
 	}
 }
 

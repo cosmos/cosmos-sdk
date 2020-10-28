@@ -193,7 +193,8 @@ func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NotEmpty(vote.Vote)
-				s.Require().Equal(types.OptionYes, vote.Vote.Option)
+				s.Require().True(len(vote.Vote.SubVotes) == 1)
+				s.Require().Equal(types.OptionYes, vote.Vote.SubVotes[0].Option)
 			}
 		})
 	}

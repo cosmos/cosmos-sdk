@@ -735,7 +735,8 @@ func (s *IntegrationTestSuite) TestCmdQueryVote() {
 
 				var vote types.Vote
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &vote), out.String())
-				s.Require().Equal(types.OptionYes, vote.Option)
+				s.Require().True(len(vote.SubVotes) == 1)
+				s.Require().Equal(types.OptionYes, vote.SubVotes[0].Option)
 			}
 		})
 	}

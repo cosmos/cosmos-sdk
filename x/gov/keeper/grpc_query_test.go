@@ -183,7 +183,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 			func() {
 				testProposals[1].Status = types.StatusVotingPeriod
 				app.GovKeeper.SetProposal(ctx, testProposals[1])
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, testProposals[1].ProposalId, addrs[0], types.OptionAbstain))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, testProposals[1].ProposalId, addrs[0], types.SubVotes{types.NewSubVote(types.OptionAbstain, 1)}))
 
 				req = &types.QueryProposalsRequest{
 					Voter: addrs[0].String(),
@@ -291,14 +291,14 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 			func() {
 				proposal.Status = types.StatusVotingPeriod
 				app.GovKeeper.SetProposal(ctx, proposal)
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[0], types.OptionAbstain))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[0], types.SubVotes{types.NewSubVote(types.OptionAbstain, 1)}))
 
 				req = &types.QueryVoteRequest{
 					ProposalId: proposal.ProposalId,
 					Voter:      addrs[0].String(),
 				}
 
-				expRes = &types.QueryVoteResponse{Vote: types.NewVote(proposal.ProposalId, addrs[0], types.OptionAbstain)}
+				expRes = &types.QueryVoteResponse{Vote: types.NewVote(proposal.ProposalId, addrs[0], types.SubVotes{types.NewSubVote(types.OptionAbstain, 1)})}
 			},
 			true,
 		},
@@ -395,15 +395,15 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 				app.GovKeeper.SetProposal(ctx, proposal)
 
 				votes = []types.Vote{
-					{proposal.ProposalId, addrs[0].String(), types.OptionAbstain},
-					{proposal.ProposalId, addrs[1].String(), types.OptionYes},
+					{proposal.ProposalId, addrs[0].String(), types.SubVotes{types.NewSubVote(types.OptionAbstain, 1)}},
+					{proposal.ProposalId, addrs[1].String(), types.SubVotes{types.NewSubVote(types.OptionYes, 1)}},
 				}
 				accAddr1, err1 := sdk.AccAddressFromBech32(votes[0].Voter)
 				accAddr2, err2 := sdk.AccAddressFromBech32(votes[1].Voter)
 				suite.Require().NoError(err1)
 				suite.Require().NoError(err2)
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalId, accAddr1, votes[0].Option))
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalId, accAddr2, votes[1].Option))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalId, accAddr1, votes[0].SubVotes))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalId, accAddr2, votes[1].SubVotes))
 
 				req = &types.QueryVotesRequest{
 					ProposalId: proposal.ProposalId,
@@ -769,9 +769,9 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 				proposal.Status = types.StatusVotingPeriod
 				app.GovKeeper.SetProposal(ctx, proposal)
 
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[0], types.OptionYes))
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[1], types.OptionYes))
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[2], types.OptionYes))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[0], types.SubVotes{types.NewSubVote(types.OptionYes, 1)}))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[1], types.SubVotes{types.NewSubVote(types.OptionYes, 1)}))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[2], types.SubVotes{types.NewSubVote(types.OptionYes, 1)}))
 
 				req = &types.QueryTallyResultRequest{ProposalId: proposal.ProposalId}
 

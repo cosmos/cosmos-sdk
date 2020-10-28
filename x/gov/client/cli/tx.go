@@ -237,7 +237,7 @@ $ %s tx gov vote 1 yes --from mykey
 			}
 
 			// Build vote message and run basic validation
-			msg := types.NewMsgVote(from, proposalID, byteVoteOption)
+			msg := types.NewMsgVote(from, proposalID, types.SubVotes{types.NewSubVote(byteVoteOption, 1)})
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err

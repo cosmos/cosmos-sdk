@@ -34,7 +34,7 @@ func (c Client) Block(height uint64) (BlockResponse, error) {
 		endpoint = c.getEndpoint(fmt.Sprintf("block?height=%d", height))
 	}
 
-	resp, err := http.Get(endpoint)
+	resp, err := http.Get(endpoint) // nolint
 	if err != nil {
 		return BlockResponse{}, err
 	}

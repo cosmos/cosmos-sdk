@@ -129,7 +129,23 @@ message EventChannelRecvPacket {
 
 // EventChannelWriteAck is a typed event emitted on write acknowledgement
 message EventChannelWriteAck {
-    bytes acknowledgement = 1;
+    bytes data = 1;
+
+    google.protobuf.Any timeout_height  = 2 [(cosmos_proto.accepts_interface) = "Height"];
+
+    uint64 timeout_timestamp = 3;
+
+    uint64 sequence = 4;
+
+    string src_port = 5;
+
+    string src_channel = 6;
+
+    string dst_port = 7;
+
+    string dst_channel = 8;
+
+    bytes acknowledgement = 9;
 }
 
 // EventChannelAckPacket is a typed event emitted when packet acknowledgement is executed

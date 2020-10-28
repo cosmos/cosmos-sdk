@@ -368,9 +368,23 @@ func (k Keeper) WriteAcknowledgement(
 	// log that a packet has been acknowledged
 	k.Logger(ctx).Info("packet acknowledged", "packet", fmt.Sprintf("%v", packet))
 
+	anyTimeoutHeight, err := clienttypes.PackHeight(packet.GetTimeoutHeight())
+	if err != nil {
+		return nil
+	}
+
+	// emit an event that the relayer can query for
 	if err := ctx.EventManager().EmitTypedEvent(
 		&types.EventChannelWriteAck{
-			Acknowledgement: acknowledgement,
+			Data:             packet.GetData(),
+			TimeoutHeight:    anyTimeoutHeight,
+			TimeoutTimestamp: packet.GetTimeoutTimestamp(),
+			Sequence:         packet.GetSequence(),
+			SrcPort:          packet.GetSourcePort(),
+			SrcChannel:       packet.GetSourceChannel(),
+			DstPort:          packet.GetDestPort(),
+			DstChannel:       packet.GetDestChannel(),
+			Acknowledgement:  acknowledgement,
 		},
 	); err != nil {
 		return err

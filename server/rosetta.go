@@ -17,7 +17,7 @@ const (
 	flagTendermintRPC = "tendermint-rpc"
 	flagAppRPC        = "app-rpc"
 	flagOfflineMode   = "offline"
-	flagEndpoint      = "endpoint"
+	flagListenAddr    = "listen-addr"
 )
 
 // RosettaCommand will start the application Rosetta API service as a blocking process.
@@ -30,20 +30,20 @@ func RosettaCommand(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			endpoint, err := cmd.Flags().GetString(flagEndpoint)
+			listenAddr, err := cmd.Flags().GetString(flagListenAddr)
 			if err != nil {
 				return err
 			}
 
 			s, err := service.New(
-				service.Options{Endpoint: endpoint},
+				service.Options{ListenAddress: listenAddr},
 				rosetta.NewNetwork(cdc, options),
 			)
 			if err != nil {
 				panic(err)
 			}
 
-			fmt.Printf("starting Rosetta API service at %s\n", endpoint)
+			fmt.Printf("starting Rosetta API service at %s\n", listenAddr)
 
 			err = s.Start()
 			if err != nil {
@@ -55,7 +55,7 @@ func RosettaCommand(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().String(flagBlockchain, "blockchain", "Application's name (e.g. Cosmos Hub)")
-	cmd.Flags().String(flagEndpoint, "localhost:8080", "The endpoint where this service will be provided")
+	cmd.Flags().String(flagListenAddr, "localhost:8080", "The address where Rosetta API will listen.")
 	cmd.Flags().String(flagNetwork, "network", "Network's identifier (e.g. cosmos-hub-3, testnet-1, etc)")
 	cmd.Flags().String(flagAppRPC, "localhost:1317", "Application's RPC endpoint.")
 	cmd.Flags().String(flagTendermintRPC, "localhost:26657", "Tendermint's RPC endpoint.")

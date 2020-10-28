@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
@@ -148,24 +149,26 @@ func (k Keeper) TimeoutExecuted(
 
 	k.Logger(ctx).Info("packet timed-out", "packet", fmt.Sprintf("%v", packet))
 
+	anyTimeoutHeight, err := clienttypes.PackHeight(packet.GetTimeoutHeight())
+	if err != nil {
+		return nil
+	}
+
 	// emit an event marking that we have processed the timeout
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeTimeoutPacket,
-			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, packet.GetTimeoutHeight().String()),
-			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
-			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
-			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
-			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
-			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
-			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
-			sdk.NewAttribute(types.AttributeKeyChannelOrdering, channel.Ordering.String()),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		),
-	})
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventChannelTimeoutPacket{
+			TimeoutHeight:    anyTimeoutHeight,
+			TimeoutTimestamp: packet.GetTimeoutTimestamp(),
+			Sequence:         packet.GetSequence(),
+			SrcPort:          packet.GetSourcePort(),
+			SrcChannel:       packet.GetSourceChannel(),
+			DstPort:          packet.GetDestPort(),
+			DstChannel:       packet.GetDestChannel(),
+			ChannelOrdering:  channel.Ordering,
+		},
+	); err != nil {
+		return err
+	}
 
 	return nil
 }

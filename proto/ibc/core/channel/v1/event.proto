@@ -1,0 +1,171 @@
+syntax = "proto3";
+package ibc.core.channel.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types";
+
+import "ibc/core/channel/v1/channel.proto";
+import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
+
+// EventChannelOpenInit is a typed event emitted on channel open init
+message EventChannelOpenInit {
+    string port_id = 1;
+
+    string channel_id = 2;
+
+    string counterparty_port_id = 3;
+
+    string counterparty_channel_id = 4;
+
+    string connection_id = 5;
+}
+
+// EventChannelOpenTry is a typed event emitted on channel open try
+message EventChannelOpenTry {
+    string port_id = 1;
+
+    string channel_id = 2;
+
+    string counterparty_port_id = 3;
+
+    string counterparty_channel_id = 4;
+
+    string connection_id = 5;
+}
+
+// EventChannelOpenAck is a typed event emitted on channel open acknowledgement
+message EventChannelOpenAck {
+    string port_id = 1;
+
+    string channel_id = 2;
+
+    string counterparty_port_id = 3;
+
+    string counterparty_channel_id = 4;
+
+    string connection_id = 5;
+}
+
+// EventChannelCloseInit is a typed event emitted on channel close init
+message EventChannelCloseInit {
+    string port_id = 1;
+
+    string channel_id = 2;
+
+    string counterparty_port_id = 3;
+
+    string counterparty_channel_id = 4;
+
+    string connection_id = 5;
+}
+
+// EventChannelOpenConfirm is a typed event emitted on channel open confirm
+message EventChannelOpenConfirm {
+    string port_id = 1;
+
+    string channel_id = 2;
+
+    string counterparty_port_id = 3;
+
+    string counterparty_channel_id = 4;
+
+    string connection_id = 5;
+}
+
+// EventChannelCloseConfirm is a typed event emitted on channel close confirm
+message EventChannelCloseConfirm {
+    string port_id = 1;
+
+    string channel_id = 2;
+
+    string counterparty_port_id = 3;
+
+    string counterparty_channel_id = 4;
+
+    string connection_id = 5;
+}
+
+// EventChannelSendPacket is a typed event emitted when packet is sent
+message EventChannelSendPacket {
+    bytes data = 1;
+
+    google.protobuf.Any timeout_height  = 2 [(cosmos_proto.accepts_interface) = "Height"];
+
+    uint64 timeout_timestamp = 3;
+
+    uint64 sequence = 4;
+
+    string src_port = 5;
+
+    string src_channel = 6;
+
+    string dst_port = 7;
+
+    string dst_channel = 8;
+
+    Order channel_ordering = 9;
+}
+
+// EventChannelRecvPacket is a typed event emitted when packet is received in channel
+message EventChannelRecvPacket {
+    bytes data = 1;
+
+    google.protobuf.Any timeout_height  = 2 [(cosmos_proto.accepts_interface) = "Height"];
+
+    uint64 timeout_timestamp = 3;
+
+    uint64 sequence = 4;
+
+    string src_port = 5;
+
+    string src_channel = 6;
+
+    string dst_port = 7;
+
+    string dst_channel = 8;
+
+    Order channel_ordering = 9;
+}
+
+// EventChannelWriteAck is a typed event emitted on write acknowledgement
+message EventChannelWriteAck {
+    bytes acknowledgement = 1;
+}
+
+// EventChannelAckPacket is a typed event emitted when packet acknowledgement is executed
+message EventChannelAckPacket {
+    google.protobuf.Any timeout_height  = 1 [(cosmos_proto.accepts_interface) = "Height"];
+
+    uint64 timeout_timestamp = 2;
+
+    uint64 sequence = 3;
+
+    string src_port = 4;
+
+    string src_channel = 5;
+
+    string dst_port = 6;
+
+    string dst_channel = 7;
+
+    Order channel_ordering = 8;
+}
+
+// EventChannelTimeoutPacket is a typed event emitted when packet is timeout
+message EventChannelTimeoutPacket {
+    google.protobuf.Any timeout_height  = 1 [(cosmos_proto.accepts_interface) = "Height"];
+
+    uint64 timeout_timestamp = 2;
+
+    uint64 sequence = 3;
+
+    string src_port = 4;
+
+    string src_channel = 5;
+
+    string dst_port = 6;
+
+    string dst_channel = 7;
+
+    Order channel_ordering = 8;
+}

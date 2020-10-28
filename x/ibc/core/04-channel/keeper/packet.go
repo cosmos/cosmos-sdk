@@ -108,26 +108,28 @@ func (k Keeper) SendPacket(
 	k.SetNextSequenceSend(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), nextSequenceSend)
 	k.SetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), types.CommitPacket(packet))
 
+	anyTimeoutHeight, err := clienttypes.PackHeight(timeoutHeight)
+	if err != nil {
+		return nil
+	}
+
 	// Emit Event with Packet data along with other packet information for relayer to pick up
 	// and relay to other chain
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeSendPacket,
-			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData())),
-			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, timeoutHeight.String()),
-			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
-			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
-			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
-			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
-			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
-			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
-			sdk.NewAttribute(types.AttributeKeyChannelOrdering, channel.Ordering.String()),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		),
-	})
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventChannelSendPacket{
+			Data:             packet.GetData(),
+			TimeoutHeight:    anyTimeoutHeight,
+			TimeoutTimestamp: packet.GetTimeoutTimestamp(),
+			Sequence:         packet.GetSequence(),
+			SrcPort:          packet.GetSourcePort(),
+			SrcChannel:       packet.GetSourceChannel(),
+			DstPort:          packet.GetDestPort(),
+			DstChannel:       packet.GetDestChannel(),
+			ChannelOrdering:  channel.Ordering,
+		},
+	); err != nil {
+		return err
+	}
 
 	k.Logger(ctx).Info("packet sent", "packet", fmt.Sprintf("%v", packet))
 	return nil
@@ -306,25 +308,27 @@ func (k Keeper) WriteReceipt(
 	// log that a packet has been received & executed
 	k.Logger(ctx).Info("packet received", "packet", fmt.Sprintf("%v", packet))
 
+	anyTimeoutHeight, err := clienttypes.PackHeight(packet.GetTimeoutHeight())
+	if err != nil {
+		return nil
+	}
+
 	// emit an event that the relayer can query for
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeRecvPacket,
-			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData())),
-			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, packet.GetTimeoutHeight().String()),
-			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
-			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
-			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
-			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
-			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
-			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
-			sdk.NewAttribute(types.AttributeKeyChannelOrdering, channel.Ordering.String()),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		),
-	})
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventChannelRecvPacket{
+			Data:             packet.GetData(),
+			TimeoutHeight:    anyTimeoutHeight,
+			TimeoutTimestamp: packet.GetTimeoutTimestamp(),
+			Sequence:         packet.GetSequence(),
+			SrcPort:          packet.GetSourcePort(),
+			SrcChannel:       packet.GetSourceChannel(),
+			DstPort:          packet.GetDestPort(),
+			DstChannel:       packet.GetDestChannel(),
+			ChannelOrdering:  channel.Ordering,
+		},
+	); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -364,17 +368,13 @@ func (k Keeper) WriteAcknowledgement(
 	// log that a packet has been acknowledged
 	k.Logger(ctx).Info("packet acknowledged", "packet", fmt.Sprintf("%v", packet))
 
-	// emit an event that the relayer can query for
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeRecvPacket,
-			sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		),
-	})
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventChannelWriteAck{
+			Acknowledgement: acknowledgement,
+		},
+	); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -520,24 +520,26 @@ func (k Keeper) AcknowledgementExecuted(
 	// log that a packet has been acknowledged
 	k.Logger(ctx).Info("packet acknowledged", "packet", fmt.Sprintf("%v", packet))
 
+	anyTimeoutHeight, err := clienttypes.PackHeight(packet.GetTimeoutHeight())
+	if err != nil {
+		return nil
+	}
+
 	// emit an event marking that we have processed the acknowledgement
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeAcknowledgePacket,
-			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, packet.GetTimeoutHeight().String()),
-			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
-			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
-			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
-			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
-			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
-			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
-			sdk.NewAttribute(types.AttributeKeyChannelOrdering, channel.Ordering.String()),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		),
-	})
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventChannelAckPacket{
+			TimeoutHeight:    anyTimeoutHeight,
+			TimeoutTimestamp: packet.GetTimeoutTimestamp(),
+			Sequence:         packet.GetSequence(),
+			SrcPort:          packet.GetSourcePort(),
+			SrcChannel:       packet.GetSourceChannel(),
+			DstPort:          packet.GetDestPort(),
+			DstChannel:       packet.GetDestChannel(),
+			ChannelOrdering:  channel.Ordering,
+		},
+	); err != nil {
+		return err
+	}
 
 	return nil
 }

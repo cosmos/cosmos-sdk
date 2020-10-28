@@ -18,20 +18,17 @@ func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, portCap *capabil
 		return nil, nil, sdkerrors.Wrap(err, "channel handshake open init failed")
 	}
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeChannelOpenInit,
-			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortId),
-			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelId),
-			sdk.NewAttribute(types.AttributeCounterpartyPortID, msg.Channel.Counterparty.PortId),
-			sdk.NewAttribute(types.AttributeCounterpartyChannelID, msg.Channel.Counterparty.ChannelId),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.Channel.ConnectionHops[0]),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		),
-	})
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventChannelOpenInit{
+			PortId:                msg.PortId,
+			ChannelId:             msg.ChannelId,
+			CounterpartyPortId:    msg.Channel.Counterparty.PortId,
+			CounterpartyChannelId: msg.Channel.Counterparty.ChannelId,
+			ConnectionId:          msg.Channel.ConnectionHops[0],
+		},
+	); err != nil {
+		return nil, nil, err
+	}
 
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),
@@ -47,20 +44,17 @@ func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capabili
 		return nil, nil, sdkerrors.Wrap(err, "channel handshake open try failed")
 	}
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeChannelOpenTry,
-			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortId),
-			sdk.NewAttribute(types.AttributeKeyChannelID, msg.DesiredChannelId),
-			sdk.NewAttribute(types.AttributeCounterpartyPortID, msg.Channel.Counterparty.PortId),
-			sdk.NewAttribute(types.AttributeCounterpartyChannelID, msg.Channel.Counterparty.ChannelId),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.Channel.ConnectionHops[0]),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		),
-	})
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventChannelOpenTry{
+			PortId:                msg.PortId,
+			ChannelId:             msg.DesiredChannelId,
+			CounterpartyPortId:    msg.Channel.Counterparty.PortId,
+			CounterpartyChannelId: msg.Channel.Counterparty.ChannelId,
+			ConnectionId:          msg.Channel.ConnectionHops[0],
+		},
+	); err != nil {
+		return nil, nil, err
+	}
 
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),
@@ -78,20 +72,17 @@ func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, channelCap *capab
 
 	channel, _ := k.GetChannel(ctx, msg.PortId, msg.ChannelId)
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeChannelOpenAck,
-			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortId),
-			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelId),
-			sdk.NewAttribute(types.AttributeCounterpartyPortID, channel.Counterparty.PortId),
-			sdk.NewAttribute(types.AttributeCounterpartyChannelID, channel.Counterparty.ChannelId),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, channel.ConnectionHops[0]),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		),
-	})
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventChannelOpenAck{
+			PortId:                msg.PortId,
+			ChannelId:             msg.ChannelId,
+			CounterpartyPortId:    channel.Counterparty.PortId,
+			CounterpartyChannelId: channel.Counterparty.ChannelId,
+			ConnectionId:          channel.ConnectionHops[0],
+		},
+	); err != nil {
+		return nil, err
+	}
 
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),
@@ -107,20 +98,17 @@ func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *c
 
 	channel, _ := k.GetChannel(ctx, msg.PortId, msg.ChannelId)
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeChannelOpenConfirm,
-			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortId),
-			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelId),
-			sdk.NewAttribute(types.AttributeCounterpartyPortID, channel.Counterparty.PortId),
-			sdk.NewAttribute(types.AttributeCounterpartyChannelID, channel.Counterparty.ChannelId),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, channel.ConnectionHops[0]),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		),
-	})
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventChannelOpenConfirm{
+			PortId:                msg.PortId,
+			ChannelId:             msg.ChannelId,
+			CounterpartyPortId:    channel.Counterparty.PortId,
+			CounterpartyChannelId: channel.Counterparty.ChannelId,
+			ConnectionId:          channel.ConnectionHops[0],
+		},
+	); err != nil {
+		return nil, err
+	}
 
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),
@@ -136,20 +124,17 @@ func HandleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, channelCap *cap
 
 	channel, _ := k.GetChannel(ctx, msg.PortId, msg.ChannelId)
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeChannelCloseInit,
-			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortId),
-			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelId),
-			sdk.NewAttribute(types.AttributeCounterpartyPortID, channel.Counterparty.PortId),
-			sdk.NewAttribute(types.AttributeCounterpartyChannelID, channel.Counterparty.ChannelId),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, channel.ConnectionHops[0]),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		),
-	})
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventChannelCloseInit{
+			PortId:                msg.PortId,
+			ChannelId:             msg.ChannelId,
+			CounterpartyPortId:    channel.Counterparty.PortId,
+			CounterpartyChannelId: channel.Counterparty.ChannelId,
+			ConnectionId:          channel.ConnectionHops[0],
+		},
+	); err != nil {
+		return nil, err
+	}
 
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),
@@ -165,20 +150,17 @@ func HandleMsgChannelCloseConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *
 
 	channel, _ := k.GetChannel(ctx, msg.PortId, msg.ChannelId)
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeChannelCloseConfirm,
-			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortId),
-			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelId),
-			sdk.NewAttribute(types.AttributeCounterpartyPortID, channel.Counterparty.PortId),
-			sdk.NewAttribute(types.AttributeCounterpartyChannelID, channel.Counterparty.ChannelId),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, channel.ConnectionHops[0]),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		),
-	})
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventChannelCloseConfirm{
+			PortId:                msg.PortId,
+			ChannelId:             msg.ChannelId,
+			CounterpartyPortId:    channel.Counterparty.PortId,
+			CounterpartyChannelId: channel.Counterparty.ChannelId,
+			ConnectionId:          channel.ConnectionHops[0],
+		},
+	); err != nil {
+		return nil, err
+	}
 
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),

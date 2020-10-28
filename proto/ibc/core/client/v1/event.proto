@@ -1,0 +1,52 @@
+syntax = "proto3";
+package ibc.core.client.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types";
+
+import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
+
+// EventCreateClient is a typed event emitted on creating client
+message EventCreateClient {
+    string client_id = 1;
+
+    string client_type = 2;
+
+    google.protobuf.Any consensus_height  = 3 [(cosmos_proto.accepts_interface) = "Height"];
+}
+
+// EventUpdateClient is a typed event emitted on updating client
+message EventUpdateClient {
+    string client_id = 1;
+
+    string client_type = 2;
+
+    google.protobuf.Any consensus_height  = 3 [(cosmos_proto.accepts_interface) = "Height"];
+}
+
+// EventUpgradeClient is a typed event emitted on upgrading client
+message EventUpgradeClient {
+    string client_id = 1;
+
+    string client_type = 2;
+
+    google.protobuf.Any consensus_height  = 3 [(cosmos_proto.accepts_interface) = "Height"];
+}
+
+// EventUpdateClientProposal is a typed event emitted on updating client proposal
+message EventUpdateClientProposal {
+    string client_id = 1;
+
+    string client_type = 2;
+
+    google.protobuf.Any consensus_height  = 3 [(cosmos_proto.accepts_interface) = "Height"];
+}
+
+// EventClientMisbehaviour is a typed event emitted when misbehaviour is submitted
+message EventClientMisbehaviour {
+    string client_id = 1;
+
+    string client_type = 2;
+
+    google.protobuf.Any consensus_height  = 3 [(cosmos_proto.accepts_interface) = "Height"];
+}

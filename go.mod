@@ -26,7 +26,7 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
 	github.com/tendermint/btcd v0.1.1
-	github.com/tendermint/cosmos-rosetta-gateway v0.1.2-0.20201020071520-761ae2d28226
+	github.com/tendermint/cosmos-rosetta-gateway v0.1.2-0.20201028094843-23ec0847c461
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/iavl v0.14.0

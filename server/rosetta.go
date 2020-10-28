@@ -17,6 +17,7 @@ const (
 	flagTendermintRPC = "tendermint-rpc"
 	flagAppRPC        = "app-rpc"
 	flagOfflineMode   = "offline"
+	flagEndpoint      = "endpoint"
 )
 
 // RosettaCommand will start the application Rosetta API service as a blocking process.
@@ -29,8 +30,13 @@ func RosettaCommand(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
+			endpoint, err := cmd.Flags().GetString(flagEndpoint)
+			if err != nil {
+				return err
+			}
+
 			s, err := service.New(
-				service.Options{Port: 8080},
+				service.Options{Endpoint: endpoint},
 				rosetta.NewNetwork(cdc, options),
 			)
 			if err != nil {
@@ -50,6 +56,7 @@ func RosettaCommand(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().String(flagNetwork, "network", "Network's identifier (e.g. cosmos-hub-3, testnet-1, etc)")
 	cmd.Flags().String(flagAppRPC, "localhost:1317", "Application's RPC endpoint.")
 	cmd.Flags().String(flagTendermintRPC, "localhost:26657", "Tendermint's RPC endpoint.")
+	cmd.Flags().String(flagEndpoint, "localhost:8080", "The endpoint where this service will be provided")
 	cmd.Flags().Bool(flagOfflineMode, false, "Flag that forces the rosetta service to run in offline mode, some endpoints won't work.")
 
 	return cmd

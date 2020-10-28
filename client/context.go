@@ -10,7 +10,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -95,12 +94,6 @@ func (ctx Context) WithOutputFormat(format string) Context {
 // WithNodeURI returns a copy of the context with an updated node URI.
 func (ctx Context) WithNodeURI(nodeURI string) Context {
 	ctx.NodeURI = nodeURI
-	client, err := rpchttp.New(nodeURI, "/websocket")
-	if err != nil {
-		panic(err)
-	}
-
-	ctx.Client = client
 	return ctx
 }
 

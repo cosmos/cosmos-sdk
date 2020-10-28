@@ -40,7 +40,7 @@ func (msr *MsgServiceRouter) Handler(methodName string) MsgServiceHandler {
 // RegisterService implements the gRPC Server.RegisterService method. sd is a gRPC
 // service description, handler is an object which implements that gRPC service.
 //
-// This function PANICs if it is called before the the service `Msg`s have been
+// This function PANICs if it is called before the service `Msg`s have been
 // registered using RegisterInterfaces.
 func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
 	// Adds a top-level query handler based on the gRPC service name.

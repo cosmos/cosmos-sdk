@@ -113,6 +113,13 @@ func (suite *KeeperTestSuite) SetupTest() {
 		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), &hi)
 	}
 
+	// add localhost client
+	version := types.ParseChainID(suite.chainA.ChainID)
+	localHostClient := localhosttypes.NewClientState(
+		suite.chainA.ChainID, types.NewHeight(version, uint64(suite.chainA.GetContext().BlockHeight())),
+	)
+	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), exported.Localhost, localHostClient)
+
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.IBCKeeper.ClientKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
@@ -245,15 +252,15 @@ func (suite KeeperTestSuite) TestGetAllClients() {
 	}
 
 	for i := range expClients {
-		suite.keeper.SetClientState(suite.ctx, clientIDs[i], expClients[i])
+		suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientIDs[i], expClients[i])
 	}
 
 	// add localhost client
-	localHostClient, found := suite.keeper.GetClientState(suite.ctx, exported.Localhost)
+	localHostClient, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), exported.Localhost)
 	suite.Require().True(found)
 	expClients = append(expClients, localHostClient)
 
-	clients := suite.keeper.GetAllClients(suite.ctx)
+	clients := suite.chainA.App.IBCKeeper.ClientKeeper.GetAllClients(suite.chainA.GetContext())
 	suite.Require().Len(clients, len(expClients))
 	suite.Require().Equal(expClients, clients)
 }
@@ -271,16 +278,16 @@ func (suite KeeperTestSuite) TestGetAllGenesisClients() {
 	expGenClients := make([]types.IdentifiedClientState, len(expClients))
 
 	for i := range expClients {
-		suite.keeper.SetClientState(suite.ctx, clientIDs[i], expClients[i])
+		suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientIDs[i], expClients[i])
 		expGenClients[i] = types.NewIdentifiedClientState(clientIDs[i], expClients[i])
 	}
 
 	// add localhost client
-	localHostClient, found := suite.keeper.GetClientState(suite.ctx, exported.Localhost)
+	localHostClient, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), exported.Localhost)
 	suite.Require().True(found)
 	expGenClients = append(expGenClients, types.NewIdentifiedClientState(exported.Localhost, localHostClient))
 
-	genClients := suite.keeper.GetAllGenesisClients(suite.ctx)
+	genClients := suite.chainA.App.IBCKeeper.ClientKeeper.GetAllGenesisClients(suite.chainA.GetContext())
 
 	suite.Require().Equal(expGenClients, genClients)
 }

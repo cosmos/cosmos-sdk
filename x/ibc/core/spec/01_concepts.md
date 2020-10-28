@@ -160,7 +160,7 @@ connection is set and stored in the OPEN state upon success.
 
 ## Connection Version Negotiation
 
-During the handshake procedure for connections a version string is agreed
+During the handshake procedure for connections a version is agreed
 upon between the two parties. This occurs during the first 3 steps of the
 handshake.
 
@@ -181,16 +181,20 @@ During `ConnOpenAck`, party A will verify that they can support the version
 party B selected. If they do not support the selected version an error is
 returned. After this step, the connection version is considered agreed upon.
 
-A valid connection version is considered to be in the following format:
-`(version-identifier,[feature-0,feature-1])`
 
-- the version tuple must be enclosed in parentheses
-- the feature set must be enclosed in brackets
-- there should be no space between the comma separating the identifier and the
-  feature set
-- the version identifier must no contain any commas
-- each feature must not contain any commas
-- each feature must be separated by commas
+A `Version` is defined as follows:
+
+```go
+type Version struct {
+	// unique version identifier
+	Identifier string 
+	// list of features compatible with the specified identifier
+	Features []string 
+}
+```
+
+A version must contain a non empty identifier. Empty feature sets are allowed, but each 
+feature must be a non empty string.
 
 ::: warning
 A set of versions should not contain two versions with the same

@@ -50,9 +50,8 @@ const (
 	UnbondingPeriod time.Duration = time.Hour * 24 * 7 * 3
 	MaxClockDrift   time.Duration = time.Second * 10
 
-	DefaultChannelVersion  = ibctransfertypes.Version
-	DefaultOpenInitVersion = ""
-	InvalidID              = "IDisInvalid"
+	DefaultChannelVersion = ibctransfertypes.Version
+	InvalidID             = "IDisInvalid"
 
 	ConnectionIDPrefix = "conn"
 	ChannelIDPrefix    = "chan"
@@ -68,6 +67,8 @@ const (
 var (
 	DefaultConsensusParams = simapp.DefaultConsensusParams
 
+	DefaultOpenInitVersion *connectiontypes.Version
+
 	// Default params variables used to create a TM client
 	DefaultTrustLevel ibctmtypes.Fraction = ibctmtypes.DefaultTrustLevel
 	TestHash                              = tmhash.Sum([]byte("TESTING HASH"))
@@ -75,7 +76,7 @@ var (
 
 	UpgradePath = fmt.Sprintf("%s/%s", "upgrade", "upgradedClient")
 
-	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]
+	ConnectionVersion = connectiontypes.ExportedVersionsToProto(connectiontypes.GetCompatibleVersions())[0]
 
 	MockAcknowledgement = mock.MockAcknowledgement
 	MockCommitment      = mock.MockCommitment
@@ -654,7 +655,7 @@ func (chain *TestChain) ConnectionOpenTry(
 	msg := connectiontypes.NewMsgConnectionOpenTry(
 		connection.ID, connection.ID, connection.ClientID, // testing doesn't use flexible selection
 		counterpartyConnection.ID, counterpartyConnection.ClientID,
-		counterpartyClient, counterparty.GetPrefix(), []string{ConnectionVersion},
+		counterpartyClient, counterparty.GetPrefix(), []*connectiontypes.Version{ConnectionVersion},
 		proofInit, proofClient, proofConsensus,
 		proofHeight, consensusHeight,
 		chain.SenderAccount.GetAddress(),

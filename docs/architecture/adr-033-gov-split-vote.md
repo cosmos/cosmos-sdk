@@ -1,4 +1,4 @@
-# ADR 028: Public Key Addresses
+# ADR 033: Governance split votes
 
 ## Changelog
 

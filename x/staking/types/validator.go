@@ -125,6 +125,7 @@ func (v Validators) Swap(i, j int) {
 
 // ValidatorsByVotingPower implements sort.Interface for []Validator based on
 // the VotingPower and Address fields.
+// The validators are sorted first by their voting power (descending). Secondary index - Address (ascending).
 // Copied from tendermint/types/validator_set.go
 type ValidatorsByVotingPower []Validator
 
@@ -132,15 +133,10 @@ func (valz ValidatorsByVotingPower) Len() int { return len(valz) }
 
 func (valz ValidatorsByVotingPower) Less(i, j int) bool {
 	if valz[i].ConsensusPower() == valz[j].ConsensusPower() {
-		var addrI, addrJ []byte
-		pkI, errI := valz[i].TmConsPubKey()
-		pkJ, errJ := valz[j].TmConsPubKey()
-		// If errors are nil, sort by address,
-		// otherwise don't sort by address and just return false
-		if errI == nil && errJ == nil {
-			addrI = pkI.Address().Bytes()
-			addrJ = pkJ.Address().Bytes()
-		}
+		// If GetConsAddr returns error, then both addresses
+		// are empty and Less will return false
+		addrI, _ := valz[i].GetConsAddr()
+		addrJ, _ := valz[j].GetConsAddr()
 		return bytes.Compare(addrI, addrJ) == -1
 	}
 	return valz[i].ConsensusPower() > valz[j].ConsensusPower()

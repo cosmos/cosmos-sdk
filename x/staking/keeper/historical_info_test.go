@@ -78,15 +78,11 @@ func TestTrackHistoricalInfo(t *testing.T) {
 
 	// Set bonded validators in keeper
 	val1 := teststaking.NewValidator(t, addrVals[2], PKs[2])
-	val1.Status = types.Bonded
-	val1.Tokens = sdk.NewInt(100)
 	app.StakingKeeper.SetValidator(ctx, val1)
-	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
+	app.StakingKeeper.SetLastValidatorPower(ctx, val1.GetOperator(), 10)
 	val2 := teststaking.NewValidator(t, addrVals[3], PKs[3])
-	val2.Status = types.Bonded
-	val2.Tokens = sdk.NewInt(80)
 	app.StakingKeeper.SetValidator(ctx, val2)
-	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val2)
+	app.StakingKeeper.SetLastValidatorPower(ctx, val2.GetOperator(), 8)
 
 	vals := []types.Validator{val1, val2}
 	sort.Sort(types.ValidatorsByVotingPower(vals))

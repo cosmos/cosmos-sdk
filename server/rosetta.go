@@ -55,10 +55,10 @@ func RosettaCommand(ctx *Context, cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().String(flagBlockchain, "blockchain", "Application's name (e.g. Cosmos Hub)")
+	cmd.Flags().String(flagEndpoint, "localhost:8080", "The endpoint where this service will be provided")
 	cmd.Flags().String(flagNetwork, "network", "Network's identifier (e.g. cosmos-hub-3, testnet-1, etc)")
 	cmd.Flags().String(flagAppRPC, "localhost:1317", "Application's RPC endpoint.")
 	cmd.Flags().String(flagTendermintRPC, "localhost:26657", "Tendermint's RPC endpoint.")
-	cmd.Flags().String(flagEndpoint, "localhost:8080", "The endpoint where this service will be provided")
 	cmd.Flags().Bool(flagOfflineMode, false, "Flag that forces the rosetta service to run in offline mode, some endpoints won't work.")
 
 	return cmd

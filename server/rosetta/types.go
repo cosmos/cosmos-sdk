@@ -8,7 +8,7 @@ const (
 	StatusReverted = "Reverted"
 	StatusSuccess  = "Success"
 
-	OperationTransfer = "Transfer"
+	OperationTransfer = "cosmos-sdk/MsgSend"
 
 	OptionAddress = "address"
 	OptionGas     = "gas"

@@ -223,7 +223,7 @@ Generally, the [commands related to a module](../building-modules/module-interfa
 
 Each module can expose gRPC endpoints, called [service methods](https://grpc.io/docs/what-is-grpc/core-concepts/#service-definition) and are defined in the [module's Protobuf `query.proto` file](#grpc-query-services). A service method is defined by its name, input arguments and output response. The module then needs to:
 
-- define a `RegisterGRPCRoutes` method on `AppModuleBasic` to wire the client gRPC requests to the correct handler inside the module.
+- define a `RegisterGRPCGatewayRoutes` method on `AppModuleBasic` to wire the client gRPC requests to the correct handler inside the module.
 - for each service method, define a corresponding handler. The handler implements the core logic necessary to serve the gRPC request, and is located in the `keeper/grpc_query.go` file.
 
 #### gRPC-gateway REST Endpoints

@@ -32,7 +32,7 @@ message MsgConnectionOpenInit {
   string       client_id     = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   string       connection_id = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
   Counterparty counterparty  = 3 [(gogoproto.nullable) = false];
-  string       version       = 4;
+  Version      version       = 4;
   string       signer        = 5;
 }
 
@@ -50,7 +50,7 @@ message MsgConnectionOpenTry {
   string counterparty_chosen_connection_id = 3 [(gogoproto.moretags) = "yaml:\"counterparty_chosen_connection_id\""];
   google.protobuf.Any client_state         = 4 [(gogoproto.moretags) = "yaml:\"client_state\""];
   Counterparty        counterparty         = 5 [(gogoproto.nullable) = false];
-  repeated string           counterparty_versions = 6 [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
+  repeated Version           counterparty_versions = 6 [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
   ibc.core.client.v1.Height proof_height          = 7
       [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
   // proof of the initialization the connection on Chain A: `UNITIALIZED ->
@@ -76,7 +76,7 @@ message MsgConnectionOpenAck {
 
   string              connection_id              = 1 [(gogoproto.moretags) = "yaml:\"connection_id\""];
   string              counterparty_connection_id = 2 [(gogoproto.moretags) = "yaml:\"counterparty_connection_id\""];
-  string              version                    = 3;
+  Version             version                    = 3;
   google.protobuf.Any client_state               = 4 [(gogoproto.moretags) = "yaml:\"client_state\""];
   ibc.core.client.v1.Height proof_height         = 5
       [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];

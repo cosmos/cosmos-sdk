@@ -81,8 +81,7 @@ type NetworkProperties struct {
 }
 ```
 
-Rosetta API services use Blockchain and Network as identifiers, e.g. the developers of gaia, the application that powers 
-the Cosmos Hub, may want to set those to Cosmos Hub and cosmos-hub-3 respectively.
+Rosetta API services use `Blockchain` and `Network` as identifiers, e.g. the developers of _gaia_, the application that powers the Cosmos Hub, may want to set those to `Cosmos Hub` and `cosmos-hub-3` respectively.
 
 `SupportedOperations` contains the transaction types that are supported by the library. At the present time, 
 only `cosmos-sdk/MsgSend` is supported in Launchpad. Additional operations will be added in due time.

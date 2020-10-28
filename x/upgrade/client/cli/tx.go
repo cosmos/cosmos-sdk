@@ -19,8 +19,8 @@ const (
 	TimeFormat = "2006-01-02T15:04:05Z"
 
 	FlagUpgradeHeight = "upgrade-height"
-	FlagUpgradeTime   = "time"
-	FlagUpgradeInfo   = "info"
+	FlagUpgradeTime   = "upgrade-time"
+	FlagUpgradeInfo   = "upgrade-info"
 )
 
 // GetTxCmd returns the transaction commands for this module

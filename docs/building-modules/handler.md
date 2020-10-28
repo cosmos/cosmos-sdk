@@ -36,7 +36,7 @@ Here's an example of a `NewHandler` from `x/bank` module:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/bank/handler.go#L10-L30
 
-Prior to defining the actual `Handler` function, we need to get `msgServer` which implements proto-generated [`MsgServer`](messages-and-queries.md#msg-services) interface with methods that map to module `Msg`s. When possible, the existing module's `Keeper` should implement `MsgServer`, else a `msgServer` struct that embeds the `Keeper` can be created:
+Prior to defining the actual `Handler` function, we need to get `msgServer` which implements proto-generated [`MsgServer`](messages-and-queries.md#msg-services) interface with methods that map to module `Msg`s. When possible, the existing module's [`Keeper`](keeper.md) should implement `MsgServer`, else a `msgServer` struct that embeds the `Keeper` can be created:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/bank/keeper/msg_server.go#L14-L16
 

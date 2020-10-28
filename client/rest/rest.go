@@ -12,6 +12,7 @@ func addHTTPDeprecationHeaders(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Deprecation", "true")
 		w.Header().Set("Link", "<https://docs.cosmos.network/v0.40/interfaces/rest.html>; rel=\"deprecation\"")
+		w.Header().Set("Warning", "199 - \"this endpoint is deprecated and may not work as before, see deprecation link for more info\"")
 		h.ServeHTTP(w, r)
 	})
 }

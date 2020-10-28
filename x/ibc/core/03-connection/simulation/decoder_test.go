@@ -21,7 +21,7 @@ func TestDecodeStore(t *testing.T) {
 
 	connection := types.ConnectionEnd{
 		ClientId: "clientidone",
-		Versions: []string{"1.0"},
+		Versions: types.ExportedVersionsToProto(types.GetCompatibleVersions()),
 	}
 
 	paths := types.ClientPaths{

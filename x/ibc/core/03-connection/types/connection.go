@@ -10,7 +10,7 @@ import (
 var _ exported.ConnectionI = (*ConnectionEnd)(nil)
 
 // NewConnectionEnd creates a new ConnectionEnd instance.
-func NewConnectionEnd(state State, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
+func NewConnectionEnd(state State, clientID string, counterparty Counterparty, versions []*Version) ConnectionEnd {
 	return ConnectionEnd{
 		ClientId:     clientID,
 		Versions:     versions,
@@ -35,8 +35,8 @@ func (c ConnectionEnd) GetCounterparty() exported.CounterpartyConnectionI {
 }
 
 // GetVersions implements the Connection interface
-func (c ConnectionEnd) GetVersions() []string {
-	return c.Versions
+func (c ConnectionEnd) GetVersions() []exported.Version {
+	return ProtoVersionsToExported(c.Versions)
 }
 
 // ValidateBasic implements the Connection interface.

@@ -74,6 +74,7 @@ define a `Msg` protobuf service.
 ### Bug Fixes
 
 * (kvstore) [\#7415](https://github.com/cosmos/cosmos-sdk/pull/7415) Allow new stores to be registered during on-chain upgrades.
+* (client) [\#7699](https://github.com/cosmos/cosmos-sdk/pull/7699) Fix panic in context when setting invalid nodeURI. `WithNodeURI` does not set the `Client` in the context.
 
 ### Improvements
 

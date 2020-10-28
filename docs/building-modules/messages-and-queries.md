@@ -4,7 +4,7 @@ order: 3
 
 # Messages and Queries
 
-`Message`s and `Queries` are the two primary objects handled by modules. Most of the core components defined in a module, like `handler`s, `keeper`s and `querier`s, exist to process `message`s and `queries`. {synopsis}
+`Msg`s and `Queries` are the two primary objects handled by modules. Most of the core components defined in a module, like `handler`s, `keeper`s and `querier`s, exist to process `message`s and `queries`. {synopsis}
 
 ## Pre-requisite Readings
 
@@ -12,13 +12,25 @@ order: 3
 
 ## Messages
 
-`Message`s are objects whose end-goal is to trigger state-transitions. They are wrapped in [transactions](../core/transactions.md), which may contain one or multiple of them. 
+`Msg`s are objects whose end-goal is to trigger state-transitions. They are wrapped in [transactions](../core/transactions.md), which may contain one or multiple of them. 
 
-When a transaction is relayed from the underlying consensus engine to the SDK application, it is first decoded by [`baseapp`](../core/baseapp.md). Then, each `message` contained in the transaction is extracted and routed to the appropriate module via `baseapp`'s `router` so that it can be processed by the module's [`handler`](./handler.md). For a more detailed explanation of the lifecycle of a transaction, click [here](../basics/tx-lifecycle.md). 
+When a transaction is relayed from the underlying consensus engine to the SDK application, it is first decoded by [`baseapp`](../core/baseapp.md). Then, each `message` contained in the transaction is extracted and routed to the appropriate module via `baseapp`'s `router` so that it can be processed by the module's [`handler`](./handler.md). For a more detailed explanation of the lifecycle of a transaction, click [here](../basics/tx-lifecycle.md).
 
-Defining `message`s is the responsibility of module developers. Typically, they are defined as protobuf messages in a `proto/` directory (see more info about [conventions and naming](../core/encoding.md#faq)). The `message`'s definition usually includes a list of parameters needed to process the message that will be provided by end-users when they want to create a new transaction containing said `message`.
+### `Msg` Services
 
-Here's an example of a protobuf message definition:
+Starting from v0.40, defining Protobuf `Msg` services is the recommended way to handle messages. A `Msg` service should be created per module, typically in `tx.proto` (see more info about [conventions and naming](../core/encoding.md#faq)). This service lists a module messages as Protobuf service methods, starting with `rpc`.
+
+See an example of a `Msg` service definition from `x/bank` module:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L10-L17
+
+Note that for backwards compatibility with [legacy `Msg`s](#legacy-msgs), we use for instance `MsgSend` as the request type instead of the more canonical `MsgSendRequest`.
+
+### Legacy `Msg`s
+
+Legacy `Msg`s are defined as single Protobuf messages. The `message`'s definition usually includes a list of parameters needed to process the message that will be provided by end-users when they want to create a new transaction containing said `message`.
+
+Here's an example of a Protobuf message definition:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/proto/cosmos/gov/v1beta1/tx.proto#L15-L27
 
@@ -36,7 +48,7 @@ It extends `proto.Message` and contains the following methods:
 
 See an example implementation of a `message` from the `gov` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/x/gov/types/msgs.go#L94-L136
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/gov/types/msgs.go#L77-L125
 
 ## Queries
 

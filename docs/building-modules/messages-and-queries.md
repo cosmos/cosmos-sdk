@@ -24,7 +24,14 @@ See an example of a `Msg` service definition from `x/bank` module:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L10-L17
 
-Note that for backwards compatibility with [legacy `Msg`s](#legacy-msgs), we use for instance `MsgSend` as the request type instead of the more canonical `MsgSendRequest`.
+For backwards compatibility with [legacy `Msg`s](#legacy-msgs), existing `Msg` types should be used as the request parameter for `service` definitions. Newer `Msg` types which only support `service` definitions should use the more canonical `Msg...Request` names.
+
+`Msg` request types need to implement the `MsgRequest` interface which is a simplified version of the `Msg` interface described [below](#legacy-msgs) with only `ValidateBasic()` and `GetSigners()` methods.
+
+Defining such `Msg` services allow to specify return types as part of `Msg` response using the canonical `Msg...Response` names.
+
+In addition, this generates client and server code.
+`MsgServer` interface defines the server API for the `Msg` service. A `RegisterMsgServer` method is also generated and should be used to register the module's `Msg` server in `RegisterServices` method from the [`AppModule` interface](./module-manager.md#appmodule).
 
 ### Legacy `Msg`s
 

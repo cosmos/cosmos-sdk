@@ -33,7 +33,10 @@ Defining such `Msg` services allow to specify return types as part of `Msg` resp
 In addition, this generates client and server code.
 `MsgServer` interface defines the server API for the `Msg` service and its implementation is described as part of the [`handler`s](./handler.md) documentation.
 
-A `RegisterMsgServer` method is also generated and should be used to register the module's `Msg` server in `RegisterServices` method from the [`AppModule` interface](./module-manager.md#appmodule).
+A `RegisterMsgServer` method is also generated and should be used to register the module's `MsgServer`  request types with custom type URLs in `RegisterServices` method from the [`AppModule` interface](./module-manager.md#appmodule).
+
+In order for clients (CLI and grpc-gateway) to have these URLs registered, the SDK provides the function `RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.ServiceDesc)` that should be called inside module's [`RegisterInterfaces`](module-manager.md#appmodulebasic) method, using proto-generated `&_Msg_serviceDesc` as `*grpc.ServiceDesc` argument.
+`RegisterInterfaces` should be called before `MsgServiceRouter` `RegisterService(sd *grpc.ServiceDesc, handler interface{})` so that all `Msg` types are already registered by then.
 
 ### Legacy `Msg`s
 

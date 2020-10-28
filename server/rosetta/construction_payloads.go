@@ -20,7 +20,7 @@ func (l launchpad) ConstructionPayloads(ctx context.Context, req *types.Construc
 		return nil, ErrInvalidOperation
 	}
 
-	if req.Operations[0].Type != OperationTransfer || req.Operations[1].Type != OperationTransfer {
+	if req.Operations[0].Type != OperationMsgSend || req.Operations[1].Type != OperationMsgSend {
 		return nil, rosetta.WrapError(ErrInvalidOperation, "the operations are not Transfer")
 	}
 

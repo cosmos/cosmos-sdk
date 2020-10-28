@@ -90,7 +90,7 @@ func TestLaunchpad_NetworkOptions(t *testing.T) {
 				},
 			},
 			OperationTypes: []string{
-				OperationTransfer,
+				OperationMsgSend,
 			},
 		},
 	}, options)

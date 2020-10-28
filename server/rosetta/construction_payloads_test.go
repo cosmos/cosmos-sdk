@@ -27,7 +27,7 @@ func TestPayloadsEndpoint_Errors(t *testing.T) {
 			req: &types.ConstructionPayloadsRequest{
 				Operations: []*types.Operation{
 					{
-						Type: OperationTransfer,
+						Type: OperationMsgSend,
 					},
 				},
 			},
@@ -38,7 +38,7 @@ func TestPayloadsEndpoint_Errors(t *testing.T) {
 			req: &types.ConstructionPayloadsRequest{
 				Operations: []*types.Operation{
 					{
-						Type: OperationTransfer,
+						Type: OperationMsgSend,
 					},
 					{
 						Type: "otherType",
@@ -70,7 +70,7 @@ func TestGetSenderByOperations(t *testing.T) {
 			Account: &types.AccountIdentifier{
 				Address: "cosmos15tltvs59rt88geyenetv3klavlq2z30fe8z6hj",
 			},
-			Type: OperationTransfer,
+			Type: OperationMsgSend,
 			Amount: &types.Amount{
 				Value: "12345",
 				Currency: &types.Currency{
@@ -84,7 +84,7 @@ func TestGetSenderByOperations(t *testing.T) {
 			Account: &types.AccountIdentifier{
 				Address: "cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv",
 			},
-			Type: OperationTransfer,
+			Type: OperationMsgSend,
 			Amount: &types.Amount{
 				Value: "-12345",
 				Currency: &types.Currency{
@@ -123,7 +123,7 @@ func TestLaunchpad_ConstructionPayloads(t *testing.T) {
 		Operations: []*types.Operation{
 			{
 				OperationIdentifier: &types.OperationIdentifier{Index: 0},
-				Type:                OperationTransfer,
+				Type:                OperationMsgSend,
 				Account: &types.AccountIdentifier{
 					Address: senderAddr,
 				},
@@ -140,7 +140,7 @@ func TestLaunchpad_ConstructionPayloads(t *testing.T) {
 				RelatedOperations: []*types.OperationIdentifier{
 					{Index: 0},
 				},
-				Type: OperationTransfer,
+				Type: OperationMsgSend,
 				Account: &types.AccountIdentifier{
 					Address: "cosmos13qmcwpacu0zvsr7edpmasyn99pmcztvjhtctuz",
 				},

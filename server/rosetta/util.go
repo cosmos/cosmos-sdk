@@ -110,7 +110,7 @@ func toOperations(msg []sdk.Msg, hasError bool, withoutStatus bool) (operations 
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: int64(index),
 				},
-				Type:   OperationTransfer,
+				Type:   OperationMsgSend,
 				Status: status,
 				Account: &types.AccountIdentifier{
 					Address: account,

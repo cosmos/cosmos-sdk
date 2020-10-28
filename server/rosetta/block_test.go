@@ -133,7 +133,7 @@ func TestLaunchpad_Block(t *testing.T) {
 					Operations: []*types.Operation{
 						{
 							OperationIdentifier: &types.OperationIdentifier{},
-							Type:                OperationTransfer,
+							Type:                OperationMsgSend,
 							Status:              StatusSuccess,
 							Account: &types.AccountIdentifier{
 								Address: addr3.String(),
@@ -149,7 +149,7 @@ func TestLaunchpad_Block(t *testing.T) {
 							OperationIdentifier: &types.OperationIdentifier{
 								Index: 1,
 							},
-							Type:   OperationTransfer,
+							Type:   OperationMsgSend,
 							Status: StatusSuccess,
 							Account: &types.AccountIdentifier{
 								Address: addr4.String(),
@@ -170,7 +170,7 @@ func TestLaunchpad_Block(t *testing.T) {
 					Operations: []*types.Operation{
 						{
 							OperationIdentifier: &types.OperationIdentifier{},
-							Type:                OperationTransfer,
+							Type:                OperationMsgSend,
 							Status:              StatusSuccess,
 							Account: &types.AccountIdentifier{
 								Address: addr1.String(),
@@ -186,7 +186,7 @@ func TestLaunchpad_Block(t *testing.T) {
 							OperationIdentifier: &types.OperationIdentifier{
 								Index: 1,
 							},
-							Type:   OperationTransfer,
+							Type:   OperationMsgSend,
 							Status: StatusSuccess,
 							Account: &types.AccountIdentifier{
 								Address: addr2.String(),
@@ -252,7 +252,7 @@ func TestLaunchpad_BlockTransaction(t *testing.T) {
 			Operations: []*types.Operation{
 				{
 					OperationIdentifier: &types.OperationIdentifier{},
-					Type:                OperationTransfer,
+					Type:                OperationMsgSend,
 					Status:              StatusSuccess,
 					Account: &types.AccountIdentifier{
 						Address: addr1.String(),
@@ -267,7 +267,7 @@ func TestLaunchpad_BlockTransaction(t *testing.T) {
 					OperationIdentifier: &types.OperationIdentifier{
 						Index: 1,
 					},
-					Type:   OperationTransfer,
+					Type:   OperationMsgSend,
 					Status: StatusSuccess,
 					Account: &types.AccountIdentifier{
 						Address: addr2.String(),

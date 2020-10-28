@@ -57,7 +57,7 @@ func NewNetwork(cdc *codec.Codec, options Options) service.Network {
 		Properties: rosetta.NetworkProperties{
 			Blockchain:          options.Blockchain,
 			Network:             options.Network,
-			SupportedOperations: []string{OperationTransfer},
+			SupportedOperations: []string{OperationMsgSend},
 		},
 		Adapter: newAdapter(
 			cdc,

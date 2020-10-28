@@ -2,27 +2,33 @@
 
 ## Context
 
-[Rosetta API](https://www.rosetta-api.org/) is an open-source specification and set of tools developed by Coinbase to standardise blockchain interactions.
+[Rosetta API](https://www.rosetta-api.org/) is an open-source specification and set of tools developed by Coinbase to 
+standardise blockchain interactions.
 
 Through the use of a standard API for integrating blockchain applications it will
 
 * Be easier for a user to interact with a given blockchain
 * Allow exchanges to integrate new blockchains quickly and easily
-* Enable application developers to build cross-blockchain applications such as block explorers, wallets and dApps at considerably lower cost and effort.
+* Enable application developers to build cross-blockchain applications such as block explorers, wallets and dApps at 
+  considerably lower cost and effort.
 
 ## Decision
 
-It is clear that adding Rosetta API support to the Cosmos SDK will bring value to all the developers and Cosmos SDK based chains in the ecosystem. How it is implemented is key.
+It is clear that adding Rosetta API support to the Cosmos SDK will bring value to all the developers and 
+Cosmos SDK based chains in the ecosystem. How it is implemented is key.
 
 The driving principles of the proposed design are:
 
-1. **Extensibility:** it must be as riskless and painless as possible for application developers to set-up network configurations to expose Rosetta API-compliant services.
+1. **Extensibility:** it must be as riskless and painless as possible for application developers to set-up network 
+   configurations to expose Rosetta API-compliant services.
 2. **Long term support:** This proposal aims to provide support for all the supported Cosmos SDK release series.
-3. **Cost-efficiency:** Backporting changes to Rosetta API specifications from `master` to the various stable branches of Cosmos SDK is a cost that needs to be reduced.
+3. **Cost-efficiency:** Backporting changes to Rosetta API specifications from `master` to the various stable 
+   branches of Cosmos SDK is a cost that needs to be reduced.
 
 We will achieve these delivering on these principles by the following:
 
-1. There will be an external repo called [cosmos-rosetta-gateway](https://github.com/tendermint/cosmos-rosetta-gateway) for the implementation of the core Rosetta API features, particularly:
+1. There will be an external repo called [cosmos-rosetta-gateway](https://github.com/tendermint/cosmos-rosetta-gateway) 
+   for the implementation of the core Rosetta API features, particularly:
    a. The types and interfaces. This separates design from implementation detail.
    b. Some core implementations: specifically, the `Service` functionality as this is independent of the Cosmos SDK version.
 2. Due to differences between the Cosmos release series, each series will have its own specific API implementations of `Network` struct and `Adapter` interface.
@@ -51,7 +57,7 @@ The constructor follows:
 
 ```golang
 type Options struct {
-	Port uint32
+    ListenAddress string
 }
 ```
 
@@ -75,16 +81,19 @@ type NetworkProperties struct {
 }
 ```
 
-Rosetta API services use Blockchain and Network as identifiers, e.g. the developers of gaia, the application that powers the Cosmos Hub, may want to set those to Cosmos Hub and cosmos-hub-3 respectively.
+Rosetta API services use Blockchain and Network as identifiers, e.g. the developers of gaia, the application that powers 
+the Cosmos Hub, may want to set those to Cosmos Hub and cosmos-hub-3 respectively.
 
-`SupportedOperations` contains the transaction types that are supported by the library. At the present time, only `Transfer` is supported. Additional operations will be added in due time.
+`SupportedOperations` contains the transaction types that are supported by the library. At the present time, 
+only `cosmos-sdk/MsgSend` is supported in Launchpad. Additional operations will be added in due time.
 
-We will map Msg type name as the operation.
+For Launchpad we will map the amino type name to the operation supported, in Stargate we will use the protoc one.
 
 #### Interfaces
 
-Every SDK version uses a different format to connect (rpc, gRpc, etc), we have abstracted this in what is called the Adapter. This is an interface
-that defines the methods an adapter implementation must provide in order to be used in the `Network` interface.
+Every SDK version uses a different format to connect (rpc, gRpc, etc), we have abstracted this in what is called the 
+Adapter. This is an interface that defines the methods an adapter implementation must provide in order to be used 
+in the `Network` interface.
 
 Each Cosmos SDK release series will have their own Adapter implementations.
 Developers can implement their own custom adapters as required.
@@ -110,9 +119,11 @@ type ConstructionAPI interface {
 
 ### 2. Cosmos SDK Implementation
 
-As described, each Cosmos SDK release series will have version specific implementations of `Network` and `Adapter`, as well as a `NewNetwork` constructor.
+As described, each Cosmos SDK release series will have version specific implementations of `Network` and `Adapter`, as 
+well as a `NewNetwork` constructor.
 
-Due to separation of interface and implementation, application developers have the option to override as needed, using this code as reference.
+Due to separation of interface and implementation, application developers have the option to override as needed, 
+using this code as reference.
 
 ```golang
 // NewNetwork returns the default application configuration.
@@ -149,7 +160,8 @@ As stated at the start, application developers will have two methods for invocat
 
 #### Shared Process (Only Stargate)
 
-Rosetta API service could run within the same execution process as the application. New configuration option and command line flags would be provided to support this:
+Rosetta API service could run within the same execution process as the application. New configuration option and 
+command line flags would be provided to support this:
 
 ```golang
 	if config.Rosetta.Enable {
@@ -158,8 +170,8 @@ Rosetta API service could run within the same execution process as the applicati
         	...
             
             h, err := service.New(
-                service.Options{Port: config.Rosetta.Port},
-                NewRosettaAPINetworkFromConfig(config),
+                service.Options{ListenAddress: config.Rosetta.ListenAddress},
+                rosetta.NewNetwork(cdc, options),
             )
             if err != nil {
             }
@@ -180,11 +192,11 @@ Rosetta API service could run within the same execution process as the applicati
 Client application developers can write a new command to launch a Rosetta API server as a separate process too:
 
 ```golang
-func NewRosettaServiceCmd() *cobra.Command {
+func RosettaCommand(cdc *codec.Codec) *cobra.Command {
 
     ...
     cmd := &cobra.Command{
-    	Use:   "vote [proposal-id] [option]",
+    	Use:   "rosetta",
         ....
         
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -193,10 +205,11 @@ func NewRosettaServiceCmd() *cobra.Command {
         	...
             
             h, err := service.New(
-                service.Options{Port: config.Rosetta.Port},
-                NewRosettaAPINetworkFromConfig(config),
+                  service.Options{Endpoint: endpoint},
+                  rosetta.NewNetwork(cdc, options),
             )
             if err != nil {
+            	return err
             }
             
             ...

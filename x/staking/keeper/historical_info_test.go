@@ -82,7 +82,7 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	app.StakingKeeper.SetLastValidatorPower(ctx, val1.GetOperator(), 10)
 	val2 := teststaking.NewValidator(t, addrVals[3], PKs[3])
 	app.StakingKeeper.SetValidator(ctx, val2)
-	app.StakingKeeper.SetLastValidatorPower(ctx, val2.GetOperator(), 8)
+	app.StakingKeeper.SetLastValidatorPower(ctx, val2.GetOperator(), 80)
 
 	vals := []types.Validator{val1, val2}
 	sort.Sort(types.ValidatorsByVotingPower(vals))

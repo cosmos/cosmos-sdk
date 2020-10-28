@@ -133,10 +133,12 @@ func (valz ValidatorsByVotingPower) Len() int { return len(valz) }
 
 func (valz ValidatorsByVotingPower) Less(i, j int) bool {
 	if valz[i].ConsensusPower() == valz[j].ConsensusPower() {
-		// If GetConsAddr returns error, then both addresses
-		// are empty and Less will return false
-		addrI, _ := valz[i].GetConsAddr()
-		addrJ, _ := valz[j].GetConsAddr()
+		addrI, errI := valz[i].GetConsAddr()
+		addrJ, errJ := valz[j].GetConsAddr()
+		// If either returns error, then return false
+		if errI != nil || errJ != nil {
+			return false
+		}
 		return bytes.Compare(addrI, addrJ) == -1
 	}
 	return valz[i].ConsensusPower() > valz[j].ConsensusPower()

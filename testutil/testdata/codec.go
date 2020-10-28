@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
 func NewTestInterfaceRegistry() types.InterfaceRegistry {
@@ -30,6 +31,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*HasHasAnimalI)(nil),
 		&HasHasAnimal{},
 	)
+
+	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 func NewTestAmino() *amino.Codec {

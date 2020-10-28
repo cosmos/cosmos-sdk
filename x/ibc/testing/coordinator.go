@@ -524,6 +524,54 @@ func (coord *Coordinator) ChanOpenInit(
 	return sourceChannel, counterpartyChannel, nil
 }
 
+// ChanOpenInitOnBothChains initializes a channel on the source chain and counterparty chain
+// with the state INIT using the OpenInit handshake call.
+func (coord *Coordinator) ChanOpenInitOnBothChains(
+	source, counterparty *TestChain,
+	connection, counterpartyConnection *TestConnection,
+	sourcePortID, counterpartyPortID string,
+	order channeltypes.Order,
+) (TestChannel, TestChannel, error) {
+	sourceChannel := connection.AddTestChannel(sourcePortID)
+	counterpartyChannel := counterpartyConnection.AddTestChannel(counterpartyPortID)
+
+	// NOTE: only creation of a capability for a transfer or mock port is supported
+	// Other applications must bind to the port in InitGenesis or modify this code.
+	source.CreatePortCapability(sourceChannel.PortID)
+	counterparty.CreatePortCapability(counterpartyChannel.PortID)
+	coord.IncrementTime()
+
+	// initialize channel on source
+	if err := source.ChanOpenInit(sourceChannel, counterpartyChannel, order, connection.ID); err != nil {
+		return sourceChannel, counterpartyChannel, err
+	}
+	coord.IncrementTime()
+
+	// initialize channel on counterparty
+	if err := counterparty.ChanOpenInit(counterpartyChannel, sourceChannel, order, counterpartyConnection.ID); err != nil {
+		return sourceChannel, counterpartyChannel, err
+	}
+	coord.IncrementTime()
+
+	// update counterparty client on source connection
+	if err := coord.UpdateClient(
+		source, counterparty,
+		connection.ClientID, Tendermint,
+	); err != nil {
+		return sourceChannel, counterpartyChannel, err
+	}
+
+	// update source client on counterparty connection
+	if err := coord.UpdateClient(
+		counterparty, source,
+		counterpartyConnection.ClientID, Tendermint,
+	); err != nil {
+		return sourceChannel, counterpartyChannel, err
+	}
+
+	return sourceChannel, counterpartyChannel, nil
+}
+
 // ChanOpenTry initializes a channel on the source chain with the state TRYOPEN
 // using the OpenTry handshake call.
 func (coord *Coordinator) ChanOpenTry(

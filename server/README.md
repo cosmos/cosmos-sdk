@@ -34,7 +34,7 @@ var (
 		},
 	}
 
-	encodingConfig = simapp.MakeEncodingConfig()
+	encodingConfig = simapp.MakeTestEncodingConfig()
 	initClientCtx  = client.Context{}.
 			WithJSONMarshaler(encodingConfig.Marshaler).
 			WithTxConfig(encodingConfig.TxConfig).

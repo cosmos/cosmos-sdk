@@ -59,6 +59,7 @@ type IBCModule interface {
 	) error
 
 	// OnRecvPacket must return the acknowledgement bytes
+	// In the case of an asynchronous acknowledgement, nil should be returned.
 	OnRecvPacket(
 		ctx sdk.Context,
 		packet channeltypes.Packet,

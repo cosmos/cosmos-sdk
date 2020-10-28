@@ -26,37 +26,31 @@ Let us break it down:
 
 ## Implementation of a module `handler`s
 
-Module `handler`s are typically implemented in a `./handler.go` file inside the module's folder. The
-[module manager](./module-manager.md) is used to add the module's `handler`s to the
+Module `handler`s are typically implemented in a `./handler.go` file inside the module's folder. The [module manager](./module-manager.md) is used to add the module's `handler`s to the
 [application's `router`](../core/baseapp.md#message-routing) via the `Route()` method. Typically,
 the manager's `Route()` method simply constructs a Route that calls a `NewHandler()` method defined in `handler.go`,
-which looks like the following:
 
-```go
-func NewHandler(keeper Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		ctx = ctx.WithEventManager(sdk.NewEventManager())
-		switch msg := msg.(type) {
-		case *MsgType1:
-			return handleMsgType1(ctx, keeper, msg)
+### Using [`Msg` Services](messages-and-queries.md#msg-services)
 
-		case *MsgType2:
-			return handleMsgType2(ctx, keeper, msg)
+Here's an example of a `NewHandler` from `x/bank` module:
 
-		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", ModuleName, msg)
-		}
-	}
-}
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/bank/handler.go#L10-L30
+
+Prior to defining the actual `Handler` function, we need to get `msgServer` which implements proto-generated [`MsgServer`](messages-and-queries.md#msg-services) interface with methods that map to module `Msg`s. When possible, the existing module's `Keeper` should implement `MsgServer`, else a `msgServer` struct that embeds the `Keeper` can be created:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/bank/keeper/msg_server.go#L14-L16
 
 First, the `handler` function sets a new `EventManager` to the context to isolate events per `msg`.
-Then, this simple switch returns a `handler` function specific to the type of the received `message`. These `handler` functions are the ones that actually process `message`s, and usually follow the following 2 steps:
+Then, a simple switch calls the appropriate `msgServer` method based on the `Msg` type. These methods are the ones that actually process `message`s. They can retrieve the `sdk.Context` from the `context.Context` parameter method using the `sdk.UnwrapSDKContext`:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/bank/keeper/msg_server.go#L27
+
+They usually follow the following 2 steps:
 
 - First, they perform *stateful* checks to make sure the `message` is valid. At this stage, the `message`'s `ValidateBasic()` method has already been called, meaning *stateless* checks on the message (like making sure parameters are correctly formatted) have already been performed. Checks performed in the `handler` can be more expensive and require access to the state. For example, a `handler` for a `transfer` message might check that the sending account has enough funds to actually perform the transfer. To access the state, the `handler` needs to call the [`keeper`'s](./keeper.md) getter functions. 
 - Then, if the checks are successfull, the `handler` calls the [`keeper`'s](./keeper.md) setter functions to actually perform the state transition. 
 
-Before returning, `handler` functions generally emit one or multiple [`events`](../core/events.md) via the `EventManager` held in the `ctx`:
+Before returning, `msgServer` methods generally emit one or multiple [`events`](../core/events.md) via the `EventManager` held in the `ctx`:
 
 ```go
 ctx.EventManager().EmitEvent(
@@ -69,19 +63,18 @@ ctx.EventManager().EmitEvent(
 
 These `events` are relayed back to the underlying consensus engine and can be used by service providers to implement services around the application. Click [here](../core/events.md) to learn more about `events`. 
 
-Finally, the `handler` function returns a `*sdk.Result` which contains the aforementioned `events` and an optional `Data` field. 
+Finally, the invoked `msgServer` method returns a `proto.Message` response and an `error` which are then wrapped in `*sdk.Result` which contains the aforementioned `events` and an optional `Data` field, using `sdk.WrapServiceResult` function. 
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/proto/cosmos/base/abci/v1beta1/abci.proto#L81-L95
-
-Next is an example of how to return a `*Result` from the `gov` module:
-
-+++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/x/gov/handler.go#L67-L70
-
-For a deeper look at `handler`s, see this [example implementation of a `handler` function](https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/x/gov/handler.go) from the `gov` module.
 
 The `handler` can then be registered from [`AppModule.Route()`](./module-manager.md#appmodule) as shown in the example below:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/228728cce2af8d494c8b4e996d011492139b04ab/x/gov/module.go#L143-L146
+
+### Using [Legacy `Msg`s](messages-and-queries.md#legacy-msgs)
+
+In this case, `handler`s functions need to be implemented for each module `Msg` and should be used in `NewHandler` in the place of `msgServer` methods.
+`handler`s functions should return a `*Result` and an `error`.
 
 ## Telemetry
 

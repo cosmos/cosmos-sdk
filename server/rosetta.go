@@ -21,7 +21,7 @@ const (
 )
 
 // RosettaCommand will start the application Rosetta API service as a blocking process.
-func RosettaCommand(ctx *Context, cdc *codec.Codec) *cobra.Command {
+func RosettaCommand(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "rosetta",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -43,7 +43,7 @@ func RosettaCommand(ctx *Context, cdc *codec.Codec) *cobra.Command {
 				panic(err)
 			}
 
-			ctx.Logger.Info("starting Rosetta API service at %s", endpoint)
+			fmt.Printf("starting Rosetta API service at %s\n", endpoint)
 
 			err = s.Start()
 			if err != nil {

@@ -165,7 +165,7 @@ func (k Keeper) ConnectionOpenTry(goCtx context.Context, msg *connectiontypes.Ms
 
 	if err := k.ConnectionKeeper.ConnOpenTry(
 		ctx, msg.DesiredConnectionId, msg.CounterpartyChosenConnectionId, msg.Counterparty, msg.ClientId, targetClient,
-		msg.CounterpartyVersions, msg.ProofInit, msg.ProofClient, msg.ProofConsensus,
+		connectiontypes.ProtoVersionsToExported(msg.CounterpartyVersions), msg.ProofInit, msg.ProofClient, msg.ProofConsensus,
 		msg.ProofHeight, msg.ConsensusHeight,
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "connection handshake open try failed")

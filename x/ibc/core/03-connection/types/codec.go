@@ -13,18 +13,17 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface(
 		"ibc.core.connection.v1.ConnectionI",
 		(*exported.ConnectionI)(nil),
+		&ConnectionEnd{},
 	)
 	registry.RegisterInterface(
 		"ibc.core.connection.v1.CounterpartyConnectionI",
 		(*exported.CounterpartyConnectionI)(nil),
-	)
-	registry.RegisterImplementations(
-		(*exported.ConnectionI)(nil),
-		&ConnectionEnd{},
-	)
-	registry.RegisterImplementations(
-		(*exported.CounterpartyConnectionI)(nil),
 		&Counterparty{},
+	)
+	registry.RegisterInterface(
+		"ibc.core.connection.v1.Version",
+		(*exported.Version)(nil),
+		&Version{},
 	)
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),

@@ -30,14 +30,14 @@ package module
 
 import (
 	"encoding/json"
-	"github.com/cosmos/cosmos-sdk/client/rest"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -110,8 +110,9 @@ func (bm BasicManager) ValidateGenesis(cdc codec.JSONMarshaler, txEncCfg client.
 
 // RegisterRESTRoutes registers all module rest routes
 func (bm BasicManager) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
+	r := rest.WithHTTPDeprecationHeaders(rtr)
 	for _, b := range bm {
-		b.RegisterRESTRoutes(clientCtx, rest.WithHTTPDeprecationHeaders(rtr))
+		b.RegisterRESTRoutes(clientCtx, r)
 	}
 }
 

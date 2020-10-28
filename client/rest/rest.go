@@ -1,8 +1,9 @@
 package rest
 
 import (
-	"github.com/gorilla/mux"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 // addHTTPDeprecationHeaders is a mux middleware function for adding HTTP

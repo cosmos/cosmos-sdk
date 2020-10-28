@@ -22,7 +22,7 @@ func (k Keeper) CreateClient(
 		return sdkerrors.Wrapf(types.ErrClientExists, "cannot create client with ID %s", clientID)
 	}
 
-	// check if consensus state is nil in case the created channel is a localhost one
+	// check if consensus state is nil in case the created client is Localhost 
 	if consensusState != nil {
 		k.SetClientConsensusState(ctx, clientID, clientState.GetLatestHeight(), consensusState)
 	}

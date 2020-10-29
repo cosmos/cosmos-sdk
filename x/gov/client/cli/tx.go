@@ -207,9 +207,8 @@ func NewCmdVote() *cobra.Command {
 			fmt.Sprintf(`Submit a vote for an active proposal. You can
 find the proposal-id by running "%s query gov proposals".
 
-
 Example:
-$ %s tx gov vote 1 yes --from mykey
+$ %s tx gov vote 1 yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05 --from mykey
 `,
 				version.AppName, version.AppName,
 			),
@@ -230,14 +229,14 @@ $ %s tx gov vote 1 yes --from mykey
 				return fmt.Errorf("proposal-id %s not a valid int, please input a valid proposal-id", args[0])
 			}
 
-			// Find out which vote option user chose
-			byteVoteOption, err := types.VoteOptionFromString(govutils.NormalizeVoteOption(args[1]))
+			// Figure out which subvotes user chose
+			subvotes, err := types.SubVotesFromString(govutils.NormalizeSubVotes(args[1]))
 			if err != nil {
 				return err
 			}
 
 			// Build vote message and run basic validation
-			msg := types.NewMsgVote(from, proposalID, types.SubVotes{types.NewSubVote(byteVoteOption, 1)})
+			msg := types.NewMsgVote(from, proposalID, subvotes)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err

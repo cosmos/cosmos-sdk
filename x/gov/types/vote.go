@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	yaml "gopkg.in/yaml.v2"
 
@@ -89,6 +90,31 @@ func VoteOptionFromString(str string) (VoteOption, error) {
 		return OptionEmpty, fmt.Errorf("'%s' is not a valid vote option", str)
 	}
 	return VoteOption(option), nil
+}
+
+// SubVotesFromString returns a SubVotes from a string. It returns an error
+// if the string is invalid.
+func SubVotesFromString(str string) (SubVotes, error) {
+	var subvotes SubVotes
+	for _, subvote := range strings.Split(str, ",") {
+		fields := strings.Split(subvote, "=")
+		option, err := VoteOptionFromString(fields[0])
+		if err != nil {
+			return subvotes, err
+		}
+		if len(fields) < 2 {
+			return subvotes, fmt.Errorf("rate field does not exist for %s opion", fields[0])
+		}
+		rate, err := sdk.NewDecFromStr(fields[1])
+		if err != nil {
+			return subvotes, err
+		}
+		subvotes = append(subvotes, SubVote{
+			option,
+			rate,
+		})
+	}
+	return subvotes, nil
 }
 
 // ValidVoteOption returns true if the vote option is valid and false otherwise.

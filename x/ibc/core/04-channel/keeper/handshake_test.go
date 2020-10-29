@@ -56,8 +56,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 			// modify connA versions
 			conn := suite.chainA.GetConnection(connA)
 
-			version, err := connectiontypes.NewVersion("2", []string{"ORDER_ORDERED", "ORDER_UNORDERED"}).Encode()
-			suite.Require().NoError(err)
+			version := connectiontypes.NewVersion("2", []string{"ORDER_ORDERED", "ORDER_UNORDERED"})
 			conn.Versions = append(conn.Versions, version)
 
 			suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(
@@ -74,9 +73,8 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 			// modify connA versions to only support UNORDERED channels
 			conn := suite.chainA.GetConnection(connA)
 
-			version, err := connectiontypes.NewVersion("1", []string{"ORDER_UNORDERED"}).Encode()
-			suite.Require().NoError(err)
-			conn.Versions = []string{version}
+			version := connectiontypes.NewVersion("1", []string{"ORDER_UNORDERED"})
+			conn.Versions = []*connectiontypes.Version{version}
 
 			suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(
 				suite.chainA.GetContext(),
@@ -151,6 +149,12 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
 
 			suite.chainB.CreatePortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
+			portCap = suite.chainB.GetPortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
+		}, true},
+		{"success with crossing hello", func() {
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+			suite.coordinator.ChanOpenInitOnBothChains(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
+
 			portCap = suite.chainB.GetPortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
 		}, true},
 		{"success with empty counterparty chosen channel id", func() {
@@ -238,8 +242,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			// modify connB versions
 			conn := suite.chainB.GetConnection(connB)
 
-			version, err := connectiontypes.NewVersion("2", []string{"ORDER_ORDERED", "ORDER_UNORDERED"}).Encode()
-			suite.Require().NoError(err)
+			version := connectiontypes.NewVersion("2", []string{"ORDER_ORDERED", "ORDER_UNORDERED"})
 			conn.Versions = append(conn.Versions, version)
 
 			suite.chainB.App.IBCKeeper.ConnectionKeeper.SetConnection(
@@ -256,9 +259,8 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			// modify connA versions to only support UNORDERED channels
 			conn := suite.chainA.GetConnection(connA)
 
-			version, err := connectiontypes.NewVersion("1", []string{"ORDER_UNORDERED"}).Encode()
-			suite.Require().NoError(err)
-			conn.Versions = []string{version}
+			version := connectiontypes.NewVersion("1", []string{"ORDER_UNORDERED"})
+			conn.Versions = []*connectiontypes.Version{version}
 
 			suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(
 				suite.chainA.GetContext(),

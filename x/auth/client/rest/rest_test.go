@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"strings"
-
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -26,6 +24,9 @@ type IntegrationTestSuite struct {
 
 	cfg     network.Config
 	network *network.Network
+
+	stdTx    legacytx.StdTx
+	stdTxRes sdk.TxResponse
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
@@ -39,6 +40,17 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
+
+	// Broadcast a StdTx used for tests.
+	s.stdTx = s.createTestStdTx(s.network.Validators[0], 1)
+	res, err := s.broadcastReq(s.stdTx, "block")
+	s.Require().NoError(err)
+
+	// NOTE: this uses amino explicitly, don't migrate it!
+	s.Require().NoError(s.cfg.LegacyAmino.UnmarshalJSON(res, &s.stdTxRes))
+	s.Require().Equal(uint32(0), s.stdTxRes.Code)
+
+	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -107,63 +119,48 @@ func (s *IntegrationTestSuite) TestBroadcastTxRequest() {
 func (s *IntegrationTestSuite) TestQueryTxByHash() {
 	val0 := s.network.Validators[0]
 
-	// Create and broadcast a tx.
-	stdTx := s.createTestStdTx(val0, 1) // Validator's sequence starts at 1.
-	res, err := s.broadcastReq(stdTx, "block")
-	s.Require().NoError(err)
-	var txRes sdk.TxResponse
-	// NOTE: this uses amino explicitly, don't migrate it!
-	s.Require().NoError(s.cfg.LegacyAmino.UnmarshalJSON(res, &txRes))
+	// We broadcasted a StdTx in SetupSuite.
 	// we just check for a non-empty TxHash here, the actual hash will depend on the underlying tx configuration
-	s.Require().NotEmpty(txRes.TxHash)
-
-	s.network.WaitForNextBlock()
+	s.Require().NotEmpty(s.stdTxRes.TxHash)
 
 	// We now fetch the tx by hash on the `/tx/{hash}` route.
-	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs/%s", val0.APIAddress, txRes.TxHash))
+	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs/%s", val0.APIAddress, s.stdTxRes.TxHash))
 	s.Require().NoError(err)
 
 	// txJSON should contain the whole tx, we just make sure that our custom
 	// memo is there.
-	s.Require().True(strings.Contains(string(txJSON), stdTx.Memo))
+	s.Require().Contains(string(txJSON), s.stdTx.Memo)
 }
 
 func (s *IntegrationTestSuite) TestQueryTxByHeight() {
 	val0 := s.network.Validators[0]
 
-	// Create and broadcast a tx.
-	stdTx := s.createTestStdTx(val0, 1) // Validator's sequence starts at 1.
-	res, err := s.broadcastReq(stdTx, "block")
-	s.Require().NoError(err)
-	var txRes sdk.TxResponse
-	// NOTE: this uses amino explicitly, don't migrate it!
-	s.Require().NoError(s.cfg.LegacyAmino.UnmarshalJSON(res, &txRes))
+	// We broadcasted a StdTx in SetupSuite.
 	// we just check for a non-empty height here, as we'll need to for querying.
-	s.Require().NotEmpty(txRes.Height)
-
-	s.network.WaitForNextBlock()
+	s.Require().NotEmpty(s.stdTxRes.Height)
 
 	// We now fetch the tx on `/txs` route, filtering by `tx.height`
-	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs?limit=100&page=1&tx.height=%d", val0.APIAddress, txRes.Height))
+	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs?limit=100&page=1&tx.height=%d", val0.APIAddress, s.stdTxRes.Height))
 	s.Require().NoError(err)
 
 	// txJSON should contain the whole tx, we just make sure that our custom
 	// memo is there.
-	s.Require().True(strings.Contains(string(txJSON), stdTx.Memo))
+	s.Require().Contains(string(txJSON), s.stdTx.Memo)
 
 	// We now fetch the tx on `/txs` route, filtering by `height`
-	txJSON, err = rest.GetRequest(fmt.Sprintf("%s/txs?height=%d", val0.APIAddress, txRes.Height))
+	txJSON, err = rest.GetRequest(fmt.Sprintf("%s/txs?height=%d", val0.APIAddress, s.stdTxRes.Height))
 	s.Require().NoError(err)
 
 	fmt.Println(string(txJSON)) // TODO This one is empty.
 
 	// txJSON should contain the whole tx, we just make sure that our custom
 	// memo is there.
-	s.Require().True(strings.Contains(string(txJSON), stdTx.Memo))
+	s.Require().Contains(string(txJSON), s.stdTx.Memo)
 }
 
 func (s *IntegrationTestSuite) TestMultipleSyncBroadcastTxRequests() {
-	// First test transaction from validator should have sequence=1 (non-genesis tx)
+	// We already sent one tx in SetupSuite with sequence=1 (non-genesis tx).
+	// Therefore, we're starting this test with sequence=2.
 	testCases := []struct {
 		desc      string
 		sequence  uint64
@@ -171,12 +168,12 @@ func (s *IntegrationTestSuite) TestMultipleSyncBroadcastTxRequests() {
 	}{
 		{
 			"First tx (correct sequence)",
-			1,
+			2,
 			false,
 		},
 		{
 			"Second tx (correct sequence)",
-			2,
+			3,
 			false,
 		},
 		{
@@ -187,7 +184,6 @@ func (s *IntegrationTestSuite) TestMultipleSyncBroadcastTxRequests() {
 	}
 	for _, tc := range testCases {
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-
 			// broadcast test with sync mode, as we want to run CheckTx to verify account sequence is correct
 			stdTx := s.createTestStdTx(s.network.Validators[0], tc.sequence)
 			res, err := s.broadcastReq(stdTx, "sync")

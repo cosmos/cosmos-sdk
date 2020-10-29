@@ -10,48 +10,64 @@ Proposed
 
 ## Abstract
 
-This ADR defines a validator to split votes into several pieces. Assuming a group with multisig address vote on a proposal, the members could have different opinion. In this case spliting voting power into pieces could be useful.
+This ADR defines a modification to the the governance module that would allow a staker to split their votes into several voting options. For example, it could use 70% of its voting power to vote Yes and 30% of its voting power to vote No.
 
 ## Context
 
-Currently, an address can cast vote with only one of vote options(yes/no/abstrain/no_with_veto) and full votingPower of that address goes to one vote option.
+Currently, an address can cast a vote with only one options (Yes/No/Abstain/NoWithVeto) and use their full voting power behind that choice.
 
-To be more accurate in voting process, allowing the split of voting power could be very helpful.
-
-Assume that there are 100 members associated to a single validator address and they participate in voting process via that address.
-
-60 members cast yes vote, 30 members cast no vote, 5 members abstrain, 5 members no_with_veto.
-If they just cast yes vote for 100% of voting power, it won't be fair enough for 40 members especially when that validator's voting power is quite high.
-
-If total voting power is 10000, and on above case we split voting power into 6000, 3000, 500, 500 pieces.
+However, often times the entity owning that address might not be a single individual.  For example, a company might have different stakeholders who want to vote differently, and so it makes sense to allow them to split their voting power.  Another example use case is exchanges.  Many centralized exchanges often stake a portion of their users' tokens in their custody.  Currently, it is not possible for them to do "passthrough voting" and giving their users voting rights over their tokens.  However, with this system, exchanges can poll their users for voting preferences, and then vote on-chain proportionally to the results of the poll.
 
 ## Decision
 
-We will modify cli command from 
-```sh
-simd tx gov vote 1 yes --from mykey
-```
-to 
-```sh
-simd tx gov vote 1 "yes=60,no=30,abstain=5,no_with_veto=5" --from mykey
-```
+We modify the vote structs to be
 
 ```
-simd tx gov vote 1 yes --from mykey
+Vote {
+    ProposalId  int64
+    Voter       sdk.Address
+    Options     []Option
+    Rates       []sdk.Dec
+}
 ```
-Old command still works and it's automatically converted to like below
+
+The `ValidateBasic` of a MsgVote struct would require that
+1. The length of the Options slice is equal to the length of Rates slice
+2. The sum of all the Rates is equal to 1.0
+3. No Option is repeated
+
+The governance tally function will iterate over all the options in a vote and add to the tally the result of the voter's voting power * the rate for that option.
+
+```
+tally() {
+    map tally
+
+    for (_, vote) in votes {
+        for (i, options) in vote{
+            tally.option += getVotingPower(vote.voter) * vote.rate[i]
+        }
+    }
+}
+```
+
+The CLI command for creating a multi-option vote would be as such:
+```sh
+simd tx gov vote 1 "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05" --from mykey
+```
+
+To create a single-option vote a user can do either
 ```
 simd tx gov vote 1 "yes=1" --from mykey
 ```
 
-If you want to set VoteOption=1, you can omit `=1`.
+or 
+
+```sh
+simd tx gov vote 1 yes --from mykey
 ```
-simd tx gov vote 1 "yes,no" --from mykey
-``` 
-is same as
-```
-simd tx gov vote 1 "yes=1,no=1" --from mykey
-```
+
+to maintain backwards compatibility.
+
 
 ## Consequences
 
@@ -59,7 +75,7 @@ simd tx gov vote 1 "yes=1,no=1" --from mykey
 - It can make more accurate voting process especially for big validators.
 
 ### Negative
+- 
 
 ### Neutral
-
-## References
+- Relatively minor change to governance tally function.

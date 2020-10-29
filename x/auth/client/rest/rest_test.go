@@ -119,9 +119,43 @@ func (s *IntegrationTestSuite) TestQueryTxByHash() {
 
 	s.network.WaitForNextBlock()
 
-	// We now fetch the tx by has on the `/tx/{hash}` route.
+	// We now fetch the tx by hash on the `/tx/{hash}` route.
 	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs/%s", val0.APIAddress, txRes.TxHash))
 	s.Require().NoError(err)
+
+	// txJSON should contain the whole tx, we just make sure that our custom
+	// memo is there.
+	s.Require().True(strings.Contains(string(txJSON), stdTx.Memo))
+}
+
+func (s *IntegrationTestSuite) TestQueryTxByHeight() {
+	val0 := s.network.Validators[0]
+
+	// Create and broadcast a tx.
+	stdTx := s.createTestStdTx(val0, 1) // Validator's sequence starts at 1.
+	res, err := s.broadcastReq(stdTx, "block")
+	s.Require().NoError(err)
+	var txRes sdk.TxResponse
+	// NOTE: this uses amino explicitly, don't migrate it!
+	s.Require().NoError(s.cfg.LegacyAmino.UnmarshalJSON(res, &txRes))
+	// we just check for a non-empty height here, as we'll need to for querying.
+	s.Require().NotEmpty(txRes.Height)
+
+	s.network.WaitForNextBlock()
+
+	// We now fetch the tx on `/txs` route, filtering by `tx.height`
+	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs?limit=100&page=1&tx.height=%d", val0.APIAddress, txRes.Height))
+	s.Require().NoError(err)
+
+	// txJSON should contain the whole tx, we just make sure that our custom
+	// memo is there.
+	s.Require().True(strings.Contains(string(txJSON), stdTx.Memo))
+
+	// We now fetch the tx on `/txs` route, filtering by `height`
+	txJSON, err = rest.GetRequest(fmt.Sprintf("%s/txs?height=%d", val0.APIAddress, txRes.Height))
+	s.Require().NoError(err)
+
+	fmt.Println(string(txJSON)) // TODO This one is empty.
 
 	// txJSON should contain the whole tx, we just make sure that our custom
 	// memo is there.

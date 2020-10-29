@@ -13,7 +13,7 @@ service Service {
     rpc Simulate(SimulateRequest) returns (SimulateResponse) {
         option (google.api.http).post = "/cosmos/tx/v1beta1/simulate";
     }
-    // Simulate simulates executing a transaction for estimating gas usage.
+    // GetTx fetches a tx by hash.
     rpc GetTx(GetTxRequest) returns (GetTxResponse) {
         option (google.api.http).get = "/cosmos/tx/v1beta1/tx/{hash}";
     }

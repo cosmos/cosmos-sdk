@@ -278,7 +278,7 @@ const _ = grpc.SupportPackageIsVersion4
 type ServiceClient interface {
 	// Simulate simulates executing a transaction for estimating gas usage.
 	Simulate(ctx context.Context, in *SimulateRequest, opts ...grpc.CallOption) (*SimulateResponse, error)
-	// Simulate simulates executing a transaction for estimating gas usage.
+	// GetTx fetches a tx by hash.
 	GetTx(ctx context.Context, in *GetTxRequest, opts ...grpc.CallOption) (*GetTxResponse, error)
 }
 
@@ -312,7 +312,7 @@ func (c *serviceClient) GetTx(ctx context.Context, in *GetTxRequest, opts ...grp
 type ServiceServer interface {
 	// Simulate simulates executing a transaction for estimating gas usage.
 	Simulate(context.Context, *SimulateRequest) (*SimulateResponse, error)
-	// Simulate simulates executing a transaction for estimating gas usage.
+	// GetTx fetches a tx by hash.
 	GetTx(context.Context, *GetTxRequest) (*GetTxResponse, error)
 }
 

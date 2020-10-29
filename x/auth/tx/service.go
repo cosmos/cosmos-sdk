@@ -20,13 +20,14 @@ import (
 // baseAppSimulateFn is the signature of the Baseapp#Simulate function.
 type baseAppSimulateFn func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error)
 
+// txServer is the server for the protobuf Tx service.
 type txServer struct {
 	clientCtx         client.Context
 	simulate          baseAppSimulateFn
 	interfaceRegistry codectypes.InterfaceRegistry
 }
 
-// NewTxServer creates a new TxService server.
+// NewTxServer creates a new Tx service server.
 func NewTxServer(clientCtx client.Context, simulate baseAppSimulateFn, interfaceRegistry codectypes.InterfaceRegistry) txtypes.ServiceServer {
 	return txServer{
 		clientCtx:         clientCtx,

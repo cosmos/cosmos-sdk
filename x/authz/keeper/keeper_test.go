@@ -145,7 +145,7 @@ func (s *TestSuite) TestKeeperFees() {
 
 	msgs := types.NewMsgExecAuthorized(granteeAddr, []sdk.ServiceMsg{
 		{
-			MethodName: proto.MessageName(&banktypes.MsgSend{}),
+			MethodName: types.SendAuthorization{}.MethodName(),
 			Request: &banktypes.MsgSend{
 				Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
 				FromAddress: granterAddr.String(),

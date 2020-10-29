@@ -1,5 +1,3 @@
-// +build norace
-
 package cli_test
 
 import (
@@ -386,7 +384,7 @@ func (s *IntegrationTestSuite) TestNewExecAuthorized() {
 	tokens := sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(12)),
 	)
-	normalGeneratedTx, err := bankcli.MsgSendExec(
+	normalGeneratedTx, err := bankcli.ServiceMsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		grantee,

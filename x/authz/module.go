@@ -8,6 +8,7 @@ import (
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
 	"github.com/gogo/protobuf/grpc"
@@ -79,8 +80,8 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx sdkclient.Context, r *mux.Rou
 	// rest.RegisterRoutes(clientCtx, r)
 }
 
-// RegisterGRPCRoutes registers the gRPC Gateway routes for the authz module.
-func (AppModuleBasic) RegisterGRPCRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the authz module.
+func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 

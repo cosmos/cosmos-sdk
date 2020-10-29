@@ -5,6 +5,7 @@ import (
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
 // RegisterLegacyAminoCodec registers concrete types and interfaces on the given codec.
@@ -16,7 +17,6 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgExecAuthorized{}, "cosmos-sdk/MsgExecAuthorized", nil)
 	cdc.RegisterConcrete(SendAuthorization{}, "cosmos-sdk/SendAuthorization", nil)
 	cdc.RegisterConcrete(GenericAuthorization{}, "cosmos-sdk/GenericAuthorization", nil)
-	// cdc.RegisterConcrete(&banktypes.MsgSend{}, "cosmos-sdk/MsgSend", nil)
 }
 
 // RegisterInterfaces registers the interfaces types with the interface registry
@@ -33,6 +33,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&SendAuthorization{},
 		&GenericAuthorization{},
 	)
+
+	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 
 }
 

@@ -226,10 +226,12 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	if err != nil {
 		return err
 	}
+	ctx.Logger.Debug("Initialization: tmNode created")
 
 	if err := tmNode.Start(); err != nil {
 		return err
 	}
+	ctx.Logger.Debug("Initialization: tmNode started")
 
 	var apiSrv *api.Server
 

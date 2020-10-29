@@ -193,6 +193,25 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
+	var cpuProfileCleanup func()
+
+	if cpuProfile := ctx.Viper.GetString(flagCPUProfile); cpuProfile != "" {
+		f, err := os.Create(cpuProfile)
+		if err != nil {
+			return err
+		}
+
+		ctx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
+		if err := pprof.StartCPUProfile(f); err != nil {
+			return err
+		}
+
+		cpuProfileCleanup = func() {
+			ctx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
+			pprof.StopCPUProfile()
+			f.Close()
+		}
+	}
 
 	traceWriterFile := ctx.Viper.GetString(flagTraceStore)
 	db, err := openDB(home)
@@ -269,26 +288,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		grpcSrv, err = servergrpc.StartGRPCServer(app, config.GRPC.Address)
 		if err != nil {
 			return err
-		}
-	}
-
-	var cpuProfileCleanup func()
-
-	if cpuProfile := ctx.Viper.GetString(flagCPUProfile); cpuProfile != "" {
-		f, err := os.Create(cpuProfile)
-		if err != nil {
-			return err
-		}
-
-		ctx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
-		if err := pprof.StartCPUProfile(f); err != nil {
-			return err
-		}
-
-		cpuProfileCleanup = func() {
-			ctx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
-			pprof.StopCPUProfile()
-			f.Close()
 		}
 	}
 

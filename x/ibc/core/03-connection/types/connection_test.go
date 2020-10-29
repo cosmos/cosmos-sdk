@@ -28,12 +28,12 @@ func TestConnectionValidateBasic(t *testing.T) {
 	}{
 		{
 			"valid connection",
-			types.ConnectionEnd{clientID, []string{ibctesting.ConnectionVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			types.ConnectionEnd{clientID, []*types.Version{ibctesting.ConnectionVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			true,
 		},
 		{
 			"invalid client id",
-			types.ConnectionEnd{"(clientID1)", []string{ibctesting.ConnectionVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			types.ConnectionEnd{"(clientID1)", []*types.Version{ibctesting.ConnectionVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			false,
 		},
 		{
@@ -43,12 +43,12 @@ func TestConnectionValidateBasic(t *testing.T) {
 		},
 		{
 			"invalid version",
-			types.ConnectionEnd{clientID, []string{"1.0.0"}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			types.ConnectionEnd{clientID, []*types.Version{&types.Version{}}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			false,
 		},
 		{
 			"invalid counterparty",
-			types.ConnectionEnd{clientID, []string{ibctesting.ConnectionVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, emptyPrefix}},
+			types.ConnectionEnd{clientID, []*types.Version{ibctesting.ConnectionVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, emptyPrefix}},
 			false,
 		},
 	}
@@ -97,12 +97,12 @@ func TestIdentifiedConnectionValidateBasic(t *testing.T) {
 	}{
 		{
 			"valid connection",
-			types.NewIdentifiedConnection(clientID, types.ConnectionEnd{clientID, []string{ibctesting.ConnectionVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}}),
+			types.NewIdentifiedConnection(clientID, types.ConnectionEnd{clientID, []*types.Version{ibctesting.ConnectionVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}}),
 			true,
 		},
 		{
 			"invalid connection id",
-			types.NewIdentifiedConnection("(connectionIDONE)", types.ConnectionEnd{clientID, []string{ibctesting.ConnectionVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}}),
+			types.NewIdentifiedConnection("(connectionIDONE)", types.ConnectionEnd{clientID, []*types.Version{ibctesting.ConnectionVersion}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}}),
 			false,
 		},
 	}

@@ -7,11 +7,14 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -81,7 +84,7 @@ func (s IntegrationTestSuite) TestSimulate() {
 	s.Require().NoError(err)
 
 	// Convert the txBuilder to a tx.Tx.
-	protoTx, err := tx.TxBuilderToProtoTx(txBuilder)
+	protoTx, err := txBuilderToProtoTx(txBuilder)
 	s.Require().NoError(err)
 
 	// Run the simulate gRPC query.
@@ -138,4 +141,24 @@ func (s IntegrationTestSuite) TestGetTx() {
 
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
+}
+
+// txBuilderToProtoTx converts a txBuilder into a proto tx.Tx.
+func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) { // nolint
+	intoAnyTx, ok := txBuilder.(codectypes.IntoAny)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (codectypes.IntoAny)(nil), intoAnyTx)
+	}
+
+	any := intoAnyTx.AsAny().GetCachedValue()
+	if any == nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "any's cached value is empty")
+	}
+
+	protoTx, ok := any.(*tx.Tx)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (codectypes.IntoAny)(nil), intoAnyTx)
+	}
+
+	return protoTx, nil
 }

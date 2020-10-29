@@ -3,6 +3,7 @@ package tx
 import (
 	"context"
 	"encoding/hex"
+	fmt "fmt"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -10,9 +11,9 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // BaseAppSimulateFn is the signature of the Baseapp#Simulate function.
@@ -76,44 +77,18 @@ func (s txServer) GetTx(ctx context.Context, req *GetTxRequest) (*GetTxResponse,
 		return nil, err
 	}
 
-	sdkTx, err := s.clientCtx.TxConfig.TxDecoder()(result.Tx)
+	// Create a proto codec, we need it to unmarshal the tx bytes.
+	cdc := codec.NewProtoCodec(s.clientCtx.InterfaceRegistry)
+	var protoTx Tx
+	err = cdc.UnmarshalBinaryBare(result.Tx, &protoTx)
 	if err != nil {
 		return nil, err
 	}
-
-	txBuilder, ok := sdkTx.(client.TxBuilder)
-	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (client.TxBuilder)(nil), sdkTx)
-	}
-	// Convert the txBuilder to a tx.Tx.
-	protoTx, err := TxBuilderToProtoTx(txBuilder)
-	if err != nil {
-		return nil, err
-	}
+	fmt.Println(protoTx)
 
 	return &GetTxResponse{
-		Tx: protoTx,
+		Tx: &protoTx,
 	}, nil
-}
-
-// TxBuilderToProtoTx convert a txBuilder into a proto tx.Tx.
-func TxBuilderToProtoTx(txBuilder client.TxBuilder) (*Tx, error) { // nolint
-	intoAnyTx, ok := txBuilder.(codectypes.IntoAny)
-	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (codectypes.IntoAny)(nil), intoAnyTx)
-	}
-
-	any := intoAnyTx.AsAny().GetCachedValue()
-	if any == nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "any's cached value is empty")
-	}
-
-	protoTx, ok := any.(*Tx)
-	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (codectypes.IntoAny)(nil), intoAnyTx)
-	}
-
-	return protoTx, nil
 }
 
 // RegisterGRPCGatewayRoutes mounts the tx service's GRPC-gateway routes on the

@@ -30,16 +30,23 @@ acting as the "source zone". When the token is sent back to the chain it previou
 prefix is removed. This is a backwards movement in the token's timeline and the sender chain is
 acting as the "sink zone".
 
-For clients that want to display the source of the token, it is recommended to:
+### UX suggestion for clients
+
+For clients that want to display the source of the token, it is recommended to one of the following alternatives:
+
+- **Use a relayer service**: Available relayer services could map the each denomination trace info and return the chain path timeline for each token (i.e `origin chain -> chain #1 -> ... -> chain #(n-1) -> final chain`). Clients are advised to connect to public relayers that support the largest number of connections between chains in the ecosystem.
+- **Map trace information directly:** If the chain you are connected is also connected to each of the channels from the denomination trace information, then it is possible to retrieve the chain path timeline directly through a series of queries:
 
 1. Query the full denomination trace.
-2. Query the channel using the 2 left most identifiers from the trace. These correspond the first destination port and channel identifiers.
-3. Query the client state using the channel's counterparty port and channel identifiers.
-
-The client state can then contain useful information such as the client identifier or chain identifier (eg: on Tendermint clients).
-
-## Send Fungible Tokens
-
-## Receive Fungible Tokens
+1. For each port and channel identifier pair (from left to right) in the trace info:
+    1. Query the client state using the identifiers pair. Note that this query will return a "Not Found" response if the current chain is not connected to this channel.
+    1. Retrieve the the client identifier or chain identifier from the client state and (eg: on Tendermint clients) insert it to a map or array as desired.
+1. Query the channel with the right-most pair, which corresponds to the first destination of the token.
+1. Query the the client state (like on step 2.1) using the counterparty port and channel identifiers from the above result.
+1. Retrieve the the client identifier or chain identifier like on 2.2.
 
 ## Locked Funds
+
+In some [exceptional cases](./../../../../../docs/architecture/adr-026-ibc-client-recovery-mechanisms.md#exceptional-cases), a client state associated with a given channel cannot be updated. This causes that funds from fungible tokens in that channel will be permanently locked and thus can no longer be transferred.
+
+To mitigate this, it an client update governance proposal can be submitted to update the frozen client with a new valid header. Once the proposal passes the client state will be unfreezed and the funds from the associated channels unlocked.

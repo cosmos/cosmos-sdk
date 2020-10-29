@@ -1,19 +1,18 @@
 package secp256k1_test
 
 import (
+	"crypto/ecdsa"
 	"encoding/base64"
 	"encoding/hex"
 	"math/big"
 	"testing"
 
+	btcSecp256k1 "github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil/base58"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/sr25519"
-
-	underlyingSecp256k1 "github.com/btcsuite/btcd/btcec"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -41,7 +40,7 @@ func TestPubKeySecp256k1Address(t *testing.T) {
 		addrBbz, _, _ := base58.CheckDecode(d.addr)
 		addrB := crypto.Address(addrBbz)
 
-		var priv secp256k1.PrivKey = secp256k1.PrivKey{Key: privB}
+		var priv = secp256k1.PrivKey{Key: privB}
 
 		pubKey := priv.PubKey()
 		pubT, _ := pubKey.(*secp256k1.PubKey)
@@ -56,15 +55,34 @@ func TestSignAndValidateSecp256k1(t *testing.T) {
 	privKey := secp256k1.GenPrivKey()
 	pubKey := privKey.PubKey()
 
-	msg := crypto.CRandBytes(128)
+	msg := crypto.CRandBytes(1000)
 	sig, err := privKey.Sign(msg)
 	require.Nil(t, err)
-
 	assert.True(t, pubKey.VerifySignature(msg, sig))
 
+	// ----
+	// Test cross packages verification
+	msgHash := crypto.Sha256(msg)
+	btcPrivKey, btcPubKey := btcSecp256k1.PrivKeyFromBytes(btcSecp256k1.S256(), privKey.Key)
+	// This fails: malformed signature: no header magic
+	//   btcSig, err := secp256k1.ParseSignature(sig, secp256k1.S256())
+	//   require.NoError(t, err)
+	//   assert.True(t, btcSig.Verify(msgHash, btcPubKey))
+	// So we do a hacky way:
+	r := new(big.Int)
+	s := new(big.Int)
+	r.SetBytes(sig[:32])
+	s.SetBytes(sig[32:])
+	ok := ecdsa.Verify(btcPubKey.ToECDSA(), msgHash, r, s)
+	require.True(t, ok)
+
+	sig2, err := btcPrivKey.Sign(msgHash)
+	require.NoError(t, err)
+	pubKey.VerifySignature(msg, sig2.Serialize())
+
+	// ----
 	// Mutate the signature, just one bit.
 	sig[3] ^= byte(0x01)
-
 	assert.False(t, pubKey.VerifySignature(msg, sig))
 }
 
@@ -79,7 +97,7 @@ func TestSecp256k1LoadPrivkeyAndSerializeIsIdentity(t *testing.T) {
 
 		// This function creates a private and public key in the underlying libraries format.
 		// The private key is basically calling new(big.Int).SetBytes(pk), which removes leading zero bytes
-		priv, _ := underlyingSecp256k1.PrivKeyFromBytes(underlyingSecp256k1.S256(), privKeyBytes[:])
+		priv, _ := btcSecp256k1.PrivKeyFromBytes(btcSecp256k1.S256(), privKeyBytes[:])
 		// this takes the bytes returned by `(big int).Bytes()`, and if the length is less than 32 bytes,
 		// pads the bytes from the left with zero bytes. Therefore these two functions composed
 		// result in the identity function on privKeyBytes, hence the following equality check
@@ -91,7 +109,7 @@ func TestSecp256k1LoadPrivkeyAndSerializeIsIdentity(t *testing.T) {
 
 func TestGenPrivKeyFromSecret(t *testing.T) {
 	// curve oder N
-	N := underlyingSecp256k1.S256().N
+	N := btcSecp256k1.S256().N
 	tests := []struct {
 		name   string
 		secret []byte

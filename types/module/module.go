@@ -56,7 +56,7 @@ type AppModuleBasic interface {
 
 	// client functionality
 	RegisterRESTRoutes(client.Context, *mux.Router)
-	RegisterGRPCRoutes(client.Context, *runtime.ServeMux)
+	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
 	GetTxCmd() *cobra.Command
 	GetQueryCmd() *cobra.Command
 }
@@ -115,10 +115,10 @@ func (bm BasicManager) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rou
 	}
 }
 
-// RegisterGRPCRoutes registers all module rest routes
-func (bm BasicManager) RegisterGRPCRoutes(clientCtx client.Context, rtr *runtime.ServeMux) {
+// RegisterGRPCGatewayRoutes registers all module rest routes
+func (bm BasicManager) RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *runtime.ServeMux) {
 	for _, b := range bm {
-		b.RegisterGRPCRoutes(clientCtx, rtr)
+		b.RegisterGRPCGatewayRoutes(clientCtx, rtr)
 	}
 }
 

@@ -9,36 +9,41 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
-var (
-	validators = []Validator{
-		NewValidator(valAddr1, pk1, Description{}),
-		NewValidator(valAddr2, pk2, Description{}),
-		NewValidator(valAddr3, pk3, Description{}),
+var header = tmproto.Header{
+	ChainID: "hello",
+	Height:  5,
+}
+
+func createValidators(t *testing.T) []Validator {
+	return []Validator{
+		newValidator(t, valAddr1, pk1),
+		newValidator(t, valAddr2, pk2),
+		newValidator(t, valAddr3, pk3),
 	}
-	header = tmproto.Header{
-		ChainID: "hello",
-		Height:  5,
-	}
-)
+}
 
 func TestHistoricalInfo(t *testing.T) {
+	validators := createValidators(t)
 	hi := NewHistoricalInfo(header, validators)
 	require.True(t, sort.IsSorted(Validators(hi.Valset)), "Validators are not sorted")
 
 	var value []byte
 	require.NotPanics(t, func() {
-		value = MustMarshalHistoricalInfo(ModuleCdc, hi)
+		value = ModuleCdc.MustMarshalBinaryBare(&hi)
 	})
-
 	require.NotNil(t, value, "Marshalled HistoricalInfo is nil")
 
 	recv, err := UnmarshalHistoricalInfo(ModuleCdc, value)
 	require.Nil(t, err, "Unmarshalling HistoricalInfo failed")
-	require.Equal(t, hi, recv, "Unmarshalled HistoricalInfo is different from original")
+	require.Equal(t, hi.Header, recv.Header)
+	for i := range hi.Valset {
+		require.True(t, hi.Valset[i].Equal(&recv.Valset[i]))
+	}
 	require.True(t, sort.IsSorted(Validators(hi.Valset)), "Validators are not sorted")
 }
 
 func TestValidateBasic(t *testing.T) {
+	validators := createValidators(t)
 	hi := HistoricalInfo{
 		Header: header,
 	}
@@ -53,7 +58,6 @@ func TestValidateBasic(t *testing.T) {
 			validators[j] = it
 		})
 	}
-
 	hi = HistoricalInfo{
 		Header: header,
 		Valset: validators,

@@ -23,8 +23,10 @@ func NewVersionCommand() *cobra.Command {
 				return nil
 			}
 
-			var bz []byte
-			var err error
+			var (
+				bz  []byte
+				err error
+			)
 
 			output, _ := cmd.Flags().GetString(cli.OutputFlag)
 			switch strings.ToLower(output) {

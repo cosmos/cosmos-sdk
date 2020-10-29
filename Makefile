@@ -222,9 +222,9 @@ $(TEST_TARGETS): run-tests
 
 # check-* compiles and collects tests without running them
 # note: go test -c doesn't support multiple packages yet (https://github.com/golang/go/issues/15513)
-CHECK_TEST_TARGETS := test-unit test-unit-amino
-check-test-unit: test-unit
-check-test-unit-amino: test-unit-amino
+CHECK_TEST_TARGETS := check-test-unit check-test-unit-amino
+check-test-unit: ARGS=-tags='cgo ledger test_ledger_mock norace'
+check-test-unit-amino: ARGS=-tags='ledger test_ledger_mock test_amino norace'
 $(CHECK_TEST_TARGETS): EXTRA_ARGS=-run=none
 $(CHECK_TEST_TARGETS): run-tests
 
@@ -362,7 +362,11 @@ proto-gen:
 	@./scripts/protocgen.sh
 
 proto-format:
+	@echo "Formatting Protobuf files"
+	docker run -v $(shell pwd):/workspace \
+	--workdir /workspace tendermintdev/docker-build-proto \
 	find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \;
+.PHONY: proto-format
 
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
 proto-gen-any:

@@ -211,14 +211,14 @@ func GetCmdQueryPacketCommitments() *cobra.Command {
 	return cmd
 }
 
-// GetCmdQueryPacketCommitment defines the command to query a channel end
+// GetCmdQueryPacketCommitment defines the command to query a packet commitment
 func GetCmdQueryPacketCommitment() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "packet-commitment [port-id] [channel-id] [sequence]",
 		Short: "Query a packet commitment",
 		Long:  "Query a packet commitment",
 		Example: fmt.Sprintf(
-			"%s query %s %s end [port-id] [channel-id]", version.AppName, host.ModuleName, types.SubModuleName,
+			"%s query %s %s packet-commitment [port-id] [channel-id] [sequence]", version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -238,6 +238,88 @@ func GetCmdQueryPacketCommitment() *cobra.Command {
 			}
 
 			res, err := utils.QueryPacketCommitment(clientCtx, portID, channelID, seq, prove)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintOutput(res)
+		},
+	}
+
+	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdQueryPacketReceipt defines the command to query a packet receipt
+func GetCmdQueryPacketReceipt() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "packet-receipt [port-id] [channel-id] [sequence]",
+		Short: "Query a packet receipt",
+		Long:  "Query a packet receipt",
+		Example: fmt.Sprintf(
+			"%s query %s %s packet-receipt [port-id] [channel-id] [sequence]", version.AppName, host.ModuleName, types.SubModuleName,
+		),
+		Args: cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			portID := args[0]
+			channelID := args[1]
+			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
+
+			seq, err := strconv.ParseUint(args[2], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			res, err := utils.QueryPacketReceipt(clientCtx, portID, channelID, seq, prove)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintOutput(res)
+		},
+	}
+
+	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdQueryPacketAcknowledgement defines the command to query a packet acknowledgement
+func GetCmdQueryPacketAcknowledgement() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "packet-ack [port-id] [channel-id] [sequence]",
+		Short: "Query a packet acknowledgement",
+		Long:  "Query a packet acknowledgement",
+		Example: fmt.Sprintf(
+			"%s query %s %s packet-ack [port-id] [channel-id] [sequence]", version.AppName, host.ModuleName, types.SubModuleName,
+		),
+		Args: cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			portID := args[0]
+			channelID := args[1]
+			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
+
+			seq, err := strconv.ParseUint(args[2], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			res, err := utils.QueryPacketAcknowledgement(clientCtx, portID, channelID, seq, prove)
 			if err != nil {
 				return err
 			}
@@ -335,9 +417,9 @@ The return value represents:
 			}
 
 			req := &types.QueryUnrelayedAcksRequest{
-				PortId:                    args[0],
-				ChannelId:                 args[1],
-				PacketCommitmentSequences: seqs,
+				PortId:             args[0],
+				ChannelId:          args[1],
+				PacketAckSequences: seqs,
 			}
 
 			res, err := queryClient.UnrelayedAcks(context.Background(), req)

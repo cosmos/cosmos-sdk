@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -237,7 +238,7 @@ func (q Keeper) PacketCommitments(c context.Context, req *types.QueryPacketCommi
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	commitments := []*types.PacketAckCommitment{}
+	commitments := []*types.PacketState{}
 	store := prefix.NewStore(ctx.KVStore(q.storeKey), []byte(host.PacketCommitmentPrefixPath(req.PortId, req.ChannelId)))
 
 	pageRes, err := query.Paginate(store, req.Pagination, func(key, value []byte) error {
@@ -248,7 +249,7 @@ func (q Keeper) PacketCommitments(c context.Context, req *types.QueryPacketCommi
 			return err
 		}
 
-		commitment := types.NewPacketAckCommitment(req.PortId, req.ChannelId, sequence, value)
+		commitment := types.NewPacketState(req.PortId, req.ChannelId, sequence, value)
 		commitments = append(commitments, &commitment)
 		return nil
 	})
@@ -263,6 +264,28 @@ func (q Keeper) PacketCommitments(c context.Context, req *types.QueryPacketCommi
 		Pagination:  pageRes,
 		Height:      selfHeight,
 	}, nil
+}
+
+func (q Keeper) PacketReceipt(c context.Context, req *types.QueryPacketReceiptRequest) (*types.QueryPacketReceiptResponse, error) {
+	fmt.Println("HELLO!!!")
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if err := validategRPCRequest(req.PortId, req.ChannelId); err != nil {
+		return nil, err
+	}
+
+	if req.Sequence == 0 {
+		return nil, status.Error(codes.InvalidArgument, "packet sequence cannot be 0")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	receipt, recvd := q.GetPacketReceipt(ctx, req.PortId, req.ChannelId, req.Sequence)
+
+	selfHeight := clienttypes.GetSelfHeight(ctx)
+	return types.NewQueryPacketReceiptResponse(receipt, recvd, nil, selfHeight), nil
 }
 
 // PacketAcknowledgement implements the Query/PacketAcknowledgement gRPC method
@@ -327,8 +350,8 @@ func (q Keeper) UnreceivedPackets(c context.Context, req *types.QueryUnreceivedP
 			return nil, status.Errorf(codes.InvalidArgument, "packet sequence %d cannot be 0", i)
 		}
 
-		// if acknowledgement exists on the receiving chain, then packet has already been received
-		if _, found := q.GetPacketAcknowledgement(ctx, req.PortId, req.ChannelId, seq); !found {
+		// if packet receipt exists on the receiving chain, then packet has already been received
+		if _, found := q.GetPacketReceipt(ctx, req.PortId, req.ChannelId, seq); !found {
 			unreceivedSequences = append(unreceivedSequences, seq)
 		}
 
@@ -371,14 +394,14 @@ func (q Keeper) UnrelayedAcks(c context.Context, req *types.QueryUnrelayedAcksRe
 
 	var unrelayedSequences = []uint64{}
 
-	for i, seq := range req.PacketCommitmentSequences {
+	for i, seq := range req.PacketAckSequences {
 		if seq == 0 {
 			return nil, status.Errorf(codes.InvalidArgument, "packet sequence %d cannot be 0", i)
 		}
 
 		// if packet commitment still exists on the original sending chain, then packet ack has not been received
 		// since processing the ack will delete the packet commitment
-		if _, found := q.GetPacketAcknowledgement(ctx, req.PortId, req.ChannelId, seq); found {
+		if commitment := q.GetPacketCommitment(ctx, req.PortId, req.ChannelId, seq); len(commitment) != 0 {
 			unrelayedSequences = append(unrelayedSequences, seq)
 		}
 

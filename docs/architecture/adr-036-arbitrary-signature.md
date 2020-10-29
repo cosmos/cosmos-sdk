@@ -85,7 +85,7 @@ Signed MsgSignedMessage json example:
 
 ## Consequences
 
-There is a specification on how messages, that are not meant to be broadcast to an active 
+There is a specification on how messages, that are not meant to be broadcast to a live chain, should be formed. 
 
 ### Backwards Compatibility
 

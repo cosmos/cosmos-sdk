@@ -18,7 +18,7 @@ message ConnectionEnd {
   string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   // IBC version which can be utilised to determine encodings or protocols for
   // channels or packets utilising this connection
-  repeated string versions = 2;
+  repeated Version versions = 2;
   // current state of the connection end.
   State state = 3;
   // counterparty chain associated with this connection.
@@ -35,7 +35,7 @@ message IdentifiedConnection {
   string client_id = 2 [(gogoproto.moretags) = "yaml:\"client_id\""];
   // IBC version which can be utilised to determine encodings or protocols for
   // channels or packets utilising this connection
-  repeated string versions = 3;
+  repeated Version versions = 3;
   // current state of the connection end.
   State state = 4;
   // counterparty chain associated with this connection.

@@ -97,7 +97,8 @@ func TestRegister(t *testing.T) {
 	// Duplicate registration with different concrete type on same typeURL.
 	require.PanicsWithError(
 		t,
-		"concrete type *testdata.Dog has already been registered under typeURL /testdata.Dog, cannot register *types_test.FakeDog under same typeURL",
+		"concrete type *testdata.Dog has already been registered under typeURL /testdata.Dog, cannot register *types_test.FakeDog under same typeURL. "+
+			"This usually means that there are conflicting modules registering different concrete types for a same interface implementation",
 		func() {
 			registry.RegisterImplementations((*testdata.Animal)(nil), &FakeDog{})
 		},

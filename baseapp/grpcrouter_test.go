@@ -69,7 +69,7 @@ func TestRegisterQueryServiceTwice(t *testing.T) {
 	// Second time should panic.
 	require.Panics(t, func() {
 		testdata.RegisterQueryServer(
-			app.MsgServiceRouter(),
+			app.GRPCQueryRouter(),
 			testdata.QueryImpl{},
 		)
 	})

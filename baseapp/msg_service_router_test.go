@@ -57,6 +57,7 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 			testdata.MsgServerImpl{},
 		)
 	})
+
 	// Second time should panic.
 	require.Panics(t, func() {
 		testdata.RegisterMsgServer(

@@ -6,13 +6,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/cosmos/cosmos-sdk/server/rosetta/client/tendermint"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
 const (
@@ -76,59 +73,61 @@ func tendermintTxToRosettaTx(res tendermint.TxResponse) *types.Transaction {
 // cosmosTxToRosettaTx converts a Cosmos api TxQuery to a Transaction
 // in the type expected by Rosetta.
 func cosmosTxToRosettaTx(tx sdk.TxResponse) *types.Transaction {
-	hasError := tx.Code > 0
-	return &types.Transaction{
-		TransactionIdentifier: &types.TransactionIdentifier{
-			Hash: tx.TxHash,
-		},
-		Operations: toOperations(tx.Tx.GetMsgs(), hasError, false),
-	}
+	//hasError := tx.Code > 0
+	//return &types.Transaction{
+	//	TransactionIdentifier: &types.TransactionIdentifier{
+	//		Hash: tx.TxHash,
+	//	},
+	//	Operations: toOperations(tx.Tx.GetMsgs(), hasError, false),
+	//}
+	return nil
 }
 
 func toOperations(msg []sdk.Msg, hasError bool, withoutStatus bool) (operations []*types.Operation) {
-	for i, msg := range msg {
-		newMsg, ok := msg.(bank.MsgSend)
-		if !ok {
-			continue
-		}
-		fromAddress := newMsg.FromAddress
-		toAddress := newMsg.ToAddress
-		amounts := newMsg.Amount
-		if len(amounts) == 0 {
-			continue
-		}
-		coin := amounts[0]
-		sendOp := func(account, amount string, index int) *types.Operation {
-			status := StatusSuccess
-			if hasError {
-				status = StatusReverted
-			}
-			if withoutStatus {
-				status = ""
-			}
-			return &types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: int64(index),
-				},
-				Type:   OperationTransfer,
-				Status: status,
-				Account: &types.AccountIdentifier{
-					Address: account,
-				},
-				Amount: &types.Amount{
-					Value: amount,
-					Currency: &types.Currency{
-						Symbol: coin.Denom,
-					},
-				},
-			}
-		}
-		operations = append(operations,
-			sendOp(fromAddress.String(), "-"+coin.Amount.String(), i),
-			sendOp(toAddress.String(), coin.Amount.String(), i+1),
-		)
-	}
-	return operations
+	//for i, msg := range msg {
+	//	newMsg, ok := msg.(bank.MsgSend)
+	//	if !ok {
+	//		continue
+	//	}
+	//	fromAddress := newMsg.FromAddress
+	//	toAddress := newMsg.ToAddress
+	//	amounts := newMsg.Amount
+	//	if len(amounts) == 0 {
+	//		continue
+	//	}
+	//	coin := amounts[0]
+	//	sendOp := func(account, amount string, index int) *types.Operation {
+	//		status := StatusSuccess
+	//		if hasError {
+	//			status = StatusReverted
+	//		}
+	//		if withoutStatus {
+	//			status = ""
+	//		}
+	//		return &types.Operation{
+	//			OperationIdentifier: &types.OperationIdentifier{
+	//				Index: int64(index),
+	//			},
+	//			Type:   OperationTransfer,
+	//			Status: status,
+	//			Account: &types.AccountIdentifier{
+	//				Address: account,
+	//			},
+	//			Amount: &types.Amount{
+	//				Value: amount,
+	//				Currency: &types.Currency{
+	//					Symbol: coin.Denom,
+	//				},
+	//			},
+	//		}
+	//	}
+	//	operations = append(operations,
+	//		sendOp(fromAddress.String(), "-"+coin.Amount.String(), i),
+	//		sendOp(toAddress.String(), coin.Amount.String(), i+1),
+	//	)
+	//}
+	//return operations
+	return nil
 }
 
 // getTransferTxDataFromOperations extracts the from and to addresses from a list of operations.

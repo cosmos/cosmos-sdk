@@ -8,7 +8,7 @@ require (
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.21.0-beta
 	github.com/btcsuite/btcutil v1.0.2
-	github.com/coinbase/rosetta-sdk-go v0.5.7
+	github.com/coinbase/rosetta-sdk-go v0.5.8
 	github.com/confio/ics23/go v0.6.3
 	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
 	github.com/cosmos/iavl v0.15.0-rc4
@@ -38,7 +38,7 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
 	github.com/tendermint/btcd v0.1.1
-	github.com/tendermint/cosmos-rosetta-gateway v0.1.1
+	github.com/tendermint/cosmos-rosetta-gateway v0.1.2-0.20201029081739-f2b4b45210a5
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.16.0
 	github.com/tendermint/tendermint v0.34.0-rc5

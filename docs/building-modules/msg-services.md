@@ -20,7 +20,10 @@ When possible, the existing module's [`Keeper`](keeper.md) should implement `Msg
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/bank/keeper/msg_server.go#L14-L16
 
-In order to route a `Msg` to the appropriate `MsgServer` method, we use the SDK's [existing routing mechanism](#handler-type). `NewHandler` function dispatches a `Msg` to appropriate `MsgServer` RPC function, usually by using a switch statement:
+At the moment, we use the SDK's [existing routing mechanism](#handler-type) to route a `Msg` to the appropriate `MsgServer` method. But this is intended to involve to satisfy the use cases discussed in [\#7093](https://github.com/cosmos/cosmos-sdk/issues/7093)
+and [\#7122](https://github.com/cosmos/cosmos-sdk/issues/7421).
+
+`NewHandler` function dispatches a `Msg` to appropriate `MsgServer` RPC function, usually by using a switch statement:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/bank/handler.go#L10-L30
 
@@ -70,7 +73,9 @@ Let us break it down:
 - The [`Msg`](./messages-and-queries.md#messages) is the actual object being processed. 
 - The [`Context`](../core/context.md) contains all the necessary information needed to process the `msg`, as well as a cache-wrapped copy of the latest state. If the `msg` is succesfully processed, the modified version of the temporary state contained in the `ctx` will be written to the main state.
 - The [`*Result`] returned to `baseapp`, which contains (among other things) information on the execution of the `handler` and [`events`](../core/events.md).
-	+++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/proto/cosmos/base/abci/v1beta1/abci.proto#L81-L95
+
+
++++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/proto/cosmos/base/abci/v1beta1/abci.proto#L81-L95
 
 Module `handler`s are typically implemented in a `./handler.go` file inside the module's folder. The [module manager](./module-manager.md) is used to add the module's `handler`s to the
 [application's `router`](../core/baseapp.md#message-routing) via the `Route()` method. Typically,
@@ -78,7 +83,7 @@ the manager's `Route()` method simply constructs a Route that calls a `NewHandle
 
 ### Implementation
 
-In this case, `handler`s functions need to be implemented for each module `Msg` and should be used in `NewHandler` in the place of [`msgServer` methods]((#implementation-of-a-module-msg-service)). This will also involve manual registration of those handlers.
+In this case, `handler`s functions need to be implemented for each module `Msg` and should be used in `NewHandler` in the place of [`msgServer` methods]((#implementation-of-a-module-msg-service)). This will also involve manual handler registration of `Msg` types.
 `handler`s functions should return a `*Result` and an `error`.
 
 ## Telemetry

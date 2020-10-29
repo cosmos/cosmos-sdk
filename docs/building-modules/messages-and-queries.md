@@ -14,7 +14,7 @@ order: 3
 
 `Msg`s are objects whose end-goal is to trigger state-transitions. They are wrapped in [transactions](../core/transactions.md), which may contain one or multiple of them. 
 
-When a transaction is relayed from the underlying consensus engine to the SDK application, it is first decoded by [`baseapp`](../core/baseapp.md). Then, each `message` contained in the transaction is extracted and routed to the appropriate module via `baseapp`'s `router` so that it can be processed by the module's [`handler`](./handler.md). For a more detailed explanation of the lifecycle of a transaction, click [here](../basics/tx-lifecycle.md).
+When a transaction is relayed from the underlying consensus engine to the SDK application, it is first decoded by [`baseapp`](../core/baseapp.md). Then, each `message` contained in the transaction is extracted and routed to the appropriate module via `baseapp`'s `router` so that it can be processed by the module's [`handler`](./msg-services.md#handler-type). For a more detailed explanation of the lifecycle of a transaction, click [here](../basics/tx-lifecycle.md).
 
 ### `Msg` Services
 
@@ -31,7 +31,7 @@ For backwards compatibility with [legacy `Msg`s](#legacy-msgs), existing `Msg` t
 Defining such `Msg` services allow to specify return types as part of `Msg` response using the canonical `Msg...Response` names.
 
 In addition, this generates client and server code.
-`MsgServer` interface defines the server API for the `Msg` service and its implementation is described as part of the [`handler`s](./handler.md) documentation.
+`MsgServer` interface defines the server API for the `Msg` service and its implementation is described as part of the [`Msg` services](./msg-services.md) documentation.
 
 A `RegisterMsgServer` method is also generated and should be used to register the module's `MsgServer`  request types with custom type URLs in `RegisterServices` method from the [`AppModule` interface](./module-manager.md#appmodule).
 
@@ -111,4 +111,4 @@ See following examples:
 
 ## Next {hide}
 
-Learn about [`handler`s](./handler.md) {hide}
+Learn about [`Msg` services](./msg-services.md) {hide}

@@ -198,7 +198,7 @@ Instead of using their `checkState`, full-nodes use `deliverState`:
   [`runMsgs`](../core/baseapp.md#runtx-and-runmsgs) to fully execute each `Msg` within the transaction.
   Since the transaction may have messages from different modules, `baseapp` needs to know which module
   to find the appropriate Handler. Thus, the `route` function is called via the [module manager](../building-modules/module-manager.md) to
-  retrieve the route name and find the [`Handler`](../building-modules/handler.md) within the module.
+  retrieve the route name and find the [`Handler`](../building-modules/msg-services.md#handler-type) within the module.
 
 - **Handler:** The `handler`, a step up from `AnteHandler`, is responsible for executing each
   message in the `Tx` and causes state transitions to persist in `deliverTxState`. It is defined

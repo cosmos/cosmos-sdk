@@ -103,10 +103,6 @@ func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) 
 	return ctx.TxConfig.TxJSONDecoder()(bytes)
 }
 
-func ReadTxsFromFile(ctx client.Context, filename string) (tx []sdk.Tx, err error) {
-	return nil, nil
-}
-
 // NewBatchScanner returns a new BatchScanner to read newline-delimited StdTx transactions from r.
 func NewBatchScanner(cfg client.TxConfig, r io.Reader) *BatchScanner {
 	return &BatchScanner{Scanner: bufio.NewScanner(r), cfg: cfg}

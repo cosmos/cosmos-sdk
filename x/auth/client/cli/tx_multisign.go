@@ -225,15 +225,20 @@ func makeBatchMultisigCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []stri
 			return err
 		}
 
-		parsedTxs, err := authclient.ReadTxsFromFile(clientCtx, args[0])
-		if err != nil {
-			return err
-		}
-
+		txCfg := clientCtx.TxConfig
 		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 		if txFactory.SignMode() == signingtypes.SignMode_SIGN_MODE_UNSPECIFIED {
 			txFactory = txFactory.WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 		}
+
+		var infile = os.Stdin
+		if args[0] != "-" {
+			infile, err = os.Open(args[0])
+			if err != nil {
+				return err
+			}
+		}
+		scanner := authclient.NewBatchScanner(txCfg, infile)
 
 		inBuf := bufio.NewReader(cmd.InOrStdin())
 		backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
@@ -260,19 +265,18 @@ func makeBatchMultisigCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []stri
 			signatureBatch = append(signatureBatch, sigs)
 		}
 
-		var sequence uint64
+		var seq uint64
 		if !clientCtx.Offline {
-			accnum, sequence, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
+			accnum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
 			if err != nil {
 				return err
 			}
 
-			txFactory = txFactory.WithAccountNumber(accnum).WithSequence(sequence)
+			txFactory = txFactory.WithAccountNumber(accnum).WithSequence(seq)
 		}
 
-		for i, parsedTx := range parsedTxs {
-			txCfg := clientCtx.TxConfig
-			txBldr, err := txCfg.WrapTxBuilder(parsedTx)
+		for sequence := seq; scanner.Scan(); {
+			txBldr, err := txCfg.WrapTxBuilder(scanner.Tx())
 			if err != nil {
 				return err
 			}
@@ -285,7 +289,7 @@ func makeBatchMultisigCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []stri
 
 			multisigPub := multisigInfo.GetPubKey().(*kmultisig.LegacyAminoPubKey)
 			multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
-			for _, sig := range signatureBatch {
+			for i, sig := range signatureBatch {
 				err = signing.VerifySignature(sig[i].PubKey, signingData, sig[i].Data, txCfg.SignModeHandler(), txBldr.GetTx())
 				if err != nil {
 					return fmt.Errorf("couldn't verify signature: %w", err)

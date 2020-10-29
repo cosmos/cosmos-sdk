@@ -262,5 +262,5 @@ func queryPacketAcknowledgementABCI(clientCtx client.Context, portID, channelID 
 		return nil, sdkerrors.Wrapf(types.ErrInvalidAcknowledgement, "portID (%s), channelID (%s), sequence (%d)", portID, channelID, sequence)
 	}
 
-	return types.NewQueryPacketAcknowledgementResponse(portID, channelID, sequence, value, proofBz, proofHeight), nil
+	return types.NewQueryPacketAcknowledgementResponse(value, proofBz, proofHeight), nil
 }

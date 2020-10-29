@@ -39,11 +39,6 @@ const (
 	KeyPacketReceiptPrefix     = "receipts"
 )
 
-// KeyPrefixBytes return the key prefix bytes from a URL string format
-func KeyPrefixBytes(prefix int) []byte {
-	return []byte(fmt.Sprintf("%d/", prefix))
-}
-
 // FullClientPath returns the full path of a specific client path in the format:
 // "clients/{clientID}/{path}" as a string.
 func FullClientPath(clientID string, path string) string {
@@ -87,7 +82,7 @@ func KeyConsensusState(height exported.Height) []byte {
 
 // ClientConnectionsPath defines a reverse mapping from clients to a set of connections
 func ClientConnectionsPath(clientID string) string {
-	return fmt.Sprintf("clients/%s/connections", clientID)
+	return fmt.Sprintf("%s/%s/connections", KeyClientStorePrefix, clientID)
 }
 
 // ConnectionPath defines the path under which connection paths are stored
@@ -95,7 +90,7 @@ func ConnectionPath(connectionID string) string {
 	return fmt.Sprintf("%s/%s", KeyConnectionPrefix, connectionID)
 }
 
-// KeyClientConnections returns the store key for the connectios of a given client
+// KeyClientConnections returns the store key for the connections of a given client
 func KeyClientConnections(clientID string) []byte {
 	return []byte(ClientConnectionsPath(clientID))
 }
@@ -107,11 +102,6 @@ func KeyConnection(connectionID string) []byte {
 
 // ICS04
 // The following paths are the keys to the store as defined in https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#store-paths
-
-// GetChannelPortsKeysPrefix returns the prefix bytes for ICS04 and ICS05 iterators
-func GetChannelPortsKeysPrefix(prefix int) []byte {
-	return []byte(fmt.Sprintf("%d/ports/", prefix))
-}
 
 // ChannelPath defines the path under which channels are stored
 func ChannelPath(portID, channelID string) string {

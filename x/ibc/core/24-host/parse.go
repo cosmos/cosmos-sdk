@@ -6,16 +6,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// RemovePath is an util function to remove a path from a set.
-func RemovePath(paths []string, path string) ([]string, bool) {
-	for i, p := range paths {
-		if p == path {
-			return append(paths[:i], paths[i+1:]...), true
-		}
-	}
-	return paths, false
-}
-
 // ParseConnectionPath returns the connection ID from a full path. It returns
 // an error if the provided path is invalid.
 func ParseConnectionPath(path string) (string, error) {

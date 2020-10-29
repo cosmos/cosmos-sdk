@@ -140,18 +140,8 @@ func (s *IntegrationTestSuite) TestQueryTxByHeight() {
 	s.Require().NotEmpty(s.stdTxRes.Height)
 
 	// We now fetch the tx on `/txs` route, filtering by `tx.height`
-	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs?limit=100&page=1&tx.height=%d", val0.APIAddress, s.stdTxRes.Height))
+	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs?limit=10&page=1&tx.height=%d", val0.APIAddress, s.stdTxRes.Height))
 	s.Require().NoError(err)
-
-	// txJSON should contain the whole tx, we just make sure that our custom
-	// memo is there.
-	s.Require().Contains(string(txJSON), s.stdTx.Memo)
-
-	// We now fetch the tx on `/txs` route, filtering by `height`
-	txJSON, err = rest.GetRequest(fmt.Sprintf("%s/txs?height=%d", val0.APIAddress, s.stdTxRes.Height))
-	s.Require().NoError(err)
-
-	fmt.Println(string(txJSON)) // TODO This one is empty.
 
 	// txJSON should contain the whole tx, we just make sure that our custom
 	// memo is there.

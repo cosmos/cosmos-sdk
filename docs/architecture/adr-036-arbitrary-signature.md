@@ -1,4 +1,4 @@
-# ADR 033: Arbitrary Message Signature
+# ADR 036: Arbitrary Message Signature
 
 ## Changelog
 

@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -266,8 +265,8 @@ func (q Keeper) PacketCommitments(c context.Context, req *types.QueryPacketCommi
 	}, nil
 }
 
+// PacketReceipt implements the Query/PacketReceipt gRPC method
 func (q Keeper) PacketReceipt(c context.Context, req *types.QueryPacketReceiptRequest) (*types.QueryPacketReceiptResponse, error) {
-	fmt.Println("HELLO!!!")
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -311,6 +310,46 @@ func (q Keeper) PacketAcknowledgement(c context.Context, req *types.QueryPacketA
 
 	selfHeight := clienttypes.GetSelfHeight(ctx)
 	return types.NewQueryPacketAcknowledgementResponse(acknowledgementBz, nil, selfHeight), nil
+}
+
+// PacketAcknowledgements implements the Query/PacketAcknowledgements gRPC method
+func (q Keeper) PacketAcknowledgements(c context.Context, req *types.QueryPacketAcknowledgementsRequest) (*types.QueryPacketAcknowledgementsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if err := validategRPCRequest(req.PortId, req.ChannelId); err != nil {
+		return nil, err
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	acks := []*types.PacketState{}
+	store := prefix.NewStore(ctx.KVStore(q.storeKey), []byte(host.PacketAcknowledgementPrefixPath(req.PortId, req.ChannelId)))
+
+	pageRes, err := query.Paginate(store, req.Pagination, func(key, value []byte) error {
+		keySplit := strings.Split(string(key), "/")
+
+		sequence, err := strconv.ParseUint(keySplit[len(keySplit)-1], 10, 64)
+		if err != nil {
+			return err
+		}
+
+		ack := types.NewPacketState(req.PortId, req.ChannelId, sequence, value)
+		acks = append(acks, &ack)
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	selfHeight := clienttypes.GetSelfHeight(ctx)
+	return &types.QueryPacketAcknowledgementsResponse{
+		Acknowledgements: acks,
+		Pagination:       pageRes,
+		Height:           selfHeight,
+	}, nil
 }
 
 // UnreceivedPackets implements the Query/UnreceivedPackets gRPC method. Given

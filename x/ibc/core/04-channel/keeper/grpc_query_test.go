@@ -788,16 +788,6 @@ func (suite *KeeperTestSuite) TestQueryPacketReceipt() {
 			},
 			false,
 		},
-		{"channel not found",
-			func() {
-				req = &types.QueryPacketReceiptRequest{
-					PortId:    "test-port-id",
-					ChannelId: "test-channel-id",
-					Sequence:  1,
-				}
-			},
-			false,
-		},
 		{
 			"success",
 			func() {
@@ -809,6 +799,7 @@ func (suite *KeeperTestSuite) TestQueryPacketReceipt() {
 					ChannelId: channelA.ID,
 					Sequence:  1,
 				}
+				expReceived = true
 			},
 			true,
 		},

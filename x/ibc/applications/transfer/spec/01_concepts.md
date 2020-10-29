@@ -46,8 +46,8 @@ For clients that want to display the source of the token, it is recommended to u
 ::: tip
  From a chain's perspective, the IBC protocol doesn't know the topology of the network (i.e
  connections between chains and identifier names between them). The proposed solution only works if
- the identifiers have consistent names between the chains (eg: ). Because of this, it is strongly recommended to use
- a relayer service instead.
+ the identifiers have consistent names between the chains. Because of this, it is strongly
+ recommended to use a relayer service instead.
 :::
 
 1. Query the full denomination trace.
@@ -61,6 +61,17 @@ For clients that want to display the source of the token, it is recommended to u
 1. Query the the client state (like on step 2.1) using the counterparty port and channel identifiers
    from the above result.
 1. Retrieve the the client identifier or chain identifier like on 2.2.
+
+#### Example
+
+Using the gRPC gataway client service the steps above would be, with a given IBC token `ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2`:
+
+1. `GET /ibc_transfer/v1beta1/denom_traces/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2` -> `{"path": "transfer/channelToA", "base_denom": "uatom"}`
+        1. `GET /ibc/channel/v1beta1/channels/channelToA/ports/transfer/client_state"` -> `{"client_id": "clientA", "chain-id": "chainA", ...}`
+1. `GET /ibc/channel/v1beta1/channels/channelToA/ports/transfer"` -> `{"channel_id": "channelToA", port_id": "transfer", counterparty: {"channel_id": "channelToB", port_id": "transfer"}, ...}`
+1. `GET /ibc/channel/v1beta1/channels/channelToB/ports/transfer/client_state" -> {"client_id": "clientB", "chain-id": "chainB",}
+
+Then, the token transfer chain path for the `uatom` denomination would be: `chainB` -> `chainA`.
 
 ## Locked Funds
 

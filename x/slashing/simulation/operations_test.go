@@ -67,7 +67,8 @@ func TestSimulateMsgUnjail(t *testing.T) {
 
 	// setup validator0 by consensus address
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator0)
-	val0ConsAddress := sdk.ConsAddress(validator0.GetConsPubKey().Address())
+	val0ConsAddress, err := validator0.GetConsAddr()
+	require.NoError(t, err)
 	info := types.NewValidatorSigningInfo(val0ConsAddress, int64(4), int64(3),
 		time.Unix(2, 0), false, int64(10))
 	app.SlashingKeeper.SetValidatorSigningInfo(ctx, val0ConsAddress, info)
@@ -136,10 +137,11 @@ func getTestingValidator0(t *testing.T, app *simapp.SimApp, ctx sdk.Context, acc
 
 func getTestingValidator(t *testing.T, app *simapp.SimApp, ctx sdk.Context, accounts []simtypes.Account, commission stakingtypes.Commission, n int) stakingtypes.Validator {
 	account := accounts[n]
-	valPubKey := account.PubKey
+	valPubKey := account.ConsKey.PubKey()
 	valAddr := sdk.ValAddress(account.PubKey.Address().Bytes())
-	validator := stakingtypes.NewValidator(valAddr, valPubKey, stakingtypes.Description{})
-	validator, err := validator.SetInitialCommission(commission)
+	validator, err := stakingtypes.NewValidator(valAddr, valPubKey, stakingtypes.Description{})
+	require.NoError(t, err)
+	validator, err = validator.SetInitialCommission(commission)
 	require.NoError(t, err)
 
 	validator.DelegatorShares = sdk.NewDec(100)

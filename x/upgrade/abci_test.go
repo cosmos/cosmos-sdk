@@ -40,7 +40,7 @@ var s TestSuite
 
 func setupTest(height int64, skip map[int64]bool) TestSuite {
 	db := dbm.NewMemDB()
-	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, skip, simapp.DefaultNodeHome, 0, simapp.MakeEncodingConfig())
+	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, skip, simapp.DefaultNodeHome, 0, simapp.MakeTestEncodingConfig())
 	genesisState := simapp.NewDefaultGenesisState()
 	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
 	if err != nil {
@@ -236,17 +236,17 @@ func TestPlanStringer(t *testing.T) {
 	require.Equal(t, `Upgrade Plan
   Name: test
   Time: 2020-01-01T00:00:00Z
-  Info: 
+  Info: .
   Upgraded IBC Client: no upgraded client provided`, types.Plan{Name: "test", Time: ti}.String())
 	require.Equal(t, `Upgrade Plan
   Name: test
   Height: 100
-  Info: 
+  Info: .
   Upgraded IBC Client: no upgraded client provided`, types.Plan{Name: "test", Height: 100}.String())
 	require.Equal(t, fmt.Sprintf(`Upgrade Plan
   Name: test
   Height: 100
-  Info: 
+  Info: .
   Upgraded IBC Client: %s`, clientState), types.Plan{Name: "test", Height: 100, UpgradedClientState: cs}.String())
 }
 

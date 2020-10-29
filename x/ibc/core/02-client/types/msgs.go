@@ -87,9 +87,10 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	return host.ClientIdentifierValidator(msg.ClientId)
 }
 
-// GetSignBytes implements sdk.Msg
+// GetSignBytes implements sdk.Msg. The function will panic since it is used
+// for amino transaction verification which IBC does not support.
 func (msg MsgCreateClient) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
+	panic("IBC messages do not support amino")
 }
 
 // GetSigners implements sdk.Msg
@@ -156,9 +157,10 @@ func (msg MsgUpdateClient) ValidateBasic() error {
 	return host.ClientIdentifierValidator(msg.ClientId)
 }
 
-// GetSignBytes implements sdk.Msg
+// GetSignBytes implements sdk.Msg. The function will panic since it is used
+// for amino transaction verification which IBC does not support.
 func (msg MsgUpdateClient) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
+	panic("IBC messages do not support amino")
 }
 
 // GetSigners implements sdk.Msg
@@ -233,9 +235,10 @@ func (msg MsgUpgradeClient) ValidateBasic() error {
 	return host.ClientIdentifierValidator(msg.ClientId)
 }
 
-// GetSignBytes implements sdk.Msg
+// GetSignBytes implements sdk.Msg. The function will panic since it is used
+// for amino transaction verification which IBC does not support.
 func (msg MsgUpgradeClient) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
+	panic("IBC messages do not support amino")
 }
 
 // GetSigners implements sdk.Msg
@@ -299,10 +302,10 @@ func (msg MsgSubmitMisbehaviour) ValidateBasic() error {
 	return host.ClientIdentifierValidator(msg.ClientId)
 }
 
-// GetSignBytes returns the raw bytes a signer is expected to sign when submitting
-// a MsgSubmitMisbehaviour message.
+// GetSignBytes implements sdk.Msg. The function will panic since it is used
+// for amino transaction verification which IBC does not support.
 func (msg MsgSubmitMisbehaviour) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
+	panic("IBC messages do not support amino")
 }
 
 // GetSigners returns the single expected signer for a MsgSubmitMisbehaviour.

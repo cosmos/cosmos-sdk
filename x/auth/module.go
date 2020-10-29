@@ -65,8 +65,8 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 	rest.RegisterRoutes(clientCtx, rtr, types.StoreKey)
 }
 
-// RegisterGRPCRoutes registers the gRPC Gateway routes for the auth module.
-func (AppModuleBasic) RegisterGRPCRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the auth module.
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
@@ -92,11 +92,11 @@ type AppModule struct {
 	AppModuleBasic
 
 	accountKeeper     keeper.AccountKeeper
-	randGenAccountsFn simulation.RandomGenesisAccountsFn
+	randGenAccountsFn types.RandomGenesisAccountsFn
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Marshaler, accountKeeper keeper.AccountKeeper, randGenAccountsFn simulation.RandomGenesisAccountsFn) AppModule {
+func NewAppModule(cdc codec.Marshaler, accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn) AppModule {
 	return AppModule{
 		AppModuleBasic:    AppModuleBasic{},
 		accountKeeper:     accountKeeper,

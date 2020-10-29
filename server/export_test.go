@@ -128,7 +128,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	db := dbm.NewMemDB()
-	encCfg := simapp.MakeEncodingConfig()
+	encCfg := simapp.MakeTestEncodingConfig()
 	app := simapp.NewSimApp(logger, db, nil, true, map[int64]bool{}, tempDir, 0, encCfg)
 
 	serverCtx := server.NewDefaultContext()
@@ -149,7 +149,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 
 	cmd := server.ExportCmd(
 		func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string) (types.ExportedApp, error) {
-			encCfg := simapp.MakeEncodingConfig()
+			encCfg := simapp.MakeTestEncodingConfig()
 
 			var simApp *simapp.SimApp
 			if height != -1 {

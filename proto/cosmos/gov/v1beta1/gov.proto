@@ -29,6 +29,7 @@ enum VoteOption {
   VOTE_OPTION_NO_WITH_VETO = 4 [(gogoproto.enumvalue_customname) = "OptionNoWithVeto"];
 }
 
+// SubVote defines a unit of vote for vote split.
 message SubVote {
   VoteOption option = 1;
   string rate = 2 [

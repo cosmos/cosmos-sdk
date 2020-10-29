@@ -33,7 +33,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	s.cfg = network.DefaultConfig()
-	s.cfg.NumValidators = 1
+	s.cfg.NumValidators = 2
 
 	s.network = network.New(s.T(), s.cfg)
 
@@ -41,6 +41,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
 
 	// create a proposal with deposit
 	_, err = govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
@@ -52,6 +53,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	// vote for proposal
 	_, err = govtestutil.MsgVote(val.ClientCtx, val.Address.String(), "1", "yes")
+	s.Require().NoError(err)
+
+	// vote for proposal as val2
+	_, err = govtestutil.MsgVote(val2.ClientCtx, val2.Address.String(), "1", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05")
 	s.Require().NoError(err)
 
 	// create a proposal without deposit
@@ -679,7 +684,7 @@ func (s *IntegrationTestSuite) TestCmdQueryVotes() {
 
 				var votes types.QueryVotesResponse
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &votes), out.String())
-				s.Require().Len(votes.Votes, 1)
+				s.Require().Len(votes.Votes, 2)
 			}
 		})
 	}
@@ -687,11 +692,13 @@ func (s *IntegrationTestSuite) TestCmdQueryVotes() {
 
 func (s *IntegrationTestSuite) TestCmdQueryVote() {
 	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
 
 	testCases := []struct {
-		name      string
-		args      []string
-		expectErr bool
+		name        string
+		args        []string
+		expectErr   bool
+		expSubVotes types.SubVotes
 	}{
 		{
 			"get vote of non existing proposal",
@@ -700,6 +707,7 @@ func (s *IntegrationTestSuite) TestCmdQueryVote() {
 				val.Address.String(),
 			},
 			true,
+			types.SubVotes{types.NewSubVote(types.OptionYes, 1)},
 		},
 		{
 			"get vote by wrong voter",
@@ -708,6 +716,7 @@ func (s *IntegrationTestSuite) TestCmdQueryVote() {
 				"wrong address",
 			},
 			true,
+			types.SubVotes{types.NewSubVote(types.OptionYes, 1)},
 		},
 		{
 			"vote for valid proposal",
@@ -717,6 +726,22 @@ func (s *IntegrationTestSuite) TestCmdQueryVote() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
+			types.SubVotes{types.NewSubVote(types.OptionYes, 1)},
+		},
+		{
+			"split vote for valid proposal",
+			[]string{
+				"1",
+				val2.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			types.SubVotes{
+				types.SubVote{Option: types.OptionYes, Rate: sdk.NewDecWithPrec(60, 2)},
+				types.SubVote{Option: types.OptionNo, Rate: sdk.NewDecWithPrec(30, 2)},
+				types.SubVote{Option: types.OptionAbstain, Rate: sdk.NewDecWithPrec(5, 2)},
+				types.SubVote{Option: types.OptionNoWithVeto, Rate: sdk.NewDecWithPrec(5, 2)},
+			},
 		},
 	}
 
@@ -735,8 +760,11 @@ func (s *IntegrationTestSuite) TestCmdQueryVote() {
 
 				var vote types.Vote
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &vote), out.String())
-				s.Require().True(len(vote.SubVotes) == 1)
-				s.Require().Equal(types.OptionYes, vote.SubVotes[0].Option)
+				s.Require().Equal(len(vote.SubVotes), len(tc.expSubVotes))
+				for i, subvote := range tc.expSubVotes {
+					s.Require().Equal(subvote.Option, vote.SubVotes[i].Option)
+					s.Require().True(subvote.Rate.Equal(vote.SubVotes[i].Rate))
+				}
 			}
 		})
 	}
@@ -773,6 +801,30 @@ func (s *IntegrationTestSuite) TestNewCmdVote() {
 			[]string{
 				"1",
 				fmt.Sprintf("%s", "yes"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, 0,
+		},
+		{
+			"invalid valid split vote string",
+			[]string{
+				"1",
+				fmt.Sprintf("%s", "yes/0.6,no/0.3,abstain/0.05,no_with_veto/0.05"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0,
+		},
+		{
+			"valid split vote",
+			[]string{
+				"1",
+				fmt.Sprintf("%s", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),

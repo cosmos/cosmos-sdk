@@ -30,7 +30,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	s.cfg = network.DefaultConfig()
-	s.cfg.NumValidators = 1
+	s.cfg.NumValidators = 2
 
 	s.network = network.New(s.T(), s.cfg)
 
@@ -38,6 +38,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
 
 	// create a proposal with deposit
 	_, err = govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
@@ -49,6 +50,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	// vote for proposal
 	_, err = govtestutil.MsgVote(val.ClientCtx, val.Address.String(), "1", "yes")
+	s.Require().NoError(err)
+
+	// vote for proposal as val2
+	_, err = govtestutil.MsgVote(val2.ClientCtx, val2.Address.String(), "1", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05")
 	s.Require().NoError(err)
 
 	// create a proposal without deposit
@@ -149,33 +154,51 @@ func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
 
 func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
 	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
 
 	voterAddressBase64 := val.Address.String()
+	voter2AddressBase64 := val2.Address.String()
 
 	testCases := []struct {
-		name   string
-		url    string
-		expErr bool
+		name        string
+		url         string
+		expErr      bool
+		expSubVotes types.SubVotes
 	}{
 		{
 			"empty proposal",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "", voterAddressBase64),
 			true,
+			types.SubVotes{types.NewSubVote(types.OptionYes, 1)},
 		},
 		{
 			"get non existing proposal",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "10", voterAddressBase64),
 			true,
+			types.SubVotes{types.NewSubVote(types.OptionYes, 1)},
 		},
 		{
 			"get proposal with wrong voter address",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "1", "wrongVoterAddress"),
 			true,
+			types.SubVotes{types.NewSubVote(types.OptionYes, 1)},
 		},
 		{
 			"get proposal with id",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "1", voterAddressBase64),
 			false,
+			types.SubVotes{types.NewSubVote(types.OptionYes, 1)},
+		},
+		{
+			"get proposal with id for split vote",
+			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "1", voter2AddressBase64),
+			false,
+			types.SubVotes{
+				types.SubVote{Option: types.OptionYes, Rate: sdk.NewDecWithPrec(60, 2)},
+				types.SubVote{Option: types.OptionNo, Rate: sdk.NewDecWithPrec(30, 2)},
+				types.SubVote{Option: types.OptionAbstain, Rate: sdk.NewDecWithPrec(5, 2)},
+				types.SubVote{Option: types.OptionNoWithVeto, Rate: sdk.NewDecWithPrec(5, 2)},
+			},
 		},
 	}
 
@@ -193,8 +216,11 @@ func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NotEmpty(vote.Vote)
-				s.Require().True(len(vote.Vote.SubVotes) == 1)
-				s.Require().Equal(types.OptionYes, vote.Vote.SubVotes[0].Option)
+				s.Require().Equal(len(vote.Vote.SubVotes), len(tc.expSubVotes))
+				for i, subvote := range tc.expSubVotes {
+					s.Require().Equal(subvote.Option, vote.Vote.SubVotes[i].Option)
+					s.Require().True(subvote.Rate.Equal(vote.Vote.SubVotes[i].Rate))
+				}
 			}
 		})
 	}
@@ -233,7 +259,7 @@ func (s *IntegrationTestSuite) TestGetProposalVotesGRPC() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Len(votes.Votes, 1)
+				s.Require().Len(votes.Votes, 2)
 			}
 		})
 	}

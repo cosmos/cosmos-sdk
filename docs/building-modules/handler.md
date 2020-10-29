@@ -44,7 +44,7 @@ When possible, the existing module's [`Keeper`](keeper.md) should implement `Msg
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/bank/keeper/msg_server.go#L14-L16
 
 First, the `handler` function sets a new `EventManager` to the context to isolate events per `msg`.
-Then, a simple switch calls the appropriate `msgServer` method based on the `Msg` type. These methods are the ones that actually process `message`s. They can retrieve the `sdk.Context` from the `context.Context` parameter method using the `sdk.UnwrapSDKContext`:
+Then, a simple switch calls the appropriate `msgServer` method based on the `Msg` type. `msgServer` methods can retrieve the `sdk.Context` from the `context.Context` parameter method using the `sdk.UnwrapSDKContext`:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/bank/keeper/msg_server.go#L27
 

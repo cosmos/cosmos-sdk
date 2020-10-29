@@ -192,6 +192,11 @@ func (msg MsgVote) ValidateBasic() error {
 	if msg.Voter == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Voter)
 	}
+
+	if len(msg.SubVotes) == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, SubVotes(msg.SubVotes).String())
+	}
+
 	for _, subvote := range msg.SubVotes {
 		if !ValidSubVote(subvote) {
 			return sdkerrors.Wrap(ErrInvalidVote, subvote.String())

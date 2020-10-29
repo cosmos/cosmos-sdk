@@ -97,19 +97,22 @@ func TestMsgVote(t *testing.T) {
 	tests := []struct {
 		proposalID uint64
 		voterAddr  sdk.AccAddress
-		option     VoteOption
+		subvotes   SubVotes
 		expectPass bool
 	}{
-		{0, addrs[0], OptionYes, true},
-		{0, sdk.AccAddress{}, OptionYes, false},
-		{0, addrs[0], OptionNo, true},
-		{0, addrs[0], OptionNoWithVeto, true},
-		{0, addrs[0], OptionAbstain, true},
-		{0, addrs[0], VoteOption(0x13), false},
+		{0, addrs[0], SubVotes{NewSubVote(OptionYes, 1)}, true},
+		{0, sdk.AccAddress{}, SubVotes{NewSubVote(OptionYes, 1)}, false},
+		{0, addrs[0], SubVotes{NewSubVote(OptionNo, 1)}, true},
+		{0, addrs[0], SubVotes{NewSubVote(OptionNoWithVeto, 1)}, true},
+		{0, addrs[0], SubVotes{NewSubVote(OptionAbstain, 1)}, true},
+		{0, addrs[0], SubVotes{NewSubVote(OptionYes, 1), NewSubVote(OptionAbstain, 1)}, true},
+		{0, addrs[0], SubVotes{NewSubVote(OptionYes, 0)}, false},
+		{0, addrs[0], SubVotes{}, false},
+		{0, addrs[0], SubVotes{NewSubVote(VoteOption(0x13), 1)}, false},
 	}
 
 	for i, tc := range tests {
-		msg := NewMsgVote(tc.voterAddr, tc.proposalID, SubVotes{NewSubVote(tc.option, 1)})
+		msg := NewMsgVote(tc.voterAddr, tc.proposalID, tc.subvotes)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", i)
 		} else {

@@ -17,7 +17,7 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 	var (
 		clientA      string
 		clientB      string
-		version      string
+		version      *types.Version
 		emptyConnBID bool
 	)
 
@@ -35,14 +35,14 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 		}, true},
 		{"success with non empty version", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
-			version = types.GetCompatibleEncodedVersions()[0]
+			version = types.ExportedVersionsToProto(types.GetCompatibleVersions())[0]
 		}, true},
 		{"connection already exists", func() {
 			clientA, clientB, _, _ = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
 		}, false},
 		{"invalid version", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
-			version = "bad version"
+			version = &types.Version{}
 		}, false},
 		{"couldn't add connection to client", func() {
 			// swap client identifiers to result in client that does not exist
@@ -55,7 +55,7 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 		suite.Run(tc.msg, func() {
 			suite.SetupTest()    // reset
 			emptyConnBID = false // must be explicitly changed
-			version = ""         // must be explicitly changed
+			version = nil        // must be explicitly changed
 
 			tc.malleate()
 
@@ -83,7 +83,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 	var (
 		clientA            string
 		clientB            string
-		versions           []string
+		versions           []exported.Version
 		consensusHeight    exported.Height
 		counterpartyClient exported.ClientState
 	)
@@ -198,9 +198,8 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			// retrieve client state of chainA to pass as counterpartyClient
 			counterpartyClient = suite.chainA.GetClientState(clientA)
 
-			version, err := types.NewVersion("0.0", nil).Encode()
-			suite.Require().NoError(err)
-			versions = []string{version}
+			version := types.NewVersion("0.0", nil)
+			versions = []exported.Version{version}
 		}, false},
 		{"connection state verification failed", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
@@ -274,7 +273,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			suite.Require().True(found)
 
 			connection.State = types.INIT
-			connection.Versions = []string{"invalid version"}
+			connection.Versions = []*types.Version{&types.Version{}}
 
 			suite.chainB.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainB.GetContext(), connB.ID, connection)
 
@@ -290,9 +289,9 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 		tc := tc
 
 		suite.Run(tc.msg, func() {
-			suite.SetupTest()                               // reset
-			consensusHeight = clienttypes.ZeroHeight()      // must be explicitly changed in malleate
-			versions = types.GetCompatibleEncodedVersions() // must be explicitly changed in malleate
+			suite.SetupTest()                          // reset
+			consensusHeight = clienttypes.ZeroHeight() // must be explicitly changed in malleate
+			versions = types.GetCompatibleVersions()   // must be explicitly changed in malleate
 
 			tc.malleate()
 
@@ -344,7 +343,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 		clientB                  string
 		counterpartyConnectionID string
 		consensusHeight          exported.Height
-		version                  string
+		version                  *types.Version
 		counterpartyClient       exported.ClientState
 	)
 
@@ -533,7 +532,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
 			suite.Require().NoError(err)
 
-			version = "2.0"
+			version = types.NewVersion("2.0", nil)
 		}, false},
 		{"connection is in TRYOPEN but the set version in the connection is invalid", func() {
 			// chainA is in TRYOPEN, chainB is in TRYOPEN
@@ -556,7 +555,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			// retrieve client state of chainB to pass as counterpartyClient
 			counterpartyClient = suite.chainB.GetClientState(clientB)
 
-			version = "2.0"
+			version = types.NewVersion("2.0", nil)
 		}, false},
 		{"incompatible IBC versions", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
@@ -570,7 +569,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			suite.Require().NoError(err)
 
 			// set version to a non-compatible version
-			version = "(2.0,[])"
+			version = types.NewVersion("2.0", nil)
 		}, false},
 		{"empty version", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
@@ -583,7 +582,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
 			suite.Require().NoError(err)
 
-			version = ""
+			version = &types.Version{}
 		}, false},
 		{"feature set verification failed - unsupported feature", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
@@ -596,8 +595,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
 			suite.Require().NoError(err)
 
-			version, err = types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"ORDER_ORDERED", "ORDER_UNORDERED", "ORDER_DAG"}).Encode()
-			suite.Require().NoError(err)
+			version = types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"ORDER_ORDERED", "ORDER_UNORDERED", "ORDER_DAG"})
 		}, false},
 		{"self consensus state not found", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
@@ -663,10 +661,10 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 	for _, tc := range testCases {
 		tc := tc
 		suite.Run(tc.msg, func() {
-			suite.SetupTest()                                 // reset
-			version = types.GetCompatibleEncodedVersions()[0] // must be explicitly changed in malleate
-			consensusHeight = clienttypes.ZeroHeight()        // must be explicitly changed in malleate
-			counterpartyConnectionID = ""                     // must be explicitly changed in malleate
+			suite.SetupTest()                                                 // reset
+			version = types.ExportedVersionsToProto(types.GetCompatibleVersions())[0] // must be explicitly changed in malleate
+			consensusHeight = clienttypes.ZeroHeight()                        // must be explicitly changed in malleate
+			counterpartyConnectionID = ""                                     // must be explicitly changed in malleate
 
 			tc.malleate()
 

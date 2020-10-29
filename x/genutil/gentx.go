@@ -95,7 +95,7 @@ func DeliverGenTxs(
 	ctx sdk.Context, genTxs []json.RawMessage,
 	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn,
 	txEncodingConfig client.TxEncodingConfig,
-) []abci.ValidatorUpdate {
+) ([]abci.ValidatorUpdate, error) {
 
 	for _, genTx := range genTxs {
 		tx, err := txEncodingConfig.TxJSONDecoder()(genTx)

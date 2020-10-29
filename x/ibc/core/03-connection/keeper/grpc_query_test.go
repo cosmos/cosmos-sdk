@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) TestQueryConnection() {
 				connB := suite.chainB.GetFirstTestConnection(clientB, clientA)
 
 				counterparty := types.NewCounterparty(clientB, connB.ID, suite.chainB.GetPrefix())
-				expConnection = types.NewConnectionEnd(types.INIT, clientA, counterparty, types.GetCompatibleEncodedVersions())
+				expConnection = types.NewConnectionEnd(types.INIT, clientA, counterparty, types.ExportedVersionsToProto(types.GetCompatibleVersions()))
 				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, expConnection)
 
 				req = &types.QueryConnectionRequest{
@@ -121,9 +121,9 @@ func (suite *KeeperTestSuite) TestQueryConnections() {
 				counterparty2 := types.NewCounterparty(clientB, connB1.ID, suite.chainB.GetPrefix())
 				counterparty3 := types.NewCounterparty(clientB1, connB2.ID, suite.chainB.GetPrefix())
 
-				conn1 := types.NewConnectionEnd(types.OPEN, clientA, counterparty1, types.GetCompatibleEncodedVersions())
-				conn2 := types.NewConnectionEnd(types.INIT, clientA, counterparty2, types.GetCompatibleEncodedVersions())
-				conn3 := types.NewConnectionEnd(types.OPEN, clientA1, counterparty3, types.GetCompatibleEncodedVersions())
+				conn1 := types.NewConnectionEnd(types.OPEN, clientA, counterparty1, types.ExportedVersionsToProto(types.GetCompatibleVersions()))
+				conn2 := types.NewConnectionEnd(types.INIT, clientA, counterparty2, types.ExportedVersionsToProto(types.GetCompatibleVersions()))
+				conn3 := types.NewConnectionEnd(types.OPEN, clientA1, counterparty3, types.ExportedVersionsToProto(types.GetCompatibleVersions()))
 
 				iconn1 := types.NewIdentifiedConnection(connA0.ID, conn1)
 				iconn2 := types.NewIdentifiedConnection(connA1.ID, conn2)

@@ -30,7 +30,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	s.cfg = network.DefaultConfig()
-	s.cfg.NumValidators = 2
+	s.cfg.NumValidators = 1
 
 	s.network = network.New(s.T(), s.cfg)
 
@@ -38,7 +38,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
-	val2 := s.network.Validators[1]
 
 	// create a proposal with deposit
 	_, err = govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
@@ -52,15 +51,23 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	_, err = govtestutil.MsgVote(val.ClientCtx, val.Address.String(), "1", "yes")
 	s.Require().NoError(err)
 
-	// vote for proposal as val2
-	_, err = govtestutil.MsgVote(val2.ClientCtx, val2.Address.String(), "1", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05")
-	s.Require().NoError(err)
-
 	// create a proposal without deposit
 	_, err = govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 2", "Where is the title!?", types.ProposalTypeText)
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
+	// create a proposal3 with deposit
+	_, err = govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
+		"Text Proposal 3", "Where is the title!?", types.ProposalTypeText,
+		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String()))
+	s.Require().NoError(err)
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
+	// vote for proposal3 as val
+	_, err = govtestutil.MsgVote(val.ClientCtx, val.Address.String(), "3", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05")
 	s.Require().NoError(err)
 }
 
@@ -146,7 +153,7 @@ func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
 				s.Require().Empty(proposals.Proposals)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Len(proposals.Proposals, 2)
+				s.Require().Len(proposals.Proposals, 3)
 			}
 		})
 	}
@@ -154,10 +161,8 @@ func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
 
 func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
 	val := s.network.Validators[0]
-	val2 := s.network.Validators[1]
 
 	voterAddressBase64 := val.Address.String()
-	voter2AddressBase64 := val2.Address.String()
 
 	testCases := []struct {
 		name        string
@@ -191,7 +196,7 @@ func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
 		},
 		{
 			"get proposal with id for split vote",
-			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "1", voter2AddressBase64),
+			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "3", voterAddressBase64),
 			false,
 			types.SubVotes{
 				types.SubVote{Option: types.OptionYes, Rate: sdk.NewDecWithPrec(60, 2)},
@@ -259,7 +264,7 @@ func (s *IntegrationTestSuite) TestGetProposalVotesGRPC() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Len(votes.Votes, 2)
+				s.Require().Len(votes.Votes, 1)
 			}
 		})
 	}

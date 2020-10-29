@@ -67,9 +67,9 @@ For clients that want to display the source of the token, it is recommended to u
 Using the gRPC gataway client service the steps above would be, with a given IBC token `ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2`:
 
 1. `GET /ibc_transfer/v1beta1/denom_traces/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2` -> `{"path": "transfer/channelToA", "base_denom": "uatom"}`
-        1. `GET /ibc/channel/v1beta1/channels/channelToA/ports/transfer/client_state"` -> `{"client_id": "clientA", "chain-id": "chainA", ...}`
+    1. `GET /ibc/channel/v1beta1/channels/channelToA/ports/transfer/client_state"` -> `{"client_id": "clientA", "chain-id": "chainA", ...}`
 1. `GET /ibc/channel/v1beta1/channels/channelToA/ports/transfer"` -> `{"channel_id": "channelToA", port_id": "transfer", counterparty: {"channel_id": "channelToB", port_id": "transfer"}, ...}`
-1. `GET /ibc/channel/v1beta1/channels/channelToB/ports/transfer/client_state" -> {"client_id": "clientB", "chain-id": "chainB",}
+1. `GET /ibc/channel/v1beta1/channels/channelToB/ports/transfer/client_state" -> {"client_id": "clientB", "chain-id": "chainB",}`
 
 Then, the token transfer chain path for the `uatom` denomination would be: `chainB` -> `chainA`.
 

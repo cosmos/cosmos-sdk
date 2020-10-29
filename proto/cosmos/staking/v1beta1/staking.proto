@@ -2,10 +2,13 @@ syntax = "proto3";
 package cosmos.staking.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "tendermint/types/types.proto";
-import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "tendermint/types/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
@@ -73,10 +76,12 @@ message Validator {
   option (gogoproto.goproto_getters)  = false;
 
   string operator_address = 1 [(gogoproto.moretags) = "yaml:\"operator_address\""];
-  string consensus_pubkey = 2 [(gogoproto.moretags) = "yaml:\"consensus_pubkey\""];
-  bool   jailed           = 3;
-  BondStatus status       = 4;
-  string tokens = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  google.protobuf.Any consensus_pubkey = 2 [
+    (cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey",
+    (gogoproto.moretags) = "yaml:\"consensus_pubkey\""];
+  bool   jailed       = 3;
+  BondStatus status   = 4;
+  string tokens       = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   string delegator_shares = 6 [
     (gogoproto.moretags)   = "yaml:\"delegator_shares\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",

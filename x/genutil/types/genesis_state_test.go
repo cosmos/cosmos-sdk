@@ -37,21 +37,22 @@ func TestValidateGenesisMultipleMessages(t *testing.T) {
 	desc := stakingtypes.NewDescription("testname", "", "", "", "")
 	comm := stakingtypes.CommissionRates{}
 
-	msg1 := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk1.Address()), pk1,
+	msg1, err := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk1.Address()), pk1,
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt())
-
-	msg2 := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk2.Address()), pk2,
-		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt())
-
-	txGen := simapp.MakeEncodingConfig().TxConfig
-	txBuilder := txGen.NewTxBuilder()
-	err := txBuilder.SetMsgs(msg1, msg2)
 	require.NoError(t, err)
+
+	msg2, err := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk2.Address()), pk2,
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt())
+	require.NoError(t, err)
+
+	txGen := simapp.MakeTestEncodingConfig().TxConfig
+	txBuilder := txGen.NewTxBuilder()
+	require.NoError(t, txBuilder.SetMsgs(msg1, msg2))
 
 	tx := txBuilder.GetTx()
 	genesisState := types.NewGenesisStateFromTx(txGen.TxJSONEncoder(), []sdk.Tx{tx})
 
-	err = types.ValidateGenesis(genesisState, simapp.MakeEncodingConfig().TxConfig.TxJSONDecoder())
+	err = types.ValidateGenesis(genesisState, simapp.MakeTestEncodingConfig().TxConfig.TxJSONDecoder())
 	require.Error(t, err)
 }
 
@@ -60,7 +61,7 @@ func TestValidateGenesisBadMessage(t *testing.T) {
 
 	msg1 := stakingtypes.NewMsgEditValidator(sdk.ValAddress(pk1.Address()), desc, nil, nil)
 
-	txGen := simapp.MakeEncodingConfig().TxConfig
+	txGen := simapp.MakeTestEncodingConfig().TxConfig
 	txBuilder := txGen.NewTxBuilder()
 	err := txBuilder.SetMsgs(msg1)
 	require.NoError(t, err)
@@ -68,7 +69,7 @@ func TestValidateGenesisBadMessage(t *testing.T) {
 	tx := txBuilder.GetTx()
 	genesisState := types.NewGenesisStateFromTx(txGen.TxJSONEncoder(), []sdk.Tx{tx})
 
-	err = types.ValidateGenesis(genesisState, simapp.MakeEncodingConfig().TxConfig.TxJSONDecoder())
+	err = types.ValidateGenesis(genesisState, simapp.MakeTestEncodingConfig().TxConfig.TxJSONDecoder())
 	require.Error(t, err)
 }
 

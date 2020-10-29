@@ -56,8 +56,8 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 // RegisterRESTRoutes registers no REST routes for the crisis module.
 func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
-// RegisterGRPCRoutes registers the gRPC Gateway routes for the capability module.
-func (AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {}
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the capability module.
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *runtime.ServeMux) {}
 
 // GetTxCmd returns the root tx command for the crisis module.
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -112,9 +112,10 @@ func (AppModule) QuerierRoute() string { return "" }
 // LegacyQuerierHandler returns no sdk.Querier.
 func (AppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier { return nil }
 
-// RegisterQueryService registers a GRPC query service to respond to the
-// module-specific GRPC queries.
-func (am AppModule) RegisterServices(module.Configurator) {}
+// RegisterServices registers module services.
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), am.keeper)
+}
 
 // InitGenesis performs genesis initialization for the crisis module. It returns
 // no validator updates.

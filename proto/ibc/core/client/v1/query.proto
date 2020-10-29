@@ -50,10 +50,8 @@ message QueryClientStateResponse {
   google.protobuf.Any client_state = 1;
   // merkle proof of existence
   bytes proof = 2;
-  // merkle proof path
-  string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryClientStatesRequest is the request type for the Query/ClientStates RPC
@@ -94,10 +92,8 @@ message QueryConsensusStateResponse {
   google.protobuf.Any consensus_state = 1;
   // merkle proof of existence
   bytes proof = 2;
-  // merkle proof path
-  string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryConsensusStatesRequest is the request type for the Query/ConsensusStates

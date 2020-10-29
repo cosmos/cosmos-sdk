@@ -2,7 +2,9 @@ package ibc_test
 
 import (
 	"fmt"
+	"testing"
 
+	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,6 +21,42 @@ import (
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/09-localhost/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
+
+const (
+	connectionID  = "connectionidone"
+	clientID      = "clientidone"
+	connectionID2 = "connectionidtwo"
+	clientID2     = "clientidtwo"
+
+	port1 = "firstport"
+	port2 = "secondport"
+
+	channel1 = "firstchannel"
+	channel2 = "secondchannel"
+)
+
+var clientHeight = clienttypes.NewHeight(0, 10)
+
+type IBCTestSuite struct {
+	suite.Suite
+
+	coordinator *ibctesting.Coordinator
+
+	chainA *ibctesting.TestChain
+	chainB *ibctesting.TestChain
+}
+
+// SetupTest creates a coordinator with 2 test chains.
+func (suite *IBCTestSuite) SetupTest() {
+	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
+
+	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
+	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
+}
+
+func TestIBCTestSuite(t *testing.T) {
+	suite.Run(t, new(IBCTestSuite))
+}
 
 func (suite *IBCTestSuite) TestValidateGenesis() {
 	header := suite.chainA.CreateTMClientHeader(suite.chainA.ChainID, suite.chainA.CurrentHeader.Height, clienttypes.NewHeight(0, uint64(suite.chainA.CurrentHeader.Height-1)), suite.chainA.CurrentHeader.Time, suite.chainA.Vals, suite.chainA.Vals, suite.chainA.Signers)
@@ -62,7 +100,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				),
 				ConnectionGenesis: connectiontypes.NewGenesisState(
 					[]connectiontypes.IdentifiedConnection{
-						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{ibctesting.ConnectionVersion})),
+						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []*connectiontypes.Version{ibctesting.ConnectionVersion})),
 					},
 					[]connectiontypes.ConnectionPaths{
 						connectiontypes.NewConnectionPaths(clientID, []string{host.ConnectionPath(connectionID)}),
@@ -121,7 +159,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis: clienttypes.DefaultGenesisState(),
 				ConnectionGenesis: connectiontypes.NewGenesisState(
 					[]connectiontypes.IdentifiedConnection{
-						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, "(CLIENTIDONE)", connectiontypes.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{"1.0.0"})),
+						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, "(CLIENTIDONE)", connectiontypes.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []*connectiontypes.Version{connectiontypes.NewVersion("1.1", nil)})),
 					},
 					[]connectiontypes.ConnectionPaths{
 						connectiontypes.NewConnectionPaths(clientID, []string{host.ConnectionPath(connectionID)}),
@@ -196,7 +234,7 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 				),
 				ConnectionGenesis: connectiontypes.NewGenesisState(
 					[]connectiontypes.IdentifiedConnection{
-						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []string{ibctesting.ConnectionVersion})),
+						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []*connectiontypes.Version{ibctesting.ConnectionVersion})),
 					},
 					[]connectiontypes.ConnectionPaths{
 						connectiontypes.NewConnectionPaths(clientID, []string{host.ConnectionPath(connectionID)}),

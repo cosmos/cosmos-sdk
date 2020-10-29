@@ -58,7 +58,7 @@ The invoked `msgServer` method returns a `proto.Message` response and an `error`
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/228728cce2af8d494c8b4e996d011492139b04ab/x/gov/module.go#L143-L146
 
-## [Legacy `Msg`s](messages-and-queries.md#legacy-msgs)
+## Legacy Amino `Msg`s
 
 ### `handler` type
 

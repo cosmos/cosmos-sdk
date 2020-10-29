@@ -24,7 +24,7 @@ See an example of a `Msg` service definition from `x/bank` module:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L10-L17
 
-For backwards compatibility with [legacy `Msg`s](#legacy-msgs), existing `Msg` types should be used as the request parameter for `service` definitions. Newer `Msg` types which only support `service` definitions should use the more canonical `Msg...Request` names.
+For backwards compatibility with [legacy amino `Msg`s](#legacy-amino-msgs), existing `Msg` types should be used as the request parameter for `service` definitions. Newer `Msg` types which only support `service` definitions should use the more canonical `Msg...Request` names.
 
 `Msg` request types need to implement the `MsgRequest` interface which is a simplified version of the `Msg` interface described [below](#legacy-msgs) with only `ValidateBasic()` and `GetSigners()` methods.
 
@@ -38,9 +38,11 @@ A `RegisterMsgServer` method is also generated and should be used to register th
 In order for clients (CLI and grpc-gateway) to have these URLs registered, the SDK provides the function `RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.ServiceDesc)` that should be called inside module's [`RegisterInterfaces`](module-manager.md#appmodulebasic) method, using proto-generated `&_Msg_serviceDesc` as `*grpc.ServiceDesc` argument.
 `RegisterInterfaces` should be called before `MsgServiceRouter` `RegisterService(sd *grpc.ServiceDesc, handler interface{})` so that all `Msg` types are already registered by then.
 
-### Legacy `Msg`s
+### Legacy Amino `Msg`s
 
-Legacy `Msg`s are defined as single Protobuf messages. The `message`'s definition usually includes a list of parameters needed to process the message that will be provided by end-users when they want to create a new transaction containing said `message`.
+This way of defining messages is deprecated and using [`Msg` services](#msg-services) should be prefered.
+
+Legacy Amino `Msg`s can be defined as regular `struct`. The `message`'s definition usually includes a list of parameters needed to process the message that will be provided by end-users when they want to create a new transaction containing said `message`.
 
 Here's an example of a Protobuf message definition:
 

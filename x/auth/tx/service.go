@@ -81,8 +81,8 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 	// Create a proto codec, we need it to unmarshal the tx bytes.
 	cdc := codec.NewProtoCodec(s.clientCtx.InterfaceRegistry)
 	var protoTx txtypes.Tx
-	err = cdc.UnmarshalBinaryBare(result.Tx, &protoTx)
-	if err != nil {
+
+	if err := cdc.UnmarshalBinaryBare(result.Tx, &protoTx); err != nil {
 		return nil, err
 	}
 

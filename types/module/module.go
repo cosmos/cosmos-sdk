@@ -37,7 +37,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -110,9 +109,8 @@ func (bm BasicManager) ValidateGenesis(cdc codec.JSONMarshaler, txEncCfg client.
 
 // RegisterRESTRoutes registers all module rest routes
 func (bm BasicManager) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
-	r := rest.WithHTTPDeprecationHeaders(rtr)
 	for _, b := range bm {
-		b.RegisterRESTRoutes(clientCtx, r)
+		b.RegisterRESTRoutes(clientCtx, rtr)
 	}
 }
 

@@ -13,7 +13,8 @@ const (
 )
 
 // RegisterRoutes registers the auth module REST routes.
-func RegisterRoutes(clientCtx client.Context, r *mux.Router, storeName string) {
+func RegisterRoutes(clientCtx client.Context, rtr *mux.Router, storeName string) {
+	r := rest.WithHTTPDeprecationHeaders(rtr)
 	r.HandleFunc(
 		"/auth/accounts/{address}", QueryAccountRequestHandlerFn(storeName, clientCtx),
 	).Methods(MethodGet)

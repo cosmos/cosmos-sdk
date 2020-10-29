@@ -18,7 +18,7 @@ When a transaction is relayed from the underlying consensus engine to the SDK ap
 
 ### `Msg` Services
 
-Starting from v0.40, defining Protobuf `Msg` services is the recommended way to handle messages. A `Msg` service should be created per module, typically in `tx.proto` (see more info about [conventions and naming](../core/encoding.md#faq)). This service lists a module messages as Protobuf service methods, starting with `rpc`.
+Starting from v0.40, defining Protobuf `Msg` services is the recommended way to handle messages. A `Msg` protobuf service should be created per module, typically in `tx.proto` (see more info about [conventions and naming](../core/encoding.md#faq)). It must have an RPC service method defined for each message in the module.
 
 See an example of a `Msg` service definition from `x/bank` module:
 

@@ -58,7 +58,7 @@ func (k Keeper) Routes() []types.InvarRoute {
 	return k.routes
 }
 
-// Invariants returns all the registered Crisis keeper invariants.
+// Invariants returns a copy of all registered Crisis keeper invariants.
 func (k Keeper) Invariants() []sdk.Invariant {
 	invars := make([]sdk.Invariant, len(k.routes))
 	for i, route := range k.routes {
@@ -74,8 +74,9 @@ func (k Keeper) AssertInvariants(ctx sdk.Context) {
 
 	start := time.Now()
 	invarRoutes := k.Routes()
-
-	for _, ir := range invarRoutes {
+	fmt.Println("invarRoutes #", len(invarRoutes))
+	for i, ir := range invarRoutes {
+		fmt.Println("invariat nr:", i)
 		if res, stop := ir.Invar(ctx); stop {
 			// TODO: Include app name as part of context to allow for this to be
 			// variable.
@@ -85,9 +86,8 @@ func (k Keeper) AssertInvariants(ctx sdk.Context) {
 		}
 	}
 
-	end := time.Now()
-	diff := end.Sub(start)
-
+	diff := time.Since(start)
+	fmt.Println(">>>asserted all invariants", "duration", diff, "height", ctx.BlockHeight())
 	logger.Info("asserted all invariants", "duration", diff, "height", ctx.BlockHeight())
 }
 

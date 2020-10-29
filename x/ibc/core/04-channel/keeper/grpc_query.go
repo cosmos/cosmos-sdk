@@ -40,7 +40,7 @@ func (q Keeper) Channel(c context.Context, req *types.QueryChannelRequest) (*typ
 	}
 
 	selfHeight := clienttypes.GetSelfHeight(ctx)
-	return types.NewQueryChannelResponse(req.PortId, req.ChannelId, channel, nil, selfHeight), nil
+	return types.NewQueryChannelResponse(channel, nil, selfHeight), nil
 }
 
 // Channels implements the Query/Channels gRPC method
@@ -222,7 +222,7 @@ func (q Keeper) PacketCommitment(c context.Context, req *types.QueryPacketCommit
 	}
 
 	selfHeight := clienttypes.GetSelfHeight(ctx)
-	return types.NewQueryPacketCommitmentResponse(req.PortId, req.ChannelId, req.Sequence, commitmentBz, nil, selfHeight), nil
+	return types.NewQueryPacketCommitmentResponse(commitmentBz, nil, selfHeight), nil
 }
 
 // PacketCommitments implements the Query/PacketCommitments gRPC method
@@ -287,7 +287,7 @@ func (q Keeper) PacketAcknowledgement(c context.Context, req *types.QueryPacketA
 	}
 
 	selfHeight := clienttypes.GetSelfHeight(ctx)
-	return types.NewQueryPacketAcknowledgementResponse(req.PortId, req.ChannelId, req.Sequence, acknowledgementBz, nil, selfHeight), nil
+	return types.NewQueryPacketAcknowledgementResponse(acknowledgementBz, nil, selfHeight), nil
 }
 
 // UnreceivedPackets implements the Query/UnreceivedPackets gRPC method. Given
@@ -411,7 +411,7 @@ func (q Keeper) NextSequenceReceive(c context.Context, req *types.QueryNextSeque
 	}
 
 	selfHeight := clienttypes.GetSelfHeight(ctx)
-	return types.NewQueryNextSequenceReceiveResponse(req.PortId, req.ChannelId, sequence, nil, selfHeight), nil
+	return types.NewQueryNextSequenceReceiveResponse(sequence, nil, selfHeight), nil
 }
 
 func validategRPCRequest(portID, channelID string) error {

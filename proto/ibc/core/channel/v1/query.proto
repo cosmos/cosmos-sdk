@@ -94,10 +94,8 @@ message QueryChannelResponse {
   ibc.core.channel.v1.Channel channel = 1;
   // merkle proof of existence
   bytes proof = 2;
-  // merkle proof path
-  string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryChannelsRequest is the request type for the Query/Channels RPC method
@@ -152,10 +150,8 @@ message QueryChannelClientStateResponse {
   ibc.core.client.v1.IdentifiedClientState identified_client_state = 1;
   // merkle proof of existence
   bytes proof = 2;
-  // merkle proof path
-  string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryChannelConsensusStateRequest is the request type for the
@@ -180,10 +176,8 @@ message QueryChannelConsensusStateResponse {
   string client_id = 2;
   // merkle proof of existence
   bytes proof = 3;
-  // merkle proof path
-  string proof_path = 4;
   // height at which the proof was retrieved
-  ibc.core.client.v1.Height proof_height = 5 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
 }
 
 // QueryPacketCommitmentRequest is the request type for the
@@ -205,10 +199,8 @@ message QueryPacketCommitmentResponse {
   bytes commitment = 1;
   // merkle proof of existence
   bytes proof = 2;
-  // merkle proof path
-  string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryPacketCommitmentsRequest is the request type for the
@@ -251,10 +243,8 @@ message QueryPacketAcknowledgementResponse {
   bytes acknowledgement = 1;
   // merkle proof of existence
   bytes proof = 2;
-  // merkle proof path
-  string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryUnreceivedPacketsRequest is the request type for the
@@ -313,8 +303,6 @@ message QueryNextSequenceReceiveResponse {
   uint64 next_sequence_receive = 1;
   // merkle proof of existence
   bytes proof = 2;
-  // merkle proof path
-  string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 3 [(gogoproto.nullable) = false];
 }

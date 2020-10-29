@@ -23,28 +23,31 @@ However, often times the entity owning that address might not be a single indivi
 We modify the vote structs to be
 
 ```
-Vote {
-    ProposalId  int64
-    Voter       sdk.Address
-    Options     []Option
-    Rates       []sdk.Dec
+type WeightedVoteOption struct {
+  Option string
+  Weight sdk.Dec
+}
+
+type Vote struct {
+  ProposalID int64
+  Voter      sdk.Address
+  Options    []WeightedVoteOption
 }
 ```
 
 The `ValidateBasic` of a MsgVote struct would require that
-1. The length of the Options slice is equal to the length of Rates slice
-2. The sum of all the Rates is equal to 1.0
-3. No Option is repeated
+1. The sum of all the Rates is equal to 1.0
+2. No Option is repeated
 
 The governance tally function will iterate over all the options in a vote and add to the tally the result of the voter's voting power * the rate for that option.
 
 ```
 tally() {
-    map tally
+    results := map[types.VoteOption]sdk.Dec
 
-    for (_, vote) in votes {
-        for (i, options) in vote{
-            tally.option += getVotingPower(vote.voter) * vote.rate[i]
+    for _, vote := range votes {
+        for i, weightedOption := range vote.Options {
+            results[weightedOption.Option] += getVotingPower(vote.voter) * weightedOption.Weight
         }
     }
 }
@@ -72,7 +75,7 @@ to maintain backwards compatibility.
 ## Consequences
 
 ### Positive
-- It can make more accurate voting process especially for big validators.
+- Can make the voting process more accurate for addresses representing multiple stakeholders, often some of the largest addresses.
 
 ### Negative
 - 

@@ -95,7 +95,7 @@ func VoteOptionFromString(str string) (VoteOption, error) {
 // SubVotesFromString returns a SubVotes from a string. It returns an error
 // if the string is invalid.
 func SubVotesFromString(str string) (SubVotes, error) {
-	var subvotes SubVotes
+	subvotes := SubVotes{}
 	for _, subvote := range strings.Split(str, ",") {
 		fields := strings.Split(subvote, "=")
 		option, err := VoteOptionFromString(fields[0])

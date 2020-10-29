@@ -28,7 +28,7 @@ func NormalizeVoteOption(option string) string {
 
 // NormalizeSubVotes - normalize subvotes
 func NormalizeSubVotes(subvotes string) string {
-	var newSubVotes []string
+	newSubVotes := []string{}
 	for _, subvote := range strings.Split(subvotes, ",") {
 		fields := strings.Split(subvote, "=")
 		fields[0] = NormalizeVoteOption(fields[0])

@@ -3,30 +3,31 @@ package tx
 import (
 	"context"
 	"encoding/hex"
-	fmt "fmt"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-// BaseAppSimulateFn is the signature of the Baseapp#Simulate function.
-type BaseAppSimulateFn func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error)
+// baseAppSimulateFn is the signature of the Baseapp#Simulate function.
+type baseAppSimulateFn func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error)
 
 type txServer struct {
 	clientCtx         client.Context
-	simulate          BaseAppSimulateFn
+	simulate          baseAppSimulateFn
 	interfaceRegistry codectypes.InterfaceRegistry
 }
 
 // NewTxServer creates a new TxService server.
-func NewTxServer(clientCtx client.Context, simulate BaseAppSimulateFn, interfaceRegistry codectypes.InterfaceRegistry) ServiceServer {
+func NewTxServer(clientCtx client.Context, simulate baseAppSimulateFn, interfaceRegistry codectypes.InterfaceRegistry) txtypes.ServiceServer {
 	return txServer{
 		clientCtx:         clientCtx,
 		simulate:          simulate,
@@ -34,10 +35,10 @@ func NewTxServer(clientCtx client.Context, simulate BaseAppSimulateFn, interface
 	}
 }
 
-var _ ServiceServer = txServer{}
+var _ txtypes.ServiceServer = txServer{}
 
 // Simulate implements the ServiceServer.Simulate RPC method.
-func (s txServer) Simulate(ctx context.Context, req *SimulateRequest) (*SimulateResponse, error) {
+func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*txtypes.SimulateResponse, error) {
 	if req.Tx == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
 	}
@@ -56,14 +57,14 @@ func (s txServer) Simulate(ctx context.Context, req *SimulateRequest) (*Simulate
 		return nil, err
 	}
 
-	return &SimulateResponse{
+	return &txtypes.SimulateResponse{
 		GasInfo: &gasInfo,
 		Result:  result,
 	}, nil
 }
 
 // GetTx implements the ServiceServer.GetTx RPC method.
-func (s txServer) GetTx(ctx context.Context, req *GetTxRequest) (*GetTxResponse, error) {
+func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtypes.GetTxResponse, error) {
 	// We get hash as a hex string in the request, convert it to bytes.
 	hash, err := hex.DecodeString(req.Hash)
 	if err != nil {
@@ -79,20 +80,32 @@ func (s txServer) GetTx(ctx context.Context, req *GetTxRequest) (*GetTxResponse,
 
 	// Create a proto codec, we need it to unmarshal the tx bytes.
 	cdc := codec.NewProtoCodec(s.clientCtx.InterfaceRegistry)
-	var protoTx Tx
+	var protoTx txtypes.Tx
 	err = cdc.UnmarshalBinaryBare(result.Tx, &protoTx)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(protoTx)
 
-	return &GetTxResponse{
+	return &txtypes.GetTxResponse{
 		Tx: &protoTx,
 	}, nil
+}
+
+// RegisterTxService registers the tx service on the gRPC router.
+func RegisterTxService(
+	qrt *baseapp.GRPCQueryRouter,
+	clientCtx client.Context,
+	simulateFn baseAppSimulateFn,
+	interfaceRegistry codectypes.InterfaceRegistry,
+) {
+	txtypes.RegisterServiceServer(
+		qrt,
+		NewTxServer(clientCtx, simulateFn, interfaceRegistry),
+	)
 }
 
 // RegisterGRPCGatewayRoutes mounts the tx service's GRPC-gateway routes on the
 // given Mux.
 func RegisterGRPCGatewayRoutes(clientConn gogogrpc.ClientConn, mux *runtime.ServeMux) {
-	RegisterServiceHandlerClient(context.Background(), mux, NewServiceClient(clientConn))
+	txtypes.RegisterServiceHandlerClient(context.Background(), mux, txtypes.NewServiceClient(clientConn))
 }

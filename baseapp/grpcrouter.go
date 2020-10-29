@@ -9,11 +9,9 @@ import (
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/proto"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 var protoCodec = encoding.GetCodec(proto.Name)
@@ -109,17 +107,5 @@ func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry codectypes.In
 	reflection.RegisterReflectionServiceServer(
 		qrt,
 		reflection.NewReflectionServiceServer(interfaceRegistry),
-	)
-}
-
-// RegisterTxService registers the tx service on the gRPC router.
-func (qrt *GRPCQueryRouter) RegisterTxService(
-	clientCtx client.Context,
-	simulateFn tx.BaseAppSimulateFn,
-	interfaceRegistry codectypes.InterfaceRegistry,
-) {
-	tx.RegisterServiceServer(
-		qrt,
-		tx.NewTxServer(clientCtx, simulateFn, interfaceRegistry),
 	)
 }

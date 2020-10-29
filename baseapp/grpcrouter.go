@@ -72,7 +72,8 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 		if found {
 			panic(
 				fmt.Errorf(
-					"grpc query service %s has already been registered. Please make sure to only register each service once",
+					"gRPC query service %s has already been registered. Please make sure to only register each service once. "+
+						"This usually means that there are conflicting modules registering the same gRPC query service",
 					fqName,
 				),
 			)

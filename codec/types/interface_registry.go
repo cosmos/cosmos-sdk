@@ -127,6 +127,11 @@ func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, im
 	}
 }
 
+// RegisterCustomTypeURL registers a concrete type which implements the given
+// interface under `typeURL`.
+//
+// This function PANICs if different concrete types are registered under the
+// same typeURL.
 func (registry *interfaceRegistry) RegisterCustomTypeURL(iface interface{}, typeURL string, impl proto.Message) {
 	registry.registerImpl(iface, typeURL, impl)
 }

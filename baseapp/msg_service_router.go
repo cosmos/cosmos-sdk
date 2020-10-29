@@ -76,7 +76,8 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 		if found {
 			panic(
 				fmt.Errorf(
-					"msg service %s has already been registered. Please make sure to only register each service once",
+					"msg service %s has already been registered. Please make sure to only register each service once. "+
+						"This usually means that there are conflicting modules registering the same msg service",
 					fqMethod,
 				),
 			)

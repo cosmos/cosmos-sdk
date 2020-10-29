@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -94,7 +93,7 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 
 // RegisterTxService registers the tx service on the gRPC router.
 func RegisterTxService(
-	qrt *baseapp.GRPCQueryRouter,
+	qrt gogogrpc.Server,
 	clientCtx client.Context,
 	simulateFn baseAppSimulateFn,
 	interfaceRegistry codectypes.InterfaceRegistry,

@@ -235,12 +235,6 @@ func makeBatchMultisigCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []stri
 			txFactory = txFactory.WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 		}
 
-		txCfg := clientCtx.TxConfig
-		txBldr, err := txCfg.WrapTxBuilder(parsedTxs)
-		if err != nil {
-			return err
-		}
-
 		inBuf := bufio.NewReader(cmd.InOrStdin())
 		backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
 
@@ -256,11 +250,29 @@ func makeBatchMultisigCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []stri
 			return fmt.Errorf("%q must be of type %s: %s", args[1], keyring.TypeMulti, multisigInfo.GetType())
 		}
 
-		multisigPub := multisigInfo.GetPubKey().(*kmultisig.LegacyAminoPubKey)
-		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 		var signatureBatch [][]signingtypes.SignatureV2
 		for i := 2; i < len(args); i++ {
 			sigs, err := unmarshalSignatureJSON(clientCtx, args[i])
+			if err != nil {
+				return err
+			}
+
+			signatureBatch = append(signatureBatch, sigs)
+		}
+
+		var sequence uint64
+		if !clientCtx.Offline {
+			accnum, sequence, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
+			if err != nil {
+				return err
+			}
+
+			txFactory = txFactory.WithAccountNumber(accnum).WithSequence(sequence)
+		}
+
+		for i, parsedTx := range parsedTxs {
+			txCfg := clientCtx.TxConfig
+			txBldr, err := txCfg.WrapTxBuilder(parsedTx)
 			if err != nil {
 				return err
 			}
@@ -271,56 +283,58 @@ func makeBatchMultisigCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []stri
 				Sequence:      txFactory.Sequence(),
 			}
 
-			for _, sig := range sigs {
-				err = signing.VerifySignature(sig.PubKey, signingData, sig.Data, txCfg.SignModeHandler(), txBuilder.GetTx())
+			multisigPub := multisigInfo.GetPubKey().(*kmultisig.LegacyAminoPubKey)
+			multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
+			for _, sig := range signatureBatch {
+				err = signing.VerifySignature(sig[i].PubKey, signingData, sig[i].Data, txCfg.SignModeHandler(), txBldr.GetTx())
 				if err != nil {
 					return fmt.Errorf("couldn't verify signature: %w", err)
 				}
 
-				if err := multisig.AddSignatureV2(multisigSig, sig, multisigPub.GetPubKeys()); err != nil {
+				if err := multisig.AddSignatureV2(multisigSig, sig[i], multisigPub.GetPubKeys()); err != nil {
 					return err
 				}
 			}
-		}
 
-		if !clientCtx.Offline {
-			accnum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
+			sigV2 := signingtypes.SignatureV2{
+				PubKey:   multisigPub,
+				Data:     multisigSig,
+				Sequence: txFactory.Sequence(),
+			}
+			err = txBldr.SetSignatures(sigV2)
 			if err != nil {
 				return err
 			}
 
-			txFactory = txFactory.WithAccountNumber(accnum).WithSequence(seq)
-		}
-		for i, tx := range parsedTxs {
-			sigBytes := types.StdSignBytes(
-				txBldr.ChainID(), txBldr.AccountNumber(), txBldr.Sequence(),
-				tx.Fee, tx.GetMsgs(), tx.GetMemo(),
-			)
+			sigOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 
-			for _, signBatch := range signatureBatch {
-				if ok := signBatch[i].PubKey.VerifyBytes(sigBytes, signBatch[i].Signature); !ok {
-					return fmt.Errorf("tx %d: couldn't verify signature for address %q", i, sdk.AccAddress(signBatch[i].PubKey.Address()).String())
+			aminoJSON, _ := cmd.Flags().GetBool(flagAmino)
+
+			var json []byte
+
+			if aminoJSON {
+				stdTx, err := tx.ConvertTxToStdTx(clientCtx.LegacyAmino, txBldr.GetTx())
+				if err != nil {
+					return err
 				}
-				if err := multisigSig.AddSignatureFromPubKey(signBatch[i].Signature, signBatch[i].PubKey, multisigPub.PubKeys); err != nil {
+
+				req := rest.BroadcastReq{
+					Tx:   stdTx,
+					Mode: "block|sync|async",
+				}
+
+				json, _ = clientCtx.LegacyAmino.MarshalJSON(req)
+
+			} else {
+				json, err = marshalSignatureJSON(txCfg, txBldr, sigOnly)
+				if err != nil {
 					return err
 				}
 			}
 
-			newStdSig := types.StdSignature{Signature: cdc.MustMarshalBinaryBare(multisigSig), PubKey: multisigPub}
-			if ok := newStdSig.VerifyBytes(sigBytes, newStdSig.Signature); !ok {
-				return fmt.Errorf("error verifying multisig signature")
-			}
-
-			newTx := types.NewStdTx(tx.GetMsgs(), tx.Fee, []types.StdSignature{newStdSig}, tx.GetMemo())
-
-			json, err := cdc.MarshalJSON(newTx)
+			err = clientCtx.PrintString(fmt.Sprintf("%s\n", json))
 			if err != nil {
-				return errors.Wrap(err, "error marshalling tx")
-			}
-
-			_, err = fmt.Fprintf(out, "%s\n", json)
-			if err != nil {
-				return errors.Wrap(err, "error writing to output")
+				return err
 			}
 
 			if viper.GetBool(flagNoAutoIncrement) {

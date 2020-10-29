@@ -5,10 +5,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"github.com/tendermint/cosmos-rosetta-gateway/service"
+
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
 )
 
 const (
@@ -30,7 +31,7 @@ func RosettaCommand(cdc codec.BinaryMarshaler) *cobra.Command {
 			}
 
 			s, err := service.New(
-				service.Options{Port: 8080},
+				service.Options{ListenAddress: ":8080"},
 				rosetta.NewNetwork(cdc, options),
 			)
 			if err != nil {

@@ -32,9 +32,9 @@ acting as the "sink zone".
 
 ### UX suggestion for clients
 
-For clients that want to display the source of the token, it is recommended to one of the following alternatives:
+For clients that want to display the source of the token, it is recommended to use one of the following alternatives:
 
-- **Use a relayer service**: Available relayer services could map the each denomination trace info and return the chain path timeline for each token (i.e `origin chain -> chain #1 -> ... -> chain #(n-1) -> final chain`). Clients are advised to connect to public relayers that support the largest number of connections between chains in the ecosystem.
+- **Use a relayer service**: Available relayer services could map the denomination trace to the chain path timeline for each token (i.e `origin chain -> chain #1 -> ... -> chain #(n-1) -> final chain`). Clients are advised to connect to public relayers that support the largest number of connections between chains in the ecosystem.
 - **Map trace information directly:** If the chain you are connected is also connected to each of the channels from the denomination trace information, then it is possible to retrieve the chain path timeline directly through a series of queries:
 
 1. Query the full denomination trace.

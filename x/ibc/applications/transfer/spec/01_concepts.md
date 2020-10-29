@@ -20,8 +20,9 @@ The denomination trace corresponds to the information that allows a token to be 
 origin chain. It contains a sequence of port and channel identifiers ordered from the most recent to
 the oldest in the timeline of transfers.
 
-This information is included on the token denomination field in the form of a hash to prevent an unbounded denomination length. For example, the token `transfer/channelToA/uatom` will be displayed as
-`ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2`.
+This information is included on the token denomination field in the form of a hash to prevent an
+unbounded denomination length. For example, the token `transfer/channelToA/uatom` will be displayed
+as `ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2`.
 
 Each send to any chain other than the one it was previously received from is a movement forwards in
 the token's timeline. This causes trace to be added to the token's history and the destination port
@@ -65,4 +66,7 @@ For clients that want to display the source of the token, it is recommended to u
 
 In some [exceptional cases](./../../../../../docs/architecture/adr-026-ibc-client-recovery-mechanisms.md#exceptional-cases), a client state associated with a given channel cannot be updated. This causes that funds from fungible tokens in that channel will be permanently locked and thus can no longer be transferred.
 
-To mitigate this, it an client update governance proposal can be submitted to update the frozen client with a new valid header. Once the proposal passes the client state will be unfreezed and the funds from the associated channels unlocked. This mechanism only applies to clients that allow updates via governance, such as Tendermint clients.
+To mitigate this, a client update governance proposal can be submitted to update the frozen client
+with a new valid header. Once the proposal passes the client state will be unfrozen and the funds
+from the associated channels will then be unlocked. This mechanism only applies to clients that
+allow updates via governance, such as Tendermint clients.

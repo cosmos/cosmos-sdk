@@ -208,3 +208,50 @@ func (suite *TypesTestSuite) TestPackMisbehaviour() {
 		}
 	}
 }
+
+func (suite *TypesTestSuite) TestPackHeight() {
+	testCases := []struct {
+		name    string
+		height  exported.Height
+		expPass bool
+	}{
+		{
+			"solo machine height",
+			ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 2).GetHeight(),
+			true,
+		},
+		{
+			"tendermint height",
+			suite.chainA.LastHeader.GetHeight(),
+			true,
+		},
+		{
+			"nil",
+			nil,
+			false,
+		},
+	}
+
+	testCasesAny := []caseAny{}
+
+	for _, tc := range testCases {
+		clientAny, err := types.PackHeight(tc.height)
+		if tc.expPass {
+			suite.Require().NoError(err, tc.name)
+		} else {
+			suite.Require().Error(err, tc.name)
+		}
+
+		testCasesAny = append(testCasesAny, caseAny{tc.name, clientAny, tc.expPass})
+	}
+
+	for i, tc := range testCasesAny {
+		cs, err := types.UnpackHeight(tc.any)
+		if tc.expPass {
+			suite.Require().NoError(err, tc.name)
+			suite.Require().Equal(testCases[i].height, cs, tc.name)
+		} else {
+			suite.Require().Error(err, tc.name)
+		}
+	}
+}

@@ -85,13 +85,20 @@ type AppModule struct {
 	// manager is created, the invariants can be properly registered and
 	// executed.
 	keeper *keeper.Keeper
+
+	genesisAssertInvariants bool
 }
 
-// NewAppModule creates a new AppModule object
-func NewAppModule(keeper *keeper.Keeper) AppModule {
+// NewAppModule creates a new AppModule object. If initChainAssertInvariants is set,
+// we will call keeper.AssertInvariants during InitGenesis (it may take a significant time)
+// - which doesn't impact the chain security unless 66+% of validators have a wrongly
+// modified genesis file.
+func NewAppModule(keeper *keeper.Keeper, genesisAssertInvariants bool) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
+
+		genesisAssertInvariants: genesisAssertInvariants,
 	}
 }
 
@@ -129,7 +136,9 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data j
 	fmt.Println("CRISIS: UnmarshalJSON", time.Since(start))
 
 	am.keeper.InitGenesis(ctx, &genesisState)
-	am.keeper.AssertInvariants(ctx)
+	if am.genesisAssertInvariants {
+		am.keeper.AssertInvariants(ctx)
+	}
 	return []abci.ValidatorUpdate{}
 }
 

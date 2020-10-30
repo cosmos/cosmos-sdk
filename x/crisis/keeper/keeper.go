@@ -74,9 +74,9 @@ func (k Keeper) AssertInvariants(ctx sdk.Context) {
 
 	start := time.Now()
 	invarRoutes := k.Routes()
-	fmt.Println("invarRoutes #", len(invarRoutes))
+	n := len(invarRoutes)
 	for i, ir := range invarRoutes {
-		fmt.Println("invariat nr:", i)
+		logger.Debug("Asserting cirisis invariants", "inv", fmt.Sprint("%d/%d", i, n))
 		if res, stop := ir.Invar(ctx); stop {
 			// TODO: Include app name as part of context to allow for this to be
 			// variable.
@@ -87,7 +87,6 @@ func (k Keeper) AssertInvariants(ctx sdk.Context) {
 	}
 
 	diff := time.Since(start)
-	fmt.Println(">>>asserted all invariants", "duration", diff, "height", ctx.BlockHeight())
 	logger.Info("asserted all invariants", "duration", diff, "height", ctx.BlockHeight())
 }
 

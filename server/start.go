@@ -231,6 +231,9 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		return err
 	}
 
+	// Add the tx service to the gRPC router.
+	app.RegisterTxService(clientCtx)
+
 	var apiSrv *api.Server
 
 	config := config.GetConfig(ctx.Viper)

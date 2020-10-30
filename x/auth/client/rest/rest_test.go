@@ -184,12 +184,13 @@ func (s *IntegrationTestSuite) TestQueryTxByHashWithServiceMessage() {
 	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs/%s", val.APIAddress, txRes.TxHash))
 	s.Require().NoError(err)
 
-	var result legacytx.StdTx
-	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(txJSON, &result))
-	s.Require().NotNil(result)
-	msgs := result.GetMsgs()
+	var txResAmino sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(txJSON, &txResAmino))
+	stdTx, ok := txResAmino.Tx.GetCachedValue().(legacytx.StdTx)
+	s.Require().True(ok)
+	msgs := stdTx.GetMsgs()
 	s.Require().Equal(len(msgs), 1)
-	_, ok := msgs[0].(*types.MsgSend)
+	_, ok = msgs[0].(*types.MsgSend)
 	s.Require().True(ok)
 }
 

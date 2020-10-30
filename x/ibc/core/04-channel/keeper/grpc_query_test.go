@@ -789,7 +789,22 @@ func (suite *KeeperTestSuite) TestQueryPacketReceipt() {
 			false,
 		},
 		{
-			"success",
+			"success: receipt not found",
+			func() {
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
+				suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketReceipt(suite.chainA.GetContext(), channelA.PortID, channelA.ID, 1)
+
+				req = &types.QueryPacketReceiptRequest{
+					PortId:    channelA.PortID,
+					ChannelId: channelA.ID,
+					Sequence:  3,
+				}
+				expReceived = false
+			},
+			true,
+		},
+		{
+			"success: receipt found",
 			func() {
 				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketReceipt(suite.chainA.GetContext(), channelA.PortID, channelA.ID, 1)

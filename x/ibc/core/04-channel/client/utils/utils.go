@@ -232,7 +232,7 @@ func queryPacketCommitmentABCI(
 	return types.NewQueryPacketCommitmentResponse(value, proofBz, proofHeight), nil
 }
 
-// QueryPacketReceipt returns a packet commitment.
+// QueryPacketReceipt returns data about a packet receipt.
 // If prove is true, it performs an ABCI store query in order to retrieve the merkle proof. Otherwise,
 // it uses the gRPC query client.
 func QueryPacketReceipt(

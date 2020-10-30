@@ -354,7 +354,7 @@ func (q Keeper) PacketAcknowledgements(c context.Context, req *types.QueryPacket
 
 // UnreceivedPackets implements the Query/UnreceivedPackets gRPC method. Given
 // a list of counterparty packet commitments, the querier checks if the packet
-// has already been received by checking if an acknowledgement exists on this
+// has already been received by checking if a receipt exists on this
 // chain for the packet sequence. All packets that haven't been received yet
 // are returned in the response
 // Usage: To use this method correctly, first query all packet commitments on
@@ -368,9 +368,6 @@ func (q Keeper) PacketAcknowledgements(c context.Context, req *types.QueryPacket
 // commitments is correct and will not function properly if the list
 // is not up to date. Ideally the query height should equal the latest height
 // on the counterparty's client which represents this chain.
-// TODO: Replace GetPacketAcknowledgement with GetPacketReceipt once async
-// acknowledgements issue is implemented.
-// Issue #7254: https://github.com/cosmos/cosmos-sdk/issues/7254
 func (q Keeper) UnreceivedPackets(c context.Context, req *types.QueryUnreceivedPacketsRequest) (*types.QueryUnreceivedPacketsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -408,10 +405,10 @@ func (q Keeper) UnreceivedPackets(c context.Context, req *types.QueryUnreceivedP
 // has already been received by checking if the packet commitment still exists on this
 // chain (original sender) for the packet sequence.
 // All acknowledgmeents that haven't been received yet are returned in the response.
-// Usage: To use this method correctly, first query all packet commitments on
-// the sending chain using the Query/PacketCommitments gRPC method.
-// Then input the returned sequences into the QueryUnrelayedPacketsRequest
-// and send the request to this Query/UnrelayedPackets on the **receiving**
+// Usage: To use this method correctly, first query all packet acknowledgements on
+// the original receiving chain (ie the chain that wrote the acks) using the Query/PacketAcknowledgements gRPC method.
+// Then input the returned sequences into the QueryUnrelayedAcksRequest
+// and send the request to this Query/UnrelayedAcks on the **original sending**
 // chain. This gRPC method will then return the list of packet sequences whose
 // acknowledgements are already written on the receiving chain but haven't yet
 // been relayed back to the sending chain.

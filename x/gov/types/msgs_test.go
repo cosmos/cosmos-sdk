@@ -97,22 +97,34 @@ func TestMsgVote(t *testing.T) {
 	tests := []struct {
 		proposalID uint64
 		voterAddr  sdk.AccAddress
-		subvotes   SubVotes
+		options    WeightedVoteOptions
 		expectPass bool
 	}{
-		{0, addrs[0], SubVotes{NewSubVote(OptionYes, 1)}, true},
-		{0, sdk.AccAddress{}, SubVotes{NewSubVote(OptionYes, 1)}, false},
-		{0, addrs[0], SubVotes{NewSubVote(OptionNo, 1)}, true},
-		{0, addrs[0], SubVotes{NewSubVote(OptionNoWithVeto, 1)}, true},
-		{0, addrs[0], SubVotes{NewSubVote(OptionAbstain, 1)}, true},
-		{0, addrs[0], SubVotes{NewSubVote(OptionYes, 1), NewSubVote(OptionAbstain, 1)}, true},
-		{0, addrs[0], SubVotes{NewSubVote(OptionYes, 0)}, false},
-		{0, addrs[0], SubVotes{}, false},
-		{0, addrs[0], SubVotes{NewSubVote(VoteOption(0x13), 1)}, false},
+		{0, addrs[0], NewNonSplitVoteOption(OptionYes), true},
+		{0, sdk.AccAddress{}, NewNonSplitVoteOption(OptionYes), false},
+		{0, addrs[0], NewNonSplitVoteOption(OptionNo), true},
+		{0, addrs[0], NewNonSplitVoteOption(OptionNoWithVeto), true},
+		{0, addrs[0], NewNonSplitVoteOption(OptionAbstain), true},
+		{0, addrs[0], WeightedVoteOptions{ // weight sum > 1
+			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDec(1)},
+			WeightedVoteOption{Option: OptionAbstain, Weight: sdk.NewDec(1)},
+		}, false},
+		{0, addrs[0], WeightedVoteOptions{ // duplicate option
+			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDecWithPrec(5, 1)},
+			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDecWithPrec(5, 1)},
+		}, false},
+		{0, addrs[0], WeightedVoteOptions{ // zero weight
+			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDec(0)},
+		}, false},
+		{0, addrs[0], WeightedVoteOptions{ // negative weight
+			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDec(-1)},
+		}, false},
+		{0, addrs[0], WeightedVoteOptions{}, false},
+		{0, addrs[0], NewNonSplitVoteOption(VoteOption(0x13)), false},
 	}
 
 	for i, tc := range tests {
-		msg := NewMsgVote(tc.voterAddr, tc.proposalID, tc.subvotes)
+		msg := NewMsgVote(tc.voterAddr, tc.proposalID, tc.options)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", i)
 		} else {

@@ -251,13 +251,13 @@ func TestQueries(t *testing.T) {
 	require.Equal(t, proposal3, proposals[1])
 
 	// Addrs[0] votes on proposals #2 & #3
-	vote1 := types.NewVote(proposal2.ProposalId, TestAddrs[0], types.SubVotes{types.NewSubVote(types.OptionYes, 1)})
-	vote2 := types.NewVote(proposal3.ProposalId, TestAddrs[0], types.SubVotes{types.NewSubVote(types.OptionYes, 1)})
+	vote1 := types.NewVote(proposal2.ProposalId, TestAddrs[0], types.NewNonSplitVoteOption(types.OptionYes))
+	vote2 := types.NewVote(proposal3.ProposalId, TestAddrs[0], types.NewNonSplitVoteOption(types.OptionYes))
 	app.GovKeeper.SetVote(ctx, vote1)
 	app.GovKeeper.SetVote(ctx, vote2)
 
 	// Addrs[1] votes on proposal #3
-	vote3 := types.NewVote(proposal3.ProposalId, TestAddrs[1], types.SubVotes{types.NewSubVote(types.OptionYes, 1)})
+	vote3 := types.NewVote(proposal3.ProposalId, TestAddrs[1], types.NewNonSplitVoteOption(types.OptionYes))
 	app.GovKeeper.SetVote(ctx, vote3)
 
 	// Test query voted by TestAddrs[0]
@@ -323,7 +323,7 @@ func TestPaginatedVotesQuery(t *testing.T) {
 		vote := types.Vote{
 			ProposalId: proposal.ProposalId,
 			Voter:      addr.String(),
-			SubVotes:   types.SubVotes{types.NewSubVote(types.OptionYes, 1)},
+			Options:    types.NewNonSplitVoteOption(types.OptionYes),
 		}
 		votes[i] = vote
 		app.GovKeeper.SetVote(ctx, vote)

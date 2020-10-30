@@ -177,8 +177,8 @@ func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
 
 // NewMsgVote creates a message to cast a vote on an active proposal
 //nolint:interfacer
-func NewMsgVote(voter sdk.AccAddress, proposalID uint64, subVotes []SubVote) *MsgVote {
-	return &MsgVote{proposalID, voter.String(), subVotes}
+func NewMsgVote(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions) *MsgVote {
+	return &MsgVote{proposalID, voter.String(), options}
 }
 
 // Route implements Msg
@@ -193,14 +193,25 @@ func (msg MsgVote) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Voter)
 	}
 
-	if len(msg.SubVotes) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, SubVotes(msg.SubVotes).String())
+	if len(msg.Options) == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, WeightedVoteOptions(msg.Options).String())
 	}
 
-	for _, subvote := range msg.SubVotes {
-		if !ValidSubVote(subvote) {
-			return sdkerrors.Wrap(ErrInvalidVote, subvote.String())
+	totalWeight := sdk.NewDec(0)
+	usedOptions := make(map[VoteOption]bool)
+	for _, option := range msg.Options {
+		if !ValidWeightedVoteOption(option) {
+			return sdkerrors.Wrap(ErrInvalidVote, option.String())
 		}
+		totalWeight = totalWeight.Add(option.Weight)
+		if usedOptions[option.Option] {
+			return sdkerrors.Wrap(ErrInvalidVote, "Duplicated vote option")
+		}
+		usedOptions[option.Option] = true
+	}
+
+	if totalWeight.GT(sdk.NewDec(1)) {
+		return sdkerrors.Wrap(ErrInvalidVote, "Total weight overflow 1.00")
 	}
 
 	return nil

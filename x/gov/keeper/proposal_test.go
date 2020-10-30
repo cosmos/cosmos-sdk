@@ -101,7 +101,7 @@ func TestGetProposalsFiltered(t *testing.T) {
 
 			if i%2 == 0 {
 				d := types.NewDeposit(proposalID, addr1, nil)
-				v := types.NewVote(proposalID, addr1, types.SubVotes{types.NewSubVote(types.OptionYes, 1)})
+				v := types.NewVote(proposalID, addr1, types.NewNonSplitVoteOption(types.OptionYes))
 				app.GovKeeper.SetDeposit(ctx, d)
 				app.GovKeeper.SetVote(ctx, v)
 			}

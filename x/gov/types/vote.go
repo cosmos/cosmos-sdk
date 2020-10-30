@@ -12,8 +12,8 @@ import (
 
 // NewVote creates a new Vote instance
 //nolint:interfacer
-func NewVote(proposalID uint64, voter sdk.AccAddress, subvotes []SubVote) Vote {
-	return Vote{proposalID, voter.String(), subvotes}
+func NewVote(proposalID uint64, voter sdk.AccAddress, options WeightedVoteOptions) Vote {
+	return Vote{proposalID, voter.String(), options}
 }
 
 func (v Vote) String() string {
@@ -45,7 +45,7 @@ func (v Votes) String() string {
 	}
 	out := fmt.Sprintf("Votes for Proposal %d:", v[0].ProposalId)
 	for _, vot := range v {
-		out += fmt.Sprintf("\n  %s: %s", vot.Voter, vot.SubVotes)
+		out += fmt.Sprintf("\n  %s: %s", vot.Voter, vot.Options)
 	}
 	return out
 }
@@ -55,31 +55,31 @@ func (v Vote) Empty() bool {
 	return v.String() == Vote{}.String()
 }
 
-// NewSubVote creates a new Vote instance
+// NewNonSplitVoteOption creates a single option vote with weight 1
 //nolint:interfacer
-func NewSubVote(option VoteOption, rate int64) SubVote {
-	return SubVote{option, sdk.NewDec(rate)}
+func NewNonSplitVoteOption(option VoteOption) WeightedVoteOptions {
+	return WeightedVoteOptions{{option, sdk.NewDec(1)}}
 }
 
-func (v SubVote) String() string {
+func (v WeightedVoteOption) String() string {
 	out, _ := json.Marshal(v)
 	return string(out)
 }
 
-// SubVotes describes array of SubVote
-type SubVotes []SubVote
+// WeightedVoteOptions describes array of WeightedVoteOptions
+type WeightedVoteOptions []WeightedVoteOption
 
-func (v SubVotes) String() string {
+func (v WeightedVoteOptions) String() string {
 	out, _ := json.Marshal(v)
 	return string(out)
 }
 
-// ValidSubVote returns true if the sub vote is valid and false otherwise.
-func ValidSubVote(subvote SubVote) bool {
-	if !subvote.Rate.IsPositive() {
+// ValidWeightedVoteOption returns true if the sub vote is valid and false otherwise.
+func ValidWeightedVoteOption(option WeightedVoteOption) bool {
+	if !option.Weight.IsPositive() || option.Weight.GT(sdk.NewDec(1)) {
 		return false
 	}
-	return ValidVoteOption(subvote.Option)
+	return ValidVoteOption(option.Option)
 }
 
 // VoteOptionFromString returns a VoteOption from a string. It returns an error
@@ -92,29 +92,26 @@ func VoteOptionFromString(str string) (VoteOption, error) {
 	return VoteOption(option), nil
 }
 
-// SubVotesFromString returns a SubVotes from a string. It returns an error
+// WeightedVoteOptionsFromString returns weighted vote options from string. It returns an error
 // if the string is invalid.
-func SubVotesFromString(str string) (SubVotes, error) {
-	subvotes := SubVotes{}
-	for _, subvote := range strings.Split(str, ",") {
-		fields := strings.Split(subvote, "=")
+func WeightedVoteOptionsFromString(str string) (WeightedVoteOptions, error) {
+	options := WeightedVoteOptions{}
+	for _, option := range strings.Split(str, ",") {
+		fields := strings.Split(option, "=")
 		option, err := VoteOptionFromString(fields[0])
 		if err != nil {
-			return subvotes, err
+			return options, err
 		}
 		if len(fields) < 2 {
-			return subvotes, fmt.Errorf("rate field does not exist for %s opion", fields[0])
+			return options, fmt.Errorf("weight field does not exist for %s option", fields[0])
 		}
-		rate, err := sdk.NewDecFromStr(fields[1])
+		weight, err := sdk.NewDecFromStr(fields[1])
 		if err != nil {
-			return subvotes, err
+			return options, err
 		}
-		subvotes = append(subvotes, SubVote{
-			option,
-			rate,
-		})
+		options = append(options, WeightedVoteOption{option, weight})
 	}
-	return subvotes, nil
+	return options, nil
 }
 
 // ValidVoteOption returns true if the vote option is valid and false otherwise.

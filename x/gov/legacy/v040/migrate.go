@@ -118,7 +118,7 @@ func Migrate(oldGovState v036gov.GenesisState) *v040gov.GenesisState {
 		newVotes[i] = v040gov.Vote{
 			ProposalId: oldVote.ProposalID,
 			Voter:      oldVote.Voter.String(),
-			SubVotes:   v040gov.SubVotes{v040gov.NewSubVote(migrateVoteOption(oldVote.Option), 1)},
+			Options:    v040gov.NewNonSplitVoteOption(migrateVoteOption(oldVote.Option)),
 		}
 	}
 

@@ -64,7 +64,7 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	if accErr != nil {
 		return nil, accErr
 	}
-	err := k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, msg.SubVotes)
+	err := k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, msg.Options)
 	if err != nil {
 		return nil, err
 	}

@@ -111,14 +111,14 @@ func newVoteHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		// Figure out which subvotes user chose
-		subvotes, err := types.SubVotesFromString(gcutils.NormalizeSubVotes(req.SubVotes))
+		// Figure out which vote options user chose
+		options, err := types.WeightedVoteOptionsFromString(gcutils.NormalizeWeightedVoteOptions(req.Options))
 		if err != nil {
 			return
 		}
 
 		// create the message
-		msg := types.NewMsgVote(req.Voter, proposalID, subvotes)
+		msg := types.NewMsgVote(req.Voter, proposalID, options)
 		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}

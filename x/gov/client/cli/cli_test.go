@@ -701,10 +701,10 @@ func (s *IntegrationTestSuite) TestCmdQueryVote() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
-		name        string
-		args        []string
-		expectErr   bool
-		expSubVotes types.SubVotes
+		name           string
+		args           []string
+		expectErr      bool
+		expVoteOptions types.WeightedVoteOptions
 	}{
 		{
 			"get vote of non existing proposal",
@@ -713,7 +713,7 @@ func (s *IntegrationTestSuite) TestCmdQueryVote() {
 				val.Address.String(),
 			},
 			true,
-			types.SubVotes{types.NewSubVote(types.OptionYes, 1)},
+			types.NewNonSplitVoteOption(types.OptionYes),
 		},
 		{
 			"get vote by wrong voter",
@@ -722,7 +722,7 @@ func (s *IntegrationTestSuite) TestCmdQueryVote() {
 				"wrong address",
 			},
 			true,
-			types.SubVotes{types.NewSubVote(types.OptionYes, 1)},
+			types.NewNonSplitVoteOption(types.OptionYes),
 		},
 		{
 			"vote for valid proposal",
@@ -732,7 +732,7 @@ func (s *IntegrationTestSuite) TestCmdQueryVote() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			types.SubVotes{types.NewSubVote(types.OptionYes, 1)},
+			types.NewNonSplitVoteOption(types.OptionYes),
 		},
 		{
 			"split vote for valid proposal",
@@ -742,11 +742,11 @@ func (s *IntegrationTestSuite) TestCmdQueryVote() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			types.SubVotes{
-				types.SubVote{Option: types.OptionYes, Rate: sdk.NewDecWithPrec(60, 2)},
-				types.SubVote{Option: types.OptionNo, Rate: sdk.NewDecWithPrec(30, 2)},
-				types.SubVote{Option: types.OptionAbstain, Rate: sdk.NewDecWithPrec(5, 2)},
-				types.SubVote{Option: types.OptionNoWithVeto, Rate: sdk.NewDecWithPrec(5, 2)},
+			types.WeightedVoteOptions{
+				types.WeightedVoteOption{Option: types.OptionYes, Weight: sdk.NewDecWithPrec(60, 2)},
+				types.WeightedVoteOption{Option: types.OptionNo, Weight: sdk.NewDecWithPrec(30, 2)},
+				types.WeightedVoteOption{Option: types.OptionAbstain, Weight: sdk.NewDecWithPrec(5, 2)},
+				types.WeightedVoteOption{Option: types.OptionNoWithVeto, Weight: sdk.NewDecWithPrec(5, 2)},
 			},
 		},
 	}
@@ -766,10 +766,10 @@ func (s *IntegrationTestSuite) TestCmdQueryVote() {
 
 				var vote types.Vote
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &vote), out.String())
-				s.Require().Equal(len(vote.SubVotes), len(tc.expSubVotes))
-				for i, subvote := range tc.expSubVotes {
-					s.Require().Equal(subvote.Option, vote.SubVotes[i].Option)
-					s.Require().True(subvote.Rate.Equal(vote.SubVotes[i].Rate))
+				s.Require().Equal(len(vote.Options), len(tc.expVoteOptions))
+				for i, option := range tc.expVoteOptions {
+					s.Require().Equal(option.Option, vote.Options[i].Option)
+					s.Require().True(option.Weight.Equal(vote.Options[i].Weight))
 				}
 			}
 		})

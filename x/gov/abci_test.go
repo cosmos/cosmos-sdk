@@ -307,7 +307,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	deposits := initialModuleAccCoins.Add(proposal.TotalDeposit...).Add(proposalCoins...)
 	require.True(t, moduleAccCoins.IsEqual(deposits))
 
-	err = app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[0], types.SubVotes{types.NewSubVote(types.OptionYes, 1)})
+	err = app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[0], types.NewNonSplitVoteOption(types.OptionYes))
 	require.NoError(t, err)
 
 	newHeader := ctx.BlockHeader()
@@ -348,7 +348,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 
 	handleAndCheck(t, gov.NewHandler(app.GovKeeper), ctx, newDepositMsg)
 
-	err = app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[0], types.SubVotes{types.NewSubVote(types.OptionYes, 1)})
+	err = app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[0], types.NewNonSplitVoteOption(types.OptionYes))
 	require.NoError(t, err)
 
 	newHeader := ctx.BlockHeader()

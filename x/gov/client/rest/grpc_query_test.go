@@ -165,44 +165,44 @@ func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
 	voterAddressBase64 := val.Address.String()
 
 	testCases := []struct {
-		name        string
-		url         string
-		expErr      bool
-		expSubVotes types.SubVotes
+		name           string
+		url            string
+		expErr         bool
+		expVoteOptions types.WeightedVoteOptions
 	}{
 		{
 			"empty proposal",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "", voterAddressBase64),
 			true,
-			types.SubVotes{types.NewSubVote(types.OptionYes, 1)},
+			types.NewNonSplitVoteOption(types.OptionYes),
 		},
 		{
 			"get non existing proposal",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "10", voterAddressBase64),
 			true,
-			types.SubVotes{types.NewSubVote(types.OptionYes, 1)},
+			types.NewNonSplitVoteOption(types.OptionYes),
 		},
 		{
 			"get proposal with wrong voter address",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "1", "wrongVoterAddress"),
 			true,
-			types.SubVotes{types.NewSubVote(types.OptionYes, 1)},
+			types.NewNonSplitVoteOption(types.OptionYes),
 		},
 		{
 			"get proposal with id",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "1", voterAddressBase64),
 			false,
-			types.SubVotes{types.NewSubVote(types.OptionYes, 1)},
+			types.NewNonSplitVoteOption(types.OptionYes),
 		},
 		{
 			"get proposal with id for split vote",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "3", voterAddressBase64),
 			false,
-			types.SubVotes{
-				types.SubVote{Option: types.OptionYes, Rate: sdk.NewDecWithPrec(60, 2)},
-				types.SubVote{Option: types.OptionNo, Rate: sdk.NewDecWithPrec(30, 2)},
-				types.SubVote{Option: types.OptionAbstain, Rate: sdk.NewDecWithPrec(5, 2)},
-				types.SubVote{Option: types.OptionNoWithVeto, Rate: sdk.NewDecWithPrec(5, 2)},
+			types.WeightedVoteOptions{
+				types.WeightedVoteOption{Option: types.OptionYes, Weight: sdk.NewDecWithPrec(60, 2)},
+				types.WeightedVoteOption{Option: types.OptionNo, Weight: sdk.NewDecWithPrec(30, 2)},
+				types.WeightedVoteOption{Option: types.OptionAbstain, Weight: sdk.NewDecWithPrec(5, 2)},
+				types.WeightedVoteOption{Option: types.OptionNoWithVeto, Weight: sdk.NewDecWithPrec(5, 2)},
 			},
 		},
 	}
@@ -221,10 +221,10 @@ func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NotEmpty(vote.Vote)
-				s.Require().Equal(len(vote.Vote.SubVotes), len(tc.expSubVotes))
-				for i, subvote := range tc.expSubVotes {
-					s.Require().Equal(subvote.Option, vote.Vote.SubVotes[i].Option)
-					s.Require().True(subvote.Rate.Equal(vote.Vote.SubVotes[i].Rate))
+				s.Require().Equal(len(vote.Vote.Options), len(tc.expVoteOptions))
+				for i, option := range tc.expVoteOptions {
+					s.Require().Equal(option.Option, vote.Vote.Options[i].Option)
+					s.Require().True(option.Weight.Equal(vote.Vote.Options[i].Weight))
 				}
 			}
 		})

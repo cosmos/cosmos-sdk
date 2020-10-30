@@ -229,14 +229,14 @@ $ %s tx gov vote 1 yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05 --from mykey
 				return fmt.Errorf("proposal-id %s not a valid int, please input a valid proposal-id", args[0])
 			}
 
-			// Figure out which subvotes user chose
-			subvotes, err := types.SubVotesFromString(govutils.NormalizeSubVotes(args[1]))
+			// Figure out which vote options user chose
+			options, err := types.WeightedVoteOptionsFromString(govutils.NormalizeWeightedVoteOptions(args[1]))
 			if err != nil {
 				return err
 			}
 
 			// Build vote message and run basic validation
-			msg := types.NewMsgVote(from, proposalID, subvotes)
+			msg := types.NewMsgVote(from, proposalID, options)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err

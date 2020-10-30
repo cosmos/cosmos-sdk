@@ -400,24 +400,24 @@ func (q Keeper) UnreceivedPackets(c context.Context, req *types.QueryUnreceivedP
 	}, nil
 }
 
-// UnrelayedAcks implements the Query/UnrelayedAcks gRPC method. Given
+// UnreceivedAcks implements the Query/UnreceivedAcks gRPC method. Given
 // a list of counterparty packet acknowledgements, the querier checks if the packet
 // has already been received by checking if the packet commitment still exists on this
 // chain (original sender) for the packet sequence.
 // All acknowledgmeents that haven't been received yet are returned in the response.
 // Usage: To use this method correctly, first query all packet acknowledgements on
 // the original receiving chain (ie the chain that wrote the acks) using the Query/PacketAcknowledgements gRPC method.
-// Then input the returned sequences into the QueryUnrelayedAcksRequest
-// and send the request to this Query/UnrelayedAcks on the **original sending**
+// Then input the returned sequences into the QueryUnreceivedAcksRequest
+// and send the request to this Query/UnreceivedAcks on the **original sending**
 // chain. This gRPC method will then return the list of packet sequences whose
 // acknowledgements are already written on the receiving chain but haven't yet
-// been relayed back to the sending chain.
+// been received back to the sending chain.
 //
 // NOTE: The querier makes the assumption that the provided list of packet
 // acknowledgements is correct and will not function properly if the list
 // is not up to date. Ideally the query height should equal the latest height
 // on the counterparty's client which represents this chain.
-func (q Keeper) UnrelayedAcks(c context.Context, req *types.QueryUnrelayedAcksRequest) (*types.QueryUnrelayedAcksResponse, error) {
+func (q Keeper) UnreceivedAcks(c context.Context, req *types.QueryUnreceivedAcksRequest) (*types.QueryUnreceivedAcksResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -428,7 +428,7 @@ func (q Keeper) UnrelayedAcks(c context.Context, req *types.QueryUnrelayedAcksRe
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	var unrelayedSequences = []uint64{}
+	var unreceivedSequences = []uint64{}
 
 	for i, seq := range req.PacketAckSequences {
 		if seq == 0 {
@@ -438,14 +438,14 @@ func (q Keeper) UnrelayedAcks(c context.Context, req *types.QueryUnrelayedAcksRe
 		// if packet commitment still exists on the original sending chain, then packet ack has not been received
 		// since processing the ack will delete the packet commitment
 		if commitment := q.GetPacketCommitment(ctx, req.PortId, req.ChannelId, seq); len(commitment) != 0 {
-			unrelayedSequences = append(unrelayedSequences, seq)
+			unreceivedSequences = append(unreceivedSequences, seq)
 		}
 
 	}
 
 	selfHeight := clienttypes.GetSelfHeight(ctx)
-	return &types.QueryUnrelayedAcksResponse{
-		Sequences: unrelayedSequences,
+	return &types.QueryUnreceivedAcksResponse{
+		Sequences: unreceivedSequences,
 		Height:    selfHeight,
 	}, nil
 }

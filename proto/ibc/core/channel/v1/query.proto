@@ -70,18 +70,18 @@ service Query {
   }
 
 
-  // UnreceivedPackets returns all the unrelayed IBC packets associated with a
+  // UnreceivedPackets returns all the unreceived IBC packets associated with a
   // channel and sequences.
   rpc UnreceivedPackets(QueryUnreceivedPacketsRequest) returns (QueryUnreceivedPacketsResponse) {
     option (google.api.http).get = "/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/"
                                    "{packet_commitment_sequences}/unreceived_packets";
   }
 
-  // UnrelayedAcks returns all the unrelayed IBC acknowledgements associated with a
+  // UnreceivedAcks returns all the unreceived IBC acknowledgements associated with a
   // channel and sequences.
-  rpc UnrelayedAcks(QueryUnrelayedAcksRequest) returns (QueryUnrelayedAcksResponse) {
+  rpc UnreceivedAcks(QueryUnreceivedAcksRequest) returns (QueryUnreceivedAcksResponse) {
     option (google.api.http).get = "/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/"
-                                   "{packet_ack_sequences}/unrelayed_acks";
+                                   "{packet_ack_sequences}/unreceived_acks";
   }
 
   // NextSequenceReceive returns the next receive sequence for a given channel.
@@ -204,7 +204,7 @@ message QueryPacketCommitmentRequest {
 }
 
 // QueryPacketCommitmentResponse defines the client query response for a packet
-// which also includes a proof and the height form which the proof was
+// which also includes a proof and the height from which the proof was
 // retrieved
 message QueryPacketCommitmentResponse {
   // packet associated with the request fields
@@ -248,7 +248,7 @@ message QueryPacketReceiptRequest {
 }
 
 // QueryPacketReceiptResponse defines the client query response for a packet receipt
-// which also includes a proof, and the height form which the proof was
+// which also includes a proof, and the height from which the proof was
 // retrieved
 message QueryPacketReceiptResponse {
   // packet receipt if it exists
@@ -273,7 +273,7 @@ message QueryPacketAcknowledgementRequest {
 }
 
 // QueryPacketAcknowledgementResponse defines the client query response for a
-// packet which also includes a proof and the height form which the
+// packet which also includes a proof and the height from which the
 // proof was retrieved
 message QueryPacketAcknowledgementResponse {
   // packet associated with the request fields
@@ -325,9 +325,9 @@ message QueryUnreceivedPacketsResponse {
   ibc.core.client.v1.Height height = 2 [(gogoproto.nullable) = false];
 }
 
-// QueryUnrelayedAcksRequest is the request type for the
-// Query/UnrelayedAcks RPC method
-message QueryUnrelayedAcksRequest {
+// QueryUnreceivedAcks is the request type for the
+// Query/UnreceivedAcks RPC method
+message QueryUnreceivedAcksRequest {
   // port unique identifier
   string port_id = 1;
   // channel unique identifier
@@ -336,10 +336,10 @@ message QueryUnrelayedAcksRequest {
   repeated uint64 packet_ack_sequences = 3;
 }
 
-// QueryUnrelayedAcksResponse is the response type for the
-// Query/UnrelayedAcks RPC method
-message QueryUnrelayedAcksResponse {
-  // list of unrelayed acknowledgement sequences
+// QueryUnreceivedAcksResponse is the response type for the
+// Query/UnreceivedAcks RPC method
+message QueryUnreceivedAcksResponse {
+  // list of unreceived acknowledgement sequences
   repeated uint64 sequences = 1;
   // query block height
   ibc.core.client.v1.Height height = 2 [(gogoproto.nullable) = false];

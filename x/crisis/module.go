@@ -26,6 +26,11 @@ var (
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
+// Module init related flags
+const (
+	FlagSkipGenesisInvariants = "x-crisis-skip-assert-invariants"
+)
+
 // AppModuleBasic defines the basic application module used by the crisis module.
 type AppModuleBasic struct{}
 
@@ -86,20 +91,25 @@ type AppModule struct {
 	// executed.
 	keeper *keeper.Keeper
 
-	genesisAssertInvariants bool
+	skipGenesisInvariants bool
 }
 
 // NewAppModule creates a new AppModule object. If initChainAssertInvariants is set,
 // we will call keeper.AssertInvariants during InitGenesis (it may take a significant time)
 // - which doesn't impact the chain security unless 66+% of validators have a wrongly
 // modified genesis file.
-func NewAppModule(keeper *keeper.Keeper, genesisAssertInvariants bool) AppModule {
+func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
 
-		genesisAssertInvariants: genesisAssertInvariants,
+		skipGenesisInvariants: skipGenesisInvariants,
 	}
+}
+
+// AddModuleInitFlags implements servertypes.ModuleInitFlags interface
+func AddModuleInitFlags(startCmd *cobra.Command) {
+	startCmd.Flags().Bool(FlagSkipGenesisInvariants, false, "Skip x/crisis invariants check on startup")
 }
 
 // Name returns the crisis module's name.
@@ -136,7 +146,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data j
 	fmt.Println("CRISIS: UnmarshalJSON", time.Since(start))
 
 	am.keeper.InitGenesis(ctx, &genesisState)
-	if am.genesisAssertInvariants {
+	if !am.skipGenesisInvariants {
 		am.keeper.AssertInvariants(ctx)
 	}
 	return []abci.ValidatorUpdate{}

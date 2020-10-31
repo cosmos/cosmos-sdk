@@ -17,7 +17,7 @@ var _ sdk.Msg = &MsgConnectionOpenInit{}
 func NewMsgConnectionOpenInit(
 	connectionID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyPrefix commitmenttypes.MerklePrefix,
-	version string, signer sdk.AccAddress,
+	version *Version, signer sdk.AccAddress,
 ) *MsgConnectionOpenInit {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
 	return &MsgConnectionOpenInit{
@@ -47,7 +47,8 @@ func (msg MsgConnectionOpenInit) ValidateBasic() error {
 	if err := host.ClientIdentifierValidator(msg.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "invalid client ID")
 	}
-	if msg.Version != "" {
+	// NOTE: Version can be nil on MsgConnectionOpenInit
+	if msg.Version != nil {
 		if err := ValidateVersion(msg.Version); err != nil {
 			return sdkerrors.Wrap(err, "basic validation of the provided version failed")
 		}
@@ -80,7 +81,7 @@ var _ sdk.Msg = &MsgConnectionOpenTry{}
 func NewMsgConnectionOpenTry(
 	desiredConnectionID, counterpartyChosenConnectionID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyClient exported.ClientState,
-	counterpartyPrefix commitmenttypes.MerklePrefix, counterpartyVersions []string,
+	counterpartyPrefix commitmenttypes.MerklePrefix, counterpartyVersions []*Version,
 	proofInit, proofClient, proofConsensus []byte,
 	proofHeight, consensusHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgConnectionOpenTry {
@@ -195,7 +196,8 @@ var _ sdk.Msg = &MsgConnectionOpenAck{}
 func NewMsgConnectionOpenAck(
 	connectionID, counterpartyConnectionID string, counterpartyClient exported.ClientState,
 	proofTry, proofClient, proofConsensus []byte,
-	proofHeight, consensusHeight clienttypes.Height, version string,
+	proofHeight, consensusHeight clienttypes.Height,
+	version *Version,
 	signer sdk.AccAddress,
 ) *MsgConnectionOpenAck {
 	csAny, _ := clienttypes.PackClientState(counterpartyClient)

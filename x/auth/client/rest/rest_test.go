@@ -2,19 +2,22 @@ package rest_test
 
 import (
 	"fmt"
-	"testing"
-
 	"strings"
+	"testing"
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 
 	rest2 "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
@@ -37,7 +40,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.cfg = cfg
 	s.network = network.New(s.T(), cfg)
 
-	_, err := s.network.WaitForHeight(1)
+	kb := s.network.Validators[0].ClientCtx.Keyring
+	_, _, err := kb.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
+
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 }
 
@@ -126,6 +133,43 @@ func (s *IntegrationTestSuite) TestQueryTxByHash() {
 	// txJSON should contain the whole tx, we just make sure that our custom
 	// memo is there.
 	s.Require().True(strings.Contains(string(txJSON), stdTx.Memo))
+}
+
+func (s *IntegrationTestSuite) TestQueryTxByHashWithServiceMessage() {
+	val := s.network.Validators[0]
+
+	account, err := val.ClientCtx.Keyring.Key("newAccount")
+	s.Require().NoError(err)
+
+	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
+
+	out, err := bankcli.ServiceMsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		account.GetAddress(),
+		sdk.NewCoins(sendTokens),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+	)
+
+	s.Require().NoError(err)
+	var txRes sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txRes))
+
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs/%s", val.APIAddress, txRes.TxHash))
+	s.Require().NoError(err)
+
+	var result legacytx.StdTx
+	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(txJSON, &result))
+	s.Require().NotNil(result)
+	msgs := result.GetMsgs()
+	s.Require().Equal(len(msgs), 1)
+	_, ok := msgs[0].(*types.MsgSend)
+	s.Require().True(ok)
 }
 
 func (s *IntegrationTestSuite) TestMultipleSyncBroadcastTxRequests() {

@@ -56,29 +56,29 @@ func defaultIdentifierValidator(id string, min, max int) error { //nolint:unpara
 }
 
 // ClientIdentifierValidator is the default validator function for Client identifiers.
-// A valid Identifier must be between 9-20 characters and only contain lowercase
-// alphabetic characters,
+// A valid Identifier must be between 9-64 characters and only contain lowercase
+// alphabetic characters.
 func ClientIdentifierValidator(id string) error {
 	return defaultIdentifierValidator(id, 9, DefaultMaxCharacterLength)
 }
 
 // ConnectionIdentifierValidator is the default validator function for Connection identifiers.
-// A valid Identifier must be between 10-20 characters and only contain lowercase
-// alphabetic characters,
+// A valid Identifier must be between 10-64 characters and only contain lowercase
+// alphabetic characters.
 func ConnectionIdentifierValidator(id string) error {
 	return defaultIdentifierValidator(id, 10, DefaultMaxCharacterLength)
 }
 
 // ChannelIdentifierValidator is the default validator function for Channel identifiers.
-// A valid Identifier must be between 10-20 characters and only contain lowercase
-// alphabetic characters,
+// A valid Identifier must be between 10-64 characters and only contain lowercase
+// alphabetic characters.
 func ChannelIdentifierValidator(id string) error {
 	return defaultIdentifierValidator(id, 10, DefaultMaxCharacterLength)
 }
 
 // PortIdentifierValidator is the default validator function for Port identifiers.
-// A valid Identifier must be between 2-20 characters and only contain lowercase
-// alphabetic characters,
+// A valid Identifier must be between 2-64 characters and only contain lowercase
+// alphabetic characters.
 func PortIdentifierValidator(id string) error {
 	return defaultIdentifierValidator(id, 2, DefaultMaxCharacterLength)
 }

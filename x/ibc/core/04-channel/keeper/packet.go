@@ -129,7 +129,7 @@ func (k Keeper) SendPacket(
 		),
 	})
 
-	k.Logger(ctx).Info(fmt.Sprintf("packet sent: %v", packet))
+	k.Logger(ctx).Info("packet sent", "packet", fmt.Sprintf("%v", packet))
 	return nil
 }
 
@@ -367,7 +367,15 @@ func (k Keeper) WriteAcknowledgement(
 	// emit an event that the relayer can query for
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.EventTypeRecvPacket,
+			types.EventTypeWriteAck,
+			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData())),
+			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, packet.GetTimeoutHeight().String()),
+			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
+			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
+			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
+			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
+			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
+			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
 			sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
 		),
 		sdk.NewEvent(
@@ -518,7 +526,7 @@ func (k Keeper) AcknowledgementExecuted(
 	}
 
 	// log that a packet has been acknowledged
-	k.Logger(ctx).Info(fmt.Sprintf("packet acknowledged: %v", packet))
+	k.Logger(ctx).Info("packet acknowledged", "packet", fmt.Sprintf("%v", packet))
 
 	// emit an event marking that we have processed the acknowledgement
 	ctx.EventManager().EmitEvents(sdk.Events{

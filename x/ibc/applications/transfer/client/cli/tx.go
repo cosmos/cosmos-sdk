@@ -29,7 +29,7 @@ func NewTransferTxCmd() *cobra.Command {
 		Short: "Transfer a fungible token through IBC",
 		Long: strings.TrimSpace(`Transfer a fungible token through IBC. Timeouts can be specified
 as absolute or relative using the "absolute-timeouts" flag. Timeout height can be set by passing in the height string
-in the form {epoch}-{height} using the "packet-timeout-height" flag. Relative timeouts are added to
+in the form {version}-{height} using the "packet-timeout-height" flag. Relative timeouts are added to
 the block height and block timestamp queried from the latest consensus state corresponding
 to the counterparty channel. Any timeout set to 0 is disabled.`),
 		Example: fmt.Sprintf("%s tx ibc-transfer transfer [src-port] [src-channel] [receiver] [amount]", version.AppName),

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"net/url"
 	"reflect"
 	"strings"
 
@@ -89,8 +90,8 @@ func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string,
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		keySplit := strings.Split(string(iterator.Key()), "/")
-		// consensus key is in the format "clients/<clientID>/consensusState/<height>"
-		if len(keySplit) != 4 || keySplit[2] != "consensusState" {
+		// consensus key is in the format "clients/<clientID>/consensusStates/<height>"
+		if len(keySplit) != 4 || keySplit[2] != string(host.KeyConsensusStatesPrefix) {
 			continue
 		}
 		clientID := keySplit[1]
@@ -181,7 +182,7 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height exported.Height) (
 	}
 	// check that height version matches chainID version
 	version := types.ParseChainID(ctx.ChainID())
-	if version != height.GetEpochNumber() {
+	if version != height.GetVersionNumber() {
 		return nil, false
 	}
 	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(selfHeight.VersionHeight))
@@ -230,6 +231,13 @@ func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientS
 			tmClient.LatestHeight, ctx.BlockHeight())
 	}
 
+	// consensus params must match consensus params on executing chain
+	expectedConsensusParams := ctx.ConsensusParams()
+	if !reflect.DeepEqual(expectedConsensusParams, tmClient.ConsensusParams) {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "client has invalid consensus params, expected: %v got: %v",
+			expectedConsensusParams, tmClient.ConsensusParams)
+	}
+
 	expectedProofSpecs := commitmenttypes.GetSDKSpecs()
 	if !reflect.DeepEqual(expectedProofSpecs, tmClient.ProofSpecs) {
 		return sdkerrors.Wrapf(types.ErrInvalidClient, "client has invalid proof specs. expected: %v got: %v",
@@ -251,10 +259,12 @@ func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientS
 			tmClient.UnbondingPeriod, tmClient.TrustingPeriod)
 	}
 
-	if tmClient.UpgradePath != nil {
+	if tmClient.UpgradePath != "" {
 		// For now, SDK IBC implementation assumes that upgrade path (if defined) is defined by SDK upgrade module
-		expectedUpgradePath := fmt.Sprintf("/%s/%s", upgradetypes.StoreKey, upgradetypes.KeyUpgradedClient)
-		if tmClient.UpgradePath.String() != expectedUpgradePath {
+		// Must escape any merkle key before adding it to upgrade path
+		upgradeKey := url.PathEscape(upgradetypes.KeyUpgradedClient)
+		expectedUpgradePath := fmt.Sprintf("%s/%s", upgradetypes.StoreKey, upgradeKey)
+		if tmClient.UpgradePath != expectedUpgradePath {
 			return sdkerrors.Wrapf(types.ErrInvalidClient, "upgrade path must be the upgrade path defined by upgrade module. expected %s, got %s",
 				expectedUpgradePath, tmClient.UpgradePath)
 		}

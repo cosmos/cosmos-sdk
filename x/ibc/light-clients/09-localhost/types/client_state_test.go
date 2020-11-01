@@ -123,8 +123,8 @@ func (suite *LocalhostTestSuite) TestCheckHeaderAndUpdateState() {
 	clientState := types.NewClientState("chainID", clientHeight)
 	cs, _, err := clientState.CheckHeaderAndUpdateState(suite.ctx, nil, nil, nil)
 	suite.Require().NoError(err)
-	suite.Require().Equal(uint64(0), cs.GetLatestHeight().GetEpochNumber())
-	suite.Require().Equal(suite.ctx.BlockHeight(), int64(cs.GetLatestHeight().GetEpochHeight()))
+	suite.Require().Equal(uint64(0), cs.GetLatestHeight().GetVersionNumber())
+	suite.Require().Equal(suite.ctx.BlockHeight(), int64(cs.GetLatestHeight().GetVersionHeight()))
 	suite.Require().Equal(suite.ctx.BlockHeader().ChainID, clientState.ChainId)
 }
 
@@ -145,8 +145,8 @@ func (suite *LocalhostTestSuite) TestProposedHeaderAndUpdateState() {
 
 func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 	counterparty := connectiontypes.NewCounterparty("clientB", testConnectionID, commitmenttypes.NewMerklePrefix([]byte("ibc")))
-	conn1 := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []string{"1.0.0"})
-	conn2 := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []string{"2.0.0"})
+	conn1 := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []*connectiontypes.Version{connectiontypes.NewVersion("1", nil)})
+	conn2 := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []*connectiontypes.Version{connectiontypes.NewVersion("2", nil)})
 
 	testCases := []struct {
 		name        string

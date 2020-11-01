@@ -179,14 +179,14 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 		tmos.Exit(err.Error())
 	}
 
-	TrapSignal(func() {
+	defer func() {
 		if err = svr.Stop(); err != nil {
 			tmos.Exit(err.Error())
 		}
-	})
+	}()
 
-	// run forever (the node will not be returned)
-	select {}
+	// Wait for SIGINT or SIGTERM signal
+	return WaitForQuitSignals()
 }
 
 // legacyAminoCdc is used for the legacy REST API
@@ -230,6 +230,9 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	if err := tmNode.Start(); err != nil {
 		return err
 	}
+
+	// Add the tx service to the gRPC router.
+	app.RegisterTxService(clientCtx)
 
 	var apiSrv *api.Server
 
@@ -290,7 +293,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		}
 	}
 
-	TrapSignal(func() {
+	defer func() {
 		if tmNode.IsRunning() {
 			_ = tmNode.Stop()
 		}
@@ -308,8 +311,8 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		}
 
 		ctx.Logger.Info("exiting...")
-	})
+	}()
 
-	// run forever (the node will not be returned)
-	select {}
+	// Wait for SIGINT or SIGTERM signal
+	return WaitForQuitSignals()
 }

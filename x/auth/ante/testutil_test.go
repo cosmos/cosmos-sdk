@@ -53,9 +53,10 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	suite.ctx = suite.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
-	encodingConfig := simapp.MakeEncodingConfig()
-	// We're using TestMsg amino encoding in some tests, so register it here.
+	encodingConfig := simapp.MakeTestEncodingConfig()
+	// We're using TestMsg encoding in some tests, so register it here.
 	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
+	testdata.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 
 	suite.clientCtx = client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig)

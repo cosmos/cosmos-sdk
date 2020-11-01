@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	"fmt"
+	"github.com/armon/go-metrics"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
@@ -21,12 +22,21 @@ func (k Keeper) CreateClient(
 		return sdkerrors.Wrapf(types.ErrClientExists, "cannot create client with ID %s", clientID)
 	}
 
+	// check if consensus state is nil in case the created client is Localhost
 	if consensusState != nil {
 		k.SetClientConsensusState(ctx, clientID, clientState.GetLatestHeight(), consensusState)
 	}
 
 	k.SetClientState(ctx, clientID, clientState)
-	k.Logger(ctx).Info(fmt.Sprintf("client %s created at height %d", clientID, clientState.GetLatestHeight()))
+	k.Logger(ctx).Info("client created at height", "client-id", clientID, "height", clientState.GetLatestHeight().String())
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{"ibc", "client", "create"},
+			1,
+			[]metrics.Label{telemetry.NewLabel("client-type", clientState.ClientType())},
+		)
+	}()
 
 	return nil
 }
@@ -43,19 +53,14 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		return sdkerrors.Wrapf(types.ErrClientFrozen, "cannot update client with ID %s", clientID)
 	}
 
-	var (
-		consensusState  exported.ConsensusState
-		consensusHeight exported.Height
-		err             error
-	)
-
-	clientState, consensusState, err = clientState.CheckHeaderAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, clientID), header)
-
+	clientState, consensusState, err := clientState.CheckHeaderAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, clientID), header)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "cannot update client with ID %s", clientID)
 	}
 
 	k.SetClientState(ctx, clientID, clientState)
+
+	var consensusHeight exported.Height
 
 	// we don't set consensus state for localhost client
 	if header != nil && clientID != exported.Localhost {
@@ -65,7 +70,19 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		consensusHeight = types.GetSelfHeight(ctx)
 	}
 
-	k.Logger(ctx).Info("client state updated", "client-id", clientID, "height", consensusHeight)
+	k.Logger(ctx).Info("client state updated", "client-id", clientID, "height", consensusHeight.String())
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{"ibc", "client", "update"},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel("client-type", clientState.ClientType()),
+				telemetry.NewLabel("client-id", clientID),
+				telemetry.NewLabel("update-type", "msg"),
+			},
+		)
+	}()
 
 	// emitting events in the keeper emits for both begin block and handler client updates
 	ctx.EventManager().EmitEvent(
@@ -82,7 +99,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 
 // UpgradeClient upgrades the client to a new client state if this new client was committed to
 // by the old client at the specified upgrade height
-func (k Keeper) UpgradeClient(ctx sdk.Context, clientID string, upgradedClient exported.ClientState, proofUpgrade []byte) error {
+func (k Keeper) UpgradeClient(ctx sdk.Context, clientID string, upgradedClient exported.ClientState, upgradeHeight exported.Height, proofUpgrade []byte) error {
 	clientState, found := k.GetClientState(ctx, clientID)
 	if !found {
 		return sdkerrors.Wrapf(types.ErrClientNotFound, "cannot update client with ID %s", clientID)
@@ -93,14 +110,25 @@ func (k Keeper) UpgradeClient(ctx sdk.Context, clientID string, upgradedClient e
 		return sdkerrors.Wrapf(types.ErrClientFrozen, "cannot update client with ID %s", clientID)
 	}
 
-	err := clientState.VerifyUpgrade(ctx, k.cdc, k.ClientStore(ctx, clientID), upgradedClient, proofUpgrade)
+	err := clientState.VerifyUpgrade(ctx, k.cdc, k.ClientStore(ctx, clientID), upgradedClient, upgradeHeight, proofUpgrade)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "cannot upgrade client with ID: %s", clientID)
+		return sdkerrors.Wrapf(err, "cannot upgrade client with ID %s", clientID)
 	}
 
 	k.SetClientState(ctx, clientID, upgradedClient)
 
-	k.Logger(ctx).Info("client state upgraded", "client-id", clientID, "height", upgradedClient.GetLatestHeight())
+	k.Logger(ctx).Info("client state upgraded", "client-id", clientID, "height", upgradedClient.GetLatestHeight().String())
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{"ibc", "client", "upgrade"},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel("client-type", clientState.ClientType()),
+				telemetry.NewLabel("client-id", clientID),
+			},
+		)
+	}()
 
 	// emitting events in the keeper emits for client upgrades
 	ctx.EventManager().EmitEvent(
@@ -123,13 +151,28 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 		return sdkerrors.Wrapf(types.ErrClientNotFound, "cannot check misbehaviour for client with ID %s", misbehaviour.GetClientID())
 	}
 
+	if clientState.IsFrozen() && clientState.GetFrozenHeight().LTE(misbehaviour.GetHeight()) {
+		return sdkerrors.Wrapf(types.ErrInvalidMisbehaviour, "client is already frozen at height ≤ misbehaviour height (%s ≤ %s)", clientState.GetFrozenHeight(), misbehaviour.GetHeight())
+	}
+
 	clientState, err := clientState.CheckMisbehaviourAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, misbehaviour.GetClientID()), misbehaviour)
 	if err != nil {
 		return err
 	}
 
 	k.SetClientState(ctx, misbehaviour.GetClientID(), clientState)
-	k.Logger(ctx).Info(fmt.Sprintf("client %s frozen due to misbehaviour", misbehaviour.GetClientID()))
+	k.Logger(ctx).Info("client frozen due to misbehaviour", "client-id", misbehaviour.GetClientID(), "height", misbehaviour.GetHeight().String())
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{"ibc", "client", "misbehaviour"},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel("client-type", misbehaviour.ClientType()),
+				telemetry.NewLabel("client-id", misbehaviour.GetClientID()),
+			},
+		)
+	}()
 
 	return nil
 }

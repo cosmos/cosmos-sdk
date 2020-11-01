@@ -10,7 +10,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -32,6 +31,7 @@ type Context struct {
 	OutputFormat      string
 	Height            int64
 	HomeDir           string
+	KeyringDir        string
 	From              string
 	BroadcastMode     string
 	FromName          string
@@ -94,12 +94,6 @@ func (ctx Context) WithOutputFormat(format string) Context {
 // WithNodeURI returns a copy of the context with an updated node URI.
 func (ctx Context) WithNodeURI(nodeURI string) Context {
 	ctx.NodeURI = nodeURI
-	client, err := rpchttp.New(nodeURI, "/websocket")
-	if err != nil {
-		panic(err)
-	}
-
-	ctx.Client = client
 	return ctx
 }
 
@@ -131,6 +125,12 @@ func (ctx Context) WithChainID(chainID string) Context {
 // WithHomeDir returns a copy of the Context with HomeDir set.
 func (ctx Context) WithHomeDir(dir string) Context {
 	ctx.HomeDir = dir
+	return ctx
+}
+
+// WithKeyringDir returns a copy of the Context with KeyringDir set.
+func (ctx Context) WithKeyringDir(dir string) Context {
+	ctx.KeyringDir = dir
 	return ctx
 }
 
@@ -302,8 +302,8 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddres
 
 func newKeyringFromFlags(ctx Context, backend string) (keyring.Keyring, error) {
 	if ctx.GenerateOnly {
-		return keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, ctx.HomeDir, ctx.Input)
+		return keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, ctx.KeyringDir, ctx.Input)
 	}
 
-	return keyring.New(sdk.KeyringServiceName(), backend, ctx.HomeDir, ctx.Input)
+	return keyring.New(sdk.KeyringServiceName(), backend, ctx.KeyringDir, ctx.Input)
 }

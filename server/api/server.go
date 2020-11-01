@@ -56,6 +56,7 @@ func New(clientCtx client.Context, logger log.Logger) *Server {
 		EmitDefaults: true,
 		Indent:       "  ",
 		OrigName:     true,
+		AnyResolver:  clientCtx.InterfaceRegistry,
 	}
 
 	return &Server{
@@ -103,7 +104,7 @@ func (s *Server) Start(cfg config.Config) error {
 		return err
 	}
 
-	s.registerGRPCRoutes()
+	s.registerGRPCGatewayRoutes()
 
 	s.listener = listener
 	var h http.Handler = s.Router
@@ -122,7 +123,7 @@ func (s *Server) Close() error {
 	return s.listener.Close()
 }
 
-func (s *Server) registerGRPCRoutes() {
+func (s *Server) registerGRPCGatewayRoutes() {
 	s.Router.PathPrefix("/").Handler(s.GRPCRouter)
 }
 

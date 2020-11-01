@@ -2,12 +2,12 @@ package types
 
 import (
 	"math/rand"
-	"reflect"
 	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/encoding"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -18,16 +18,12 @@ import (
 )
 
 func TestValidatorTestEquivalent(t *testing.T) {
-	val1 := NewValidator(valAddr1, pk1, Description{})
-	val2 := NewValidator(valAddr1, pk1, Description{})
+	val1 := newValidator(t, valAddr1, pk1)
+	val2 := newValidator(t, valAddr1, pk1)
+	require.Equal(t, val1.String(), val2.String())
 
-	ok := val1.String() == val2.String()
-	require.True(t, ok)
-
-	val2 = NewValidator(valAddr2, pk2, Description{})
-
-	ok = val1.String() == val2.String()
-	require.False(t, ok)
+	val2 = newValidator(t, valAddr2, pk2)
+	require.NotEqual(t, val1.String(), val2.String())
 }
 
 func TestUpdateDescription(t *testing.T) {
@@ -60,33 +56,29 @@ func TestUpdateDescription(t *testing.T) {
 }
 
 func TestABCIValidatorUpdate(t *testing.T) {
-	validator := NewValidator(valAddr1, pk1, Description{})
-
+	validator := newValidator(t, valAddr1, pk1)
 	abciVal := validator.ABCIValidatorUpdate()
-	pk, err := encoding.PubKeyToProto(validator.GetConsPubKey())
+	consPk, err := validator.TmConsPubKey()
+	require.NoError(t, err)
+	pk, err := encoding.PubKeyToProto(consPk)
 	require.NoError(t, err)
 	require.Equal(t, pk, abciVal.PubKey)
 	require.Equal(t, validator.BondedTokens().Int64(), abciVal.Power)
 }
 
 func TestABCIValidatorUpdateZero(t *testing.T) {
-	validator := NewValidator(valAddr1, pk1, Description{})
-
+	validator := newValidator(t, valAddr1, pk1)
 	abciVal := validator.ABCIValidatorUpdateZero()
-	pk, err := encoding.PubKeyToProto(validator.GetConsPubKey())
+	consPk, err := validator.TmConsPubKey()
+	require.NoError(t, err)
+	pk, err := encoding.PubKeyToProto(consPk)
 	require.NoError(t, err)
 	require.Equal(t, pk, abciVal.PubKey)
 	require.Equal(t, int64(0), abciVal.Power)
 }
 
 func TestShareTokens(t *testing.T) {
-	validator := Validator{
-		OperatorAddress: valAddr1.String(),
-		ConsensusPubkey: sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pk1),
-		Status:          sdk.Bonded,
-		Tokens:          sdk.NewInt(100),
-		DelegatorShares: sdk.NewDec(100),
-	}
+	validator := mkValidator(100, sdk.NewDec(100))
 	assert.True(sdk.DecEq(t, sdk.NewDec(50), validator.TokensFromShares(sdk.NewDec(50))))
 
 	validator.Tokens = sdk.NewInt(50)
@@ -95,24 +87,15 @@ func TestShareTokens(t *testing.T) {
 }
 
 func TestRemoveTokens(t *testing.T) {
-	valPubKey := pk1
-	valAddr := sdk.ValAddress(valPubKey.Address().Bytes())
-
-	validator := Validator{
-		OperatorAddress: valAddr.String(),
-		ConsensusPubkey: sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey),
-		Status:          sdk.Bonded,
-		Tokens:          sdk.NewInt(100),
-		DelegatorShares: sdk.NewDec(100),
-	}
+	validator := mkValidator(100, sdk.NewDec(100))
 
 	// remove tokens and test check everything
 	validator = validator.RemoveTokens(sdk.NewInt(10))
 	require.Equal(t, int64(90), validator.Tokens.Int64())
 
 	// update validator to from bonded -> unbonded
-	validator = validator.UpdateStatus(sdk.Unbonded)
-	require.Equal(t, sdk.Unbonded, validator.Status)
+	validator = validator.UpdateStatus(Unbonded)
+	require.Equal(t, Unbonded, validator.Status)
 
 	validator = validator.RemoveTokens(sdk.NewInt(10))
 	require.Panics(t, func() { validator.RemoveTokens(sdk.NewInt(-1)) })
@@ -120,8 +103,8 @@ func TestRemoveTokens(t *testing.T) {
 }
 
 func TestAddTokensValidatorBonded(t *testing.T) {
-	validator := NewValidator(sdk.ValAddress(pk1.Address().Bytes()), pk1, Description{})
-	validator = validator.UpdateStatus(sdk.Bonded)
+	validator := newValidator(t, valAddr1, pk1)
+	validator = validator.UpdateStatus(Bonded)
 	validator, delShares := validator.AddTokensFromDel(sdk.NewInt(10))
 
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), delShares))
@@ -130,24 +113,24 @@ func TestAddTokensValidatorBonded(t *testing.T) {
 }
 
 func TestAddTokensValidatorUnbonding(t *testing.T) {
-	validator := NewValidator(sdk.ValAddress(pk1.Address().Bytes()), pk1, Description{})
-	validator = validator.UpdateStatus(sdk.Unbonding)
+	validator := newValidator(t, valAddr1, pk1)
+	validator = validator.UpdateStatus(Unbonding)
 	validator, delShares := validator.AddTokensFromDel(sdk.NewInt(10))
 
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), delShares))
-	assert.Equal(t, sdk.Unbonding, validator.Status)
+	assert.Equal(t, Unbonding, validator.Status)
 	assert.True(sdk.IntEq(t, sdk.NewInt(10), validator.Tokens))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 }
 
 func TestAddTokensValidatorUnbonded(t *testing.T) {
 
-	validator := NewValidator(sdk.ValAddress(pk1.Address().Bytes()), pk1, Description{})
-	validator = validator.UpdateStatus(sdk.Unbonded)
+	validator := newValidator(t, valAddr1, pk1)
+	validator = validator.UpdateStatus(Unbonded)
 	validator, delShares := validator.AddTokensFromDel(sdk.NewInt(10))
 
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), delShares))
-	assert.Equal(t, sdk.Unbonded, validator.Status)
+	assert.Equal(t, Unbonded, validator.Status)
 	assert.True(sdk.IntEq(t, sdk.NewInt(10), validator.Tokens))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 }
@@ -155,9 +138,9 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 // TODO refactor to make simpler like the AddToken tests above
 func TestRemoveDelShares(t *testing.T) {
 	valA := Validator{
-		OperatorAddress: sdk.ValAddress(pk1.Address().Bytes()).String(),
-		ConsensusPubkey: sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pk1),
-		Status:          sdk.Bonded,
+		OperatorAddress: valAddr1.String(),
+		ConsensusPubkey: pk1Any,
+		Status:          Bonded,
 		Tokens:          sdk.NewInt(100),
 		DelegatorShares: sdk.NewDec(100),
 	}
@@ -169,24 +152,14 @@ func TestRemoveDelShares(t *testing.T) {
 	require.Equal(t, int64(90), valB.BondedTokens().Int64())
 
 	// specific case from random tests
-	poolTokens := sdk.NewInt(5102)
-	delShares := sdk.NewDec(115)
-	validator := Validator{
-		OperatorAddress: sdk.ValAddress(pk1.Address().Bytes()).String(),
-		ConsensusPubkey: sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pk1),
-		Status:          sdk.Bonded,
-		Tokens:          poolTokens,
-		DelegatorShares: delShares,
-	}
-
-	shares := sdk.NewDec(29)
-	_, tokens := validator.RemoveDelShares(shares)
+	validator := mkValidator(5102, sdk.NewDec(115))
+	_, tokens := validator.RemoveDelShares(sdk.NewDec(29))
 
 	require.True(sdk.IntEq(t, sdk.NewInt(1286), tokens))
 }
 
 func TestAddTokensFromDel(t *testing.T) {
-	validator := NewValidator(sdk.ValAddress(pk1.Address().Bytes()), pk1, Description{})
+	validator := newValidator(t, valAddr1, pk1)
 
 	validator, shares := validator.AddTokensFromDel(sdk.NewInt(6))
 	require.True(sdk.DecEq(t, sdk.NewDec(6), shares))
@@ -200,34 +173,27 @@ func TestAddTokensFromDel(t *testing.T) {
 }
 
 func TestUpdateStatus(t *testing.T) {
-	validator := NewValidator(sdk.ValAddress(pk1.Address().Bytes()), pk1, Description{})
+	validator := newValidator(t, valAddr1, pk1)
 	validator, _ = validator.AddTokensFromDel(sdk.NewInt(100))
-	require.Equal(t, sdk.Unbonded, validator.Status)
+	require.Equal(t, Unbonded, validator.Status)
 	require.Equal(t, int64(100), validator.Tokens.Int64())
 
 	// Unbonded to Bonded
-	validator = validator.UpdateStatus(sdk.Bonded)
-	require.Equal(t, sdk.Bonded, validator.Status)
+	validator = validator.UpdateStatus(Bonded)
+	require.Equal(t, Bonded, validator.Status)
 
 	// Bonded to Unbonding
-	validator = validator.UpdateStatus(sdk.Unbonding)
-	require.Equal(t, sdk.Unbonding, validator.Status)
+	validator = validator.UpdateStatus(Unbonding)
+	require.Equal(t, Unbonding, validator.Status)
 
 	// Unbonding to Bonded
-	validator = validator.UpdateStatus(sdk.Bonded)
-	require.Equal(t, sdk.Bonded, validator.Status)
+	validator = validator.UpdateStatus(Bonded)
+	require.Equal(t, Bonded, validator.Status)
 }
 
 func TestPossibleOverflow(t *testing.T) {
 	delShares := sdk.NewDec(391432570689183511).Quo(sdk.NewDec(40113011844664))
-	validator := Validator{
-		OperatorAddress: sdk.ValAddress(pk1.Address().Bytes()).String(),
-		ConsensusPubkey: sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pk1),
-		Status:          sdk.Bonded,
-		Tokens:          sdk.NewInt(2159),
-		DelegatorShares: delShares,
-	}
-
+	validator := mkValidator(2159, delShares)
 	newValidator, _ := validator.AddTokensFromDel(sdk.NewInt(71))
 
 	require.False(t, newValidator.DelegatorShares.IsNegative())
@@ -235,19 +201,19 @@ func TestPossibleOverflow(t *testing.T) {
 }
 
 func TestValidatorMarshalUnmarshalJSON(t *testing.T) {
-	validator := NewValidator(valAddr1, pk1, Description{})
+	validator := newValidator(t, valAddr1, pk1)
 	js, err := legacy.Cdc.MarshalJSON(validator)
 	require.NoError(t, err)
 	require.NotEmpty(t, js)
-	require.Contains(t, string(js), "\"consensus_pubkey\":\"cosmosvalconspu")
+	require.Contains(t, string(js), "\"consensus_pubkey\":{\"type\":\"cosmos/PubKeyEd25519\"")
 	got := &Validator{}
 	err = legacy.Cdc.UnmarshalJSON(js, got)
 	assert.NoError(t, err)
-	assert.Equal(t, validator, *got)
+	assert.True(t, validator.Equal(got))
 }
 
 func TestValidatorSetInitialCommission(t *testing.T) {
-	val := NewValidator(valAddr1, pk1, Description{})
+	val := newValidator(t, valAddr1, pk1)
 	testCases := []struct {
 		validator   Validator
 		commission  Commission
@@ -288,7 +254,7 @@ func TestValidatorsSortDeterminism(t *testing.T) {
 	// Create random validator slice
 	for i := range vals {
 		pk := ed25519.GenPrivKey().PubKey()
-		vals[i] = NewValidator(sdk.ValAddress(pk.Address()), pk, Description{})
+		vals[i] = newValidator(t, sdk.ValAddress(pk.Address()), pk)
 	}
 
 	// Save sorted copy
@@ -304,8 +270,39 @@ func TestValidatorsSortDeterminism(t *testing.T) {
 		})
 
 		Validators(vals).Sort()
-		require.True(t, reflect.DeepEqual(sortedVals, vals), "Validator sort returned different slices")
+		require.Equal(t, sortedVals, vals, "Validator sort returned different slices")
 	}
+}
+
+// Check SortTendermint sorts the same as tendermint
+func TestValidatorsSortTendermint(t *testing.T) {
+	vals := make([]Validator, 100)
+
+	for i := range vals {
+		pk := ed25519.GenPrivKey().PubKey()
+		pk2 := ed25519.GenPrivKey().PubKey()
+		vals[i] = newValidator(t, sdk.ValAddress(pk2.Address()), pk)
+		vals[i].Status = Bonded
+		vals[i].Tokens = sdk.NewInt(rand.Int63())
+	}
+	// create some validators with the same power
+	for i := 0; i < 10; i++ {
+		vals[i].Tokens = sdk.NewInt(1000000)
+	}
+
+	valz := Validators(vals)
+
+	// create expected tendermint validators by converting to tendermint then sorting
+	expectedVals, err := valz.ToTmValidators()
+	require.NoError(t, err)
+	sort.Sort(tmtypes.ValidatorsByVotingPower(expectedVals))
+
+	// sort in SDK and then convert to tendermint
+	sort.Sort(ValidatorsByVotingPower(valz))
+	actualVals, err := valz.ToTmValidators()
+	require.NoError(t, err)
+
+	require.Equal(t, expectedVals, actualVals, "sorting in SDK is not the same as sorting in Tendermint")
 }
 
 func TestValidatorToTm(t *testing.T) {
@@ -314,12 +311,41 @@ func TestValidatorToTm(t *testing.T) {
 
 	for i := range vals {
 		pk := ed25519.GenPrivKey().PubKey()
-		val := NewValidator(sdk.ValAddress(pk.Address()), pk, Description{})
-		val.Status = sdk.Bonded
+		val := newValidator(t, sdk.ValAddress(pk.Address()), pk)
+		val.Status = Bonded
 		val.Tokens = sdk.NewInt(rand.Int63())
 		vals[i] = val
 		expected[i] = tmtypes.NewValidator(pk.(cryptotypes.IntoTmPubKey).AsTmPubKey(), val.ConsensusPower())
 	}
+	vs, err := vals.ToTmValidators()
+	require.NoError(t, err)
+	require.Equal(t, expected, vs)
+}
 
-	require.Equal(t, expected, vals.ToTmValidators())
+func TestBondStatus(t *testing.T) {
+	require.False(t, Unbonded == Bonded)
+	require.False(t, Unbonded == Unbonding)
+	require.False(t, Bonded == Unbonding)
+	require.Equal(t, BondStatus(4).String(), "4")
+	require.Equal(t, BondStatusUnspecified, Unspecified.String())
+	require.Equal(t, BondStatusUnbonded, Unbonded.String())
+	require.Equal(t, BondStatusBonded, Bonded.String())
+	require.Equal(t, BondStatusUnbonding, Unbonding.String())
+}
+
+func mkValidator(tokens int64, shares sdk.Dec) Validator {
+	return Validator{
+		OperatorAddress: valAddr1.String(),
+		ConsensusPubkey: pk1Any,
+		Status:          Bonded,
+		Tokens:          sdk.NewInt(tokens),
+		DelegatorShares: shares,
+	}
+}
+
+// Creates a new validators and asserts the error check.
+func newValidator(t *testing.T, operator sdk.ValAddress, pubKey crypto.PubKey) Validator {
+	v, err := NewValidator(operator, pubKey, Description{})
+	require.NoError(t, err)
+	return v
 }

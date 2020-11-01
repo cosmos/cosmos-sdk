@@ -146,7 +146,7 @@ func printlnJSON(v interface{}) error {
 func UnsafeResetAllCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "unsafe-reset-all",
-		Short: "Resets the blockchain database, removes address book files, and resets priv_validator.json to the genesis state",
+		Short: "Resets the blockchain database, removes address book files, and resets data/priv_validator_state.json to the genesis state",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config

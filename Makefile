@@ -67,13 +67,15 @@ ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=badgerdb
 endif
 # handle rocksdb
-ifeq (rocksdb,$(findstring rocksdb,$(TENDERMINT_BUILD_OPTIONS)))
+ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
   CGO_ENABLED=1
   BUILD_TAGS += rocksdb
+  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=rocksdb
 endif
 # handle boltdb
-ifeq (boltdb,$(findstring boltdb,$(TENDERMINT_BUILD_OPTIONS)))
+ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
   BUILD_TAGS += boltdb
+  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=boltdb
 endif
 
 ifeq (,$(findstring nostrip,$(COSMOS_BUILD_OPTIONS)))
@@ -110,10 +112,9 @@ $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
 build-simd-all: go.sum
-	$(if $(shell docker inspect -f '{{ .Id }}' cosmossdk/rbuilder 2>/dev/null),$(info found image cosmossdk/rbuilder),docker pull cosmossdk/rbuilder:latest)
 	docker rm latest-build || true
 	docker run --volume=$(CURDIR):/sources:ro \
-        --env TARGET_OS='darwin linux windows' \
+        --env TARGET_PLATFORMS='linux/amd64 darwin/amd64 linux/arm64 windows/amd64' \
         --env APP=simd \
         --env VERSION=$(VERSION) \
         --env COMMIT=$(COMMIT) \
@@ -122,10 +123,9 @@ build-simd-all: go.sum
 	docker cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
 
 build-simd-linux: go.sum $(BUILDDIR)/
-	$(if $(shell docker inspect -f '{{ .Id }}' cosmossdk/rbuilder 2>/dev/null),$(info found image cosmossdk/rbuilder),docker pull cosmossdk/rbuilder:latest)
 	docker rm latest-build || true
 	docker run --volume=$(CURDIR):/sources:ro \
-        --env TARGET_OS='linux' \
+        --env TARGET_PLATFORMS='linux/amd64' \
         --env APP=simd \
         --env VERSION=$(VERSION) \
         --env COMMIT=$(COMMIT) \
@@ -175,16 +175,6 @@ go.sum: go.mod
 ###                              Documentation                              ###
 ###############################################################################
 
-update-swagger-docs: statik
-	$(BINDIR)/statik -src=client/docs/swagger-ui -dest=client/docs -f -m
-	@if [ -n "$(git status --porcelain)" ]; then \
-        echo "\033[91mSwagger docs are out of sync!!!\033[0m";\
-        exit 1;\
-    else \
-    	echo "\033[92mSwagger docs are in sync\033[0m";\
-    fi
-.PHONY: update-swagger-docs
-
 godocs:
 	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/cosmos/cosmos-sdk/types"
 	godoc -http=:6060
@@ -222,21 +212,27 @@ TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-
 # Test runs-specific rules. To add a new test target, just add
 # a new rule, customise ARGS or TEST_PACKAGES ad libitum, and
 # append the new rule to the TEST_TARGETS list.
-
 test-unit: ARGS=-tags='cgo ledger test_ledger_mock norace'
 test-unit-amino: ARGS=-tags='ledger test_ledger_mock test_amino norace'
 test-ledger: ARGS=-tags='cgo ledger norace'
 test-ledger-mock: ARGS=-tags='ledger test_ledger_mock norace'
 test-race: ARGS=-race -tags='cgo ledger test_ledger_mock'
 test-race: TEST_PACKAGES=$(PACKAGES_NOSIMULATION)
-
 $(TEST_TARGETS): run-tests
+
+# check-* compiles and collects tests without running them
+# note: go test -c doesn't support multiple packages yet (https://github.com/golang/go/issues/15513)
+CHECK_TEST_TARGETS := check-test-unit check-test-unit-amino
+check-test-unit: ARGS=-tags='cgo ledger test_ledger_mock norace'
+check-test-unit-amino: ARGS=-tags='ledger test_ledger_mock test_amino norace'
+$(CHECK_TEST_TARGETS): EXTRA_ARGS=-run=none
+$(CHECK_TEST_TARGETS): run-tests
 
 run-tests:
 ifneq (,$(shell which tparse 2>/dev/null))
-	go test -mod=readonly -json $(ARGS) $(TEST_PACKAGES) | tparse
+	go test -mod=readonly -json $(ARGS) $(EXTRA_ARGS) $(TEST_PACKAGES) | tparse
 else
-	go test -mod=readonly $(ARGS) $(TEST_PACKAGES)
+	go test -mod=readonly $(ARGS)  $(EXTRA_ARGS) $(TEST_PACKAGES)
 endif
 
 .PHONY: run-tests test test-all $(TEST_TARGETS)
@@ -366,7 +362,11 @@ proto-gen:
 	@./scripts/protocgen.sh
 
 proto-format:
+	@echo "Formatting Protobuf files"
+	docker run -v $(shell pwd):/workspace \
+	--workdir /workspace tendermintdev/docker-build-proto \
 	find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \;
+.PHONY: proto-format
 
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
 proto-gen-any:
@@ -389,10 +389,10 @@ proto-check-breaking-docker:
 	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=master
 .PHONY: proto-check-breaking-ci
 
-TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/3359e0bf2f8414d9687f9eecda67b899d64a9cd1/proto/tendermint
+TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.0-rc5/proto/tendermint
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
-CONFIO_URL 		 = https://raw.githubusercontent.com/confio/ics23/v0.6.2
+CONFIO_URL 		 = https://raw.githubusercontent.com/confio/ics23/v0.6.3
 
 TM_CRYPTO_TYPES     = third_party/proto/tendermint/crypto
 TM_ABCI_TYPES       = third_party/proto/tendermint/abci

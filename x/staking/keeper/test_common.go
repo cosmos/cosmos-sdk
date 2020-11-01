@@ -40,21 +40,15 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 
 	keeper.SetValidatorByPowerIndex(ctx, validator)
 
-	if apply {
-		keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-
-		validator, found := keeper.GetValidator(ctx, validator.GetOperator())
-		if !found {
-			panic("validator expected but not found")
-		}
-
-		return validator
+	if !apply {
+		ctx, _ = ctx.CacheContext()
+	}
+	_, err := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	if err != nil {
+		panic(err)
 	}
 
-	cachectx, _ := ctx.CacheContext()
-	keeper.ApplyAndReturnValidatorSetUpdates(cachectx)
-
-	validator, found := keeper.GetValidator(cachectx, validator.GetOperator())
+	validator, found := keeper.GetValidator(ctx, validator.GetOperator())
 	if !found {
 		panic("validator expected but not found")
 	}

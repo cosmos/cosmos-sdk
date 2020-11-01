@@ -1,8 +1,7 @@
 package keeper
 
 import (
-	"fmt"
-
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -85,7 +84,12 @@ func (k Keeper) ChanOpenInit(
 	k.SetNextSequenceRecv(ctx, portID, channelID, 1)
 	k.SetNextSequenceAck(ctx, portID, channelID, 1)
 
-	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: NONE -> INIT", portID, channelID))
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", channelID, "previous-state", "NONE", "new-state", "INIT")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "channel", "open-init")
+	}()
+
 	return capKey, nil
 }
 
@@ -183,18 +187,40 @@ func (k Keeper) ChanOpenTry(
 		return nil, err
 	}
 
-	k.SetChannel(ctx, portID, desiredChannelID, channel)
+	var (
+		capKey *capabilitytypes.Capability
+		err    error
+	)
 
-	capKey, err := k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, desiredChannelID))
-	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, desiredChannelID)
+	// Only create a capability and set the sequences if the previous channel does not exist
+	_, found = k.GetChannel(ctx, portID, desiredChannelID)
+	if !found {
+		capKey, err = k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, desiredChannelID))
+		if err != nil {
+			return nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, desiredChannelID)
+		}
+
+		k.SetNextSequenceSend(ctx, portID, desiredChannelID, 1)
+		k.SetNextSequenceRecv(ctx, portID, desiredChannelID, 1)
+		k.SetNextSequenceAck(ctx, portID, desiredChannelID, 1)
+	} else {
+		// capability initialized in ChanOpenInit
+		capKey, found = k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, desiredChannelID))
+		if !found {
+			return nil, sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound,
+				"capability not found for existing channel, portID (%s) channelID (%s)", portID, desiredChannelID,
+			)
+		}
 	}
 
-	k.SetNextSequenceSend(ctx, portID, desiredChannelID, 1)
-	k.SetNextSequenceRecv(ctx, portID, desiredChannelID, 1)
-	k.SetNextSequenceAck(ctx, portID, desiredChannelID, 1)
+	k.SetChannel(ctx, portID, desiredChannelID, channel)
 
-	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: NONE -> TRYOPEN", portID, desiredChannelID))
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", desiredChannelID, "previous-state", previousChannel.State.String(), "new-state", "TRYOPEN")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "channel", "open-try")
+	}()
+
 	return capKey, nil
 }
 
@@ -269,7 +295,11 @@ func (k Keeper) ChanOpenAck(
 		return err
 	}
 
-	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: %s -> OPEN", portID, channelID, channel.State))
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", channelID, "previous-state", channel.State.String(), "new-state", "OPEN")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "channel", "open-ack")
+	}()
 
 	channel.State = types.OPEN
 	channel.Version = counterpartyVersion
@@ -339,8 +369,11 @@ func (k Keeper) ChanOpenConfirm(
 
 	channel.State = types.OPEN
 	k.SetChannel(ctx, portID, channelID, channel)
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", channelID, "previous-state", "TRYOPEN", "new-state", "OPEN")
 
-	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: TRYOPEN -> OPEN", portID, channelID))
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "channel", "open-confirm")
+	}()
 	return nil
 }
 
@@ -348,7 +381,7 @@ func (k Keeper) ChanOpenConfirm(
 //
 // This section defines the set of functions required to close a channel handshake
 // as defined in https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#closing-handshake
-
+//
 // ChanCloseInit is called by either module to close their end of the channel. Once
 // closed, channels cannot be reopened.
 func (k Keeper) ChanCloseInit(
@@ -382,7 +415,11 @@ func (k Keeper) ChanCloseInit(
 		)
 	}
 
-	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: %s -> CLOSED", portID, channelID, channel.State))
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", channelID, "previous-state", channel.State.String(), "new-state", "CLOSED")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "channel", "close-init")
+	}()
 
 	channel.State = types.CLOSED
 	k.SetChannel(ctx, portID, channelID, channel)
@@ -445,7 +482,11 @@ func (k Keeper) ChanCloseConfirm(
 		return err
 	}
 
-	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: %s -> CLOSED", portID, channelID, channel.State))
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", channelID, "previous-state", channel.State.String(), "new-state", "CLOSED")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "channel", "close-confirm")
+	}()
 
 	channel.State = types.CLOSED
 	k.SetChannel(ctx, portID, channelID, channel)

@@ -93,9 +93,9 @@ func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals 
 		bz = bz[m:]
 		n := protowire.ConsumeFieldValue(tagNum, wireType, bz)
 		if n < 0 {
-			err = fmt.Errorf("unknownproto: %w: could not consume field value for tagNum: %d, wireType: %q",
-				protowire.ParseError(n), tagNum, wireTypeToString(wireType))
-			return
+			err = fmt.Errorf("could not consume field value for tagNum: %d, wireType: %q; %w",
+				tagNum, wireTypeToString(wireType), protowire.ParseError(n))
+			return hasUnknownNonCriticals, err
 		}
 		fieldBytes := bz[:n]
 		bz = bz[n:]

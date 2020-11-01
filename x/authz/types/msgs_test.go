@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -125,7 +126,7 @@ func TestMsgRevokeAuthorizationGetSignBytes(t *testing.T) {
 }
 
 func TestMsgExecAuthorizedGetSignBytes(t *testing.T) {
-	expected := `{"type":"cosmos-sdk/MsgExecAuthorized","value":{"grantee":"cosmos1ta047h6lta0kwunpde6x2e2lta047h6l22453t","msgs":[{"MethodName":"/cosmos.bank.v1beta1.Msg/Send","Request":{"type":"cosmos-sdk/MsgSend","value":{"amount":[{"amount":"2","denom":"steak"}],"from_address":"cosmos1ta047h6lta0kwunpde6x2ujlta047h6l3ksxz2","to_address":"cosmos1ta047h6lta0kwunpde6x2e2lta047h6l22453t"}}}]}}`
+	expected := `{"type":"cosmos-sdk/MsgExecAuthorized","value":{"grantee":"cosmos1ta047h6lta0kwunpde6x2e2lta047h6l22453t","msgs":[{"amount":[{"amount":"2","denom":"steak"}],"from_address":"cosmos1ta047h6lta0kwunpde6x2ujlta047h6l3ksxz2","to_address":"cosmos1ta047h6lta0kwunpde6x2e2lta047h6l22453t"}]}}`
 	msg := types.NewMsgExecAuthorized(
 		grantee, []sdk.ServiceMsg{
 			{
@@ -138,6 +139,9 @@ func TestMsgExecAuthorizedGetSignBytes(t *testing.T) {
 			},
 		},
 	)
+	var app *simapp.SimApp
+	app = simapp.Setup(false)
+	msg.UnpackInterfaces(app.AppCodec())
 	res := msg.GetSignBytes()
 	require.Equal(t, expected, string(res))
 }

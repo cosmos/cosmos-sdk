@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -182,7 +181,7 @@ func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.ServiceMsg) MsgExec
 			panic(err)
 		}
 
-		anyMsg := &codectypes.Any{
+		anyMsg := &types.Any{
 			TypeUrl: msg.MethodName,
 			Value:   bz,
 		}

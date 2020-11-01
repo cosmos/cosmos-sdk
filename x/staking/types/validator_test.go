@@ -274,6 +274,37 @@ func TestValidatorsSortDeterminism(t *testing.T) {
 	}
 }
 
+// Check SortTendermint sorts the same as tendermint
+func TestValidatorsSortTendermint(t *testing.T) {
+	vals := make([]Validator, 100)
+
+	for i := range vals {
+		pk := ed25519.GenPrivKey().PubKey()
+		pk2 := ed25519.GenPrivKey().PubKey()
+		vals[i] = newValidator(t, sdk.ValAddress(pk2.Address()), pk)
+		vals[i].Status = Bonded
+		vals[i].Tokens = sdk.NewInt(rand.Int63())
+	}
+	// create some validators with the same power
+	for i := 0; i < 10; i++ {
+		vals[i].Tokens = sdk.NewInt(1000000)
+	}
+
+	valz := Validators(vals)
+
+	// create expected tendermint validators by converting to tendermint then sorting
+	expectedVals, err := valz.ToTmValidators()
+	require.NoError(t, err)
+	sort.Sort(tmtypes.ValidatorsByVotingPower(expectedVals))
+
+	// sort in SDK and then convert to tendermint
+	sort.Sort(ValidatorsByVotingPower(valz))
+	actualVals, err := valz.ToTmValidators()
+	require.NoError(t, err)
+
+	require.Equal(t, expectedVals, actualVals, "sorting in SDK is not the same as sorting in Tendermint")
+}
+
 func TestValidatorToTm(t *testing.T) {
 	vals := make(Validators, 10)
 	expected := make([]*tmtypes.Validator, 10)

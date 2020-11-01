@@ -4,9 +4,9 @@ The following document describes the changes, and an approach to update the chai
 aka stargate release.
 
 ## Contents
-- [Updating a module to use Cosmos-SDK v0.40]()
-- [Updating a cosmos-sdk chain to use SDK v0.40]()
-- [Upgrading a live chain to v0.40]()
+- [Updating a module to use Cosmos-SDK v0.40](#updating-a-module-to-use-cosmos-sdk-v040)
+- [Updating a cosmos-sdk chain to use SDK v0.40](#updating-a-cosmos-sdk-chain-to-use-sdk-v040)
+- [Upgrading a live chain to v0.40](#upgrading-a-live-chain-to-v040)
 
 ## Updating a module to use Cosmos-SDK v0.40
 This section covers the changes in modules from `v0.39.x` to `v0.40`.
@@ -124,7 +124,7 @@ func NewSendTxCmd() *cobra.Command {
 	...
 }
 ```
-The new definition for CLI tx command would look like the following
+*Sample code for new tx command:*
 ```go
 // NewSendTxCmd returns a CLI command handler for creating a MsgSend transaction.
 func NewSendTxCmd() *cobra.Command {
@@ -166,6 +166,10 @@ ignored as it is implied from [from_key_or_address].`,
 	return cmd
 }
 ```
+
+## Updating a cosmos-sdk chain to use SDK 0.40
+
+## Upgrading a live chain to v0.40
 
 References:
 - [ADR 019 - Protobuf State Encoding](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-019-protobuf-state-encoding.md)

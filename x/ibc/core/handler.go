@@ -24,6 +24,10 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := k.UpdateClient(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
+		case *clienttypes.MsgUpgradeClient:
+			res, err := k.UpgradeClient(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+
 		case *clienttypes.MsgSubmitMisbehaviour:
 			res, err := k.SubmitMisbehaviour(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)

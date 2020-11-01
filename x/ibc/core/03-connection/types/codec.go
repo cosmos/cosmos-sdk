@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
@@ -13,18 +14,17 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface(
 		"ibc.core.connection.v1.ConnectionI",
 		(*exported.ConnectionI)(nil),
+		&ConnectionEnd{},
 	)
 	registry.RegisterInterface(
 		"ibc.core.connection.v1.CounterpartyConnectionI",
 		(*exported.CounterpartyConnectionI)(nil),
-	)
-	registry.RegisterImplementations(
-		(*exported.ConnectionI)(nil),
-		&ConnectionEnd{},
-	)
-	registry.RegisterImplementations(
-		(*exported.CounterpartyConnectionI)(nil),
 		&Counterparty{},
+	)
+	registry.RegisterInterface(
+		"ibc.core.connection.v1.Version",
+		(*exported.Version)(nil),
+		&Version{},
 	)
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
@@ -33,6 +33,8 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&MsgConnectionOpenAck{},
 		&MsgConnectionOpenConfirm{},
 	)
+
+	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 var (

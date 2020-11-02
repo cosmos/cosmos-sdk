@@ -430,7 +430,7 @@ func Benchmark(b *testing.B) {
 		},
 	}
 
-	opCounts := []int{2, 33, 257, 513}
+	opCounts := []int{2, 33, 257}
 
 	for _, opCount := range opCounts {
 		for _, bm := range benchmarks {

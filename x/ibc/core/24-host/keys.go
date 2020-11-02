@@ -144,6 +144,11 @@ func PacketAcknowledgementPath(portID, channelID string, sequence uint64) string
 	return fmt.Sprintf("%s/", KeyPacketAckPrefix) + channelPath(portID, channelID) + fmt.Sprintf("/acknowledgements/%d", sequence)
 }
 
+// PacketAcknowledgementPrefixPath defines the prefix for commitments to packet data fields store path.
+func PacketAcknowledgementPrefixPath(portID, channelID string) string {
+	return fmt.Sprintf("%s/", KeyPacketAckPrefix) + channelPath(portID, channelID)
+}
+
 // PacketReceiptPath defines the packet receipt store path
 func PacketReceiptPath(portID, channelID string, sequence uint64) string {
 	return fmt.Sprintf("%s/", KeyPacketReceiptPrefix) + channelPath(portID, channelID) + fmt.Sprintf("/receipts/%d", sequence)

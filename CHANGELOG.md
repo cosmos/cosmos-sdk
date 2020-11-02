@@ -52,12 +52,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `MsgCreateValidator.Pubkey` type changed from `string` to `codectypes.Any`.
 * Deprecating and renaming `MakeEncodingConfig` to `MakeTestEncodingConfig` (both in `simapp` and `simapp/params` packages).
 * (tx) [\#7688](https://github.com/cosmos/cosmos-sdk/pull/7688) The gRPC simulate service method has been moved from `cosmos.base.v1beta1.simulate` to `cosmos.tx.v1beta1`, as a method in the Tx service.
+* [#7764](https://github.com/cosmos/cosmos-sdk/pull/7764) Added module initialization options:
+  * `server/types.AppExporter` requires extra argument: `AppOptions`.
+  * `server.AddCommands` requires extra argument: `addStartFlags types.ModuleInitFlags`
+  * `x/crisis.NewAppModule` has a new attribute: `skipGenesisInvariants`. [PR](https://github.com/cosmos/cosmos-sdk/pull/7764)
 
 ### Features
 
 * (codec) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) `InterfaceRegistry` now inherits `jsonpb.AnyResolver`, and has a `RegisterCustomTypeURL` method to support ADR 031 packing of `Any`s. `AnyResolver` is now a required parameter to `RejectUnknownFields`.
 * (baseapp) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) Add `ServiceMsgRouter` to BaseApp to handle routing of protobuf service `Msg`s. The two new types defined in ADR 031, `sdk.ServiceMsg` and `sdk.MsgRequest` are introduced with this router.
 * (tx) [\#7688](https://github.com/cosmos/cosmos-sdk/pull/7688) Add a new Tx gRPC service with methods `Simulate` and `GetTx` (by hash).
+* `x/crisis` has a new function: `AddModuleInitFlags`, which will register optional crisis module flags for the start command.
+
 
 ### Bug Fixes
 

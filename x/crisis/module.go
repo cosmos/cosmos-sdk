@@ -107,7 +107,7 @@ func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool) AppModule {
 	}
 }
 
-// AddModuleInitFlags implements servertypes.ModuleInitFlags interface
+// AddModuleInitFlags implements servertypes.ModuleInitFlags interface.
 func AddModuleInitFlags(startCmd *cobra.Command) {
 	startCmd.Flags().Bool(FlagSkipGenesisInvariants, false, "Skip x/crisis invariants check on startup")
 }

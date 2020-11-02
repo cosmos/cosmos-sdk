@@ -52,7 +52,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `MsgCreateValidator.Pubkey` type changed from `string` to `codectypes.Any`.
 * Deprecating and renaming `MakeEncodingConfig` to `MakeTestEncodingConfig` (both in `simapp` and `simapp/params` packages).
 * (tx) [\#7688](https://github.com/cosmos/cosmos-sdk/pull/7688) The gRPC simulate service method has been moved from `cosmos.base.v1beta1.simulate` to `cosmos.tx.v1beta1`, as a method in the Tx service.
-* Added module initialization options [PR](https://github.com/cosmos/cosmos-sdk/pull/7764)
+* [#7764](https://github.com/cosmos/cosmos-sdk/pull/7764) Added module initialization options:
   * `server/types.AppExporter` requires extra argument: `AppOptions`.
   * `server.AddCommands` requires extra argument: `addStartFlags types.ModuleInitFlags`
   * `x/crisis.NewAppModule` has a new attribute: `skipGenesisInvariants`. [PR](https://github.com/cosmos/cosmos-sdk/pull/7764)

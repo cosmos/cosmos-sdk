@@ -9,7 +9,7 @@ import (
 )
 
 func TestAuthAccountClient(t *testing.T) {
-	client, err := NewClient("0.0.0.0:9090")
+	client, err := NewClient("0.0.0.0:9090", "")
 	require.NoError(t, err)
 
 	account, err := client.GetAuthAccount(context.Background(), "cosmos1y7jgzf0q4vvun8tlgc7lf5jj35anytrjsy9hv8", 0)

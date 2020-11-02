@@ -2,29 +2,20 @@ package sdk
 
 import (
 	"context"
+	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 )
 
 func (c Client) GetNodeInfo(ctx context.Context) (rpc.NodeInfoResponse, error) {
-	//r, err := http.Get(c.getEndpoint("/node_info"))
-	//if err != nil {
-	//	return rpc.NodeInfoResponse{}, err
-	//}
-	//if r == nil {
-	//	return rpc.NodeInfoResponse{}, fmt.Errorf("unable to fetch data from endpoint %s", c.getEndpoint("/node_info"))
-	//}
-	//defer r.Body.Close()
-	//btes, err := ioutil.ReadAll(r.Body)
-	//if err != nil {
-	//	return rpc.NodeInfoResponse{}, err
-	//}
-	//
-	//var infoRes rpc.NodeInfoResponse
-	//if err = c.cdc.UnmarshalBinaryBare(btes, &infoRes); err != nil {
-	//	return infoRes, err
-	//}
-	//
-	//return infoRes, nil
-	return rpc.NodeInfoResponse{}, nil
+	status, err := c.clientCtx.Client.Status(ctx)
+	if err != nil {
+		return rpc.NodeInfoResponse{}, err
+	}
+	return rpc.NodeInfoResponse{
+		DefaultNodeInfo: status.NodeInfo,
+		// NOTE(fdymylja): I doubt this is correct as we could run a rosetta
+		// 'node' with version v0.40.1, and query a v0.40.2 node successfully
+		ApplicationVersion: version.NewInfo(),
+	}, nil
 }

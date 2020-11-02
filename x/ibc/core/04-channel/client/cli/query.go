@@ -391,7 +391,7 @@ func GetCmdQueryUnreceivedAcks() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unreceived-acks [port-id] [channel-id]",
 		Short: "Query all the unreceived acks associated with a channel",
-		Long: `Given a list of packet commitment sequences from counterparty, determine if an ack on executing chain has not been received to counterparty.
+		Long: `Given a list of acknowledgement sequences from counterparty, determine if an ack on the counterparty chain has been received on the executing chain.
 
 The return value represents:
 - Unreceived packet acknowledgement: packet commitment exists on original sending (executing) chain and ack exists on receiving chain.

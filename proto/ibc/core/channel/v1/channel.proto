@@ -115,7 +115,7 @@ message Packet {
 }
 
 // PacketState defines the generic type necessary to retrieve and store
-// packet commitments, acknowledgments, and receipts
+// packet commitments, acknowledgments, and receipts.
 // Caller is responsible for knowing the context necessary to interpret this
 // state as a commitment, acknowledgement, or a receipt
 message PacketState {

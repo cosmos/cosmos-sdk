@@ -9,8 +9,7 @@ import "ibc/core/channel/v1/channel.proto";
 // GenesisState defines the ibc channel submodule's genesis state.
 message GenesisState {
   repeated IdentifiedChannel   channels = 1 [(gogoproto.casttype) = "IdentifiedChannel", (gogoproto.nullable) = false];
-  repeated PacketState acknowledgements = 2
-      [(gogoproto.casttype) = "PacketState", (gogoproto.nullable) = false];
+  repeated PacketState acknowledgements = 2 [(gogoproto.nullable) = false];
   repeated PacketState commitments    = 3 [(gogoproto.nullable) = false];
   repeated PacketState receipts = 4 [(gogoproto.nullable) = false];
   repeated PacketSequence      send_sequences = 5

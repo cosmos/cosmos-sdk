@@ -287,7 +287,7 @@ func (k Keeper) GetAllPacketCommitmentsAtChannel(ctx sdk.Context, portID, channe
 	return commitments
 }
 
-// IteratePacketReceipt provides an iterator over all PacketTeceipt objects. For each
+// IteratePacketReceipt provides an iterator over all PacketReceipt objects. For each
 // receipt, cb will be called. If the cb returns true, the iterator will close
 // and stop.
 func (k Keeper) IteratePacketReceipt(ctx sdk.Context, cb func(portID, channelID string, sequence uint64, receipt []byte) bool) {

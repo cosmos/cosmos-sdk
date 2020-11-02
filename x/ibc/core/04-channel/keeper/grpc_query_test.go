@@ -762,7 +762,7 @@ func (suite *KeeperTestSuite) TestQueryPacketReceipt() {
 				req = &types.QueryPacketReceiptRequest{
 					PortId:    "",
 					ChannelId: "test-channel-id",
-					Sequence:  0,
+					Sequence:  1,
 				}
 			},
 			false,
@@ -773,7 +773,7 @@ func (suite *KeeperTestSuite) TestQueryPacketReceipt() {
 				req = &types.QueryPacketReceiptRequest{
 					PortId:    "test-port-id",
 					ChannelId: "",
-					Sequence:  0,
+					Sequence:  1,
 				}
 			},
 			false,

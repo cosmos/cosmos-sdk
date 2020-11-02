@@ -1,6 +1,8 @@
 package types
 
 import (
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
@@ -55,10 +57,10 @@ func (msg MsgTransfer) ValidateBasic() error {
 	if !msg.Token.IsPositive() {
 		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, msg.Token.String())
 	}
-	if msg.Sender == "" {
+	if strings.TrimSpace(msg.Sender) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
 	}
-	if msg.Receiver == "" {
+	if strings.TrimSpace(msg.Receiver) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing recipient address")
 	}
 	return ValidateIBCDenom(msg.Token.Denom)

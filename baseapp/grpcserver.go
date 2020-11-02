@@ -38,10 +38,8 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 					sdkerrors.ErrInvalidRequest,
 					"Baseapp.RegisterGRPCServer: invalid height header %q: %v", grpctypes.GRPCBlockHeightHeader, err)
 			}
-			if height < 0 {
-				return nil, sdkerrors.Wrapf(
-					sdkerrors.ErrInvalidRequest,
-					"Baseapp.RegisterGRPCServer: invalid height header %q: value out of range, must be >= 0", grpctypes.GRPCBlockHeightHeader)
+			if err := checkNegativeHeight(height); err != nil {
+				return nil, err
 			}
 		}
 

@@ -263,14 +263,7 @@ func queryPacketReceiptABCI(
 		return nil, err
 	}
 
-	var receipt string
-	if value == nil {
-		receipt = ""
-	} else {
-		receipt = string(value)
-	}
-
-	return types.NewQueryPacketReceiptResponse(receipt, value != nil, proofBz, proofHeight), nil
+	return types.NewQueryPacketReceiptResponse(value != nil, proofBz, proofHeight), nil
 }
 
 // QueryPacketAcknowledgement returns the data about a packet acknowledgement.

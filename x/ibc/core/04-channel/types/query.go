@@ -47,10 +47,9 @@ func NewQueryPacketCommitmentResponse(
 
 // NewQueryPacketReceiptResponse creates a new QueryPacketReceiptResponse instance
 func NewQueryPacketReceiptResponse(
-	receipt string, recvd bool, proof []byte, height clienttypes.Height,
+	recvd bool, proof []byte, height clienttypes.Height,
 ) *QueryPacketReceiptResponse {
 	return &QueryPacketReceiptResponse{
-		Receipt:     receipt,
 		Received:    recvd,
 		Proof:       proof,
 		ProofHeight: height,

@@ -17633,7 +17633,7 @@ paths:
                     PacketState defines the generic type necessary to retrieve
                     and store
 
-                    packet commitments, acknowledgments, and receipts
+                    packet commitments, acknowledgments, and receipts.
 
                     Caller is responsible for knowing the context necessary to
                     interpret this
@@ -18240,7 +18240,7 @@ paths:
                     PacketState defines the generic type necessary to retrieve
                     and store
 
-                    packet commitments, acknowledgments, and receipts
+                    packet commitments, acknowledgments, and receipts.
 
                     Caller is responsible for knowing the context necessary to
                     interpret this
@@ -19349,9 +19349,6 @@ paths:
           schema:
             type: object
             properties:
-              receipt:
-                type: string
-                title: packet receipt if it exists
               received:
                 type: boolean
                 title: success flag for if receipt exists
@@ -31401,7 +31398,7 @@ definitions:
         description: embedded data that represents packet state.
     title: |-
       PacketState defines the generic type necessary to retrieve and store
-      packet commitments, acknowledgments, and receipts
+      packet commitments, acknowledgments, and receipts.
       Caller is responsible for knowing the context necessary to interpret this
       state as a commitment, acknowledgement, or a receipt
   ibc.core.channel.v1.QueryChannelClientStateResponse:
@@ -32296,7 +32293,7 @@ definitions:
           title: >-
             PacketState defines the generic type necessary to retrieve and store
 
-            packet commitments, acknowledgments, and receipts
+            packet commitments, acknowledgments, and receipts.
 
             Caller is responsible for knowing the context necessary to interpret
             this
@@ -32426,7 +32423,7 @@ definitions:
           title: >-
             PacketState defines the generic type necessary to retrieve and store
 
-            packet commitments, acknowledgments, and receipts
+            packet commitments, acknowledgments, and receipts.
 
             Caller is responsible for knowing the context necessary to interpret
             this
@@ -32490,9 +32487,6 @@ definitions:
   ibc.core.channel.v1.QueryPacketReceiptResponse:
     type: object
     properties:
-      receipt:
-        type: string
-        title: packet receipt if it exists
       received:
         type: boolean
         title: success flag for if receipt exists

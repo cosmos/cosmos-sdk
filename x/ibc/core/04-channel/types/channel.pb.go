@@ -300,7 +300,7 @@ func (m *Packet) XXX_DiscardUnknown() {
 var xxx_messageInfo_Packet proto.InternalMessageInfo
 
 // PacketState defines the generic type necessary to retrieve and store
-// packet commitments, acknowledgments, and receipts
+// packet commitments, acknowledgments, and receipts.
 // Caller is responsible for knowing the context necessary to interpret this
 // state as a commitment, acknowledgement, or a receipt
 type PacketState struct {

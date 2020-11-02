@@ -251,8 +251,6 @@ message QueryPacketReceiptRequest {
 // which also includes a proof, and the height from which the proof was
 // retrieved
 message QueryPacketReceiptResponse {
-  // packet receipt if it exists
-  string receipt = 1;
   // success flag for if receipt exists
   bool received = 2;
   // merkle proof of existence

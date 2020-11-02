@@ -281,10 +281,10 @@ func (q Keeper) PacketReceipt(c context.Context, req *types.QueryPacketReceiptRe
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	receipt, recvd := q.GetPacketReceipt(ctx, req.PortId, req.ChannelId, req.Sequence)
+	_, recvd := q.GetPacketReceipt(ctx, req.PortId, req.ChannelId, req.Sequence)
 
 	selfHeight := clienttypes.GetSelfHeight(ctx)
-	return types.NewQueryPacketReceiptResponse(receipt, recvd, nil, selfHeight), nil
+	return types.NewQueryPacketReceiptResponse(recvd, nil, selfHeight), nil
 }
 
 // PacketAcknowledgement implements the Query/PacketAcknowledgement gRPC method

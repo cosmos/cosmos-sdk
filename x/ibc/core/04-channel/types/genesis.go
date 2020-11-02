@@ -20,6 +20,9 @@ func NewPacketState(portID, channelID string, seq uint64, data []byte) PacketSta
 // Validate performs basic validation of fields returning an error upon any
 // failure.
 func (pa PacketState) Validate() error {
+	if pa.Data == nil {
+		return errors.New("data bytes cannot be nil")
+	}
 	return validateGenFields(pa.PortId, pa.ChannelId, pa.Sequence)
 }
 

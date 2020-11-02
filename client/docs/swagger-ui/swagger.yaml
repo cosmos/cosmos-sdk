@@ -17629,16 +17629,16 @@ paths:
                       type: string
                       format: byte
                       description: embedded data that represents packet state.
-                  title: >-
+                  description: >-
                     PacketState defines the generic type necessary to retrieve
                     and store
 
-                    packet commitments, acknowledgments, and receipts.
+                    packet commitments, acknowledgements, and receipts.
 
                     Caller is responsible for knowing the context necessary to
                     interpret this
 
-                    state as a commitment, acknowledgement, or a receipt
+                    state as a commitment, acknowledgement, or a receipt.
               pagination:
                 title: pagination response
                 type: object
@@ -18236,16 +18236,16 @@ paths:
                       type: string
                       format: byte
                       description: embedded data that represents packet state.
-                  title: >-
+                  description: >-
                     PacketState defines the generic type necessary to retrieve
                     and store
 
-                    packet commitments, acknowledgments, and receipts.
+                    packet commitments, acknowledgements, and receipts.
 
                     Caller is responsible for knowing the context necessary to
                     interpret this
 
-                    state as a commitment, acknowledgement, or a receipt
+                    state as a commitment, acknowledgement, or a receipt.
               pagination:
                 title: pagination response
                 type: object
@@ -18803,7 +18803,7 @@ paths:
           required: true
           type: string
         - name: packet_ack_sequences
-          description: list of acknowledgment sequences
+          description: list of acknowledgement sequences
           in: path
           required: true
           type: array
@@ -31396,11 +31396,11 @@ definitions:
         type: string
         format: byte
         description: embedded data that represents packet state.
-    title: |-
+    description: |-
       PacketState defines the generic type necessary to retrieve and store
-      packet commitments, acknowledgments, and receipts.
+      packet commitments, acknowledgements, and receipts.
       Caller is responsible for knowing the context necessary to interpret this
-      state as a commitment, acknowledgement, or a receipt
+      state as a commitment, acknowledgement, or a receipt.
   ibc.core.channel.v1.QueryChannelClientStateResponse:
     type: object
     properties:
@@ -32290,15 +32290,15 @@ definitions:
               type: string
               format: byte
               description: embedded data that represents packet state.
-          title: >-
+          description: >-
             PacketState defines the generic type necessary to retrieve and store
 
-            packet commitments, acknowledgments, and receipts.
+            packet commitments, acknowledgements, and receipts.
 
             Caller is responsible for knowing the context necessary to interpret
             this
 
-            state as a commitment, acknowledgement, or a receipt
+            state as a commitment, acknowledgement, or a receipt.
       pagination:
         title: pagination response
         type: object
@@ -32420,15 +32420,15 @@ definitions:
               type: string
               format: byte
               description: embedded data that represents packet state.
-          title: >-
+          description: >-
             PacketState defines the generic type necessary to retrieve and store
 
-            packet commitments, acknowledgments, and receipts.
+            packet commitments, acknowledgements, and receipts.
 
             Caller is responsible for knowing the context necessary to interpret
             this
 
-            state as a commitment, acknowledgement, or a receipt
+            state as a commitment, acknowledgement, or a receipt.
       pagination:
         title: pagination response
         type: object

@@ -1432,7 +1432,7 @@ type QueryUnreceivedAcksRequest struct {
 	PortId string `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
 	// channel unique identifier
 	ChannelId string `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
-	// list of acknowledgment sequences
+	// list of acknowledgement sequences
 	PacketAckSequences []uint64 `protobuf:"varint,3,rep,packed,name=packet_ack_sequences,json=packetAckSequences,proto3" json:"packet_ack_sequences,omitempty"`
 }
 

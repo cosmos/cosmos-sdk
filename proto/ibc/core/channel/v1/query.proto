@@ -330,7 +330,7 @@ message QueryUnreceivedAcksRequest {
   string port_id = 1;
   // channel unique identifier
   string channel_id = 2;
-  // list of acknowledgment sequences
+  // list of acknowledgement sequences
   repeated uint64 packet_ack_sequences = 3;
 }
 

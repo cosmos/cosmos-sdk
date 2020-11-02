@@ -18,7 +18,7 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-func TestRegisterService(t *testing.T) {
+func TestRegisterMsgService(t *testing.T) {
 	db := dbm.NewMemDB()
 
 	// Create an encoding config that doesn't register testdata Msg services.
@@ -35,6 +35,31 @@ func TestRegisterService(t *testing.T) {
 	// Register testdata Msg services, and rerun `RegisterService`.
 	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
 	require.NotPanics(t, func() {
+		testdata.RegisterMsgServer(
+			app.MsgServiceRouter(),
+			testdata.MsgServerImpl{},
+		)
+	})
+}
+
+func TestRegisterMsgServiceTwice(t *testing.T) {
+	// Setup baseapp.
+	db := dbm.NewMemDB()
+	encCfg := simapp.MakeTestEncodingConfig()
+	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
+	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
+
+	// First time registering service shouldn't panic.
+	require.NotPanics(t, func() {
+		testdata.RegisterMsgServer(
+			app.MsgServiceRouter(),
+			testdata.MsgServerImpl{},
+		)
+	})
+
+	// Second time should panic.
+	require.Panics(t, func() {
 		testdata.RegisterMsgServer(
 			app.MsgServiceRouter(),
 			testdata.MsgServerImpl{},

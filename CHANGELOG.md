@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/staking) [\#7499](https://github.com/cosmos/cosmos-sdk/pull/7499) `BondStatus` is now a protobuf `enum` instead of an `int32`, and JSON serialized using its protobuf name, so expect names like `BOND_STATUS_UNBONDING` as opposed to `Unbonding`.
 * (x/evidence) [\#7538](https://github.com/cosmos/cosmos-sdk/pull/7538) The ABCI's `Result.Data` field of `MsgSubmitEvidence` does not contain the raw evidence's hash, but the encoded `MsgSubmitEvidenceResponse` struct.
+* (x/upgrade) [#7697](https://github.com/cosmos/cosmos-sdk/pull/7697) Rename flag name "--time" to "--upgrade-time", "--info" to "--upgrade-info", to keep it consistent with help message.
 
 ### API Breaking
 
@@ -50,15 +51,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `Validator.ConsensusPubkey` type changed from `string` to `codectypes.Any`.
   * `MsgCreateValidator.Pubkey` type changed from `string` to `codectypes.Any`.
 * Deprecating and renaming `MakeEncodingConfig` to `MakeTestEncodingConfig` (both in `simapp` and `simapp/params` packages).
+* (tx) [\#7688](https://github.com/cosmos/cosmos-sdk/pull/7688) The gRPC simulate service method has been moved from `cosmos.base.v1beta1.simulate` to `cosmos.tx.v1beta1`, as a method in the Tx service.
 
 ### Features
 
 * (codec) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) `InterfaceRegistry` now inherits `jsonpb.AnyResolver`, and has a `RegisterCustomTypeURL` method to support ADR 031 packing of `Any`s. `AnyResolver` is now a required parameter to `RejectUnknownFields`.
 * (baseapp) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) Add `ServiceMsgRouter` to BaseApp to handle routing of protobuf service `Msg`s. The two new types defined in ADR 031, `sdk.ServiceMsg` and `sdk.MsgRequest` are introduced with this router.
+* (tx) [\#7688](https://github.com/cosmos/cosmos-sdk/pull/7688) Add a new Tx gRPC service with methods `Simulate` and `GetTx` (by hash).
 
 ### Bug Fixes
 
 * (kvstore) [\#7415](https://github.com/cosmos/cosmos-sdk/pull/7415) Allow new stores to be registered during on-chain upgrades.
+* (client) [\#7699](https://github.com/cosmos/cosmos-sdk/pull/7699) Fix panic in context when setting invalid nodeURI. `WithNodeURI` does not set the `Client` in the context.
 
 
 ## [v0.40.0-rc0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc0) - 2020-10-13

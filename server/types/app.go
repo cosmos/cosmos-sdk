@@ -10,6 +10,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 )
@@ -37,6 +38,10 @@ type (
 		// RegisterGRPCServer registers gRPC services directly with the gRPC
 		// server.
 		RegisterGRPCServer(grpc.Server)
+
+		// RegisterTxService registers the gRPC Query service for tx (such as tx
+		// simulation, fetching txs by hash...).
+		RegisterTxService(clientCtx client.Context)
 	}
 
 	// AppCreator is a function that allows us to lazily initialize an

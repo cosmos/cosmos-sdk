@@ -51,7 +51,7 @@ func queryPacketCommitmentABCI(
 		return nil, sdkerrors.Wrapf(types.ErrPacketCommitmentNotFound, "portID (%s), channelID (%s), sequence (%d)", portID, channelID, sequence)
 	}
 
-	return types.NewQueryPacketCommitmentResponse(portID, channelID, sequence, value, proofBz, proofHeight), nil
+	return types.NewQueryPacketCommitmentResponse(value, proofBz, proofHeight), nil
 }
 
 // QueryChannel returns a channel end.
@@ -93,7 +93,7 @@ func queryChannelABCI(clientCtx client.Context, portID, channelID string) (*type
 		return nil, err
 	}
 
-	return types.NewQueryChannelResponse(portID, channelID, channel, proofBz, proofHeight), nil
+	return types.NewQueryChannelResponse(channel, proofBz, proofHeight), nil
 }
 
 // QueryChannelClientState returns the ClientState of a channel end. If
@@ -229,5 +229,38 @@ func queryNextSequenceRecvABCI(clientCtx client.Context, portID, channelID strin
 
 	sequence := binary.BigEndian.Uint64(value)
 
-	return types.NewQueryNextSequenceReceiveResponse(portID, channelID, sequence, proofBz, proofHeight), nil
+	return types.NewQueryNextSequenceReceiveResponse(sequence, proofBz, proofHeight), nil
+}
+
+// QueryPacketAcknowledgement returns the data about a packet acknowledgement.
+// If prove is true, it performs an ABCI store query in order to retrieve the merkle proof. Otherwise,
+// it uses the gRPC query client
+func QueryPacketAcknowledgement(clientCtx client.Context, portID, channelID string, sequence uint64, prove bool) (*types.QueryPacketAcknowledgementResponse, error) {
+	if prove {
+		return queryPacketAcknowledgementABCI(clientCtx, portID, channelID, sequence)
+	}
+
+	queryClient := types.NewQueryClient(clientCtx)
+	req := &types.QueryPacketAcknowledgementRequest{
+		PortId:    portID,
+		ChannelId: channelID,
+		Sequence:  sequence,
+	}
+
+	return queryClient.PacketAcknowledgement(context.Background(), req)
+}
+
+func queryPacketAcknowledgementABCI(clientCtx client.Context, portID, channelID string, sequence uint64) (*types.QueryPacketAcknowledgementResponse, error) {
+	key := host.KeyPacketAcknowledgement(portID, channelID, sequence)
+
+	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(value) == 0 {
+		return nil, sdkerrors.Wrapf(types.ErrInvalidAcknowledgement, "portID (%s), channelID (%s), sequence (%d)", portID, channelID, sequence)
+	}
+
+	return types.NewQueryPacketAcknowledgementResponse(value, proofBz, proofHeight), nil
 }

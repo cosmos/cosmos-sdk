@@ -159,6 +159,11 @@ func (k Keeper) IterateDenomTraces(ctx sdk.Context, cb func(denomTrace types.Den
 	}
 }
 
+// AuthenticateCapability wraps the scopedKeeper's AuthenticateCapability function
+func (k Keeper) AuthenticateCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) bool {
+	return k.scopedKeeper.AuthenticateCapability(ctx, cap, name)
+}
+
 // ClaimCapability allows the transfer module that can claim a capability that IBC module
 // passes to it
 func (k Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error {

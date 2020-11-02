@@ -33,7 +33,7 @@ acting as the "sink zone".
 
 It is strongly recommended to read the full details of [ADR 001: Coin Source Tracing](./../../../../../docs/architecture/adr-001-coin-source-tracing.md) to understand the implications and context of the IBC token representations.
 
-### UX suggestion for clients
+### UX suggestions for clients
 
 For clients that want to display the source of the token, it is recommended to use the following
 alternatives for each of the following cases:

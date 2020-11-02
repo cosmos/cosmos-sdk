@@ -35,8 +35,8 @@ It is strongly recommended to read the full details of [ADR 001: Coin Source Tra
 
 ### UX suggestions for clients
 
-For clients that want to display the source of the token, it is recommended to use the following
-alternatives for each of the following cases:
+For clients (wallets, exchanges, applications, block explorers, etc) that want to display the source of the token, it is recommended to use the following
+alternatives for each of the cases below:
 
 #### Direct connection
 
@@ -61,7 +61,7 @@ Using the gRPC gataway client service the steps above would be, with a given IBC
 1. `GET /ibc_transfer/v1beta1/denom_traces/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2` -> `{"path": "transfer/channelToA", "base_denom": "uatom"}`
 2. `GET /ibc/channel/v1beta1/channels/channelToA/ports/transfer/client_state"` -> `{"client_id": "clientA", "chain-id": "chainA", ...}`
 3. `GET /ibc/channel/v1beta1/channels/channelToA/ports/transfer"` -> `{"channel_id": "channelToA", port_id": "transfer", counterparty: {"channel_id": "channelToB", port_id": "transfer"}, ...}`
-4. `GET /ibc/channel/v1beta1/channels/channelToB/ports/transfer/client_state" -> {"client_id": "clientB", "chain-id": "chainB",}`
+4. `GET /ibc/channel/v1beta1/channels/channelToB/ports/transfer/client_state" -> {"client_id": "clientB", "chain-id": "chainB", ...}`
 
 Then, the token transfer chain path for the `uatom` denomination would be: `chainB` -> `chainA`.
 
@@ -80,8 +80,12 @@ Thus the proposed solution for clients that the IBC team recommends are the foll
   that the client must connect to nodes on each of the chains in order to perform the queries.
 - **Relayer as a Service (RaaS)**: A longer term solution is to use/create a relayer service that
   could map the denomination trace to the chain path timeline for each token (i.e `origin chain ->
-  chain #1 -> ... -> chain #(n-1) -> final chain`). Clients would be advised to connect to public
-  relayers that support the largest number of connections between chains in the ecosystem. Unfortunately, none of the existing public relayers (in [Golang](https://github.com/cosmos/relayer) and [Rust](https://github.com/informalsystems/ibc-rs)), provide this service to clients.
+  chain #1 -> ... -> chain #(n-1) -> final chain`). These services could provide merkle proofs in
+  order to allow clients to optionally verify the path timeline correctness for themselves.
+  Additionally, client would be advised in the future to use RaaS that support the largest number of
+  connections between chains in the ecosystem. Unfortunately, none of the existing public relayers
+  (in [Golang](https://github.com/cosmos/relayer) and
+  [Rust](https://github.com/informalsystems/ibc-rs)), provide this service to clients.
 
 ::: tip
 The only viable alternative for clients (at the time of writing) to tokens with multiple connection hops, is to connect to all chains directly and perform relevant queries to each of them in the sequence.

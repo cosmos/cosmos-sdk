@@ -211,14 +211,14 @@ func GetCmdQueryPacketCommitments() *cobra.Command {
 	return cmd
 }
 
-// GetCmdQueryPacketCommitment defines the command to query a channel end
+// GetCmdQueryPacketCommitment defines the command to query a packet commitment
 func GetCmdQueryPacketCommitment() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "packet-commitment [port-id] [channel-id] [sequence]",
 		Short: "Query a packet commitment",
 		Long:  "Query a packet commitment",
 		Example: fmt.Sprintf(
-			"%s query %s %s end [port-id] [channel-id]", version.AppName, host.ModuleName, types.SubModuleName,
+			"%s query %s %s packet-commitment [port-id] [channel-id] [sequence]", version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -252,6 +252,88 @@ func GetCmdQueryPacketCommitment() *cobra.Command {
 	return cmd
 }
 
+// GetCmdQueryPacketReceipt defines the command to query a packet receipt
+func GetCmdQueryPacketReceipt() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "packet-receipt [port-id] [channel-id] [sequence]",
+		Short: "Query a packet receipt",
+		Long:  "Query a packet receipt",
+		Example: fmt.Sprintf(
+			"%s query %s %s packet-receipt [port-id] [channel-id] [sequence]", version.AppName, host.ModuleName, types.SubModuleName,
+		),
+		Args: cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			portID := args[0]
+			channelID := args[1]
+			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
+
+			seq, err := strconv.ParseUint(args[2], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			res, err := utils.QueryPacketReceipt(clientCtx, portID, channelID, seq, prove)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintOutput(res)
+		},
+	}
+
+	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdQueryPacketAcknowledgement defines the command to query a packet acknowledgement
+func GetCmdQueryPacketAcknowledgement() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "packet-ack [port-id] [channel-id] [sequence]",
+		Short: "Query a packet acknowledgement",
+		Long:  "Query a packet acknowledgement",
+		Example: fmt.Sprintf(
+			"%s query %s %s packet-ack [port-id] [channel-id] [sequence]", version.AppName, host.ModuleName, types.SubModuleName,
+		),
+		Args: cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			portID := args[0]
+			channelID := args[1]
+			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
+
+			seq, err := strconv.ParseUint(args[2], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			res, err := utils.QueryPacketAcknowledgement(clientCtx, portID, channelID, seq, prove)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintOutput(res)
+		},
+	}
+
+	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
 // GetCmdQueryUnreceivedPackets defines the command to query all the unreceived
 // packets on the receiving chain
 func GetCmdQueryUnreceivedPackets() *cobra.Command {
@@ -264,7 +346,7 @@ The return value represents:
 - Unreceived packet commitments: no acknowledgement exists on receiving chain for the given packet commitment sequence on sending chain.
 `,
 		Example: fmt.Sprintf("%s query %s %s unreceived-packets [port-id] [channel-id] --sequences=1,2,3", version.AppName, host.ModuleName, types.SubModuleName),
-		Args:    cobra.ExactArgs(3),
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
@@ -304,18 +386,18 @@ The return value represents:
 	return cmd
 }
 
-// GetCmdQueryUnrelayedAcks defines the command to query all the unrelayed acks on the original sending chain
-func GetCmdQueryUnrelayedAcks() *cobra.Command {
+// GetCmdQueryUnreceivedAcks defines the command to query all the unreceived acks on the original sending chain
+func GetCmdQueryUnreceivedAcks() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unrelayed-acks [port-id] [channel-id]",
-		Short: "Query all the unrelayed acks associated with a channel",
-		Long: `Given a list of packet commitment sequences from counterparty, determine if an ack on executing chain has not been relayed to counterparty.
+		Use:   "unreceived-acks [port-id] [channel-id]",
+		Short: "Query all the unreceived acks associated with a channel",
+		Long: `Given a list of acknowledgement sequences from counterparty, determine if an ack on the counterparty chain has been received on the executing chain.
 
 The return value represents:
-- Unrelayed packet acknowledgement: packet commitment exists on original sending chain and ack exists on receiving (executing) chain.
+- Unreceived packet acknowledgement: packet commitment exists on original sending (executing) chain and ack exists on receiving chain.
 `,
-		Example: fmt.Sprintf("%s query %s %s unrelayed-acks [port-id] [channel-id] --sequences=1,2,3", version.AppName, host.ModuleName, types.SubModuleName),
-		Args:    cobra.ExactArgs(3),
+		Example: fmt.Sprintf("%s query %s %s unreceived-acks [port-id] [channel-id] --sequences=1,2,3", version.AppName, host.ModuleName, types.SubModuleName),
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
@@ -334,13 +416,13 @@ The return value represents:
 				seqs[i] = uint64(seqSlice[i])
 			}
 
-			req := &types.QueryUnrelayedAcksRequest{
-				PortId:                    args[0],
-				ChannelId:                 args[1],
-				PacketCommitmentSequences: seqs,
+			req := &types.QueryUnreceivedAcksRequest{
+				PortId:             args[0],
+				ChannelId:          args[1],
+				PacketAckSequences: seqs,
 			}
 
-			res, err := queryClient.UnrelayedAcks(context.Background(), req)
+			res, err := queryClient.UnreceivedAcks(context.Background(), req)
 			if err != nil {
 				return err
 			}

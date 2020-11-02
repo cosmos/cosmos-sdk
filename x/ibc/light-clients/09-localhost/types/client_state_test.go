@@ -375,7 +375,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 					host.KeyPacketAcknowledgement(testPortID, testChannelID, testSequence), []byte("different"),
 				)
 			},
-			ack:     []byte("acknowledgment"),
+			ack:     []byte("acknowledgement"),
 			expPass: false,
 		},
 		{

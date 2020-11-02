@@ -98,7 +98,7 @@ func (suite *LocalhostTestSuite) TestVerifyClientState() {
 			tc.malleate()
 
 			err := tc.clientState.VerifyClientState(
-				suite.store, suite.cdc, nil, clienttypes.NewHeight(0, 10), nil, "", []byte{}, tc.counterparty,
+				suite.store, suite.cdc, clienttypes.NewHeight(0, 10), nil, "", []byte{}, tc.counterparty,
 			)
 
 			if tc.expPass {
@@ -114,7 +114,7 @@ func (suite *LocalhostTestSuite) TestVerifyClientState() {
 func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 	clientState := types.NewClientState("chainID", clientHeight)
 	err := clientState.VerifyClientConsensusState(
-		nil, nil, nil, nil, "", nil, nil, nil, nil,
+		nil, nil, nil, "", nil, nil, nil, nil,
 	)
 	suite.Require().NoError(err)
 }

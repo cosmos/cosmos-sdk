@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 	"math/rand"
 	"testing"
@@ -75,7 +76,7 @@ var decimal128Context = apd.Context{
 	Rounding:    apd.RoundHalfEven,
 }
 
-func BenchmarkDecErr(b *testing.B) {
+func TestDecErr(t *testing.T) {
 	cases := []struct {
 		name string
 		f    func(x, y int64) (bool, string)
@@ -224,33 +225,31 @@ func BenchmarkDecErr(b *testing.B) {
 		},
 	}
 
-	for _, tc := range cases {
-		b.Run(tc.name, func(b *testing.B) {
-			b.StopTimer()
+	numTests := 100000
 
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
 			r := rand.New(rand.NewSource(0))
-			xs := make([]int64, b.N)
-			ys := make([]int64, b.N)
-			for i := 0; i < b.N; i++ {
+			xs := make([]int64, numTests)
+			ys := make([]int64, numTests)
+			for i := 0; i < numTests; i++ {
 				xs[i] = int64(r.Int31())
 				ys[i] = int64(r.Int31())
 			}
 
 			numCorrect := 0
-			errs := make([]string, b.N)
+			errs := make([]string, numTests)
 
-			b.StartTimer()
-			for i := 0; i < b.N; i++ {
+			for i := 0; i < numTests; i++ {
 				var correct bool
 				correct, errs[i] = tc.f(xs[i], ys[i])
 				if correct {
 					numCorrect++
 				}
 			}
-			b.StopTimer()
 
 			totalErr := apd.New(0, 1)
-			for i := 0; i < b.N; i++ {
+			for i := 0; i < numTests; i++ {
 				errF, _, err := decimal128Context.NewFromString(errs[i])
 				if err != nil {
 					panic(err)
@@ -268,7 +267,7 @@ func BenchmarkDecErr(b *testing.B) {
 				}
 			}
 			n := apd.New(0, 1)
-			n.SetInt64(int64(b.N))
+			n.SetInt64(int64(numTests))
 			_, err := decimal128Context.Quo(totalErr, totalErr, n)
 			if err != nil {
 				panic(err)
@@ -279,12 +278,184 @@ func BenchmarkDecErr(b *testing.B) {
 				panic(err)
 			}
 
-			b.Logf("%s Out of %d trials: %.2f%% Correct, %.2e Average Error",
+			t.Logf("%s Out of %d trials: %.2f%% Correct, %.2e Average Error",
 				tc.name,
-				b.N,
-				float64(numCorrect)/float64(b.N)*float64(100),
+				numTests,
+				float64(numCorrect)/float64(numTests)*float64(100),
 				totalErrF,
 			)
 		})
+	}
+}
+
+func Benchmark(b *testing.B) {
+	parseFloat64 := func(f float64) interface{} { return f }
+
+	parseDec := func(f float64) interface{} {
+		res, err := NewDecFromStr(fmt.Sprintf("%f", f))
+		if err != nil {
+			panic(fmt.Errorf("%v: %f", err, f))
+		}
+		return res
+	}
+
+	parseBigRat := func(f float64) interface{} {
+		r := big.NewRat(0, 1)
+		return r.SetFloat64(f)
+	}
+
+	parseBigFloat128 := func(f float64) interface{} {
+		res := big.NewFloat(f)
+		res.SetPrec(113)
+		return res
+	}
+
+	parseDecimal128 := func(f float64) interface{} {
+		res := apd.New(0, 1)
+		res, err := res.SetFloat64(f)
+		if err != nil {
+			panic(err)
+		}
+		return res
+	}
+
+	benchmarks := []struct {
+		name  string
+		parse func(f float64) interface{}
+		f     func(x, y interface{}) interface{}
+	}{
+		{
+			"float64.+", parseFloat64,
+			func(x, y interface{}) interface{} { return x.(float64) + y.(float64) },
+		},
+		{
+			"float64.-", parseFloat64,
+			func(x, y interface{}) interface{} { return x.(float64) - y.(float64) },
+		},
+		{
+			"float64.*", parseFloat64,
+			func(x, y interface{}) interface{} { return x.(float64) * y.(float64) },
+		},
+		{
+			"float64./", parseFloat64,
+			func(x, y interface{}) interface{} { return x.(float64) / y.(float64) },
+		},
+		{
+			"sdk.Dec.Add", parseDec,
+			func(x, y interface{}) interface{} { return x.(Dec).Add(y.(Dec)) },
+		},
+		{
+			"sdk.Dec.Sub", parseDec,
+			func(x, y interface{}) interface{} { return x.(Dec).Sub(y.(Dec)) },
+		},
+		{
+			"sdk.Dec.Mul", parseDec,
+			func(x, y interface{}) interface{} { return x.(Dec).Quo(y.(Dec)) },
+		},
+		{
+			"sdk.Dec.Quo", parseDec,
+			func(x, y interface{}) interface{} { return x.(Dec).Quo(y.(Dec)) },
+		},
+		{
+			"big.Rat.Add", parseBigRat,
+			func(x, y interface{}) interface{} { return x.(*big.Rat).Add(x.(*big.Rat), y.(*big.Rat)) },
+		},
+		{
+			"big.Rat.Sub", parseBigRat,
+			func(x, y interface{}) interface{} { return x.(*big.Rat).Sub(x.(*big.Rat), y.(*big.Rat)) },
+		},
+		{
+			"big.Rat.Mul", parseBigRat,
+			func(x, y interface{}) interface{} { return x.(*big.Rat).Mul(x.(*big.Rat), y.(*big.Rat)) },
+		},
+		{
+			"big.Rat.Quo", parseBigRat,
+			func(x, y interface{}) interface{} { return x.(*big.Rat).Quo(x.(*big.Rat), y.(*big.Rat)) },
+		},
+		{
+			"big.Float128.Add", parseBigFloat128,
+			func(x, y interface{}) interface{} { return x.(*big.Float).Add(x.(*big.Float), y.(*big.Float)) },
+		},
+		{
+			"big.Float128.Sub", parseBigFloat128,
+			func(x, y interface{}) interface{} { return x.(*big.Float).Sub(x.(*big.Float), y.(*big.Float)) },
+		},
+		{
+			"big.Float128.Mul", parseBigFloat128,
+			func(x, y interface{}) interface{} { return x.(*big.Float).Mul(x.(*big.Float), y.(*big.Float)) },
+		},
+		{
+			"big.Float128.Quo", parseBigFloat128,
+			func(x, y interface{}) interface{} { return x.(*big.Float).Quo(x.(*big.Float), y.(*big.Float)) },
+		},
+		{
+			"apd.Decimal128.Add", parseDecimal128,
+			func(x, y interface{}) interface{} {
+				_, err := decimal128Context.Add(x.(*apd.Decimal), x.(*apd.Decimal), y.(*apd.Decimal))
+				if err != nil {
+					panic(err)
+				}
+				return x
+			},
+		},
+		{
+			"apd.Decimal128.Sub", parseDecimal128,
+			func(x, y interface{}) interface{} {
+				_, err := decimal128Context.Sub(x.(*apd.Decimal), x.(*apd.Decimal), y.(*apd.Decimal))
+				if err != nil {
+					panic(err)
+				}
+				return x
+			},
+		},
+		{
+			"apd.Decimal128.Mul", parseDecimal128,
+			func(x, y interface{}) interface{} {
+				_, err := decimal128Context.Mul(x.(*apd.Decimal), x.(*apd.Decimal), y.(*apd.Decimal))
+				if err != nil {
+					panic(err)
+				}
+				return x
+			},
+		},
+		{
+			"apd.Decimal128.Quo", parseDecimal128,
+			func(x, y interface{}) interface{} {
+				_, err := decimal128Context.Quo(x.(*apd.Decimal), x.(*apd.Decimal), y.(*apd.Decimal))
+				if err != nil {
+					panic(err)
+				}
+				return x
+			},
+		},
+	}
+
+	opCounts := []int{2, 33, 257, 513}
+
+	for _, opCount := range opCounts {
+		for _, bm := range benchmarks {
+			b.Run(fmt.Sprintf("%d Ops: %s", opCount-1, bm.name), func(b *testing.B) {
+				b.StopTimer()
+				r := rand.New(rand.NewSource(0))
+				xs := make([][]interface{}, b.N)
+				for i := 0; i < b.N; i++ {
+					xs[i] = make([]interface{}, opCount)
+					for j := 0; j < opCount; j++ {
+						a := r.Int63()
+						b := math.Pow10(r.Intn(10))
+						c := float64(a) / b
+						xs[i][j] = bm.parse(c)
+					}
+				}
+
+				b.StartTimer()
+				for i := 0; i < b.N; i++ {
+					a := xs[i][0]
+					for j := 1; j < opCount; j++ {
+						a = bm.f(a, xs[i][j])
+					}
+				}
+			})
+		}
 	}
 }

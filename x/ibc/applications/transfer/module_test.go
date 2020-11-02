@@ -109,6 +109,12 @@ func (suite *TransferTestSuite) TestOnChanOpenTry() {
 			"success", func() {}, true,
 		},
 		{
+			"capability already claimed in INIT should pass", func() {
+				err := suite.chainA.App.ScopedTransferKeeper.ClaimCapability(suite.chainA.GetContext(), chanCap, host.ChannelCapabilityPath(testChannel.PortID, testChannel.ID))
+				suite.Require().NoError(err)
+			}, true,
+		},
+		{
 			"invalid order - ORDERED", func() {
 				channel.Ordering = channeltypes.ORDERED
 			}, false,
@@ -126,12 +132,6 @@ func (suite *TransferTestSuite) TestOnChanOpenTry() {
 		{
 			"invalid counterparty version", func() {
 				counterpartyVersion = "version"
-			}, false,
-		},
-		{
-			"capability already claimed", func() {
-				err := suite.chainA.App.ScopedTransferKeeper.ClaimCapability(suite.chainA.GetContext(), chanCap, host.ChannelCapabilityPath(testChannel.PortID, testChannel.ID))
-				suite.Require().NoError(err)
 			}, false,
 		},
 	}

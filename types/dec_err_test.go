@@ -76,82 +76,120 @@ var decimal128Context = apd.Context{
 }
 
 func BenchmarkDecErr(b *testing.B) {
-	cases := map[string]func(x, y int64) (bool, string){
-		"big.Rat (x/y)*y": func(x, y int64) (bool, string) {
-			a := big.NewRat(x, 1)
-			b := big.NewRat(y, 1)
-			c := big.NewRat(0, 1)
-			c = c.Quo(a, b)
-			c = c.Mul(c, b)
-			c = c.Sub(c, a)
-			zero := big.NewRat(0, 1)
-			return c.Cmp(zero) == 0, c.FloatString(10)
+	cases := []struct {
+		name string
+		f    func(x, y int64) (bool, string)
+	}{
+		{
+			"big.Rat (x/y)*y",
+			func(x, y int64) (bool, string) {
+				a := big.NewRat(x, 1)
+				b := big.NewRat(y, 1)
+				c := big.NewRat(0, 1)
+				c = c.Quo(a, b)
+				c = c.Mul(c, b)
+				c = c.Sub(c, a)
+				zero := big.NewRat(0, 1)
+				return c.Cmp(zero) == 0, c.FloatString(10)
+			},
 		},
-		"big.Rat (x*y)/y": func(x, y int64) (bool, string) {
-			a := big.NewRat(x, 1)
-			b := big.NewRat(y, 1)
-			c := big.NewRat(0, 1)
-			c = c.Mul(a, b)
-			c = c.Quo(c, b)
-			c = c.Sub(c, a)
-			zero := big.NewRat(0, 1)
-			return c.Cmp(zero) == 0, c.FloatString(10)
+		{
+			"big.Rat (x*y)/y",
+			func(x, y int64) (bool, string) {
+				a := big.NewRat(x, 1)
+				b := big.NewRat(y, 1)
+				c := big.NewRat(0, 1)
+				c = c.Mul(a, b)
+				c = c.Quo(c, b)
+				c = c.Sub(c, a)
+				zero := big.NewRat(0, 1)
+				return c.Cmp(zero) == 0, c.FloatString(10)
+			},
 		},
-		"sdk.Dec (x/y)*y": func(x, y int64) (bool, string) {
-			a := NewDec(x)
-			b := NewDec(y)
-			c := a.Quo(b).Mul(b).Sub(a)
-			return c.IsZero(), c.String()
+		{
+			"sdk.Dec (x/y)*y",
+			func(x, y int64) (bool, string) {
+				a := NewDec(x)
+				b := NewDec(y)
+				c := a.Quo(b).Mul(b).Sub(a)
+				return c.IsZero(), c.String()
+			},
 		},
-		"sdk.Dec (x*y)/y": func(x, y int64) (bool, string) {
-			a := NewDec(x)
-			b := NewDec(y)
-			c := a.Mul(b).Quo(b).Sub(a)
-			return c.IsZero(), c.String()
+		{
+			"sdk.Dec (x*y)/y",
+			func(x, y int64) (bool, string) {
+				a := NewDec(x)
+				b := NewDec(y)
+				c := a.Mul(b).Quo(b).Sub(a)
+				return c.IsZero(), c.String()
+			},
 		},
-		"float32 (x/y)*y": func(x, y int64) (bool, string) {
-			a := float32(x)
-			b := float32(y)
-			c := a / b
-			d := c * b
-			e := d - a
-			return e == float32(0), fmt.Sprintf("%e", e)
+		{
+			"float32 (x/y)*y",
+			func(x, y int64) (bool, string) {
+				a := float32(x)
+				b := float32(y)
+				c := a / b
+				d := c * b
+				e := d - a
+				return e == float32(0), fmt.Sprintf("%e", e)
+			},
 		},
-		"float32 (x*y)/y": func(x, y int64) (bool, string) {
-			a := float32(x)
-			b := float32(y)
-			c := a * b
-			d := c / b
-			e := d - a
-			return e == float32(0), fmt.Sprintf("%e", e)
+		{
+			"float32 (x*y)/y",
+			func(x, y int64) (bool, string) {
+				a := float32(x)
+				b := float32(y)
+				c := a * b
+				d := c / b
+				e := d - a
+				return e == float32(0), fmt.Sprintf("%e", e)
+			},
 		},
-		"float64 (x/y)*y": func(x, y int64) (bool, string) {
-			a := float64(x)
-			b := float64(y)
-			c := a / b
-			d := c * b
-			e := d - a
-			return e == float64(0), fmt.Sprintf("%e", e)
+		{
+			"float64 (x/y)*y", func(x, y int64) (bool, string) {
+				a := float64(x)
+				b := float64(y)
+				c := a / b
+				d := c * b
+				e := d - a
+				return e == float64(0), fmt.Sprintf("%e", e)
+			},
 		},
-		"float64 (x*y)/y": func(x, y int64) (bool, string) {
-			a := float64(x)
-			b := float64(y)
-			c := a * b
-			d := c / b
-			e := d - a
-			return e == float64(0), fmt.Sprintf("%e", e)
+		{
+			"float64 (x*y)/y",
+			func(x, y int64) (bool, string) {
+				a := float64(x)
+				b := float64(y)
+				c := a * b
+				d := c / b
+				e := d - a
+				return e == float64(0), fmt.Sprintf("%e", e)
+			},
 		},
-		"decimal32 (x/y)*y":  apdQuoFirst(decimal32Context),
-		"decimal32 (x*y)/y":  apdMulFirst(decimal32Context),
-		"decimal64 (x/y)*y":  apdQuoFirst(decimal64Context),
-		"decimal64 (x*y)/y":  apdMulFirst(decimal64Context),
-		"decimal128 (x/y)*y": apdQuoFirst(decimal128Context),
-		"decimal128 (x*y)/y": apdMulFirst(decimal128Context),
+		{
+			"decimal32 (x/y)*y",
+			apdQuoFirst(decimal32Context),
+		},
+		{
+			"decimal32 (x*y)/y", apdMulFirst(decimal32Context),
+		},
+		{
+			"decimal64 (x/y)*y", apdQuoFirst(decimal64Context),
+		},
+		{
+			"decimal64 (x*y)/y", apdMulFirst(decimal64Context),
+		},
+		{
+			"decimal128 (x/y)*y", apdQuoFirst(decimal128Context),
+		},
+		{
+			"decimal128 (x*y)/y", apdMulFirst(decimal128Context),
+		},
 	}
 
-	b.Logf("N: %d", b.N)
-	for name, tc := range cases {
-		b.Run(name, func(b *testing.B) {
+	for _, tc := range cases {
+		b.Run(tc.name, func(b *testing.B) {
 			b.StopTimer()
 
 			r := rand.New(rand.NewSource(0))
@@ -168,7 +206,7 @@ func BenchmarkDecErr(b *testing.B) {
 			b.StartTimer()
 			for i := 0; i < b.N; i++ {
 				var correct bool
-				correct, errs[i] = tc(xs[i], ys[i])
+				correct, errs[i] = tc.f(xs[i], ys[i])
 				if correct {
 					numCorrect++
 				}
@@ -206,7 +244,7 @@ func BenchmarkDecErr(b *testing.B) {
 			}
 
 			b.Logf("%s Out of %d trials: %.2f%% Correct, %.2e Average Error",
-				name,
+				tc.name,
 				b.N,
 				float64(numCorrect)/float64(b.N)*float64(100),
 				totalErrF,

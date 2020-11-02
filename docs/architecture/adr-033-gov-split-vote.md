@@ -35,7 +35,22 @@ type Vote struct {
 }
 ```
 
-The `ValidateBasic` of a MsgVote struct would require that
+And for backwards compatibility, we introduce `MsgWeightedVote` while keeping `MsgVote`.
+```
+type MsgVote struct {
+  ProposalID int64
+  Voter      sdk.Address
+  Option     Option
+}
+
+type MsgWeightedVote struct {
+  ProposalID int64
+  Voter      sdk.Address
+  Options    []WeightedVoteOption
+}
+```
+
+The `ValidateBasic` of a `MsgWeightedVote` struct would require that
 1. The sum of all the Rates is equal to 1.0
 2. No Option is repeated
 

@@ -168,6 +168,42 @@ func BenchmarkDecErr(b *testing.B) {
 			},
 		},
 		{
+			"float128 (x/y)*y",
+			func(x, y int64) (bool, string) {
+				a := big.NewFloat(0)
+				a.SetInt64(x)
+				a.SetPrec(113)
+				b := big.NewFloat(0)
+				b.SetInt64(x)
+				b.SetPrec(113)
+				c := big.NewFloat(0)
+				c.SetPrec(113)
+				c = c.Quo(a, b)
+				c = c.Mul(c, b)
+				c = c.Sub(c, a)
+				zero := big.NewFloat(0)
+				return c.Cmp(zero) == 0, c.String()
+			},
+		},
+		{
+			"float128 (x*y)/y",
+			func(x, y int64) (bool, string) {
+				a := big.NewFloat(0)
+				a.SetInt64(x)
+				a.SetPrec(113)
+				b := big.NewFloat(0)
+				b.SetInt64(x)
+				b.SetPrec(113)
+				c := big.NewFloat(0)
+				c.SetPrec(113)
+				c = c.Mul(a, b)
+				c = c.Quo(c, b)
+				c = c.Sub(c, a)
+				zero := big.NewFloat(0)
+				return c.Cmp(zero) == 0, c.String()
+			},
+		},
+		{
 			"decimal32 (x/y)*y",
 			apdQuoFirst(decimal32Context),
 		},

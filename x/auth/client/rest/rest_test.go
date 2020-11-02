@@ -50,7 +50,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	// Broadcast a StdTx used for tests.
-	s.stdTx = s.createTestStdTx(s.network.Validators[0], 1)
+	s.stdTx = s.createTestStdTx(s.network.Validators[0], 0, 1)
 	res, err := s.broadcastReq(s.stdTx, "block")
 	s.Require().NoError(err)
 
@@ -159,15 +159,16 @@ func (s *IntegrationTestSuite) TestQueryTxByHeight() {
 func (s *IntegrationTestSuite) TestQueryTxByHashWithServiceMessage() {
 	val := s.network.Validators[0]
 
-	account, err := val.ClientCtx.Keyring.Key("newAccount")
-	s.Require().NoError(err)
-
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
+
+	// Right after this line, we're sending a tx. Might need to wait a block
+	// to refresh sequences.
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	out, err := bankcli.ServiceMsgSendExec(
 		val.ClientCtx,
 		val.Address,
-		account.GetAddress(),
+		val.Address,
 		sdk.NewCoins(sendTokens),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -178,6 +179,7 @@ func (s *IntegrationTestSuite) TestQueryTxByHashWithServiceMessage() {
 	s.Require().NoError(err)
 	var txRes sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txRes))
+	s.Require().Equal(uint32(0), txRes.Code)
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
@@ -195,8 +197,7 @@ func (s *IntegrationTestSuite) TestQueryTxByHashWithServiceMessage() {
 }
 
 func (s *IntegrationTestSuite) TestMultipleSyncBroadcastTxRequests() {
-	// We already sent one tx in SetupSuite with sequence=1 (non-genesis tx).
-	// Therefore, we're starting this test with sequence=2.
+	// First test transaction from validator should have sequence=1 (non-genesis tx)
 	testCases := []struct {
 		desc      string
 		sequence  uint64
@@ -204,12 +205,12 @@ func (s *IntegrationTestSuite) TestMultipleSyncBroadcastTxRequests() {
 	}{
 		{
 			"First tx (correct sequence)",
-			2,
+			1,
 			false,
 		},
 		{
 			"Second tx (correct sequence)",
-			3,
+			2,
 			false,
 		},
 		{
@@ -221,7 +222,7 @@ func (s *IntegrationTestSuite) TestMultipleSyncBroadcastTxRequests() {
 	for _, tc := range testCases {
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			// broadcast test with sync mode, as we want to run CheckTx to verify account sequence is correct
-			stdTx := s.createTestStdTx(s.network.Validators[0], tc.sequence)
+			stdTx := s.createTestStdTx(s.network.Validators[1], 1, tc.sequence)
 			res, err := s.broadcastReq(stdTx, "sync")
 			s.Require().NoError(err)
 
@@ -246,7 +247,7 @@ func (s *IntegrationTestSuite) TestMultipleSyncBroadcastTxRequests() {
 	}
 }
 
-func (s *IntegrationTestSuite) createTestStdTx(val *network.Validator, sequence uint64) legacytx.StdTx {
+func (s *IntegrationTestSuite) createTestStdTx(val *network.Validator, accNum, sequence uint64) legacytx.StdTx {
 	txConfig := legacytx.StdTxConfig{Cdc: s.cfg.LegacyAmino}
 
 	msg := &types.MsgSend{
@@ -270,6 +271,7 @@ func (s *IntegrationTestSuite) createTestStdTx(val *network.Validator, sequence 
 		WithKeybase(val.ClientCtx.Keyring).
 		WithTxConfig(txConfig).
 		WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON).
+		WithAccountNumber(accNum).
 		WithSequence(sequence)
 
 	// sign Tx (offline mode so we can manually set sequence number)

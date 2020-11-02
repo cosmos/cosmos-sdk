@@ -197,7 +197,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func GetBatchMultisigCommand() *cobra.Command {
+func GetMultiSignBatchCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:    "multisign-batch [file] [name] [[signature-file]...]",
 		Short:  "Assemble multisig transactions",
@@ -212,6 +212,7 @@ func GetBatchMultisigCommand() *cobra.Command {
 		FlagMultisig, "",
 		"Address of the multisig account on behalf of which the transaction shall be signed",
 	)
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -239,13 +240,7 @@ func makeBatchMultisigCmd() func(cmd *cobra.Command, args []string) error {
 		}
 		scanner := authclient.NewBatchScanner(txCfg, infile)
 
-		inBuf := bufio.NewReader(cmd.InOrStdin())
-		backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-
-		kb, err := keyring.New(sdk.KeyringServiceName(), backend, clientCtx.HomeDir, inBuf)
-		if err != nil {
-			return err
-		}
+		kb := clientCtx.Keyring
 		multisigInfo, err := kb.Key(args[1])
 		if err != nil {
 			return errors.Wrap(err, "error getting keybase multisig account")
@@ -256,6 +251,7 @@ func makeBatchMultisigCmd() func(cmd *cobra.Command, args []string) error {
 
 		var signatureBatch [][]signingtypes.SignatureV2
 		for i := 2; i < len(args); i++ {
+			// todo:unmarshal sigs from multiple files
 			sigs, err := unmarshalSignatureJSON(clientCtx, args[i])
 			if err != nil {
 				return err

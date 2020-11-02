@@ -21,6 +21,7 @@ func GetTxCmd() *cobra.Command {
 		GetSignCommand(),
 		GetValidateSignaturesCommand(),
 		GetSignBatchCommand(),
+		GetMultiSignBatchCmd(),
 	)
 	return txCmd
 }

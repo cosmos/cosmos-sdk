@@ -98,4 +98,18 @@ func TxDecodeExec(clientCtx client.Context, encodedTx string, extraArgs ...strin
 	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetDecodeCommand(), args)
 }
 
+func TxMultiSignBatchExec(clientCtx client.Context, filename string, from string, sigFile1 string, sigFile2 string, extraArgs ...string) (testutil.BufferWriter, error) {
+	args := []string{
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		filename,
+		from,
+		sigFile1,
+		sigFile2,
+	}
+
+	args = append(args, extraArgs...)
+
+	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetMultiSignBatchCmd(), args)
+}
+
 // DONTCOVER

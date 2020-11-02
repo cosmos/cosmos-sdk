@@ -50,7 +50,7 @@ type launchpad struct {
 
 // NewNetwork returns a configured network to work in a Launchpad version.
 func NewNetwork(cdc codec.BinaryMarshaler, options Options) service.Network {
-	cosmosClient := cosmos.NewClient(fmt.Sprintf("http://%s", options.AppEndpoint), cdc)
+	cosmosClient, _ := cosmos.NewClient(options.AppEndpoint)
 	tendermintClient := tendermint.NewClient(fmt.Sprintf("http://%s", options.TendermintEndpoint))
 
 	return service.Network{

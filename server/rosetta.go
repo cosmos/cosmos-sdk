@@ -21,7 +21,7 @@ const (
 )
 
 // RosettaCommand will start the application Rosetta API service as a blocking process.
-func RosettaCommand(cdc codec.BinaryMarshaler) *cobra.Command {
+func RosettaCommand(cdc codec.Marshaler) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "rosetta",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -47,9 +47,9 @@ func RosettaCommand(cdc codec.BinaryMarshaler) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flagBlockchain, "blockchain", "Application's name (e.g. Cosmos Hub)")
+	cmd.Flags().String(flagBlockchain, "app", "Application's name (e.g. Cosmos Hub)")
 	cmd.Flags().String(flagNetwork, "network", "Network's identifier (e.g. cosmos-hub-3, testnet-1, etc)")
-	cmd.Flags().String(flagAppRpc, "localhost:1317", "Application's RPC endpoint.")
+	cmd.Flags().String(flagAppRpc, "localhost:9090", "Application's RPC endpoint.")
 	cmd.Flags().String(flagTendermintRpc, "localhost:26657", "Tendermint's RPC endpoint.")
 	cmd.Flags().Bool(flagOfflineMode, false, "Flag that forces the rosetta service to run in offline mode, some endpoints won't work.")
 

@@ -12,6 +12,7 @@ import (
 
 func (l launchpad) AccountBalance(ctx context.Context, request *types.AccountBalanceRequest) (
 	*types.AccountBalanceResponse, *types.Error) {
+
 	if l.properties.OfflineMode {
 		return nil, ErrEndpointDisabledOfflineMode
 	}

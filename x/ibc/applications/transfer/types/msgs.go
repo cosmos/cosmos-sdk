@@ -44,6 +44,8 @@ func (MsgTransfer) Type() string {
 
 // ValidateBasic performs a basic check of the MsgTransfer fields.
 // NOTE: timeout height or timestamp values can be 0 to disable the timeout.
+// NOTE: The addresses formats are not validated as the sender and recipient can have different
+// formats defined by their corresponding chains that are not known to IBC.
 func (msg MsgTransfer) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.SourcePort); err != nil {
 		return sdkerrors.Wrap(err, "invalid source port ID")

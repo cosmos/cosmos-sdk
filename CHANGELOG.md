@@ -68,6 +68,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client) [\#7699](https://github.com/cosmos/cosmos-sdk/pull/7699) Fix panic in context when setting invalid nodeURI. `WithNodeURI` does not set the `Client` in the context.
 * (x/gov) [#7641](https://github.com/cosmos/cosmos-sdk/pull/7641) Fix tally calculation precision error.
 
+### Improvements 
+
+* (rest) [#7649](https://github.com/cosmos/cosmos-sdk/pull/7649) Return an unsigned tx in legacy GET /tx endpoint when signature conversion fails
+* (cli) [#7764](https://github.com/cosmos/cosmos-sdk/pull/7764) Update x/banking and x/crisis InitChain to improve node startup time
+
+
 ## [v0.40.0-rc1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc1) - 2020-10-19
 
 ### Client Breaking Changes
@@ -102,6 +108,7 @@ define a `Msg` protobuf service.
 ### Bug Fixes
 
 * (kvstore) [\#7415](https://github.com/cosmos/cosmos-sdk/pull/7415) Allow new stores to be registered during on-chain upgrades.
+* (rest) [\#7730](https://github.com/cosmos/cosmos-sdk/pull/7730) Fix fetch txs by height on legacy REST endpoint
 
 ### Improvements
 

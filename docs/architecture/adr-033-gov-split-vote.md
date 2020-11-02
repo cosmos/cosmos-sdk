@@ -89,11 +89,16 @@ to maintain backwards compatibility.
 
 ## Consequences
 
+### Backwards Compatibility
+- Previous VoteMsg types will remain the same and so clients will not have to update their procedure unless they want to support the WeightedVoteMsg feature.
+- When querying a Vote struct from state, its structure will be different, and so clients wanting to display all voters and their respective votes will have to handle the new format and the fact that a single voter can have split votes.
+- The result of querying the tally function should have the same API for clients.
+
 ### Positive
 - Can make the voting process more accurate for addresses representing multiple stakeholders, often some of the largest addresses.
 
 ### Negative
-- 
+- Is more complex than simple voting, and so may be harder to explain to users.  However, this is mostly mitigated because the feature is opt-in.
 
 ### Neutral
 - Relatively minor change to governance tally function.

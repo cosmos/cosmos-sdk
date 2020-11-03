@@ -46,7 +46,10 @@ func (msg MsgChannelOpenInit) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
-	// Signer can be empty
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
+	}
 	return msg.Channel.ValidateBasic()
 }
 
@@ -115,7 +118,10 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	// Signer can be empty
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
+	}
 	return msg.Channel.ValidateBasic()
 }
 
@@ -180,7 +186,10 @@ func (msg MsgChannelOpenAck) ValidateBasic() error {
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	// Signer can be empty
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
+	}
 	return nil
 }
 
@@ -240,7 +249,10 @@ func (msg MsgChannelOpenConfirm) ValidateBasic() error {
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	// Signer can be empty
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
+	}
 	return nil
 }
 
@@ -291,7 +303,10 @@ func (msg MsgChannelCloseInit) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
-	// Signer can be empty
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
+	}
 	return nil
 }
 
@@ -351,7 +366,10 @@ func (msg MsgChannelCloseConfirm) ValidateBasic() error {
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	// Signer can be empty
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
+	}
 	return nil
 }
 

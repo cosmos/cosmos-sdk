@@ -173,7 +173,10 @@ func DerivePrivateKeyForPath(privKeyBytes, chainCode [32]byte, path string) ([]b
 			part = part[:len(part)-1]
 		}
 
-		idx, err := strconv.ParseUint(part, 10, 32)
+		// As per the extended keys specification in
+		// https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#extended-keys
+		// index values are in the range [0, 1<<31-1] aka [0, max(int32)]
+		idx, err := strconv.ParseUint(part, 10, 31)
 		if err != nil {
 			return []byte{}, fmt.Errorf("invalid BIP 32 path: %s", err)
 		}

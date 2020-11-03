@@ -36,15 +36,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.40.0-rc2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc2) - 2020-11-02
+
 ### Client Breaking
 
-* (x/staking) [\#7499](https://github.com/cosmos/cosmos-sdk/pull/7499) `BondStatus` is now a protobuf `enum` instead of an `int32`, and JSON serialized using its protobuf name, so expect names like `BOND_STATUS_UNBONDING` as opposed to `Unbonding`.
-* (x/evidence) [\#7538](https://github.com/cosmos/cosmos-sdk/pull/7538) The ABCI's `Result.Data` field of `MsgSubmitEvidence` does not contain the raw evidence's hash, but the encoded `MsgSubmitEvidenceResponse` struct.
 * (x/upgrade) [#7697](https://github.com/cosmos/cosmos-sdk/pull/7697) Rename flag name "--time" to "--upgrade-time", "--info" to "--upgrade-info", to keep it consistent with help message.
 
 ### API Breaking
 
-* (AppModule) [\#7518](https://github.com/cosmos/cosmos-sdk/pull/7518) [\#7584](https://github.com/cosmos/cosmos-sdk/pull/7584) Rename `AppModule.RegisterQueryServices` to `AppModule.RegisterServices`, as this method now registers multiple services (the gRPC query service and the protobuf Msg service). A `Configurator` struct is used to hold the different services.
 * (x/staking/types) [\#7447](https://github.com/cosmos/cosmos-sdk/issues/7447) Remove bech32 PubKey support:
   * `ValidatorI` interface update. `GetConsPubKey` renamed to `TmConsPubKey` (consensus public key must be a tendermint key). `TmConsPubKey`, `GetConsAddr` methods return error.
   * `Validator` update. Methods changed in `ValidatorI` (as described above) and `ToTmValidator` return error.
@@ -59,18 +58,62 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
-* (codec) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) `InterfaceRegistry` now inherits `jsonpb.AnyResolver`, and has a `RegisterCustomTypeURL` method to support ADR 031 packing of `Any`s. `AnyResolver` is now a required parameter to `RejectUnknownFields`.
-* (baseapp) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) Add `ServiceMsgRouter` to BaseApp to handle routing of protobuf service `Msg`s. The two new types defined in ADR 031, `sdk.ServiceMsg` and `sdk.MsgRequest` are introduced with this router.
 * (tx) [\#7688](https://github.com/cosmos/cosmos-sdk/pull/7688) Add a new Tx gRPC service with methods `Simulate` and `GetTx` (by hash).
-* `x/crisis` has a new function: `AddModuleInitFlags`, which will register optional crisis module flags for the start command.
+* __Modules__
+  * `x/crisis` has a new function: `AddModuleInitFlags`, which will register optional crisis module flags for the start command.
 
 
 ### Bug Fixes
 
-* (kvstore) [\#7415](https://github.com/cosmos/cosmos-sdk/pull/7415) Allow new stores to be registered during on-chain upgrades.
 * (client) [\#7699](https://github.com/cosmos/cosmos-sdk/pull/7699) Fix panic in context when setting invalid nodeURI. `WithNodeURI` does not set the `Client` in the context.
 * (x/gov) [#7641](https://github.com/cosmos/cosmos-sdk/pull/7641) Fix tally calculation precision error.
 
+### Improvements 
+
+* (rest) [#7649](https://github.com/cosmos/cosmos-sdk/pull/7649) Return an unsigned tx in legacy GET /tx endpoint when signature conversion fails
+* (cli) [#7764](https://github.com/cosmos/cosmos-sdk/pull/7764) Update x/banking and x/crisis InitChain to improve node startup time
+
+
+## [v0.40.0-rc1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc1) - 2020-10-19
+
+### Client Breaking Changes
+
+* __Modules__
+  * (x/staking) [\#7499](https://github.com/cosmos/cosmos-sdk/pull/7499) `BondStatus` is now a protobuf `enum` instead
+    of an `int32`, and JSON serialized using its protobuf name, so expect names like `BOND_STATUS_UNBONDING` as opposed
+    to `Unbonding`.
+  * (x/staking) [\#7556](https://github.com/cosmos/cosmos-sdk/pull/7556) The ABCI's `Result.Data` field for
+    `MsgBeginRedelegate` and `MsgUndelegate` responses does not contain custom binary marshaled `completionTime`, but the
+    protobuf encoded `MsgBeginRedelegateResponse` and `MsgUndelegateResponse` structs respectively
+  * (x/evidence) [\#7538](https://github.com/cosmos/cosmos-sdk/pull/7538) The ABCI's `Result.Data` field for
+    `MsgSubmitEvidence` responses does not contain the raw evidence's hash, but the protobuf encoded
+    `MsgSubmitEvidenceResponse` struct.
+  * (x/gov) [\#7533](https://github.com/cosmos/cosmos-sdk/pull/7533) The ABCI's `Result.Data` field for
+    `MsgSubmitProposal` responses does not contain a raw binary encoding of the `proposalID`, but the protobuf encoded
+    `MsgSubmitSubmitProposalResponse` struct.
+
+### API Breaking
+
+* (AppModule) [\#7518](https://github.com/cosmos/cosmos-sdk/pull/7518) [\#7584](https://github.com/cosmos/cosmos-sdk/pull/7584) Rename `AppModule.RegisterQueryServices` to `AppModule.RegisterServices`, as this method now registers multiple services (the gRPC query service and the protobuf Msg service). A `Configurator` struct is used to hold the different services.
+
+### Features
+
+* (modules) [\#7540](https://github.com/cosmos/cosmos-sdk/issues/7540) Protobuf service definitions can now be used for
+packing `Msg`s in transactions as defined in [ADR 031](./docs/architecture/adr-031-msg-service.md). All modules now 
+define a `Msg` protobuf service.
+* (codec) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) `InterfaceRegistry` now inherits `jsonpb.AnyResolver`, and has a `RegisterCustomTypeURL` method to support ADR 031 packing of `Any`s. `AnyResolver` is now a required parameter to `RejectUnknownFields`.
+* (baseapp) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) Add `ServiceMsgRouter` to BaseApp to handle routing of protobuf service `Msg`s. The two new types defined in ADR 031, `sdk.ServiceMsg` and `sdk.MsgRequest` are introduced with this router.
+* (cli) [\#7221](https://github.com/cosmos/cosmos-sdk/pull/7221) Add the option of emitting amino encoded json from the CLI
+
+### Bug Fixes
+
+* (kvstore) [\#7415](https://github.com/cosmos/cosmos-sdk/pull/7415) Allow new stores to be registered during on-chain upgrades.
+* (rest) [\#7730](https://github.com/cosmos/cosmos-sdk/pull/7730) Fix fetch txs by height on legacy REST endpoint
+
+### Improvements
+
+* (tendermint) [\#7527](https://github.com/cosmos/cosmos-sdk/pull/7527) Update sdk to tendermint 0.34-rc5
+* (iavl) [\#7549](https://github.com/cosmos/cosmos-sdk/pull/7549) Update sdk to IAVL 0.15.0-rc4
 
 ## [v0.40.0-rc0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc0) - 2020-10-13
 

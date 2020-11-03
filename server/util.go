@@ -76,6 +76,7 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
+
 	basename := path.Base(executableName)
 
 	// Configure the viper instance

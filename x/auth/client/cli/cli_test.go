@@ -771,7 +771,6 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	var balRes banktypes.QueryAllBalancesResponse
 	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
-	s.Require().Equal(sendTokens.Amount, balRes.Balances.AmountOf(s.cfg.BondDenom))
 	s.T().Log(balRes.Balances.AmountOf(s.cfg.BondDenom))
 
 	generatedStd, err := bankcli.MsgSendExec(

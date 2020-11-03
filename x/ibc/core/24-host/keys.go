@@ -31,9 +31,9 @@ var (
 const (
 	KeyChannelPrefix           = "channelEnds"
 	KeyChannelCapabilityPrefix = "capabilities"
-	KeyNextSeqSendPrefix       = "seqSends"
-	KeyNextSeqRecvPrefix       = "seqRecvs"
-	KeyNextSeqAckPrefix        = "seqAcks"
+	KeyNextSeqSendPrefix       = "nextSequenceSend"
+	KeyNextSeqRecvPrefix       = "nextSequenceRecv"
+	KeyNextSeqAckPrefix        = "nextSequenceAck"
 	KeyPacketCommitmentPrefix  = "commitments"
 	KeyPacketAckPrefix         = "acks"
 	KeyPacketReceiptPrefix     = "receipts"

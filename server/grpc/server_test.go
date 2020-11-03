@@ -109,15 +109,18 @@ func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 	val0 := s.network.Validators[0]
 
 	// We should reject connections with invalid block heights off the bat.
-	invalidHeightStrs := []string{
-		"-1",
-		"9223372036854775808", // > max(int64) by 1
-		"-10",
-		"18446744073709551615", // max uint64, which is  > max(int64)
-		"-9223372036854775809", // Out of the range of for negative int64
+	invalidHeightStrs := []struct {
+		value   string
+		wantErr string
+	}{
+		{"-1", "height < 0"},
+		{"9223372036854775808", "value out of range"}, // > max(int64) by 1
+		{"-10", "height < 0"},
+		{"18446744073709551615", "value out of range"}, // max uint64, which is  > max(int64)
+		{"-9223372036854775809", "value out of range"}, // Out of the range of for negative int64
 	}
-	for _, invalidHeightStr := range invalidHeightStrs {
-		t.Run(invalidHeightStr, func(t *testing.T) {
+	for _, tt := range invalidHeightStrs {
+		t.Run(tt.value, func(t *testing.T) {
 			conn, err := grpc.Dial(
 				val0.AppConfig.GRPC.Address,
 				grpc.WithInsecure(), // Or else we get "no transport security set"
@@ -125,11 +128,11 @@ func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 			defer conn.Close()
 
 			testClient := testdata.NewQueryClient(conn)
-			ctx := metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, invalidHeightStr)
+			ctx := metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, tt.value)
 			testRes, err := testClient.Echo(ctx, &testdata.EchoRequest{Message: "hello"})
 			require.Error(t, err)
 			require.Nil(t, testRes)
-			require.Contains(t, err.Error(), "value out of range")
+			require.Contains(t, err.Error(), tt.wantErr)
 		})
 	}
 }

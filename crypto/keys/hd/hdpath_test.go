@@ -7,7 +7,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/types"
 
 	bip39 "github.com/cosmos/go-bip39"
@@ -111,7 +110,7 @@ func TestBIP32Vecs(t *testing.T) {
 	// cosmos, absolute path
 	priv, err := DerivePrivateKeyForPath(master, ch, types.FullFundraiserPath)
 	require.NoError(t, err)
-	require.NotEmpty(t, priv)
+
 	fmt.Println(hex.EncodeToString(priv[:]))
 
 	absPrivKey := hex.EncodeToString(priv[:])
@@ -129,23 +128,21 @@ func TestBIP32Vecs(t *testing.T) {
 	// bitcoin
 	priv, err = DerivePrivateKeyForPath(master, ch, "m/44'/0'/0'/0/0")
 	require.NoError(t, err)
-	require.NotEmpty(t, priv)
+
 	fmt.Println(hex.EncodeToString(priv[:]))
 
 	// ether
 	priv, err = DerivePrivateKeyForPath(master, ch, "m/44'/60'/0'/0/0")
 	require.NoError(t, err)
-	require.NotEmpty(t, priv)
+
 	fmt.Println(hex.EncodeToString(priv[:]))
 
 	// INVALID
 	priv, err = DerivePrivateKeyForPath(master, ch, "m/X/0'/0'/0/0")
 	require.Error(t, err)
-	require.Empty(t, priv)
 
 	priv, err = DerivePrivateKeyForPath(master, ch, "m/-44/0'/0'/0/0")
 	require.Error(t, err)
-	require.Empty(t, priv)
 
 	fmt.Println()
 	fmt.Println("keys generated via https://coinomi.com/recovery-phrase-tool.html")
@@ -190,30 +187,6 @@ func TestBIP32Vecs(t *testing.T) {
 	// BIP 32 example
 	//
 	// c4c11d8c03625515905d7e89d25dfc66126fbc629ecca6db489a1a72fc4bda78
-}
-
-func TestCreateHDPath(t *testing.T) {
-	type args struct {
-		coinType uint32
-		account  uint32
-		index    uint32
-	}
-	tests := []struct {
-		name string
-		args args
-		want BIP44Params
-	}{
-		{"m/44'/0'/0'/0/0", args{0, 0, 0}, BIP44Params{Purpose: 44}},
-		{"m/44'/114'/0'/0/0", args{114, 0, 0}, BIP44Params{Purpose: 44, CoinType: 114, Account: 0, AddressIndex: 0}},
-		{"m/44'/114'/1'/1/0", args{114, 1, 1}, BIP44Params{Purpose: 44, CoinType: 114, Account: 1, AddressIndex: 1}},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			tt := tt
-			require.Equal(t, tt.want, *keys.CreateHDPath(tt.args.account, tt.args.index))
-		})
-	}
 }
 
 // Tests to ensure that any index value is in the range [0, max(int32)] as per

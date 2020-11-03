@@ -228,3 +228,10 @@ func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
 		})
 	}
 }
+
+// TODO - finish this test to show who the key will be presented in YAML
+func TestMarshalYAML(t *testing.T) {
+	privKey := ed25519.GenPrivKey()
+	pubKey := privKey.PubKey()
+
+}

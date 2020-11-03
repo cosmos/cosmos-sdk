@@ -55,7 +55,7 @@ func ShowValidatorCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Println(out)
+			fmt.Println(string(out))
 			return nil
 		},
 	}

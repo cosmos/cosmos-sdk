@@ -8,6 +8,7 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,15 +30,16 @@ func TestDecodeStore(t *testing.T) {
 	dec := simulation.NewDecodeStore(cdc)
 
 	info := types.NewValidatorSigningInfo(consAddr1, 0, 1, time.Now().UTC(), false, 0)
-	bechPK := sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, delPk1)
 	missed := gogotypes.BoolValue{Value: true}
+	delPk1Proto, err := codec.AssertProtoMsg(delPk1)
+	require.NoError(t, err)
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
 			{Key: types.ValidatorSigningInfoKey(consAddr1), Value: cdc.MustMarshalBinaryBare(&info)},
 			{Key: types.ValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryBare(&missed)},
-			{Key: types.AddrPubkeyRelationKey(delAddr1), Value: cdc.MustMarshalBinaryBare(&gogotypes.StringValue{Value: bechPK})},
-			{Key: []byte{0x99}, Value: []byte{0x99}},
+			{Key: types.AddrPubkeyRelationKey(delAddr1), Value: cdc.MustMarshalBinaryBare(delPk1)},
+			{Key: []byte{0x99}, Value: []byte{0x99}}, // This test should panic
 		},
 	}
 

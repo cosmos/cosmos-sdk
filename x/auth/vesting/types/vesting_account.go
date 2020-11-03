@@ -6,9 +6,11 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // Compile-time type assertions
@@ -188,7 +190,7 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 		return nil, err
 	}
 
-	alias := vestingAccountYAML{
+	out := vestingAccountYAML{
 		Address:          accAddr,
 		AccountNumber:    bva.AccountNumber,
 		Sequence:         bva.Sequence,
@@ -197,23 +199,10 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 		DelegatedVesting: bva.DelegatedVesting,
 		EndTime:          bva.EndTime,
 	}
-
-	pk := bva.GetPubKey()
-	if pk != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pk)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
-	}
-
-	bz, err := yaml.Marshal(alias)
-	if err != nil {
+	if out.PubKey, err = getPKString(bva); err != nil {
 		return nil, err
 	}
-
-	return string(bz), err
+	return marshalYaml(out)
 }
 
 //-----------------------------------------------------------------------------
@@ -316,7 +305,7 @@ func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
 		return nil, err
 	}
 
-	alias := vestingAccountYAML{
+	out := vestingAccountYAML{
 		Address:          accAddr,
 		AccountNumber:    cva.AccountNumber,
 		Sequence:         cva.Sequence,
@@ -326,23 +315,10 @@ func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
 		EndTime:          cva.EndTime,
 		StartTime:        cva.StartTime,
 	}
-
-	pk := cva.GetPubKey()
-	if pk != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pk)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
-	}
-
-	bz, err := yaml.Marshal(alias)
-	if err != nil {
+	if out.PubKey, err = getPKString(cva); err != nil {
 		return nil, err
 	}
-
-	return string(bz), err
+	return marshalYaml(out)
 }
 
 //-----------------------------------------------------------------------------
@@ -474,7 +450,7 @@ func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 		return nil, err
 	}
 
-	alias := vestingAccountYAML{
+	out := vestingAccountYAML{
 		Address:          accAddr,
 		AccountNumber:    pva.AccountNumber,
 		Sequence:         pva.Sequence,
@@ -485,23 +461,10 @@ func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 		StartTime:        pva.StartTime,
 		VestingPeriods:   pva.VestingPeriods,
 	}
-
-	pk := pva.GetPubKey()
-	if pk != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pk)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
-	}
-
-	bz, err := yaml.Marshal(alias)
-	if err != nil {
+	if out.PubKey, err = getPKString(pva); err != nil {
 		return nil, err
 	}
-
-	return string(bz), err
+	return marshalYaml(out)
 }
 
 //-----------------------------------------------------------------------------
@@ -569,4 +532,28 @@ func (dva DelayedVestingAccount) Validate() error {
 func (dva DelayedVestingAccount) String() string {
 	out, _ := dva.MarshalYAML()
 	return out.(string)
+}
+
+type getPK interface {
+	GetPubKey() crypto.PubKey
+}
+
+func getPKString(g getPK) (string, err) {
+	if pk := g.GetPubKey(); pk != nil {
+		// TODO check if it's ok to change a type of ValidatorOutput.PubKey to crypto.PubKey
+		pk, err := codec.ProtoMarshalJSONI(pk, nil)
+		if err != nil {
+			return nil, err
+		}
+		return string(pk), err
+	}
+	return "", nil
+}
+
+func marshalYaml(i interface{}) (interface{}, error) {
+	bz, err := yaml.Marshal(i)
+	if err != nil {
+		return nil, err
+	}
+	return string(bz), nil
 }

@@ -2,7 +2,10 @@ package keyring
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
 )
+
+// TODO: Update this file and remove legacybech32 ?
 
 // KeyOutput defines a structure wrapping around an Info object used for output
 // functionality.
@@ -52,7 +55,7 @@ func Bech32KeysOutput(infos []Info) ([]KeyOutput, error) {
 func Bech32ConsKeyOutput(keyInfo Info) (KeyOutput, error) {
 	consAddr := sdk.ConsAddress(keyInfo.GetPubKey().Address().Bytes())
 
-	bechPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, keyInfo.GetPubKey())
+	bechPubKey, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeConsPub, keyInfo.GetPubKey())
 	if err != nil {
 		return KeyOutput{}, err
 	}
@@ -64,7 +67,7 @@ func Bech32ConsKeyOutput(keyInfo Info) (KeyOutput, error) {
 func Bech32ValKeyOutput(keyInfo Info) (KeyOutput, error) {
 	valAddr := sdk.ValAddress(keyInfo.GetPubKey().Address().Bytes())
 
-	bechPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeValPub, keyInfo.GetPubKey())
+	bechPubKey, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeValPub, keyInfo.GetPubKey())
 	if err != nil {
 		return KeyOutput{}, err
 	}
@@ -77,7 +80,7 @@ func Bech32ValKeyOutput(keyInfo Info) (KeyOutput, error) {
 // public keys will be added.
 func Bech32KeyOutput(keyInfo Info) (KeyOutput, error) {
 	accAddr := sdk.AccAddress(keyInfo.GetPubKey().Address().Bytes())
-	bechPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, keyInfo.GetPubKey())
+	bechPubKey, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeAccPub, keyInfo.GetPubKey())
 	if err != nil {
 		return KeyOutput{}, err
 	}
@@ -90,7 +93,7 @@ func Bech32KeyOutput(keyInfo Info) (KeyOutput, error) {
 		for i, pk := range mInfo.PubKeys {
 			accAddr := sdk.AccAddress(pk.PubKey.Address().Bytes())
 
-			bechPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pk.PubKey)
+			bechPubKey, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeAccPub, pk.PubKey)
 			if err != nil {
 				return KeyOutput{}, err
 			}

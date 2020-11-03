@@ -7,7 +7,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -29,12 +29,11 @@ func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 	).Methods("GET")
 }
 
-// http request handler to query signing info
-// [DEPRECATED]
+// Deprecated: http request handler to query signing info
 func signingInfoHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, vars["validatorPubKey"])
+		pk, err := legacybech32.GetPubKeyFromBech32(legacybech32.Bech32PubKeyTypeConsPub, vars["validatorPubKey"])
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}

@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
+	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -63,10 +64,10 @@ func ValidatorCommand() *cobra.Command {
 	return cmd
 }
 
-// Validator output in bech32 format
+// Validator output
 type ValidatorOutput struct {
 	Address          sdk.ConsAddress `json:"address"`
-	PubKey           string          `json:"pub_key"`
+	PubKey           crypto.PubKey   `json:"pub_key"`
 	ProposerPriority int64           `json:"proposer_priority"`
 	VotingPower      int64           `json:"voting_power"`
 }
@@ -98,18 +99,13 @@ func (rvo ResultValidatorsOutput) String() string {
 	return b.String()
 }
 
-func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
-	bechValPubkey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, validator.PubKey)
-	if err != nil {
-		return ValidatorOutput{}, err
-	}
-
+func validatorOutput(validator *tmtypes.Validator) ValidatorOutput {
 	return ValidatorOutput{
 		Address:          sdk.ConsAddress(validator.Address),
-		PubKey:           bechValPubkey,
+		PubKey:           validator.PubKey,
 		ProposerPriority: validator.ProposerPriority,
 		VotingPower:      validator.VotingPower,
-	}, nil
+	}
 }
 
 // GetValidators from client
@@ -125,19 +121,16 @@ func GetValidators(clientCtx client.Context, height *int64, page, limit *int) (R
 		return ResultValidatorsOutput{}, err
 	}
 
-	outputValidatorsRes := ResultValidatorsOutput{
+	out := ResultValidatorsOutput{
 		BlockHeight: validatorsRes.BlockHeight,
 		Validators:  make([]ValidatorOutput, len(validatorsRes.Validators)),
 	}
 
 	for i := 0; i < len(validatorsRes.Validators); i++ {
-		outputValidatorsRes.Validators[i], err = bech32ValidatorOutput(validatorsRes.Validators[i])
-		if err != nil {
-			return ResultValidatorsOutput{}, err
-		}
+		out.Validators[i] = validatorOutput(validatorsRes.Validators[i])
 	}
 
-	return outputValidatorsRes, nil
+	return out, nil
 }
 
 // REST

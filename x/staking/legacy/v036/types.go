@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
 	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v034"
 )
 
@@ -89,7 +90,7 @@ func NewGenesisState(
 }
 
 func (v Validator) MarshalJSON() ([]byte, error) {
-	bechConsPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, v.ConsPubKey)
+	bechConsPubKey, err := legacybech32.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, v.ConsPubKey)
 	if err != nil {
 		return nil, err
 	}

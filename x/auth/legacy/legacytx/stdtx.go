@@ -6,6 +6,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"gopkg.in/yaml.v2"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -92,13 +93,12 @@ func (ss StdSignature) GetPubKey() crypto.PubKey {
 func (ss StdSignature) MarshalYAML() (interface{}, error) {
 	var (
 		bz     []byte
-		pubkey string
+		pubkey []byte
 		err    error
 	)
 
 	if ss.PubKey != nil {
-		pubkey, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, ss.GetPubKey())
-		if err != nil {
+		if pubkey, err = codec.ProtoMarshalJSONI(ss.PubKey, nil); err != nil {
 			return nil, err
 		}
 	}
@@ -107,7 +107,7 @@ func (ss StdSignature) MarshalYAML() (interface{}, error) {
 		PubKey    string
 		Signature string
 	}{
-		PubKey:    pubkey,
+		PubKey:    string(pubkey),
 		Signature: fmt.Sprintf("%X", ss.Signature),
 	})
 	if err != nil {

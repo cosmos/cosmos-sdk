@@ -1,14 +1,12 @@
-package types_test
+package legacybech32
 
 import (
 	"math/rand"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 )
 
 func BenchmarkBech32ifyPubKey(b *testing.B) {
@@ -23,7 +21,7 @@ func BenchmarkBech32ifyPubKey(b *testing.B) {
 		rng.Read(pk.Key)
 		b.StartTimer()
 
-		_, err := types.Bech32ifyPubKey(types.Bech32PubKeyTypeConsPub, pk)
+		_, err := Bech32ifyPubKey(Bech32PubKeyTypeConsPub, pk)
 		require.NoError(b, err)
 	}
 }
@@ -39,11 +37,11 @@ func BenchmarkGetPubKeyFromBech32(b *testing.B) {
 		b.StopTimer()
 		rng.Read(pk.Key)
 
-		pkStr, err := types.Bech32ifyPubKey(types.Bech32PubKeyTypeConsPub, pk)
+		pkStr, err := Bech32ifyPubKey(Bech32PubKeyTypeConsPub, pk)
 		require.NoError(b, err)
 
 		b.StartTimer()
-		pk2, err := types.GetPubKeyFromBech32(types.Bech32PubKeyTypeConsPub, pkStr)
+		pk2, err := GetPubKeyFromBech32(Bech32PubKeyTypeConsPub, pkStr)
 		require.NoError(b, err)
 		require.Equal(b, pk, pk2)
 	}

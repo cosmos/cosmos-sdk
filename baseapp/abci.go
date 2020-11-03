@@ -354,6 +354,10 @@ func (app *BaseApp) halt() {
 
 // snapshot takes a snapshot of the current state and prunes any old snapshottypes.
 func (app *BaseApp) snapshot(height int64) {
+	if app.snapshotManager == nil {
+		app.logger.Info("snapshot manager not configured")
+		return
+	}
 	app.logger.Info("Creating state snapshot", "height", height)
 	snapshot, err := app.snapshotManager.Create(uint64(height))
 	if err != nil {
@@ -447,6 +451,11 @@ func (app *BaseApp) LoadSnapshotChunk(req abci.RequestLoadSnapshotChunk) abci.Re
 
 // OfferSnapshot implements the ABCI interface. It delegates to app.snapshotManager if set.
 func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOfferSnapshot {
+	if app.snapshotManager == nil {
+		app.logger.Error("snapshot manager not configured")
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}
+	}
+
 	if req.Snapshot == nil {
 		app.logger.Error("Received nil snapshot")
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
@@ -481,6 +490,11 @@ func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOf
 
 // ApplySnapshotChunk implements the ABCI interface. It delegates to app.snapshotManager if set.
 func (app *BaseApp) ApplySnapshotChunk(req abci.RequestApplySnapshotChunk) abci.ResponseApplySnapshotChunk {
+	if app.snapshotManager == nil {
+		app.logger.Error("snapshot manager not configured")
+		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}
+	}
+
 	_, err := app.snapshotManager.RestoreChunk(req.Chunk)
 	switch {
 	case err == nil:

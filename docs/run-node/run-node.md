@@ -87,4 +87,4 @@ The naive way would be to run the same commands in separate terminal windows. Th
 
 ## Next {hide}
 
-Read about the [Interacting with your Node](./query-lifecycle.md) {hide}
+Read about the [Interacting with your Node](./interact-node.md) {hide}

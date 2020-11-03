@@ -25,10 +25,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-//todo: move to flags
 const (
 	flagNoAutoIncrement = "no-auto-increment"
-	FlagMultisig        = "multisigaddr"
 )
 
 // GetSignCommand returns the sign command
@@ -209,7 +207,7 @@ func GetMultiSignBatchCmd() *cobra.Command {
 
 	cmd.Flags().Bool(flagNoAutoIncrement, false, "disable sequence auto increment")
 	cmd.Flags().String(
-		FlagMultisig, "",
+		flagMultisig, "",
 		"Address of the multisig account on behalf of which the transaction shall be signed",
 	)
 	flags.AddTxFlagsToCmd(cmd)
@@ -252,7 +250,7 @@ func makeBatchMultisigCmd() func(cmd *cobra.Command, args []string) error {
 		var signatureBatch [][]signingtypes.SignatureV2
 		for i := 2; i < len(args); i++ {
 			// todo:unmarshal sigs from multiple files
-			sigs, err := unmarshalSignatureJSON(clientCtx, args[i])
+			sigs, err := unmarshalMultiSigsJSON(clientCtx, args[i])
 			if err != nil {
 				return err
 			}
@@ -348,6 +346,14 @@ func makeBatchMultisigCmd() func(cmd *cobra.Command, args []string) error {
 }
 
 func unmarshalSignatureJSON(clientCtx client.Context, filename string) (sigs []signingtypes.SignatureV2, err error) {
+	var bytes []byte
+	if bytes, err = ioutil.ReadFile(filename); err != nil {
+		return
+	}
+	return clientCtx.TxConfig.UnmarshalSignatureJSON(bytes)
+}
+
+func unmarshalMultiSigsJSON(clientCtx client.Context, filename string) (sigs []signingtypes.SignatureV2, err error) {
 	var bytes []byte
 	if bytes, err = ioutil.ReadFile(filename); err != nil {
 		return

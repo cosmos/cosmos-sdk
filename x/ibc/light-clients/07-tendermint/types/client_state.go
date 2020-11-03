@@ -169,14 +169,13 @@ func (cs ClientState) ZeroCustomFields() exported.ClientState {
 func (cs ClientState) VerifyClientState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	provingRoot exported.Root,
 	height exported.Height,
 	prefix exported.Prefix,
 	counterpartyClientIdentifier string,
 	proof []byte,
 	clientState exported.ClientState,
 ) error {
-	merkleProof, _, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
+	merkleProof, provingConsensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -201,7 +200,7 @@ func (cs ClientState) VerifyClientState(
 		return err
 	}
 
-	return merkleProof.VerifyMembership(cs.ProofSpecs, provingRoot, path, bz)
+	return merkleProof.VerifyMembership(cs.ProofSpecs, provingConsensusState.GetRoot(), path, bz)
 }
 
 // VerifyClientConsensusState verifies a proof of the consensus state of the
@@ -209,7 +208,6 @@ func (cs ClientState) VerifyClientState(
 func (cs ClientState) VerifyClientConsensusState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	provingRoot exported.Root,
 	height exported.Height,
 	counterpartyClientIdentifier string,
 	consensusHeight exported.Height,
@@ -217,7 +215,7 @@ func (cs ClientState) VerifyClientConsensusState(
 	proof []byte,
 	consensusState exported.ConsensusState,
 ) error {
-	merkleProof, _, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
+	merkleProof, provingConsensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -242,7 +240,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	if err := merkleProof.VerifyMembership(cs.ProofSpecs, provingRoot, path, bz); err != nil {
+	if err := merkleProof.VerifyMembership(cs.ProofSpecs, provingConsensusState.GetRoot(), path, bz); err != nil {
 		return err
 	}
 

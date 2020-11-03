@@ -1,5 +1,3 @@
-// +build norace
-
 package cli_test
 
 import (
@@ -739,11 +737,6 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 func (s *IntegrationTestSuite) TestMultiSignBatchCmd() {
 	val := s.network.Validators[0]
-
-	codec := codec2.NewLegacyAmino()
-	sdk.RegisterLegacyAminoCodec(codec)
-	banktypes.RegisterLegacyAminoCodec(codec)
-	val.ClientCtx.LegacyAmino = codec
 
 	// Fetch 2 accounts and a multisig.
 	account1, err := val.ClientCtx.Keyring.Key("newAccount1")

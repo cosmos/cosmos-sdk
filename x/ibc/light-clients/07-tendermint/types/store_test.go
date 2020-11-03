@@ -5,6 +5,7 @@ import (
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
+	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 )
 
@@ -36,15 +37,14 @@ func (suite *TendermintTestSuite) TestGetConsensusState() {
 				store.Set(host.KeyConsensusState(height), clientStateBz)
 			}, false,
 		},
-		// TODO: uncomment upon merge of solomachine
-		//	{
-		//		"invalid consensus state (solomachine)", func() {
-		//				// marshal and set solomachine consensus state
-		//				store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
-		//				consensusStateBz := suite.chainA.App.IBCKeeper.ClientKeeper.MustMarshalConsensusState(&solomachinetypes.ConsensusState{})
-		//				store.Set(host.KeyConsensusState(height), consensusStateBz)
-		//			}, false,
-		//		},
+		{
+			"invalid consensus state (solomachine)", func() {
+				// marshal and set solomachine consensus state
+				store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
+				consensusStateBz := suite.chainA.App.IBCKeeper.ClientKeeper.MustMarshalConsensusState(&solomachinetypes.ConsensusState{})
+				store.Set(host.KeyConsensusState(height), consensusStateBz)
+			}, false,
+		},
 	}
 
 	for _, tc := range testCases {

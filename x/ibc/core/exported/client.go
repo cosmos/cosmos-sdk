@@ -51,7 +51,6 @@ type ClientState interface {
 	VerifyClientState(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		root Root,
 		height Height,
 		prefix Prefix,
 		counterpartyClientIdentifier string,
@@ -61,7 +60,6 @@ type ClientState interface {
 	VerifyClientConsensusState(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		root Root,
 		height Height,
 		counterpartyClientIdentifier string,
 		consensusHeight Height,

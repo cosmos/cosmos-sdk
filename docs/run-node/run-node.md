@@ -61,11 +61,11 @@ simd collect-gentxs --chain-id my-test-chain
 
 A `gentx` does three things:
 
-    1. Makes the `validator` account you created into a validator operator account (i.e. the account that controls the validator).
-    2. Self-delegates the provided `amount` of staking tokens.
-    3. Link the operator account with a Tendermint node pubkey that will be used for signing blocks. If no `--pubkey` flag is provided, it defaults to the local node pubkey created via the `simd init` command above.
+1. Makes the `validator` account you created into a validator operator account (i.e. the account that controls the validator).
+2. Self-delegates the provided `amount` of staking tokens.
+3. Link the operator account with a Tendermint node pubkey that will be used for signing blocks. If no `--pubkey` flag is provided, it defaults to the local node pubkey created via the `simd init` command above.
 
-For more on `gentx`, use the following command:
+For more information on `gentx`, use the following command:
 
 ```bash
 simd gentx --help
@@ -81,9 +81,9 @@ You should see blocks come in.
 
 ## Run a Localnet
 
-The previous commands allow you to run a single node. This is enough for the next section on interacting with this node, but you may wish to run multiple nodes at the same.
+The previous commands allow you to run a single node. This is enough for the next section on interacting with this node, but you may wish to run multiple nodes at the same time, and see how consensus happens between them.
 
-The naive way would be to run the same commands in separate terminal windows. However, in the SDK, we leverage the power [Docker Compose](https://docs.docker.com/compose/) to run a localnet. For inspiration, you can have a look at the SDK's [`docker-compose.yml`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/docker-compose.yml).
+The naive way would be to run the same commands in separate terminal windows. This is possible, however in the SDK, we leverage the power of [Docker Compose](https://docs.docker.com/compose/) to run a localnet. If you need inspiration on how to set up your own localnet with Docker Compose, you can have a look at the SDK's [`docker-compose.yml`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/docker-compose.yml).
 
 ## Next {hide}
 

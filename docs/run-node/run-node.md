@@ -77,6 +77,12 @@ aud start
 
 You should see blocks come in.
 
+## Run a Localnet
+
+The previous commands allow you to run a single node. This is enough for the next section on interacting with this node, but you may wish to run multiple nodes at the same.
+
+The naive way would be to run the same commands in separate terminal windows. However, in the SDK, we leverage the power [Docker Compose](https://docs.docker.com/compose/) to run a localnet. For inspiration, you can have a look at the SDK's [`docker-compose.yml`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/docker-compose.yml).
+
 ## Next {hide}
 
 Read about the [Interacting with your Node](./query-lifecycle.md) {hide}

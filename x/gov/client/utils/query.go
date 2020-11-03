@@ -150,33 +150,38 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 	}
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
-			vote := types.Vote{}
-
 			// there should only be a single vote under the given conditions
 			if msg.Type() == types.TypeMsgVote {
 				voteMsg := msg.(*types.MsgVote)
 
-				vote = types.Vote{
+				vote := types.Vote{
 					Voter:      voteMsg.Voter,
 					ProposalId: params.ProposalID,
 					Options:    types.NewNonSplitVoteOption(voteMsg.Option),
 				}
+
+				bz, err := clientCtx.JSONMarshaler.MarshalJSON(&vote)
+				if err != nil {
+					return nil, err
+				}
+
+				return bz, nil
 			} else if msg.Type() == types.TypeMsgWeightedVote {
 				voteMsg := msg.(*types.MsgWeightedVote)
 
-				vote = types.Vote{
+				vote := types.Vote{
 					Voter:      voteMsg.Voter,
 					ProposalId: params.ProposalID,
 					Options:    voteMsg.Options,
 				}
-			}
 
-			bz, err := clientCtx.JSONMarshaler.MarshalJSON(&vote)
-			if err != nil {
-				return nil, err
-			}
+				bz, err := clientCtx.JSONMarshaler.MarshalJSON(&vote)
+				if err != nil {
+					return nil, err
+				}
 
-			return bz, nil
+				return bz, nil
+			}
 		}
 	}
 

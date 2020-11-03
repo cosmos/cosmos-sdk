@@ -18,7 +18,7 @@ service Msg {
   rpc Vote(MsgVote) returns (MsgVoteResponse);
 
   // WeightedVote defines a method to add a weighted vote on a specific proposal.
-  rpc WeightedVote(MsgWeightedVote) returns (MsgVoteResponse);
+  rpc WeightedVote(MsgWeightedVote) returns (MsgWeightedVoteResponse);
 
   // Deposit defines a method to add deposit on a specific proposal.
   rpc Deposit(MsgDeposit) returns (MsgDepositResponse);
@@ -53,7 +53,7 @@ message MsgVote {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  uint64     proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
+  uint64     proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
   string     voter       = 2;
   VoteOption option      = 3;
 }
@@ -72,6 +72,9 @@ message MsgWeightedVote {
 
 // MsgVoteResponse defines the Msg/Vote response type.
 message MsgVoteResponse {}
+
+// MsgWeightedVoteResponse defines the MsgWeightedVote response type.
+message MsgWeightedVoteResponse {}
 
 // MsgDeposit defines a message to submit a deposit to an existing proposal.
 message MsgDeposit {

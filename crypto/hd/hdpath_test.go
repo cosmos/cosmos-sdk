@@ -3,7 +3,6 @@ package hd_test
 import (
 	"encoding/hex"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -268,17 +267,10 @@ func TestDeriveHDPathRange(t *testing.T) {
 			_, err := hd.DerivePrivateKeyForPath(master, ch, tt.path)
 
 			if tt.wantErr == "" {
-				if err != nil {
-					t.Fatalf("Unexpected error: %v", err)
-				}
-				return
-			}
-
-			if err == nil {
-				t.Fatal("Expected a report of an int overflow")
-			}
-			if !strings.Contains(err.Error(), tt.wantErr) {
-				t.Fatalf(`Error:\n%q\ndoes not contain\n%q`, err, tt.wantErr)
+				require.Nil(t, err, "unexpected error")
+			} else {
+				require.NotNil(t, err, "expected a report of an int overflow")
+				require.Contains(t, err.Error(), tt.wantErr)
 			}
 		})
 	}

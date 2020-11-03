@@ -407,7 +407,7 @@ type TxCreateValidatorConfig struct {
 	CommissionMaxChangeRate string
 	MinSelfDelegation       string
 
-	PubKey string
+	PubKey crypto.PubKey
 
 	IP              string
 	Website         string
@@ -479,7 +479,7 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 	}
 
 	c.NodeID = nodeID
-	c.PubKey = sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey)
+	c.PubKey = valPubKey
 	c.Website = website
 	c.SecurityContact = securityContact
 	c.Details = details
@@ -520,13 +520,6 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 	}
 
 	valAddr := clientCtx.GetFromAddress()
-	pkStr := config.PubKey
-
-	pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, pkStr)
-	if err != nil {
-		return txBldr, nil, err
-	}
-
 	description := types.NewDescription(
 		config.Moniker,
 		config.Identity,
@@ -554,7 +547,7 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 	}
 
 	msg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(valAddr), pk, amount, description, commissionRates, minSelfDelegation,
+		sdk.ValAddress(valAddr), config.PubKey, amount, description, commissionRates, minSelfDelegation,
 	)
 	if err != nil {
 		return txBldr, msg, err

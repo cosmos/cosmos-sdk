@@ -15,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
 	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v034"
 )
 
@@ -174,7 +175,7 @@ func (acc BaseAccount) MarshalJSON() ([]byte, error) {
 	}
 
 	if acc.PubKey != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, acc.PubKey)
+		pks, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeAccPub, acc.PubKey)
 		if err != nil {
 			return nil, err
 		}
@@ -193,7 +194,7 @@ func (acc *BaseAccount) UnmarshalJSON(bz []byte) error {
 	}
 
 	if alias.PubKey != "" {
-		pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, alias.PubKey)
+		pk, err := legacybech32.GetPubKeyFromBech32(legacybech32.Bech32PubKeyTypeAccPub, alias.PubKey)
 		if err != nil {
 			return err
 		}
@@ -240,7 +241,7 @@ func (bva BaseVestingAccount) MarshalJSON() ([]byte, error) {
 	}
 
 	if bva.PubKey != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, bva.PubKey)
+		pks, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeAccPub, bva.PubKey)
 		if err != nil {
 			return nil, err
 		}
@@ -264,7 +265,7 @@ func (bva *BaseVestingAccount) UnmarshalJSON(bz []byte) error {
 	)
 
 	if alias.PubKey != "" {
-		pk, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, alias.PubKey)
+		pk, err = legacybech32.GetPubKeyFromBech32(legacybech32.Bech32PubKeyTypeAccPub, alias.PubKey)
 		if err != nil {
 			return err
 		}
@@ -309,7 +310,7 @@ func (cva ContinuousVestingAccount) MarshalJSON() ([]byte, error) {
 	}
 
 	if cva.PubKey != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, cva.PubKey)
+		pks, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeAccPub, cva.PubKey)
 		if err != nil {
 			return nil, err
 		}
@@ -333,7 +334,7 @@ func (cva *ContinuousVestingAccount) UnmarshalJSON(bz []byte) error {
 	)
 
 	if alias.PubKey != "" {
-		pk, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, alias.PubKey)
+		pk, err = legacybech32.GetPubKeyFromBech32(legacybech32.Bech32PubKeyTypeAccPub, alias.PubKey)
 		if err != nil {
 			return err
 		}
@@ -375,7 +376,7 @@ func (dva DelayedVestingAccount) MarshalJSON() ([]byte, error) {
 	}
 
 	if dva.PubKey != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, dva.PubKey)
+		pks, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeAccPub, dva.PubKey)
 		if err != nil {
 			return nil, err
 		}
@@ -399,7 +400,7 @@ func (dva *DelayedVestingAccount) UnmarshalJSON(bz []byte) error {
 	)
 
 	if alias.PubKey != "" {
-		pk, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, alias.PubKey)
+		pk, err = legacybech32.GetPubKeyFromBech32(legacybech32.Bech32PubKeyTypeAccPub, alias.PubKey)
 		if err != nil {
 			return err
 		}

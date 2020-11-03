@@ -41,12 +41,12 @@ consisting of all the keys provided by name and multisig threshold.`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: runShowCmd,
 	}
-
-	cmd.Flags().String(FlagBechPrefix, sdk.PrefixAccount, "The Bech32 prefix encoding for a key (acc|val|cons)")
-	cmd.Flags().BoolP(FlagAddress, "a", false, "Output the address only (overrides --output)")
-	cmd.Flags().BoolP(FlagPublicKey, "p", false, "Output the public key only (overrides --output)")
-	cmd.Flags().BoolP(FlagDevice, "d", false, "Output the address in a ledger device")
-	cmd.Flags().Int(flagMultiSigThreshold, 1, "K out of N required signatures")
+	flags := cmd.Flags()
+	flags.String(FlagBechPrefix, sdk.PrefixAccount, "The Bech32 prefix encoding for a key (acc|val|cons)")
+	flags.BoolP(FlagAddress, "a", false, "Output the address only (overrides --output)")
+	flags.BoolP(FlagPublicKey, "p", false, "Output the public key only (overrides --output)")
+	flags.BoolP(FlagDevice, "d", false, "Output the address in a ledger device")
+	flags.Int(flagMultiSigThreshold, 1, "K out of N required signatures")
 
 	return cmd
 }

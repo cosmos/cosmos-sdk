@@ -61,21 +61,21 @@ the flag --nosort is set.
 		Args: cobra.ExactArgs(1),
 		RunE: runAddCmd,
 	}
-
-	cmd.Flags().StringSlice(flagMultisig, nil, "Construct and store a multisig public key (implies --pubkey)")
-	cmd.Flags().Int(flagMultiSigThreshold, 1, "K out of N required signatures. For use in conjunction with --multisig")
-	cmd.Flags().Bool(flagNoSort, false, "Keys passed to --multisig are taken in the order they're supplied")
-	cmd.Flags().String(FlagPublicKey, "", "Parse a public key in bech32 format and save it to disk")
-	cmd.Flags().BoolP(flagInteractive, "i", false, "Interactively prompt user for BIP39 passphrase and mnemonic")
-	cmd.Flags().Bool(flags.FlagUseLedger, false, "Store a local reference to a private key on a Ledger device")
-	cmd.Flags().Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
-	cmd.Flags().Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
-	cmd.Flags().Bool(flags.FlagDryRun, false, "Perform action, but don't add key to local keystore")
-	cmd.Flags().String(flagHDPath, "", "Manual HD Path derivation (overrides BIP44 config)")
-	cmd.Flags().Uint32(flagCoinType, sdk.GetConfig().GetCoinType(), "coin type number for HD derivation")
-	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
-	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
-	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
+	flags := cmd.Flags()
+	flags.StringSlice(flagMultisig, nil, "Construct and store a multisig public key (implies --pubkey)")
+	flags.Int(flagMultiSigThreshold, 1, "K out of N required signatures. For use in conjunction with --multisig")
+	flags.Bool(flagNoSort, false, "Keys passed to --multisig are taken in the order they're supplied")
+	flags.String(FlagPublicKey, "", "Parse a public key in bech32 format and save it to disk")
+	flags.BoolP(flagInteractive, "i", false, "Interactively prompt user for BIP39 passphrase and mnemonic")
+	flags.Bool(flags.FlagUseLedger, false, "Store a local reference to a private key on a Ledger device")
+	flags.Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
+	flags.Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
+	flags.Bool(flags.FlagDryRun, false, "Perform action, but don't add key to local keystore")
+	flags.String(flagHDPath, "", "Manual HD Path derivation (overrides BIP44 config)")
+	flags.Uint32(flagCoinType, sdk.GetConfig().GetCoinType(), "coin type number for HD derivation")
+	flags.Uint32(flagAccount, 0, "Account number for HD derivation")
+	flags.Uint32(flagIndex, 0, "Address index number for HD derivation")
+	flags.String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 
 	cmd.SetOut(cmd.OutOrStdout())
 	cmd.SetErr(cmd.ErrOrStderr())
@@ -186,16 +186,15 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 
 	pubKey, _ := cmd.Flags().GetString(FlagPublicKey)
 	if pubKey != "" {
-		pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, pubKey)
-		if err != nil {
+		var pk crypto.PubKey
+		// TODO: shall we use KeysCdc here (global from this module, = codec.NewLegacyAmino)?
+		marshaller := client.GetClientContextFromCmd(cmd).JSONMarshaler
+		if err := marshaller.UnmarshalJSON([]byte(pubKey), &pk); err != nil {
 			return err
 		}
 
-		if _, err := kb.SavePubKey(name, pk, algo.Name()); err != nil {
-			return err
-		}
-
-		return nil
+		_, err := kb.SavePubKey(name, pk, algo.Name())
+		return err
 	}
 
 	coinType, _ := cmd.Flags().GetUint32(flagCoinType)

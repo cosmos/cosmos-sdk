@@ -12,6 +12,7 @@ import (
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
 	tversion "github.com/tendermint/tendermint/version"
+	"google.golang.org/protobuf/proto"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -58,6 +59,8 @@ func ShowValidatorCmd() *cobra.Command {
 			if strings.ToLower(output) == "json" {
 				return printlnJSON(valPubKey)
 			}
+
+			pk, ok := valPubKey.(proto.Message)
 
 			pubkey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey)
 			if err != nil {

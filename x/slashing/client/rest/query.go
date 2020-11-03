@@ -30,6 +30,7 @@ func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 }
 
 // http request handler to query signing info
+// [DEPRECATED]
 func signingInfoHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

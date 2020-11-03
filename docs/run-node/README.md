@@ -4,9 +4,9 @@ parent:
   order: 5
 -->
 
-# Interfaces
+# Running a Node
 
-This repository contains documentation on interfaces for Cosmos SDK applications.
+This folder contains documentation on how to run a node and interact with it.
 
 1. [Setting up the keyring](./keyring.md)
 2. [Running a Node](./run-node.md)

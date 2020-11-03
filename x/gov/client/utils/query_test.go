@@ -70,12 +70,12 @@ func TestGetPaginatedVotes(t *testing.T) {
 	acc2 := make(sdk.AccAddress, 20)
 	acc2[0] = 2
 	acc1Msgs := []sdk.Msg{
-		types.NewMsgVote(acc1, 0, types.NewNonSplitVoteOption(types.OptionYes)),
-		types.NewMsgVote(acc1, 0, types.NewNonSplitVoteOption(types.OptionYes)),
+		types.NewMsgVote(acc1, 0, types.OptionYes),
+		types.NewMsgVote(acc1, 0, types.OptionYes),
 	}
 	acc2Msgs := []sdk.Msg{
-		types.NewMsgVote(acc2, 0, types.NewNonSplitVoteOption(types.OptionYes)),
-		types.NewMsgVote(acc2, 0, types.NewNonSplitVoteOption(types.OptionYes)),
+		types.NewMsgVote(acc2, 0, types.OptionYes),
+		types.NewMsgWeightedVote(acc2, 0, types.NewNonSplitVoteOption(types.OptionYes)),
 	}
 	for _, tc := range []testCase{
 		{

@@ -80,6 +80,7 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 	var (
 		events = []string{
 			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgVote),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgWeightedVote),
 			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 		}
 		votes      []types.Vote
@@ -97,6 +98,14 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 			for _, msg := range info.GetTx().GetMsgs() {
 				if msg.Type() == types.TypeMsgVote {
 					voteMsg := msg.(*types.MsgVote)
+
+					votes = append(votes, types.Vote{
+						Voter:      voteMsg.Voter,
+						ProposalId: params.ProposalID,
+						Options:    types.NewNonSplitVoteOption(voteMsg.Option),
+					})
+				} else if msg.Type() == types.TypeMsgWeightedVote {
+					voteMsg := msg.(*types.MsgWeightedVote)
 
 					votes = append(votes, types.Vote{
 						Voter:      voteMsg.Voter,
@@ -141,23 +150,33 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 	}
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
+			vote := types.Vote{}
+
 			// there should only be a single vote under the given conditions
 			if msg.Type() == types.TypeMsgVote {
 				voteMsg := msg.(*types.MsgVote)
 
-				vote := types.Vote{
+				vote = types.Vote{
+					Voter:      voteMsg.Voter,
+					ProposalId: params.ProposalID,
+					Options:    types.NewNonSplitVoteOption(voteMsg.Option),
+				}
+			} else if msg.Type() == types.TypeMsgWeightedVote {
+				voteMsg := msg.(*types.MsgWeightedVote)
+
+				vote = types.Vote{
 					Voter:      voteMsg.Voter,
 					ProposalId: params.ProposalID,
 					Options:    voteMsg.Options,
 				}
-
-				bz, err := clientCtx.JSONMarshaler.MarshalJSON(&vote)
-				if err != nil {
-					return nil, err
-				}
-
-				return bz, nil
 			}
+
+			bz, err := clientCtx.JSONMarshaler.MarshalJSON(&vote)
+			if err != nil {
+				return nil, err
+			}
+
+			return bz, nil
 		}
 	}
 

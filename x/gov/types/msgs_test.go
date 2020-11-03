@@ -92,8 +92,34 @@ func TestMsgDeposit(t *testing.T) {
 	}
 }
 
-// test ValidateBasic for MsgDeposit
+// test ValidateBasic for MsgVote
 func TestMsgVote(t *testing.T) {
+	tests := []struct {
+		proposalID uint64
+		voterAddr  sdk.AccAddress
+		option     VoteOption
+		expectPass bool
+	}{
+		{0, addrs[0], OptionYes, true},
+		{0, sdk.AccAddress{}, OptionYes, false},
+		{0, addrs[0], OptionNo, true},
+		{0, addrs[0], OptionNoWithVeto, true},
+		{0, addrs[0], OptionAbstain, true},
+		{0, addrs[0], VoteOption(0x13), false},
+	}
+
+	for i, tc := range tests {
+		msg := NewMsgVote(tc.voterAddr, tc.proposalID, tc.option)
+		if tc.expectPass {
+			require.Nil(t, msg.ValidateBasic(), "test: %v", i)
+		} else {
+			require.NotNil(t, msg.ValidateBasic(), "test: %v", i)
+		}
+	}
+}
+
+// test ValidateBasic for MsgWeightedVote
+func TestMsgWeightedVote(t *testing.T) {
 	tests := []struct {
 		proposalID uint64
 		voterAddr  sdk.AccAddress
@@ -124,7 +150,7 @@ func TestMsgVote(t *testing.T) {
 	}
 
 	for i, tc := range tests {
-		msg := NewMsgVote(tc.voterAddr, tc.proposalID, tc.options)
+		msg := NewMsgWeightedVote(tc.voterAddr, tc.proposalID, tc.options)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", i)
 		} else {

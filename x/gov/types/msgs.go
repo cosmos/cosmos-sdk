@@ -16,12 +16,13 @@ import (
 const (
 	TypeMsgDeposit        = "deposit"
 	TypeMsgVote           = "vote"
+	TypeMsgWeightedVote   = "weighted_vote"
 	TypeMsgSubmitProposal = "submit_proposal"
 )
 
 var (
-	_, _, _ sdk.Msg                       = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}
-	_       types.UnpackInterfacesMessage = &MsgSubmitProposal{}
+	_, _, _, _ sdk.Msg                       = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgWeightedVote{}
+	_          types.UnpackInterfacesMessage = &MsgSubmitProposal{}
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
@@ -177,8 +178,8 @@ func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
 
 // NewMsgVote creates a message to cast a vote on an active proposal
 //nolint:interfacer
-func NewMsgVote(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions) *MsgVote {
-	return &MsgVote{proposalID, voter.String(), options}
+func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) *MsgVote {
+	return &MsgVote{proposalID, voter.String(), option}
 }
 
 // Route implements Msg
@@ -189,6 +190,49 @@ func (msg MsgVote) Type() string { return TypeMsgVote }
 
 // ValidateBasic implements Msg
 func (msg MsgVote) ValidateBasic() error {
+	if msg.Voter == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Voter)
+	}
+
+	if !ValidVoteOption(msg.Option) {
+		return sdkerrors.Wrap(ErrInvalidVote, msg.Option.String())
+	}
+
+	return nil
+}
+
+// String implements the Stringer interface
+func (msg MsgVote) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// GetSignBytes implements Msg
+func (msg MsgVote) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners implements Msg
+func (msg MsgVote) GetSigners() []sdk.AccAddress {
+	voter, _ := sdk.AccAddressFromBech32(msg.Voter)
+	return []sdk.AccAddress{voter}
+}
+
+// NewMsgWeightedVote creates a message to cast a vote on an active proposal
+//nolint:interfacer
+func NewMsgWeightedVote(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions) *MsgWeightedVote {
+	return &MsgWeightedVote{proposalID, voter.String(), options}
+}
+
+// Route implements Msg
+func (msg MsgWeightedVote) Route() string { return RouterKey }
+
+// Type implements Msg
+func (msg MsgWeightedVote) Type() string { return TypeMsgWeightedVote }
+
+// ValidateBasic implements Msg
+func (msg MsgWeightedVote) ValidateBasic() error {
 	if msg.Voter == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Voter)
 	}
@@ -218,19 +262,19 @@ func (msg MsgVote) ValidateBasic() error {
 }
 
 // String implements the Stringer interface
-func (msg MsgVote) String() string {
+func (msg MsgWeightedVote) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
 // GetSignBytes implements Msg
-func (msg MsgVote) GetSignBytes() []byte {
+func (msg MsgWeightedVote) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners implements Msg
-func (msg MsgVote) GetSigners() []sdk.AccAddress {
+func (msg MsgWeightedVote) GetSigners() []sdk.AccAddress {
 	voter, _ := sdk.AccAddressFromBech32(msg.Voter)
 	return []sdk.AccAddress{voter}
 }

@@ -3,10 +3,11 @@ package codec
 import (
 	"bytes"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
+
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // ProtoMarshalJSON provides an auxiliary function to return Proto3 JSON encoded
@@ -27,4 +28,14 @@ func ProtoMarshalJSON(msg proto.Message, resolver jsonpb.AnyResolver) ([]byte, e
 	}
 
 	return buf.Bytes(), nil
+}
+
+// ProtoMarshalJSONI same as ProtoMarshalJSON, but does msg type inspection to assert
+// that it implements `proto.Message` and return an error if it doesn't.
+func ProtoMarshalJSONI(msg interface{}, resolver jsonpb.AnyResolver) ([]byte, error) {
+	msgProto, ok := msg.(proto.Message)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "Expecting protobuf Message type, got %T", msgProto)
+	}
+	return ProtoMarshalJSON(msgProto, resolver)
 }

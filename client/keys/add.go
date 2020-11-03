@@ -59,7 +59,7 @@ required through --multisig-threshold. The keys are sorted by address, unless
 the flag --nosort is set.
 `,
 		Args: cobra.ExactArgs(1),
-		RunE: runAddCmd,
+		RunE: runAddCmdPrepare,
 	}
 	flags := cmd.Flags()
 	flags.StringSlice(flagMultisig, nil, "Construct and store a multisig public key (implies --pubkey)")
@@ -83,7 +83,7 @@ the flag --nosort is set.
 	return cmd
 }
 
-func runAddCmd(cmd *cobra.Command, args []string) error {
+func runAddCmdPrepare(cmd *cobra.Command, args []string) error {
 	buf := bufio.NewReader(cmd.InOrStdin())
 	clientCtx := client.GetClientContextFromCmd(cmd)
 
@@ -104,7 +104,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return RunAddCmd(cmd, args, kr, buf)
+	return runAddCmd(clientCtx, cmd, args, kr, buf)
 }
 
 /*
@@ -116,7 +116,7 @@ input
 output
 	- armor encrypted private key (saved to file)
 */
-func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *bufio.Reader) error {
+func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *bufio.Reader) error {
 	var err error
 
 	name := args[0]
@@ -188,11 +188,9 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 	if pubKey != "" {
 		var pk crypto.PubKey
 		// TODO: shall we use KeysCdc here (global from this module, = codec.NewLegacyAmino)?
-		marshaller := client.GetClientContextFromCmd(cmd).JSONMarshaler
-		if err := marshaller.UnmarshalJSON([]byte(pubKey), &pk); err != nil {
+		if err := ctx.JSONMarshaler.UnmarshalJSON([]byte(pubKey), &pk); err != nil {
 			return err
 		}
-
 		_, err := kb.SavePubKey(name, pk, algo.Name())
 		return err
 	}

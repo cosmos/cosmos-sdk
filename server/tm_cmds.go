@@ -12,7 +12,6 @@ import (
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
 	tversion "github.com/tendermint/tendermint/version"
-	"google.golang.org/protobuf/proto"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -30,11 +29,9 @@ func ShowNodeIDCmd() *cobra.Command {
 			cfg := serverCtx.Config
 
 			nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
-			if err != nil {
-				return err
+			if err == nil {
+				fmt.Println(nodeKey.ID())
 			}
-
-			fmt.Println(nodeKey.ID())
 			return nil
 		},
 	}
@@ -50,29 +47,19 @@ func ShowValidatorCmd() *cobra.Command {
 			cfg := serverCtx.Config
 
 			privValidator := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
-			valPubKey, err := privValidator.GetPubKey()
+			pk, err := privValidator.GetPubKey()
 			if err != nil {
 				return err
 			}
-
-			output, _ := cmd.Flags().GetString(cli.OutputFlag)
-			if strings.ToLower(output) == "json" {
-				return printlnJSON(valPubKey)
-			}
-
-			pk, ok := valPubKey.(proto.Message)
-
-			pubkey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey)
+			out, err := codec.ProtoMarshalJSONI(pk, nil)
 			if err != nil {
 				return err
 			}
-
-			fmt.Println(pubkey)
+			fmt.Println(out)
 			return nil
 		},
 	}
 
-	cmd.Flags().StringP(cli.OutputFlag, "o", "text", "Output format (text|json)")
 	return &cmd
 }
 
@@ -132,6 +119,8 @@ against which this app has been compiled.
 	}
 }
 
+// Deprecated: prints the content to the standard output using Legacy Amino
+// TODO: add issue to trace it?
 func printlnJSON(v interface{}) error {
 	cdc := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(cdc)

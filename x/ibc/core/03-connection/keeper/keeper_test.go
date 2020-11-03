@@ -46,10 +46,11 @@ func (suite *KeeperTestSuite) TestSetAndGetClientConnectionPaths() {
 	_, existed := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetClientConnectionPaths(suite.chainA.GetContext(), clientA)
 	suite.False(existed)
 
-	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetClientConnectionPaths(suite.chainA.GetContext(), clientA, types.GetCompatibleEncodedVersions())
+	connections := []string{"connectionA", "connectionB"}
+	suite.chainA.App.IBCKeeper.ConnectionKeeper.SetClientConnectionPaths(suite.chainA.GetContext(), clientA, connections)
 	paths, existed := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetClientConnectionPaths(suite.chainA.GetContext(), clientA)
 	suite.True(existed)
-	suite.EqualValues(types.GetCompatibleEncodedVersions(), paths)
+	suite.EqualValues(connections, paths)
 }
 
 // create 2 connections: A0 - B0, A1 - B1
@@ -60,8 +61,8 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 	counterpartyB0 := types.NewCounterparty(clientB, connB0.ID, suite.chainB.GetPrefix()) // connection B0
 	counterpartyB1 := types.NewCounterparty(clientB, connB1.ID, suite.chainB.GetPrefix()) // connection B1
 
-	conn1 := types.NewConnectionEnd(types.OPEN, clientA, counterpartyB0, types.GetCompatibleEncodedVersions()) // A0 - B0
-	conn2 := types.NewConnectionEnd(types.OPEN, clientA, counterpartyB1, types.GetCompatibleEncodedVersions()) // A1 - B1
+	conn1 := types.NewConnectionEnd(types.OPEN, clientA, counterpartyB0, types.ExportedVersionsToProto(types.GetCompatibleVersions())) // A0 - B0
+	conn2 := types.NewConnectionEnd(types.OPEN, clientA, counterpartyB1, types.ExportedVersionsToProto(types.GetCompatibleVersions())) // A1 - B1
 
 	iconn1 := types.NewIdentifiedConnection(connA0.ID, conn1)
 	iconn2 := types.NewIdentifiedConnection(connA1.ID, conn2)

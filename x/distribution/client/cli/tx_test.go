@@ -65,7 +65,7 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 }
 
 func TestParseProposal(t *testing.T) {
-	encodingConfig := params.MakeEncodingConfig()
+	encodingConfig := params.MakeTestEncodingConfig()
 
 	okJSON, cleanup := testutil.WriteToNewTempFile(t, `
 {

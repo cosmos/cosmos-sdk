@@ -247,15 +247,17 @@ func makeBatchMultisigCmd() func(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("%q must be of type %s: %s", args[1], keyring.TypeMulti, multisigInfo.GetType())
 		}
 
-		var signatureBatch [][]signingtypes.SignatureV2
+		var signatureBatch []signingtypes.SignatureV2
 		for i := 2; i < len(args); i++ {
 			// todo:unmarshal sigs from multiple files
-			sigs, err := unmarshalMultiSigsJSON(clientCtx, args[i])
+			sigs, err := unmarshalSignatureJSON(clientCtx, args[i])
 			if err != nil {
 				return err
 			}
+			for _, sig := range sigs {
+				signatureBatch = append(signatureBatch, sig)
 
-			signatureBatch = append(signatureBatch, sigs)
+			}
 		}
 
 		var seq uint64
@@ -282,13 +284,13 @@ func makeBatchMultisigCmd() func(cmd *cobra.Command, args []string) error {
 
 			multisigPub := multisigInfo.GetPubKey().(*kmultisig.LegacyAminoPubKey)
 			multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
-			for i, sig := range signatureBatch {
-				err = signing.VerifySignature(sig[i].PubKey, signingData, sig[i].Data, txCfg.SignModeHandler(), txBldr.GetTx())
+			for _, sig := range signatureBatch {
+				err = signing.VerifySignature(sig.PubKey, signingData, sig.Data, txCfg.SignModeHandler(), txBldr.GetTx())
 				if err != nil {
-					return fmt.Errorf("couldn't verify signature: %w", err)
+					return fmt.Errorf("couldn't verify signature: %w %d %d %v", err, txFactory.AccountNumber(), txFactory.Sequence(), sig.Data)
 				}
 
-				if err := multisig.AddSignatureV2(multisigSig, sig[i], multisigPub.GetPubKeys()); err != nil {
+				if err := multisig.AddSignatureV2(multisigSig, sig, multisigPub.GetPubKeys()); err != nil {
 					return err
 				}
 			}
@@ -346,14 +348,6 @@ func makeBatchMultisigCmd() func(cmd *cobra.Command, args []string) error {
 }
 
 func unmarshalSignatureJSON(clientCtx client.Context, filename string) (sigs []signingtypes.SignatureV2, err error) {
-	var bytes []byte
-	if bytes, err = ioutil.ReadFile(filename); err != nil {
-		return
-	}
-	return clientCtx.TxConfig.UnmarshalSignatureJSON(bytes)
-}
-
-func unmarshalMultiSigsJSON(clientCtx client.Context, filename string) (sigs []signingtypes.SignatureV2, err error) {
 	var bytes []byte
 	if bytes, err = ioutil.ReadFile(filename); err != nil {
 		return

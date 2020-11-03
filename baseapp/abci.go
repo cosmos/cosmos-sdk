@@ -537,9 +537,24 @@ func gRPCErrorToSDKError(err error) error {
 	}
 }
 
+func checkNegativeHeight(height int64) error {
+	if height < 0 {
+		// Reject invalid heights.
+		return sdkerrors.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"cannot query with height < 0; please provide a valid height",
+		)
+	}
+	return nil
+}
+
 // createQueryContext creates a new sdk.Context for a query, taking as args
 // the block height and whether the query needs a proof or not.
 func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, error) {
+	if err := checkNegativeHeight(height); err != nil {
+		return sdk.Context{}, err
+	}
+
 	// when a client did not provide a query height, manually inject the latest
 	if height == 0 {
 		height = app.LastBlockHeight()

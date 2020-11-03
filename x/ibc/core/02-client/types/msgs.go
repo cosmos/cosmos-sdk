@@ -186,7 +186,7 @@ func NewMsgUpgradeClient(clientID string, clientState exported.ClientState, upgr
 		return nil, err
 	}
 
-	height, ok := upgradeHeight.(Height)
+	height, ok := upgradeHeight.(*Height)
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid height type. expected: %T, got: %T", &Height{}, upgradeHeight)
 	}
@@ -195,7 +195,7 @@ func NewMsgUpgradeClient(clientID string, clientState exported.ClientState, upgr
 		ClientId:      clientID,
 		ClientState:   anyClient,
 		ProofUpgrade:  proofUpgrade,
-		UpgradeHeight: &height,
+		UpgradeHeight: height,
 		Signer:        signer.String(),
 	}, nil
 }

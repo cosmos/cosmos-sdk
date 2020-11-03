@@ -189,7 +189,7 @@ func (chain *TestChain) GetContext() sdk.Context {
 
 // QueryProof performs an abci query with the given key and returns the proto encoded merkle proof
 // for the query and the height at which the proof will succeed on a tendermint verifier.
-func (chain *TestChain) QueryProof(key []byte) ([]byte, clienttypes.Height) {
+func (chain *TestChain) QueryProof(key []byte) ([]byte, *clienttypes.Height) {
 	res := chain.App.Query(abci.RequestQuery{
 		Path:   fmt.Sprintf("store/%s/key", host.StoreKey),
 		Height: chain.App.LastBlockHeight() - 1,
@@ -214,7 +214,7 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, clienttypes.Height) {
 
 // QueryUpgradeProof performs an abci query with the given key and returns the proto encoded merkle proof
 // for the query and the height at which the proof will succeed on a tendermint verifier.
-func (chain *TestChain) QueryUpgradeProof(key []byte, height uint64) ([]byte, clienttypes.Height) {
+func (chain *TestChain) QueryUpgradeProof(key []byte, height uint64) ([]byte, *clienttypes.Height) {
 	res := chain.App.Query(abci.RequestQuery{
 		Path:   "store/upgrade/key",
 		Height: int64(height - 1),
@@ -252,10 +252,10 @@ func (chain *TestChain) QueryClientStateProof(clientID string) (exported.ClientS
 
 // QueryConsensusStateProof performs an abci query for a consensus state
 // stored on the given clientID. The proof and consensusHeight are returned.
-func (chain *TestChain) QueryConsensusStateProof(clientID string) ([]byte, clienttypes.Height) {
+func (chain *TestChain) QueryConsensusStateProof(clientID string) ([]byte, *clienttypes.Height) {
 	clientState := chain.GetClientState(clientID)
 
-	consensusHeight := clientState.GetLatestHeight().(clienttypes.Height)
+	consensusHeight := clientState.GetLatestHeight().(*clienttypes.Height)
 	consensusKey := host.FullKeyClientPath(clientID, host.KeyConsensusState(consensusHeight))
 	proofConsensus, _ := chain.QueryProof(consensusKey)
 
@@ -435,7 +435,7 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 
 	switch clientType {
 	case Tendermint:
-		height := counterparty.LastHeader.GetHeight().(clienttypes.Height)
+		height := counterparty.LastHeader.GetHeight().(*clienttypes.Height)
 		clientState = ibctmtypes.NewClientState(
 			counterparty.ChainID, DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
 			height, counterparty.App.GetConsensusParams(counterparty.GetContext()), commitmenttypes.GetSDKSpecs(),
@@ -486,7 +486,7 @@ func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string)
 func (chain *TestChain) ConstructUpdateTMClientHeader(counterparty *TestChain, clientID string) (*ibctmtypes.Header, error) {
 	header := counterparty.LastHeader
 	// Relayer must query for LatestHeight on client to get TrustedHeight
-	trustedHeight := chain.GetClientState(clientID).GetLatestHeight().(clienttypes.Height)
+	trustedHeight := chain.GetClientState(clientID).GetLatestHeight().(*clienttypes.Height)
 	var (
 		tmTrustedVals *tmtypes.ValidatorSet
 		ok            bool
@@ -529,12 +529,12 @@ func (chain *TestChain) ExpireClient(amount time.Duration) {
 // CurrentTMClientHeader creates a TM header using the current header parameters
 // on the chain. The trusted fields in the header are set to nil.
 func (chain *TestChain) CurrentTMClientHeader() *ibctmtypes.Header {
-	return chain.CreateTMClientHeader(chain.ChainID, chain.CurrentHeader.Height, clienttypes.Height{}, chain.CurrentHeader.Time, chain.Vals, nil, chain.Signers)
+	return chain.CreateTMClientHeader(chain.ChainID, chain.CurrentHeader.Height, &clienttypes.Height{}, chain.CurrentHeader.Time, chain.Vals, nil, chain.Signers)
 }
 
 // CreateTMClientHeader creates a TM header to update the TM client. Args are passed in to allow
 // caller flexibility to use params that differ from the chain.
-func (chain *TestChain) CreateTMClientHeader(chainID string, blockHeight int64, trustedHeight clienttypes.Height, timestamp time.Time, tmValSet, tmTrustedVals *tmtypes.ValidatorSet, signers []tmtypes.PrivValidator) *ibctmtypes.Header {
+func (chain *TestChain) CreateTMClientHeader(chainID string, blockHeight int64, trustedHeight *clienttypes.Height, timestamp time.Time, tmValSet, tmTrustedVals *tmtypes.ValidatorSet, signers []tmtypes.PrivValidator) *ibctmtypes.Header {
 	var (
 		valSet      *tmproto.ValidatorSet
 		trustedVals *tmproto.ValidatorSet

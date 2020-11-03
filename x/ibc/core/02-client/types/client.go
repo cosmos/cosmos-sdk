@@ -38,7 +38,7 @@ func (ics IdentifiedClientState) UnpackInterfaces(unpacker codectypes.AnyUnpacke
 }
 
 // NewConsensusStateWithHeight creates a new ConsensusStateWithHeight instance
-func NewConsensusStateWithHeight(height Height, consensusState exported.ConsensusState) ConsensusStateWithHeight {
+func NewConsensusStateWithHeight(height *Height, consensusState exported.ConsensusState) ConsensusStateWithHeight {
 	msg, ok := consensusState.(proto.Message)
 	if !ok {
 		panic(fmt.Errorf("cannot proto marshal %T", consensusState))

@@ -53,7 +53,7 @@ func (k Keeper) SendTransfer(
 	token sdk.Coin,
 	sender sdk.AccAddress,
 	receiver string,
-	timeoutHeight clienttypes.Height,
+	timeoutHeight *clienttypes.Height,
 	timeoutTimestamp uint64,
 ) error {
 

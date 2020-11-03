@@ -81,7 +81,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						clientID,
 						[]types.ConsensusStateWithHeight{
 							types.NewConsensusStateWithHeight(
-								header.GetHeight().(types.Height),
+								header.GetHeight().(*types.Height),
 								ibctmtypes.NewConsensusState(
 									header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), header.Header.NextValidatorsHash,
 								),
@@ -109,7 +109,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						clientID,
 						[]types.ConsensusStateWithHeight{
 							types.NewConsensusStateWithHeight(
-								header.GetHeight().(types.Height),
+								header.GetHeight().(*types.Height),
 								ibctmtypes.NewConsensusState(
 									header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), header.Header.NextValidatorsHash,
 								),

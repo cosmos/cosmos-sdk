@@ -58,7 +58,7 @@ message QueryConnectionResponse {
   // merkle proof of existence
   bytes proof = 2;
   // height at which the proof was retrieved
-  ibc.core.client.v1.Height proof_height = 3 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 3;
 }
 
 // QueryConnectionsRequest is the request type for the Query/Connections RPC
@@ -75,7 +75,7 @@ message QueryConnectionsResponse {
   // pagination response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
   // query block height
-  ibc.core.client.v1.Height height = 3 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height height = 3;
 }
 
 // QueryClientConnectionsRequest is the request type for the
@@ -93,7 +93,7 @@ message QueryClientConnectionsResponse {
   // merkle proof of existence
   bytes proof = 2;
   // height at which the proof was generated
-  ibc.core.client.v1.Height proof_height = 3 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 3;
 }
 
 // QueryConnectionClientStateRequest is the request type for the
@@ -111,7 +111,7 @@ message QueryConnectionClientStateResponse {
   // merkle proof of existence
   bytes proof = 2;
   // height at which the proof was retrieved
-  ibc.core.client.v1.Height proof_height = 3 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 3;
 }
 
 // QueryConnectionConsensusStateRequest is the request type for the
@@ -133,5 +133,5 @@ message QueryConnectionConsensusStateResponse {
   // merkle proof of existence
   bytes proof = 3;
   // height at which the proof was retrieved
-  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 4;
 }

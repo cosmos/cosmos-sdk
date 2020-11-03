@@ -29,7 +29,7 @@ const Tendermint string = "Tendermint"
 func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	latestHeight clienttypes.Height, consensusParams *abci.ConsensusParams, specs []*ics23.ProofSpec,
+	latestHeight *clienttypes.Height, consensusParams *abci.ConsensusParams, specs []*ics23.ProofSpec,
 	upgradePath string, allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour bool,
 ) *ClientState {
 	return &ClientState{

@@ -104,7 +104,7 @@ func (misbehaviour Misbehaviour) ValidateBasic() error {
 		)
 	}
 	// Ensure that Heights are the same
-	if misbehaviour.Header1.GetHeight() != misbehaviour.Header2.GetHeight() {
+	if !misbehaviour.Header1.GetHeight().EQ(misbehaviour.Header2.GetHeight()) {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour, "headers in misbehaviour are on different heights (%d ≠ %d)", misbehaviour.Header1.GetHeight(), misbehaviour.Header2.GetHeight())
 	}
 

@@ -19,25 +19,25 @@ var _ exported.Height = (*Height)(nil)
 var IsVersionFormat = regexp.MustCompile(`^.+[^-]-{1}[1-9][0-9]*$`).MatchString
 
 // ZeroHeight is a helper function which returns an uninitialized height.
-func ZeroHeight() Height {
-	return Height{}
+func ZeroHeight() *Height {
+	return &Height{}
 }
 
 // NewHeight is a constructor for the IBC height type
-func NewHeight(versionNumber, versionHeight uint64) Height {
-	return Height{
+func NewHeight(versionNumber, versionHeight uint64) *Height {
+	return &Height{
 		VersionNumber: versionNumber,
 		VersionHeight: versionHeight,
 	}
 }
 
 // GetVersionNumber returns the version-number of the height
-func (h Height) GetVersionNumber() uint64 {
+func (h *Height) GetVersionNumber() uint64 {
 	return h.VersionNumber
 }
 
 // GetVersionHeight returns the version-height of the height
-func (h Height) GetVersionHeight() uint64 {
+func (h *Height) GetVersionHeight() uint64 {
 	return h.VersionHeight
 }
 
@@ -49,8 +49,8 @@ func (h Height) GetVersionHeight() uint64 {
 //
 // It first compares based on version numbers, whichever has the higher version number is the higher height
 // If version number is the same, then the version height is compared
-func (h Height) Compare(other exported.Height) int64 {
-	height, ok := other.(Height)
+func (h *Height) Compare(other exported.Height) int64 {
+	height, ok := other.(*Height)
 	if !ok {
 		panic(fmt.Sprintf("cannot compare against invalid height type: %T. expected height type: %T", other, h))
 	}
@@ -69,29 +69,29 @@ func (h Height) Compare(other exported.Height) int64 {
 }
 
 // LT Helper comparison function returns true if h < other
-func (h Height) LT(other exported.Height) bool {
+func (h *Height) LT(other exported.Height) bool {
 	return h.Compare(other) == -1
 }
 
 // LTE Helper comparison function returns true if h <= other
-func (h Height) LTE(other exported.Height) bool {
+func (h *Height) LTE(other exported.Height) bool {
 	cmp := h.Compare(other)
 	return cmp <= 0
 }
 
 // GT Helper comparison function returns true if h > other
-func (h Height) GT(other exported.Height) bool {
+func (h *Height) GT(other exported.Height) bool {
 	return h.Compare(other) == 1
 }
 
 // GTE Helper comparison function returns true if h >= other
-func (h Height) GTE(other exported.Height) bool {
+func (h *Height) GTE(other exported.Height) bool {
 	cmp := h.Compare(other)
 	return cmp >= 0
 }
 
 // EQ Helper comparison function returns true if h == other
-func (h Height) EQ(other exported.Height) bool {
+func (h *Height) EQ(other exported.Height) bool {
 	return h.Compare(other) == 0
 }
 
@@ -102,27 +102,27 @@ func (h Height) String() string {
 
 // Decrement will return a new height with the VersionHeight decremented
 // If the VersionHeight is already at lowest value (1), then false success flag is returend
-func (h Height) Decrement() (decremented exported.Height, success bool) {
+func (h *Height) Decrement() (decremented exported.Height, success bool) {
 	if h.VersionHeight == 0 {
-		return Height{}, false
+		return &Height{}, false
 	}
 	return NewHeight(h.VersionNumber, h.VersionHeight-1), true
 }
 
 // Increment will return a height with the same version number but an
 // incremented version height
-func (h Height) Increment() Height {
+func (h *Height) Increment() *Height {
 	return NewHeight(h.VersionNumber, h.VersionHeight+1)
 }
 
 // IsZero returns true if height version and version-height are both 0
-func (h Height) IsZero() bool {
+func (h *Height) IsZero() bool {
 	return h.VersionNumber == 0 && h.VersionHeight == 0
 }
 
 // MustParseHeight will attempt to parse a string representation of a height and panic if
 // parsing fails.
-func MustParseHeight(heightStr string) Height {
+func MustParseHeight(heightStr string) *Height {
 	height, err := ParseHeight(heightStr)
 	if err != nil {
 		panic(err)
@@ -133,18 +133,18 @@ func MustParseHeight(heightStr string) Height {
 
 // ParseHeight is a utility function that takes a string representation of the height
 // and returns a Height struct
-func ParseHeight(heightStr string) (Height, error) {
+func ParseHeight(heightStr string) (*Height, error) {
 	splitStr := strings.Split(heightStr, "-")
 	if len(splitStr) != 2 {
-		return Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "expected height string format: {version}-{height}. Got: %s", heightStr)
+		return &Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "expected height string format: {version}-{height}. Got: %s", heightStr)
 	}
 	versionNumber, err := strconv.ParseUint(splitStr[0], 10, 64)
 	if err != nil {
-		return Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid version number. parse err: %s", err)
+		return &Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid version number. parse err: %s", err)
 	}
 	versionHeight, err := strconv.ParseUint(splitStr[1], 10, 64)
 	if err != nil {
-		return Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid version height. parse err: %s", err)
+		return &Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid version height. parse err: %s", err)
 	}
 	return NewHeight(versionNumber, versionHeight), nil
 }
@@ -184,7 +184,7 @@ func ParseChainID(chainID string) uint64 {
 
 // GetSelfHeight is a utility function that returns self height given context
 // Version number is retrieved from ctx.ChainID()
-func GetSelfHeight(ctx sdk.Context) Height {
+func GetSelfHeight(ctx sdk.Context) *Height {
 	version := ParseChainID(ctx.ChainID())
 	return NewHeight(version, uint64(ctx.BlockHeight()))
 }

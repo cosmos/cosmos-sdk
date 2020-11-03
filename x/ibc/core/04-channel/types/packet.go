@@ -33,7 +33,7 @@ func NewPacket(
 	data []byte,
 	sequence uint64, sourcePort, sourceChannel,
 	destinationPort, destinationChannel string,
-	timeoutHeight clienttypes.Height, timeoutTimestamp uint64,
+	timeoutHeight *clienttypes.Height, timeoutTimestamp uint64,
 ) Packet {
 	return Packet{
 		Data:               data,

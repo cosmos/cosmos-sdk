@@ -12,7 +12,7 @@ import (
 func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 	var (
 		upgradedClient exported.ClientState
-		upgradeHeight  clienttypes.Height
+		upgradeHeight  *clienttypes.Height
 		clientA        string
 		proofUpgrade   []byte
 	)

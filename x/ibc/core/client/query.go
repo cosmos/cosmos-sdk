@@ -21,7 +21,7 @@ import (
 // not supported. Queries with a client context height of 0 will perform a query
 // at the lastest state available.
 // Issue: https://github.com/cosmos/cosmos-sdk/issues/6567
-func QueryTendermintProof(clientCtx client.Context, key []byte) ([]byte, []byte, clienttypes.Height, error) {
+func QueryTendermintProof(clientCtx client.Context, key []byte) ([]byte, []byte, *clienttypes.Height, error) {
 	height := clientCtx.Height
 
 	// ABCI queries at heights 1, 2 or less than or equal to 0 are not supported.
@@ -29,7 +29,7 @@ func QueryTendermintProof(clientCtx client.Context, key []byte) ([]byte, []byte,
 	// Therefore, a query at height 2 would be equivalent to a query at height 3.
 	// A height of 0 will query with the lastest state.
 	if height != 0 && height <= 2 {
-		return nil, nil, clienttypes.Height{}, fmt.Errorf("proof queries at height <= 2 are not supported")
+		return nil, nil, &clienttypes.Height{}, fmt.Errorf("proof queries at height <= 2 are not supported")
 	}
 
 	// Use the IAVL height if a valid tendermint height is passed in.
@@ -47,7 +47,7 @@ func QueryTendermintProof(clientCtx client.Context, key []byte) ([]byte, []byte,
 
 	res, err := clientCtx.QueryABCI(req)
 	if err != nil {
-		return nil, nil, clienttypes.Height{}, err
+		return nil, nil, &clienttypes.Height{}, err
 	}
 
 	merkleProof := commitmenttypes.MerkleProof{
@@ -58,7 +58,7 @@ func QueryTendermintProof(clientCtx client.Context, key []byte) ([]byte, []byte,
 
 	proofBz, err := cdc.MarshalBinaryBare(&merkleProof)
 	if err != nil {
-		return nil, nil, clienttypes.Height{}, err
+		return nil, nil, &clienttypes.Height{}, err
 	}
 
 	version := clienttypes.ParseChainID(clientCtx.ChainID)

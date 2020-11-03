@@ -176,7 +176,7 @@ func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, max
 // and returns the expected consensus state at that height.
 // For now, can only retrieve self consensus states for the current version
 func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height exported.Height) (exported.ConsensusState, bool) {
-	selfHeight, ok := height.(types.Height)
+	selfHeight, ok := height.(*types.Height)
 	if !ok {
 		return nil, false
 	}

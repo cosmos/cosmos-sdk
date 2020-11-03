@@ -682,9 +682,9 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 				consAny, err := clienttypes.PackConsensusState(consState)
 				suite.Require().NoError(err)
 
-				height, _ := upgradeHeight.(clienttypes.Height)
+				height, _ := upgradeHeight.(*clienttypes.Height)
 
-				msg = &clienttypes.MsgUpgradeClient{ClientId: clientA, ClientState: consAny, UpgradeHeight: &height, ProofUpgrade: proofUpgrade, Signer: suite.chainA.SenderAccount.GetAddress().String()}
+				msg = &clienttypes.MsgUpgradeClient{ClientId: clientA, ClientState: consAny, UpgradeHeight: height, ProofUpgrade: proofUpgrade, Signer: suite.chainA.SenderAccount.GetAddress().String()}
 			},
 			expPass: false,
 		},

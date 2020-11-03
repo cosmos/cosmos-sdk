@@ -1,14 +1,82 @@
 <!--
-order: 1
+order: 2
 -->
 
 # Running a Node
 
-Now that we have built our app using the Cosmos SDK, it's time to see how to run the blockchain node and interact with it.
+Now that the application is ready and the keyring populated, it's time to see how to run the blockchain node. In this section, the application we are running is called [`simapp`](https://github.com/cosmos/cosmos-sdk/tree/v0.40.0-rc1/simapp), and its corresponding CLI binary `simd`. {synopsis}
 
 ## Pre-requisite Readings
 
 - [Anatomy of an SDK Application](../basics/app-anatomy.md) {prereq}
 - [Setting up the keyring](./keyring.md) {prereq}
 
-##
+## Run the Chain
+
+::: warning
+Make sure you can build your own binary, and replace `simd` with the name of your binary in the snippets.
+:::
+
+Before actually running the node, we need to initialize the chain, and most importantly its genesis file. The is done first with the `init` subcommand:
+
+```bash
+# The argument <moniker> is the custom username of your node, it should be human-readable.
+simd init <moniker> --chain-id my-test-chain
+```
+
+The command above creates all the configuration files needed for your node to run, as well as a default genesis file, which defines the initial state of the network. All these configuration files are in `~/.simapp` by default, you can overwrite the location of this folder by passing the `--home` flag.
+
+The `~/.simapp` folder has the following structure:
+
+```bash
+.
+  |- data                           # Contains the databases used by the node.
+  |- config/
+      |- app.toml                   # Application-related configuration file.
+      |- config.toml                # Tendermint-related configuration file.
+      |- genesis.json               # The genesis file.
+      |- node_key.json              # Tendermint node pubkey that will be used for signing blocks.
+      |- priv_validator_key.json    # TODO
+```
+
+Before starting the chain, you need to populate the state with at least one account. To do so, first [create a new account](../keyring.md) named `my_validator` (or whatever name you chose in the previous step).
+
+Now that you have created a local account, go ahead and grant it `stake` tokens in your chain's genesis file. Doing so will also make sure your chain is aware of this account's existence:
+
+```bash
+simd add-genesis-account $(simd keys show my_validator -a) 100000000stake --chain-id my-test-chain
+```
+
+Now that your account has some tokens, you need to add a validator to your chain. Validators are special full-nodes that participate in the consensus process (implemented in the [underlying consensus engine](../intro/sdk-app-architecture.md#tendermint)) in order to add new blocks to the chain. Any account can declare its intention to become a validator operator, but only those with sufficient delegation get to enter the active set (for example, only the top 125 validator candidates with the most delegation get to be validators in the Cosmos Hub). For this guide, you will add your local node (created via the `init` command above) as a validator of your chain. Validators can be declared before a chain is first started via a special transaction included in the genesis file called a `gentx`:
+
+```bash
+# Create a gentx.
+simd gentx --name my_validator --amount 100000stake --chain-id my-test-chain
+
+# Add the gentx to the genesis file.
+simd collect-gentxs --chain-id my-test-chain
+```
+
+A `gentx` does three things:
+
+    1. Makes the `validator` account you created into a validator operator account (i.e. the account that controls the validator).
+    2. Self-delegates the provided `amount` of staking tokens.
+    3. Link the operator account with a Tendermint node pubkey that will be used for signing blocks. If no `--pubkey` flag is provided, it defaults to the local node pubkey created via the `simd init` command above.
+
+For more on `gentx`, use the following command:
+
+```bash
+simd gentx --help
+```
+
+Now that everything is set up, you can finally start your node:
+
+```bash
+aud start
+```
+
+You should see blocks come in.
+
+## Next {hide}
+
+Read about the [Interacting with your Node](./query-lifecycle.md) {hide}

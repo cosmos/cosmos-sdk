@@ -97,7 +97,11 @@ information.
 
 ## Adding keys to the keyring
 
-Applications developed using the Cosmos SDK come with the `keys` subcommand.
+Applications developed using the Cosmos SDK come with the `keys` subcommand. For the purpose of this tutorial, we're running the `simd` CLI, which is an application built using the Cosmos SDK for testing and educational purposes. For more information, see [`simapp`](https://github.com/cosmos/cosmos-sdk/tree/v0.40.0-rc1/simapp).
+
+::: warning
+Make sure you can build your own binary, and replace `simd` with the name of your binary in the snippets.
+:::
 
 ```
 $ simd keys
@@ -123,13 +127,13 @@ Flags:
       --output string            Output format (text|json) (default "text")
 
 Global Flags:
-      --home string   directory for config and data (default "/Users/amaury/.simapp")
+      --home string   directory for config and data (default "/Users/{your_username}/.simapp")
       --trace         print out full stack trace on errors
 
 Use "simd keys [command] --help" for more information about a command.
 ```
 
-To create a new key in the keyring, run the `add` subcommand with a `<key_name>` argument. For the purpose of this tutorial, we will solely use the `test` backend.
+To create a new key in the keyring, run the `add` subcommand with a `<key_name>` argument. For the purpose of this tutorial, we will solely use the `test` backend, and call our new key `my_validator`. This key will be used in the next section.
 
 ```bash
 $ simd keys add my_validator --keyring-backend test

@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
@@ -32,6 +33,8 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&MsgConnectionOpenAck{},
 		&MsgConnectionOpenConfirm{},
 	)
+
+	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 var (

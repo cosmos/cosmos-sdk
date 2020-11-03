@@ -192,105 +192,15 @@ func (proof MerkleProof) VerifyNonMembership(specs []*ics23.ProofSpec, root expo
 }
 
 // BatchVerifyMembership verifies a group of key value pairs against the given root
-// NOTE: All items must be part of a batch proof in the first chained proof, i.e. items must all be part of smallest subtree in the chained proof
-// NOTE: The path passed in must be the path from the root to the smallest subtree in the chained proof
-// NOTE: Untested
+// NOTE: Currently left unimplemented as it is unused
 func (proof MerkleProof) BatchVerifyMembership(specs []*ics23.ProofSpec, root exported.Root, path exported.Path, items map[string][]byte) error {
-	if err := proof.validateVerificationArgs(specs, root); err != nil {
-		return err
-	}
-
-	// Convert Proof to []CommitmentProof
-	proofs, err := convertProofs(proof)
-	if err != nil {
-		return err
-	}
-
-	// VerifyNonMembership will verify the absence of key in lowest subtree, and then chain inclusion proofs
-	// of all subroots up to final root
-	subroot, err := proofs[0].Calculate()
-	if err != nil {
-		return sdkerrors.Wrapf(ErrInvalidProof, "could not calculate root for proof index 0: %v", err)
-	}
-	if ok := ics23.BatchVerifyMembership(specs[0], subroot, proofs[0], items); !ok {
-		return sdkerrors.Wrapf(ErrInvalidProof, "could not verify batch items")
-	}
-
-	// BatchVerifyMembership specific argument validation
-	// Path must only be defined if this is a chained proof
-	if len(specs) > 1 {
-		mpath, ok := path.(MerklePath)
-		if !ok {
-			return sdkerrors.Wrapf(ErrInvalidProof, "path %v is not of type MerkleProof", path)
-		}
-		// path length should be one less than specs, since lowest proof keys are in items
-		if len(mpath.KeyPath.Keys) != len(specs)-1 {
-			return sdkerrors.Wrapf(ErrInvalidProof, "path length %d not same as proof %d",
-				len(mpath.KeyPath.Keys), len(specs))
-		}
-
-		// Since BatchedProof path does not include lowest subtree, exclude first proof from specs and proofs and start
-		// chaining at index 0
-		if err := verifyChainedMembershipProof(root.GetHash(), specs[1:], proofs[1:], mpath.KeyPath, subroot, 0); err != nil {
-			return err
-		}
-	} else if !bytes.Equal(root.GetHash(), subroot) {
-		// Since we are not chaining proofs, we must check first subroot equals given root
-		return sdkerrors.Wrapf(ErrInvalidProof, "batched proof did not commit to expected root: %X, got: %X", root.GetHash(), subroot)
-	}
-
-	return nil
+	return sdkerrors.Wrap(ErrInvalidProof, "batch proofs are currently unsupported")
 }
 
 // BatchVerifyNonMembership verifies absence of a group of keys against the given root
-// NOTE: All items must be part of a batch proof in the first chained proof, i.e. items must all be part of smallest subtree in the chained proof
-// NOTE: The path passed in must be the path from the root to the smallest subtree in the chained proof
-// NOTE: Untested
+// NOTE: Currently left unimplemented as it is unused
 func (proof MerkleProof) BatchVerifyNonMembership(specs []*ics23.ProofSpec, root exported.Root, path exported.Path, items [][]byte) error {
-	if err := proof.validateVerificationArgs(specs, root); err != nil {
-		return err
-	}
-
-	// Convert Proof to []CommitmentProof
-	proofs, err := convertProofs(proof)
-	if err != nil {
-		return err
-	}
-
-	// VerifyNonMembership will verify the absence of key in lowest subtree, and then chain inclusion proofs
-	// of all subroots up to final root
-	subroot, err := proofs[0].Calculate()
-	if err != nil {
-		return sdkerrors.Wrapf(ErrInvalidProof, "could not calculate root for proof index 0: %v", err)
-	}
-	if ok := ics23.BatchVerifyNonMembership(specs[0], subroot, proofs[0], items); !ok {
-		return sdkerrors.Wrapf(ErrInvalidProof, "could not verify batch items")
-	}
-
-	// BatchVerifyNonMembership specific argument validation
-	// Path must only be defined if this is a chained proof
-	if len(specs) > 1 {
-		mpath, ok := path.(MerklePath)
-		if !ok {
-			return sdkerrors.Wrapf(ErrInvalidProof, "path %v is not of type MerkleProof", path)
-		}
-		// path length should be one less than specs, since lowest proof keys are in items
-		if len(mpath.KeyPath.Keys) != len(specs)-1 {
-			return sdkerrors.Wrapf(ErrInvalidProof, "path length %d not same as proof %d",
-				len(mpath.KeyPath.Keys), len(specs))
-		}
-
-		// Since BatchedProof path does not include lowest subtree, exclude first proof from specs and proofs and start
-		// chaining at index 0
-		if err := verifyChainedMembershipProof(root.GetHash(), specs[1:], proofs[1:], mpath.KeyPath, subroot, 0); err != nil {
-			return err
-		}
-	} else if !bytes.Equal(root.GetHash(), subroot) {
-		// Since we are not chaining proofs, we must check first subroot equals given root
-		return sdkerrors.Wrapf(ErrInvalidProof, "batched proof did not commit to expected root: %X, got: %X", root.GetHash(), subroot)
-	}
-
-	return nil
+	return sdkerrors.Wrap(ErrInvalidProof, "batch proofs are currently unsupported")
 }
 
 // verifyChainedMembershipProof takes a list of proofs and specs and verifies each proof sequentially ensuring that the value is committed to

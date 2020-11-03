@@ -84,10 +84,6 @@ func (k Keeper) UpgradeClient(goCtx context.Context, msg *clienttypes.MsgUpgrade
 		return nil, err
 	}
 
-	if err := upgradedClient.Validate(); err != nil {
-		return nil, err
-	}
-
 	if err = k.ClientKeeper.UpgradeClient(ctx, msg.ClientId, upgradedClient, msg.UpgradeHeight, msg.ProofUpgrade); err != nil {
 		return nil, err
 	}

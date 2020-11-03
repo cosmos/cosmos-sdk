@@ -35,14 +35,18 @@ func (suite *KeeperTestSuite) SetupTest() {
 	types.RegisterQueryServer(queryHelper, querier)
 	queryClient := types.NewQueryClient(queryHelper)
 
-	addrs, _, validators := createValidators(ctx, app, []int64{9, 8, 7})
+	addrs, _, validators := createValidators(suite.T(), ctx, app, []int64{9, 8, 7})
 	header := tmproto.Header{
 		ChainID: "HelloChain",
 		Height:  5,
 	}
 
-	hi := types.NewHistoricalInfo(header, validators)
-	app.StakingKeeper.SetHistoricalInfo(ctx, 5, hi)
+	// sort a copy of the validators, so that original validators does not
+	// have its order changed
+	sortedVals := make([]types.Validator, len(validators))
+	copy(sortedVals, validators)
+	hi := types.NewHistoricalInfo(header, sortedVals)
+	app.StakingKeeper.SetHistoricalInfo(ctx, 5, &hi)
 
 	suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals = app, ctx, queryClient, addrs, validators
 }

@@ -346,18 +346,6 @@ func (suite *TypesTestSuite) TestMsgRecvPacketValidateBasic() {
 	}
 }
 
-func (suite *TypesTestSuite) TestMsgRecvPacketGetSignBytes() {
-	msg := types.NewMsgRecvPacket(packet, suite.proof, height, addr)
-	res := msg.GetSignBytes()
-
-	expected := fmt.Sprintf(
-		`{"packet":{"data":%s,"destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid","timeout_height":{"version_height":"100","version_number":"0"},"timeout_timestamp":"100"},"proof":"Co0BCi4KCmljczIzOmlhdmwSA0tFWRobChkKA0tFWRIFVkFMVUUaCwgBGAEgASoDAAICClsKDGljczIzOnNpbXBsZRIMaWF2bFN0b3JlS2V5Gj0KOwoMaWF2bFN0b3JlS2V5EiAcIiDXSHQRSvh/Wa07MYpTK0B4XtbaXtzxBED76xk0WhoJCAEYASABKgEA","proof_height":{"version_height":"1","version_number":"0"},"signer":"%s"}`,
-		string(msg.GetDataSignBytes()),
-		addr.String(),
-	)
-	suite.Equal(expected, string(res))
-}
-
 func (suite *TypesTestSuite) TestMsgRecvPacketGetSigners() {
 	msg := types.NewMsgRecvPacket(packet, suite.proof, height, addr)
 	res := msg.GetSigners()

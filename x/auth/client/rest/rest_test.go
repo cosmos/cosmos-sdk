@@ -2,7 +2,6 @@ package rest_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -29,6 +28,9 @@ type IntegrationTestSuite struct {
 
 	cfg     network.Config
 	network *network.Network
+
+	stdTx    legacytx.StdTx
+	stdTxRes sdk.TxResponse
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
@@ -46,6 +48,17 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
+
+	// Broadcast a StdTx used for tests.
+	s.stdTx = s.createTestStdTx(s.network.Validators[0], 0, 1)
+	res, err := s.broadcastReq(s.stdTx, "block")
+	s.Require().NoError(err)
+
+	// NOTE: this uses amino explicitly, don't migrate it!
+	s.Require().NoError(s.cfg.LegacyAmino.UnmarshalJSON(res, &s.stdTxRes))
+	s.Require().Equal(uint32(0), s.stdTxRes.Code)
+
+	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -114,39 +127,48 @@ func (s *IntegrationTestSuite) TestBroadcastTxRequest() {
 func (s *IntegrationTestSuite) TestQueryTxByHash() {
 	val0 := s.network.Validators[0]
 
-	// Create and broadcast a tx.
-	stdTx := s.createTestStdTx(val0, 1) // Validator's sequence starts at 1.
-	res, err := s.broadcastReq(stdTx, "block")
-	s.Require().NoError(err)
-	var txRes sdk.TxResponse
-	// NOTE: this uses amino explicitly, don't migrate it!
-	s.Require().NoError(s.cfg.LegacyAmino.UnmarshalJSON(res, &txRes))
+	// We broadcasted a StdTx in SetupSuite.
 	// we just check for a non-empty TxHash here, the actual hash will depend on the underlying tx configuration
-	s.Require().NotEmpty(txRes.TxHash)
+	s.Require().NotEmpty(s.stdTxRes.TxHash)
 
-	s.network.WaitForNextBlock()
-
-	// We now fetch the tx by has on the `/tx/{hash}` route.
-	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs/%s", val0.APIAddress, txRes.TxHash))
+	// We now fetch the tx by hash on the `/tx/{hash}` route.
+	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs/%s", val0.APIAddress, s.stdTxRes.TxHash))
 	s.Require().NoError(err)
 
 	// txJSON should contain the whole tx, we just make sure that our custom
 	// memo is there.
-	s.Require().True(strings.Contains(string(txJSON), stdTx.Memo))
+	s.Require().Contains(string(txJSON), s.stdTx.Memo)
+}
+
+func (s *IntegrationTestSuite) TestQueryTxByHeight() {
+	val0 := s.network.Validators[0]
+
+	// We broadcasted a StdTx in SetupSuite.
+	// we just check for a non-empty height here, as we'll need to for querying.
+	s.Require().NotEmpty(s.stdTxRes.Height)
+
+	// We now fetch the tx on `/txs` route, filtering by `tx.height`
+	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs?limit=10&page=1&tx.height=%d", val0.APIAddress, s.stdTxRes.Height))
+	s.Require().NoError(err)
+
+	// txJSON should contain the whole tx, we just make sure that our custom
+	// memo is there.
+	s.Require().Contains(string(txJSON), s.stdTx.Memo)
 }
 
 func (s *IntegrationTestSuite) TestQueryTxByHashWithServiceMessage() {
 	val := s.network.Validators[0]
 
-	account, err := val.ClientCtx.Keyring.Key("newAccount")
-	s.Require().NoError(err)
-
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
+
+	// Right after this line, we're sending a tx. Might need to wait a block
+	// to refresh sequences.
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	out, err := bankcli.ServiceMsgSendExec(
 		val.ClientCtx,
 		val.Address,
-		account.GetAddress(),
+		val.Address,
 		sdk.NewCoins(sendTokens),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -157,18 +179,20 @@ func (s *IntegrationTestSuite) TestQueryTxByHashWithServiceMessage() {
 	s.Require().NoError(err)
 	var txRes sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txRes))
+	s.Require().Equal(uint32(0), txRes.Code)
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs/%s", val.APIAddress, txRes.TxHash))
 	s.Require().NoError(err)
 
-	var result legacytx.StdTx
-	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(txJSON, &result))
-	s.Require().NotNil(result)
-	msgs := result.GetMsgs()
+	var txResAmino sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(txJSON, &txResAmino))
+	stdTx, ok := txResAmino.Tx.GetCachedValue().(legacytx.StdTx)
+	s.Require().True(ok)
+	msgs := stdTx.GetMsgs()
 	s.Require().Equal(len(msgs), 1)
-	_, ok := msgs[0].(*types.MsgSend)
+	_, ok = msgs[0].(*types.MsgSend)
 	s.Require().True(ok)
 }
 
@@ -197,9 +221,8 @@ func (s *IntegrationTestSuite) TestMultipleSyncBroadcastTxRequests() {
 	}
 	for _, tc := range testCases {
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-
 			// broadcast test with sync mode, as we want to run CheckTx to verify account sequence is correct
-			stdTx := s.createTestStdTx(s.network.Validators[0], tc.sequence)
+			stdTx := s.createTestStdTx(s.network.Validators[1], 1, tc.sequence)
 			res, err := s.broadcastReq(stdTx, "sync")
 			s.Require().NoError(err)
 
@@ -224,7 +247,7 @@ func (s *IntegrationTestSuite) TestMultipleSyncBroadcastTxRequests() {
 	}
 }
 
-func (s *IntegrationTestSuite) createTestStdTx(val *network.Validator, sequence uint64) legacytx.StdTx {
+func (s *IntegrationTestSuite) createTestStdTx(val *network.Validator, accNum, sequence uint64) legacytx.StdTx {
 	txConfig := legacytx.StdTxConfig{Cdc: s.cfg.LegacyAmino}
 
 	msg := &types.MsgSend{
@@ -248,6 +271,7 @@ func (s *IntegrationTestSuite) createTestStdTx(val *network.Validator, sequence 
 		WithKeybase(val.ClientCtx.Keyring).
 		WithTxConfig(txConfig).
 		WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON).
+		WithAccountNumber(accNum).
 		WithSequence(sequence)
 
 	// sign Tx (offline mode so we can manually set sequence number)

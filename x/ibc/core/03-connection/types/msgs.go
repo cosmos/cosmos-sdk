@@ -53,8 +53,9 @@ func (msg MsgConnectionOpenInit) ValidateBasic() error {
 			return sdkerrors.Wrap(err, "basic validation of the provided version failed")
 		}
 	}
-	if msg.Signer == "" {
-		return sdkerrors.ErrInvalidAddress
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
 	}
 	return msg.Counterparty.ValidateBasic()
 }
@@ -157,8 +158,9 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	if msg.ConsensusHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "consensus height must be non-zero")
 	}
-	if msg.Signer == "" {
-		return sdkerrors.ErrInvalidAddress
+	_, err = sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
 	}
 	return msg.Counterparty.ValidateBasic()
 }
@@ -266,8 +268,9 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 	if msg.ConsensusHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "consensus height must be non-zero")
 	}
-	if msg.Signer == "" {
-		return sdkerrors.ErrInvalidAddress
+	_, err = sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
 	}
 	return nil
 }
@@ -324,8 +327,9 @@ func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	if msg.Signer == "" {
-		return sdkerrors.ErrInvalidAddress
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
 	}
 	return nil
 }

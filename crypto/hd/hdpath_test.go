@@ -213,3 +213,65 @@ func TestCreateHDPath(t *testing.T) {
 		})
 	}
 }
+
+// Tests to ensure that any index value is in the range [0, max(int32)] as per
+// the extended keys specification. If the index belongs to that of a hardened key,
+// its 0x80000000 bit will be set, so we can still accept values in [0, max(int32)] and then
+// increase its value as deriveKeyPath already augments.
+// See issue https://github.com/cosmos/cosmos-sdk/issues/7627.
+func TestDeriveHDPathRange(t *testing.T) {
+	seed := mnemonicToSeed("I am become Death, the destroyer of worlds!")
+
+	tests := []struct {
+		path    string
+		wantErr string
+	}{
+		{
+			path:    "1'/2147483648/0'/0/0",
+			wantErr: "out of range",
+		},
+		{
+			path:    "2147483648'/1/0/0",
+			wantErr: "out of range",
+		},
+		{
+			path:    "2147483648'/2147483648/0'/0/0",
+			wantErr: "out of range",
+		},
+		{
+			path:    "1'/-5/0'/0/0",
+			wantErr: "invalid syntax",
+		},
+		{
+			path:    "-2147483646'/1/0/0",
+			wantErr: "invalid syntax",
+		},
+		{
+			path:    "-2147483648'/-2147483648/0'/0/0",
+			wantErr: "invalid syntax",
+		},
+		{
+			// Should pass.
+			path: "1'/2147483647/0'/0/0",
+		},
+		{
+			// Should pass.
+			path: "2147483647'/1/0'/0/0",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.path, func(t *testing.T) {
+			master, ch := hd.ComputeMastersFromSeed(seed)
+			_, err := hd.DerivePrivateKeyForPath(master, ch, tt.path)
+
+			if tt.wantErr == "" {
+				require.Nil(t, err, "unexpected error")
+			} else {
+				require.NotNil(t, err, "expected a report of an int overflow")
+				require.Contains(t, err.Error(), tt.wantErr)
+			}
+		})
+	}
+}

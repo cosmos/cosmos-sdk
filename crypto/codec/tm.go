@@ -10,6 +10,17 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// FromTmPubKey converts TM's tmcrypto.PubKey toour own PubKey.
+func FromTmPubKey(tmPk tmcrypto.PubKey) (cryptotypes.PubKey, error) {
+	switch tmPk := tmPk.(type) {
+	case tmed25519.PubKey:
+		return &ed25519.PubKey{Key: []byte(tmPk)}, nil
+	default:
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot convert %v to cryptotypes.PubKey", tmPk)
+	}
+
+}
+
 // ToTmPubKey converts our own PubKey to TM's tmcrypto.PubKey.
 func ToTmPubKey(pk cryptotypes.PubKey) (tmcrypto.PubKey, error) {
 	switch pk := pk.(type) {

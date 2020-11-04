@@ -221,14 +221,3 @@ func (pubKey *PubKey) UnmarshalAminoJSON(bz []byte) error {
 func (pubKey *PubKey) AsTmPubKey() crypto.PubKey {
 	return tmed25519.PubKey(pubKey.Key)
 }
-
-// FromTmEd25519 converts a Tendermint ED25519 pubkey into our own ED25519
-// PubKey.
-func FromTmEd25519(pubKey crypto.PubKey) (*PubKey, error) {
-	tmPk, ok := pubKey.(tmed25519.PubKey)
-	if !ok {
-		return nil, fmt.Errorf("expected %T, got %T", tmed25519.PubKey{}, pubKey)
-	}
-
-	return &PubKey{Key: []byte(tmPk)}, nil
-}

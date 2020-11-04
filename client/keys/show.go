@@ -5,14 +5,13 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
-	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -62,7 +61,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 			return fmt.Errorf("%s is not a valid name or address: %v", args[0], err)
 		}
 	} else {
-		pks := make([]crypto..PubKey, len(args))
+		pks := make([]cryptotypes.PubKey, len(args))
 		for i, keyref := range args {
 			info, err := fetchKey(clientCtx.Keyring, keyref)
 			if err != nil {

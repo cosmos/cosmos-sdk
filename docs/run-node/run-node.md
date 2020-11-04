@@ -71,8 +71,6 @@ For more information on `gentx`, use the following command:
 simd gentx --help
 ```
 
-You should see blocks come in.
-
 ## Run a Localnet
 
 Now that everything is set up, you can finally start your node:
@@ -80,6 +78,8 @@ Now that everything is set up, you can finally start your node:
 ```bash
 simd start
 ```
+
+You should see blocks come in.
 
 The previous command allow you to run a single node. This is enough for the next section on interacting with this node, but you may wish to run multiple nodes at the same time, and see how consensus happens between them.
 

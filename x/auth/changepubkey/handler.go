@@ -37,11 +37,10 @@ func handleMsgChangePubKey(ctx sdk.Context, ak keeper.AccountKeeper, msg *types.
 	}
 
 	authParams := ak.GetParams(ctx)
-	if authParams.EnableChangePubKey == false {
+	if !authParams.EnableChangePubKey {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "change pubkey param is disabled")
 	}
-	amount := authParams.PubKeyChangeCost
-	ctx.GasMeter().ConsumeGas(amount, "pubkey change fee")
+	ctx.GasMeter().ConsumeGas(authParams.PubKeyChangeCost, "pubkey change fee")
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

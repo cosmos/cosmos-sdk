@@ -35,8 +35,8 @@ The `~/.simapp` folder has the following structure:
       |- app.toml                   # Application-related configuration file.
       |- config.toml                # Tendermint-related configuration file.
       |- genesis.json               # The genesis file.
-      |- node_key.json              # Tendermint node pubkey that will be used for signing blocks.
-      |- priv_validator_key.json    # TODO
+      |- node_key.json              # Private key to use for node authentication in the p2p protocol.
+      |- priv_validator_key.json    # Private key to use as a validator in the consensus protocol.
 ```
 
 Before starting the chain, you need to populate the state with at least one account. To do so, first [create a new account in the keyring](./keyring.md#adding-keys-to-the-keyring) named `my_validator` (feel free to choose another name).

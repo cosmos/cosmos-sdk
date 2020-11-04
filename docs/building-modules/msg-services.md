@@ -58,7 +58,7 @@ The `handler` type defined in the Cosmos SDK will be deprecated in favor of [`Ms
 
 Here is the typical structure of a `handler` function:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/handler.go#L4
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc2/types/handler.go#L4
 
 Let us break it down:
 

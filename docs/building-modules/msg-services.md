@@ -16,7 +16,7 @@ All `Msg` processing is done by a `MsgServer`](messages-and-queries.md#msg-servi
 
 As further described in [ADR 031](../architecture/adr-031-msg-service.md), this approach has the advantages of clearly specifying return types and generating server and client code.
 
-When possible, the existing module's [`Keeper`](keeper.md) should implement `MsgServer`, else a `msgServer` struct that embeds the `Keeper` can be created, typically in `./keeper/msg_server.go`:
+When possible, the existing module's [`Keeper`](keeper.md) should implement `MsgServer`, otherwise a `msgServer` struct that embeds the `Keeper` can be created, typically in `./keeper/msg_server.go`:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/bank/keeper/msg_server.go#L14-L16
 

@@ -288,9 +288,12 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 				packet.Data = []byte(ibctesting.InvalidID)
 			}
 
+			commitment, err := channeltypes.CommitPacket(suite.chainB.App.IBCKeeper.Codec(), packet)
+			suite.Require().NoError(err)
+
 			err = suite.chainB.App.IBCKeeper.ConnectionKeeper.VerifyPacketCommitment(
 				suite.chainB.GetContext(), connection, malleateHeight(proofHeight, tc.heightDiff), proof,
-				packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), channeltypes.CommitPacket(packet),
+				packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), commitment,
 			)
 
 			if tc.expPass {

@@ -104,9 +104,14 @@ func (k Keeper) SendPacket(
 		)
 	}
 
+	commitment, err := types.CommitPacket(k.cdc, packet)
+	if err != nil {
+		return sdkerrors.Wrap(types.ErrInvalidPacket, err.Error())
+	}
+
 	nextSequenceSend++
 	k.SetNextSequenceSend(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), nextSequenceSend)
-	k.SetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), types.CommitPacket(packet))
+	k.SetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), commitment)
 
 	// Emit Event with Packet data along with other packet information for relayer to pick up
 	// and relay to other chain
@@ -230,10 +235,15 @@ func (k Keeper) RecvPacket(
 		}
 	}
 
+	commitment, err := types.CommitPacket(k.cdc, packet)
+	if err != nil {
+		return sdkerrors.Wrap(types.ErrInvalidPacket, err.Error())
+	}
+
 	if err := k.connectionKeeper.VerifyPacketCommitment(
 		ctx, connectionEnd, proofHeight, proof,
 		packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(),
-		types.CommitPacket(packet),
+		commitment,
 	); err != nil {
 		return sdkerrors.Wrap(err, "couldn't verify counterparty packet commitment")
 	}
@@ -447,9 +457,14 @@ func (k Keeper) AcknowledgePacket(
 
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 
+	packetCommitment, err := types.CommitPacket(k.cdc, packet)
+	if err != nil {
+		return sdkerrors.Wrap(types.ErrInvalidPacket, err.Error())
+	}
+
 	// verify we sent the packet and haven't cleared it out yet
-	if !bytes.Equal(commitment, types.CommitPacket(packet)) {
-		return sdkerrors.Wrapf(types.ErrInvalidPacket, "commitment bytes are not equal: got (%v), expected (%v)", types.CommitPacket(packet), commitment)
+	if !bytes.Equal(commitment, packetCommitment) {
+		return sdkerrors.Wrapf(types.ErrInvalidPacket, "commitment bytes are not equal: got (%v), expected (%v)", packetCommitment, commitment)
 	}
 
 	if err := k.connectionKeeper.VerifyPacketAcknowledgement(

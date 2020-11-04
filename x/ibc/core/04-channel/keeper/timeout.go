@@ -80,9 +80,14 @@ func (k Keeper) TimeoutPacket(
 
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 
+	packetCommitment, err := types.CommitPacket(k.cdc, packet)
+	if err != nil {
+		return sdkerrors.Wrap(types.ErrInvalidPacket, err.Error())
+	}
+
 	// verify we sent the packet and haven't cleared it out yet
-	if !bytes.Equal(commitment, types.CommitPacket(packet)) {
-		return sdkerrors.Wrapf(types.ErrInvalidPacket, "packet commitment bytes are not equal: got (%v), expected (%v)", commitment, types.CommitPacket(packet))
+	if !bytes.Equal(commitment, packetCommitment) {
+		return sdkerrors.Wrapf(types.ErrInvalidPacket, "packet commitment bytes are not equal: got (%v), expected (%v)", commitment, packetCommitment)
 	}
 
 	switch channel.Ordering {
@@ -216,9 +221,14 @@ func (k Keeper) TimeoutOnClose(
 
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 
+	packetCommitment, err := types.CommitPacket(k.cdc, packet)
+	if err != nil {
+		return sdkerrors.Wrap(types.ErrInvalidPacket, err.Error())
+	}
+
 	// verify we sent the packet and haven't cleared it out yet
-	if !bytes.Equal(commitment, types.CommitPacket(packet)) {
-		return sdkerrors.Wrapf(types.ErrInvalidPacket, "packet commitment bytes are not equal: got (%v), expected (%v)", commitment, types.CommitPacket(packet))
+	if !bytes.Equal(commitment, packetCommitment) {
+		return sdkerrors.Wrapf(types.ErrInvalidPacket, "packet commitment bytes are not equal: got (%v), expected (%v)", commitment, packetCommitment)
 	}
 
 	counterpartyHops, found := k.CounterpartyHops(ctx, channel)
@@ -241,7 +251,6 @@ func (k Keeper) TimeoutOnClose(
 		return err
 	}
 
-	var err error
 	switch channel.Ordering {
 	case types.ORDERED:
 		// check that packet has not been received

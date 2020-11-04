@@ -1,8 +1,9 @@
 package types
 
 import (
-	"github.com/tendermint/tendermint/crypto/tmhash"
+	"crypto/sha256"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
@@ -10,19 +11,26 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
-// CommitPacket returns a packet commitment bytes. The commitment consists of:
-// hash(timeout_timestamp + timeout_version_number + timeout_version_height + data) from a given packet.
-func CommitPacket(packet exported.PacketI) []byte {
+// CommitPacket returns a packet commitment bytes and an error. The commitment consists of:
+// sha256_hash(timeout_timestamp + proto_marshal(timeout_height) + data) from a given packet.
+// The function will fail if the timeout height cannot be marshaled to bytes.
+func CommitPacket(cdc codec.BinaryMarshaler, packet exported.PacketI) ([]byte, error) {
+	timeoutBz, err := codec.MarshalAny(cdc, packet.GetTimeoutHeight())
+	if err != nil {
+		return nil, err
+	}
+
 	buf := sdk.Uint64ToBigEndian(packet.GetTimeoutTimestamp())
-	buf = append(buf, sdk.Uint64ToBigEndian(packet.GetTimeoutHeight().GetVersionNumber())...)
-	buf = append(buf, sdk.Uint64ToBigEndian(packet.GetTimeoutHeight().GetVersionHeight())...)
+	buf = append(buf, timeoutBz...)
 	buf = append(buf, packet.GetData()...)
-	return tmhash.Sum(buf)
+	hash := sha256.Sum256(buf)
+	return hash[:], nil
 }
 
 // CommitAcknowledgement returns the hash of commitment bytes
 func CommitAcknowledgement(data []byte) []byte {
-	return tmhash.Sum(data)
+	hash := sha256.Sum256(data)
+	return hash[:]
 }
 
 var _ exported.PacketI = (*Packet)(nil)

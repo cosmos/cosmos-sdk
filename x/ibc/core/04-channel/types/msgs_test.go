@@ -427,6 +427,7 @@ func (suite *TypesTestSuite) TestMsgAcknowledgementValidateBasic() {
 	}{
 		{"", types.NewMsgAcknowledgement(packet, packet.GetData(), suite.proof, height, addr), true},
 		{"proof height must be > 0", types.NewMsgAcknowledgement(packet, packet.GetData(), suite.proof, clienttypes.ZeroHeight(), addr), false},
+		{"empty ack", types.NewMsgAcknowledgement(packet, nil, suite.proof, height, addr), false},
 		{"missing signer address", types.NewMsgAcknowledgement(packet, packet.GetData(), suite.proof, height, emptyAddr), false},
 		{"cannot submit an empty proof", types.NewMsgAcknowledgement(packet, packet.GetData(), emptyProof, height, addr), false},
 		{"invalid packet", types.NewMsgAcknowledgement(invalidPacket, packet.GetData(), suite.proof, height, addr), false},

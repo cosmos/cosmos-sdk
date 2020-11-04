@@ -493,6 +493,9 @@ func (msg MsgTimeout) ValidateBasic() error {
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
+	if msg.NextSequenceRecv == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, "next sequence receive cannot be 0")
+	}
 	_, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
@@ -607,6 +610,9 @@ func (msg MsgAcknowledgement) ValidateBasic() error {
 	}
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
+	}
+	if len(msg.Acknowledgement) == 0 {
+		return sdkerrors.Wrap(ErrInvalidAcknowledgement, "ack bytes cannot be empty")
 	}
 	_, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {

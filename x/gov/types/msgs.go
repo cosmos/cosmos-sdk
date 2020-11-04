@@ -16,12 +16,13 @@ import (
 const (
 	TypeMsgDeposit        = "deposit"
 	TypeMsgVote           = "vote"
+	TypeMsgWeightedVote   = "weighted_vote"
 	TypeMsgSubmitProposal = "submit_proposal"
 )
 
 var (
-	_, _, _ sdk.Msg                       = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}
-	_       types.UnpackInterfacesMessage = &MsgSubmitProposal{}
+	_, _, _, _ sdk.Msg                       = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgWeightedVote{}
+	_          types.UnpackInterfacesMessage = &MsgSubmitProposal{}
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
@@ -192,6 +193,7 @@ func (msg MsgVote) ValidateBasic() error {
 	if msg.Voter == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Voter)
 	}
+
 	if !ValidVoteOption(msg.Option) {
 		return sdkerrors.Wrap(ErrInvalidVote, msg.Option.String())
 	}
@@ -213,6 +215,66 @@ func (msg MsgVote) GetSignBytes() []byte {
 
 // GetSigners implements Msg
 func (msg MsgVote) GetSigners() []sdk.AccAddress {
+	voter, _ := sdk.AccAddressFromBech32(msg.Voter)
+	return []sdk.AccAddress{voter}
+}
+
+// NewMsgWeightedVote creates a message to cast a vote on an active proposal
+//nolint:interfacer
+func NewMsgWeightedVote(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions) *MsgWeightedVote {
+	return &MsgWeightedVote{proposalID, voter.String(), options}
+}
+
+// Route implements Msg
+func (msg MsgWeightedVote) Route() string { return RouterKey }
+
+// Type implements Msg
+func (msg MsgWeightedVote) Type() string { return TypeMsgWeightedVote }
+
+// ValidateBasic implements Msg
+func (msg MsgWeightedVote) ValidateBasic() error {
+	if msg.Voter == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Voter)
+	}
+
+	if len(msg.Options) == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, WeightedVoteOptions(msg.Options).String())
+	}
+
+	totalWeight := sdk.NewDec(0)
+	usedOptions := make(map[VoteOption]bool)
+	for _, option := range msg.Options {
+		if !ValidWeightedVoteOption(option) {
+			return sdkerrors.Wrap(ErrInvalidVote, option.String())
+		}
+		totalWeight = totalWeight.Add(option.Weight)
+		if usedOptions[option.Option] {
+			return sdkerrors.Wrap(ErrInvalidVote, "Duplicated vote option")
+		}
+		usedOptions[option.Option] = true
+	}
+
+	if totalWeight.GT(sdk.NewDec(1)) {
+		return sdkerrors.Wrap(ErrInvalidVote, "Total weight overflow 1.00")
+	}
+
+	return nil
+}
+
+// String implements the Stringer interface
+func (msg MsgWeightedVote) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// GetSignBytes implements Msg
+func (msg MsgWeightedVote) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners implements Msg
+func (msg MsgWeightedVote) GetSigners() []sdk.AccAddress {
 	voter, _ := sdk.AccAddressFromBech32(msg.Voter)
 	return []sdk.AccAddress{voter}
 }

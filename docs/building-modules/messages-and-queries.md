@@ -24,9 +24,9 @@ See an example of a `Msg` service definition from `x/bank` module:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L10-L17
 
-For backwards compatibility with [legacy amino `Msg`s](#legacy-amino-msgs), existing `Msg` types should be used as the request parameter for `service` definitions. Newer `Msg` types which only support `service` definitions should use the more canonical `Msg...Request` names.
+For backwards compatibility with [legacy Amino `Msg`s](#legacy-amino-msgs), existing `Msg` types should be used as the request parameter for `service` definitions. Newer `Msg` types which only support `service` definitions should use the more canonical `Msg...Request` names.
 
-`Msg` request types need to implement the `MsgRequest` interface which is a simplified version of the `Msg` interface described [below](#legacy-msgs) with only `ValidateBasic()` and `GetSigners()` methods.
+`Msg` request types need to implement the `MsgRequest` interface which is a simplified version of the `Msg` interface described [below](#legacy-amino-msgs) with only `ValidateBasic()` and `GetSigners()` methods.
 
 Defining such `Msg` services allow to specify return types as part of `Msg` response using the canonical `Msg...Response` names.
 
@@ -42,13 +42,13 @@ In order for clients (CLI and grpc-gateway) to have these URLs registered, the S
 
 This way of defining messages is deprecated and using [`Msg` services](#msg-services) should be prefered.
 
-Legacy Amino `Msg`s can be defined as regular `struct`. The `message`'s definition usually includes a list of parameters needed to process the message that will be provided by end-users when they want to create a new transaction containing said `message`.
+Legacy `Msg`s can be defined as protobuf messages. The `message`'s definition usually includes a list of parameters needed to process the message that will be provided by end-users when they want to create a new transaction containing said `message`.
 
 The `Msg` is typically accompanied by a standard constructor function, that is called from one of the [module's interface](./module-interfaces.md). `message`s also need to implement the [`Msg`] interface:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/4a1b2fba43b1052ca162b3a1e0b6db6db9c26656/types/tx_msg.go#L10-L33
 
-It contains the following methods:
+It extends `proto.Message` and contains the following methods:
 
 - `Route() string`: Name of the route for this message. Typically all `message`s in a module have the same route, which is most often the module's name.
 - `Type() string`: Type of the message, used primarly in [events](../core/events.md). This should return a message-specific `string`, typically the denomination of the message itself.

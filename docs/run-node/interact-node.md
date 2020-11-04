@@ -30,7 +30,7 @@ The command above creates a local key-pair that is not yet registered on the cha
 ```bash
 simd tx send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000stake --chain-id my-test-chain
 
-# Check that the second account did receive the tokens.
+# Check that the recipient account did receive the tokens.
 simd query account $RECIPIENT --chain-id my-test-chain
 ```
 
@@ -38,11 +38,8 @@ Finally, delegate some of the stake tokens sent to the `recipient` account to th
 
 ```bash
 simd tx staking delegate $(simd keys show my_validator --bech val -a) 500stake --from recipient --chain-id my-test-chain
-```
 
-Try to query the total delegations to `validator`:
-
-```bash
+# Query the total delegations to `validator`.
 simd query staking delegations-to $(simd keys show my_validator --bech val -a) --chain-id my-test-chain
 ```
 

@@ -41,7 +41,7 @@ experience without compromising on security.
 ### The `file` backend
 
 The `file` backend more closely resembles the keybase implementation used prior to
-v0.38.1. It stores the keyring encrypted within the apps configuration directory. This
+v0.38.1. It stores the keyring encrypted within the app's configuration directory. This
 keyring will request a password each time it is accessed, which may occur multiple
 times in a single command resulting in repeated password prompts. If using bash scripts
 to execute commands using the `file` option you may want to utilize the following format

@@ -11,7 +11,7 @@ Now that the application is ready and the keyring populated, it's time to see ho
 - [Anatomy of an SDK Application](../basics/app-anatomy.md) {prereq}
 - [Setting up the keyring](./keyring.md) {prereq}
 
-## Run the Chain
+## Initialize the Chain
 
 ::: warning
 Make sure you can build your own binary, and replace `simd` with the name of your binary in the snippets.
@@ -71,19 +71,19 @@ For more information on `gentx`, use the following command:
 simd gentx --help
 ```
 
+You should see blocks come in.
+
+## Run a Localnet
+
 Now that everything is set up, you can finally start your node:
 
 ```bash
 simd start
 ```
 
-You should see blocks come in.
+The previous command allow you to run a single node. This is enough for the next section on interacting with this node, but you may wish to run multiple nodes at the same time, and see how consensus happens between them.
 
-## Run a Localnet
-
-The previous commands allow you to run a single node. This is enough for the next section on interacting with this node, but you may wish to run multiple nodes at the same time, and see how consensus happens between them.
-
-The naive way would be to run the same commands in separate terminal windows. This is possible, however in the SDK, we leverage the power of [Docker Compose](https://docs.docker.com/compose/) to run a localnet. If you need inspiration on how to set up your own localnet with Docker Compose, you can have a look at the SDK's [`docker-compose.yml`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc2/docker-compose.yml).
+The naive way would be to run the same commands again in separate terminal windows. This is possible, however in the SDK, we leverage the power of [Docker Compose](https://docs.docker.com/compose/) to run a localnet. If you need inspiration on how to set up your own localnet with Docker Compose, you can have a look at the SDK's [`docker-compose.yml`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc2/docker-compose.yml).
 
 ## Next {hide}
 

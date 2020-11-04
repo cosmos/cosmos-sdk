@@ -12,7 +12,7 @@ A `Msg` Service processes [`message`s](./messages-and-queries.md#messages). `Msg
 
 ## Implementation of a module `Msg` service
 
-All `Msg` processing is done by a `MsgServer`](messages-and-queries.md#msg-services) protobuf service. Each module should define a `Msg` service, which will be responsible for request and response serialization. 
+All `Msg` processing is done by a [`Msg`](messages-and-queries.md#msg-services) protobuf service. Each module should define a `Msg` service, which will be responsible for request and response serialization. 
 
 As further described in [ADR 031](../architecture/adr-031-msg-service.md), this approach has the advantages of clearly specifying return types and generating server and client code.
 

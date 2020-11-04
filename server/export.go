@@ -68,7 +68,7 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 			forZeroHeight, _ := cmd.Flags().GetBool(FlagForZeroHeight)
 			jailAllowedAddrs, _ := cmd.Flags().GetStringSlice(FlagJailAllowedAddrs)
 
-			exported, err := appExporter(serverCtx.Logger, db, traceWriter, height, forZeroHeight, jailAllowedAddrs)
+			exported, err := appExporter(serverCtx.Logger, db, traceWriter, height, forZeroHeight, jailAllowedAddrs, serverCtx.Viper)
 			if err != nil {
 				return fmt.Errorf("error exporting state: %v", err)
 			}

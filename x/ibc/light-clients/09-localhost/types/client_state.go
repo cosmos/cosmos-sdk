@@ -112,7 +112,7 @@ func (cs ClientState) VerifyUpgrade(
 
 // VerifyClientState verifies that the localhost client state is stored locally
 func (cs ClientState) VerifyClientState(
-	store sdk.KVStore, cdc codec.BinaryMarshaler, _ exported.Root,
+	store sdk.KVStore, cdc codec.BinaryMarshaler,
 	_ exported.Height, _ exported.Prefix, _ string, _ []byte, clientState exported.ClientState,
 ) error {
 	path := host.KeyClientState()
@@ -136,7 +136,7 @@ func (cs ClientState) VerifyClientState(
 // VerifyClientConsensusState returns nil since a local host client does not store consensus
 // states.
 func (cs ClientState) VerifyClientConsensusState(
-	sdk.KVStore, codec.BinaryMarshaler, exported.Root,
+	sdk.KVStore, codec.BinaryMarshaler,
 	exported.Height, string, exported.Height, exported.Prefix,
 	[]byte, exported.ConsensusState,
 ) error {

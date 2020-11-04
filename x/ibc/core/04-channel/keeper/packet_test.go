@@ -271,6 +271,7 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 				types.NewChannel(types.OPEN, types.ORDERED, types.NewCounterparty(channelA.PortID, channelA.ID), []string{connIDB}, channelB.Version),
 			)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			suite.chainB.CreateChannelCapability(channelB.PortID, channelB.ID)
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 		}, false},
 		{"connection not OPEN", func() {
@@ -288,6 +289,7 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 				types.NewChannel(types.OPEN, types.ORDERED, types.NewCounterparty(channelA.PortID, channelA.ID), []string{connB.ID}, channelB.Version),
 			)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			suite.chainB.CreateChannelCapability(channelB.PortID, channelB.ID)
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 		}, false},
 		{"timeout height passed", func() {
@@ -316,6 +318,8 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 
 			// manually set packet commitment
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), channelA.PortID, channelA.ID, packet.GetSequence(), ibctesting.TestHash)
+			suite.chainB.CreateChannelCapability(channelB.PortID, channelB.ID)
+
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 		}, false},
 		{"receipt already stored", func() {

@@ -35,7 +35,7 @@ type AccountKeeperI interface {
 	IterateAccounts(sdk.Context, func(types.AccountI) bool)
 
 	// Fetch the public key of an account at a specified address
-	GetPubKey(sdk.Context, sdk.AccAddress) (crypto.PubKey, error)
+	GetPubKey(sdk.Context, sdk.AccAddress) (cryptotypes.PubKey, error)
 
 	// Fetch the sequence of an account at a specified address.
 	GetSequence(sdk.Context, sdk.AccAddress) (uint64, error)

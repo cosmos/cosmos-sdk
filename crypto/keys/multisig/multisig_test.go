@@ -3,8 +3,6 @@ package multisig_test
 import (
 	"testing"
 
-	tmcrypto "github.com/tendermint/tendermint/crypto"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"

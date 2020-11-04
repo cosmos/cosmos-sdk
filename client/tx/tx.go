@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/crypto/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -344,7 +344,7 @@ func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 // corresponding SignatureV2 if the signing is successful.
 func SignWithPrivKey(
 	signMode signing.SignMode, signerData authsigning.SignerData,
-	txBuilder client.TxBuilder, priv crypto.PrivKey, txConfig client.TxConfig,
+	txBuilder client.TxBuilder, priv cryptotypes.PrivKey, txConfig client.TxConfig,
 	accSeq uint64,
 ) (signing.SignatureV2, error) {
 	var sigV2 signing.SignatureV2

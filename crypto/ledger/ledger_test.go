@@ -150,7 +150,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 
 	const numIters = 10
 
-	privKeys := make([]types.PrivKey, numIters)
+	privKeys := make([]types.BasePrivKey, numIters)
 
 	// Check with device
 	for i := uint32(0); i < 10; i++ {

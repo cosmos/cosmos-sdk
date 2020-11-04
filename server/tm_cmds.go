@@ -60,6 +60,9 @@ func ShowValidatorCmd() *cobra.Command {
 			}
 
 			pubkey, err := cryptocodec.FromTmPubKey(valPubKey)
+			if err != nil {
+				return err
+			}
 			pubkeyBech32, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pubkey)
 			if err != nil {
 				return err

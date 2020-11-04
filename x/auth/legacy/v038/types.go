@@ -11,9 +11,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/tendermint/tendermint/crypto"
+	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v034"
 )
@@ -45,11 +46,11 @@ type (
 	}
 
 	BaseAccount struct {
-		Address       sdk.AccAddress `json:"address" yaml:"address"`
-		Coins         sdk.Coins      `json:"coins,omitempty" yaml:"coins,omitempty"`
-		PubKey        crypto.PubKey  `json:"public_key" yaml:"public_key"`
-		AccountNumber uint64         `json:"account_number" yaml:"account_number"`
-		Sequence      uint64         `json:"sequence" yaml:"sequence"`
+		Address       sdk.AccAddress     `json:"address" yaml:"address"`
+		Coins         sdk.Coins          `json:"coins,omitempty" yaml:"coins,omitempty"`
+		PubKey        cryptotypes.PubKey `json:"public_key" yaml:"public_key"`
+		AccountNumber uint64             `json:"account_number" yaml:"account_number"`
+		Sequence      uint64             `json:"sequence" yaml:"sequence"`
 	}
 
 	baseAccountPretty struct {
@@ -127,7 +128,7 @@ func NewBaseAccountWithAddress(addr sdk.AccAddress) BaseAccount {
 }
 
 func NewBaseAccount(
-	address sdk.AccAddress, coins sdk.Coins, pk crypto.PubKey, accountNumber, sequence uint64,
+	address sdk.AccAddress, coins sdk.Coins, pk cryptotypes.PubKey, accountNumber, sequence uint64,
 ) *BaseAccount {
 
 	return &BaseAccount{
@@ -259,7 +260,7 @@ func (bva *BaseVestingAccount) UnmarshalJSON(bz []byte) error {
 	}
 
 	var (
-		pk  crypto.PubKey
+		pk  cryptotypes.PubKey
 		err error
 	)
 
@@ -328,7 +329,7 @@ func (cva *ContinuousVestingAccount) UnmarshalJSON(bz []byte) error {
 	}
 
 	var (
-		pk  crypto.PubKey
+		pk  cryptotypes.PubKey
 		err error
 	)
 
@@ -394,7 +395,7 @@ func (dva *DelayedVestingAccount) UnmarshalJSON(bz []byte) error {
 	}
 
 	var (
-		pk  crypto.PubKey
+		pk  cryptotypes.PubKey
 		err error
 	)
 
@@ -417,7 +418,7 @@ func (dva *DelayedVestingAccount) UnmarshalJSON(bz []byte) error {
 }
 
 func NewModuleAddress(name string) sdk.AccAddress {
-	return sdk.AccAddress(crypto.AddressHash([]byte(name)))
+	return sdk.AccAddress(tmcrypto.AddressHash([]byte(name)))
 }
 
 func NewModuleAccount(baseAccount *BaseAccount, name string, permissions ...string) *ModuleAccount {
@@ -437,7 +438,7 @@ func (ma ModuleAccount) Validate() error {
 		return errors.New("module account name cannot be blank")
 	}
 
-	if !ma.Address.Equals(sdk.AccAddress(crypto.AddressHash([]byte(ma.Name)))) {
+	if !ma.Address.Equals(sdk.AccAddress(tmcrypto.AddressHash([]byte(ma.Name)))) {
 		return fmt.Errorf("address %s cannot be derived from the module name '%s'", ma.Address, ma.Name)
 	}
 

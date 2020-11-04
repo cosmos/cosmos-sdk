@@ -503,17 +503,27 @@ func (v Validator) GetOperator() sdk.ValAddress {
 	return addr
 }
 
-// TmConsPubKey casts Validator.ConsensusPubkey to tmcrypto.PubKey.
-func (v Validator) TmConsPubKey() (tmcrypto.PubKey, error) {
-	var tmPk tmcrypto.PubKey
+// ConsPubKey returns the validator PubKey as a cryptotypes.PubKey.
+func (v Validator) ConsPubKey() (cryptotypes.PubKey, error) {
 	pk, ok := v.ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {
-		return tmPk, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", pk)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", pk)
+	}
+
+	return pk, nil
+
+}
+
+// TmConsPubKey casts Validator.ConsensusPubkey to tmcrypto.PubKey.
+func (v Validator) TmConsPubKey() (tmcrypto.PubKey, error) {
+	pk, err := v.ConsPubKey()
+	if err != nil {
+		return nil, err
 	}
 
 	tmPk, err := cryptocodec.ToTmPubKey(pk)
 	if err != nil {
-		return tmPk, err
+		return nil, err
 	}
 
 	return tmPk, nil

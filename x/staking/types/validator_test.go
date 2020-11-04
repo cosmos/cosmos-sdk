@@ -11,6 +11,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -314,7 +315,9 @@ func TestValidatorToTm(t *testing.T) {
 		val.Status = Bonded
 		val.Tokens = sdk.NewInt(rand.Int63())
 		vals[i] = val
-		expected[i] = tmtypes.NewValidator(pk.(cryptotypes.IntoTmPubKey).AsTmPubKey(), val.ConsensusPower())
+		tmPk, err := cryptocodec.ToTmPubKey(pk)
+		require.NoError(t, err)
+		expected[i] = tmtypes.NewValidator(tmPk, val.ConsensusPower())
 	}
 	vs, err := vals.ToTmValidators()
 	require.NoError(t, err)

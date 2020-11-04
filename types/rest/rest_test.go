@@ -12,13 +12,13 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -180,11 +180,11 @@ func TestProcessPostResponse(t *testing.T) {
 
 	t.Parallel()
 	type mockAccount struct {
-		Address       types.AccAddress `json:"address"`
-		Coins         types.Coins      `json:"coins"`
-		PubKey        crypto.PubKey    `json:"public_key"`
-		AccountNumber uint64           `json:"account_number"`
-		Sequence      uint64           `json:"sequence"`
+		Address       types.AccAddress   `json:"address"`
+		Coins         types.Coins        `json:"coins"`
+		PubKey        cryptotypes.PubKey `json:"public_key"`
+		AccountNumber uint64             `json:"account_number"`
+		Sequence      uint64             `json:"sequence"`
 	}
 
 	// setup

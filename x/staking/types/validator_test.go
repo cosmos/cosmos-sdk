@@ -7,7 +7,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/encoding"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -344,7 +343,7 @@ func mkValidator(tokens int64, shares sdk.Dec) Validator {
 }
 
 // Creates a new validators and asserts the error check.
-func newValidator(t *testing.T, operator sdk.ValAddress, pubKey crypto.PubKey) Validator {
+func newValidator(t *testing.T, operator sdk.ValAddress, pubKey cryptotypes.PubKey) Validator {
 	v, err := NewValidator(operator, pubKey, Description{})
 	require.NoError(t, err)
 	return v

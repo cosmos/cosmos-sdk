@@ -199,13 +199,14 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 func WriteValidators(ctx sdk.Context, keeper keeper.Keeper) (vals []tmtypes.GenesisValidator, err error) {
 	keeper.IterateLastValidators(ctx, func(_ int64, validator types.ValidatorI) (stop bool) {
 		var consPk crypto.PubKey
-		consPk, err = validator.TmConsPubKey()
+		tmPk, err := validator.TmConsPubKey()
 		if err != nil {
 			return true
 		}
+
 		vals = append(vals, tmtypes.GenesisValidator{
 			Address: sdk.ConsAddress(consPk.Address()).Bytes(),
-			PubKey:  consPk,
+			PubKey:  tmPk,
 			Power:   validator.GetConsensusPower(),
 			Name:    validator.GetMoniker(),
 		})

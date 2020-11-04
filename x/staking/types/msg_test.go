@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -61,7 +60,7 @@ func TestMsgCreateValidator(t *testing.T) {
 		CommissionRates                                            CommissionRates
 		minSelfDelegation                                          sdk.Int
 		validatorAddr                                              sdk.ValAddress
-		pubkey                                                     crypto.PubKey
+		pubkey                                                     cryptotypes.PubKey
 		bond                                                       sdk.Coin
 		expectPass                                                 bool
 	}{

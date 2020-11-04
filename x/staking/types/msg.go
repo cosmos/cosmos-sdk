@@ -3,8 +3,6 @@ package types
 import (
 	"bytes"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -141,7 +139,7 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var pubKey crypto.PubKey
+	var pubKey cryptotypes.PubKey
 	return unpacker.UnpackAny(msg.Pubkey, &pubKey)
 }
 

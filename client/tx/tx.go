@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/spf13/pflag"
-	// "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

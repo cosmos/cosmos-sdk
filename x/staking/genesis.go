@@ -5,7 +5,6 @@ import (
 	"log"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -198,14 +197,17 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 // WriteValidators returns a slice of bonded genesis validators.
 func WriteValidators(ctx sdk.Context, keeper keeper.Keeper) (vals []tmtypes.GenesisValidator, err error) {
 	keeper.IterateLastValidators(ctx, func(_ int64, validator types.ValidatorI) (stop bool) {
-		var consPk crypto.PubKey
+		pk, err := validator.ConsPubKey()
+		if err != nil {
+			return true
+		}
 		tmPk, err := validator.TmConsPubKey()
 		if err != nil {
 			return true
 		}
 
 		vals = append(vals, tmtypes.GenesisValidator{
-			Address: sdk.ConsAddress(consPk.Address()).Bytes(),
+			Address: sdk.ConsAddress(pk.Address()).Bytes(),
 			PubKey:  tmPk,
 			Power:   validator.GetConsensusPower(),
 			Name:    validator.GetMoniker(),

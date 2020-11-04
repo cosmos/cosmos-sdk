@@ -245,9 +245,15 @@ func (am AppModule) OnChanOpenTry(
 		return sdkerrors.Wrapf(types.ErrInvalidVersion, "invalid counterparty version: got: %s, expected %s", counterpartyVersion, types.Version)
 	}
 
-	// Claim channel capability passed back by IBC module
-	if err := am.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
-		return err
+	// Module may have already claimed capability in OnChanOpenInit in the case of crossing hellos
+	// (ie chainA and chainB both call ChanOpenInit before one of them calls ChanOpenTry)
+	// If module can already authenticate the capability then module already owns it so we don't need to claim
+	// Otherwise, module does not have channel capability and we must claim it from IBC
+	if !am.keeper.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) {
+		// Only claim channel capability passed back by IBC module if we do not already own it
+		if err := am.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
+			return err
+		}
 	}
 
 	return nil

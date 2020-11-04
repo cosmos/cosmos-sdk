@@ -97,46 +97,25 @@ information.
 
 ## Adding keys to the keyring
 
-Applications developed using the Cosmos SDK come with the `keys` subcommand. For the purpose of this tutorial, we're running the `simd` CLI, which is an application built using the Cosmos SDK for testing and educational purposes. For more information, see [`simapp`](https://github.com/cosmos/cosmos-sdk/tree/v0.40.0-rc1/simapp).
-
 ::: warning
 Make sure you can build your own binary, and replace `simd` with the name of your binary in the snippets.
 :::
 
-```
-$ simd keys
-Usage:
-  simd keys [command]
+Applications developed using the Cosmos SDK come with the `keys` subcommand. For the purpose of this tutorial, we're running the `simd` CLI, which is an application built using the Cosmos SDK for testing and educational purposes. For more information, see [`simapp`](https://github.com/cosmos/cosmos-sdk/tree/v0.40.0-rc1/simapp).
 
-Available Commands:
+You can use `simd keys` for help about the keys command and `simd keys [command] --help` for more information about a particular subcommand.
 
-  add         Add an encrypted private key (either newly generated or recovered), encrypt it, and save to disk
-  delete      Delete the given keys
-  export      Export private keys
-  import      Import private keys into the local keybase
-  list        List all keys
-  migrate     Migrate keys from the legacy (db-based) Keybase
-  mnemonic    Compute the bip39 mnemonic for some input entropy
-  parse       Parse address from hex to bech32 and vice versa
-  show        Retrieve key information by name or address
-
-Flags:
-  -h, --help                     help for keys
-      --keyring-backend string   Select keyring's backend (os|file|test) (default "os")
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --output string            Output format (text|json) (default "text")
-
-Global Flags:
-      --home string   directory for config and data (default "/Users/{your_username}/.simapp")
-      --trace         print out full stack trace on errors
-
-Use "simd keys [command] --help" for more information about a command.
-```
+::: tip
+You can also enable auto-completion with the `simd completion` command. For example, at the start of a bash session, run `. <(simd completion)`, and all `simd` subcommands will be auto-completed.
+:::
 
 To create a new key in the keyring, run the `add` subcommand with a `<key_name>` argument. For the purpose of this tutorial, we will solely use the `test` backend, and call our new key `my_validator`. This key will be used in the next section.
 
 ```bash
 $ simd keys add my_validator --keyring-backend test
+
+# Put the generated address in a variable for later use.
+MY_VALIDATOR_ADDRESS=$(simd keys show my_validator -a)
 ```
 
 This command generates a new 24-word mnemonic phrase, persists it to the relevant backend, and outputs information about the keypair. If this keypair will be used to hold value-bearing tokens, be sure to write down the mnemonic phrase somewhere safe!

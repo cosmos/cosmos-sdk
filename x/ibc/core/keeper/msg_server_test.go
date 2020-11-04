@@ -49,7 +49,7 @@ func TestIBCTestSuite(t *testing.T) {
 // tests the IBC handler receiving a packet on ordered and unordered channels.
 // It verifies that the storing of an acknowledgement on success occurs. It
 // tests high level properties like ordering and basic sanity checks. More
-// rigorous testing of 'RecvPacket' and 'WriteReceipt' can be found in the
+// rigorous testing of 'RecvPacket' can be found in the
 // 04-channel/keeper/packet_test.go.
 func (suite *KeeperTestSuite) TestHandleRecvPacket() {
 	var (
@@ -113,7 +113,7 @@ func (suite *KeeperTestSuite) TestHandleRecvPacket() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
 			suite.Require().NoError(err)
 		}, false},
 		{"UNORDERED: packet already received (replay)", func() {
@@ -124,7 +124,7 @@ func (suite *KeeperTestSuite) TestHandleRecvPacket() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
 			suite.Require().NoError(err)
 		}, false},
 	}
@@ -167,7 +167,7 @@ func (suite *KeeperTestSuite) TestHandleRecvPacket() {
 // tests the IBC handler acknowledgement of a packet on ordered and unordered
 // channels. It verifies that the deletion of packet commitments from state
 // occurs. It test high level properties like ordering and basic sanity
-// checks. More rigorous testing of 'AcknowledgePacket' and 'AcknowledgementExecuted'
+// checks. More rigorous testing of 'AcknowledgePacket'
 // can be found in the 04-channel/keeper/packet_test.go.
 func (suite *KeeperTestSuite) TestHandleAcknowledgePacket() {
 	var (
@@ -186,7 +186,7 @@ func (suite *KeeperTestSuite) TestHandleAcknowledgePacket() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
 			suite.Require().NoError(err)
 
 			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
@@ -199,7 +199,7 @@ func (suite *KeeperTestSuite) TestHandleAcknowledgePacket() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
 			suite.Require().NoError(err)
 
 			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
@@ -216,7 +216,7 @@ func (suite *KeeperTestSuite) TestHandleAcknowledgePacket() {
 				err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 				suite.Require().NoError(err)
 
-				err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+				err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
 				suite.Require().NoError(err)
 
 				err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
@@ -233,7 +233,7 @@ func (suite *KeeperTestSuite) TestHandleAcknowledgePacket() {
 				err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 				suite.Require().NoError(err)
 
-				err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+				err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
 				suite.Require().NoError(err)
 
 				err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
@@ -258,13 +258,14 @@ func (suite *KeeperTestSuite) TestHandleAcknowledgePacket() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
 			suite.Require().NoError(err)
 
+			// writes ibctesting.TestHash as ack
 			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.AcknowledgementExecuted(suite.chainA, suite.chainB, packet, clientB)
+			err = suite.coordinator.AcknowledgePacket(suite.chainA, suite.chainB, clientB, packet, ibctesting.TestHash)
 			suite.Require().NoError(err)
 		}, false},
 		{"UNORDERED: packet already received (replay)", func() {
@@ -275,13 +276,14 @@ func (suite *KeeperTestSuite) TestHandleAcknowledgePacket() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
 			suite.Require().NoError(err)
 
+			// writes ibctesting.TestHash as ack
 			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.AcknowledgementExecuted(suite.chainA, suite.chainB, packet, clientB)
+			err = suite.coordinator.AcknowledgePacket(suite.chainA, suite.chainB, clientB, packet, ibctesting.TestHash)
 			suite.Require().NoError(err)
 		}, false},
 	}

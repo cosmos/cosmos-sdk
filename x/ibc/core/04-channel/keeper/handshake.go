@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -79,6 +81,7 @@ func (k Keeper) ChanOpenInit(
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, channelID)
 	}
+	fmt.Println("CREATED NEW CAPABILITY:", host.ChannelCapabilityPath(portID, channelID))
 
 	k.SetNextSequenceSend(ctx, portID, channelID, 1)
 	k.SetNextSequenceRecv(ctx, portID, channelID, 1)
@@ -196,6 +199,7 @@ func (k Keeper) ChanOpenTry(
 	_, found = k.GetChannel(ctx, portID, desiredChannelID)
 	if !found {
 		capKey, err = k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, desiredChannelID))
+		fmt.Println("CREATED NEW CAPABILITY:", host.ChannelCapabilityPath(portID, desiredChannelID))
 		if err != nil {
 			return nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, desiredChannelID)
 		}

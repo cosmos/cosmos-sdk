@@ -336,7 +336,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
 			suite.Require().NoError(err)
 
 			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
@@ -399,7 +399,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketReceiptAbsence() {
 			suite.Require().NoError(err)
 
 			if tc.recvAck {
-				err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+				err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
 				suite.Require().NoError(err)
 			} else {
 				// need to update height to prove absence
@@ -458,7 +458,7 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
 			suite.Require().NoError(err)
 
 			nextSeqRecvKey := host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())

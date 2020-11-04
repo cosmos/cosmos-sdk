@@ -56,18 +56,20 @@ A general pseudo algorithm would look like the following:
 4. Retrieve the the client identifier or chain identifier from the client state (eg: on
    Tendermint clients) and store it locally.
 
-Using the gRPC gataway client service the steps above would be, with a given IBC token `ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2`:
+Using the gRPC gataway client service the steps above would be, with a given IBC token `ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2` stored on `chainB`:
 
 1. `GET /ibc_transfer/v1beta1/denom_traces/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2` -> `{"path": "transfer/channelToA", "base_denom": "uatom"}`
 2. `GET /ibc/channel/v1beta1/channels/channelToA/ports/transfer/client_state"` -> `{"client_id": "clientA", "chain-id": "chainA", ...}`
 3. `GET /ibc/channel/v1beta1/channels/channelToA/ports/transfer"` -> `{"channel_id": "channelToA", port_id": "transfer", counterparty: {"channel_id": "channelToB", port_id": "transfer"}, ...}`
 4. `GET /ibc/channel/v1beta1/channels/channelToB/ports/transfer/client_state" -> {"client_id": "clientB", "chain-id": "chainB", ...}`
 
-Then, the token transfer chain path for the `uatom` denomination would be: `chainB` -> `chainA`.
+Then, the token transfer chain path for the `uatom` denomination would be: `chainA` -> `chainB`.
 
-### Multiple connection hops
+### Multiple hops
 
-The IBC protocol doesn't know the topology of the overall network (i.e connections between chains and identifier names between them). In the concrete case of fungible token transfers with more than one connection hop, a particular chain in the timeline of the individual transfers can't query the chain and client identifiers of the other chains.
+The multiple channel hops case applies when the token has passed through multiple chains between the original source and final destination chains.
+
+The IBC protocol doesn't know the topology of the overall network (i.e connections between chains and identifier names between them). For this reason, in the the multiple hops case, a particular chain in the timeline of the individual transfers can't query the chain and client identifiers of the other chains.
 
 Take for example the following sequence of transfers `A -> B -> C` for an IBC token, with a final prefix path (trace info) of `transfer/channelChainC/transfer/channelChainB`. What the paragraph above means is that is that even in the case that chain `C` is directly connected to chain `A`, querying the port and channel identifiers that chain `B` uses to connect to chain `A` (eg: `transfer/channelChainA`) can be completely different from the one that chain `C` uses to connect to chain `A` (eg: `transfer/channelToChainA`).
 
@@ -81,10 +83,11 @@ Thus the proposed solution for clients that the IBC team recommends are the foll
 - **Relayer as a Service (RaaS)**: A longer term solution is to use/create a relayer service that
   could map the denomination trace to the chain path timeline for each token (i.e `origin chain ->
   chain #1 -> ... -> chain #(n-1) -> final chain`). These services could provide merkle proofs in
-  order to allow clients to optionally verify the path timeline correctness for themselves.
-  Additionally, client would be advised in the future to use RaaS that support the largest number of
-  connections between chains in the ecosystem. Unfortunately, none of the existing public relayers
-  (in [Golang](https://github.com/cosmos/relayer) and
+  order to allow clients to optionally verify the path timeline correctness for themselves by
+  running light clients. If the proofs are not verified, they should be considered as trusted third
+  parties services. Additionally, client would be advised in the future to use RaaS that support the
+  largest number of connections between chains in the ecosystem. Unfortunately, none of the existing
+  public relayers (in [Golang](https://github.com/cosmos/relayer) and
   [Rust](https://github.com/informalsystems/ibc-rs)), provide this service to clients.
 
 ::: tip
@@ -99,3 +102,10 @@ To mitigate this, a client update governance proposal can be submitted to update
 with a new valid header. Once the proposal passes the client state will be unfrozen and the funds
 from the associated channels will then be unlocked. This mechanism only applies to clients that
 allow updates via governance, such as Tendermint clients.
+
+In addition to this, it's important to mention that a token must be sent back along the exact route
+that it took originally un order to return it to its original form on the source chain (eg: the
+Cosmos Hub for the `uatom`). Sending a token back to the same chain across a different channel will
+**not** move the token back across its timeline. If a channel in the chain history closes before the
+token can be sent back across that channel, then the token will not be returnable to its original
+form.

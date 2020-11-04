@@ -4,7 +4,7 @@ order: 1
 
 # Setting up the keyring
 
-This document describes how to configure and use the keyring and its various backends for an [**application**](../basics/app-anatomy.md). A separate document for implementing a CLI for an SDK [**module**](../building-modules/intro.md) can be found [here](#../building-modules/module-interfaces.md#cli). {synopsis}
+This document describes how to configure and use the keyring and its various backends for an [**application**](../basics/app-anatomy.md). {synopsis}
 
 The keyring holds the private/public keypairs used to interact with a node. For instance, a validator key needs to be set up before running the blockchain node, so that blocks can be correctly signed. The private key can be stored in different locations, called "backends", such as a file or the operating system's own key storage.
 

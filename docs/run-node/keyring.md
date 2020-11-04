@@ -18,8 +18,8 @@ all operating systems.
 ### The `os` backend
 
 The `os` backend relies on operating system-specific defaults to handle key storage
-securely. Typically, operating systems credentials sub-systems handle passwords prompt,
-private keys storage, and user sessions according to their users password policies. Here
+securely. Typically, an operating system's credential sub-system handles password prompts,
+private keys storage, and user sessions according to the user's password policies. Here
 is a list of the most popular operating systems and their respective passwords manager:
 
 - macOS (since Mac OS 8.6): [Keychain](https://support.apple.com/en-gb/guide/keychain-access/welcome/mac)

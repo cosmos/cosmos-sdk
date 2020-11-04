@@ -9,7 +9,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmprotoversion "github.com/tendermint/tendermint/proto/tendermint/version"
@@ -109,7 +108,7 @@ type TestChain struct {
 	Vals    *tmtypes.ValidatorSet
 	Signers []tmtypes.PrivValidator
 
-	senderPrivKey crypto.PrivKey
+	senderPrivKey cryptotypes.PrivKey
 	SenderAccount authtypes.AccountI
 
 	// IBC specific helpers

@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -100,7 +101,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 	var validators stakingtypes.Validators
 	for i := 1; i < 11; i++ {
 		privVal := ibctestingmock.NewPV()
-		pk, err := privVal.GetPubKey()
+		tmPk, err := privVal.GetPubKey()
+		suite.Require().NoError(err)
+		pk, err := cryptocodec.FromTmPubKey(tmPk)
 		suite.Require().NoError(err)
 		val, err := stakingtypes.NewValidator(sdk.ValAddress(pk.Address()), pk, stakingtypes.Description{})
 		suite.Require().NoError(err)

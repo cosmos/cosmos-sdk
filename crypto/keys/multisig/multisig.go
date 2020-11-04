@@ -30,7 +30,7 @@ func NewLegacyAminoPubKey(k int, pubKeys []cryptotypes.PubKey) *LegacyAminoPubKe
 	return &LegacyAminoPubKey{Threshold: uint32(k), PubKeys: anyPubKeys}
 }
 
-// Address implements crypto.PubKey Address method
+// Address implements cryptotypes.PubKey Address method
 func (m *LegacyAminoPubKey) Address() cryptotypes.Address {
 	return tmcrypto.AddressHash(m.Bytes())
 }

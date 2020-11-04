@@ -4,8 +4,9 @@ import (
 	"os"
 	"testing"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/stretchr/testify/require"
+
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 type byter interface {

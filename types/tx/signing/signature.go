@@ -3,8 +3,6 @@ package signing
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
@@ -105,5 +103,5 @@ func (sds *SignatureDescriptors) UnpackInterfaces(unpacker codectypes.AnyUnpacke
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (sd *SignatureDescriptor) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	return unpacker.UnpackAny(sd.PublicKey, new(crypto.PubKey))
+	return unpacker.UnpackAny(sd.PublicKey, new(cryptotypes.PubKey))
 }

@@ -176,7 +176,7 @@ func TestParseQueryHeight(t *testing.T) {
 func TestProcessPostResponse(t *testing.T) {
 	// mock account
 	// PubKey field ensures amino encoding is used first since standard
-	// JSON encoding will panic on crypto.PubKey
+	// JSON encoding will panic on cryptotypes.PubKey
 
 	t.Parallel()
 	type mockAccount struct {

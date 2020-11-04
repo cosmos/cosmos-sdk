@@ -1,15 +1,12 @@
 package tx
 
 import (
-	"fmt"
-
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -366,11 +363,7 @@ func (w *wrapper) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 	w.bodyBz = nil
 }
 
-// PubKeyToAny converts a crypto.PubKey to a proto Any.
+// PubKeyToAny converts a cryptotypes.PubKey to a proto Any.
 func PubKeyToAny(key cryptotypes.PubKey) (*codectypes.Any, error) {
-	protoMsg, ok := key.(proto.Message)
-	if !ok {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, fmt.Sprintf("can't proto encode %T", protoMsg))
-	}
-	return codectypes.NewAnyWithValue(protoMsg)
+	return codectypes.NewAnyWithValue(key)
 }

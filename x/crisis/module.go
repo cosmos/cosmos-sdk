@@ -3,6 +3,7 @@ package crisis
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -12,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/crisis/client/cli"
@@ -22,6 +24,11 @@ import (
 var (
 	_ module.AppModule      = AppModule{}
 	_ module.AppModuleBasic = AppModuleBasic{}
+)
+
+// Module init related flags
+const (
+	FlagSkipGenesisInvariants = "x-crisis-skip-assert-invariants"
 )
 
 // AppModuleBasic defines the basic application module used by the crisis module.
@@ -56,8 +63,8 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 // RegisterRESTRoutes registers no REST routes for the crisis module.
 func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
-// RegisterGRPCRoutes registers the gRPC Gateway routes for the capability module.
-func (AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {}
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the capability module.
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *runtime.ServeMux) {}
 
 // GetTxCmd returns the root tx command for the crisis module.
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -83,14 +90,26 @@ type AppModule struct {
 	// manager is created, the invariants can be properly registered and
 	// executed.
 	keeper *keeper.Keeper
+
+	skipGenesisInvariants bool
 }
 
-// NewAppModule creates a new AppModule object
-func NewAppModule(keeper *keeper.Keeper) AppModule {
+// NewAppModule creates a new AppModule object. If initChainAssertInvariants is set,
+// we will call keeper.AssertInvariants during InitGenesis (it may take a significant time)
+// - which doesn't impact the chain security unless 66+% of validators have a wrongly
+// modified genesis file.
+func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
+
+		skipGenesisInvariants: skipGenesisInvariants,
 	}
+}
+
+// AddModuleInitFlags implements servertypes.ModuleInitFlags interface.
+func AddModuleInitFlags(startCmd *cobra.Command) {
+	startCmd.Flags().Bool(FlagSkipGenesisInvariants, false, "Skip x/crisis invariants check on startup")
 }
 
 // Name returns the crisis module's name.
@@ -112,17 +131,23 @@ func (AppModule) QuerierRoute() string { return "" }
 // LegacyQuerierHandler returns no sdk.Querier.
 func (AppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier { return nil }
 
-// RegisterQueryService registers a GRPC query service to respond to the
-// module-specific GRPC queries.
-func (am AppModule) RegisterServices(module.Configurator) {}
+// RegisterServices registers module services.
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), am.keeper)
+}
 
 // InitGenesis performs genesis initialization for the crisis module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
+	start := time.Now()
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
+	telemetry.MeasureSince(start, "InitGenesis", "crisis", "unmarshal")
+
 	am.keeper.InitGenesis(ctx, &genesisState)
-	am.keeper.AssertInvariants(ctx)
+	if !am.skipGenesisInvariants {
+		am.keeper.AssertInvariants(ctx)
+	}
 	return []abci.ValidatorUpdate{}
 }
 

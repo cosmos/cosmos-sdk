@@ -100,7 +100,7 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, 
 
 		msg := types.NewMsgSetWithdrawAddress(simAccount.Address, simToAccount.Address)
 
-		txGen := simappparams.MakeEncodingConfig().TxConfig
+		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
@@ -115,7 +115,7 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, 
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
-		_, _, err = app.Deliver(tx)
+		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
@@ -152,7 +152,7 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKee
 
 		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address, validator.GetOperator())
 
-		txGen := simappparams.MakeEncodingConfig().TxConfig
+		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
@@ -167,7 +167,7 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKee
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
-		_, _, err = app.Deliver(tx)
+		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
@@ -207,7 +207,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 
 		msg := types.NewMsgWithdrawValidatorCommission(validator.GetOperator())
 
-		txGen := simappparams.MakeEncodingConfig().TxConfig
+		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
@@ -222,7 +222,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
-		_, _, err = app.Deliver(tx)
+		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
@@ -262,7 +262,7 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 		}
 
 		msg := types.NewMsgFundCommunityPool(fundAmount, funder.Address)
-		txGen := simappparams.MakeEncodingConfig().TxConfig
+		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},
@@ -277,7 +277,7 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
-		_, _, err = app.Deliver(tx)
+		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}

@@ -4,9 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/utils"
-
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/rpc/client/mock"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -14,8 +11,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -148,7 +147,7 @@ func TestGetPaginatedVotes(t *testing.T) {
 				cdc        = newTestCodec()
 			)
 
-			encodingConfig := simapp.MakeEncodingConfig()
+			encodingConfig := simapp.MakeTestEncodingConfig()
 			cli := TxSearchMock{txs: marshalled}
 			clientCtx := client.Context{}.
 				WithLegacyAmino(cdc).

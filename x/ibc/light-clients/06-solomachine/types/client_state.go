@@ -89,7 +89,6 @@ func (cs ClientState) VerifyUpgrade(
 func (cs ClientState) VerifyClientState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	_ exported.Root,
 	height exported.Height,
 	prefix exported.Prefix,
 	counterpartyClientIdentifier string,
@@ -127,7 +126,6 @@ func (cs ClientState) VerifyClientState(
 func (cs ClientState) VerifyClientConsensusState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	_ exported.Root,
 	height exported.Height,
 	counterpartyClientIdentifier string,
 	consensusHeight exported.Height,
@@ -439,10 +437,10 @@ func produceVerificationArgs(
 	}
 
 	latestSequence := cs.GetLatestHeight().GetVersionHeight()
-	if latestSequence < sequence {
+	if latestSequence != sequence {
 		return nil, 0, 0, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
-			"client state sequence < proof sequence (%d < %d)", latestSequence, sequence,
+			"client state sequence != proof sequence (%d != %d)", latestSequence, sequence,
 		)
 	}
 

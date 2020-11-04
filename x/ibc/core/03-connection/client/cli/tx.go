@@ -2,13 +2,16 @@ package cli
 
 import (
 	"fmt"
+	"io/ioutil"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/client/utils"
@@ -53,7 +56,7 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 				return err
 			}
 
-			var encodedVersion string
+			var version *types.Version
 			versionIdentifier, _ := cmd.Flags().GetString(flagVersionIdentifier)
 
 			if versionIdentifier != "" {
@@ -64,16 +67,12 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 					features = strings.Split(versionFeatures, ",")
 				}
 
-				version := types.NewVersion(versionIdentifier, features)
-				encodedVersion, err = version.Encode()
-				if err != nil {
-					return err
-				}
+				version = types.NewVersion(versionIdentifier, features)
 			}
 
 			msg := types.NewMsgConnectionOpenInit(
 				connectionID, clientID, counterpartyConnectionID, counterpartyClientID,
-				counterpartyPrefix, encodedVersion, clientCtx.GetFromAddress(),
+				counterpartyPrefix, version, clientCtx.GetFromAddress(),
 			)
 
 			if err := msg.ValidateBasic(); err != nil {
@@ -99,9 +98,9 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: strings.TrimSpace(`open-try [connection-id] [client-id]
 [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] [path/to/client_state.json]
-[counterparty-versions] [consensus-height] [proof-height] [path/to/proof_init.json] [path/to/proof_client.json] [path/to/proof_consensus.json]`),
+[path/to/counterparty_version1.json,path/to/counterparty_version2.json...] [consensus-height] [proof-height] [path/to/proof_init.json] [path/to/proof_client.json] [path/to/proof_consensus.json]`),
 		Short: "initiate connection handshake between two chains",
-		Long:  "Initialize a connection on chain A with a given counterparty chain B",
+		Long:  "Initialize a connection on chain A with a given counterparty chain B. Provide counterparty versions separated by commas",
 		Example: fmt.Sprintf(
 			`%s tx %s %s open-try connection-id] [client-id] \
 [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] [path/to/client_state.json]\
@@ -132,8 +131,28 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 				return err
 			}
 
-			// TODO: parse strings?
-			counterpartyVersions := args[6]
+			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+
+			versionsStr := strings.Split(args[6], ",")
+			counterpartyVersions := make([]*types.Version, len(versionsStr))
+
+			for _, ver := range versionsStr {
+
+				// attempt to unmarshal version
+				version := &types.Version{}
+				if err := cdc.UnmarshalJSON([]byte(ver), version); err != nil {
+
+					// check for file path if JSON input is not provided
+					contents, err := ioutil.ReadFile(ver)
+					if err != nil {
+						return errors.Wrap(err, "neither JSON input nor path to .json file for version were provided")
+					}
+
+					if err := cdc.UnmarshalJSON(contents, version); err != nil {
+						return errors.Wrap(err, "error unmarshalling version file")
+					}
+				}
+			}
 
 			consensusHeight, err := clienttypes.ParseHeight(args[7])
 			if err != nil {
@@ -161,7 +180,7 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 
 			msg := types.NewMsgConnectionOpenTry(
 				connectionID, provedID, clientID, counterpartyConnectionID, counterpartyClientID,
-				counterpartyClient, counterpartyPrefix, []string{counterpartyVersions},
+				counterpartyClient, counterpartyPrefix, counterpartyVersions,
 				proofInit, proofClient, proofConsensus, proofHeight,
 				consensusHeight, clientCtx.GetFromAddress(),
 			)
@@ -233,7 +252,22 @@ func NewConnectionOpenAckCmd() *cobra.Command {
 				return err
 			}
 
-			version := args[8]
+			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+
+			// attempt to unmarshal version
+			version := &types.Version{}
+			if err := cdc.UnmarshalJSON([]byte(args[8]), version); err != nil {
+
+				// check for file path if JSON input is not provided
+				contents, err := ioutil.ReadFile(args[8])
+				if err != nil {
+					return errors.Wrap(err, "neither JSON input nor path to .json file for version were provided")
+				}
+
+				if err := cdc.UnmarshalJSON(contents, version); err != nil {
+					return errors.Wrap(err, "error unmarshalling version file")
+				}
+			}
 
 			msg := types.NewMsgConnectionOpenAck(
 				connectionID, counterpartyConnectionID, counterpartyClient, proofTry, proofClient, proofConsensus, proofHeight,

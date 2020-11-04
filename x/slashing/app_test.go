@@ -63,13 +63,14 @@ func TestSlashingMsgs(t *testing.T) {
 	description := stakingtypes.NewDescription("foo_moniker", "", "", "", "")
 	commission := stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 
-	createValidatorMsg := stakingtypes.NewMsgCreateValidator(
+	createValidatorMsg, err := stakingtypes.NewMsgCreateValidator(
 		sdk.ValAddress(addr1), valKey.PubKey(), bondCoin, description, commission, sdk.OneInt(),
 	)
+	require.NoError(t, err)
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
-	txGen := simapp.MakeEncodingConfig().TxConfig
-	_, _, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
+	txGen := simapp.MakeTestEncodingConfig().TxConfig
+	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
 	require.NoError(t, err)
 	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin.Sub(bondCoin)})
 

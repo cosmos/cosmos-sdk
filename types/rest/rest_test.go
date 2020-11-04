@@ -307,7 +307,7 @@ func TestParseQueryParamBool(t *testing.T) {
 func TestPostProcessResponseBare(t *testing.T) {
 	t.Parallel()
 
-	encodingConfig := simappparams.MakeEncodingConfig()
+	encodingConfig := simappparams.MakeTestEncodingConfig()
 	clientCtx := client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino) // amino used intentionally here

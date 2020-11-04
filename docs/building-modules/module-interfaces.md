@@ -97,7 +97,7 @@ Similarly, there is a `AddQueryFlagsToCmd(cmd *cobra.Command)` to add common fla
 
 In addition to providing an ABCI query pathway, modules [custom queries](./messages-and-queries.md#grpc-queries) can provide a GRPC proxy server that routes requests in the GRPC protocol to ABCI query requests under the hood.
 
-In order to do that, module should implement `RegisterGRPCRoutes(clientCtx client.Context, mux *runtime.ServeMux)` on `AppModuleBasic` to wire the client gRPC requests to the correct handler inside the module.
+In order to do that, module should implement `RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux)` on `AppModuleBasic` to wire the client gRPC requests to the correct handler inside the module.
 
 Here's an example from the `auth` module:
 

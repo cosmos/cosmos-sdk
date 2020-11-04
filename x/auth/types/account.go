@@ -15,7 +15,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var (
@@ -84,23 +83,12 @@ func (acc BaseAccount) GetPubKey() (pk cryptotypes.PubKey) {
 }
 
 // SetPubKey - Implements sdk.AccountI.
-func (acc *BaseAccount) SetPubKey(pubKey cryptotypes.PubKey) error {
-	if pubKey == nil {
-		acc.PubKey = nil
-	} else {
-		protoMsg, ok := pubKey.(proto.Message)
-		if !ok {
-			return sdkerrors.ErrInvalidPubKey
-		}
-
-		any, err := codectypes.NewAnyWithValue(protoMsg)
-		if err != nil {
-			return err
-		}
-
-		acc.PubKey = any
+func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
+	any, err := codectypes.PackAny(pubKey)
+	if err != nil {
+		return err
 	}
-
+	acc.PubKey = any
 	return nil
 }
 

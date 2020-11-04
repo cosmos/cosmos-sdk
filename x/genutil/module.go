@@ -56,8 +56,8 @@ func (b AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, txEncodingConfi
 // RegisterRESTRoutes registers the REST routes for the genutil module.
 func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
-// RegisterGRPCRoutes registers the gRPC Gateway routes for the genutil module.
-func (AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the genutil module.
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *runtime.ServeMux) {
 }
 
 // GetTxCmd returns no root tx command for the genutil module.
@@ -98,7 +98,11 @@ func NewAppModule(accountKeeper types.AccountKeeper,
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	return InitGenesis(ctx, am.stakingKeeper, am.deliverTx, genesisState, am.txEncodingConfig)
+	validators, err := InitGenesis(ctx, am.stakingKeeper, am.deliverTx, genesisState, am.txEncodingConfig)
+	if err != nil {
+		panic(err)
+	}
+	return validators
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the genutil

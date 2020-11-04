@@ -108,7 +108,7 @@ func sendMsgSend(
 			return err
 		}
 	}
-	txGen := simappparams.MakeEncodingConfig().TxConfig
+	txGen := simappparams.MakeTestEncodingConfig().TxConfig
 	tx, err := helpers.GenTx(
 		txGen,
 		[]sdk.Msg{msg},
@@ -123,7 +123,7 @@ func sendMsgSend(
 		return err
 	}
 
-	_, _, err = app.Deliver(tx)
+	_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 	if err != nil {
 		return err
 	}
@@ -265,7 +265,7 @@ func sendMsgMultiSend(
 		}
 	}
 
-	txGen := simappparams.MakeEncodingConfig().TxConfig
+	txGen := simappparams.MakeTestEncodingConfig().TxConfig
 	tx, err := helpers.GenTx(
 		txGen,
 		[]sdk.Msg{msg},
@@ -280,7 +280,7 @@ func sendMsgMultiSend(
 		return err
 	}
 
-	_, _, err = app.Deliver(tx)
+	_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 	if err != nil {
 		return err
 	}

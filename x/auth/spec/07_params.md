@@ -14,3 +14,4 @@ The auth module contains the following parameters:
 | SigVerifyCostED25519   | string (uint64) | "590"   |
 | SigVerifyCostSecp256k1 | string (uint64) | "1000"  |
 | PubKeyChangeCost       | string (uint64) | "5000"  |
+| EnableChangePubKey     | string (bool)   | "true"  |

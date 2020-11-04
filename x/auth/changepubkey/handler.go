@@ -36,7 +36,11 @@ func handleMsgChangePubKey(ctx sdk.Context, ak keeper.AccountKeeper, msg *types.
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "signers should exist")
 	}
 
-	amount := ak.GetParams(ctx).PubKeyChangeCost
+	authParams := ak.GetParams(ctx)
+	if authParams.EnableChangePubKey == false {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "change pubkey param is disabled")
+	}
+	amount := authParams.PubKeyChangeCost
 	ctx.GasMeter().ConsumeGas(amount, "pubkey change fee")
 
 	ctx.EventManager().EmitEvent(

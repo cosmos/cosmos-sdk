@@ -3,8 +3,9 @@ package unknownproto_test
 import (
 	"encoding/hex"
 	"io"
-	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 )
@@ -19,10 +20,7 @@ func TestBadBytesPassedIntoDecoder(t *testing.T) {
 
 	// TODO: File an issue to ensure that sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 	// properly wraps errors to be compatible with errors.Is, otherwise right now it doesn't work correctly.
-	if !strings.Contains(err.Error(), io.ErrUnexpectedEOF.Error()) {
-		t.Errorf("Expected the error to have been wrapped as io.ErrUnexpectedEOF,\n\tgot:\n%q", err)
-	}
-	if tx != nil {
-		t.Fatalf("Unexpectedly returned a non-nil Tx: %#v", tx)
-	}
+
+	require.Contains(t, err.Error(), io.ErrUnexpectedEOF.Error())
+	require.Nil(t, tx)
 }

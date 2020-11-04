@@ -46,6 +46,12 @@ func (msg MsgChannelOpenInit) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
+	if msg.Channel.State != INIT {
+		return sdkerrors.Wrapf(ErrInvalidChannelState,
+			"channel state must be INIT in MsgChannelOpenInit. expected: %s, got: %s",
+			INIT, msg.Channel.State,
+		)
+	}
 	// Signer can be empty
 	return msg.Channel.ValidateBasic()
 }
@@ -75,7 +81,7 @@ func NewMsgChannelOpenTry(
 	proofInit []byte, proofHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgChannelOpenTry {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
-	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
+	channel := NewChannel(TRYOPEN, channelOrder, counterparty, connectionHops, version)
 	return &MsgChannelOpenTry{
 		PortId:                      portID,
 		DesiredChannelId:            desiredChannelID,
@@ -114,6 +120,12 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 	}
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
+	}
+	if msg.Channel.State != TRYOPEN {
+		return sdkerrors.Wrapf(ErrInvalidChannelState,
+			"channel state must be TRYOPEN in MsgChannelOpenTry. expected: %s, got: %s",
+			TRYOPEN, msg.Channel.State,
+		)
 	}
 	// Signer can be empty
 	return msg.Channel.ValidateBasic()

@@ -94,7 +94,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	validator := tmtypes.NewValidator(pubKey.(cryptotypes.IntoTmPubKey).AsTmPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	suite.valSetHash = suite.valSet.Hash()
-	suite.header = ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeightMinus1, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	suite.header = suite.chainA.CreateTMClientHeader(testChainID, int64(testClientHeight.VersionHeight), testClientHeightMinus1, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.consensusState = ibctmtypes.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot([]byte("hash")), suite.valSetHash)
 
 	var validators stakingtypes.Validators
@@ -102,13 +102,23 @@ func (suite *KeeperTestSuite) SetupTest() {
 		privVal := ibctestingmock.NewPV()
 		pk, err := privVal.GetPubKey()
 		suite.Require().NoError(err)
-		val := stakingtypes.NewValidator(sdk.ValAddress(pk.Address()), pk, stakingtypes.Description{})
-		val.Status = sdk.Bonded
+		val, err := stakingtypes.NewValidator(sdk.ValAddress(pk.Address()), pk, stakingtypes.Description{})
+		suite.Require().NoError(err)
+
+		val.Status = stakingtypes.Bonded
 		val.Tokens = sdk.NewInt(rand.Int63())
 		validators = append(validators, val)
 
-		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), stakingtypes.NewHistoricalInfo(suite.ctx.BlockHeader(), validators))
+		hi := stakingtypes.NewHistoricalInfo(suite.ctx.BlockHeader(), validators)
+		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), &hi)
 	}
+
+	// add localhost client
+	version := types.ParseChainID(suite.chainA.ChainID)
+	localHostClient := localhosttypes.NewClientState(
+		suite.chainA.ChainID, types.NewHeight(version, uint64(suite.chainA.GetContext().BlockHeight())),
+	)
+	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), exported.Localhost, localHostClient)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.IBCKeeper.ClientKeeper)
@@ -242,15 +252,15 @@ func (suite KeeperTestSuite) TestGetAllClients() {
 	}
 
 	for i := range expClients {
-		suite.keeper.SetClientState(suite.ctx, clientIDs[i], expClients[i])
+		suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientIDs[i], expClients[i])
 	}
 
 	// add localhost client
-	localHostClient, found := suite.keeper.GetClientState(suite.ctx, exported.Localhost)
+	localHostClient, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), exported.Localhost)
 	suite.Require().True(found)
 	expClients = append(expClients, localHostClient)
 
-	clients := suite.keeper.GetAllClients(suite.ctx)
+	clients := suite.chainA.App.IBCKeeper.ClientKeeper.GetAllClients(suite.chainA.GetContext())
 	suite.Require().Len(clients, len(expClients))
 	suite.Require().Equal(expClients, clients)
 }
@@ -268,16 +278,16 @@ func (suite KeeperTestSuite) TestGetAllGenesisClients() {
 	expGenClients := make([]types.IdentifiedClientState, len(expClients))
 
 	for i := range expClients {
-		suite.keeper.SetClientState(suite.ctx, clientIDs[i], expClients[i])
+		suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientIDs[i], expClients[i])
 		expGenClients[i] = types.NewIdentifiedClientState(clientIDs[i], expClients[i])
 	}
 
 	// add localhost client
-	localHostClient, found := suite.keeper.GetClientState(suite.ctx, exported.Localhost)
+	localHostClient, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), exported.Localhost)
 	suite.Require().True(found)
 	expGenClients = append(expGenClients, types.NewIdentifiedClientState(exported.Localhost, localHostClient))
 
-	genClients := suite.keeper.GetAllGenesisClients(suite.ctx)
+	genClients := suite.chainA.App.IBCKeeper.ClientKeeper.GetAllGenesisClients(suite.chainA.GetContext())
 
 	suite.Require().Equal(expGenClients, genClients)
 }
@@ -319,7 +329,7 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 
 	testClientHeightPlus5 := types.NewHeight(0, height+5)
 
-	header := ibctmtypes.CreateTestHeader(testClientID, testClientHeightPlus5, testClientHeight, suite.header.Header.Time.Add(time.Minute),
+	header := suite.chainA.CreateTMClientHeader(testClientID, int64(testClientHeightPlus5.VersionHeight), testClientHeight, suite.header.Header.Time.Add(time.Minute),
 		suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 
 	// mock update functionality

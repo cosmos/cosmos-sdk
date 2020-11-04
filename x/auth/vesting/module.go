@@ -3,7 +3,6 @@ package vesting
 import (
 	"encoding/json"
 
-	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -58,9 +57,9 @@ func (AppModuleBasic) ValidateGenesis(_ codec.JSONMarshaler, _ client.TxEncoding
 // RegisterRESTRoutes registers module's REST handlers. Currently, this is a no-op.
 func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
-// RegisterGRPCRoutes registers the module's gRPC Gateway routes. Currently, this
+// RegisterGRPCGatewayRoutes registers the module's gRPC Gateway routes. Currently, this
 // is a no-op.
-func (a AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {}
+func (a AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *runtime.ServeMux) {}
 
 // GetTxCmd returns the root tx command for the auth module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -101,8 +100,10 @@ func (am AppModule) Route() sdk.Route {
 // functionality.
 func (AppModule) QuerierRoute() string { return "" }
 
-// RegisterQueryService performs a no-op.
-func (am AppModule) RegisterQueryService(_ grpc.Server) {}
+// RegisterServices registers module services.
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), NewMsgServerImpl(am.accountKeeper, am.bankKeeper))
+}
 
 // LegacyQuerierHandler performs a no-op.
 func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {

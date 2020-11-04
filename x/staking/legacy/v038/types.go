@@ -30,7 +30,7 @@ type (
 		OperatorAddress         sdk.ValAddress         `json:"operator_address" yaml:"operator_address"`
 		ConsPubKey              crypto.PubKey          `json:"consensus_pubkey" yaml:"consensus_pubkey"`
 		Jailed                  bool                   `json:"jailed" yaml:"jailed"`
-		Status                  sdk.BondStatus         `json:"status" yaml:"status"`
+		Status                  v034staking.BondStatus `json:"status" yaml:"status"`
 		Tokens                  sdk.Int                `json:"tokens" yaml:"tokens"`
 		DelegatorShares         sdk.Dec                `json:"delegator_shares" yaml:"delegator_shares"`
 		Description             Description            `json:"description" yaml:"description"`
@@ -44,7 +44,7 @@ type (
 		OperatorAddress         sdk.ValAddress         `json:"operator_address" yaml:"operator_address"`
 		ConsPubKey              string                 `json:"consensus_pubkey" yaml:"consensus_pubkey"`
 		Jailed                  bool                   `json:"jailed" yaml:"jailed"`
-		Status                  sdk.BondStatus         `json:"status" yaml:"status"`
+		Status                  v034staking.BondStatus `json:"status" yaml:"status"`
 		Tokens                  sdk.Int                `json:"tokens" yaml:"tokens"`
 		DelegatorShares         sdk.Dec                `json:"delegator_shares" yaml:"delegator_shares"`
 		Description             Description            `json:"description" yaml:"description"`
@@ -56,8 +56,16 @@ type (
 
 	Validators []Validator
 
+	Params struct {
+		UnbondingTime     time.Duration `json:"unbonding_time" yaml:"unbonding_time"`         // time duration of unbonding
+		MaxValidators     uint16        `json:"max_validators" yaml:"max_validators"`         // maximum number of validators (max uint16 = 65535)
+		MaxEntries        uint16        `json:"max_entries" yaml:"max_entries"`               // max entries for either unbonding delegation or redelegation (per pair/trio)
+		HistoricalEntries uint16        `json:"historical_entries" yaml:"historical_entries"` // number of historical entries to persist
+		BondDenom         string        `json:"bond_denom" yaml:"bond_denom"`                 // bondable coin denomination
+	}
+
 	GenesisState struct {
-		Params               v034staking.Params                `json:"params"`
+		Params               Params                            `json:"params"`
 		LastTotalPower       sdk.Int                           `json:"last_total_power"`
 		LastValidatorPowers  []v034staking.LastValidatorPower  `json:"last_validator_powers"`
 		Validators           Validators                        `json:"validators"`
@@ -87,7 +95,13 @@ func NewGenesisState(
 ) GenesisState {
 
 	return GenesisState{
-		Params:               params,
+		Params: Params{
+			UnbondingTime:     params.UnbondingTime,
+			MaxValidators:     params.MaxValidators,
+			MaxEntries:        params.MaxEntries,
+			BondDenom:         params.BondDenom,
+			HistoricalEntries: 0,
+		},
 		LastTotalPower:       lastTotalPower,
 		LastValidatorPowers:  lastValPowers,
 		Validators:           validators,

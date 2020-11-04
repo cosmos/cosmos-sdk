@@ -31,10 +31,8 @@ package module
 import (
 	"encoding/json"
 
-	"github.com/gogo/protobuf/grpc"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -57,7 +55,7 @@ type AppModuleBasic interface {
 
 	// client functionality
 	RegisterRESTRoutes(client.Context, *mux.Router)
-	RegisterGRPCRoutes(client.Context, *runtime.ServeMux)
+	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
 	GetTxCmd() *cobra.Command
 	GetQueryCmd() *cobra.Command
 }
@@ -116,10 +114,10 @@ func (bm BasicManager) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rou
 	}
 }
 
-// RegisterGRPCRoutes registers all module rest routes
-func (bm BasicManager) RegisterGRPCRoutes(clientCtx client.Context, rtr *runtime.ServeMux) {
+// RegisterGRPCGatewayRoutes registers all module rest routes
+func (bm BasicManager) RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *runtime.ServeMux) {
 	for _, b := range bm {
-		b.RegisterGRPCRoutes(clientCtx, rtr)
+		b.RegisterGRPCGatewayRoutes(clientCtx, rtr)
 	}
 }
 
@@ -173,8 +171,8 @@ type AppModule interface {
 	// Deprecated: use RegisterQueryService
 	LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier
 
-	// RegisterQueryService allows a module to register a gRPC query service
-	RegisterQueryService(grpc.Server)
+	// RegisterServices allows a module to register services
+	RegisterServices(Configurator)
 
 	// ABCI
 	BeginBlock(sdk.Context, abci.RequestBeginBlock)
@@ -207,8 +205,8 @@ func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 // LegacyQuerierHandler returns an empty module querier
 func (gam GenesisOnlyAppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier { return nil }
 
-// RegisterQueryService registers all gRPC query services.
-func (gam GenesisOnlyAppModule) RegisterQueryService(grpc.Server) {}
+// RegisterServices registers all services.
+func (gam GenesisOnlyAppModule) RegisterServices(Configurator) {}
 
 // BeginBlock returns an empty module begin-block
 func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
@@ -279,19 +277,19 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 // RegisterRoutes registers all module routes and module querier routes
 func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter, legacyQuerierCdc *codec.LegacyAmino) {
 	for _, module := range m.Modules {
-		if !module.Route().Empty() {
-			router.AddRoute(module.Route())
+		if r := module.Route(); !r.Empty() {
+			router.AddRoute(r)
 		}
-		if module.QuerierRoute() != "" {
-			queryRouter.AddRoute(module.QuerierRoute(), module.LegacyQuerierHandler(legacyQuerierCdc))
+		if r := module.QuerierRoute(); r != "" {
+			queryRouter.AddRoute(r, module.LegacyQuerierHandler(legacyQuerierCdc))
 		}
 	}
 }
 
-// RegisterQueryServices registers all module query services
-func (m *Manager) RegisterQueryServices(grpcRouter grpc.Server) {
+// RegisterServices registers all module services
+func (m *Manager) RegisterServices(cfg Configurator) {
 	for _, module := range m.Modules {
-		module.RegisterQueryService(grpcRouter)
+		module.RegisterServices(cfg)
 	}
 }
 

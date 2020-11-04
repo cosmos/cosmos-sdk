@@ -64,8 +64,9 @@ func (msg MsgCreateClient) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgCreateClient) ValidateBasic() error {
-	if msg.Signer == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "signer address cannot be empty")
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
 	}
 	clientState, err := UnpackClientState(msg.ClientState)
 	if err != nil {
@@ -87,9 +88,10 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	return host.ClientIdentifierValidator(msg.ClientId)
 }
 
-// GetSignBytes implements sdk.Msg
+// GetSignBytes implements sdk.Msg. The function will panic since it is used
+// for amino transaction verification which IBC does not support.
 func (msg MsgCreateClient) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
+	panic("IBC messages do not support amino")
 }
 
 // GetSigners implements sdk.Msg
@@ -140,8 +142,9 @@ func (msg MsgUpdateClient) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgUpdateClient) ValidateBasic() error {
-	if msg.Signer == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "signer address cannot be empty")
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
 	}
 	header, err := UnpackHeader(msg.Header)
 	if err != nil {
@@ -156,9 +159,10 @@ func (msg MsgUpdateClient) ValidateBasic() error {
 	return host.ClientIdentifierValidator(msg.ClientId)
 }
 
-// GetSignBytes implements sdk.Msg
+// GetSignBytes implements sdk.Msg. The function will panic since it is used
+// for amino transaction verification which IBC does not support.
 func (msg MsgUpdateClient) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
+	panic("IBC messages do not support amino")
 }
 
 // GetSigners implements sdk.Msg
@@ -233,9 +237,10 @@ func (msg MsgUpgradeClient) ValidateBasic() error {
 	return host.ClientIdentifierValidator(msg.ClientId)
 }
 
-// GetSignBytes implements sdk.Msg
+// GetSignBytes implements sdk.Msg. The function will panic since it is used
+// for amino transaction verification which IBC does not support.
 func (msg MsgUpgradeClient) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
+	panic("IBC messages do not support amino")
 }
 
 // GetSigners implements sdk.Msg
@@ -278,8 +283,9 @@ func (msg MsgSubmitMisbehaviour) Type() string {
 
 // ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitMisbehaviour.
 func (msg MsgSubmitMisbehaviour) ValidateBasic() error {
-	if msg.Signer == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "signer address cannot be empty")
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
 	}
 	misbehaviour, err := UnpackMisbehaviour(msg.Misbehaviour)
 	if err != nil {
@@ -299,10 +305,10 @@ func (msg MsgSubmitMisbehaviour) ValidateBasic() error {
 	return host.ClientIdentifierValidator(msg.ClientId)
 }
 
-// GetSignBytes returns the raw bytes a signer is expected to sign when submitting
-// a MsgSubmitMisbehaviour message.
+// GetSignBytes implements sdk.Msg. The function will panic since it is used
+// for amino transaction verification which IBC does not support.
 func (msg MsgSubmitMisbehaviour) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
+	panic("IBC messages do not support amino")
 }
 
 // GetSigners returns the single expected signer for a MsgSubmitMisbehaviour.

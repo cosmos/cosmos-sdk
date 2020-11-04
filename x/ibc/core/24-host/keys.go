@@ -22,26 +22,22 @@ const (
 
 // KVStore key prefixes for IBC
 var (
-	KeyClientStorePrefix = []byte("clients")
-	KeyConnectionPrefix  = []byte("connections")
+	KeyClientStorePrefix     = []byte("clients")
+	KeyConsensusStatesPrefix = []byte("consensusStates")
+	KeyConnectionPrefix      = []byte("connections")
 )
 
 // KVStore key prefixes for IBC
 const (
 	KeyChannelPrefix           = "channelEnds"
 	KeyChannelCapabilityPrefix = "capabilities"
-	KeyNextSeqSendPrefix       = "seqSends"
-	KeyNextSeqRecvPrefix       = "seqRecvs"
-	KeyNextSeqAckPrefix        = "seqAcks"
+	KeyNextSeqSendPrefix       = "nextSequenceSend"
+	KeyNextSeqRecvPrefix       = "nextSequenceRecv"
+	KeyNextSeqAckPrefix        = "nextSequenceAck"
 	KeyPacketCommitmentPrefix  = "commitments"
 	KeyPacketAckPrefix         = "acks"
 	KeyPacketReceiptPrefix     = "receipts"
 )
-
-// KeyPrefixBytes return the key prefix bytes from a URL string format
-func KeyPrefixBytes(prefix int) []byte {
-	return []byte(fmt.Sprintf("%d/", prefix))
-}
 
 // FullClientPath returns the full path of a specific client path in the format:
 // "clients/{clientID}/{path}" as a string.
@@ -64,26 +60,15 @@ func ClientStatePath() string {
 	return "clientState"
 }
 
-// ClientTypePath takes an Identifier and returns Path under which to store the
-// type of a particular client.
-func ClientTypePath() string {
-	return "clientType"
-}
-
 // ConsensusStatePath takes an Identifier and returns a Path under which to
 // store the consensus state of a client.
 func ConsensusStatePath(height exported.Height) string {
-	return fmt.Sprintf("consensusState/%s", height)
+	return fmt.Sprintf("%s/%s", KeyConsensusStatesPrefix, height)
 }
 
 // KeyClientState returns the store key for a particular client state
 func KeyClientState() []byte {
 	return []byte(ClientStatePath())
-}
-
-// KeyClientType returns the store key for type of a particular client
-func KeyClientType() []byte {
-	return []byte(ClientTypePath())
 }
 
 // KeyConsensusState returns the store key for the consensus state of a particular
@@ -97,7 +82,7 @@ func KeyConsensusState(height exported.Height) []byte {
 
 // ClientConnectionsPath defines a reverse mapping from clients to a set of connections
 func ClientConnectionsPath(clientID string) string {
-	return fmt.Sprintf("clients/%s/connections", clientID)
+	return fmt.Sprintf("%s/%s/connections", KeyClientStorePrefix, clientID)
 }
 
 // ConnectionPath defines the path under which connection paths are stored
@@ -105,7 +90,7 @@ func ConnectionPath(connectionID string) string {
 	return fmt.Sprintf("%s/%s", KeyConnectionPrefix, connectionID)
 }
 
-// KeyClientConnections returns the store key for the connectios of a given client
+// KeyClientConnections returns the store key for the connections of a given client
 func KeyClientConnections(clientID string) []byte {
 	return []byte(ClientConnectionsPath(clientID))
 }
@@ -117,11 +102,6 @@ func KeyConnection(connectionID string) []byte {
 
 // ICS04
 // The following paths are the keys to the store as defined in https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#store-paths
-
-// GetChannelPortsKeysPrefix returns the prefix bytes for ICS04 and ICS05 iterators
-func GetChannelPortsKeysPrefix(prefix int) []byte {
-	return []byte(fmt.Sprintf("%d/ports/", prefix))
-}
 
 // ChannelPath defines the path under which channels are stored
 func ChannelPath(portID, channelID string) string {
@@ -136,17 +116,17 @@ func ChannelCapabilityPath(portID, channelID string) string {
 
 // NextSequenceSendPath defines the next send sequence counter store path
 func NextSequenceSendPath(portID, channelID string) string {
-	return fmt.Sprintf("%s/", KeyNextSeqSendPrefix) + channelPath(portID, channelID) + "/nextSequenceSend"
+	return fmt.Sprintf("%s/", KeyNextSeqSendPrefix) + channelPath(portID, channelID)
 }
 
 // NextSequenceRecvPath defines the next receive sequence counter store path
 func NextSequenceRecvPath(portID, channelID string) string {
-	return fmt.Sprintf("%s/", KeyNextSeqRecvPrefix) + channelPath(portID, channelID) + "/nextSequenceRecv"
+	return fmt.Sprintf("%s/", KeyNextSeqRecvPrefix) + channelPath(portID, channelID)
 }
 
 // NextSequenceAckPath defines the next acknowledgement sequence counter store path
 func NextSequenceAckPath(portID, channelID string) string {
-	return fmt.Sprintf("%s/", KeyNextSeqAckPrefix) + channelPath(portID, channelID) + "/nextSequenceAck"
+	return fmt.Sprintf("%s/", KeyNextSeqAckPrefix) + channelPath(portID, channelID)
 }
 
 // PacketCommitmentPath defines the commitments to packet data fields store path
@@ -162,6 +142,11 @@ func PacketCommitmentPrefixPath(portID, channelID string) string {
 // PacketAcknowledgementPath defines the packet acknowledgement store path
 func PacketAcknowledgementPath(portID, channelID string, sequence uint64) string {
 	return fmt.Sprintf("%s/", KeyPacketAckPrefix) + channelPath(portID, channelID) + fmt.Sprintf("/acknowledgements/%d", sequence)
+}
+
+// PacketAcknowledgementPrefixPath defines the prefix for commitments to packet data fields store path.
+func PacketAcknowledgementPrefixPath(portID, channelID string) string {
+	return fmt.Sprintf("%s/", KeyPacketAckPrefix) + channelPath(portID, channelID)
 }
 
 // PacketReceiptPath defines the packet receipt store path

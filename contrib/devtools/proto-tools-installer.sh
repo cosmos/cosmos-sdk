@@ -119,32 +119,6 @@ f_install_protoc_gen_swagger() {
   f_print_done
 }
 
-f_install_clang_format() {
-  f_print_installing_with_padding clang-format
-
-  if which clang-format &>/dev/null ; then
-    echo -e "\talready installed. Skipping."
-    return 0
-  fi
-
-  case "${UNAME_S}" in
-  Linux)
-    if [ -e /etc/debian_version ]; then
-      echo -e "\tRun: sudo apt-get install clang-format" >&2
-    elif [ -e /etc/fedora-release ]; then
-      echo -e "\tRun: sudo dnf install clang" >&2
-    else
-      echo -e "\tRun (as root): subscription-manager repos --enable rhel-7-server-devtools-rpms ; yum install llvm-toolset-7" >&2
-    fi
-    ;;
-  Darwin)
-    echo "\tRun: brew install clang-format" >&2
-    ;;
-  *)
-    echo "\tunknown operating system. Skipping." >&2
-  esac
-}
-
 f_ensure_tools
 f_ensure_dirs
 f_install_protoc
@@ -152,4 +126,3 @@ f_install_buf
 f_install_protoc_gen_gocosmos
 f_install_protoc_gen_grpc_gateway
 f_install_protoc_gen_swagger
-f_install_clang_format

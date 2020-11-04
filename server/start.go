@@ -179,20 +179,39 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 		tmos.Exit(err.Error())
 	}
 
-	TrapSignal(func() {
+	defer func() {
 		if err = svr.Stop(); err != nil {
 			tmos.Exit(err.Error())
 		}
-	})
+	}()
 
-	// run forever (the node will not be returned)
-	select {}
+	// Wait for SIGINT or SIGTERM signal
+	return WaitForQuitSignals()
 }
 
 // legacyAminoCdc is used for the legacy REST API
 func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
+	var cpuProfileCleanup func()
+
+	if cpuProfile := ctx.Viper.GetString(flagCPUProfile); cpuProfile != "" {
+		f, err := os.Create(cpuProfile)
+		if err != nil {
+			return err
+		}
+
+		ctx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
+		if err := pprof.StartCPUProfile(f); err != nil {
+			return err
+		}
+
+		cpuProfileCleanup = func() {
+			ctx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
+			pprof.StopCPUProfile()
+			f.Close()
+		}
+	}
 
 	traceWriterFile := ctx.Viper.GetString(flagTraceStore)
 	db, err := openDB(home)
@@ -226,10 +245,15 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	if err != nil {
 		return err
 	}
+	ctx.Logger.Debug("Initialization: tmNode created")
 
 	if err := tmNode.Start(); err != nil {
 		return err
 	}
+	ctx.Logger.Debug("Initialization: tmNode started")
+
+	// Add the tx service to the gRPC router.
+	app.RegisterTxService(clientCtx)
 
 	var apiSrv *api.Server
 
@@ -270,27 +294,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		}
 	}
 
-	var cpuProfileCleanup func()
-
-	if cpuProfile := ctx.Viper.GetString(flagCPUProfile); cpuProfile != "" {
-		f, err := os.Create(cpuProfile)
-		if err != nil {
-			return err
-		}
-
-		ctx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
-		if err := pprof.StartCPUProfile(f); err != nil {
-			return err
-		}
-
-		cpuProfileCleanup = func() {
-			ctx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
-			pprof.StopCPUProfile()
-			f.Close()
-		}
-	}
-
-	TrapSignal(func() {
+	defer func() {
 		if tmNode.IsRunning() {
 			_ = tmNode.Stop()
 		}
@@ -308,8 +312,8 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		}
 
 		ctx.Logger.Info("exiting...")
-	})
+	}()
 
-	// run forever (the node will not be returned)
-	select {}
+	// Wait for SIGINT or SIGTERM signal
+	return WaitForQuitSignals()
 }

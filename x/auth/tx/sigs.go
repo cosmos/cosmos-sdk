@@ -125,7 +125,7 @@ func (g config) MarshalSignatureJSON(sigs []signing.SignatureV2) ([]byte, error)
 
 	toJSON := &signing.SignatureDescriptors{Signatures: descs}
 
-	return codec.ProtoMarshalJSON(toJSON)
+	return codec.ProtoMarshalJSON(toJSON, nil)
 }
 
 func (g config) UnmarshalSignatureJSON(bz []byte) ([]signing.SignatureV2, error) {

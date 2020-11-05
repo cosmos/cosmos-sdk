@@ -13,7 +13,7 @@ order: 3
 Now that your chain is running, it is time to try sending tokens from the first account you created to a second account. In a new terminal window, start by running the following query command:
 
 ```bash
-simd query account $MY_VALIDATOR_ADDRESS
+simd query account $MY_VALIDATOR_ADDRESS --chain-id my-test-chain
 ```
 
 You should see the current balance of the account you created, equal to the original balance of `stake` you granted it minus the amount you delegated via the `gentx`. Now, create a second account:

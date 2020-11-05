@@ -232,7 +232,9 @@ func (k Keeper) RecvPacket(
 		}
 
 		// All verification complete, update state
-		// In unordered case, we must increment nextSequenceRecv
+		// For unordered channels we must set the receipt so it can be verified on the other side.
+		// This receipt does not contain any data, since the packet has not yet been processed,
+		// it's just a single store key set to an empty string to indicate that the packet has been received
 		k.SetPacketReceipt(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 
 	case types.ORDERED:
@@ -372,9 +374,9 @@ func (k Keeper) WriteAcknowledgement(
 // AcknowledgePacket is called by a module to process the acknowledgement of a
 // packet previously sent by the calling module on a channel to a counterparty
 // module on the counterparty chain. Its intended usage is within the ante
-// handler. A subsequent call to AcknowledgementExecuted will clean up the
-// packet commitment, which is no longer necessary since the packet has been
-// received and acted upon.
+// handler. AcknowledgePacket will clean up the packet commitment,
+// which is no longer necessary since the packet has been received and acted upon.
+// It will also increment NextSequenceAck in case of ORDERED channels.
 func (k Keeper) AcknowledgePacket(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,

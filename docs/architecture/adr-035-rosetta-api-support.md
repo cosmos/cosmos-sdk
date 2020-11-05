@@ -116,6 +116,35 @@ type ConstructionAPI interface {
 }
 ```
 
+Example in pseudo-code of an Adapter interface:
+
+```
+type SomeAdapter struct {
+	cosmosClient     client
+	tendermintClient client
+}
+
+func NewSomeAdapter(cosmosClient client, tendermintClient client) rosetta.Adapter {
+	return &SomeAdapter{cosmosClient: cosmosClient, tendermintClient: tendermintClient}
+}
+
+func (s SomeAdapter) NetworkStatus(ctx context.Context, request *types.NetworkRequest) (*types.NetworkStatusResponse, *types.Error) {
+	resp := s.tendermintClient.CallStatus()
+	// ... Parse status Response
+	// build NetworkStatusResponse
+	return networkStatusResp, nil
+}
+
+func (s SomeAdapter) AccountBalance(ctx context.Context, request *types.AccountBalanceRequest) (*types.AccountBalanceResponse, *types.Error) {
+	resp := s.cosmosClient.Account()
+	// ... Parse cosmos specific account response
+	// build AccountBalanceResponse
+	return AccountBalanceResponse, nil
+}
+
+// And we repeat for all the methods defined in the interface.
+```
+
 For further information about the `Servicer` interfaces, please refer to the [Coinbase's rosetta-sdk-go's documentation](https://pkg.go.dev/github.com/coinbase/rosetta-sdk-go@v0.5.9/server).
 
 ### 2. Cosmos SDK Implementation

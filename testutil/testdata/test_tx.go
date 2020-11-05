@@ -24,7 +24,7 @@ func NewTestFeeAmount() sdk.Coins {
 
 // NewTestGasLimit is a test fee gas limit.
 func NewTestGasLimit() uint64 {
-	return 100000
+	return 150000
 }
 
 // NewTestMsg creates a message for testing with the given signers.

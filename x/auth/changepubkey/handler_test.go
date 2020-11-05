@@ -49,14 +49,22 @@ func (suite *HandlerTestSuite) TestMsgChangePubKey() {
 	pubKey := privKey.PubKey()
 
 	testCases := []struct {
-		name      string
-		msg       *types.MsgChangePubKey
-		expectErr bool
+		name               string
+		msg                *types.MsgChangePubKey
+		enableChangePubKey bool
+		expectErr          bool
 	}{
 		{
-			name:      "try changing pubkey",
-			msg:       types.NewMsgChangePubKey(addr2, pubKey),
-			expectErr: false,
+			name:               "try changing pubkey",
+			msg:                types.NewMsgChangePubKey(addr2, pubKey),
+			expectErr:          false,
+			enableChangePubKey: true,
+		},
+		{
+			name:               "try changing pubkey",
+			msg:                types.NewMsgChangePubKey(addr2, pubKey),
+			expectErr:          true,
+			enableChangePubKey: false,
 		},
 	}
 
@@ -64,6 +72,9 @@ func (suite *HandlerTestSuite) TestMsgChangePubKey() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
+			authParams := suite.app.AccountKeeper.GetParams(ctx)
+			authParams.EnableChangePubKey = tc.enableChangePubKey
+			suite.app.AccountKeeper.SetParams(ctx, authParams)
 			res, err := suite.handler(ctx, tc.msg)
 			if tc.expectErr {
 				suite.Require().Error(err)

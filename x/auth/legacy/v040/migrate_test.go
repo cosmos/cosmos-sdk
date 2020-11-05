@@ -233,6 +233,7 @@ func TestMigrate(t *testing.T) {
     }
   ],
   "params": {
+    "enable_change_pubkey": false,
     "max_memo_characters": "10",
     "pubkey_change_cost": "0",
     "sig_verify_cost_ed25519": "40",

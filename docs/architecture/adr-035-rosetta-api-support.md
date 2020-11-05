@@ -128,7 +128,6 @@ using this code as reference.
 
 ```golang
 // NewNetwork returns the default application configuration.
-
 func NewNetwork(options Options) service.Network {
 	cosmosClient := cosmos.NewClient(fmt.Sprintf("http://%s", options.CosmosEndpoint))
 	tendermintClient := tendermint.NewClient(fmt.Sprintf("http://%s", options.TendermintEndpoint))

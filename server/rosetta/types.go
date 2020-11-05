@@ -3,60 +3,41 @@ package rosetta
 import (
 	"context"
 	"fmt"
-	"github.com/coinbase/rosetta-sdk-go/asserter"
-	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
+	"github.com/tendermint/cosmos-rosetta-gateway/service"
 	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
-	"net/http"
 )
+
+// list of supported operations
+const (
+	StatusReverted = "Reverted"
+	StatusSuccess  = "Success"
+
+	OperationTransfer = "Transfer"
+
+	OptionAddress = "address"
+	OptionGas     = "gas"
+)
+
+// NewNetwork builds a rosetta gateway network
+func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter) service.Network {
+	return service.Network{
+		Properties: crg.NetworkProperties{
+			Blockchain:          networkIdentifier.Blockchain,
+			Network:             networkIdentifier.Network,
+			AddrPrefix:          sdk.GetConfig().GetBech32AccountAddrPrefix(),                                         // since we're inside cosmos sdk the config is supposed to be sealed
+			SupportedOperations: []string{StatusReverted, StatusSuccess, OperationTransfer, OptionAddress, OptionGas}, // TODO are this defaults always true?
+		},
+		Adapter: adapter,
+	}
+}
 
 // SdkTxWithHash wraps an sdk transaction with its hash and block identifier
 type SdkTxWithHash struct {
 	HexHash string
 	Tx      sdk.Tx
-}
-
-func NewRouter(network *types.NetworkIdentifier, rosetta Rosetta) (http.Handler, error) {
-	assrt, err := asserter.NewServer(
-		[]string{"Transfer"},
-		true,
-		[]*types.NetworkIdentifier{
-			network,
-		},
-		nil,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("cannot build assrt: %w", err)
-	}
-
-	h := server.NewRouter(
-		server.NewAccountAPIController(rosetta, assrt),
-		server.NewBlockAPIController(rosetta, assrt),
-		server.NewNetworkAPIController(rosetta, assrt),
-		server.NewMempoolAPIController(rosetta, assrt),
-		server.NewConstructionAPIController(rosetta, assrt),
-	)
-	return h, nil
-}
-
-// Rosetta defines the full implementation of the rosetta API
-type Rosetta interface {
-	DataAPI
-	ConstructionAPI
-}
-
-// DataAPI defines rosetta's data API implementation
-type DataAPI interface {
-	server.AccountAPIServicer
-	server.BlockAPIServicer
-	server.MempoolAPIServicer
-	server.NetworkAPIServicer
-}
-
-// ConstructionAPI defines rosetta's construction API
-type ConstructionAPI interface {
-	server.ConstructionAPIServicer
 }
 
 // DataAPIClient defines the interface

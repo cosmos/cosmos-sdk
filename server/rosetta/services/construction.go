@@ -7,7 +7,11 @@ import (
 	secp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 )
+
+// interface implementation assertion
+var _ crg.ConstructionAPI = SingleNetwork{}
 
 func (sn SingleNetwork) ConstructionCombine(ctx context.Context, request *types.ConstructionCombineRequest) (*types.ConstructionCombineResponse, *types.Error) {
 	return nil, rosetta.ErrNotImplemented.RosettaError()

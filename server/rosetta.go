@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	"github.com/cosmos/cosmos-sdk/server/rosetta/config"
 	"github.com/spf13/cobra"
-	"net/http"
+	"github.com/tendermint/cosmos-rosetta-gateway/service"
 )
 
 // RosettaCommand builds the rosetta root command given
@@ -31,16 +31,19 @@ func RosettaCommand(ir codectypes.InterfaceRegistry, cdc codec.Marshaler) *cobra
 				return err
 			}
 			// instantiate a new rosetta service
-			svc, err := config.RetryRosettaFromConfig(conf)
+			adapter, err := config.RetryRosettaFromConfig(conf)
 			if err != nil {
 				return err
 			}
 			// create the router
-			router, err := rosetta.NewRouter(conf.NetworkIdentifier(), svc)
+			svc, err := service.New(
+				service.Options{ListenAddress: conf.Addr},
+				rosetta.NewNetwork(conf.NetworkIdentifier(), adapter),
+			)
 			if err != nil {
 				return err
 			}
-			return http.ListenAndServe(conf.Addr, router)
+			return svc.Start()
 		},
 	}
 	config.SetFlags(cmd.Flags(), config.DisableFileFlag())

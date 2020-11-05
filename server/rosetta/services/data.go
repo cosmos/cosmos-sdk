@@ -5,12 +5,13 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/conversion"
+	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
 	"time"
 )
 
 // assert interface implementation
-var _ rosetta.DataAPI = SingleNetwork{}
+var _ crg.DataAPI = SingleNetwork{}
 
 // genesisBlockFetchTimeout defines a timeout to fetch the genesis block
 const genesisBlockFetchTimeout = 15 * time.Second

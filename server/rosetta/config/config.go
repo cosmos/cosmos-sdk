@@ -6,11 +6,11 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/client"
 	"github.com/cosmos/cosmos-sdk/server/rosetta/services"
 	"github.com/ghodss/yaml"
 	"github.com/spf13/pflag"
+	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -41,7 +41,7 @@ const (
 )
 
 // RosettaFromConfig builds the rosetta servicer full implementation from configurations
-func RosettaFromConfig(conf *Config) (rosetta.Rosetta, error) {
+func RosettaFromConfig(conf *Config) (crg.Adapter, error) {
 	if conf.Offline {
 		panic("offline mode not supported for now")
 	}
@@ -64,7 +64,7 @@ func RosettaFromConfig(conf *Config) (rosetta.Rosetta, error) {
 }
 
 // RetryRosettaFromConfig tries to initialize rosetta retrying
-func RetryRosettaFromConfig(conf *Config) (rosetta rosetta.Rosetta, err error) {
+func RetryRosettaFromConfig(conf *Config) (rosetta crg.Adapter, err error) {
 	for i := 0; i < conf.Retries; i++ {
 		rosetta, err = RosettaFromConfig(conf)
 		if err == nil {

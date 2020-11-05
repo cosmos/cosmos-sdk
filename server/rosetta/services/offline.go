@@ -4,10 +4,11 @@ import (
 	"context"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
+	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 )
 
 // assert interface implementation
-var _ rosetta.Rosetta = OfflineNetwork{}
+var _ crg.Adapter = OfflineNetwork{}
 
 // NewOffline instantiates the instance of an offline network
 // whilst the offline network does not support the DataAPI,

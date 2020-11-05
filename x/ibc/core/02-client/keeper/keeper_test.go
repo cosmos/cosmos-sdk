@@ -340,11 +340,6 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 	latest, ok := suite.keeper.GetLatestClientConsensusState(suite.ctx, testClientID)
 	suite.Require().True(ok)
 	suite.Require().Equal(nextState, latest, "Latest client not returned correctly")
-
-	// Should return existing consensusState at latestClientHeight
-	lte, ok := suite.keeper.GetClientConsensusStateLTE(suite.ctx, testClientID, types.NewHeight(0, height+3))
-	suite.Require().True(ok)
-	suite.Require().Equal(suite.consensusState, lte, "LTE helper function did not return latest client state below height: %d", height+3)
 }
 
 // 2 clients in total are created on chainA. The first client is updated so it contains an initial consensus state

@@ -1,0 +1,23 @@
+services:
+  cosmos:
+    build:
+      context: .
+      dockerfile: test/docker/node.dockerfile
+    command: ["simd", "start"]
+    ports:
+    - 9090:9090
+    - 26657:26657
+
+  rosetta:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["./rosetta", "start"]
+    environment:
+      - ROSETTA_BLOCKCHAIN=cosmos
+      - ROSETTA_NETWORK=test_network
+      - ROSETTA_TENDERMINT_RPC=cosmos:26657
+      - ROSETTA_GRPC_ENDPOINT=cosmos:9090
+      - ROSETTA_ADDR=:8080
+    ports:
+    - 8080:8080

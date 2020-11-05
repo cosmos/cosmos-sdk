@@ -64,8 +64,9 @@ func (msg MsgCreateClient) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgCreateClient) ValidateBasic() error {
-	if msg.Signer == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "signer address cannot be empty")
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
 	}
 	clientState, err := UnpackClientState(msg.ClientState)
 	if err != nil {
@@ -141,8 +142,9 @@ func (msg MsgUpdateClient) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgUpdateClient) ValidateBasic() error {
-	if msg.Signer == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "signer address cannot be empty")
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
 	}
 	header, err := UnpackHeader(msg.Header)
 	if err != nil {
@@ -281,8 +283,9 @@ func (msg MsgSubmitMisbehaviour) Type() string {
 
 // ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitMisbehaviour.
 func (msg MsgSubmitMisbehaviour) ValidateBasic() error {
-	if msg.Signer == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "signer address cannot be empty")
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
 	}
 	misbehaviour, err := UnpackMisbehaviour(msg.Misbehaviour)
 	if err != nil {

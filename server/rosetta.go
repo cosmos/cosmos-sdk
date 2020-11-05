@@ -11,7 +11,7 @@ import (
 
 // RosettaCommand builds the rosetta root command given
 // a protocol buffers serializer/deserializer
-func RosettaCommand(ir codectypes.InterfaceRegistry, cdc *codec.ProtoCodec) *cobra.Command {
+func RosettaCommand(ir codectypes.InterfaceRegistry, cdc codec.Marshaler) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rosetta",
 		Short: "spin up a rosetta server",
@@ -21,8 +21,11 @@ func RosettaCommand(ir codectypes.InterfaceRegistry, cdc *codec.ProtoCodec) *cob
 			if err != nil {
 				return err
 			}
-			// add codec settings to config
-			conf.WithCodec(ir, cdc)
+			// if the provided interface registry and codec
+			// are valid then use them
+			if protoCodec, ok := cdc.(*codec.ProtoCodec); ok {
+				conf.WithCodec(ir, protoCodec)
+			}
 			// validate config
 			if err := conf.Validate(); err != nil {
 				return err

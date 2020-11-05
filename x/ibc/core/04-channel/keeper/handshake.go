@@ -14,18 +14,22 @@ import (
 
 // CounterpartyHops returns the connection hops of the counterparty channel.
 // The counterparty hops are stored in the inverse order as the channel's.
+// NOTE: Since connectionHops only supports single connection channels for now,
+// this function requires that connection hops only contain a single connection id
 func (k Keeper) CounterpartyHops(ctx sdk.Context, ch types.Channel) ([]string, bool) {
-	counterPartyHops := make([]string, len(ch.ConnectionHops))
-
-	for i, hop := range ch.ConnectionHops {
-		conn, found := k.connectionKeeper.GetConnection(ctx, hop)
-		if !found {
-			return []string{}, false
-		}
-
-		counterPartyHops[len(counterPartyHops)-1-i] = conn.GetCounterparty().GetConnectionID()
+	// Return empty array if connection hops is more than one
+	// ConnectionHops length should be verified earlier
+	if len(ch.ConnectionHops) != 1 {
+		return []string{}, false
+	}
+	counterPartyHops := make([]string, 1)
+	hop := ch.ConnectionHops[0]
+	conn, found := k.connectionKeeper.GetConnection(ctx, hop)
+	if !found {
+		return []string{}, false
 	}
 
+	counterPartyHops[0] = conn.GetCounterparty().GetConnectionID()
 	return counterPartyHops, true
 }
 

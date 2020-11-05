@@ -105,6 +105,9 @@ func TestTypesTestSuite(t *testing.T) {
 }
 
 func (suite *TypesTestSuite) TestMsgChannelOpenInitValidateBasic() {
+	counterparty := types.NewCounterparty(cpportid, cpchanid)
+	tryOpenChannel := types.NewChannel(types.TRYOPEN, types.ORDERED, counterparty, connHops, version)
+
 	testCases := []struct {
 		name    string
 		msg     *types.MsgChannelOpenInit
@@ -125,6 +128,7 @@ func (suite *TypesTestSuite) TestMsgChannelOpenInitValidateBasic() {
 		{"", types.NewMsgChannelOpenInit(portid, chanid, "", types.UNORDERED, connHops, cpportid, cpchanid, addr), true},
 		{"invalid counterparty port id", types.NewMsgChannelOpenInit(portid, chanid, version, types.UNORDERED, connHops, invalidPort, cpchanid, addr), false},
 		{"invalid counterparty channel id", types.NewMsgChannelOpenInit(portid, chanid, version, types.UNORDERED, connHops, cpportid, invalidChannel, addr), false},
+		{"channel not in INIT state", &types.MsgChannelOpenInit{portid, chanid, tryOpenChannel, addr.String()}, false},
 	}
 
 	for _, tc := range testCases {
@@ -142,6 +146,9 @@ func (suite *TypesTestSuite) TestMsgChannelOpenInitValidateBasic() {
 }
 
 func (suite *TypesTestSuite) TestMsgChannelOpenTryValidateBasic() {
+	counterparty := types.NewCounterparty(cpportid, cpchanid)
+	initChannel := types.NewChannel(types.INIT, types.ORDERED, counterparty, connHops, version)
+
 	testCases := []struct {
 		name    string
 		msg     *types.MsgChannelOpenTry
@@ -167,6 +174,7 @@ func (suite *TypesTestSuite) TestMsgChannelOpenTryValidateBasic() {
 		{"empty proof", types.NewMsgChannelOpenTry(portid, chanid, chanid, version, types.UNORDERED, connHops, cpportid, cpchanid, version, emptyProof, height, addr), false},
 		{"valid empty proved channel id", types.NewMsgChannelOpenTry(portid, chanid, "", version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), true},
 		{"invalid proved channel id, doesn't match channel id", types.NewMsgChannelOpenTry(portid, chanid, "differentchannel", version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
+		{"channel not in TRYOPEN state", &types.MsgChannelOpenTry{portid, chanid, chanid, initChannel, version, suite.proof, height, addr.String()}, false},
 	}
 
 	for _, tc := range testCases {

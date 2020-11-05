@@ -116,6 +116,8 @@ type ConstructionAPI interface {
 }
 ```
 
+For further information about the `Servicer` interfaces, please refer to the [Coinbase's rosetta-sdk-go's documentation](https://pkg.go.dev/github.com/coinbase/rosetta-sdk-go@v0.5.9/server).
+
 ### 2. Cosmos SDK Implementation
 
 As described, each Cosmos SDK release series will have version specific implementations of `Network` and `Adapter`, as 

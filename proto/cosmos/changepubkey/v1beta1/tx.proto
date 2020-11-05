@@ -5,6 +5,12 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/changepubkey/types";
 
+// Msg defines the changepubkey Msg service.
+service Msg {
+  // ChangePubKey defines a method for changing a pubkey of an account
+  rpc ChangePubKey(MsgChangePubKey) returns (MsgChangePubKeyResponse);
+}
+
 // MsgChangePubKey defines a message that enables changing a pubkey
 // of an account.
 message MsgChangePubKey {
@@ -15,3 +21,6 @@ message MsgChangePubKey {
     (gogoproto.jsontag) = "public_key,omitempty", (gogoproto.moretags) = "yaml:\"public_key\""
   ];
 }
+
+// MsgChangePubKeyResponse defines the Msg/ChangePubKey response type.
+message MsgChangePubKeyResponse { }

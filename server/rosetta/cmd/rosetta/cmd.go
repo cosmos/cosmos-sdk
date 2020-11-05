@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
+	"github.com/cosmos/cosmos-sdk/server/rosetta/config"
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
 	"net/http"
@@ -23,30 +24,30 @@ func startCmd() *cobra.Command {
 		Short: "start the rosetta server",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			klog.Info("finding configuration")
-			config, err := FindConfig(cmd.Flags())
+			conf, err := config.Find(cmd.Flags())
 			if err != nil {
 				return err
 			}
-			klog.Infof("configuration found: %#v", config)
-			svc, err := RetryRosettaFromConfig(config)
+			klog.Infof("configuration found: %#v", conf)
+			svc, err := config.RetryRosettaFromConfig(conf)
 			if err != nil {
 				return err
 			}
 			klog.Infof("cosmos rosetta adapter built")
 			router, err := rosetta.NewRouter(&types.NetworkIdentifier{
-				Blockchain:           config.Blockchain,
-				Network:              config.Network,
+				Blockchain:           conf.Blockchain,
+				Network:              conf.Network,
 				SubNetworkIdentifier: nil,
 			}, svc)
 			klog.Infof("http router correctly instantiated")
 			if err != nil {
 				return err
 			}
-			klog.Infof("listening and serving at: %s", config.Addr)
-			return http.ListenAndServe(config.Addr, router)
+			klog.Infof("listening and serving at: %s", conf.Addr)
+			return http.ListenAndServe(conf.Addr, router)
 		},
 	}
 
-	SetConfigFlags(cmd.Flags())
+	config.SetFlags(cmd.Flags())
 	return cmd
 }

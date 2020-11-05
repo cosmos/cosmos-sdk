@@ -109,6 +109,9 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		txCommand(),
 		keys.Commands(simapp.DefaultNodeHome),
 	)
+
+	// add rosetta
+
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {

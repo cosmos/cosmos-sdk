@@ -1,8 +1,8 @@
 services:
   cosmos:
     build:
-      context: .
-      dockerfile: test/docker/node.dockerfile
+      context: ../../
+      dockerfile: server/rosetta/test/docker/node.dockerfile
     command: ["simd", "start"]
     ports:
     - 9090:9090
@@ -10,8 +10,8 @@ services:
 
   rosetta:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../../
+      dockerfile: server/rosetta/Dockerfile
     command: ["./rosetta", "start"]
     environment:
       - ROSETTA_BLOCKCHAIN=cosmos

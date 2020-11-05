@@ -20,5 +20,5 @@ COPY --from=build /build/cosmos-sdk/simd ./simd
 
 WORKDIR /root/.simapp
 
-COPY test/data/node ./
+COPY ./server/rosetta/test/data/node ./
 

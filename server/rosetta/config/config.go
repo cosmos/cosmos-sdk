@@ -1,9 +1,11 @@
-package main
+package config
 
 import (
 	"fmt"
 	"github.com/caarlos0/env"
 	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/client"
 	"github.com/cosmos/cosmos-sdk/server/rosetta/services"
@@ -43,7 +45,11 @@ func RosettaFromConfig(conf *Config) (rosetta.Rosetta, error) {
 	if conf.Offline {
 		panic("offline mode not supported for now")
 	}
-	dataAPIClient, err := client.NewSingle(conf.GRPCEndpoint, conf.TendermintRPC)
+	var dataAPIOpts []client.OptionFunc
+	if conf.codec != nil && conf.ir != nil {
+		dataAPIOpts = append(dataAPIOpts, client.WithCodec(conf.ir, conf.codec))
+	}
+	dataAPIClient, err := client.NewSingle(conf.GRPCEndpoint, conf.TendermintRPC, dataAPIOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("data api client init failure: %w", err)
 	}
@@ -91,11 +97,27 @@ type Config struct {
 	Retries int `json:"retries" yaml:"retries" env:"ROSETTA_RETRIES"`
 	// Offline defines if the server must be run in offline mode
 	Offline bool `json:"offline" yaml:"offline" env:"ROSETTA_OFFLINE"`
+	// codec overrides the default data and construction api client codecs
+	codec *codec.ProtoCodec
+	// ir overrides the default data and construction api interface registry
+	ir codectypes.InterfaceRegistry
+}
+
+// NetworkIdentifier returns the network identifier given the configuration
+func (c *Config) NetworkIdentifier() *types.NetworkIdentifier {
+	return &types.NetworkIdentifier{
+		Blockchain: c.Blockchain,
+		Network:    c.Network,
+	}
 }
 
 // Validate validates a configuration and sets
 // its defaults in case they were not provided
 func (c *Config) Validate() error {
+	// why don't we have XOR in golang?
+	if (c.codec == nil) != (c.ir == nil) {
+		return fmt.Errorf("codec and interface registry must be both different from nil or nil")
+	}
 	// set defaults
 	if c.Addr == "" {
 		c.Addr = DefaultConfigAddr
@@ -126,8 +148,14 @@ func (c *Config) Validate() error {
 	return nil
 }
 
-// ConfigFromEnv tries to get the configurations from the environment variable
-func ConfigFromEnv() (*Config, error) {
+// WithCodec extends the configuration with a predefined codec
+func (c *Config) WithCodec(ir codectypes.InterfaceRegistry, cdc *codec.ProtoCodec) {
+	c.codec = cdc
+	c.ir = ir
+}
+
+// FromEnv tries to get the configurations from the environment variable
+func FromEnv() (*Config, error) {
 	conf := &Config{}
 	err := env.Parse(conf)
 	if err != nil {
@@ -140,8 +168,8 @@ func ConfigFromEnv() (*Config, error) {
 	return conf, nil
 }
 
-// ConfigFromYaml attempts to get a configuration given a yaml file
-func ConfigFromYaml(path string) (*Config, error) {
+// FromYaml attempts to get a configuration given a yaml file
+func FromYaml(path string) (*Config, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -163,8 +191,8 @@ func ConfigFromYaml(path string) (*Config, error) {
 	return conf, nil
 }
 
-// ConfigFromCmdFlags gets the configuration from flags
-func ConfigFromCmdFlags(flags *pflag.FlagSet) (*Config, error) {
+// FromFlags gets the configuration from flags
+func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 	blockchain, err := flags.GetString(flagBlockchain)
 	if err != nil {
 		return nil, err
@@ -206,9 +234,30 @@ func ConfigFromCmdFlags(flags *pflag.FlagSet) (*Config, error) {
 	return conf, nil
 }
 
-// SetConfigFlags sets the configuration flags to the given flagset
-func SetConfigFlags(flags *pflag.FlagSet) {
-	flags.StringP(flagFile, "f", "", "the .yaml configuration file (optional, can use env or flags)")
+// SetConfigFlagOption is a function that allows
+// to customize flag settings
+type SetConfigFlagsOption func(flagsSettings *setConfigFlagsSettings)
+
+type setConfigFlagsSettings struct {
+	disableFileFlag bool
+}
+
+// DisableFileFlag disables the file flag
+func DisableFileFlag() SetConfigFlagsOption {
+	return func(flagsSettings *setConfigFlagsSettings) {
+		flagsSettings.disableFileFlag = true
+	}
+}
+
+// SetFlags sets the configuration flags to the given flagset
+func SetFlags(flags *pflag.FlagSet, opts ...SetConfigFlagsOption) {
+	settings := setConfigFlagsSettings{}
+	for _, opt := range opts {
+		opt(&settings)
+	}
+	if !settings.disableFileFlag {
+		flags.StringP(flagFile, "f", "", "the .yaml configuration file (optional, can use env or flags)")
+	}
 	flags.String(flagBlockchain, DefaultConfigBlockchain, "the blockchain type")
 	flags.String(flagNetwork, "", "the network name")
 	flags.String(flagTendermintEndpoint, "", "the tendermint rpc endpoint, without tcp://")
@@ -223,28 +272,28 @@ func SetConfigFlags(flags *pflag.FlagSet) {
 // 1) if config is set via flags
 // 2) flags
 // 3) environment variables
-func FindConfig(flags *pflag.FlagSet) (*Config, error) {
+func Find(flags *pflag.FlagSet) (*Config, error) {
 	// try config file
 	filePath, err := flags.GetString(flagFile)
 	if err == nil && filePath != "" {
-		return ConfigFromYaml(filePath)
+		return FromYaml(filePath)
 	}
 	// try flags
-	config, err := ConfigFromCmdFlags(flags)
+	config, err := FromFlags(flags)
 	if err == nil {
 		return config, nil
 	}
 	// try env
-	config, err = ConfigFromEnv()
+	config, err = FromEnv()
 	if err == nil {
 		return config, nil
 	}
 	return nil, fmt.Errorf("unable to find valid configurations")
 }
 
-// MustFindConfig is used to find configs but if it fails it panics
-func MustFindConfig(flags *pflag.FlagSet) *Config {
-	config, err := FindConfig(flags)
+// MustFind is used to find configs but if it fails it panics
+func MustFind(flags *pflag.FlagSet) *Config {
+	config, err := Find(flags)
 	if err != nil {
 		panic(err)
 	}

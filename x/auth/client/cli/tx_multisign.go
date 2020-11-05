@@ -19,6 +19,7 @@ import (
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
@@ -52,6 +53,7 @@ recommended to set such parameters manually.
 
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
+	cmd.Flags().Bool(flagAmino, false, "Generate Amino encoded JSON suitable for submiting to the txs REST endpoint")
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(flags.FlagChainID, "", "network chain ID")
 
@@ -147,9 +149,28 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 
 		sigOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 
-		json, err := marshalSignatureJSON(txCfg, txBuilder, sigOnly)
-		if err != nil {
-			return err
+		aminoJSON, _ := cmd.Flags().GetBool(flagAmino)
+
+		var json []byte
+
+		if aminoJSON {
+			stdTx, err := tx.ConvertTxToStdTx(clientCtx.LegacyAmino, txBuilder.GetTx())
+			if err != nil {
+				return err
+			}
+
+			req := rest.BroadcastReq{
+				Tx:   stdTx,
+				Mode: "block|sync|async",
+			}
+
+			json, _ = clientCtx.LegacyAmino.MarshalJSON(req)
+
+		} else {
+			json, err = marshalSignatureJSON(txCfg, txBuilder, sigOnly)
+			if err != nil {
+				return err
+			}
 		}
 
 		outputDoc, _ := cmd.Flags().GetString(flags.FlagOutputDocument)

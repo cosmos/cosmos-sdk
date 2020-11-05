@@ -29,16 +29,16 @@ func DefaultTxEncoder() sdk.TxEncoder {
 }
 
 // DefaultJSONTxEncoder returns a default protobuf JSON TxEncoder using the provided Marshaler.
-func DefaultJSONTxEncoder() sdk.TxEncoder {
+func DefaultJSONTxEncoder(cdc codec.ProtoCodecMarshaler) sdk.TxEncoder {
 	return func(tx sdk.Tx) ([]byte, error) {
 		txWrapper, ok := tx.(*wrapper)
 		if ok {
-			return codec.ProtoMarshalJSON(txWrapper.tx)
+			return cdc.MarshalJSON(txWrapper.tx)
 		}
 
 		protoTx, ok := tx.(*txtypes.Tx)
 		if ok {
-			return codec.ProtoMarshalJSON(protoTx)
+			return cdc.MarshalJSON(protoTx)
 		}
 
 		return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, tx)

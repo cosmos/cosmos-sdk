@@ -31,7 +31,7 @@ func TestParseQueryResponse(t *testing.T) {
 		Result:  &sdk.Result{Data: []byte("tx data"), Log: "log"},
 	}
 
-	bz, err := codec.ProtoMarshalJSON(simRes)
+	bz, err := codec.ProtoMarshalJSON(simRes, nil)
 	require.NoError(t, err)
 
 	res, err := authclient.ParseQueryResponse(bz)
@@ -55,7 +55,7 @@ func TestDefaultTxEncoder(t *testing.T) {
 
 func TestReadTxFromFile(t *testing.T) {
 	t.Parallel()
-	encodingConfig := simapp.MakeEncodingConfig()
+	encodingConfig := simapp.MakeTestEncodingConfig()
 
 	txCfg := encodingConfig.TxConfig
 	clientCtx := client.Context{}
@@ -90,7 +90,7 @@ func TestReadTxFromFile(t *testing.T) {
 
 func TestBatchScanner_Scan(t *testing.T) {
 	t.Parallel()
-	encodingConfig := simapp.MakeEncodingConfig()
+	encodingConfig := simapp.MakeTestEncodingConfig()
 
 	txGen := encodingConfig.TxConfig
 	clientCtx := client.Context{}

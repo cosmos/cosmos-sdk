@@ -23,10 +23,6 @@ const (
 	EnableChangePubKey     = "enable_change_pubkey"
 )
 
-// RandomGenesisAccountsFn defines the function required to generate custom account types
-// on the auth module simulation.
-type RandomGenesisAccountsFn func(simState *module.SimulationState) types.GenesisAccounts
-
 // RandomGenesisAccounts defines the default RandomGenesisAccountsFn used on the SDK.
 // It creates a slice of BaseAccount, ContinuousVestingAccount and DelayedVestingAccount.
 func RandomGenesisAccounts(simState *module.SimulationState) types.GenesisAccounts {
@@ -104,7 +100,7 @@ func GenEnableChangePubKey(r *rand.Rand) bool {
 }
 
 // RandomizedGenState generates a random GenesisState for auth
-func RandomizedGenState(simState *module.SimulationState, randGenAccountsFn RandomGenesisAccountsFn) {
+func RandomizedGenState(simState *module.SimulationState, randGenAccountsFn types.RandomGenesisAccountsFn) {
 	var maxMemoChars uint64
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, MaxMemoChars, &maxMemoChars, simState.Rand,

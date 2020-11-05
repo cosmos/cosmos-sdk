@@ -62,7 +62,7 @@ func QueryClientStateABCI(
 		return nil, err
 	}
 
-	clientStateRes := types.NewQueryClientStateResponse(clientID, anyClientState, proofBz, proofHeight)
+	clientStateRes := types.NewQueryClientStateResponse(anyClientState, proofBz, proofHeight)
 	return clientStateRes, nil
 }
 
@@ -115,7 +115,7 @@ func QueryConsensusStateABCI(
 		return nil, err
 	}
 
-	return types.NewQueryConsensusStateResponse(clientID, anyConsensusState, proofBz, proofHeight), nil
+	return types.NewQueryConsensusStateResponse(anyConsensusState, proofBz, proofHeight), nil
 }
 
 // QueryTendermintHeader takes a client context and returns the appropriate

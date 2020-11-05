@@ -14,7 +14,6 @@ import (
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	sdk.RegisterLegacyAminoCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
-	vesting.RegisterLegacyAminoCodec(cdc)
 }
 
 // RegisterInterfaces registers Interfaces from sdk/types, vesting, crypto, tx.

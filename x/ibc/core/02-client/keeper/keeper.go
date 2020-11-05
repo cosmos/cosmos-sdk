@@ -90,8 +90,8 @@ func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string,
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		keySplit := strings.Split(string(iterator.Key()), "/")
-		// consensus key is in the format "clients/<clientID>/consensusState/<height>"
-		if len(keySplit) != 4 || keySplit[2] != "consensusState" {
+		// consensus key is in the format "clients/<clientID>/consensusStates/<height>"
+		if len(keySplit) != 4 || keySplit[2] != string(host.KeyConsensusStatesPrefix) {
 			continue
 		}
 		clientID := keySplit[1]
@@ -154,22 +154,6 @@ func (k Keeper) GetLatestClientConsensusState(ctx sdk.Context, clientID string) 
 		return nil, false
 	}
 	return k.GetClientConsensusState(ctx, clientID, clientState.GetLatestHeight())
-}
-
-// GetClientConsensusStateLTE will get the latest ConsensusState of a particular client at the latest height
-// less than or equal to the given height
-// It will only search for heights within the same version
-func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, maxHeight exported.Height) (exported.ConsensusState, bool) {
-	h := maxHeight
-	ok := true
-	for ok {
-		found := k.HasClientConsensusState(ctx, clientID, h)
-		if found {
-			return k.GetClientConsensusState(ctx, clientID, h)
-		}
-		h, ok = h.Decrement()
-	}
-	return nil, false
 }
 
 // GetSelfConsensusState introspects the (self) past historical info at a given height

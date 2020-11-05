@@ -30,7 +30,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	)
 
 	registry.RegisterInterface(
-		"cosmos.auth.GenesisAccount",
+		"cosmos.auth.v1beta1.GenesisAccount",
 		(*GenesisAccount)(nil),
 		&BaseAccount{},
 		&ModuleAccount{},

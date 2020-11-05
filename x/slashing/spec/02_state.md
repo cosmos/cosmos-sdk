@@ -40,27 +40,35 @@ bonded validator. The `SignedBlocksWindow` parameter defines the size
 
 The information stored for tracking validator liveness is as follows:
 
-```go
-type ValidatorSigningInfo struct {
-    Address             sdk.ConsAddress
-    StartHeight         int64
-    IndexOffset         int64
-    JailedUntil         time.Time
-    Tombstoned          bool
-    MissedBlocksCounter int64
+```protobuf
+// ValidatorSigningInfo defines a validator's signing info for monitoring their
+// liveness activity.
+message ValidatorSigningInfo {
+  string address = 1;
+  // height at which validator was first a candidate OR was unjailed
+  int64 start_height = 2;
+  // index offset into signed block bit array
+  int64 index_offset = 3;
+  // timestamp validator cannot be unjailed until
+  google.protobuf.Timestamp jailed_until = 4;
+  // whether or not a validator has been tombstoned (killed out of validator
+  // set)
+  bool tombstoned = 5;
+  // missed blocks counter (to avoid scanning the array every time)
+  int64 missed_blocks_counter = 6;
 }
 ```
 
 Where:
 
-- __Address__: The validator's consensus address.
-- __StartHeight__: The height that the candidate became an active validator
+- **Address**: The validator's consensus address.
+- **StartHeight**: The height that the candidate became an active validator
   (with non-zero voting power).
-- __IndexOffset__: Index which is incremented each time the validator was a bonded
+- **IndexOffset**: Index which is incremented each time the validator was a bonded
   in a block and may have signed a precommit or not. This in conjunction with the
   `SignedBlocksWindow` param determines the index in the `MissedBlocksBitArray`.
-- __JailedUntil__: Time for which the validator is jailed until due to liveness downtime.
-- __Tombstoned__: Desribes if the validator is tombstoned or not. It is set once the
+- **JailedUntil**: Time for which the validator is jailed until due to liveness downtime.
+- **Tombstoned**: Desribes if the validator is tombstoned or not. It is set once the
   validator commits an equivocation or for any other configured misbehiavor.
-- __MissedBlocksCounter__: A counter kept to avoid unnecessary array reads. Note
+- **MissedBlocksCounter**: A counter kept to avoid unnecessary array reads. Note
   that `Sum(MissedBlocksBitArray)` equals `MissedBlocksCounter` always.

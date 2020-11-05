@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/keeper"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
+	ibcmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -113,7 +114,7 @@ func (suite *KeeperTestSuite) TestHandleRecvPacket() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
+			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 			suite.Require().NoError(err)
 		}, false},
 		{"UNORDERED: packet already received (replay)", func() {
@@ -124,7 +125,7 @@ func (suite *KeeperTestSuite) TestHandleRecvPacket() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
+			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 			suite.Require().NoError(err)
 		}, false},
 	}
@@ -186,10 +187,7 @@ func (suite *KeeperTestSuite) TestHandleAcknowledgePacket() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
-			suite.Require().NoError(err)
-
-			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 			suite.Require().NoError(err)
 		}, true},
 		{"success: UNORDERED", func() {
@@ -199,10 +197,7 @@ func (suite *KeeperTestSuite) TestHandleAcknowledgePacket() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
-			suite.Require().NoError(err)
-
-			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 			suite.Require().NoError(err)
 		}, true},
 		{"success: UNORDERED acknowledge out of order packet", func() {
@@ -216,10 +211,7 @@ func (suite *KeeperTestSuite) TestHandleAcknowledgePacket() {
 				err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 				suite.Require().NoError(err)
 
-				err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
-				suite.Require().NoError(err)
-
-				err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
+				err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 				suite.Require().NoError(err)
 			}
 		}, true},
@@ -233,10 +225,7 @@ func (suite *KeeperTestSuite) TestHandleAcknowledgePacket() {
 				err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 				suite.Require().NoError(err)
 
-				err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
-				suite.Require().NoError(err)
-
-				err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
+				err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 				suite.Require().NoError(err)
 			}
 		}, false},
@@ -258,17 +247,13 @@ func (suite *KeeperTestSuite) TestHandleAcknowledgePacket() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
-			suite.Require().NoError(err)
-
-			// writes ibctesting.TestHash as ack
-			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 			suite.Require().NoError(err)
 
 			err = suite.coordinator.AcknowledgePacket(suite.chainA, suite.chainB, clientB, packet, ibctesting.TestHash)
 			suite.Require().NoError(err)
 		}, false},
-		{"UNORDERED: packet already received (replay)", func() {
+		{"UNORDERED: packet already acknowledged (replay)", func() {
 			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 
 			packet = channeltypes.NewPacket(ibctesting.MockCommitment, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
@@ -276,11 +261,7 @@ func (suite *KeeperTestSuite) TestHandleAcknowledgePacket() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
-			suite.Require().NoError(err)
-
-			// writes ibctesting.TestHash as ack
-			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 			suite.Require().NoError(err)
 
 			err = suite.coordinator.AcknowledgePacket(suite.chainA, suite.chainB, clientB, packet, ibctesting.TestHash)
@@ -300,7 +281,7 @@ func (suite *KeeperTestSuite) TestHandleAcknowledgePacket() {
 			packetKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 			proof, proofHeight := suite.chainB.QueryProof(packetKey)
 
-			msg := channeltypes.NewMsgAcknowledgement(packet, ibctesting.MockAcknowledgement, proof, proofHeight, suite.chainA.SenderAccount.GetAddress())
+			msg := channeltypes.NewMsgAcknowledgement(packet, ibcmock.MockAcknowledgement, proof, proofHeight, suite.chainA.SenderAccount.GetAddress())
 
 			_, err := keeper.Keeper.Acknowledgement(*suite.chainA.App.IBCKeeper, sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 

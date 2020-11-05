@@ -885,7 +885,7 @@ func (chain *TestChain) SendPacket(
 func (chain *TestChain) WriteAcknowledgement(
 	packet exported.PacketI,
 ) error {
-	channelCap := chain.GetChannelCapability(packet.GetSourcePort(), packet.GetSourceChannel())
+	channelCap := chain.GetChannelCapability(packet.GetDestPort(), packet.GetDestChannel())
 
 	// no need to send message, acting as a handler
 	err := chain.App.IBCKeeper.ChannelKeeper.WriteAcknowledgement(chain.GetContext(), channelCap, packet, TestHash)

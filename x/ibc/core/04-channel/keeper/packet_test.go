@@ -9,6 +9,7 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
+	ibcmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 )
 
 var (
@@ -415,7 +416,7 @@ func (suite *KeeperTestSuite) TestWriteAcknowledgement() {
 				ack = ibctesting.TestHash
 				channelCap = capabilitytypes.NewCapability(3)
 			},
-			true,
+			false,
 		},
 		{
 			"no-op, already acked",
@@ -460,8 +461,9 @@ func (suite *KeeperTestSuite) TestWriteAcknowledgement() {
 // TestAcknowledgePacket tests the call AcknowledgePacket on chainA.
 func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 	var (
-		packet     types.Packet
-		ack        = ibctesting.TestHash
+		packet types.Packet
+		ack    = ibcmock.MockAcknowledgement
+
 		channelCap *capabilitytypes.Capability
 	)
 
@@ -474,11 +476,9 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			suite.Require().NoError(err)
 
 			// create packet receipt and acknowledgement
-			err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
+			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
-			suite.Require().NoError(err)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, true},
 		{"success on unordered channel", func() {
@@ -491,11 +491,9 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			suite.Require().NoError(err)
 
 			// create packet receipt and acknowledgement
-			err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
+			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
-			suite.Require().NoError(err)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, true},
 		{"channel not found", func() {
@@ -519,13 +517,11 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			suite.Require().NoError(err)
 
 			// create packet receipt and acknowledgement
-			err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
+			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
-			suite.Require().NoError(err)
 			channelCap = capabilitytypes.NewCapability(3)
-		}, true},
+		}, false},
 		{"packet destination port ≠ channel counterparty port", func() {
 			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			// use wrong port for dest
@@ -548,6 +544,7 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 				types.NewChannel(types.OPEN, types.ORDERED, types.NewCounterparty(channelA.PortID, channelA.ID), []string{connIDB}, channelB.Version),
 			)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			suite.chainA.CreateChannelCapability(channelA.PortID, channelA.ID)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"connection not OPEN", func() {
@@ -565,6 +562,7 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 				types.NewChannel(types.OPEN, types.ORDERED, types.NewCounterparty(channelB.PortID, channelB.ID), []string{connA.ID}, channelA.Version),
 			)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			suite.chainA.CreateChannelCapability(channelA.PortID, channelA.ID)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"packet hasn't been sent", func() {
@@ -596,8 +594,9 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			// manually set packet commitment
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), channelA.PortID, channelA.ID, packet.GetSequence(), ibctesting.TestHash)
 
-			// manually set packet acknowledgement
+			// manually set packet acknowledgement and capability
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainB.GetContext(), channelB.PortID, channelB.ID, packet.GetSequence(), ibctesting.TestHash)
+			suite.chainA.CreateChannelCapability(channelA.PortID, channelA.ID)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"next ack sequence mismatch", func() {
@@ -608,10 +607,7 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			suite.Require().NoError(err)
 
 			// create packet acknowledgement
-			err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
-			suite.Require().NoError(err)
-
-			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 			suite.Require().NoError(err)
 
 			// set next sequence ack wrong

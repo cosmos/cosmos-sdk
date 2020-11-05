@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
+	ibcmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 )
 
 const (
@@ -465,10 +466,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 			suite.Require().NoError(err)
 
 			// write receipt and ack
-			err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
-			suite.Require().NoError(err)
-
-			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 			suite.Require().NoError(err)
 
 			var ok bool
@@ -488,7 +486,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 
 			err = clientState.VerifyPacketAcknowledgement(
 				store, suite.chainA.Codec, proofHeight, &prefix, proof,
-				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(), ibctesting.TestHash,
+				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(), ibcmock.MockAcknowledgement,
 			)
 
 			if tc.expPass {
@@ -643,7 +641,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 			suite.Require().NoError(err)
 
 			// next seq recv incremented
-			err = suite.coordinator.RecvPacket(suite.chainB, suite.chainA, clientA, packet)
+			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 			suite.Require().NoError(err)
 
 			// need to update chainA's client representing chainB

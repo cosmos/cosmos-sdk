@@ -222,14 +222,14 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 }
 
 func (suite *KeeperTestSuite) TestUpdateClientLocalhost() {
-	var localhostClient exported.ClientState = localhosttypes.NewClientState(suite.header.Header.GetChainID(), types.NewHeight(0, uint64(suite.ctx.BlockHeight())))
+	version := types.ParseChainID(suite.chainA.ChainID)
+	var localhostClient exported.ClientState = localhosttypes.NewClientState(suite.chainA.ChainID, types.NewHeight(version, uint64(suite.chainA.GetContext().BlockHeight())))
 
-	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
+	ctx := suite.chainA.GetContext().WithBlockHeight(suite.chainA.GetContext().BlockHeight() + 1)
+	err := suite.chainA.App.IBCKeeper.ClientKeeper.UpdateClient(ctx, exported.Localhost, nil)
+	suite.Require().NoError(err)
 
-	err := suite.keeper.UpdateClient(suite.ctx, exported.Localhost, nil)
-	suite.Require().NoError(err, err)
-
-	clientState, found := suite.keeper.GetClientState(suite.ctx, exported.Localhost)
+	clientState, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(ctx, exported.Localhost)
 	suite.Require().True(found)
 	suite.Require().Equal(localhostClient.GetLatestHeight().(types.Height).Increment(), clientState.GetLatestHeight())
 }

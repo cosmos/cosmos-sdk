@@ -192,7 +192,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 				}
 
 				err := tc.clientState.VerifyClientState(
-					suite.store, suite.chainA.Codec, nil, solomachine.GetHeight(), tc.prefix, counterpartyClientIdentifier, tc.proof, clientState,
+					suite.store, suite.chainA.Codec, solomachine.GetHeight(), tc.prefix, counterpartyClientIdentifier, tc.proof, clientState,
 				)
 
 				if tc.expPass {
@@ -320,7 +320,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 				}
 
 				err := tc.clientState.VerifyClientConsensusState(
-					suite.store, suite.chainA.Codec, nil, solomachine.GetHeight(), counterpartyClientIdentifier, consensusHeight, tc.prefix, tc.proof, consensusState,
+					suite.store, suite.chainA.Codec, solomachine.GetHeight(), counterpartyClientIdentifier, consensusHeight, tc.prefix, tc.proof, consensusState,
 				)
 
 				if tc.expPass {
@@ -336,7 +336,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 
 func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 	counterparty := connectiontypes.NewCounterparty("clientB", testConnectionID, prefix)
-	conn := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []string{"1.0.0"})
+	conn := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, connectiontypes.ExportedVersionsToProto(connectiontypes.GetCompatibleVersions()))
 
 	path := suite.solomachine.GetConnectionStatePath(testConnectionID)
 

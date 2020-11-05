@@ -12,9 +12,13 @@ var _ rosetta.Rosetta = OfflineNetwork{}
 // NewOffline instantiates the instance of an offline network
 // whilst the offline network does not support the DataAPI,
 // it supports a subset of the construction API.
-func NewOffline(api rosetta.ConstructionAPI) OfflineNetwork {
+func NewOffline(network *types.NetworkIdentifier) OfflineNetwork {
 	return OfflineNetwork{
-		ConstructionAPI: api,
+		SingleNetwork{
+			client:                 nil,
+			network:                network,
+			genesisBlockIdentifier: nil,
+		},
 	}
 }
 
@@ -22,7 +26,7 @@ func NewOffline(api rosetta.ConstructionAPI) OfflineNetwork {
 // which is basically a data API that constantly
 // returns errors, because it cannot be used if offline
 type OfflineNetwork struct {
-	rosetta.ConstructionAPI
+	SingleNetwork
 }
 
 // Implement DataAPI in offline mode, which means no method is available

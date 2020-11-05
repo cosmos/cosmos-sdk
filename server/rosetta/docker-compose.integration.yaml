@@ -12,12 +12,14 @@ services:
     build:
       context: ../../
       dockerfile: server/rosetta/Dockerfile
-    command: ["./rosetta", "start"]
-    environment:
-      - ROSETTA_BLOCKCHAIN=cosmos
-      - ROSETTA_NETWORK=test_network
-      - ROSETTA_TENDERMINT_RPC=cosmos:26657
-      - ROSETTA_GRPC_ENDPOINT=cosmos:9090
-      - ROSETTA_ADDR=:8080
+    command: [
+      "./simd",
+      "rosetta",
+      "--blockchain", "cosmos",
+      "--network", "test_network",
+      "--tendermint", "cosmos:26657",
+      "--grpc", "cosmos:9090",
+      "--addr", ":8080",
+    ]
     ports:
     - 8080:8080

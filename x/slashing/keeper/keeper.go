@@ -42,7 +42,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 // AddPubkey sets a address-pubkey relation
 func (k Keeper) AddPubkey(ctx sdk.Context, pubkey crypto.PubKey) error {
 	addr := pubkey.Address()
-	pkProto, err := codec.AssertProtoMsg(pubkey)
+	pkProto, err := protocdc.AssertMsg(pubkey)
 	if err != nil {
 		return err
 	}

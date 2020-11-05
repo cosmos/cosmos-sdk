@@ -6,9 +6,9 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"gopkg.in/yaml.v2"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/internal/protocdc"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
@@ -98,7 +98,7 @@ func (ss StdSignature) MarshalYAML() (interface{}, error) {
 	)
 
 	if ss.PubKey != nil {
-		if pubkey, err = codec.ProtoMarshalJSONI(ss.PubKey, nil); err != nil {
+		if pubkey, err = protocdc.MarshalJSONI(ss.PubKey, nil); err != nil {
 			return nil, err
 		}
 	}

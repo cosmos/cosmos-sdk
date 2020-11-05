@@ -6,7 +6,7 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/internal/protocdc"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
@@ -541,7 +541,7 @@ type getPK interface {
 func getPKString(g getPK) (string, err) {
 	if pk := g.GetPubKey(); pk != nil {
 		// TODO check if it's ok to change a type of ValidatorOutput.PubKey to crypto.PubKey
-		pk, err := codec.ProtoMarshalJSONI(pk, nil)
+		pk, err := protocdc.MarshalJSONI(pk, nil)
 		if err != nil {
 			return nil, err
 		}

@@ -16,6 +16,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/internal/protocdc"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -51,7 +52,7 @@ func ShowValidatorCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			out, err := codec.ProtoMarshalJSONI(pk, nil)
+			out, err := protocdc.MarshalJSONI(pk, nil)
 			if err != nil {
 				return err
 			}

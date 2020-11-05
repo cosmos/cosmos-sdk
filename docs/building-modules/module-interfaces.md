@@ -103,7 +103,7 @@ Request types, which define structured interactions from users, must be defined 
 
 Here is an example of a request to buy a name from the `nameservice` module:
 
-+++ https://github.com/cosmos/sdk-tutorials/blob/master/nameservice/x/nameservice/client/rest/tx.go#L14-L19
++++ https://github.com/cosmos/cosmos-sdk/blob/7f59723d889b69ca19966167f0b3a7fec7a39e53/x/bank/client/rest/tx.go#L15-L19
 
 The `BaseReq` includes basic information that every request needs to have, similar to required flags in a CLI. All of these values, including `GasPrices` and `AccountNumber`, will be provided in the request body. The user will also need to specify the arguments `Name` and `Amount` fields in the body and `Buyer` will be provided by the user's address.
 
@@ -128,7 +128,7 @@ Request handlers must be defined for both transaction and query requests. Handle
 
 Here is an example of a request handler for the nameservice module `buyNameReq` request (the same one shown above):
 
-+++ https://github.com/cosmos/sdk-tutorials/blob/master/nameservice/x/nameservice/client/rest/tx.go#L21-L57
++++ https://github.com/cosmos/cosmos-sdk/blob/7f59723d889b69ca19966167f0b3a7fec7a39e53/x/bank/client/rest/tx.go#L21-L51
 
 The request handler can be broken down as follows:
 

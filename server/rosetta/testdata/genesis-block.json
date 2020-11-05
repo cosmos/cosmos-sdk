@@ -1,0 +1,58 @@
+{
+  "jsonrpc": "2.0",
+  "id": -1,
+  "result": {
+    "block_id": {
+      "hash": "360A1DED0DEE79A8A28FBD88517EA3B6A9719460A9BE30D8E8D786D5AD79127B",
+      "parts": {
+        "total": "1",
+        "hash": "82914D192B2C538716049AA0193DDADD8F855AAA04B596587E0B2BE4CEF27E5E"
+      }
+    },
+    "block": {
+      "header": {
+        "version": {
+          "block": "10",
+          "app": "0"
+        },
+        "chain_id": "blog",
+        "height": "1",
+        "time": "2020-08-13T11:36:18.162487Z",
+        "last_block_id": {
+          "hash": "",
+          "parts": {
+            "total": "0",
+            "hash": ""
+          }
+        },
+        "last_commit_hash": "",
+        "data_hash": "",
+        "validators_hash": "6260C775FAC0092DFD7574B4943F6A180F409189BA24BF9B9A3A4C74CA512D47",
+        "next_validators_hash": "6260C775FAC0092DFD7574B4943F6A180F409189BA24BF9B9A3A4C74CA512D47",
+        "consensus_hash": "048091BC7DDC283F77BFBF91D73C44DA58C3DF8A9CBC867405D8B7F3DAADA22F",
+        "app_hash": "",
+        "last_results_hash": "",
+        "evidence_hash": "",
+        "proposer_address": "89E00B1FA0E5DACAAB55AD38C422ADB433936C69"
+      },
+      "data": {
+        "txs": null
+      },
+      "evidence": {
+        "evidence": null
+      },
+      "last_commit": {
+        "height": "0",
+        "round": "0",
+        "block_id": {
+          "hash": "",
+          "parts": {
+            "total": "0",
+            "hash": ""
+          }
+        },
+        "signatures": null
+      }
+    }
+  }
+}

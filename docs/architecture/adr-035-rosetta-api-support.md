@@ -119,7 +119,7 @@ type ConstructionAPI interface {
 Example in pseudo-code of an Adapter interface:
 
 ```
-type SomeAdapter struct {
+``type SomeAdapter struct {
 	cosmosClient     client
 	tendermintClient client
 }

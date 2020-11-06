@@ -64,7 +64,7 @@ func (s txServer) TxsByEvents(ctx context.Context, req *txtypes.GetTxsEventReque
 
 	tmEvents := make([]string, len(events))
 
-	for _, event := range events {
+	for i, event := range events {
 		if !strings.Contains(event, "=") {
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid event; event %s should be of the format: %s", event, eventFormat))
 		} else if strings.Count(event, "=") > 1 {
@@ -78,7 +78,7 @@ func (s txServer) TxsByEvents(ctx context.Context, req *txtypes.GetTxsEventReque
 			event = fmt.Sprintf("%s='%s'", tokens[0], tokens[1])
 		}
 
-		tmEvents = append(tmEvents, event)
+		tmEvents[i] = event
 	}
 
 	query := strings.Join(tmEvents, " AND ")

@@ -8,9 +8,7 @@ import (
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/encoding"
-	tmtypes "github.com/tendermint/tendermint/types"
+	tmprotocrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 	"gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -86,20 +84,6 @@ func (v Validators) ToSDKValidators() (validators []ValidatorI) {
 	}
 
 	return validators
-}
-
-// ToTmValidators casts all validators to the corresponding tendermint type.
-func (v Validators) ToTmValidators() ([]*tmtypes.Validator, error) {
-	validators := make([]*tmtypes.Validator, len(v))
-	var err error
-	for i, val := range v {
-		validators[i], err = val.ToTmValidator()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return validators, nil
 }
 
 // Sort Validators sorts validator array in ascending operator address order
@@ -274,11 +258,7 @@ func (d Description) EnsureLength() (Description, error) {
 // ABCIValidatorUpdate returns an abci.ValidatorUpdate from a staking validator type
 // with the full validator power
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
-	tmPk, err := v.TmConsPubKey()
-	if err != nil {
-		panic(err)
-	}
-	tmProtoPk, err := encoding.PubKeyToProto(tmPk)
+	tmProtoPk, err := v.TmConsPublicKey()
 	if err != nil {
 		panic(err)
 	}
@@ -292,11 +272,7 @@ func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 // ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staking validator type
 // with zero power used for validator updates.
 func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
-	tmPk, err := v.TmConsPubKey()
-	if err != nil {
-		panic(err)
-	}
-	tmProtoPk, err := encoding.PubKeyToProto(tmPk)
+	tmProtoPk, err := v.TmConsPublicKey()
 	if err != nil {
 		panic(err)
 	}
@@ -305,16 +281,6 @@ func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 		PubKey: tmProtoPk,
 		Power:  0,
 	}
-}
-
-// ToTmValidator casts an SDK validator to a tendermint type Validator.
-func (v Validator) ToTmValidator() (*tmtypes.Validator, error) {
-	tmPk, err := v.TmConsPubKey()
-	if err != nil {
-		return nil, err
-	}
-
-	return tmtypes.NewValidator(tmPk, v.ConsensusPower()), nil
 }
 
 // SetInitialCommission attempts to set a validator's initial commission. An
@@ -514,16 +480,16 @@ func (v Validator) ConsPubKey() (cryptotypes.PubKey, error) {
 
 }
 
-// TmConsPubKey casts Validator.ConsensusPubkey to tmcrypto.PubKey.
-func (v Validator) TmConsPubKey() (tmcrypto.PubKey, error) {
+// TmConsPublicKey casts Validator.ConsensusPubkey to tmprotocrypto.PubKey.
+func (v Validator) TmConsPublicKey() (tmprotocrypto.PublicKey, error) {
 	pk, err := v.ConsPubKey()
 	if err != nil {
-		return nil, err
+		return tmprotocrypto.PublicKey{}, err
 	}
 
-	tmPk, err := cryptocodec.ToTmPubKey(pk)
+	tmPk, err := cryptocodec.ToTmPublicKey(pk)
 	if err != nil {
-		return nil, err
+		return tmprotocrypto.PublicKey{}, err
 	}
 
 	return tmPk, nil

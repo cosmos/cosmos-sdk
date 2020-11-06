@@ -132,9 +132,9 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 
 	validator := tstaking.CheckValidator(addr1, types.Bonded, false)
 	assert.Equal(t, addr1.String(), validator.OperatorAddress)
-	consKey, err := validator.TmConsPubKey()
+	consKey, err := validator.TmConsPublicKey()
 	require.NoError(t, err)
-	tmPk1, err := cryptocodec.ToTmPubKey(pk1)
+	tmPk1, err := cryptocodec.ToTmPublicKey(pk1)
 	require.NoError(t, err)
 	assert.Equal(t, tmPk1, consKey)
 	assert.Equal(t, valTokens, validator.BondedTokens())
@@ -157,9 +157,9 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 
 	validator = tstaking.CheckValidator(addr2, types.Bonded, false)
 	assert.Equal(t, addr2.String(), validator.OperatorAddress)
-	consPk, err := validator.TmConsPubKey()
+	consPk, err := validator.TmConsPublicKey()
 	require.NoError(t, err)
-	tmPk2, err := cryptocodec.ToTmPubKey(pk2)
+	tmPk2, err := cryptocodec.ToTmPublicKey(pk2)
 	require.NoError(t, err)
 	assert.Equal(t, tmPk2, consPk)
 	assert.True(sdk.IntEq(t, valTokens, validator.Tokens))

@@ -7,6 +7,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -201,13 +202,13 @@ func WriteValidators(ctx sdk.Context, keeper keeper.Keeper) (vals []tmtypes.Gene
 		if err != nil {
 			return true
 		}
-		tmPk, err := validator.TmConsPubKey()
+		tmPk, err := cryptocodec.ToTmPubKey(pk)
 		if err != nil {
 			return true
 		}
 
 		vals = append(vals, tmtypes.GenesisValidator{
-			Address: sdk.ConsAddress(pk.Address()).Bytes(),
+			Address: sdk.ConsAddress(tmPk.Address()).Bytes(),
 			PubKey:  tmPk,
 			Power:   validator.GetConsensusPower(),
 			Name:    validator.GetMoniker(),
@@ -234,7 +235,7 @@ func validateGenesisStateValidators(validators []types.Validator) error {
 
 	for i := 0; i < len(validators); i++ {
 		val := validators[i]
-		consPk, err := val.TmConsPubKey()
+		consPk, err := val.ConsPubKey()
 		if err != nil {
 			return err
 		}

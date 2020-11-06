@@ -241,8 +241,8 @@ func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 func SetFlags(flags *pflag.FlagSet) {
 	flags.String(FlagBlockchain, DefaultBlockchain, "the blockchain type")
 	flags.String(FlagNetwork, "", "the network name")
-	flags.String(FlagTendermintEndpoint, "", "the tendermint rpc endpoint, without tcp://")
-	flags.String(FlagGRPCEndpoint, "", "the app gRPC endpoint")
+	flags.String(FlagTendermintEndpoint, DefaultTendermintEndpoint, "the tendermint rpc endpoint, without tcp://")
+	flags.String(FlagGRPCEndpoint, DefaultGRPCEndpoint, "the app gRPC endpoint")
 	flags.String(FlagAddr, DefaultAddr, "the address rosetta will bind to")
 	flags.Int(FlagRetries, DefaultRetries, "the number of retries that will be done before quitting")
 	return

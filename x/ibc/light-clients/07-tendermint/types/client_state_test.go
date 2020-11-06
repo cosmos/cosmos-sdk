@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
+	ibcmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 )
 
 const (
@@ -465,10 +466,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 			suite.Require().NoError(err)
 
 			// write receipt and ack
-			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
-			suite.Require().NoError(err)
-
-			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 			suite.Require().NoError(err)
 
 			var ok bool
@@ -488,7 +486,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 
 			err = clientState.VerifyPacketAcknowledgement(
 				store, suite.chainA.Codec, proofHeight, &prefix, proof,
-				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(), ibctesting.TestHash,
+				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(), ibcmock.MockAcknowledgement,
 			)
 
 			if tc.expPass {
@@ -635,15 +633,15 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 			suite.SetupTest() // reset
 
 			// setup testing conditions
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.ORDERED)
 			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
 
 			// send packet
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			// write receipt, next seq recv incremented
-			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+			// next seq recv incremented
+			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 			suite.Require().NoError(err)
 
 			// need to update chainA's client representing chainB
@@ -666,7 +664,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 
 			err = clientState.VerifyNextSequenceRecv(
 				store, suite.chainA.Codec, proofHeight, &prefix, proof,
-				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
+				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()+1,
 			)
 
 			if tc.expPass {

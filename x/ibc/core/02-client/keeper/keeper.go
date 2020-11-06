@@ -156,22 +156,6 @@ func (k Keeper) GetLatestClientConsensusState(ctx sdk.Context, clientID string) 
 	return k.GetClientConsensusState(ctx, clientID, clientState.GetLatestHeight())
 }
 
-// GetClientConsensusStateLTE will get the latest ConsensusState of a particular client at the latest height
-// less than or equal to the given height
-// It will only search for heights within the same version
-func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, maxHeight exported.Height) (exported.ConsensusState, bool) {
-	h := maxHeight
-	ok := true
-	for ok {
-		found := k.HasClientConsensusState(ctx, clientID, h)
-		if found {
-			return k.GetClientConsensusState(ctx, clientID, h)
-		}
-		h, ok = h.Decrement()
-	}
-	return nil, false
-}
-
 // GetSelfConsensusState introspects the (self) past historical info at a given height
 // and returns the expected consensus state at that height.
 // For now, can only retrieve self consensus states for the current version

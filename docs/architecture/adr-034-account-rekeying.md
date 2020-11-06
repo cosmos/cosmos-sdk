@@ -1,4 +1,4 @@
-# ADR 034: Account Rekying
+# ADR 034: Account Rekeying
 
 ## Changelog
 

@@ -33,7 +33,7 @@ func ExamplePrintRegisteredTypes() {
 	cdc.PrintTypes(os.Stdout)
 	// | Type | Name | Prefix | Length | Notes |
 	// | ---- | ---- | ------ | ----- | ------ |
-	// | PrivKeyLedgerSecp256K1 | tendermint/PrivKeyLedgerSecp256K1 | 0x10CAB393 | variable |  |
+	// | PrivKeyLedgerSecp256k1 | tendermint/PrivKeyLedgerSecp256k1 | 0x10CAB393 | variable |  |
 	// | PubKey | tendermint/PubKeyEd25519 | 0x1624DE64 | variable |  |
 	// | PubKey | tendermint/PubKeySr25519 | 0x0DFB1005 | variable |  |
 	// | PubKey | tendermint/PubKeySecp256k1 | 0xEB5AE987 | variable |  |

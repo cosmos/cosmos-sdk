@@ -93,7 +93,7 @@ func NewError(code int32, message string, retry bool) Error {
 	}
 }
 
-// WrapError wraps the rosetta error with additional context
+// WrapError wraps the Rosetta API error with additional context.
 func WrapError(err Error, msg string) Error {
 	e := err.RosettaError()
 	e.Message = fmt.Sprintf("%s: %s", e.Message, msg)

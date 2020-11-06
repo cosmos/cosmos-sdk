@@ -92,7 +92,7 @@ func (t *Tx) ValidateBasic() error {
 	if len(sigs) != len(t.GetSigners()) {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrUnauthorized,
-			"wrong number of signers; expected %d, got %d", t.GetSigners(), len(sigs),
+			"wrong number of signers; expected %d, got %d", len(t.GetSigners()), len(sigs),
 		)
 	}
 

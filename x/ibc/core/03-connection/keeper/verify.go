@@ -22,13 +22,8 @@ func (k Keeper) VerifyClientState(
 		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, clientID)
 	}
 
-	targetConsState, found := k.clientKeeper.GetClientConsensusState(ctx, clientID, height)
-	if !found {
-		return sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "clientID: %s with height: %s", clientID, height)
-	}
-
 	if err := targetClient.VerifyClientState(
-		k.clientKeeper.ClientStore(ctx, clientID), k.cdc, targetConsState.GetRoot(), height,
+		k.clientKeeper.ClientStore(ctx, clientID), k.cdc, height,
 		connection.GetCounterparty().GetPrefix(), connection.GetCounterparty().GetClientID(), proof, clientState); err != nil {
 		return sdkerrors.Wrapf(err, "failed client state verification for target client: %s", connection.GetClientID())
 	}
@@ -52,13 +47,8 @@ func (k Keeper) VerifyClientConsensusState(
 		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, clientID)
 	}
 
-	targetConsState, found := k.clientKeeper.GetClientConsensusState(ctx, clientID, height)
-	if !found {
-		return sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "clientID: %s with height: %s", clientID, height)
-	}
-
 	if err := clientState.VerifyClientConsensusState(
-		k.clientKeeper.ClientStore(ctx, clientID), k.cdc, targetConsState.GetRoot(), height,
+		k.clientKeeper.ClientStore(ctx, clientID), k.cdc, height,
 		connection.GetCounterparty().GetClientID(), consensusHeight, connection.GetCounterparty().GetPrefix(), proof, consensusState,
 	); err != nil {
 		return sdkerrors.Wrapf(err, "failed consensus state verification for client (%s)", connection.GetClientID())

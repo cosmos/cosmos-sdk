@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
+	ibcmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 )
 
 var defaultTimeoutHeight = clienttypes.NewHeight(0, 100000)
@@ -336,16 +337,13 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
-			suite.Require().NoError(err)
-
-			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 			suite.Require().NoError(err)
 
 			packetAckKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 			proof, proofHeight := suite.chainB.QueryProof(packetAckKey)
 
-			ack := ibctesting.TestHash
+			ack := ibcmock.MockAcknowledgement
 			if tc.changeAcknowledgement {
 				ack = []byte(ibctesting.InvalidID)
 			}
@@ -399,7 +397,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketReceiptAbsence() {
 			suite.Require().NoError(err)
 
 			if tc.recvAck {
-				err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+				err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 				suite.Require().NoError(err)
 			} else {
 				// need to update height to prove absence
@@ -458,7 +456,7 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 			suite.Require().NoError(err)
 
 			nextSeqRecvKey := host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())

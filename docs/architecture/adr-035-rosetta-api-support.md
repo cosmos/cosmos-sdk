@@ -1,5 +1,11 @@
 # ADR 035: Rosetta API Support
 
+## Authors:
+
+- Jonathan Gimeno (@jgimeno)
+- David Grierson (@senormonito)
+- Alessio Treglia (@alessio)
+
 ## Context
 
 [Rosetta API](https://www.rosetta-api.org/) is an open-source specification and set of tools developed by Coinbase to 

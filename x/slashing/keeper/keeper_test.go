@@ -117,7 +117,7 @@ func TestHandleNewValidator(t *testing.T) {
 	require.Equal(t, stakingtypes.Bonded, validator.GetStatus())
 	bondPool := app.StakingKeeper.GetBondedPool(ctx)
 	expTokens := sdk.TokensFromConsensusPower(100)
-	require.Equal(t, expTokens.Int64(), app.BankKeeper.GetBalance(ctx, bondPool.GetAddress(), app.StakingKeeper.BondDenom(ctx)).Amount.Int64())
+	require.True(t, expTokens.Equal(app.BankKeeper.GetBalance(ctx, bondPool.GetAddress(), app.StakingKeeper.BondDenom(ctx)).Amount))
 }
 
 // Test a jailed validator being "down" twice

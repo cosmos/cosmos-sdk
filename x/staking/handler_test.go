@@ -281,7 +281,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	require.Equal(t, bondAmount, bond.Shares.RoundInt())
 
 	bondedTokens := app.StakingKeeper.TotalBondedTokens(ctx)
-	require.Equal(t, bondAmount.Int64(), bondedTokens.Int64())
+	require.True(t, bondAmount.Equal(bondedTokens))
 
 	for i := int64(0); i < 5; i++ {
 		ctx = ctx.WithBlockHeight(i)
@@ -436,13 +436,13 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		gotDelegatorShares := validator.DelegatorShares.RoundInt()
 		gotDelegatorAcc := app.BankKeeper.GetBalance(ctx, delegatorAddr, params.BondDenom).Amount
 
-		require.Equal(t, expBond.Int64(), gotBond.Int64(),
+		require.True(t, expBond.Equal(gotBond),
 			"i: %v\nexpBond: %v\ngotBond: %v\nvalidator: %v\nbond: %v\n",
 			i, expBond, gotBond, validator, bond)
-		require.Equal(t, expDelegatorShares.Int64(), gotDelegatorShares.Int64(),
+		require.True(t, expDelegatorShares.Equal(gotDelegatorShares),
 			"i: %v\nexpDelegatorShares: %v\ngotDelegatorShares: %v\nvalidator: %v\nbond: %v\n",
 			i, expDelegatorShares, gotDelegatorShares, validator, bond)
-		require.Equal(t, expDelegatorAcc.Int64(), gotDelegatorAcc.Int64(),
+		require.True(t, expDelegatorAcc.Equal(gotDelegatorAcc),
 			"i: %v\nexpDelegatorAcc: %v\ngotDelegatorAcc: %v\nvalidator: %v\nbond: %v\n",
 			i, expDelegatorAcc, gotDelegatorAcc, validator, bond)
 	}
@@ -740,7 +740,7 @@ func TestRedelegationPeriod(t *testing.T) {
 
 	// balance should have been subtracted after creation
 	amt2 := app.BankKeeper.GetBalance(ctx, sdk.AccAddress(validatorAddr), denom).Amount
-	require.Equal(t, amt1.Sub(sdk.NewInt(10)).Int64(), amt2.Int64(), "expected coins to be subtracted")
+	require.True(t, amt1.Sub(sdk.NewInt(10)).Equal(amt2), "expected coins to be subtracted")
 
 	tstaking.CreateValidator(validatorAddr2, PKs[1], 10, true)
 	bal1 := app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(validatorAddr))

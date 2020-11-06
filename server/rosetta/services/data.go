@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/conversion"
@@ -110,14 +111,14 @@ func (sn SingleNetwork) Block(ctx context.Context, request *types.BlockRequest) 
 	}
 	return &types.BlockResponse{
 		Block: &types.Block{
-			BlockIdentifier: &types.BlockIdentifier{
-				Index: block.Block.Height,
-				Hash:  block.BlockID.Hash.String(),
+			BlockIdentifier: conversion.TendermintBlockToBlockIdentifier(block),
+			ParentBlockIdentifier: &types.BlockIdentifier{
+				Index: block.Block.Height - 1,
+				Hash:  fmt.Sprintf("%X", block.BlockID.PartSetHeader.Hash.Bytes()),
 			},
-			ParentBlockIdentifier: conversion.TendermintBlockToBlockIdentifier(block),
-			Timestamp:             conversion.TimeToMilliseconds(block.Block.Time), // ts is required in milliseconds
-			Transactions:          conversion.ResultTxSearchToTransaction(txs),
-			Metadata:              nil,
+			Timestamp:    conversion.TimeToMilliseconds(block.Block.Time), // ts is required in milliseconds
+			Transactions: conversion.ResultTxSearchToTransaction(txs),
+			Metadata:     nil,
 		},
 		OtherTransactions: nil,
 	}, nil

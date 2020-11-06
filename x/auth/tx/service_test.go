@@ -99,6 +99,48 @@ func (s IntegrationTestSuite) TestSimulate() {
 	s.Require().True(res.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
 }
 
+func (s IntegrationTestSuite) TestGetTxEvents() {
+	val := s.network.Validators[0]
+
+	// Create a new MsgSend tx from val to itself.
+	out, err := bankcli.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		val.Address,
+		sdk.NewCoins(
+			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+		fmt.Sprintf("--%s=foobar", flags.FlagMemo),
+	)
+	s.Require().NoError(err)
+	var txRes sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txRes))
+	s.Require().Equal(uint32(0), txRes.Code)
+
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// Query the tx via gRPC.
+	grpcRes, err := s.queryClient.TxsByEvents(
+		context.Background(),
+		&tx.GetTxsEventRequest{Event: "message.action=send", Page: 1, Limit: 10},
+	)
+	s.Require().NoError(err)
+	s.Require().Equal(len(grpcRes.Txs), 1)
+	s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
+
+	// // Query the tx via grpc-gateway.
+	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?event=%s&page=%d&limit=%d", val.APIAddress, "message.action=send", 1, 10))
+	s.Require().NoError(err)
+	var getTxRes tx.GetTxsEventResponse
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getTxRes))
+	s.Require().Equal(len(grpcRes.Txs), 1)
+	s.Require().Equal("foobar", getTxRes.Txs[0].Body.Memo)
+}
+
 func (s IntegrationTestSuite) TestGetTx() {
 	val := s.network.Validators[0]
 

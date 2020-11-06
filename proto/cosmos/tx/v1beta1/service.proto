@@ -19,22 +19,29 @@ service Service {
     }
 
     // TxsByEvents fetches txs by event.
-    rpc TxsByEvents(TxsEventRequest) returns (TxsEventResponse) {
-        option (google.api.http).post = "/cosmos/tx/v1beta1/txsevents";
+    rpc TxsByEvents(GetTxsEventRequest) returns (GetTxsEventResponse) {
+        option (google.api.http).get = "/cosmos/tx/v1beta1/txs";
     }
 }
 
-// TxsEventRequest is the request type for the Service.TxsByEvents
+// GetTxsEventRequest is the request type for the Service.TxsByEvents
 // RPC method.
-message TxsEventRequest {
-    // tx is the transaction to simulate.
+message GetTxsEventRequest {
+
+    // event is the transaction event type.
     string event = 1;
+
+    // page is the page number
+    int64 page = 2;
+
+    // limit defines per page limit
+    int64 limit = 3;
 }
 
-// TxsEventResponse is the response type for the Service.TxsByEvents
+// GetTxsEventResponse is the response type for the Service.TxsByEvents
 // RPC method.
-message TxsEventResponse {
-    // tx is the queried transaction.
+message GetTxsEventResponse {
+    // txs is the list of queried transactions.
     repeated cosmos.tx.v1beta1.Tx txs = 1;
 }
 

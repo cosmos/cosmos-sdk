@@ -38,6 +38,16 @@ func (e errorWrapper) RosettaError() *types.Error {
 	return e.err
 }
 
+// Is implements the errors.Is interface to verify
+// if the given error matches one in the library
+func (e errorWrapper) Is(target error) bool {
+	err, ok := target.(Error)
+	if !ok {
+		return false
+	}
+	return err.RosettaError().Code == e.err.Code
+}
+
 // NewError instantiates a new rosetta error
 func NewError(code int32, message string, retry bool) Error {
 	return errorWrapper{

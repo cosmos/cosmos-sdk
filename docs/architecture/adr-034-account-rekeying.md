@@ -1,4 +1,4 @@
-# ADR 034: Change PubKey
+# ADR 034: Account Rekying
 
 ## Changelog
 
@@ -6,7 +6,11 @@
 
 ## Status
 
-Proposed
+PROPOSED
+
+## Abstract
+
+Account rekeying is a process hat allows an account to replace its authentication pubkey with a new one.
 
 ## Context
 
@@ -23,10 +27,16 @@ This is possible because the Cosmos SDK `BaseAccount` stores the public key for 
 To build this system, we design a new Msg type as follows:
 
 ```protobuf
+service Msg {
+    rpc ChangePubKey(MsgChangePubKey) returns (MsgChangePubKeyResponse);
+}
+
 message MsgChangePubKey {
   string address = 1;
   google.protobuf.Any pub_key = 2;
 }
+
+message MsgChangePubKeyResponse {}
 ```
 
 The MsgChangePubKey transaction needs to be signed by the existing pubkey in state.

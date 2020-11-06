@@ -8,14 +8,12 @@ require (
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.21.0-beta
 	github.com/btcsuite/btcutil v1.0.2
-	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/coinbase/rosetta-sdk-go v0.5.9
 	github.com/confio/ics23/go v0.6.3
 	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
 	github.com/cosmos/iavl v0.15.0-rc4
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/enigmampc/btcutil v1.0.3-0.20200723161021-e2fb6adb2a25
-	github.com/ghodss/yaml v1.0.0
 	github.com/gogo/gateway v1.1.0
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/mock v1.4.4

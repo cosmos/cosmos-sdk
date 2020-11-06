@@ -29,6 +29,7 @@ func NewSingleNetwork(client rosetta.DataAPIClient, network *types.NetworkIdenti
 	return SingleNetwork{
 		client:                 client,
 		network:                network,
+		networkOptions:         &types.NetworkOptionsResponse{Version: rosetta.Version(), Allow: rosetta.Allow()},
 		genesisBlockIdentifier: conversion.TendermintBlockToBlockIdentifier(block),
 	}, nil
 }
@@ -36,25 +37,33 @@ func NewSingleNetwork(client rosetta.DataAPIClient, network *types.NetworkIdenti
 // SingleNetwork groups together all the components required for the full rosetta data API
 // which is running on a single network
 type SingleNetwork struct {
-	client                 rosetta.DataAPIClient
-	network                *types.NetworkIdentifier
-	genesisBlockIdentifier *types.BlockIdentifier
+	client rosetta.DataAPIClient // used to query cosmos app + tendermint
+
+	network        *types.NetworkIdentifier      // identifies the network, it's static
+	networkOptions *types.NetworkOptionsResponse // identifies the network options, it's static
+
+	genesisBlockIdentifier *types.BlockIdentifier // identifies genesis block, it's static
+
 }
 
 // AccountBalance retrieves the account balance of an address
+// NOTE(fdymylja): for now historical balance is not supported
 func (sn SingleNetwork) AccountBalance(ctx context.Context, request *types.AccountBalanceRequest) (*types.AccountBalanceResponse, *types.Error) {
-	balances, err := sn.client.Balances(ctx, request.AccountIdentifier.Address, request.BlockIdentifier.Index)
+	// we need to provide block information, so get last block
+	block, _, err := sn.client.BlockByHeight(ctx, nil)
+	if err != nil {
+		return nil, rosetta.ToRosettaError(err)
+	}
+	// now get balance
+	balances, err := sn.client.Balances(ctx, request.AccountIdentifier.Address, nil)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
 	resp := &types.AccountBalanceResponse{
-		BlockIdentifier: &types.BlockIdentifier{
-			Index: *request.BlockIdentifier.Index,
-			Hash:  *request.BlockIdentifier.Hash,
-		},
-		Balances: conversion.CoinsToBalance(balances),
-		Coins:    nil,
-		Metadata: nil,
+		BlockIdentifier: conversion.TendermintBlockToBlockIdentifier(block),
+		Balances:        conversion.CoinsToBalance(balances),
+		Coins:           nil,
+		Metadata:        nil,
 	}
 	return resp, nil
 }
@@ -81,11 +90,8 @@ func (sn SingleNetwork) Block(ctx context.Context, request *types.BlockRequest) 
 	}
 	return &types.BlockResponse{
 		Block: &types.Block{
-			BlockIdentifier: &types.BlockIdentifier{
-				Index: block.Block.Height,
-				Hash:  block.BlockID.Hash.String(),
-			},
-			ParentBlockIdentifier: conversion.TendermintBlockToBlockIdentifier(block),
+			BlockIdentifier:       conversion.TendermintBlockToBlockIdentifier(block),
+			ParentBlockIdentifier: conversion.ParentBlockIdentifierFromLastBlock(block),
 			Timestamp:             conversion.TimeToMilliseconds(block.Block.Time), // ts is required in milliseconds
 			Transactions:          conversion.ResultTxSearchToTransaction(txs),
 			Metadata:              nil,
@@ -136,28 +142,20 @@ func (sn SingleNetwork) NetworkList(_ context.Context, _ *types.MetadataRequest)
 	return &types.NetworkListResponse{NetworkIdentifiers: []*types.NetworkIdentifier{sn.network}}, nil
 }
 
-func (sn SingleNetwork) NetworkOptions(ctx context.Context, request *types.NetworkRequest) (*types.NetworkOptionsResponse, *types.Error) {
-	return &types.NetworkOptionsResponse{
-		Version: &types.Version{
-			RosettaVersion:    "",
-			NodeVersion:       "",
-			MiddlewareVersion: nil,
-			Metadata:          nil,
-		},
-		Allow: &types.Allow{
-			OperationStatuses:       nil,
-			OperationTypes:          nil,
-			Errors:                  nil,
-			HistoricalBalanceLookup: false,
-			TimestampStartIndex:     nil,
-			CallMethods:             nil,
-			BalanceExemptions:       nil,
-		},
-	}, nil
+func (sn SingleNetwork) NetworkOptions(_ context.Context, _ *types.NetworkRequest) (*types.NetworkOptionsResponse, *types.Error) {
+	return sn.networkOptions, nil
 }
 
 func (sn SingleNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkRequest) (*types.NetworkStatusResponse, *types.Error) {
+	// get last block
 	block, _, err := sn.client.BlockByHeight(ctx, nil)
+	if err != nil {
+		return nil, rosetta.ToRosettaError(err)
+	}
+	// get peers
+	peers, err := sn.client.Peers(ctx)
+	// get node status
+	status, err := sn.client.Status(ctx)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
@@ -165,14 +163,9 @@ func (sn SingleNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkReque
 		CurrentBlockIdentifier: conversion.TendermintBlockToBlockIdentifier(block),
 		CurrentBlockTimestamp:  conversion.TimeToMilliseconds(block.Block.Time),
 		GenesisBlockIdentifier: sn.genesisBlockIdentifier,
-		OldestBlockIdentifier:  nil, // TODO what is this, most likely foresees that the node we're querying is not synced yet
-		SyncStatus:             nil, // TODO what is this
-		Peers: []*types.Peer{
-			{
-				PeerID:   "",
-				Metadata: nil,
-			},
-		},
+		OldestBlockIdentifier:  nil,
+		SyncStatus:             conversion.TendermintStatusToSync(status),
+		Peers:                  conversion.TmPeersToRosettaPeers(peers),
 	}
 	return resp, nil
 }

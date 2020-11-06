@@ -197,3 +197,20 @@ func (c *Client) Mempool(ctx context.Context) (*tmtypes.ResultUnconfirmedTxs, er
 	}
 	return txs, nil
 }
+
+// Peers gets the number of peers
+func (c *Client) Peers(ctx context.Context) ([]tmtypes.Peer, error) {
+	netInfo, err := c.client.Client.NetInfo(ctx)
+	if err != nil {
+		return nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
+	}
+	return netInfo.Peers, nil
+}
+
+func (c *Client) Status(ctx context.Context) (*tmtypes.ResultStatus, error) {
+	status, err := c.client.Client.Status(ctx)
+	if err != nil {
+		return nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
+	}
+	return status, err
+}

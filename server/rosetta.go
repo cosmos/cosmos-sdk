@@ -46,6 +46,6 @@ func RosettaCommand(ir codectypes.InterfaceRegistry, cdc codec.Marshaler) *cobra
 			return svc.Start()
 		},
 	}
-	config.SetFlags(cmd.Flags(), config.DisableFileFlag())
+	config.SetFlags(cmd.Flags())
 	return cmd
 }

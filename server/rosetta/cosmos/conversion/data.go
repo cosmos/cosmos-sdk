@@ -95,7 +95,7 @@ func toOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) (operations
 					OperationIdentifier: &types.OperationIdentifier{
 						Index: int64(index),
 					},
-					Type:   rosetta.OperationTransfer,
+					Type:   rosetta.OperationMsgSend,
 					Status: status,
 					Account: &types.AccountIdentifier{
 						Address: account,
@@ -120,7 +120,7 @@ func toOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) (operations
 func GetMsgDataFromOperations(ops []*types.Operation) (sdk.Msg, error) {
 	op := ops[0]
 	switch op.Type {
-	case rosetta.OperationTransfer:
+	case rosetta.OperationMsgSend:
 		return getTransferTxDataFromOperations(ops)
 	}
 
@@ -160,4 +160,47 @@ func getTransferTxDataFromOperations(ops []*types.Operation) (sdk.Msg, error) {
 
 	msg := banktypes.NewMsgSend(from, to, sdk.NewCoins(sendAmt))
 	return msg, nil
+}
+
+// TmPeersToRosettaPeers converts tendermint peers to rosetta ones
+func TmPeersToRosettaPeers(peers []tmcoretypes.Peer) []*types.Peer {
+	converted := make([]*types.Peer, len(peers))
+	for i, peer := range peers {
+		converted[i] = &types.Peer{
+			PeerID: peer.NodeInfo.Moniker,
+			Metadata: map[string]interface{}{
+				"addr": peer.NodeInfo.ListenAddr,
+			},
+		}
+	}
+	return converted
+}
+
+// TendermintStatusToSync converts a tendermint status to rosetta sync status
+func TendermintStatusToSync(status *tmcoretypes.ResultStatus) *types.SyncStatus {
+	// determine sync status
+	var stage = rosetta.StageSynced
+	if status.SyncInfo.CatchingUp {
+		stage = rosetta.StageSyncing
+	}
+
+	return &types.SyncStatus{
+		CurrentIndex: status.SyncInfo.LatestBlockHeight,
+		TargetIndex:  nil, // sync info does not allow us to get target height
+		Stage:        &stage,
+	}
+}
+
+// ParentBlockIdentifierFromLastBlock returns the parent block identifier from the last block
+func ParentBlockIdentifierFromLastBlock(block *tmcoretypes.ResultBlock) *types.BlockIdentifier {
+	if block.Block.Height == 1 {
+		return &types.BlockIdentifier{
+			Index: 1,
+			Hash:  fmt.Sprintf("%X", block.BlockID.Hash.Bytes()),
+		}
+	}
+	return &types.BlockIdentifier{
+		Index: block.Block.Height - 1,
+		Hash:  fmt.Sprintf("%X", block.Block.LastBlockID.Hash.Bytes()),
+	}
 }

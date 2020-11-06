@@ -2,48 +2,50 @@ package config
 
 import (
 	"fmt"
-	"github.com/caarlos0/env"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/client"
 	"github.com/cosmos/cosmos-sdk/server/rosetta/services"
-	"github.com/ghodss/yaml"
 	"github.com/spf13/pflag"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
-	"io/ioutil"
-	"os"
 	"strings"
 	"time"
 )
 
 // configuration defaults constants
 const (
-	// DefaultConfigBlockchain defines the default blockchain identifier name
-	// TODO: should it be cosmos stargate?
-	DefaultConfigBlockchain = "cosmos"
-	// DefaultConfigAddr defines the default rosetta binding address
-	DefaultConfigAddr = ":8080"
-	// DefaultConfigRetries is the default number of retries
-	DefaultConfigRetries = 5
+	// DefaultBlockchain defines the default blockchain identifier name
+	DefaultBlockchain = "app"
+	// DefaultAddr defines the default rosetta binding address
+	DefaultAddr = ":8080"
+	// DefaultRetries is the default number of retries
+	DefaultRetries = 5
+	// DefaultTendermintEndpoint is the default value for the tendermint endpoint
+	DefaultTendermintEndpoint = "localhost:26657"
+	// DefaultGRPCEndpoint is the default value for the gRPC endpoint
+	DefaultGRPCEndpoint = "localhost:9090"
+	// DefaultNetwork defines the default network name
+	DefaultNetwork = "network"
+	// DefaultOffline defines the default offline value
+	DefaultOffline = false
 )
 
 // configuration flags
 const (
-	flagBlockchain         = "blockchain"
-	flagNetwork            = "network"
-	flagTendermintEndpoint = "tendermint"
-	flagGRPCEndpoint       = "grpc"
-	flagAddr               = "addr"
-	flagRetries            = "retries"
-	flagFile               = "file"
-	flagOffline            = "offline"
+	FlagBlockchain         = "blockchain"
+	FlagNetwork            = "network"
+	FlagTendermintEndpoint = "tendermint"
+	FlagGRPCEndpoint       = "grpc"
+	FlagAddr               = "addr"
+	FlagRetries            = "retries"
+	FlagOffline            = "offline"
 )
 
 // RosettaFromConfig builds the rosetta servicer full implementation from configurations
 func RosettaFromConfig(conf *Config) (crg.Adapter, error) {
 	if conf.Offline {
-		panic("offline mode not supported for now")
+		return services.NewOffline(conf.NetworkIdentifier()), nil
 	}
 	var dataAPIOpts []client.OptionFunc
 	if conf.codec != nil && conf.ir != nil {
@@ -78,7 +80,7 @@ func RetryRosettaFromConfig(conf *Config) (rosetta crg.Adapter, err error) {
 // Config defines the configuration of the rosetta server
 type Config struct {
 	// Blockchain defines the blockchain name
-	// defaults to DefaultConfigBlockchain
+	// defaults to DefaultBlockchain
 	Blockchain string `json:"blockchain" yaml:"blockchain" env:"ROSETTA_BLOCKCHAIN"`
 	// Network defines the network name
 	Network string `json:"network" yaml:"network" env:"ROSETTA_NETWORK"`
@@ -90,7 +92,7 @@ type Config struct {
 	// usually it is located at 9090 port
 	GRPCEndpoint string `json:"grpc_endpoint" yaml:"gRPCEndpoint" env:"ROSETTA_GRPC_ENDPOINT"`
 	// Addr defines the default address to bind the rosetta server to
-	// defaults to DefaultConfigAddr
+	// defaults to DefaultAddr
 	Addr string `json:"addr" yaml:"addr" env:"ROSETTA_ADDR"`
 	// Retries defines the maximum number of retries
 	// rosetta will do before quitting
@@ -120,13 +122,13 @@ func (c *Config) Validate() error {
 	}
 	// set defaults
 	if c.Addr == "" {
-		c.Addr = DefaultConfigAddr
+		c.Addr = DefaultAddr
 	}
 	if c.Blockchain == "" {
-		c.Blockchain = DefaultConfigBlockchain
+		c.Blockchain = DefaultBlockchain
 	}
 	if c.Retries == 0 {
-		c.Retries = DefaultConfigRetries
+		c.Retries = DefaultRetries
 	}
 	// these are must
 	if c.Network == "" {
@@ -154,70 +156,33 @@ func (c *Config) WithCodec(ir codectypes.InterfaceRegistry, cdc *codec.ProtoCode
 	c.ir = ir
 }
 
-// FromEnv tries to get the configurations from the environment variable
-func FromEnv() (*Config, error) {
-	conf := &Config{}
-	err := env.Parse(conf)
-	if err != nil {
-		return nil, err
-	}
-	err = conf.Validate()
-	if err != nil {
-		return nil, err
-	}
-	return conf, nil
-}
-
-// FromYaml attempts to get a configuration given a yaml file
-func FromYaml(path string) (*Config, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	b, err := ioutil.ReadAll(f)
-	if err != nil {
-		return nil, err
-	}
-	conf := &Config{}
-	err = yaml.Unmarshal(b, conf)
-	if err != nil {
-		return nil, err
-	}
-	err = conf.Validate()
-	if err != nil {
-		return conf, err
-	}
-	return conf, nil
-}
-
 // FromFlags gets the configuration from flags
 func FromFlags(flags *pflag.FlagSet) (*Config, error) {
-	blockchain, err := flags.GetString(flagBlockchain)
+	blockchain, err := flags.GetString(FlagBlockchain)
 	if err != nil {
 		return nil, err
 	}
-	network, err := flags.GetString(flagNetwork)
+	network, err := flags.GetString(FlagNetwork)
 	if err != nil {
 		return nil, err
 	}
-	tendermintRPC, err := flags.GetString(flagTendermintEndpoint)
+	tendermintRPC, err := flags.GetString(FlagTendermintEndpoint)
 	if err != nil {
 		return nil, err
 	}
-	gRPCEndpoint, err := flags.GetString(flagGRPCEndpoint)
+	gRPCEndpoint, err := flags.GetString(FlagGRPCEndpoint)
 	if err != nil {
 		return nil, err
 	}
-	addr, err := flags.GetString(flagAddr)
+	addr, err := flags.GetString(FlagAddr)
 	if err != nil {
 		return nil, err
 	}
-	retries, err := flags.GetInt(flagRetries)
+	retries, err := flags.GetInt(FlagRetries)
 	if err != nil {
 		return nil, err
 	}
-	offline, err := flags.GetBool(flagOffline)
+	offline, err := flags.GetBool(FlagOffline)
 	conf := &Config{
 		Blockchain:    blockchain,
 		Network:       network,
@@ -234,68 +199,14 @@ func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 	return conf, nil
 }
 
-// SetConfigFlagOption is a function that allows
-// to customize flag settings
-type SetConfigFlagsOption func(flagsSettings *setConfigFlagsSettings)
-
-type setConfigFlagsSettings struct {
-	disableFileFlag bool
-}
-
-// DisableFileFlag disables the file flag
-func DisableFileFlag() SetConfigFlagsOption {
-	return func(flagsSettings *setConfigFlagsSettings) {
-		flagsSettings.disableFileFlag = true
-	}
-}
-
 // SetFlags sets the configuration flags to the given flagset
-func SetFlags(flags *pflag.FlagSet, opts ...SetConfigFlagsOption) {
-	settings := setConfigFlagsSettings{}
-	for _, opt := range opts {
-		opt(&settings)
-	}
-	if !settings.disableFileFlag {
-		flags.StringP(flagFile, "f", "", "the .yaml configuration file (optional, can use env or flags)")
-	}
-	flags.String(flagBlockchain, DefaultConfigBlockchain, "the blockchain type")
-	flags.String(flagNetwork, "", "the network name")
-	flags.String(flagTendermintEndpoint, "", "the tendermint rpc endpoint, without tcp://")
-	flags.String(flagGRPCEndpoint, "", "the app gRPC endpoint")
-	flags.String(flagAddr, DefaultConfigAddr, "the address rosetta will bind to")
-	flags.Int(flagRetries, DefaultConfigRetries, "the number of retries that will be done before quitting")
+func SetFlags(flags *pflag.FlagSet) {
+	flags.String(FlagBlockchain, DefaultBlockchain, "the blockchain type")
+	flags.String(FlagNetwork, DefaultNetwork, "the network name")
+	flags.String(FlagTendermintEndpoint, DefaultTendermintEndpoint, "the tendermint rpc endpoint, without tcp://")
+	flags.String(FlagGRPCEndpoint, DefaultGRPCEndpoint, "the app gRPC endpoint")
+	flags.String(FlagAddr, DefaultAddr, "the address rosetta will bind to")
+	flags.Int(FlagRetries, DefaultRetries, "the number of retries that will be done before quitting")
+	flags.Bool(FlagOffline, DefaultOffline, "run rosetta only with construction API")
 	return
-}
-
-// FindConfigs will attempt to find configurations
-// giving priority to
-// 1) if config is set via flags
-// 2) flags
-// 3) environment variables
-func Find(flags *pflag.FlagSet) (*Config, error) {
-	// try config file
-	filePath, err := flags.GetString(flagFile)
-	if err == nil && filePath != "" {
-		return FromYaml(filePath)
-	}
-	// try flags
-	config, err := FromFlags(flags)
-	if err == nil {
-		return config, nil
-	}
-	// try env
-	config, err = FromEnv()
-	if err == nil {
-		return config, nil
-	}
-	return nil, fmt.Errorf("unable to find valid configurations")
-}
-
-// MustFind is used to find configs but if it fails it panics
-func MustFind(flags *pflag.FlagSet) *Config {
-	config, err := Find(flags)
-	if err != nil {
-		panic(err)
-	}
-	return config
 }

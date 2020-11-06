@@ -54,8 +54,8 @@ func NewError(code int32, message string, retry bool) Error {
 // WrapError wraps the rosetta error with additional context
 func WrapError(err Error, msg string) Error {
 	e := err.RosettaError()
-	e.Message = fmt.Sprintf("%s: %s", e.Message, msg)
-	return err
+	wrappedMsg := fmt.Sprintf("%s: %s", e.Message, msg)
+	return NewError(e.Code, wrappedMsg, e.Retriable)
 }
 
 // ToRosettaError attempts to converting an error into a rosetta
@@ -70,13 +70,15 @@ func ToRosettaError(err error) *types.Error {
 
 // FromGRPCToRosettaError converts a gRPC error to rosetta error
 func FromGRPCToRosettaError(err error) Error {
-	return errorWrapper{err: &types.Error{
-		Code:        0,
-		Message:     err.Error(),
-		Description: nil,
-		Retriable:   false,
-		Details:     nil,
-	}}
+	return errorWrapper{
+		err: &types.Error{
+			Code:        0,
+			Message:     err.Error(),
+			Description: nil,
+			Retriable:   false,
+			Details:     nil,
+		},
+	}
 }
 
 // Default error list

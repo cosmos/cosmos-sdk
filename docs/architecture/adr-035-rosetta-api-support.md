@@ -1,6 +1,6 @@
 # ADR 035: Rosetta API Support
 
-## Authors:
+## Authors
 
 - Jonathan Gimeno (@jgimeno)
 - David Grierson (@senormonito)

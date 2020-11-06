@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 	"github.com/tendermint/cosmos-rosetta-gateway/service"
 	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -65,9 +64,10 @@ type DataAPIClient interface {
 // since this value is static, we can wrap it here
 func Version() *types.Version {
 	const rosettaSpecVersion = "1.4.6"
+	const cosmosSdkVersion = "0.40.0-rc2"
 	return &types.Version{
 		RosettaVersion:    rosettaSpecVersion,
-		NodeVersion:       version.NewInfo().Version,
+		NodeVersion:       cosmosSdkVersion,
 		MiddlewareVersion: nil,
 		Metadata:          nil,
 	}

@@ -2,17 +2,13 @@ package config
 
 import (
 	"fmt"
-	"github.com/caarlos0/env"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/client"
 	"github.com/cosmos/cosmos-sdk/server/rosetta/services"
-	"github.com/ghodss/yaml"
 	"github.com/spf13/pflag"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
-	"io/ioutil"
-	"os"
 	"strings"
 	"time"
 )
@@ -20,8 +16,7 @@ import (
 // configuration defaults constants
 const (
 	// DefaultBlockchain defines the default blockchain identifier name
-	// TODO: should it be cosmos stargate?
-	DefaultBlockchain = "cosmos"
+	DefaultBlockchain = "app"
 	// DefaultAddr defines the default rosetta binding address
 	DefaultAddr = ":8080"
 	// DefaultRetries is the default number of retries
@@ -30,6 +25,8 @@ const (
 	DefaultTendermintEndpoint = "localhost:26657"
 	// DefaultGRPCEndpoint is the default value for the gRPC endpoint
 	DefaultGRPCEndpoint = "localhost:9090"
+	// DefaultNetwork defines the default network name
+	DefaultNetwork = "network"
 )
 
 // configuration flags
@@ -157,43 +154,6 @@ func (c *Config) WithCodec(ir codectypes.InterfaceRegistry, cdc *codec.ProtoCode
 	c.ir = ir
 }
 
-// FromEnv tries to get the configurations from the environment variable
-func FromEnv() (*Config, error) {
-	conf := &Config{}
-	err := env.Parse(conf)
-	if err != nil {
-		return nil, err
-	}
-	err = conf.Validate()
-	if err != nil {
-		return nil, err
-	}
-	return conf, nil
-}
-
-// FromYaml attempts to get a configuration given a yaml file
-func FromYaml(path string) (*Config, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	b, err := ioutil.ReadAll(f)
-	if err != nil {
-		return nil, err
-	}
-	conf := &Config{}
-	err = yaml.Unmarshal(b, conf)
-	if err != nil {
-		return nil, err
-	}
-	err = conf.Validate()
-	if err != nil {
-		return conf, err
-	}
-	return conf, nil
-}
-
 // FromFlags gets the configuration from flags
 func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 	blockchain, err := flags.GetString(FlagBlockchain)
@@ -240,45 +200,10 @@ func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 // SetFlags sets the configuration flags to the given flagset
 func SetFlags(flags *pflag.FlagSet) {
 	flags.String(FlagBlockchain, DefaultBlockchain, "the blockchain type")
-	flags.String(FlagNetwork, "", "the network name")
+	flags.String(FlagNetwork, DefaultNetwork, "the network name")
 	flags.String(FlagTendermintEndpoint, DefaultTendermintEndpoint, "the tendermint rpc endpoint, without tcp://")
 	flags.String(FlagGRPCEndpoint, DefaultGRPCEndpoint, "the app gRPC endpoint")
 	flags.String(FlagAddr, DefaultAddr, "the address rosetta will bind to")
 	flags.Int(FlagRetries, DefaultRetries, "the number of retries that will be done before quitting")
 	return
-}
-
-// FindConfigs will attempt to find configurations
-// giving priority to
-// 1) if config is set via flags
-// 2) flags
-// 3) environment variables
-func Find(flags *pflag.FlagSet) (*Config, error) {
-	/*
-		// try config file
-		filePath, err := flags.GetString(Flag)
-		if err == nil && filePath != "" {
-			return FromYaml(filePath)
-		}
-	*/
-	// try flags
-	config, err := FromFlags(flags)
-	if err == nil {
-		return config, nil
-	}
-	// try env
-	config, err = FromEnv()
-	if err == nil {
-		return config, nil
-	}
-	return nil, fmt.Errorf("unable to find valid configurations")
-}
-
-// MustFind is used to find configs but if it fails it panics
-func MustFind(flags *pflag.FlagSet) *Config {
-	config, err := Find(flags)
-	if err != nil {
-		panic(err)
-	}
-	return config
 }

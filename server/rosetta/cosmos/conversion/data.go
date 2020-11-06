@@ -190,3 +190,17 @@ func TendermintStatusToSync(status *tmcoretypes.ResultStatus) *types.SyncStatus 
 		Stage:        &stage,
 	}
 }
+
+// ParentBlockIdentifierFromLastBlock returns the parent block identifier from the last block
+func ParentBlockIdentifierFromLastBlock(block *tmcoretypes.ResultBlock) *types.BlockIdentifier {
+	if block.Block.Height == 1 {
+		return &types.BlockIdentifier{
+			Index: 1,
+			Hash:  fmt.Sprintf("%X", block.BlockID.Hash.Bytes()),
+		}
+	}
+	return &types.BlockIdentifier{
+		Index: block.Block.Height - 1,
+		Hash:  fmt.Sprintf("%X", block.Block.LastBlockID.Hash.Bytes()),
+	}
+}

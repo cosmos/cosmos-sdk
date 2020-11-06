@@ -125,9 +125,10 @@ func TestSetLoader(t *testing.T) {
 			origapp.MountStores(capKey)
 			origapp.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
 			err := origapp.LoadLatestVersion()
+			require.Nil(t, err)
 
-			for i := 2; i <= int(upgradeHeight-1); i++ {
-				origapp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: int64(i)}})
+			for i := int64(2); i <= upgradeHeight-1; i++ {
+				origapp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: i}})
 				res := origapp.Commit()
 				require.NotNil(t, res.Data)
 			}

@@ -29,6 +29,100 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// TxsEventRequest is the request type for the Service.TxsByEvents
+// RPC method.
+type TxsEventRequest struct {
+	// tx is the transaction to simulate.
+	Event string `protobuf:"bytes,1,opt,name=event,proto3" json:"event,omitempty"`
+}
+
+func (m *TxsEventRequest) Reset()         { *m = TxsEventRequest{} }
+func (m *TxsEventRequest) String() string { return proto.CompactTextString(m) }
+func (*TxsEventRequest) ProtoMessage()    {}
+func (*TxsEventRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0b00a618705eca7, []int{0}
+}
+func (m *TxsEventRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TxsEventRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TxsEventRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TxsEventRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TxsEventRequest.Merge(m, src)
+}
+func (m *TxsEventRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *TxsEventRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_TxsEventRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TxsEventRequest proto.InternalMessageInfo
+
+func (m *TxsEventRequest) GetEvent() string {
+	if m != nil {
+		return m.Event
+	}
+	return ""
+}
+
+// TxsEventResponse is the response type for the Service.TxsByEvents
+// RPC method.
+type TxsEventResponse struct {
+	// tx is the queried transaction.
+	Txs []*Tx `protobuf:"bytes,1,rep,name=txs,proto3" json:"txs,omitempty"`
+}
+
+func (m *TxsEventResponse) Reset()         { *m = TxsEventResponse{} }
+func (m *TxsEventResponse) String() string { return proto.CompactTextString(m) }
+func (*TxsEventResponse) ProtoMessage()    {}
+func (*TxsEventResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0b00a618705eca7, []int{1}
+}
+func (m *TxsEventResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TxsEventResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TxsEventResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TxsEventResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TxsEventResponse.Merge(m, src)
+}
+func (m *TxsEventResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *TxsEventResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_TxsEventResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TxsEventResponse proto.InternalMessageInfo
+
+func (m *TxsEventResponse) GetTxs() []*Tx {
+	if m != nil {
+		return m.Txs
+	}
+	return nil
+}
+
 // SimulateRequest is the request type for the Service.Simulate
 // RPC method.
 type SimulateRequest struct {
@@ -40,7 +134,7 @@ func (m *SimulateRequest) Reset()         { *m = SimulateRequest{} }
 func (m *SimulateRequest) String() string { return proto.CompactTextString(m) }
 func (*SimulateRequest) ProtoMessage()    {}
 func (*SimulateRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0b00a618705eca7, []int{0}
+	return fileDescriptor_e0b00a618705eca7, []int{2}
 }
 func (m *SimulateRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -89,7 +183,7 @@ func (m *SimulateResponse) Reset()         { *m = SimulateResponse{} }
 func (m *SimulateResponse) String() string { return proto.CompactTextString(m) }
 func (*SimulateResponse) ProtoMessage()    {}
 func (*SimulateResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0b00a618705eca7, []int{1}
+	return fileDescriptor_e0b00a618705eca7, []int{3}
 }
 func (m *SimulateResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -143,7 +237,7 @@ func (m *GetTxRequest) Reset()         { *m = GetTxRequest{} }
 func (m *GetTxRequest) String() string { return proto.CompactTextString(m) }
 func (*GetTxRequest) ProtoMessage()    {}
 func (*GetTxRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0b00a618705eca7, []int{2}
+	return fileDescriptor_e0b00a618705eca7, []int{4}
 }
 func (m *GetTxRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -189,7 +283,7 @@ func (m *GetTxResponse) Reset()         { *m = GetTxResponse{} }
 func (m *GetTxResponse) String() string { return proto.CompactTextString(m) }
 func (*GetTxResponse) ProtoMessage()    {}
 func (*GetTxResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0b00a618705eca7, []int{3}
+	return fileDescriptor_e0b00a618705eca7, []int{5}
 }
 func (m *GetTxResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -226,6 +320,8 @@ func (m *GetTxResponse) GetTx() *Tx {
 }
 
 func init() {
+	proto.RegisterType((*TxsEventRequest)(nil), "cosmos.tx.v1beta1.TxsEventRequest")
+	proto.RegisterType((*TxsEventResponse)(nil), "cosmos.tx.v1beta1.TxsEventResponse")
 	proto.RegisterType((*SimulateRequest)(nil), "cosmos.tx.v1beta1.SimulateRequest")
 	proto.RegisterType((*SimulateResponse)(nil), "cosmos.tx.v1beta1.SimulateResponse")
 	proto.RegisterType((*GetTxRequest)(nil), "cosmos.tx.v1beta1.GetTxRequest")
@@ -235,33 +331,37 @@ func init() {
 func init() { proto.RegisterFile("cosmos/tx/v1beta1/service.proto", fileDescriptor_e0b00a618705eca7) }
 
 var fileDescriptor_e0b00a618705eca7 = []byte{
-	// 404 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x92, 0x31, 0x6b, 0xdb, 0x40,
-	0x1c, 0xc5, 0x2d, 0xd1, 0xda, 0xee, 0xb5, 0xa5, 0xed, 0x41, 0xc1, 0xa8, 0xae, 0xec, 0x9e, 0x6b,
-	0xe8, 0x52, 0x1d, 0x76, 0xa1, 0x78, 0x08, 0x04, 0xb2, 0x98, 0xac, 0xb2, 0xa7, 0x2c, 0xe1, 0xa4,
-	0x9c, 0x65, 0x11, 0x5b, 0xa7, 0xf8, 0x4e, 0xe6, 0x42, 0xc8, 0x92, 0x31, 0x53, 0x20, 0x5f, 0x2a,
-	0xa3, 0x21, 0x4b, 0xc6, 0x60, 0xe7, 0x2b, 0x64, 0x0f, 0x3a, 0x9d, 0x92, 0x10, 0xcb, 0x21, 0x93,
-	0x4e, 0xe8, 0xbd, 0xdf, 0xff, 0xbd, 0xd3, 0x1f, 0x34, 0x7c, 0xc6, 0xa7, 0x8c, 0x63, 0x21, 0xf1,
-	0xbc, 0xe3, 0x51, 0x41, 0x3a, 0x98, 0xd3, 0xd9, 0x3c, 0xf4, 0xa9, 0x13, 0xcf, 0x98, 0x60, 0xf0,
-	0x5b, 0x26, 0x70, 0x84, 0x74, 0xb4, 0xc0, 0xaa, 0x07, 0x8c, 0x05, 0x13, 0x8a, 0x49, 0x1c, 0x62,
-	0x12, 0x45, 0x4c, 0x10, 0x11, 0xb2, 0x88, 0x67, 0x06, 0xab, 0xa5, 0x89, 0x1e, 0xe1, 0x14, 0x13,
-	0xcf, 0x0f, 0x1f, 0xc1, 0xe9, 0x8b, 0x16, 0x59, 0xeb, 0x63, 0x85, 0xcc, 0xbe, 0xa1, 0x1e, 0xf8,
-	0x32, 0x08, 0xa7, 0xc9, 0x84, 0x08, 0xea, 0xd2, 0xa3, 0x84, 0x72, 0x01, 0xdb, 0xc0, 0x14, 0xb2,
-	0x66, 0x34, 0x8d, 0x3f, 0x1f, 0xbb, 0xdf, 0x9d, 0xb5, 0x44, 0xce, 0x50, 0xba, 0xa6, 0x90, 0xe8,
-	0xdc, 0x00, 0x5f, 0x9f, 0xac, 0x3c, 0x66, 0x11, 0xa7, 0x70, 0x0b, 0x54, 0x03, 0xc2, 0xf7, 0xc3,
-	0x68, 0xc4, 0x34, 0xe1, 0x57, 0x4e, 0x48, 0x23, 0x3a, 0x2a, 0x55, 0x0e, 0xea, 0x13, 0xbe, 0x1b,
-	0x8d, 0x98, 0x5b, 0x09, 0xb2, 0x03, 0xec, 0x81, 0xf2, 0x8c, 0xf2, 0x64, 0x22, 0x6a, 0xa6, 0xf2,
-	0x36, 0x37, 0x7b, 0x5d, 0xa5, 0x73, 0xb5, 0x1e, 0x21, 0xf0, 0xa9, 0x4f, 0xc5, 0x50, 0xe6, 0x1d,
-	0x20, 0x78, 0x37, 0x26, 0x7c, 0xac, 0x32, 0x7c, 0x70, 0xd5, 0x19, 0xfd, 0x07, 0x9f, 0xb5, 0x46,
-	0x87, 0x7d, 0x5b, 0xd1, 0xee, 0xbd, 0x01, 0x2a, 0x83, 0xec, 0x37, 0x41, 0x09, 0xaa, 0x79, 0x67,
-	0x88, 0x0a, 0x2c, 0x2f, 0xee, 0xd2, 0x6a, 0xbd, 0xaa, 0xc9, 0x72, 0xa0, 0xd6, 0xd9, 0xf5, 0xdd,
-	0xa5, 0xf9, 0x13, 0xfd, 0xc0, 0x05, 0xfb, 0x91, 0x4f, 0x8b, 0xc1, 0x7b, 0x95, 0x1e, 0x36, 0x0a,
-	0x90, 0xcf, 0xbb, 0x5b, 0xcd, 0xcd, 0x02, 0x3d, 0xf0, 0xb7, 0x1a, 0x68, 0xc3, 0x3a, 0x2e, 0xda,
-	0x0c, 0x7c, 0x92, 0x5e, 0xd7, 0xe9, 0xce, 0xf6, 0xd5, 0xd2, 0x36, 0x16, 0x4b, 0xdb, 0xb8, 0x5d,
-	0xda, 0xc6, 0xc5, 0xca, 0x2e, 0x2d, 0x56, 0x76, 0xe9, 0x66, 0x65, 0x97, 0xf6, 0xda, 0x41, 0x28,
-	0xc6, 0x89, 0xe7, 0xf8, 0x6c, 0x9a, 0x13, 0xb2, 0xc7, 0x5f, 0x7e, 0x70, 0x88, 0xc5, 0x71, 0x4c,
-	0x53, 0xa4, 0x57, 0x56, 0x2b, 0xf6, 0xef, 0x21, 0x00, 0x00, 0xff, 0xff, 0x0f, 0x4c, 0x40, 0xff,
-	0xf7, 0x02, 0x00, 0x00,
+	// 471 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x53, 0x4f, 0x6b, 0x13, 0x41,
+	0x14, 0xef, 0x6e, 0xed, 0x1f, 0x5f, 0x95, 0xd6, 0x41, 0x21, 0xac, 0x75, 0x1b, 0x27, 0x96, 0xf6,
+	0xe2, 0x0e, 0xad, 0x20, 0x05, 0x05, 0xa1, 0x20, 0xc5, 0xeb, 0x36, 0x27, 0x2f, 0x32, 0x1b, 0xa7,
+	0x9b, 0xc5, 0x64, 0x67, 0xcd, 0x7b, 0x09, 0x53, 0xd4, 0x8b, 0x47, 0x4f, 0x82, 0x5f, 0xca, 0x63,
+	0xc1, 0x8b, 0x47, 0x49, 0xfc, 0x06, 0x7e, 0x01, 0xd9, 0xd9, 0x59, 0x2b, 0xe9, 0x46, 0x3c, 0x65,
+	0x1e, 0xf9, 0xfd, 0x79, 0xbf, 0xc7, 0x6f, 0x61, 0xa7, 0xa7, 0x71, 0xa8, 0x51, 0x90, 0x11, 0x93,
+	0x83, 0x44, 0x91, 0x3c, 0x10, 0xa8, 0x46, 0x93, 0xac, 0xa7, 0xa2, 0x62, 0xa4, 0x49, 0xb3, 0x5b,
+	0x15, 0x20, 0x22, 0x13, 0x39, 0x40, 0xb0, 0x9d, 0x6a, 0x9d, 0x0e, 0x94, 0x90, 0x45, 0x26, 0x64,
+	0x9e, 0x6b, 0x92, 0x94, 0xe9, 0x1c, 0x2b, 0x42, 0xd0, 0x71, 0x8a, 0x89, 0x44, 0x25, 0x64, 0xd2,
+	0xcb, 0xfe, 0x08, 0x97, 0x83, 0x03, 0x05, 0x57, 0x6d, 0xc9, 0x54, 0xff, 0xf1, 0x3d, 0xd8, 0xec,
+	0x1a, 0x7c, 0x3e, 0x51, 0x39, 0xc5, 0xea, 0xed, 0x58, 0x21, 0xb1, 0xdb, 0xb0, 0xa2, 0xca, 0xb9,
+	0xe5, 0xb5, 0xbd, 0xfd, 0xeb, 0x71, 0x35, 0xf0, 0x27, 0xb0, 0x75, 0x09, 0xc4, 0x42, 0xe7, 0xa8,
+	0xd8, 0x1e, 0x2c, 0x93, 0xc1, 0x96, 0xd7, 0x5e, 0xde, 0xdf, 0x38, 0xbc, 0x13, 0x5d, 0x59, 0x3e,
+	0xea, 0x9a, 0xb8, 0x44, 0xf0, 0x23, 0xd8, 0x3c, 0xcd, 0x86, 0xe3, 0x81, 0x24, 0x55, 0xbb, 0xec,
+	0x82, 0x4f, 0xc6, 0x5a, 0x2c, 0xa4, 0xfa, 0x64, 0xf8, 0x27, 0x0f, 0xb6, 0x2e, 0xa9, 0xce, 0xf7,
+	0x29, 0xac, 0xa7, 0x12, 0x5f, 0x65, 0xf9, 0x99, 0x76, 0x0a, 0xf7, 0x6b, 0x85, 0xf2, 0x10, 0x91,
+	0xcd, 0x5e, 0x0b, 0x9d, 0x48, 0x7c, 0x91, 0x9f, 0xe9, 0x78, 0x2d, 0xad, 0x1e, 0xec, 0x08, 0x56,
+	0x47, 0x0a, 0xc7, 0x03, 0x6a, 0xf9, 0x96, 0xdb, 0x5e, 0xcc, 0x8d, 0x2d, 0x2e, 0x76, 0x78, 0xce,
+	0xe1, 0xc6, 0x89, 0xa2, 0xae, 0xa9, 0x33, 0x30, 0xb8, 0xd6, 0x97, 0xd8, 0x77, 0x87, 0xb2, 0x6f,
+	0xfe, 0x18, 0x6e, 0x3a, 0x8c, 0x5b, 0xf6, 0xff, 0x82, 0x1e, 0xfe, 0xf2, 0x61, 0xed, 0xb4, 0x2a,
+	0x03, 0x33, 0xb0, 0x5e, 0x67, 0x66, 0xbc, 0x81, 0x32, 0x77, 0xcb, 0xa0, 0xf3, 0x4f, 0x4c, 0xb5,
+	0x07, 0xef, 0x7c, 0xfc, 0xf6, 0xf3, 0x8b, 0x7f, 0x8f, 0xdf, 0x15, 0x0d, 0x2d, 0xac, 0xdd, 0x0a,
+	0x58, 0xb1, 0xdb, 0xb3, 0x9d, 0x06, 0xc9, 0xbf, 0xb3, 0x07, 0xed, 0xc5, 0x00, 0x67, 0xf8, 0xc0,
+	0x1a, 0x86, 0x6c, 0x5b, 0x34, 0xf5, 0x4f, 0xbc, 0x2b, 0xcf, 0xf5, 0x81, 0xbd, 0x87, 0x8d, 0xae,
+	0xc1, 0xe3, 0x73, 0xdb, 0x2c, 0x6c, 0x8c, 0x3b, 0x57, 0xd0, 0xc6, 0xb8, 0xf3, 0xdd, 0xac, 0xdd,
+	0x79, 0xb3, 0x3b, 0xda, 0x52, 0xe3, 0xf1, 0xb3, 0xaf, 0xd3, 0xd0, 0xbb, 0x98, 0x86, 0xde, 0x8f,
+	0x69, 0xe8, 0x7d, 0x9e, 0x85, 0x4b, 0x17, 0xb3, 0x70, 0xe9, 0xfb, 0x2c, 0x5c, 0x7a, 0xb9, 0x9b,
+	0x66, 0xd4, 0x1f, 0x27, 0x51, 0x4f, 0x0f, 0x6b, 0x85, 0xea, 0xe7, 0x21, 0xbe, 0x7e, 0x23, 0xe8,
+	0xbc, 0x50, 0xa5, 0x64, 0xb2, 0x6a, 0x3f, 0xa3, 0x47, 0xbf, 0x03, 0x00, 0x00, 0xff, 0xff, 0xd3,
+	0xdc, 0x1e, 0x5b, 0xdb, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -280,6 +380,8 @@ type ServiceClient interface {
 	Simulate(ctx context.Context, in *SimulateRequest, opts ...grpc.CallOption) (*SimulateResponse, error)
 	// GetTx fetches a tx by hash.
 	GetTx(ctx context.Context, in *GetTxRequest, opts ...grpc.CallOption) (*GetTxResponse, error)
+	// TxsByEvents fetches txs by event.
+	TxsByEvents(ctx context.Context, in *TxsEventRequest, opts ...grpc.CallOption) (*TxsEventResponse, error)
 }
 
 type serviceClient struct {
@@ -308,12 +410,23 @@ func (c *serviceClient) GetTx(ctx context.Context, in *GetTxRequest, opts ...grp
 	return out, nil
 }
 
+func (c *serviceClient) TxsByEvents(ctx context.Context, in *TxsEventRequest, opts ...grpc.CallOption) (*TxsEventResponse, error) {
+	out := new(TxsEventResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.Service/TxsByEvents", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ServiceServer is the server API for Service service.
 type ServiceServer interface {
 	// Simulate simulates executing a transaction for estimating gas usage.
 	Simulate(context.Context, *SimulateRequest) (*SimulateResponse, error)
 	// GetTx fetches a tx by hash.
 	GetTx(context.Context, *GetTxRequest) (*GetTxResponse, error)
+	// TxsByEvents fetches txs by event.
+	TxsByEvents(context.Context, *TxsEventRequest) (*TxsEventResponse, error)
 }
 
 // UnimplementedServiceServer can be embedded to have forward compatible implementations.
@@ -325,6 +438,9 @@ func (*UnimplementedServiceServer) Simulate(ctx context.Context, req *SimulateRe
 }
 func (*UnimplementedServiceServer) GetTx(ctx context.Context, req *GetTxRequest) (*GetTxResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTx not implemented")
+}
+func (*UnimplementedServiceServer) TxsByEvents(ctx context.Context, req *TxsEventRequest) (*TxsEventResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TxsByEvents not implemented")
 }
 
 func RegisterServiceServer(s grpc1.Server, srv ServiceServer) {
@@ -367,6 +483,24 @@ func _Service_GetTx_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Service_TxsByEvents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TxsEventRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).TxsByEvents(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.tx.v1beta1.Service/TxsByEvents",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).TxsByEvents(ctx, req.(*TxsEventRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Service_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.tx.v1beta1.Service",
 	HandlerType: (*ServiceServer)(nil),
@@ -379,9 +513,80 @@ var _Service_serviceDesc = grpc.ServiceDesc{
 			MethodName: "GetTx",
 			Handler:    _Service_GetTx_Handler,
 		},
+		{
+			MethodName: "TxsByEvents",
+			Handler:    _Service_TxsByEvents_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "cosmos/tx/v1beta1/service.proto",
+}
+
+func (m *TxsEventRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TxsEventRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TxsEventRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Event) > 0 {
+		i -= len(m.Event)
+		copy(dAtA[i:], m.Event)
+		i = encodeVarintService(dAtA, i, uint64(len(m.Event)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TxsEventResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TxsEventResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TxsEventResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Txs) > 0 {
+		for iNdEx := len(m.Txs) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Txs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintService(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *SimulateRequest) Marshal() (dAtA []byte, err error) {
@@ -542,6 +747,34 @@ func encodeVarintService(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *TxsEventRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Event)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	return n
+}
+
+func (m *TxsEventResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Txs) > 0 {
+		for _, e := range m.Txs {
+			l = e.Size()
+			n += 1 + l + sovService(uint64(l))
+		}
+	}
+	return n
+}
+
 func (m *SimulateRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -603,6 +836,178 @@ func sovService(x uint64) (n int) {
 }
 func sozService(x uint64) (n int) {
 	return sovService(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *TxsEventRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TxsEventRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TxsEventRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Event", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Event = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TxsEventResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TxsEventResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TxsEventResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Txs", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Txs = append(m.Txs, &Tx{})
+			if err := m.Txs[len(m.Txs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *SimulateRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)

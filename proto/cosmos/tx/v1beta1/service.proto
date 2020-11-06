@@ -17,6 +17,25 @@ service Service {
     rpc GetTx(GetTxRequest) returns (GetTxResponse) {
         option (google.api.http).get = "/cosmos/tx/v1beta1/tx/{hash}";
     }
+
+    // TxsByEvents fetches txs by event.
+    rpc TxsByEvents(TxsEventRequest) returns (TxsEventResponse) {
+        option (google.api.http).post = "/cosmos/tx/v1beta1/txsevents";
+    }
+}
+
+// TxsEventRequest is the request type for the Service.TxsByEvents
+// RPC method.
+message TxsEventRequest {
+    // tx is the transaction to simulate.
+    string event = 1;
+}
+
+// TxsEventResponse is the response type for the Service.TxsByEvents
+// RPC method.
+message TxsEventResponse {
+    // tx is the queried transaction.
+    repeated cosmos.tx.v1beta1.Tx txs = 1;
 }
 
 // SimulateRequest is the request type for the Service.Simulate

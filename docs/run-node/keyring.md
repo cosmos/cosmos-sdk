@@ -115,7 +115,7 @@ To create a new key in the keyring, run the `add` subcommand with a `<key_name>`
 $ simd keys add my_validator --keyring-backend test
 
 # Put the generated address in a variable for later use.
-MY_VALIDATOR_ADDRESS=$(simd keys show my_validator -a)
+MY_VALIDATOR_ADDRESS=$(simd keys show my_validator -a --keyring-backend test)
 ```
 
 This command generates a new 24-word mnemonic phrase, persists it to the relevant backend, and outputs information about the keypair. If this keypair will be used to hold value-bearing tokens, be sure to write down the mnemonic phrase somewhere safe!

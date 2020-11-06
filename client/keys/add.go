@@ -247,7 +247,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 	}
 
 	if len(mnemonic) == 0 {
-		// read entropy seed straight from tmctypesrypto.Rand and convert to mnemonic
+		// read entropy seed straight from tmcrypto.Rand and convert to mnemonic
 		entropySeed, err := bip39.NewEntropy(mnemonicEntropySize)
 		if err != nil {
 			return err

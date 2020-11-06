@@ -5,6 +5,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/conversion"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
 	"time"
@@ -43,18 +44,41 @@ type SingleNetwork struct {
 
 // AccountBalance retrieves the account balance of an address
 func (sn SingleNetwork) AccountBalance(ctx context.Context, request *types.AccountBalanceRequest) (*types.AccountBalanceResponse, *types.Error) {
-	balances, err := sn.client.Balances(ctx, request.AccountIdentifier.Address, request.BlockIdentifier.Index)
-	if err != nil {
-		return nil, rosetta.ToRosettaError(err)
+	var height *int64
+	var blockHash *string
+	// if block identifier is specified
+	// then use it as reference for height
+	if request.BlockIdentifier != nil {
+		height = request.BlockIdentifier.Index
+		blockHash = request.BlockIdentifier.Hash
+	}
+	var (
+		balances sdk.Coins
+		err      error
+		block    *tmtypes.ResultBlock
+	)
+	// if the request is by hash then we need to get the height of the block first
+	if blockHash != nil {
+		block, _, err = sn.client.BlockByHash(ctx, *blockHash)
+		if err != nil {
+			return nil, rosetta.ToRosettaError(err)
+		}
+		balances, err = sn.client.Balances(ctx, request.AccountIdentifier.Address, &block.Block.Height)
+		if err != nil {
+			return nil, rosetta.ToRosettaError(err)
+		}
+		// otherwise get it by height, which if nil means we'll fetch the last block's balances
+	} else {
+		balances, err = sn.client.Balances(ctx, request.AccountIdentifier.Address, height)
+		if err != nil {
+			return nil, rosetta.ToRosettaError(err)
+		}
 	}
 	resp := &types.AccountBalanceResponse{
-		BlockIdentifier: &types.BlockIdentifier{
-			Index: *request.BlockIdentifier.Index,
-			Hash:  *request.BlockIdentifier.Hash,
-		},
-		Balances: conversion.CoinsToBalance(balances),
-		Coins:    nil,
-		Metadata: nil,
+		BlockIdentifier: partialBlockIdentifierToFull(request.BlockIdentifier),
+		Balances:        conversion.CoinsToBalance(balances),
+		Coins:           nil,
+		Metadata:        nil,
 	}
 	return resp, nil
 }
@@ -175,4 +199,19 @@ func (sn SingleNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkReque
 		},
 	}
 	return resp, nil
+}
+
+// partialBlockIdentifierToFull converts a partial block identifier to a fully qualified block identifier
+func partialBlockIdentifierToFull(partial *types.PartialBlockIdentifier) *types.BlockIdentifier {
+	if partial == nil {
+		return nil
+	}
+	full := &types.BlockIdentifier{}
+	if partial.Hash != nil {
+		full.Hash = *partial.Hash
+	}
+	if partial.Index != nil {
+		full.Index = *partial.Index
+	}
+	return full
 }

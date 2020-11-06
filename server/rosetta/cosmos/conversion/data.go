@@ -185,8 +185,8 @@ func TendermintStatusToSync(status *tmcoretypes.ResultStatus) *types.SyncStatus 
 	}
 
 	return &types.SyncStatus{
-		CurrentIndex: status.SyncInfo.EarliestBlockHeight,
-		TargetIndex:  &status.SyncInfo.LatestBlockHeight,
+		CurrentIndex: status.SyncInfo.LatestBlockHeight,
+		TargetIndex:  nil, // sync info does not allow us to get target height
 		Stage:        &stage,
 	}
 }

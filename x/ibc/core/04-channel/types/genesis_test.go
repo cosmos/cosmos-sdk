@@ -48,11 +48,14 @@ func TestValidateGenesis(t *testing.T) {
 						),
 					),
 				},
-				[]types.PacketAckCommitment{
-					types.NewPacketAckCommitment(testPort2, testChannel2, 1, []byte("ack")),
+				[]types.PacketState{
+					types.NewPacketState(testPort2, testChannel2, 1, []byte("ack")),
 				},
-				[]types.PacketAckCommitment{
-					types.NewPacketAckCommitment(testPort1, testChannel1, 1, []byte("commit_hash")),
+				[]types.PacketState{
+					types.NewPacketState(testPort2, testChannel2, 1, []byte("")),
+				},
+				[]types.PacketState{
+					types.NewPacketState(testPort1, testChannel1, 1, []byte("commit_hash")),
 				},
 				[]types.PacketSequence{
 					types.NewPacketSequence(testPort1, testChannel1, 1),
@@ -82,8 +85,8 @@ func TestValidateGenesis(t *testing.T) {
 		{
 			name: "invalid ack",
 			genState: types.GenesisState{
-				Acknowledgements: []types.PacketAckCommitment{
-					types.NewPacketAckCommitment(testPort2, testChannel2, 1, nil),
+				Acknowledgements: []types.PacketState{
+					types.NewPacketState(testPort2, testChannel2, 1, nil),
 				},
 			},
 			expPass: false,
@@ -91,8 +94,8 @@ func TestValidateGenesis(t *testing.T) {
 		{
 			name: "invalid commitment",
 			genState: types.GenesisState{
-				Commitments: []types.PacketAckCommitment{
-					types.NewPacketAckCommitment(testPort1, testChannel1, 1, nil),
+				Commitments: []types.PacketState{
+					types.NewPacketState(testPort1, testChannel1, 1, nil),
 				},
 			},
 			expPass: false,

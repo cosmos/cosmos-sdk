@@ -115,11 +115,14 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 							),
 						),
 					},
-					[]channeltypes.PacketAckCommitment{
-						channeltypes.NewPacketAckCommitment(port2, channel2, 1, []byte("ack")),
+					[]channeltypes.PacketState{
+						channeltypes.NewPacketState(port2, channel2, 1, []byte("ack")),
 					},
-					[]channeltypes.PacketAckCommitment{
-						channeltypes.NewPacketAckCommitment(port1, channel1, 1, []byte("commit_hash")),
+					[]channeltypes.PacketState{
+						channeltypes.NewPacketState(port2, channel2, 1, []byte("")),
+					},
+					[]channeltypes.PacketState{
+						channeltypes.NewPacketState(port1, channel1, 1, []byte("commit_hash")),
 					},
 					[]channeltypes.PacketSequence{
 						channeltypes.NewPacketSequence(port1, channel1, 1),
@@ -174,8 +177,8 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis:     clienttypes.DefaultGenesisState(),
 				ConnectionGenesis: connectiontypes.DefaultGenesisState(),
 				ChannelGenesis: channeltypes.GenesisState{
-					Acknowledgements: []channeltypes.PacketAckCommitment{
-						channeltypes.NewPacketAckCommitment("(portID)", channel1, 1, []byte("ack")),
+					Acknowledgements: []channeltypes.PacketState{
+						channeltypes.NewPacketState("(portID)", channel1, 1, []byte("ack")),
 					},
 				},
 			},
@@ -249,11 +252,14 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 							),
 						),
 					},
-					[]channeltypes.PacketAckCommitment{
-						channeltypes.NewPacketAckCommitment(port2, channel2, 1, []byte("ack")),
+					[]channeltypes.PacketState{
+						channeltypes.NewPacketState(port2, channel2, 1, []byte("ack")),
 					},
-					[]channeltypes.PacketAckCommitment{
-						channeltypes.NewPacketAckCommitment(port1, channel1, 1, []byte("commit_hash")),
+					[]channeltypes.PacketState{
+						channeltypes.NewPacketState(port2, channel2, 1, []byte("")),
+					},
+					[]channeltypes.PacketState{
+						channeltypes.NewPacketState(port1, channel1, 1, []byte("commit_hash")),
 					},
 					[]channeltypes.PacketSequence{
 						channeltypes.NewPacketSequence(port1, channel1, 1),

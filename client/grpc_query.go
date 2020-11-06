@@ -15,6 +15,7 @@ import (
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var _ gogogrpc.ClientConn = Context{}
@@ -34,6 +35,11 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, args, reply 
 		height, err := strconv.ParseInt(heights[0], 10, 64)
 		if err != nil {
 			return err
+		}
+		if height < 0 {
+			return sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"client.Context.Invoke: height (%d) from %q must be >= 0", height, grpctypes.GRPCBlockHeightHeader)
 		}
 
 		ctx = ctx.WithHeight(height)

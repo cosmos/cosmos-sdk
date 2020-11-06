@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/gogo/protobuf/grpc"
+	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -48,6 +49,9 @@ type (
 	// application using various configurations.
 	AppCreator func(log.Logger, dbm.DB, io.Writer, AppOptions) Application
 
+	// ModuleInitFlags takes a start command and adds modules specific init flags.
+	ModuleInitFlags func(startCmd *cobra.Command)
+
 	// ExportedApp represents an exported app state, along with
 	// validators, consensus params and latest app height.
 	ExportedApp struct {
@@ -63,5 +67,5 @@ type (
 
 	// AppExporter is a function that dumps all app state to
 	// JSON-serializable structure and returns the current validator set.
-	AppExporter func(log.Logger, dbm.DB, io.Writer, int64, bool, []string) (ExportedApp, error)
+	AppExporter func(log.Logger, dbm.DB, io.Writer, int64, bool, []string, AppOptions) (ExportedApp, error)
 )

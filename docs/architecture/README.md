@@ -71,3 +71,4 @@ Read about the [PROCESS](./PROCESS.md).
 - [ADR 028: Public Key Addresses](./adr-028-public-key-addresses.md)
 - [ADR 031: Protobuf Msg Services](./adr-031-msg-service.md)
 - [ADR 032: Typed Events](./adr-032-typed-events.md)
+- [ADR 035: Rosetta API Support](./adr-035-rosetta-api-support.md)

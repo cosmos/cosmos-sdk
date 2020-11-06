@@ -30,6 +30,7 @@ func NewSingleNetwork(client rosetta.DataAPIClient, network *types.NetworkIdenti
 	return SingleNetwork{
 		client:                 client,
 		network:                network,
+		networkOptions:         &types.NetworkOptionsResponse{Version: rosetta.Version(), Allow: rosetta.Allow()},
 		genesisBlockIdentifier: conversion.TendermintBlockToBlockIdentifier(block),
 	}, nil
 }
@@ -37,9 +38,13 @@ func NewSingleNetwork(client rosetta.DataAPIClient, network *types.NetworkIdenti
 // SingleNetwork groups together all the components required for the full rosetta data API
 // which is running on a single network
 type SingleNetwork struct {
-	client                 rosetta.DataAPIClient
-	network                *types.NetworkIdentifier
-	genesisBlockIdentifier *types.BlockIdentifier
+	client rosetta.DataAPIClient // used to query cosmos app + tendermint
+
+	network        *types.NetworkIdentifier      // identifies the network, it's static
+	networkOptions *types.NetworkOptionsResponse // identifies the network options, it's static
+
+	genesisBlockIdentifier *types.BlockIdentifier // identifies genesis block, it's static
+
 }
 
 // AccountBalance retrieves the account balance of an address
@@ -160,24 +165,8 @@ func (sn SingleNetwork) NetworkList(_ context.Context, _ *types.MetadataRequest)
 	return &types.NetworkListResponse{NetworkIdentifiers: []*types.NetworkIdentifier{sn.network}}, nil
 }
 
-func (sn SingleNetwork) NetworkOptions(ctx context.Context, request *types.NetworkRequest) (*types.NetworkOptionsResponse, *types.Error) {
-	return &types.NetworkOptionsResponse{
-		Version: &types.Version{
-			RosettaVersion:    "",
-			NodeVersion:       "",
-			MiddlewareVersion: nil,
-			Metadata:          nil,
-		},
-		Allow: &types.Allow{
-			OperationStatuses:       nil,
-			OperationTypes:          nil,
-			Errors:                  nil,
-			HistoricalBalanceLookup: false,
-			TimestampStartIndex:     nil,
-			CallMethods:             nil,
-			BalanceExemptions:       nil,
-		},
-	}, nil
+func (sn SingleNetwork) NetworkOptions(_ context.Context, _ *types.NetworkRequest) (*types.NetworkOptionsResponse, *types.Error) {
+	return sn.networkOptions, nil
 }
 
 func (sn SingleNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkRequest) (*types.NetworkStatusResponse, *types.Error) {
@@ -191,12 +180,7 @@ func (sn SingleNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkReque
 		GenesisBlockIdentifier: sn.genesisBlockIdentifier,
 		OldestBlockIdentifier:  nil, // TODO what is this, most likely foresees that the node we're querying is not synced yet
 		SyncStatus:             nil, // TODO what is this
-		Peers: []*types.Peer{
-			{
-				PeerID:   "",
-				Metadata: nil,
-			},
-		},
+		Peers:                  nil,
 	}
 	return resp, nil
 }

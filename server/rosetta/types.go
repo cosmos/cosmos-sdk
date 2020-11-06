@@ -12,11 +12,11 @@ import (
 
 // list of supported operations
 const (
-	StatusReverted    = "Reverted"
-	StatusSuccess     = "Success"
-	OperationTransfer = "Transfer"
-	OptionAddress     = "address"
-	OptionGas         = "gas"
+	StatusReverted   = "Reverted"
+	StatusSuccess    = "Success"
+	OperationMsgSend = "cosmos-sdk/MsgSend"
+	OptionAddress    = "address"
+	OptionGas        = "gas"
 )
 
 // NewNetwork builds a rosetta gateway network
@@ -25,8 +25,8 @@ func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter)
 		Properties: crg.NetworkProperties{
 			Blockchain:          networkIdentifier.Blockchain,
 			Network:             networkIdentifier.Network,
-			AddrPrefix:          sdk.GetConfig().GetBech32AccountAddrPrefix(),                                         // since we're inside cosmos sdk the config is supposed to be sealed
-			SupportedOperations: []string{StatusReverted, StatusSuccess, OperationTransfer, OptionAddress, OptionGas}, // TODO are this defaults always true?
+			AddrPrefix:          sdk.GetConfig().GetBech32AccountAddrPrefix(),                                        // since we're inside cosmos sdk the config is supposed to be sealed
+			SupportedOperations: []string{StatusReverted, StatusSuccess, OperationMsgSend, OptionAddress, OptionGas}, // TODO are this defaults always true?
 		},
 		Adapter: adapter,
 	}
@@ -76,8 +76,17 @@ func Version() *types.Version {
 // a static information we can club it here
 func Allow() *types.Allow {
 	return &types.Allow{
-		OperationStatuses:       nil,
-		OperationTypes:          nil,
+		OperationStatuses: []*types.OperationStatus{
+			{
+				Status:     StatusSuccess,
+				Successful: true,
+			},
+			{
+				Status:     StatusReverted,
+				Successful: false,
+			},
+		},
+		OperationTypes:          []string{OperationMsgSend},
 		Errors:                  AllowedErrors.RosettaErrors(),
 		HistoricalBalanceLookup: false,
 		TimestampStartIndex:     nil,

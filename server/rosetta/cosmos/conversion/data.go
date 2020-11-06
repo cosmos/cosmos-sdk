@@ -95,7 +95,7 @@ func toOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) (operations
 					OperationIdentifier: &types.OperationIdentifier{
 						Index: int64(index),
 					},
-					Type:   rosetta.OperationTransfer,
+					Type:   rosetta.OperationMsgSend,
 					Status: status,
 					Account: &types.AccountIdentifier{
 						Address: account,
@@ -120,7 +120,7 @@ func toOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) (operations
 func GetMsgDataFromOperations(ops []*types.Operation) (sdk.Msg, error) {
 	op := ops[0]
 	switch op.Type {
-	case rosetta.OperationTransfer:
+	case rosetta.OperationMsgSend:
 		return getTransferTxDataFromOperations(ops)
 	}
 

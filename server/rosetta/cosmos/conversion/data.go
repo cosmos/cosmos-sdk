@@ -161,3 +161,17 @@ func getTransferTxDataFromOperations(ops []*types.Operation) (sdk.Msg, error) {
 	msg := banktypes.NewMsgSend(from, to, sdk.NewCoins(sendAmt))
 	return msg, nil
 }
+
+// TmPeersToRosettaPeers converts tendermint peers to rosetta ones
+func TmPeersToRosettaPeers(peers []tmcoretypes.Peer) []*types.Peer {
+	converted := make([]*types.Peer, len(peers))
+	for i, peer := range peers {
+		converted[i] = &types.Peer{
+			PeerID: peer.NodeInfo.Moniker,
+			Metadata: map[string]interface{}{
+				"addr": peer.NodeInfo.ListenAddr,
+			},
+		}
+	}
+	return converted
+}

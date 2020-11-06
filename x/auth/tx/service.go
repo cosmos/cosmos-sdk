@@ -44,9 +44,8 @@ const (
 )
 
 // TxsByEvents implements the ServiceServer.TxsByEvents RPC method.
-func (s txServer) TxsByEvents(ctx context.Context, req *txtypes.GetTxsEventRequest) (*txtypes.GetTxsEventResponse, error) {
+func (s txServer) TxsByEvents(ctx context.Context, req *txtypes.GetTxsEventRequest) (*txtypes.TxsByEventsResponse, error) {
 
-	fmt.Println(req.Event)
 	if req.Page < 0 {
 		return nil, status.Error(codes.InvalidArgument, "page must greater than 0")
 	}
@@ -63,7 +62,7 @@ func (s txServer) TxsByEvents(ctx context.Context, req *txtypes.GetTxsEventReque
 		events = append(events, req.Event)
 	}
 
-	var tmEvents []string
+	tmEvents := make([]string, len(events))
 
 	for _, event := range events {
 		if !strings.Contains(event, "=") {
@@ -102,7 +101,7 @@ func (s txServer) TxsByEvents(ctx context.Context, req *txtypes.GetTxsEventReque
 
 	}
 
-	return &txtypes.GetTxsEventResponse{
+	return &txtypes.TxsByEventsResponse{
 		Txs: res,
 	}, nil
 

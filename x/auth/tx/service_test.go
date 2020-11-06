@@ -129,15 +129,15 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 		&tx.GetTxsEventRequest{Event: "message.action=send", Page: 1, Limit: 10},
 	)
 	s.Require().NoError(err)
-	s.Require().Equal(len(grpcRes.Txs), 1)
+	s.Require().Greater(len(grpcRes.Txs), 0)
 	s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
 
 	// // Query the tx via grpc-gateway.
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?event=%s&page=%d&limit=%d", val.APIAddress, "message.action=send", 1, 10))
 	s.Require().NoError(err)
-	var getTxRes tx.GetTxsEventResponse
+	var getTxRes tx.TxsByEventsResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getTxRes))
-	s.Require().Equal(len(grpcRes.Txs), 1)
+	s.Require().Greater(len(grpcRes.Txs), 0)
 	s.Require().Equal("foobar", getTxRes.Txs[0].Body.Memo)
 }
 

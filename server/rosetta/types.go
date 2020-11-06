@@ -18,6 +18,12 @@ const (
 	OptionGas        = "gas"
 )
 
+// Synchronization stage constants used to determine if a node is synced or catching up
+const (
+	StageSynced  = "synced"
+	StageSyncing = "syncing"
+)
+
 // NewNetwork builds a rosetta gateway network
 func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter) service.Network {
 	return service.Network{
@@ -58,6 +64,8 @@ type DataAPIClient interface {
 	Mempool(ctx context.Context) (*tmtypes.ResultUnconfirmedTxs, error)
 	// Peers gets the peers currently connected to the node
 	Peers(ctx context.Context) ([]tmtypes.Peer, error)
+	// Status returns the node status, such as sync data, version etc
+	Status(ctx context.Context) (*tmtypes.ResultStatus, error)
 }
 
 // Version returns the version for rosetta

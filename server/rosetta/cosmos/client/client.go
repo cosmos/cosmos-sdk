@@ -206,3 +206,11 @@ func (c *Client) Peers(ctx context.Context) ([]tmtypes.Peer, error) {
 	}
 	return netInfo.Peers, nil
 }
+
+func (c *Client) Status(ctx context.Context) (*tmtypes.ResultStatus, error) {
+	status, err := c.client.Client.Status(ctx)
+	if err != nil {
+		return nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
+	}
+	return status, err
+}

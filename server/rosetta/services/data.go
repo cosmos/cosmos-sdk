@@ -178,12 +178,17 @@ func (sn SingleNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkReque
 	}
 	// get peers
 	peers, err := sn.client.Peers(ctx)
+	// get node status
+	status, err := sn.client.Status(ctx)
+	if err != nil {
+		return nil, rosetta.ToRosettaError(err)
+	}
 	resp := &types.NetworkStatusResponse{
 		CurrentBlockIdentifier: conversion.TendermintBlockToBlockIdentifier(block),
 		CurrentBlockTimestamp:  conversion.TimeToMilliseconds(block.Block.Time),
 		GenesisBlockIdentifier: sn.genesisBlockIdentifier,
-		OldestBlockIdentifier:  nil, // TODO what is this, most likely foresees that the node we're querying is not synced yet
-		SyncStatus:             nil, // TODO what is this
+		OldestBlockIdentifier:  nil,
+		SyncStatus:             conversion.TendermintStatusToSync(status),
 		Peers:                  conversion.TmPeersToRosettaPeers(peers),
 	}
 	return resp, nil

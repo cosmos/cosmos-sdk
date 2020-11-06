@@ -175,3 +175,18 @@ func TmPeersToRosettaPeers(peers []tmcoretypes.Peer) []*types.Peer {
 	}
 	return converted
 }
+
+// TendermintStatusToSync converts a tendermint status to rosetta sync status
+func TendermintStatusToSync(status *tmcoretypes.ResultStatus) *types.SyncStatus {
+	// determine sync status
+	var stage = rosetta.StageSynced
+	if status.SyncInfo.CatchingUp {
+		stage = rosetta.StageSyncing
+	}
+
+	return &types.SyncStatus{
+		CurrentIndex: status.SyncInfo.EarliestBlockHeight,
+		TargetIndex:  &status.SyncInfo.LatestBlockHeight,
+		Stage:        &stage,
+	}
+}

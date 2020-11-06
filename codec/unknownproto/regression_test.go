@@ -18,9 +18,8 @@ func TestBadBytesPassedIntoDecoder(t *testing.T) {
 	decoder := cfg.TxConfig.TxDecoder()
 	tx, err := decoder(data)
 
-	// TODO: File an issue to ensure that sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
-	// properly wraps errors to be compatible with errors.Is, otherwise right now it doesn't work correctly.
-
+	// TODO: When issue https://github.com/cosmos/cosmos-sdk/issues/7846
+	// is addressed, we'll remove this .Contains check.
 	require.Contains(t, err.Error(), io.ErrUnexpectedEOF.Error())
 	require.Nil(t, tx)
 }

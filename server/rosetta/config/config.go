@@ -27,6 +27,8 @@ const (
 	DefaultGRPCEndpoint = "localhost:9090"
 	// DefaultNetwork defines the default network name
 	DefaultNetwork = "network"
+	// DefaultOffline defines the default offline value
+	DefaultOffline = false
 )
 
 // configuration flags
@@ -43,7 +45,7 @@ const (
 // RosettaFromConfig builds the rosetta servicer full implementation from configurations
 func RosettaFromConfig(conf *Config) (crg.Adapter, error) {
 	if conf.Offline {
-		panic("offline mode not supported for now")
+		return services.NewOffline(conf.NetworkIdentifier()), nil
 	}
 	var dataAPIOpts []client.OptionFunc
 	if conf.codec != nil && conf.ir != nil {
@@ -205,5 +207,6 @@ func SetFlags(flags *pflag.FlagSet) {
 	flags.String(FlagGRPCEndpoint, DefaultGRPCEndpoint, "the app gRPC endpoint")
 	flags.String(FlagAddr, DefaultAddr, "the address rosetta will bind to")
 	flags.Int(FlagRetries, DefaultRetries, "the number of retries that will be done before quitting")
+	flags.Bool(FlagOffline, DefaultOffline, "run rosetta only with construction API")
 	return
 }

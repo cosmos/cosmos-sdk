@@ -429,7 +429,6 @@ func (sk ScopedKeeper) getOwners(ctx sdk.Context, cap *types.Capability) *types.
 	var capOwners types.CapabilityOwners
 	sk.cdc.MustUnmarshalBinaryBare(bz, &capOwners)
 	return &capOwners
-
 }
 
 func logger(ctx sdk.Context) log.Logger {

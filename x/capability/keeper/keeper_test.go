@@ -75,11 +75,15 @@ func (suite *KeeperTestSuite) TestInitializeAndSeal() {
 func (suite *KeeperTestSuite) TestNewCapability() {
 	sk := suite.keeper.ScopeToModule(banktypes.ModuleName)
 
+	got, ok := sk.GetCapability(suite.ctx, "transfer")
+	suite.Require().False(ok)
+	suite.Require().Nil(got)
+
 	cap, err := sk.NewCapability(suite.ctx, "transfer")
 	suite.Require().NoError(err)
 	suite.Require().NotNil(cap)
 
-	got, ok := sk.GetCapability(suite.ctx, "transfer")
+	got, ok = sk.GetCapability(suite.ctx, "transfer")
 	suite.Require().True(ok)
 	suite.Require().Equal(cap, got)
 	suite.Require().True(cap == got, "expected memory addresses to be equal")
@@ -88,9 +92,19 @@ func (suite *KeeperTestSuite) TestNewCapability() {
 	suite.Require().False(ok)
 	suite.Require().Nil(got)
 
-	cap, err = sk.NewCapability(suite.ctx, "transfer")
+	got, ok = sk.GetCapability(suite.ctx, "transfer")
+	suite.Require().True(ok)
+	suite.Require().Equal(cap, got)
+	suite.Require().True(cap == got, "expected memory addresses to be equal")
+
+	cap2, err := sk.NewCapability(suite.ctx, "transfer")
 	suite.Require().Error(err)
-	suite.Require().Nil(cap)
+	suite.Require().Nil(cap2)
+
+	got, ok = sk.GetCapability(suite.ctx, "transfer")
+	suite.Require().True(ok)
+	suite.Require().Equal(cap, got)
+	suite.Require().True(cap == got, "expected memory addresses to be equal")
 }
 
 func (suite *KeeperTestSuite) TestOriginalCapabilityKeeper() {
@@ -111,7 +125,8 @@ func (suite *KeeperTestSuite) TestAuthenticateCapability() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(cap1)
 
-	forgedCap := types.NewCapability(0) // index should be the same index as the first capability
+	forgedCap := types.NewCapability(cap1.Index) // index should be the same index as the first capability
+	suite.Require().False(sk1.AuthenticateCapability(suite.ctx, forgedCap, "transfer"))
 	suite.Require().False(sk2.AuthenticateCapability(suite.ctx, forgedCap, "transfer"))
 
 	cap2, err := sk2.NewCapability(suite.ctx, "bond")
@@ -176,14 +191,15 @@ func (suite *KeeperTestSuite) TestGetOwners() {
 	// Ensure all scoped keepers can get owners
 	for _, sk := range sks {
 		owners, ok := sk.GetOwners(suite.ctx, "transfer")
-		mods, cap, err := sk.LookupModules(suite.ctx, "transfer")
+		mods, gotCap, err := sk.LookupModules(suite.ctx, "transfer")
 
 		suite.Require().True(ok, "could not retrieve owners")
 		suite.Require().NotNil(owners, "owners is nil")
 
 		suite.Require().NoError(err, "could not retrieve modules")
-		suite.Require().NotNil(cap, "capability is nil")
+		suite.Require().NotNil(gotCap, "capability is nil")
 		suite.Require().NotNil(mods, "modules is nil")
+		suite.Require().Equal(cap, gotCap, "caps not equal")
 
 		suite.Require().Equal(len(expectedOrder), len(owners.Owners), "length of owners is unexpected")
 		for i, o := range owners.Owners {

@@ -7,21 +7,21 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 )
 
-// NewPacketAckCommitment creates a new PacketAckCommitment instance.
-func NewPacketAckCommitment(portID, channelID string, seq uint64, hash []byte) PacketAckCommitment {
-	return PacketAckCommitment{
+// NewPacketState creates a new PacketState instance.
+func NewPacketState(portID, channelID string, seq uint64, data []byte) PacketState {
+	return PacketState{
 		PortId:    portID,
 		ChannelId: channelID,
 		Sequence:  seq,
-		Hash:      hash,
+		Data:      data,
 	}
 }
 
 // Validate performs basic validation of fields returning an error upon any
 // failure.
-func (pa PacketAckCommitment) Validate() error {
-	if len(pa.Hash) == 0 {
-		return errors.New("hash bytes cannot be empty")
+func (pa PacketState) Validate() error {
+	if pa.Data == nil {
+		return errors.New("data bytes cannot be nil")
 	}
 	return validateGenFields(pa.PortId, pa.ChannelId, pa.Sequence)
 }
@@ -43,7 +43,7 @@ func (ps PacketSequence) Validate() error {
 
 // NewGenesisState creates a GenesisState instance.
 func NewGenesisState(
-	channels []IdentifiedChannel, acks, commitments []PacketAckCommitment,
+	channels []IdentifiedChannel, acks, receipts, commitments []PacketState,
 	sendSeqs, recvSeqs, ackSeqs []PacketSequence,
 ) GenesisState {
 	return GenesisState{
@@ -60,8 +60,9 @@ func NewGenesisState(
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		Channels:         []IdentifiedChannel{},
-		Acknowledgements: []PacketAckCommitment{},
-		Commitments:      []PacketAckCommitment{},
+		Acknowledgements: []PacketState{},
+		Receipts:         []PacketState{},
+		Commitments:      []PacketState{},
 		SendSequences:    []PacketSequence{},
 		RecvSequences:    []PacketSequence{},
 		AckSequences:     []PacketSequence{},
@@ -81,11 +82,23 @@ func (gs GenesisState) Validate() error {
 		if err := ack.Validate(); err != nil {
 			return fmt.Errorf("invalid acknowledgement %v ack index %d: %w", ack, i, err)
 		}
+		if len(ack.Data) == 0 {
+			return fmt.Errorf("invalid acknowledgement %v ack index %d: data bytes cannot be empty", ack, i)
+		}
+	}
+
+	for i, receipt := range gs.Receipts {
+		if err := receipt.Validate(); err != nil {
+			return fmt.Errorf("invalid acknowledgement %v ack index %d: %w", receipt, i, err)
+		}
 	}
 
 	for i, commitment := range gs.Commitments {
 		if err := commitment.Validate(); err != nil {
 			return fmt.Errorf("invalid commitment %v index %d: %w", commitment, i, err)
+		}
+		if len(commitment.Data) == 0 {
+			return fmt.Errorf("invalid acknowledgement %v ack index %d: data bytes cannot be empty", commitment, i)
 		}
 	}
 

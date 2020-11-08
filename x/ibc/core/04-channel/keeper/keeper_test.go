@@ -143,51 +143,69 @@ func (suite KeeperTestSuite) TestGetAllSequences() {
 	suite.Equal(expSeqs, ackSeqs)
 }
 
-// TestGetAllCommitmentsAcks creates a set of acks and packet commitments on two different
+// TestGetAllPacketState creates a set of acks, packet commitments, and receipts on two different
 // channels on chain A and tests their retrieval.
-func (suite KeeperTestSuite) TestGetAllCommitmentsAcks() {
+func (suite KeeperTestSuite) TestGetAllPacketState() {
 	_, _, connA, connB, channelA0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 	channelA1, _ := suite.coordinator.CreateMockChannels(suite.chainA, suite.chainB, connA, connB, types.UNORDERED)
 
 	// channel 0 acks
-	ack1 := types.NewPacketAckCommitment(channelA0.PortID, channelA0.ID, 1, []byte("ack"))
-	ack2 := types.NewPacketAckCommitment(channelA0.PortID, channelA0.ID, 2, []byte("ack"))
+	ack1 := types.NewPacketState(channelA0.PortID, channelA0.ID, 1, []byte("ack"))
+	ack2 := types.NewPacketState(channelA0.PortID, channelA0.ID, 2, []byte("ack"))
 
 	// duplicate ack
-	ack2dup := types.NewPacketAckCommitment(channelA0.PortID, channelA0.ID, 2, []byte("ack"))
+	ack2dup := types.NewPacketState(channelA0.PortID, channelA0.ID, 2, []byte("ack"))
 
 	// channel 1 acks
-	ack3 := types.NewPacketAckCommitment(channelA1.PortID, channelA1.ID, 1, []byte("ack"))
+	ack3 := types.NewPacketState(channelA1.PortID, channelA1.ID, 1, []byte("ack"))
+
+	// create channel 0 receipts
+	rec1 := types.NewPacketState(channelA0.PortID, channelA0.ID, 1, []byte(""))
+	rec2 := types.NewPacketState(channelA0.PortID, channelA0.ID, 2, []byte(""))
+
+	// channel 1 receipts
+	rec3 := types.NewPacketState(channelA1.PortID, channelA1.ID, 1, []byte(""))
+	rec4 := types.NewPacketState(channelA1.PortID, channelA1.ID, 2, []byte(""))
 
 	// channel 0 packet commitments
-	comm1 := types.NewPacketAckCommitment(channelA0.PortID, channelA0.ID, 1, []byte("hash"))
-	comm2 := types.NewPacketAckCommitment(channelA0.PortID, channelA0.ID, 2, []byte("hash"))
+	comm1 := types.NewPacketState(channelA0.PortID, channelA0.ID, 1, []byte("hash"))
+	comm2 := types.NewPacketState(channelA0.PortID, channelA0.ID, 2, []byte("hash"))
 
 	// channel 1 packet commitments
-	comm3 := types.NewPacketAckCommitment(channelA1.PortID, channelA1.ID, 1, []byte("hash"))
-	comm4 := types.NewPacketAckCommitment(channelA1.PortID, channelA1.ID, 2, []byte("hash"))
+	comm3 := types.NewPacketState(channelA1.PortID, channelA1.ID, 1, []byte("hash"))
+	comm4 := types.NewPacketState(channelA1.PortID, channelA1.ID, 2, []byte("hash"))
 
-	expAcks := []types.PacketAckCommitment{ack1, ack2, ack3}
-	expCommitments := []types.PacketAckCommitment{comm1, comm2, comm3, comm4}
+	expAcks := []types.PacketState{ack1, ack2, ack3}
+	expReceipts := []types.PacketState{rec1, rec2, rec3, rec4}
+	expCommitments := []types.PacketState{comm1, comm2, comm3, comm4}
 
 	ctxA := suite.chainA.GetContext()
 
 	// set acknowledgements
-	for _, ack := range []types.PacketAckCommitment{ack1, ack2, ack2dup, ack3} {
-		suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(ctxA, ack.PortId, ack.ChannelId, ack.Sequence, ack.Hash)
+	for _, ack := range []types.PacketState{ack1, ack2, ack2dup, ack3} {
+		suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(ctxA, ack.PortId, ack.ChannelId, ack.Sequence, ack.Data)
+	}
+
+	// set packet receipts
+	for _, rec := range expReceipts {
+		suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketReceipt(ctxA, rec.PortId, rec.ChannelId, rec.Sequence)
 	}
 
 	// set packet commitments
 	for _, comm := range expCommitments {
-		suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(ctxA, comm.PortId, comm.ChannelId, comm.Sequence, comm.Hash)
+		suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(ctxA, comm.PortId, comm.ChannelId, comm.Sequence, comm.Data)
 	}
 
 	acks := suite.chainA.App.IBCKeeper.ChannelKeeper.GetAllPacketAcks(ctxA)
+	receipts := suite.chainA.App.IBCKeeper.ChannelKeeper.GetAllPacketReceipts(ctxA)
 	commitments := suite.chainA.App.IBCKeeper.ChannelKeeper.GetAllPacketCommitments(ctxA)
+
 	suite.Require().Len(acks, len(expAcks))
 	suite.Require().Len(commitments, len(expCommitments))
+	suite.Require().Len(receipts, len(expReceipts))
 
 	suite.Require().Equal(expAcks, acks)
+	suite.Require().Equal(expReceipts, receipts)
 	suite.Require().Equal(expCommitments, commitments)
 }
 
@@ -275,7 +293,7 @@ func (suite *KeeperTestSuite) TestGetAllPacketCommitmentsAtChannel() {
 		suite.True(expectedSeqs[packet.Sequence])
 		suite.Equal(channelA.PortID, packet.PortId)
 		suite.Equal(channelA.ID, packet.ChannelId)
-		suite.Equal(hash, packet.Hash)
+		suite.Equal(hash, packet.Data)
 
 		// prevent duplicates from passing checks
 		expectedSeqs[packet.Sequence] = false

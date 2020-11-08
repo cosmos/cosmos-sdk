@@ -117,12 +117,22 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 	k.sealed = true
 }
 
-// SetIndex sets the index to one in InitChain
-// Since it is an exported function, we check that index is indeed unset, before initializing
-func (k Keeper) SetIndex(ctx sdk.Context, index uint64) {
+// SetIndex sets the index to one (or greater) in InitChain according
+// to the GenesisState. It must only be called once.
+// It will panic if the provided index is 0, or if the index is already set.
+func (k Keeper) SetIndex(ctx sdk.Context, index uint64) error {
+	if index == 0 {
+		panic("SetIndex requires index > 0")
+	}
+	latest := k.GetLatestIndex(ctx)
+	if latest > 0 {
+		panic("SetIndex requires index to not be set")
+	}
+
 	// set the global index to the passed index
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.KeyIndex, types.IndexToKey(index))
+	return nil
 }
 
 // GetLatestIndex returns the latest index of the CapabilityKeeper
@@ -156,7 +166,8 @@ func (k Keeper) GetOwners(ctx sdk.Context, index uint64) (types.CapabilityOwners
 }
 
 // InitializeCapability takes in an index and an owners array. It creates the capability in memory
-// and sets the fwd and reverse keys for each owner in the memstore
+// and sets the fwd and reverse keys for each owner in the memstore.
+// It is used during initialization from genesis.
 func (k Keeper) InitializeCapability(ctx sdk.Context, index uint64, owners types.CapabilityOwners) {
 
 	memStore := ctx.KVStore(k.memKey)
@@ -278,14 +289,12 @@ func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap *types.Capability)
 
 	memStore := ctx.KVStore(sk.memKey)
 
-	// Set the forward mapping between the module and capability tuple and the
+	// Delete the forward mapping between the module and capability tuple and the
 	// capability name in the memKVStore
 	memStore.Delete(types.FwdCapabilityKey(sk.module, cap))
 
-	// Set the reverse mapping between the module and capability name and the
-	// index in the in-memory store. Since marshalling and unmarshalling into a store
-	// will change memory address of capability, we simply store index as value here
-	// and retrieve the in-memory pointer to the capability from our map
+	// Delete the reverse mapping between the module and capability name and the
+	// index in the in-memory store.
 	memStore.Delete(types.RevCapabilityKey(sk.module, name))
 
 	// remove owner
@@ -298,7 +307,7 @@ func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap *types.Capability)
 	if len(capOwners.Owners) == 0 {
 		// remove capability owner set
 		prefixStore.Delete(indexKey)
-		// since no one ones capability, we can delete capability from map
+		// since no one owns capability, we can delete capability from map
 		delete(sk.capMap, cap.GetIndex())
 	} else {
 		// update capability owner set
@@ -370,7 +379,7 @@ func (sk ScopedKeeper) GetOwners(ctx sdk.Context, name string) (*types.Capabilit
 
 // LookupModules returns all the module owners for a given capability
 // as a string array and the capability itself.
-// The method returns an errors if either the capability or the owners cannot be
+// The method returns an error if either the capability or the owners cannot be
 // retreived from the memstore.
 func (sk ScopedKeeper) LookupModules(ctx sdk.Context, name string) ([]string, *types.Capability, error) {
 	cap, ok := sk.GetCapability(ctx, name)
@@ -413,16 +422,13 @@ func (sk ScopedKeeper) getOwners(ctx sdk.Context, cap *types.Capability) *types.
 
 	bz := prefixStore.Get(indexKey)
 
-	var owners *types.CapabilityOwners
 	if len(bz) == 0 {
-		owners = types.NewCapabilityOwners()
-	} else {
-		var capOwners types.CapabilityOwners
-		sk.cdc.MustUnmarshalBinaryBare(bz, &capOwners)
-		owners = &capOwners
+		return types.NewCapabilityOwners()
 	}
 
-	return owners
+	var capOwners types.CapabilityOwners
+	sk.cdc.MustUnmarshalBinaryBare(bz, &capOwners)
+	return &capOwners
 }
 
 func logger(ctx sdk.Context) log.Logger {

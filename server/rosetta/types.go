@@ -3,6 +3,7 @@ package rosetta
 import (
 	"context"
 	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
@@ -12,15 +13,16 @@ import (
 
 // list of supported operations
 const (
-	StatusReverted   = "Reverted"
-	StatusSuccess    = "Success"
-	OperationMsgSend = "cosmos-sdk/MsgSend"
-	OptionAddress    = "address"
-	OptionGas        = "gas"
-	OptionMemo       = "memo"
-	Sequence         = "sequence"
-	AccountNumber    = "account_number"
-	ChainId          = "chain_id"
+	StatusReverted    = "Reverted"
+	StatusSuccess     = "Success"
+	OperationMsgSend  = "cosmos-sdk/MsgSend"
+	OptionAddress     = "address"
+	OptionGas         = "gas"
+	OptionMemo        = "memo"
+	Sequence          = "sequence"
+	AccountNumber     = "account_number"
+	ChainId           = "chain_id"
+	OperationTransfer = "transfer"
 )
 
 // Synchronization stage constants used to determine if a node is synced or catching up
@@ -72,6 +74,7 @@ type DataAPIClient interface {
 	Peers(ctx context.Context) ([]tmtypes.Peer, error)
 	// Status returns the node status, such as sync data, version etc
 	Status(ctx context.Context) (*tmtypes.ResultStatus, error)
+	GetTxConfig(ctx context.Context) client.TxConfig
 }
 
 // Version returns the version for rosetta

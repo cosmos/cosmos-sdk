@@ -236,3 +236,7 @@ func (c *Client) Status(ctx context.Context) (*tmtypes.ResultStatus, error) {
 	}
 	return status, err
 }
+
+func (c *Client) GetTxConfig(ctx context.Context) client.TxConfig {
+	return c.client.TxConfig
+}

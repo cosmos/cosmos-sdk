@@ -121,16 +121,16 @@ func GetMsgDataFromOperations(ops []*types.Operation) (sdk.Msg, error) {
 	op := ops[0]
 	switch op.Type {
 	case rosetta.OperationMsgSend:
-		return getTransferTxDataFromOperations(ops)
+		return GetTransferTxDataFromOperations(ops)
 	}
 
 	return nil, fmt.Errorf("unable to iterate operations")
 }
 
-// getTransferTxDataFromOperations extracts the from and to addresses from a list of operations.
+// GetTransferTxDataFromOperations extracts the from and to addresses from a list of operations.
 // We assume that it comes formated in the correct way. And that the balance of the sender is the same
 // as the receiver operations.
-func getTransferTxDataFromOperations(ops []*types.Operation) (sdk.Msg, error) {
+func GetTransferTxDataFromOperations(ops []*types.Operation) (*banktypes.MsgSend, error) {
 	var (
 		from, to sdk.AccAddress
 		sendAmt  sdk.Coin

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 	"github.com/tendermint/cosmos-rosetta-gateway/service"
 	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -16,6 +17,10 @@ const (
 	OperationMsgSend = "cosmos-sdk/MsgSend"
 	OptionAddress    = "address"
 	OptionGas        = "gas"
+	OptionMemo       = "memo"
+	Sequence         = "sequence"
+	AccountNumber    = "account_number"
+	ChainId          = "chain_id"
 )
 
 // Synchronization stage constants used to determine if a node is synced or catching up
@@ -47,6 +52,7 @@ type SdkTxWithHash struct {
 // a client has to implement in order to
 // interact with cosmos-sdk chains
 type DataAPIClient interface {
+	AccountInfo(ctx context.Context, addr string, height *int64) (auth.AccountI, error)
 	// Balances fetches the balance of the given address
 	// if height is not nil, then the balance will be displayed
 	// at the provided height, otherwise last block balance will be returned

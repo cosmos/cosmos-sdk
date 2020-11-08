@@ -6,6 +6,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	secp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
+	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/conversion"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 )
@@ -42,7 +43,46 @@ func (sn SingleNetwork) ConstructionHash(ctx context.Context, request *types.Con
 }
 
 func (sn SingleNetwork) ConstructionMetadata(ctx context.Context, request *types.ConstructionMetadataRequest) (*types.ConstructionMetadataResponse, *types.Error) {
-	return nil, rosetta.ErrNotImplemented.RosettaError()
+	if len(request.Options) == 0 {
+		return nil, rosetta.ErrInterpreting.RosettaError()
+	}
+
+	addr, ok := request.Options[rosetta.OptionAddress]
+	if !ok {
+		return nil, rosetta.ErrInvalidAddress.RosettaError()
+	}
+	addrString := addr.(string)
+	accountInfo, err := sn.client.AccountInfo(ctx, addrString, nil)
+	if err != nil {
+		return nil, rosetta.ToRosettaError(err)
+	}
+
+	gas, ok := request.Options[rosetta.OptionGas]
+	if !ok {
+		return nil, rosetta.WrapError(rosetta.ErrInvalidAddress, "gas not set").RosettaError()
+	}
+
+	memo, ok := request.Options[rosetta.OptionMemo]
+	if !ok {
+		return nil, rosetta.WrapError(rosetta.ErrInvalidMemo, "memo not set").RosettaError()
+	}
+
+	status, err := sn.client.Status(ctx)
+	if err != nil {
+		return nil, rosetta.ToRosettaError(err)
+	}
+
+	res := &types.ConstructionMetadataResponse{
+		Metadata: map[string]interface{}{
+			rosetta.AccountNumber: accountInfo.GetAccountNumber(),
+			rosetta.Sequence:      accountInfo.GetSequence(),
+			rosetta.ChainId:       status.NodeInfo.Network,
+			rosetta.OptionGas:     gas,
+			rosetta.OptionMemo:    memo,
+		},
+	}
+
+	return res, nil
 }
 
 func (sn SingleNetwork) ConstructionParse(ctx context.Context, request *types.ConstructionParseRequest) (*types.ConstructionParseResponse, *types.Error) {
@@ -54,7 +94,33 @@ func (sn SingleNetwork) ConstructionPayloads(ctx context.Context, request *types
 }
 
 func (sn SingleNetwork) ConstructionPreprocess(ctx context.Context, request *types.ConstructionPreprocessRequest) (*types.ConstructionPreprocessResponse, *types.Error) {
-	return nil, rosetta.ErrNotImplemented.RosettaError()
+	operations := request.Operations
+	if len(operations) != 2 {
+		return nil, rosetta.ErrInterpreting.RosettaError()
+	}
+
+	txData, err := conversion.GetTransferTxDataFromOperations(operations)
+	if err != nil {
+		return nil, rosetta.WrapError(rosetta.ErrInvalidAddress, err.Error()).RosettaError()
+	}
+	if txData.FromAddress == "" {
+		return nil, rosetta.WrapError(rosetta.ErrInvalidAddress, err.Error()).RosettaError()
+	}
+
+	memo, ok := request.Metadata["memo"]
+	if !ok {
+		return nil, rosetta.ErrInvalidMemo.RosettaError()
+
+	}
+
+	var res = &types.ConstructionPreprocessResponse{
+		Options: map[string]interface{}{
+			rosetta.OptionAddress: txData.FromAddress,
+			rosetta.OptionMemo:    memo,
+			rosetta.OptionGas:     request.SuggestedFeeMultiplier,
+		},
+	}
+	return res, nil
 }
 
 func (sn SingleNetwork) ConstructionSubmit(ctx context.Context, request *types.ConstructionSubmitRequest) (*types.TransactionIdentifierResponse, *types.Error) {

@@ -111,7 +111,10 @@ var (
 	// ErrUnsupportedCurve is returned when the curve specified is not supported
 	ErrUnsupportedCurve = NewError(15, "unsupported curve, expected secp256k1", false)
 	// ErrInvalidPubkey is returned when the public key is invalid
-	ErrInvalidPubkey = NewError(8, "invalid pubkey", false)
+	ErrInvalidPubkey  = NewError(8, "invalid pubkey", false)
+	ErrInterpreting   = NewError(1, "error interpreting data from node", false)
+	ErrInvalidAddress = NewError(7, "invalid address", false)
+	ErrInvalidMemo    = NewError(11, "invalid memo", false)
 )
 
 // AllowedErrors lists all the rosetta allowed errors

@@ -7,7 +7,7 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	secp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/conversion"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,7 +22,62 @@ import (
 var _ crg.ConstructionAPI = SingleNetwork{}
 
 func (sn SingleNetwork) ConstructionCombine(ctx context.Context, request *types.ConstructionCombineRequest) (*types.ConstructionCombineResponse, *types.Error) {
-	return nil, rosetta.ErrNotImplemented.RosettaError()
+	txBytes, err := hex.DecodeString(request.UnsignedTransaction)
+	if err != nil {
+		return nil, rosetta.ToRosettaError(err)
+	}
+
+	TxConfig := sn.client.GetTxConfig(ctx)
+	rawTx, err := TxConfig.TxDecoder()(txBytes)
+	if err != nil {
+		return nil, rosetta.ToRosettaError(err)
+	}
+
+	txBldr, _ := TxConfig.WrapTxBuilder(rawTx)
+
+	var sigs []signing.SignatureV2
+	for _, signature := range request.Signatures {
+		if signature.PublicKey.CurveType != "secp256k1" {
+			return nil, rosetta.ErrUnsupportedCurve.RosettaError()
+		}
+
+		cmp, err := btcec.ParsePubKey(signature.PublicKey.Bytes, btcec.S256())
+		if err != nil {
+			return nil, rosetta.ToRosettaError(err)
+		}
+
+		compressedPublicKey := make([]byte, secp256k1.PubKeySize)
+		copy(compressedPublicKey, cmp.SerializeCompressed())
+		pubKey := &secp256k1.PubKey{Key: compressedPublicKey}
+
+		accountInfo, err := sn.client.AccountInfo(ctx, sdk.AccAddress(compressedPublicKey).String(), nil)
+		if err != nil {
+			return nil, rosetta.ToRosettaError(err)
+		}
+
+		sig := signing.SignatureV2{
+			PubKey: pubKey,
+			Data: &signing.SingleSignatureData{
+				SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
+				Signature: signature.Bytes,
+			},
+			Sequence: accountInfo.GetSequence(),
+		}
+		sigs = append(sigs, sig)
+	}
+	err = txBldr.SetSignatures(sigs...)
+	if err != nil {
+		return nil, rosetta.ToRosettaError(err)
+	}
+
+	txBytes, err = TxConfig.TxEncoder()(txBldr.GetTx())
+	if err != nil {
+		return nil, rosetta.ToRosettaError(err)
+	}
+
+	return &types.ConstructionCombineResponse{
+		SignedTransaction: hex.EncodeToString(txBytes),
+	}, nil
 }
 
 func (sn SingleNetwork) ConstructionDerive(ctx context.Context, request *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
@@ -223,5 +278,21 @@ func (sn SingleNetwork) ConstructionPreprocess(ctx context.Context, request *typ
 }
 
 func (sn SingleNetwork) ConstructionSubmit(ctx context.Context, request *types.ConstructionSubmitRequest) (*types.TransactionIdentifierResponse, *types.Error) {
-	return nil, rosetta.ErrNotImplemented.RosettaError()
+	txBytes, err := hex.DecodeString(request.SignedTransaction)
+	if err != nil {
+		return nil, rosetta.ToRosettaError(err)
+	}
+
+	res, err := sn.client.PostTx(ctx, txBytes)
+	if err != nil {
+		return nil, rosetta.ToRosettaError(err)
+	}
+	return &types.TransactionIdentifierResponse{
+		TransactionIdentifier: &types.TransactionIdentifier{
+			Hash: res.TxHash,
+		},
+		Metadata: map[string]interface{}{
+			"log": res.RawLog,
+		},
+	}, nil
 }

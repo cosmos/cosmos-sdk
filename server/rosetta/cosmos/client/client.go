@@ -240,3 +240,7 @@ func (c *Client) Status(ctx context.Context) (*tmtypes.ResultStatus, error) {
 func (c *Client) GetTxConfig(ctx context.Context) client.TxConfig {
 	return c.client.TxConfig
 }
+
+func (c *Client) PostTx(ctx context.Context, txBytes []byte) (res *sdk.TxResponse, err error) {
+	return c.client.BroadcastTx(txBytes)
+}

@@ -75,6 +75,7 @@ type DataAPIClient interface {
 	// Status returns the node status, such as sync data, version etc
 	Status(ctx context.Context) (*tmtypes.ResultStatus, error)
 	GetTxConfig(ctx context.Context) client.TxConfig
+	PostTx(ctx context.Context, txBytes []byte) (res *sdk.TxResponse, err error)
 }
 
 // Version returns the version for rosetta

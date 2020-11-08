@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/hex"
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -14,6 +15,7 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 	"github.com/tendermint/tendermint/crypto"
+	"strings"
 )
 
 // interface implementation assertion
@@ -44,7 +46,21 @@ func (sn SingleNetwork) ConstructionDerive(ctx context.Context, request *types.C
 }
 
 func (sn SingleNetwork) ConstructionHash(ctx context.Context, request *types.ConstructionHashRequest) (*types.TransactionIdentifierResponse, *types.Error) {
-	return nil, rosetta.ErrNotImplemented.RosettaError()
+	bz, err := hex.DecodeString(request.SignedTransaction)
+	if err != nil {
+		return nil, rosetta.WrapError(rosetta.ErrInvalidTransaction, "error decoding tx").RosettaError()
+	}
+
+	hash := sha256.Sum256(bz)
+	bzHash := hash[:]
+
+	hashString := hex.EncodeToString(bzHash)
+
+	return &types.TransactionIdentifierResponse{
+		TransactionIdentifier: &types.TransactionIdentifier{
+			Hash: strings.ToUpper(hashString),
+		},
+	}, nil
 }
 
 func (sn SingleNetwork) ConstructionMetadata(ctx context.Context, request *types.ConstructionMetadataRequest) (*types.ConstructionMetadataResponse, *types.Error) {
@@ -91,7 +107,31 @@ func (sn SingleNetwork) ConstructionMetadata(ctx context.Context, request *types
 }
 
 func (sn SingleNetwork) ConstructionParse(ctx context.Context, request *types.ConstructionParseRequest) (*types.ConstructionParseResponse, *types.Error) {
-	return nil, rosetta.ErrNotImplemented.RosettaError()
+	txBytes, err := hex.DecodeString(request.Transaction)
+	if err != nil {
+		return nil, rosetta.ToRosettaError(err)
+	}
+
+	TxConfig := sn.client.GetTxConfig(ctx)
+	rawTx, err := TxConfig.TxDecoder()(txBytes)
+	if err != nil {
+		return nil, rosetta.ToRosettaError(err)
+	}
+
+	txBldr, _ := TxConfig.WrapTxBuilder(rawTx)
+	addrs := txBldr.GetTx().GetSigners()
+	var accountIdentifierSigners []*types.AccountIdentifier
+	for _, addr := range addrs {
+		signer := &types.AccountIdentifier{
+			Address: addr.String(),
+		}
+		accountIdentifierSigners = append(accountIdentifierSigners, signer)
+	}
+
+	return &types.ConstructionParseResponse{
+		Operations:               conversion.ToOperations(rawTx.GetMsgs(), false, true),
+		AccountIdentifierSigners: accountIdentifierSigners,
+	}, nil
 }
 
 func (sn SingleNetwork) ConstructionPayloads(ctx context.Context, request *types.ConstructionPayloadsRequest) (*types.ConstructionPayloadsResponse, *types.Error) {
@@ -122,6 +162,7 @@ func (sn SingleNetwork) ConstructionPayloads(ctx context.Context, request *types
 	if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
 		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
+
 	signerData := authsigning.SignerData{
 		ChainID:       txFactory.ChainID(),
 		AccountNumber: txFactory.AccountNumber(),

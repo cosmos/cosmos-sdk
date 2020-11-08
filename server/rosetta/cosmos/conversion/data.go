@@ -50,7 +50,7 @@ func ResultTxSearchToTransaction(txs []*rosetta.SdkTxWithHash) []*types.Transact
 
 // SdkTxResponseToOperations converts a tx response to operations
 func SdkTxToOperations(tx sdk.Tx, hasError, withoutStatus bool) []*types.Operation {
-	return toOperations(tx.GetMsgs(), hasError, withoutStatus)
+	return ToOperations(tx.GetMsgs(), hasError, withoutStatus)
 }
 
 // TendermintTxsToTxIdentifiers converts a tendermint raw transaction into a rosetta tx identifier
@@ -70,7 +70,7 @@ func TendermintBlockToBlockIdentifier(block *tmcoretypes.ResultBlock) *types.Blo
 	}
 }
 
-func toOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) (operations []*types.Operation) {
+func ToOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) (operations []*types.Operation) {
 	for i, msg := range msgs {
 		x := msg.Type()
 		switch x {

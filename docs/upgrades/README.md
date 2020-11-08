@@ -266,7 +266,9 @@ This section covers the changes to `BaseApp` and related changes in `app.go`, `c
 - `GRPCQueryRouter` routes ABCI Query requests to GRPC handlers.
 - `GRPCQueryHandler` defines a function type which handles ABCI Query requests using gRPC
 
-`baseapp/grpcrouter.go` 
+- [TODO] explain `baseapp/grpcrouter.go` 
+- [TODO] explain `app.go` updates
+- [TODO] explain `server` updates
 
 #### REST Queries and Swagger Generation
 [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway) is a project that translates REST calls into GRPC calls 

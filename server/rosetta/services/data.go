@@ -49,15 +49,34 @@ type SingleNetwork struct {
 }
 
 // AccountBalance retrieves the account balance of an address
-// NOTE(fdymylja): for now historical balance is not supported
+// rosetta requires us to fetch the block information too
 func (sn SingleNetwork) AccountBalance(ctx context.Context, request *types.AccountBalanceRequest) (*types.AccountBalanceResponse, *types.Error) {
-	// we need to provide block information, so get last block
-	block, _, err := sn.client.BlockByHeight(ctx, nil)
-	if err != nil {
-		return nil, rosetta.ToRosettaError(err)
+	var (
+		height *int64
+		block  *tmtypes.ResultBlock
+		err    error
+	)
+	switch {
+	case request.BlockIdentifier == nil:
+		height = nil
+		block, _, err = sn.client.BlockByHeight(ctx, nil)
+		if err != nil {
+			return nil, rosetta.ToRosettaError(err)
+		}
+	case request.BlockIdentifier.Hash != nil:
+		block, _, err = sn.client.BlockByHash(ctx, *request.BlockIdentifier.Hash)
+		if err != nil {
+			return nil, rosetta.ToRosettaError(err)
+		}
+		height = &block.Block.Height
+	case request.BlockIdentifier.Index != nil:
+		height = request.BlockIdentifier.Index
+		block, _, err = sn.client.BlockByHeight(ctx, height)
+		if err != nil {
+			return nil, rosetta.ToRosettaError(err)
+		}
 	}
-	// now get balance
-	balances, err := sn.client.Balances(ctx, request.AccountIdentifier.Address, nil)
+	balances, err := sn.client.Balances(ctx, request.AccountIdentifier.Address, height)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}

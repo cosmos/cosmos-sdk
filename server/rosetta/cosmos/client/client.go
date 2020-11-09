@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"strconv"
+
+	"google.golang.org/grpc/metadata"
 
 	"github.com/tendermint/tendermint/rpc/client/http"
 	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -27,12 +30,6 @@ import (
 var _ rosetta.DataAPIClient = (*Client)(nil)
 
 const tmWebsocketPath = "/websocket"
-
-// GRPCHeader defines a string which should represent a gRPC header
-type GRPCHeader string
-
-// GRPCHeight defines the gRPC height header
-var GRPCHeight GRPCHeader = grpctypes.GRPCBlockHeightHeader
 
 // options defines optional settings for SingleClient
 type options struct {
@@ -115,16 +112,15 @@ func NewSingle(grpcEndpoint, tendermintEndpoint string, optsFunc ...OptionFunc) 
 
 func (c *Client) Balances(ctx context.Context, addr string, height *int64) ([]sdk.Coin, error) {
 	if height != nil {
-		ctx = context.WithValue(ctx, GRPCHeight, *height)
+		strHeight := strconv.FormatInt(*height, 10)
+		ctx = metadata.AppendToOutgoingContext(ctx, grpctypes.GRPCBlockHeightHeader, strHeight)
 	}
-
 	balance, err := c.bank.AllBalances(ctx, &bank.QueryAllBalancesRequest{
 		Address: addr,
 	})
 	if err != nil {
 		return nil, rosetta.FromGRPCToRosettaError(err)
 	}
-
 	return balance.Balances, nil
 }
 

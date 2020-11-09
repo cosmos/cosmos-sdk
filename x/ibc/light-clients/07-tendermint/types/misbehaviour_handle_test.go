@@ -7,7 +7,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
@@ -22,7 +21,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	altPubKey, err := altPrivVal.GetPubKey()
 	suite.Require().NoError(err)
 
-	altVal := tmtypes.NewValidator(altPubKey.(cryptotypes.IntoTmPubKey).AsTmPubKey(), 4)
+	altVal := tmtypes.NewValidator(altPubKey, 4)
 
 	// Create bothValSet with both suite validator and altVal
 	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))

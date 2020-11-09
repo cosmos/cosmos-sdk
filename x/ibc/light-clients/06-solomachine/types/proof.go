@@ -1,9 +1,8 @@
 package types
 
 import (
-	"github.com/tendermint/tendermint/crypto"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -19,7 +18,7 @@ import (
 // The type of the signature data determines how the public key is used to
 // verify the signature. An error is returned if signature verification fails
 // or an invalid SignatureData type is provided.
-func VerifySignature(pubKey crypto.PubKey, signBytes []byte, sigData signing.SignatureData) error {
+func VerifySignature(pubKey cryptotypes.PubKey, signBytes []byte, sigData signing.SignatureData) error {
 	switch data := sigData.(type) {
 	case *signing.SingleSignatureData:
 		if !pubKey.VerifySignature(signBytes, data.Signature) {

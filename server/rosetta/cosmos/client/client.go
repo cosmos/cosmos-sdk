@@ -86,7 +86,6 @@ func NewSingle(grpcEndpoint, tendermintEndpoint string, optsFunc ...OptionFunc) 
 
 	authClient := auth.NewQueryClient(grpcConn)
 	bankClient := bank.NewQueryClient(grpcConn)
-
 	// NodeURI and Client are set from here otherwise
 	// WitNodeURI will require to create a new client
 	// it's done here because WithNodeURI panics if
@@ -154,6 +153,15 @@ func (c *Client) BlockByHeight(ctx context.Context, height *int64) (*tmtypes.Res
 		return nil, nil, err
 	}
 	return block, txs, err
+}
+
+// Coins fetches the existing coins in the application
+func (c *Client) Coins(ctx context.Context) (sdk.Coins, error) {
+	supply, err := c.bank.TotalSupply(ctx, &bank.QueryTotalSupplyRequest{})
+	if err != nil {
+		return nil, rosetta.FromGRPCToRosettaError(err)
+	}
+	return supply.Supply, nil
 }
 
 // ListTransactionsInBlock returns the list of the transactions in a block given its height

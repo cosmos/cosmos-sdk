@@ -77,7 +77,8 @@ func (sn SingleNetwork) Block(ctx context.Context, request *types.BlockRequest) 
 		txs   []*rosetta.SdkTxWithHash
 		err   error
 	)
-	if request.BlockIdentifier.Hash != nil {
+	// TODO frojdi check this lint error.
+	if request.BlockIdentifier.Hash != nil { // nolint
 		block, txs, err = sn.client.BlockByHash(ctx, *request.BlockIdentifier.Hash)
 		if err != nil {
 			return nil, rosetta.ToRosettaError(err)

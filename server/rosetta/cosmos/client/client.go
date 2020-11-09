@@ -110,8 +110,9 @@ func NewSingle(grpcEndpoint, tendermintEndpoint string, optsFunc ...OptionFunc) 
 }
 
 func (c *Client) Balances(ctx context.Context, addr string, height *int64) ([]sdk.Coin, error) {
+	// TODO frojdi check this lint error.
 	if height != nil {
-		ctx = context.WithValue(ctx, grpctypes.GRPCBlockHeightHeader, *height)
+		ctx = context.WithValue(ctx, grpctypes.GRPCBlockHeightHeader, *height) // nolint
 	}
 
 	balance, err := c.bank.AllBalances(ctx, &bank.QueryAllBalancesRequest{

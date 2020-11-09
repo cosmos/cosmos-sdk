@@ -25,15 +25,19 @@ service Service {
     }
 }
 
+// BroadcastTxRequest is the request type for the Service.BroadcastTxRequest
+// RPC method.
 message BroadcastTxRequest {
     // tx is the list of queried transactions.
     bytes tx = 1;
     string mode = 2;
 }
 
+// BroadcastTxResponse is the response type for the
+// Service.BroadcastTx method.
 message BroadcastTxResponse {
   // Response code.
-    int64 code = 1;
+    uint32 code = 1;
       // Namespace for the Code
     string codespace = 2;
       // Result bytes, if any.

@@ -117,11 +117,11 @@ func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxReque
 		return nil, err
 	}
 	return &txtypes.BroadcastTxResponse{
-		Code:      int64(resp.Code),
+		Code:      resp.Code,
 		Codespace: resp.Codespace,
 		Data:      resp.Data,
-		GasUsed:   int64(resp.GasUsed),
-		GasWanted: int64(resp.GasWanted),
+		GasUsed:   resp.GasUsed,
+		GasWanted: resp.GasWanted,
 		Height:    resp.Height,
 		Info:      resp.Info,
 		RawLog:    resp.RawLog,

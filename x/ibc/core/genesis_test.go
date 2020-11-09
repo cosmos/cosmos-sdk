@@ -235,7 +235,7 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 							},
 						),
 					},
-					clienttypes.NewParams(ibctmtypes.Tendermint),
+					clienttypes.NewParams(ibctmtypes.Tendermint, exported.Localhost),
 					true,
 				),
 				ConnectionGenesis: connectiontypes.NewGenesisState(

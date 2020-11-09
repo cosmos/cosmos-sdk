@@ -223,7 +223,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 				types.NewParams(" "),
 				true,
 			),
-			expPass: true,
+			expPass: false,
 		},
 	}
 

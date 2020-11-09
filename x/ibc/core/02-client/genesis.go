@@ -67,6 +67,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
 	return types.GenesisState{
 		Clients:          k.GetAllGenesisClients(ctx),
 		ClientsConsensus: k.GetAllConsensusStates(ctx),
+		Params:           k.GetParams(ctx),
 		CreateLocalhost:  false,
 	}
 }

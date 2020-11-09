@@ -38,7 +38,7 @@ func CoinsToBalance(coins []sdk.Coin) []*types.Amount {
 func ResultTxSearchToTransaction(txs []*rosetta.SdkTxWithHash) []*types.Transaction {
 	converted := make([]*types.Transaction, len(txs))
 	for i, tx := range txs {
-		//hasError := tx.Code > 0
+		// hasError := tx.Code > 0
 		converted[i] = &types.Transaction{
 			TransactionIdentifier: &types.TransactionIdentifier{Hash: tx.HexHash},
 			Operations:            SdkTxToOperations(tx.Tx, false, false),

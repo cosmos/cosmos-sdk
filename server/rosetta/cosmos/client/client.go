@@ -28,6 +28,12 @@ var _ rosetta.DataAPIClient = (*Client)(nil)
 
 const tmWebsocketPath = "/websocket"
 
+// GRPCHeader defines a string which should represent a gRPC header
+type GRPCHeader string
+
+// GRPCHeight defines the gRPC height header
+var GRPCHeight GRPCHeader = grpctypes.GRPCBlockHeightHeader
+
 // options defines optional settings for SingleClient
 type options struct {
 	interfaceRegistry codectypes.InterfaceRegistry
@@ -110,9 +116,8 @@ func NewSingle(grpcEndpoint, tendermintEndpoint string, optsFunc ...OptionFunc) 
 }
 
 func (c *Client) Balances(ctx context.Context, addr string, height *int64) ([]sdk.Coin, error) {
-	// TODO frojdi check this lint error.
 	if height != nil {
-		ctx = context.WithValue(ctx, grpctypes.GRPCBlockHeightHeader, *height) // nolint
+		ctx = context.WithValue(ctx, GRPCHeight, *height)
 	}
 
 	balance, err := c.bank.AllBalances(ctx, &bank.QueryAllBalancesRequest{

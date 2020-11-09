@@ -77,18 +77,20 @@ func (sn SingleNetwork) Block(ctx context.Context, request *types.BlockRequest) 
 		txs   []*rosetta.SdkTxWithHash
 		err   error
 	)
-	// TODO frojdi check this lint error.
-	if request.BlockIdentifier.Hash != nil { // nolint
+	// block identifier is assumed not to be nil as rosetta will do this check for us
+	// check if we have to query via hash or block number
+	switch {
+	case request.BlockIdentifier.Hash != nil:
 		block, txs, err = sn.client.BlockByHash(ctx, *request.BlockIdentifier.Hash)
 		if err != nil {
 			return nil, rosetta.ToRosettaError(err)
 		}
-	} else if request.BlockIdentifier.Index != nil {
+	case request.BlockIdentifier.Index != nil:
 		block, txs, err = sn.client.BlockByHeight(ctx, request.BlockIdentifier.Index)
 		if err != nil {
 			return nil, rosetta.ToRosettaError(err)
 		}
-	} else {
+	default:
 		return nil, rosetta.WrapError(rosetta.ErrBadArgument, "at least one of hash or index needs to be specified").RosettaError()
 	}
 	return &types.BlockResponse{

@@ -7,9 +7,9 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// MarshalJSONI same as codec.ProtoMarshalJSON, but does msg type inspection to assert
+// MarshalJSON same as codec.ProtoMarshalJSON, but does msg type inspection to assert
 // that it implements `proto.Message` and return an error if it doesn't.
-func MarshalJSONI(msg interface{}, resolver jsonpb.AnyResolver) ([]byte, error) {
+func MarshalJSON(msg interface{}, resolver jsonpb.AnyResolver) ([]byte, error) {
 	msgProto, err := AssertMsg(msg)
 	if err != nil {
 		return nil, err

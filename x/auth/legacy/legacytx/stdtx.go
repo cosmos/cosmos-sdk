@@ -98,7 +98,7 @@ func (ss StdSignature) MarshalYAML() (interface{}, error) {
 	)
 
 	if ss.PubKey != nil {
-		if pubkey, err = protocdc.MarshalJSONI(ss.PubKey, nil); err != nil {
+		if pubkey, err = protocdc.MarshalJSON(ss.PubKey, nil); err != nil {
 			return nil, err
 		}
 	}

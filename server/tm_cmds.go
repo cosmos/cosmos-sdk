@@ -52,7 +52,7 @@ func ShowValidatorCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			out, err := protocdc.MarshalJSONI(pk, nil)
+			out, err := protocdc.MarshalJSON(pk, nil)
 			if err != nil {
 				return err
 			}

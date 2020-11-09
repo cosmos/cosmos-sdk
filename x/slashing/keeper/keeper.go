@@ -7,6 +7,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/internal/protocdc"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -47,7 +48,10 @@ func (k Keeper) AddPubkey(ctx sdk.Context, pubkey crypto.PubKey) error {
 		return err
 	}
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryBare(pkProto)
+	bz, err := k.cdc.MarshalBinaryBare(pkProto)
+	if err != nil {
+		return err
+	}
 	store.Set(types.AddrPubkeyRelationKey(addr), bz)
 	return nil
 }

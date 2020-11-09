@@ -538,10 +538,10 @@ type getPK interface {
 	GetPubKey() crypto.PubKey
 }
 
-func getPKString(g getPK) (string, err) {
+func getPKString(g getPK) (string, error) {
 	if pk := g.GetPubKey(); pk != nil {
 		// TODO check if it's ok to change a type of ValidatorOutput.PubKey to crypto.PubKey
-		pk, err := protocdc.MarshalJSONI(pk, nil)
+		pk, err := protocdc.MarshalJSON(pk, nil)
 		if err != nil {
 			return nil, err
 		}

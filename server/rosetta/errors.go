@@ -106,7 +106,7 @@ func FromGRPCToRosettaError(err error) Error {
 var (
 	// ErrUnknown defines an unknown error, if this is returned it means
 	// the library is ignoring an error
-	ErrUnknown = NewError(0, "unknown", true)
+	ErrUnknown = NewError(0, "unknown", false)
 	// ErrBadArgument is returned when the request is malformed
 	ErrBadArgument = NewError(400, "bad argument", false)
 	// ErrNotFound is returned when the required object was not found

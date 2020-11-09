@@ -54,6 +54,8 @@ type DataAPIClient interface {
 	BlockByHash(ctx context.Context, hash string) (*tmtypes.ResultBlock, []*SdkTxWithHash, error)
 	// BlockByHeight gets a block given its height, if height is nil then last block is returned
 	BlockByHeight(ctx context.Context, height *int64) (*tmtypes.ResultBlock, []*SdkTxWithHash, error)
+	// Coins gets the supply of the coins active in the network
+	Coins(ctx context.Context) (sdk.Coins, error)
 	// GetTx gets a transaction given its hash
 	GetTx(ctx context.Context, hash string) (sdk.Tx, error)
 	// GetUnconfirmedTx gets an unconfirmed Tx given its hash

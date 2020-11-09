@@ -19,12 +19,27 @@ func TimeToMilliseconds(t time.Time) int64 {
 }
 
 // CoinsToBalance converts sdk.Coins to rosetta.Amounts
-func CoinsToBalance(coins []sdk.Coin) []*types.Amount {
-	amounts := make([]*types.Amount, len(coins))
+func CoinsToBalance(ownedCoins []sdk.Coin, availableCoins sdk.Coins) []*types.Amount {
+	amounts := make([]*types.Amount, len(availableCoins))
+	ownedCoinsMap := make(map[string]sdk.Int, len(availableCoins))
 
-	for i, coin := range coins {
+	for _, ownedCoin := range ownedCoins {
+		ownedCoinsMap[ownedCoin.Denom] = ownedCoin.Amount
+	}
+
+	for i, coin := range availableCoins {
+		value, owned := ownedCoinsMap[coin.Denom]
+		if !owned {
+			amounts[i] = &types.Amount{
+				Value: sdk.NewInt(0).String(),
+				Currency: &types.Currency{
+					Symbol: coin.Denom,
+				},
+			}
+			continue
+		}
 		amounts[i] = &types.Amount{
-			Value: coin.Amount.String(),
+			Value: value.String(),
 			Currency: &types.Currency{
 				Symbol: coin.Denom,
 			},

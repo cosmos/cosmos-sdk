@@ -76,13 +76,17 @@ func (sn SingleNetwork) AccountBalance(ctx context.Context, request *types.Accou
 			return nil, rosetta.ToRosettaError(err)
 		}
 	}
-	balances, err := sn.client.Balances(ctx, request.AccountIdentifier.Address, height)
+	accountCoins, err := sn.client.Balances(ctx, request.AccountIdentifier.Address, height)
+	if err != nil {
+		return nil, rosetta.ToRosettaError(err)
+	}
+	availableCoins, err := sn.client.Coins(ctx)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
 	resp := &types.AccountBalanceResponse{
 		BlockIdentifier: conversion.TendermintBlockToBlockIdentifier(block),
-		Balances:        conversion.CoinsToBalance(balances),
+		Balances:        conversion.CoinsToBalance(accountCoins, availableCoins),
 		Coins:           nil,
 		Metadata:        nil,
 	}

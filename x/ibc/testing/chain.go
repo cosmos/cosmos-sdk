@@ -197,8 +197,6 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, clienttypes.Height) {
 		Prove:  true,
 	})
 
-	fmt.Println(res)
-
 	merkleProof, err := commitmenttypes.ConvertProofs(res.ProofOps)
 	require.NoError(chain.t, err)
 

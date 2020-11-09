@@ -1,20 +1,31 @@
-# Cosmos SDK v0.39.1 Release Notes
+# Cosmos SDK v0.39.2 Release Notes
 
-This release fixes the [issue affecting the accounts migration](https://github.com/cosmos/cosmos-sdk/issues/6828) from v0.38 to v0.39.
+This release fixes various bugs and brings coin's denom validation to the *Cosmos SDK 0.39* release series.
 
-See the [Cosmos SDK 0.39.1 milestone](https://github.com/cosmos/cosmos-sdk/milestone/29?closed=1) on our issue tracker for details.
+See the [Cosmos SDK 0.39.2 milestone](https://github.com/cosmos/cosmos-sdk/milestone/30?closed=1) on our issue tracker for details.
 
-## Remove custom JSON serialization for account types
+## Allow ValidateDenom() to be customised per application
 
-Account types JSON serialization has now changed to Amino. Changes are significant (e.g. integers are treated
-as strings) thus it is required to migrate the exported state of an application before restarting the node
-with a more recent version of the Cosmos SDK.
+Applications can now customise `types.Coin` denomination validation by
+replacing `types.CoinDenomRegex` with their application-specific validation function.
 
-## REST server's --unsafe-cors mode
+## Upgrade queries don't work after upgrade
 
-This a UX improvement [back ported from master](https://github.com/cosmos/cosmos-sdk/pull/6853) that allows developers to disable CORS
-restrictions during app development and testing by passing the `--unsafe-cors` option to the client's `rest-server` command.
+New stores can now be registered during an on-chain upgrade. This is to
+prevent blockchain state queries from stopping working after a successful upgrade.
 
-## Tendermint 0.33.7
+## ApproxRoot() infinite looping
 
-Tendermint 0.33.7 brings an important regression fix. Please refer to [this bug report](https://github.com/tendermint/tendermint/issues/5112) for more information.
+The `types.Dec.ApproxRoot()` function has now a maximum number 100 iterations as backup boundary
+condition to prevent the client's code from entering an endless loop.
+
+## Go 1.15
+
+This is the first release of the Launchpad series that has been tested and built with **go 1.15**.
+
+## Tendermint 0.33.8
+
+A security vulnerability that affected the Go's `encoding/binary` package was reported.
+Tendermint's new `v0.33.8` is meant to aid users in using the correct version of Go.
+
+Please refer to [this bug report](https://github.com/golang/go/issues/40618) for more information.

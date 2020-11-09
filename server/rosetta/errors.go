@@ -4,6 +4,7 @@ package rosetta
 
 import (
 	"fmt"
+
 	grpccodes "google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 

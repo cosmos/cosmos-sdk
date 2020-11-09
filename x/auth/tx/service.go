@@ -86,8 +86,13 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 		return nil, err
 	}
 
+	proof := result.Proof.ToProto()
+
 	return &txtypes.GetTxResponse{
-		Tx: &protoTx,
+		Tx:     &protoTx,
+		Height: uint64(result.Height),
+		Index:  result.Index,
+		Proof:  &proof,
 	}, nil
 }
 

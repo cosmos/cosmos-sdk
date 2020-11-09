@@ -130,6 +130,8 @@ func (s IntegrationTestSuite) TestGetTx() {
 	)
 	s.Require().NoError(err)
 	s.Require().Equal("foobar", grpcRes.Tx.Body.Memo)
+	s.Require().Zero(grpcRes.Index)
+	s.Require().NotZero(grpcRes.Height)
 
 	// Query the tx via grpc-gateway.
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/tx/%s", val.APIAddress, txRes.TxHash))
@@ -137,6 +139,8 @@ func (s IntegrationTestSuite) TestGetTx() {
 	var getTxRes tx.GetTxResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getTxRes))
 	s.Require().Equal("foobar", getTxRes.Tx.Body.Memo)
+	s.Require().Zero(grpcRes.Index)
+	s.Require().NotZero(grpcRes.Height)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

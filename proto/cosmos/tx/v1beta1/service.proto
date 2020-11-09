@@ -4,6 +4,7 @@ package cosmos.tx.v1beta1;
 import "google/api/annotations.proto";
 import "cosmos/base/abci/v1beta1/abci.proto";
 import "cosmos/tx/v1beta1/tx.proto";
+import "tendermint/types/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
 
@@ -46,4 +47,11 @@ message GetTxRequest {
 message GetTxResponse {
     // tx is the queried transaction.
     cosmos.tx.v1beta1.Tx tx = 1;
+    // height is the block height in which the block was included.
+    uint64 height = 2;
+    // index defines the index of the transaction in the block.
+    uint32 index = 3;
+    // proof returns the transaction merkle proof of the presence of the transaction
+    // in the block
+    .tendermint.types.TxProof proof = 4;
 }

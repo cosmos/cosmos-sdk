@@ -39,12 +39,12 @@ The `~/.simapp` folder has the following structure:
       |- priv_validator_key.json    # Private key to use as a validator in the consensus protocol.
 ```
 
-Before starting the chain, you need to populate the state with at least one account. To do so, first [create a new account in the keyring](./keyring.md#adding-keys-to-the-keyring) named `my_validator` (feel free to choose another name).
+Before starting the chain, you need to populate the state with at least one account. To do so, first [create a new account in the keyring](./keyring.md#adding-keys-to-the-keyring) named `my_validator` under the `test` keyring backend (feel free to choose another name and another backend).
 
 Now that you have created a local account, go ahead and grant it some `stake` tokens in your chain's genesis file. Doing so will also make sure your chain is aware of this account's existence:
 
 ```bash
-simd add-genesis-account $(simd keys show my_validator -a) 100000000stake --chain-id my-test-chain
+simd add-genesis-account $MY_VALIDATOR_ADDRESS 100000000stake
 ```
 
 Recall that `$MY_VALIDATOR_ADDRESS` is a variable that holds the address of the `my_validator` key in the [keyring](./keyring.md#adding-keys-to-the-keyring). Also note that the tokens in the SDK have the `{amount}{denom}` format: `amount` is is a 18-digit-precision decimal number, and `denom` is the unique token identifier with its denomination key (e.g. `atom` or `uatom`). Here, we are granting `stake` tokens, as `stake` is the token identifier used for staking in [`simapp`](https://github.com/cosmos/cosmos-sdk/tree/v0.40.0-rc2/simapp). For your own chain with its own staking denom, that token identifier should be used instead.
@@ -53,10 +53,10 @@ Now that your account has some tokens, you need to add a validator to your chain
 
 ```bash
 # Create a gentx.
-simd gentx --name my_validator --amount 100000stake --chain-id my-test-chain
+simd gentx my_validator --amount 100000stake --chain-id my-test-chain --keyring-backend test
 
 # Add the gentx to the genesis file.
-simd collect-gentxs --chain-id my-test-chain
+simd collect-gentxs
 ```
 
 A `gentx` does three things:

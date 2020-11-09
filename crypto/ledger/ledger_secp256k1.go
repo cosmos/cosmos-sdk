@@ -53,7 +53,7 @@ type (
 // This function is marked as unsafe as it will retrieve a pubkey without user verification.
 // It can only be used to verify a pubkey but never to create new accounts/keys. In that case,
 // please refer to NewPrivKeySecp256k1
-func NewPrivKeySecp256k1Unsafe(path hd.BIP44Params) (types.BasePrivKey, error) {
+func NewPrivKeySecp256k1Unsafe(path hd.BIP44Params) (types.LedgerPrivKey, error) {
 	device, err := getDevice()
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func NewPrivKeySecp256k1Unsafe(path hd.BIP44Params) (types.BasePrivKey, error) {
 
 // NewPrivKeySecp256k1 will generate a new key and store the public key for later use.
 // The request will require user confirmation and will show account and index in the device
-func NewPrivKeySecp256k1(path hd.BIP44Params, hrp string) (types.BasePrivKey, string, error) {
+func NewPrivKeySecp256k1(path hd.BIP44Params, hrp string) (types.LedgerPrivKey, string, error) {
 	device, err := getDevice()
 	if err != nil {
 		return nil, "", err
@@ -154,7 +154,7 @@ func (pkl PrivKeyLedgerSecp256k1) Bytes() []byte {
 
 // Equals implements the PrivKey interface. It makes sure two private keys
 // refer to the same public key.
-func (pkl PrivKeyLedgerSecp256k1) Equals(other types.BasePrivKey) bool {
+func (pkl PrivKeyLedgerSecp256k1) Equals(other types.LedgerPrivKey) bool {
 	if otherKey, ok := other.(PrivKeyLedgerSecp256k1); ok {
 		return pkl.CachedPubKey.Equals(otherKey.CachedPubKey)
 	}

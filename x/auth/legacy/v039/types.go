@@ -9,10 +9,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tendermint/tendermint/crypto"
+	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v034"
 	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v038"
@@ -29,11 +31,11 @@ type (
 	}
 
 	BaseAccount struct {
-		Address       sdk.AccAddress `json:"address" yaml:"address"`
-		Coins         sdk.Coins      `json:"coins,omitempty" yaml:"coins,omitempty"`
-		PubKey        crypto.PubKey  `json:"public_key" yaml:"public_key"`
-		AccountNumber uint64         `json:"account_number" yaml:"account_number"`
-		Sequence      uint64         `json:"sequence" yaml:"sequence"`
+		Address       sdk.AccAddress     `json:"address" yaml:"address"`
+		Coins         sdk.Coins          `json:"coins,omitempty" yaml:"coins,omitempty"`
+		PubKey        cryptotypes.PubKey `json:"public_key" yaml:"public_key"`
+		AccountNumber uint64             `json:"account_number" yaml:"account_number"`
+		Sequence      uint64             `json:"sequence" yaml:"sequence"`
 	}
 
 	BaseVestingAccount struct {
@@ -47,15 +49,15 @@ type (
 	}
 
 	vestingAccountJSON struct {
-		Address          sdk.AccAddress `json:"address" yaml:"address"`
-		Coins            sdk.Coins      `json:"coins,omitempty" yaml:"coins"`
-		PubKey           crypto.PubKey  `json:"public_key" yaml:"public_key"`
-		AccountNumber    uint64         `json:"account_number" yaml:"account_number"`
-		Sequence         uint64         `json:"sequence" yaml:"sequence"`
-		OriginalVesting  sdk.Coins      `json:"original_vesting" yaml:"original_vesting"`
-		DelegatedFree    sdk.Coins      `json:"delegated_free" yaml:"delegated_free"`
-		DelegatedVesting sdk.Coins      `json:"delegated_vesting" yaml:"delegated_vesting"`
-		EndTime          int64          `json:"end_time" yaml:"end_time"`
+		Address          sdk.AccAddress     `json:"address" yaml:"address"`
+		Coins            sdk.Coins          `json:"coins,omitempty" yaml:"coins"`
+		PubKey           cryptotypes.PubKey `json:"public_key" yaml:"public_key"`
+		AccountNumber    uint64             `json:"account_number" yaml:"account_number"`
+		Sequence         uint64             `json:"sequence" yaml:"sequence"`
+		OriginalVesting  sdk.Coins          `json:"original_vesting" yaml:"original_vesting"`
+		DelegatedFree    sdk.Coins          `json:"delegated_free" yaml:"delegated_free"`
+		DelegatedVesting sdk.Coins          `json:"delegated_vesting" yaml:"delegated_vesting"`
+		EndTime          int64              `json:"end_time" yaml:"end_time"`
 
 		// custom fields based on concrete vesting type which can be omitted
 		StartTime      int64   `json:"start_time,omitempty" yaml:"start_time,omitempty"`
@@ -117,7 +119,7 @@ func NewBaseAccountWithAddress(addr sdk.AccAddress) BaseAccount {
 }
 
 func NewBaseAccount(
-	address sdk.AccAddress, coins sdk.Coins, pk crypto.PubKey, accountNumber, sequence uint64,
+	address sdk.AccAddress, coins sdk.Coins, pk cryptotypes.PubKey, accountNumber, sequence uint64,
 ) *BaseAccount {
 
 	return &BaseAccount{
@@ -380,7 +382,7 @@ func (ma ModuleAccount) Validate() error {
 		return errors.New("module account name cannot be blank")
 	}
 
-	if x := sdk.AccAddress(crypto.AddressHash([]byte(ma.Name))); !ma.Address.Equals(x) {
+	if x := sdk.AccAddress(tmcrypto.AddressHash([]byte(ma.Name))); !ma.Address.Equals(x) {
 		return fmt.Errorf("address %s cannot be derived from the module name '%s'; expected: %s", ma.Address, ma.Name, x)
 	}
 
@@ -415,6 +417,7 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 }
 
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	cryptocodec.RegisterCrypto(cdc)
 	cdc.RegisterInterface((*v038auth.GenesisAccount)(nil), nil)
 	cdc.RegisterInterface((*v038auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/Account", nil)

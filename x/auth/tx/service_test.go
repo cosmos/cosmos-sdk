@@ -139,6 +139,52 @@ func (s IntegrationTestSuite) TestGetTx() {
 	s.Require().Equal("foobar", getTxRes.Tx.Body.Memo)
 }
 
+func (s IntegrationTestSuite) TestBroadcastTx() {
+	val := s.network.Validators[0]
+
+	// prepare txBuilder with msg
+	txBuilder := val.ClientCtx.TxConfig.NewTxBuilder()
+	feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
+	gasLimit := testdata.NewTestGasLimit()
+	s.Require().NoError(
+		txBuilder.SetMsgs(&banktypes.MsgSend{
+			FromAddress: val.Address.String(),
+			ToAddress:   val.Address.String(),
+			Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
+		}),
+	)
+	txBuilder.SetFeeAmount(feeAmount)
+	txBuilder.SetGasLimit(gasLimit)
+	txBuilder.SetMemo("foobar")
+
+	// setup txFactory
+	txFactory := clienttx.Factory{}.
+		WithChainID(val.ClientCtx.ChainID).
+		WithKeybase(val.ClientCtx.Keyring).
+		WithTxConfig(val.ClientCtx.TxConfig).
+		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
+
+	// Sign Tx.
+	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false)
+	s.Require().NoError(err)
+
+	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	fmt.Println(string(txBytes))
+	s.Require().NoError(err)
+
+	// Query the tx via gRPC.
+	grpcRes, err := s.queryClient.BroadcastTx(
+		context.Background(),
+		&tx.BroadcastTxRequest{
+			Mode: "async",
+			Tx:   txBytes,
+		},
+	)
+	s.Require().NoError(err)
+	fmt.Println(grpcRes)
+	s.Require().Equal("foobar", grpcRes.Tx.Body.Memo)
+}
+
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }

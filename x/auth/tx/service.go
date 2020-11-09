@@ -91,6 +91,47 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 	}, nil
 }
 
+func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxRequest) (*txtypes.BroadcastTxResponse, error) {
+	if req.Tx == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
+	}
+	if req.Mode == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid empty mode")
+	}
+	clientCtx := s.clientCtx.WithBroadcastMode(req.Mode)
+
+	resp, err := clientCtx.BroadcastTx(req.Tx)
+
+	if err != nil {
+		return nil, err
+	}
+	// Create a proto codec, we need it to unmarshal the tx bytes.
+	cdc := codec.NewProtoCodec(s.clientCtx.InterfaceRegistry)
+	var protoTx txtypes.Tx
+
+	bz, err := resp.Tx.Marshal()
+	if err != nil {
+		return nil, err
+	}
+	if err := cdc.UnmarshalBinaryBare(bz, &protoTx); err != nil {
+		return nil, err
+	}
+	return &txtypes.BroadcastTxResponse{
+		Code:      int64(resp.Code),
+		Codespace: resp.Codespace,
+		Data:      resp.Data,
+		GasUsed:   int64(resp.GasUsed),
+		GasWanted: int64(resp.GasWanted),
+		Height:    resp.Height,
+		Info:      resp.Info,
+		RawLog:    resp.RawLog,
+		Timestamp: resp.Timestamp,
+		TxHash:    resp.TxHash,
+		Tx:        &protoTx,
+	}, nil
+
+}
+
 // RegisterTxService registers the tx service on the gRPC router.
 func RegisterTxService(
 	qrt gogogrpc.Server,

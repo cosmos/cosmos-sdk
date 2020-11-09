@@ -50,7 +50,7 @@ func (s txServer) TxsByEvents(ctx context.Context, req *txtypes.GetTxsEventReque
 		return nil, status.Error(codes.InvalidArgument, "page must greater than 0")
 	}
 	if req.Limit < 0 {
-		return nil, status.Error(codes.InvalidArgument, "page must greater than 0")
+		return nil, status.Error(codes.InvalidArgument, "limit must greater than 0")
 	}
 	if len(req.Event) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "must declare at least one event to search")
@@ -91,14 +91,23 @@ func (s txServer) TxsByEvents(ctx context.Context, req *txtypes.GetTxsEventReque
 	}
 	// Create a proto codec, we need it to unmarshal the tx bytes.
 	cdc := codec.NewProtoCodec(s.clientCtx.InterfaceRegistry)
-	res := make([]*txtypes.Tx, result.TotalCount)
+	res := make([]*txtypes.TxResponse, result.TotalCount)
 	var protoTx txtypes.Tx
 	for i, tx := range result.Txs {
 		if err := cdc.UnmarshalBinaryBare(tx.Tx, &protoTx); err != nil {
 			return nil, err
 		}
-		res[i] = &protoTx
-
+		res[i] = &txtypes.TxResponse{
+			Code:      tx.TxResult.Code,
+			Codespace: tx.TxResult.Codespace,
+			GasUsed:   tx.TxResult.GasUsed,
+			GasWanted: tx.TxResult.GasWanted,
+			Height:    tx.Height,
+			Info:      tx.TxResult.Info,
+			RawLog:    tx.TxResult.Log,
+			TxHash:    tx.Hash.String(),
+			Tx:        &protoTx,
+		}
 	}
 
 	return &txtypes.TxsByEventsResponse{
@@ -134,7 +143,7 @@ func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*
 }
 
 // GetTx implements the ServiceServer.GetTx RPC method.
-func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtypes.GetTxResponse, error) {
+func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtypes.TxResponse, error) {
 	// We get hash as a hex string in the request, convert it to bytes.
 	hash, err := hex.DecodeString(req.Hash)
 	if err != nil {
@@ -156,8 +165,16 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 		return nil, err
 	}
 
-	return &txtypes.GetTxResponse{
-		Tx: &protoTx,
+	return &txtypes.TxResponse{
+		Code:      result.TxResult.Code,
+		Codespace: result.TxResult.Codespace,
+		GasUsed:   result.TxResult.GasUsed,
+		GasWanted: result.TxResult.GasWanted,
+		Height:    result.Height,
+		Info:      result.TxResult.Info,
+		RawLog:    result.TxResult.Log,
+		TxHash:    result.Hash.String(),
+		Tx:        &protoTx,
 	}, nil
 }
 

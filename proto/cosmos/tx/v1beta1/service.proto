@@ -1,6 +1,7 @@
 syntax = "proto3";
 package cosmos.tx.v1beta1;
 
+import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/abci/v1beta1/abci.proto";
 import "cosmos/tx/v1beta1/tx.proto";
@@ -14,7 +15,7 @@ service Service {
         option (google.api.http).post = "/cosmos/tx/v1beta1/simulate";
     }
     // GetTx fetches a tx by hash.
-    rpc GetTx(GetTxRequest) returns (GetTxResponse) {
+    rpc GetTx(GetTxRequest) returns (TxResponse) {
         option (google.api.http).get = "/cosmos/tx/v1beta1/tx/{hash}";
     }
 
@@ -42,7 +43,31 @@ message GetTxsEventRequest {
 // RPC method.
 message TxsByEventsResponse {
     // txs is the list of queried transactions.
-    repeated cosmos.tx.v1beta1.Tx txs = 1;
+    repeated TxResponse txs = 1;
+}
+
+// TxResponse defines a structure containing relevant tx data and metadata.
+message TxResponse {
+    option (gogoproto.goproto_getters) = false;
+    // The block height
+    int64 height = 1;
+    // The transaction hash.
+    string txhash = 2 [(gogoproto.customname) = "TxHash"];
+    // Namespace for the Code
+    string codespace = 3;
+    // Response code.
+    uint32 code = 4;
+    // tx is the queried transaction.
+    cosmos.tx.v1beta1.Tx tx = 5;
+    // The output of the application's logger (raw string). May be
+    // non-deterministic.
+    string raw_log = 6;
+    // Additional information. May be non-deterministic.
+    string info = 7;
+    // Amount of gas requested for transaction.
+    int64 gas_wanted = 8;
+    // Amount of gas consumed by transaction.
+    int64 gas_used = 9;
 }
 
 // SimulateRequest is the request type for the Service.Simulate
@@ -66,10 +91,4 @@ message SimulateResponse {
 message GetTxRequest {
     // hash is the tx hash to query, encoded as a hex string.
    string hash = 1;
-}
-  
-// GetTxResponse is the response type for the Service.GetTx method.
-message GetTxResponse {
-    // tx is the queried transaction.
-    cosmos.tx.v1beta1.Tx tx = 1;
 }

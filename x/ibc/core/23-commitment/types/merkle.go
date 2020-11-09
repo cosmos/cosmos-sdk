@@ -136,14 +136,8 @@ func (proof MerkleProof) VerifyMembership(specs []*ics23.ProofSpec, root exporte
 		return sdkerrors.Wrap(ErrInvalidProof, "empty value in membership proof")
 	}
 
-	// Convert Proof to []CommitmentProof
-	proofs, err := convertProofs(proof)
-	if err != nil {
-		return err
-	}
-
 	// Since every proof in chain is a membership proof we can chain from index 0
-	if err := verifyChainedMembershipProof(root.GetHash(), specs, proofs, mpath.KeyPath, value, 0); err != nil {
+	if err := verifyChainedMembershipProof(root.GetHash(), specs, proof.Proofs, mpath.KeyPath, value, 0); err != nil {
 		return err
 	}
 	return nil
@@ -167,25 +161,19 @@ func (proof MerkleProof) VerifyNonMembership(specs []*ics23.ProofSpec, root expo
 			len(mpath.KeyPath.Keys), len(specs))
 	}
 
-	// Convert Proof to []CommitmentProof
-	proofs, err := convertProofs(proof)
-	if err != nil {
-		return err
-	}
-
 	// VerifyNonMembership will verify the absence of key in lowest subtree, and then chain inclusion proofs
 	// of all subroots up to final root
-	subroot, err := proofs[0].Calculate()
+	subroot, err := proof.Proofs[0].Calculate()
 	if err != nil {
 		sdkerrors.Wrapf(ErrInvalidProof, "could not calculate root for proof index 0. %v", err)
 	}
 	key := mpath.KeyPath.GetKey(-1)
-	if ok := ics23.VerifyNonMembership(specs[0], subroot, proofs[0], key); !ok {
+	if ok := ics23.VerifyNonMembership(specs[0], subroot, proof.Proofs[0], key); !ok {
 		return sdkerrors.Wrapf(ErrInvalidProof, "could not verify absence of key %s", string(key))
 	}
 
 	// Verify chained membership proof starting from index 1 with value = subroot
-	if err := verifyChainedMembershipProof(root.GetHash(), specs, proofs, mpath.KeyPath, subroot, 1); err != nil {
+	if err := verifyChainedMembershipProof(root.GetHash(), specs, proof.Proofs, mpath.KeyPath, subroot, 1); err != nil {
 		return err
 	}
 	return nil
@@ -239,21 +227,6 @@ func verifyChainedMembershipProof(root []byte, specs []*ics23.ProofSpec, proofs 
 	return nil
 }
 
-// convertProofs converts a MerkleProof into []*ics23.CommitmentProof
-func convertProofs(mproof MerkleProof) ([]*ics23.CommitmentProof, error) {
-	// Unmarshal all proof ops to CommitmentProof
-	proofs := make([]*ics23.CommitmentProof, len(mproof.Proof.Ops))
-	for i, op := range mproof.Proof.Ops {
-		var p ics23.CommitmentProof
-		err := p.Unmarshal(op.Data)
-		if err != nil {
-			return nil, sdkerrors.Wrapf(ErrInvalidMerkleProof, "could not unmarshal proof op into CommitmentProof at index: %d", i)
-		}
-		proofs[i] = &p
-	}
-	return proofs, nil
-}
-
 // Empty returns true if the root is empty
 func (proof MerkleProof) Empty() bool {
 	return proto.Equal(&proof, nil) || proto.Equal(&proof, &MerkleProof{}) || proto.Equal(&proof, &tmcrypto.ProofOps{})
@@ -277,10 +250,10 @@ func (proof MerkleProof) validateVerificationArgs(specs []*ics23.ProofSpec, root
 		return sdkerrors.Wrap(ErrInvalidMerkleProof, "root cannot be empty")
 	}
 
-	if len(specs) != len(proof.Proof.Ops) {
+	if len(specs) != len(proof.Proofs) {
 		return sdkerrors.Wrapf(ErrInvalidMerkleProof,
 			"length of specs: %d not equal to length of proof: %d",
-			len(specs), len(proof.Proof.Ops))
+			len(specs), len(proof.Proofs))
 	}
 
 	for i, spec := range specs {

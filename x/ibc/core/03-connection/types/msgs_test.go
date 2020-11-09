@@ -62,7 +62,8 @@ func (suite *MsgTestSuite) SetupTest() {
 		Prove: true,
 	})
 
-	merkleProof := commitmenttypes.MerkleProof{Proof: res.ProofOps}
+	merkleProof, err := commitmenttypes.ConvertProofs(res.ProofOps)
+	suite.NoError(err)
 	proof, err := app.AppCodec().MarshalBinaryBare(&merkleProof)
 	suite.NoError(err)
 

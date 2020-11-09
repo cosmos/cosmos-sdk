@@ -6,8 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
-	tmmerkle "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 )
@@ -23,9 +21,9 @@ func (suite *MerkleTestSuite) TestVerifyMembership() {
 	})
 	require.NotNil(suite.T(), res.ProofOps)
 
-	proof := types.MerkleProof{
-		Proof: res.ProofOps,
-	}
+	proof, err := types.ConvertProofs(res.ProofOps)
+	require.NoError(suite.T(), err)
+
 	suite.Require().NoError(proof.ValidateBasic())
 	suite.Require().Error(types.MerkleProof{}.ValidateBasic())
 
@@ -49,9 +47,7 @@ func (suite *MerkleTestSuite) TestVerifyMembership() {
 		{"nil root", []byte(nil), []string{suite.storeKey.Name(), "MYKEY"}, []byte("MYVALUE"), func() {}, false},           // invalid proof with nil root
 		{"proof is wrong length", cid.Hash, []string{suite.storeKey.Name(), "MYKEY"}, []byte("MYVALUE"), func() {
 			proof = types.MerkleProof{
-				Proof: &tmmerkle.ProofOps{
-					Ops: res.ProofOps.Ops[1:],
-				},
+				Proofs: proof.Proofs[1:],
 			}
 		}, false}, // invalid proof with wrong length
 
@@ -91,9 +87,9 @@ func (suite *MerkleTestSuite) TestVerifyNonMembership() {
 	})
 	require.NotNil(suite.T(), res.ProofOps)
 
-	proof := types.MerkleProof{
-		Proof: res.ProofOps,
-	}
+	proof, err := types.ConvertProofs(res.ProofOps)
+	require.NoError(suite.T(), err)
+
 	suite.Require().NoError(proof.ValidateBasic())
 
 	cases := []struct {
@@ -114,9 +110,7 @@ func (suite *MerkleTestSuite) TestVerifyNonMembership() {
 		{"nil root", []byte(nil), []string{suite.storeKey.Name(), "MYABSENTKEY"}, func() {}, false},           // invalid proof with nil root
 		{"proof is wrong length", cid.Hash, []string{suite.storeKey.Name(), "MYKEY"}, func() {
 			proof = types.MerkleProof{
-				Proof: &tmcrypto.ProofOps{
-					Ops: res.ProofOps.Ops[1:],
-				},
+				Proofs: proof.Proofs[1:],
 			}
 		}, false}, // invalid proof with wrong length
 

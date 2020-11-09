@@ -348,7 +348,7 @@ func (cs ClientState) VerifyPacketCommitment(
 	}
 
 	if err := merkleProof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, commitmentBytes); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedPacketCommitmentVerification, err.Error())
+		return err
 	}
 
 	return nil

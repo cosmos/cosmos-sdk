@@ -107,6 +107,17 @@ func QueryTxsRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			packStdTxResponse(w, clientCtx, txRes)
 		}
 
+		_, err = clientCtx.LegacyAmino.MarshalJSON(searchResult)
+		if err != nil {
+			if strings.Contains(err.Error(), "unregistered concrete type") {
+				rest.WriteErrorResponse(w, http.StatusInternalServerError,
+					"This transaction was created with the new SIGN_MODE_DIRECT signing method, and therefore cannot be displayed"+
+						" via legacy REST handlers, please use CLI or directly query the Tendermint RPC endpoint to query"+
+						" this transaction. gRPC gateway endpoint is /cosmos/tx/v1beta1/txs")
+			}
+			return
+		}
+
 		rest.PostProcessResponseBare(w, clientCtx, searchResult)
 	}
 }
@@ -141,6 +152,17 @@ func QueryTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		if output.Empty() {
 			rest.WriteErrorResponse(w, http.StatusNotFound, fmt.Sprintf("no transaction found with hash %s", hashHexStr))
+		}
+
+		_, err = clientCtx.LegacyAmino.MarshalJSON(output)
+		if err != nil {
+			if strings.Contains(err.Error(), "unregistered concrete type") {
+				rest.WriteErrorResponse(w, http.StatusInternalServerError,
+					"This transaction was created with the new SIGN_MODE_DIRECT signing method, and therefore cannot be displayed"+
+						" via legacy REST handlers, please use CLI or directly query the Tendermint RPC endpoint to query"+
+						" this transaction. gRPC gateway endpoint is /cosmos/tx/v1beta1/tx/<txhash>")
+			}
+			return
 		}
 
 		rest.PostProcessResponseBare(w, clientCtx, output)

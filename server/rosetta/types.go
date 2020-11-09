@@ -2,6 +2,7 @@ package rosetta
 
 import (
 	"context"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
@@ -14,8 +15,6 @@ const (
 	StatusReverted   = "Reverted"
 	StatusSuccess    = "Success"
 	OperationMsgSend = "cosmos-sdk/MsgSend"
-	OptionAddress    = "address"
-	OptionGas        = "gas"
 )
 
 // Synchronization stage constants used to determine if a node is synced or catching up
@@ -30,8 +29,7 @@ func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter)
 		Properties: crg.NetworkProperties{
 			Blockchain:          networkIdentifier.Blockchain,
 			Network:             networkIdentifier.Network,
-			AddrPrefix:          sdk.GetConfig().GetBech32AccountAddrPrefix(),                                        // since we're inside cosmos sdk the config is supposed to be sealed
-			SupportedOperations: []string{StatusReverted, StatusSuccess, OperationMsgSend, OptionAddress, OptionGas}, // TODO are this defaults always true?
+			SupportedOperations: []string{OperationMsgSend},
 		},
 		Adapter: adapter,
 	}

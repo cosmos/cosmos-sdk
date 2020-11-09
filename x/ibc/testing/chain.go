@@ -9,7 +9,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmprotoversion "github.com/tendermint/tendermint/proto/tendermint/version"
@@ -37,6 +36,7 @@ import (
 	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -109,7 +109,7 @@ type TestChain struct {
 	Vals    *tmtypes.ValidatorSet
 	Signers []tmtypes.PrivValidator
 
-	senderPrivKey crypto.PrivKey
+	senderPrivKey cryptotypes.PrivKey
 	SenderAccount authtypes.AccountI
 
 	// IBC specific helpers
@@ -132,7 +132,7 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 	require.NoError(t, err)
 
 	// create validator set with single validator
-	validator := tmtypes.NewValidator(pubKey.(cryptotypes.IntoTmPubKey).AsTmPubKey(), 1)
+	validator := tmtypes.NewValidator(pubKey, 1)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	signers := []tmtypes.PrivValidator{privVal}
 
@@ -346,7 +346,7 @@ func (chain *TestChain) GetValsAtHeight(height int64) (*tmtypes.ValidatorSet, bo
 
 	valSet := stakingtypes.Validators(histInfo.Valset)
 
-	tmValidators, err := valSet.ToTmValidators()
+	tmValidators, err := teststaking.ToTmValidators(valSet)
 	if err != nil {
 		panic(err)
 	}

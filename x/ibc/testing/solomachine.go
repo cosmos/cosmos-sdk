@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -28,9 +28,9 @@ type Solomachine struct {
 
 	cdc         codec.BinaryMarshaler
 	ClientID    string
-	PrivateKeys []crypto.PrivKey // keys used for signing
-	PublicKeys  []crypto.PubKey  // keys used for generating solo machine pub key
-	PublicKey   crypto.PubKey    // key used for verification
+	PrivateKeys []cryptotypes.PrivKey // keys used for signing
+	PublicKeys  []cryptotypes.PubKey  // keys used for generating solo machine pub key
+	PublicKey   cryptotypes.PubKey    // key used for verification
 	Sequence    uint64
 	Time        uint64
 	Diversifier string
@@ -63,17 +63,17 @@ func NewSolomachine(t *testing.T, cdc codec.BinaryMarshaler, clientID, diversifi
 // The key type can be swapped for any key type supported by the PublicKey
 // interface, if needed. The same is true for the amino based Multisignature
 // public key.
-func GenerateKeys(t *testing.T, n uint64) ([]crypto.PrivKey, []crypto.PubKey, crypto.PubKey) {
+func GenerateKeys(t *testing.T, n uint64) ([]cryptotypes.PrivKey, []cryptotypes.PubKey, cryptotypes.PubKey) {
 	require.NotEqual(t, uint64(0), n, "generation of zero keys is not allowed")
 
-	privKeys := make([]crypto.PrivKey, n)
-	pubKeys := make([]crypto.PubKey, n)
+	privKeys := make([]cryptotypes.PrivKey, n)
+	pubKeys := make([]cryptotypes.PubKey, n)
 	for i := uint64(0); i < n; i++ {
 		privKeys[i] = secp256k1.GenPrivKey()
 		pubKeys[i] = privKeys[i].PubKey()
 	}
 
-	var pk crypto.PubKey
+	var pk cryptotypes.PubKey
 	if len(privKeys) > 1 {
 		// generate multi sig pk
 		pk = kmultisig.NewLegacyAminoPubKey(int(n), pubKeys)

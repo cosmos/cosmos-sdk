@@ -3,9 +3,8 @@ package signing
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // SignatureV2 is a convenience type that is easier to use in application logic
@@ -15,7 +14,7 @@ import (
 // signatures.
 type SignatureV2 struct {
 	// PubKey is the public key to use for verifying the signature
-	PubKey crypto.PubKey
+	PubKey cryptotypes.PubKey
 
 	// Data is the actual data of the signature which includes SignMode's and
 	// the signatures themselves for either single or multi-signatures.
@@ -104,5 +103,5 @@ func (sds *SignatureDescriptors) UnpackInterfaces(unpacker codectypes.AnyUnpacke
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (sd *SignatureDescriptor) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	return unpacker.UnpackAny(sd.PublicKey, new(crypto.PubKey))
+	return unpacker.UnpackAny(sd.PublicKey, new(cryptotypes.PubKey))
 }

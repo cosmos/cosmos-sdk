@@ -32,7 +32,7 @@ func TestPublicKeyUnsafe(t *testing.T) {
 		fmt.Sprintf("%x", cdc.Amino.MustMarshalBinaryBare(priv.PubKey())),
 		"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
-	out, err := protocdc.ProtoMarshalJSONI(pk, nil)
+	out, err := protocdc.MarshalJSON(pk, nil)
 	require.NoError(t, err)
 	// TODO:  require.Equal(t, out, ...)
 	fmt.Println("TODO ledger_test.go", out)

@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -49,17 +50,17 @@ func getPubKeyFromString(pkstr string) (crypto.PubKey, error) {
 		}
 	}
 
-	pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, pkstr)
+	pk, err := legacybech32.GetPubKeyFromBech32(legacybech32.Bech32PubKeyTypeAccPub, pkstr)
 	if err == nil {
 		return pk, nil
 	}
 
-	pk, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeValPub, pkstr)
+	pk, err = legacybech32.GetPubKeyFromBech32(legacybech32.Bech32PubKeyTypeValPub, pkstr)
 	if err == nil {
 		return pk, nil
 	}
 
-	pk, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, pkstr)
+	pk, err = legacybech32.GetPubKeyFromBech32(legacybech32.Bech32PubKeyTypeConsPub, pkstr)
 	if err == nil {
 		return pk, nil
 	}
@@ -95,15 +96,15 @@ $ %s debug pubkey cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			if err != nil {
 				return err
 			}
-			accPub, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, edPK)
+			accPub, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeAccPub, edPK)
 			if err != nil {
 				return err
 			}
-			valPub, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeValPub, edPK)
+			valPub, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeValPub, edPK)
 			if err != nil {
 				return err
 			}
-			consenusPub, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, edPK)
+			consenusPub, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeConsPub, edPK)
 			if err != nil {
 				return err
 			}
@@ -125,7 +126,7 @@ func AddrCmd() *cobra.Command {
 		Use:   "addr [address]",
 		Short: "Convert an address between hex and bech32",
 		Long: fmt.Sprintf(`Convert an address between hex encoding and bech32.
-			
+
 Example:
 $ %s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			`, version.AppName),
@@ -169,7 +170,7 @@ func RawBytesCmd() *cobra.Command {
 		Use:   "raw-bytes [raw-bytes]",
 		Short: "Convert raw bytes output (eg. [10 21 13 255]) to hex",
 		Long: fmt.Sprintf(`Convert raw-bytes to hex.
-			
+
 Example:
 $ %s debug raw-bytes [72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]
 			`, version.AppName),

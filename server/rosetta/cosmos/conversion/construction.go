@@ -2,9 +2,11 @@ package conversion
 
 import (
 	"fmt"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/tendermint/btcd/btcec"
+
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // RosettaSignatureToCosmos converts a rosetta signature to a cosmos one

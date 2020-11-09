@@ -2,9 +2,11 @@ package services
 
 import (
 	"context"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
+
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
 )
 
 // assert interface implementation

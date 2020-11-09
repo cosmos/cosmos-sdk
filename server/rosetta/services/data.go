@@ -2,12 +2,14 @@ package services
 
 import (
 	"context"
+	"time"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
-	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/conversion"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
-	"time"
+
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
+	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/conversion"
 )
 
 // assert interface implementation
@@ -147,14 +149,14 @@ func (sn SingleNetwork) NetworkOptions(_ context.Context, _ *types.NetworkReques
 }
 
 func (sn SingleNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkRequest) (*types.NetworkStatusResponse, *types.Error) {
-	// get last block
 	block, _, err := sn.client.BlockByHeight(ctx, nil)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
-	// get peers
 	peers, err := sn.client.Peers(ctx)
-	// get node status
+	if err != nil {
+		return nil, rosetta.ToRosettaError(err)
+	}
 	status, err := sn.client.Status(ctx)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)

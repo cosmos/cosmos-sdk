@@ -4,17 +4,18 @@ import (
 	"context"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 	"github.com/tendermint/cosmos-rosetta-gateway/service"
 	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // list of supported operations
 const (
 	StatusReverted   = "Reverted"
 	StatusSuccess    = "Success"
-	OperationMsgSend = "cosmos-sdk/MsgSend"
+	OperationMsgSend = "send"
 )
 
 // Synchronization stage constants used to determine if a node is synced or catching up

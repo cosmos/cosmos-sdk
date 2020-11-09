@@ -185,6 +185,9 @@ func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 		return nil, err
 	}
 	offline, err := flags.GetBool(FlagOffline)
+	if err != nil {
+		return nil, err
+	}
 	conf := &Config{
 		Blockchain:    blockchain,
 		Network:       network,
@@ -210,5 +213,4 @@ func SetFlags(flags *pflag.FlagSet) {
 	flags.String(FlagAddr, DefaultAddr, "the address rosetta will bind to")
 	flags.Int(FlagRetries, DefaultRetries, "the number of retries that will be done before quitting")
 	flags.Bool(FlagOffline, DefaultOffline, "run rosetta only with construction API")
-	return
 }

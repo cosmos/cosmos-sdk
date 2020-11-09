@@ -2,15 +2,15 @@ package conversion
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
+	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmtypes "github.com/tendermint/tendermint/types"
-	"strconv"
-	"strings"
-	"time"
 )
 
 // TimeToMilliseconds converts time to milliseconds timestamp
@@ -70,10 +70,10 @@ func TendermintBlockToBlockIdentifier(block *tmcoretypes.ResultBlock) *types.Blo
 	}
 }
 
-func toOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) (operations []*types.Operation) {
+func toOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) []*types.Operation {
+	var operations []*types.Operation
 	for i, msg := range msgs {
-		x := msg.Type()
-		switch x {
+		switch msg.Type() { // nolint
 		case "send":
 			newMsg := msg.(*banktypes.MsgSend)
 			fromAddress := newMsg.FromAddress
@@ -114,52 +114,7 @@ func toOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) (operations
 			)
 		}
 	}
-	return
-}
-
-func GetMsgDataFromOperations(ops []*types.Operation) (sdk.Msg, error) {
-	op := ops[0]
-	switch op.Type {
-	case rosetta.OperationMsgSend:
-		return getTransferTxDataFromOperations(ops)
-	}
-
-	return nil, fmt.Errorf("unable to iterate operations")
-}
-
-// getTransferTxDataFromOperations extracts the from and to addresses from a list of operations.
-// We assume that it comes formated in the correct way. And that the balance of the sender is the same
-// as the receiver operations.
-func getTransferTxDataFromOperations(ops []*types.Operation) (sdk.Msg, error) {
-	var (
-		from, to sdk.AccAddress
-		sendAmt  sdk.Coin
-		err      error
-	)
-
-	for _, op := range ops {
-		if strings.HasPrefix(op.Amount.Value, "-") {
-			from, err = sdk.AccAddressFromBech32(op.Account.Address)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			to, err = sdk.AccAddressFromBech32(op.Account.Address)
-			if err != nil {
-				return nil, err
-			}
-
-			amount, err := strconv.ParseInt(op.Amount.Value, 10, 64)
-			if err != nil {
-				return nil, fmt.Errorf("invalid amount")
-			}
-
-			sendAmt = sdk.NewCoin(op.Amount.Currency.Symbol, sdk.NewInt(amount))
-		}
-	}
-
-	msg := banktypes.NewMsgSend(from, to, sdk.NewCoins(sendAmt))
-	return msg, nil
+	return operations
 }
 
 // TmPeersToRosettaPeers converts tendermint peers to rosetta ones

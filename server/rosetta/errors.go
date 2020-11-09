@@ -4,6 +4,7 @@ package rosetta
 
 import (
 	"fmt"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 

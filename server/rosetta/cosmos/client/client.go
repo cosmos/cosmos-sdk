@@ -4,6 +4,11 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+
+	"github.com/tendermint/tendermint/rpc/client/http"
+	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
+	"google.golang.org/grpc"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -16,9 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/tendermint/tendermint/rpc/client/http"
-	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
-	"google.golang.org/grpc"
 )
 
 // interface assertion
@@ -65,22 +67,21 @@ type Client struct {
 
 // NewSingleNetwork instantiates a single network client
 func NewSingle(grpcEndpoint, tendermintEndpoint string, optsFunc ...OptionFunc) (*Client, error) {
-	// set options
 	opts := newDefaultOptions()
 	for _, optFunc := range optsFunc {
 		optFunc(&opts)
 	}
-	// connect to gRPC endpoint
+
 	grpcConn, err := grpc.Dial(grpcEndpoint, grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}
-	// connect to tendermint
+
 	tmRPC, err := http.New(tendermintEndpoint, tmWebsocketPath)
 	if err != nil {
 		return nil, err
 	}
-	// build clients
+
 	authClient := auth.NewQueryClient(grpcConn)
 	bankClient := bank.NewQueryClient(grpcConn)
 	// build client context
@@ -109,18 +110,17 @@ func NewSingle(grpcEndpoint, tendermintEndpoint string, optsFunc ...OptionFunc) 
 }
 
 func (c *Client) Balances(ctx context.Context, addr string, height *int64) ([]sdk.Coin, error) {
-	// if height is set, send height instruction to account
 	if height != nil {
 		ctx = context.WithValue(ctx, grpctypes.GRPCBlockHeightHeader, *height)
 	}
-	// retrieve balance
+
 	balance, err := c.bank.AllBalances(ctx, &bank.QueryAllBalancesRequest{
 		Address: addr,
 	})
 	if err != nil {
 		return nil, rosetta.FromGRPCToRosettaError(err)
 	}
-	// success
+
 	return balance.Balances, nil
 }
 
@@ -130,7 +130,7 @@ func (c *Client) BlockByHash(ctx context.Context, hash string) (*tmtypes.ResultB
 	if err != nil {
 		return nil, nil, rosetta.WrapError(rosetta.ErrBadArgument, fmt.Sprintf("invalid block hash: %s", err))
 	}
-	// get block
+
 	block, err := c.client.Client.BlockByHash(ctx, bHash)
 	if err != nil {
 		return nil, nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error()) // can be either a connection error or bad argument?
@@ -158,14 +158,16 @@ func (c *Client) BlockByHeight(ctx context.Context, height *int64) (*tmtypes.Res
 
 // ListTransactionsInBlock returns the list of the transactions in a block given its height
 func (c *Client) ListTransactionsInBlock(ctx context.Context, height int64) ([]*rosetta.SdkTxWithHash, error) {
-	// prepare tx list query
 	txQuery := fmt.Sprintf(`tx.height=%d`, height)
-	// get tx
 	txList, err := c.client.Client.TxSearch(ctx, txQuery, true, nil, nil, "")
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
 	}
+
 	sdkTxs, err := conversion.TmResultTxsToSdkTxs(c.client.TxConfig.TxDecoder(), txList.Txs)
+	if err != nil {
+		return nil, err
+	}
 	return sdkTxs, nil
 }
 

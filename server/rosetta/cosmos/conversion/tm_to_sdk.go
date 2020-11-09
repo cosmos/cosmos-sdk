@@ -2,10 +2,12 @@ package conversion
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TmTxToSdkTx converts a tendermint transaction to a cosmos one

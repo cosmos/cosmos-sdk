@@ -42,7 +42,6 @@ type options struct {
 
 // newDefaultOptions builds the default options
 func newDefaultOptions() options {
-	// create codec and interface registry
 	cdc, ir := MakeCodec()
 	return options{
 		interfaceRegistry: ir,
@@ -90,7 +89,7 @@ func NewSingle(grpcEndpoint, tendermintEndpoint string, optsFunc ...OptionFunc) 
 
 	authClient := auth.NewQueryClient(grpcConn)
 	bankClient := bank.NewQueryClient(grpcConn)
-	// build client context
+
 	// NodeURI and Client are set from here otherwise
 	// WitNodeURI will require to create a new client
 	// it's done here because WithNodeURI panics if
@@ -106,7 +105,6 @@ func NewSingle(grpcEndpoint, tendermintEndpoint string, optsFunc ...OptionFunc) 
 		WithAccountRetriever(auth.AccountRetriever{}).
 		WithBroadcastMode(flags.BroadcastBlock)
 
-	// done
 	return &Client{
 		auth:   authClient,
 		bank:   bankClient,

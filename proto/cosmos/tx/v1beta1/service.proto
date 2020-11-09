@@ -4,6 +4,7 @@ package cosmos.tx.v1beta1;
 import "google/api/annotations.proto";
 import "cosmos/base/abci/v1beta1/abci.proto";
 import "cosmos/tx/v1beta1/tx.proto";
+import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
 
@@ -43,12 +44,12 @@ message BroadcastTxResponse {
       // Result bytes, if any.
     string data = 3;
       // Amount of gas consumed by transaction.
-    int64 gasUsed = 4;
+    int64 gas_used = 4;
       // Amount of gas requested for transaction.
-    int64 gasWanted = 5;
+    int64 gas_wanted = 5;
   // The output of the application's logger (raw string). May be
   // non-deterministic.
-    string rawLog = 6;
+    string raw_log = 6;
     // Time of the previous block. For heights > 1, it's the weighted median of
   // the timestamps of the valid votes in the block.LastCommit. For height == 1,
   // it's genesis time.
@@ -60,7 +61,10 @@ message BroadcastTxResponse {
       // The request transaction bytes.
     cosmos.tx.v1beta1.Tx tx = 10;
       // The transaction hash.
-    string txHash = 11;
+    string txhash = 11 [(gogoproto.customname) = "TxHash"];
+
+    repeated cosmos.base.abci.v1beta1.ABCIMessageLog logs = 12 [(gogoproto.nullable) = false];
+
 }
 
 

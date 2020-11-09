@@ -128,6 +128,7 @@ func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxReque
 		Timestamp: resp.Timestamp,
 		TxHash:    resp.TxHash,
 		Tx:        &protoTx,
+		Logs:      resp.Logs,
 	}, nil
 
 }

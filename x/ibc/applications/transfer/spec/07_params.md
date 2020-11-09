@@ -1,5 +1,5 @@
 <!--
-order: 6
+order: 7
 -->
 
 # Parameters
@@ -17,7 +17,7 @@ The transfers enabled parameter controls send cross-chain transfer capabilities 
 tokens.
 
 To prevent a single token from being transferred from the chain, set the `SendEnabled` parameter to `true` and
-then set the bank module's [`SendEnabled` parameter](./../../bank/spec/05_params.md#sendenabled) for
+then set the bank module's [`SendEnabled` parameter](./../../../../bank/spec/05_params.md#sendenabled) for
 the denomination to `false`.
 
 ## ReceiveEnabled
@@ -26,5 +26,5 @@ The transfers enabled parameter controls receive cross-chain transfer capabiliti
 tokens.
 
 To prevent a single token from being transferred to the chain, set the `ReceiveEnabled` parameter to `true` and
-then set the bank module's [`SendEnabled` parameter](./../../bank/spec/05_params.md#sendenabled) for
+then set the bank module's [`SendEnabled` parameter](./../../../../bank/spec/05_params.md#sendenabled) for
 the denomination to `false`.

@@ -14,12 +14,8 @@ func GetTmConsPubKey(v types.Validator) (tmcrypto.PubKey, error) {
 	if err != nil {
 		return nil, err
 	}
-	tmPk, err := cryptocodec.ToTmPubKeyInterface(pk)
-	if err != nil {
-		return nil, err
-	}
 
-	return tmPk, nil
+	return cryptocodec.ToTmPubKeyInterface(pk)
 }
 
 // ToTmValidator casts an SDK validator to a tendermint type Validator.

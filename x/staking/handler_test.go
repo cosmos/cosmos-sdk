@@ -11,8 +11,10 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/golang/protobuf/proto"
+
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/golang/protobuf/proto"
 )
 
 func bootstrapHandlerGenesisTest(t *testing.T, power int64, numAddrs int, accAmount int64) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
@@ -132,9 +133,11 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 
 	validator := tstaking.CheckValidator(addr1, types.Bonded, false)
 	assert.Equal(t, addr1.String(), validator.OperatorAddress)
-	consKey, err := validator.TmConsPubKey()
+	consKey, err := validator.TmConsPublicKey()
 	require.NoError(t, err)
-	assert.Equal(t, pk1.(cryptotypes.IntoTmPubKey).AsTmPubKey(), consKey)
+	tmPk1, err := cryptocodec.ToTmProtoPublicKey(pk1)
+	require.NoError(t, err)
+	assert.Equal(t, tmPk1, consKey)
 	assert.Equal(t, valTokens, validator.BondedTokens())
 	assert.Equal(t, valTokens.ToDec(), validator.DelegatorShares)
 	assert.Equal(t, types.Description{}, validator.Description)
@@ -155,9 +158,11 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 
 	validator = tstaking.CheckValidator(addr2, types.Bonded, false)
 	assert.Equal(t, addr2.String(), validator.OperatorAddress)
-	consPk, err := validator.TmConsPubKey()
+	consPk, err := validator.TmConsPublicKey()
 	require.NoError(t, err)
-	assert.Equal(t, pk2.(cryptotypes.IntoTmPubKey).AsTmPubKey(), consPk)
+	tmPk2, err := cryptocodec.ToTmProtoPublicKey(pk2)
+	require.NoError(t, err)
+	assert.Equal(t, tmPk2, consPk)
 	assert.True(sdk.IntEq(t, valTokens, validator.Tokens))
 	assert.True(sdk.DecEq(t, valTokens.ToDec(), validator.DelegatorShares))
 	assert.Equal(t, types.Description{}, validator.Description)

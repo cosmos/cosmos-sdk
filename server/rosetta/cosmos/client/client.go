@@ -65,7 +65,7 @@ type Client struct {
 	client client.Context
 }
 
-// NewSingleNetwork instantiates a single network client
+// NewSingle instantiates a single network client
 func NewSingle(grpcEndpoint, tendermintEndpoint string, optsFunc ...OptionFunc) (*Client, error) {
 	opts := newDefaultOptions()
 	for _, optFunc := range optsFunc {

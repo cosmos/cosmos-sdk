@@ -13,9 +13,9 @@ import (
 
 // list of supported operations
 const (
-	StatusReverted   = "Reverted"
-	StatusSuccess    = "Success"
-	OperationMsgSend = "send"
+	StatusReverted = "Reverted"
+	StatusSuccess  = "Success"
+	OperationSend  = "send"
 )
 
 // Synchronization stage constants used to determine if a node is synced or catching up
@@ -30,7 +30,7 @@ func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter)
 		Properties: crg.NetworkProperties{
 			Blockchain:          networkIdentifier.Blockchain,
 			Network:             networkIdentifier.Network,
-			SupportedOperations: []string{OperationMsgSend},
+			SupportedOperations: []string{OperationSend},
 		},
 		Adapter: adapter,
 	}
@@ -95,7 +95,7 @@ func Allow() *types.Allow {
 				Successful: false,
 			},
 		},
-		OperationTypes:          []string{OperationMsgSend},
+		OperationTypes:          []string{OperationSend},
 		Errors:                  AllowedErrors.RosettaErrors(),
 		HistoricalBalanceLookup: false,
 		TimestampStartIndex:     nil,

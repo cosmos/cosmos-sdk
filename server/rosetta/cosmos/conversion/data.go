@@ -74,7 +74,7 @@ func toOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) []*types.Op
 	var operations []*types.Operation
 	for i, msg := range msgs {
 		switch msg.Type() { // nolint
-		case "send":
+		case rosetta.OperationSend:
 			newMsg := msg.(*banktypes.MsgSend)
 			fromAddress := newMsg.FromAddress
 			toAddress := newMsg.ToAddress
@@ -95,7 +95,7 @@ func toOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) []*types.Op
 					OperationIdentifier: &types.OperationIdentifier{
 						Index: int64(index),
 					},
-					Type:   rosetta.OperationMsgSend,
+					Type:   rosetta.OperationSend,
 					Status: status,
 					Account: &types.AccountIdentifier{
 						Address: account,

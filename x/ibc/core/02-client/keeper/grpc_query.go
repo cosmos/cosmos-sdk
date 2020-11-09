@@ -179,12 +179,12 @@ func (q Keeper) ConsensusStates(c context.Context, req *types.QueryConsensusStat
 	}, nil
 }
 
-// Params implements the Query/Params gRPC method
-func (q Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+// ClientParams implements the Query/ClientParams gRPC method
+func (q Keeper) ClientParams(c context.Context, _ *types.QueryClientParamsRequest) (*types.QueryClientParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	params := q.GetParams(ctx)
 
-	return &types.QueryParamsResponse{
+	return &types.QueryClientParamsResponse{
 		Params: &params,
 	}, nil
 }

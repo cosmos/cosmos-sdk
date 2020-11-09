@@ -34,8 +34,8 @@ service Query {
     option (google.api.http).get = "/ibc/client/v1beta1/consensus_states/{client_id}";
   }
 
-   // Params queries all parameters of the ibc-transfer module.
-   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+   // ClientParams queries all parameters of the ibc client.
+   rpc ClientParams(QueryClientParamsRequest) returns (QueryClientParamsResponse) {
     option (google.api.http).get = "/ibc/client/v1beta1/params";
   }
 }
@@ -119,11 +119,11 @@ message QueryConsensusStatesResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryParamsRequest is the request type for the Query/Params RPC method.
-message QueryParamsRequest {}
+// QueryClientParamsRequest is the request type for the Query/ClientParams RPC method.
+message QueryClientParamsRequest {}
 
-// QueryParamsResponse is the response type for the Query/Params RPC method.
-message QueryParamsResponse {
+// QueryClientParamsResponse is the response type for the Query/ClientParams RPC method.
+message QueryClientParamsResponse {
   // params defines the parameters of the module.
   Params params = 1;
 }

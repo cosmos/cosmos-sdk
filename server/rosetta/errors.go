@@ -4,6 +4,8 @@ package rosetta
 
 import (
 	"fmt"
+	grpccodes "google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
@@ -81,14 +83,21 @@ func ToRosettaError(err error) *types.Error {
 
 // FromGRPCToRosettaError converts a gRPC error to rosetta error
 func FromGRPCToRosettaError(err error) Error {
-	return errorWrapper{
-		err: &types.Error{
-			Code:        0,
-			Message:     err.Error(),
-			Description: nil,
-			Retriable:   false,
-			Details:     nil,
-		},
+	status, ok := grpcstatus.FromError(err)
+	if !ok {
+		return WrapError(ErrUnknown, err.Error())
+	}
+	switch status.Code() {
+	case grpccodes.NotFound:
+		return WrapError(ErrNotFound, status.Message())
+	case grpccodes.FailedPrecondition:
+		return WrapError(ErrBadArgument, status.Message())
+	case grpccodes.InvalidArgument:
+		return WrapError(ErrBadArgument, status.Message())
+	case grpccodes.Internal:
+		return WrapError(ErrInternal, status.Message())
+	default:
+		return WrapError(ErrUnknown, status.Message())
 	}
 }
 
@@ -99,6 +108,12 @@ var (
 	ErrUnknown = NewError(0, "unknown", true)
 	// ErrBadArgument is returned when the request is malformed
 	ErrBadArgument = NewError(400, "bad argument", false)
+	// ErrNotFound is returned when the required object was not found
+	// retry is set to true because something that is not found now
+	// might be found later, example: a TX
+	ErrNotFound = NewError(404, "not found", true)
+	// ErrInternal is returned when the node is experiencing internal errors
+	ErrInternal = NewError(500, "internal error", false)
 	// ErrBadGateway is returned when there are problems interacting with the nodes
 	ErrBadGateway = NewError(502, "bad gateway", true)
 	// ErrOffline is returned when there is an attempt to query an endpoint in offline mode
@@ -118,7 +133,9 @@ var (
 // AllowedErrors lists all the rosetta allowed errors
 var AllowedErrors = Errors{
 	ErrUnknown,
+	ErrNotFound,
 	ErrBadArgument,
+	ErrInternal,
 	ErrBadGateway,
 	ErrOffline,
 	ErrNetworkNotSupported,

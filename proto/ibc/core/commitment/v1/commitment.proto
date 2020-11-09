@@ -4,7 +4,7 @@ package ibc.core.commitment.v1;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types";
 
 import "gogoproto/gogo.proto";
-import "tendermint/crypto/proof.proto";
+import "confio/proofs.proto";
 
 // MerkleRoot defines a merkle root hash.
 // In the Cosmos SDK, the AppHash of a block header becomes the root.
@@ -29,12 +29,12 @@ message MerklePath {
   KeyPath key_path = 1 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"key_path\""];
 }
 
-// MerkleProof is a wrapper type that contains a merkle proof.
+// MerkleProof is a wrapper type over a chain of CommitmentProofs.
 // It demonstrates membership or non-membership for an element or set of
 // elements, verifiable in conjunction with a known commitment root. Proofs
 // should be succinct.
 message MerkleProof {
-  tendermint.crypto.ProofOps proof = 1;
+    repeated ics23.CommitmentProof proofs = 1;
 }
 
 // KeyPath defines a slice of keys

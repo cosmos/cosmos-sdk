@@ -59,7 +59,7 @@ func (suite *MerkleTestSuite) TestVerifyMembership() {
 			tc.malleate()
 
 			root := types.NewMerkleRoot(tc.root)
-			path := types.NewMerklePath(tc.pathArr)
+			path := types.NewMerklePath(tc.pathArr...)
 
 			err := proof.VerifyMembership(types.GetSDKSpecs(), &root, path, tc.value)
 
@@ -123,7 +123,7 @@ func (suite *MerkleTestSuite) TestVerifyNonMembership() {
 			tc.malleate()
 
 			root := types.NewMerkleRoot(tc.root)
-			path := types.NewMerklePath(tc.pathArr)
+			path := types.NewMerklePath(tc.pathArr...)
 
 			err := proof.VerifyNonMembership(types.GetSDKSpecs(), &root, path)
 
@@ -142,17 +142,14 @@ func (suite *MerkleTestSuite) TestVerifyNonMembership() {
 func TestApplyPrefix(t *testing.T) {
 	prefix := types.NewMerklePrefix([]byte("storePrefixKey"))
 
-	pathStr := "pathone/pathtwo/paththree/key"
+	pathStr := "pathone%2Fpathtwo%2Fpaththree%2Fkey"
+	path := types.MerklePath{
+		KeyPath: []string{pathStr},
+	}
 
-	prefixedPath, err := types.ApplyPrefix(prefix, pathStr)
+	prefixedPath, err := types.ApplyPrefix(prefix, path)
 	require.Nil(t, err, "valid prefix returns error")
 
-	require.Equal(t, "/storePrefixKey/"+pathStr, prefixedPath.Pretty(), "Prefixed path incorrect")
-	require.Equal(t, "/storePrefixKey/pathone%2Fpathtwo%2Fpaththree%2Fkey", prefixedPath.String(), "Prefixed scaped path incorrect")
-
-	// invalid prefix contains non-alphanumeric character
-	invalidPathStr := "invalid-path/doesitfail?/hopefully"
-	invalidPath, err := types.ApplyPrefix(prefix, invalidPathStr)
-	require.NotNil(t, err, "invalid prefix does not returns error")
-	require.Equal(t, types.MerklePath{}, invalidPath, "invalid prefix returns valid Path on ApplyPrefix")
+	require.Equal(t, "/storePrefixKey/pathone/pathtwo/paththree/key", prefixedPath.Pretty(), "Prefixed path incorrect")
+	require.Equal(t, "/storePrefixKey/"+pathStr, prefixedPath.String(), "Prefixed scaped path incorrect")
 }

@@ -487,7 +487,7 @@ func (v Validator) TmConsPublicKey() (tmprotocrypto.PublicKey, error) {
 		return tmprotocrypto.PublicKey{}, err
 	}
 
-	tmPk, err := cryptocodec.ToTmPublicKey(pk)
+	tmPk, err := cryptocodec.ToTmProtoPublicKey(pk)
 	if err != nil {
 		return tmprotocrypto.PublicKey{}, err
 	}

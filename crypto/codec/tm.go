@@ -22,8 +22,8 @@ func FromTmPublicKey(protoPk tmprotocrypto.PublicKey) (cryptotypes.PubKey, error
 	}
 }
 
-// ToTmPublicKey converts our own PubKey to TM's tmprotocrypto.PublicKey.
-func ToTmPublicKey(pk cryptotypes.PubKey) (tmprotocrypto.PublicKey, error) {
+// ToTmProtoPublicKey converts our own PubKey to TM's tmprotocrypto.PublicKey.
+func ToTmProtoPublicKey(pk cryptotypes.PubKey) (tmprotocrypto.PublicKey, error) {
 	switch pk := pk.(type) {
 	case *ed25519.PubKey:
 		return tmprotocrypto.PublicKey{
@@ -46,9 +46,9 @@ func FromTmPubKey(tmPk tmcrypto.PubKey) (cryptotypes.PubKey, error) {
 	return FromTmPublicKey(tmProtoPk)
 }
 
-// ToTmPubKey converts our own PubKey to TM's tmcrypto.PubKey.
-func ToTmPubKey(pk cryptotypes.PubKey) (tmcrypto.PubKey, error) {
-	tmProtoPk, err := ToTmPublicKey(pk)
+// ToTmPubKeyInterface converts our own PubKey to TM's tmcrypto.PubKey.
+func ToTmPubKeyInterface(pk cryptotypes.PubKey) (tmcrypto.PubKey, error) {
+	tmProtoPk, err := ToTmProtoPublicKey(pk)
 	if err != nil {
 		return nil, err
 	}

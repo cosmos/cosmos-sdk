@@ -14,7 +14,7 @@ func GetTmConsPubKey(v types.Validator) (tmcrypto.PubKey, error) {
 	if err != nil {
 		return nil, err
 	}
-	tmPk, err := cryptocodec.ToTmPubKey(pk)
+	tmPk, err := cryptocodec.ToTmPubKeyInterface(pk)
 	if err != nil {
 		return nil, err
 	}

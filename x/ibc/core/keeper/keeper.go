@@ -21,8 +21,7 @@ type Keeper struct {
 	// implements gRPC QueryServer interface
 	types.QueryServer
 
-	cdc        codec.BinaryMarshaler
-	paramSpace paramtypes.Subspace
+	cdc codec.BinaryMarshaler
 
 	ClientKeeper     clientkeeper.Keeper
 	ConnectionKeeper connectionkeeper.Keeper

@@ -70,7 +70,7 @@ func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey 
 		return "", nil, err
 	}
 
-	valPubKey, err = cryptocodec.FromTmPubKey(tmValPubKey)
+	valPubKey, err = cryptocodec.FromTmPubKeyInterface(tmValPubKey)
 	if err != nil {
 		return "", nil, err
 	}

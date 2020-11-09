@@ -10,8 +10,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// FromTmPublicKey converts a TM's tmprotocrypto.PublicKey into our own PubKey.
-func FromTmPublicKey(protoPk tmprotocrypto.PublicKey) (cryptotypes.PubKey, error) {
+// FromTmProtoPublicKey converts a TM's tmprotocrypto.PublicKey into our own PubKey.
+func FromTmProtoPublicKey(protoPk tmprotocrypto.PublicKey) (cryptotypes.PubKey, error) {
 	switch protoPk := protoPk.Sum.(type) {
 	case *tmprotocrypto.PublicKey_Ed25519:
 		return &ed25519.PubKey{
@@ -36,14 +36,14 @@ func ToTmProtoPublicKey(pk cryptotypes.PubKey) (tmprotocrypto.PublicKey, error) 
 	}
 }
 
-// FromTmPubKey converts TM's tmcrypto.PubKey to our own PubKey.
-func FromTmPubKey(tmPk tmcrypto.PubKey) (cryptotypes.PubKey, error) {
+// FromTmPubKeyInterface converts TM's tmcrypto.PubKey to our own PubKey.
+func FromTmPubKeyInterface(tmPk tmcrypto.PubKey) (cryptotypes.PubKey, error) {
 	tmProtoPk, err := encoding.PubKeyToProto(tmPk)
 	if err != nil {
 		return nil, err
 	}
 
-	return FromTmPublicKey(tmProtoPk)
+	return FromTmProtoPublicKey(tmProtoPk)
 }
 
 // ToTmPubKeyInterface converts our own PubKey to TM's tmcrypto.PubKey.

@@ -5,24 +5,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 )
 
-// // GetSendEnabled retrieves the send enabled boolean from the paramstore
-// func (k Keeper) GetSendEnabled(ctx sdk.Context) bool {
-// 	var res bool
-// 	k.paramSpace.Get(ctx, types.KeySendEnabled, &res)
-// 	return res
-// }
+// GetAllowedClients retrieves the receive enabled boolean from the paramstore
+func (k Keeper) GetAllowedClients(ctx sdk.Context) []string {
+	var res []string
+	k.paramSpace.Get(ctx, types.KeyAllowedClients, &res)
+	return res
+}
 
-// // GetReceiveEnabled retrieves the receive enabled boolean from the paramstore
-// func (k Keeper) GetReceiveEnabled(ctx sdk.Context) bool {
-// 	var res bool
-// 	k.paramSpace.Get(ctx, types.KeyReceiveEnabled, &res)
-// 	return res
-// }
-
-// // GetParams returns the total set of ibc-transfer parameters.
-// func (k Keeper) GetParams(ctx sdk.Context) types.Params {
-// 	return types.NewParams(k.GetSendEnabled(ctx), k.GetReceiveEnabled(ctx))
-// }
+// GetParams returns the total set of ibc-transfer parameters.
+func (k Keeper) GetParams(ctx sdk.Context) types.Params {
+	return types.NewParams(k.GetAllowedClients(ctx)...)
+}
 
 // SetParams sets the total set of ibc-transfer parameters.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {

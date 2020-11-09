@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 var (
 	// DefaultAllowedClients are "Solo Machine" and "Tendermint"
-	DefaultAllowedClients = []string{solomachinetypes.SoloMachine, ibctmtypes.Tendermint}
+	DefaultAllowedClients = []string{"Solo Machine", "Tendermint"}
 
 	// KeyAllowedClients is store's key for AllowedClients Params
 	KeyAllowedClients = []byte("AllowedClients")
@@ -44,6 +42,16 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyAllowedClients, p.AllowedClients, validateClients),
 	}
+}
+
+// IsAllowedClient checks if the given client type is registered on the allowlist.
+func (p Params) IsAllowedClient(clientType string) bool {
+	for _, allowedClient := range p.AllowedClients {
+		if allowedClient == clientType {
+			return true
+		}
+	}
+	return false
 }
 
 func validateClients(i interface{}) error {

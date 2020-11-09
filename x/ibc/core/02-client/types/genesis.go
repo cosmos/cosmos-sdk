@@ -66,11 +66,13 @@ func (ccs ClientConsensusStates) UnpackInterfaces(unpacker codectypes.AnyUnpacke
 
 // NewGenesisState creates a GenesisState instance.
 func NewGenesisState(
-	clients []IdentifiedClientState, clientsConsensus ClientsConsensusStates, createLocalhost bool,
+	clients []IdentifiedClientState, clientsConsensus ClientsConsensusStates,
+	params Params, createLocalhost bool,
 ) GenesisState {
 	return GenesisState{
 		Clients:          clients,
 		ClientsConsensus: clientsConsensus,
+		Params:           params,
 		CreateLocalhost:  createLocalhost,
 	}
 }
@@ -80,6 +82,7 @@ func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		Clients:          []IdentifiedClientState{},
 		ClientsConsensus: ClientsConsensusStates{},
+		Params:           DefaultParams(),
 		CreateLocalhost:  false,
 	}
 }
@@ -133,5 +136,5 @@ func (gs GenesisState) Validate() error {
 		}
 	}
 
-	return nil
+	return gs.Params.Validate()
 }

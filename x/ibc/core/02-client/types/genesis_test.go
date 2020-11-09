@@ -89,6 +89,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						},
 					),
 				},
+				types.NewParams("Tendermint"),
 				true,
 			),
 			expPass: true,
@@ -117,6 +118,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						},
 					),
 				},
+				types.NewParams("Tendermint"),
 				true,
 			),
 			expPass: false,
@@ -131,6 +133,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 					types.NewIdentifiedClientState(exported.Localhost, localhosttypes.NewClientState("chaindID", types.ZeroHeight())),
 				},
 				nil,
+				types.NewParams("Tendermint"),
 				true,
 			),
 			expPass: false,
@@ -159,6 +162,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						},
 					),
 				},
+				types.NewParams("Tendermint"),
 				true,
 			),
 			expPass: false,
@@ -187,9 +191,39 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						},
 					),
 				},
+				types.NewParams("Tendermint"),
 				true,
 			),
 			expPass: false,
+		},
+		{
+			name: "valid param",
+			genState: types.NewGenesisState(
+				[]types.IdentifiedClientState{
+					types.NewIdentifiedClientState(
+						clientID, ibctmtypes.NewClientState(chainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
+					),
+					types.NewIdentifiedClientState(
+						exported.Localhost, localhosttypes.NewClientState("chainID", clientHeight),
+					),
+				},
+				[]types.ClientConsensusStates{
+					types.NewClientConsensusStates(
+						clientID,
+						[]types.ConsensusStateWithHeight{
+							types.NewConsensusStateWithHeight(
+								header.GetHeight().(types.Height),
+								ibctmtypes.NewConsensusState(
+									header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), header.Header.NextValidatorsHash,
+								),
+							),
+						},
+					),
+				},
+				types.NewParams(" "),
+				true,
+			),
+			expPass: true,
 		},
 	}
 

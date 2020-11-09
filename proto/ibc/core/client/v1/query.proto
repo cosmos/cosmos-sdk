@@ -33,6 +33,11 @@ service Query {
   rpc ConsensusStates(QueryConsensusStatesRequest) returns (QueryConsensusStatesResponse) {
     option (google.api.http).get = "/ibc/client/v1beta1/consensus_states/{client_id}";
   }
+
+   // Params queries all parameters of the ibc-transfer module.
+   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/ibc/client/v1beta1/params";
+  }
 }
 
 // QueryClientStateRequest is the request type for the Query/ClientState RPC
@@ -112,4 +117,13 @@ message QueryConsensusStatesResponse {
   repeated ConsensusStateWithHeight consensus_states = 1 [(gogoproto.nullable) = false];
   // pagination response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1;
 }

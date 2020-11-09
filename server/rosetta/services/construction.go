@@ -150,8 +150,8 @@ func (sn SingleNetwork) ConstructionMetadata(ctx context.Context, request *types
 
 	res := &types.ConstructionMetadataResponse{
 		Metadata: map[string]interface{}{
-			rosetta.AccountNumber: accountInfo.GetAccountNumber(),
-			rosetta.Sequence:      accountInfo.GetSequence(),
+			rosetta.AccountNumber: string(accountInfo.GetAccountNumber()),
+			rosetta.Sequence:      string(accountInfo.GetSequence()),
 			rosetta.ChainId:       status.NodeInfo.Network,
 			rosetta.OptionGas:     gas,
 			rosetta.OptionMemo:    memo,
@@ -211,9 +211,10 @@ func (sn SingleNetwork) ConstructionPayloads(ctx context.Context, request *types
 	txFactory := tx.Factory{}.WithAccountNumber(metadata.AccountNumber).WithChainID(metadata.ChainId).
 		WithGas(metadata.Gas).WithSequence(metadata.Sequence).WithMemo(metadata.Memo)
 
+	TxConfig := sn.client.GetTxConfig(ctx)
+	txFactory = txFactory.WithTxConfig(TxConfig)
 	txBldr, err := tx.BuildUnsignedTx(txFactory, sendMsg)
 
-	TxConfig := sn.client.GetTxConfig(ctx)
 	if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
 		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}

@@ -37,8 +37,8 @@ func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter)
 		Properties: crg.NetworkProperties{
 			Blockchain:          networkIdentifier.Blockchain,
 			Network:             networkIdentifier.Network,
-			AddrPrefix:          sdk.GetConfig().GetBech32AccountAddrPrefix(),                                        // since we're inside cosmos sdk the config is supposed to be sealed
-			SupportedOperations: []string{StatusReverted, StatusSuccess, OperationMsgSend, OptionAddress, OptionGas}, // TODO are this defaults always true?
+			AddrPrefix:          sdk.GetConfig().GetBech32AccountAddrPrefix(), // since we're inside cosmos sdk the config is supposed to be sealed
+			SupportedOperations: []string{OperationTransfer},
 		},
 		Adapter: adapter,
 	}

@@ -38,6 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * (types/coin.go) [\#6755](https://github.com/cosmos/cosmos-sdk/pull/6755) Add custom regex validation for `Coin` denom by overwriting `CoinDenomRegex` when using `/types/coin.go`.
+* (version) [\#7835](https://github.com/cosmos/cosmos-sdk/issues/7835) The version --long command now shows the list of build dependencies and their versioning information.
 
 ### Bug Fixes
 

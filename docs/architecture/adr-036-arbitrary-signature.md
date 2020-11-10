@@ -35,7 +35,7 @@ Cosmos SDK 0.40 also introduces a concept of “auth_info” this can specify SI
 A spec should include an `auth_info` that supports SIGN_MODE_DIRECT and SIGN_MODE_LEGACY_AMINO.
 
 - the memo must be empty
-- nonce, sequence number must be equal to 0
+- nonce, sequence number must be equal to 0 (this makes the transaction invalid on-chain)
 - chain-id must be equal to “signature”
 - fee gas must be equal to 0
 - fee amount must be an empty array

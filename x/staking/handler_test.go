@@ -14,6 +14,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -182,7 +183,7 @@ func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
 	tstaking.CreateValidator(addr, invalidPk, 10, false)
 }
 
-func TestBothPubKeyTypeMsgCreateValidator(t *testing.T) {
+func TestBothPubKeyTypesMsgCreateValidator(t *testing.T) {
 	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 2, 1000)
 	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{
 		Validator: &tmproto.ValidatorParams{PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519, tmtypes.ABCIPubKeyTypeSecp256k1}},
@@ -190,14 +191,27 @@ func TestBothPubKeyTypeMsgCreateValidator(t *testing.T) {
 
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
-	addrEd := valAddrs[0]
-	addrSecp := valAddrs[1]
-	pkEd := ed25519.GenPrivKey().PubKey()
-	pkSecp := secp256k1.GenPrivKey().PubKey()
-
-	// Create validators with both keys should work
-	tstaking.CreateValidator(addrEd, pkEd, 10, true)
-	tstaking.CreateValidator(addrSecp, pkSecp, 10, true)
+	testCases := []struct {
+		name string
+		addr sdk.ValAddress
+		pk   cryptotypes.PubKey
+	}{
+		{
+			"can create a validator with ed25519 pubkey",
+			valAddrs[0],
+			ed25519.GenPrivKey().PubKey(),
+		},
+		{
+			"can create a validator with secp256k1 pubkey",
+			valAddrs[1],
+			secp256k1.GenPrivKey().PubKey(),
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(*testing.T) {
+			tstaking.CreateValidator(tc.addr, tc.pk, 10, true)
+		})
+	}
 }
 
 func TestLegacyValidatorDelegations(t *testing.T) {

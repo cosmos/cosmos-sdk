@@ -16,7 +16,7 @@ Draft
 
 ## Abstract
 
-Currently, in the SDK, there is no convention to sign arbitrary message like on Ethereum. We propose with this specification a way to sign arbitrary message for Cosmos SDK chains.
+Currently, in the SDK, there is no convention to sign arbitrary message like on Ethereum. We propose with this specification, for Cosmos SDK ecosystem, a way to sign and validate off-chain arbitrary messages.
 
 This specification serves the purpose of covering every use case, this means that cosmos-sdk applications developers decide how to serialize and represent `Data` to users. 
 ## Context
@@ -28,11 +28,11 @@ Having the ability to sign messages off-chain has proven to be a fundamental asp
 
 The aim is being able to sign arbitrary messages, even using Ledger or similar HSM devices.
 
-As a result signed messages should look roughly like Cosmos SDK messages. chain-id, account_number and sequence can all be assigned invalid values.
+As a result signed messages should look roughly like Cosmos SDK messages but **must not** be a valid on-chain transaction. `chain-id`, `account_number` and `sequence` can all be assigned invalid values.
 
 Cosmos SDK 0.40 also introduces a concept of “auth_info” this can specify SIGN_MODES.
 
-A spec should include an auth info that supports SIGN_MODE_DIRECT and SIGN_MODE_LEGACY_AMINO.
+A spec should include an `auth_info` that supports SIGN_MODE_DIRECT and SIGN_MODE_LEGACY_AMINO.
 
 - the memo must be empty
 - nonce, sequence number must be equal to 0

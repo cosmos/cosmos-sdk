@@ -12,9 +12,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/sr25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
@@ -143,7 +143,7 @@ func TestPubKeyEquals(t *testing.T) {
 	testCases := []struct {
 		msg      string
 		pubKey   cryptotypes.PubKey
-		other    crypto.PubKey
+		other    cryptotypes.PubKey
 		expectEq bool
 	}{
 		{
@@ -163,7 +163,7 @@ func TestPubKeyEquals(t *testing.T) {
 		{
 			"different types",
 			secp256K1PubKey,
-			sr25519.GenPrivKey().PubKey(),
+			ed25519.GenPrivKey().PubKey(),
 			false,
 		},
 	}
@@ -182,7 +182,7 @@ func TestPrivKeyEquals(t *testing.T) {
 	testCases := []struct {
 		msg      string
 		privKey  cryptotypes.PrivKey
-		other    crypto.PrivKey
+		other    cryptotypes.PrivKey
 		expectEq bool
 	}{
 		{
@@ -202,7 +202,7 @@ func TestPrivKeyEquals(t *testing.T) {
 		{
 			"different types",
 			secp256K1PrivKey,
-			sr25519.GenPrivKey(),
+			ed25519.GenPrivKey(),
 			false,
 		},
 	}

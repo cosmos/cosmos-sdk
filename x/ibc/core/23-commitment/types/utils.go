@@ -16,7 +16,7 @@ func ConvertProofs(tmProof *crypto.ProofOps) (MerkleProof, error) {
 	for i, op := range tmProof.Ops {
 		var p ics23.CommitmentProof
 		err := p.Unmarshal(op.Data)
-		if err != nil {
+		if err != nil || p.Proof == nil {
 			return MerkleProof{}, sdkerrors.Wrapf(ErrInvalidMerkleProof, "could not unmarshal proof op into CommitmentProof at index %d: %v", i, err)
 		}
 		proofs[i] = &p

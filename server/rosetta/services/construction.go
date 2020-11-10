@@ -267,8 +267,7 @@ func (sn SingleNetwork) ConstructionPreprocess(ctx context.Context, request *typ
 
 	memo, ok := request.Metadata["memo"]
 	if !ok {
-		return nil, rosetta.ErrInvalidMemo.RosettaError()
-
+		memo = ""
 	}
 
 	var res = &types.ConstructionPreprocessResponse{

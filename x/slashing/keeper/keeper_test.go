@@ -40,7 +40,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	// create a 6th validator with less power than the cliff validator (won't be bonded)
 	addr, val := valAddrs[5], pks[5]
 	amt := sdk.TokensFromConsensusPower(50)
-	msg := tstaking.CreateValidatorMsg(addr, val, amt.Int64())
+	msg := tstaking.CreateValidatorMsg(addr, val, amt)
 	msg.MinSelfDelegation = amt
 	tstaking.Handle(msg, true)
 

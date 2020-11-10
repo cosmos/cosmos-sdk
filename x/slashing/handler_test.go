@@ -58,7 +58,7 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 	slh := slashing.NewHandler(app.SlashingKeeper)
 	addr, val := sdk.ValAddress(pks[0].Address()), pks[0]
 	amt := sdk.TokensFromConsensusPower(100)
-	msg := tstaking.CreateValidatorMsg(addr, val, amt.Int64())
+	msg := tstaking.CreateValidatorMsg(addr, val, amt)
 	msg.MinSelfDelegation = amt
 	tstaking.Handle(msg, true)
 
@@ -101,7 +101,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 
 	// delegate tokens to the validator
 	delAddr := sdk.AccAddress(pks[2].Address())
-	tstaking.Delegate(delAddr, valAddr, amt.Int64())
+	tstaking.Delegate(delAddr, valAddr, amt)
 
 	// unbond validator total self-delegations (which should jail the validator)
 	valAcc := sdk.AccAddress(valAddr)
@@ -120,7 +120,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	require.Nil(t, res)
 
 	// self-delegate to validator
-	tstaking.Delegate(valAcc, valAddr, amt.Int64())
+	tstaking.Delegate(valAcc, valAddr, amt)
 
 	// verify the validator can now unjail itself
 	res, err = slashing.NewHandler(app.SlashingKeeper)(ctx, types.NewMsgUnjail(valAddr))

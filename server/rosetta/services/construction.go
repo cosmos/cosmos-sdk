@@ -4,8 +4,13 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"strings"
+
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/coinbase/rosetta-sdk-go/types"
+	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
+	"github.com/tendermint/tendermint/crypto"
+
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
@@ -13,9 +18,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
-	"github.com/tendermint/tendermint/crypto"
-	"strings"
 )
 
 // interface implementation assertion
@@ -93,9 +95,10 @@ func (sn SingleNetwork) ConstructionDerive(ctx context.Context, request *types.C
 	compressedPublicKey := make([]byte, secp256k1.PubKeySize)
 	copy(compressedPublicKey, cmp.SerializeCompressed())
 
+	pk := secp256k1.PubKey{Key: compressedPublicKey}
 	return &types.ConstructionDeriveResponse{
 		AccountIdentifier: &types.AccountIdentifier{
-			Address: sdk.AccAddress(compressedPublicKey).String(),
+			Address: sdk.AccAddress(pk.Address()).String(),
 		},
 	}, nil
 }

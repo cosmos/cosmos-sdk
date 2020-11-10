@@ -3,9 +3,8 @@ package types
 import (
 	"bytes"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -32,7 +31,7 @@ var (
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
 // Delegator address and validator address are the same.
 func NewMsgCreateValidator(
-	valAddr sdk.ValAddress, pubKey crypto.PubKey, selfDelegation sdk.Coin,
+	valAddr sdk.ValAddress, pubKey cryptotypes.PubKey, selfDelegation sdk.Coin,
 	description Description, commission CommissionRates, minSelfDelegation sdk.Int,
 ) (*MsgCreateValidator, error) {
 	pkAny, err := codectypes.PackAny(pubKey)
@@ -140,7 +139,7 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var pubKey crypto.PubKey
+	var pubKey cryptotypes.PubKey
 	return unpacker.UnpackAny(msg.Pubkey, &pubKey)
 }
 

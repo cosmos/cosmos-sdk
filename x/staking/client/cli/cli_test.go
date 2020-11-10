@@ -146,7 +146,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 		{
 			"invalid transaction (missing moniker)",
 			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagPubKey, consPubKey),
+				fmt.Sprintf("--%s=%s", cli.FlagPubKey, consPubKeyEd),
 				fmt.Sprintf("--%s=100stake", cli.FlagAmount),
 				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
 				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),

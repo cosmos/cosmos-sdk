@@ -26,6 +26,7 @@ import (
 	v040slashing "github.com/cosmos/cosmos-sdk/x/slashing/legacy/v040"
 	v038staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v038"
 	v040staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v040"
+	v038upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/legacy/v038"
 )
 
 func migrateGenutil(oldGenState v039genutil.GenesisState) *types.GenesisState {
@@ -41,6 +42,7 @@ func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 	v039auth.RegisterLegacyAminoCodec(v039Codec)
 	v036gov.RegisterLegacyAminoCodec(v039Codec)
 	v036distr.RegisterLegacyAminoCodec(v039Codec)
+	v038upgrade.RegisterLegacyAminoCodec(v039Codec)
 
 	v040Codec := clientCtx.JSONMarshaler
 

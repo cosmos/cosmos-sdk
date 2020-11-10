@@ -12,6 +12,7 @@ import (
 	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v036"
 	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v036"
 	v038staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v038"
+	v038upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/legacy/v038"
 )
 
 // Migrate migrates exported state from v0.36/v0.37 to a v0.38 genesis state.
@@ -24,6 +25,7 @@ func Migrate(appState types.AppMap, _ client.Context) types.AppMap {
 	v038auth.RegisterLegacyAminoCodec(v038Codec)
 	v036gov.RegisterLegacyAminoCodec(v038Codec)
 	v036distr.RegisterLegacyAminoCodec(v038Codec)
+	v038upgrade.RegisterLegacyAminoCodec(v038Codec)
 
 	if appState[v036genaccounts.ModuleName] != nil {
 		// unmarshal relative source genesis application state

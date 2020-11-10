@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 var (
-	// DefaultAllowedClients are "Solo Machine" and "Tendermint"
-	DefaultAllowedClients = []string{"Solo Machine", "Tendermint"}
+	// DefaultAllowedClients are "06-solomachine" and "07-tendermint"
+	DefaultAllowedClients = []string{exported.Solomachine, exported.Tendermint}
 
 	// KeyAllowedClients is store's key for AllowedClients Params
 	KeyAllowedClients = []byte("AllowedClients")

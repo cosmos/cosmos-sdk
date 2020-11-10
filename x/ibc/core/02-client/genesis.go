@@ -39,7 +39,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 		}
 	}
 
-	if !gs.CreateLocalhost || !gs.Params.IsAllowedClient(exported.Localhost) {
+	if !gs.CreateLocalhost {
 		return
 	}
 

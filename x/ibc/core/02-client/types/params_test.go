@@ -3,6 +3,7 @@ package types
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,7 +14,7 @@ func TestValidateParams(t *testing.T) {
 		expPass bool
 	}{
 		{"default params", DefaultParams(), true},
-		{"custom params", NewParams("Tendermint"), true},
+		{"custom params", NewParams(exported.Tendermint), true},
 		{"blank client", NewParams(" "), false},
 	}
 

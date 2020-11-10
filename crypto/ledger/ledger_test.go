@@ -57,7 +57,7 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 
 	const numIters = 10
 
-	privKeys := make([]types.LedgerPrivKey, numIters)
+	privKeys := make([]types.PrivKey, numIters)
 
 	// Check with device
 	for i := uint32(0); i < 10; i++ {
@@ -69,9 +69,8 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 		require.NotNil(t, priv)
 
 		// Check other methods
-		tmp := priv.(PrivKey)
+		tmp := priv.(*PrivKey)
 		require.NoError(t, tmp.ValidateKey())
-		(&tmp).AssertIsPrivKeyInner()
 
 		pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
 		require.NoError(t, err)
@@ -150,7 +149,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 
 	const numIters = 10
 
-	privKeys := make([]types.LedgerPrivKey, numIters)
+	privKeys := make([]types.PrivKey, numIters)
 
 	// Check with device
 	for i := uint32(0); i < 10; i++ {
@@ -169,9 +168,8 @@ func TestPublicKeyHDPath(t *testing.T) {
 			"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
 		// Check other methods
-		tmp := priv.(PrivKey)
+		tmp := priv.(*PrivKey)
 		require.NoError(t, tmp.ValidateKey())
-		(&tmp).AssertIsPrivKeyInner()
 
 		pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
 		require.NoError(t, err)

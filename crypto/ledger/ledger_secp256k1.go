@@ -43,7 +43,7 @@ type (
 // This function is marked as unsafe as it will retrieve a pubkey without user verification.
 // It can only be used to verify a pubkey but never to create new accounts/keys. In that case,
 // please refer to NewPrivKeySecp256k1
-func NewPrivKeySecp256k1Unsafe(path *hd.BIP44Params) (types.LedgerPrivKey, error) {
+func NewPrivKeySecp256k1Unsafe(path *hd.BIP44Params) (types.PrivKey, error) {
 	device, err := getDevice()
 	if err != nil {
 		return nil, err
@@ -55,12 +55,12 @@ func NewPrivKeySecp256k1Unsafe(path *hd.BIP44Params) (types.LedgerPrivKey, error
 		return nil, err
 	}
 
-	return PrivKey{CachedPubKey: pubKey.Bytes(), Path: path}, nil
+	return &PrivKey{CachedPubKey: pubKey.Bytes(), Path: path}, nil
 }
 
 // NewPrivKeySecp256k1 will generate a new key and store the public key for later use.
 // The request will require user confirmation and will show account and index in the device
-func NewPrivKeySecp256k1(path *hd.BIP44Params, hrp string) (types.LedgerPrivKey, string, error) {
+func NewPrivKeySecp256k1(path *hd.BIP44Params, hrp string) (types.PrivKey, string, error) {
 	device, err := getDevice()
 	if err != nil {
 		return nil, "", err
@@ -72,16 +72,18 @@ func NewPrivKeySecp256k1(path *hd.BIP44Params, hrp string) (types.LedgerPrivKey,
 		return nil, "", err
 	}
 
-	return PrivKey{CachedPubKey: pubKey.Bytes(), Path: &path}, addr, nil
+	return &PrivKey{CachedPubKey: pubKey.Bytes(), Path: path}, addr, nil
 }
 
+var _ types.PrivKey = &PrivKey{} // Assert interface implementation.
+
 // PubKey returns the cached public key.
-func (pkl PrivKey) PubKey() types.PubKey {
+func (pkl *PrivKey) PubKey() types.PubKey {
 	return &secp256k1.PubKey{Key: pkl.CachedPubKey}
 }
 
 // Sign returns a secp256k1 signature for the corresponding message
-func (pkl PrivKey) Sign(message []byte) ([]byte, error) {
+func (pkl *PrivKey) Sign(message []byte) ([]byte, error) {
 	device, err := getDevice()
 	if err != nil {
 		return nil, err
@@ -130,28 +132,25 @@ func (pkl PrivKey) ValidateKey() error {
 	}
 	defer warnIfErrors(device.Close)
 
-	return validateKey(device, pkl)
+	return validateKey(device, &pkl)
 }
-
-// AssertIsPrivKeyInner implements the PrivKey interface. It performs a no-op.
-func (pkl *PrivKey) AssertIsPrivKeyInner() {}
 
 // Bytes implements the PrivKey interface. It stores the cached public key so
 // we can verify the same key when we reconnect to a ledger.
-func (pkl PrivKey) Bytes() []byte {
+func (pkl *PrivKey) Bytes() []byte {
 	return cdc.MustMarshalBinaryBare(pkl)
 }
 
 // Equals implements the PrivKey interface. It makes sure two private keys
 // refer to the same public key.
-func (pkl PrivKey) Equals(other types.LedgerPrivKey) bool {
-	if otherKey, ok := other.(PrivKey); ok {
+func (pkl *PrivKey) Equals(other types.PrivKey) bool {
+	if otherKey, ok := other.(*PrivKey); ok {
 		return pkl.PubKey().Equals(otherKey.PubKey())
 	}
 	return false
 }
 
-func (pkl PrivKey) Type() string { return "PrivKey" }
+func (pkl *PrivKey) Type() string { return "PrivKey" }
 
 // warnIfErrors wraps a function and writes a warning to stderr. This is required
 // to avoid ignoring errors when defer is used. Using defer may result in linter warnings.
@@ -183,7 +182,7 @@ func getDevice() (SECP256K1, error) {
 	return device, nil
 }
 
-func validateKey(device SECP256K1, pkl PrivKey) error {
+func validateKey(device SECP256K1, pkl *PrivKey) error {
 	pub, err := getPubKeyUnsafe(device, pkl.Path)
 	if err != nil {
 		return err
@@ -202,7 +201,7 @@ func validateKey(device SECP256K1, pkl PrivKey) error {
 // Communication is checked on NewPrivKeyLedger and PrivKeyFromBytes, returning
 // an error, so this should only trigger if the private key is held in memory
 // for a while before use.
-func sign(device SECP256K1, pkl PrivKey, msg []byte) ([]byte, error) {
+func sign(device SECP256K1, pkl *PrivKey, msg []byte) ([]byte, error) {
 	err := validateKey(device, pkl)
 	if err != nil {
 		return nil, err

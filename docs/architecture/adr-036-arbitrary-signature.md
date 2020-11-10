@@ -32,7 +32,7 @@ The CLI should set those to default values.
 
 Cosmos SDK 0.40 also introduces a concept of “auth_info” this can specify SIGN_MODES.
 
-A spec should include an auth info that supports SIGN_MODE_DIRECT and SIGN_MODE_LEGACY_AMINO.
+A spec should include an `auth_info` that supports SIGN_MODE_DIRECT and SIGN_MODE_LEGACY_AMINO.
 
 - the memo should be empty
 - nonce, sequence number should be equal to 0

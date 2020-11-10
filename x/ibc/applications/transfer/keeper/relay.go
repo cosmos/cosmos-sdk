@@ -55,6 +55,7 @@ func (k Keeper) SendTransfer(
 	receiver string,
 	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64,
+	delayPeriod uint64,
 ) error {
 
 	if !k.GetSendEnabled(ctx) {
@@ -154,6 +155,7 @@ func (k Keeper) SendTransfer(
 		destinationChannel,
 		timeoutHeight,
 		timeoutTimestamp,
+		delayPeriod,
 	)
 
 	if err := k.channelKeeper.SendPacket(ctx, channelCap, packet); err != nil {

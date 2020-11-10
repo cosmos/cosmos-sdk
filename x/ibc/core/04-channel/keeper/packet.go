@@ -213,7 +213,7 @@ func (k Keeper) RecvPacket(
 
 	// verify that the counterparty did commit to sending this packet
 	if err := k.connectionKeeper.VerifyPacketCommitment(
-		ctx, connectionEnd, proofHeight, proof,
+		ctx, connectionEnd, proofHeight, packet.GetDelayPeriod(), proof,
 		packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(),
 		types.CommitPacket(packet),
 	); err != nil {
@@ -444,8 +444,8 @@ func (k Keeper) AcknowledgePacket(
 	}
 
 	if err := k.connectionKeeper.VerifyPacketAcknowledgement(
-		ctx, connectionEnd, proofHeight, proof, packet.GetDestPort(), packet.GetDestChannel(),
-		packet.GetSequence(), acknowledgement,
+		ctx, connectionEnd, proofHeight, packet.GetDelayPeriod(), proof,
+		packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(), acknowledgement,
 	); err != nil {
 		return sdkerrors.Wrap(err, "packet acknowledgement verification failed")
 	}

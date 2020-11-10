@@ -115,6 +115,7 @@ func (k Keeper) VerifyPacketCommitment(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
 	height exported.Height,
+	delayPeriod uint64,
 	proof []byte,
 	portID,
 	channelID string,
@@ -127,7 +128,7 @@ func (k Keeper) VerifyPacketCommitment(
 	}
 
 	if err := clientState.VerifyPacketCommitment(
-		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
+		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height, uint64(ctx.BlockTime().UnixNano()), delayPeriod,
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		sequence, commitmentBytes,
 	); err != nil {
@@ -143,6 +144,7 @@ func (k Keeper) VerifyPacketAcknowledgement(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
 	height exported.Height,
+	delayPeriod uint64,
 	proof []byte,
 	portID,
 	channelID string,
@@ -155,7 +157,7 @@ func (k Keeper) VerifyPacketAcknowledgement(
 	}
 
 	if err := clientState.VerifyPacketAcknowledgement(
-		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
+		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height, uint64(ctx.BlockTime().UnixNano()), delayPeriod,
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		sequence, acknowledgement,
 	); err != nil {
@@ -172,6 +174,7 @@ func (k Keeper) VerifyPacketReceiptAbsence(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
 	height exported.Height,
+	delayPeriod uint64,
 	proof []byte,
 	portID,
 	channelID string,
@@ -183,7 +186,7 @@ func (k Keeper) VerifyPacketReceiptAbsence(
 	}
 
 	if err := clientState.VerifyPacketReceiptAbsence(
-		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
+		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height, uint64(ctx.BlockTime().UnixNano()), delayPeriod,
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		sequence,
 	); err != nil {
@@ -199,6 +202,7 @@ func (k Keeper) VerifyNextSequenceRecv(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
 	height exported.Height,
+	delayPeriod uint64,
 	proof []byte,
 	portID,
 	channelID string,
@@ -210,7 +214,7 @@ func (k Keeper) VerifyNextSequenceRecv(
 	}
 
 	if err := clientState.VerifyNextSequenceRecv(
-		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
+		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height, uint64(ctx.BlockTime().UnixNano()), delayPeriod,
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		nextSequenceRecv,
 	); err != nil {

@@ -14,11 +14,12 @@ import (
 
 // NewConsensusState creates a new ConsensusState instance.
 func NewConsensusState(
-	timestamp time.Time, root commitmenttypes.MerkleRoot,
-	nextValsHash tmbytes.HexBytes,
+	timestamp, processedTime time.Time,
+	root commitmenttypes.MerkleRoot, nextValsHash tmbytes.HexBytes,
 ) *ConsensusState {
 	return &ConsensusState{
 		Timestamp:          timestamp,
+		ProcessedTimestamp: processedTime,
 		Root:               root,
 		NextValidatorsHash: nextValsHash,
 	}
@@ -34,9 +35,14 @@ func (cs ConsensusState) GetRoot() exported.Root {
 	return cs.Root
 }
 
-// GetTimestamp returns block time in nanoseconds at which the consensus state was stored
+// GetTimestamp returns block time in nanoseconds of the header that created consensus state
 func (cs ConsensusState) GetTimestamp() uint64 {
 	return uint64(cs.Timestamp.UnixNano())
+}
+
+// GetProcessedTimestamp returns block time in nanoseconds at which the consensus state was stored
+func (cs ConsensusState) GetProcessedTimestamp() uint64 {
+	return uint64(cs.ProcessedTimestamp.UnixNano())
 }
 
 // ValidateBasic defines a basic validation for the tendermint consensus state.
@@ -53,5 +59,12 @@ func (cs ConsensusState) ValidateBasic() error {
 	if cs.Timestamp.UnixNano() < 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp cannot be negative Unix time")
 	}
+	if cs.ProcessedTimestamp.IsZero() {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "processed timestamp cannot be zero Unix time")
+	}
+	if cs.ProcessedTimestamp.UnixNano() < 0 {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "processed timestamp cannot be negative Unix time")
+	}
+
 	return nil
 }

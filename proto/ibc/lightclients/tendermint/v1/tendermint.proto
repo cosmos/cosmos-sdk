@@ -61,12 +61,14 @@ message ClientState {
 message ConsensusState {
   option (gogoproto.goproto_getters) = false;
 
-  // timestamp that corresponds to the block height in which the ConsensusState
-  // was stored.
+  // timestamp that corresponds to the blocktime of the Header that created this ConsensusState
   google.protobuf.Timestamp timestamp = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  // processed timestamp corresponds to the timestamp on the executing chain at which the Header that
+  // created this ConsensusState was received
+  google.protobuf.Timestamp processed_timestamp = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   // commitment root (i.e app hash)
-  ibc.core.commitment.v1.MerkleRoot root                 = 2 [(gogoproto.nullable) = false];
-  bytes                             next_validators_hash = 3 [
+  ibc.core.commitment.v1.MerkleRoot root                 = 3 [(gogoproto.nullable) = false];
+  bytes                             next_validators_hash = 4 [
     (gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes",
     (gogoproto.moretags) = "yaml:\"next_validators_hash\""
   ];

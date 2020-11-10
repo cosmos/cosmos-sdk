@@ -60,7 +60,7 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 		return nil, nil, err
 	}
 
-	newClientState, consensusState := update(&cs, tmHeader)
+	newClientState, consensusState := update(ctx, &cs, tmHeader)
 	return newClientState, consensusState, nil
 }
 
@@ -167,13 +167,14 @@ func checkValidity(
 }
 
 // update the consensus state from a new header
-func update(clientState *ClientState, header *Header) (*ClientState, *ConsensusState) {
+func update(ctx sdk.Context, clientState *ClientState, header *Header) (*ClientState, *ConsensusState) {
 	height := header.GetHeight().(clienttypes.Height)
 	if height.GT(clientState.LatestHeight) {
 		clientState.LatestHeight = height
 	}
 	consensusState := &ConsensusState{
 		Timestamp:          header.GetTime(),
+		ProcessedTimestamp: ctx.BlockTime(),
 		Root:               commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()),
 		NextValidatorsHash: header.Header.NextValidatorsHash,
 	}

@@ -332,6 +332,8 @@ func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	height exported.Height,
+	currentTimestamp uint64,
+	delayPeriod uint64,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
@@ -342,6 +344,13 @@ func (cs ClientState) VerifyPacketCommitment(
 	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
+	}
+
+	// check that executing chain's timestamp has passed consensusState's processed time + delay period
+	validTime := consensusState.GetProcessedTimestamp() + delayPeriod
+	if validTime > currentTimestamp {
+		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %s, current time: %s",
+			validTime, currentTimestamp)
 	}
 
 	commitmentPath := commitmenttypes.NewMerklePath(host.PacketCommitmentPath(portID, channelID, sequence))
@@ -363,6 +372,8 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	height exported.Height,
+	currentTimestamp uint64,
+	delayPeriod uint64,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
@@ -373,6 +384,13 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
+	}
+
+	// check that executing chain's timestamp has passed consensusState's processed time + delay period
+	validTime := consensusState.GetProcessedTimestamp() + delayPeriod
+	if validTime > currentTimestamp {
+		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %s, current time: %s",
+			validTime, currentTimestamp)
 	}
 
 	ackPath := commitmenttypes.NewMerklePath(host.PacketAcknowledgementPath(portID, channelID, sequence))
@@ -395,6 +413,8 @@ func (cs ClientState) VerifyPacketReceiptAbsence(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	height exported.Height,
+	currentTimestamp uint64,
+	delayPeriod uint64,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
@@ -404,6 +424,13 @@ func (cs ClientState) VerifyPacketReceiptAbsence(
 	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
+	}
+
+	// check that executing chain's timestamp has passed consensusState's processed time + delay period
+	validTime := consensusState.GetProcessedTimestamp() + delayPeriod
+	if validTime > currentTimestamp {
+		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %s, current time: %s",
+			validTime, currentTimestamp)
 	}
 
 	receiptPath := commitmenttypes.NewMerklePath(host.PacketReceiptPath(portID, channelID, sequence))
@@ -425,6 +452,8 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	height exported.Height,
+	currentTimestamp uint64,
+	delayPeriod uint64,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
@@ -434,6 +463,13 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
+	}
+
+	// check that executing chain's timestamp has passed consensusState's processed time + delay period
+	validTime := consensusState.GetProcessedTimestamp() + delayPeriod
+	if validTime > currentTimestamp {
+		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %s, current time: %s",
+			validTime, currentTimestamp)
 	}
 
 	nextSequenceRecvPath := commitmenttypes.NewMerklePath(host.NextSequenceRecvPath(portID, channelID))

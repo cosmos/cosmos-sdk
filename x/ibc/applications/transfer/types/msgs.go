@@ -19,7 +19,7 @@ const (
 func NewMsgTransfer(
 	sourcePort, sourceChannel string,
 	token sdk.Coin, sender sdk.AccAddress, receiver string,
-	timeoutHeight clienttypes.Height, timeoutTimestamp uint64,
+	timeoutHeight clienttypes.Height, timeoutTimestamp, delayPeriod uint64,
 ) *MsgTransfer {
 	return &MsgTransfer{
 		SourcePort:       sourcePort,
@@ -29,6 +29,7 @@ func NewMsgTransfer(
 		Receiver:         receiver,
 		TimeoutHeight:    timeoutHeight,
 		TimeoutTimestamp: timeoutTimestamp,
+		DelayPeriod:      delayPeriod,
 	}
 }
 

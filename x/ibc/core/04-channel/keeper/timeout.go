@@ -97,12 +97,12 @@ func (k Keeper) TimeoutPacket(
 
 		// check that the recv sequence is as claimed
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
-			ctx, connectionEnd, proofHeight, proof,
+			ctx, connectionEnd, proofHeight, packet.GetDelayPeriod(), proof,
 			packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv,
 		)
 	case types.UNORDERED:
 		err = k.connectionKeeper.VerifyPacketReceiptAbsence(
-			ctx, connectionEnd, proofHeight, proof,
+			ctx, connectionEnd, proofHeight, packet.GetDelayPeriod(), proof,
 			packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 		)
 	default:
@@ -251,12 +251,12 @@ func (k Keeper) TimeoutOnClose(
 
 		// check that the recv sequence is as claimed
 		err = k.connectionKeeper.VerifyNextSequenceRecv(
-			ctx, connectionEnd, proofHeight, proof,
+			ctx, connectionEnd, proofHeight, packet.GetDelayPeriod(), proof,
 			packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv,
 		)
 	case types.UNORDERED:
 		err = k.connectionKeeper.VerifyPacketReceiptAbsence(
-			ctx, connectionEnd, proofHeight, proof,
+			ctx, connectionEnd, proofHeight, packet.GetDelayPeriod(), proof,
 			packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 		)
 	default:

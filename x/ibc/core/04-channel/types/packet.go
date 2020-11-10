@@ -16,6 +16,7 @@ func CommitPacket(packet exported.PacketI) []byte {
 	buf := sdk.Uint64ToBigEndian(packet.GetTimeoutTimestamp())
 	buf = append(buf, sdk.Uint64ToBigEndian(packet.GetTimeoutHeight().GetVersionNumber())...)
 	buf = append(buf, sdk.Uint64ToBigEndian(packet.GetTimeoutHeight().GetVersionHeight())...)
+	buf = append(buf, sdk.Uint64ToBigEndian(packet.GetDelayPeriod())...)
 	buf = append(buf, packet.GetData()...)
 	return tmhash.Sum(buf)
 }
@@ -33,7 +34,7 @@ func NewPacket(
 	data []byte,
 	sequence uint64, sourcePort, sourceChannel,
 	destinationPort, destinationChannel string,
-	timeoutHeight clienttypes.Height, timeoutTimestamp uint64,
+	timeoutHeight clienttypes.Height, timeoutTimestamp, delayPeriod uint64,
 ) Packet {
 	return Packet{
 		Data:               data,
@@ -44,6 +45,7 @@ func NewPacket(
 		DestinationChannel: destinationChannel,
 		TimeoutHeight:      timeoutHeight,
 		TimeoutTimestamp:   timeoutTimestamp,
+		DelayPeriod:        delayPeriod,
 	}
 }
 
@@ -70,6 +72,9 @@ func (p Packet) GetTimeoutHeight() exported.Height { return p.TimeoutHeight }
 
 // GetTimeoutTimestamp implements PacketI interface
 func (p Packet) GetTimeoutTimestamp() uint64 { return p.TimeoutTimestamp }
+
+// GetDelayPeriod implements PacketI interface
+func (p Packet) GetDelayPeriod() uint64 { return p.DelayPeriod }
 
 // ValidateBasic implements PacketI interface
 func (p Packet) ValidateBasic() error {

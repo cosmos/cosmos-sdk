@@ -37,6 +37,9 @@ message MsgTransfer {
   // Timeout timestamp (in nanoseconds) relative to the current block timestamp.
   // The timeout is disabled when set to 0.
   uint64 timeout_timestamp = 7 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
+  // Delay period allows sender to specify how much time needs to pass after consensus state
+  // is processed before the packet state can be verified.
+  uint64 delay_period = 9 [(gogoproto.moretags) = "yaml:\"delay_period\""];
 }
 
 // MsgTransferResponse defines the Msg/Transfer response type.

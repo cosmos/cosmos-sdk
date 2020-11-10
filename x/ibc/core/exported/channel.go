@@ -23,6 +23,7 @@ type PacketI interface {
 	GetSequence() uint64
 	GetTimeoutHeight() Height
 	GetTimeoutTimestamp() uint64
+	GetDelayPeriod() uint64
 	GetSourcePort() string
 	GetSourceChannel() string
 	GetDestPort() string

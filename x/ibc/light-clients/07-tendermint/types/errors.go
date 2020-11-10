@@ -16,6 +16,7 @@ var (
 	ErrInvalidHeaderHeight    = sdkerrors.Register(SubModuleName, 5, "invalid header height")
 	ErrInvalidHeader          = sdkerrors.Register(SubModuleName, 6, "invalid header")
 	ErrInvalidMaxClockDrift   = sdkerrors.Register(SubModuleName, 7, "invalid max clock drift")
+	ErrDelayPeriodNotPassed   = sdkerrors.Register(SubModuleName, 8, "packet-specified delay period has not been reached")
 	ErrTrustingPeriodExpired  = sdkerrors.Register(SubModuleName, 8, "time since latest trusted state has passed the trusting period")
 	ErrUnbondingPeriodExpired = sdkerrors.Register(SubModuleName, 9, "time since latest trusted state has passed the unbonding period")
 	ErrInvalidProofSpecs      = sdkerrors.Register(SubModuleName, 10, "invalid proof specs")

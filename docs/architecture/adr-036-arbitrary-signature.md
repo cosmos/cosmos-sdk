@@ -28,40 +28,39 @@ Having the ability to sign messages off-chain has proven to be a fundamental asp
 The aim is being able to sign arbitrary messages, even using Ledger or similar HSM devices.
 
 As a result signed messages should look roughly like Cosmos SDK messages. chain-id, account_number and sequence can all be assigned invalid values.
-The CLI should set those to default values.
 
 Cosmos SDK 0.40 also introduces a concept of “auth_info” this can specify SIGN_MODES.
 
 A spec should include an auth info that supports SIGN_MODE_DIRECT and SIGN_MODE_LEGACY_AMINO.
 
-- the memo should be empty
-- nonce, sequence number should be equal to 0
-- chain-id should be equal to “signature”
-- fee gas should be equal to 0
-- fee amount should be an empty array
-- Inside the message with the type MsgSignText, we put inside a  *bytes* message and the address of the signer.
+- the memo must be empty
+- nonce, sequence number must be equal to 0
+- chain-id must be equal to “signature”
+- fee gas must be equal to 0
+- fee amount must be an empty array
+- Inside the message with type `MsgSignData`, we put inside *bytes* data and the `address` of the signer.
 
 Proto definition:
 ```proto
-// MsgSignedMessage defines 
-message MsgSignedMessage {
+// MsgSignData defines an arbitrary, general-purpose, off-chain message
+message MsgSignData {
     // Signer is the sdk.AccAddress of the message signer
     bytes Signer = 1 [(gogoproto.jsontag) = "signer", (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    // Message represents the raw bytes of the content that is signed (text, json, etc)
-    bytes Message = 2 [(gogoproto.jsontag) = "message"];
+    // Data represents the raw bytes of the content that is signed (text, json, etc)
+    bytes Data = 2 [(gogoproto.jsontag) = "data"];
 }
 ```
-Signed MsgSignedMessage json example:
+Signed MsgSignData json example:
 ```json
 {
   "type": "cosmos-sdk/StdTx",
   "value": {
     "msg": [
       {
-        "type": "sign/MsgSignedMessage",
+        "type": "sign/MsgSignData",
         "value": {
           "signer": "cosmos1hftz5ugqmpg9243xeegsqqav62f8hnywsjr4xr",
-          "message": "cmFuZG9t"
+          "data": "cmFuZG9t"
         }
       }
     ],

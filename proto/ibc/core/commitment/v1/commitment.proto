@@ -23,8 +23,7 @@ message MerklePrefix {
 
 // MerklePath is the path used to verify commitment proofs, which can be an
 // arbitrary structured object (defined by a commitment type).
-// The Path is represented as a string array, each element in the string should
-// have all backslashs "/" URL-escaped.
+// MerklePath is represented from root-to-leaf
 message MerklePath {
   option (gogoproto.goproto_stringer) = false;
 
@@ -35,6 +34,7 @@ message MerklePath {
 // It demonstrates membership or non-membership for an element or set of
 // elements, verifiable in conjunction with a known commitment root. Proofs
 // should be succinct.
+// MerkleProofs are ordered from leaf-to-root
 message MerkleProof {
     repeated ics23.CommitmentProof proofs = 1;
 }

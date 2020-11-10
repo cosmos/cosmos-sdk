@@ -70,9 +70,8 @@ var _ exported.Path = (*MerklePath)(nil)
 // NewMerklePath creates a new MerklePath instance
 // The keys must be passed in from root-to-leaf order
 func NewMerklePath(keyPath ...string) MerklePath {
-	kp := keyPath[:]
 	return MerklePath{
-		KeyPath: kp,
+		KeyPath: keyPath,
 	}
 }
 
@@ -105,11 +104,8 @@ func (mp MerklePath) Empty() bool {
 	return len(mp.KeyPath) == 0
 }
 
-// ApplyPrefix constructs a new commitment path from the arguments. It interprets
-// the path argument in the context of the prefix argument.
-//
-// CONTRACT: provided path string MUST be a well formated path. See ICS24 for
-// reference.
+// ApplyPrefix constructs a new commitment path from the arguments. It prepends the prefix key
+// with the given path.
 func ApplyPrefix(prefix exported.Prefix, path MerklePath) (MerklePath, error) {
 	if prefix == nil || prefix.Empty() {
 		return MerklePath{}, sdkerrors.Wrap(ErrInvalidPrefix, "prefix can't be empty")

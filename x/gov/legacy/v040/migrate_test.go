@@ -12,6 +12,7 @@ import (
 	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v036"
 	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v036"
 	v040gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v040"
+	v036params "github.com/cosmos/cosmos-sdk/x/params/legacy/v036"
 	v038upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/legacy/v038"
 )
 
@@ -58,6 +59,20 @@ func TestMigrate(t *testing.T) {
 					},
 				},
 			},
+			{
+				Content: v036params.ParameterChangeProposal{
+					Title:       "foo_param_change",
+					Description: "bar_param_change",
+					Changes: []v036params.ParamChange{
+						{
+							Subspace: "foo_param_change_subspace",
+							Key:      "foo_param_change_key",
+							Subkey:   "foo_param_change_subkey",
+							Value:    "foo_param_change_value",
+						},
+					},
+				},
+			},
 		},
 	}
 
@@ -78,6 +93,7 @@ func TestMigrate(t *testing.T) {
 	// - CommunityPoolSpendProposal has correct JSON.
 	// - CancelSoftwareUpgradeProposal has correct JSON.
 	// - SoftwareUpgradeProposal has correct JSON.
+	// - ParameterChangeProposal has correct JSON.
 	expected := `{
 	"deposit_params": {
 		"max_deposit_period": "0s",
@@ -164,6 +180,33 @@ func TestMigrate(t *testing.T) {
 					"upgraded_client_state": null
 				},
 				"title": "foo_software_upgrade"
+			},
+			"deposit_end_time": "0001-01-01T00:00:00Z",
+			"final_tally_result": {
+				"abstain": "0",
+				"no": "0",
+				"no_with_veto": "0",
+				"yes": "0"
+			},
+			"proposal_id": "0",
+			"status": "PROPOSAL_STATUS_UNSPECIFIED",
+			"submit_time": "0001-01-01T00:00:00Z",
+			"total_deposit": [],
+			"voting_end_time": "0001-01-01T00:00:00Z",
+			"voting_start_time": "0001-01-01T00:00:00Z"
+		},
+		{
+			"content": {
+				"@type": "/cosmos.params.v1beta1.ParameterChangeProposal",
+				"changes": [
+					{
+						"key": "foo_param_change_key",
+						"subspace": "foo_param_change_subspace",
+						"value": "foo_param_change_value"
+					}
+				],
+				"description": "bar_param_change",
+				"title": "foo_param_change"
 			},
 			"deposit_end_time": "0001-01-01T00:00:00Z",
 			"final_tally_result": {

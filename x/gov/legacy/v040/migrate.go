@@ -11,6 +11,8 @@ import (
 	v034gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v034"
 	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v036"
 	v040gov "github.com/cosmos/cosmos-sdk/x/gov/types"
+	v036params "github.com/cosmos/cosmos-sdk/x/params/legacy/v036"
+	v040params "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	v038upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/legacy/v038"
 	v040upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -110,8 +112,25 @@ func migrateContent(oldContent v036gov.Content) *codectypes.Any {
 				},
 			}
 		}
+	case v036params.ParameterChangeProposal:
+		{
+			newChanges := make([]v040params.ParamChange, len(oldContent.Changes))
+			for i, oldChange := range oldContent.Changes {
+				newChanges[i] = v040params.ParamChange{
+					Subspace: oldChange.Subspace,
+					Key:      oldChange.Key,
+					Value:    oldChange.Value,
+				}
+			}
+
+			protoProposal = &v040params.ParameterChangeProposal{
+				Description: oldContent.Description,
+				Title:       oldContent.Title,
+				Changes:     newChanges,
+			}
+		}
 	default:
-		panic(fmt.Errorf("'%T' is not a valid proposal content type", oldContent))
+		panic(fmt.Errorf("%T is not a valid proposal content type", oldContent))
 	}
 
 	// Convert the content into Any.

@@ -52,7 +52,7 @@ func (sn SingleNetwork) ConstructionCombine(ctx context.Context, request *types.
 		copy(compressedPublicKey, cmp.SerializeCompressed())
 		pubKey := &secp256k1.PubKey{Key: compressedPublicKey}
 
-		accountInfo, err := sn.client.AccountInfo(ctx, sdk.AccAddress(compressedPublicKey).String(), nil)
+		accountInfo, err := sn.client.AccountInfo(ctx, sdk.AccAddress(pubKey.Address()).String(), nil)
 		if err != nil {
 			return nil, rosetta.ToRosettaError(err)
 		}
@@ -177,13 +177,16 @@ func (sn SingleNetwork) ConstructionParse(ctx context.Context, request *types.Co
 	}
 
 	txBldr, _ := TxConfig.WrapTxBuilder(rawTx)
-	addrs := txBldr.GetTx().GetSigners()
+
 	var accountIdentifierSigners []*types.AccountIdentifier
-	for _, addr := range addrs {
-		signer := &types.AccountIdentifier{
-			Address: addr.String(),
+	if request.Signed {
+		addrs := txBldr.GetTx().GetSigners()
+		for _, addr := range addrs {
+			signer := &types.AccountIdentifier{
+				Address: addr.String(),
+			}
+			accountIdentifierSigners = append(accountIdentifierSigners, signer)
 		}
-		accountIdentifierSigners = append(accountIdentifierSigners, signer)
 	}
 
 	return &types.ConstructionParseResponse{

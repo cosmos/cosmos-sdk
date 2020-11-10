@@ -308,7 +308,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 			prefix = suite.chainB.GetPrefix()
 
 			// make channel proof
-			channelKey := host.KeyChannel(channelB.PortID, channelB.ID)
+			channelKey := host.ChannelKey(channelB.PortID, channelB.ID)
 			proof, proofHeight = suite.chainB.QueryProof(channelKey)
 
 			tc.malleate() // make changes as necessary

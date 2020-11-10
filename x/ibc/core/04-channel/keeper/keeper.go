@@ -58,7 +58,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 // GetChannel returns a channel with a particular identifier binded to a specific port
 func (k Keeper) GetChannel(ctx sdk.Context, portID, channelID string) (types.Channel, bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(host.KeyChannel(portID, channelID))
+	bz := store.Get(host.ChannelKey(portID, channelID))
 	if bz == nil {
 		return types.Channel{}, false
 	}
@@ -72,7 +72,7 @@ func (k Keeper) GetChannel(ctx sdk.Context, portID, channelID string) (types.Cha
 func (k Keeper) SetChannel(ctx sdk.Context, portID, channelID string, channel types.Channel) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryBare(&channel)
-	store.Set(host.KeyChannel(portID, channelID), bz)
+	store.Set(host.ChannelKey(portID, channelID), bz)
 }
 
 // GetNextSequenceSend gets a channel's next send sequence from the store

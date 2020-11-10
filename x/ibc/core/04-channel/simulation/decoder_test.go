@@ -31,7 +31,7 @@ func TestDecodeStore(t *testing.T) {
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
 			{
-				Key:   host.KeyChannel(portID, channelID),
+				Key:   host.ChannelKey(portID, channelID),
 				Value: cdc.MustMarshalBinaryBare(&channel),
 			},
 			{

@@ -197,9 +197,8 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, clienttypes.Height) {
 		Prove:  true,
 	})
 
-	merkleProof := commitmenttypes.MerkleProof{
-		Proof: res.ProofOps,
-	}
+	merkleProof, err := commitmenttypes.ConvertProofs(res.ProofOps)
+	require.NoError(chain.t, err)
 
 	proof, err := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
 	require.NoError(chain.t, err)
@@ -222,9 +221,8 @@ func (chain *TestChain) QueryUpgradeProof(key []byte, height uint64) ([]byte, cl
 		Prove:  true,
 	})
 
-	merkleProof := commitmenttypes.MerkleProof{
-		Proof: res.ProofOps,
-	}
+	merkleProof, err := commitmenttypes.ConvertProofs(res.ProofOps)
+	require.NoError(chain.t, err)
 
 	proof, err := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
 	require.NoError(chain.t, err)
@@ -790,7 +788,7 @@ func (chain *TestChain) ChanOpenTry(
 	order channeltypes.Order,
 	connectionID string,
 ) error {
-	proof, height := counterparty.QueryProof(host.KeyChannel(counterpartyCh.PortID, counterpartyCh.ID))
+	proof, height := counterparty.QueryProof(host.ChannelKey(counterpartyCh.PortID, counterpartyCh.ID))
 
 	msg := channeltypes.NewMsgChannelOpenTry(
 		ch.PortID, ch.ID, ch.ID, // testing doesn't use flexible selection
@@ -808,7 +806,7 @@ func (chain *TestChain) ChanOpenAck(
 	counterparty *TestChain,
 	ch, counterpartyCh TestChannel,
 ) error {
-	proof, height := counterparty.QueryProof(host.KeyChannel(counterpartyCh.PortID, counterpartyCh.ID))
+	proof, height := counterparty.QueryProof(host.ChannelKey(counterpartyCh.PortID, counterpartyCh.ID))
 
 	msg := channeltypes.NewMsgChannelOpenAck(
 		ch.PortID, ch.ID,
@@ -824,7 +822,7 @@ func (chain *TestChain) ChanOpenConfirm(
 	counterparty *TestChain,
 	ch, counterpartyCh TestChannel,
 ) error {
-	proof, height := counterparty.QueryProof(host.KeyChannel(counterpartyCh.PortID, counterpartyCh.ID))
+	proof, height := counterparty.QueryProof(host.ChannelKey(counterpartyCh.PortID, counterpartyCh.ID))
 
 	msg := channeltypes.NewMsgChannelOpenConfirm(
 		ch.PortID, ch.ID,

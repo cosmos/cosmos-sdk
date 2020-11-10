@@ -35,7 +35,7 @@ func QueryChannel(
 }
 
 func queryChannelABCI(clientCtx client.Context, portID, channelID string) (*types.QueryChannelResponse, error) {
-	key := host.KeyChannel(portID, channelID)
+	key := host.ChannelKey(portID, channelID)
 
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {

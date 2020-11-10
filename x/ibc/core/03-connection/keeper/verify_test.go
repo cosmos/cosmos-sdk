@@ -227,7 +227,7 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 				connection.ClientId = ibctesting.InvalidID
 			}
 
-			channelKey := host.KeyChannel(channelB.PortID, channelB.ID)
+			channelKey := host.ChannelKey(channelB.PortID, channelB.ID)
 			proof, proofHeight := suite.chainB.QueryProof(channelKey)
 
 			channel := suite.chainB.GetChannel(channelB)

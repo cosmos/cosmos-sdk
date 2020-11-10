@@ -188,7 +188,7 @@ func (cs ClientState) VerifyChannelState(
 	channelID string,
 	channel exported.ChannelI,
 ) error {
-	path := host.KeyChannel(portID, channelID)
+	path := host.ChannelKey(portID, channelID)
 	bz := store.Get(path)
 	if bz == nil {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedChannelStateVerification, "not found for path %s", path)

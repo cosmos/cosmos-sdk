@@ -233,7 +233,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 			malleate: func() {
 				bz, err := suite.cdc.MarshalBinaryBare(&ch1)
 				suite.Require().NoError(err)
-				suite.store.Set(host.KeyChannel(testPortID, testChannelID), bz)
+				suite.store.Set(host.ChannelKey(testPortID, testChannelID), bz)
 			},
 			channel: ch1,
 			expPass: true,
@@ -249,7 +249,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 			name:        "proof verification failed: unmarshal failed",
 			clientState: types.NewClientState("chainID", clientHeight),
 			malleate: func() {
-				suite.store.Set(host.KeyChannel(testPortID, testChannelID), []byte("channel"))
+				suite.store.Set(host.ChannelKey(testPortID, testChannelID), []byte("channel"))
 
 			},
 			channel: ch1,
@@ -261,7 +261,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 			malleate: func() {
 				bz, err := suite.cdc.MarshalBinaryBare(&ch2)
 				suite.Require().NoError(err)
-				suite.store.Set(host.KeyChannel(testPortID, testChannelID), bz)
+				suite.store.Set(host.ChannelKey(testPortID, testChannelID), bz)
 
 			},
 			channel: ch1,

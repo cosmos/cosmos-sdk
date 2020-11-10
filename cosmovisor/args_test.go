@@ -100,7 +100,7 @@ func (s *argsTestSuite) TestValidate() {
 	}
 }
 
-func (s *argsTestSuite) TestEnsureBin(t *testing.T) {
+func (s *argsTestSuite) TestEnsureBin() {
 	relPath := filepath.Join("testdata", "validate")
 	absPath, err := filepath.Abs(relPath)
 	s.Require().NoError(err)

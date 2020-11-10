@@ -661,10 +661,10 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 	for _, tc := range testCases {
 		tc := tc
 		suite.Run(tc.msg, func() {
-			suite.SetupTest()                                                 // reset
+			suite.SetupTest()                                                         // reset
 			version = types.ExportedVersionsToProto(types.GetCompatibleVersions())[0] // must be explicitly changed in malleate
-			consensusHeight = clienttypes.ZeroHeight()                        // must be explicitly changed in malleate
-			counterpartyConnectionID = ""                                     // must be explicitly changed in malleate
+			consensusHeight = clienttypes.ZeroHeight()                                // must be explicitly changed in malleate
+			counterpartyConnectionID = ""                                             // must be explicitly changed in malleate
 
 			tc.malleate()
 

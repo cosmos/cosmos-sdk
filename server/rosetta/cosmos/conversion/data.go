@@ -2,6 +2,8 @@ package conversion
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/coinbase/rosetta-sdk-go/types"

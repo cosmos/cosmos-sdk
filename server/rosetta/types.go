@@ -10,8 +10,6 @@ import (
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 	"github.com/tendermint/cosmos-rosetta-gateway/service"
 	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // list of supported operations
@@ -26,7 +24,7 @@ const (
 	AccountNumber     = "account_number"
 	ChainId           = "chain_id"
 	OperationTransfer = "transfer"
-	OperationSend  = "send"
+	OperationSend     = "send"
 )
 
 // Synchronization stage constants used to determine if a node is synced or catching up

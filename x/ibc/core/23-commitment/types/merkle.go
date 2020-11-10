@@ -4,7 +4,6 @@ import (
 	"bytes"
 	fmt "fmt"
 	"net/url"
-	"strings"
 
 	ics23 "github.com/confio/ics23/go"
 	"github.com/gogo/protobuf/proto"
@@ -77,11 +76,21 @@ func NewMerklePath(keyPath ...string) MerklePath {
 }
 
 // String implements fmt.Stringer.
+// This represents the path in the same way the tendermint KeyPath will
+// represent a key path. The backslashes partition the key path into
+// the respective stores they belong to.
 func (mp MerklePath) String() string {
-	return "/" + strings.Join(mp.KeyPath, "/")
+	pathStr := ""
+	for _, k := range mp.KeyPath {
+		pathStr += "/" + url.PathEscape(k)
+	}
+	return pathStr
 }
 
 // Pretty returns the unescaped path of the URL string.
+// This function will unescape any backslash within a particular store key.
+// This makes the keypath more human-readable while removing information
+// about the exact partitions in the key path.
 func (mp MerklePath) Pretty() string {
 	path, err := url.PathUnescape(mp.String())
 	if err != nil {

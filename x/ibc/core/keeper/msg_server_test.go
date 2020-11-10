@@ -142,7 +142,7 @@ func (suite *KeeperTestSuite) TestHandleRecvPacket() {
 			tc.malleate()
 
 			// get proof of packet commitment from chainA
-			packetKey := host.KeyPacketCommitment(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+			packetKey := host.PacketCommitmentKey(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 			proof, proofHeight := suite.chainA.QueryProof(packetKey)
 
 			msg := channeltypes.NewMsgRecvPacket(packet, proof, proofHeight, suite.chainB.SenderAccount.GetAddress())
@@ -281,7 +281,7 @@ func (suite *KeeperTestSuite) TestHandleAcknowledgePacket() {
 
 			tc.malleate()
 
-			packetKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			packetKey := host.PacketAcknowledgementKey(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 			proof, proofHeight := suite.chainB.QueryProof(packetKey)
 
 			msg := channeltypes.NewMsgAcknowledgement(packet, ibcmock.MockAcknowledgement, proof, proofHeight, suite.chainA.SenderAccount.GetAddress())
@@ -333,7 +333,7 @@ func (suite *KeeperTestSuite) TestHandleTimeoutPacket() {
 			// need to update chainA client to prove missing ack
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 
-			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
+			packetKey = host.NextSequenceRecvKey(packet.GetDestPort(), packet.GetDestChannel())
 		}, true},
 		{"success: UNORDERED", func() {
 			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
@@ -346,7 +346,7 @@ func (suite *KeeperTestSuite) TestHandleTimeoutPacket() {
 			// need to update chainA client to prove missing ack
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 
-			packetKey = host.KeyPacketReceipt(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			packetKey = host.PacketReceiptKey(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 		}, true},
 		{"success: UNORDERED timeout out of order packet", func() {
 			// setup uses an UNORDERED channel
@@ -363,7 +363,7 @@ func (suite *KeeperTestSuite) TestHandleTimeoutPacket() {
 			}
 
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
-			packetKey = host.KeyPacketReceipt(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			packetKey = host.PacketReceiptKey(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 		}, true},
 		{"success: ORDERED timeout out of order packet", func() {
 			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.ORDERED)
@@ -379,19 +379,19 @@ func (suite *KeeperTestSuite) TestHandleTimeoutPacket() {
 			}
 
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
-			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
+			packetKey = host.NextSequenceRecvKey(packet.GetDestPort(), packet.GetDestChannel())
 
 		}, true},
 		{"channel does not exist", func() {
 			// any non-nil value of packet is valid
 			suite.Require().NotNil(packet)
 
-			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
+			packetKey = host.NextSequenceRecvKey(packet.GetDestPort(), packet.GetDestChannel())
 		}, false},
 		{"UNORDERED: packet not sent", func() {
 			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			packet = channeltypes.NewPacket(ibctesting.MockCommitment, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
-			packetKey = host.KeyPacketReceipt(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			packetKey = host.PacketReceiptKey(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 		}, false},
 	}
 
@@ -460,7 +460,7 @@ func (suite *KeeperTestSuite) TestHandleTimeoutOnClosePacket() {
 			// need to update chainA client to prove missing ack
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 
-			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
+			packetKey = host.NextSequenceRecvKey(packet.GetDestPort(), packet.GetDestChannel())
 
 			// close counterparty channel
 			suite.coordinator.SetChannelClosed(suite.chainB, suite.chainA, counterpartyChannel)
@@ -481,7 +481,7 @@ func (suite *KeeperTestSuite) TestHandleTimeoutOnClosePacket() {
 			// need to update chainA client to prove missing ack
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 
-			packetKey = host.KeyPacketReceipt(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			packetKey = host.PacketReceiptKey(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 
 			// close counterparty channel
 			suite.coordinator.SetChannelClosed(suite.chainB, suite.chainA, counterpartyChannel)
@@ -506,7 +506,7 @@ func (suite *KeeperTestSuite) TestHandleTimeoutOnClosePacket() {
 			}
 
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
-			packetKey = host.KeyPacketReceipt(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			packetKey = host.PacketReceiptKey(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 
 			// close counterparty channel
 			suite.coordinator.SetChannelClosed(suite.chainB, suite.chainA, counterpartyChannel)
@@ -530,7 +530,7 @@ func (suite *KeeperTestSuite) TestHandleTimeoutOnClosePacket() {
 			}
 
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
-			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
+			packetKey = host.NextSequenceRecvKey(packet.GetDestPort(), packet.GetDestChannel())
 
 			// close counterparty channel
 			suite.coordinator.SetChannelClosed(suite.chainB, suite.chainA, counterpartyChannel)
@@ -539,12 +539,12 @@ func (suite *KeeperTestSuite) TestHandleTimeoutOnClosePacket() {
 			// any non-nil value of packet is valid
 			suite.Require().NotNil(packet)
 
-			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
+			packetKey = host.NextSequenceRecvKey(packet.GetDestPort(), packet.GetDestChannel())
 		}, false},
 		{"UNORDERED: packet not sent", func() {
 			clientA, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			packet = channeltypes.NewPacket(ibctesting.MockCommitment, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
-			packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			packetKey = host.PacketAcknowledgementKey(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 			counterpartyChannel = ibctesting.TestChannel{
 				PortID:               channelB.PortID,
 				ID:                   channelB.ID,
@@ -570,7 +570,7 @@ func (suite *KeeperTestSuite) TestHandleTimeoutOnClosePacket() {
 			// need to update chainA client to prove missing ack
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 
-			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
+			packetKey = host.NextSequenceRecvKey(packet.GetDestPort(), packet.GetDestChannel())
 		}, false},
 	}
 
@@ -584,7 +584,7 @@ func (suite *KeeperTestSuite) TestHandleTimeoutOnClosePacket() {
 
 			proof, proofHeight := suite.chainB.QueryProof(packetKey)
 
-			channelKey := host.KeyChannel(counterpartyChannel.PortID, counterpartyChannel.ID)
+			channelKey := host.ChannelKey(counterpartyChannel.PortID, counterpartyChannel.ID)
 			proofClosed, _ := suite.chainB.QueryProof(channelKey)
 
 			msg := channeltypes.NewMsgTimeoutOnClose(packet, 1, proof, proofClosed, proofHeight, suite.chainA.SenderAccount.GetAddress())

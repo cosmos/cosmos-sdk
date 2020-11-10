@@ -94,9 +94,9 @@ func (suite *TypesTestSuite) SetupTest() {
 	})
 
 	merkleProof, err := commitmenttypes.ConvertProofs(res.ProofOps)
-	suite.NoError(err)
+	suite.Require().NoError(err)
 	proof, err := app.AppCodec().MarshalBinaryBare(&merkleProof)
-	suite.NoError(err)
+	suite.Require().NoError(err)
 
 	suite.proof = proof
 }

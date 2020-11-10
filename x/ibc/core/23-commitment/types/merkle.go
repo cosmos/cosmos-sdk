@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	fmt "fmt"
 	"net/url"
 	"strings"
 
@@ -92,6 +93,9 @@ func (mp MerklePath) Pretty() string {
 // GetKey will return a byte representation of the key
 // after URL escaping the key element
 func (mp MerklePath) GetKey(i uint64) ([]byte, error) {
+	if i >= uint64(len(mp.KeyPath)) {
+		return nil, fmt.Errorf("index out of range. %d (index) >= %d (len)", i, len(mp.KeyPath))
+	}
 	key, err := url.PathUnescape(mp.KeyPath[i])
 	if err != nil {
 		return nil, err
@@ -160,18 +164,26 @@ func (proof MerkleProof) VerifyNonMembership(specs []*ics23.ProofSpec, root expo
 			len(mpath.KeyPath), len(specs))
 	}
 
-	// VerifyNonMembership will verify the absence of key in lowest subtree, and then chain inclusion proofs
-	// of all subroots up to final root
-	subroot, err := proof.Proofs[0].Calculate()
-	if err != nil {
-		return sdkerrors.Wrapf(ErrInvalidProof, "could not calculate root for proof index 0, merkle tree is likely empty. %v", err)
-	}
-	key, err := mpath.GetKey(uint64(len(mpath.KeyPath) - 1))
-	if err != nil {
-		return sdkerrors.Wrapf(ErrInvalidProof, "could not retrieve key bytes for key: %s", mpath.KeyPath[len(mpath.KeyPath)-1])
-	}
 	switch proof.Proofs[0].Proof.(type) {
 	case *ics23.CommitmentProof_Nonexist:
+		// VerifyNonMembership will verify the absence of key in lowest subtree, and then chain inclusion proofs
+		// of all subroots up to final root
+		subroot, err := proof.Proofs[0].Calculate()
+		if err != nil {
+			return sdkerrors.Wrapf(ErrInvalidProof, "could not calculate root for proof index 0, merkle tree is likely empty. %v", err)
+		}
+		key, err := mpath.GetKey(uint64(len(mpath.KeyPath) - 1))
+		if err != nil {
+			return sdkerrors.Wrapf(ErrInvalidProof, "could not retrieve key bytes for key: %s", mpath.KeyPath[len(mpath.KeyPath)-1])
+		}
+		if ok := ics23.VerifyNonMembership(specs[0], subroot, proof.Proofs[0], key); !ok {
+			return sdkerrors.Wrapf(ErrInvalidProof, "could not verify absence of key %s. please ensure that the path is correct.", string(key))
+		}
+
+		// Verify chained membership proof starting from index 1 with value = subroot
+		if err := verifyChainedMembershipProof(root.GetHash(), specs, proof.Proofs, mpath, subroot, 1); err != nil {
+			return err
+		}
 		break
 	case *ics23.CommitmentProof_Exist:
 		return sdkerrors.Wrapf(ErrInvalidProof,
@@ -179,14 +191,6 @@ func (proof MerkleProof) VerifyNonMembership(specs []*ics23.ProofSpec, root expo
 	default:
 		return sdkerrors.Wrapf(ErrInvalidProof,
 			"expected proof type: %T, got: %T", &ics23.CommitmentProof_Exist{}, proof.Proofs[0].Proof)
-	}
-	if ok := ics23.VerifyNonMembership(specs[0], subroot, proof.Proofs[0], key); !ok {
-		return sdkerrors.Wrapf(ErrInvalidProof, "could not verify absence of key %s. please ensure that the path is correct.", string(key))
-	}
-
-	// Verify chained membership proof starting from index 1 with value = subroot
-	if err := verifyChainedMembershipProof(root.GetHash(), specs, proof.Proofs, mpath, subroot, 1); err != nil {
-		return err
 	}
 	return nil
 }
@@ -218,18 +222,27 @@ func verifyChainedMembershipProof(root []byte, specs []*ics23.ProofSpec, proofs 
 	// In this case, there may be no intermediate proofs to verify and we just check that lowest proof root equals final root
 	subroot = value
 	for i := index; i < len(proofs); i++ {
-		subroot, err = proofs[i].Calculate()
-		if err != nil {
-			return sdkerrors.Wrapf(ErrInvalidProof, "could not calculate proof root at index %d, merkle tree may be empty. %v", i, err)
-		}
-		// Since keys are passed in from highest to lowest, we must grab their indices in reverse order
-		// from the proofs and specs which are lowest to highest
-		key, err := keys.GetKey(uint64(len(keys.KeyPath) - 1 - i))
-		if err != nil {
-			return sdkerrors.Wrapf(ErrInvalidProof, "could not retrieve key bytes for key: %s", keys.KeyPath[len(keys.KeyPath)-1-i])
-		}
 		switch proofs[i].Proof.(type) {
 		case *ics23.CommitmentProof_Exist:
+			subroot, err = proofs[i].Calculate()
+			if err != nil {
+				return sdkerrors.Wrapf(ErrInvalidProof, "could not calculate proof root at index %d, merkle tree may be empty. %v", i, err)
+			}
+			// Since keys are passed in from highest to lowest, we must grab their indices in reverse order
+			// from the proofs and specs which are lowest to highest
+			key, err := keys.GetKey(uint64(len(keys.KeyPath) - 1 - i))
+			if err != nil {
+				return sdkerrors.Wrapf(ErrInvalidProof, "could not retrieve key bytes for key %s: %v", keys.KeyPath[len(keys.KeyPath)-1-i], err)
+			}
+
+			// verify membership of the proof at this index with appropriate key and value
+			if ok := ics23.VerifyMembership(specs[i], subroot, proofs[i], key, value); !ok {
+				return sdkerrors.Wrapf(ErrInvalidProof,
+					"chained membership proof failed to verify membership of value: %X in subroot %X at index %d. please ensure the path and value are both correct.",
+					value, subroot, i)
+			}
+			// Set value to subroot so that we verify next proof in chain commits to this subroot
+			value = subroot
 			break
 		case *ics23.CommitmentProof_Nonexist:
 			return sdkerrors.Wrapf(ErrInvalidProof,
@@ -239,13 +252,6 @@ func verifyChainedMembershipProof(root []byte, specs []*ics23.ProofSpec, proofs 
 			return sdkerrors.Wrapf(ErrInvalidProof,
 				"expected proof type: %T, got: %T", &ics23.CommitmentProof_Exist{}, proofs[i].Proof)
 		}
-		if ok := ics23.VerifyMembership(specs[i], subroot, proofs[i], key, value); !ok {
-			return sdkerrors.Wrapf(ErrInvalidProof,
-				"chained membership proof failed to verify membership of value: %X in subroot %X at index %d. please ensure the path and value are both correct.",
-				value, subroot, i)
-		}
-		// Set value to subroot so that we verify next proof in chain commits to this subroot
-		value = subroot
 	}
 	// Check that chained proof root equals passed-in root
 	if !bytes.Equal(root, subroot) {

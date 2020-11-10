@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	query "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -126,19 +127,28 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 	// Query the tx via gRPC.
 	grpcRes, err := s.queryClient.TxsByEvents(
 		context.Background(),
-		&tx.GetTxsEventRequest{Event: "message.action=send", Page: 1, Limit: 10},
+		&tx.GetTxsEventRequest{Event: "message.action=send",
+			Pagination: &query.PageRequest{
+				CountTotal: false,
+				Offset:     0,
+				Limit:      1,
+			},
+		},
 	)
 	s.Require().NoError(err)
-	s.Require().Greater(len(grpcRes.Txs), 0)
+	s.Require().Equal(len(grpcRes.Txs), 1)
 	s.Require().Equal("foobar", grpcRes.Txs[0].Tx.Body.Memo)
 
 	// // Query the tx via grpc-gateway.
-	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?event=%s&page=%d&limit=%d", val.APIAddress, "message.action=send", 1, 10))
+	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?event=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action=send", 0, 1))
 	s.Require().NoError(err)
 	var getTxRes tx.TxsByEventsResponse
+	fmt.Println(string(restRes))
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getTxRes))
-	s.Require().Greater(len(grpcRes.Txs), 0)
+	s.Require().Equal(len(grpcRes.Txs), 1)
 	s.Require().Equal("foobar", getTxRes.Txs[0].Tx.Body.Memo)
+	s.Require().Zero(grpcRes.Txs[0].Index)
+	s.Require().NotZero(grpcRes.Txs[0].Height)
 }
 
 func (s IntegrationTestSuite) TestGetTx() {
@@ -171,14 +181,18 @@ func (s IntegrationTestSuite) TestGetTx() {
 		&tx.GetTxRequest{Hash: txRes.TxHash},
 	)
 	s.Require().NoError(err)
-	s.Require().Equal("foobar", grpcRes.Tx.Body.Memo)
+	s.Require().Equal("foobar", grpcRes.Result.Tx.Body.Memo)
+	s.Require().Zero(grpcRes.Result.Index)
+	s.Require().NotZero(grpcRes.Result.Height)
 
 	// Query the tx via grpc-gateway.
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/tx/%s", val.APIAddress, txRes.TxHash))
 	s.Require().NoError(err)
-	var getTxRes tx.TxResponse
+	var getTxRes tx.GetTxResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getTxRes))
-	s.Require().Equal("foobar", grpcRes.Tx.Body.Memo)
+	s.Require().Equal("foobar", grpcRes.Result.Tx.Body.Memo)
+	s.Require().Zero(grpcRes.Result.Index)
+	s.Require().NotZero(grpcRes.Result.Height)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

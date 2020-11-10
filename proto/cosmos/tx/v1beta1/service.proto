@@ -5,6 +5,8 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/abci/v1beta1/abci.proto";
 import "cosmos/tx/v1beta1/tx.proto";
+import "tendermint/types/types.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
 
@@ -15,7 +17,7 @@ service Service {
         option (google.api.http).post = "/cosmos/tx/v1beta1/simulate";
     }
     // GetTx fetches a tx by hash.
-    rpc GetTx(GetTxRequest) returns (TxResponse) {
+    rpc GetTx(GetTxRequest) returns (GetTxResponse) {
         option (google.api.http).get = "/cosmos/tx/v1beta1/tx/{hash}";
     }
 
@@ -29,25 +31,28 @@ service Service {
 // RPC method.
 message GetTxsEventRequest {
 
-    // event is the transaction event type.
+    // event is the of transaction event type.
     string event = 1;
 
-    // page is the page number
-    int64 page = 2;
+    // pagination defines an pagination for the request.
+    cosmos.base.query.v1beta1.PageRequest pagination = 2;
 
-    // limit defines per page limit
-    int64 limit = 3;
+
 }
 
 // TxsByEventsResponse is the response type for the Service.TxsByEvents
 // RPC method.
 message TxsByEventsResponse {
     // txs is the list of queried transactions.
-    repeated TxResponse txs = 1;
+    repeated TxRes txs = 1;
+
+    // pagination defines an pagination for the response.
+    cosmos.base.query.v1beta1.PageResponse pagination = 2;
+
 }
 
-// TxResponse defines a structure containing relevant tx data and metadata.
-message TxResponse {
+// TxRes defines a structure containing relevant tx data and metadata.
+message TxRes {
     option (gogoproto.goproto_getters) = false;
     // The block height
     int64 height = 1;
@@ -68,6 +73,11 @@ message TxResponse {
     int64 gas_wanted = 8;
     // Amount of gas consumed by transaction.
     int64 gas_used = 9;
+    // index defines the index of the transaction in the block.
+    uint32 index = 10;
+    // proof returns the transaction merkle proof of the presence of the transaction
+    // in the block
+    tendermint.types.TxProof proof = 11;
 }
 
 // SimulateRequest is the request type for the Service.Simulate
@@ -91,4 +101,11 @@ message SimulateResponse {
 message GetTxRequest {
     // hash is the tx hash to query, encoded as a hex string.
    string hash = 1;
+}
+
+// GetTxResponse is the response type for the Service.GetTx method.
+message GetTxResponse {
+    // TxRes is the queried transaction.
+    TxRes result = 1;
+  
 }

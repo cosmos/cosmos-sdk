@@ -10,9 +10,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	pagination "github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -46,10 +48,14 @@ const (
 // TxsByEvents implements the ServiceServer.TxsByEvents RPC method.
 func (s txServer) TxsByEvents(ctx context.Context, req *txtypes.GetTxsEventRequest) (*txtypes.TxsByEventsResponse, error) {
 
-	if req.Page < 0 {
-		return nil, status.Error(codes.InvalidArgument, "page must greater than 0")
+	offset := int(req.Pagination.Offset)
+	limit := int(req.Pagination.Limit)
+	page := offset/limit + 1
+
+	if page < 0 {
+		return nil, status.Error(codes.InvalidArgument, "offset must greater than 0")
 	}
-	if req.Limit < 0 {
+	if limit < 0 {
 		return nil, status.Error(codes.InvalidArgument, "limit must greater than 0")
 	}
 	if len(req.Event) == 0 {
@@ -61,7 +67,6 @@ func (s txServer) TxsByEvents(ctx context.Context, req *txtypes.GetTxsEventReque
 	} else {
 		events = append(events, req.Event)
 	}
-
 	tmEvents := make([]string, len(events))
 
 	for i, event := range events {
@@ -82,36 +87,29 @@ func (s txServer) TxsByEvents(ctx context.Context, req *txtypes.GetTxsEventReque
 	}
 
 	query := strings.Join(tmEvents, " AND ")
-	page := int(req.Page)
-	limit := int(req.Limit)
 
 	result, err := s.clientCtx.Client.TxSearch(ctx, query, false, &page, &limit, "")
+
 	if err != nil {
 		return nil, err
 	}
 	// Create a proto codec, we need it to unmarshal the tx bytes.
 	cdc := codec.NewProtoCodec(s.clientCtx.InterfaceRegistry)
-	res := make([]*txtypes.TxResponse, result.TotalCount)
-	var protoTx txtypes.Tx
+	res := make([]*txtypes.TxRes, len(result.Txs))
+
 	for i, tx := range result.Txs {
-		if err := cdc.UnmarshalBinaryBare(tx.Tx, &protoTx); err != nil {
+		result, err := txResponseToTxRes(cdc, tx)
+		if err != nil {
 			return nil, err
 		}
-		res[i] = &txtypes.TxResponse{
-			Code:      tx.TxResult.Code,
-			Codespace: tx.TxResult.Codespace,
-			GasUsed:   tx.TxResult.GasUsed,
-			GasWanted: tx.TxResult.GasWanted,
-			Height:    tx.Height,
-			Info:      tx.TxResult.Info,
-			RawLog:    tx.TxResult.Log,
-			TxHash:    tx.Hash.String(),
-			Tx:        &protoTx,
-		}
+		res[i] = result
 	}
 
 	return &txtypes.TxsByEventsResponse{
 		Txs: res,
+		Pagination: &pagination.PageResponse{
+			Total: uint64(result.TotalCount),
+		},
 	}, nil
 
 }
@@ -143,7 +141,7 @@ func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*
 }
 
 // GetTx implements the ServiceServer.GetTx RPC method.
-func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtypes.TxResponse, error) {
+func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtypes.GetTxResponse, error) {
 	// We get hash as a hex string in the request, convert it to bytes.
 	hash, err := hex.DecodeString(req.Hash)
 	if err != nil {
@@ -159,22 +157,14 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 
 	// Create a proto codec, we need it to unmarshal the tx bytes.
 	cdc := codec.NewProtoCodec(s.clientCtx.InterfaceRegistry)
-	var protoTx txtypes.Tx
 
-	if err := cdc.UnmarshalBinaryBare(result.Tx, &protoTx); err != nil {
+	resp, err := txResponseToTxRes(cdc, result)
+	if err != nil {
 		return nil, err
 	}
 
-	return &txtypes.TxResponse{
-		Code:      result.TxResult.Code,
-		Codespace: result.TxResult.Codespace,
-		GasUsed:   result.TxResult.GasUsed,
-		GasWanted: result.TxResult.GasWanted,
-		Height:    result.Height,
-		Info:      result.TxResult.Info,
-		RawLog:    result.TxResult.Log,
-		TxHash:    result.Hash.String(),
-		Tx:        &protoTx,
+	return &txtypes.GetTxResponse{
+		Result: resp,
 	}, nil
 }
 
@@ -195,4 +185,27 @@ func RegisterTxService(
 // given Mux.
 func RegisterGRPCGatewayRoutes(clientConn gogogrpc.ClientConn, mux *runtime.ServeMux) {
 	txtypes.RegisterServiceHandlerClient(context.Background(), mux, txtypes.NewServiceClient(clientConn))
+}
+
+func txResponseToTxRes(cdc *codec.ProtoCodec, result *coretypes.ResultTx) (*txtypes.TxRes, error) {
+	var protoTx txtypes.Tx
+
+	if err := cdc.UnmarshalBinaryBare(result.Tx, &protoTx); err != nil {
+		return nil, err
+	}
+	proof := result.Proof.ToProto()
+
+	return &txtypes.TxRes{
+		Code:      result.TxResult.Code,
+		Codespace: result.TxResult.Codespace,
+		GasUsed:   result.TxResult.GasUsed,
+		GasWanted: result.TxResult.GasWanted,
+		Height:    result.Height,
+		Info:      result.TxResult.Info,
+		RawLog:    result.TxResult.Log,
+		TxHash:    result.Hash.String(),
+		Tx:        &protoTx,
+		Proof:     &proof,
+		Index:     result.Index,
+	}, nil
 }

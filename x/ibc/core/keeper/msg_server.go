@@ -136,7 +136,7 @@ func (k Keeper) ConnectionOpenInit(goCtx context.Context, msg *connectiontypes.M
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			connectiontypes.EventTypeConnectionOpenInit,
-			sdk.NewAttribute(connectiontypes.AttributeConnectionKeyID, msg.ConnectionId),
+			sdk.NewAttribute(connectiontypes.AttributeKeyConnectionID, msg.ConnectionId),
 			sdk.NewAttribute(connectiontypes.AttributeKeyClientID, msg.ClientId),
 			sdk.NewAttribute(connectiontypes.AttributeKeyCounterpartyClientID, msg.Counterparty.ClientId),
 			sdk.NewAttribute(connectiontypes.AttributeKeyCounterpartyConnectionID, msg.Counterparty.ConnectionId),
@@ -170,7 +170,7 @@ func (k Keeper) ConnectionOpenTry(goCtx context.Context, msg *connectiontypes.Ms
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			connectiontypes.EventTypeConnectionOpenTry,
-			sdk.NewAttribute(connectiontypes.AttributeConnectionKeyID, msg.DesiredConnectionId),
+			sdk.NewAttribute(connectiontypes.AttributeKeyConnectionID, msg.DesiredConnectionId),
 			sdk.NewAttribute(connectiontypes.AttributeKeyClientID, msg.ClientId),
 			sdk.NewAttribute(connectiontypes.AttributeKeyCounterpartyClientID, msg.Counterparty.ClientId),
 			sdk.NewAttribute(connectiontypes.AttributeKeyCounterpartyConnectionID, msg.Counterparty.ConnectionId),
@@ -205,7 +205,7 @@ func (k Keeper) ConnectionOpenAck(goCtx context.Context, msg *connectiontypes.Ms
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			connectiontypes.EventTypeConnectionOpenAck,
-			sdk.NewAttribute(connectiontypes.AttributeConnectionKeyID, msg.ConnectionId),
+			sdk.NewAttribute(connectiontypes.AttributeKeyConnectionID, msg.ConnectionId),
 			sdk.NewAttribute(connectiontypes.AttributeKeyClientID, connectionEnd.ClientId),
 			sdk.NewAttribute(connectiontypes.AttributeKeyCounterpartyClientID, connectionEnd.Counterparty.ClientId),
 			sdk.NewAttribute(connectiontypes.AttributeKeyCounterpartyConnectionID, connectionEnd.Counterparty.ConnectionId),
@@ -234,7 +234,7 @@ func (k Keeper) ConnectionOpenConfirm(goCtx context.Context, msg *connectiontype
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			connectiontypes.EventTypeConnectionOpenConfirm,
-			sdk.NewAttribute(connectiontypes.AttributeConnectionKeyID, msg.ConnectionId),
+			sdk.NewAttribute(connectiontypes.AttributeKeyConnectionID, msg.ConnectionId),
 			sdk.NewAttribute(connectiontypes.AttributeKeyClientID, connectionEnd.ClientId),
 			sdk.NewAttribute(connectiontypes.AttributeKeyCounterpartyClientID, connectionEnd.Counterparty.ClientId),
 			sdk.NewAttribute(connectiontypes.AttributeKeyCounterpartyConnectionID, connectionEnd.Counterparty.ConnectionId),

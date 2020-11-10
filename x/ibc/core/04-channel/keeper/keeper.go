@@ -330,7 +330,7 @@ func (k Keeper) GetAllPacketAcks(ctx sdk.Context) (acks []types.PacketState) {
 // and stop.
 func (k Keeper) IterateChannels(ctx sdk.Context, cb func(types.IdentifiedChannel) bool) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, []byte(host.KeyChannelPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, []byte(host.KeyChannelEndPrefix))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

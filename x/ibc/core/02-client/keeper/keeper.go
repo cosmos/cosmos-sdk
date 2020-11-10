@@ -46,7 +46,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 // GetClientState gets a particular client from the store
 func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (exported.ClientState, bool) {
 	store := k.ClientStore(ctx, clientID)
-	bz := store.Get([]byte(host.KeyClientState))
+	bz := store.Get(host.ClientStateKey())
 	if bz == nil {
 		return nil, false
 	}
@@ -58,7 +58,7 @@ func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (exported.Clien
 // SetClientState sets a particular Client to the store
 func (k Keeper) SetClientState(ctx sdk.Context, clientID string, clientState exported.ClientState) {
 	store := k.ClientStore(ctx, clientID)
-	store.Set([]byte(host.KeyClientState), k.MustMarshalClientState(clientState))
+	store.Set(host.ClientStateKey(), k.MustMarshalClientState(clientState))
 }
 
 // GetClientConsensusState gets the stored consensus state from a client at a given height.

@@ -244,7 +244,7 @@ func (chain *TestChain) QueryClientStateProof(clientID string) (exported.ClientS
 	clientState, found := chain.App.IBCKeeper.ClientKeeper.GetClientState(chain.GetContext(), clientID)
 	require.True(chain.t, found)
 
-	clientKey := host.FullKeyClientPath(clientID, host.KeyClientState())
+	clientKey := host.FullClientStateKey(clientID)
 	proofClient, _ := chain.QueryProof(clientKey)
 
 	return clientState, proofClient
@@ -256,7 +256,7 @@ func (chain *TestChain) QueryConsensusStateProof(clientID string) ([]byte, clien
 	clientState := chain.GetClientState(clientID)
 
 	consensusHeight := clientState.GetLatestHeight().(clienttypes.Height)
-	consensusKey := host.FullKeyClientPath(clientID, host.KeyConsensusState(consensusHeight))
+	consensusKey := host.FullConsensusStateKey(clientID, consensusHeight)
 	proofConsensus, _ := chain.QueryProof(consensusKey)
 
 	return proofConsensus, consensusHeight
@@ -647,7 +647,7 @@ func (chain *TestChain) ConnectionOpenTry(
 ) error {
 	counterpartyClient, proofClient := counterparty.QueryClientStateProof(counterpartyConnection.ClientID)
 
-	connectionKey := host.KeyConnection(counterpartyConnection.ID)
+	connectionKey := host.ConnectionKey(counterpartyConnection.ID)
 	proofInit, proofHeight := counterparty.QueryProof(connectionKey)
 
 	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
@@ -670,7 +670,7 @@ func (chain *TestChain) ConnectionOpenAck(
 ) error {
 	counterpartyClient, proofClient := counterparty.QueryClientStateProof(counterpartyConnection.ClientID)
 
-	connectionKey := host.KeyConnection(counterpartyConnection.ID)
+	connectionKey := host.ConnectionKey(counterpartyConnection.ID)
 	proofTry, proofHeight := counterparty.QueryProof(connectionKey)
 
 	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
@@ -690,7 +690,7 @@ func (chain *TestChain) ConnectionOpenConfirm(
 	counterparty *TestChain,
 	connection, counterpartyConnection *TestConnection,
 ) error {
-	connectionKey := host.KeyConnection(counterpartyConnection.ID)
+	connectionKey := host.ConnectionKey(counterpartyConnection.ID)
 	proof, height := counterparty.QueryProof(connectionKey)
 
 	msg := connectiontypes.NewMsgConnectionOpenConfirm(

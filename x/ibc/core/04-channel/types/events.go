@@ -8,7 +8,7 @@ import (
 
 // IBC channel events
 const (
-	AttributeKeyConnectionID       = "connection_id"
+	AttributeConnectionKeyID       = "connection_id"
 	AttributeKeyPortID             = "port_id"
 	AttributeKeyChannelID          = "channel_id"
 	AttributeCounterpartyPortID    = "counterparty_port_id"

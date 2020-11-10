@@ -180,7 +180,7 @@ func (cs ClientState) VerifyClientState(
 		return err
 	}
 
-	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ClientStatePath()
+	clientPrefixedPath := host.FullClientStatePath(counterpartyClientIdentifier)
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	if err != nil {
 		return err
@@ -220,7 +220,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ConsensusStatePath(consensusHeight)
+	clientPrefixedPath := host.FullConsensusStatePath(counterpartyClientIdentifier, consensusHeight)
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	if err != nil {
 		return err

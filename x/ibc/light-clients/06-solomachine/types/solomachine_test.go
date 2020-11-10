@@ -49,7 +49,7 @@ func TestSoloMachineTestSuite(t *testing.T) {
 }
 
 func (suite *SoloMachineTestSuite) GetSequenceFromStore() uint64 {
-	bz := suite.store.Get(host.KeyClientState())
+	bz := suite.store.Get(host.ClientStateKey())
 	suite.Require().NotNil(bz)
 
 	var clientState exported.ClientState

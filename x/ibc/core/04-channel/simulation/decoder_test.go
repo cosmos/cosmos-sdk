@@ -35,23 +35,23 @@ func TestDecodeStore(t *testing.T) {
 				Value: cdc.MustMarshalBinaryBare(&channel),
 			},
 			{
-				Key:   host.KeyNextSequenceSend(portID, channelID),
+				Key:   host.NextSequenceSendKey(portID, channelID),
 				Value: sdk.Uint64ToBigEndian(1),
 			},
 			{
-				Key:   host.KeyNextSequenceRecv(portID, channelID),
+				Key:   host.NextSequenceRecvKey(portID, channelID),
 				Value: sdk.Uint64ToBigEndian(1),
 			},
 			{
-				Key:   host.KeyNextSequenceAck(portID, channelID),
+				Key:   host.NextSequenceAckKey(portID, channelID),
 				Value: sdk.Uint64ToBigEndian(1),
 			},
 			{
-				Key:   host.KeyPacketCommitment(portID, channelID, 1),
+				Key:   host.PacketCommitmentKey(portID, channelID, 1),
 				Value: bz,
 			},
 			{
-				Key:   host.KeyPacketAcknowledgement(portID, channelID, 1),
+				Key:   host.PacketAcknowledgementKey(portID, channelID, 1),
 				Value: bz,
 			},
 			{

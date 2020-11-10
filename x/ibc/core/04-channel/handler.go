@@ -25,7 +25,7 @@ func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, portCap *capabil
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelId),
 			sdk.NewAttribute(types.AttributeCounterpartyPortID, msg.Channel.Counterparty.PortId),
 			sdk.NewAttribute(types.AttributeCounterpartyChannelID, msg.Channel.Counterparty.ChannelId),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.Channel.ConnectionHops[0]),
+			sdk.NewAttribute(types.AttributeConnectionKeyID, msg.Channel.ConnectionHops[0]),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -54,7 +54,7 @@ func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capabili
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.DesiredChannelId),
 			sdk.NewAttribute(types.AttributeCounterpartyPortID, msg.Channel.Counterparty.PortId),
 			sdk.NewAttribute(types.AttributeCounterpartyChannelID, msg.Channel.Counterparty.ChannelId),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.Channel.ConnectionHops[0]),
+			sdk.NewAttribute(types.AttributeConnectionKeyID, msg.Channel.ConnectionHops[0]),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -85,7 +85,7 @@ func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, channelCap *capab
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelId),
 			sdk.NewAttribute(types.AttributeCounterpartyPortID, channel.Counterparty.PortId),
 			sdk.NewAttribute(types.AttributeCounterpartyChannelID, channel.Counterparty.ChannelId),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, channel.ConnectionHops[0]),
+			sdk.NewAttribute(types.AttributeConnectionKeyID, channel.ConnectionHops[0]),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -114,7 +114,7 @@ func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *c
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelId),
 			sdk.NewAttribute(types.AttributeCounterpartyPortID, channel.Counterparty.PortId),
 			sdk.NewAttribute(types.AttributeCounterpartyChannelID, channel.Counterparty.ChannelId),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, channel.ConnectionHops[0]),
+			sdk.NewAttribute(types.AttributeConnectionKeyID, channel.ConnectionHops[0]),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -143,7 +143,7 @@ func HandleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, channelCap *cap
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelId),
 			sdk.NewAttribute(types.AttributeCounterpartyPortID, channel.Counterparty.PortId),
 			sdk.NewAttribute(types.AttributeCounterpartyChannelID, channel.Counterparty.ChannelId),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, channel.ConnectionHops[0]),
+			sdk.NewAttribute(types.AttributeConnectionKeyID, channel.ConnectionHops[0]),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -172,7 +172,7 @@ func HandleMsgChannelCloseConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelId),
 			sdk.NewAttribute(types.AttributeCounterpartyPortID, channel.Counterparty.PortId),
 			sdk.NewAttribute(types.AttributeCounterpartyChannelID, channel.Counterparty.ChannelId),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, channel.ConnectionHops[0]),
+			sdk.NewAttribute(types.AttributeConnectionKeyID, channel.ConnectionHops[0]),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

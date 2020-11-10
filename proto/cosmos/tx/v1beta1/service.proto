@@ -31,12 +31,11 @@ service Service {
 // RPC method.
 message GetTxsEventRequest {
 
-    // event is the of transaction event type.
+    // event is the transaction event type.
     string event = 1;
 
     // pagination defines an pagination for the request.
     cosmos.base.query.v1beta1.PageRequest pagination = 2;
-
 
 }
 
@@ -96,7 +95,7 @@ message SimulateResponse {
     cosmos.base.abci.v1beta1.Result result = 2;
 }
 
-// GetTx is the request type for the Service.GetTx
+// GetTxRequest is the request type for the Service.GetTx
 // RPC method.
 message GetTxRequest {
     // hash is the tx hash to query, encoded as a hex string.

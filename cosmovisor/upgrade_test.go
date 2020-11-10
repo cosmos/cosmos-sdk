@@ -1,42 +1,37 @@
 // +build linux
 
-package cosmovisor
+package cosmovisor_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	copy2 "github.com/otiai10/copy"
-
-	"github.com/stretchr/testify/assert"
+	"github.com/otiai10/copy"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/cosmovisor"
 )
 
 func TestCurrentBin(t *testing.T) {
-	home, err := copyTestData("validate")
-	require.NoError(t, err)
-	defer os.RemoveAll(home)
-
-	cfg := Config{Home: home, Name: "dummyd"}
+	home := copyTestData(t, "validate")
+	cfg := cosmovisor.Config{Home: home, Name: "dummyd"}
 
 	currentBin, err := cfg.CurrentBin()
 	require.NoError(t, err)
 
-	assert.Equal(t, cfg.GenesisBin(), currentBin)
+	require.Equal(t, cfg.GenesisBin(), currentBin)
 
 	// ensure we cannot set this to an invalid value
 	for _, name := range []string{"missing", "nobin", "noexec"} {
-		err = cfg.SetCurrentUpgrade(name)
-		require.Error(t, err, name)
+		require.Error(t, cfg.SetCurrentUpgrade(name), name)
 
 		currentBin, err := cfg.CurrentBin()
 		require.NoError(t, err)
 
-		assert.Equal(t, cfg.GenesisBin(), currentBin, name)
+		require.Equal(t, cfg.GenesisBin(), currentBin, name)
 	}
 
 	// try a few times to make sure this can be reproduced
@@ -48,32 +43,29 @@ func TestCurrentBin(t *testing.T) {
 		currentBin, err := cfg.CurrentBin()
 		require.NoError(t, err)
 
-		assert.Equal(t, cfg.UpgradeBin(upgrade), currentBin)
+		require.Equal(t, cfg.UpgradeBin(upgrade), currentBin)
 	}
 }
 
 func TestCurrentAlwaysSymlinkToDirectory(t *testing.T) {
-	home, err := copyTestData("validate")
-	require.NoError(t, err)
-	defer os.RemoveAll(home)
-
-	cfg := Config{Home: home, Name: "dummyd"}
+	home := copyTestData(t, "validate")
+	cfg := cosmovisor.Config{Home: home, Name: "dummyd"}
 
 	currentBin, err := cfg.CurrentBin()
 	require.NoError(t, err)
-	assert.Equal(t, cfg.GenesisBin(), currentBin)
+	require.Equal(t, cfg.GenesisBin(), currentBin)
 	assertCurrentLink(t, cfg, "genesis")
 
 	err = cfg.SetCurrentUpgrade("chain2")
 	require.NoError(t, err)
 	currentBin, err = cfg.CurrentBin()
 	require.NoError(t, err)
-	assert.Equal(t, cfg.UpgradeBin("chain2"), currentBin)
+	require.Equal(t, cfg.UpgradeBin("chain2"), currentBin)
 	assertCurrentLink(t, cfg, filepath.Join("upgrades", "chain2"))
 }
 
-func assertCurrentLink(t *testing.T, cfg Config, target string) {
-	link := filepath.Join(cfg.Root(), currentLink)
+func assertCurrentLink(t *testing.T, cfg cosmovisor.Config, target string) {
+	link := filepath.Join(cfg.Root(), "current")
 	// ensure this is a symlink
 	info, err := os.Lstat(link)
 	require.NoError(t, err)
@@ -87,45 +79,42 @@ func assertCurrentLink(t *testing.T, cfg Config, target string) {
 
 // TODO: test with download (and test all download functions)
 func TestDoUpgradeNoDownloadUrl(t *testing.T) {
-	home, err := copyTestData("validate")
-	require.NoError(t, err)
-	defer os.RemoveAll(home)
-
-	cfg := &Config{Home: home, Name: "dummyd", AllowDownloadBinaries: true}
+	home := copyTestData(t, "validate")
+	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", AllowDownloadBinaries: true}
 
 	currentBin, err := cfg.CurrentBin()
 	require.NoError(t, err)
 
-	assert.Equal(t, cfg.GenesisBin(), currentBin)
+	require.Equal(t, cfg.GenesisBin(), currentBin)
 
 	// do upgrade ignores bad files
 	for _, name := range []string{"missing", "nobin", "noexec"} {
-		info := &UpgradeInfo{Name: name}
-		err = DoUpgrade(cfg, info)
+		info := &cosmovisor.UpgradeInfo{Name: name}
+		err = cosmovisor.DoUpgrade(cfg, info)
 		require.Error(t, err, name)
 		currentBin, err := cfg.CurrentBin()
 		require.NoError(t, err)
-		assert.Equal(t, cfg.GenesisBin(), currentBin, name)
+		require.Equal(t, cfg.GenesisBin(), currentBin, name)
 	}
 
 	// make sure it updates a few times
 	for _, upgrade := range []string{"chain2", "chain3"} {
 		// now set it to a valid upgrade and make sure CurrentBin is now set properly
-		info := &UpgradeInfo{Name: upgrade}
-		err = DoUpgrade(cfg, info)
+		info := &cosmovisor.UpgradeInfo{Name: upgrade}
+		err = cosmovisor.DoUpgrade(cfg, info)
 		require.NoError(t, err)
 		// we should see current point to the new upgrade dir
 		upgradeBin := cfg.UpgradeBin(upgrade)
 		currentBin, err := cfg.CurrentBin()
 		require.NoError(t, err)
 
-		assert.Equal(t, upgradeBin, currentBin)
+		require.Equal(t, upgradeBin, currentBin)
 	}
 }
 
 func TestOsArch(t *testing.T) {
 	// all download tests will fail if we are not on linux...
-	assert.Equal(t, "linux/amd64", osArch())
+	require.Equal(t, "linux/amd64", cosmovisor.OSArch())
 }
 
 func TestGetDownloadURL(t *testing.T) {
@@ -175,12 +164,12 @@ func TestGetDownloadURL(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			url, err := GetDownloadURL(&UpgradeInfo{Info: tc.info})
+			url, err := cosmovisor.GetDownloadURL(&cosmovisor.UpgradeInfo{Info: tc.info})
 			if tc.isErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tc.url, url)
+				require.NoError(t, err)
+				require.Equal(t, tc.url, url)
 			}
 		})
 	}
@@ -230,12 +219,11 @@ func TestDownloadBinary(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
+			var err error
 			// make temp dir
-			home, err := copyTestData("download")
-			require.NoError(t, err)
-			defer os.RemoveAll(home)
+			home := copyTestData(t, "download")
 
-			cfg := &Config{
+			cfg := &cosmovisor.Config{
 				Home:                  home,
 				Name:                  "autod",
 				AllowDownloadBinaries: true,
@@ -249,19 +237,19 @@ func TestDownloadBinary(t *testing.T) {
 			}
 
 			upgrade := "amazonas"
-			info := &UpgradeInfo{
+			info := &cosmovisor.UpgradeInfo{
 				Name: upgrade,
-				Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, osArch(), url),
+				Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, cosmovisor.OSArch(), url),
 			}
 
-			err = DownloadBinary(cfg, info)
+			err = cosmovisor.DownloadBinary(cfg, info)
 			if !tc.canDownload {
-				assert.Error(t, err)
+				require.Error(t, err)
 				return
 			}
 			require.NoError(t, err)
 
-			err = EnsureBinary(cfg.UpgradeBin(upgrade))
+			err = cosmovisor.EnsureBinary(cfg.UpgradeBin(upgrade))
 			if tc.validBinary {
 				require.NoError(t, err)
 			} else {
@@ -274,19 +262,12 @@ func TestDownloadBinary(t *testing.T) {
 // copyTestData will make a tempdir and then
 // "cp -r" a subdirectory under testdata there
 // returns the directory (which can now be used as Config.Home) and modified safely
-func copyTestData(subdir string) (string, error) {
-	tmpdir, err := ioutil.TempDir("", "upgrade-manager-test")
-	if err != nil {
-		return "", fmt.Errorf("couldn't create temporary directory: %w", err)
-	}
+func copyTestData(t *testing.T, subdir string) string {
+	t.Helper()
 
-	src := filepath.Join("testdata", subdir)
+	tmpdir := t.TempDir()
 
-	err = copy2.Copy(src, tmpdir)
-	if err != nil {
-		os.RemoveAll(tmpdir)
-		return "", fmt.Errorf("couldn't copy files: %w", err)
-	}
+	require.NoError(t, copy.Copy(filepath.Join("testdata", subdir), tmpdir))
 
-	return tmpdir, nil
+	return tmpdir
 }

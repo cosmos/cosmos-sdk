@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestConfigPaths(t *testing.T) {
@@ -34,9 +34,9 @@ func TestConfigPaths(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			assert.Equal(t, tc.cfg.Root(), filepath.FromSlash(tc.expectRoot))
-			assert.Equal(t, tc.cfg.GenesisBin(), filepath.FromSlash(tc.expectGenesis))
-			assert.Equal(t, tc.cfg.UpgradeBin(tc.upgradeName), filepath.FromSlash(tc.expectUpgrade))
+			require.Equal(t, tc.cfg.Root(), filepath.FromSlash(tc.expectRoot))
+			require.Equal(t, tc.cfg.GenesisBin(), filepath.FromSlash(tc.expectGenesis))
+			require.Equal(t, tc.cfg.UpgradeBin(tc.upgradeName), filepath.FromSlash(tc.expectUpgrade))
 		})
 	}
 }
@@ -45,10 +45,10 @@ func TestConfigPaths(t *testing.T) {
 func TestValidate(t *testing.T) {
 	relPath := filepath.Join("testdata", "validate")
 	absPath, err := filepath.Abs(relPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	testdata, err := filepath.Abs("testdata")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	cases := map[string]struct {
 		cfg   Config
@@ -88,9 +88,9 @@ func TestValidate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			err := tc.cfg.validate()
 			if tc.valid {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			} else {
-				assert.Error(t, err)
+				require.Error(t, err)
 			}
 		})
 	}
@@ -99,13 +99,12 @@ func TestValidate(t *testing.T) {
 func TestEnsureBin(t *testing.T) {
 	relPath := filepath.Join("testdata", "validate")
 	absPath, err := filepath.Abs(relPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	cfg := Config{Home: absPath, Name: "dummyd"}
-	assert.NoError(t, cfg.validate())
+	require.NoError(t, cfg.validate())
 
-	err = EnsureBinary(cfg.GenesisBin())
-	assert.NoError(t, err)
+	require.NoError(t, EnsureBinary(cfg.GenesisBin()))
 
 	cases := map[string]struct {
 		upgrade string
@@ -121,9 +120,9 @@ func TestEnsureBin(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			err := EnsureBinary(cfg.UpgradeBin(tc.upgrade))
 			if tc.hasBin {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			} else {
-				assert.Error(t, err)
+				require.Error(t, err)
 			}
 		})
 	}

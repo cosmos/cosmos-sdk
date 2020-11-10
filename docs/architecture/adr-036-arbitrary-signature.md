@@ -18,6 +18,7 @@ Draft
 
 Currently, in the SDK, there is no convention to sign arbitrary message like on Ethereum. We propose with this specification a way to sign arbitrary message for Cosmos SDK chains.
 
+This specification serves the purpose of covering every use case, this means that cosmos-sdk applications developers decide how to serialize and represent `Data` to users. 
 ## Context
 
 Having the ability to sign messages off-chain has proven to be a fundamental aspect of nearly any blockchain. The notion of signing messages off-chain has many added benefits such as saving on computational costs and reducing transaction throughput and overhead. Within the context of the Cosmos, some of the major applications of signing such data includes, but is not limited to, providing a cryptographic secure and verifiable means of proving validator identity and possibly associating it with some other framework or organization. In addition, having the ability to sign Cosmos messages with a Ledger or similar HSM device.
@@ -38,7 +39,8 @@ A spec should include an auth info that supports SIGN_MODE_DIRECT and SIGN_MODE_
 - chain-id must be equal to “signature”
 - fee gas must be equal to 0
 - fee amount must be an empty array
-- Inside the message with type `MsgSignData`, we put inside *bytes* data and the `address` of the signer.
+- inside the message with type `MsgSignData`, we put inside *bytes* data and the `address` of the signer.
+- it's applications developers decision how `Data` should be treated, by treated we mean the serialization and deserialization process and the Object `Data` should represent. 
 
 Proto definition:
 ```proto
@@ -92,11 +94,15 @@ Backwards compatibility is maintained as this is a new message spec definition.
 
 ### Positive
 
-- A common format that can be used by multiple applications to sign and verify offchain messages.
+- A common format that can be used by multiple applications to sign and verify off-chain messages.
+- The specification is primitive which means it can cover every use case without limiting what is possible to fit inside it.
+- It gives room for other off-chain messages specifications that aim to target more specific and common use cases such as off-chain-based authN/authZ layers [2].
 
 ### Negative
+
 
 
 ## References
 
 1. https://github.com/cosmos/ics/pull/33
+2. https://github.com/cosmos/cosmos-sdk/pull/7727#discussion_r515668204

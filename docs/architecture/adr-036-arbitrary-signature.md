@@ -16,7 +16,7 @@ Draft
 
 ## Abstract
 
-Currently, in the SDK, there is no convention to sign arbitrary message like on Ethereum. We propose with this specification a way to sign arbitrary message for Cosmos SDK chains.
+Currently, in the SDK, there is no convention to sign arbitrary message like on Ethereum. We propose with this specification, for Cosmos SDK ecosystem, a way to sign and validate off-chain arbitrary messages.
 
 ## Context
 

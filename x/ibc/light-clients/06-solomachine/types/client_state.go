@@ -4,6 +4,7 @@ import (
 	ics23 "github.com/confio/ics23/go"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -95,7 +96,7 @@ func (cs ClientState) VerifyClientState(
 	proof []byte,
 	clientState exported.ClientState,
 ) error {
-	sigData, timestamp, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
+	publicKey, sigData, timestamp, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -111,7 +112,7 @@ func (cs ClientState) VerifyClientState(
 		return err
 	}
 
-	if err := VerifySignature(cs.ConsensusState.GetPubKey(), signBz, sigData); err != nil {
+	if err := VerifySignature(publicKey, signBz, sigData); err != nil {
 		return err
 	}
 
@@ -133,7 +134,7 @@ func (cs ClientState) VerifyClientConsensusState(
 	proof []byte,
 	consensusState exported.ConsensusState,
 ) error {
-	sigData, timestamp, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
+	publicKey, sigData, timestamp, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -149,7 +150,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	if err := VerifySignature(cs.ConsensusState.GetPubKey(), signBz, sigData); err != nil {
+	if err := VerifySignature(publicKey, signBz, sigData); err != nil {
 		return err
 	}
 
@@ -170,7 +171,7 @@ func (cs ClientState) VerifyConnectionState(
 	connectionID string,
 	connectionEnd exported.ConnectionI,
 ) error {
-	sigData, timestamp, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
+	publicKey, sigData, timestamp, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -186,7 +187,7 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	if err := VerifySignature(cs.ConsensusState.GetPubKey(), signBz, sigData); err != nil {
+	if err := VerifySignature(publicKey, signBz, sigData); err != nil {
 		return err
 	}
 
@@ -208,7 +209,7 @@ func (cs ClientState) VerifyChannelState(
 	channelID string,
 	channel exported.ChannelI,
 ) error {
-	sigData, timestamp, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
+	publicKey, sigData, timestamp, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -224,7 +225,7 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	if err := VerifySignature(cs.ConsensusState.GetPubKey(), signBz, sigData); err != nil {
+	if err := VerifySignature(publicKey, signBz, sigData); err != nil {
 		return err
 	}
 
@@ -247,7 +248,7 @@ func (cs ClientState) VerifyPacketCommitment(
 	packetSequence uint64,
 	commitmentBytes []byte,
 ) error {
-	sigData, timestamp, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
+	publicKey, sigData, timestamp, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -263,7 +264,7 @@ func (cs ClientState) VerifyPacketCommitment(
 		return err
 	}
 
-	if err := VerifySignature(cs.ConsensusState.GetPubKey(), signBz, sigData); err != nil {
+	if err := VerifySignature(publicKey, signBz, sigData); err != nil {
 		return err
 	}
 
@@ -286,7 +287,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	packetSequence uint64,
 	acknowledgement []byte,
 ) error {
-	sigData, timestamp, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
+	publicKey, sigData, timestamp, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -302,7 +303,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		return err
 	}
 
-	if err := VerifySignature(cs.ConsensusState.GetPubKey(), signBz, sigData); err != nil {
+	if err := VerifySignature(publicKey, signBz, sigData); err != nil {
 		return err
 	}
 
@@ -325,7 +326,7 @@ func (cs ClientState) VerifyPacketReceiptAbsence(
 	channelID string,
 	packetSequence uint64,
 ) error {
-	sigData, timestamp, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
+	publicKey, sigData, timestamp, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -341,7 +342,7 @@ func (cs ClientState) VerifyPacketReceiptAbsence(
 		return err
 	}
 
-	if err := VerifySignature(cs.ConsensusState.GetPubKey(), signBz, sigData); err != nil {
+	if err := VerifySignature(publicKey, signBz, sigData); err != nil {
 		return err
 	}
 
@@ -363,7 +364,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	channelID string,
 	nextSequenceRecv uint64,
 ) error {
-	sigData, timestamp, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
+	publicKey, sigData, timestamp, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -379,7 +380,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		return err
 	}
 
-	if err := VerifySignature(cs.ConsensusState.GetPubKey(), signBz, sigData); err != nil {
+	if err := VerifySignature(publicKey, signBz, sigData); err != nil {
 		return err
 	}
 
@@ -390,71 +391,76 @@ func (cs ClientState) VerifyNextSequenceRecv(
 }
 
 // produceVerificationArgs perfoms the basic checks on the arguments that are
-// shared between the verification functions and returns the unmarshalled
-// proof representing the signature and timestamp along with the solo-machine sequence
-// encoded in the proofHeight.
+// shared between the verification functions and returns the public key of the
+// consensus state, the unmarshalled proof representing the signature and timestamp
+// along with the solo-machine sequence encoded in the proofHeight.
 func produceVerificationArgs(
 	cdc codec.BinaryMarshaler,
 	cs ClientState,
 	height exported.Height,
 	prefix exported.Prefix,
 	proof []byte,
-) (signing.SignatureData, uint64, uint64, error) {
+) (cryptotypes.PubKey, signing.SignatureData, uint64, uint64, error) {
 	if version := height.GetVersionNumber(); version != 0 {
-		return nil, 0, 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "version must be 0 for solomachine, got version-number: %d", version)
+		return nil, nil, 0, 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "version must be 0 for solomachine, got version-number: %d", version)
 	}
 	// sequence is encoded in the version height of height struct
 	sequence := height.GetVersionHeight()
 	if cs.IsFrozen() {
-		return nil, 0, 0, clienttypes.ErrClientFrozen
+		return nil, nil, 0, 0, clienttypes.ErrClientFrozen
 	}
 
 	if prefix == nil {
-		return nil, 0, 0, sdkerrors.Wrap(commitmenttypes.ErrInvalidPrefix, "prefix cannot be empty")
+		return nil, nil, 0, 0, sdkerrors.Wrap(commitmenttypes.ErrInvalidPrefix, "prefix cannot be empty")
 	}
 
 	_, ok := prefix.(commitmenttypes.MerklePrefix)
 	if !ok {
-		return nil, 0, 0, sdkerrors.Wrapf(commitmenttypes.ErrInvalidPrefix, "invalid prefix type %T, expected MerklePrefix", prefix)
+		return nil, nil, 0, 0, sdkerrors.Wrapf(commitmenttypes.ErrInvalidPrefix, "invalid prefix type %T, expected MerklePrefix", prefix)
 	}
 
 	if proof == nil {
-		return nil, 0, 0, sdkerrors.Wrap(ErrInvalidProof, "proof cannot be empty")
+		return nil, nil, 0, 0, sdkerrors.Wrap(ErrInvalidProof, "proof cannot be empty")
 	}
 
 	timestampedSigData := &TimestampedSignatureData{}
 	if err := cdc.UnmarshalBinaryBare(proof, timestampedSigData); err != nil {
-		return nil, 0, 0, sdkerrors.Wrapf(err, "failed to unmarshal proof into type %T", timestampedSigData)
+		return nil, nil, 0, 0, sdkerrors.Wrapf(err, "failed to unmarshal proof into type %T", timestampedSigData)
 	}
 
 	timestamp := timestampedSigData.Timestamp
 
 	if len(timestampedSigData.SignatureData) == 0 {
-		return nil, 0, 0, sdkerrors.Wrap(ErrInvalidProof, "signature data cannot be empty")
+		return nil, nil, 0, 0, sdkerrors.Wrap(ErrInvalidProof, "signature data cannot be empty")
 	}
 
 	sigData, err := UnmarshalSignatureData(cdc, timestampedSigData.SignatureData)
 	if err != nil {
-		return nil, 0, 0, err
+		return nil, nil, 0, 0, err
 	}
 
 	if cs.ConsensusState == nil {
-		return nil, 0, 0, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
+		return nil, nil, 0, 0, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
 	}
 
 	latestSequence := cs.GetLatestHeight().GetVersionHeight()
 	if latestSequence != sequence {
-		return nil, 0, 0, sdkerrors.Wrapf(
+		return nil, nil, 0, 0, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
 			"client state sequence != proof sequence (%d != %d)", latestSequence, sequence,
 		)
 	}
 
 	if cs.ConsensusState.GetTimestamp() > timestamp {
-		return nil, 0, 0, sdkerrors.Wrapf(ErrInvalidProof, "the consensus state timestamp is greater than the signature timestamp (%d >= %d)", cs.ConsensusState.GetTimestamp(), timestamp)
+		return nil, nil, 0, 0, sdkerrors.Wrapf(ErrInvalidProof, "the consensus state timestamp is greater than the signature timestamp (%d >= %d)", cs.ConsensusState.GetTimestamp(), timestamp)
 	}
 
-	return sigData, timestamp, sequence, nil
+	publicKey, err := cs.ConsensusState.GetPubKey()
+	if err != nil {
+		return nil, nil, 0, 0, err
+	}
+
+	return publicKey, sigData, timestamp, sequence, nil
 }
 
 // sets the client state to the store

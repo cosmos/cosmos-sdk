@@ -2,6 +2,7 @@ package rosetta
 
 import (
 	"context"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,6 +10,8 @@ import (
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 	"github.com/tendermint/cosmos-rosetta-gateway/service"
 	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // list of supported operations
@@ -23,6 +26,7 @@ const (
 	AccountNumber     = "account_number"
 	ChainId           = "chain_id"
 	OperationTransfer = "transfer"
+	OperationSend  = "send"
 )
 
 // Synchronization stage constants used to determine if a node is synced or catching up
@@ -38,7 +42,7 @@ func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter)
 			Blockchain:          networkIdentifier.Blockchain,
 			Network:             networkIdentifier.Network,
 			AddrPrefix:          sdk.GetConfig().GetBech32AccountAddrPrefix(), // since we're inside cosmos sdk the config is supposed to be sealed
-			SupportedOperations: []string{OperationTransfer},
+			SupportedOperations: []string{OperationSend},
 		},
 		Adapter: adapter,
 	}
@@ -63,6 +67,8 @@ type DataAPIClient interface {
 	BlockByHash(ctx context.Context, hash string) (*tmtypes.ResultBlock, []*SdkTxWithHash, error)
 	// BlockByHeight gets a block given its height, if height is nil then last block is returned
 	BlockByHeight(ctx context.Context, height *int64) (*tmtypes.ResultBlock, []*SdkTxWithHash, error)
+	// Coins gets the supply of the coins active in the network
+	Coins(ctx context.Context) (sdk.Coins, error)
 	// GetTx gets a transaction given its hash
 	GetTx(ctx context.Context, hash string) (sdk.Tx, error)
 	// GetUnconfirmedTx gets an unconfirmed Tx given its hash
@@ -106,9 +112,9 @@ func Allow() *types.Allow {
 				Successful: false,
 			},
 		},
-		OperationTypes:          []string{OperationMsgSend},
+		OperationTypes:          []string{OperationSend},
 		Errors:                  AllowedErrors.RosettaErrors(),
-		HistoricalBalanceLookup: false,
+		HistoricalBalanceLookup: true,
 		TimestampStartIndex:     nil,
 		CallMethods:             nil,
 		BalanceExemptions:       nil,

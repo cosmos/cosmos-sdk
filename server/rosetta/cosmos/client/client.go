@@ -4,6 +4,14 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"strconv"
+
+	"google.golang.org/grpc/metadata"
+
+	"github.com/tendermint/tendermint/rpc/client/http"
+	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
+	"google.golang.org/grpc"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -16,9 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/tendermint/tendermint/rpc/client/http"
-	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
-	"google.golang.org/grpc"
 )
 
 // interface assertion
@@ -34,7 +39,6 @@ type options struct {
 
 // newDefaultOptions builds the default options
 func newDefaultOptions() options {
-	// create codec and interface registry
 	cdc, ir := MakeCodec()
 	return options{
 		interfaceRegistry: ir,
@@ -63,27 +67,25 @@ type Client struct {
 	client client.Context
 }
 
-// NewSingleNetwork instantiates a single network client
+// NewSingle instantiates a single network client
 func NewSingle(grpcEndpoint, tendermintEndpoint string, optsFunc ...OptionFunc) (*Client, error) {
-	// set options
 	opts := newDefaultOptions()
 	for _, optFunc := range optsFunc {
 		optFunc(&opts)
 	}
-	// connect to gRPC endpoint
+
 	grpcConn, err := grpc.Dial(grpcEndpoint, grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}
-	// connect to tendermint
+
 	tmRPC, err := http.New(tendermintEndpoint, tmWebsocketPath)
 	if err != nil {
 		return nil, err
 	}
-	// build clients
+
 	authClient := auth.NewQueryClient(grpcConn)
 	bankClient := bank.NewQueryClient(grpcConn)
-	// build client context
 	// NodeURI and Client are set from here otherwise
 	// WitNodeURI will require to create a new client
 	// it's done here because WithNodeURI panics if
@@ -99,7 +101,6 @@ func NewSingle(grpcEndpoint, tendermintEndpoint string, optsFunc ...OptionFunc) 
 		WithAccountRetriever(auth.AccountRetriever{}).
 		WithBroadcastMode(flags.BroadcastBlock)
 
-	// done
 	return &Client{
 		auth:   authClient,
 		bank:   bankClient,
@@ -131,18 +132,16 @@ func (c *Client) AccountInfo(ctx context.Context, addr string, height *int64) (a
 }
 
 func (c *Client) Balances(ctx context.Context, addr string, height *int64) ([]sdk.Coin, error) {
-	// if height is set, send height instruction to account
 	if height != nil {
-		ctx = context.WithValue(ctx, grpctypes.GRPCBlockHeightHeader, *height)
+		strHeight := strconv.FormatInt(*height, 10)
+		ctx = metadata.AppendToOutgoingContext(ctx, grpctypes.GRPCBlockHeightHeader, strHeight)
 	}
-	// retrieve balance
 	balance, err := c.bank.AllBalances(ctx, &bank.QueryAllBalancesRequest{
 		Address: addr,
 	})
 	if err != nil {
 		return nil, rosetta.FromGRPCToRosettaError(err)
 	}
-	// success
 	return balance.Balances, nil
 }
 
@@ -152,7 +151,7 @@ func (c *Client) BlockByHash(ctx context.Context, hash string) (*tmtypes.ResultB
 	if err != nil {
 		return nil, nil, rosetta.WrapError(rosetta.ErrBadArgument, fmt.Sprintf("invalid block hash: %s", err))
 	}
-	// get block
+
 	block, err := c.client.Client.BlockByHash(ctx, bHash)
 	if err != nil {
 		return nil, nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error()) // can be either a connection error or bad argument?
@@ -178,16 +177,27 @@ func (c *Client) BlockByHeight(ctx context.Context, height *int64) (*tmtypes.Res
 	return block, txs, err
 }
 
+// Coins fetches the existing coins in the application
+func (c *Client) Coins(ctx context.Context) (sdk.Coins, error) {
+	supply, err := c.bank.TotalSupply(ctx, &bank.QueryTotalSupplyRequest{})
+	if err != nil {
+		return nil, rosetta.FromGRPCToRosettaError(err)
+	}
+	return supply.Supply, nil
+}
+
 // ListTransactionsInBlock returns the list of the transactions in a block given its height
 func (c *Client) ListTransactionsInBlock(ctx context.Context, height int64) ([]*rosetta.SdkTxWithHash, error) {
-	// prepare tx list query
 	txQuery := fmt.Sprintf(`tx.height=%d`, height)
-	// get tx
 	txList, err := c.client.Client.TxSearch(ctx, txQuery, true, nil, nil, "")
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
 	}
+
 	sdkTxs, err := conversion.TmResultTxsToSdkTxs(c.client.TxConfig.TxDecoder(), txList.Txs)
+	if err != nil {
+		return nil, err
+	}
 	return sdkTxs, nil
 }
 

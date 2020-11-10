@@ -2,15 +2,17 @@ package config
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/spf13/pflag"
+	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/client"
 	"github.com/cosmos/cosmos-sdk/server/rosetta/services"
-	"github.com/spf13/pflag"
-	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
-	"strings"
-	"time"
 )
 
 // configuration defaults constants
@@ -81,24 +83,24 @@ func RetryRosettaFromConfig(conf *Config) (rosetta crg.Adapter, err error) {
 type Config struct {
 	// Blockchain defines the blockchain name
 	// defaults to DefaultBlockchain
-	Blockchain string `json:"blockchain" yaml:"blockchain" env:"ROSETTA_BLOCKCHAIN"`
+	Blockchain string
 	// Network defines the network name
-	Network string `json:"network" yaml:"network" env:"ROSETTA_NETWORK"`
+	Network string
 	// TendermintRPC defines the endpoint to connect to
 	// tendermint RPC, specifying 'tcp://' before is not
 	// required, usually it's at port 26657 of the
-	TendermintRPC string `json:"tendermint_rpc" yaml:"tendermintRPC" env:"ROSETTA_TENDERMINT_RPC"`
+	TendermintRPC string
 	// GRPCEndpoint defines the cosmos application gRPC endpoint
 	// usually it is located at 9090 port
-	GRPCEndpoint string `json:"grpc_endpoint" yaml:"gRPCEndpoint" env:"ROSETTA_GRPC_ENDPOINT"`
+	GRPCEndpoint string
 	// Addr defines the default address to bind the rosetta server to
 	// defaults to DefaultAddr
-	Addr string `json:"addr" yaml:"addr" env:"ROSETTA_ADDR"`
+	Addr string
 	// Retries defines the maximum number of retries
 	// rosetta will do before quitting
-	Retries int `json:"retries" yaml:"retries" env:"ROSETTA_RETRIES"`
+	Retries int
 	// Offline defines if the server must be run in offline mode
-	Offline bool `json:"offline" yaml:"offline" env:"ROSETTA_OFFLINE"`
+	Offline bool
 	// codec overrides the default data and construction api client codecs
 	codec *codec.ProtoCodec
 	// ir overrides the default data and construction api interface registry
@@ -183,6 +185,9 @@ func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 		return nil, err
 	}
 	offline, err := flags.GetBool(FlagOffline)
+	if err != nil {
+		return nil, err
+	}
 	conf := &Config{
 		Blockchain:    blockchain,
 		Network:       network,
@@ -208,5 +213,4 @@ func SetFlags(flags *pflag.FlagSet) {
 	flags.String(FlagAddr, DefaultAddr, "the address rosetta will bind to")
 	flags.Int(FlagRetries, DefaultRetries, "the number of retries that will be done before quitting")
 	flags.Bool(FlagOffline, DefaultOffline, "run rosetta only with construction API")
-	return
 }

@@ -1,8 +1,10 @@
 package types
 
 import (
+	tmprotocrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
+
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 // DelegationI delegation bond for a delegated proof of stake system
@@ -21,7 +23,8 @@ type ValidatorI interface {
 	IsUnbonded() bool                                       // check if has status unbonded
 	IsUnbonding() bool                                      // check if has status unbonding
 	GetOperator() sdk.ValAddress                            // operator address to receive/return validators coins
-	TmConsPubKey() (crypto.PubKey, error)                   // validation consensus pubkey
+	ConsPubKey() (cryptotypes.PubKey, error)                // validation consensus pubkey (cryptotypes.PubKey)
+	TmConsPublicKey() (tmprotocrypto.PublicKey, error)      // validation consensus pubkey (Tendermint)
 	GetConsAddr() (sdk.ConsAddress, error)                  // validation consensus address
 	GetTokens() sdk.Int                                     // validation tokens
 	GetBondedTokens() sdk.Int                               // validator bonded tokens

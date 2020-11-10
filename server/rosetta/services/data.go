@@ -2,12 +2,14 @@ package services
 
 import (
 	"context"
+	"time"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
-	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/conversion"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
-	"time"
+
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
+	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/conversion"
 )
 
 // assert interface implementation
@@ -47,21 +49,44 @@ type SingleNetwork struct {
 }
 
 // AccountBalance retrieves the account balance of an address
-// NOTE(fdymylja): for now historical balance is not supported
+// rosetta requires us to fetch the block information too
 func (sn SingleNetwork) AccountBalance(ctx context.Context, request *types.AccountBalanceRequest) (*types.AccountBalanceResponse, *types.Error) {
-	// we need to provide block information, so get last block
-	block, _, err := sn.client.BlockByHeight(ctx, nil)
+	var (
+		height *int64
+		block  *tmtypes.ResultBlock
+		err    error
+	)
+	switch {
+	case request.BlockIdentifier == nil:
+		height = nil
+		block, _, err = sn.client.BlockByHeight(ctx, nil)
+		if err != nil {
+			return nil, rosetta.ToRosettaError(err)
+		}
+	case request.BlockIdentifier.Hash != nil:
+		block, _, err = sn.client.BlockByHash(ctx, *request.BlockIdentifier.Hash)
+		if err != nil {
+			return nil, rosetta.ToRosettaError(err)
+		}
+		height = &block.Block.Height
+	case request.BlockIdentifier.Index != nil:
+		height = request.BlockIdentifier.Index
+		block, _, err = sn.client.BlockByHeight(ctx, height)
+		if err != nil {
+			return nil, rosetta.ToRosettaError(err)
+		}
+	}
+	accountCoins, err := sn.client.Balances(ctx, request.AccountIdentifier.Address, height)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
-	// now get balance
-	balances, err := sn.client.Balances(ctx, request.AccountIdentifier.Address, nil)
+	availableCoins, err := sn.client.Coins(ctx)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
 	resp := &types.AccountBalanceResponse{
 		BlockIdentifier: conversion.TendermintBlockToBlockIdentifier(block),
-		Balances:        conversion.CoinsToBalance(balances),
+		Balances:        conversion.CoinsToBalance(accountCoins, availableCoins),
 		Coins:           nil,
 		Metadata:        nil,
 	}
@@ -75,17 +100,20 @@ func (sn SingleNetwork) Block(ctx context.Context, request *types.BlockRequest) 
 		txs   []*rosetta.SdkTxWithHash
 		err   error
 	)
-	if request.BlockIdentifier.Hash != nil {
+	// block identifier is assumed not to be nil as rosetta will do this check for us
+	// check if we have to query via hash or block number
+	switch {
+	case request.BlockIdentifier.Hash != nil:
 		block, txs, err = sn.client.BlockByHash(ctx, *request.BlockIdentifier.Hash)
 		if err != nil {
 			return nil, rosetta.ToRosettaError(err)
 		}
-	} else if request.BlockIdentifier.Index != nil {
+	case request.BlockIdentifier.Index != nil:
 		block, txs, err = sn.client.BlockByHeight(ctx, request.BlockIdentifier.Index)
 		if err != nil {
 			return nil, rosetta.ToRosettaError(err)
 		}
-	} else {
+	default:
 		return nil, rosetta.WrapError(rosetta.ErrBadArgument, "at least one of hash or index needs to be specified").RosettaError()
 	}
 	return &types.BlockResponse{
@@ -147,14 +175,14 @@ func (sn SingleNetwork) NetworkOptions(_ context.Context, _ *types.NetworkReques
 }
 
 func (sn SingleNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkRequest) (*types.NetworkStatusResponse, *types.Error) {
-	// get last block
 	block, _, err := sn.client.BlockByHeight(ctx, nil)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
-	// get peers
 	peers, err := sn.client.Peers(ctx)
-	// get node status
+	if err != nil {
+		return nil, rosetta.ToRosettaError(err)
+	}
 	status, err := sn.client.Status(ctx)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)

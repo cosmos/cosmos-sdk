@@ -2,15 +2,15 @@ package conversion
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
+	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmtypes "github.com/tendermint/tendermint/types"
-	"strconv"
-	"strings"
-	"time"
 )
 
 // TimeToMilliseconds converts time to milliseconds timestamp
@@ -19,12 +19,27 @@ func TimeToMilliseconds(t time.Time) int64 {
 }
 
 // CoinsToBalance converts sdk.Coins to rosetta.Amounts
-func CoinsToBalance(coins []sdk.Coin) []*types.Amount {
-	amounts := make([]*types.Amount, len(coins))
+func CoinsToBalance(ownedCoins []sdk.Coin, availableCoins sdk.Coins) []*types.Amount {
+	amounts := make([]*types.Amount, len(availableCoins))
+	ownedCoinsMap := make(map[string]sdk.Int, len(availableCoins))
 
-	for i, coin := range coins {
+	for _, ownedCoin := range ownedCoins {
+		ownedCoinsMap[ownedCoin.Denom] = ownedCoin.Amount
+	}
+
+	for i, coin := range availableCoins {
+		value, owned := ownedCoinsMap[coin.Denom]
+		if !owned {
+			amounts[i] = &types.Amount{
+				Value: sdk.NewInt(0).String(),
+				Currency: &types.Currency{
+					Symbol: coin.Denom,
+				},
+			}
+			continue
+		}
 		amounts[i] = &types.Amount{
-			Value: coin.Amount.String(),
+			Value: value.String(),
 			Currency: &types.Currency{
 				Symbol: coin.Denom,
 			},
@@ -38,7 +53,7 @@ func CoinsToBalance(coins []sdk.Coin) []*types.Amount {
 func ResultTxSearchToTransaction(txs []*rosetta.SdkTxWithHash) []*types.Transaction {
 	converted := make([]*types.Transaction, len(txs))
 	for i, tx := range txs {
-		//hasError := tx.Code > 0
+		// hasError := tx.Code > 0
 		converted[i] = &types.Transaction{
 			TransactionIdentifier: &types.TransactionIdentifier{Hash: tx.HexHash},
 			Operations:            SdkTxToOperations(tx.Tx, false, false),
@@ -72,9 +87,8 @@ func TendermintBlockToBlockIdentifier(block *tmcoretypes.ResultBlock) *types.Blo
 
 func ToOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) (operations []*types.Operation) {
 	for i, msg := range msgs {
-		x := msg.Type()
-		switch x {
-		case "send":
+		switch msg.Type() { // nolint
+		case rosetta.OperationSend:
 			newMsg := msg.(*banktypes.MsgSend)
 			fromAddress := newMsg.FromAddress
 			toAddress := newMsg.ToAddress
@@ -95,7 +109,7 @@ func ToOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) (operations
 					OperationIdentifier: &types.OperationIdentifier{
 						Index: int64(index),
 					},
-					Type:   rosetta.OperationMsgSend,
+					Type:   rosetta.OperationSend,
 					Status: status,
 					Account: &types.AccountIdentifier{
 						Address: account,

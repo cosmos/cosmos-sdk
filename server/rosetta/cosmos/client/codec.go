@@ -13,9 +13,10 @@ import (
 func MakeCodec() (*codec.ProtoCodec, codectypes.InterfaceRegistry) {
 	ir := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(ir)
-	// register interfaces
+
 	authcodec.RegisterInterfaces(ir)
 	bankcodec.RegisterInterfaces(ir)
 	cryptocodec.RegisterInterfaces(ir)
+
 	return cdc, ir
 }

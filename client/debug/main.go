@@ -8,10 +8,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -34,7 +34,7 @@ func Cmd() *cobra.Command {
 // getPubKeyFromString returns a Tendermint PubKey (PubKeyEd25519) by attempting
 // to decode the pubkey string from hex, base64, and finally bech32. If all
 // encodings fail, an error is returned.
-func getPubKeyFromString(pkstr string) (crypto.PubKey, error) {
+func getPubKeyFromString(pkstr string) (cryptotypes.PubKey, error) {
 	bz, err := hex.DecodeString(pkstr)
 	if err == nil {
 		if len(bz) == ed25519.PubKeySize {

@@ -71,17 +71,8 @@ func AddressFromLastValidatorPowerKey(key []byte) []byte {
 // VALUE: validator operator address ([]byte)
 func GetValidatorsByPowerIndexKey(validator Validator) []byte {
 	// NOTE the address doesn't need to be stored because counter bytes must always be different
-	return getValidatorPowerRank(validator)
-}
+	// NOTE the larger values are of higher value
 
-// get the bonded validator index key for an operator address
-func GetLastValidatorPowerKey(operator sdk.ValAddress) []byte {
-	return append(LastValidatorPowerKey, operator...)
-}
-
-// get the power ranking of a validator
-// NOTE the larger values are of higher value
-func getValidatorPowerRank(validator Validator) []byte {
 	consensusPower := sdk.TokensToConsensusPower(validator.Tokens)
 	consensusPowerBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(consensusPowerBytes, uint64(consensusPower))
@@ -107,6 +98,11 @@ func getValidatorPowerRank(validator Validator) []byte {
 	copy(key[powerBytesLen+1:], operAddrInvr)
 
 	return key
+}
+
+// get the bonded validator index key for an operator address
+func GetLastValidatorPowerKey(operator sdk.ValAddress) []byte {
+	return append(LastValidatorPowerKey, operator...)
 }
 
 // parse the validators operator address from power rank key

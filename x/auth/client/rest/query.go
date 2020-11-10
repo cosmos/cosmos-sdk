@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -102,6 +103,10 @@ func QueryTxsRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
+		for _, txRes := range searchResult.Txs {
+			packStdTxResponse(w, clientCtx, txRes)
+		}
+
 		rest.PostProcessResponseBare(w, clientCtx, searchResult)
 	}
 }
@@ -128,11 +133,9 @@ func QueryTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		// We just unmarshalled from Tendermint, we take the proto Tx's raw
-		// bytes, and convert them into a StdTx to be displayed.
-		txBytes := output.Tx.Value
-		stdTx, ok := convertToStdTx(w, clientCtx, txBytes)
-		if !ok {
+		err = packStdTxResponse(w, clientCtx, output)
+		if err != nil {
+			// Error is already returned by packStdTxResponse.
 			return
 		}
 
@@ -140,7 +143,7 @@ func QueryTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusNotFound, fmt.Sprintf("no transaction found with hash %s", hashHexStr))
 		}
 
-		rest.PostProcessResponseBare(w, clientCtx, stdTx)
+		rest.PostProcessResponseBare(w, clientCtx, output)
 	}
 }
 
@@ -160,4 +163,22 @@ func queryParamsHandler(clientCtx client.Context) http.HandlerFunc {
 		clientCtx = clientCtx.WithHeight(height)
 		rest.PostProcessResponse(w, clientCtx, res)
 	}
+}
+
+// packStdTxResponse takes a sdk.TxResponse, converts the Tx into a StdTx, and
+// packs the StdTx again into the sdk.TxResponse Any. Amino then takes care of
+// seamlessly JSON-outputting the Any.
+func packStdTxResponse(w http.ResponseWriter, clientCtx client.Context, txRes *sdk.TxResponse) error {
+	// We just unmarshalled from Tendermint, we take the proto Tx's raw
+	// bytes, and convert them into a StdTx to be displayed.
+	txBytes := txRes.Tx.Value
+	stdTx, err := convertToStdTx(w, clientCtx, txBytes)
+	if err != nil {
+		return err
+	}
+
+	// Pack the amino stdTx into the TxResponse's Any.
+	txRes.Tx = codectypes.UnsafePackAny(stdTx)
+
+	return nil
 }

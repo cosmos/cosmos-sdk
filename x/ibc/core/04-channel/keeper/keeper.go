@@ -258,9 +258,9 @@ func (k Keeper) IteratePacketCommitment(ctx sdk.Context, cb func(portID, channel
 }
 
 // GetAllPacketCommitments returns all stored PacketCommitments objects.
-func (k Keeper) GetAllPacketCommitments(ctx sdk.Context) (commitments []types.PacketAckCommitment) {
+func (k Keeper) GetAllPacketCommitments(ctx sdk.Context) (commitments []types.PacketState) {
 	k.IteratePacketCommitment(ctx, func(portID, channelID string, sequence uint64, hash []byte) bool {
-		pc := types.NewPacketAckCommitment(portID, channelID, sequence, hash)
+		pc := types.NewPacketState(portID, channelID, sequence, hash)
 		commitments = append(commitments, pc)
 		return false
 	})
@@ -278,13 +278,32 @@ func (k Keeper) IteratePacketCommitmentAtChannel(ctx sdk.Context, portID, channe
 
 // GetAllPacketCommitmentsAtChannel returns all stored PacketCommitments objects for a specified
 // port ID and channel ID.
-func (k Keeper) GetAllPacketCommitmentsAtChannel(ctx sdk.Context, portID, channelID string) (commitments []types.PacketAckCommitment) {
+func (k Keeper) GetAllPacketCommitmentsAtChannel(ctx sdk.Context, portID, channelID string) (commitments []types.PacketState) {
 	k.IteratePacketCommitmentAtChannel(ctx, portID, channelID, func(_, _ string, sequence uint64, hash []byte) bool {
-		pc := types.NewPacketAckCommitment(portID, channelID, sequence, hash)
+		pc := types.NewPacketState(portID, channelID, sequence, hash)
 		commitments = append(commitments, pc)
 		return false
 	})
 	return commitments
+}
+
+// IteratePacketReceipt provides an iterator over all PacketReceipt objects. For each
+// receipt, cb will be called. If the cb returns true, the iterator will close
+// and stop.
+func (k Keeper) IteratePacketReceipt(ctx sdk.Context, cb func(portID, channelID string, sequence uint64, receipt []byte) bool) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, []byte(host.KeyPacketReceiptPrefix))
+	k.iterateHashes(ctx, iterator, cb)
+}
+
+// GetAllPacketReceipts returns all stored PacketReceipt objects.
+func (k Keeper) GetAllPacketReceipts(ctx sdk.Context) (receipts []types.PacketState) {
+	k.IteratePacketReceipt(ctx, func(portID, channelID string, sequence uint64, receipt []byte) bool {
+		packetReceipt := types.NewPacketState(portID, channelID, sequence, receipt)
+		receipts = append(receipts, packetReceipt)
+		return false
+	})
+	return receipts
 }
 
 // IteratePacketAcknowledgement provides an iterator over all PacketAcknowledgement objects. For each
@@ -297,9 +316,9 @@ func (k Keeper) IteratePacketAcknowledgement(ctx sdk.Context, cb func(portID, ch
 }
 
 // GetAllPacketAcks returns all stored PacketAcknowledgements objects.
-func (k Keeper) GetAllPacketAcks(ctx sdk.Context) (acks []types.PacketAckCommitment) {
+func (k Keeper) GetAllPacketAcks(ctx sdk.Context) (acks []types.PacketState) {
 	k.IteratePacketAcknowledgement(ctx, func(portID, channelID string, sequence uint64, ack []byte) bool {
-		packetAck := types.NewPacketAckCommitment(portID, channelID, sequence, ack)
+		packetAck := types.NewPacketState(portID, channelID, sequence, ack)
 		acks = append(acks, packetAck)
 		return false
 	})

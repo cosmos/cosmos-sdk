@@ -33,7 +33,7 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 				NodeID:                  nodeID,
 				PubKey:                  sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey),
 				Moniker:                 moniker,
-				Amount:                  defaultAmount, // for power reduction change, do not hardcode value here
+				Amount:                  defaultAmount,
 				CommissionRate:          "0.1",
 				CommissionMaxRate:       "0.2",
 				CommissionMaxChangeRate: "0.01",
@@ -69,7 +69,7 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 				ChainID:                 chainID,
 				NodeID:                  nodeID,
 				PubKey:                  sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey),
-				Amount:                  defaultAmount, // for power reduction change, do not hardcode value here
+				Amount:                  defaultAmount,
 				CommissionRate:          "0.54",
 				CommissionMaxRate:       "0.2",
 				CommissionMaxChangeRate: "0.01",
@@ -87,7 +87,7 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 				ChainID:                 chainID,
 				NodeID:                  nodeID,
 				PubKey:                  sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey),
-				Amount:                  defaultAmount, // for power reduction change, do not hardcode value here
+				Amount:                  defaultAmount,
 				CommissionRate:          "0.1",
 				CommissionMaxRate:       "0.89",
 				CommissionMaxChangeRate: "0.01",
@@ -105,7 +105,7 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 				ChainID:                 chainID,
 				NodeID:                  nodeID,
 				PubKey:                  sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey),
-				Amount:                  defaultAmount, // for power reduction change, do not hardcode value here
+				Amount:                  defaultAmount,
 				CommissionRate:          "0.1",
 				CommissionMaxRate:       "0.2",
 				CommissionMaxChangeRate: "0.55",
@@ -123,7 +123,7 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 				ChainID:                 chainID,
 				NodeID:                  nodeID,
 				PubKey:                  sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey),
-				Amount:                  defaultAmount, // for power reduction change, do not hardcode value here
+				Amount:                  defaultAmount,
 				CommissionRate:          "0.1",
 				CommissionMaxRate:       "0.2",
 				CommissionMaxChangeRate: "0.01",

@@ -238,7 +238,7 @@ func (coord *Coordinator) RecvPacket(
 	packet channeltypes.Packet,
 ) error {
 	// get proof of packet commitment on source
-	packetKey := host.KeyPacketCommitment(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+	packetKey := host.PacketCommitmentKey(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 	proof, proofHeight := source.QueryProof(packetKey)
 
 	recvMsg := channeltypes.NewMsgRecvPacket(packet, proof, proofHeight, counterparty.SenderAccount.GetAddress())
@@ -277,7 +277,7 @@ func (coord *Coordinator) AcknowledgePacket(
 	packet channeltypes.Packet, ack []byte,
 ) error {
 	// get proof of acknowledgement on counterparty
-	packetKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+	packetKey := host.PacketAcknowledgementKey(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 	proof, proofHeight := counterparty.QueryProof(packetKey)
 
 	ackMsg := channeltypes.NewMsgAcknowledgement(packet, ack, proof, proofHeight, source.SenderAccount.GetAddress())

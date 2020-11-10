@@ -197,9 +197,8 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, clienttypes.Height) {
 		Prove:  true,
 	})
 
-	merkleProof := commitmenttypes.MerkleProof{
-		Proof: res.ProofOps,
-	}
+	merkleProof, err := commitmenttypes.ConvertProofs(res.ProofOps)
+	require.NoError(chain.t, err)
 
 	proof, err := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
 	require.NoError(chain.t, err)
@@ -222,9 +221,8 @@ func (chain *TestChain) QueryUpgradeProof(key []byte, height uint64) ([]byte, cl
 		Prove:  true,
 	})
 
-	merkleProof := commitmenttypes.MerkleProof{
-		Proof: res.ProofOps,
-	}
+	merkleProof, err := commitmenttypes.ConvertProofs(res.ProofOps)
+	require.NoError(chain.t, err)
 
 	proof, err := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
 	require.NoError(chain.t, err)

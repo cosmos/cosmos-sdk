@@ -117,5 +117,5 @@ func constructUpgradeMerklePath(upgradePath string, upgradeHeight exported.Heigh
 	// append upgradeHeight to last key in merkle path
 	// this will create the IAVL key that is used to store client in upgrade store
 	upgradeKeys[len(upgradeKeys)-1] = fmt.Sprintf("%s/%d", lastKey, upgradeHeight.GetVersionHeight())
-	return commitmenttypes.NewMerklePath(upgradeKeys), nil
+	return commitmenttypes.NewMerklePath(upgradeKeys...), nil
 }

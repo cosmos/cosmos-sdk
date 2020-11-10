@@ -153,8 +153,8 @@ func (sn SingleNetwork) ConstructionMetadata(ctx context.Context, request *types
 
 	res := &types.ConstructionMetadataResponse{
 		Metadata: map[string]interface{}{
-			rosetta.AccountNumber: string(accountInfo.GetAccountNumber()),
-			rosetta.Sequence:      string(accountInfo.GetSequence()),
+			rosetta.AccountNumber: accountInfo.GetAccountNumber(),
+			rosetta.Sequence:      accountInfo.GetSequence(),
 			rosetta.ChainId:       status.NodeInfo.Network,
 			rosetta.OptionGas:     gas,
 			rosetta.OptionMemo:    memo,
@@ -197,7 +197,7 @@ func (sn SingleNetwork) ConstructionPayloads(ctx context.Context, request *types
 		return nil, rosetta.ErrInvalidOperation.RosettaError()
 	}
 
-	if request.Operations[0].Type != rosetta.OperationTransfer || request.Operations[1].Type != rosetta.OperationTransfer {
+	if request.Operations[0].Type != rosetta.OperationSend || request.Operations[1].Type != rosetta.OperationSend {
 		return nil, rosetta.WrapError(rosetta.ErrInvalidOperation, "the operations are not Transfer").RosettaError()
 	}
 
@@ -270,11 +270,16 @@ func (sn SingleNetwork) ConstructionPreprocess(ctx context.Context, request *typ
 		memo = ""
 	}
 
+	defaultGas := float64(200000)
+	gas := request.SuggestedFeeMultiplier
+	if gas == nil {
+		gas = &defaultGas
+	}
 	var res = &types.ConstructionPreprocessResponse{
 		Options: map[string]interface{}{
 			rosetta.OptionAddress: txData.FromAddress,
 			rosetta.OptionMemo:    memo,
-			rosetta.OptionGas:     request.SuggestedFeeMultiplier,
+			rosetta.OptionGas:     gas,
 		},
 	}
 	return res, nil

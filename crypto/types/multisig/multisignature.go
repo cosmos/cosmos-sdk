@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
@@ -27,7 +25,7 @@ func NewMultisig(n int) *signing.MultiSignatureData {
 }
 
 // GetIndex returns the index of pk in keys. Returns -1 if not found
-func getIndex(pk crypto.PubKey, keys []crypto.PubKey) int {
+func getIndex(pk types.PubKey, keys []types.PubKey) int {
 	for i := 0; i < len(keys); i++ {
 		if pk.Equals(keys[i]) {
 			return i
@@ -60,7 +58,7 @@ func AddSignature(mSig *signing.MultiSignatureData, sig signing.SignatureData, i
 
 // AddSignatureFromPubKey adds a signature to the multisig, at the index in
 // keys corresponding to the provided pubkey.
-func AddSignatureFromPubKey(mSig *signing.MultiSignatureData, sig signing.SignatureData, pubkey crypto.PubKey, keys []crypto.PubKey) error {
+func AddSignatureFromPubKey(mSig *signing.MultiSignatureData, sig signing.SignatureData, pubkey types.PubKey, keys []types.PubKey) error {
 	if mSig == nil {
 		return fmt.Errorf("value of mSig is nil %v", mSig)
 	}
@@ -85,6 +83,6 @@ func AddSignatureFromPubKey(mSig *signing.MultiSignatureData, sig signing.Signat
 	return nil
 }
 
-func AddSignatureV2(mSig *signing.MultiSignatureData, sig signing.SignatureV2, keys []crypto.PubKey) error {
+func AddSignatureV2(mSig *signing.MultiSignatureData, sig signing.SignatureV2, keys []types.PubKey) error {
 	return AddSignatureFromPubKey(mSig, sig.Data, sig.PubKey, keys)
 }

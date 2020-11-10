@@ -148,7 +148,7 @@ func TestApplyPrefix(t *testing.T) {
 	}
 
 	prefixedPath, err := types.ApplyPrefix(prefix, path)
-	require.Nil(t, err, "valid prefix returns error")
+	require.NoError(t, err, "valid prefix returns error")
 
 	require.Equal(t, "/storePrefixKey/pathone/pathtwo/paththree/key", prefixedPath.Pretty(), "Prefixed path incorrect")
 	require.Equal(t, "/storePrefixKey/"+pathStr, prefixedPath.String(), "Prefixed scaped path incorrect")

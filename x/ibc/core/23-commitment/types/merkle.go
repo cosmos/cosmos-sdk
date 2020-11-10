@@ -175,13 +175,13 @@ func (proof MerkleProof) VerifyNonMembership(specs []*ics23.ProofSpec, root expo
 		break
 	case *ics23.CommitmentProof_Exist:
 		return sdkerrors.Wrapf(ErrInvalidProof,
-			"Got ExistenceProof in VerifyNonMembership. If this is unexpected, please ensure that proof was queried with the correct key")
+			"got ExistenceProof in VerifyNonMembership. If this is unexpected, please ensure that proof was queried with the correct key.")
 	default:
 		return sdkerrors.Wrapf(ErrInvalidProof,
 			"expected proof type: %T, got: %T", &ics23.CommitmentProof_Exist{}, proof.Proofs[0].Proof)
 	}
 	if ok := ics23.VerifyNonMembership(specs[0], subroot, proof.Proofs[0], key); !ok {
-		return sdkerrors.Wrapf(ErrInvalidProof, "could not verify absence of key %s. please ensure that the path is correct.", string(key))
+		return sdkerrors.Wrapf(ErrInvalidProof, "could not verify absence of key %s. Please ensure that the path is correct.", string(key))
 	}
 
 	// Verify chained membership proof starting from index 1 with value = subroot
@@ -220,7 +220,7 @@ func verifyChainedMembershipProof(root []byte, specs []*ics23.ProofSpec, proofs 
 	for i := index; i < len(proofs); i++ {
 		subroot, err = proofs[i].Calculate()
 		if err != nil {
-			return sdkerrors.Wrapf(ErrInvalidProof, "could not calculate proof root at index %d, merkle tree may be empty. %v", i, err)
+			return sdkerrors.Wrapf(ErrInvalidProof, "could not calculate proof root at index %d, merkle tree may be empty: %v", i, err)
 		}
 		// Since keys are passed in from highest to lowest, we must grab their indices in reverse order
 		// from the proofs and specs which are lowest to highest
@@ -233,7 +233,7 @@ func verifyChainedMembershipProof(root []byte, specs []*ics23.ProofSpec, proofs 
 			break
 		case *ics23.CommitmentProof_Nonexist:
 			return sdkerrors.Wrapf(ErrInvalidProof,
-				"chained membership proof contains nonexistence proof at index %d. If this is unexpected, please ensure that proof was queried from height that contained the value in store and was queried with the correct key",
+				"chained membership proof contains nonexistence proof at index %d. If this is unexpected, please ensure that proof was queried from the height that contained the value in store and was queried with the correct key.",
 				i)
 		default:
 			return sdkerrors.Wrapf(ErrInvalidProof,
@@ -241,7 +241,7 @@ func verifyChainedMembershipProof(root []byte, specs []*ics23.ProofSpec, proofs 
 		}
 		if ok := ics23.VerifyMembership(specs[i], subroot, proofs[i], key, value); !ok {
 			return sdkerrors.Wrapf(ErrInvalidProof,
-				"chained membership proof failed to verify membership of value: %X in subroot %X at index %d. please ensure the path and value are both correct.",
+				"chained membership proof failed to verify membership of value: %X in subroot %X at index %d. Please ensure the path and value are both correct.",
 				value, subroot, i)
 		}
 		// Set value to subroot so that we verify next proof in chain commits to this subroot
@@ -250,7 +250,7 @@ func verifyChainedMembershipProof(root []byte, specs []*ics23.ProofSpec, proofs 
 	// Check that chained proof root equals passed-in root
 	if !bytes.Equal(root, subroot) {
 		return sdkerrors.Wrapf(ErrInvalidProof,
-			"proof did not commit to expected root: %X, got: %X. please ensure proof was submitted with correct proofHeight and to the correct chain",
+			"proof did not commit to expected root: %X, got: %X. Please ensure proof was submitted with correct proofHeight and to the correct chain.",
 			root, subroot)
 	}
 	return nil

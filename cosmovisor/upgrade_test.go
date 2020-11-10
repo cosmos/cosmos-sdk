@@ -9,92 +9,102 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/otiai10/copy"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
 )
 
-func TestCurrentBin(t *testing.T) {
-	home := copyTestData(t, "validate")
+type upgradeTestSuite struct {
+	suite.Suite
+}
+
+func TestUpgradeTestSuite(t *testing.T) {
+	suite.Run(t, new(upgradeTestSuite))
+}
+
+func (s *upgradeTestSuite) TestCurrentBin() {
+	home := copyTestData(s.T(), "validate")
 	cfg := cosmovisor.Config{Home: home, Name: "dummyd"}
 
 	currentBin, err := cfg.CurrentBin()
-	require.NoError(t, err)
+	s.Require().NoError(err)
 
-	require.Equal(t, cfg.GenesisBin(), currentBin)
+	s.Require().Equal(cfg.GenesisBin(), currentBin)
 
 	// ensure we cannot set this to an invalid value
 	for _, name := range []string{"missing", "nobin", "noexec"} {
-		require.Error(t, cfg.SetCurrentUpgrade(name), name)
+		s.Require().Error(cfg.SetCurrentUpgrade(name), name)
 
 		currentBin, err := cfg.CurrentBin()
-		require.NoError(t, err)
+		s.Require().NoError(err)
 
-		require.Equal(t, cfg.GenesisBin(), currentBin, name)
+		s.Require().Equal(cfg.GenesisBin(), currentBin, name)
 	}
 
 	// try a few times to make sure this can be reproduced
 	for _, upgrade := range []string{"chain2", "chain3", "chain2"} {
 		// now set it to a valid upgrade and make sure CurrentBin is now set properly
 		err = cfg.SetCurrentUpgrade(upgrade)
-		require.NoError(t, err)
+		s.Require().NoError(err)
 		// we should see current point to the new upgrade dir
 		currentBin, err := cfg.CurrentBin()
-		require.NoError(t, err)
+		s.Require().NoError(err)
 
-		require.Equal(t, cfg.UpgradeBin(upgrade), currentBin)
+		s.Require().Equal(cfg.UpgradeBin(upgrade), currentBin)
 	}
 }
 
-func TestCurrentAlwaysSymlinkToDirectory(t *testing.T) {
-	home := copyTestData(t, "validate")
+func (s *upgradeTestSuite) TestCurrentAlwaysSymlinkToDirectory() {
+	home := copyTestData(s.T(), "validate")
 	cfg := cosmovisor.Config{Home: home, Name: "dummyd"}
 
 	currentBin, err := cfg.CurrentBin()
-	require.NoError(t, err)
-	require.Equal(t, cfg.GenesisBin(), currentBin)
-	assertCurrentLink(t, cfg, "genesis")
+	s.Require().NoError(err)
+	s.Require().Equal(cfg.GenesisBin(), currentBin)
+	s.assertCurrentLink(cfg, "genesis")
 
 	err = cfg.SetCurrentUpgrade("chain2")
-	require.NoError(t, err)
+	s.Require().NoError(err)
 	currentBin, err = cfg.CurrentBin()
-	require.NoError(t, err)
-	require.Equal(t, cfg.UpgradeBin("chain2"), currentBin)
-	assertCurrentLink(t, cfg, filepath.Join("upgrades", "chain2"))
+	s.Require().NoError(err)
+	s.Require().Equal(cfg.UpgradeBin("chain2"), currentBin)
+	s.assertCurrentLink(cfg, filepath.Join("upgrades", "chain2"))
 }
 
-func assertCurrentLink(t *testing.T, cfg cosmovisor.Config, target string) {
+func (s *upgradeTestSuite) assertCurrentLink(cfg cosmovisor.Config, target string) {
 	link := filepath.Join(cfg.Root(), "current")
 	// ensure this is a symlink
 	info, err := os.Lstat(link)
-	require.NoError(t, err)
-	require.Equal(t, os.ModeSymlink, info.Mode()&os.ModeSymlink)
+	s.Require().NoError(err)
+	s.Require().Equal(os.ModeSymlink, info.Mode()&os.ModeSymlink)
 
 	dest, err := os.Readlink(link)
-	require.NoError(t, err)
+	s.Require().NoError(err)
 	expected := filepath.Join(cfg.Root(), target)
-	require.Equal(t, expected, dest)
+	s.Require().Equal(expected, dest)
 }
 
 // TODO: test with download (and test all download functions)
-func TestDoUpgradeNoDownloadUrl(t *testing.T) {
-	home := copyTestData(t, "validate")
+func (s *upgradeTestSuite) TestDoUpgradeNoDownloadUrl() {
+	home := copyTestData(s.T(), "validate")
 	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", AllowDownloadBinaries: true}
 
 	currentBin, err := cfg.CurrentBin()
-	require.NoError(t, err)
+	s.Require().NoError(err)
 
-	require.Equal(t, cfg.GenesisBin(), currentBin)
+	s.Require().Equal(cfg.GenesisBin(), currentBin)
 
 	// do upgrade ignores bad files
 	for _, name := range []string{"missing", "nobin", "noexec"} {
 		info := &cosmovisor.UpgradeInfo{Name: name}
 		err = cosmovisor.DoUpgrade(cfg, info)
-		require.Error(t, err, name)
+		s.Require().Error(err, name)
 		currentBin, err := cfg.CurrentBin()
-		require.NoError(t, err)
-		require.Equal(t, cfg.GenesisBin(), currentBin, name)
+		s.Require().NoError(err)
+		s.Require().Equal(cfg.GenesisBin(), currentBin, name)
 	}
 
 	// make sure it updates a few times
@@ -102,27 +112,27 @@ func TestDoUpgradeNoDownloadUrl(t *testing.T) {
 		// now set it to a valid upgrade and make sure CurrentBin is now set properly
 		info := &cosmovisor.UpgradeInfo{Name: upgrade}
 		err = cosmovisor.DoUpgrade(cfg, info)
-		require.NoError(t, err)
+		s.Require().NoError(err)
 		// we should see current point to the new upgrade dir
 		upgradeBin := cfg.UpgradeBin(upgrade)
 		currentBin, err := cfg.CurrentBin()
-		require.NoError(t, err)
+		s.Require().NoError(err)
 
-		require.Equal(t, upgradeBin, currentBin)
+		s.Require().Equal(upgradeBin, currentBin)
 	}
 }
 
-func TestOsArch(t *testing.T) {
+func (s *upgradeTestSuite) TestOsArch() {
 	// all download tests will fail if we are not on linux...
-	require.Equal(t, "linux/amd64", cosmovisor.OSArch())
+	s.Require().Equal("linux/amd64", cosmovisor.OSArch())
 }
 
-func TestGetDownloadURL(t *testing.T) {
+func (s *upgradeTestSuite) TestGetDownloadURL() {
 	// all download tests will fail if we are not on linux...
 	ref, err := filepath.Abs(filepath.FromSlash("./testdata/repo/ref_zipped"))
-	require.NoError(t, err)
+	s.Require().NoError(err)
 	badref, err := filepath.Abs(filepath.FromSlash("./testdata/repo/zip_binary/autod.zip"))
-	require.NoError(t, err)
+	s.Require().NoError(err)
 
 	cases := map[string]struct {
 		info  string
@@ -162,20 +172,18 @@ func TestGetDownloadURL(t *testing.T) {
 		},
 	}
 
-	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
-			url, err := cosmovisor.GetDownloadURL(&cosmovisor.UpgradeInfo{Info: tc.info})
-			if tc.isErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.url, url)
-			}
-		})
+	for _, tc := range cases {
+		url, err := cosmovisor.GetDownloadURL(&cosmovisor.UpgradeInfo{Info: tc.info})
+		if tc.isErr {
+			s.Require().Error(err)
+		} else {
+			s.Require().NoError(err)
+			s.Require().Equal(tc.url, url)
+		}
 	}
 }
 
-func TestDownloadBinary(t *testing.T) {
+func (s *upgradeTestSuite) TestDownloadBinary() {
 	cases := map[string]struct {
 		url         string
 		canDownload bool
@@ -217,45 +225,43 @@ func TestDownloadBinary(t *testing.T) {
 		},
 	}
 
-	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
-			var err error
-			// make temp dir
-			home := copyTestData(t, "download")
+	for _, tc := range cases {
+		var err error
+		// make temp dir
+		home := copyTestData(s.T(), "download")
 
-			cfg := &cosmovisor.Config{
-				Home:                  home,
-				Name:                  "autod",
-				AllowDownloadBinaries: true,
-			}
+		cfg := &cosmovisor.Config{
+			Home:                  home,
+			Name:                  "autod",
+			AllowDownloadBinaries: true,
+		}
 
-			// if we have a relative path, make it absolute, but don't change eg. https://... urls
-			url := tc.url
-			if strings.HasPrefix(url, "./") {
-				url, err = filepath.Abs(url)
-				require.NoError(t, err)
-			}
+		// if we have a relative path, make it absolute, but don't change eg. https://... urls
+		url := tc.url
+		if strings.HasPrefix(url, "./") {
+			url, err = filepath.Abs(url)
+			s.Require().NoError(err)
+		}
 
-			upgrade := "amazonas"
-			info := &cosmovisor.UpgradeInfo{
-				Name: upgrade,
-				Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, cosmovisor.OSArch(), url),
-			}
+		upgrade := "amazonas"
+		info := &cosmovisor.UpgradeInfo{
+			Name: upgrade,
+			Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, cosmovisor.OSArch(), url),
+		}
 
-			err = cosmovisor.DownloadBinary(cfg, info)
-			if !tc.canDownload {
-				require.Error(t, err)
-				return
-			}
-			require.NoError(t, err)
+		err = cosmovisor.DownloadBinary(cfg, info)
+		if !tc.canDownload {
+			s.Require().Error(err)
+			return
+		}
+		s.Require().NoError(err)
 
-			err = cosmovisor.EnsureBinary(cfg.UpgradeBin(upgrade))
-			if tc.validBinary {
-				require.NoError(t, err)
-			} else {
-				require.Error(t, err)
-			}
-		})
+		err = cosmovisor.EnsureBinary(cfg.UpgradeBin(upgrade))
+		if tc.validBinary {
+			s.Require().NoError(err)
+		} else {
+			s.Require().Error(err)
+		}
 	}
 }
 

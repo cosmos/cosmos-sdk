@@ -5,10 +5,18 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
-func TestConfigPaths(t *testing.T) {
+type argsTestSuite struct {
+	suite.Suite
+}
+
+func TestArgsTestSuite(t *testing.T) {
+	suite.Run(t, new(argsTestSuite))
+}
+
+func (s *argsTestSuite) TestConfigPaths() {
 	cases := map[string]struct {
 		cfg           Config
 		upgradeName   string
@@ -32,23 +40,21 @@ func TestConfigPaths(t *testing.T) {
 		},
 	}
 
-	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
-			require.Equal(t, tc.cfg.Root(), filepath.FromSlash(tc.expectRoot))
-			require.Equal(t, tc.cfg.GenesisBin(), filepath.FromSlash(tc.expectGenesis))
-			require.Equal(t, tc.cfg.UpgradeBin(tc.upgradeName), filepath.FromSlash(tc.expectUpgrade))
-		})
+	for _, tc := range cases {
+		s.Require().Equal(tc.cfg.Root(), filepath.FromSlash(tc.expectRoot))
+		s.Require().Equal(tc.cfg.GenesisBin(), filepath.FromSlash(tc.expectGenesis))
+		s.Require().Equal(tc.cfg.UpgradeBin(tc.upgradeName), filepath.FromSlash(tc.expectUpgrade))
 	}
 }
 
 // Test validate
-func TestValidate(t *testing.T) {
+func (s *argsTestSuite) TestValidate() {
 	relPath := filepath.Join("testdata", "validate")
 	absPath, err := filepath.Abs(relPath)
-	require.NoError(t, err)
+	s.Require().NoError(err)
 
 	testdata, err := filepath.Abs("testdata")
-	require.NoError(t, err)
+	s.Require().NoError(err)
 
 	cases := map[string]struct {
 		cfg   Config
@@ -84,27 +90,25 @@ func TestValidate(t *testing.T) {
 		},
 	}
 
-	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
-			err := tc.cfg.validate()
-			if tc.valid {
-				require.NoError(t, err)
-			} else {
-				require.Error(t, err)
-			}
-		})
+	for _, tc := range cases {
+		err := tc.cfg.validate()
+		if tc.valid {
+			s.Require().NoError(err)
+		} else {
+			s.Require().Error(err)
+		}
 	}
 }
 
-func TestEnsureBin(t *testing.T) {
+func (s *argsTestSuite) TestEnsureBin(t *testing.T) {
 	relPath := filepath.Join("testdata", "validate")
 	absPath, err := filepath.Abs(relPath)
-	require.NoError(t, err)
+	s.Require().NoError(err)
 
 	cfg := Config{Home: absPath, Name: "dummyd"}
-	require.NoError(t, cfg.validate())
+	s.Require().NoError(cfg.validate())
 
-	require.NoError(t, EnsureBinary(cfg.GenesisBin()))
+	s.Require().NoError(EnsureBinary(cfg.GenesisBin()))
 
 	cases := map[string]struct {
 		upgrade string
@@ -116,14 +120,12 @@ func TestEnsureBin(t *testing.T) {
 		"no directory":   {"foobarbaz", false},
 	}
 
-	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
-			err := EnsureBinary(cfg.UpgradeBin(tc.upgrade))
-			if tc.hasBin {
-				require.NoError(t, err)
-			} else {
-				require.Error(t, err)
-			}
-		})
+	for _, tc := range cases {
+		err := EnsureBinary(cfg.UpgradeBin(tc.upgrade))
+		if tc.hasBin {
+			s.Require().NoError(err)
+		} else {
+			s.Require().Error(err)
+		}
 	}
 }

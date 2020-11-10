@@ -12,6 +12,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -179,6 +180,24 @@ func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
 
 	// invalid pukKey type should not be allowed
 	tstaking.CreateValidator(addr, invalidPk, 10, false)
+}
+
+func TestBothPubKeyTypeMsgCreateValidator(t *testing.T) {
+	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 2, 1000)
+	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{
+		Validator: &tmproto.ValidatorParams{PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519, tmtypes.ABCIPubKeyTypeSecp256k1}},
+	})
+
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
+
+	addrEd := valAddrs[0]
+	addrSecp := valAddrs[1]
+	pkEd := ed25519.GenPrivKey().PubKey()
+	pkSecp := secp256k1.GenPrivKey().PubKey()
+
+	// Create validators with both keys should work
+	tstaking.CreateValidator(addrEd, pkEd, 10, true)
+	tstaking.CreateValidator(addrSecp, pkSecp, 10, true)
 }
 
 func TestLegacyValidatorDelegations(t *testing.T) {

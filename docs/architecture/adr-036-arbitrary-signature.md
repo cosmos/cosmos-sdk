@@ -27,7 +27,7 @@ Having the ability to sign messages off-chain has proven to be a fundamental asp
 
 The aim is being able to sign arbitrary messages, even using Ledger or similar HSM devices.
 
-As a result signed messages should look roughly like Cosmos SDK messages. chain-id, account_number and sequence can all be assigned invalid values.
+As a result signed messages should look roughly like Cosmos SDK messages but **must not** be a valid on-chain transaction. `chain-id`, `account_number` and `sequence` can all be assigned invalid values.
 The CLI should set those to default values.
 
 Cosmos SDK 0.40 also introduces a concept of “auth_info” this can specify SIGN_MODES.

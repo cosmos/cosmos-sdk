@@ -2,7 +2,7 @@ package types
 
 import (
 	"bytes"
-	fmt "fmt"
+	"fmt"
 	"net/url"
 
 	ics23 "github.com/confio/ics23/go"
@@ -193,7 +193,6 @@ func (proof MerkleProof) VerifyNonMembership(specs []*ics23.ProofSpec, root expo
 		if err := verifyChainedMembershipProof(root.GetHash(), specs, proof.Proofs, mpath, subroot, 1); err != nil {
 			return err
 		}
-		break
 	case *ics23.CommitmentProof_Exist:
 		return sdkerrors.Wrapf(ErrInvalidProof,
 			"got ExistenceProof in VerifyNonMembership. If this is unexpected, please ensure that proof was queried with the correct key.")
@@ -252,7 +251,6 @@ func verifyChainedMembershipProof(root []byte, specs []*ics23.ProofSpec, proofs 
 			}
 			// Set value to subroot so that we verify next proof in chain commits to this subroot
 			value = subroot
-			break
 		case *ics23.CommitmentProof_Nonexist:
 			return sdkerrors.Wrapf(ErrInvalidProof,
 				"chained membership proof contains nonexistence proof at index %d. If this is unexpected, please ensure that proof was queried from the height that contained the value in store and was queried with the correct key.",

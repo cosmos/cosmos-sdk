@@ -289,7 +289,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 				counterpartyChosenChannelID = channel.Counterparty.ChannelId
 			}
 
-			channelKey := host.KeyChannel(counterparty.PortId, counterparty.ChannelId)
+			channelKey := host.ChannelKey(counterparty.PortId, counterparty.ChannelId)
 			proof, proofHeight := suite.chainA.QueryProof(channelKey)
 
 			cap, err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanOpenTry(
@@ -455,7 +455,7 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 				counterpartyChannelID = channelB.ID
 			}
 
-			channelKey := host.KeyChannel(channelB.PortID, channelB.ID)
+			channelKey := host.ChannelKey(channelB.PortID, channelB.ID)
 			proof, proofHeight := suite.chainB.QueryProof(channelKey)
 
 			err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenAck(
@@ -583,7 +583,7 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 			channelA := connA.FirstOrNextTestChannel(ibctesting.MockPort)
 			channelB := connB.FirstOrNextTestChannel(ibctesting.MockPort)
 
-			channelKey := host.KeyChannel(channelA.PortID, channelA.ID)
+			channelKey := host.ChannelKey(channelA.PortID, channelA.ID)
 			proof, proofHeight := suite.chainA.QueryProof(channelKey)
 
 			err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanOpenConfirm(
@@ -784,7 +784,7 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 			channelA = connA.FirstOrNextTestChannel(ibctesting.MockPort)
 			channelB = connB.FirstOrNextTestChannel(ibctesting.MockPort)
 
-			channelKey := host.KeyChannel(channelA.PortID, channelA.ID)
+			channelKey := host.ChannelKey(channelA.PortID, channelA.ID)
 			proof, proofHeight := suite.chainA.QueryProof(channelKey)
 
 			err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanCloseConfirm(

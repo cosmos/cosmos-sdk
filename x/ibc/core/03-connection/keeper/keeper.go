@@ -48,7 +48,7 @@ func (k Keeper) GetCommitmentPrefix() exported.Prefix {
 // GetConnection returns a connection with a particular identifier
 func (k Keeper) GetConnection(ctx sdk.Context, connectionID string) (types.ConnectionEnd, bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(host.KeyConnection(connectionID))
+	bz := store.Get(host.ConnectionKey(connectionID))
 	if bz == nil {
 		return types.ConnectionEnd{}, false
 	}
@@ -63,7 +63,7 @@ func (k Keeper) GetConnection(ctx sdk.Context, connectionID string) (types.Conne
 func (k Keeper) SetConnection(ctx sdk.Context, connectionID string, connection types.ConnectionEnd) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryBare(&connection)
-	store.Set(host.KeyConnection(connectionID), bz)
+	store.Set(host.ConnectionKey(connectionID), bz)
 }
 
 // GetTimestampAtHeight returns the timestamp in nanoseconds of the consensus state at the
@@ -87,7 +87,7 @@ func (k Keeper) GetTimestampAtHeight(ctx sdk.Context, connection types.Connectio
 // particular client
 func (k Keeper) GetClientConnectionPaths(ctx sdk.Context, clientID string) ([]string, bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(host.KeyClientConnections(clientID))
+	bz := store.Get(host.ClientConnectionsKey(clientID))
 	if bz == nil {
 		return nil, false
 	}
@@ -102,7 +102,7 @@ func (k Keeper) SetClientConnectionPaths(ctx sdk.Context, clientID string, paths
 	store := ctx.KVStore(k.storeKey)
 	clientPaths := types.ClientPaths{Paths: paths}
 	bz := k.cdc.MustMarshalBinaryBare(&clientPaths)
-	store.Set(host.KeyClientConnections(clientID), bz)
+	store.Set(host.ClientConnectionsKey(clientID), bz)
 }
 
 // GetAllClientConnectionPaths returns all stored clients connection id paths. It
@@ -129,7 +129,7 @@ func (k Keeper) GetAllClientConnectionPaths(ctx sdk.Context) []types.ConnectionP
 // iterator will close and stop.
 func (k Keeper) IterateConnections(ctx sdk.Context, cb func(types.IdentifiedConnection) bool) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, host.KeyConnectionPrefix)
+	iterator := sdk.KVStorePrefixIterator(store, []byte(host.KeyConnectionPrefix))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

@@ -41,7 +41,7 @@ func (suite *SoloMachineTestSuite) SetupTest() {
 	suite.solomachine = ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachinesingle", "testing", 1)
 	suite.solomachineMulti = ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachinemulti", "testing", 4)
 
-	suite.store = suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), types.SoloMachine)
+	suite.store = suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), exported.Solomachine)
 }
 
 func TestSoloMachineTestSuite(t *testing.T) {

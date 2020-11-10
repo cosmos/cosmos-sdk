@@ -347,7 +347,7 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 // 2 clients in total are created on chainA. The first client is updated so it contains an initial consensus state
 // and a consensus state at the update height.
 func (suite KeeperTestSuite) TestGetAllConsensusStates() {
-	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 
 	clientState := suite.chainA.GetClientState(clientA)
 	expConsensusHeight0 := clientState.GetLatestHeight()
@@ -355,7 +355,7 @@ func (suite KeeperTestSuite) TestGetAllConsensusStates() {
 	suite.Require().True(ok)
 
 	// update client to create a second consensus state
-	err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
+	err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 	suite.Require().NoError(err)
 
 	clientState = suite.chainA.GetClientState(clientA)
@@ -370,7 +370,7 @@ func (suite KeeperTestSuite) TestGetAllConsensusStates() {
 	}
 
 	// create second client on chainA
-	clientA2, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+	clientA2, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 	clientState = suite.chainA.GetClientState(clientA2)
 
 	expConsensusHeight2 := clientState.GetLatestHeight()

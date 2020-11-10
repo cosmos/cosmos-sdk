@@ -13,7 +13,7 @@ var _ exported.ConsensusState = ConsensusState{}
 
 // ClientType returns Solo Machine type.
 func (ConsensusState) ClientType() string {
-	return SoloMachine
+	return exported.Solomachine
 }
 
 // GetTimestamp returns zero.

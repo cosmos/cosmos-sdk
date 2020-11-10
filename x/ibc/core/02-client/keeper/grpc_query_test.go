@@ -112,8 +112,8 @@ func (suite *KeeperTestSuite) TestQueryClientStates() {
 		{
 			"success",
 			func() {
-				clientA1, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
-				clientA2, _ := suite.coordinator.CreateClient(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				clientA1, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+				clientA2, _ := suite.coordinator.CreateClient(suite.chainA, suite.chainB, exported.Tendermint)
 
 				clientStateA1 := suite.chainA.GetClientState(clientA1)
 				clientStateA2 := suite.chainA.GetClientState(clientA2)

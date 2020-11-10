@@ -13,7 +13,7 @@ var _ exported.Header = Header{}
 
 // ClientType defines that the Header is a Solo Machine.
 func (Header) ClientType() string {
-	return SoloMachine
+	return exported.Solomachine
 }
 
 // GetHeight returns the current sequence number as the height.

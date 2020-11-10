@@ -136,5 +136,13 @@ func (gs GenesisState) Validate() error {
 		}
 	}
 
-	return gs.Params.Validate()
+	if err := gs.Params.Validate(); err != nil {
+		return err
+	}
+
+	if gs.CreateLocalhost && !gs.Params.IsAllowedClient(exported.Localhost) {
+		return fmt.Errorf("localhost client is not registered on the allowlist")
+	}
+
+	return nil
 }

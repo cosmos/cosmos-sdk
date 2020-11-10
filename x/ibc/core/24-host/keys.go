@@ -132,7 +132,7 @@ func ChannelPath(portID, channelID string) string {
 }
 
 // ChannelKey returns the store key for a particular channel
-func KeyChannel(portID, channelID string) []byte {
+func ChannelKey(portID, channelID string) []byte {
 	return []byte(ChannelPath(portID, channelID))
 }
 

@@ -251,7 +251,7 @@ func (solo *Solomachine) GenerateSignature(signBytes []byte) []byte {
 
 // GetClientStatePath returns the commitment path for the client state.
 func (solo *Solomachine) GetClientStatePath(counterpartyClientIdentifier string) commitmenttypes.MerklePath {
-	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ClientStatePath()
+	clientPrefixedPath := commitmenttypes.NewMerklePath("clients/" + counterpartyClientIdentifier + "/" + host.ClientStatePath())
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	require.NoError(solo.t, err)
 
@@ -260,7 +260,7 @@ func (solo *Solomachine) GetClientStatePath(counterpartyClientIdentifier string)
 
 // GetConsensusStatePath returns the commitment path for the consensus state.
 func (solo *Solomachine) GetConsensusStatePath(counterpartyClientIdentifier string, consensusHeight exported.Height) commitmenttypes.MerklePath {
-	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ConsensusStatePath(consensusHeight)
+	clientPrefixedPath := commitmenttypes.NewMerklePath("clients/" + counterpartyClientIdentifier + "/" + host.ConsensusStatePath(consensusHeight))
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	require.NoError(solo.t, err)
 
@@ -269,7 +269,8 @@ func (solo *Solomachine) GetConsensusStatePath(counterpartyClientIdentifier stri
 
 // GetConnectionStatePath returns the commitment path for the connection state.
 func (solo *Solomachine) GetConnectionStatePath(connID string) commitmenttypes.MerklePath {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(connID))
+	connectionPath := commitmenttypes.NewMerklePath(host.ConnectionPath(connID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, connectionPath)
 	require.NoError(solo.t, err)
 
 	return path
@@ -277,7 +278,8 @@ func (solo *Solomachine) GetConnectionStatePath(connID string) commitmenttypes.M
 
 // GetChannelStatePath returns the commitment path for that channel state.
 func (solo *Solomachine) GetChannelStatePath(portID, channelID string) commitmenttypes.MerklePath {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(portID, channelID))
+	channelPath := commitmenttypes.NewMerklePath(host.ChannelPath(portID, channelID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, channelPath)
 	require.NoError(solo.t, err)
 
 	return path
@@ -285,7 +287,8 @@ func (solo *Solomachine) GetChannelStatePath(portID, channelID string) commitmen
 
 // GetPacketCommitmentPath returns the commitment path for a packet commitment.
 func (solo *Solomachine) GetPacketCommitmentPath(portID, channelID string) commitmenttypes.MerklePath {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(portID, channelID, solo.Sequence))
+	commitmentPath := commitmenttypes.NewMerklePath(host.PacketCommitmentPath(portID, channelID, solo.Sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, commitmentPath)
 	require.NoError(solo.t, err)
 
 	return path
@@ -293,7 +296,8 @@ func (solo *Solomachine) GetPacketCommitmentPath(portID, channelID string) commi
 
 // GetPacketAcknowledgementPath returns the commitment path for a packet acknowledgement.
 func (solo *Solomachine) GetPacketAcknowledgementPath(portID, channelID string) commitmenttypes.MerklePath {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, solo.Sequence))
+	ackPath := commitmenttypes.NewMerklePath(host.PacketAcknowledgementPath(portID, channelID, solo.Sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, ackPath)
 	require.NoError(solo.t, err)
 
 	return path
@@ -302,7 +306,8 @@ func (solo *Solomachine) GetPacketAcknowledgementPath(portID, channelID string) 
 // GetPacketReceiptPath returns the commitment path for a packet receipt
 // and an absent receipts.
 func (solo *Solomachine) GetPacketReceiptPath(portID, channelID string) commitmenttypes.MerklePath {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketReceiptPath(portID, channelID, solo.Sequence))
+	receiptPath := commitmenttypes.NewMerklePath(host.PacketReceiptPath(portID, channelID, solo.Sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, receiptPath)
 	require.NoError(solo.t, err)
 
 	return path
@@ -310,7 +315,8 @@ func (solo *Solomachine) GetPacketReceiptPath(portID, channelID string) commitme
 
 // GetNextSequenceRecvPath returns the commitment path for the next sequence recv counter.
 func (solo *Solomachine) GetNextSequenceRecvPath(portID, channelID string) commitmenttypes.MerklePath {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(portID, channelID))
+	nextSequenceRecvPath := commitmenttypes.NewMerklePath(host.NextSequenceRecvPath(portID, channelID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, nextSequenceRecvPath)
 	require.NoError(solo.t, err)
 
 	return path

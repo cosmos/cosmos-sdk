@@ -3,13 +3,12 @@ package cosmos.crypto.ledger.secp256k1.v1beta1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/ledger";
 
-import "gogoproto/gogo.proto";
 import "cosmos/base/hd/v1beta1/hd.proto";
 
 // PrivKey defines a Ledger hardware wallet secp256k1 private key.
 message PrivKey {
     // path is the derivation path used to generate the private key.
-    BIP44Params path = 1;
+    cosmos.base.hd.v1beta1.BIP44Params path = 1;
 
     // cached_pub_key is an utility field used to cache the key's public key,
     // so that we don't need to query the Ledger each time we need to access

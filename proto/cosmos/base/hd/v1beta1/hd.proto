@@ -1,0 +1,20 @@
+syntax = "proto3";
+package cosmos.crypto.ledger.secp256k1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/crypto/hd";
+
+// BIP44Params wraps BIP 44 params (5 level BIP 32 path).
+// To receive a canonical string representation ala
+// m / purpose' / coinType' / account' / change / addressIndex
+// call String() on a BIP44Params instance.
+message BIP44Params {
+	option (gogoproto.goproto_stringer) = false;
+
+	uint32 Purpose = 1;
+	uint32 CoinType = 2;
+	uint32 Account = 3;
+	bool Change = 4;
+	uint32 AddressIndex = 5;
+}

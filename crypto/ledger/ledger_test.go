@@ -16,13 +16,13 @@ import (
 func TestErrorHandling(t *testing.T) {
 	// first, try to generate a key, must return an error
 	// (no panic)
-	path := *hd.NewParams(44, 555, 0, false, 0)
+	path := hd.NewParams(44, 555, 0, false, 0)
 	_, err := NewPrivKeySecp256k1Unsafe(path)
 	require.Error(t, err)
 }
 
 func TestPublicKeyUnsafe(t *testing.T) {
-	path := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
+	path := hd.NewFundraiserParams(0, sdk.CoinType, 0)
 	priv, err := NewPrivKeySecp256k1Unsafe(path)
 	require.Nil(t, err, "%s", err)
 	require.NotNil(t, priv)
@@ -61,7 +61,7 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 
 	// Check with device
 	for i := uint32(0); i < 10; i++ {
-		path := *hd.NewFundraiserParams(0, sdk.CoinType, i)
+		path := hd.NewFundraiserParams(0, sdk.CoinType, i)
 		fmt.Printf("Checking keys at %v\n", path)
 
 		priv, err := NewPrivKeySecp256k1Unsafe(path)
@@ -69,7 +69,7 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 		require.NotNil(t, priv)
 
 		// Check other methods
-		tmp := priv.(PrivKeyLedgerSecp256k1)
+		tmp := priv.(PrivKey)
 		require.NoError(t, tmp.ValidateKey())
 		(&tmp).AssertIsPrivKeyInner()
 
@@ -97,7 +97,7 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 }
 
 func TestPublicKeySafe(t *testing.T) {
-	path := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
+	path := hd.NewFundraiserParams(0, sdk.CoinType, 0)
 	priv, addr, err := NewPrivKeySecp256k1(path, "cosmos")
 
 	require.Nil(t, err, "%s", err)
@@ -154,7 +154,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 
 	// Check with device
 	for i := uint32(0); i < 10; i++ {
-		path := *hd.NewFundraiserParams(0, sdk.CoinType, i)
+		path := hd.NewFundraiserParams(0, sdk.CoinType, i)
 		fmt.Printf("Checking keys at %v\n", path)
 
 		priv, addr, err := NewPrivKeySecp256k1(path, "cosmos")
@@ -169,7 +169,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 			"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
 		// Check other methods
-		tmp := priv.(PrivKeyLedgerSecp256k1)
+		tmp := priv.(PrivKey)
 		require.NoError(t, tmp.ValidateKey())
 		(&tmp).AssertIsPrivKeyInner()
 
@@ -208,7 +208,7 @@ func TestSignaturesHD(t *testing.T) {
 	for account := uint32(0); account < 100; account += 30 {
 		msg := getFakeTx(account)
 
-		path := *hd.NewFundraiserParams(account, sdk.CoinType, account/5)
+		path := hd.NewFundraiserParams(account, sdk.CoinType, account/5)
 		fmt.Printf("Checking signature at %v    ---   PLEASE REVIEW AND ACCEPT IN THE DEVICE\n", path)
 
 		priv, err := NewPrivKeySecp256k1Unsafe(path)
@@ -225,7 +225,7 @@ func TestSignaturesHD(t *testing.T) {
 
 func TestRealDeviceSecp256k1(t *testing.T) {
 	msg := getFakeTx(50)
-	path := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
+	path := hd.NewFundraiserParams(0, sdk.CoinType, 0)
 	priv, err := NewPrivKeySecp256k1Unsafe(path)
 	require.Nil(t, err, "%s", err)
 

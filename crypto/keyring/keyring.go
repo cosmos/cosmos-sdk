@@ -352,7 +352,7 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 
 	hdPath := hd.NewFundraiserParams(account, coinType, index)
 
-	priv, _, err := ledger.NewPrivKeySecp256k1(*hdPath, hrp)
+	priv, _, err := ledger.NewPrivKeySecp256k1(hdPath, hrp)
 	if err != nil {
 		return nil, err
 	}
@@ -546,7 +546,7 @@ func SignWithLedger(info Info, msg []byte) (sig []byte, pub types.PubKey, err er
 		return
 	}
 
-	priv, err := ledger.NewPrivKeySecp256k1Unsafe(*path)
+	priv, err := ledger.NewPrivKeySecp256k1Unsafe(path)
 	if err != nil {
 		return
 	}

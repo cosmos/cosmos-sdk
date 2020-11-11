@@ -16,22 +16,6 @@ var (
 	errInvalidRoute = errors.New("invalid route")
 )
 
-// verifyMessage asserts that the message implementation fits offchain specification correctly
-func verifyMessage(m sdk.Msg) error {
-	// ensure the sdk.msg messages are of type offchain.msg
-	// generally speaking we do not want to try to handle
-	// any other type of transaction aside from the offchain ones
-	// as they abide by different rules
-	_, valid := m.(msg)
-	if !valid {
-		return fmt.Errorf("%w: %T", errInvalidType, m)
-	}
-	if m.Route() != ExpectedRoute {
-		return fmt.Errorf("%w: %s", errInvalidRoute, m.Route())
-	}
-	return nil
-}
-
 // NewVerifier is SignatureVerifier's constructor
 func NewVerifier(signModeHandler authsigning.SignModeHandler) SignatureVerifier {
 	return SignatureVerifier{signModeHandler: signModeHandler}
@@ -72,7 +56,7 @@ func (v SignatureVerifier) Verify(tx sdk.Tx) error {
 	for i, signature := range signatures {
 		err := verifySignature(tx, signature, signers[i], v.signModeHandler)
 		if err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid signature %d: %w", i, err)
+			return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "invalid signature %d: %s", i, err)
 		}
 	}
 	return nil
@@ -90,6 +74,22 @@ func verifySignature(tx sdk.Tx, sig signing.SignatureV2, signer cryptotypes.PubK
 	err := authsigning.VerifySignature(signer, signerData, sig.Data, handler, tx)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+// verifyMessage asserts that the message implementation fits offchain specification correctly
+func verifyMessage(m sdk.Msg) error {
+	// ensure the sdk.msg messages are of type offchain.msg
+	// generally speaking we do not want to try to handle
+	// any other type of transaction aside from the offchain ones
+	// as they abide by different rules
+	_, valid := m.(msg)
+	if !valid {
+		return fmt.Errorf("%w: %T", errInvalidType, m)
+	}
+	if m.Route() != ExpectedRoute {
+		return fmt.Errorf("%w: %s", errInvalidRoute, m.Route())
 	}
 	return nil
 }

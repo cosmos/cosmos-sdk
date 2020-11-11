@@ -11,8 +11,8 @@ import (
 var ModuleCdc = codec.NewAminoCodec(amino)
 var amino = codec.NewLegacyAmino()
 
-// RegisterCodec adds offchain sdk.Msg types to the interface registry
-func RegisterCodec(ir types.InterfaceRegistry) {
+// RegisterInterfaces adds offchain sdk.Msg types to the interface registry
+func RegisterInterfaces(ir types.InterfaceRegistry) {
 	ir.RegisterImplementations((*sdk.Msg)(nil), &MsgSignData{})
 }
 

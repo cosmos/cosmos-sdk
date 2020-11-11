@@ -21,7 +21,7 @@ const (
 
 // msg defines an off-chain msg this exists so that offchain verification
 // procedures are only applied to transactions lying in this package.
-// TODO: making this exported would allow external types to use the SignatureVerifier
+// TODO: making this exported would allow external types to use the SignatureVerifier and Signer
 type msg interface {
 	sdk.Msg
 	offchain()

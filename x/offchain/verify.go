@@ -16,8 +16,8 @@ var (
 	errInvalidRoute = errors.New("invalid route")
 )
 
-// VerifyMessage asserts that the message implementation fits offchain specification correctly
-func VerifyMessage(m sdk.Msg) error {
+// verifyMessage asserts that the message implementation fits offchain specification correctly
+func verifyMessage(m sdk.Msg) error {
 	// ensure the sdk.msg messages are of type offchain.msg
 	// generally speaking we do not want to try to handle
 	// any other type of transaction aside from the offchain ones
@@ -55,7 +55,7 @@ func (v SignatureVerifier) Verify(tx sdk.Tx) error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "no message provided")
 	}
 	for i, msg := range msgs {
-		err := VerifyMessage(msg)
+		err := verifyMessage(msg)
 		if err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "message number %d is invalid: %s", i, err)
 		}
@@ -67,12 +67,12 @@ func (v SignatureVerifier) Verify(tx sdk.Tx) error {
 		return fmt.Errorf("cannot verify: %w", err)
 	}
 	if len(signatures) != len(signers) {
-		return fmt.Errorf("signatures and signers mismatch: %d <-> %d", len(signers), len(signatures))
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "signatures and signers mismatch: %d <-> %d", len(signers), len(signatures))
 	}
 	for i, signature := range signatures {
 		err := verifySignature(tx, signature, signers[i], v.signModeHandler)
 		if err != nil {
-			return fmt.Errorf("invalid signature %d: %w", i, err)
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid signature %d: %w", i, err)
 		}
 	}
 	return nil

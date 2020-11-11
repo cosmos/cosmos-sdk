@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
@@ -22,15 +23,20 @@ type Signer struct {
 
 // Sign produces a signed tx given a private key
 // and the msgs we're aiming to sign
-func (s Signer) Sign(privKey cryptotypes.PrivKey, msgs []msg) (authsigning.SigVerifiableTx, error) {
+func (s Signer) Sign(privKey cryptotypes.PrivKey, msgs []sdk.Msg) (authsigning.SigVerifiableTx, error) {
+	if len(msgs) == 0 {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "no msg provided")
+	}
 	// build unsigned tx
 	builder := s.txConfig.NewTxBuilder()
 
-	sdkMsgs := make([]sdk.Msg, len(msgs))
 	for i, msg := range msgs {
-		sdkMsgs[i] = msg
+		err := verifyMessage(msg)
+		if err != nil {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "message number %d is invalid: %s", i, err)
+		}
 	}
-	err := builder.SetMsgs(sdkMsgs...)
+	err := builder.SetMsgs(msgs...)
 	if err != nil {
 		return nil, err
 	}

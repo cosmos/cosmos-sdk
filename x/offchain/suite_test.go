@@ -27,7 +27,7 @@ func (ts *packageTestSuite) SetupTest() {
 
 // tests sign verify cycle works
 func (ts *packageTestSuite) TestSignVerify() {
-	tx, err := ts.signer.Sign(ts.privKey, []msg{
+	tx, err := ts.signer.Sign(ts.privKey, []sdk.Msg{
 		NewMsgSignData(ts.address, []byte("data")),
 	})
 	ts.Require().NoError(err, "error while signing transaction")

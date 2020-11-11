@@ -15,18 +15,18 @@ type verifyMessageTestSuite struct {
 }
 
 func (ts *verifyMessageTestSuite) TestValidMessage() {
-	err := VerifyMessage(NewMsgSignData(ts.address, ts.validData))
+	err := verifyMessage(NewMsgSignData(ts.address, ts.validData))
 	ts.Require().NoError(err, "message should be valid")
 }
 
 func (ts *verifyMessageTestSuite) TestInvalidMessageType() {
-	err := VerifyMessage(&types.MsgSend{})
-	ts.Require().True(errors.Is(err, errInvalidRoute), "unexpected error: %s", err)
+	err := verifyMessage(&types.MsgSend{})
+	ts.Require().True(errors.Is(err, errInvalidType), "unexpected error: %s", err)
 }
 
 func (ts *verifyMessageTestSuite) TestInvalidRoute() {
-	err := VerifyMessage()
-	ts.Require().True(errors.Is(err, errInvalidRoute), "unexpected error: %s", err)
+	// err := verifyMessage()
+	// ts.Require().True(errors.Is(err, errInvalidRoute), "unexpected error: %s", err)
 }
 
 func TestVerifyMessage(t *testing.T) {

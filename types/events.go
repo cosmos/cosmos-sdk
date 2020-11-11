@@ -74,7 +74,8 @@ func (em *EventManager) EmitTypedEvents(tevs ...proto.Message) error {
 
 // TypedEventToEvent takes typed event and converts to Event object
 func TypedEventToEvent(tev proto.Message) (Event, error) {
-	evtType := proto.MessageName(tev)
+	// Replace "." in event type with "-" to fix tm event query issue
+	evtType := strings.ReplaceAll(proto.MessageName(tev), ".", "-")
 	evtJSON, err := codec.ProtoMarshalJSON(tev, nil)
 	if err != nil {
 		return Event{}, err
@@ -102,7 +103,9 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 
 // ParseTypedEvent converts abci.Event back to typed event
 func ParseTypedEvent(event abci.Event) (proto.Message, error) {
-	concreteGoType := proto.MessageType(event.Type)
+	// Revert changes in event type name by replacing "-" with "."
+	evtType := strings.ReplaceAll(event.Type, "-", ".")
+	concreteGoType := proto.MessageType(evtType)
 	if concreteGoType == nil {
 		return nil, fmt.Errorf("failed to retrieve the message of type %q", event.Type)
 	}

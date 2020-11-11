@@ -170,12 +170,8 @@ func ResultEventToABCIEvent(rev ctypes.ResultEvent) ([]abci.Event, error) {
 			return nil, fmt.Errorf("failed to unmarshal into tmtypes.EventDataNewBlock: %s", string(bl))
 		}
 		out := []abci.Event{}
-		for _, ev := range blResult.ResultBeginBlock.Events {
-			out = append(out, ev)
-		}
-		for _, ev := range blResult.ResultEndBlock.Events {
-			out = append(out, ev)
-		}
+		out = append(out, blResult.ResultBeginBlock.Events...)
+		out = append(out, blResult.ResultEndBlock.Events...)
 		return out, nil
 	default:
 		return nil, fmt.Errorf("neither tx nor new block event: %s", rev.Query)

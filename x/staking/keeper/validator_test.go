@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -19,7 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func newMonikerValidator(t *testing.T, operator sdk.ValAddress, pubKey crypto.PubKey, moniker string) types.Validator {
+func newMonikerValidator(t *testing.T, operator sdk.ValAddress, pubKey cryptotypes.PubKey, moniker string) types.Validator {
 	v, err := types.NewValidator(operator, pubKey, types.Description{Moniker: moniker})
 	require.NoError(t, err)
 	return v

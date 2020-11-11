@@ -9,7 +9,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmprotoversion "github.com/tendermint/tendermint/proto/tendermint/version"
@@ -34,17 +33,13 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/types"
-	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
-	// client types
-	Tendermint  = ibctmtypes.Tendermint
-	SoloMachine = solomachinetypes.SoloMachine
-
 	// Default params constants used to create a TM client
 	TrustingPeriod  time.Duration = time.Hour * 24 * 7 * 2
 	UnbondingPeriod time.Duration = time.Hour * 24 * 7 * 3
@@ -109,7 +104,7 @@ type TestChain struct {
 	Vals    *tmtypes.ValidatorSet
 	Signers []tmtypes.PrivValidator
 
-	senderPrivKey crypto.PrivKey
+	senderPrivKey cryptotypes.PrivKey
 	SenderAccount authtypes.AccountI
 
 	// IBC specific helpers
@@ -132,7 +127,7 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 	require.NoError(t, err)
 
 	// create validator set with single validator
-	validator := tmtypes.NewValidator(pubKey.(cryptotypes.IntoTmPubKey).AsTmPubKey(), 1)
+	validator := tmtypes.NewValidator(pubKey, 1)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	signers := []tmtypes.PrivValidator{privVal}
 
@@ -197,9 +192,8 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, clienttypes.Height) {
 		Prove:  true,
 	})
 
-	merkleProof := commitmenttypes.MerkleProof{
-		Proof: res.ProofOps,
-	}
+	merkleProof, err := commitmenttypes.ConvertProofs(res.ProofOps)
+	require.NoError(chain.t, err)
 
 	proof, err := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
 	require.NoError(chain.t, err)
@@ -222,9 +216,8 @@ func (chain *TestChain) QueryUpgradeProof(key []byte, height uint64) ([]byte, cl
 		Prove:  true,
 	})
 
-	merkleProof := commitmenttypes.MerkleProof{
-		Proof: res.ProofOps,
-	}
+	merkleProof, err := commitmenttypes.ConvertProofs(res.ProofOps)
+	require.NoError(chain.t, err)
 
 	proof, err := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
 	require.NoError(chain.t, err)
@@ -244,7 +237,7 @@ func (chain *TestChain) QueryClientStateProof(clientID string) (exported.ClientS
 	clientState, found := chain.App.IBCKeeper.ClientKeeper.GetClientState(chain.GetContext(), clientID)
 	require.True(chain.t, found)
 
-	clientKey := host.FullKeyClientPath(clientID, host.KeyClientState())
+	clientKey := host.FullClientStateKey(clientID)
 	proofClient, _ := chain.QueryProof(clientKey)
 
 	return clientState, proofClient
@@ -256,7 +249,7 @@ func (chain *TestChain) QueryConsensusStateProof(clientID string) ([]byte, clien
 	clientState := chain.GetClientState(clientID)
 
 	consensusHeight := clientState.GetLatestHeight().(clienttypes.Height)
-	consensusKey := host.FullKeyClientPath(clientID, host.KeyConsensusState(consensusHeight))
+	consensusKey := host.FullConsensusStateKey(clientID, consensusHeight)
 	proofConsensus, _ := chain.QueryProof(consensusKey)
 
 	return proofConsensus, consensusHeight
@@ -346,7 +339,7 @@ func (chain *TestChain) GetValsAtHeight(height int64) (*tmtypes.ValidatorSet, bo
 
 	valSet := stakingtypes.Validators(histInfo.Valset)
 
-	tmValidators, err := valSet.ToTmValidators()
+	tmValidators, err := teststaking.ToTmValidators(valSet)
 	if err != nil {
 		panic(err)
 	}
@@ -434,7 +427,7 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 	)
 
 	switch clientType {
-	case Tendermint:
+	case exported.Tendermint:
 		height := counterparty.LastHeader.GetHeight().(clienttypes.Height)
 		clientState = ibctmtypes.NewClientState(
 			counterparty.ChainID, DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
@@ -442,7 +435,7 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 			UpgradePath, false, false,
 		)
 		consensusState = counterparty.LastHeader.ConsensusState()
-	case SoloMachine:
+	case exported.Solomachine:
 		solo := NewSolomachine(chain.t, chain.Codec, clientID, "", 1)
 		clientState = solo.ClientState()
 		consensusState = solo.ConsensusState()
@@ -461,7 +454,7 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 // client will be created on the (target) chain.
 func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string) error {
 	// construct MsgCreateClient using counterparty
-	msg := chain.ConstructMsgCreateClient(counterparty, clientID, Tendermint)
+	msg := chain.ConstructMsgCreateClient(counterparty, clientID, exported.Tendermint)
 	return chain.sendMsgs(msg)
 }
 
@@ -647,7 +640,7 @@ func (chain *TestChain) ConnectionOpenTry(
 ) error {
 	counterpartyClient, proofClient := counterparty.QueryClientStateProof(counterpartyConnection.ClientID)
 
-	connectionKey := host.KeyConnection(counterpartyConnection.ID)
+	connectionKey := host.ConnectionKey(counterpartyConnection.ID)
 	proofInit, proofHeight := counterparty.QueryProof(connectionKey)
 
 	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
@@ -670,7 +663,7 @@ func (chain *TestChain) ConnectionOpenAck(
 ) error {
 	counterpartyClient, proofClient := counterparty.QueryClientStateProof(counterpartyConnection.ClientID)
 
-	connectionKey := host.KeyConnection(counterpartyConnection.ID)
+	connectionKey := host.ConnectionKey(counterpartyConnection.ID)
 	proofTry, proofHeight := counterparty.QueryProof(connectionKey)
 
 	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
@@ -690,7 +683,7 @@ func (chain *TestChain) ConnectionOpenConfirm(
 	counterparty *TestChain,
 	connection, counterpartyConnection *TestConnection,
 ) error {
-	connectionKey := host.KeyConnection(counterpartyConnection.ID)
+	connectionKey := host.ConnectionKey(counterpartyConnection.ID)
 	proof, height := counterparty.QueryProof(connectionKey)
 
 	msg := connectiontypes.NewMsgConnectionOpenConfirm(
@@ -790,7 +783,7 @@ func (chain *TestChain) ChanOpenTry(
 	order channeltypes.Order,
 	connectionID string,
 ) error {
-	proof, height := counterparty.QueryProof(host.KeyChannel(counterpartyCh.PortID, counterpartyCh.ID))
+	proof, height := counterparty.QueryProof(host.ChannelKey(counterpartyCh.PortID, counterpartyCh.ID))
 
 	msg := channeltypes.NewMsgChannelOpenTry(
 		ch.PortID, ch.ID, ch.ID, // testing doesn't use flexible selection
@@ -808,7 +801,7 @@ func (chain *TestChain) ChanOpenAck(
 	counterparty *TestChain,
 	ch, counterpartyCh TestChannel,
 ) error {
-	proof, height := counterparty.QueryProof(host.KeyChannel(counterpartyCh.PortID, counterpartyCh.ID))
+	proof, height := counterparty.QueryProof(host.ChannelKey(counterpartyCh.PortID, counterpartyCh.ID))
 
 	msg := channeltypes.NewMsgChannelOpenAck(
 		ch.PortID, ch.ID,
@@ -824,7 +817,7 @@ func (chain *TestChain) ChanOpenConfirm(
 	counterparty *TestChain,
 	ch, counterpartyCh TestChannel,
 ) error {
-	proof, height := counterparty.QueryProof(host.KeyChannel(counterpartyCh.PortID, counterpartyCh.ID))
+	proof, height := counterparty.QueryProof(host.ChannelKey(counterpartyCh.PortID, counterpartyCh.ID))
 
 	msg := channeltypes.NewMsgChannelOpenConfirm(
 		ch.PortID, ch.ID,

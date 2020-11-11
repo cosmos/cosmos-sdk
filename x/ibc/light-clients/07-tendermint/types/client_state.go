@@ -22,9 +22,6 @@ import (
 
 var _ exported.ClientState = (*ClientState)(nil)
 
-// Tendermint is used to indicate that the client uses the Tendermint Consensus Algorithm.
-const Tendermint string = "Tendermint"
-
 // NewClientState creates a new ClientState instance
 func NewClientState(
 	chainID string, trustLevel Fraction,
@@ -55,7 +52,7 @@ func (cs ClientState) GetChainID() string {
 
 // ClientType is tendermint.
 func (cs ClientState) ClientType() string {
-	return Tendermint
+	return exported.Tendermint
 }
 
 // GetLatestHeight returns latest block height.
@@ -180,7 +177,7 @@ func (cs ClientState) VerifyClientState(
 		return err
 	}
 
-	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ClientStatePath()
+	clientPrefixedPath := commitmenttypes.NewMerklePath(host.FullClientStatePath(counterpartyClientIdentifier))
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	if err != nil {
 		return err
@@ -220,7 +217,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ConsensusStatePath(consensusHeight)
+	clientPrefixedPath := commitmenttypes.NewMerklePath(host.FullConsensusStatePath(counterpartyClientIdentifier, consensusHeight))
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	if err != nil {
 		return err
@@ -263,7 +260,8 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(connectionID))
+	connectionPath := commitmenttypes.NewMerklePath(host.ConnectionPath(connectionID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, connectionPath)
 	if err != nil {
 		return err
 	}
@@ -302,7 +300,8 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(portID, channelID))
+	channelPath := commitmenttypes.NewMerklePath(host.ChannelPath(portID, channelID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, channelPath)
 	if err != nil {
 		return err
 	}
@@ -342,13 +341,14 @@ func (cs ClientState) VerifyPacketCommitment(
 		return err
 	}
 
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(portID, channelID, sequence))
+	commitmentPath := commitmenttypes.NewMerklePath(host.PacketCommitmentPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, commitmentPath)
 	if err != nil {
 		return err
 	}
 
 	if err := merkleProof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, commitmentBytes); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedPacketCommitmentVerification, err.Error())
+		return err
 	}
 
 	return nil
@@ -372,7 +372,8 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		return err
 	}
 
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
+	ackPath := commitmenttypes.NewMerklePath(host.PacketAcknowledgementPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, ackPath)
 	if err != nil {
 		return err
 	}
@@ -402,7 +403,8 @@ func (cs ClientState) VerifyPacketReceiptAbsence(
 		return err
 	}
 
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketReceiptPath(portID, channelID, sequence))
+	receiptPath := commitmenttypes.NewMerklePath(host.PacketReceiptPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, receiptPath)
 	if err != nil {
 		return err
 	}
@@ -431,7 +433,8 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		return err
 	}
 
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(portID, channelID))
+	nextSequenceRecvPath := commitmenttypes.NewMerklePath(host.NextSequenceRecvPath(portID, channelID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, nextSequenceRecvPath)
 	if err != nil {
 		return err
 	}

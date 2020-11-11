@@ -242,7 +242,7 @@ func (chain *TestChain) QueryClientStateProof(clientID string) (exported.ClientS
 	clientState, found := chain.App.IBCKeeper.ClientKeeper.GetClientState(chain.GetContext(), clientID)
 	require.True(chain.t, found)
 
-	clientKey := host.FullKeyClientPath(clientID, host.KeyClientState())
+	clientKey := host.FullClientStateKey(clientID)
 	proofClient, _ := chain.QueryProof(clientKey)
 
 	return clientState, proofClient
@@ -254,7 +254,7 @@ func (chain *TestChain) QueryConsensusStateProof(clientID string) ([]byte, clien
 	clientState := chain.GetClientState(clientID)
 
 	consensusHeight := clientState.GetLatestHeight().(clienttypes.Height)
-	consensusKey := host.FullKeyClientPath(clientID, host.KeyConsensusState(consensusHeight))
+	consensusKey := host.FullConsensusStateKey(clientID, consensusHeight)
 	proofConsensus, _ := chain.QueryProof(consensusKey)
 
 	return proofConsensus, consensusHeight
@@ -645,7 +645,7 @@ func (chain *TestChain) ConnectionOpenTry(
 ) error {
 	counterpartyClient, proofClient := counterparty.QueryClientStateProof(counterpartyConnection.ClientID)
 
-	connectionKey := host.KeyConnection(counterpartyConnection.ID)
+	connectionKey := host.ConnectionKey(counterpartyConnection.ID)
 	proofInit, proofHeight := counterparty.QueryProof(connectionKey)
 
 	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
@@ -668,7 +668,7 @@ func (chain *TestChain) ConnectionOpenAck(
 ) error {
 	counterpartyClient, proofClient := counterparty.QueryClientStateProof(counterpartyConnection.ClientID)
 
-	connectionKey := host.KeyConnection(counterpartyConnection.ID)
+	connectionKey := host.ConnectionKey(counterpartyConnection.ID)
 	proofTry, proofHeight := counterparty.QueryProof(connectionKey)
 
 	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
@@ -688,7 +688,7 @@ func (chain *TestChain) ConnectionOpenConfirm(
 	counterparty *TestChain,
 	connection, counterpartyConnection *TestConnection,
 ) error {
-	connectionKey := host.KeyConnection(counterpartyConnection.ID)
+	connectionKey := host.ConnectionKey(counterpartyConnection.ID)
 	proof, height := counterparty.QueryProof(connectionKey)
 
 	msg := connectiontypes.NewMsgConnectionOpenConfirm(
@@ -788,7 +788,7 @@ func (chain *TestChain) ChanOpenTry(
 	order channeltypes.Order,
 	connectionID string,
 ) error {
-	proof, height := counterparty.QueryProof(host.KeyChannel(counterpartyCh.PortID, counterpartyCh.ID))
+	proof, height := counterparty.QueryProof(host.ChannelKey(counterpartyCh.PortID, counterpartyCh.ID))
 
 	msg := channeltypes.NewMsgChannelOpenTry(
 		ch.PortID, ch.ID, ch.ID, // testing doesn't use flexible selection
@@ -806,7 +806,7 @@ func (chain *TestChain) ChanOpenAck(
 	counterparty *TestChain,
 	ch, counterpartyCh TestChannel,
 ) error {
-	proof, height := counterparty.QueryProof(host.KeyChannel(counterpartyCh.PortID, counterpartyCh.ID))
+	proof, height := counterparty.QueryProof(host.ChannelKey(counterpartyCh.PortID, counterpartyCh.ID))
 
 	msg := channeltypes.NewMsgChannelOpenAck(
 		ch.PortID, ch.ID,
@@ -822,7 +822,7 @@ func (chain *TestChain) ChanOpenConfirm(
 	counterparty *TestChain,
 	ch, counterpartyCh TestChannel,
 ) error {
-	proof, height := counterparty.QueryProof(host.KeyChannel(counterpartyCh.PortID, counterpartyCh.ID))
+	proof, height := counterparty.QueryProof(host.ChannelKey(counterpartyCh.PortID, counterpartyCh.ID))
 
 	msg := channeltypes.NewMsgChannelOpenConfirm(
 		ch.PortID, ch.ID,

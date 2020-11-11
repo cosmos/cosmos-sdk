@@ -15760,7 +15760,7 @@ paths:
                         }
       tags:
         - Query
-  /ibc/channel/v1beta1/channels:
+  /ibc/core/channel/v1beta1/channels:
     get:
       summary: Channels queries all the IBC channels of a chain.
       operationId: Channels
@@ -16146,7 +16146,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}':
+  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}':
     get:
       summary: Channel queries an IBC Channel.
       operationId: Channel
@@ -16471,7 +16471,7 @@ paths:
           type: string
       tags:
         - Query
-  '/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/client_state':
+  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/client_state':
     get:
       summary: >-
         ChannelClientState queries for the client state for the channel
@@ -16909,7 +16909,7 @@ paths:
           type: string
       tags:
         - Query
-  '/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/consensus_state/version/{version_number}/height/{version_height}':
+  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/consensus_state/version/{version_number}/height/{version_height}':
     get:
       summary: |-
         ChannelConsensusState queries for the consensus state for the channel
@@ -17344,7 +17344,7 @@ paths:
           format: uint64
       tags:
         - Query
-  '/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/next_sequence':
+  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/next_sequence':
     get:
       summary: >-
         NextSequenceReceive returns the next receive sequence for a given
@@ -17596,7 +17596,7 @@ paths:
           type: string
       tags:
         - Query
-  '/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acknowledgements':
+  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acknowledgements':
     get:
       summary: >-
         PacketAcknowledgements returns all the packet acknowledgements
@@ -17945,7 +17945,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acks/{sequence}':
+  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acks/{sequence}':
     get:
       summary: PacketAcknowledgement queries a stored packet acknowledgement hash.
       operationId: PacketAcknowledgement
@@ -18205,7 +18205,7 @@ paths:
           format: uint64
       tags:
         - Query
-  '/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments':
+  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments':
     get:
       summary: |-
         PacketCommitments returns all the packet commitments hashes associated
@@ -18552,7 +18552,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{packet_ack_sequences}/unreceived_acks':
+  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{packet_ack_sequences}/unreceived_acks':
     get:
       summary: >-
         UnreceivedAcks returns all the unreceived IBC acknowledgements
@@ -18814,7 +18814,7 @@ paths:
           minItems: 1
       tags:
         - Query
-  '/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{packet_commitment_sequences}/unreceived_packets':
+  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{packet_commitment_sequences}/unreceived_packets':
     get:
       summary: >-
         UnreceivedPackets returns all the unreceived IBC packets associated with
@@ -19076,7 +19076,7 @@ paths:
           minItems: 1
       tags:
         - Query
-  '/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{sequence}':
+  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{sequence}':
     get:
       summary: PacketCommitment queries a stored packet commitment hash.
       operationId: PacketCommitment
@@ -19337,7 +19337,7 @@ paths:
           format: uint64
       tags:
         - Query
-  '/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_receipts/{sequence}':
+  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_receipts/{sequence}':
     get:
       summary: >-
         PacketReceipt queries if a given packet sequence has been received on
@@ -19599,7 +19599,7 @@ paths:
           format: uint64
       tags:
         - Query
-  '/ibc/channel/v1beta1/connections/{connection}/channels':
+  '/ibc/core/channel/v1beta1/connections/{connection}/channels':
     get:
       summary: |-
         ConnectionChannels queries all the channels associated with a connection
@@ -19992,7 +19992,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /ibc/client/v1beta1/client_states:
+  /ibc/core/client/v1beta1/client_states:
     get:
       summary: ClientStates queries all the IBC light clients of a chain.
       operationId: ClientStates
@@ -20465,7 +20465,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/ibc/client/v1beta1/client_states/{client_id}':
+  '/ibc/core/client/v1beta1/client_states/{client_id}':
     get:
       summary: ClientState queries an IBC light client.
       operationId: ClientState
@@ -20883,7 +20883,7 @@ paths:
           type: string
       tags:
         - Query
-  '/ibc/client/v1beta1/consensus_states/{client_id}':
+  '/ibc/core/client/v1beta1/consensus_states/{client_id}':
     get:
       summary: |-
         ConsensusStates queries all the consensus state associated with a given
@@ -21383,7 +21383,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/ibc/client/v1beta1/consensus_states/{client_id}/version/{version_number}/height/{version_height}':
+  '/ibc/core/client/v1beta1/consensus_states/{client_id}/version/{version_number}/height/{version_height}':
     get:
       summary: >-
         ConsensusState queries a consensus state associated with a client state
@@ -21825,7 +21825,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/ibc/connection/v1beta1/client_connections/{client_id}':
+  '/ibc/core/connection/v1beta1/client_connections/{client_id}':
     get:
       summary: |-
         ClientConnections queries the connection paths associated with a client
@@ -22073,7 +22073,7 @@ paths:
           type: string
       tags:
         - Query
-  /ibc/connection/v1beta1/connections:
+  /ibc/core/connection/v1beta1/connections:
     get:
       summary: Connections queries all the IBC connections of a chain.
       operationId: Connections
@@ -22457,7 +22457,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/ibc/connection/v1beta1/connections/{connection_id}':
+  '/ibc/core/connection/v1beta1/connections/{connection_id}':
     get:
       summary: Connection queries an IBC connection end.
       operationId: Connection
@@ -22777,7 +22777,7 @@ paths:
           type: string
       tags:
         - Query
-  '/ibc/connection/v1beta1/connections/{connection_id}/client_state':
+  '/ibc/core/connection/v1beta1/connections/{connection_id}/client_state':
     get:
       summary: |-
         ConnectionClientState queries the client state associated with the
@@ -23208,7 +23208,7 @@ paths:
           type: string
       tags:
         - Query
-  '/ibc/connection/v1beta1/connections/{connection_id}/consensus_state/version/{version_number}/height/{version_height}':
+  '/ibc/core/connection/v1beta1/connections/{connection_id}/consensus_state/version/{version_number}/height/{version_height}':
     get:
       summary: |-
         ConnectionConsensusState queries the consensus state associated with the
@@ -23636,7 +23636,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /ibc_transfer/v1beta1/denom_traces:
+  /ibc/applications/transfer/v1beta1/denom_traces:
     get:
       summary: DenomTraces queries all denomination traces.
       operationId: DenomTraces
@@ -23761,7 +23761,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/ibc_transfer/v1beta1/denom_traces/{hash}':
+  '/ibc/applications/transfer/v1beta1/denom_traces/{hash}':
     get:
       summary: DenomTrace queries a denomination trace information.
       operationId: DenomTrace
@@ -23822,7 +23822,7 @@ paths:
           type: string
       tags:
         - Query
-  /ibc_transfer/v1beta1/params:
+  /ibc/applications/transfer/v1beta1/params:
     get:
       summary: Params queries all parameters of the ibc-transfer module.
       operationId: IBCTransferParams

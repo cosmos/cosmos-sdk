@@ -306,18 +306,18 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 				counterpartyChosenConnectionID = connection.Counterparty.ConnectionId
 			}
 
-			connectionKey := host.KeyConnection(connA.ID)
+			connectionKey := host.ConnectionKey(connA.ID)
 			proofInit, proofHeight := suite.chainA.QueryProof(connectionKey)
 
 			if consensusHeight.IsZero() {
 				// retrieve consensus state height to provide proof for
 				consensusHeight = counterpartyClient.GetLatestHeight()
 			}
-			consensusKey := host.FullKeyClientPath(clientA, host.KeyConsensusState(consensusHeight))
+			consensusKey := host.FullConsensusStateKey(clientA, consensusHeight)
 			proofConsensus, _ := suite.chainA.QueryProof(consensusKey)
 
 			// retrieve proof of counterparty clientstate on chainA
-			clientKey := host.FullKeyClientPath(clientA, host.KeyClientState())
+			clientKey := host.FullClientStateKey(clientA)
 			proofClient, _ := suite.chainA.QueryProof(clientKey)
 
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenTry(
@@ -661,10 +661,10 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 	for _, tc := range testCases {
 		tc := tc
 		suite.Run(tc.msg, func() {
-			suite.SetupTest()                                                 // reset
+			suite.SetupTest()                                                         // reset
 			version = types.ExportedVersionsToProto(types.GetCompatibleVersions())[0] // must be explicitly changed in malleate
-			consensusHeight = clienttypes.ZeroHeight()                        // must be explicitly changed in malleate
-			counterpartyConnectionID = ""                                     // must be explicitly changed in malleate
+			consensusHeight = clienttypes.ZeroHeight()                                // must be explicitly changed in malleate
+			counterpartyConnectionID = ""                                             // must be explicitly changed in malleate
 
 			tc.malleate()
 
@@ -675,7 +675,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 				counterpartyConnectionID = connB.ID
 			}
 
-			connectionKey := host.KeyConnection(connB.ID)
+			connectionKey := host.ConnectionKey(connB.ID)
 			proofTry, proofHeight := suite.chainB.QueryProof(connectionKey)
 
 			if consensusHeight.IsZero() {
@@ -683,11 +683,11 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 				clientState := suite.chainB.GetClientState(clientB)
 				consensusHeight = clientState.GetLatestHeight()
 			}
-			consensusKey := host.FullKeyClientPath(clientB, host.KeyConsensusState(consensusHeight))
+			consensusKey := host.FullConsensusStateKey(clientB, consensusHeight)
 			proofConsensus, _ := suite.chainB.QueryProof(consensusKey)
 
 			// retrieve proof of counterparty clientstate on chainA
-			clientKey := host.FullKeyClientPath(clientB, host.KeyClientState())
+			clientKey := host.FullClientStateKey(clientB)
 			proofClient, _ := suite.chainB.QueryProof(clientKey)
 
 			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenAck(
@@ -757,7 +757,7 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 			connA := suite.chainA.GetFirstTestConnection(clientA, clientB)
 			connB := suite.chainB.GetFirstTestConnection(clientB, clientA)
 
-			connectionKey := host.KeyConnection(connA.ID)
+			connectionKey := host.ConnectionKey(connA.ID)
 			proofAck, proofHeight := suite.chainA.QueryProof(connectionKey)
 
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenConfirm(

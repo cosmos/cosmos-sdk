@@ -101,7 +101,7 @@ func (cs ClientState) VerifyClientState(
 		return err
 	}
 
-	clientPrefixedPath := commitmenttypes.NewMerklePath("clients/" + counterpartyClientIdentifier + "/" + host.ClientStatePath())
+	clientPrefixedPath := commitmenttypes.NewMerklePath(host.FullClientStatePath(counterpartyClientIdentifier))
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	if err != nil {
 		return err
@@ -139,7 +139,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	clientPrefixedPath := commitmenttypes.NewMerklePath("clients/" + counterpartyClientIdentifier + "/" + host.ConsensusStatePath(consensusHeight))
+	clientPrefixedPath := commitmenttypes.NewMerklePath(host.FullConsensusStatePath(counterpartyClientIdentifier, consensusHeight))
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	if err != nil {
 		return err
@@ -466,5 +466,5 @@ func produceVerificationArgs(
 // sets the client state to the store
 func setClientState(store sdk.KVStore, cdc codec.BinaryMarshaler, clientState exported.ClientState) {
 	bz := clienttypes.MustMarshalClientState(cdc, clientState)
-	store.Set(host.KeyClientState(), bz)
+	store.Set([]byte(host.KeyClientState), bz)
 }

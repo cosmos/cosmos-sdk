@@ -363,7 +363,7 @@ proto-gen:
 
 proto-gen-docker:
 	@echo "Generating Protobuf files"
-	@docker run -v $(shell pwd):/workspace --workdir /workspace tendermintdev/sdk-proto-gen sh ./scripts/protocgen.sh
+	docker run -v $(shell pwd):/workspace --workdir /workspace tendermintdev/sdk-proto-gen sh ./scripts/protocgen.sh
 .PHONY: proto-gen-docker
 
 proto-format:

@@ -24,13 +24,19 @@ func (h Header) GetHeight() exported.Height {
 }
 
 // GetPubKey unmarshals the new public key into a cryptotypes.PubKey type.
-func (h Header) GetPubKey() cryptotypes.PubKey {
-	publicKey, ok := h.NewPublicKey.GetCachedValue().(cryptotypes.PubKey)
-	if !ok {
-		panic("Header NewPublicKey is not cryptotypes.PubKey")
+// An error is returned if the new public key is nil or the cached value
+// is not a PubKey.
+func (h Header) GetPubKey() (cryptotypes.PubKey, error) {
+	if h.NewPublicKey == nil {
+		return nil, sdkerrors.Wrap(ErrInvalidHeader, "header NewPublicKey cannot be nil")
 	}
 
-	return publicKey
+	publicKey, ok := h.NewPublicKey.GetCachedValue().(cryptotypes.PubKey)
+	if !ok {
+		return nil, sdkerrors.Wrap(ErrInvalidHeader, "header NewPublicKey is not cryptotypes.PubKey")
+	}
+
+	return publicKey, nil
 }
 
 // ValidateBasic ensures that the sequence, signature and public key have all
@@ -52,7 +58,8 @@ func (h Header) ValidateBasic() error {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "signature cannot be empty")
 	}
 
-	if h.NewPublicKey == nil || h.GetPubKey() == nil || len(h.GetPubKey().Bytes()) == 0 {
+	newPublicKey, err := h.GetPubKey()
+	if err != nil || newPublicKey == nil || len(newPublicKey.Bytes()) == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "new public key cannot be empty")
 	}
 

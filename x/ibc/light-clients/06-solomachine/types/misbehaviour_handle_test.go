@@ -241,6 +241,16 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				},
 				false,
 			},
+			{
+				"consensus state pubkey is nil",
+				func() {
+					cs := solomachine.ClientState()
+					cs.ConsensusState.PublicKey = nil
+					clientState = cs
+					misbehaviour = solomachine.CreateMisbehaviour()
+				},
+				false,
+			},
 		}
 
 		for _, tc := range testCases {

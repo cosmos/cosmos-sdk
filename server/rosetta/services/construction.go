@@ -222,7 +222,7 @@ func (sn SingleNetwork) ConstructionPayloads(ctx context.Context, request *types
 	txBldr, err := tx.BuildUnsignedTx(txFactory, sendMsg)
 
 	if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
-		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 	}
 
 	signerData := authsigning.SignerData{
@@ -230,6 +230,20 @@ func (sn SingleNetwork) ConstructionPayloads(ctx context.Context, request *types
 		AccountNumber: txFactory.AccountNumber(),
 		Sequence:      txFactory.Sequence(),
 	}
+
+	sigData := signing.SingleSignatureData{
+		SignMode:  txFactory.SignMode(),
+		Signature: nil,
+	}
+	sig := signing.SignatureV2{
+		PubKey:   pubKey,
+		Data:     &sigData,
+		Sequence: txFactory.Sequence(),
+	}
+	if err := txBldr.SetSignatures(sig); err != nil {
+		return nil, rosetta.WrapError(rosetta.ErrInvalidRequest, err.Error()).RosettaError()
+	}
+
 	signBytes, err := TxConfig.SignModeHandler().GetSignBytes(txFactory.SignMode(), signerData, txBldr.GetTx())
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)

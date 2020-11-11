@@ -1,4 +1,4 @@
-# ADR 033: Governance split votes
+# ADR 037: Governance split votes
 
 ## Changelog
 

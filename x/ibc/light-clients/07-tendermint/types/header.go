@@ -25,7 +25,7 @@ func (h Header) ConsensusState() *ConsensusState {
 
 // ClientType defines that the Header is a Tendermint consensus algorithm
 func (h Header) ClientType() string {
-	return Tendermint
+	return exported.Tendermint
 }
 
 // GetHeight returns the current height. It returns 0 if the tendermint

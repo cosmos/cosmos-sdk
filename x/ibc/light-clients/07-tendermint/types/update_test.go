@@ -5,7 +5,6 @@ import (
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	types "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
@@ -35,7 +34,7 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 	heightMinus3 := clienttypes.NewHeight(height.VersionNumber, height.VersionHeight-3)
 	heightPlus5 := clienttypes.NewHeight(height.VersionNumber, height.VersionHeight+5)
 
-	altVal := tmtypes.NewValidator(altPubKey.(cryptotypes.IntoTmPubKey).AsTmPubKey(), versionHeight)
+	altVal := tmtypes.NewValidator(altPubKey, versionHeight)
 
 	// Create bothValSet with both suite validator and altVal. Would be valid update
 	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))

@@ -11,6 +11,13 @@ import (
 	"github.com/gogo/protobuf/jsonpb"
 	proto "github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	tmtypes "github.com/tendermint/tendermint/types"
+)
+
+var (
+	txEvents = "tm.event='Tx'"
+	blEvents = "tm.event='NewBlock'"
 )
 
 // ----------------------------------------------------------------------------
@@ -138,6 +145,41 @@ func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 	}
 
 	return protoMsg, nil
+}
+
+// ResultEventToABCIEvent takes the ctypes.ResultEvent and casts it to abci.TxResult, extracting the []abci.Event
+func ResultEventToABCIEvent(rev ctypes.ResultEvent) ([]abci.Event, error) {
+	switch rev.Query {
+	case txEvents:
+		var txResult abci.TxResult
+		txResBytes, err := json.Marshal(rev.Data)
+		if err != nil {
+			return nil, err
+		}
+		if err := json.Unmarshal(txResBytes, &txResult); err != nil {
+			return nil, fmt.Errorf("failed to unmarshall into abci.TxResult: %s", string(txResBytes))
+		}
+		return txResult.Result.Events, nil
+	case blEvents:
+		var blResult tmtypes.EventDataNewBlock
+		bl, err := json.Marshal(rev.Data)
+		if err != nil {
+			return nil, err
+		}
+		if err := json.Unmarshal(bl, &blResult); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal into tmtypes.EventDataNewBlock: %s", string(bl))
+		}
+		out := []abci.Event{}
+		for _, ev := range blResult.ResultBeginBlock.Events {
+			out = append(out, ev)
+		}
+		for _, ev := range blResult.ResultEndBlock.Events {
+			out = append(out, ev)
+		}
+		return out, nil
+	default:
+		return nil, fmt.Errorf("neither tx nor new block event: %s", rev.Query)
+	}
 }
 
 // ----------------------------------------------------------------------------

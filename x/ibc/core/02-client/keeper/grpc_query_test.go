@@ -82,7 +82,7 @@ func (suite *KeeperTestSuite) TestQueryClientState() {
 func (suite *KeeperTestSuite) TestQueryClientStates() {
 	var (
 		req             *types.QueryClientStatesRequest
-		expClientStates = []*types.IdentifiedClientState(nil)
+		expClientStates = types.IdentifiedClientStates{}
 	)
 
 	testCases := []struct {
@@ -112,8 +112,8 @@ func (suite *KeeperTestSuite) TestQueryClientStates() {
 		{
 			"success",
 			func() {
-				clientA1, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
-				clientA2, _ := suite.coordinator.CreateClient(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				clientA1, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+				clientA2, _ := suite.coordinator.CreateClient(suite.chainA, suite.chainB, exported.Tendermint)
 
 				clientStateA1 := suite.chainA.GetClientState(clientA1)
 				clientStateA2 := suite.chainA.GetClientState(clientA2)
@@ -122,7 +122,7 @@ func (suite *KeeperTestSuite) TestQueryClientStates() {
 				idcs2 := types.NewIdentifiedClientState(clientA2, clientStateA2)
 
 				// order is sorted by client id, localhost is last
-				expClientStates = []*types.IdentifiedClientState{&idcs, &idcs2}
+				expClientStates = types.IdentifiedClientStates{idcs, idcs2}.Sort()
 				req = &types.QueryClientStatesRequest{
 					Pagination: &query.PageRequest{
 						Limit:      7,
@@ -144,7 +144,7 @@ func (suite *KeeperTestSuite) TestQueryClientStates() {
 			// always add localhost which is created by default in init genesis
 			localhostClientState := suite.chainA.GetClientState(exported.Localhost)
 			identifiedLocalhost := types.NewIdentifiedClientState(exported.Localhost, localhostClientState)
-			expClientStates = append(expClientStates, &identifiedLocalhost)
+			expClientStates = append(expClientStates, identifiedLocalhost)
 
 			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
 
@@ -153,12 +153,7 @@ func (suite *KeeperTestSuite) TestQueryClientStates() {
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
-				suite.Require().Equal(len(expClientStates), len(res.ClientStates))
-				for i := range expClientStates {
-					suite.Require().Equal(expClientStates[i].ClientId, res.ClientStates[i].ClientId)
-					suite.Require().NotNil(res.ClientStates[i].ClientState)
-					suite.Require().Equal(expClientStates[i].ClientState, res.ClientStates[i].ClientState)
-				}
+				suite.Require().Equal(expClientStates.Sort(), res.ClientStates)
 			} else {
 				suite.Require().Error(err)
 			}
@@ -363,4 +358,11 @@ func (suite *KeeperTestSuite) TestQueryConsensusStates() {
 			}
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestQueryParams() {
+	ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
+	expParams := types.DefaultParams()
+	res, _ := suite.queryClient.ClientParams(ctx, &types.QueryClientParamsRequest{})
+	suite.Require().Equal(&expParams, res.Params)
 }

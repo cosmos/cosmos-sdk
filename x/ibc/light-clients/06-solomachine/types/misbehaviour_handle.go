@@ -79,7 +79,12 @@ func verifySignatureAndData(cdc codec.BinaryMarshaler, clientState ClientState, 
 		return err
 	}
 
-	if err := VerifySignature(clientState.ConsensusState.GetPubKey(), data, sigData); err != nil {
+	publicKey, err := clientState.ConsensusState.GetPubKey()
+	if err != nil {
+		return err
+	}
+
+	if err := VerifySignature(publicKey, data, sigData); err != nil {
 		return err
 	}
 

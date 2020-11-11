@@ -96,6 +96,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 							},
 						),
 					},
+					clienttypes.NewParams(exported.Tendermint, exported.Localhost),
 					true,
 				),
 				ConnectionGenesis: connectiontypes.NewGenesisState(
@@ -150,6 +151,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 						),
 					},
 					nil,
+					clienttypes.NewParams(exported.Tendermint),
 					false,
 				),
 				ConnectionGenesis: connectiontypes.DefaultGenesisState(),
@@ -233,6 +235,7 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 							},
 						),
 					},
+					clienttypes.NewParams(exported.Tendermint, exported.Localhost),
 					true,
 				),
 				ConnectionGenesis: connectiontypes.NewGenesisState(
@@ -295,8 +298,8 @@ func (suite *IBCTestSuite) TestExportGenesis() {
 				// creates clients
 				suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 				// create extra clients
-				suite.coordinator.CreateClient(suite.chainA, suite.chainB, ibctesting.Tendermint)
-				suite.coordinator.CreateClient(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				suite.coordinator.CreateClient(suite.chainA, suite.chainB, exported.Tendermint)
+				suite.coordinator.CreateClient(suite.chainA, suite.chainB, exported.Tendermint)
 			},
 		},
 	}

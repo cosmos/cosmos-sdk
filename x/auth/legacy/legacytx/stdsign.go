@@ -3,11 +3,10 @@ package legacytx
 import (
 	"encoding/json"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -57,8 +56,8 @@ func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, 
 
 // Deprecated: StdSignature represents a sig
 type StdSignature struct {
-	crypto.PubKey `json:"pub_key" yaml:"pub_key"` // optional
-	Signature     []byte                          `json:"signature" yaml:"signature"`
+	cryptotypes.PubKey `json:"pub_key" yaml:"pub_key"` // optional
+	Signature          []byte                          `json:"signature" yaml:"signature"`
 }
 
 // StdSignatureToSignatureV2 converts a StdSignature to a SignatureV2
@@ -75,7 +74,7 @@ func StdSignatureToSignatureV2(cdc *codec.LegacyAmino, sig StdSignature) (signin
 	}, nil
 }
 
-func pubKeySigToSigData(cdc *codec.LegacyAmino, key crypto.PubKey, sig []byte) (signing.SignatureData, error) {
+func pubKeySigToSigData(cdc *codec.LegacyAmino, key cryptotypes.PubKey, sig []byte) (signing.SignatureData, error) {
 	multiPK, ok := key.(multisig.PubKey)
 	if !ok {
 		return &signing.SingleSignatureData{

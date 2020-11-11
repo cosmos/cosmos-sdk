@@ -115,8 +115,8 @@ func (cs ClientState) VerifyClientState(
 	store sdk.KVStore, cdc codec.BinaryMarshaler,
 	_ exported.Height, _ exported.Prefix, _ string, _ []byte, clientState exported.ClientState,
 ) error {
-	path := host.KeyClientState()
-	bz := store.Get(path)
+	path := host.KeyClientState
+	bz := store.Get([]byte(path))
 	if bz == nil {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedClientStateVerification,
 			"not found for path: %s", path)
@@ -154,7 +154,7 @@ func (cs ClientState) VerifyConnectionState(
 	connectionID string,
 	connectionEnd exported.ConnectionI,
 ) error {
-	path := host.KeyConnection(connectionID)
+	path := host.ConnectionKey(connectionID)
 	bz := store.Get(path)
 	if bz == nil {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedConnectionStateVerification, "not found for path %s", path)
@@ -188,7 +188,7 @@ func (cs ClientState) VerifyChannelState(
 	channelID string,
 	channel exported.ChannelI,
 ) error {
-	path := host.KeyChannel(portID, channelID)
+	path := host.ChannelKey(portID, channelID)
 	bz := store.Get(path)
 	if bz == nil {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedChannelStateVerification, "not found for path %s", path)
@@ -223,7 +223,7 @@ func (cs ClientState) VerifyPacketCommitment(
 	sequence uint64,
 	commitmentBytes []byte,
 ) error {
-	path := host.KeyPacketCommitment(portID, channelID, sequence)
+	path := host.PacketCommitmentKey(portID, channelID, sequence)
 
 	data := store.Get(path)
 	if len(data) == 0 {
@@ -253,7 +253,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	sequence uint64,
 	acknowledgement []byte,
 ) error {
-	path := host.KeyPacketAcknowledgement(portID, channelID, sequence)
+	path := host.PacketAcknowledgementKey(portID, channelID, sequence)
 
 	data := store.Get(path)
 	if len(data) == 0 {
@@ -283,7 +283,7 @@ func (cs ClientState) VerifyPacketReceiptAbsence(
 	channelID string,
 	sequence uint64,
 ) error {
-	path := host.KeyPacketReceipt(portID, channelID, sequence)
+	path := host.PacketReceiptKey(portID, channelID, sequence)
 
 	data := store.Get(path)
 	if data != nil {
@@ -305,7 +305,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	channelID string,
 	nextSequenceRecv uint64,
 ) error {
-	path := host.KeyNextSequenceRecv(portID, channelID)
+	path := host.NextSequenceRecvKey(portID, channelID)
 
 	data := store.Get(path)
 	if len(data) == 0 {

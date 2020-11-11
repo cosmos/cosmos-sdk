@@ -1,15 +1,12 @@
 package tx
 
 import (
-	"fmt"
-
 	"github.com/gogo/protobuf/proto"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -103,9 +100,9 @@ func (w *wrapper) GetSigners() []sdk.AccAddress {
 	return w.tx.GetSigners()
 }
 
-func (w *wrapper) GetPubKeys() []crypto.PubKey {
+func (w *wrapper) GetPubKeys() []cryptotypes.PubKey {
 	signerInfos := w.tx.AuthInfo.SignerInfos
-	pks := make([]crypto.PubKey, len(signerInfos))
+	pks := make([]cryptotypes.PubKey, len(signerInfos))
 
 	for i, si := range signerInfos {
 		// NOTE: it is okay to leave this nil if there is no PubKey in the SignerInfo.
@@ -114,7 +111,7 @@ func (w *wrapper) GetPubKeys() []crypto.PubKey {
 			continue
 		}
 
-		pk, ok := si.PublicKey.GetCachedValue().(crypto.PubKey)
+		pk, ok := si.PublicKey.GetCachedValue().(cryptotypes.PubKey)
 		if ok {
 			pks[i] = pk
 		}
@@ -366,11 +363,7 @@ func (w *wrapper) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 	w.bodyBz = nil
 }
 
-// PubKeyToAny converts a crypto.PubKey to a proto Any.
-func PubKeyToAny(key crypto.PubKey) (*codectypes.Any, error) {
-	protoMsg, ok := key.(proto.Message)
-	if !ok {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, fmt.Sprintf("can't proto encode %T", protoMsg))
-	}
-	return codectypes.NewAnyWithValue(protoMsg)
+// PubKeyToAny converts a cryptotypes.PubKey to a proto Any.
+func PubKeyToAny(key cryptotypes.PubKey) (*codectypes.Any, error) {
+	return codectypes.NewAnyWithValue(key)
 }

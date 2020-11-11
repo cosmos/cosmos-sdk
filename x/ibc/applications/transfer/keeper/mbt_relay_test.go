@@ -9,6 +9,7 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
+	"strings"
 )
 
 type OnRecvPacketTestCase  = struct {
@@ -83,7 +84,11 @@ func (bank *Bank) NonZeroString() string {
 func BankOfChain(chain *ibctesting.TestChain) Bank {
 	bank := MakeBank()
 	chain.App.BankKeeper.IterateAllBalances(chain.GetContext(), func(address sdk.AccAddress, coin sdk.Coin) (stop bool){
-		bank.SetBalance(address.String(), coin.Denom, coin.Amount)
+		fullDenom := coin.Denom
+		if strings.HasPrefix(coin.Denom, "ibc/") {
+			fullDenom, _ = chain.App.TransferKeeper.DenomPathFromHash(chain.GetContext(), coin.Denom)
+		}
+		bank.SetBalance(address.String(), fullDenom, coin.Amount)
 		return false
 	})
 	return bank
@@ -101,7 +106,7 @@ func (suite *KeeperTestSuite) SetChainBankBalances(chain *ibctesting.TestChain, 
 	return nil
 }
 
-
+// Check that the state of the bank is the bankBefore + expectedBankChange
 func (suite *KeeperTestSuite) CheckBankBalances(chain *ibctesting.TestChain, bankBefore *Bank, expectedBankChange *Bank) error {
 	bankAfter := BankOfChain(chain)
 	bankChange := bankAfter.Sub(bankBefore)
@@ -125,13 +130,15 @@ func (suite *KeeperTestSuite) TestModelBasedOnRecvPacket() {
 
 		seq := uint64(1)
 		coin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
-		data := types.NewFungibleTokenPacketData(coin.Denom, coin.Amount.Uint64(), suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String())
+		data := types.NewFungibleTokenPacketData(coin.Denom, coin.Amount.Uint64(), suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String())
 		packet := channeltypes.NewPacket(data.GetBytes(), seq, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
+
+		bankBefore := BankOfChain(suite.chainB)
+		expectedChange := MakeBank()
+		expectedChange.SetBalance(suite.chainB.SenderAccount.GetAddress().String(), "transfer/testchain1-conn0-chan0/stake", coin.Amount)
 		err := suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, data)
 		suite.Require().NoError(err)
-
-		emptyBank := MakeBank()
-		err = suite.CheckBankBalances(suite.chainA, &emptyBank, &emptyBank)
+		err = suite.CheckBankBalances(suite.chainB, &bankBefore, &expectedChange)
 		suite.Require().NoError(err)
 	})
 }

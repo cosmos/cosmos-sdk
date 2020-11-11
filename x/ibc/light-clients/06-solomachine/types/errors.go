@@ -15,5 +15,4 @@ var (
 	ErrSignatureVerificationFailed = sdkerrors.Register(SubModuleName, 5, "signature verification failed")
 	ErrInvalidProof                = sdkerrors.Register(SubModuleName, 6, "invalid solo machine proof")
 	ErrInvalidDataType             = sdkerrors.Register(SubModuleName, 7, "invalid data type")
-	ErrInvalidConsensusState       = sdkerrors.Register(SubModuleName, 8, "invalid solo machine consensus state")
 )

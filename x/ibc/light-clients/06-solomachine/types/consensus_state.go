@@ -31,12 +31,12 @@ func (cs ConsensusState) GetRoot() exported.Root {
 // is not a PubKey.
 func (cs ConsensusState) GetPubKey() (cryptotypes.PubKey, error) {
 	if cs.PublicKey == nil {
-		return nil, sdkerrors.Wrap(ErrInvalidConsensusState, "consensus state PublicKey cannot be nil")
+		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state PublicKey cannot be nil")
 	}
 
 	publicKey, ok := cs.PublicKey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {
-		return nil, sdkerrors.Wrap(ErrInvalidConsensusState, "consensus state PublicKey is not cryptotypes.PubKey")
+		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state PublicKey is not cryptotypes.PubKey")
 	}
 
 	return publicKey, nil

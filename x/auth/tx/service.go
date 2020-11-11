@@ -42,8 +42,7 @@ func NewTxServer(clientCtx client.Context, simulate baseAppSimulateFn, interface
 var _ txtypes.ServiceServer = txServer{}
 
 const (
-	eventFormat  = "{eventType}.{eventAttribute}={value}"
-	DefaultLimit = 10
+	eventFormat = "{eventType}.{eventAttribute}={value}"
 )
 
 // TxsByEvents implements the ServiceServer.TxsByEvents RPC method.
@@ -53,12 +52,16 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 	if offset < 0 {
 		return nil, status.Error(codes.InvalidArgument, "offset must greater than 0")
 	}
-	if limit <= 0 {
-		limit = DefaultLimit
-	}
 	if len(req.Event) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "must declare at least one event to search")
 	}
+
+	if limit < 0 {
+		return nil, status.Error(codes.InvalidArgument, "limit must greater than 0")
+	} else if limit == 0 {
+		limit = pagination.DefaultLimit
+	}
+
 	page := offset/limit + 1
 
 	var events []string

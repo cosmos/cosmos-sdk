@@ -125,8 +125,8 @@ func (suite *KeeperTestSuite) TestTimeoutPacket() {
 			nextSeqRecv = 1   // must be explicitly changed
 			tc.malleate()
 
-			orderedPacketKey := host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
-			unorderedPacketKey := host.KeyPacketReceipt(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			orderedPacketKey := host.NextSequenceRecvKey(packet.GetDestPort(), packet.GetDestChannel())
+			unorderedPacketKey := host.PacketReceiptKey(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 
 			if ordered {
 				proof, proofHeight = suite.chainB.QueryProof(orderedPacketKey)
@@ -326,9 +326,9 @@ func (suite *KeeperTestSuite) TestTimeoutOnClose() {
 			nextSeqRecv = 1   // must be explicitly changed
 			tc.malleate()
 
-			channelKey := host.KeyChannel(packet.GetDestPort(), packet.GetDestChannel())
-			unorderedPacketKey := host.KeyPacketReceipt(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
-			orderedPacketKey := host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
+			channelKey := host.ChannelKey(packet.GetDestPort(), packet.GetDestChannel())
+			unorderedPacketKey := host.PacketReceiptKey(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			orderedPacketKey := host.NextSequenceRecvKey(packet.GetDestPort(), packet.GetDestChannel())
 
 			proofClosed, proofHeight := suite.chainB.QueryProof(channelKey)
 

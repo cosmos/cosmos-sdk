@@ -345,7 +345,7 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 			tc.malleate()
 
 			// get proof of packet commitment from chainA
-			packetKey := host.KeyPacketCommitment(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+			packetKey := host.PacketCommitmentKey(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 			proof, proofHeight := suite.chainA.QueryProof(packetKey)
 
 			err := suite.chainB.App.IBCKeeper.ChannelKeeper.RecvPacket(suite.chainB.GetContext(), channelCap, packet, proof, proofHeight)
@@ -622,7 +622,7 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			suite.SetupTest() // reset
 			tc.malleate()
 
-			packetKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			packetKey := host.PacketAcknowledgementKey(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 			proof, proofHeight := suite.chainB.QueryProof(packetKey)
 
 			err := suite.chainA.App.IBCKeeper.ChannelKeeper.AcknowledgePacket(suite.chainA.GetContext(), channelCap, packet, ack, proof, proofHeight)

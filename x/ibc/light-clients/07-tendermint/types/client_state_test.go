@@ -230,7 +230,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 			prefix = suite.chainB.GetPrefix()
 
 			// make connection proof
-			connectionKey := host.KeyConnection(connB.ID)
+			connectionKey := host.ConnectionKey(connB.ID)
 			proof, proofHeight = suite.chainB.QueryProof(connectionKey)
 
 			tc.malleate() // make changes as necessary
@@ -308,7 +308,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 			prefix = suite.chainB.GetPrefix()
 
 			// make channel proof
-			channelKey := host.KeyChannel(channelB.PortID, channelB.ID)
+			channelKey := host.ChannelKey(channelB.PortID, channelB.ID)
 			proof, proofHeight = suite.chainB.QueryProof(channelKey)
 
 			tc.malleate() // make changes as necessary
@@ -389,7 +389,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 			prefix = suite.chainB.GetPrefix()
 
 			// make packet commitment proof
-			packetKey := host.KeyPacketCommitment(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+			packetKey := host.PacketCommitmentKey(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 			proof, proofHeight = suite.chainB.QueryProof(packetKey)
 
 			tc.malleate() // make changes as necessary
@@ -477,7 +477,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 			prefix = suite.chainB.GetPrefix()
 
 			// make packet acknowledgement proof
-			acknowledgementKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			acknowledgementKey := host.PacketAcknowledgementKey(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 			proof, proofHeight = suite.chainB.QueryProof(acknowledgementKey)
 
 			tc.malleate() // make changes as necessary
@@ -564,7 +564,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketReceiptAbsence() {
 			prefix = suite.chainB.GetPrefix()
 
 			// make packet receipt absence proof
-			receiptKey := host.KeyPacketReceipt(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			receiptKey := host.PacketReceiptKey(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 			proof, proofHeight = suite.chainB.QueryProof(receiptKey)
 
 			tc.malleate() // make changes as necessary
@@ -655,7 +655,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 			prefix = suite.chainB.GetPrefix()
 
 			// make next seq recv proof
-			nextSeqRecvKey := host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
+			nextSeqRecvKey := host.NextSequenceRecvKey(packet.GetDestPort(), packet.GetDestChannel())
 			proof, proofHeight = suite.chainB.QueryProof(nextSeqRecvKey)
 
 			tc.malleate() // make changes as necessary

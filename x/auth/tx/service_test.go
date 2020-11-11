@@ -146,7 +146,7 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getTxRes))
 	s.Require().Equal(len(grpcRes.Txs), 1)
 	s.Require().Equal("foobar", getTxRes.Txs[0].Body.Memo)
-	s.Require().NotZero(grpcRes.TxResponse[0].Height)
+	s.Require().NotZero(grpcRes.TxResponses[0].Height)
 }
 
 func (s IntegrationTestSuite) TestGetTx() {

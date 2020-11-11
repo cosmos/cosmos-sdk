@@ -115,8 +115,8 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 	}
 
 	return &txtypes.GetTxsEventResponse{
-		Txs:        txsList,
-		TxResponse: txRespList,
+		Txs:         txsList,
+		TxResponses: txRespList,
 		Pagination: &pagination.PageResponse{
 			Total: uint64(result.TotalCount),
 		},

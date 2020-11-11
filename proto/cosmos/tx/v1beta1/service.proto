@@ -41,7 +41,7 @@ message GetTxsEventResponse {
     // txs is the list of queried transactions.
     repeated cosmos.tx.v1beta1.Tx txs = 1;
     // tx_responses is the list of queried TxResponses.
-    repeated cosmos.base.abci.v1beta1.TxResponse tx_response = 2;
+    repeated cosmos.base.abci.v1beta1.TxResponse tx_responses = 2;
     // pagination defines an pagination for the response.
     cosmos.base.query.v1beta1.PageResponse pagination = 3;
 

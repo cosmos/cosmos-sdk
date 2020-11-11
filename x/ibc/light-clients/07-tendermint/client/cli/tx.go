@@ -290,12 +290,12 @@ func parseFraction(fraction string) (types.Fraction, error) {
 		return types.Fraction{}, fmt.Errorf("fraction must have format 'numerator/denominator' got %s", fraction)
 	}
 
-	numerator, err := strconv.ParseInt(fr[0], 10, 64)
+	numerator, err := strconv.ParseUint(fr[0], 10, 64)
 	if err != nil {
 		return types.Fraction{}, fmt.Errorf("invalid trust-level numerator: %w", err)
 	}
 
-	denominator, err := strconv.ParseInt(fr[1], 10, 64)
+	denominator, err := strconv.ParseUint(fr[1], 10, 64)
 	if err != nil {
 		return types.Fraction{}, fmt.Errorf("invalid trust-level denominator: %w", err)
 	}

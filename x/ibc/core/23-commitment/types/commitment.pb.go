@@ -112,6 +112,7 @@ func (m *MerklePrefix) GetKeyPrefix() []byte {
 
 // MerklePath is the path used to verify commitment proofs, which can be an
 // arbitrary structured object (defined by a commitment type).
+// MerklePath is represented from root-to-leaf
 type MerklePath struct {
 	KeyPath []string `protobuf:"bytes,1,rep,name=key_path,json=keyPath,proto3" json:"key_path,omitempty" yaml:"key_path"`
 }
@@ -159,6 +160,7 @@ func (m *MerklePath) GetKeyPath() []string {
 // It demonstrates membership or non-membership for an element or set of
 // elements, verifiable in conjunction with a known commitment root. Proofs
 // should be succinct.
+// MerkleProofs are ordered from leaf-to-root
 type MerkleProof struct {
 	Proofs []*_go.CommitmentProof `protobuf:"bytes,1,rep,name=proofs,proto3" json:"proofs,omitempty"`
 }

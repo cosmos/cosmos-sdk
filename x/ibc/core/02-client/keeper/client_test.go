@@ -261,7 +261,7 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 				// commit upgrade store changes and update clients
 
 				suite.coordinator.CommitBlock(suite.chainB)
-				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
+				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 				suite.Require().NoError(err)
 
 				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
@@ -286,7 +286,7 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 				// commit upgrade store changes and update clients
 
 				suite.coordinator.CommitBlock(suite.chainB)
-				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
+				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 				suite.Require().NoError(err)
 
 				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
@@ -313,7 +313,7 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 				// commit upgrade store changes and update clients
 
 				suite.coordinator.CommitBlock(suite.chainB)
-				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
+				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 				suite.Require().NoError(err)
 
 				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
@@ -345,7 +345,7 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 				upgradedClient = ibctmtypes.NewClientState("wrongchainID", ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, newClientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, true, true)
 
 				suite.coordinator.CommitBlock(suite.chainB)
-				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
+				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 				suite.Require().NoError(err)
 
 				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
@@ -359,7 +359,7 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 
 	for _, tc := range testCases {
 		tc := tc
-		clientA, _ = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+		clientA, _ = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 
 		tc.setup()
 

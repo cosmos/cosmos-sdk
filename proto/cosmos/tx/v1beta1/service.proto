@@ -32,7 +32,6 @@ message GetTxsEventRequest {
     string event = 1;
     // pagination defines an pagination for the request.
     cosmos.base.query.v1beta1.PageRequest pagination = 2;
-
 }
 
 // GetTxsEventResponse is the response type for the Service.TxsByEvents
@@ -44,7 +43,6 @@ message GetTxsEventResponse {
     repeated cosmos.base.abci.v1beta1.TxResponse tx_responses = 2;
     // pagination defines an pagination for the response.
     cosmos.base.query.v1beta1.PageResponse pagination = 3;
-
 }
 
 // SimulateRequest is the request type for the Service.Simulate

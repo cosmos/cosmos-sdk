@@ -33,6 +33,11 @@ service Query {
   rpc ConsensusStates(QueryConsensusStatesRequest) returns (QueryConsensusStatesResponse) {
     option (google.api.http).get = "/ibc/core/client/v1beta1/consensus_states/{client_id}";
   }
+
+   // ClientParams queries all parameters of the ibc client.
+   rpc ClientParams(QueryClientParamsRequest) returns (QueryClientParamsResponse) {
+    option (google.api.http).get = "/ibc/client/v1beta1/params";
+  }
 }
 
 // QueryClientStateRequest is the request type for the Query/ClientState RPC
@@ -65,7 +70,10 @@ message QueryClientStatesRequest {
 // method.
 message QueryClientStatesResponse {
   // list of stored ClientStates of the chain.
-  repeated IdentifiedClientState client_states = 1;
+  repeated IdentifiedClientState client_states = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "IdentifiedClientStates"
+  ];
   // pagination response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
@@ -112,4 +120,13 @@ message QueryConsensusStatesResponse {
   repeated ConsensusStateWithHeight consensus_states = 1 [(gogoproto.nullable) = false];
   // pagination response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryClientParamsRequest is the request type for the Query/ClientParams RPC method.
+message QueryClientParamsRequest {}
+
+// QueryClientParamsResponse is the response type for the Query/ClientParams RPC method.
+message QueryClientParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1;
 }

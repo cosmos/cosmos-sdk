@@ -16,9 +16,6 @@ import (
 
 var _ exported.ClientState = (*ClientState)(nil)
 
-// SoloMachine is used to indicate that the light client is a solo machine.
-const SoloMachine string = "Solo Machine"
-
 // NewClientState creates a new ClientState instance.
 func NewClientState(latestSequence uint64, consensusState *ConsensusState, allowUpdateAfterProposal bool) *ClientState {
 	return &ClientState{
@@ -31,7 +28,7 @@ func NewClientState(latestSequence uint64, consensusState *ConsensusState, allow
 
 // ClientType is Solo Machine.
 func (cs ClientState) ClientType() string {
-	return SoloMachine
+	return exported.Solomachine
 }
 
 // GetLatestHeight returns the latest sequence number.

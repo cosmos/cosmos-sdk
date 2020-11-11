@@ -243,30 +243,6 @@ func (suite *KeeperTestSuite) TestValidateSelfClient() {
 	}
 }
 
-func (suite KeeperTestSuite) TestGetAllClients() {
-	clientIDs := []string{
-		testClientID2, testClientID3, testClientID,
-	}
-	expClients := []exported.ClientState{
-		ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.ZeroHeight(), ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
-		ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.ZeroHeight(), ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
-		ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.ZeroHeight(), ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
-	}
-
-	for i := range expClients {
-		suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientIDs[i], expClients[i])
-	}
-
-	// add localhost client
-	localHostClient, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), exported.Localhost)
-	suite.Require().True(found)
-	expClients = append(expClients, localHostClient)
-
-	clients := suite.chainA.App.IBCKeeper.ClientKeeper.GetAllClients(suite.chainA.GetContext())
-	suite.Require().Len(clients, len(expClients))
-	suite.Require().Equal(expClients, clients)
-}
-
 func (suite KeeperTestSuite) TestGetAllGenesisClients() {
 	clientIDs := []string{
 		testClientID2, testClientID3, testClientID,
@@ -277,7 +253,7 @@ func (suite KeeperTestSuite) TestGetAllGenesisClients() {
 		ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.ZeroHeight(), ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
 	}
 
-	expGenClients := make([]types.IdentifiedClientState, len(expClients))
+	expGenClients := make(types.IdentifiedClientStates, len(expClients))
 
 	for i := range expClients {
 		suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientIDs[i], expClients[i])
@@ -291,7 +267,7 @@ func (suite KeeperTestSuite) TestGetAllGenesisClients() {
 
 	genClients := suite.chainA.App.IBCKeeper.ClientKeeper.GetAllGenesisClients(suite.chainA.GetContext())
 
-	suite.Require().Equal(expGenClients, genClients)
+	suite.Require().Equal(expGenClients.Sort(), genClients)
 }
 
 func (suite KeeperTestSuite) TestGetConsensusState() {
@@ -347,7 +323,7 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 // 2 clients in total are created on chainA. The first client is updated so it contains an initial consensus state
 // and a consensus state at the update height.
 func (suite KeeperTestSuite) TestGetAllConsensusStates() {
-	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 
 	clientState := suite.chainA.GetClientState(clientA)
 	expConsensusHeight0 := clientState.GetLatestHeight()
@@ -355,7 +331,7 @@ func (suite KeeperTestSuite) TestGetAllConsensusStates() {
 	suite.Require().True(ok)
 
 	// update client to create a second consensus state
-	err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
+	err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 	suite.Require().NoError(err)
 
 	clientState = suite.chainA.GetClientState(clientA)
@@ -370,7 +346,7 @@ func (suite KeeperTestSuite) TestGetAllConsensusStates() {
 	}
 
 	// create second client on chainA
-	clientA2, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+	clientA2, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 	clientState = suite.chainA.GetClientState(clientA2)
 
 	expConsensusHeight2 := clientState.GetLatestHeight()

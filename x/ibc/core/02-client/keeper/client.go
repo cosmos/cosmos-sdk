@@ -17,6 +17,14 @@ import (
 func (k Keeper) CreateClient(
 	ctx sdk.Context, clientID string, clientState exported.ClientState, consensusState exported.ConsensusState,
 ) error {
+	params := k.GetParams(ctx)
+	if !params.IsAllowedClient(clientState.ClientType()) {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidClientType,
+			"client state type %s is not registered in the allowlist", clientState.ClientType(),
+		)
+	}
+
 	_, found := k.GetClientState(ctx, clientID)
 	if found {
 		return sdkerrors.Wrapf(types.ErrClientExists, "cannot create client with ID %s", clientID)

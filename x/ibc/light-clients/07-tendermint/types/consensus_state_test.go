@@ -4,6 +4,7 @@ import (
 	"time"
 
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 )
 
@@ -54,13 +55,15 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 	for i, tc := range testCases {
 		tc := tc
 
-		suite.Require().Equal(tc.consensusState.ClientType(), types.Tendermint)
+		// check just to increase coverage
+		suite.Require().Equal(exported.Tendermint, tc.consensusState.ClientType())
 		suite.Require().Equal(tc.consensusState.GetRoot(), tc.consensusState.Root)
 
+		err := tc.consensusState.ValidateBasic()
 		if tc.expectPass {
-			suite.Require().NoError(tc.consensusState.ValidateBasic(), "valid test case %d failed: %s", i, tc.msg)
+			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 		} else {
-			suite.Require().Error(tc.consensusState.ValidateBasic(), "invalid test case %d passed: %s", i, tc.msg)
+			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
 		}
 	}
 }

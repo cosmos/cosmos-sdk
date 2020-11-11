@@ -69,7 +69,14 @@ func (suite *SoloMachineTestSuite) TestCheckProposedHeaderAndUpdateState() {
 					suite.Require().True(ok)
 
 					suite.Require().Equal(cs.(*types.ClientState).ConsensusState, consState)
-					suite.Require().Equal(smHeader.GetPubKey(), smConsState.GetPubKey())
+
+					headerPubKey, err := smHeader.GetPubKey()
+					suite.Require().NoError(err)
+
+					consStatePubKey, err := smConsState.GetPubKey()
+					suite.Require().NoError(err)
+
+					suite.Require().Equal(headerPubKey, consStatePubKey)
 					suite.Require().Equal(smHeader.NewDiversifier, smConsState.Diversifier)
 					suite.Require().Equal(smHeader.Timestamp, smConsState.Timestamp)
 					suite.Require().Equal(smHeader.GetHeight().GetVersionHeight(), cs.(*types.ClientState).Sequence)

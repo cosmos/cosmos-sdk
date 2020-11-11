@@ -1,6 +1,7 @@
 package offchain
 
 import (
+	"errors"
 	"fmt"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,13 +10,10 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-const (
-	// ChainID defines the chain id an off-chain message must have
-	ChainID = ""
-	// AccountNumber defines the account number an off-chain message must have
-	AccountNumber = 0
-	// Sequence defines the sequence number an off-chain message must have
-	Sequence = 0
+// errors are private and used only for testing purposes
+var (
+	errInvalidType  = errors.New("invalid type")
+	errInvalidRoute = errors.New("invalid route")
 )
 
 // VerifyMessage asserts that the message implementation fits offchain specification correctly
@@ -26,10 +24,10 @@ func VerifyMessage(m sdk.Msg) error {
 	// as they abide by different rules
 	_, valid := m.(msg)
 	if !valid {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid type: %T", m)
+		return fmt.Errorf("%w: %T", errInvalidType, m)
 	}
-	if m.Route() != Route {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "offchain messages route should be set to: %s", Route)
+	if m.Route() != ExpectedRoute {
+		return fmt.Errorf("%w: %s", errInvalidRoute, m.Route())
 	}
 	return nil
 }
@@ -85,9 +83,9 @@ func verifySignature(tx sdk.Tx, sig signing.SignatureV2, signer cryptotypes.PubK
 	// TODO: we're imposing chainID accountNumber and sequence, is there a way to verify those params beforehand?
 	// TODO: so we can return a bad request error instead of an unauthorized sig one
 	signerData := authsigning.SignerData{
-		ChainID:       ChainID,
-		AccountNumber: AccountNumber,
-		Sequence:      Sequence,
+		ChainID:       ExpectedChainID,
+		AccountNumber: ExpectedAccountNumber,
+		Sequence:      ExpectedSequence,
 	}
 	err := authsigning.VerifySignature(signer, signerData, sig.Data, handler, tx)
 	if err != nil {

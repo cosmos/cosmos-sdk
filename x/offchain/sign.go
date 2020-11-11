@@ -8,6 +8,7 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
+// NewSigner is Signer's constructor
 func NewSigner(txConfig client.TxConfig) Signer {
 	return Signer{
 		txConfig: txConfig,
@@ -38,9 +39,9 @@ func (s Signer) Sign(privKey cryptotypes.PrivKey, msgs []msg) (authsigning.SigVe
 	signMode := s.txConfig.SignModeHandler().DefaultMode()
 
 	signerData := authsigning.SignerData{
-		ChainID:       ChainID,
-		AccountNumber: AccountNumber,
-		Sequence:      Sequence,
+		ChainID:       ExpectedChainID,
+		AccountNumber: ExpectedAccountNumber,
+		Sequence:      ExpectedSequence,
 	}
 
 	sigData := signing.SingleSignatureData{
@@ -51,7 +52,7 @@ func (s Signer) Sign(privKey cryptotypes.PrivKey, msgs []msg) (authsigning.SigVe
 	sig := signing.SignatureV2{
 		PubKey:   privKey.PubKey(),
 		Data:     &sigData,
-		Sequence: Sequence,
+		Sequence: ExpectedSequence,
 	}
 	err = builder.SetSignatures(sig)
 	if err != nil {
@@ -80,7 +81,7 @@ func (s Signer) Sign(privKey cryptotypes.PrivKey, msgs []msg) (authsigning.SigVe
 	sig = signing.SignatureV2{
 		PubKey:   privKey.PubKey(),
 		Data:     &sigData,
-		Sequence: Sequence,
+		Sequence: ExpectedSequence,
 	}
 
 	err = builder.SetSignatures(sig)

@@ -8,8 +8,16 @@ import (
 // interface implementation assertions
 var _ msg = &MsgSignData{}
 
-// Route defines the route to use for sdk.Msg.Route() implementation for offchain messages
-const Route = "offchain"
+const (
+	// ExpectedChainID defines the chain id an off-chain message must have
+	ExpectedChainID = ""
+	// ExpectedAccountNumber defines the account number an off-chain message must have
+	ExpectedAccountNumber = 0
+	// ExpectedSequence defines the sequence number an off-chain message must have
+	ExpectedSequence = 0
+	// ExpectedRoute defines the route to use for sdk.Msg.ExpectedRoute() implementation for offchain messages
+	ExpectedRoute = "offchain"
+)
 
 // msg defines an off-chain msg this exists so that offchain verification
 // procedures are only applied to transactions lying in this package.
@@ -30,7 +38,7 @@ func NewMsgSignData(signer sdk.AccAddress, data []byte) *MsgSignData {
 // sdk.Msg implementation
 
 func (m *MsgSignData) Route() string {
-	return Route
+	return ExpectedRoute
 }
 
 func (m *MsgSignData) Type() string {

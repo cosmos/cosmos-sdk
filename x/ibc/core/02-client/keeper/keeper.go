@@ -115,12 +115,14 @@ func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string,
 }
 
 // GetAllGenesisClients returns all the clients in state with their client ids returned as IdentifiedClientState
-func (k Keeper) GetAllGenesisClients(ctx sdk.Context) (genClients []types.IdentifiedClientState) {
+func (k Keeper) GetAllGenesisClients(ctx sdk.Context) types.IdentifiedClientStates {
+	var genClients types.IdentifiedClientStates
 	k.IterateClients(ctx, func(clientID string, cs exported.ClientState) bool {
 		genClients = append(genClients, types.NewIdentifiedClientState(clientID, cs))
 		return false
 	})
-	return
+
+	return genClients.Sort()
 }
 
 // GetAllConsensusStates returns all stored client consensus states.

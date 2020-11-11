@@ -70,7 +70,10 @@ message QueryClientStatesRequest {
 // method.
 message QueryClientStatesResponse {
   // list of stored ClientStates of the chain.
-  repeated IdentifiedClientState client_states = 1;
+  repeated IdentifiedClientState client_states = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "IdentifiedClientStates"
+  ];
   // pagination response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

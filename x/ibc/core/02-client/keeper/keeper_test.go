@@ -243,30 +243,6 @@ func (suite *KeeperTestSuite) TestValidateSelfClient() {
 	}
 }
 
-func (suite KeeperTestSuite) TestGetAllClients() {
-	clientIDs := []string{
-		testClientID2, testClientID3, testClientID,
-	}
-	expClients := []exported.ClientState{
-		ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.ZeroHeight(), ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
-		ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.ZeroHeight(), ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
-		ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.ZeroHeight(), ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
-	}
-
-	for i := range expClients {
-		suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientIDs[i], expClients[i])
-	}
-
-	// add localhost client
-	localHostClient, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), exported.Localhost)
-	suite.Require().True(found)
-	expClients = append(expClients, localHostClient)
-
-	clients := suite.chainA.App.IBCKeeper.ClientKeeper.GetAllClients(suite.chainA.GetContext())
-	suite.Require().Len(clients, len(expClients))
-	suite.Require().Equal(expClients, clients)
-}
-
 func (suite KeeperTestSuite) TestGetAllGenesisClients() {
 	clientIDs := []string{
 		testClientID2, testClientID3, testClientID,
@@ -277,7 +253,7 @@ func (suite KeeperTestSuite) TestGetAllGenesisClients() {
 		ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.ZeroHeight(), ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
 	}
 
-	expGenClients := make([]types.IdentifiedClientState, len(expClients))
+	expGenClients := make(types.IdentifiedClientStates, len(expClients))
 
 	for i := range expClients {
 		suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientIDs[i], expClients[i])
@@ -291,7 +267,7 @@ func (suite KeeperTestSuite) TestGetAllGenesisClients() {
 
 	genClients := suite.chainA.App.IBCKeeper.ClientKeeper.GetAllGenesisClients(suite.chainA.GetContext())
 
-	suite.Require().Equal(expGenClients, genClients)
+	suite.Require().Equal(expGenClients.Sort(), genClients)
 }
 
 func (suite KeeperTestSuite) TestGetConsensusState() {

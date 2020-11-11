@@ -12,9 +12,15 @@ const (
 	// TypeClientMisbehaviour is the shared evidence misbehaviour type
 	TypeClientMisbehaviour string = "client_misbehaviour"
 
+	// Solomachine is used to indicate that the light client is a solo machine.
+	Solomachine string = "06-solomachine"
+
+	// Tendermint is used to indicate that the client uses the Tendermint Consensus Algorithm.
+	Tendermint string = "07-tendermint"
+
 	// Localhost is the client type for a localhost client. It is also used as the clientID
 	// for the localhost client.
-	Localhost string = "localhost"
+	Localhost string = "09-localhost"
 )
 
 // ClientState defines the required common functions for light clients.

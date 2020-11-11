@@ -18,6 +18,7 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -26,14 +27,21 @@ import (
 type Keeper struct {
 	storeKey      sdk.StoreKey
 	cdc           codec.BinaryMarshaler
+	paramSpace    paramtypes.Subspace
 	stakingKeeper types.StakingKeeper
 }
 
 // NewKeeper creates a new NewKeeper instance
-func NewKeeper(cdc codec.BinaryMarshaler, key sdk.StoreKey, sk types.StakingKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryMarshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace, sk types.StakingKeeper) Keeper {
+	// set KeyTable if it has not already been set
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	}
+
 	return Keeper{
 		storeKey:      key,
 		cdc:           cdc,
+		paramSpace:    paramSpace,
 		stakingKeeper: sk,
 	}
 }
@@ -107,12 +115,14 @@ func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string,
 }
 
 // GetAllGenesisClients returns all the clients in state with their client ids returned as IdentifiedClientState
-func (k Keeper) GetAllGenesisClients(ctx sdk.Context) (genClients []types.IdentifiedClientState) {
+func (k Keeper) GetAllGenesisClients(ctx sdk.Context) types.IdentifiedClientStates {
+	var genClients types.IdentifiedClientStates
 	k.IterateClients(ctx, func(clientID string, cs exported.ClientState) bool {
 		genClients = append(genClients, types.NewIdentifiedClientState(clientID, cs))
 		return false
 	})
-	return
+
+	return genClients.Sort()
 }
 
 // GetAllConsensusStates returns all stored client consensus states.

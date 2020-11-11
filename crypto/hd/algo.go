@@ -2,9 +2,9 @@ package hd
 
 import (
 	bip39 "github.com/cosmos/go-bip39"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // PubKeyType defines an algorithm to derive key-pairs which can be used for cryptographic signing.
@@ -28,11 +28,11 @@ var (
 )
 
 type DeriveFn func(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error)
-type GenerateFn func(bz []byte) crypto.PrivKey
+type GenerateFn func(bz []byte) types.PrivKey
 
 type WalletGenerator interface {
 	Derive(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error)
-	Generate(bz []byte) crypto.PrivKey
+	Generate(bz []byte) types.PrivKey
 }
 
 type secp256k1Algo struct {
@@ -62,7 +62,7 @@ func (s secp256k1Algo) Derive() DeriveFn {
 
 // Generate generates a secp256k1 private key from the given bytes.
 func (s secp256k1Algo) Generate() GenerateFn {
-	return func(bz []byte) crypto.PrivKey {
+	return func(bz []byte) types.PrivKey {
 		var bzArr = make([]byte, secp256k1.PrivKeySize)
 		copy(bzArr, bz)
 

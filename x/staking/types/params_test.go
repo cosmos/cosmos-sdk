@@ -1,14 +1,15 @@
-package types
+package types_test
 
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 )
 
 func TestParamsEqual(t *testing.T) {
-	p1 := DefaultParams()
-	p2 := DefaultParams()
+	p1 := types.DefaultParams()
+	p2 := types.DefaultParams()
 
 	ok := p1.Equal(p2)
 	require.True(t, ok)

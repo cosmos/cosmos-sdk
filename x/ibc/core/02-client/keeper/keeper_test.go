@@ -12,7 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/keeper"
@@ -91,7 +91,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	testClientHeightMinus1 := types.NewHeight(0, height-1)
 
-	validator := tmtypes.NewValidator(pubKey.(cryptotypes.IntoTmPubKey).AsTmPubKey(), 1)
+	validator := tmtypes.NewValidator(pubKey, 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	suite.valSetHash = suite.valSet.Hash()
 	suite.header = suite.chainA.CreateTMClientHeader(testChainID, int64(testClientHeight.VersionHeight), testClientHeightMinus1, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
@@ -100,7 +100,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 	var validators stakingtypes.Validators
 	for i := 1; i < 11; i++ {
 		privVal := ibctestingmock.NewPV()
-		pk, err := privVal.GetPubKey()
+		tmPk, err := privVal.GetPubKey()
+		suite.Require().NoError(err)
+		pk, err := cryptocodec.FromTmPubKeyInterface(tmPk)
 		suite.Require().NoError(err)
 		val, err := stakingtypes.NewValidator(sdk.ValAddress(pk.Address()), pk, stakingtypes.Description{})
 		suite.Require().NoError(err)

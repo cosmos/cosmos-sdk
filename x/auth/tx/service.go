@@ -47,7 +47,7 @@ const (
 )
 
 // TxsByEvents implements the ServiceServer.TxsByEvents RPC method.
-func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventRequest) (*txtypes.TxsByEventsResponse, error) {
+func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventRequest) (*txtypes.GetTxsEventResponse, error) {
 	offset := int(req.Pagination.Offset)
 	limit := int(req.Pagination.Limit)
 	if offset < 0 {
@@ -99,7 +99,7 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 	txsList := make([]*txtypes.Tx, len(result.Txs))
 
 	for i, tx := range result.Txs {
-		txResp := txResultToTxResponse(cdc, &tx.TxResult)
+		txResp := txResultToTxResponse(&tx.TxResult)
 		txResp.Height = tx.Height
 		txResp.TxHash = tx.Hash.String()
 		txRespList[i] = txResp
@@ -111,7 +111,7 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 		txsList[i] = &protoTx
 	}
 
-	return &txtypes.TxsByEventsResponse{
+	return &txtypes.GetTxsEventResponse{
 		Txs:        txsList,
 		TxResponse: txRespList,
 		Pagination: &pagination.PageResponse{
@@ -170,7 +170,7 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 		return nil, err
 	}
 
-	txResp := txResultToTxResponse(cdc, &result.TxResult)
+	txResp := txResultToTxResponse(&result.TxResult)
 	txResp.Height = result.Height
 	txResp.TxHash = result.Hash.String()
 
@@ -199,7 +199,7 @@ func RegisterGRPCGatewayRoutes(clientConn gogogrpc.ClientConn, mux *runtime.Serv
 	txtypes.RegisterServiceHandlerClient(context.Background(), mux, txtypes.NewServiceClient(clientConn))
 }
 
-func txResultToTxResponse(cdc *codec.ProtoCodec, respTx *abci.ResponseDeliverTx) *sdk.TxResponse {
+func txResultToTxResponse(respTx *abci.ResponseDeliverTx) *sdk.TxResponse {
 	logs, _ := sdk.ParseABCILogs(respTx.Log)
 	return &sdk.TxResponse{
 		Code:      respTx.Code,

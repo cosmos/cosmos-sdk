@@ -20,7 +20,7 @@ service Service {
     }
 
     // GetTxsEvent fetches txs by event.
-    rpc GetTxsEvent(GetTxsEventRequest) returns (TxsByEventsResponse) {
+    rpc GetTxsEvent(GetTxsEventRequest) returns (GetTxsEventResponse) {
         option (google.api.http).get = "/cosmos/tx/v1beta1/txs";
     }
 }
@@ -35,9 +35,9 @@ message GetTxsEventRequest {
 
 }
 
-// TxsByEventsResponse is the response type for the Service.TxsByEvents
+// GetTxsEventResponse is the response type for the Service.TxsByEvents
 // RPC method.
-message TxsByEventsResponse {
+message GetTxsEventResponse {
     // txs is the list of queried transactions.
     repeated cosmos.tx.v1beta1.Tx txs = 1;
     // tx_responses is the list of queried TxResponses.

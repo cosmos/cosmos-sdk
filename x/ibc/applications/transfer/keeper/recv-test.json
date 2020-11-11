@@ -1,0 +1,328 @@
+[
+  {
+    "packet": {
+      "sourceChannel": "zarko",
+      "sourcePort": "zarko",
+      "destChannel": "zarko",
+      "destPort": "zarko",
+      "data": {
+        "sender": "",
+        "receiver": "a2",
+        "amount": 1,
+        "denom": {
+          "port": "",
+          "channel": "",
+          "denom": "eth"
+        }
+      }
+    },
+    "bankBefore": [
+      {
+        "address": {
+          "port": "",
+          "channel": "",
+          "id": ""
+        },
+        "denom": {
+          "port": "",
+          "channel": "",
+          "denom": ""
+        },
+        "amount": 0
+      }
+    ],
+    "bankAfter": [
+      {
+        "address": {
+          "port": "",
+          "channel": "",
+          "id": ""
+        },
+        "denom": {
+          "port": "",
+          "channel": "",
+          "denom": ""
+        },
+        "amount": 0
+      },
+      {
+        "address": {
+          "port": "",
+          "channel": "",
+          "id": "a2"
+        },
+        "denom": {
+          "port": "zarko",
+          "channel": "zarko",
+          "denom": "eth"
+        },
+        "amount": 1
+      }
+    ],
+    "error": false
+  },
+  {
+    "packet": {
+      "sourceChannel": "",
+      "sourcePort": "",
+      "destChannel": "",
+      "destPort": "bucky",
+      "data": {
+        "sender": "a1",
+        "receiver": "a1",
+        "amount": 0,
+        "denom": {
+          "port": "",
+          "channel": "",
+          "denom": ""
+        }
+      }
+    },
+    "bankBefore": [
+      {
+        "address": {
+          "port": "",
+          "channel": "",
+          "id": ""
+        },
+        "denom": {
+          "port": "",
+          "channel": "",
+          "denom": ""
+        },
+        "amount": 0
+      },
+      {
+        "address": {
+          "port": "",
+          "channel": "",
+          "id": "a2"
+        },
+        "denom": {
+          "port": "zarko",
+          "channel": "zarko",
+          "denom": "eth"
+        },
+        "amount": 1
+      }
+    ],
+    "bankAfter": [
+      {
+        "address": {
+          "port": "",
+          "channel": "",
+          "id": ""
+        },
+        "denom": {
+          "port": "",
+          "channel": "",
+          "denom": ""
+        },
+        "amount": 0
+      },
+      {
+        "address": {
+          "port": "",
+          "channel": "",
+          "id": "a2"
+        },
+        "denom": {
+          "port": "zarko",
+          "channel": "zarko",
+          "denom": "eth"
+        },
+        "amount": 1
+      }
+    ],
+    "error": true
+  },
+  {
+    "packet": {
+      "sourceChannel": "bucky",
+      "sourcePort": "bucky",
+      "destChannel": "bucky",
+      "destPort": "",
+      "data": {
+        "sender": "a2",
+        "receiver": "a1",
+        "amount": 1,
+        "denom": {
+          "port": "bucky",
+          "channel": "",
+          "denom": "atom"
+        }
+      }
+    },
+    "bankBefore": [
+      {
+        "address": {
+          "port": "",
+          "channel": "",
+          "id": ""
+        },
+        "denom": {
+          "port": "",
+          "channel": "",
+          "denom": ""
+        },
+        "amount": 0
+      },
+      {
+        "address": {
+          "port": "",
+          "channel": "",
+          "id": "a2"
+        },
+        "denom": {
+          "port": "zarko",
+          "channel": "zarko",
+          "denom": "eth"
+        },
+        "amount": 1
+      }
+    ],
+    "bankAfter": [
+      {
+        "address": {
+          "port": "",
+          "channel": "",
+          "id": ""
+        },
+        "denom": {
+          "port": "",
+          "channel": "",
+          "denom": ""
+        },
+        "amount": 0
+      },
+      {
+        "address": {
+          "port": "",
+          "channel": "",
+          "id": "a1"
+        },
+        "denom": {
+          "port": "",
+          "channel": "bucky",
+          "denom": "atom"
+        },
+        "amount": 1
+      },
+      {
+        "address": {
+          "port": "",
+          "channel": "",
+          "id": "a2"
+        },
+        "denom": {
+          "port": "zarko",
+          "channel": "zarko",
+          "denom": "eth"
+        },
+        "amount": 1
+      }
+    ],
+    "error": false
+  },
+  {
+    "packet": {
+      "sourceChannel": "zarko",
+      "sourcePort": "zarko",
+      "destChannel": "zarko",
+      "destPort": "zarko",
+      "data": {
+        "sender": "a1",
+        "receiver": "",
+        "amount": 1,
+        "denom": {
+          "port": "zarko",
+          "channel": "zarko",
+          "denom": ""
+        }
+      }
+    },
+    "bankBefore": [
+      {
+        "address": {
+          "port": "",
+          "channel": "",
+          "id": ""
+        },
+        "denom": {
+          "port": "",
+          "channel": "",
+          "denom": ""
+        },
+        "amount": 0
+      },
+      {
+        "address": {
+          "port": "",
+          "channel": "",
+          "id": "a1"
+        },
+        "denom": {
+          "port": "",
+          "channel": "bucky",
+          "denom": "atom"
+        },
+        "amount": 1
+      },
+      {
+        "address": {
+          "port": "",
+          "channel": "",
+          "id": "a2"
+        },
+        "denom": {
+          "port": "zarko",
+          "channel": "zarko",
+          "denom": "eth"
+        },
+        "amount": 1
+      }
+    ],
+    "bankAfter": [
+      {
+        "address": {
+          "port": "",
+          "channel": "",
+          "id": ""
+        },
+        "denom": {
+          "port": "",
+          "channel": "",
+          "denom": ""
+        },
+        "amount": 0
+      },
+      {
+        "address": {
+          "port": "",
+          "channel": "",
+          "id": "a1"
+        },
+        "denom": {
+          "port": "",
+          "channel": "bucky",
+          "denom": "atom"
+        },
+        "amount": 1
+      },
+      {
+        "address": {
+          "port": "",
+          "channel": "",
+          "id": "a2"
+        },
+        "denom": {
+          "port": "zarko",
+          "channel": "zarko",
+          "denom": "eth"
+        },
+        "amount": 1
+      }
+    ],
+    "error": true
+  }
+]

@@ -369,9 +369,7 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		if tc.expPass {
 			suite.Require().NoError(err, "verify upgrade failed on valid case: %s", tc.name)
 			suite.Require().NotNil(clientState, "verify upgrade failed on valid case: %s", tc.name)
-
-			// FIXME: https://github.com/cosmos/cosmos-sdk/issues/7708
-			suite.Require().Nil(consensusState, "verify upgrade failed on valid case: %s", tc.name)
+			suite.Require().NotNil(consensusState, "verify upgrade failed on valid case: %s", tc.name)
 		} else {
 			suite.Require().Error(err, "verify upgrade passed on invalid case: %s", tc.name)
 			suite.Require().Nil(clientState, "verify upgrade passed on invalid case: %s", tc.name)

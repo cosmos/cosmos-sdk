@@ -98,7 +98,7 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	}
 
 	// TODO: Return valid consensus state https://github.com/cosmos/cosmos-sdk/issues/7708
-	return updatedClientState, nil, nil
+	return updatedClientState, &ConsensusState{}, nil
 }
 
 // construct MerklePath from upgradePath

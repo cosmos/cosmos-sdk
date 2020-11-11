@@ -317,6 +317,31 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 			},
 			expPass: false,
 		},
+		{
+			name: "unsuccessful upgrade: updated unbonding period is equal to trusting period",
+			setup: func() {
+
+				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, trustingPeriod, maxClockDrift, newClientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
+
+				// upgrade Height is at next block
+				upgradeHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
+
+				// zero custom fields and store in upgrade store
+				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(upgradeHeight.GetVersionHeight()), upgradedClient)
+
+				// commit upgrade store changes and update clients
+
+				suite.coordinator.CommitBlock(suite.chainB)
+				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
+				suite.Require().NoError(err)
+
+				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
+				suite.Require().True(found)
+
+				proofUpgrade, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(upgradeHeight.GetVersionHeight())), cs.GetLatestHeight().GetVersionHeight())
+			},
+			expPass: false,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -332,7 +357,7 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		cs := suite.chainA.GetClientState(clientA)
 		clientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
 
-		err := cs.VerifyUpgrade(
+		clientState, consensusState, err := cs.VerifyUpgradeAndUpdateState(
 			suite.chainA.GetContext(),
 			suite.cdc,
 			clientStore,
@@ -343,8 +368,14 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 
 		if tc.expPass {
 			suite.Require().NoError(err, "verify upgrade failed on valid case: %s", tc.name)
+			suite.Require().NotNil(clientState, "verify upgrade failed on valid case: %s", tc.name)
+			suite.Require().NotNil(consensusState, "verify upgrade failed on valid case: %s", tc.name)
 		} else {
 			suite.Require().Error(err, "verify upgrade passed on invalid case: %s", tc.name)
+			suite.Require().Nil(clientState, "verify upgrade passed on invalid case: %s", tc.name)
+
+			suite.Require().Nil(consensusState, "verify upgrade passed on invalid case: %s", tc.name)
+
 		}
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
@@ -12,13 +11,14 @@ import (
 	"strings"
 )
 
-type OnRecvPacketTestCase  = struct {
+type OnRecvPacketTestCase = struct {
+	description string
 	// The required subset of bank balances
-	bankBefore []bank.Balance
+	bankBefore []Balance
 	// The packet to process
 	packet types.FungibleTokenPacketData
 	// The expected changes in the bank
-	bankChange []bank.Balance
+	bankChange []Balance
 	// Whether OnRecvPacket should pass or fail
 	pass bool
 }
@@ -27,6 +27,13 @@ type OwnedCoin struct {
 	Address string
 	Denom string
 }
+
+type Balance struct {
+	Address string
+	Denom string
+	Amount sdk.Int
+}
+
 type Bank struct {
 	balances map[OwnedCoin]sdk.Int
 }
@@ -59,6 +66,23 @@ func (bank *Bank) Sub(other *Bank) Bank {
 func (bank *Bank) SetBalance(address string, denom string, amount sdk.Int) {
 	bank.balances[OwnedCoin{address, denom}] = amount
 }
+
+// Set several balances at once
+func (bank *Bank) SetBalances(balances []Balance) {
+	for _, balance := range balances {
+		bank.balances[OwnedCoin{balance.Address, balance.Denom}] = balance.Amount
+	}
+}
+
+// Set several balances at once
+func BankFromBalances(balances []Balance) Bank{
+	bank := MakeBank()
+	for _, balance := range balances {
+		bank.balances[OwnedCoin{balance.Address, balance.Denom}] = balance.Amount
+	}
+	return bank
+}
+
 
 // String representation of all bank balances
 func (bank *Bank) String() string {
@@ -113,32 +137,69 @@ func (suite *KeeperTestSuite) CheckBankBalances(chain *ibctesting.TestChain, ban
 	diff := bankChange.Sub(expectedBankChange)
 	NonZeroString := diff.NonZeroString()
 	if len(NonZeroString) != 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, NonZeroString)
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "Unexpected changes in the bank: \n" + NonZeroString)
 	}
 	return nil
 }
 
-func (suite *KeeperTestSuite) TestModelBasedOnRecvPacket() {
+
+func StaticOnRecvPacketTestCases() []OnRecvPacketTestCase {
+	return []OnRecvPacketTestCase {
+		{
+			description: "failure: zero amount",
+			bankBefore: []Balance{},
+			packet: types.FungibleTokenPacketData {"stake", 0, "cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5","cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5"},
+			bankChange: []Balance{},
+			pass: false,
+		},
+		{
+			description: "failure: empty denomination",
+			bankBefore: []Balance{},
+			packet: types.FungibleTokenPacketData {"", 1, "cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5","cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5"},
+			bankChange: []Balance{},
+			pass: true,
+		},
+		{
+			description: "failure: unexpected change",
+			bankBefore: []Balance{},
+			packet: types.FungibleTokenPacketData {"a", 1, "cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5","cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5"},
+			bankChange: []Balance{{"cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5", "transfer/testchain1-conn0-chan0/a", sdk.NewInt(1)}},
+			pass: true,
+		},
+	}
+}
+
+
+func (suite *KeeperTestSuite) TestModelBasedStaticOnRecvPacket() {
+
 	var (
 		channelA, channelB ibctesting.TestChannel
 	)
 
-	suite.Run(fmt.Sprintf("Model based test for OnRecvPacket"), func() {
-		suite.SetupTest() // reset
-		_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
-		channelA, channelB = suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.UNORDERED)
+	for _, tc := range StaticOnRecvPacketTestCases() {
+		suite.Run(fmt.Sprintf("Case %s", tc.description), func() {
+			suite.SetupTest() // reset
+			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+			channelA, channelB = suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.UNORDERED)
 
-		seq := uint64(1)
-		coin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
-		data := types.NewFungibleTokenPacketData(coin.Denom, coin.Amount.Uint64(), suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String())
-		packet := channeltypes.NewPacket(data.GetBytes(), seq, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
+			seq := uint64(1)
+			packet := channeltypes.NewPacket(tc.packet.GetBytes(), seq, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
 
-		bankBefore := BankOfChain(suite.chainB)
-		expectedChange := MakeBank()
-		expectedChange.SetBalance(suite.chainB.SenderAccount.GetAddress().String(), "transfer/testchain1-conn0-chan0/stake", coin.Amount)
-		err := suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, data)
-		suite.Require().NoError(err)
-		err = suite.CheckBankBalances(suite.chainB, &bankBefore, &expectedChange)
-		suite.Require().NoError(err)
-	})
+			bankBefore := BankFromBalances(tc.bankBefore)
+			suite.SetChainBankBalances(suite.chainB, &bankBefore)
+			bankBefore = BankOfChain(suite.chainB)
+			err := suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, tc.packet)
+			if err != nil {
+				suite.Require().False(tc.pass)
+			} else {
+				expectedChange := BankFromBalances(tc.bankChange)
+				err = suite.CheckBankBalances(suite.chainB, &bankBefore, &expectedChange)
+				if tc.pass {
+					suite.Require().NoError(err)
+				} else {
+					suite.Require().Error(err)
+				}
+			}
+		})
+	}
 }

@@ -125,7 +125,10 @@ func (suite *KeeperTestSuite) SetChainBankBalances(chain *ibctesting.TestChain, 
 		if err != nil {
 			return err
 		}
-		chain.App.BankKeeper.SetBalance(chain.GetContext(), address, sdk.NewCoin(coin.Denom, amount))
+		err = chain.App.BankKeeper.SetBalance(chain.GetContext(), address, sdk.NewCoin(coin.Denom, amount))
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -186,20 +189,21 @@ func (suite *KeeperTestSuite) TestModelBasedStaticOnRecvPacket() {
 			packet := channeltypes.NewPacket(tc.packet.GetBytes(), seq, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
 
 			bankBefore := BankFromBalances(tc.bankBefore)
-			suite.SetChainBankBalances(suite.chainB, &bankBefore)
-			bankBefore = BankOfChain(suite.chainB)
-			err := suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, tc.packet)
-			if err != nil {
+			if suite.SetChainBankBalances(suite.chainB, &bankBefore) != nil {
 				suite.Require().False(tc.pass)
-			} else {
-				expectedChange := BankFromBalances(tc.bankChange)
-				err = suite.CheckBankBalances(suite.chainB, &bankBefore, &expectedChange)
-				if tc.pass {
-					suite.Require().NoError(err)
-				} else {
-					suite.Require().Error(err)
-				}
+				return
 			}
+			bankBefore = BankOfChain(suite.chainB)
+			if suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, tc.packet) != nil {
+				suite.Require().False(tc.pass)
+				return
+			}
+			expectedChange := BankFromBalances(tc.bankChange)
+			if suite.CheckBankBalances(suite.chainB, &bankBefore, &expectedChange) != nil {
+				suite.Require().False(tc.pass)
+				return
+			}
+			suite.Require().True(tc.pass)
 		})
 	}
 }

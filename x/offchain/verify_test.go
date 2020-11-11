@@ -41,6 +41,7 @@ type signatureVerifierSuite struct {
 func (ts *signatureVerifierSuite) SetupTest() {
 	encConf := simapp.MakeTestEncodingConfig()
 	RegisterInterfaces(encConf.InterfaceRegistry)
+	RegisterLegacyAminoCodec(encConf.Amino)
 	ts.txDecoder = encConf.TxConfig.TxJSONDecoder()
 	ts.invalidTx = []byte(`{"body":{"messages":[{"@type":"/","Signer":"cosmos1346fyal5a9xxwlygkqmkkqf7g3q3zwzpdmkam8","Data":"ZGF0YQ=="}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[{"public_key":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A+FkzsHk5mVRk8IkVq5p0XapCrqu1MFf8KT594BtN6ss"},"mode_info":{"single":{"mode":"SIGN_MODE_DIRECT"}},"sequence":"0"}],"fee":{"amount":[],"gas_limit":"0","payer":"","granter":""}},"signatures":["pSz+zrzoTZPWpBV57IK8O7ECkIH5Kt0Wse+TerbvsZx7vwns7GY0+dwsA8SuNDqmx0uwr+VRARcb+E9u1nXhkA=="]}`)
 	ts.verifier = NewVerifier(encConf.TxConfig.SignModeHandler())

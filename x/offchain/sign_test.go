@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/suite"
-	"log"
 	"testing"
 )
 
@@ -23,6 +22,7 @@ type signerTestSuite struct {
 func (ts *signerTestSuite) SetupTest() {
 	encConf := simapp.MakeTestEncodingConfig()
 	RegisterInterfaces(encConf.InterfaceRegistry)
+	RegisterLegacyAminoCodec(encConf.Amino)
 	ts.signer = NewSigner(encConf.TxConfig)
 	ts.verifier = NewVerifier(encConf.TxConfig.SignModeHandler())
 	ts.privKey = secp256k1.GenPrivKeyFromSecret(nil)
@@ -40,8 +40,6 @@ func (ts *signerTestSuite) TestVerifyCompatibility() {
 		NewMsgSignData(ts.address, []byte("data")),
 	})
 	ts.Require().NoError(err, "error while signing transaction")
-	res, err := ts.signer.txConfig.TxJSONEncoder()(tx)
-	log.Printf("%s %s", res, err)
 	err = ts.verifier.Verify(tx)
 	ts.Require().NoError(err, "valid transaction should be verified")
 }

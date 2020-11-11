@@ -14,7 +14,7 @@ import (
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -42,33 +42,33 @@ func NewTxServer(clientCtx client.Context, simulate baseAppSimulateFn, interface
 var _ txtypes.ServiceServer = txServer{}
 
 const (
-	eventFormat = "{eventType}.{eventAttribute}={value}"
+	eventFormat  = "{eventType}.{eventAttribute}={value}"
+	DefaultLimit = 10
 )
 
 // TxsByEvents implements the ServiceServer.TxsByEvents RPC method.
-func (s txServer) TxsByEvents(ctx context.Context, req *txtypes.GetTxsEventRequest) (*txtypes.TxsByEventsResponse, error) {
-
+func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventRequest) (*txtypes.TxsByEventsResponse, error) {
 	offset := int(req.Pagination.Offset)
 	limit := int(req.Pagination.Limit)
-	page := offset/limit + 1
-
-	if page < 0 {
+	if offset < 0 {
 		return nil, status.Error(codes.InvalidArgument, "offset must greater than 0")
 	}
-	if limit < 0 {
-		return nil, status.Error(codes.InvalidArgument, "limit must greater than 0")
+	if limit <= 0 {
+		limit = DefaultLimit
 	}
 	if len(req.Event) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "must declare at least one event to search")
 	}
+	page := offset/limit + 1
+
 	var events []string
+
 	if strings.Contains(req.Event, "&") {
 		events = strings.Split(req.Event, "&")
 	} else {
 		events = append(events, req.Event)
 	}
 	tmEvents := make([]string, len(events))
-
 	for i, event := range events {
 		if !strings.Contains(event, "=") {
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid event; event %s should be of the format: %s", event, eventFormat))
@@ -89,24 +89,31 @@ func (s txServer) TxsByEvents(ctx context.Context, req *txtypes.GetTxsEventReque
 	query := strings.Join(tmEvents, " AND ")
 
 	result, err := s.clientCtx.Client.TxSearch(ctx, query, false, &page, &limit, "")
-
 	if err != nil {
 		return nil, err
 	}
+
 	// Create a proto codec, we need it to unmarshal the tx bytes.
 	cdc := codec.NewProtoCodec(s.clientCtx.InterfaceRegistry)
-	res := make([]*txtypes.TxRes, len(result.Txs))
+	txRespList := make([]*sdk.TxResponse, len(result.Txs))
+	txsList := make([]*txtypes.Tx, len(result.Txs))
 
 	for i, tx := range result.Txs {
-		result, err := txResponseToTxRes(cdc, tx)
-		if err != nil {
+		txResp := txResultToTxResponse(cdc, &tx.TxResult)
+		txResp.Height = tx.Height
+		txResp.TxHash = tx.Hash.String()
+		txRespList[i] = txResp
+
+		var protoTx txtypes.Tx
+		if err := cdc.UnmarshalBinaryBare(tx.Tx, &protoTx); err != nil {
 			return nil, err
 		}
-		res[i] = result
+		txsList[i] = &protoTx
 	}
 
 	return &txtypes.TxsByEventsResponse{
-		Txs: res,
+		Txs:        txsList,
+		TxResponse: txRespList,
 		Pagination: &pagination.PageResponse{
 			Total: uint64(result.TotalCount),
 		},
@@ -158,13 +165,18 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 	// Create a proto codec, we need it to unmarshal the tx bytes.
 	cdc := codec.NewProtoCodec(s.clientCtx.InterfaceRegistry)
 
-	resp, err := txResponseToTxRes(cdc, result)
-	if err != nil {
+	var protoTx txtypes.Tx
+	if err := cdc.UnmarshalBinaryBare(result.Tx, &protoTx); err != nil {
 		return nil, err
 	}
 
+	txResp := txResultToTxResponse(cdc, &result.TxResult)
+	txResp.Height = result.Height
+	txResp.TxHash = result.Hash.String()
+
 	return &txtypes.GetTxResponse{
-		Result: resp,
+		Tx:         &protoTx,
+		TxResponse: txResp,
 	}, nil
 }
 
@@ -187,25 +199,14 @@ func RegisterGRPCGatewayRoutes(clientConn gogogrpc.ClientConn, mux *runtime.Serv
 	txtypes.RegisterServiceHandlerClient(context.Background(), mux, txtypes.NewServiceClient(clientConn))
 }
 
-func txResponseToTxRes(cdc *codec.ProtoCodec, result *coretypes.ResultTx) (*txtypes.TxRes, error) {
-	var protoTx txtypes.Tx
-
-	if err := cdc.UnmarshalBinaryBare(result.Tx, &protoTx); err != nil {
-		return nil, err
+func txResultToTxResponse(cdc *codec.ProtoCodec, respTx *abci.ResponseDeliverTx) *sdk.TxResponse {
+	logs, _ := sdk.ParseABCILogs(respTx.Log)
+	return &sdk.TxResponse{
+		Code:      respTx.Code,
+		Codespace: respTx.Codespace,
+		GasUsed:   respTx.GasUsed,
+		GasWanted: respTx.GasWanted,
+		Info:      respTx.Info,
+		Logs:      logs,
 	}
-	proof := result.Proof.ToProto()
-
-	return &txtypes.TxRes{
-		Code:      result.TxResult.Code,
-		Codespace: result.TxResult.Codespace,
-		GasUsed:   result.TxResult.GasUsed,
-		GasWanted: result.TxResult.GasWanted,
-		Height:    result.Height,
-		Info:      result.TxResult.Info,
-		RawLog:    result.TxResult.Log,
-		TxHash:    result.Hash.String(),
-		Tx:        &protoTx,
-		Proof:     &proof,
-		Index:     result.Index,
-	}, nil
 }

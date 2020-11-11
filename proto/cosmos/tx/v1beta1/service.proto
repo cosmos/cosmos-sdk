@@ -1,11 +1,9 @@
 syntax = "proto3";
 package cosmos.tx.v1beta1;
 
-import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/abci/v1beta1/abci.proto";
 import "cosmos/tx/v1beta1/tx.proto";
-import "tendermint/types/types.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
@@ -21,8 +19,8 @@ service Service {
         option (google.api.http).get = "/cosmos/tx/v1beta1/tx/{hash}";
     }
 
-    // TxsByEvents fetches txs by event.
-    rpc TxsByEvents(GetTxsEventRequest) returns (TxsByEventsResponse) {
+    // GetTxsEvent fetches txs by event.
+    rpc GetTxsEvent(GetTxsEventRequest) returns (TxsByEventsResponse) {
         option (google.api.http).get = "/cosmos/tx/v1beta1/txs";
     }
 }
@@ -30,10 +28,8 @@ service Service {
 // GetTxsEventRequest is the request type for the Service.TxsByEvents
 // RPC method.
 message GetTxsEventRequest {
-
     // event is the transaction event type.
     string event = 1;
-
     // pagination defines an pagination for the request.
     cosmos.base.query.v1beta1.PageRequest pagination = 2;
 
@@ -43,40 +39,12 @@ message GetTxsEventRequest {
 // RPC method.
 message TxsByEventsResponse {
     // txs is the list of queried transactions.
-    repeated TxRes txs = 1;
-
+    repeated cosmos.tx.v1beta1.Tx txs = 1;
+    // tx_responses is the list of queried TxResponses.
+    repeated cosmos.base.abci.v1beta1.TxResponse tx_response = 2;
     // pagination defines an pagination for the response.
-    cosmos.base.query.v1beta1.PageResponse pagination = 2;
+    cosmos.base.query.v1beta1.PageResponse pagination = 3;
 
-}
-
-// TxRes defines a structure containing relevant tx data and metadata.
-message TxRes {
-    option (gogoproto.goproto_getters) = false;
-    // The block height
-    int64 height = 1;
-    // The transaction hash.
-    string txhash = 2 [(gogoproto.customname) = "TxHash"];
-    // Namespace for the Code
-    string codespace = 3;
-    // Response code.
-    uint32 code = 4;
-    // tx is the queried transaction.
-    cosmos.tx.v1beta1.Tx tx = 5;
-    // The output of the application's logger (raw string). May be
-    // non-deterministic.
-    string raw_log = 6;
-    // Additional information. May be non-deterministic.
-    string info = 7;
-    // Amount of gas requested for transaction.
-    int64 gas_wanted = 8;
-    // Amount of gas consumed by transaction.
-    int64 gas_used = 9;
-    // index defines the index of the transaction in the block.
-    uint32 index = 10;
-    // proof returns the transaction merkle proof of the presence of the transaction
-    // in the block
-    tendermint.types.TxProof proof = 11;
 }
 
 // SimulateRequest is the request type for the Service.Simulate
@@ -104,7 +72,8 @@ message GetTxRequest {
 
 // GetTxResponse is the response type for the Service.GetTx method.
 message GetTxResponse {
-    // TxRes is the queried transaction.
-    TxRes result = 1;
-  
+    // tx is the queried transaction.
+    cosmos.tx.v1beta1.Tx tx = 1;
+    // tx_response is the queried TxResponses.
+    cosmos.base.abci.v1beta1.TxResponse tx_response = 2;
 }

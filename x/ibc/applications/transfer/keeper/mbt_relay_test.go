@@ -146,21 +146,21 @@ func (suite *KeeperTestSuite) CheckBankBalances(chain *ibctesting.TestChain, ban
 func StaticOnRecvPacketTestCases() []OnRecvPacketTestCase {
 	return []OnRecvPacketTestCase {
 		{
-			description: "failure: zero amount",
+			description: "failure zero amount",
 			bankBefore: []Balance{},
 			packet: types.FungibleTokenPacketData {"stake", 0, "cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5","cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5"},
 			bankChange: []Balance{},
 			pass: false,
 		},
 		{
-			description: "failure: empty denomination",
+			description: "failure empty denomination",
 			bankBefore: []Balance{},
 			packet: types.FungibleTokenPacketData {"", 1, "cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5","cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5"},
 			bankChange: []Balance{},
-			pass: true,
+			pass: false,
 		},
 		{
-			description: "failure: unexpected change",
+			description: "success expected change",
 			bankBefore: []Balance{},
 			packet: types.FungibleTokenPacketData {"a", 1, "cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5","cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5"},
 			bankChange: []Balance{{"cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5", "transfer/testchain1-conn0-chan0/a", sdk.NewInt(1)}},

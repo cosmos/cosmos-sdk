@@ -6,6 +6,7 @@ import (
 	tmprotocrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 )
 
@@ -63,7 +64,7 @@ func (suite *TendermintTestSuite) TestHeaderValidateBasic() {
 		}, false},
 	}
 
-	suite.Require().Equal(types.Tendermint, suite.header.ClientType())
+	suite.Require().Equal(exported.Tendermint, suite.header.ClientType())
 
 	for _, tc := range testCases {
 		tc := tc

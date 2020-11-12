@@ -106,8 +106,8 @@ message Header {
   .tendermint.types.ValidatorSet trusted_validators = 4 [(gogoproto.moretags) = "yaml:\"trusted_validators\""];
 }
 
-// Fraction defines the protobuf message type for tmmath.Fraction
+// Fraction defines the protobuf message type for tmmath.Fraction that only supports positive values.
 message Fraction {
-  int64 numerator   = 1;
-  int64 denominator = 2;
+  uint64 numerator   = 1;
+  uint64 denominator = 2;
 }

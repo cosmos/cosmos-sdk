@@ -8,7 +8,6 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
-	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 // TestConnOpenInit - chainA initializes (INIT state) a connection with
@@ -771,61 +770,4 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 			}
 		})
 	}
-}
-
-// Ensure consensus params are correctly validated by executing messages. Consensus params are
-// set in context by baseapp so test should deliver messages and not call the functions directly.
-// Only invalid cases are tested since successful instances are by default tested by the testing
-// package.
-func (suite *KeeperTestSuite) TestConsensusParamsValidation() {
-	// invalid client state in ConnOpenTry
-	clientA, clientB := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
-	connA, connB, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
-	suite.Require().NoError(err)
-
-	// set incorrect consensus params on counterparty client on chainA
-	clientState := suite.chainA.GetClientState(clientA)
-	tmClient, ok := clientState.(*ibctmtypes.ClientState)
-	suite.Require().True(ok)
-	tmClient.ConsensusParams.Evidence.MaxAgeDuration++
-
-	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientA, tmClient)
-
-	// should fail on validate self client
-	ibctesting.ExpSimPassSend = false
-	ibctesting.ExpPassSend = false
-	err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
-	suite.Require().Error(err)
-
-	// reset values
-	ibctesting.ExpSimPassSend = true
-	ibctesting.ExpPassSend = true
-
-	suite.SetupTest() // reset
-
-	// invalid client state in ConnOpenAck
-	clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
-	connA, connB, err = suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
-	suite.Require().NoError(err)
-
-	err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
-	suite.Require().NoError(err)
-
-	// set incorrect consensus params on counterparty client on chainB
-	clientState = suite.chainB.GetClientState(clientB)
-	tmClient, ok = clientState.(*ibctmtypes.ClientState)
-	suite.Require().True(ok)
-	tmClient.ConsensusParams.Evidence.MaxAgeDuration++
-
-	suite.chainB.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainB.GetContext(), clientB, tmClient)
-
-	// should fail on validate self client
-	ibctesting.ExpSimPassSend = false
-	ibctesting.ExpPassSend = false
-	err = suite.coordinator.ConnOpenAck(suite.chainA, suite.chainB, connA, connB)
-	suite.Require().Error(err)
-
-	// reset values
-	ibctesting.ExpSimPassSend = true
-	ibctesting.ExpPassSend = true
 }

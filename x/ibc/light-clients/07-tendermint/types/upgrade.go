@@ -85,7 +85,7 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	// come from current client.
 	updatedClientState := NewClientState(
 		tmCommittedClient.ChainId, cs.TrustLevel, cs.TrustingPeriod, tmCommittedClient.UnbondingPeriod,
-		cs.MaxClockDrift, tmCommittedClient.LatestHeight, tmCommittedClient.ConsensusParams, tmCommittedClient.ProofSpecs, tmCommittedClient.UpgradePath,
+		cs.MaxClockDrift, tmCommittedClient.LatestHeight, tmCommittedClient.ProofSpecs, tmCommittedClient.UpgradePath,
 		cs.AllowUpdateAfterExpiry, cs.AllowUpdateAfterMisbehaviour,
 	)
 

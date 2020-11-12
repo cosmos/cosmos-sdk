@@ -13,16 +13,16 @@
       "description": "",
       "kind": "INLINE",
       "source": {
-        "address": {
-          "port": "$.colonGreater.tuple[0]..[?(@.key.str == 'port')].value.str | unwrap",
-          "channel": "$.colonGreater.tuple[0]..[?(@.key.str == 'channel')].value.str | unwrap",
-          "id": "$.colonGreater.tuple[0]..[?(@.key.str == 'id')].value.str | unwrap"
-        },
-        "denom": {
-          "port": "$.colonGreater.tuple[1]..[?(@.key.str == 'port')].value.str | unwrap",
-          "channel": "$.colonGreater.tuple[1]..[?(@.key.str == 'channel')].value.str | unwrap",
-          "denom": "$.colonGreater.tuple[1]..[?(@.key.str == 'denom')].value.str | unwrap"
-        },
+        "address": [
+          "$.colonGreater.tuple[0]..[?(@.key.str == 'port')].value.str | unwrap",
+          "$.colonGreater.tuple[0]..[?(@.key.str == 'channel')].value.str | unwrap",
+          "$.colonGreater.tuple[0]..[?(@.key.str == 'id')].value.str | unwrap"
+        ],
+        "denom": [
+          "$.colonGreater.tuple[1]..[?(@.key.str == 'port')].value.str | unwrap",
+          "$.colonGreater.tuple[1]..[?(@.key.str == 'channel')].value.str | unwrap",
+          "$.colonGreater.tuple[1]..[?(@.key.str == 'denom')].value.str | unwrap"
+        ],
         "amount": "$.arg | unwrap"
       }
     },
@@ -69,11 +69,11 @@
           "sender": "$packetData.[?(@.key.str == 'sender')].value.str | unwrap",
           "receiver": "$packetData.[?(@.key.str == 'receiver')].value.str | unwrap",
           "amount": "$packetData.[?(@.key.str == 'amount')].value | unwrap",
-          "denom": {
-            "port": "$packetDataDenom.[?(@.key.str == 'port')].value.str | unwrap",
-            "channel": "$packetDataDenom.[?(@.key.str == 'channel')].value.str | unwrap",
-            "denom": "$packetDataDenom.[?(@.key.str == 'denom')].value.str | unwrap"
-          }
+          "denom": [
+            "$packetDataDenom.[?(@.key.str == 'port')].value.str | unwrap",
+            "$packetDataDenom.[?(@.key.str == 'channel')].value.str | unwrap",
+            "$packetDataDenom.[?(@.key.str == 'denom')].value.str | unwrap"
+          ]
         }
       }
     },

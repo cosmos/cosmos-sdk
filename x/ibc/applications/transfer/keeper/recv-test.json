@@ -9,53 +9,53 @@
         "sender": "",
         "receiver": "a2",
         "amount": 1,
-        "denom": {
-          "port": "",
-          "channel": "",
-          "denom": "eth"
-        }
+        "denom": [
+          "",
+          "",
+          "eth"
+        ]
       }
     },
     "bankBefore": [
       {
-        "address": {
-          "port": "",
-          "channel": "",
-          "id": ""
-        },
-        "denom": {
-          "port": "",
-          "channel": "",
-          "denom": ""
-        },
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
         "amount": 0
       }
     ],
     "bankAfter": [
       {
-        "address": {
-          "port": "",
-          "channel": "",
-          "id": ""
-        },
-        "denom": {
-          "port": "",
-          "channel": "",
-          "denom": ""
-        },
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
         "amount": 0
       },
       {
-        "address": {
-          "port": "",
-          "channel": "",
-          "id": "a2"
-        },
-        "denom": {
-          "port": "zarko",
-          "channel": "zarko",
-          "denom": "eth"
-        },
+        "address": [
+          "",
+          "",
+          "a2"
+        ],
+        "denom": [
+          "zarko",
+          "zarko",
+          "eth"
+        ],
         "amount": 1
       }
     ],
@@ -71,66 +71,66 @@
         "sender": "a1",
         "receiver": "a1",
         "amount": 0,
-        "denom": {
-          "port": "",
-          "channel": "",
-          "denom": ""
-        }
+        "denom": [
+          "",
+          "",
+          ""
+        ]
       }
     },
     "bankBefore": [
       {
-        "address": {
-          "port": "",
-          "channel": "",
-          "id": ""
-        },
-        "denom": {
-          "port": "",
-          "channel": "",
-          "denom": ""
-        },
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
         "amount": 0
       },
       {
-        "address": {
-          "port": "",
-          "channel": "",
-          "id": "a2"
-        },
-        "denom": {
-          "port": "zarko",
-          "channel": "zarko",
-          "denom": "eth"
-        },
+        "address": [
+          "",
+          "",
+          "a2"
+        ],
+        "denom": [
+          "zarko",
+          "zarko",
+          "eth"
+        ],
         "amount": 1
       }
     ],
     "bankAfter": [
       {
-        "address": {
-          "port": "",
-          "channel": "",
-          "id": ""
-        },
-        "denom": {
-          "port": "",
-          "channel": "",
-          "denom": ""
-        },
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
         "amount": 0
       },
       {
-        "address": {
-          "port": "",
-          "channel": "",
-          "id": "a2"
-        },
-        "denom": {
-          "port": "zarko",
-          "channel": "zarko",
-          "denom": "eth"
-        },
+        "address": [
+          "",
+          "",
+          "a2"
+        ],
+        "denom": [
+          "zarko",
+          "zarko",
+          "eth"
+        ],
         "amount": 1
       }
     ],
@@ -146,79 +146,79 @@
         "sender": "a2",
         "receiver": "a1",
         "amount": 1,
-        "denom": {
-          "port": "bucky",
-          "channel": "",
-          "denom": "atom"
-        }
+        "denom": [
+          "bucky",
+          "",
+          "atom"
+        ]
       }
     },
     "bankBefore": [
       {
-        "address": {
-          "port": "",
-          "channel": "",
-          "id": ""
-        },
-        "denom": {
-          "port": "",
-          "channel": "",
-          "denom": ""
-        },
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
         "amount": 0
       },
       {
-        "address": {
-          "port": "",
-          "channel": "",
-          "id": "a2"
-        },
-        "denom": {
-          "port": "zarko",
-          "channel": "zarko",
-          "denom": "eth"
-        },
+        "address": [
+          "",
+          "",
+          "a2"
+        ],
+        "denom": [
+          "zarko",
+          "zarko",
+          "eth"
+        ],
         "amount": 1
       }
     ],
     "bankAfter": [
       {
-        "address": {
-          "port": "",
-          "channel": "",
-          "id": ""
-        },
-        "denom": {
-          "port": "",
-          "channel": "",
-          "denom": ""
-        },
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
         "amount": 0
       },
       {
-        "address": {
-          "port": "",
-          "channel": "",
-          "id": "a1"
-        },
-        "denom": {
-          "port": "",
-          "channel": "bucky",
-          "denom": "atom"
-        },
+        "address": [
+          "",
+          "",
+          "a1"
+        ],
+        "denom": [
+          "",
+          "bucky",
+          "atom"
+        ],
         "amount": 1
       },
       {
-        "address": {
-          "port": "",
-          "channel": "",
-          "id": "a2"
-        },
-        "denom": {
-          "port": "zarko",
-          "channel": "zarko",
-          "denom": "eth"
-        },
+        "address": [
+          "",
+          "",
+          "a2"
+        ],
+        "denom": [
+          "zarko",
+          "zarko",
+          "eth"
+        ],
         "amount": 1
       }
     ],
@@ -234,92 +234,92 @@
         "sender": "a1",
         "receiver": "",
         "amount": 1,
-        "denom": {
-          "port": "zarko",
-          "channel": "zarko",
-          "denom": ""
-        }
+        "denom": [
+          "zarko",
+          "zarko",
+          ""
+        ]
       }
     },
     "bankBefore": [
       {
-        "address": {
-          "port": "",
-          "channel": "",
-          "id": ""
-        },
-        "denom": {
-          "port": "",
-          "channel": "",
-          "denom": ""
-        },
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
         "amount": 0
       },
       {
-        "address": {
-          "port": "",
-          "channel": "",
-          "id": "a1"
-        },
-        "denom": {
-          "port": "",
-          "channel": "bucky",
-          "denom": "atom"
-        },
+        "address": [
+          "",
+          "",
+          "a1"
+        ],
+        "denom": [
+          "",
+          "bucky",
+          "atom"
+        ],
         "amount": 1
       },
       {
-        "address": {
-          "port": "",
-          "channel": "",
-          "id": "a2"
-        },
-        "denom": {
-          "port": "zarko",
-          "channel": "zarko",
-          "denom": "eth"
-        },
+        "address": [
+          "",
+          "",
+          "a2"
+        ],
+        "denom": [
+          "zarko",
+          "zarko",
+          "eth"
+        ],
         "amount": 1
       }
     ],
     "bankAfter": [
       {
-        "address": {
-          "port": "",
-          "channel": "",
-          "id": ""
-        },
-        "denom": {
-          "port": "",
-          "channel": "",
-          "denom": ""
-        },
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
         "amount": 0
       },
       {
-        "address": {
-          "port": "",
-          "channel": "",
-          "id": "a1"
-        },
-        "denom": {
-          "port": "",
-          "channel": "bucky",
-          "denom": "atom"
-        },
+        "address": [
+          "",
+          "",
+          "a1"
+        ],
+        "denom": [
+          "",
+          "bucky",
+          "atom"
+        ],
         "amount": 1
       },
       {
-        "address": {
-          "port": "",
-          "channel": "",
-          "id": "a2"
-        },
-        "denom": {
-          "port": "zarko",
-          "channel": "zarko",
-          "denom": "eth"
-        },
+        "address": [
+          "",
+          "",
+          "a2"
+        ],
+        "denom": [
+          "zarko",
+          "zarko",
+          "eth"
+        ],
         "amount": 1
       }
     ],

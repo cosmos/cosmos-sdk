@@ -174,38 +174,6 @@ func StaticOnRecvPacketTestCases() []OnRecvPacketTestCase {
 	}
 }
 
-
-type DockerInstance struct {
-	Name string
-	Id string
-	Scope string
-	Driver string
-	EnableIPv6 bool
-	IPAM IPAM
-	Internal bool
-	Containers map[string]Container
-	Options map[string]string
-	Labels interface{}
-}
-
-type IPAM struct {
-	Driver string
-	Options interface{}
-	Config []Conf
-}
-
-type Conf struct {
-	Subnet string
-}
-
-type Container struct {
-	Name string
-	EndPointID string
-	MacAddress string
-	IPv4Address string
-	IPv6Address string
-}
-
 type TlaBalance struct {
 	Address []string  `json:"address"`
 	Denom []string    `json:"denom"`

@@ -13,12 +13,53 @@ import (
 	"strings"
 )
 
+
+type TlaBalance struct {
+	Address []string  `json:"address"`
+	Denom []string    `json:"denom"`
+	Amount int64      `json:"amount"`
+}
+
+type TlaFungibleTokenPacketData struct {
+	Sender string     `json:"sender"`
+	Receiver string   `json:"receiver"`
+	Amount int        `json:"amount"`
+	Denom []string    `json:"denom"`
+}
+
+type TlaFungibleTokenPacket struct {
+	SourceChannel string `json:"sourceChannel"`
+	SourcePort string    `json:"sourcePort"`
+	DestChannel string   `json:"destChannel"`
+	DestPort string      `json:"destPort"`
+	Data TlaFungibleTokenPacketData `json:"data"`
+}
+
+type TlaOnRecvPacketTestCase = struct {
+	// The required subset of bank balances
+	BankBefore []TlaBalance        `json:"bankBefore"`
+	// The packet to process
+	Packet TlaFungibleTokenPacket  `json:"packet"`
+	// The expected changes in the bank
+	BankAfter []TlaBalance        `json:"bankAfter"`
+	// Whether OnRecvPacket should fail or not
+	Error bool                     `json:"error"`
+}
+
+type FungibleTokenPacket struct {
+	SourceChannel string
+	SourcePort string
+	DestChannel string
+	DestPort string
+	Data types.FungibleTokenPacketData
+}
+
 type OnRecvPacketTestCase = struct {
 	description string
 	// The required subset of bank balances
 	bankBefore []Balance
 	// The packet to process
-	data types.FungibleTokenPacketData
+	packet FungibleTokenPacket
 	// The expected changes in the bank
 	bankChange []Balance
 	// Whether OnRecvPacket should pass or fail
@@ -34,6 +75,64 @@ type Balance struct {
 	Address string
 	Denom string
 	Amount sdk.Int
+}
+
+func AddressFromTla(addr []string) string {
+	return strings.Join(addr, "/")
+}
+
+func DenomFromTla(denom []string) string {
+	if len(denom) != 3 {
+		panic("failed to convert from TLA+ denom")
+	}
+	s := ""
+	if len(denom[0]) == 0 && len(denom[1]) == 0 {
+		// native denomination
+		s = denom[2]
+	} else  {
+		s = strings.Join(denom, "/")
+	}
+	return s
+}
+
+func BalanceFromTla(balance TlaBalance) Balance {
+	return Balance{
+		Address: AddressFromTla(balance.Address),
+		Denom:   DenomFromTla(balance.Denom),
+		Amount:  sdk.NewInt(balance.Amount),
+	}
+}
+
+func BalancesFromTla(tla []TlaBalance) []Balance {
+	balances := make([]Balance,0)
+	for _, b := range tla {
+		balances = append(balances, BalanceFromTla(b))
+	}
+	return balances
+}
+
+func FungibleTokenPacketFromTla(packet TlaFungibleTokenPacket) FungibleTokenPacket {
+	return FungibleTokenPacket{
+		SourceChannel: packet.SourceChannel,
+		SourcePort:    packet.SourcePort,
+		DestChannel:   packet.DestChannel,
+		DestPort:      packet.DestPort,
+		Data:          types.NewFungibleTokenPacketData(
+			DenomFromTla(packet.Data.Denom),
+			uint64(packet.Data.Amount),
+			packet.Data.Sender,
+			packet.Data.Receiver),
+	}
+}
+
+func OnRecvPacketTestCaseFromTla(tc TlaOnRecvPacketTestCase) OnRecvPacketTestCase {
+	return OnRecvPacketTestCase{
+		description: "auto-generated",
+		bankBefore:  BalancesFromTla(tc.BankBefore),
+		packet:      FungibleTokenPacketFromTla(tc.Packet),
+		bankChange:  BalancesFromTla(tc.BankAfter),
+		pass:        !tc.Error,
+	}
 }
 
 type Bank struct {
@@ -150,60 +249,28 @@ func (suite *KeeperTestSuite) CheckBankBalances(chain *ibctesting.TestChain, ban
 
 func StaticOnRecvPacketTestCases() []OnRecvPacketTestCase {
 	return []OnRecvPacketTestCase {
-		{
-			description: "failure zero amount",
-			bankBefore: []Balance{},
-			data: types.FungibleTokenPacketData {"stake", 0, "cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5","cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5"},
-			bankChange: []Balance{},
-			pass: false,
-		},
-		{
-			description: "failure empty denomination",
-			bankBefore: []Balance{},
-			data: types.FungibleTokenPacketData {"", 1, "cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5","cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5"},
-			bankChange: []Balance{},
-			pass: false,
-		},
-		{
-			description: "success expected change",
-			bankBefore: []Balance{},
-			data: types.FungibleTokenPacketData {"a", 1, "cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5","cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5"},
-			bankChange: []Balance{{"cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5", "transfer/testchain1-conn0-chan0/a", sdk.NewInt(1)}},
-			pass: true,
-		},
+		//{
+		//	description: "failure zero amount",
+		//	bankBefore: []Balance{},
+		//	data: types.FungibleTokenPacketData {"stake", 0, "cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5","cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5"},
+		//	bankChange: []Balance{},
+		//	pass: false,
+		//},
+		//{
+		//	description: "failure empty denomination",
+		//	bankBefore: []Balance{},
+		//	data: types.FungibleTokenPacketData {"", 1, "cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5","cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5"},
+		//	bankChange: []Balance{},
+		//	pass: false,
+		//},
+		//{
+		//	description: "success expected change",
+		//	bankBefore: []Balance{},
+		//	data: types.FungibleTokenPacketData {"a", 1, "cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5","cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5"},
+		//	bankChange: []Balance{{"cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5", "transfer/testchain1-conn0-chan0/a", sdk.NewInt(1)}},
+		//	pass: true,
+		//},
 	}
-}
-
-type TlaBalance struct {
-	Address []string  `json:"address"`
-	Denom []string    `json:"denom"`
-	Amount int        `json:"amount"`
-}
-
-type TlaFungibleTokenPacketData struct {
-	Sender string     `json:"sender"`
-	Receiver string   `json:"receiver"`
-	Amount int        `json:"amount"`
-	Denom []string    `json:"denom"`
-}
-
-type TlaFungibleTokenPacket struct {
-	SourceChannel string `json:"sourceChannel"`
-	SourcePort string    `json:"sourcePort"`
-	DestChannel string   `json:"destChannel"`
-	DestPort string      `json:"destPort"`
-	Data TlaFungibleTokenPacketData `json:"data"`
-}
-
-type TlaOnRecvPacketTestCase = struct {
-	// The required subset of bank balances
-	BankBefore []TlaBalance        `json:"bankBefore"`
-	// The packet to process
-	Packet TlaFungibleTokenPacket  `json:"packet"`
-	// The expected changes in the bank
-	BankAfter []TlaBalance        `json:"bankAfter"`
-	// Whether OnRecvPacket should fail or not
-	Error bool                     `json:"error"`
 }
 
 func (suite *KeeperTestSuite) TestModelBasedStaticOnRecvPacket() {
@@ -230,14 +297,14 @@ func (suite *KeeperTestSuite) TestModelBasedStaticOnRecvPacket() {
 			channelA, channelB = suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.UNORDERED)
 
 			seq := uint64(1)
-			packet := channeltypes.NewPacket(tc.data.GetBytes(), seq, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
+			packet := channeltypes.NewPacket(tc.packet.Data.GetBytes(), seq, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
 
 			bankBefore := BankFromBalances(tc.bankBefore)
 			if suite.SetChainBankBalances(suite.chainB, &bankBefore) != nil {
 				panic("failed to set chain balances")
 			}
 			bankBefore = BankOfChain(suite.chainB)
-			if suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, tc.data) != nil {
+			if suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, tc.packet.Data) != nil {
 				suite.Require().False(tc.pass)
 				return
 			}

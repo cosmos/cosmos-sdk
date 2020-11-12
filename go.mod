@@ -22,15 +22,12 @@ require (
 	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.4.3
 	github.com/golang/snappy v0.0.2 // indirect
-	github.com/google/go-cmp v0.5.2 // indirect
-	github.com/google/gofuzz v1.1.1-0.20200604201612-c04b05f3adfa // indirect
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.15.2
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/magiconair/properties v1.8.4
 	github.com/mattn/go-isatty v0.0.12
-	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/otiai10/copy v1.2.0
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/errors v0.9.1

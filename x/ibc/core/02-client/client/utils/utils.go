@@ -38,7 +38,7 @@ func QueryClientState(
 func QueryClientStateABCI(
 	clientCtx client.Context, clientID string,
 ) (*types.QueryClientStateResponse, error) {
-	key := host.FullKeyClientPath(clientID, host.KeyClientState())
+	key := host.FullClientStateKey(clientID)
 
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
@@ -91,7 +91,7 @@ func QueryConsensusState(
 func QueryConsensusStateABCI(
 	clientCtx client.Context, clientID string, height exported.Height,
 ) (*types.QueryConsensusStateResponse, error) {
-	key := host.FullKeyClientPath(clientID, host.KeyConsensusState(height))
+	key := host.FullConsensusStateKey(clientID, height)
 
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {

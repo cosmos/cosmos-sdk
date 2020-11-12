@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -30,13 +31,16 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
 	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
+	// commit some blocks so that QueryProof returns valid proof (cannot return valid query if height <= 1)
+	suite.coordinator.CommitNBlocks(suite.chainA, 2)
+	suite.coordinator.CommitNBlocks(suite.chainB, 2)
 }
 
 // TestSetChannel create clients and connections on both chains. It tests for the non-existence
 // and existence of a channel in INIT on chainA.
 func (suite *KeeperTestSuite) TestSetChannel() {
 	// create client and connections on both chains
-	_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+	_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 
 	// check for channel to be created on chainB
 	channelA := connA.NextTestChannel(ibctesting.MockPort)

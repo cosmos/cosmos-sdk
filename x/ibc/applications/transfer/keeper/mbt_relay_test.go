@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"encoding/json"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -8,6 +9,7 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
+	"io/ioutil"
 	"strings"
 )
 
@@ -16,7 +18,7 @@ type OnRecvPacketTestCase = struct {
 	// The required subset of bank balances
 	bankBefore []Balance
 	// The packet to process
-	packet types.FungibleTokenPacketData
+	data types.FungibleTokenPacketData
 	// The expected changes in the bank
 	bankChange []Balance
 	// Whether OnRecvPacket should pass or fail
@@ -151,21 +153,21 @@ func StaticOnRecvPacketTestCases() []OnRecvPacketTestCase {
 		{
 			description: "failure zero amount",
 			bankBefore: []Balance{},
-			packet: types.FungibleTokenPacketData {"stake", 0, "cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5","cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5"},
+			data: types.FungibleTokenPacketData {"stake", 0, "cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5","cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5"},
 			bankChange: []Balance{},
 			pass: false,
 		},
 		{
 			description: "failure empty denomination",
 			bankBefore: []Balance{},
-			packet: types.FungibleTokenPacketData {"", 1, "cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5","cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5"},
+			data: types.FungibleTokenPacketData {"", 1, "cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5","cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5"},
 			bankChange: []Balance{},
 			pass: false,
 		},
 		{
 			description: "success expected change",
 			bankBefore: []Balance{},
-			packet: types.FungibleTokenPacketData {"a", 1, "cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5","cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5"},
+			data: types.FungibleTokenPacketData {"a", 1, "cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5","cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5"},
 			bankChange: []Balance{{"cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5", "transfer/testchain1-conn0-chan0/a", sdk.NewInt(1)}},
 			pass: true,
 		},
@@ -173,7 +175,81 @@ func StaticOnRecvPacketTestCases() []OnRecvPacketTestCase {
 }
 
 
+type DockerInstance struct {
+	Name string
+	Id string
+	Scope string
+	Driver string
+	EnableIPv6 bool
+	IPAM IPAM
+	Internal bool
+	Containers map[string]Container
+	Options map[string]string
+	Labels interface{}
+}
+
+type IPAM struct {
+	Driver string
+	Options interface{}
+	Config []Conf
+}
+
+type Conf struct {
+	Subnet string
+}
+
+type Container struct {
+	Name string
+	EndPointID string
+	MacAddress string
+	IPv4Address string
+	IPv6Address string
+}
+
+type TlaBalance struct {
+	Address []string  `json:"address"`
+	Denom []string    `json:"denom"`
+	Amount int        `json:"amount"`
+}
+
+type TlaFungibleTokenPacketData struct {
+	Sender string     `json:"sender"`
+	Receiver string   `json:"receiver"`
+	Amount int        `json:"amount"`
+	Denom []string    `json:"denom"`
+}
+
+type TlaFungibleTokenPacket struct {
+	SourceChannel string `json:"sourceChannel"`
+	SourcePort string    `json:"sourcePort"`
+	DestChannel string   `json:"destChannel"`
+	DestPort string      `json:"destPort"`
+	Data TlaFungibleTokenPacketData `json:"data"`
+}
+
+type TlaOnRecvPacketTestCase = struct {
+	// The required subset of bank balances
+	BankBefore []TlaBalance        `json:"bankBefore"`
+	// The packet to process
+	Packet TlaFungibleTokenPacket  `json:"packet"`
+	// The expected changes in the bank
+	BankAfter []TlaBalance        `json:"bankAfter"`
+	// Whether OnRecvPacket should fail or not
+	Error bool                     `json:"error"`
+}
+
 func (suite *KeeperTestSuite) TestModelBasedStaticOnRecvPacket() {
+	var testCases = []TlaOnRecvPacketTestCase{}
+
+	jsonBlob, err := ioutil.ReadFile("recv-test.json")
+	if err != nil {
+		panic(fmt.Errorf("Failed to read JSON test fixture: %w", err))
+	}
+
+	err = json.Unmarshal([]byte(jsonBlob), &testCases)
+	if err != nil {
+		panic(fmt.Errorf("Failed to parse JSON test fixture: %w", err))
+	}
 
 	var (
 		channelA, channelB ibctesting.TestChannel
@@ -186,15 +262,14 @@ func (suite *KeeperTestSuite) TestModelBasedStaticOnRecvPacket() {
 			channelA, channelB = suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.UNORDERED)
 
 			seq := uint64(1)
-			packet := channeltypes.NewPacket(tc.packet.GetBytes(), seq, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
+			packet := channeltypes.NewPacket(tc.data.GetBytes(), seq, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
 
 			bankBefore := BankFromBalances(tc.bankBefore)
 			if suite.SetChainBankBalances(suite.chainB, &bankBefore) != nil {
-				suite.Require().False(tc.pass)
-				return
+				panic("failed to set chain balances")
 			}
 			bankBefore = BankOfChain(suite.chainB)
-			if suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, tc.packet) != nil {
+			if suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, tc.data) != nil {
 				suite.Require().False(tc.pass)
 				return
 			}

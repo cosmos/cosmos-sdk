@@ -18,8 +18,10 @@ import (
 // in client state that must be the same across all valid Tendermint clients for the new chain.
 // VerifyUpgrade will return an error if:
 // - the upgradedClient is not a Tendermint ClientState
+// - the lastest height of the client state does not have the same version number or has a greater
+// height than the committed client.
 // - the height of upgraded client is not greater than that of current client
-// - the latest height of the new client does not match the height in committed client
+// - the latest height of the new client does not match or is greater than the height in committed client
 // - any Tendermint chain specified parameter in upgraded client such as ChainID, UnbondingPeriod,
 //   and ProofSpecs do not match parameters set by committed client
 func (cs ClientState) VerifyUpgradeAndUpdateState(
@@ -38,6 +40,13 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	if cs.GetLatestHeight().GetVersionNumber() != upgradeHeight.GetVersionNumber() {
 		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "version at which upgrade occurs must be same as current client version. expected version %d, got %d",
 			cs.GetLatestHeight().GetVersionNumber(), upgradeHeight.GetVersionNumber())
+	}
+
+	// UpgradeHeight must be greater than or equal to current client state height
+	if cs.GetLatestHeight().GetVersionHeight() > upgradeHeight.GetVersionHeight() {
+		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "version height at which upgrade occurs must be greater than or equal to current client height (%d > %d)",
+			cs.GetLatestHeight().GetVersionHeight(), upgradeHeight.GetVersionHeight(),
+		)
 	}
 
 	if !upgradedClient.GetLatestHeight().GT(cs.GetLatestHeight()) {

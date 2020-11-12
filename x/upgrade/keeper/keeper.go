@@ -161,6 +161,33 @@ func (k Keeper) GetUpgradedClient(ctx sdk.Context) (ibcexported.ClientState, int
 	return clientState, int64(height), nil
 }
 
+// SetUpgradedConsensusState set the expected upgraded consensus state for the next version of this chain
+func (k Keeper) SetUpgradedConsensusState(ctx sdk.Context, upgradeHeight int64, cs ibcexported.ConsensusState) error {
+	store := ctx.KVStore(k.storeKey)
+	bz, err := clienttypes.MarshalConsensusState(k.cdc, cs)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "could not marshal consensus state: %v", err)
+	}
+
+	store.Set(types.UpgradedConsStateKey(upgradeHeight), bz)
+	return nil
+}
+
+// GetUpgradedConsensusState set the expected upgraded consensus state for the next version of this chain
+func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, upgradeHeight int64) (ibcexported.ConsensusState, error) {
+	store := ctx.KVStore(k.storeKey)
+
+	bz := store.Get(types.UpgradedConsStateKey(upgradeHeight))
+	if len(bz) == 0 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "upgraded consensus state not found in store")
+	}
+	consState, err := clienttypes.UnmarshalConsensusState(k.cdc, bz)
+	if err != nil {
+		return nil, err
+	}
+	return consState, nil
+}
+
 // GetDoneHeight returns the height at which the given upgrade was executed
 func (k Keeper) GetDoneHeight(ctx sdk.Context, name string) int64 {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.DoneByte})

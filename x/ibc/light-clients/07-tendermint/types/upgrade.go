@@ -24,7 +24,8 @@ import (
 //   and ProofSpecs do not match parameters set by committed client
 func (cs ClientState) VerifyUpgradeAndUpdateState(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, clientStore sdk.KVStore,
-	upgradedClient exported.ClientState, upgradeHeight exported.Height, proofUpgrade []byte,
+	upgradedClient exported.ClientState, upgradedConsState exported.ConsensusState,
+	upgradeHeight exported.Height, proofUpgradeClient, proofUpgradeConsState []byte,
 ) (exported.ClientState, exported.ConsensusState, error) {
 	if cs.UpgradePath == "" {
 		return nil, nil, sdkerrors.Wrap(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade client, no upgrade path set")
@@ -40,26 +41,39 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 			cs.GetLatestHeight().GetVersionNumber(), upgradeHeight.GetVersionNumber())
 	}
 
-	if !upgradedClient.GetLatestHeight().GT(cs.GetLatestHeight()) {
-		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "upgraded client height %s must be greater than current client height %s",
+	if upgradedClient.GetLatestHeight().GetVersionNumber() <= cs.GetLatestHeight().GetVersionNumber {
+		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "upgraded client height %s must be at greater version than current client height %s",
 			upgradedClient.GetLatestHeight(), cs.GetLatestHeight())
-	}
-
-	if len(proofUpgrade) == 0 {
-		return nil, nil, sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof of upgrade is empty")
-	}
-
-	var merkleProof commitmenttypes.MerkleProof
-	if err := cdc.UnmarshalBinaryBare(proofUpgrade, &merkleProof); err != nil {
-		return nil, nil, sdkerrors.Wrapf(commitmenttypes.ErrInvalidProof, "could not unmarshal merkle proof: %v", err)
 	}
 
 	// counterparty chain must commit the upgraded client with all client-customizable fields zeroed out
 	// at the upgrade path specified by current client
+	// counterparty must also commit to the upgraded consensus state at a sub-path under the upgrade path specified
 	committedClient := upgradedClient.ZeroCustomFields()
-	bz, err := codec.MarshalAny(cdc, committedClient)
-	if err != nil {
-		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "could not marshal client state: %v", err)
+	tmCommittedClient, ok := committedClient.(*ClientState)
+	if !ok {
+		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "upgraded client must be Tendermint client. expected: %T got: %T",
+			&ClientState{}, upgradedClient)
+	}
+	tmUpgradeConsState, ok := upgradedConsState.(*ConsensusState)
+	if !ok {
+		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidConsensusState, "upgraded consensus state must be Tendermint consensus state. expected %T, got: %T",
+			&ConsensusState{}, tmUpgradeConsState)
+	}
+
+	if len(proofUpgradeClient) == 0 {
+		return nil, nil, sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof of upgrade client is empty")
+	}
+	if len(proofUpgradeConsState) == 0 {
+		return nil, nil, sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof of upgrade consensus state is empty")
+	}
+
+	var merkleProofClient, merkleProofConsState commitmenttypes.MerkleProof
+	if err := cdc.UnmarshalBinaryBare(proofUpgradeClient, &merkleProofClient); err != nil {
+		return nil, nil, sdkerrors.Wrapf(commitmenttypes.ErrInvalidProof, "could not unmarshal client merkle proof: %v", err)
+	}
+	if err := cdc.UnmarshalBinaryBare(proofUpgradeClient, &merkleProofConsState); err != nil {
+		return nil, nil, sdkerrors.Wrapf(commitmenttypes.ErrInvalidProof, "could not unmarshal consensus state merkle proof: %v", err)
 	}
 
 	// Must prove against latest consensus state to ensure we are verifying against latest upgrade plan
@@ -74,31 +88,48 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 		return nil, nil, sdkerrors.Wrap(clienttypes.ErrInvalidClient, "cannot upgrade an expired client")
 	}
 
-	tmCommittedClient, ok := committedClient.(*ClientState)
-	if !ok {
-		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "upgraded client must be Tendermint client. expected: %T got: %T",
-			&ClientState{}, upgradedClient)
+	// Verify client proof
+	bz, err := codec.MarshalAny(cdc, committedClient)
+	if err != nil {
+		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "could not marshal client state: %v", err)
+	}
+	if err := merkleProofClient.VerifyMembership(cs.ProofSpecs, consState.GetRoot(), upgradePath, bz); err != nil {
+		return nil, nil, err
 	}
 
+	// Verify consensus state proof
+	bz, err = codec.MarshalAny(cdc, upgradedConsState)
+	if err != nil {
+		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidConsensusState, "could not marshal consensus state: %v", err)
+	}
+	if err := merkleProofConsState.VerifyMembership(cs.ProofSpecs, consState.GetRoot(), upgradePath, bz); err != nil {
+		return nil, nil, err
+	}
+
+	// Construct new client state and consensus state
 	// Relayer chosen client parameters are ignored.
 	// All chain-chosen parameters come from committed client, all client-chosen parameters
 	// come from current client.
-	updatedClientState := NewClientState(
+	newClientState := NewClientState(
 		tmCommittedClient.ChainId, cs.TrustLevel, cs.TrustingPeriod, tmCommittedClient.UnbondingPeriod,
 		cs.MaxClockDrift, tmCommittedClient.LatestHeight, tmCommittedClient.ProofSpecs, tmCommittedClient.UpgradePath,
 		cs.AllowUpdateAfterExpiry, cs.AllowUpdateAfterMisbehaviour,
 	)
 
-	if err := updatedClientState.Validate(); err != nil {
+	if err := newClientState.Validate(); err != nil {
 		return nil, nil, sdkerrors.Wrap(err, "updated client state failed basic validation")
 	}
 
-	if err := merkleProof.VerifyMembership(cs.ProofSpecs, consState.GetRoot(), upgradePath, bz); err != nil {
-		return nil, nil, err
-	}
+	// The new consensus state is merely used as a trusted kernel against which headers on the new
+	// chain can be verified. The root is empty as it cannot be known in advance, thus no proof verification will pass
+	// The timestamp of the consensus state is also this chain's blocktime. This is because starting up a new chain
+	// may take a long time, especially if there are unexpected issues and thus we do not want the new client to be
+	// automatically expired due to unforeseen delays.
+	newConsState := NewConsensusState(
+		ctx.BlockTime(), commitmenttypes.MerkleRoot{}, tmUpgradeConsState.NextValidatorsHash,
+	)
 
-	// TODO: Return valid consensus state https://github.com/cosmos/cosmos-sdk/issues/7708
-	return updatedClientState, &ConsensusState{}, nil
+	return newClientState, newConsState, nil
 }
 
 // construct MerklePath from upgradePath

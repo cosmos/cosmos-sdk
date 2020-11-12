@@ -44,8 +44,10 @@ type ClientState interface {
 		cdc codec.BinaryMarshaler,
 		store sdk.KVStore,
 		newClient ClientState,
+		newConsState ConsensusState,
 		upgradeHeight Height,
-		proofUpgrade []byte,
+		proofUpgradeClient,
+		proofUpgradeConsState []byte,
 	) (ClientState, ConsensusState, error)
 	// Utility function that zeroes out any client customizable fields in client state
 	// Ledger enforced fields are maintained while all custom fields are zero values

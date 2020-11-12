@@ -103,6 +103,32 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 			expPass: false,
 		},
 		{
+			name: "unsuccessful upgrade: upgrade height version height is less than the current client version height",
+			setup: func() {
+
+				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
+
+				// upgrade Height is at next block
+				upgradeHeight = clienttypes.NewHeight(10, uint64(suite.chainB.GetContext().BlockHeight()-1))
+
+				// zero custom fields and store in upgrade store
+				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(upgradeHeight.GetVersionHeight()), upgradedClient)
+
+				// commit upgrade store changes and update clients
+
+				suite.coordinator.CommitBlock(suite.chainB)
+				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
+				suite.Require().NoError(err)
+
+				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
+				suite.Require().True(found)
+
+				proofUpgrade, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(upgradeHeight.GetVersionHeight())), cs.GetLatestHeight().GetVersionHeight())
+			},
+			expPass: false,
+		},
+
+		{
 			name: "unsuccessful upgrade: chain-specified parameters do not match committed client",
 			setup: func() {
 

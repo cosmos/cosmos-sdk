@@ -95,11 +95,19 @@ func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxReque
 	if req.Tx == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
 	}
-	if req.Mode == "" {
-		return nil, status.Error(codes.InvalidArgument, "invalid empty mode")
-	}
-	clientCtx := s.clientCtx.WithBroadcastMode(req.Mode)
 
+	var mode string
+	switch req.Mode {
+	case txtypes.BroadcastMode_BROADCAST_MODE_SYNC:
+		mode = "sync"
+	case txtypes.BroadcastMode_BROADCAST_MODE_ASYNC:
+		mode = "async"
+	case txtypes.BroadcastMode_BROADCAST_MODE_BLOCK:
+		mode = "block"
+	default:
+		return nil, status.Error(codes.InvalidArgument, "invalid mode")
+	}
+	clientCtx := s.clientCtx.WithBroadcastMode(mode)
 	resp, err := clientCtx.BroadcastTx(req.Tx)
 
 	if err != nil {
@@ -117,18 +125,20 @@ func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxReque
 		return nil, err
 	}
 	return &txtypes.BroadcastTxResponse{
-		Code:      resp.Code,
-		Codespace: resp.Codespace,
-		Data:      resp.Data,
-		GasUsed:   resp.GasUsed,
-		GasWanted: resp.GasWanted,
-		Height:    resp.Height,
-		Info:      resp.Info,
-		RawLog:    resp.RawLog,
-		Timestamp: resp.Timestamp,
-		TxHash:    resp.TxHash,
-		Tx:        &protoTx,
-		Logs:      resp.Logs,
+		Tx: &protoTx,
+		TxResponse: &sdk.TxResponse{
+			Code:      resp.Code,
+			Codespace: resp.Codespace,
+			Data:      resp.Data,
+			GasUsed:   resp.GasUsed,
+			GasWanted: resp.GasWanted,
+			Height:    resp.Height,
+			Info:      resp.Info,
+			RawLog:    resp.RawLog,
+			Timestamp: resp.Timestamp,
+			TxHash:    resp.TxHash,
+			Logs:      resp.Logs,
+		},
 	}, nil
 
 }

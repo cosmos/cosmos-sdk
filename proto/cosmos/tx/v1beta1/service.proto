@@ -18,8 +18,7 @@ service Service {
     rpc GetTx(GetTxRequest) returns (GetTxResponse) {
         option (google.api.http).get = "/cosmos/tx/v1beta1/tx/{hash}";
     }
-    
-
+  
   // BroadcastTx broadcast transaction.
     rpc BroadcastTx(BroadcastTxRequest) returns (BroadcastTxResponse) {
             option (google.api.http).post = "/cosmos/tx/v1beta1/txs";
@@ -31,40 +30,31 @@ service Service {
 message BroadcastTxRequest {
     // tx is the list of queried transactions.
     bytes tx = 1;
-    string mode = 2;
+    BroadcastMode mode = 2;
+}
+
+// BroadcastMode specifies the broadcast mode for the TxService.Broadcast RPC method.
+enum BroadcastMode {
+    // BROADCAST_MODE_BLOCK defines a tx broadcasting mode where the client waits for
+    // the tx to be committed in a block.
+    BROADCAST_MODE_BLOCK = 0;
+
+    // BROADCAST_MODE_SYNC defines a tx broadcasting mode where the client waits for
+    // a CheckTx execution response only.
+    BROADCAST_MODE_SYNC = 1;
+    
+    // BROADCAST_MODE_ASYNC defines a tx broadcasting mode where the client returns
+    // immediately.
+    BROADCAST_MODE_ASYNC = 2;
 }
 
 // BroadcastTxResponse is the response type for the
 // Service.BroadcastTx method.
 message BroadcastTxResponse {
-  // Response code.
-    uint32 code = 1;
-      // Namespace for the Code
-    string codespace = 2;
-      // Result bytes, if any.
-    string data = 3;
-      // Amount of gas consumed by transaction.
-    int64 gas_used = 4;
-      // Amount of gas requested for transaction.
-    int64 gas_wanted = 5;
-  // The output of the application's logger (raw string). May be
-  // non-deterministic.
-    string raw_log = 6;
-    // Time of the previous block. For heights > 1, it's the weighted median of
-  // the timestamps of the valid votes in the block.LastCommit. For height == 1,
-  // it's genesis time.
-    string timestamp = 7;
-      // Additional information. May be non-deterministic.
-    string info = 8;
-      // The block height
-    int64 height = 9;
-      // The request transaction bytes.
-    cosmos.tx.v1beta1.Tx tx = 10;
-      // The transaction hash.
-    string txhash = 11 [(gogoproto.customname) = "TxHash"];
-
-    repeated cosmos.base.abci.v1beta1.ABCIMessageLog logs = 12 [(gogoproto.nullable) = false];
-
+    // tx is the queried transaction.
+    cosmos.tx.v1beta1.Tx tx = 1;
+    // tx_response is the queried TxResponses.
+    cosmos.base.abci.v1beta1.TxResponse tx_response = 2;
 }
 
 

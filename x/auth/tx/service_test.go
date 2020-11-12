@@ -164,6 +164,8 @@ func (s IntegrationTestSuite) TestBroadcastTx() {
 		WithTxConfig(val.ClientCtx.TxConfig).
 		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 
+	txBuilder.SetTimeoutHeight(txFactory.TimeoutHeight())
+
 	// Sign Tx.
 	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false)
 	s.Require().NoError(err)
@@ -176,7 +178,7 @@ func (s IntegrationTestSuite) TestBroadcastTx() {
 	grpcRes, err := s.queryClient.BroadcastTx(
 		context.Background(),
 		&tx.BroadcastTxRequest{
-			Mode: "async",
+			Mode: tx.BroadcastMode_BROADCAST_MODE_ASYNC,
 			Tx:   txBytes,
 		},
 	)

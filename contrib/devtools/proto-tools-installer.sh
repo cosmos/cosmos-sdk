@@ -6,8 +6,7 @@ DESTDIR=${DESTDIR:-}
 PREFIX=${PREFIX:-/usr/local}
 UNAME_S="$(uname -s 2>/dev/null)"
 UNAME_M="$(uname -m 2>/dev/null)"
-BUF_VERSION=0.11.0
-PROTOC_VERSION=3.13.0
+BUF_VERSION=0.30.0
 PROTOC_GRPC_GATEWAY_VERSION=1.14.7
 
 f_abort() {
@@ -61,37 +60,12 @@ f_needs_install() {
   return 0
 }
 
-f_install_protoc() {
-  f_print_installing_with_padding proto_c
-  f_needs_install "${DESTDIR}/${PREFIX}/bin/protoc" || return 0
-
-  pushd "${TEMPDIR}" >/dev/null
-  curl -o "${PROTOC_ZIP}" -sSL "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/${PROTOC_ZIP}"
-  unzip -q -o ${PROTOC_ZIP} -d ${DESTDIR}/${PREFIX} bin/protoc; \
-  unzip -q -o ${PROTOC_ZIP} -d ${DESTDIR}/${PREFIX} 'include/*'; \
-  rm -f ${PROTOC_ZIP}
-  popd >/dev/null
-  f_print_done
-}
-
 f_install_buf() {
   f_print_installing_with_padding buf
   f_needs_install "${DESTDIR}/${PREFIX}/bin/buf" || return 0
 
   curl -sSL "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/buf-${UNAME_S}-${UNAME_M}" -o "${DESTDIR}/${PREFIX}/bin/buf"
   chmod +x "${DESTDIR}/${PREFIX}/bin/buf"
-  f_print_done
-}
-
-f_install_protoc_gen_gocosmos() {
-  f_print_installing_with_padding protoc-gen-gocosmos
-
-  if ! grep "github.com/gogo/protobuf => github.com/regen-network/protobuf" go.mod &>/dev/null ; then
-    echo -e "\tPlease run this command from somewhere inside the cosmos-sdk folder."
-    return 1
-  fi
-
-  go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos 2>/dev/null
   f_print_done
 }
 
@@ -121,7 +95,6 @@ f_install_protoc_gen_swagger() {
 
 f_ensure_tools
 f_ensure_dirs
-f_install_protoc
 f_install_buf
 f_install_protoc_gen_gocosmos
 f_install_protoc_gen_grpc_gateway

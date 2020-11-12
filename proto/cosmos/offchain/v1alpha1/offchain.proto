@@ -8,8 +8,8 @@ import "gogoproto/gogo.proto";
 
 // MsgSignData defines an arbitrary, general-purpose, off-chain message
 message MsgSignData {
-    // Signer is the sdk.AccAddress of the message signer
-    bytes Signer = 1 [(gogoproto.jsontag) = "signer", (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    // Data represents the raw bytes of the content that is signed (text, json, etc)
-    bytes Data = 2 [(gogoproto.jsontag) = "data"];
+    // signer is the sdk.AccAddress of the message signer
+    bytes signer = 1 [(gogoproto.jsontag) = "signer", (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    // data represents the raw bytes of the content that is signed (text, json, etc)
+    bytes data = 2 [(gogoproto.jsontag) = "data"];
 }

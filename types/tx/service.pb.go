@@ -7,8 +7,8 @@ import (
 	context "context"
 	fmt "fmt"
 	types "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/gogo/protobuf/gogoproto"
 	query "github.com/cosmos/cosmos-sdk/types/query"
+	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
@@ -66,26 +66,6 @@ func (BroadcastMode) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_e0b00a618705eca7, []int{0}
 }
 
-// BroadcastTxRequest is the request type for the Service.BroadcastTxRequest
-// RPC method.
-type BroadcastTxRequest struct {
-	// tx is the list of queried transactions.
-	Tx   []byte        `protobuf:"bytes,1,opt,name=tx,proto3" json:"tx,omitempty"`
-	Mode BroadcastMode `protobuf:"varint,2,opt,name=mode,proto3,enum=cosmos.tx.v1beta1.BroadcastMode" json:"mode,omitempty"`
-}
-
-func (m *BroadcastTxRequest) Reset()         { *m = BroadcastTxRequest{} }
-func (m *BroadcastTxRequest) String() string { return proto.CompactTextString(m) }
-func (*BroadcastTxRequest) ProtoMessage()    {}
-func (*BroadcastTxRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0b00a618705eca7, []int{0}
-}
-func (m *BroadcastTxRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *BroadcastTxRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_BroadcastTxRequest.Marshal(b, m, deterministic)
 // GetTxsEventRequest is the request type for the Service.TxsByEvents
 // RPC method.
 type GetTxsEventRequest struct {
@@ -116,53 +96,6 @@ func (m *GetTxsEventRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return b[:n], nil
 	}
 }
-func (m *BroadcastTxRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BroadcastTxRequest.Merge(m, src)
-}
-func (m *BroadcastTxRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *BroadcastTxRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_BroadcastTxRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_BroadcastTxRequest proto.InternalMessageInfo
-
-func (m *BroadcastTxRequest) GetTx() []byte {
-	if m != nil {
-		return m.Tx
-	}
-	return nil
-}
-
-func (m *BroadcastTxRequest) GetMode() BroadcastMode {
-	if m != nil {
-		return m.Mode
-	}
-	return BroadcastMode_BROADCAST_MODE_BLOCK
-}
-
-// BroadcastTxResponse is the response type for the
-// Service.BroadcastTx method.
-type BroadcastTxResponse struct {
-	// tx is the queried transaction.
-	Tx *Tx `protobuf:"bytes,1,opt,name=tx,proto3" json:"tx,omitempty"`
-	// tx_response is the queried TxResponses.
-	TxResponse *types.TxResponse `protobuf:"bytes,2,opt,name=tx_response,json=txResponse,proto3" json:"tx_response,omitempty"`
-}
-
-func (m *BroadcastTxResponse) Reset()         { *m = BroadcastTxResponse{} }
-func (m *BroadcastTxResponse) String() string { return proto.CompactTextString(m) }
-func (*BroadcastTxResponse) ProtoMessage()    {}
-func (*BroadcastTxResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0b00a618705eca7, []int{1}
-}
-func (m *BroadcastTxResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *BroadcastTxResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_BroadcastTxResponse.Marshal(b, m, deterministic)
 func (m *GetTxsEventRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_GetTxsEventRequest.Merge(m, src)
 }
@@ -221,21 +154,6 @@ func (m *GetTxsEventResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-func (m *BroadcastTxResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BroadcastTxResponse.Merge(m, src)
-}
-func (m *BroadcastTxResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *BroadcastTxResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_BroadcastTxResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_BroadcastTxResponse proto.InternalMessageInfo
-
-func (m *BroadcastTxResponse) GetTx() *Tx {
-	if m != nil {
-		return m.Tx
 func (m *GetTxsEventResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_GetTxsEventResponse.Merge(m, src)
 }
@@ -262,12 +180,120 @@ func (m *GetTxsEventResponse) GetTxResponses() []*types.TxResponse {
 	return nil
 }
 
-func (m *BroadcastTxResponse) GetTxResponse() *types.TxResponse {
-	if m != nil {
-		return m.TxResponse
 func (m *GetTxsEventResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
+	}
+	return nil
+}
+
+// BroadcastTxRequest is the request type for the Service.BroadcastTxRequest
+// RPC method.
+type BroadcastTxRequest struct {
+	// tx is the list of queried transactions.
+	Tx   []byte        `protobuf:"bytes,1,opt,name=tx,proto3" json:"tx,omitempty"`
+	Mode BroadcastMode `protobuf:"varint,2,opt,name=mode,proto3,enum=cosmos.tx.v1beta1.BroadcastMode" json:"mode,omitempty"`
+}
+
+func (m *BroadcastTxRequest) Reset()         { *m = BroadcastTxRequest{} }
+func (m *BroadcastTxRequest) String() string { return proto.CompactTextString(m) }
+func (*BroadcastTxRequest) ProtoMessage()    {}
+func (*BroadcastTxRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0b00a618705eca7, []int{2}
+}
+func (m *BroadcastTxRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BroadcastTxRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BroadcastTxRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BroadcastTxRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BroadcastTxRequest.Merge(m, src)
+}
+func (m *BroadcastTxRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *BroadcastTxRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_BroadcastTxRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BroadcastTxRequest proto.InternalMessageInfo
+
+func (m *BroadcastTxRequest) GetTx() []byte {
+	if m != nil {
+		return m.Tx
+	}
+	return nil
+}
+
+func (m *BroadcastTxRequest) GetMode() BroadcastMode {
+	if m != nil {
+		return m.Mode
+	}
+	return BroadcastMode_BROADCAST_MODE_BLOCK
+}
+
+// BroadcastTxResponse is the response type for the
+// Service.BroadcastTx method.
+type BroadcastTxResponse struct {
+	// tx is the queried transaction.
+	Tx *Tx `protobuf:"bytes,1,opt,name=tx,proto3" json:"tx,omitempty"`
+	// tx_response is the queried TxResponses.
+	TxResponse *types.TxResponse `protobuf:"bytes,2,opt,name=tx_response,json=txResponse,proto3" json:"tx_response,omitempty"`
+}
+
+func (m *BroadcastTxResponse) Reset()         { *m = BroadcastTxResponse{} }
+func (m *BroadcastTxResponse) String() string { return proto.CompactTextString(m) }
+func (*BroadcastTxResponse) ProtoMessage()    {}
+func (*BroadcastTxResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0b00a618705eca7, []int{3}
+}
+func (m *BroadcastTxResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BroadcastTxResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BroadcastTxResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BroadcastTxResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BroadcastTxResponse.Merge(m, src)
+}
+func (m *BroadcastTxResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *BroadcastTxResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_BroadcastTxResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BroadcastTxResponse proto.InternalMessageInfo
+
+func (m *BroadcastTxResponse) GetTx() *Tx {
+	if m != nil {
+		return m.Tx
+	}
+	return nil
+}
+
+func (m *BroadcastTxResponse) GetTxResponse() *types.TxResponse {
+	if m != nil {
+		return m.TxResponse
 	}
 	return nil
 }
@@ -283,7 +309,7 @@ func (m *SimulateRequest) Reset()         { *m = SimulateRequest{} }
 func (m *SimulateRequest) String() string { return proto.CompactTextString(m) }
 func (*SimulateRequest) ProtoMessage()    {}
 func (*SimulateRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0b00a618705eca7, []int{2}
+	return fileDescriptor_e0b00a618705eca7, []int{4}
 }
 func (m *SimulateRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -332,7 +358,7 @@ func (m *SimulateResponse) Reset()         { *m = SimulateResponse{} }
 func (m *SimulateResponse) String() string { return proto.CompactTextString(m) }
 func (*SimulateResponse) ProtoMessage()    {}
 func (*SimulateResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0b00a618705eca7, []int{3}
+	return fileDescriptor_e0b00a618705eca7, []int{5}
 }
 func (m *SimulateResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -386,7 +412,7 @@ func (m *GetTxRequest) Reset()         { *m = GetTxRequest{} }
 func (m *GetTxRequest) String() string { return proto.CompactTextString(m) }
 func (*GetTxRequest) ProtoMessage()    {}
 func (*GetTxRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0b00a618705eca7, []int{4}
+	return fileDescriptor_e0b00a618705eca7, []int{6}
 }
 func (m *GetTxRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -434,7 +460,7 @@ func (m *GetTxResponse) Reset()         { *m = GetTxResponse{} }
 func (m *GetTxResponse) String() string { return proto.CompactTextString(m) }
 func (*GetTxResponse) ProtoMessage()    {}
 func (*GetTxResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0b00a618705eca7, []int{5}
+	return fileDescriptor_e0b00a618705eca7, []int{7}
 }
 func (m *GetTxResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -479,10 +505,10 @@ func (m *GetTxResponse) GetTxResponse() *types.TxResponse {
 
 func init() {
 	proto.RegisterEnum("cosmos.tx.v1beta1.BroadcastMode", BroadcastMode_name, BroadcastMode_value)
-	proto.RegisterType((*BroadcastTxRequest)(nil), "cosmos.tx.v1beta1.BroadcastTxRequest")
-	proto.RegisterType((*BroadcastTxResponse)(nil), "cosmos.tx.v1beta1.BroadcastTxResponse")
 	proto.RegisterType((*GetTxsEventRequest)(nil), "cosmos.tx.v1beta1.GetTxsEventRequest")
 	proto.RegisterType((*GetTxsEventResponse)(nil), "cosmos.tx.v1beta1.GetTxsEventResponse")
+	proto.RegisterType((*BroadcastTxRequest)(nil), "cosmos.tx.v1beta1.BroadcastTxRequest")
+	proto.RegisterType((*BroadcastTxResponse)(nil), "cosmos.tx.v1beta1.BroadcastTxResponse")
 	proto.RegisterType((*SimulateRequest)(nil), "cosmos.tx.v1beta1.SimulateRequest")
 	proto.RegisterType((*SimulateResponse)(nil), "cosmos.tx.v1beta1.SimulateResponse")
 	proto.RegisterType((*GetTxRequest)(nil), "cosmos.tx.v1beta1.GetTxRequest")
@@ -492,79 +518,51 @@ func init() {
 func init() { proto.RegisterFile("cosmos/tx/v1beta1/service.proto", fileDescriptor_e0b00a618705eca7) }
 
 var fileDescriptor_e0b00a618705eca7 = []byte{
-	// 563 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x54, 0x4f, 0x6f, 0x12, 0x4d,
-	0x18, 0x67, 0x37, 0x7d, 0xdb, 0xbe, 0x0f, 0x6d, 0xc5, 0x69, 0x55, 0x82, 0x75, 0x8b, 0x43, 0x31,
-	0x8d, 0x89, 0x3b, 0x29, 0x1a, 0xd3, 0x83, 0x89, 0x01, 0xda, 0x34, 0x46, 0x2b, 0xc9, 0xc2, 0xc5,
-	0xc6, 0x84, 0x0c, 0x30, 0x5d, 0x36, 0xc2, 0x0e, 0x32, 0x43, 0xb3, 0x46, 0xbd, 0xe8, 0xcd, 0x93,
-	0x89, 0x5f, 0xca, 0x63, 0x13, 0x2f, 0x1e, 0x0d, 0xf8, 0x0d, 0xfc, 0x02, 0x86, 0xd9, 0x59, 0x4a,
-	0xdb, 0xa5, 0xea, 0x69, 0x9f, 0xdd, 0xf9, 0xfd, 0x9b, 0xe7, 0x99, 0x59, 0xd8, 0x68, 0x72, 0xd1,
-	0xe5, 0x82, 0xc8, 0x80, 0x1c, 0x6f, 0x37, 0x98, 0xa4, 0xdb, 0x44, 0xb0, 0xfe, 0xb1, 0xd7, 0x64,
-	0x76, 0xaf, 0xcf, 0x25, 0x47, 0x57, 0x43, 0x80, 0x2d, 0x03, 0x5b, 0x03, 0x32, 0xeb, 0x2e, 0xe7,
-	0x6e, 0x87, 0x11, 0xda, 0xf3, 0x08, 0xf5, 0x7d, 0x2e, 0xa9, 0xf4, 0xb8, 0x2f, 0x42, 0x42, 0x26,
-	0xa7, 0x15, 0x1b, 0x54, 0x30, 0x42, 0x1b, 0x4d, 0x6f, 0x22, 0x3c, 0x7e, 0xd1, 0xa0, 0xcc, 0x45,
-	0x5b, 0x19, 0xe8, 0xb5, 0x35, 0x97, 0xbb, 0x5c, 0x95, 0x64, 0x5c, 0x85, 0x5f, 0xf1, 0x21, 0xa0,
-	0x52, 0x9f, 0xd3, 0x56, 0x93, 0x0a, 0x59, 0x0b, 0x1c, 0xf6, 0x7a, 0xc0, 0x84, 0x44, 0x2b, 0x60,
-	0xca, 0x20, 0x6d, 0x64, 0x8d, 0xad, 0x25, 0xc7, 0x94, 0x01, 0x7a, 0x00, 0x73, 0x5d, 0xde, 0x62,
-	0x69, 0x33, 0x6b, 0x6c, 0xad, 0x14, 0xb2, 0xf6, 0x85, 0xf0, 0xf6, 0x44, 0xe4, 0x80, 0xb7, 0x98,
-	0xa3, 0xd0, 0xf8, 0xa3, 0x01, 0xab, 0x67, 0xc4, 0x45, 0x8f, 0xfb, 0x82, 0xa1, 0xfc, 0x44, 0x3d,
-	0x59, 0xb8, 0x16, 0xa3, 0x55, 0x0b, 0x94, 0xe9, 0x1e, 0x24, 0x65, 0x50, 0xef, 0x6b, 0x96, 0xf2,
-	0x4e, 0x16, 0x36, 0x23, 0xfc, 0xb8, 0x0f, 0xb6, 0xda, 0xfa, 0x14, 0x4d, 0x63, 0x1d, 0x90, 0x93,
-	0x1a, 0xef, 0xc0, 0x95, 0xaa, 0xd7, 0x1d, 0x74, 0xa8, 0x64, 0xd1, 0xf6, 0xfe, 0x2e, 0x00, 0xfe,
-	0x64, 0x40, 0xea, 0x94, 0xaa, 0xc3, 0x3f, 0x82, 0x45, 0x97, 0x8a, 0xba, 0xe7, 0x1f, 0x71, 0xad,
-	0x70, 0x7b, 0x76, 0xa4, 0x7d, 0x2a, 0x9e, 0xf8, 0x47, 0xdc, 0x59, 0x70, 0xc3, 0x02, 0xed, 0xc0,
-	0x7c, 0x9f, 0x89, 0x41, 0x47, 0xea, 0xed, 0x64, 0x67, 0x73, 0x1d, 0x85, 0x73, 0x34, 0x1e, 0x63,
-	0x58, 0xda, 0x67, 0x53, 0x23, 0x42, 0x30, 0xd7, 0xa6, 0xa2, 0xad, 0x32, 0xfc, 0xef, 0xa8, 0x1a,
-	0x3f, 0x84, 0x65, 0x8d, 0xf9, 0xa7, 0x4e, 0xdf, 0x7d, 0x09, 0xcb, 0x67, 0xe6, 0x87, 0xd2, 0xb0,
-	0x56, 0x72, 0x2a, 0xc5, 0xdd, 0x72, 0xb1, 0x5a, 0xab, 0x1f, 0x54, 0x76, 0xf7, 0xea, 0xa5, 0x67,
-	0x95, 0xf2, 0xd3, 0x54, 0x02, 0xdd, 0x80, 0xd5, 0x73, 0x2b, 0xd5, 0x17, 0xcf, 0xcb, 0x29, 0x23,
-	0x86, 0x52, 0x54, 0x2b, 0x66, 0xe1, 0x97, 0x09, 0x0b, 0xd5, 0xf0, 0xf0, 0xa3, 0x00, 0x16, 0xa3,
-	0x8e, 0x22, 0x1c, 0x13, 0xe8, 0xdc, 0xa4, 0x32, 0xb9, 0x4b, 0x31, 0x7a, 0xc2, 0xb9, 0x0f, 0xdf,
-	0x7e, 0x7e, 0x31, 0x6f, 0xe1, 0x9b, 0x24, 0xe6, 0xd6, 0x45, 0x6e, 0x3d, 0xf8, 0x4f, 0xf5, 0x06,
-	0x6d, 0xc4, 0x48, 0x4e, 0x77, 0x36, 0x93, 0x9d, 0x0d, 0xd0, 0x86, 0x9b, 0xca, 0xd0, 0x42, 0xeb,
-	0x24, 0xee, 0xbe, 0x91, 0xb7, 0xe3, 0x61, 0xbc, 0x47, 0xef, 0x20, 0x39, 0x75, 0xfa, 0x51, 0xfe,
-	0xb2, 0x5b, 0x73, 0xea, 0x7e, 0xe7, 0x4f, 0x30, 0x9d, 0xc1, 0x52, 0x19, 0xd2, 0xf8, 0x7a, 0x6c,
-	0x06, 0x51, 0x7a, 0xfc, 0x75, 0x68, 0x19, 0x27, 0x43, 0xcb, 0xf8, 0x31, 0xb4, 0x8c, 0xcf, 0x23,
-	0x2b, 0x71, 0x32, 0xb2, 0x12, 0xdf, 0x47, 0x56, 0xe2, 0x30, 0xef, 0x7a, 0xb2, 0x3d, 0x68, 0xd8,
-	0x4d, 0xde, 0x8d, 0xb8, 0xe1, 0xe3, 0x9e, 0x68, 0xbd, 0x22, 0xf2, 0x4d, 0x8f, 0x8d, 0xc5, 0x1a,
-	0xf3, 0xea, 0x07, 0x71, 0xff, 0x77, 0x00, 0x00, 0x00, 0xff, 0xff, 0x50, 0xdf, 0x75, 0x07, 0xcb,
-	0x04, 0x00, 0x00,
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x54, 0xcd, 0x6e, 0xd3, 0x40,
-	0x10, 0xae, 0x1d, 0xfa, 0xc3, 0xa4, 0x08, 0x58, 0x7e, 0x14, 0x99, 0xe2, 0x06, 0xa7, 0x69, 0x23,
-	0x24, 0xbc, 0x6a, 0xb8, 0xf4, 0x80, 0x84, 0x84, 0x54, 0x22, 0x6e, 0xc8, 0xed, 0x89, 0x4b, 0xb5,
-	0x09, 0x5b, 0xc7, 0x22, 0xf1, 0xba, 0xde, 0x4d, 0xb4, 0x15, 0xf4, 0xc2, 0x91, 0x13, 0x12, 0x2f,
-	0xc5, 0x31, 0x12, 0x17, 0x8e, 0x28, 0xe1, 0x0d, 0x78, 0x01, 0xe4, 0xf5, 0x3a, 0x71, 0xa8, 0x4d,
-	0x7b, 0xf2, 0xae, 0xfc, 0xfd, 0xcc, 0x37, 0xe3, 0x31, 0x6c, 0xf7, 0x18, 0x1f, 0x32, 0x8e, 0x85,
-	0xc4, 0xe3, 0xfd, 0x2e, 0x15, 0x64, 0x1f, 0x73, 0x1a, 0x8f, 0x83, 0x1e, 0x75, 0xa3, 0x98, 0x09,
-	0x86, 0xee, 0xa6, 0x00, 0x57, 0x48, 0x57, 0x03, 0xac, 0x2d, 0x9f, 0x31, 0x7f, 0x40, 0x31, 0x89,
-	0x02, 0x4c, 0xc2, 0x90, 0x09, 0x22, 0x02, 0x16, 0xf2, 0x94, 0x60, 0x35, 0xb4, 0x62, 0x97, 0x70,
-	0x8a, 0x49, 0xb7, 0x17, 0xcc, 0x85, 0x93, 0x8b, 0x06, 0x59, 0x97, 0x6d, 0x85, 0xd4, 0xef, 0x9e,
-	0xe6, 0x05, 0xce, 0x46, 0x34, 0x3e, 0x9f, 0x63, 0x22, 0xe2, 0x07, 0xa1, 0x72, 0x4b, 0xb1, 0x4e,
-	0x0c, 0xa8, 0x43, 0xc5, 0xb1, 0xe4, 0x87, 0x63, 0x1a, 0x0a, 0x8f, 0x9e, 0x8d, 0x28, 0x17, 0xe8,
-	0x3e, 0xac, 0xd2, 0xe4, 0x5e, 0x33, 0xea, 0x46, 0xeb, 0xa6, 0x97, 0x5e, 0xd0, 0x6b, 0x80, 0x05,
-	0xbf, 0x66, 0xd6, 0x8d, 0x56, 0xb5, 0xbd, 0xeb, 0xea, 0x78, 0x89, 0x99, 0xab, 0xcc, 0xb2, 0x98,
-	0xee, 0x5b, 0xe2, 0x53, 0xad, 0xe8, 0xe5, 0x98, 0xce, 0xc4, 0x80, 0x7b, 0x4b, 0xa6, 0x3c, 0x62,
-	0x21, 0xa7, 0x68, 0x0f, 0x2a, 0x42, 0xf2, 0x9a, 0x51, 0xaf, 0xb4, 0xaa, 0xed, 0x07, 0xee, 0xa5,
-	0xbe, 0xb9, 0xc7, 0xd2, 0x4b, 0x10, 0xa8, 0x03, 0x9b, 0x42, 0x9e, 0xc4, 0x9a, 0xc7, 0x6b, 0xa6,
-	0x62, 0xec, 0x2c, 0x95, 0xa2, 0x7a, 0x95, 0x23, 0x6a, 0xb0, 0x57, 0x15, 0xf3, 0x73, 0x22, 0x94,
-	0x4f, 0x54, 0x51, 0x89, 0xf6, 0xae, 0x4c, 0xa4, 0x95, 0xf2, 0x91, 0x0e, 0xe0, 0xf6, 0x51, 0x30,
-	0x1c, 0x0d, 0x88, 0xc8, 0x12, 0xa3, 0x26, 0x98, 0x42, 0xaa, 0x06, 0x96, 0x86, 0x31, 0x85, 0x74,
-	0xbe, 0x18, 0x70, 0x67, 0x41, 0xd5, 0x9d, 0x78, 0x01, 0x1b, 0x3e, 0xe1, 0x27, 0x41, 0x78, 0xca,
-	0xb4, 0xc2, 0x93, 0xf2, 0x70, 0x1d, 0xc2, 0xdf, 0x84, 0xa7, 0xcc, 0x5b, 0xf7, 0xd3, 0x03, 0x3a,
-	0x80, 0xb5, 0x98, 0xf2, 0xd1, 0x40, 0xe8, 0x19, 0xd5, 0xcb, 0xb9, 0x9e, 0xc2, 0x79, 0x1a, 0xef,
-	0x38, 0xb0, 0xa9, 0x06, 0x93, 0x65, 0x40, 0x70, 0xa3, 0x4f, 0x78, 0x5f, 0x7f, 0x06, 0xea, 0xec,
-	0x5c, 0xc0, 0x2d, 0x8d, 0xd1, 0xc5, 0x5e, 0x2f, 0x28, 0x3a, 0x84, 0x6a, 0x6e, 0x68, 0xba, 0xb4,
-	0xeb, 0xcd, 0x0c, 0x16, 0x33, 0x6b, 0xff, 0x31, 0x61, 0xfd, 0x28, 0x5d, 0x30, 0x24, 0x61, 0x23,
-	0x6b, 0x1d, 0x72, 0x0a, 0x9c, 0xff, 0x19, 0x89, 0xd5, 0xf8, 0x2f, 0x26, 0x35, 0x70, 0x1a, 0x9f,
-	0x7f, 0xfc, 0xfe, 0x66, 0x3e, 0x76, 0x1e, 0xe1, 0x82, 0xcd, 0xce, 0xdc, 0x22, 0x58, 0x55, 0x4d,
-	0x40, 0xdb, 0x05, 0x92, 0xf9, 0x16, 0x5a, 0xf5, 0x72, 0x80, 0x36, 0xdc, 0x51, 0x86, 0x36, 0xda,
-	0xc2, 0x45, 0x3b, 0x8d, 0x3f, 0x26, 0x5d, 0xbf, 0x40, 0x9f, 0xa0, 0x9a, 0xdb, 0x19, 0xd4, 0x2c,
-	0x93, 0x5d, 0x5a, 0x64, 0x6b, 0xf7, 0x2a, 0x98, 0xae, 0xc1, 0x56, 0x35, 0xd4, 0xd0, 0xc3, 0xc2,
-	0x1a, 0xf8, 0xab, 0x97, 0xdf, 0xa7, 0xb6, 0x31, 0x99, 0xda, 0xc6, 0xaf, 0xa9, 0x6d, 0x7c, 0x9d,
-	0xd9, 0x2b, 0x93, 0x99, 0xbd, 0xf2, 0x73, 0x66, 0xaf, 0xbc, 0x6b, 0xfa, 0x81, 0xe8, 0x8f, 0xba,
-	0x6e, 0x8f, 0x0d, 0x33, 0x6e, 0xfa, 0x78, 0xc6, 0xdf, 0x7f, 0xc0, 0xe2, 0x3c, 0xa2, 0x89, 0x58,
-	0x77, 0x4d, 0xfd, 0x6e, 0x9e, 0xff, 0x0d, 0x00, 0x00, 0xff, 0xff, 0xae, 0x63, 0xf9, 0x38, 0x2f,
-	0x05, 0x00, 0x00,
+	// 695 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x55, 0x5f, 0x4f, 0xd3, 0x50,
+	0x14, 0x5f, 0x37, 0xfe, 0x79, 0x06, 0x88, 0x17, 0xd4, 0x65, 0x62, 0xa9, 0xe5, 0x6f, 0x48, 0x6c,
+	0xc3, 0xf4, 0x81, 0x07, 0x13, 0xc3, 0x00, 0x89, 0x51, 0xc4, 0x74, 0xbc, 0x48, 0x4c, 0x96, 0xbb,
+	0xed, 0x52, 0x1a, 0x59, 0x6f, 0xe9, 0xbd, 0x23, 0x25, 0xca, 0x8b, 0xbe, 0xf9, 0x64, 0xe2, 0x97,
+	0xf2, 0x91, 0xc4, 0x17, 0x1f, 0x0d, 0xf8, 0x05, 0xfc, 0x06, 0xa6, 0xb7, 0xb7, 0x5b, 0xc7, 0x3a,
+	0xe0, 0xcd, 0x27, 0x6e, 0xe9, 0xef, 0xcf, 0x39, 0xbf, 0x73, 0x7b, 0x06, 0x33, 0x75, 0xca, 0x9a,
+	0x94, 0x99, 0x3c, 0x30, 0x8f, 0x57, 0x6a, 0x84, 0xe3, 0x15, 0x93, 0x11, 0xff, 0xd8, 0xa9, 0x13,
+	0xc3, 0xf3, 0x29, 0xa7, 0xe8, 0x4e, 0x04, 0x30, 0x78, 0x60, 0x48, 0x40, 0x71, 0xda, 0xa6, 0xd4,
+	0x3e, 0x24, 0x26, 0xf6, 0x1c, 0x13, 0xbb, 0x2e, 0xe5, 0x98, 0x3b, 0xd4, 0x65, 0x11, 0xa1, 0x38,
+	0x2b, 0x15, 0x6b, 0x98, 0x11, 0x13, 0xd7, 0xea, 0x4e, 0x5b, 0x38, 0x7c, 0x90, 0xa0, 0x62, 0xaf,
+	0x2d, 0x0f, 0xe4, 0xbb, 0x29, 0x9b, 0xda, 0x54, 0x1c, 0xcd, 0xf0, 0x24, 0xff, 0xbb, 0x9c, 0x94,
+	0x3d, 0x6a, 0x11, 0xff, 0xa4, 0xcd, 0xf4, 0xb0, 0xed, 0xb8, 0xa2, 0x86, 0x08, 0xab, 0xfb, 0x80,
+	0xb6, 0x08, 0xdf, 0x0d, 0xd8, 0xe6, 0x31, 0x71, 0xb9, 0x45, 0x8e, 0x5a, 0x84, 0x71, 0x34, 0x05,
+	0x83, 0x24, 0x7c, 0x2e, 0x28, 0x9a, 0xb2, 0x74, 0xcb, 0x8a, 0x1e, 0xd0, 0x0b, 0x80, 0x0e, 0xbf,
+	0x90, 0xd5, 0x94, 0xa5, 0x7c, 0x69, 0xc1, 0x90, 0x4d, 0x87, 0x66, 0x86, 0x30, 0x8b, 0x9b, 0x37,
+	0xde, 0x62, 0x9b, 0x48, 0x45, 0x2b, 0xc1, 0xd4, 0xcf, 0x14, 0x98, 0xec, 0x32, 0x65, 0x1e, 0x75,
+	0x19, 0x41, 0x8b, 0x90, 0xe3, 0x01, 0x2b, 0x28, 0x5a, 0x6e, 0x29, 0x5f, 0xba, 0x6b, 0xf4, 0xa4,
+	0x69, 0xec, 0x06, 0x56, 0x88, 0x40, 0x5b, 0x30, 0xca, 0x83, 0xaa, 0x2f, 0x79, 0xac, 0x90, 0x15,
+	0x8c, 0xb9, 0xae, 0x52, 0x44, 0x82, 0x09, 0xa2, 0x04, 0x5b, 0x79, 0xde, 0x3e, 0x87, 0x42, 0xc9,
+	0x8e, 0x72, 0xa2, 0xa3, 0xc5, 0x6b, 0x3b, 0x92, 0x4a, 0xc9, 0x96, 0xf6, 0x00, 0x95, 0x7d, 0x8a,
+	0x1b, 0x75, 0xcc, 0x78, 0x68, 0x16, 0xc5, 0x38, 0x0e, 0x59, 0x1e, 0x88, 0x0c, 0x47, 0xad, 0x2c,
+	0x0f, 0xd0, 0x53, 0x18, 0x68, 0xd2, 0x06, 0x11, 0xd1, 0x8d, 0x97, 0xb4, 0x94, 0x0e, 0xdb, 0x22,
+	0xdb, 0xb4, 0x41, 0x2c, 0x81, 0xd6, 0xbf, 0x28, 0x30, 0xd9, 0x25, 0x2e, 0xe3, 0x9a, 0x6f, 0xab,
+	0xf7, 0x4d, 0x2b, 0x34, 0xdd, 0x84, 0x7c, 0x22, 0x2c, 0x39, 0xb6, 0x9b, 0x65, 0x05, 0x9d, 0xac,
+	0xf4, 0x55, 0xb8, 0x5d, 0x71, 0x9a, 0xad, 0x43, 0xcc, 0xe3, 0x99, 0xde, 0xb0, 0x00, 0xfd, 0xab,
+	0x02, 0x13, 0x1d, 0xaa, 0x2c, 0xfe, 0x19, 0x8c, 0xd8, 0x98, 0x55, 0x1d, 0x77, 0x9f, 0x4a, 0x85,
+	0x47, 0xfd, 0x4b, 0xda, 0xc2, 0xec, 0xa5, 0xbb, 0x4f, 0xad, 0x61, 0x3b, 0x3a, 0xa0, 0x55, 0x18,
+	0xf2, 0x09, 0x6b, 0x1d, 0x72, 0xd9, 0x8e, 0xd6, 0x9f, 0x6b, 0x09, 0x9c, 0x25, 0xf1, 0xba, 0x0e,
+	0xa3, 0xe2, 0xea, 0xc5, 0x3d, 0x20, 0x18, 0x38, 0xc0, 0xec, 0x40, 0x5e, 0x74, 0x71, 0xd6, 0x4f,
+	0x61, 0x4c, 0x62, 0xfe, 0x47, 0xd2, 0xcb, 0xef, 0x61, 0xac, 0xeb, 0x1a, 0xa0, 0x02, 0x4c, 0x95,
+	0xad, 0x9d, 0xb5, 0x8d, 0xf5, 0xb5, 0xca, 0x6e, 0x75, 0x7b, 0x67, 0x63, 0xb3, 0x5a, 0x7e, 0xbd,
+	0xb3, 0xfe, 0x6a, 0x22, 0x83, 0xee, 0xc3, 0xe4, 0xa5, 0x37, 0x95, 0x77, 0x6f, 0xd6, 0x27, 0x94,
+	0x14, 0xca, 0x9a, 0x78, 0x93, 0x2d, 0xfd, 0xcd, 0xc1, 0x70, 0x25, 0x5a, 0x5b, 0x28, 0x80, 0x91,
+	0x78, 0x30, 0x48, 0x4f, 0xe9, 0xeb, 0xd2, 0xc0, 0x8b, 0xb3, 0x57, 0x62, 0xe4, 0x45, 0x99, 0xfd,
+	0xfc, 0xf3, 0xcf, 0xf7, 0xec, 0x43, 0xfd, 0x81, 0x99, 0xb2, 0x2f, 0x63, 0x37, 0x0f, 0x06, 0x45,
+	0xc4, 0x68, 0x26, 0x45, 0x32, 0x39, 0xa0, 0xa2, 0xd6, 0x1f, 0x20, 0x0d, 0xe7, 0x84, 0xa1, 0x8a,
+	0xa6, 0xcd, 0xb4, 0x4d, 0x69, 0x7e, 0x0c, 0x67, 0x7a, 0x8a, 0x3e, 0x41, 0x3e, 0xf1, 0x11, 0xa1,
+	0xf9, 0xab, 0x3e, 0xbe, 0x8e, 0xfb, 0xc2, 0x75, 0x30, 0x59, 0x83, 0x2a, 0x6a, 0x28, 0xe8, 0xf7,
+	0x52, 0x6b, 0x60, 0xa1, 0x7b, 0x62, 0xe3, 0xa5, 0xba, 0xf7, 0xae, 0xe1, 0x54, 0xf7, 0x94, 0xc5,
+	0x19, 0xbb, 0xa3, 0x3e, 0xee, 0xe5, 0xe7, 0x3f, 0xce, 0x55, 0xe5, 0xec, 0x5c, 0x55, 0x7e, 0x9f,
+	0xab, 0xca, 0xb7, 0x0b, 0x35, 0x73, 0x76, 0xa1, 0x66, 0x7e, 0x5d, 0xa8, 0x99, 0xbd, 0x79, 0xdb,
+	0xe1, 0x07, 0xad, 0x9a, 0x51, 0xa7, 0xcd, 0x98, 0x1b, 0xfd, 0x79, 0xcc, 0x1a, 0x1f, 0x4c, 0x7e,
+	0xe2, 0x91, 0x50, 0xac, 0x36, 0x24, 0x7e, 0x2c, 0x9e, 0xfc, 0x0b, 0x00, 0x00, 0xff, 0xff, 0xe3,
+	0x60, 0x2a, 0x38, 0x03, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -618,6 +616,12 @@ func (c *serviceClient) GetTx(ctx context.Context, in *GetTxRequest, opts ...grp
 func (c *serviceClient) BroadcastTx(ctx context.Context, in *BroadcastTxRequest, opts ...grpc.CallOption) (*BroadcastTxResponse, error) {
 	out := new(BroadcastTxResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.Service/BroadcastTx", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *serviceClient) GetTxsEvent(ctx context.Context, in *GetTxsEventRequest, opts ...grpc.CallOption) (*GetTxsEventResponse, error) {
 	out := new(GetTxsEventResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.Service/GetTxsEvent", in, out, opts...)
@@ -651,6 +655,7 @@ func (*UnimplementedServiceServer) GetTx(ctx context.Context, req *GetTxRequest)
 }
 func (*UnimplementedServiceServer) BroadcastTx(ctx context.Context, req *BroadcastTxRequest) (*BroadcastTxResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BroadcastTx not implemented")
+}
 func (*UnimplementedServiceServer) GetTxsEvent(ctx context.Context, req *GetTxsEventRequest) (*GetTxsEventResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTxsEvent not implemented")
 }
@@ -697,8 +702,6 @@ func _Service_GetTx_Handler(srv interface{}, ctx context.Context, dec func(inter
 
 func _Service_BroadcastTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(BroadcastTxRequest)
-func _Service_GetTxsEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetTxsEventRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -711,6 +714,16 @@ func _Service_GetTxsEvent_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ServiceServer).BroadcastTx(ctx, req.(*BroadcastTxRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Service_GetTxsEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTxsEventRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
 		return srv.(ServiceServer).GetTxsEvent(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
@@ -738,6 +751,8 @@ var _Service_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BroadcastTx",
 			Handler:    _Service_BroadcastTx_Handler,
+		},
+		{
 			MethodName: "GetTxsEvent",
 			Handler:    _Service_GetTxsEvent_Handler,
 		},
@@ -746,7 +761,6 @@ var _Service_serviceDesc = grpc.ServiceDesc{
 	Metadata: "cosmos/tx/v1beta1/service.proto",
 }
 
-func (m *BroadcastTxRequest) Marshal() (dAtA []byte, err error) {
 func (m *GetTxsEventRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -757,27 +771,16 @@ func (m *GetTxsEventRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *BroadcastTxRequest) MarshalTo(dAtA []byte) (int, error) {
 func (m *GetTxsEventRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *BroadcastTxRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 func (m *GetTxsEventRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.Mode != 0 {
-		i = encodeVarintService(dAtA, i, uint64(m.Mode))
-		i--
-		dAtA[i] = 0x10
-	}
-	if len(m.Tx) > 0 {
-		i -= len(m.Tx)
-		copy(dAtA[i:], m.Tx)
-		i = encodeVarintService(dAtA, i, uint64(len(m.Tx)))
 	if m.Pagination != nil {
 		{
 			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
@@ -800,7 +803,6 @@ func (m *GetTxsEventRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *BroadcastTxResponse) Marshal() (dAtA []byte, err error) {
 func (m *GetTxsEventResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -811,21 +813,16 @@ func (m *GetTxsEventResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *BroadcastTxResponse) MarshalTo(dAtA []byte) (int, error) {
 func (m *GetTxsEventResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *BroadcastTxResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 func (m *GetTxsEventResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.TxResponse != nil {
-		{
-			size, err := m.TxResponse.MarshalToSizedBuffer(dAtA[:i])
 	if m.Pagination != nil {
 		{
 			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
@@ -836,19 +833,6 @@ func (m *GetTxsEventResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i = encodeVarintService(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x12
-	}
-	if m.Tx != nil {
-		{
-			size, err := m.Tx.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintService(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
 		dAtA[i] = 0x1a
 	}
 	if len(m.TxResponses) > 0 {
@@ -878,6 +862,88 @@ func (m *GetTxsEventResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0xa
 		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *BroadcastTxRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BroadcastTxRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BroadcastTxRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Mode != 0 {
+		i = encodeVarintService(dAtA, i, uint64(m.Mode))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Tx) > 0 {
+		i -= len(m.Tx)
+		copy(dAtA[i:], m.Tx)
+		i = encodeVarintService(dAtA, i, uint64(len(m.Tx)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *BroadcastTxResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BroadcastTxResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BroadcastTxResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.TxResponse != nil {
+		{
+			size, err := m.TxResponse.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintService(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Tx != nil {
+		{
+			size, err := m.Tx.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintService(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -1052,19 +1118,12 @@ func encodeVarintService(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *BroadcastTxRequest) Size() (n int) {
 func (m *GetTxsEventRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = len(m.Tx)
-	if l > 0 {
-		n += 1 + l + sovService(uint64(l))
-	}
-	if m.Mode != 0 {
-		n += 1 + sovService(uint64(m.Mode))
 	l = len(m.Event)
 	if l > 0 {
 		n += 1 + l + sovService(uint64(l))
@@ -1076,19 +1135,12 @@ func (m *GetTxsEventRequest) Size() (n int) {
 	return n
 }
 
-func (m *BroadcastTxResponse) Size() (n int) {
 func (m *GetTxsEventResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.Tx != nil {
-		l = m.Tx.Size()
-		n += 1 + l + sovService(uint64(l))
-	}
-	if m.TxResponse != nil {
-		l = m.TxResponse.Size()
 	if len(m.Txs) > 0 {
 		for _, e := range m.Txs {
 			l = e.Size()
@@ -1103,6 +1155,39 @@ func (m *GetTxsEventResponse) Size() (n int) {
 	}
 	if m.Pagination != nil {
 		l = m.Pagination.Size()
+		n += 1 + l + sovService(uint64(l))
+	}
+	return n
+}
+
+func (m *BroadcastTxRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Tx)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	if m.Mode != 0 {
+		n += 1 + sovService(uint64(m.Mode))
+	}
+	return n
+}
+
+func (m *BroadcastTxResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Tx != nil {
+		l = m.Tx.Size()
+		n += 1 + l + sovService(uint64(l))
+	}
+	if m.TxResponse != nil {
+		l = m.TxResponse.Size()
 		n += 1 + l + sovService(uint64(l))
 	}
 	return n
@@ -1174,7 +1259,6 @@ func sovService(x uint64) (n int) {
 func sozService(x uint64) (n int) {
 	return sovService(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *BroadcastTxRequest) Unmarshal(dAtA []byte) error {
 func (m *GetTxsEventRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1198,10 +1282,6 @@ func (m *GetTxsEventRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: BroadcastTxRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BroadcastTxRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 			return fmt.Errorf("proto: GetTxsEventRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
@@ -1210,9 +1290,6 @@ func (m *GetTxsEventRequest) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Tx", wireType)
-			}
-			var byteLen int
 				return fmt.Errorf("proto: wrong wireType = %d for field Event", wireType)
 			}
 			var stringLen uint64
@@ -1225,16 +1302,11 @@ func (m *GetTxsEventRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
 				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
-				return ErrInvalidLengthService
-			}
-			postIndex := iNdEx + byteLen
 			intStringLen := int(stringLen)
 			if intStringLen < 0 {
 				return ErrInvalidLengthService
@@ -1246,16 +1318,6 @@ func (m *GetTxsEventRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Tx = append(m.Tx[:0], dAtA[iNdEx:postIndex]...)
-			if m.Tx == nil {
-				m.Tx = []byte{}
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Mode", wireType)
-			}
-			m.Mode = 0
 			m.Event = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
@@ -1272,7 +1334,6 @@ func (m *GetTxsEventRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Mode |= BroadcastMode(b&0x7F) << shift
 				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
@@ -1319,7 +1380,6 @@ func (m *GetTxsEventRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *BroadcastTxResponse) Unmarshal(dAtA []byte) error {
 func (m *GetTxsEventResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1343,10 +1403,6 @@ func (m *GetTxsEventResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: BroadcastTxResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BroadcastTxResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			return fmt.Errorf("proto: GetTxsEventResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
@@ -1355,7 +1411,6 @@ func (m *GetTxsEventResponse) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Tx", wireType)
 				return fmt.Errorf("proto: wrong wireType = %d for field Txs", wireType)
 			}
 			var msglen int
@@ -1383,10 +1438,6 @@ func (m *GetTxsEventResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Tx == nil {
-				m.Tx = &Tx{}
-			}
-			if err := m.Tx.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 			m.Txs = append(m.Txs, &Tx{})
 			if err := m.Txs[len(m.Txs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -1394,7 +1445,6 @@ func (m *GetTxsEventResponse) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TxResponse", wireType)
 				return fmt.Errorf("proto: wrong wireType = %d for field TxResponses", wireType)
 			}
 			var msglen int
@@ -1456,14 +1506,241 @@ func (m *GetTxsEventResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.TxResponse == nil {
-				m.TxResponse = &types.TxResponse{}
-			}
-			if err := m.TxResponse.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 			if m.Pagination == nil {
 				m.Pagination = &query.PageResponse{}
 			}
 			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BroadcastTxRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BroadcastTxRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BroadcastTxRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tx", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Tx = append(m.Tx[:0], dAtA[iNdEx:postIndex]...)
+			if m.Tx == nil {
+				m.Tx = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Mode", wireType)
+			}
+			m.Mode = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Mode |= BroadcastMode(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BroadcastTxResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BroadcastTxResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BroadcastTxResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tx", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Tx == nil {
+				m.Tx = &Tx{}
+			}
+			if err := m.Tx.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxResponse", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.TxResponse == nil {
+				m.TxResponse = &types.TxResponse{}
+			}
+			if err := m.TxResponse.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

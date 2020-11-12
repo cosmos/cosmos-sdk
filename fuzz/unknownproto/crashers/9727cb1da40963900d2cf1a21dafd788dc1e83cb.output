@@ -1,0 +1,67 @@
+program hanged (timeout 10 seconds)
+
+SIGABRT: abort
+PC=0x7fff6ba5881e m=0 sigcode=0
+
+goroutine 0 [idle]:
+syscall.syscall(0x1080340, 0x4, 0xc000e35e87, 0x9, 0x0, 0x0, 0x0)
+	runtime/sys_darwin.go:63 +0x2e fp=0xc000e35dd0 sp=0xc000e35da8 pc=0x106a3ae
+syscall.read(0x4, 0xc000e35e87, 0x9, 0x9, 0x18, 0x18, 0x0)
+	syscall/zsyscall_darwin_amd64.go:1242 +0x66 fp=0xc000e35e28 sp=0xc000e35dd0 pc=0x107e2e6
+syscall.Read(...)
+	syscall/syscall_unix.go:187
+go-fuzz-dep.FD.read(...)
+	go-fuzz-dep/sys_posix.go:27
+go-fuzz-dep.read(0x4, 0xc000e35f18, 0x3)
+	go-fuzz-dep/main.go:47 +0x8b fp=0xc000e35eb0 sp=0xc000e35e28 pc=0x109720b
+go-fuzz-dep.Main(0xc000e35f70, 0x1, 0x1)
+	go-fuzz-dep/main.go:26 +0x253 fp=0xc000e35f58 sp=0xc000e35eb0 pc=0x10970b3
+main.main()
+	github.com/cosmos/cosmos-sdk/fuzz/unknownproto/go.fuzz.main/main.go:15 +0x52 fp=0xc000e35f88 sp=0xc000e35f58 pc=0x1abc5f2
+runtime.main()
+	runtime/proc.go:225 +0x256 fp=0xc000e35fe0 sp=0xc000e35f88 pc=0x103a776
+runtime.goexit()
+	runtime/asm_amd64.s:1367 +0x1 fp=0xc000e35fe8 sp=0xc000e35fe0 pc=0x106d701
+
+goroutine 1 [syscall]:
+syscall.syscall(0x1080340, 0x4, 0xc000e35e87, 0x9, 0x0, 0x0, 0x0)
+	runtime/sys_darwin.go:63 +0x2e fp=0xc000e35dd0 sp=0xc000e35da8 pc=0x106a3ae
+syscall.read(0x4, 0xc000e35e87, 0x9, 0x9, 0x18, 0x18, 0x0)
+	syscall/zsyscall_darwin_amd64.go:1242 +0x66 fp=0xc000e35e28 sp=0xc000e35dd0 pc=0x107e2e6
+syscall.Read(...)
+	syscall/syscall_unix.go:187
+go-fuzz-dep.FD.read(...)
+	go-fuzz-dep/sys_posix.go:27
+go-fuzz-dep.read(0x4, 0xc000e35f18, 0x3)
+	go-fuzz-dep/main.go:47 +0x8b fp=0xc000e35eb0 sp=0xc000e35e28 pc=0x109720b
+go-fuzz-dep.Main(0xc000e35f70, 0x1, 0x1)
+	go-fuzz-dep/main.go:26 +0x253 fp=0xc000e35f58 sp=0xc000e35eb0 pc=0x10970b3
+main.main()
+	github.com/cosmos/cosmos-sdk/fuzz/unknownproto/go.fuzz.main/main.go:15 +0x52 fp=0xc000e35f88 sp=0xc000e35f58 pc=0x1abc5f2
+runtime.main()
+	runtime/proc.go:225 +0x256 fp=0xc000e35fe0 sp=0xc000e35f88 pc=0x103a776
+runtime.goexit()
+	runtime/asm_amd64.s:1367 +0x1 fp=0xc000e35fe8 sp=0xc000e35fe0 pc=0x106d701
+
+rax    0x9
+rbx    0xc000e35dd0
+rcx    0x7ffeefbfd5b8
+rdx    0x0
+rdi    0x4
+rsi    0xc000e35e87
+rbp    0x7ffeefbfd5d0
+rsp    0x7ffeefbfd5b8
+r8     0xc000000180
+r9     0x0
+r10    0x1080340
+r11    0x246
+r12    0x1
+r13    0x1
+r14    0x42
+r15    0xffffffffffffffff
+rip    0x7fff6ba5881e
+rflags 0x246
+cs     0x7
+fs     0x0
+gs     0x0
+exit status 2

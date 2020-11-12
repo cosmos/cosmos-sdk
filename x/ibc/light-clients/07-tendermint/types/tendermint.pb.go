@@ -254,7 +254,7 @@ func (m *Header) GetTrustedValidators() *types3.ValidatorSet {
 	return nil
 }
 
-// Fraction defines the protobuf message type for tmmath.Fraction
+// Fraction defines the protobuf message type for tmmath.Fraction that only supports positive values.
 type Fraction struct {
 	Numerator   uint64 `protobuf:"varint,1,opt,name=numerator,proto3" json:"numerator,omitempty"`
 	Denominator uint64 `protobuf:"varint,2,opt,name=denominator,proto3" json:"denominator,omitempty"`

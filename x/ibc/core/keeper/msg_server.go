@@ -431,7 +431,7 @@ func (k Keeper) RecvPacket(goCtx context.Context, msg *channeltypes.MsgRecvPacke
 	}
 
 	// Perform TAO verification
-	if err := k.ChannelKeeper.RecvPacket(ctx, cap, msg.Packet, msg.Proof, msg.ProofHeight); err != nil {
+	if err := k.ChannelKeeper.RecvPacket(ctx, cap, msg.Packet, msg.ProofCommitment, msg.ProofHeight); err != nil {
 		return nil, sdkerrors.Wrap(err, "receive packet verification failed")
 	}
 
@@ -582,7 +582,7 @@ func (k Keeper) Acknowledgement(goCtx context.Context, msg *channeltypes.MsgAckn
 	}
 
 	// Perform TAO verification
-	if err := k.ChannelKeeper.AcknowledgePacket(ctx, cap, msg.Packet, msg.Acknowledgement, msg.Proof, msg.ProofHeight); err != nil {
+	if err := k.ChannelKeeper.AcknowledgePacket(ctx, cap, msg.Packet, msg.Acknowledgement, msg.ProofAcked, msg.ProofHeight); err != nil {
 		return nil, sdkerrors.Wrap(err, "acknowledge packet verification failed")
 	}
 

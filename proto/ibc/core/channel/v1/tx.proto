@@ -148,7 +148,7 @@ message MsgRecvPacket {
   option (gogoproto.goproto_getters) = false;
 
   Packet                    packet       = 1 [(gogoproto.nullable) = false];
-  bytes                     proof        = 2;
+  bytes                     proof_commitment        = 2 [(gogoproto.moretags) = "yaml:\"proof_commitment\""];
   ibc.core.client.v1.Height proof_height = 3
       [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
   string signer = 4;
@@ -197,7 +197,7 @@ message MsgAcknowledgement {
 
   Packet                    packet          = 1 [(gogoproto.nullable) = false];
   bytes                     acknowledgement = 2;
-  bytes                     proof           = 3;
+  bytes                     proof_acked           = 3 [(gogoproto.moretags) = "yaml:\"proof_acked\""];
   ibc.core.client.v1.Height proof_height    = 4
       [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
   string signer = 5;

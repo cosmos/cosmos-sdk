@@ -44,7 +44,7 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 
 	// UpgradeHeight must be greater than or equal to current client state height
 	if cs.GetLatestHeight().GetVersionHeight() > upgradeHeight.GetVersionHeight() {
-		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "version height at which upgrade occurs must be greater than or equal to current client height (%d < %d)",
+		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "version height at which upgrade occurs must be greater than or equal to current client height (%d > %d)",
 			cs.GetLatestHeight().GetVersionHeight(), upgradeHeight.GetVersionHeight(),
 		)
 	}

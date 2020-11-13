@@ -29,7 +29,7 @@ When possible, the existing module's [`Keeper`](keeper.md) should implement `Msg
 - First, they perform *stateful* checks to make sure the `message` is valid. At this stage, the `message`'s `ValidateBasic()` method has already been called, meaning *stateless* checks on the message (like making sure parameters are correctly formatted) have already been performed. Checks performed in the `msgServer` method can be more expensive and require access to the state. For example, a `msgServer` method for a `transfer` message might check that the sending account has enough funds to actually perform the transfer. To access the state, the `msgServer` method needs to call the [`keeper`'s](./keeper.md) getter functions. 
 - Then, if the checks are successful, the `msgServer` method calls the [`keeper`'s](./keeper.md) setter functions to actually perform the state transition. 
 
-Before returning, `msgServer` methods generally emit one or multiple [`events`](../core/events.md) via the `EventManager` held in the `ctx`:
+Before returning, `msgServer` methods generally emit one or more [events](../core/events.md) via the `EventManager` held in the `ctx`:
 
 ```go
 ctx.EventManager().EmitEvent(

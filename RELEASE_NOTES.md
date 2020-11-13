@@ -29,3 +29,15 @@ A security vulnerability that affected the Go's `encoding/binary` package was re
 Tendermint's new `v0.33.8` is meant to aid users in using the correct version of Go.
 
 Please refer to [this bug report](https://github.com/golang/go/issues/40618) for more information.
+
+## Known issues
+
+Keyrings using the `test` backend that were created with applications built with `Cosmos SDK v0.39.1`
+and `go 1.15` may break with the following error after re-compiling with `Cosmos SDK v0.39.2`:
+
+```
+ERROR: aes.KeyUnwrap(): integrity check failed.
+```
+
+This is due to [the update](https://github.com/99designs/keyring/pull/75) that the `jose2go` dependency
+has received that made it [fully compatible with go 1.15](https://github.com/dvsekhvalnov/jose2go/issues/26).

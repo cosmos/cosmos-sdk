@@ -99,7 +99,6 @@ func TestSetLoader(t *testing.T) {
 					OldKey: "foo",
 					NewKey: "bar",
 				}},
-				Added: []string{"baz"},
 			}),
 			origStoreKey: "foo",
 			loadStoreKey: "bar",
@@ -119,11 +118,9 @@ func TestSetLoader(t *testing.T) {
 
 			// load the app with the existing db
 			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(store.PruneNothing)}
-			capKey := sdk.NewKVStoreKey("main")
 
 			origapp := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
-			origapp.MountStores(capKey)
-			origapp.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
+			origapp.MountStores(sdk.NewKVStoreKey(tc.origStoreKey))
 			err := origapp.LoadLatestVersion()
 			require.Nil(t, err)
 
@@ -139,7 +136,6 @@ func TestSetLoader(t *testing.T) {
 
 			// load the new app with the original app db
 			app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
-			app.MountStores(capKey)
 			app.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
 			err = app.LoadLatestVersion()
 			require.Nil(t, err)

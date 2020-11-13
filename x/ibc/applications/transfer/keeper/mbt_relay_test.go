@@ -9,6 +9,7 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
+	"github.com/tendermint/tendermint/crypto"
 	"io/ioutil"
 	"strings"
 )
@@ -77,8 +78,26 @@ type Balance struct {
 	Amount sdk.Int
 }
 
+
+func AddressFromString(address string) string {
+	return sdk.AccAddress(crypto.AddressHash([]byte(address))).String()
+}
+
 func AddressFromTla(addr []string) string {
-	return strings.Join(addr, "/")
+	if len(addr) != 3 {
+		panic("failed to convert from TLA+ address: wrong number of address components")
+	}
+	s := ""
+	if len(addr[0]) == 0 && len(addr[1]) == 0 {
+		// simple address: id
+		s = addr[2]
+	} else if len(addr[2]) == 0   {
+		// escrow address: port + channel
+		s = addr[0] + addr[1]
+	} else {
+		panic("failed to convert from TLA+ address: neither simple nor escrow address")
+	}
+	return s
 }
 
 func DenomFromTla(denom []string) string {
@@ -120,8 +139,8 @@ func FungibleTokenPacketFromTla(packet TlaFungibleTokenPacket) FungibleTokenPack
 		Data:          types.NewFungibleTokenPacketData(
 			DenomFromTla(packet.Data.Denom),
 			uint64(packet.Data.Amount),
-			packet.Data.Sender,
-			packet.Data.Receiver),
+			AddressFromString(packet.Data.Sender),
+			AddressFromString(packet.Data.Receiver)),
 	}
 }
 
@@ -273,6 +292,8 @@ func StaticOnRecvPacketTestCases() []OnRecvPacketTestCase {
 	}
 }
 
+
+
 func (suite *KeeperTestSuite) TestModelBasedStaticOnRecvPacket() {
 	var testCases = []TlaOnRecvPacketTestCase{}
 
@@ -286,9 +307,16 @@ func (suite *KeeperTestSuite) TestModelBasedStaticOnRecvPacket() {
 		panic(fmt.Errorf("Failed to parse JSON test fixture: %w", err))
 	}
 
+
+	for _, tlaTc := range testCases {
+		tc := OnRecvPacketTestCaseFromTla(tlaTc)
+		fmt.Println(tc)
+	}
+
 	var (
 		channelA, channelB ibctesting.TestChannel
 	)
+
 
 	for _, tc := range StaticOnRecvPacketTestCases() {
 		suite.Run(fmt.Sprintf("Case %s", tc.description), func() {

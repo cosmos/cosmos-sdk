@@ -71,7 +71,7 @@ func (k *Keeper) ScopeToModule(moduleName string) ScopedKeeper {
 		panic("cannot scope to module via a sealed capability keeper")
 	}
 	if strings.TrimSpace(moduleName) == "" {
-		panic("cannot scope to module name")
+		panic("cannot scope to an empty module name")
 	}
 
 	if _, ok := k.scopedModules[moduleName]; ok {

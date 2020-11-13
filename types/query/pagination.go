@@ -6,9 +6,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-// defaultLimit is the default `limit` for queries
-// if the `limit` is not supplied, paginate will use `defaultLimit`
-const defaultLimit = 100
+// DefaultLimit is the default `limit` for queries
+// if the `limit` is not supplied, paginate will use `DefaultLimit`
+const DefaultLimit = 100
 
 // Paginate does pagination of all the results in the PrefixStore based on the
 // provided PageRequest. onResult should be used to do actual unmarshaling.
@@ -33,7 +33,7 @@ func Paginate(
 	}
 
 	if limit == 0 {
-		limit = defaultLimit
+		limit = DefaultLimit
 
 		// count total results when the limit is zero/not supplied
 		countTotal = true

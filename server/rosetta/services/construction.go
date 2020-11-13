@@ -6,6 +6,8 @@ import (
 	"encoding/hex"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/client"
+
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
@@ -24,18 +26,10 @@ import (
 var _ crg.ConstructionAPI = SingleNetwork{}
 
 func (sn SingleNetwork) ConstructionCombine(ctx context.Context, request *types.ConstructionCombineRequest) (*types.ConstructionCombineResponse, *types.Error) {
-	txBytes, err := hex.DecodeString(request.UnsignedTransaction)
+	txBldr, err := sn.getTxBuilderFromBytesTx(request.UnsignedTransaction)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
-
-	TxConfig := sn.client.GetTxConfig(ctx)
-	rawTx, err := TxConfig.TxDecoder()(txBytes)
-	if err != nil {
-		return nil, rosetta.ToRosettaError(err)
-	}
-
-	txBldr, _ := TxConfig.WrapTxBuilder(rawTx)
 
 	var sigs = make([]signing.SignatureV2, len(request.Signatures))
 	for i, signature := range request.Signatures {
@@ -73,7 +67,7 @@ func (sn SingleNetwork) ConstructionCombine(ctx context.Context, request *types.
 		return nil, rosetta.ToRosettaError(err)
 	}
 
-	txBytes, err = TxConfig.TxEncoder()(txBldr.GetTx())
+	txBytes, err := sn.client.GetTxConfig().TxEncoder()(txBldr.GetTx())
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
@@ -81,6 +75,22 @@ func (sn SingleNetwork) ConstructionCombine(ctx context.Context, request *types.
 	return &types.ConstructionCombineResponse{
 		SignedTransaction: hex.EncodeToString(txBytes),
 	}, nil
+}
+
+func (sn SingleNetwork) getTxBuilderFromBytesTx(tx string) (client.TxBuilder, error) {
+	txBytes, err := hex.DecodeString(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	TxConfig := sn.client.GetTxConfig()
+	rawTx, err := TxConfig.TxDecoder()(txBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	txBldr, _ := TxConfig.WrapTxBuilder(rawTx)
+	return txBldr, nil
 }
 
 func (sn SingleNetwork) ConstructionDerive(ctx context.Context, request *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
@@ -166,18 +176,10 @@ func (sn SingleNetwork) ConstructionMetadata(ctx context.Context, request *types
 }
 
 func (sn SingleNetwork) ConstructionParse(ctx context.Context, request *types.ConstructionParseRequest) (*types.ConstructionParseResponse, *types.Error) {
-	txBytes, err := hex.DecodeString(request.Transaction)
+	txBldr, err := sn.getTxBuilderFromBytesTx(request.Transaction)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
-
-	TxConfig := sn.client.GetTxConfig(ctx)
-	rawTx, err := TxConfig.TxDecoder()(txBytes)
-	if err != nil {
-		return nil, rosetta.ToRosettaError(err)
-	}
-
-	txBldr, _ := TxConfig.WrapTxBuilder(rawTx)
 
 	var accountIdentifierSigners []*types.AccountIdentifier
 	if request.Signed {
@@ -191,7 +193,7 @@ func (sn SingleNetwork) ConstructionParse(ctx context.Context, request *types.Co
 	}
 
 	return &types.ConstructionParseResponse{
-		Operations:               conversion.ToOperations(rawTx.GetMsgs(), false, true),
+		Operations:               conversion.ToOperations(txBldr.GetTx().GetMsgs(), false, true),
 		AccountIdentifierSigners: accountIdentifierSigners,
 	}, nil
 }
@@ -218,7 +220,7 @@ func (sn SingleNetwork) ConstructionPayloads(ctx context.Context, request *types
 	txFactory := tx.Factory{}.WithAccountNumber(metadata.AccountNumber).WithChainID(metadata.ChainID).
 		WithGas(metadata.Gas).WithSequence(metadata.Sequence).WithMemo(metadata.Memo)
 
-	TxConfig := sn.client.GetTxConfig(ctx)
+	TxConfig := sn.client.GetTxConfig()
 	txFactory = txFactory.WithTxConfig(TxConfig)
 	txBldr, err := tx.BuildUnsignedTx(txFactory, sendMsg)
 	if err != nil {
@@ -299,7 +301,7 @@ func (sn SingleNetwork) ConstructionSubmit(ctx context.Context, request *types.C
 		return nil, rosetta.ToRosettaError(err)
 	}
 
-	res, err := sn.client.PostTx(ctx, txBytes)
+	res, err := sn.client.PostTx(txBytes)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}

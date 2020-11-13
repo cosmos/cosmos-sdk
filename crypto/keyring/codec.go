@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // CryptoCdc defines the codec required for keys and info
@@ -24,4 +25,16 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(ledgerInfo{}, "crypto/keys/ledgerInfo", nil)
 	cdc.RegisterConcrete(offlineInfo{}, "crypto/keys/offlineInfo", nil)
 	cdc.RegisterConcrete(multiInfo{}, "crypto/keys/multiInfo", nil)
+}
+
+// PrivKeyFromBytes unmarshals private key bytes and returns a PrivKey
+func PrivKeyFromBytes(privKeyBytes []byte) (privKey crypto.PrivKey, err error) {
+	err = CryptoCdc.UnmarshalBinaryBare(privKeyBytes, &privKey)
+	return
+}
+
+// PubKeyFromBytes unmarshals public key bytes and returns a PubKey
+func PubKeyFromBytes(pubKeyBytes []byte) (pubKey crypto.PubKey, err error) {
+	err = CryptoCdc.UnmarshalBinaryBare(pubKeyBytes, &pubKey)
+	return
 }

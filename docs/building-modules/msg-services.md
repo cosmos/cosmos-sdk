@@ -3,7 +3,7 @@ order: 4
 -->
 # `Msg` Services
 
-A `Msg` Service processes [`message`s](./messages-and-queries.md#messages). `Msg` Services are specific to the module in which they are defined, and only process `message`s defined within the said module. They are called from `baseapp` during [`DeliverTx`](../core/baseapp.md#delivertx). {synopsis}
+A `Msg` Service processes [messages](./messages-and-queries.md#messages). `Msg` Services are specific to the module in which they are defined, and only process messages defined within the said module. They are called from `baseapp` during [`DeliverTx`](../core/baseapp.md#delivertx). {synopsis}
 
 ## Pre-requisite Readings
 

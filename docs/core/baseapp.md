@@ -285,7 +285,7 @@ Before the first transaction of a given block is processed, a [volatile state](#
 `DeliverTx` performs the **exact same steps as `CheckTx`**, with a little caveat at step 3 and the addition of a fifth step:
 
 1. The `AnteHandler` does **not** check that the transaction's `gas-prices` is sufficient. That is because the `min-gas-prices` value `gas-prices` is checked against is local to the node, and therefore what is enough for one full-node might not be for another. This means that the proposer can potentially include transactions for free, although they are not incentivised to do so, as they earn a bonus on the total fee of the block they propose.
-2. For each `message` in the transaction, route to the appropriate module's [`handler`](../building-modules/msg-services.md#handler-type). Additional _stateful_ checks are performed, and the cache-wrapped multistore held in `deliverState`'s `context` is updated by the module's `keeper`. If the `handler` returns successfully, the cache-wrapped multistore held in `context` is written to `deliverState` `CacheMultiStore`.
+2. For each message in the transaction, route to the appropriate module's [`handler`](../building-modules/msg-services.md#handler-type). Additional _stateful_ checks are performed, and the cache-wrapped multistore held in `deliverState`'s `context` is updated by the module's `keeper`. If the `handler` returns successfully, the cache-wrapped multistore held in `context` is written to `deliverState` `CacheMultiStore`.
 
 During step 5., each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation:
 

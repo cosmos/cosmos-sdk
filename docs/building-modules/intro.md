@@ -76,7 +76,7 @@ While there is no definitive guidelines for writing modules, here are some impor
 
 ## Main Components of SDK Modules
 
-Modules are by convention defined in the `.x/` subfolder (e.g. the `bank` module will be defined in the `./x/bank` folder). They generally share the same core components:
+Modules are by convention defined in the `./x/` subfolder (e.g. the `bank` module will be defined in the `./x/bank` folder). They generally share the same core components:
 
 - A  [`keeper`](./keeper.md), used to access the module's store(s) and update the state.
 - A [`Msg` service](./messages-and-queries.md#messages) used to process messages when they are routed to the module by [`baseapp`](../core/baseapp.md#message-routing) and trigger state-transitions.

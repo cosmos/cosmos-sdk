@@ -156,8 +156,8 @@ func ValidCommit(chainID string, commit *tmproto.Commit, valSet *tmproto.Validat
 
 	blockID, ok := voteSet.TwoThirdsMajority()
 
-	// Check that ValidatorSet did indeed commit to blockID in Commit
-	if !ok || !blockID.Equals(tmCommit.BlockID) {
+	// Check that ValidatorSet did indeed commit to blockID hash in Commit
+	if !ok || !bytes.Equal(blockID.Hash, tmCommit.BlockID.Hash) {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "validator set did not commit to header")
 	}
 

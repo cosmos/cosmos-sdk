@@ -40,7 +40,7 @@ In order for clients (CLI and grpc-gateway) to have these URLs registered, the S
 
 ### Legacy Amino `Msg`s
 
-This way of defining messages is deprecated and using [`Msg` services](#msg-services) should be prefered.
+This way of defining messages is deprecated and using [`Msg` services](#msg-services) is preferred.
 
 Legacy `Msg`s can be defined as protobuf messages. The `message`'s definition usually includes a list of parameters needed to process the message that will be provided by end-users when they want to create a new transaction containing said `message`.
 

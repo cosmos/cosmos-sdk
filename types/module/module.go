@@ -162,7 +162,7 @@ type AppModule interface {
 	// registers
 	RegisterInvariants(sdk.InvariantRegistry)
 
-	// routes
+	// Deprecated: use RegisterServices
 	Route() sdk.Route
 
 	// Deprecated: use RegisterServices

@@ -256,7 +256,7 @@ func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (*types.Capab
 // Note, the capability's forward mapping is indexed by a string which should
 // contain its unique memory reference.
 func (sk ScopedKeeper) AuthenticateCapability(ctx sdk.Context, cap *types.Capability, name string) bool {
-	if name == "" || cap == nil {
+	if strings.TrimSpace(name) == "" || cap == nil {
 		return false
 	}
 	return sk.GetCapabilityName(ctx, cap) == name

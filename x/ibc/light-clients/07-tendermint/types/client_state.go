@@ -5,10 +5,8 @@ import (
 	"time"
 
 	ics23 "github.com/confio/ics23/go"
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/light"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -26,7 +24,7 @@ var _ exported.ClientState = (*ClientState)(nil)
 func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	latestHeight clienttypes.Height, consensusParams *abci.ConsensusParams, specs []*ics23.ProofSpec,
+	latestHeight clienttypes.Height, specs []*ics23.ProofSpec,
 	upgradePath string, allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour bool,
 ) *ClientState {
 	return &ClientState{
@@ -37,7 +35,6 @@ func NewClientState(
 		MaxClockDrift:                maxClockDrift,
 		LatestHeight:                 latestHeight,
 		FrozenHeight:                 clienttypes.ZeroHeight(),
-		ConsensusParams:              consensusParams,
 		ProofSpecs:                   specs,
 		UpgradePath:                  upgradePath,
 		AllowUpdateAfterExpiry:       allowUpdateAfterExpiry,
@@ -105,21 +102,6 @@ func (cs ClientState) Validate() error {
 		)
 	}
 
-	// validate consensus params
-	if cs.ConsensusParams == nil || cs.ConsensusParams.Evidence == nil ||
-		cs.ConsensusParams.Block == nil || cs.ConsensusParams.Validator == nil {
-		return sdkerrors.Wrap(ErrInvalidConsensusParams, "consensus params including block, evidence, and validator params cannot be empty")
-	}
-	if err := baseapp.ValidateBlockParams(*cs.ConsensusParams.Block); err != nil {
-		return sdkerrors.Wrap(err, "invalid block params")
-	}
-	if err := baseapp.ValidateEvidenceParams(*cs.ConsensusParams.Evidence); err != nil {
-		return sdkerrors.Wrap(err, "invalid evidence params")
-	}
-	if err := baseapp.ValidateValidatorParams(*cs.ConsensusParams.Validator); err != nil {
-		return sdkerrors.Wrap(err, "invalid validator params")
-	}
-
 	if cs.ProofSpecs == nil {
 		return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof specs cannot be nil for tm client")
 	}
@@ -155,7 +137,6 @@ func (cs ClientState) ZeroCustomFields() exported.ClientState {
 		ChainId:         cs.ChainId,
 		UnbondingPeriod: cs.UnbondingPeriod,
 		LatestHeight:    cs.LatestHeight,
-		ConsensusParams: cs.ConsensusParams,
 		ProofSpecs:      cs.ProofSpecs,
 		UpgradePath:     cs.UpgradePath,
 	}

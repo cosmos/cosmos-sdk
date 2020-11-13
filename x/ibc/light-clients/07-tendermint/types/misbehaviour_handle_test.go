@@ -7,7 +7,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
@@ -36,7 +35,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 
 	altSigners := []tmtypes.PrivValidator{altPrivVal}
 
-	versionHeight := int64(height.VersionHeight)
 	heightMinus1 := clienttypes.NewHeight(height.VersionNumber, height.VersionHeight-1)
 	heightMinus3 := clienttypes.NewHeight(height.VersionNumber, height.VersionHeight-3)
 
@@ -53,7 +51,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	}{
 		{
 			"valid misbehavior misbehaviour",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
 			height,
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
@@ -61,7 +59,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -69,7 +66,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"valid misbehavior at height greater than last consensusState",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
 			heightMinus1,
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
@@ -77,7 +74,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -85,7 +81,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"valid misbehaviour with different trusted heights",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
 			heightMinus1,
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), suite.valsHash),
@@ -93,7 +89,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus3, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -101,7 +96,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"valid misbehaviour at a previous version",
-			types.NewClientState(chainIDVersion1, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clienttypes.NewHeight(1, 1), ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			types.NewClientState(chainIDVersion1, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clienttypes.NewHeight(1, 1), commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
 			heightMinus1,
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), suite.valsHash),
@@ -109,7 +104,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainIDVersion0, int64(height.VersionHeight), heightMinus1, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainIDVersion0, int64(height.VersionHeight), heightMinus3, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
-				ChainId:  chainIDVersion0,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -117,7 +111,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"valid misbehaviour at a future version",
-			types.NewClientState(chainIDVersion0, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			types.NewClientState(chainIDVersion0, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
 			heightMinus1,
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), suite.valsHash),
@@ -125,7 +119,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainIDVersion0, 3, heightMinus1, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainIDVersion0, 3, heightMinus3, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
-				ChainId:  chainIDVersion0,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -133,7 +126,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"valid misbehaviour with trusted heights at a previous version",
-			types.NewClientState(chainIDVersion1, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clienttypes.NewHeight(1, 1), ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			types.NewClientState(chainIDVersion1, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clienttypes.NewHeight(1, 1), commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
 			heightMinus1,
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), suite.valsHash),
@@ -141,7 +134,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainIDVersion1, 1, heightMinus1, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainIDVersion1, 1, heightMinus3, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
-				ChainId:  chainIDVersion1,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -149,7 +141,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"consensus state's valset hash different from misbehaviour should still pass",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), suite.valsHash),
 			height,
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), suite.valsHash),
@@ -157,7 +149,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now, bothValSet, suite.valSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -165,7 +156,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"invalid misbehavior misbehaviour from different chain",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
 			height,
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
@@ -173,7 +164,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader("ethermint", int64(height.VersionHeight), height, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader("ethermint", int64(height.VersionHeight), height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  "ethermint",
 				ClientId: chainID,
 			},
 			suite.now,
@@ -181,7 +171,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"invalid misbehavior misbehaviour with trusted height different from trusted consensus state",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
 			heightMinus1,
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), suite.valsHash),
@@ -189,7 +179,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -197,7 +186,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"invalid misbehavior misbehaviour with trusted validators different from trusted consensus state",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
 			heightMinus1,
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), suite.valsHash),
@@ -205,7 +194,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus3, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -221,7 +209,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -229,7 +216,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"trusted consensus state does not exist",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			nil, // consensus state for trusted height - 1 does not exist in store
 			clienttypes.Height{},
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
@@ -237,7 +224,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -245,7 +231,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"invalid tendermint misbehaviour",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
 			height,
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
@@ -255,40 +241,8 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			false,
 		},
 		{
-			"rejected misbehaviour due to expired age duration",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
-			height,
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
-			height,
-			&types.Misbehaviour{
-				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now, bothValSet, bothValSet, bothSigners),
-				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  chainID,
-				ClientId: chainID,
-			},
-			suite.now.Add(2 * time.Minute).Add(simapp.DefaultConsensusParams.Evidence.MaxAgeDuration),
-			false,
-		},
-		{
-			"rejected misbehaviour due to expired block duration",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clienttypes.NewHeight(0, uint64(versionHeight+simapp.DefaultConsensusParams.Evidence.MaxAgeNumBlocks+1)), ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
-			height,
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
-			height,
-			&types.Misbehaviour{
-				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now, bothValSet, bothValSet, bothSigners),
-				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  chainID,
-				ClientId: chainID,
-			},
-			suite.now.Add(time.Hour),
-			false,
-		},
-		{
 			"provided height > header height",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
 			height,
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
@@ -296,7 +250,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -304,7 +257,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"unbonding period expired",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			types.NewConsensusState(time.Time{}, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
 			heightMinus1,
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
@@ -312,7 +265,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now.Add(ubdPeriod),
@@ -320,7 +272,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"trusted validators is incorrect for given consensus state",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
 			height,
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
@@ -328,7 +280,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now, bothValSet, suite.valSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -336,7 +287,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"first valset has too much change",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
 			height,
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
@@ -344,7 +295,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now, altValSet, bothValSet, altSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -352,7 +302,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"second valset has too much change",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
 			height,
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
@@ -360,7 +310,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), altValSet, bothValSet, altSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -368,7 +317,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"both valsets have too much change",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
 			height,
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
@@ -376,7 +325,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now, altValSet, bothValSet, altSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), altValSet, bothValSet, altSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,

@@ -225,13 +225,6 @@ func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientS
 			tmClient.LatestHeight, ctx.BlockHeight())
 	}
 
-	// consensus params must match consensus params on executing chain
-	expectedConsensusParams := ctx.ConsensusParams()
-	if !reflect.DeepEqual(expectedConsensusParams, tmClient.ConsensusParams) {
-		return sdkerrors.Wrapf(types.ErrInvalidClient, "client has invalid consensus params, expected: %v got: %v",
-			expectedConsensusParams, tmClient.ConsensusParams)
-	}
-
 	expectedProofSpecs := commitmenttypes.GetSDKSpecs()
 	if !reflect.DeepEqual(expectedProofSpecs, tmClient.ProofSpecs) {
 		return sdkerrors.Wrapf(types.ErrInvalidClient, "client has invalid proof specs. expected: %v got: %v",

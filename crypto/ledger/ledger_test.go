@@ -6,10 +6,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	tmcrypto "github.com/tendermint/tendermint/crypto"
-
 	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -58,7 +57,7 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 
 	const numIters = 10
 
-	privKeys := make([]tmcrypto.PrivKey, numIters)
+	privKeys := make([]types.LedgerPrivKey, numIters)
 
 	// Check with device
 	for i := uint32(0); i < 10; i++ {
@@ -70,8 +69,8 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 		require.NotNil(t, priv)
 
 		// Check other methods
-		require.NoError(t, priv.(PrivKeyLedgerSecp256k1).ValidateKey())
 		tmp := priv.(PrivKeyLedgerSecp256k1)
+		require.NoError(t, tmp.ValidateKey())
 		(&tmp).AssertIsPrivKeyInner()
 
 		pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
@@ -151,7 +150,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 
 	const numIters = 10
 
-	privKeys := make([]tmcrypto.PrivKey, numIters)
+	privKeys := make([]types.LedgerPrivKey, numIters)
 
 	// Check with device
 	for i := uint32(0); i < 10; i++ {
@@ -170,8 +169,8 @@ func TestPublicKeyHDPath(t *testing.T) {
 			"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
 		// Check other methods
-		require.NoError(t, priv.(PrivKeyLedgerSecp256k1).ValidateKey())
 		tmp := priv.(PrivKeyLedgerSecp256k1)
+		require.NoError(t, tmp.ValidateKey())
 		(&tmp).AssertIsPrivKeyInner()
 
 		pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())

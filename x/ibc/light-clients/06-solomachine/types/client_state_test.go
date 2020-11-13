@@ -82,7 +82,7 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 
 func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 	// create client for tendermint so we can use client state for verification
-	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 	clientState := suite.chainA.GetClientState(clientA)
 	path := suite.solomachine.GetClientStatePath(counterpartyClientIdentifier)
 
@@ -192,7 +192,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 				}
 
 				err := tc.clientState.VerifyClientState(
-					suite.store, suite.chainA.Codec, nil, solomachine.GetHeight(), tc.prefix, counterpartyClientIdentifier, tc.proof, clientState,
+					suite.store, suite.chainA.Codec, solomachine.GetHeight(), tc.prefix, counterpartyClientIdentifier, tc.proof, clientState,
 				)
 
 				if tc.expPass {
@@ -208,7 +208,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 
 func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 	// create client for tendermint so we can use consensus state for verification
-	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 	clientState := suite.chainA.GetClientState(clientA)
 	consensusState, found := suite.chainA.GetConsensusState(clientA, clientState.GetLatestHeight())
 	suite.Require().True(found)
@@ -320,7 +320,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 				}
 
 				err := tc.clientState.VerifyClientConsensusState(
-					suite.store, suite.chainA.Codec, nil, solomachine.GetHeight(), counterpartyClientIdentifier, consensusHeight, tc.prefix, tc.proof, consensusState,
+					suite.store, suite.chainA.Codec, solomachine.GetHeight(), counterpartyClientIdentifier, consensusHeight, tc.prefix, tc.proof, consensusState,
 				)
 
 				if tc.expPass {

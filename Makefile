@@ -361,6 +361,11 @@ proto-all: proto-tools proto-gen proto-lint proto-check-breaking proto-swagger-g
 proto-gen:
 	@./scripts/protocgen.sh
 
+proto-gen-docker:
+	@echo "Generating Protobuf files"
+	docker run -v $(shell pwd):/workspace --workdir /workspace tendermintdev/sdk-proto-gen sh ./scripts/protocgen.sh
+.PHONY: proto-gen-docker
+
 proto-format:
 	@echo "Formatting Protobuf files"
 	docker run -v $(shell pwd):/workspace \
@@ -389,7 +394,7 @@ proto-check-breaking-docker:
 	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=master
 .PHONY: proto-check-breaking-ci
 
-TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.0-rc5/proto/tendermint
+TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.0-rc6/proto/tendermint
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
 CONFIO_URL 		 = https://raw.githubusercontent.com/confio/ics23/v0.6.3

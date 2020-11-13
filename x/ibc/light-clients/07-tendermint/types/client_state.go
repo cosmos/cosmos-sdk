@@ -5,10 +5,8 @@ import (
 	"time"
 
 	ics23 "github.com/confio/ics23/go"
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/light"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -22,14 +20,11 @@ import (
 
 var _ exported.ClientState = (*ClientState)(nil)
 
-// Tendermint is used to indicate that the client uses the Tendermint Consensus Algorithm.
-const Tendermint string = "Tendermint"
-
 // NewClientState creates a new ClientState instance
 func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	latestHeight clienttypes.Height, consensusParams *abci.ConsensusParams, specs []*ics23.ProofSpec,
+	latestHeight clienttypes.Height, specs []*ics23.ProofSpec,
 	upgradePath string, allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour bool,
 ) *ClientState {
 	return &ClientState{
@@ -40,7 +35,6 @@ func NewClientState(
 		MaxClockDrift:                maxClockDrift,
 		LatestHeight:                 latestHeight,
 		FrozenHeight:                 clienttypes.ZeroHeight(),
-		ConsensusParams:              consensusParams,
 		ProofSpecs:                   specs,
 		UpgradePath:                  upgradePath,
 		AllowUpdateAfterExpiry:       allowUpdateAfterExpiry,
@@ -55,7 +49,7 @@ func (cs ClientState) GetChainID() string {
 
 // ClientType is tendermint.
 func (cs ClientState) ClientType() string {
-	return Tendermint
+	return exported.Tendermint
 }
 
 // GetLatestHeight returns latest block height.
@@ -108,21 +102,6 @@ func (cs ClientState) Validate() error {
 		)
 	}
 
-	// validate consensus params
-	if cs.ConsensusParams == nil || cs.ConsensusParams.Evidence == nil ||
-		cs.ConsensusParams.Block == nil || cs.ConsensusParams.Validator == nil {
-		return sdkerrors.Wrap(ErrInvalidConsensusParams, "consensus params including block, evidence, and validator params cannot be empty")
-	}
-	if err := baseapp.ValidateBlockParams(*cs.ConsensusParams.Block); err != nil {
-		return sdkerrors.Wrap(err, "invalid block params")
-	}
-	if err := baseapp.ValidateEvidenceParams(*cs.ConsensusParams.Evidence); err != nil {
-		return sdkerrors.Wrap(err, "invalid evidence params")
-	}
-	if err := baseapp.ValidateValidatorParams(*cs.ConsensusParams.Validator); err != nil {
-		return sdkerrors.Wrap(err, "invalid validator params")
-	}
-
 	if cs.ProofSpecs == nil {
 		return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof specs cannot be nil for tm client")
 	}
@@ -158,7 +137,6 @@ func (cs ClientState) ZeroCustomFields() exported.ClientState {
 		ChainId:         cs.ChainId,
 		UnbondingPeriod: cs.UnbondingPeriod,
 		LatestHeight:    cs.LatestHeight,
-		ConsensusParams: cs.ConsensusParams,
 		ProofSpecs:      cs.ProofSpecs,
 		UpgradePath:     cs.UpgradePath,
 	}
@@ -169,19 +147,18 @@ func (cs ClientState) ZeroCustomFields() exported.ClientState {
 func (cs ClientState) VerifyClientState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	provingRoot exported.Root,
 	height exported.Height,
 	prefix exported.Prefix,
 	counterpartyClientIdentifier string,
 	proof []byte,
 	clientState exported.ClientState,
 ) error {
-	merkleProof, _, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
+	merkleProof, provingConsensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
 
-	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ClientStatePath()
+	clientPrefixedPath := commitmenttypes.NewMerklePath(host.FullClientStatePath(counterpartyClientIdentifier))
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	if err != nil {
 		return err
@@ -201,7 +178,7 @@ func (cs ClientState) VerifyClientState(
 		return err
 	}
 
-	return merkleProof.VerifyMembership(cs.ProofSpecs, provingRoot, path, bz)
+	return merkleProof.VerifyMembership(cs.ProofSpecs, provingConsensusState.GetRoot(), path, bz)
 }
 
 // VerifyClientConsensusState verifies a proof of the consensus state of the
@@ -209,7 +186,6 @@ func (cs ClientState) VerifyClientState(
 func (cs ClientState) VerifyClientConsensusState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	provingRoot exported.Root,
 	height exported.Height,
 	counterpartyClientIdentifier string,
 	consensusHeight exported.Height,
@@ -217,12 +193,12 @@ func (cs ClientState) VerifyClientConsensusState(
 	proof []byte,
 	consensusState exported.ConsensusState,
 ) error {
-	merkleProof, _, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
+	merkleProof, provingConsensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
 
-	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ConsensusStatePath(consensusHeight)
+	clientPrefixedPath := commitmenttypes.NewMerklePath(host.FullConsensusStatePath(counterpartyClientIdentifier, consensusHeight))
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	if err != nil {
 		return err
@@ -242,7 +218,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	if err := merkleProof.VerifyMembership(cs.ProofSpecs, provingRoot, path, bz); err != nil {
+	if err := merkleProof.VerifyMembership(cs.ProofSpecs, provingConsensusState.GetRoot(), path, bz); err != nil {
 		return err
 	}
 
@@ -265,7 +241,8 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(connectionID))
+	connectionPath := commitmenttypes.NewMerklePath(host.ConnectionPath(connectionID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, connectionPath)
 	if err != nil {
 		return err
 	}
@@ -304,7 +281,8 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(portID, channelID))
+	channelPath := commitmenttypes.NewMerklePath(host.ChannelPath(portID, channelID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, channelPath)
 	if err != nil {
 		return err
 	}
@@ -344,13 +322,14 @@ func (cs ClientState) VerifyPacketCommitment(
 		return err
 	}
 
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(portID, channelID, sequence))
+	commitmentPath := commitmenttypes.NewMerklePath(host.PacketCommitmentPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, commitmentPath)
 	if err != nil {
 		return err
 	}
 
 	if err := merkleProof.VerifyMembership(cs.ProofSpecs, consensusState.GetRoot(), path, commitmentBytes); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedPacketCommitmentVerification, err.Error())
+		return err
 	}
 
 	return nil
@@ -374,7 +353,8 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		return err
 	}
 
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
+	ackPath := commitmenttypes.NewMerklePath(host.PacketAcknowledgementPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, ackPath)
 	if err != nil {
 		return err
 	}
@@ -404,7 +384,8 @@ func (cs ClientState) VerifyPacketReceiptAbsence(
 		return err
 	}
 
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketReceiptPath(portID, channelID, sequence))
+	receiptPath := commitmenttypes.NewMerklePath(host.PacketReceiptPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, receiptPath)
 	if err != nil {
 		return err
 	}
@@ -433,7 +414,8 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		return err
 	}
 
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(portID, channelID))
+	nextSequenceRecvPath := commitmenttypes.NewMerklePath(host.NextSequenceRecvPath(portID, channelID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, nextSequenceRecvPath)
 	if err != nil {
 		return err
 	}

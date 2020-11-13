@@ -36,6 +36,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+- (gRPC) [\#7925](https://github.com/cosmos/cosmos-sdk/pull/7925) Update gRPC dependency to v1.33.2
+
 ## [v0.40.0-rc3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc3) - 2020-11-06
 
 ### Client Breaking

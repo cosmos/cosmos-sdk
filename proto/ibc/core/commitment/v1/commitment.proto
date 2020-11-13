@@ -36,5 +36,5 @@ message MerklePath {
 // should be succinct.
 // MerkleProofs are ordered from leaf-to-root
 message MerkleProof {
-    repeated ics23.CommitmentProof proofs = 1;
+  repeated ics23.CommitmentProof proofs = 1;
 }

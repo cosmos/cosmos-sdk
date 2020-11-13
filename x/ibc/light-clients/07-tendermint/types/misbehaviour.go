@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"math"
 	"time"
 
@@ -117,7 +118,7 @@ func (misbehaviour Misbehaviour) ValidateBasic() error {
 	}
 
 	// Ensure that Commit Hashes are different
-	if blockID1.Equals(*blockID2) {
+	if bytes.Equal(blockID1.Hash, blockID2.Hash) {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "headers blockIDs are equal")
 	}
 	if err := ValidCommit(misbehaviour.ChainId, misbehaviour.Header1.Commit, misbehaviour.Header1.ValidatorSet); err != nil {

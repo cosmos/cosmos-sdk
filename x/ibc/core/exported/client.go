@@ -39,14 +39,14 @@ type ClientState interface {
 	CheckProposedHeaderAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Header) (ClientState, ConsensusState, error)
 
 	// Upgrade functions
-	VerifyUpgrade(
+	VerifyUpgradeAndUpdateState(
 		ctx sdk.Context,
 		cdc codec.BinaryMarshaler,
 		store sdk.KVStore,
 		newClient ClientState,
 		upgradeHeight Height,
 		proofUpgrade []byte,
-	) error
+	) (ClientState, ConsensusState, error)
 	// Utility function that zeroes out any client customizable fields in client state
 	// Ledger enforced fields are maintained while all custom fields are zero values
 	// Used to verify upgrades
@@ -154,7 +154,6 @@ type ConsensusState interface {
 type Misbehaviour interface {
 	ClientType() string
 	GetClientID() string
-	String() string
 	ValidateBasic() error
 
 	// Height at which the infraction occurred

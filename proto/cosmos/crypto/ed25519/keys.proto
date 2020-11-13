@@ -11,12 +11,12 @@ option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519";
 // the x-coordinate. Otherwise the first byte is a 0x03.
 // This prefix is followed with the x-coordinate.
 message PubKey {
-    option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = false;
 
-    bytes key = 1 [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];
+  bytes key = 1 [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];
 }
 
 // PrivKey defines a ed25519 private key.
 message PrivKey {
-    bytes key = 1 [(gogoproto.casttype) = "crypto/ed25519.PrivateKey"];
+  bytes key = 1 [(gogoproto.casttype) = "crypto/ed25519.PrivateKey"];
 }

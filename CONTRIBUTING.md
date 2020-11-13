@@ -142,11 +142,15 @@ build, in which case we can fall back on `go mod tidy -v`.
 
 We use [Protocol Buffers](https://developers.google.com/protocol-buffers) along with [gogoproto](https://github.com/gogo/protobuf) to generate code for use in Cosmos-SDK.
 
+For determinstic behavior around Protobuf tooling, everything is containerized using Docker. Make sure to have Docker installed on your machine, or head to [Docker's website](https://docs.docker.com/get-docker/) to install it.
+
 For formatting code in `.proto` files, you can run `make proto-format` command.
 
-For linting and checking breaking changes, we use [buf](https://buf.build/). Make sure you have Docker installed, then you can use these commands `make proto-lint` and `make proto-check-breaking` to respectively lint your proto files and check for breaking changes.
+For linting and checking breaking changes, we use [buf](https://buf.build/). You can use the commands `make proto-lint` and `make proto-check-breaking` to respectively lint your proto files and check for breaking changes.
 
-To generate the protobuf stubs you must Docker installed. Then, you will be able to run `make proto-gen` to generate the protobuf stubs.
+To generate the protobuf stubs, you can run `make proto-gen`.
+
+We also added the `make proto-all` command to run all the above commands sequentially.
 
 In order for imports to properly compile in your IDE, you may need to manually set your protobuf path in your IDE's workspace settings/config.
 

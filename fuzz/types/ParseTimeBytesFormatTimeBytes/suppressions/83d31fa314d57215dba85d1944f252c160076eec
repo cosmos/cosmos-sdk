@@ -1,0 +1,4 @@
+panic: Roundtrip failure, got
+github.com/cosmos/cosmos-sdk/fuzz/types/ParseTimeBytes.Fuzz
+go-fuzz-dep.Main
+main.main

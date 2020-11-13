@@ -104,7 +104,7 @@ Backwards compatibility is maintained as this is a new message spec definition.
 
 ### Negative
 
-
+## Further discussion
 
 ## References
 

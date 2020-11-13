@@ -11,6 +11,7 @@ import (
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	"github.com/tendermint/tendermint/crypto"
 	"io/ioutil"
+	"strconv"
 	"strings"
 )
 
@@ -84,20 +85,24 @@ func AddressFromString(address string) string {
 }
 
 func AddressFromTla(addr []string) string {
+	fmt.Printf("addr: (%+v)", addr)
 	if len(addr) != 3 {
 		panic("failed to convert from TLA+ address: wrong number of address components")
 	}
 	s := ""
 	if len(addr[0]) == 0 && len(addr[1]) == 0 {
+		fmt.Printf("1\n")
+
 		// simple address: id
 		s = addr[2]
 	} else if len(addr[2]) == 0   {
+		fmt.Printf("2\n")
 		// escrow address: port + channel
 		s = addr[0] + addr[1]
 	} else {
 		panic("failed to convert from TLA+ address: neither simple nor escrow address")
 	}
-	return s
+	return AddressFromString(s)
 }
 
 func DenomFromTla(denom []string) string {
@@ -194,11 +199,21 @@ func (bank *Bank) SetBalances(balances []Balance) {
 	}
 }
 
+func NullCoin() OwnedCoin {
+	return OwnedCoin{
+		Address: AddressFromString(""),
+		Denom:   "",
+	}
+}
+
 // Set several balances at once
 func BankFromBalances(balances []Balance) Bank{
 	bank := MakeBank()
 	for _, balance := range balances {
-		bank.balances[OwnedCoin{balance.Address, balance.Denom}] = balance.Amount
+		coin := OwnedCoin{balance.Address, balance.Denom}
+		if coin != NullCoin() { // ignore null coin
+			bank.balances[coin] = balance.Amount
+		}
 	}
 	return bank
 }
@@ -265,60 +280,34 @@ func (suite *KeeperTestSuite) CheckBankBalances(chain *ibctesting.TestChain, ban
 	return nil
 }
 
-
-func StaticOnRecvPacketTestCases() []OnRecvPacketTestCase {
-	return []OnRecvPacketTestCase {
-		//{
-		//	description: "failure zero amount",
-		//	bankBefore: []Balance{},
-		//	data: types.FungibleTokenPacketData {"stake", 0, "cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5","cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5"},
-		//	bankChange: []Balance{},
-		//	pass: false,
-		//},
-		//{
-		//	description: "failure empty denomination",
-		//	bankBefore: []Balance{},
-		//	data: types.FungibleTokenPacketData {"", 1, "cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5","cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5"},
-		//	bankChange: []Balance{},
-		//	pass: false,
-		//},
-		//{
-		//	description: "success expected change",
-		//	bankBefore: []Balance{},
-		//	data: types.FungibleTokenPacketData {"a", 1, "cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5","cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5"},
-		//	bankChange: []Balance{{"cosmos1dpv8nhpl26lfpcc0f9wyseyhn0l8sv894j8tw5", "transfer/testchain1-conn0-chan0/a", sdk.NewInt(1)}},
-		//	pass: true,
-		//},
-	}
-}
-
-
-
 func (suite *KeeperTestSuite) TestModelBasedStaticOnRecvPacket() {
-	var testCases = []TlaOnRecvPacketTestCase{}
+	var tlaTestCases = []TlaOnRecvPacketTestCase{}
 
-	jsonBlob, err := ioutil.ReadFile("recv-test.json")
+	filename := "recv-test.json"
+	jsonBlob, err := ioutil.ReadFile(filename)
 	if err != nil {
 		panic(fmt.Errorf("Failed to read JSON test fixture: %w", err))
 	}
 
-	err = json.Unmarshal([]byte(jsonBlob), &testCases)
+	err = json.Unmarshal([]byte(jsonBlob), &tlaTestCases)
 	if err != nil {
 		panic(fmt.Errorf("Failed to parse JSON test fixture: %w", err))
 	}
 
+	testCases := []OnRecvPacketTestCase{}
 
-	for _, tlaTc := range testCases {
+	for i, tlaTc := range tlaTestCases {
 		tc := OnRecvPacketTestCaseFromTla(tlaTc)
-		fmt.Println(tc)
+		tc.description = filename + " # " + strconv.Itoa(i)
+		testCases = append(testCases, tc)
+		fmt.Printf("%+v\n\n", tc)
 	}
 
 	var (
 		channelA, channelB ibctesting.TestChannel
 	)
 
-
-	for _, tc := range StaticOnRecvPacketTestCases() {
+	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.description), func() {
 			suite.SetupTest() // reset
 			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
@@ -328,17 +317,17 @@ func (suite *KeeperTestSuite) TestModelBasedStaticOnRecvPacket() {
 			packet := channeltypes.NewPacket(tc.packet.Data.GetBytes(), seq, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
 
 			bankBefore := BankFromBalances(tc.bankBefore)
-			if suite.SetChainBankBalances(suite.chainB, &bankBefore) != nil {
-				panic("failed to set chain balances")
+			if err := suite.SetChainBankBalances(suite.chainB, &bankBefore); err != nil {
+				panic("failed to set chain balances: " + err.Error())
 			}
 			bankBefore = BankOfChain(suite.chainB)
-			if suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, tc.packet.Data) != nil {
-				suite.Require().False(tc.pass)
+			if err := suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, tc.packet.Data); err != nil {
+				suite.Require().False(tc.pass, err.Error())
 				return
 			}
 			expectedChange := BankFromBalances(tc.bankChange)
-			if suite.CheckBankBalances(suite.chainB, &bankBefore, &expectedChange) != nil {
-				suite.Require().False(tc.pass)
+			if err := suite.CheckBankBalances(suite.chainB, &bankBefore, &expectedChange); err != nil {
+				suite.Require().False(tc.pass, err.Error())
 				return
 			}
 			suite.Require().True(tc.pass)

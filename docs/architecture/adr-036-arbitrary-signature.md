@@ -35,6 +35,8 @@ Cosmos SDK 0.40 also introduces a concept of “auth_info” this can specify SI
 
 A spec should include an `auth_info` that supports SIGN_MODE_DIRECT and SIGN_MODE_LEGACY_AMINO.
 
+Create the `offchain` proto definitions, we extend the auth module with `offchain` package to offer functionalities to verify and sign offline messages.
+ 
 An offchain transaction follows these rules:
 
 - the memo must be empty
@@ -42,10 +44,15 @@ An offchain transaction follows these rules:
 - chain-id must be equal to “”
 - fee gas must be equal to 0
 - fee amount must be an empty array
-- inside the message with type `MsgSignData`, we put *bytes* data and the `address` of the signer.
-- it's applications developers decision how `Data` should be treated, by treated we mean the serialization and deserialization process and the Object `Data` should represent. 
 
 Verification of an offchain transaction follows the same rules as an onchain one, except for the spec differences highlighted above.
+
+The first message added to the `offchain` package is `MsgSignData`.
+
+`MsgSignData` allows developers to sign arbitrary bytes valid offchain only. Where `Signer` is the account address of the signer. `Data` is arbitrary bytes which can represent `text`, `files`, `object`s. It's applications developers decision how `Data` should be deserialized, serialized and the object it can represent in their context.
+
+It's applications developers decision how `Data` should be treated, by treated we mean the serialization and deserialization process and the Object `Data` should represent. 
+
 
 Proto definition:
 ```proto

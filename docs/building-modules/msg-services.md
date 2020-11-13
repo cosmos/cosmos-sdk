@@ -3,7 +3,7 @@ order: 4
 -->
 # `Msg` Services
 
-A `Msg` Service processes [messages](./messages-and-queries.md#messages). `Msg` Services are specific to the module in which they are defined, and only process messages defined within the said module. They are called from `baseapp` during [`DeliverTx`](../core/baseapp.md#delivertx). {synopsis}
+A `Msg` Service processes [messages](./messages-and-queries.md#messages). `Msg` Services are specific to the module in which they are defined, and only process messages defined within the said module. They are called from `BaseApp` during [`DeliverTx`](../core/baseapp.md#delivertx). {synopsis}
 
 ## Pre-requisite Readings
 
@@ -64,7 +64,7 @@ Let us break it down:
 
 - The [`Msg`](./messages-and-queries.md#messages) is the actual object being processed. 
 - The [`Context`](../core/context.md) contains all the necessary information needed to process the `msg`, as well as a cache-wrapped copy of the latest state. If the `msg` is succesfully processed, the modified version of the temporary state contained in the `ctx` will be written to the main state.
-- The [`*Result`] returned to `baseapp` contains (among other things) information on the execution of the `handler` and [events](../core/events.md).
+- The [`*Result`] returned to `BaseApp` contains (among other things) information on the execution of the `handler` and [events](../core/events.md).
 
 Module `handler`s are typically implemented in a `./handler.go` file inside the module's folder. The [module manager](./module-manager.md) is used to add the module's `handler`s to the
 [application's `router`](../core/baseapp.md#message-routing) via the `Route()` method. Typically,

@@ -14,7 +14,7 @@ order: 3
 
 `Msg`s are objects whose end-goal is to trigger state-transitions. They are wrapped in [transactions](../core/transactions.md), which may contain one or more of them. 
 
-When a transaction is relayed from the underlying consensus engine to the SDK application, it is first decoded by [`baseapp`](../core/baseapp.md). Then, each message contained in the transaction is extracted and routed to the appropriate module via `baseapp`'s `MsgServiceRouter` so that it can be processed by the module's [`Msg` service](./msg-services.md). For a more detailed explanation of the lifecycle of a transaction, click [here](../basics/tx-lifecycle.md).
+When a transaction is relayed from the underlying consensus engine to the SDK application, it is first decoded by [`BaseApp`](../core/baseapp.md). Then, each message contained in the transaction is extracted and routed to the appropriate module via `BaseApp`'s `MsgServiceRouter` so that it can be processed by the module's [`Msg` service](./msg-services.md). For a more detailed explanation of the lifecycle of a transaction, click [here](../basics/tx-lifecycle.md).
 
 ### `Msg` Services
 
@@ -51,7 +51,7 @@ It extends `proto.Message` and contains the following methods:
 
 - `Route() string`: Name of the route for this message. Typically all `message`s in a module have the same route, which is most often the module's name.
 - `Type() string`: Type of the message, used primarly in [events](../core/events.md). This should return a message-specific `string`, typically the denomination of the message itself.
-- `ValidateBasic() error`: This method is called by `baseapp` very early in the processing of the `message` (in both [`CheckTx`](../core/baseapp.md#checktx) and [`DeliverTx`](../core/baseapp.md#delivertx)), in order to discard obviously invalid messages. `ValidateBasic` should only include *stateless* checks, i.e. checks that do not require access to the state. This usually consists in checking that the message's parameters are correctly formatted and valid (i.e. that the `amount` is strictly positive for a transfer).
+- `ValidateBasic() error`: This method is called by `BaseApp` very early in the processing of the `message` (in both [`CheckTx`](../core/baseapp.md#checktx) and [`DeliverTx`](../core/baseapp.md#delivertx)), in order to discard obviously invalid messages. `ValidateBasic` should only include *stateless* checks, i.e. checks that do not require access to the state. This usually consists in checking that the message's parameters are correctly formatted and valid (i.e. that the `amount` is strictly positive for a transfer).
 - `GetSignBytes() []byte`: Return the canonical byte representation of the message. Used to generate a signature. 
 - `GetSigners() []AccAddress`: Return the list of signers. The SDK will make sure that each `message` contained in a transaction is signed by all the signers listed in the list returned by this method. 
 
@@ -61,7 +61,7 @@ See an example implementation of a `message` from the `gov` module:
 
 ## Queries
 
-A `query` is a request for information made by end-users of applications through an interface and processed by a full-node. A `query` is received by a full-node through its consensus engine and relayed to the application via the ABCI. It is then routed to the appropriate module via `baseapp`'s `queryrouter` so that it can be processed by the module's query service (./query-services.md). For a deeper look at the lifecycle of a `query`, click [here](../interfaces/query-lifecycle.md). 
+A `query` is a request for information made by end-users of applications through an interface and processed by a full-node. A `query` is received by a full-node through its consensus engine and relayed to the application via the ABCI. It is then routed to the appropriate module via `BaseApp`'s `queryrouter` so that it can be processed by the module's query service (./query-services.md). For a deeper look at the lifecycle of a `query`, click [here](../interfaces/query-lifecycle.md). 
 
 ### gRPC Queries
 
@@ -85,8 +85,8 @@ queryCategory/queryRoute/queryType/arg1/arg2/...
 
 where:
 
-- `queryCategory` is the category of the `query`, typically `custom` for module queries. It is used to differentiate between different kinds of queries within `baseapp`'s [`Query` method](../core/baseapp.md#query).
-- `queryRoute` is used by `baseapp`'s [`queryRouter`](../core/baseapp.md#query-routing) to map the `query` to its module. Usually, `queryRoute` should be the name of the module.
+- `queryCategory` is the category of the `query`, typically `custom` for module queries. It is used to differentiate between different kinds of queries within `BaseApp`'s [`Query` method](../core/baseapp.md#query).
+- `queryRoute` is used by `BaseApp`'s [`queryRouter`](../core/baseapp.md#query-routing) to map the `query` to its module. Usually, `queryRoute` should be the name of the module.
 - `queryType` is used by the module's [`querier`](./query-services.md#legacy-queriers) to map the `query` to the appropriate `querier function` within the module. 
 - `args` are the actual arguments needed to process the `query`. They are filled out by the end-user. Note that for bigger queries, you might prefer passing arguments in the `Data` field of the request `req` instead of the `path`. 
 

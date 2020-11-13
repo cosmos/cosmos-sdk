@@ -104,8 +104,9 @@ Backwards compatibility is maintained as this is a new message spec definition.
 
 ### Negative
 
-+ Current proposal requires a fixed relationship between an account address and a public key.
-+ Doesn't work with multi sig accounts.
+- Current proposal requires a fixed relationship between an account address and a public key.
+- Doesn't work with multi sig accounts.
+
 ## Further discussion
 
 ## References

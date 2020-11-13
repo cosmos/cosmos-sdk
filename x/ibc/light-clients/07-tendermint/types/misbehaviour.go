@@ -72,7 +72,7 @@ func (misbehaviour Misbehaviour) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidValidatorSet, "trusted validator set in Header2 cannot be empty")
 	}
 	if misbehaviour.Header1.Header.ChainID != misbehaviour.Header2.Header.ChainID {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "headers must identical chainIDs")
+		return sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "headers must have identical chainIDs")
 	}
 
 	if err := host.ClientIdentifierValidator(misbehaviour.ClientId); err != nil {

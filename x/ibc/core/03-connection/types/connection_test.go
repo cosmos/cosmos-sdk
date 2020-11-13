@@ -12,12 +12,13 @@ import (
 )
 
 var (
-	chainID       = "gaiamainnet"
-	connectionID  = "connectionidone"
-	clientID      = "clientidone"
-	connectionID2 = "connectionidtwo"
-	clientID2     = "clientidtwo"
-	clientHeight  = clienttypes.NewHeight(0, 6)
+	chainID             = "gaiamainnet"
+	connectionID        = "connectionidone"
+	clientID            = "clientidone"
+	connectionID2       = "connectionidtwo"
+	clientID2           = "clientidtwo"
+	invalidConnectionID = "(invalidConnectionID)"
+	clientHeight        = clienttypes.NewHeight(0, 6)
 )
 
 func TestConnectionValidateBasic(t *testing.T) {

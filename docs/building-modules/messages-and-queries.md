@@ -42,7 +42,7 @@ In order for clients (CLI and grpc-gateway) to have these URLs registered, the S
 
 This way of defining messages is deprecated and using [`Msg` services](#msg-services) is preferred.
 
-Legacy `Msg`s can be defined as protobuf messages. The `message`'s definition usually includes a list of parameters needed to process the message that will be provided by end-users when they want to create a new transaction containing said `message`.
+Legacy `Msg`s can be defined as protobuf messages. The messages definition usually includes a list of parameters needed to process the message that will be provided by end-users when they want to create a new transaction containing said message. 
 
 The `Msg` is typically accompanied by a standard constructor function, that is called from one of the [module's interface](./module-interfaces.md). `message`s also need to implement the [`Msg`] interface:
 

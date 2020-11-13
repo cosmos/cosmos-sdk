@@ -73,7 +73,7 @@ Here's an example of such a `Query` service definition:
 
 As `proto.Message`s, generated `Response` types implement by default `String()` method of [`fmt.Stringer`](https://golang.org/pkg/fmt/#Stringer).
 
-A `RegisterQueryServer` method is also generated and should be used to register the module's query server in `RegisterServices` method from the [`AppModule` interface](./module-manager.md#appmodule).
+A `RegisterQueryServer` method is also generated and should be used to register the module's query server in the `RegisterServices` method from the [`AppModule` interface](./module-manager.md#appmodule).
 
 ### Legacy Queries
 

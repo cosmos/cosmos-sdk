@@ -108,7 +108,7 @@ func checkMisbehaviourHeader(
 		chainID, _ = clienttypes.SetVersionNumber(chainID, header.GetHeight().GetVersionNumber())
 	}
 
-	// - ValidatorSet must have 2/3 similarity with trusted FromValidatorSet
+	// - ValidatorSet must have TrustLevel similarity with trusted FromValidatorSet
 	// - ValidatorSets on both headers are valid given the last trusted ValidatorSet
 	if err := tmTrustedValset.VerifyCommitLightTrusting(
 		chainID, tmCommit, clientState.TrustLevel.ToTendermint(),

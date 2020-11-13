@@ -14,7 +14,7 @@ order: 3
 
 `Msg`s are objects whose end-goal is to trigger state-transitions. They are wrapped in [transactions](../core/transactions.md), which may contain one or more of them. 
 
-When a transaction is relayed from the underlying consensus engine to the SDK application, it is first decoded by [`baseapp`](../core/baseapp.md). Then, each `message` contained in the transaction is extracted and routed to the appropriate module via `baseapp`'s `msgServiceRouter` so that it can be processed by the module's [`Msg` service](./msg-services.md). For a more detailed explanation of the lifecycle of a transaction, click [here](../basics/tx-lifecycle.md).
+When a transaction is relayed from the underlying consensus engine to the SDK application, it is first decoded by [`baseapp`](../core/baseapp.md). Then, each message contained in the transaction is extracted and routed to the appropriate module via `baseapp`'s `MsgServiceRouter` so that it can be processed by the module's [`Msg` service](./msg-services.md). For a more detailed explanation of the lifecycle of a transaction, click [here](../basics/tx-lifecycle.md).
 
 ### `Msg` Services
 

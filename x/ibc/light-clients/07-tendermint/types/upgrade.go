@@ -2,8 +2,6 @@ package types
 
 import (
 	"fmt"
-	"net/url"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,6 +9,7 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // VerifyUpgradeAndUpdateState checks if the upgraded client has been committed by the current client
@@ -27,12 +26,8 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	upgradedClient exported.ClientState, upgradedConsState exported.ConsensusState,
 	upgradeHeight exported.Height, proofUpgradeClient, proofUpgradeConsState []byte,
 ) (exported.ClientState, exported.ConsensusState, error) {
-	if cs.UpgradePath == "" {
+	if len(cs.UpgradePath) == 0 {
 		return nil, nil, sdkerrors.Wrap(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade client, no upgrade path set")
-	}
-	upgradePath, err := constructUpgradeMerklePath(cs.UpgradePath, upgradeHeight)
-	if err != nil {
-		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade client, unescaping key with URL format failed: %v", err)
 	}
 
 	// UpgradeHeight must be in same version as client state height
@@ -41,7 +36,7 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 			cs.GetLatestHeight().GetVersionNumber(), upgradeHeight.GetVersionNumber())
 	}
 
-	if upgradedClient.GetLatestHeight().GetVersionNumber() <= cs.GetLatestHeight().GetVersionNumber {
+	if upgradedClient.GetLatestHeight().GetVersionNumber() <= cs.GetLatestHeight().GetVersionNumber() {
 		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "upgraded client height %s must be at greater version than current client height %s",
 			upgradedClient.GetLatestHeight(), cs.GetLatestHeight())
 	}
@@ -57,10 +52,11 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	}
 	tmUpgradeConsState, ok := upgradedConsState.(*ConsensusState)
 	if !ok {
-		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidConsensusState, "upgraded consensus state must be Tendermint consensus state. expected %T, got: %T",
+		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "upgraded consensus state must be Tendermint consensus state. expected %T, got: %T",
 			&ConsensusState{}, tmUpgradeConsState)
 	}
 
+	// check proofs not empty
 	if len(proofUpgradeClient) == 0 {
 		return nil, nil, sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof of upgrade client is empty")
 	}
@@ -68,6 +64,7 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 		return nil, nil, sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof of upgrade consensus state is empty")
 	}
 
+	// unmarshal proofs
 	var merkleProofClient, merkleProofConsState commitmenttypes.MerkleProof
 	if err := cdc.UnmarshalBinaryBare(proofUpgradeClient, &merkleProofClient); err != nil {
 		return nil, nil, sdkerrors.Wrapf(commitmenttypes.ErrInvalidProof, "could not unmarshal client merkle proof: %v", err)
@@ -93,16 +90,20 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	if err != nil {
 		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "could not marshal client state: %v", err)
 	}
-	if err := merkleProofClient.VerifyMembership(cs.ProofSpecs, consState.GetRoot(), upgradePath, bz); err != nil {
+	// construct clientState Merkle path
+	upgradeClientPath := constructUpgradeClientMerklePath(cs.UpgradePath[:], upgradeHeight)
+	if err := merkleProofClient.VerifyMembership(cs.ProofSpecs, consState.GetRoot(), upgradeClientPath, bz); err != nil {
 		return nil, nil, err
 	}
 
 	// Verify consensus state proof
 	bz, err = codec.MarshalAny(cdc, upgradedConsState)
 	if err != nil {
-		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidConsensusState, "could not marshal consensus state: %v", err)
+		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "could not marshal consensus state: %v", err)
 	}
-	if err := merkleProofConsState.VerifyMembership(cs.ProofSpecs, consState.GetRoot(), upgradePath, bz); err != nil {
+	// construct consensus state Merkle path
+	upgradeConsStatePath := constructUpgradeConsStateMerklePath(cs.UpgradePath[:], upgradeHeight)
+	if err := merkleProofConsState.VerifyMembership(cs.ProofSpecs, consState.GetRoot(), upgradeConsStatePath, bz); err != nil {
 		return nil, nil, err
 	}
 
@@ -121,7 +122,7 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	}
 
 	// The new consensus state is merely used as a trusted kernel against which headers on the new
-	// chain can be verified. The root is empty as it cannot be known in advance, thus no proof verification will pass
+	// chain can be verified. The root is empty as it cannot be known in advance, thus no proof verification will pass.
 	// The timestamp of the consensus state is also this chain's blocktime. This is because starting up a new chain
 	// may take a long time, especially if there are unexpected issues and thus we do not want the new client to be
 	// automatically expired due to unforeseen delays.
@@ -132,18 +133,18 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	return newClientState, newConsState, nil
 }
 
-// construct MerklePath from upgradePath
-func constructUpgradeMerklePath(upgradePath string, upgradeHeight exported.Height) (commitmenttypes.MerklePath, error) {
-	// assume that all keys here are separated by `/` and
-	// any `/` within a merkle key is correctly escaped
-	upgradeKeys := strings.Split(upgradePath, "/")
-	// unescape the last key so that we can append `/{height}` to the last key
-	lastKey, err := url.PathUnescape(upgradeKeys[len(upgradeKeys)-1])
-	if err != nil {
-		return commitmenttypes.MerklePath{}, err
-	}
-	// append upgradeHeight to last key in merkle path
+// construct MerklePath for the committed client from upgradePath
+func constructUpgradeClientMerklePath(upgradePath []string, upgradeHeight exported.Height) commitmenttypes.MerklePath {
+	// append upgradeHeight and `upgradedClient` to last key in merkle path
 	// this will create the IAVL key that is used to store client in upgrade store
-	upgradeKeys[len(upgradeKeys)-1] = fmt.Sprintf("%s/%d", lastKey, upgradeHeight.GetVersionHeight())
-	return commitmenttypes.NewMerklePath(upgradeKeys...), nil
+	upgradePath[len(upgradePath)-1] = fmt.Sprintf("%s/%d/%s", upgradePath[len(upgradePath)-1], upgradeHeight.GetVersionHeight(), upgradetypes.KeyUpgradedClient)
+	return commitmenttypes.NewMerklePath(upgradePath...)
+}
+
+// construct MerklePath for the committed consensus state from upgradePath
+func constructUpgradeConsStateMerklePath(upgradePath []string, upgradeHeight exported.Height) commitmenttypes.MerklePath {
+	// append upgradeHeight and `upgradedClient` to last key in merkle path
+	// this will create the IAVL key that is used to store client in upgrade store
+	upgradePath[len(upgradePath)-1] = fmt.Sprintf("%s/%d/%s", upgradePath[len(upgradePath)-1], upgradeHeight.GetVersionHeight(), upgradetypes.KeyUpgradedConsState)
+	return commitmenttypes.NewMerklePath(upgradePath...)
 }

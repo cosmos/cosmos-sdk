@@ -42,12 +42,12 @@ func PlanKey() []byte {
 // Connecting IBC chains can verify against the upgraded client in this path before
 // upgrading their clients
 func UpgradedClientKey(height int64) []byte {
-	return []byte(fmt.Sprintf("%s/%s/%d", KeyUpgradedIBCState, KeyUpgradedClient, height))
+	return []byte(fmt.Sprintf("%s/%d/%s", KeyUpgradedIBCState, height, KeyUpgradedClient))
 }
 
 // UpgradedConsStateKey is the key under which the upgraded consensus state is saved
 // Connecting IBC chains can verify against the upgraded consensus state in this path before
 // upgrading their clients.
 func UpgradedConsStateKey(height int64) []byte {
-	return []byte(fmt.Sprintf("%s/%s/%d", KeyUpgradedIBCState, KeyUpgradedConsState, height))
+	return []byte(fmt.Sprintf("%s/%d/%s", KeyUpgradedIBCState, height, KeyUpgradedConsState))
 }

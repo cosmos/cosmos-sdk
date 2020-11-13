@@ -83,7 +83,7 @@ func (k Keeper) UpgradeClient(goCtx context.Context, msg *clienttypes.MsgUpgrade
 	if err != nil {
 		return nil, err
 	}
-	upgradedConsState, err := clienttypes.UnpackClientState(msg.ConsensusState)
+	upgradedConsState, err := clienttypes.UnpackConsensusState(msg.ConsensusState)
 	if err != nil {
 		return nil, err
 	}

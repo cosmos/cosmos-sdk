@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"net/url"
 	"reflect"
 	"strings"
 
@@ -246,14 +245,14 @@ func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientS
 			tmClient.UnbondingPeriod, tmClient.TrustingPeriod)
 	}
 
-	if tmClient.UpgradePath != "" {
+	if len(tmClient.UpgradePath) != 0 {
 		// For now, SDK IBC implementation assumes that upgrade path (if defined) is defined by SDK upgrade module
-		// Must escape any merkle key before adding it to upgrade path
-		upgradeKey := url.PathEscape(upgradetypes.KeyUpgradedClient)
-		expectedUpgradePath := fmt.Sprintf("%s/%s", upgradetypes.StoreKey, upgradeKey)
-		if tmClient.UpgradePath != expectedUpgradePath {
+		merklePath := commitmenttypes.NewMerklePath(tmClient.UpgradePath...)
+		expectedUpgradePath := fmt.Sprintf("%s/%s", upgradetypes.StoreKey, upgradetypes.KeyUpgradedIBCState)
+		actualUpgradePath := merklePath.Pretty()
+		if actualUpgradePath != expectedUpgradePath {
 			return sdkerrors.Wrapf(types.ErrInvalidClient, "upgrade path must be the upgrade path defined by upgrade module. expected %s, got %s",
-				expectedUpgradePath, tmClient.UpgradePath)
+				expectedUpgradePath, actualUpgradePath)
 		}
 	}
 	return nil

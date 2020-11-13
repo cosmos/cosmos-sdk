@@ -14,7 +14,7 @@ A `Msg` Service processes [messages](./messages-and-queries.md#messages). `Msg` 
 
 All `Msg` processing is done by a [`Msg`](messages-and-queries.md#msg-services) protobuf service. Each module should define a `Msg` service, which will be responsible for request and response serialization. 
 
-As further described in [ADR 031](../architecture/adr-031-msg-service.md), this approach has the advantages of clearly specifying return types and generating server and client code.
+As further described in [ADR 031](../architecture/adr-031-msg-service.md), this approach has the advantage of clearly specifying return types and generating server and client code.
 
 When possible, the existing module's [`Keeper`](keeper.md) should implement `MsgServer`, otherwise a `msgServer` struct that embeds the `Keeper` can be created, typically in `./keeper/msg_server.go`:
 

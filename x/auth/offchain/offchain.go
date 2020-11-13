@@ -30,7 +30,7 @@ type msg interface {
 // NewMsgSignData is MsgSignData's constructor
 func NewMsgSignData(signer sdk.AccAddress, data []byte) *MsgSignData {
 	return &MsgSignData{
-		Signer: signer,
+		Signer: signer.String(),
 		Data:   data,
 	}
 }
@@ -46,7 +46,11 @@ func (m *MsgSignData) Type() string {
 }
 
 func (m *MsgSignData) ValidateBasic() error {
-	if m.Signer.Empty() {
+	signer, err := sdk.AccAddressFromBech32(m.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid signer: %s", err.Error())
+	}
+	if signer.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty signer")
 	}
 	if len(m.Data) == 0 {
@@ -60,7 +64,11 @@ func (m *MsgSignData) GetSignBytes() []byte {
 }
 
 func (m *MsgSignData) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{m.Signer}
+	signer, err := sdk.AccAddressFromBech32(m.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{signer}
 }
 
 func (m *MsgSignData) offchain() {}

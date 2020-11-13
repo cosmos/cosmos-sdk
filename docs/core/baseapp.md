@@ -342,7 +342,7 @@ Click [here](../basics/gas-fees.md#antehandler) for more on the `anteHandler`.
 
 `RunMsgs` is called from `RunTx` with `runTxModeCheck` as parameter to check the existence of a route for each message the transaction, and with `runTxModeDeliver` to actually process the `message`s. 
 
-First, it retreives the `message`'s `route` using the `Msg.Route()` method. Then, using the application's [`router`](#routing) and the `route`, it checks for the existence of a `handler`. At this point, if `mode == runTxModeCheck`, `RunMsgs` returns. If instead `mode == runTxModeDeliver`, the [`handler`](../building-modules/msg-services.md#handler-type) function for the message is executed, before `RunMsgs` returns. 
+First, it retreives the message's `route` using the `Msg.Route()` method. Then, using the application's [`router`](#routing) and the `route`, it checks for the existence of a `handler`. At this point, if `mode == runTxModeCheck`, `RunMsgs` returns. If instead `mode == runTxModeDeliver`, the [`handler`](../building-modules/msg-services.md#handler-type) function for the message is executed, before `RunMsgs` returns. 
 
 ## Other ABCI Messages
 

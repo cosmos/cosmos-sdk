@@ -356,22 +356,17 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-proto-all: proto-tools proto-gen proto-lint proto-check-breaking proto-swagger-gen proto-format
+proto-all: proto-format proto-lint proto-check-breaking proto-gen proto-swagger-gen
 
 proto-gen:
-	@./scripts/protocgen.sh
-
-proto-gen-docker:
 	@echo "Generating Protobuf files"
 	docker run -v $(shell pwd):/workspace --workdir /workspace tendermintdev/sdk-proto-gen sh ./scripts/protocgen.sh
-.PHONY: proto-gen-docker
 
 proto-format:
 	@echo "Formatting Protobuf files"
 	docker run -v $(shell pwd):/workspace \
 	--workdir /workspace tendermintdev/docker-build-proto \
 	find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \;
-.PHONY: proto-format
 
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
 proto-gen-any:
@@ -381,18 +376,10 @@ proto-swagger-gen:
 	@./scripts/protoc-swagger-gen.sh
 
 proto-lint:
-	@buf check lint --error-format=json
+	@$(DOCKER_BUF) check lint --error-format=json
 
 proto-check-breaking:
-	@buf check breaking --against-input '.git#branch=master'
-
-proto-lint-docker:
-	@$(DOCKER_BUF) check lint --error-format=json
-.PHONY: proto-lint
-
-proto-check-breaking-docker:
 	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=master
-.PHONY: proto-check-breaking-ci
 
 TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.0-rc6/proto/tendermint
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
@@ -445,7 +432,7 @@ proto-update-deps:
 ## Issue link: https://github.com/confio/ics23/issues/32
 	@sed -i '4ioption go_package = "github.com/confio/ics23/go";' $(CONFIO_TYPES)/proofs.proto
 
-.PHONY: proto-all proto-gen proto-lint proto-check-breaking proto-update-deps
+.PHONY: proto-all proto-gen proto-gen-any proto-swagger-gen proto-format proto-lint proto-check-breaking proto-update-deps
 
 ###############################################################################
 ###                                Localnet                                 ###

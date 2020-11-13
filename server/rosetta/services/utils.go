@@ -2,12 +2,14 @@ package services
 
 import (
 	"fmt"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
+
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 )
 
 type PayloadReqMetadata struct {
-	ChainId       string
+	ChainID       string
 	Sequence      uint64
 	AccountNumber uint64
 	Gas           uint64
@@ -16,7 +18,7 @@ type PayloadReqMetadata struct {
 
 // GetMetadataFromPayloadReq obtains the metadata from the request to /construction/payloads endpoint.
 func GetMetadataFromPayloadReq(req *types.ConstructionPayloadsRequest) (*PayloadReqMetadata, error) {
-	chainId, ok := req.Metadata[rosetta.ChainId].(string)
+	chainID, ok := req.Metadata[rosetta.ChainID].(string)
 	if !ok {
 		return nil, fmt.Errorf("chain_id metadata was not provided")
 	}
@@ -59,7 +61,7 @@ func GetMetadataFromPayloadReq(req *types.ConstructionPayloadsRequest) (*Payload
 	}
 
 	return &PayloadReqMetadata{
-		ChainId:       chainId,
+		ChainID:       chainID,
 		Sequence:      uint64(seqNum),
 		AccountNumber: uint64(accNum),
 		Gas:           uint64(gasF64),

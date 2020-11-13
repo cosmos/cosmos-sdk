@@ -87,7 +87,8 @@ func TendermintBlockToBlockIdentifier(block *tmcoretypes.ResultBlock) *types.Blo
 	}
 }
 
-func ToOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) (operations []*types.Operation) {
+func ToOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) []*types.Operation {
+	var operations []*types.Operation
 	for i, msg := range msgs {
 		switch msg.Type() { // nolint
 		case rosetta.OperationSend:
@@ -130,7 +131,7 @@ func ToOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) (operations
 			)
 		}
 	}
-	return
+	return operations
 }
 
 // GetTransferTxDataFromOperations extracts the from and to addresses from a list of operations.

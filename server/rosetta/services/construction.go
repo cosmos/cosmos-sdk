@@ -37,8 +37,8 @@ func (sn SingleNetwork) ConstructionCombine(ctx context.Context, request *types.
 
 	txBldr, _ := TxConfig.WrapTxBuilder(rawTx)
 
-	var sigs []signing.SignatureV2
-	for _, signature := range request.Signatures {
+	var sigs = make([]signing.SignatureV2, len(request.Signatures))
+	for i, signature := range request.Signatures {
 		if signature.PublicKey.CurveType != "secp256k1" {
 			return nil, rosetta.ErrUnsupportedCurve.RosettaError()
 		}
@@ -65,8 +65,9 @@ func (sn SingleNetwork) ConstructionCombine(ctx context.Context, request *types.
 			},
 			Sequence: accountInfo.GetSequence(),
 		}
-		sigs = append(sigs, sig)
+		sigs[i] = sig
 	}
+
 	err = txBldr.SetSignatures(sigs...)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
@@ -155,7 +156,7 @@ func (sn SingleNetwork) ConstructionMetadata(ctx context.Context, request *types
 		Metadata: map[string]interface{}{
 			rosetta.AccountNumber: accountInfo.GetAccountNumber(),
 			rosetta.Sequence:      accountInfo.GetSequence(),
-			rosetta.ChainId:       status.NodeInfo.Network,
+			rosetta.ChainID:       status.NodeInfo.Network,
 			rosetta.OptionGas:     gas,
 			rosetta.OptionMemo:    memo,
 		},
@@ -214,12 +215,15 @@ func (sn SingleNetwork) ConstructionPayloads(ctx context.Context, request *types
 		return nil, rosetta.WrapError(rosetta.ErrInvalidRequest, err.Error()).RosettaError()
 	}
 
-	txFactory := tx.Factory{}.WithAccountNumber(metadata.AccountNumber).WithChainID(metadata.ChainId).
+	txFactory := tx.Factory{}.WithAccountNumber(metadata.AccountNumber).WithChainID(metadata.ChainID).
 		WithGas(metadata.Gas).WithSequence(metadata.Sequence).WithMemo(metadata.Memo)
 
 	TxConfig := sn.client.GetTxConfig(ctx)
 	txFactory = txFactory.WithTxConfig(TxConfig)
 	txBldr, err := tx.BuildUnsignedTx(txFactory, sendMsg)
+	if err != nil {
+		return nil, rosetta.ToRosettaError(err)
+	}
 
 	if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
 		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)

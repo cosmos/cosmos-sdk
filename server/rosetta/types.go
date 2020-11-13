@@ -4,27 +4,26 @@ import (
 	"context"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/cosmos/cosmos-sdk/client"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 	"github.com/tendermint/cosmos-rosetta-gateway/service"
 	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // list of supported operations
 const (
-	StatusReverted    = "Reverted"
-	StatusSuccess     = "Success"
-	OperationMsgSend  = "cosmos-sdk/MsgSend"
-	OptionAddress     = "address"
-	OptionGas         = "gas"
-	OptionMemo        = "memo"
-	Sequence          = "sequence"
-	AccountNumber     = "account_number"
-	ChainId           = "chain_id"
-	OperationTransfer = "transfer"
-	OperationSend     = "send"
+	StatusReverted = "Reverted"
+	StatusSuccess  = "Success"
+	OptionAddress  = "address"
+	OptionGas      = "gas"
+	OptionMemo     = "memo"
+	Sequence       = "sequence"
+	AccountNumber  = "account_number"
+	ChainID        = "chain_id"
+	OperationSend  = "send"
 )
 
 // Synchronization stage constants used to determine if a node is synced or catching up

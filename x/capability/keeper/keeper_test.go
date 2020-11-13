@@ -39,7 +39,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 func (suite *KeeperTestSuite) TestInitializeAndSeal() {
 	sk := suite.keeper.ScopeToModule(banktypes.ModuleName)
 	suite.Require().Panics(func() {
-		suite.keeper.ScopeToModule("")
+		suite.keeper.ScopeToModule("  ")
 	})
 
 	caps := make([]*types.Capability, 5)
@@ -109,7 +109,7 @@ func (suite *KeeperTestSuite) TestNewCapability() {
 	suite.Require().Equal(cap, got)
 	suite.Require().True(cap == got, "expected memory addresses to be equal")
 
-	cap, err = sk.NewCapability(suite.ctx, "")
+	cap, err = sk.NewCapability(suite.ctx, "   ")
 	suite.Require().Error(err)
 	suite.Require().Nil(cap)
 }
@@ -159,7 +159,7 @@ func (suite *KeeperTestSuite) TestAuthenticateCapability() {
 	suite.Require().False(sk1.AuthenticateCapability(suite.ctx, badCap, "transfer"))
 	suite.Require().False(sk2.AuthenticateCapability(suite.ctx, badCap, "bond"))
 
-	suite.Require().False(sk1.AuthenticateCapability(suite.ctx, cap1, ""))
+	suite.Require().False(sk1.AuthenticateCapability(suite.ctx, cap1, "  "))
 	suite.Require().False(sk1.AuthenticateCapability(suite.ctx, nil, "transfer"))
 }
 
@@ -183,7 +183,7 @@ func (suite *KeeperTestSuite) TestClaimCapability() {
 	suite.Require().True(ok)
 	suite.Require().Equal(cap, got)
 
-	suite.Require().Error(sk3.ClaimCapability(suite.ctx, cap, ""))
+	suite.Require().Error(sk3.ClaimCapability(suite.ctx, cap, "  "))
 	suite.Require().Error(sk3.ClaimCapability(suite.ctx, nil, "transfer"))
 }
 
@@ -251,7 +251,7 @@ func (suite *KeeperTestSuite) TestGetOwners() {
 		}
 	}
 
-	_, ok := sk1.GetOwners(suite.ctx, "")
+	_, ok := sk1.GetOwners(suite.ctx, "  ")
 	suite.Require().False(ok, "got owners from empty capability name")
 }
 

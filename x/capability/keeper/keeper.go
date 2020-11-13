@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -69,7 +70,7 @@ func (k *Keeper) ScopeToModule(moduleName string) ScopedKeeper {
 	if k.sealed {
 		panic("cannot scope to module via a sealed capability keeper")
 	}
-	if moduleName == "" {
+	if strings.TrimSpace(moduleName) == "" {
 		panic("cannot scope to module name")
 	}
 
@@ -205,7 +206,7 @@ func (k Keeper) InitializeCapability(ctx sdk.Context, index uint64, owners types
 // Note, namespacing is completely local, which is safe since records are prefixed
 // with the module name and no two ScopedKeeper can have the same module name.
 func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (*types.Capability, error) {
-	if name == "" {
+	if strings.TrimSpace(name) == "" {
 		return nil, sdkerrors.Wrap(types.ErrInvalidCapabilityName, "capability name cannot be empty")
 	}
 	store := ctx.KVStore(sk.storeKey)
@@ -270,7 +271,7 @@ func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap *types.Capability, n
 	if cap == nil {
 		return sdkerrors.Wrap(types.ErrNilCapability, "cannot claim nil capability")
 	}
-	if name == "" {
+	if strings.TrimSpace(name) == "" {
 		return sdkerrors.Wrap(types.ErrInvalidCapabilityName, "capability name cannot be empty")
 	}
 	// update capability owner set
@@ -341,7 +342,7 @@ func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap *types.Capability)
 // by name. The module is not allowed to retrieve capabilities which it does not
 // own.
 func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (*types.Capability, bool) {
-	if name == "" {
+	if strings.TrimSpace(name) == "" {
 		return nil, false
 	}
 	memStore := ctx.KVStore(sk.memKey)
@@ -382,7 +383,7 @@ func (sk ScopedKeeper) GetCapabilityName(ctx sdk.Context, cap *types.Capability)
 // GetOwners all the Owners that own the capability associated with the name this ScopedKeeper uses
 // to refer to the capability
 func (sk ScopedKeeper) GetOwners(ctx sdk.Context, name string) (*types.CapabilityOwners, bool) {
-	if name == "" {
+	if strings.TrimSpace(name) == "" {
 		return nil, false
 	}
 	cap, ok := sk.GetCapability(ctx, name)
@@ -410,7 +411,7 @@ func (sk ScopedKeeper) GetOwners(ctx sdk.Context, name string) (*types.Capabilit
 // The method returns an error if either the capability or the owners cannot be
 // retreived from the memstore.
 func (sk ScopedKeeper) LookupModules(ctx sdk.Context, name string) ([]string, *types.Capability, error) {
-	if name == "" {
+	if strings.TrimSpace(name) == "" {
 		return nil, nil, sdkerrors.Wrap(types.ErrInvalidCapabilityName, "cannot lookup modules with empty capability name")
 	}
 	cap, ok := sk.GetCapability(ctx, name)

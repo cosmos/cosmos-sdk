@@ -43,7 +43,7 @@ func TestConnectionValidateBasic(t *testing.T) {
 		},
 		{
 			"invalid version",
-			types.ConnectionEnd{clientID, []*types.Version{&types.Version{}}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			types.ConnectionEnd{clientID, []*types.Version{{}}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			false,
 		},
 		{

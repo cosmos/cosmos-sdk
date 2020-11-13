@@ -361,7 +361,9 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 // DenomPathFromHash returns the full denomination path prefix from an ibc denom with a hash
 // component.
 func (k Keeper) DenomPathFromHash(ctx sdk.Context, denom string) (string, error) {
-	hexHash := denom[4:]
+	// trim the denomination prefix, by default "ibc/"
+	hexHash := denom[len(types.DenomPrefix+"/"):]
+
 	hash, err := types.ParseHexHash(hexHash)
 	if err != nil {
 		return "", sdkerrors.Wrap(types.ErrInvalidDenomForTransfer, err.Error())

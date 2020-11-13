@@ -86,7 +86,7 @@ In this regard, `handler`s functions need to be implemented for each module `Msg
 
 ## Telemetry
 
-New [telemetry metrics](../core/telemetry.md) can be created from `msgServer` methods when handling messages for instance. 
+New [telemetry metrics](../core/telemetry.md) can be created from `msgServer` methods when handling messages. 
 
 This is an example from the `x/auth/vesting` module:
 

@@ -36,6 +36,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.40.0-rc3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc3) - 2020-11-06
+
+### Client Breaking
+
+* (x/staking) [\#7419](https://github.com/cosmos/cosmos-sdk/pull/7419) The `TmConsPubKey` method on ValidatorI has been removed and replaced instead by `ConsPubKey` (which returns a SDK `cryptotypes.PubKey`) and `TmConsPublicKey` (which returns a Tendermint proto PublicKey).
+
 ### Improvements
 * (tendermint) [\#7828](https://github.com/cosmos/cosmos-sdk/pull/7828) Update tendermint dependency to v0.34.0-rc6
 
@@ -59,6 +65,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `server/types.AppExporter` requires extra argument: `AppOptions`.
   * `server.AddCommands` requires extra argument: `addStartFlags types.ModuleInitFlags`
   * `x/crisis.NewAppModule` has a new attribute: `skipGenesisInvariants`. [PR](https://github.com/cosmos/cosmos-sdk/pull/7764)
+* [#7918](https://github.com/cosmos/cosmos-sdk/pull/7918) Add x/capability safety checks:
+  * All outward facing APIs will now check that capability is not nil and name is not empty before performing any state-machine changes
+  * `SetIndex` has been renamed to `InitializeIndex`
 
 ### Features
 

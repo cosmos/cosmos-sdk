@@ -66,7 +66,7 @@ func (suite *LocalhostTestSuite) TestVerifyClientState() {
 			clientState: clientState,
 			malleate: func() {
 				bz := clienttypes.MustMarshalClientState(suite.cdc, clientState)
-				suite.store.Set(host.KeyClientState(), bz)
+				suite.store.Set(host.ClientStateKey(), bz)
 			},
 			counterparty: clientState,
 			expPass:      true,
@@ -76,7 +76,7 @@ func (suite *LocalhostTestSuite) TestVerifyClientState() {
 			clientState: clientState,
 			malleate: func() {
 				bz := clienttypes.MustMarshalClientState(suite.cdc, clientState)
-				suite.store.Set(host.KeyClientState(), bz)
+				suite.store.Set(host.ClientStateKey(), bz)
 			},
 			counterparty: invalidClient,
 			expPass:      false,
@@ -161,7 +161,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 			malleate: func() {
 				bz, err := suite.cdc.MarshalBinaryBare(&conn1)
 				suite.Require().NoError(err)
-				suite.store.Set(host.KeyConnection(testConnectionID), bz)
+				suite.store.Set(host.ConnectionKey(testConnectionID), bz)
 			},
 			connection: conn1,
 			expPass:    true,
@@ -177,7 +177,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 			name:        "proof verification failed: unmarshal error",
 			clientState: types.NewClientState("chainID", clientHeight),
 			malleate: func() {
-				suite.store.Set(host.KeyConnection(testConnectionID), []byte("connection"))
+				suite.store.Set(host.ConnectionKey(testConnectionID), []byte("connection"))
 			},
 			connection: conn1,
 			expPass:    false,
@@ -188,7 +188,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 			malleate: func() {
 				bz, err := suite.cdc.MarshalBinaryBare(&conn2)
 				suite.Require().NoError(err)
-				suite.store.Set(host.KeyConnection(testConnectionID), bz)
+				suite.store.Set(host.ConnectionKey(testConnectionID), bz)
 			},
 			connection: conn1,
 			expPass:    false,
@@ -233,7 +233,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 			malleate: func() {
 				bz, err := suite.cdc.MarshalBinaryBare(&ch1)
 				suite.Require().NoError(err)
-				suite.store.Set(host.KeyChannel(testPortID, testChannelID), bz)
+				suite.store.Set(host.ChannelKey(testPortID, testChannelID), bz)
 			},
 			channel: ch1,
 			expPass: true,
@@ -249,7 +249,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 			name:        "proof verification failed: unmarshal failed",
 			clientState: types.NewClientState("chainID", clientHeight),
 			malleate: func() {
-				suite.store.Set(host.KeyChannel(testPortID, testChannelID), []byte("channel"))
+				suite.store.Set(host.ChannelKey(testPortID, testChannelID), []byte("channel"))
 
 			},
 			channel: ch1,
@@ -261,7 +261,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 			malleate: func() {
 				bz, err := suite.cdc.MarshalBinaryBare(&ch2)
 				suite.Require().NoError(err)
-				suite.store.Set(host.KeyChannel(testPortID, testChannelID), bz)
+				suite.store.Set(host.ChannelKey(testPortID, testChannelID), bz)
 
 			},
 			channel: ch1,
@@ -302,7 +302,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 			clientState: types.NewClientState("chainID", clientHeight),
 			malleate: func() {
 				suite.store.Set(
-					host.KeyPacketCommitment(testPortID, testChannelID, testSequence), []byte("commitment"),
+					host.PacketCommitmentKey(testPortID, testChannelID, testSequence), []byte("commitment"),
 				)
 			},
 			commitment: []byte("commitment"),
@@ -313,7 +313,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 			clientState: types.NewClientState("chainID", clientHeight),
 			malleate: func() {
 				suite.store.Set(
-					host.KeyPacketCommitment(testPortID, testChannelID, testSequence), []byte("different"),
+					host.PacketCommitmentKey(testPortID, testChannelID, testSequence), []byte("different"),
 				)
 			},
 			commitment: []byte("commitment"),
@@ -361,7 +361,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 			clientState: types.NewClientState("chainID", clientHeight),
 			malleate: func() {
 				suite.store.Set(
-					host.KeyPacketAcknowledgement(testPortID, testChannelID, testSequence), []byte("acknowledgement"),
+					host.PacketAcknowledgementKey(testPortID, testChannelID, testSequence), []byte("acknowledgement"),
 				)
 			},
 			ack:     []byte("acknowledgement"),
@@ -372,7 +372,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 			clientState: types.NewClientState("chainID", clientHeight),
 			malleate: func() {
 				suite.store.Set(
-					host.KeyPacketAcknowledgement(testPortID, testChannelID, testSequence), []byte("different"),
+					host.PacketAcknowledgementKey(testPortID, testChannelID, testSequence), []byte("different"),
 				)
 			},
 			ack:     []byte("acknowledgement"),
@@ -416,7 +416,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketReceiptAbsence() {
 
 	suite.Require().NoError(err, "receipt absence failed")
 
-	suite.store.Set(host.KeyPacketReceipt(testPortID, testChannelID, testSequence), []byte("receipt"))
+	suite.store.Set(host.PacketReceiptKey(testPortID, testChannelID, testSequence), []byte("receipt"))
 
 	err = clientState.VerifyPacketReceiptAbsence(
 		suite.store, suite.cdc, clientHeight, nil, nil, testPortID, testChannelID, testSequence,
@@ -439,7 +439,7 @@ func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 			clientState: types.NewClientState("chainID", clientHeight),
 			malleate: func() {
 				suite.store.Set(
-					host.KeyNextSequenceRecv(testPortID, testChannelID),
+					host.NextSequenceRecvKey(testPortID, testChannelID),
 					sdk.Uint64ToBigEndian(nextSeqRecv),
 				)
 			},
@@ -451,7 +451,7 @@ func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 			clientState: types.NewClientState("chainID", clientHeight),
 			malleate: func() {
 				suite.store.Set(
-					host.KeyNextSequenceRecv(testPortID, testChannelID),
+					host.NextSequenceRecvKey(testPortID, testChannelID),
 					sdk.Uint64ToBigEndian(3),
 				)
 			},

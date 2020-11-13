@@ -1,17 +1,19 @@
-package cosmovisor
+package cosmovisor_test
 
 import (
 	"bufio"
 	"io"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/cosmos/cosmos-sdk/cosmovisor"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestWaitForInfo(t *testing.T) {
 	cases := map[string]struct {
 		write         []string
-		expectUpgrade *UpgradeInfo
+		expectUpgrade *cosmovisor.UpgradeInfo
 		expectErr     bool
 	}{
 		"no match": {
@@ -19,14 +21,14 @@ func TestWaitForInfo(t *testing.T) {
 		},
 		"match name with no info": {
 			write: []string{"first line\n", `UPGRADE "myname" NEEDED at height: 123: `, "\nnext line\n"},
-			expectUpgrade: &UpgradeInfo{
+			expectUpgrade: &cosmovisor.UpgradeInfo{
 				Name: "myname",
 				Info: "",
 			},
 		},
 		"match name with info": {
 			write: []string{"first line\n", `UPGRADE "take2" NEEDED at height: 123:   DownloadData here!`, "\nnext line\n"},
-			expectUpgrade: &UpgradeInfo{
+			expectUpgrade: &cosmovisor.UpgradeInfo{
 				Name: "take2",
 				Info: "DownloadData",
 			},
@@ -42,20 +44,20 @@ func TestWaitForInfo(t *testing.T) {
 			go func() {
 				for _, line := range tc.write {
 					n, err := w.Write([]byte(line))
-					assert.NoError(t, err)
-					assert.Equal(t, len(line), n)
+					require.NoError(t, err)
+					require.Equal(t, len(line), n)
 				}
 				w.Close()
 			}()
 
 			// now scan the info
-			info, err := WaitForUpdate(scan)
+			info, err := cosmovisor.WaitForUpdate(scan)
 			if tc.expectErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 				return
 			}
-			assert.NoError(t, err)
-			assert.Equal(t, tc.expectUpgrade, info)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectUpgrade, info)
 		})
 	}
 }

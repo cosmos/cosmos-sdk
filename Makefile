@@ -361,6 +361,11 @@ proto-all: proto-tools proto-gen proto-lint proto-check-breaking proto-swagger-g
 proto-gen:
 	@./scripts/protocgen.sh
 
+proto-gen-docker:
+	@echo "Generating Protobuf files"
+	docker run -v $(shell pwd):/workspace --workdir /workspace tendermintdev/sdk-proto-gen sh ./scripts/protocgen.sh
+.PHONY: proto-gen-docker
+
 proto-format:
 	@echo "Formatting Protobuf files"
 	docker run -v $(shell pwd):/workspace \

@@ -23,3 +23,4 @@ For the general specification please refer to the [Interchain Standards](https:/
 4. **[Messages](04_messages.md)**
 5. **[Callbacks](05_callbacks.md)**
 6. **[Events](06_events.md)**
+7. **[Params](07_params.md)**

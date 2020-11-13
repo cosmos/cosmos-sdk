@@ -370,7 +370,7 @@ proto-format:
 
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
 proto-gen-any:
-	@./scripts/protocgen-any.sh
+	docker run -v $(shell pwd):/workspace --workdir /workspace tendermintdev/sdk-proto-gen sh ./scripts/protocgen-any.sh
 
 proto-swagger-gen:
 	@./scripts/protoc-swagger-gen.sh

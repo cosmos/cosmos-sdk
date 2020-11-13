@@ -1,0 +1,11 @@
+panic: Roundtrip failure, got
+0000-07-06T00:00:00.000000000
+
+goroutine 1 [running]:
+github.com/cosmos/cosmos-sdk/fuzz/types/ParseTimeBytes.Fuzz(0xaa70000, 0x1c, 0x1c, 0x4)
+	/Users/emmanuelodeke/go/src/github.com/cosmos/cosmos-sdk/fuzz/types/ParseTimeBytes/fuzz.go:17 +0x265
+go-fuzz-dep.Main(0xc000271f70, 0x1, 0x1)
+	go-fuzz-dep/main.go:36 +0x1b8
+main.main()
+	github.com/cosmos/cosmos-sdk/fuzz/types/ParseTimeBytes/go.fuzz.main/main.go:15 +0x52
+exit status 2

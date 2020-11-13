@@ -148,7 +148,7 @@ message MsgRecvPacket {
   option (gogoproto.goproto_getters) = false;
 
   Packet                    packet       = 1 [(gogoproto.nullable) = false];
-  bytes                     proof        = 2;
+  bytes                     proof_commitment        = 2 [(gogoproto.moretags) = "yaml:\"proof_commitment\""];
   ibc.core.client.v1.Height proof_height = 3
       [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
   string signer = 4;
@@ -163,7 +163,7 @@ message MsgTimeout {
   option (gogoproto.goproto_getters) = false;
 
   Packet                    packet       = 1 [(gogoproto.nullable) = false];
-  bytes                     proof        = 2;
+  bytes                     proof_unreceived        = 2 [(gogoproto.moretags) = "yaml:\"proof_unreceived\""];
   ibc.core.client.v1.Height proof_height = 3
       [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
   uint64 next_sequence_recv = 4 [(gogoproto.moretags) = "yaml:\"next_sequence_recv\""];
@@ -179,7 +179,7 @@ message MsgTimeoutOnClose {
   option (gogoproto.goproto_getters) = false;
 
   Packet                    packet       = 1 [(gogoproto.nullable) = false];
-  bytes                     proof        = 2;
+  bytes                     proof_unreceived        = 2 [(gogoproto.moretags) = "yaml:\"proof_unreceived\""];
   bytes                     proof_close  = 3 [(gogoproto.moretags) = "yaml:\"proof_close\""];
   ibc.core.client.v1.Height proof_height = 4
       [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
@@ -197,7 +197,7 @@ message MsgAcknowledgement {
 
   Packet                    packet          = 1 [(gogoproto.nullable) = false];
   bytes                     acknowledgement = 2;
-  bytes                     proof           = 3;
+  bytes                     proof_acked           = 3 [(gogoproto.moretags) = "yaml:\"proof_acked\""];
   ibc.core.client.v1.Height proof_height    = 4
       [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
   string signer = 5;

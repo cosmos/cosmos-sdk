@@ -36,7 +36,6 @@ The generated `MsgServer` interface defines the server API for the `Msg` service
 A `RegisterMsgServer` method is also generated and should be used to register the module's `MsgServer` implementation in `RegisterServices` method from the [`AppModule` interface](./module-manager.md#appmodule).
 
 In order for clients (CLI and grpc-gateway) to have these URLs registered, the SDK provides the function `RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.ServiceDesc)` that should be called inside module's [`RegisterInterfaces`](module-manager.md#appmodulebasic) method, using the proto-generated `&_Msg_serviceDesc` as `*grpc.ServiceDesc` argument.
-`RegisterInterfaces` should be called before `MsgServiceRouter` `RegisterService(sd *grpc.ServiceDesc, handler interface{})` so that all `Msg` types are already registered by then.
 
 ### Legacy Amino `Msg`s
 

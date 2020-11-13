@@ -59,7 +59,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -75,7 +74,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -91,7 +89,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus3, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -107,7 +104,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainIDVersion0, int64(height.VersionHeight), heightMinus1, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainIDVersion0, int64(height.VersionHeight), heightMinus3, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
-				ChainId:  chainIDVersion0,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -123,7 +119,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainIDVersion0, 3, heightMinus1, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainIDVersion0, 3, heightMinus3, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
-				ChainId:  chainIDVersion0,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -139,7 +134,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainIDVersion1, 1, heightMinus1, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainIDVersion1, 1, heightMinus3, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
-				ChainId:  chainIDVersion1,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -155,7 +149,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now, bothValSet, suite.valSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -171,7 +164,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader("ethermint", int64(height.VersionHeight), height, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader("ethermint", int64(height.VersionHeight), height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  "ethermint",
 				ClientId: chainID,
 			},
 			suite.now,
@@ -187,7 +179,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -203,7 +194,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus3, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -219,7 +209,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -235,7 +224,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -262,7 +250,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -278,7 +265,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now.Add(ubdPeriod),
@@ -294,7 +280,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now, bothValSet, suite.valSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -310,7 +295,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now, altValSet, bothValSet, altSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -326,7 +310,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), altValSet, bothValSet, altSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,
@@ -342,7 +325,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			&types.Misbehaviour{
 				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now, altValSet, bothValSet, altSigners),
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), altValSet, bothValSet, altSigners),
-				ChainId:  chainID,
 				ClientId: chainID,
 			},
 			suite.now,

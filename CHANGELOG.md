@@ -65,6 +65,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `server/types.AppExporter` requires extra argument: `AppOptions`.
   * `server.AddCommands` requires extra argument: `addStartFlags types.ModuleInitFlags`
   * `x/crisis.NewAppModule` has a new attribute: `skipGenesisInvariants`. [PR](https://github.com/cosmos/cosmos-sdk/pull/7764)
+* [#7918](https://github.com/cosmos/cosmos-sdk/pull/7918) Add x/capability safety checks:
+  * All outward facing APIs will now check that capability is not nil and name is not empty before performing any state-machine changes
+  * `SetIndex` has been renamed to `InitializeIndex`
 
 ### Features
 

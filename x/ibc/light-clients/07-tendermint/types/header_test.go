@@ -13,17 +13,11 @@ import (
 func (suite *TendermintTestSuite) TestGetHeight() {
 	header := suite.chainA.LastHeader
 	suite.Require().NotEqual(uint64(0), header.GetHeight())
-
-	header.Header = nil
-	suite.Require().Equal(clienttypes.ZeroHeight(), header.GetHeight())
 }
 
 func (suite *TendermintTestSuite) TestGetTime() {
 	header := suite.chainA.LastHeader
 	suite.Require().NotEqual(time.Time{}, header.GetTime())
-
-	header.Header = nil
-	suite.Require().Equal(time.Time{}, header.GetTime())
 }
 
 func (suite *TendermintTestSuite) TestHeaderValidateBasic() {

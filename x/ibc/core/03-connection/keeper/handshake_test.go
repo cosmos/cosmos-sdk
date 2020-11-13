@@ -272,7 +272,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			suite.Require().True(found)
 
 			connection.State = types.INIT
-			connection.Versions = []*types.Version{&types.Version{}}
+			connection.Versions = []*types.Version{{}}
 
 			suite.chainB.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainB.GetContext(), connB.ID, connection)
 

@@ -156,7 +156,6 @@ type ConsensusState interface {
 type Misbehaviour interface {
 	ClientType() string
 	GetClientID() string
-	String() string
 	ValidateBasic() error
 
 	// Height at which the infraction occurred

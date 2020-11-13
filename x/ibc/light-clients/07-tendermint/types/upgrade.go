@@ -17,8 +17,10 @@ import (
 // in client state that must be the same across all valid Tendermint clients for the new chain.
 // VerifyUpgrade will return an error if:
 // - the upgradedClient is not a Tendermint ClientState
+// - the lastest height of the client state does not have the same version number or has a greater
+// height than the committed client.
 // - the height of upgraded client is not greater than that of current client
-// - the latest height of the new client does not match the height in committed client
+// - the latest height of the new client does not match or is greater than the height in committed client
 // - any Tendermint chain specified parameter in upgraded client such as ChainID, UnbondingPeriod,
 //   and ProofSpecs do not match parameters set by committed client
 func (cs ClientState) VerifyUpgradeAndUpdateState(
@@ -30,15 +32,16 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 		return nil, nil, sdkerrors.Wrap(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade client, no upgrade path set")
 	}
 
-	// UpgradeHeight must be in same version as client state height
-	if cs.GetLatestHeight().GetVersionNumber() != lastHeight.GetVersionNumber() {
-		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "version at which upgrade occurs must be same as current client version. expected version %d, got %d",
-			cs.GetLatestHeight().GetVersionNumber(), lastHeight.GetVersionNumber())
-	}
-
 	if upgradedClient.GetLatestHeight().GetVersionNumber() <= cs.GetLatestHeight().GetVersionNumber() {
 		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "upgraded client height %s must be at greater version than current client height %s",
 			upgradedClient.GetLatestHeight(), cs.GetLatestHeight())
+	}
+
+	// UpgradeHeight must be the latest height of the client state as client must contain the consensus state
+	// of the last height, and should not contain a greater height before the upgrade.
+	if !cs.GetLatestHeight().EQ(lastHeight.GetVersionNumber()) {
+		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "height at which upgrade occurs must be latest height of the client",
+			cs.GetLatestHeight(), lastHeight)
 	}
 
 	// counterparty chain must commit the upgraded client with all client-customizable fields zeroed out

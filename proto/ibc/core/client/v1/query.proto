@@ -34,8 +34,8 @@ service Query {
     option (google.api.http).get = "/ibc/core/client/v1beta1/consensus_states/{client_id}";
   }
 
-   // ClientParams queries all parameters of the ibc client.
-   rpc ClientParams(QueryClientParamsRequest) returns (QueryClientParamsResponse) {
+  // ClientParams queries all parameters of the ibc client.
+  rpc ClientParams(QueryClientParamsRequest) returns (QueryClientParamsResponse) {
     option (google.api.http).get = "/ibc/client/v1beta1/params";
   }
 }
@@ -70,10 +70,8 @@ message QueryClientStatesRequest {
 // method.
 message QueryClientStatesResponse {
   // list of stored ClientStates of the chain.
-  repeated IdentifiedClientState client_states = 1 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "IdentifiedClientStates"
-  ];
+  repeated IdentifiedClientState client_states = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "IdentifiedClientStates"];
   // pagination response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

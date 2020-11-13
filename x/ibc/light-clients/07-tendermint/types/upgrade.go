@@ -39,7 +39,7 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 
 	// UpgradeHeight must be the latest height of the client state as client must contain the consensus state
 	// of the last height, and should not contain a greater height before the upgrade.
-	if !cs.GetLatestHeight().EQ(lastHeight.GetVersionNumber()) {
+	if !cs.GetLatestHeight().EQ(lastHeight) {
 		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "height at which upgrade occurs must be latest height of the client",
 			cs.GetLatestHeight(), lastHeight)
 	}

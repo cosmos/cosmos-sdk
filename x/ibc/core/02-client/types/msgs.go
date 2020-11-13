@@ -182,16 +182,16 @@ func (msg MsgUpdateClient) UnpackInterfaces(unpacker codectypes.AnyUnpacker) err
 
 // NewMsgUpgradeClient creates a new MsgUpgradeClient instance
 // nolint: interfacer
-func NewMsgUpgradeClient(clientID string, clientState exported.ClientState, upgradeHeight exported.Height,
+func NewMsgUpgradeClient(clientID string, clientState exported.ClientState, lastHeight exported.Height,
 	proofUpgradeClient, proofUpgradeConsState []byte, signer sdk.AccAddress) (*MsgUpgradeClient, error) {
 	anyClient, err := PackClientState(clientState)
 	if err != nil {
 		return nil, err
 	}
 
-	height, ok := upgradeHeight.(Height)
+	height, ok := lastHeight.(Height)
 	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid height type. expected: %T, got: %T", &Height{}, upgradeHeight)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid height type. expected: %T, got: %T", &Height{}, lastHeight)
 	}
 
 	return &MsgUpgradeClient{
@@ -199,7 +199,7 @@ func NewMsgUpgradeClient(clientID string, clientState exported.ClientState, upgr
 		ClientState:                anyClient,
 		ProofUpgradeClient:         proofUpgradeClient,
 		ProofUpgradeConsensusState: proofUpgradeConsState,
-		UpgradeHeight:              &height,
+		LastHeight:                 &height,
 		Signer:                     signer.String(),
 	}, nil
 }
@@ -229,10 +229,10 @@ func (msg MsgUpgradeClient) ValidateBasic() error {
 	if len(msg.ProofUpgradeConsensusState) == 0 {
 		return sdkerrors.Wrap(ErrInvalidUpgradeClient, "proof of upgrade consensus state cannot be empty")
 	}
-	if msg.UpgradeHeight == nil {
+	if msg.LastHeight == nil {
 		return sdkerrors.Wrap(ErrInvalidUpgradeClient, "upgrade height cannot be nil")
 	}
-	if msg.UpgradeHeight.IsZero() {
+	if msg.LastHeight.IsZero() {
 		return sdkerrors.Wrap(ErrInvalidUpgradeClient, "upgrade height cannot be zero")
 	}
 	_, err = sdk.AccAddressFromBech32(msg.Signer)

@@ -45,7 +45,7 @@ type ClientState interface {
 		store sdk.KVStore,
 		newClient ClientState,
 		newConsState ConsensusState,
-		upgradeHeight Height,
+		lastHeight Height,
 		proofUpgradeClient,
 		proofUpgradeConsState []byte,
 	) (ClientState, ConsensusState, error)

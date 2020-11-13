@@ -95,11 +95,13 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "could not unpack clientstate: %v", err)
 	}
 	// deletes any previously stored upgraded client and sets the new upgraded client in
-	return k.SetUpgradedClient(ctx, plan.Height, clientState)
+	// last height committed on this chain is at plan.Height - 1, since the chain will panic at plan.Height
+	// and new chain will resume at plan.Height
+	return k.SetUpgradedClient(ctx, plan.Height-1, clientState)
 }
 
-// SetUpgradedClient sets the expected upgraded client for the next version of this chain
-func (k Keeper) SetUpgradedClient(ctx sdk.Context, upgradeHeight int64, cs ibcexported.ClientState) error {
+// SetUpgradedClient sets the expected upgraded client for the next version of this chain at the last height the current chain will commit.
+func (k Keeper) SetUpgradedClient(ctx sdk.Context, lastHeight int64, cs ibcexported.ClientState) error {
 	store := ctx.KVStore(k.storeKey)
 
 	// delete any previously stored upgraded client before setting a new one
@@ -116,13 +118,13 @@ func (k Keeper) SetUpgradedClient(ctx sdk.Context, upgradeHeight int64, cs ibcex
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "could not marshal clientstate: %v", err)
 	}
 
-	store.Set(types.UpgradedClientKey(upgradeHeight), bz)
+	store.Set(types.UpgradedClientKey(lastHeight), bz)
 	return nil
 }
 
 // GetUpgradedClient gets the expected upgraded client for the next version of this chain
-// along with the planned upgrade height
-// Since there is only ever one upgraded client in store, we do not need to know key beforehand
+// along with the planned last height of the current chain.
+// Since there is only ever one upgraded client in store, we do not need to know key beforehand.
 func (k Keeper) GetUpgradedClient(ctx sdk.Context) (ibcexported.ClientState, int64, error) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, []byte(types.KeyUpgradedClient))
@@ -162,22 +164,24 @@ func (k Keeper) GetUpgradedClient(ctx sdk.Context) (ibcexported.ClientState, int
 }
 
 // SetUpgradedConsensusState set the expected upgraded consensus state for the next version of this chain
-func (k Keeper) SetUpgradedConsensusState(ctx sdk.Context, upgradeHeight int64, cs ibcexported.ConsensusState) error {
+// using the last height committed on this chain.
+func (k Keeper) SetUpgradedConsensusState(ctx sdk.Context, lastHeight int64, cs ibcexported.ConsensusState) error {
 	store := ctx.KVStore(k.storeKey)
 	bz, err := clienttypes.MarshalConsensusState(k.cdc, cs)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "could not marshal consensus state: %v", err)
 	}
 
-	store.Set(types.UpgradedConsStateKey(upgradeHeight), bz)
+	store.Set(types.UpgradedConsStateKey(lastHeight), bz)
 	return nil
 }
 
 // GetUpgradedConsensusState set the expected upgraded consensus state for the next version of this chain
-func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, upgradeHeight int64) (ibcexported.ConsensusState, error) {
+// NOTE: Used for testing purposes only
+func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) (ibcexported.ConsensusState, error) {
 	store := ctx.KVStore(k.storeKey)
 
-	bz := store.Get(types.UpgradedConsStateKey(upgradeHeight))
+	bz := store.Get(types.UpgradedConsStateKey(lastHeight))
 	if len(bz) == 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "upgraded consensus state not found in store")
 	}

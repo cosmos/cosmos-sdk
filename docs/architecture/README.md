@@ -74,3 +74,4 @@ Read about the [PROCESS](./PROCESS.md).
 - [ADR 032: Typed Events](./adr-032-typed-events.md)
 - [ADR 035: Rosetta API Support](./adr-035-rosetta-api-support.md)
 - [ADR 037: Governance Split Votes](./adr-037-gov-split-vote.md)
+- [ADR 038: State Listening](./adr-038-state-listening.md)

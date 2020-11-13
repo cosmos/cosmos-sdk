@@ -85,7 +85,7 @@ Every message in a transaction must be signed by the addresses specified by `Get
 
 ### Handlers
 
-Since `message`s are module-specific types, each module needs a [`handler`](../building-modules/msg-services.md#handler-type) to process all of its `message` types and trigger state changes within the module's scope. This design puts more responsibility on module developers, allowing application developers to reuse common functionalities without having to implement state transition logic repetitively. To read more about `handler`s, click [here](../building-modules/msg-services.md#handler-type).
+Since messages are module-specific types, each module needs a [`handler`](../building-modules/msg-services.md#handler-type) to process all of its message types and trigger state changes within the module's scope. This design puts more responsibility on module developers, allowing application developers to reuse common functionalities without having to implement state transition logic repetitively. To read more about `handler`s, click [here](../building-modules/msg-services.md#handler-type).
 
 ## Next {hide}
 

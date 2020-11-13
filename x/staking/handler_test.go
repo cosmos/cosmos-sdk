@@ -185,7 +185,7 @@ func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
 }
 
 func TestBothPubKeyTypesMsgCreateValidator(t *testing.T) {
-	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 2, 1000)
+	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 2, sdk.NewInt(1000))
 	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{
 		Validator: &tmproto.ValidatorParams{PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519, tmtypes.ABCIPubKeyTypeSecp256k1}},
 	})
@@ -210,7 +210,7 @@ func TestBothPubKeyTypesMsgCreateValidator(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(*testing.T) {
-			tstaking.CreateValidator(tc.addr, tc.pk, 10, true)
+			tstaking.CreateValidator(tc.addr, tc.pk, sdk.NewInt(10), true)
 		})
 	}
 }

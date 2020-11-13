@@ -31,7 +31,7 @@ For backwards compatibility with [legacy Amino `Msg`s](#legacy-amino-msgs), exis
 Defining such `Msg` services allow to specify return types as part of `Msg` response using the canonical `Msg...Response` names.
 
 In addition, this generates client and server code.
-`MsgServer` interface defines the server API for the `Msg` service and its implementation is described as part of the [`Msg` services](./msg-services.md) documentation.
+The generated `MsgServer` interface defines the server API for the `Msg` service and its implementation is described as part of the [`Msg` services](./msg-services.md) documentation.
 
 A `RegisterMsgServer` method is also generated and should be used to register the module's `MsgServer`  request types with custom type URLs in `RegisterServices` method from the [`AppModule` interface](./module-manager.md#appmodule).
 

@@ -288,33 +288,18 @@ func (suite *KeeperTestSuite) TestModelBasedStaticOnRecvPacket() {
 	if err != nil {
 		panic(fmt.Errorf("Failed to read JSON test fixture: %w", err))
 	}
-
 	err = json.Unmarshal([]byte(jsonBlob), &tlaTestCases)
 	if err != nil {
 		panic(fmt.Errorf("Failed to parse JSON test fixture: %w", err))
 	}
 
-	testCases := []OnRecvPacketTestCase{}
-
 	for i, tlaTc := range tlaTestCases {
 		tc := OnRecvPacketTestCaseFromTla(tlaTc)
-		tc.description = filename + " # " + strconv.Itoa(i)
-		testCases = append(testCases, tc)
-		fmt.Printf("%+v\n\n", tc)
-	}
-
-	var (
-		channelA, channelB ibctesting.TestChannel
-	)
-
-	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.description), func() {
-			suite.SetupTest() // reset
-			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
-			channelA, channelB = suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.UNORDERED)
-
+		description := filename + " # " + strconv.Itoa(i)
+		suite.Run(fmt.Sprintf("Case %s", description), func() {
+			suite.SetupTest()
 			seq := uint64(1)
-			packet := channeltypes.NewPacket(tc.packet.Data.GetBytes(), seq, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
+			packet := channeltypes.NewPacket(tc.packet.Data.GetBytes(), seq, tc.packet.SourcePort, tc.packet.SourceChannel, tc.packet.DestPort, tc.packet.DestChannel, clienttypes.NewHeight(0, 100), 0)
 
 			bankBefore := BankFromBalances(tc.bankBefore)
 			if err := suite.SetChainBankBalances(suite.chainB, &bankBefore); err != nil {

@@ -23,6 +23,7 @@ This specification serves the purpose of covering every use case, this means tha
 
 Having the ability to sign messages off-chain has proven to be a fundamental aspect of nearly any blockchain. The notion of signing messages off-chain has many added benefits such as saving on computational costs and reducing transaction throughput and overhead. Within the context of the Cosmos, some of the major applications of signing such data includes, but is not limited to, providing a cryptographic secure and verifiable means of proving validator identity and possibly associating it with some other framework or organization. In addition, having the ability to sign Cosmos messages with a Ledger or similar HSM device.
 
+Further context and use cases can be found in the references links.
 
 ## Decision
 
@@ -116,3 +117,5 @@ Backwards compatibility is maintained as this is a new message spec definition.
 
 1. https://github.com/cosmos/ics/pull/33
 2. https://github.com/cosmos/cosmos-sdk/pull/7727#discussion_r515668204
+3. https://github.com/cosmos/cosmos-sdk/pull/7727#issuecomment-722478477
+4. https://github.com/cosmos/cosmos-sdk/pull/7727#issuecomment-721062923

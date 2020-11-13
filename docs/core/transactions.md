@@ -45,7 +45,7 @@ When users interact with the application's interfaces, they invoke the underlyin
 
 ### Messages
 
-**`Message`s** are module-specific objects that trigger state transitions within the scope of the module they belong to. Module developers define the `message`s for their module by implementing the `Msg` interface, and also define a [`Handler`](../building-modules/msg-services.md#handler-type) to process them.
+**`Message`s** are module-specific objects that trigger state transitions within the scope of the module they belong to. Module developers define the messages for their module by implementing the `Msg` interface, and also define a [`Handler`](../building-modules/msg-services.md#handler-type) to process them.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/tx_msg.go#L8-L29
 

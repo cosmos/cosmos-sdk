@@ -150,7 +150,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 		{"invalid consensusHeight", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []*types.Version{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clienttypes.ZeroHeight(), signer), false},
 		{"empty singer", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []*types.Version{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, nil), false},
 		{"success", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []*types.Version{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), true},
-		{"invalid version", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []*types.Version{&types.Version{}}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
+		{"invalid version", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []*types.Version{{}}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
 	}
 
 	for _, tc := range testCases {

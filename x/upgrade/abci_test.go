@@ -120,6 +120,22 @@ func TestCanOverwriteScheduleUpgrade(t *testing.T) {
 	VerifyDoUpgrade(t)
 }
 
+func VerifyDoIBCLastBlock(t *testing.T) {
+	t.Log("Verify that chain committed to consensus state on the last height it will commit")
+	nextValsHash := []byte("nextValsHash")
+	newCtx := s.ctx.WithBlockHeader(tmproto.Header{
+		Height:             s.ctx.BlockHeight(),
+		NextValidatorsHash: nextValsHash,
+	})
+
+	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
+	s.module.BeginBlock(newCtx, req)
+
+	consState, err := s.keeper.GetUpgradedConsensusState(newCtx, s.ctx.BlockHeight())
+	require.NoError(t, err)
+	require.Equal(t, &ibctmtypes.ConsensusState{NextValidatorsHash: nextValsHash}, consState)
+}
+
 func VerifyDoUpgrade(t *testing.T) {
 	t.Log("Verify that a panic happens at the upgrade time/height")
 	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
@@ -409,6 +425,27 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 	require.Panics(t, func() {
 		s.module.BeginBlock(newCtx, req)
 	})
+
+	VerifyDoUpgrade(t)
+	VerifyDone(t, s.ctx, "test")
+}
+
+func TestIBCUpgradeWithoutSkip(t *testing.T) {
+	s := setupTest(10, map[int64]bool{})
+	cs, err := clienttypes.PackClientState(&ibctmtypes.ClientState{})
+	require.NoError(t, err)
+	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{
+		Title: "prop",
+		Plan: types.Plan{
+			Name:                "test",
+			Height:              s.ctx.BlockHeight() + 1,
+			UpgradedClientState: cs,
+		},
+	})
+	require.Nil(t, err)
+
+	t.Log("Verify if last height stores consensus state")
+	VerifyDoIBCLastBlock(t)
 
 	VerifyDoUpgrade(t)
 	VerifyDone(t, s.ctx, "test")

@@ -185,23 +185,25 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 	}, nil
 }
 
+func normalizeBoradcastMode(mode txtypes.BroadcastMode) string {
+	switch mode {
+	case txtypes.BroadcastMode_async:
+		return "async"
+	case txtypes.BroadcastMode_sync:
+		return "sync"
+	case txtypes.BroadcastMode_block:
+		return "block"
+	default:
+		return "sync"
+	}
+}
+
 func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxRequest) (*txtypes.BroadcastTxResponse, error) {
 	if req.Tx == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
 	}
 
-	var mode string
-	switch req.Mode {
-	case txtypes.BroadcastMode_BROADCAST_MODE_SYNC:
-		mode = "sync"
-	case txtypes.BroadcastMode_BROADCAST_MODE_ASYNC:
-		mode = "async"
-	case txtypes.BroadcastMode_BROADCAST_MODE_BLOCK:
-		mode = "block"
-	default:
-		return nil, status.Error(codes.InvalidArgument, "invalid mode")
-	}
-	clientCtx := s.clientCtx.WithBroadcastMode(mode)
+	clientCtx := s.clientCtx.WithBroadcastMode(normalizeBoradcastMode((req.Mode)))
 	resp, err := clientCtx.BroadcastTx(req.Tx)
 
 	if err != nil {

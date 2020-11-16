@@ -230,12 +230,11 @@ func (s IntegrationTestSuite) TestBroadcastTx() {
 	grpcRes, err := s.queryClient.BroadcastTx(
 		context.Background(),
 		&tx.BroadcastTxRequest{
-			Mode: tx.BroadcastMode_BROADCAST_MODE_ASYNC,
+			Mode: tx.BroadcastMode_async,
 			Tx:   txBytes,
 		},
 	)
 	s.Require().NoError(err)
-	fmt.Println(grpcRes)
 	s.Require().Equal("foobar", grpcRes.Tx.Body.Memo)
 }
 

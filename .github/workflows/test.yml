@@ -215,7 +215,7 @@ jobs:
         run: |
           docker container ls
           docker network ls
-          docker exec simdnode0 rosetta
+          docker exec simdnode0 ./simd rosetta
       - name: check data API
         # if: env.GIT_DIFF
         run: |

@@ -9,13 +9,12 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
-
-	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
@@ -67,10 +66,10 @@ func ValidatorCommand() *cobra.Command {
 
 // Validator output
 type ValidatorOutput struct {
-	Address          sdk.ConsAddress `json:"address"`
-	PubKey           crypto.PubKey   `json:"pub_key"`
-	ProposerPriority int64           `json:"proposer_priority"`
-	VotingPower      int64           `json:"voting_power"`
+	Address          sdk.ConsAddress    `json:"address"`
+	PubKey           cryptotypes.PubKey `json:"pub_key"`
+	ProposerPriority int64              `json:"proposer_priority"`
+	VotingPower      int64              `json:"voting_power"`
 }
 
 // Validators at a certain height output in bech32 format
@@ -100,7 +99,7 @@ func (rvo ResultValidatorsOutput) String() string {
 	return b.String()
 }
 
-func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
+func validatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
 	pk, err := cryptocodec.FromTmPubKeyInterface(validator.PubKey)
 	if err != nil {
 		return ValidatorOutput{}, err
@@ -131,9 +130,11 @@ func GetValidators(clientCtx client.Context, height *int64, page, limit *int) (R
 		BlockHeight: validatorsRes.BlockHeight,
 		Validators:  make([]ValidatorOutput, len(validatorsRes.Validators)),
 	}
-
 	for i := 0; i < len(validatorsRes.Validators); i++ {
-		out.Validators[i] = validatorOutput(validatorsRes.Validators[i])
+		out.Validators[i], err = validatorOutput(validatorsRes.Validators[i])
+		if err != nil {
+			return out, err
+		}
 	}
 
 	return out, nil

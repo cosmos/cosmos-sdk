@@ -3,25 +3,13 @@ package keeper
 import (
 	"fmt"
 
-<<<<<<< HEAD
 	"github.com/tendermint/tendermint/crypto"
-||||||| 4420fe2d5
 	gogotypes "github.com/gogo/protobuf/types"
-
-	"github.com/tendermint/tendermint/crypto"
-=======
-	gogotypes "github.com/gogo/protobuf/types"
-
->>>>>>> master
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-<<<<<<< HEAD
 	"github.com/cosmos/cosmos-sdk/internal/protocdc"
-||||||| 4420fe2d5
-=======
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
->>>>>>> master
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )

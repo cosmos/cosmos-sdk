@@ -38,7 +38,7 @@ func ShowNodeIDCmd() *cobra.Command {
 	}
 }
 
-// ShowValidator - ported from Tendermint, show this node's validator info
+// ShowValidatorCmd - ported from Tendermint, show this node's validator info
 func ShowValidatorCmd() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "show-validator",
@@ -52,7 +52,11 @@ func ShowValidatorCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			out, err := protocdc.MarshalJSON(pk, nil)
+			sdkPK, err := cryptocodec.FromTmPubKeyInterface(pk)
+			if err != nil {
+				return err
+			}
+			out, err := protocdc.MarshalJSON(sdkPK, nil)
 			if err != nil {
 				return err
 			}
@@ -105,7 +109,7 @@ against which this app has been compiled.
 				BlockProtocol uint64
 				P2PProtocol   uint64
 			}{
-				Tendermint:    tversion.Version,
+				Tendermint:    tversion.TMCoreSemVer,
 				ABCI:          tversion.ABCIVersion,
 				BlockProtocol: tversion.BlockProtocol,
 				P2PProtocol:   tversion.P2PProtocol,

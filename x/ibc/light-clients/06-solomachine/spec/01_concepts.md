@@ -154,6 +154,9 @@ If the misbehaviour is successfully processed:
 
 - the client is frozen by setting the frozen sequence to the misbehaviour sequence
 
+NOTE: Misbehaviour processing is data processing order dependent. A misbehaving solo machine
+could update to a new public key to prevent being frozen before misbehaviour is submitted. 
+
 ## Upgrades
 
 Upgrades to solo machine light clients are not supported since an entirely different type of 

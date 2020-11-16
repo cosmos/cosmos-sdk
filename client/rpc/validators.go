@@ -15,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
@@ -99,13 +100,18 @@ func (rvo ResultValidatorsOutput) String() string {
 	return b.String()
 }
 
-func validatorOutput(validator *tmtypes.Validator) ValidatorOutput {
+func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
+	pk, err := cryptocodec.FromTmPubKeyInterface(validator.PubKey)
+	if err != nil {
+		return ValidatorOutput{}, err
+	}
+
 	return ValidatorOutput{
 		Address:          sdk.ConsAddress(validator.Address),
-		PubKey:           validator.PubKey,
+		PubKey:           pk,
 		ProposerPriority: validator.ProposerPriority,
 		VotingPower:      validator.VotingPower,
-	}
+	}, nil
 }
 
 // GetValidators from client

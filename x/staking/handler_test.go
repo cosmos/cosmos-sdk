@@ -11,6 +11,8 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -132,9 +134,11 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 
 	validator := tstaking.CheckValidator(addr1, types.Bonded, false)
 	assert.Equal(t, addr1.String(), validator.OperatorAddress)
-	consKey, err := validator.TmConsPubKey()
+	consKey, err := validator.TmConsPublicKey()
 	require.NoError(t, err)
-	assert.Equal(t, pk1.(cryptotypes.IntoTmPubKey).AsTmPubKey(), consKey)
+	tmPk1, err := cryptocodec.ToTmProtoPublicKey(pk1)
+	require.NoError(t, err)
+	assert.Equal(t, tmPk1, consKey)
 	assert.Equal(t, valTokens, validator.BondedTokens())
 	assert.Equal(t, valTokens.ToDec(), validator.DelegatorShares)
 	assert.Equal(t, types.Description{}, validator.Description)
@@ -155,9 +159,11 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 
 	validator = tstaking.CheckValidator(addr2, types.Bonded, false)
 	assert.Equal(t, addr2.String(), validator.OperatorAddress)
-	consPk, err := validator.TmConsPubKey()
+	consPk, err := validator.TmConsPublicKey()
 	require.NoError(t, err)
-	assert.Equal(t, pk2.(cryptotypes.IntoTmPubKey).AsTmPubKey(), consPk)
+	tmPk2, err := cryptocodec.ToTmProtoPublicKey(pk2)
+	require.NoError(t, err)
+	assert.Equal(t, tmPk2, consPk)
 	assert.True(sdk.IntEq(t, valTokens, validator.Tokens))
 	assert.True(sdk.DecEq(t, valTokens.ToDec(), validator.DelegatorShares))
 	assert.Equal(t, types.Description{}, validator.Description)
@@ -175,6 +181,37 @@ func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
 
 	// invalid pukKey type should not be allowed
 	tstaking.CreateValidator(addr, invalidPk, 10, false)
+}
+
+func TestBothPubKeyTypesMsgCreateValidator(t *testing.T) {
+	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 2, 1000)
+	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{
+		Validator: &tmproto.ValidatorParams{PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519, tmtypes.ABCIPubKeyTypeSecp256k1}},
+	})
+
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
+
+	testCases := []struct {
+		name string
+		addr sdk.ValAddress
+		pk   cryptotypes.PubKey
+	}{
+		{
+			"can create a validator with ed25519 pubkey",
+			valAddrs[0],
+			ed25519.GenPrivKey().PubKey(),
+		},
+		{
+			"can create a validator with secp256k1 pubkey",
+			valAddrs[1],
+			secp256k1.GenPrivKey().PubKey(),
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(*testing.T) {
+			tstaking.CreateValidator(tc.addr, tc.pk, 10, true)
+		})
+	}
 }
 
 func TestLegacyValidatorDelegations(t *testing.T) {

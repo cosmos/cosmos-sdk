@@ -9,7 +9,6 @@ import (
 
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -153,7 +152,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, kb keyring
 
 		multisigKeys, _ := cmd.Flags().GetStringSlice(flagMultisig)
 		if len(multisigKeys) != 0 {
-			var pks []crypto.PubKey
+			var pks []cryptotypes.PubKey
 			multisigThreshold, _ := cmd.Flags().GetInt(flagMultiSigThreshold)
 			if err := validateMultisigThreshold(multisigThreshold, len(multisigKeys)); err != nil {
 				return err
@@ -245,7 +244,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, kb keyring
 	}
 
 	if len(mnemonic) == 0 {
-		// read entropy seed straight from crypto.Rand and convert to mnemonic
+		// read entropy seed straight from tmcrypto.Rand and convert to mnemonic
 		entropySeed, err := bip39.NewEntropy(mnemonicEntropySize)
 		if err != nil {
 			return err

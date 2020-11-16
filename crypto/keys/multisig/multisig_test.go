@@ -3,19 +3,16 @@ package multisig_test
 import (
 	"testing"
 
-	tmcrypto "github.com/tendermint/tendermint/crypto"
-
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 func TestAddress(t *testing.T) {
@@ -30,12 +27,12 @@ func TestEquals(t *testing.T) {
 	pubKey1 := secp256k1.GenPrivKey().PubKey()
 	pubKey2 := secp256k1.GenPrivKey().PubKey()
 
-	multisigKey := kmultisig.NewLegacyAminoPubKey(1, []tmcrypto.PubKey{pubKey1, pubKey2})
-	otherMultisigKey := kmultisig.NewLegacyAminoPubKey(1, []tmcrypto.PubKey{pubKey1, multisigKey})
+	multisigKey := kmultisig.NewLegacyAminoPubKey(1, []cryptotypes.PubKey{pubKey1, pubKey2})
+	otherMultisigKey := kmultisig.NewLegacyAminoPubKey(1, []cryptotypes.PubKey{pubKey1, multisigKey})
 
 	testCases := []struct {
 		msg      string
-		other    tmcrypto.PubKey
+		other    cryptotypes.PubKey
 		expectEq bool
 	}{
 		{
@@ -255,8 +252,8 @@ func TestPubKeyMultisigThresholdAminoToIface(t *testing.T) {
 
 	ab, err := kmultisig.AminoCdc.MarshalBinaryLengthPrefixed(multisigKey)
 	require.NoError(t, err)
-	// like other crypto.Pubkey implementations (e.g. ed25519.PubKey),
-	// LegacyAminoPubKey should be deserializable into a crypto.LegacyAminoPubKey:
+	// like other cryptotypes.Pubkey implementations (e.g. ed25519.PubKey),
+	// LegacyAminoPubKey should be deserializable into a cryptotypes.LegacyAminoPubKey:
 	var pubKey kmultisig.LegacyAminoPubKey
 	err = kmultisig.AminoCdc.UnmarshalBinaryLengthPrefixed(ab, &pubKey)
 	require.NoError(t, err)
@@ -264,8 +261,8 @@ func TestPubKeyMultisigThresholdAminoToIface(t *testing.T) {
 	require.Equal(t, multisigKey.Equals(&pubKey), true)
 }
 
-func generatePubKeysAndSignatures(n int, msg []byte) (pubKeys []tmcrypto.PubKey, signatures []signing.SignatureData) {
-	pubKeys = make([]tmcrypto.PubKey, n)
+func generatePubKeysAndSignatures(n int, msg []byte) (pubKeys []cryptotypes.PubKey, signatures []signing.SignatureData) {
+	pubKeys = make([]cryptotypes.PubKey, n)
 	signatures = make([]signing.SignatureData, n)
 
 	for i := 0; i < n; i++ {
@@ -279,12 +276,12 @@ func generatePubKeysAndSignatures(n int, msg []byte) (pubKeys []tmcrypto.PubKey,
 }
 
 func generateNestedMultiSignature(n int, msg []byte) (multisig.PubKey, *signing.MultiSignatureData) {
-	pubKeys := make([]tmcrypto.PubKey, n)
+	pubKeys := make([]cryptotypes.PubKey, n)
 	signatures := make([]signing.SignatureData, n)
-	bitArray := crypto.NewCompactBitArray(n)
+	bitArray := cryptotypes.NewCompactBitArray(n)
 	for i := 0; i < n; i++ {
 		nestedPks, nestedSigs := generatePubKeysAndSignatures(5, msg)
-		nestedBitArray := crypto.NewCompactBitArray(5)
+		nestedBitArray := cryptotypes.NewCompactBitArray(5)
 		for j := 0; j < 5; j++ {
 			nestedBitArray.SetIndex(j, true)
 		}

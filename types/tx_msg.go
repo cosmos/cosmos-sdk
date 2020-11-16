@@ -1,9 +1,8 @@
 package types
 
 import (
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/gogo/protobuf/proto"
-
-	"github.com/tendermint/tendermint/crypto"
 )
 
 type (
@@ -42,7 +41,7 @@ type (
 	// Signature defines an interface for an application application-defined
 	// concrete transaction type to be able to set and return transaction signatures.
 	Signature interface {
-		GetPubKey() crypto.PubKey
+		GetPubKey() cryptotypes.PubKey
 		GetSignature() []byte
 	}
 

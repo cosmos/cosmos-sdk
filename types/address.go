@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tendermint/tendermint/crypto"
 	yaml "gopkg.in/yaml.v2"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
@@ -445,7 +445,7 @@ func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
 }
 
 // get ConsAddress from pubkey
-func GetConsAddress(pubkey crypto.PubKey) ConsAddress {
+func GetConsAddress(pubkey cryptotypes.PubKey) ConsAddress {
 	return ConsAddress(pubkey.Address())
 }
 

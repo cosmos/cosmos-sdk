@@ -1736,31 +1736,31 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Channel_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Channel_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Channels_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"ibc", "channel", "v1beta1", "channels"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Channels_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"ibc", "core", "channel", "v1beta1", "channels"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ConnectionChannels_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"ibc", "channel", "v1beta1", "connections", "connection", "channels"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ConnectionChannels_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"ibc", "core", "channel", "v1beta1", "connections", "connection", "channels"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ChannelClientState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "client_state"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ChannelClientState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "client_state"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ChannelConsensusState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 2, 8, 1, 0, 4, 1, 5, 9, 2, 10, 1, 0, 4, 1, 5, 11}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "consensus_state", "version", "version_number", "height", "version_height"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ChannelConsensusState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 2, 9, 1, 0, 4, 1, 5, 10, 2, 11, 1, 0, 4, 1, 5, 12}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "consensus_state", "version", "version_number", "height", "version_height"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_PacketCommitment_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments", "sequence"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_PacketCommitment_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments", "sequence"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_PacketCommitments_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_PacketCommitments_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_PacketReceipt_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_receipts", "sequence"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_PacketReceipt_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_receipts", "sequence"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_PacketAcknowledgement_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_acks", "sequence"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_PacketAcknowledgement_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_acks", "sequence"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_PacketAcknowledgements_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_acknowledgements"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_PacketAcknowledgements_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_acknowledgements"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_UnreceivedPackets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments", "packet_commitment_sequences", "unreceived_packets"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_UnreceivedPackets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9, 2, 10}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments", "packet_commitment_sequences", "unreceived_packets"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_UnreceivedAcks_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments", "packet_ack_sequences", "unreceived_acks"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_UnreceivedAcks_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9, 2, 10}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments", "packet_ack_sequences", "unreceived_acks"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_NextSequenceReceive_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "next_sequence"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_NextSequenceReceive_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "next_sequence"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

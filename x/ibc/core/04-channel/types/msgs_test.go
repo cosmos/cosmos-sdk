@@ -93,9 +93,10 @@ func (suite *TypesTestSuite) SetupTest() {
 		Prove: true,
 	})
 
-	merkleProof := commitmenttypes.MerkleProof{Proof: res.ProofOps}
+	merkleProof, err := commitmenttypes.ConvertProofs(res.ProofOps)
+	suite.Require().NoError(err)
 	proof, err := app.AppCodec().MarshalBinaryBare(&merkleProof)
-	suite.NoError(err)
+	suite.Require().NoError(err)
 
 	suite.proof = proof
 }
@@ -105,6 +106,9 @@ func TestTypesTestSuite(t *testing.T) {
 }
 
 func (suite *TypesTestSuite) TestMsgChannelOpenInitValidateBasic() {
+	counterparty := types.NewCounterparty(cpportid, cpchanid)
+	tryOpenChannel := types.NewChannel(types.TRYOPEN, types.ORDERED, counterparty, connHops, version)
+
 	testCases := []struct {
 		name    string
 		msg     *types.MsgChannelOpenInit
@@ -125,6 +129,7 @@ func (suite *TypesTestSuite) TestMsgChannelOpenInitValidateBasic() {
 		{"", types.NewMsgChannelOpenInit(portid, chanid, "", types.UNORDERED, connHops, cpportid, cpchanid, addr), true},
 		{"invalid counterparty port id", types.NewMsgChannelOpenInit(portid, chanid, version, types.UNORDERED, connHops, invalidPort, cpchanid, addr), false},
 		{"invalid counterparty channel id", types.NewMsgChannelOpenInit(portid, chanid, version, types.UNORDERED, connHops, cpportid, invalidChannel, addr), false},
+		{"channel not in INIT state", &types.MsgChannelOpenInit{portid, chanid, tryOpenChannel, addr.String()}, false},
 	}
 
 	for _, tc := range testCases {
@@ -142,6 +147,9 @@ func (suite *TypesTestSuite) TestMsgChannelOpenInitValidateBasic() {
 }
 
 func (suite *TypesTestSuite) TestMsgChannelOpenTryValidateBasic() {
+	counterparty := types.NewCounterparty(cpportid, cpchanid)
+	initChannel := types.NewChannel(types.INIT, types.ORDERED, counterparty, connHops, version)
+
 	testCases := []struct {
 		name    string
 		msg     *types.MsgChannelOpenTry
@@ -167,6 +175,7 @@ func (suite *TypesTestSuite) TestMsgChannelOpenTryValidateBasic() {
 		{"empty proof", types.NewMsgChannelOpenTry(portid, chanid, chanid, version, types.UNORDERED, connHops, cpportid, cpchanid, version, emptyProof, height, addr), false},
 		{"valid empty proved channel id", types.NewMsgChannelOpenTry(portid, chanid, "", version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), true},
 		{"invalid proved channel id, doesn't match channel id", types.NewMsgChannelOpenTry(portid, chanid, "differentchannel", version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
+		{"channel not in TRYOPEN state", &types.MsgChannelOpenTry{portid, chanid, chanid, initChannel, version, suite.proof, height, addr.String()}, false},
 	}
 
 	for _, tc := range testCases {
@@ -324,7 +333,7 @@ func (suite *TypesTestSuite) TestMsgRecvPacketValidateBasic() {
 		msg     *types.MsgRecvPacket
 		expPass bool
 	}{
-		{"", types.NewMsgRecvPacket(packet, suite.proof, height, addr), true},
+		{"success", types.NewMsgRecvPacket(packet, suite.proof, height, addr), true},
 		{"proof height is zero", types.NewMsgRecvPacket(packet, suite.proof, clienttypes.ZeroHeight(), addr), false},
 		{"proof contain empty proof", types.NewMsgRecvPacket(packet, emptyProof, height, addr), false},
 		{"missing signer address", types.NewMsgRecvPacket(packet, suite.proof, height, emptyAddr), false},
@@ -360,8 +369,9 @@ func (suite *TypesTestSuite) TestMsgTimeoutValidateBasic() {
 		msg     *types.MsgTimeout
 		expPass bool
 	}{
-		{"", types.NewMsgTimeout(packet, 1, suite.proof, height, addr), true},
+		{"success", types.NewMsgTimeout(packet, 1, suite.proof, height, addr), true},
 		{"proof height must be > 0", types.NewMsgTimeout(packet, 1, suite.proof, clienttypes.ZeroHeight(), addr), false},
+		{"seq 0", types.NewMsgTimeout(packet, 0, suite.proof, height, addr), false},
 		{"missing signer address", types.NewMsgTimeout(packet, 1, suite.proof, height, emptyAddr), false},
 		{"cannot submit an empty proof", types.NewMsgTimeout(packet, 1, emptyProof, height, addr), false},
 		{"invalid packet", types.NewMsgTimeout(invalidPacket, 1, suite.proof, height, addr), false},
@@ -389,6 +399,7 @@ func (suite *TypesTestSuite) TestMsgTimeoutOnCloseValidateBasic() {
 		expPass bool
 	}{
 		{"success", types.NewMsgTimeoutOnClose(packet, 1, suite.proof, suite.proof, height, addr), true},
+		{"seq 0", types.NewMsgTimeoutOnClose(packet, 0, suite.proof, suite.proof, height, addr), false},
 		{"empty proof", types.NewMsgTimeoutOnClose(packet, 1, emptyProof, suite.proof, height, addr), false},
 		{"empty proof close", types.NewMsgTimeoutOnClose(packet, 1, suite.proof, emptyProof, height, addr), false},
 		{"proof height is zero", types.NewMsgTimeoutOnClose(packet, 1, suite.proof, suite.proof, clienttypes.ZeroHeight(), addr), false},
@@ -417,8 +428,9 @@ func (suite *TypesTestSuite) TestMsgAcknowledgementValidateBasic() {
 		msg     *types.MsgAcknowledgement
 		expPass bool
 	}{
-		{"", types.NewMsgAcknowledgement(packet, packet.GetData(), suite.proof, height, addr), true},
+		{"success", types.NewMsgAcknowledgement(packet, packet.GetData(), suite.proof, height, addr), true},
 		{"proof height must be > 0", types.NewMsgAcknowledgement(packet, packet.GetData(), suite.proof, clienttypes.ZeroHeight(), addr), false},
+		{"empty ack", types.NewMsgAcknowledgement(packet, nil, suite.proof, height, addr), false},
 		{"missing signer address", types.NewMsgAcknowledgement(packet, packet.GetData(), suite.proof, height, emptyAddr), false},
 		{"cannot submit an empty proof", types.NewMsgAcknowledgement(packet, packet.GetData(), emptyProof, height, addr), false},
 		{"invalid packet", types.NewMsgAcknowledgement(invalidPacket, packet.GetData(), suite.proof, height, addr), false},

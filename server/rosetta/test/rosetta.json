@@ -1,7 +1,7 @@
 {
   "network": {
-    "blockchain": "cosmos",
-    "network": "test_network"
+    "blockchain": "app",
+    "network": "network"
   },
   "online_url": "http://localhost:8080",
   "data_directory": "",

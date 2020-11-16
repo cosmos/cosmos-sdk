@@ -1,6 +1,8 @@
 package keyring
 
 import (
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/internal/protocdc"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
 )
@@ -20,13 +22,17 @@ type KeyOutput struct {
 }
 
 // NewKeyOutput creates a default KeyOutput instance without Mnemonic, Threshold and PubKeys
-func NewKeyOutput(name, keyType, address, pubkey string) KeyOutput {
+func NewKeyOutput(name string, keyType KeyType, a sdk.Address, pk cryptotypes.PubKey) (KeyOutput, error) {
+	pkBytes, err := protocdc.MarshalJSON(pk, nil)
+	if err != nil {
+		return KeyOutput{}, err
+	}
 	return KeyOutput{
 		Name:    name,
-		Type:    keyType,
-		Address: address,
-		PubKey:  pubkey,
-	}
+		Type:    keyType.String(),
+		Address: a.String(),
+		PubKey:  string(pkBytes),
+	}, nil
 }
 
 type multisigPubKeyOutput struct {
@@ -60,7 +66,7 @@ func Bech32ConsKeyOutput(keyInfo Info) (KeyOutput, error) {
 		return KeyOutput{}, err
 	}
 
-	return NewKeyOutput(keyInfo.GetName(), keyInfo.GetType().String(), consAddr.String(), bechPubKey), nil
+	return NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), consAddr, bechPubKey)
 }
 
 // Bech32ValKeyOutput create a KeyOutput in with "val" Bech32 prefixes.
@@ -72,7 +78,7 @@ func Bech32ValKeyOutput(keyInfo Info) (KeyOutput, error) {
 		return KeyOutput{}, err
 	}
 
-	return NewKeyOutput(keyInfo.GetName(), keyInfo.GetType().String(), valAddr.String(), bechPubKey), nil
+	return NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), valAddr, bechPubKey)
 }
 
 // Bech32KeyOutput create a KeyOutput in with "acc" Bech32 prefixes. If the
@@ -85,7 +91,10 @@ func Bech32KeyOutput(keyInfo Info) (KeyOutput, error) {
 		return KeyOutput{}, err
 	}
 
-	ko := NewKeyOutput(keyInfo.GetName(), keyInfo.GetType().String(), accAddr.String(), bechPubKey)
+	ko, err := NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), accAddr, bechPubKey)
+	if err != nil {
+		return KeyOutput{}, err
+	}
 
 	if mInfo, ok := keyInfo.(*multiInfo); ok {
 		pubKeys := make([]multisigPubKeyOutput, len(mInfo.PubKeys))

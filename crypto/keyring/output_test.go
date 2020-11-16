@@ -9,20 +9,21 @@ import (
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
 )
 
 func TestBech32KeysOutput(t *testing.T) {
+	// TODO - update this test to not use bech32
+
 	tmpKey := secp256k1.GenPrivKey().PubKey()
-	bechTmpKey := legacybech32.MustBech32ifyPubKey(legacybech32.Bech32PubKeyTypeAccPub, tmpKey)
 	tmpAddr := sdk.AccAddress(tmpKey.Address().Bytes())
 
 	multisigPks := kmultisig.NewLegacyAminoPubKey(1, []crypto.PubKey{tmpKey})
 	multiInfo := NewMultiInfo("multisig", multisigPks)
 	accAddr := sdk.AccAddress(multiInfo.GetPubKey().Address().Bytes())
-	bechPubKey := legacybech32.MustBech32ifyPubKey(legacybech32.Bech32PubKeyTypeAccPub, multiInfo.GetPubKey())
+	require.True(t, accAddr.Equals(tmpAddr))
 
-	expectedOutput := NewKeyOutput(multiInfo.GetName(), multiInfo.GetType().String(), accAddr.String(), bechPubKey)
+	expectedOutput, err := NewKeyOutput(multiInfo.GetName(), multiInfo.GetType(), accAddr, tmpKey)
+	require.NoError(t, err)
 	expectedOutput.Threshold = 1
 	expectedOutput.PubKeys = []multisigPubKeyOutput{{tmpAddr.String(), bechTmpKey, 1}}
 

@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/internal/protocdc"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
 )
 
 func TestErrorHandling(t *testing.T) {
@@ -32,7 +33,7 @@ func TestPublicKeyUnsafe(t *testing.T) {
 		fmt.Sprintf("%x", cdc.Amino.MustMarshalBinaryBare(priv.PubKey())),
 		"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
-	out, err := protocdc.MarshalJSON(pk, nil)
+	out, err := protocdc.MarshalJSON(priv.PubKey(), nil)
 	require.NoError(t, err)
 	// TODO:  require.Equal(t, out, ...)
 	fmt.Println("TODO ledger_test.go", out)
@@ -74,7 +75,7 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 		tmp := priv.(PrivKeyLedgerSecp256k1)
 		(&tmp).AssertIsPrivKeyInner()
 
-		pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
+		pubKeyAddr, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeAccPub, priv.PubKey())
 		require.NoError(t, err)
 		require.Equal(t,
 			expectedAnswers[i], pubKeyAddr,
@@ -110,7 +111,7 @@ func TestPublicKeySafe(t *testing.T) {
 		fmt.Sprintf("%x", cdc.Amino.MustMarshalBinaryBare(priv.PubKey())),
 		"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
-	pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
+	pubKeyAddr, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeAccPub, priv.PubKey())
 	require.NoError(t, err)
 	require.Equal(t, "cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0",
 		pubKeyAddr, "Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
@@ -174,7 +175,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 		tmp := priv.(PrivKeyLedgerSecp256k1)
 		(&tmp).AssertIsPrivKeyInner()
 
-		pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
+		pubKeyAddr, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeAccPub, priv.PubKey())
 		require.NoError(t, err)
 		require.Equal(t,
 			expectedPubKeys[i], pubKeyAddr,

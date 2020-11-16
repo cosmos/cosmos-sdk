@@ -49,7 +49,7 @@ func TestDecodeStore(t *testing.T) {
 	}{
 		{"ValidatorSigningInfo", fmt.Sprintf("%v\n%v", info, info)},
 		{"ValidatorMissedBlockBitArray", fmt.Sprintf("missedA: %v\nmissedB: %v", missed.Value, missed.Value)},
-		{"AddrPubkeyRelation", fmt.Sprintf("PubKeyA: %s\nPubKeyB: %s", bechPK, bechPK)},
+		{"AddrPubkeyRelation", fmt.Sprintf("PubKeyA: %s\nPubKeyB: %s", delPk1Proto, delPk1Proto)},
 		{"other", ""},
 	}
 	for i, tt := range tests {

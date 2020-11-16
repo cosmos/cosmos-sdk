@@ -543,7 +543,7 @@ func getPKString(g getPK) (string, error) {
 		// TODO check if it's ok to change a type of ValidatorOutput.PubKey to crypto.PubKey
 		pk, err := protocdc.MarshalJSON(pk, nil)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 		return string(pk), err
 	}

@@ -233,5 +233,4 @@ func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
 func TestMarshalYAML(t *testing.T) {
 	privKey := ed25519.GenPrivKey()
 	pubKey := privKey.PubKey()
-
 }

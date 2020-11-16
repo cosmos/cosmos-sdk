@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -298,6 +298,7 @@ $ %s tx staking unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from
 	return cmd
 }
 
+// NewBuildCreateValidatorMsg constructs a CreateValidatorMsg
 func NewBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
 	fAmount, _ := fs.GetString(FlagAmount)
 	amount, err := sdk.ParseCoin(fAmount)
@@ -306,10 +307,13 @@ func NewBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 	}
 
 	valAddr := clientCtx.GetFromAddress()
-	pkStr, _ := fs.GetString(FlagPubKey)
-
-	pk, err := legacybech32.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, pkStr)
+	pkStr, err := fs.GetString(FlagPubKey)
 	if err != nil {
+		return txf, nil, err
+	}
+
+	var pk cryptotypes.PubKey
+	if err := clientCtx.JSONMarshaler.UnmarshalJSON([]byte(pkStr), pk); err != nil {
 		return txf, nil, err
 	}
 

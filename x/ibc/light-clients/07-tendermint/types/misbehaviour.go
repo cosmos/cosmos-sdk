@@ -111,27 +111,19 @@ func (misbehaviour Misbehaviour) ValidateBasic() error {
 	if bytes.Equal(blockID1.Hash, blockID2.Hash) {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "headers block hashes are equal")
 	}
-	if err := ValidCommit(misbehaviour.Header1.Header.ChainID, misbehaviour.Header1.Commit, misbehaviour.Header1.ValidatorSet); err != nil {
+	if err := validCommit(misbehaviour.Header1.Header.ChainID, *blockID1,
+		misbehaviour.Header1.Commit, misbehaviour.Header1.ValidatorSet); err != nil {
 		return err
 	}
-	if err := ValidCommit(misbehaviour.Header2.Header.ChainID, misbehaviour.Header2.Commit, misbehaviour.Header2.ValidatorSet); err != nil {
+	if err := validCommit(misbehaviour.Header2.Header.ChainID, *blockID2,
+		misbehaviour.Header2.Commit, misbehaviour.Header2.ValidatorSet); err != nil {
 		return err
 	}
 	return nil
 }
 
-// ValidCommit checks if the given commit is a valid commit from the passed-in validatorset
-//
-// CommitToVoteSet will panic if the commit cannot be converted to a valid voteset given the validatorset
-// This implies that someone tried to submit misbehaviour that wasn't actually committed by the validatorset
-// thus we should return an error here and reject the misbehaviour rather than panicing.
-func ValidCommit(chainID string, commit *tmproto.Commit, valSet *tmproto.ValidatorSet) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour, "invalid commit: %v", r)
-		}
-	}()
-
+// validCommit checks if the given commit is a valid commit from the passed-in validatorset
+func validCommit(chainID string, blockID tmtypes.BlockID, commit *tmproto.Commit, valSet *tmproto.ValidatorSet) (err error) {
 	tmCommit, err := tmtypes.CommitFromProto(commit)
 	if err != nil {
 		return sdkerrors.Wrap(err, "commit is not tendermint commit type")
@@ -141,13 +133,7 @@ func ValidCommit(chainID string, commit *tmproto.Commit, valSet *tmproto.Validat
 		return sdkerrors.Wrap(err, "validator set is not tendermint validator set type")
 	}
 
-	// Convert commits to vote-sets given the validator set so we can check if they both have 2/3 power
-	voteSet := tmtypes.CommitToVoteSet(chainID, tmCommit, tmValset)
-
-	blockID, ok := voteSet.TwoThirdsMajority()
-
-	// Check that ValidatorSet did indeed commit to blockID hash in Commit
-	if !ok || !bytes.Equal(blockID.Hash, tmCommit.BlockID.Hash) {
+	if err := tmValset.VerifyCommitLight(chainID, blockID, tmCommit.Height, tmCommit); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "validator set did not commit to header")
 	}
 

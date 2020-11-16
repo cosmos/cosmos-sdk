@@ -213,18 +213,17 @@ jobs:
       - name: start rosetta
         # if: env.GIT_DIFF
         run: |
-          docker network ls
-          docker container ls
           docker build -t rosetta:latest -f server/rosetta/Dockerfile .
           docker run -d --network="cosmos-sdk_localnet" -p 8080:8080 rosetta:latest ./simd rosetta --tendermint="192.168.10.2:26657" --grpc="192.168.10.2:9090"
       - name: check data API
         # if: env.GIT_DIFF
         run: |
-          ./bin/rosetta-cli check:data
+          cat rosetta.conf
+          ./bin/rosetta-cli check:data --configuration-file ./rosetta.conf
       - name: check construction API
         # if: env.GIT_DIFF
         run: |
-          ./bin/rosetta-cli check:construction
+          ./bin/rosetta-cli check:construction --configuration-file ./rosetta.conf
 
   race-detector-report:
     runs-on: ubuntu-latest

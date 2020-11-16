@@ -2,6 +2,8 @@ package conversion
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -65,7 +67,7 @@ func ResultTxSearchToTransaction(txs []*rosetta.SdkTxWithHash) []*types.Transact
 
 // SdkTxResponseToOperations converts a tx response to operations
 func SdkTxToOperations(tx sdk.Tx, hasError, withoutStatus bool) []*types.Operation {
-	return toOperations(tx.GetMsgs(), hasError, withoutStatus)
+	return ToOperations(tx.GetMsgs(), hasError, withoutStatus)
 }
 
 // TendermintTxsToTxIdentifiers converts a tendermint raw transaction into a rosetta tx identifier
@@ -85,7 +87,7 @@ func TendermintBlockToBlockIdentifier(block *tmcoretypes.ResultBlock) *types.Blo
 	}
 }
 
-func toOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) []*types.Operation {
+func ToOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) []*types.Operation {
 	var operations []*types.Operation
 	for i, msg := range msgs {
 		switch msg.Type() { // nolint
@@ -130,6 +132,41 @@ func toOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) []*types.Op
 		}
 	}
 	return operations
+}
+
+// GetTransferTxDataFromOperations extracts the from and to addresses from a list of operations.
+// We assume that it comes formated in the correct way. And that the balance of the sender is the same
+// as the receiver operations.
+func GetTransferTxDataFromOperations(ops []*types.Operation) (*banktypes.MsgSend, error) {
+	var (
+		from, to sdk.AccAddress
+		sendAmt  sdk.Coin
+		err      error
+	)
+
+	for _, op := range ops {
+		if strings.HasPrefix(op.Amount.Value, "-") {
+			from, err = sdk.AccAddressFromBech32(op.Account.Address)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			to, err = sdk.AccAddressFromBech32(op.Account.Address)
+			if err != nil {
+				return nil, err
+			}
+
+			amount, err := strconv.ParseInt(op.Amount.Value, 10, 64)
+			if err != nil {
+				return nil, fmt.Errorf("invalid amount")
+			}
+
+			sendAmt = sdk.NewCoin(op.Amount.Currency.Symbol, sdk.NewInt(amount))
+		}
+	}
+
+	msg := banktypes.NewMsgSend(from, to, sdk.NewCoins(sendAmt))
+	return msg, nil
 }
 
 // TmPeersToRosettaPeers converts tendermint peers to rosetta ones

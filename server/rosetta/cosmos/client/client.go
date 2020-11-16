@@ -64,7 +64,7 @@ type Client struct {
 
 	ir codectypes.InterfaceRegistry
 
-	client client.Context
+	clientCtx client.Context
 }
 
 // NewSingle instantiates a single network client
@@ -86,15 +86,16 @@ func NewSingle(grpcEndpoint, tendermintEndpoint string, optsFunc ...OptionFunc) 
 
 	authClient := auth.NewQueryClient(grpcConn)
 	bankClient := bank.NewQueryClient(grpcConn)
+
 	// NodeURI and Client are set from here otherwise
 	// WitNodeURI will require to create a new client
 	// it's done here because WithNodeURI panics if
 	// connection to tendermint node fails
-	clientContext := client.Context{
+	clientCtx := client.Context{
 		Client:  tmRPC,
 		NodeURI: tendermintEndpoint,
 	}
-	clientContext = clientContext.
+	clientCtx = clientCtx.
 		WithJSONMarshaler(opts.cdc).
 		WithInterfaceRegistry(opts.interfaceRegistry).
 		WithTxConfig(tx.NewTxConfig(opts.cdc, tx.DefaultSignModes)).
@@ -102,11 +103,34 @@ func NewSingle(grpcEndpoint, tendermintEndpoint string, optsFunc ...OptionFunc) 
 		WithBroadcastMode(flags.BroadcastBlock)
 
 	return &Client{
-		auth:   authClient,
-		bank:   bankClient,
-		client: clientContext,
-		ir:     opts.interfaceRegistry,
+		auth:      authClient,
+		bank:      bankClient,
+		clientCtx: clientCtx,
+		ir:        opts.interfaceRegistry,
 	}, nil
+}
+
+func (c *Client) AccountInfo(ctx context.Context, addr string, height *int64) (auth.AccountI, error) {
+	// if height is set, send height instruction to account
+	if height != nil {
+		strHeight := strconv.FormatInt(*height, 10)
+		ctx = metadata.AppendToOutgoingContext(ctx, grpctypes.GRPCBlockHeightHeader, strHeight)
+	}
+	// retrieve account info
+	accountInfo, err := c.auth.Account(ctx, &auth.QueryAccountRequest{
+		Address: addr,
+	})
+	if err != nil {
+		return nil, rosetta.FromGRPCToRosettaError(err)
+	}
+	// success
+	var account auth.AccountI
+	err = c.ir.UnpackAny(accountInfo.Account, &account)
+	if err != nil {
+		return nil, rosetta.WrapError(rosetta.ErrCodec, err.Error())
+	}
+
+	return account, nil
 }
 
 func (c *Client) Balances(ctx context.Context, addr string, height *int64) ([]sdk.Coin, error) {
@@ -130,7 +154,7 @@ func (c *Client) BlockByHash(ctx context.Context, hash string) (*tmtypes.ResultB
 		return nil, nil, rosetta.WrapError(rosetta.ErrBadArgument, fmt.Sprintf("invalid block hash: %s", err))
 	}
 
-	block, err := c.client.Client.BlockByHash(ctx, bHash)
+	block, err := c.clientCtx.Client.BlockByHash(ctx, bHash)
 	if err != nil {
 		return nil, nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error()) // can be either a connection error or bad argument?
 	}
@@ -144,7 +168,7 @@ func (c *Client) BlockByHash(ctx context.Context, hash string) (*tmtypes.ResultB
 
 // BlockByHeight returns the block and the transactions contained inside it given its height
 func (c *Client) BlockByHeight(ctx context.Context, height *int64) (*tmtypes.ResultBlock, []*rosetta.SdkTxWithHash, error) {
-	block, err := c.client.Client.Block(ctx, height)
+	block, err := c.clientCtx.Client.Block(ctx, height)
 	if err != nil {
 		return nil, nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
 	}
@@ -167,12 +191,12 @@ func (c *Client) Coins(ctx context.Context) (sdk.Coins, error) {
 // ListTransactionsInBlock returns the list of the transactions in a block given its height
 func (c *Client) ListTransactionsInBlock(ctx context.Context, height int64) ([]*rosetta.SdkTxWithHash, error) {
 	txQuery := fmt.Sprintf(`tx.height=%d`, height)
-	txList, err := c.client.Client.TxSearch(ctx, txQuery, true, nil, nil, "")
+	txList, err := c.clientCtx.Client.TxSearch(ctx, txQuery, true, nil, nil, "")
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
 	}
 
-	sdkTxs, err := conversion.TmResultTxsToSdkTxs(c.client.TxConfig.TxDecoder(), txList.Txs)
+	sdkTxs, err := conversion.TmResultTxsToSdkTxs(c.clientCtx.TxConfig.TxDecoder(), txList.Txs)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +205,7 @@ func (c *Client) ListTransactionsInBlock(ctx context.Context, height int64) ([]*
 
 // GetTx returns a transaction given its hash
 func (c *Client) GetTx(_ context.Context, hash string) (sdk.Tx, error) {
-	txResp, err := authclient.QueryTx(c.client, hash)
+	txResp, err := authclient.QueryTx(c.clientCtx, hash)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
 	}
@@ -201,7 +225,7 @@ func (c *Client) GetUnconfirmedTx(_ context.Context, hash string) (sdk.Tx, error
 
 // Mempool returns the unconfirmed transactions in the mempool
 func (c *Client) Mempool(ctx context.Context) (*tmtypes.ResultUnconfirmedTxs, error) {
-	txs, err := c.client.Client.UnconfirmedTxs(ctx, nil)
+	txs, err := c.clientCtx.Client.UnconfirmedTxs(ctx, nil)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
 	}
@@ -210,7 +234,7 @@ func (c *Client) Mempool(ctx context.Context) (*tmtypes.ResultUnconfirmedTxs, er
 
 // Peers gets the number of peers
 func (c *Client) Peers(ctx context.Context) ([]tmtypes.Peer, error) {
-	netInfo, err := c.client.Client.NetInfo(ctx)
+	netInfo, err := c.clientCtx.Client.NetInfo(ctx)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
 	}
@@ -218,9 +242,17 @@ func (c *Client) Peers(ctx context.Context) ([]tmtypes.Peer, error) {
 }
 
 func (c *Client) Status(ctx context.Context) (*tmtypes.ResultStatus, error) {
-	status, err := c.client.Client.Status(ctx)
+	status, err := c.clientCtx.Client.Status(ctx)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
 	}
 	return status, err
+}
+
+func (c *Client) GetTxConfig() client.TxConfig {
+	return c.clientCtx.TxConfig
+}
+
+func (c *Client) PostTx(txBytes []byte) (res *sdk.TxResponse, err error) {
+	return c.clientCtx.BroadcastTx(txBytes)
 }

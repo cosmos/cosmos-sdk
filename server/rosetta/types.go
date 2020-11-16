@@ -8,13 +8,21 @@ import (
 	"github.com/tendermint/cosmos-rosetta-gateway/service"
 	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // list of supported operations
 const (
 	StatusReverted = "Reverted"
 	StatusSuccess  = "Success"
+	OptionAddress  = "address"
+	OptionGas      = "gas"
+	OptionMemo     = "memo"
+	Sequence       = "sequence"
+	AccountNumber  = "account_number"
+	ChainID        = "chain_id"
 	OperationSend  = "send"
 )
 
@@ -30,6 +38,7 @@ func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter)
 		Properties: crg.NetworkProperties{
 			Blockchain:          networkIdentifier.Blockchain,
 			Network:             networkIdentifier.Network,
+			AddrPrefix:          sdk.GetConfig().GetBech32AccountAddrPrefix(), // since we're inside cosmos sdk the config is supposed to be sealed
 			SupportedOperations: []string{OperationSend},
 		},
 		Adapter: adapter,
@@ -46,6 +55,7 @@ type SdkTxWithHash struct {
 // a client has to implement in order to
 // interact with cosmos-sdk chains
 type DataAPIClient interface {
+	AccountInfo(ctx context.Context, addr string, height *int64) (auth.AccountI, error)
 	// Balances fetches the balance of the given address
 	// if height is not nil, then the balance will be displayed
 	// at the provided height, otherwise last block balance will be returned
@@ -67,6 +77,8 @@ type DataAPIClient interface {
 	Peers(ctx context.Context) ([]tmtypes.Peer, error)
 	// Status returns the node status, such as sync data, version etc
 	Status(ctx context.Context) (*tmtypes.ResultStatus, error)
+	GetTxConfig() client.TxConfig
+	PostTx(txBytes []byte) (res *sdk.TxResponse, err error)
 }
 
 // Version returns the version for rosetta

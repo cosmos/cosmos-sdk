@@ -7,8 +7,8 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
-	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -29,10 +29,8 @@ func TestPublicKeyUnsafe(t *testing.T) {
 	require.Nil(t, err, "%s", err)
 	require.NotNil(t, priv)
 
-	bs, err := proto.Marshal(priv.PubKey())
-	require.NoError(t, err)
-	require.Equal(t, "eb5ae98721034fef9cd7c4c63588d3b03feb5281b9d232cba34d6f3d71aee59211ffbfe1fe87",
-		fmt.Sprintf("%x", bs),
+	require.Equal(t, "034fef9cd7c4c63588d3b03feb5281b9d232cba34d6f3d71aee59211ffbfe1fe87",
+		fmt.Sprintf("%x", priv.PubKey().Bytes()),
 		"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
 	pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
@@ -85,7 +83,7 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 		// Store and restore
 		serializedPk := priv.Bytes()
 		require.NotNil(t, serializedPk)
-		require.True(t, len(serializedPk) >= 50)
+		require.True(t, len(serializedPk) >= 40)
 
 		privKeys[i] = priv
 	}
@@ -108,10 +106,8 @@ func TestPublicKeySafe(t *testing.T) {
 
 	require.Nil(t, ledger.ShowAddress(path, priv.PubKey(), sdk.GetConfig().GetBech32AccountAddrPrefix()))
 
-	bs, err := proto.Marshal(priv.PubKey())
-	require.NoError(t, err)
-	require.Equal(t, "eb5ae98721034fef9cd7c4c63588d3b03feb5281b9d232cba34d6f3d71aee59211ffbfe1fe87",
-		fmt.Sprintf("%x", bs),
+	require.Equal(t, "034fef9cd7c4c63588d3b03feb5281b9d232cba34d6f3d71aee59211ffbfe1fe87",
+		fmt.Sprintf("%x", priv.PubKey().Bytes()),
 		"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
 	pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
@@ -243,11 +239,12 @@ func TestRealDeviceSecp256k1(t *testing.T) {
 	// now, let's serialize the public key and make sure it still works
 	bs, err := proto.Marshal(priv.PubKey())
 	require.NoError(t, err)
-	pub2, err := cryptoAmino.PubKeyFromBytes(bs)
+	var pub2 secp256k1.PubKey
+	err = proto.Unmarshal(bs, &pub2)
 	require.Nil(t, err, "%+v", err)
 
 	// make sure we get the same pubkey when we load from disk
-	require.Equal(t, pub, pub2)
+	require.Equal(t, pub, &pub2)
 
 	// signing with the loaded key should match the original pubkey
 	sig, err = priv.Sign(msg)
@@ -258,7 +255,8 @@ func TestRealDeviceSecp256k1(t *testing.T) {
 	// make sure pubkeys serialize properly as well
 	bs, err = proto.Marshal(pub)
 	require.NoError(t, err)
-	bpub, err := cryptoAmino.PubKeyFromBytes(bs)
+	var bpub secp256k1.PubKey
+	err = proto.Unmarshal(bs, &bpub)
 	require.NoError(t, err)
-	require.Equal(t, pub, bpub)
+	require.Equal(t, pub, &bpub)
 }

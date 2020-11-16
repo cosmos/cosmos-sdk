@@ -14,6 +14,8 @@ This document describes the state transition operations pertaining to:
 State transitions in validators are performed on every [`EndBlock`](./05_end_block.md#validator-set-changes) 
 in order to check for changes in the active `ValidatorSet`.
 
+Thoughts: On Every EndBlock, only Jail / slashing should take effect and other changes should take effect on every epoching.
+
 ### Unbonded to Bonded
 
 The following transition occurs when a validator's ranking in the `ValidatorPowerIndex` surpasses 
@@ -26,6 +28,8 @@ that of the `LastValidator`.
 - update the `Validator` object for this validator
 - if it exists, delete any `ValidatorQueue` record for this validator
 
+Thoughts: take effect on epoching
+
 ### Bonded to Unbonding
 
 When a validator begins the unbonding process the following operations occur:
@@ -36,6 +40,8 @@ When a validator begins the unbonding process the following operations occur:
 - add a new updated record to the `ValidatorByPowerIndex`
 - update the `Validator` object for this validator
 - insert a new record into the `ValidatorQueue` for this validator
+
+Thoughts: Validator could stop his node at time of unbonding and we could remove validator from validator set instantly.
 
 ### Unbonding to Unbonded
 
@@ -68,6 +74,8 @@ When a delegation occurs both the validator and the delegation objects are affec
 - delete the existing record from `ValidatorByPowerIndex`
 - add an new updated record to the `ValidatorByPowerIndex`
 
+Thoughts: We could manage `BondedPool` and `StagingBondedPool` for epoching. `StagingBondedPool` should take effect instantly as current staking module does for `BondedPool`.
+
 ### Begin Unbonding
 
 As a part of the Undelegate and Complete Unbonding state transitions Unbond
@@ -92,6 +100,8 @@ occur when the unbonding delegation queue element matures:
 - remove the entry from the `UnbondingDelegation` object
 - transfer the tokens from the `NotBondedPool` `ModuleAccount` to the delegator `Account`
 
+Thoughts: Complete unbonding should take effect on epoching but transition from bonded to unbonding could take effect instantly.
+
 ### Begin Redelegation
 
 Redelegations affect the delegation, source and destination validators.
@@ -103,6 +113,8 @@ Redelegations affect the delegation, source and destination validators.
 - otherwise, if the `sourceValidator.Status` is not `Bonded`, and the `destinationValidator` 
   is `Bonded`, transfer the newly delegated tokens from the `NotBondedPool` to the `BondedPool` `ModuleAccount`
 - record the token amount in an new entry in the relevant `Redelegation`
+
+Thoughts: This take effect on every epoching, process could be same except adding `StagingBondedPool`, `StagingNotBondedPool`.
 
 ### Complete Redelegation
 
@@ -124,6 +136,9 @@ percentage of the initialBalance.
 total slash amount.
 - The `remaingSlashAmount` is then slashed from the validator's tokens in the `BondedPool` or
 `NonBondedPool` depending on the validator's status. This reduces the total supply of tokens.
+
+Thoughts: For slashingAmount, `StagingBondedPool` or `StagingNonBondedPool` could take effect and this could take actual effect on epoching.
+Not sure about how slashing, jail are related each other.
 
 ### Slash Unbonding Delegation
 

@@ -84,6 +84,10 @@ for vote in block.LastCommitInfo.Votes {
     Slash(vote.Validator.Address, distributionHeight, vote.Validator.Power, SlashFractionDowntime())
     Jail(vote.Validator.Address)
 
+    // Thoughts:
+    // How Slash and Jail function implementation look like? Is it as part of slashing module?
+    // How Jail/Slash/Unjail (slashing), Bond/Delegation (staking module) could be connected each other
+
     signInfo.JailedUntil = block.Time.Add(DowntimeJailDuration())
 
     // We need to reset the counter & array so that the validator won't be

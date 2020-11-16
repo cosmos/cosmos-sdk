@@ -24,6 +24,7 @@ type Params struct {
     MaxEntries    uint16        // max entries for either unbonding delegation or redelegation (per pair/trio)
     BondDenom     string        // bondable coin denomination
 }
+// Thoughts: Params are being modified by governance, validator update should be done on next epoching based on Params change.
 ```
 
 ## Validator
@@ -42,6 +43,11 @@ Validators can have one of three statuses
 - `Unbonding`: When a validator leaves the active set, either by choice or due to slashing or
   tombstoning, an unbonding of all their delegations begins. All delegations must then wait the UnbondingTime
   before moving receiving their tokens to their accounts from the `BondedPool`.
+
+Thoughts on validator status update: 
+- `Unbonded` status is set at initial validator creation as it is.
+- `Bonded` status is set on epoching process
+- `Unbonded` status could be set on each endblocker for slashing situation.
 
 Validators objects should be primarily stored and accessed by the
 `OperatorAddr`, an SDK validator address for the operator of the validator. Two
@@ -92,6 +98,24 @@ type Validator struct {
     MinSelfDelegation       sdk.Int         // validator's self declared minimum self delegation
 }
 
+//// Epoching change fields
+// MinSelfDelegation, Commission
+
+//// Endblocker change fields
+// Jailed, 
+
+//// Instant change fields
+// DelegatorShares, 
+
+//// Both epoching and Endblocker change fields
+// Status
+
+//// Should have staging fields
+// Tokens
+
+//// Not sure
+// UnbondingHeight, UnbondingCompletionTime
+
 type Commission struct {
     CommissionRates
     UpdateTime time.Time // the last time the commission rate was changed
@@ -130,6 +154,7 @@ type Delegation struct {
     ValidatorAddr sdk.ValAddress
     Shares        sdk.Dec        // delegation shares received
 }
+// Thought: Delegation should have both staging / current status
 ```
 
 ### Delegator Shares
@@ -184,6 +209,7 @@ type UnbondingDelegationEntry struct {
     InitialBalance sdk.Coin  // atoms initially scheduled to receive at completion
     Balance        sdk.Coin  // atoms to receive at completion
 }
+// Thought: UnbondingDelegation should take effect in epoching
 ```
 
 ## Redelegation
@@ -227,6 +253,8 @@ type RedelegationEntry struct {
     Balance        sdk.Coin  // current balance (current value held in destination validator)
     SharesDst      sdk.Dec   // amount of destination-validator shares created by redelegation
 }
+
+// Thought: Redelegation should take effect in epoching
 ```
 
 ## Queues

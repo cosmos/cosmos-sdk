@@ -32,6 +32,10 @@ type FeePool struct {
     Pool                       DecCoins // funds for all validators which have yet to be withdrawn
     CommunityPool              DecCoins // pool for community funds yet to be spent
 }
+
+// Thoughts: For withdrawing rewards
+// When withdrawal fees are modified? (on every block?) Is it on epoching or on each epoching?
+// we change validator set on epoching process except jail, but distribution logic could be working on every block.
 ```
 
 ## Validator Distribution

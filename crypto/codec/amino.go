@@ -3,12 +3,14 @@ package codec
 import (
 	"github.com/tendermint/tendermint/crypto"
 	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
+	tmsm2 "github.com/tendermint/tendermint/crypto/sm2"
 	"github.com/tendermint/tendermint/crypto/sr25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/sm2"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -36,6 +38,10 @@ func RegisterCrypto(cdc *codec.LegacyAmino) {
 		ed25519.PubKeyName, nil)
 	cdc.RegisterConcrete(&secp256k1.PubKey{},
 		secp256k1.PubKeyName, nil)
+	cdc.RegisterConcrete(tmsm2.PubKeySm2{},
+		tmsm2.PubKeyName, nil)
+	cdc.RegisterConcrete(&sm2.PubKey{},
+		sm2.PubKeyName, nil)
 	cdc.RegisterConcrete(&kmultisig.LegacyAminoPubKey{},
 		kmultisig.PubKeyAminoRoute, nil)
 
@@ -49,6 +55,10 @@ func RegisterCrypto(cdc *codec.LegacyAmino) {
 		ed25519.PrivKeyName, nil)
 	cdc.RegisterConcrete(&secp256k1.PrivKey{},
 		secp256k1.PrivKeyName, nil)
+	cdc.RegisterConcrete(sm2.PrivKey{},
+		sm2.PrivKeyName, nil)
+	cdc.RegisterConcrete(tmsm2.PrivKeySm2{},
+		tmsm2.PrivKeyName, nil)
 }
 
 // PrivKeyFromBytes unmarshals private key bytes and returns a PrivKey

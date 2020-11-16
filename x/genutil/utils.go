@@ -2,6 +2,7 @@ package genutil
 
 import (
 	"encoding/json"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"path/filepath"
 	"time"
 
@@ -11,8 +12,6 @@ import (
 	"github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/privval"
 	tmtypes "github.com/tendermint/tendermint/types"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 )
 
 // ExportGenesisFile creates and writes the genesis configuration to disk. An
@@ -70,7 +69,7 @@ func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey 
 		return "", nil, err
 	}
 
-	valPubKey, err = ed25519.FromTmEd25519(tmValPubKey)
+	valPubKey, err = keys.FromTmPubKey(tmValPubKey)
 	if err != nil {
 		return "", nil, err
 	}

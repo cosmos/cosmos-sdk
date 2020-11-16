@@ -114,16 +114,16 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 
 			acc := cgts.ak.GetAccount(ctx, signer)
 
-			// use placeholder simSecp256k1Pubkey if sig is nil
+			// use placeholder simSm2Pubkey if sig is nil
 			if acc == nil || acc.GetPubKey() == nil {
-				pubkey = simSecp256k1Pubkey
+				pubkey = simSm2Pubkey
 			} else {
 				pubkey = acc.GetPubKey()
 			}
 
 			// use stdsignature to mock the size of a full signature
 			simSig := legacytx.StdSignature{ //nolint:staticcheck // this will be removed when proto is ready
-				Signature: simSecp256k1Sig[:],
+				Signature: simSm2Sig[:],
 				PubKey:    pubkey,
 			}
 

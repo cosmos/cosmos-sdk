@@ -213,6 +213,8 @@ jobs:
       - name: start rosetta
         # if: env.GIT_DIFF
         run: |
+          docker network ls
+          docker container ls
           docker build -t rosetta:latest -f server/rosetta/Dockerfile .
           docker run -d --network="cosmos-sdk_localnet" -p 8080:8080 rosetta:latest ./simd rosetta --tendermint="simnode0:26657" --grpc="simnode0:9090"
       - name: check data API

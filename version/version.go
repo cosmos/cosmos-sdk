@@ -89,6 +89,7 @@ func (d buildDep) String() string {
 	if d.Replace != nil {
 		return fmt.Sprintf("%s@%s => %s@%s", d.Path, d.Version, d.Replace.Path, d.Replace.Version)
 	}
+
 	return fmt.Sprintf("%s@%s", d.Path, d.Version)
 }
 

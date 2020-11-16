@@ -1610,6 +1610,7 @@ BREAKING CHANGES
   field to `from` in the `base_req` body.
   * [\#3485](https://github.com/cosmos/cosmos-sdk/pull/3485) Error responses are now JSON objects.
   * [\#3477][distribution] endpoint changed "all_delegation_rewards" -> "delegator_total_rewards"
+
 * Gaia CLI  (`gaiacli`)
   - [#3399](https://github.com/cosmos/cosmos-sdk/pull/3399) Add `gaiad validate-genesis` command to facilitate checking of genesis files
   - [\#1894](https://github.com/cosmos/cosmos-sdk/issues/1894) `version` prints out short info by default. Add `--long` flag. Proper handling of `--format` flag introduced.

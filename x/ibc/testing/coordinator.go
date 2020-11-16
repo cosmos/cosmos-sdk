@@ -247,25 +247,6 @@ func (coord *Coordinator) RecvPacket(
 	return coord.SendMsgs(counterparty, source, sourceClient, []sdk.Msg{recvMsg})
 }
 
-// WriteReceipt receives a packet through the channel keeper on the source chain, writes a receipt, and updates the
-// counterparty client for the source chain.
-func (coord *Coordinator) WriteReceipt(
-	source, counterparty *TestChain,
-	packet exported.PacketI,
-	counterpartyClientID string,
-) error {
-	if err := source.WriteReceipt(packet); err != nil {
-		return err
-	}
-	coord.IncrementTime()
-
-	// update source client on counterparty connection
-	return coord.UpdateClient(
-		counterparty, source,
-		counterpartyClientID, Tendermint,
-	)
-}
-
 // WriteAcknowledgement writes an acknowledgement to the channel keeper on the source chain and updates the
 // counterparty client for the source chain.
 func (coord *Coordinator) WriteAcknowledgement(
@@ -301,25 +282,6 @@ func (coord *Coordinator) AcknowledgePacket(
 
 	ackMsg := channeltypes.NewMsgAcknowledgement(packet, ack, proof, proofHeight, source.SenderAccount.GetAddress())
 	return coord.SendMsgs(source, counterparty, counterpartyClient, []sdk.Msg{ackMsg})
-}
-
-// AcknowledgementExecuted deletes the packet commitment with the given
-// packet sequence since the acknowledgement has been verified.
-func (coord *Coordinator) AcknowledgementExecuted(
-	source, counterparty *TestChain,
-	packet exported.PacketI,
-	counterpartyClientID string,
-) error {
-	if err := source.AcknowledgementExecuted(packet); err != nil {
-		return err
-	}
-	coord.IncrementTime()
-
-	// update source client on counterparty connection
-	return coord.UpdateClient(
-		counterparty, source,
-		counterpartyClientID, Tendermint,
-	)
 }
 
 // RelayPacket receives a channel packet on counterparty, queries the ack

@@ -881,51 +881,14 @@ func (chain *TestChain) SendPacket(
 	return nil
 }
 
-// WriteReceipt simulates receiving and writing a receipt to the chain.
-func (chain *TestChain) WriteReceipt(
+// WriteAcknowledgement simulates writing an acknowledgement to the chain.
+func (chain *TestChain) WriteAcknowledgement(
 	packet exported.PacketI,
 ) error {
 	channelCap := chain.GetChannelCapability(packet.GetDestPort(), packet.GetDestChannel())
 
 	// no need to send message, acting as a handler
-	err := chain.App.IBCKeeper.ChannelKeeper.WriteReceipt(chain.GetContext(), channelCap, packet)
-	if err != nil {
-		return err
-	}
-
-	// commit changes
-	chain.App.Commit()
-	chain.NextBlock()
-
-	return nil
-}
-
-// WriteAcknowledgement simulates writing an acknowledgement to the chain.
-func (chain *TestChain) WriteAcknowledgement(
-	packet exported.PacketI,
-) error {
-	// no need to send message, acting as a handler
-	err := chain.App.IBCKeeper.ChannelKeeper.WriteAcknowledgement(chain.GetContext(), packet, TestHash)
-	if err != nil {
-		return err
-	}
-
-	// commit changes
-	chain.App.Commit()
-	chain.NextBlock()
-
-	return nil
-}
-
-// AcknowledgementExecuted simulates deleting a packet commitment with the
-// given packet sequence.
-func (chain *TestChain) AcknowledgementExecuted(
-	packet exported.PacketI,
-) error {
-	channelCap := chain.GetChannelCapability(packet.GetSourcePort(), packet.GetSourceChannel())
-
-	// no need to send message, acting as a handler
-	err := chain.App.IBCKeeper.ChannelKeeper.AcknowledgementExecuted(chain.GetContext(), channelCap, packet)
+	err := chain.App.IBCKeeper.ChannelKeeper.WriteAcknowledgement(chain.GetContext(), channelCap, packet, TestHash)
 	if err != nil {
 		return err
 	}

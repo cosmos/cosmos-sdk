@@ -286,7 +286,7 @@ keepers. Thus, the `OnRecvPacket` callback only needs to worry about making the 
 changes given the packet data without worrying about whether the packet is valid or not.
 
 Modules must return an acknowledgement as a byte string and return it to the IBC handler.
-The IBC handler will then commit this acknowledgment of the packet so that a relayer may relay the
+The IBC handler will then commit this acknowledgement of the packet so that a relayer may relay the
 acknowledgement back to the sender module.
 
 ```go
@@ -354,7 +354,7 @@ with some additional data that could be useful for remediation if the packet pro
 
 Since the modules are responsible for agreeing on an encoding/decoding standard for packet data and
 acknowledgements, IBC will pass in the acknowledgements as `[]byte` to this callback. The callback
-is responsible for decoding the acknowledgment and processing it.
+is responsible for decoding the acknowledgement and processing it.
 
 ```go
 OnAcknowledgementPacket(

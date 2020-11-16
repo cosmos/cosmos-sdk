@@ -211,8 +211,9 @@ jobs:
           make clean build-simd-linux localnet-start
         # if: env.GIT_DIFF
       - name: start rosetta
-        if: env.GIT_DIFF
+        # if: env.GIT_DIFF
         run: |
+          docker container ls
           simd rosetta
       - name: check data API
         # if: env.GIT_DIFF

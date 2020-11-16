@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -56,14 +55,9 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		response := DecodeResp(stdTx)
 
-		_, err = clientCtx.LegacyAmino.MarshalJSON(response)
+		err = checkForJSONMarshalFailure(w, clientCtx, response)
 		if err != nil {
-			if strings.Contains(err.Error(), "unregistered concrete type") {
-				rest.WriteErrorResponse(w, http.StatusInternalServerError,
-					"This transaction was created with the new SIGN_MODE_DIRECT signing method, and therefore cannot be displayed"+
-						" via legacy REST handlers, please use CLI or directly query the Tendermint RPC endpoint to query"+
-						" this transaction. gRPC gateway endpoint is /cosmos/tx/v1beta1/txs/decode")
-			}
+			// Error is already returned by checkForJSONMarshalFailure.
 			return
 		}
 

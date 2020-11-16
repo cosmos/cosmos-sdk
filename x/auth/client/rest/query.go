@@ -107,14 +107,9 @@ func QueryTxsRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			packStdTxResponse(w, clientCtx, txRes)
 		}
 
-		_, err = clientCtx.LegacyAmino.MarshalJSON(searchResult)
+		err = checkForJSONMarshalFailure(w, clientCtx, searchResult)
 		if err != nil {
-			if strings.Contains(err.Error(), "unregistered concrete type") {
-				rest.WriteErrorResponse(w, http.StatusInternalServerError,
-					"This transaction was created with the new SIGN_MODE_DIRECT signing method, and therefore cannot be displayed"+
-						" via legacy REST handlers, please use CLI or directly query the Tendermint RPC endpoint to query"+
-						" this transaction. gRPC gateway endpoint is /cosmos/tx/v1beta1/txs")
-			}
+			// Error is already returned by checkForJSONMarshalFailure.
 			return
 		}
 
@@ -154,14 +149,9 @@ func QueryTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusNotFound, fmt.Sprintf("no transaction found with hash %s", hashHexStr))
 		}
 
-		_, err = clientCtx.LegacyAmino.MarshalJSON(output)
+		err = checkForJSONMarshalFailure(w, clientCtx, output)
 		if err != nil {
-			if strings.Contains(err.Error(), "unregistered concrete type") {
-				rest.WriteErrorResponse(w, http.StatusInternalServerError,
-					"This transaction was created with the new SIGN_MODE_DIRECT signing method, and therefore cannot be displayed"+
-						" via legacy REST handlers, please use CLI or directly query the Tendermint RPC endpoint to query"+
-						" this transaction. gRPC gateway endpoint is /cosmos/tx/v1beta1/tx/<txhash>")
-			}
+			// Error is already returned by checkForJSONMarshalFailure.
 			return
 		}
 
@@ -201,6 +191,24 @@ func packStdTxResponse(w http.ResponseWriter, clientCtx client.Context, txRes *s
 
 	// Pack the amino stdTx into the TxResponse's Any.
 	txRes.Tx = codectypes.UnsafePackAny(stdTx)
+
+	return nil
+}
+
+func checkForJSONMarshalFailure(w http.ResponseWriter, ctx client.Context, resp interface{}) error {
+	// LegacyAmino used intentionally here to error message
+	const errMsg = "unregistered concrete type"
+	marshaler := ctx.LegacyAmino
+
+	_, err := marshaler.MarshalJSON(resp)
+
+	if err != nil && strings.Contains(err.Error(), errMsg) {
+		rest.WriteErrorResponse(w, http.StatusInternalServerError,
+			"This transaction was created with the new SIGN_MODE_DIRECT signing method, and therefore cannot be displayed"+
+				" via legacy REST handlers, please use CLI or directly query the Tendermint RPC endpoint to query"+
+				" this transaction.")
+		return err
+	}
 
 	return nil
 }

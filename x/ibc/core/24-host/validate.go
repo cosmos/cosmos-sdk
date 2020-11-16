@@ -112,14 +112,3 @@ func NewPathValidator(idValidator ValidateFn) ValidateFn {
 		return nil
 	}
 }
-
-// PathValidator takes in path string and validates with default identifier rules:
-// path consists of `/`-separated valid identifiers,
-// each identifier is between 1-64 characters and contains only alphanumeric and some allowed
-// special characters (see IsValidID).
-func PathValidator(path string) error {
-	f := NewPathValidator(func(path string) error {
-		return nil
-	})
-	return f(path)
-}

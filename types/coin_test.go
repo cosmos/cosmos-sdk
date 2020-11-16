@@ -663,7 +663,7 @@ func (s *coinTestSuite) TestParseCoins() {
 		{"5 mycoin,", false, nil},                           // no empty coins in a list
 		{"2 3foo, 97 bar", false, nil},                      // 3foo is invalid coin name
 		{"11me coin, 12you coin", false, nil},               // no spaces in coin names
-		{"1.2btc", true, sdk.Coins{{"btc", sdk.NewInt(1)}}}, // amount cab be decimal, will get truncated
+		{"1.2btc", true, sdk.Coins{{"btc", sdk.NewInt(1)}}}, // amount can be decimal, will get truncated
 		{"5foo:bar", false, nil},                            // invalid separator
 		{"10atom10", true, sdk.Coins{{"atom10", sdk.NewInt(10)}}},
 		{"200transfer/channelToA/uatom", true, sdk.Coins{{"transfer/channelToA/uatom", sdk.NewInt(200)}}},

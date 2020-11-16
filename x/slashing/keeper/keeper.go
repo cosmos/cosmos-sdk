@@ -3,13 +3,13 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto"
 	gogotypes "github.com/gogo/protobuf/types"
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/internal/protocdc"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/internal/protocdc"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -43,13 +43,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // AddPubkey sets a address-pubkey relation
-<<<<<<< HEAD
-func (k Keeper) AddPubkey(ctx sdk.Context, pubkey crypto.PubKey) error {
-||||||| 4420fe2d5
-func (k Keeper) AddPubkey(ctx sdk.Context, pubkey crypto.PubKey) {
-=======
-func (k Keeper) AddPubkey(ctx sdk.Context, pubkey cryptotypes.PubKey) {
->>>>>>> master
+func (k Keeper) AddPubkey(ctx sdk.Context, pubkey cryptotypes.PubKey) error {
 	addr := pubkey.Address()
 	pkProto, err := protocdc.AssertMsg(pubkey)
 	if err != nil {
@@ -103,18 +97,6 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	k.sk.Jail(ctx, consAddr)
 }
 
-<<<<<<< HEAD
-func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address) {
-||||||| 4420fe2d5
-func (k Keeper) setAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address, pubkey string) {
-	store := ctx.KVStore(k.storeKey)
-
-	bz := k.cdc.MustMarshalBinaryBare(&gogotypes.StringValue{Value: pubkey})
-	store.Set(types.AddrPubkeyRelationKey(addr), bz)
-}
-
-func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address) {
-=======
 func (k Keeper) setAddrPubkeyRelation(ctx sdk.Context, addr cryptotypes.Address, pubkey string) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -123,7 +105,6 @@ func (k Keeper) setAddrPubkeyRelation(ctx sdk.Context, addr cryptotypes.Address,
 }
 
 func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr cryptotypes.Address) {
->>>>>>> master
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.AddrPubkeyRelationKey(addr))
 }

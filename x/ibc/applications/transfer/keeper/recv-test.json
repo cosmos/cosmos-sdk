@@ -2,8 +2,119 @@
   {
     "packet": {
       "sourceChannel": "zarko",
+      "sourcePort": "",
+      "destChannel": "",
+      "destPort": "",
+      "data": {
+        "sender": "a1",
+        "receiver": "",
+        "amount": 1,
+        "denom": [
+          "bucky",
+          "zarko",
+          ""
+        ]
+      }
+    },
+    "bankBefore": [
+      {
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
+        "amount": 0
+      }
+    ],
+    "bankAfter": [
+      {
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
+        "amount": 0
+      }
+    ],
+    "error": false
+  },
+  {
+    "packet": {
+      "sourceChannel": "bucky",
       "sourcePort": "zarko",
       "destChannel": "zarko",
+      "destPort": "bucky",
+      "data": {
+        "sender": "a2",
+        "receiver": "a1",
+        "amount": 1,
+        "denom": [
+          "",
+          "",
+          "atom"
+        ]
+      }
+    },
+    "bankBefore": [
+      {
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
+        "amount": 0
+      }
+    ],
+    "bankAfter": [
+      {
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
+        "amount": 0
+      },
+      {
+        "address": [
+          "",
+          "",
+          "a1"
+        ],
+        "denom": [
+          "bucky",
+          "zarko",
+          "atom"
+        ],
+        "amount": 1
+      }
+    ],
+    "error": false
+  },
+  {
+    "packet": {
+      "sourceChannel": "bucky",
+      "sourcePort": "bucky",
+      "destChannel": "bucky",
       "destPort": "zarko",
       "data": {
         "sender": "",
@@ -29,6 +140,19 @@
           ""
         ],
         "amount": 0
+      },
+      {
+        "address": [
+          "",
+          "",
+          "a1"
+        ],
+        "denom": [
+          "bucky",
+          "zarko",
+          "atom"
+        ],
+        "amount": 1
       }
     ],
     "bankAfter": [
@@ -49,11 +173,24 @@
         "address": [
           "",
           "",
+          "a1"
+        ],
+        "denom": [
+          "bucky",
+          "zarko",
+          "atom"
+        ],
+        "amount": 1
+      },
+      {
+        "address": [
+          "",
+          "",
           "a2"
         ],
         "denom": [
           "zarko",
-          "zarko",
+          "bucky",
           "eth"
         ],
         "amount": 1
@@ -66,90 +203,15 @@
       "sourceChannel": "",
       "sourcePort": "",
       "destChannel": "",
-      "destPort": "bucky",
-      "data": {
-        "sender": "a1",
-        "receiver": "a1",
-        "amount": 0,
-        "denom": [
-          "",
-          "",
-          ""
-        ]
-      }
-    },
-    "bankBefore": [
-      {
-        "address": [
-          "",
-          "",
-          ""
-        ],
-        "denom": [
-          "",
-          "",
-          ""
-        ],
-        "amount": 0
-      },
-      {
-        "address": [
-          "",
-          "",
-          "a2"
-        ],
-        "denom": [
-          "zarko",
-          "zarko",
-          "eth"
-        ],
-        "amount": 1
-      }
-    ],
-    "bankAfter": [
-      {
-        "address": [
-          "",
-          "",
-          ""
-        ],
-        "denom": [
-          "",
-          "",
-          ""
-        ],
-        "amount": 0
-      },
-      {
-        "address": [
-          "",
-          "",
-          "a2"
-        ],
-        "denom": [
-          "zarko",
-          "zarko",
-          "eth"
-        ],
-        "amount": 1
-      }
-    ],
-    "error": true
-  },
-  {
-    "packet": {
-      "sourceChannel": "bucky",
-      "sourcePort": "bucky",
-      "destChannel": "bucky",
       "destPort": "",
       "data": {
-        "sender": "a2",
-        "receiver": "a1",
-        "amount": 1,
+        "sender": "",
+        "receiver": "",
+        "amount": 0,
         "denom": [
-          "bucky",
-          "",
-          "atom"
+          "zarko",
+          "zarko",
+          ""
         ]
       }
     },
@@ -171,11 +233,24 @@
         "address": [
           "",
           "",
+          "a1"
+        ],
+        "denom": [
+          "bucky",
+          "zarko",
+          "atom"
+        ],
+        "amount": 1
+      },
+      {
+        "address": [
+          "",
+          "",
           "a2"
         ],
         "denom": [
           "zarko",
-          "zarko",
+          "bucky",
           "eth"
         ],
         "amount": 1
@@ -202,8 +277,8 @@
           "a1"
         ],
         "denom": [
-          "",
           "bucky",
+          "zarko",
           "atom"
         ],
         "amount": 1
@@ -216,113 +291,12 @@
         ],
         "denom": [
           "zarko",
-          "zarko",
+          "bucky",
           "eth"
         ],
         "amount": 1
       }
     ],
     "error": false
-  },
-  {
-    "packet": {
-      "sourceChannel": "zarko",
-      "sourcePort": "zarko",
-      "destChannel": "zarko",
-      "destPort": "zarko",
-      "data": {
-        "sender": "a1",
-        "receiver": "",
-        "amount": 1,
-        "denom": [
-          "zarko",
-          "zarko",
-          ""
-        ]
-      }
-    },
-    "bankBefore": [
-      {
-        "address": [
-          "",
-          "",
-          ""
-        ],
-        "denom": [
-          "",
-          "",
-          ""
-        ],
-        "amount": 0
-      },
-      {
-        "address": [
-          "",
-          "",
-          "a1"
-        ],
-        "denom": [
-          "",
-          "bucky",
-          "atom"
-        ],
-        "amount": 1
-      },
-      {
-        "address": [
-          "",
-          "",
-          "a2"
-        ],
-        "denom": [
-          "zarko",
-          "zarko",
-          "eth"
-        ],
-        "amount": 1
-      }
-    ],
-    "bankAfter": [
-      {
-        "address": [
-          "",
-          "",
-          ""
-        ],
-        "denom": [
-          "",
-          "",
-          ""
-        ],
-        "amount": 0
-      },
-      {
-        "address": [
-          "",
-          "",
-          "a1"
-        ],
-        "denom": [
-          "",
-          "bucky",
-          "atom"
-        ],
-        "amount": 1
-      },
-      {
-        "address": [
-          "",
-          "",
-          "a2"
-        ],
-        "denom": [
-          "zarko",
-          "zarko",
-          "eth"
-        ],
-        "amount": 1
-      }
-    ],
-    "error": true
   }
 ]

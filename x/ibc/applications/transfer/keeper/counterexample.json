@@ -207,7 +207,7 @@
                                             "str": "channel"
                                           },
                                           "value": {
-                                            "str": ""
+                                            "str": "zarko"
                                           }
                                         },
                                         {
@@ -215,7 +215,7 @@
                                             "str": "denom"
                                           },
                                           "value": {
-                                            "str": "eth"
+                                            "str": ""
                                           }
                                         },
                                         {
@@ -223,7 +223,7 @@
                                             "str": "port"
                                           },
                                           "value": {
-                                            "str": ""
+                                            "str": "bucky"
                                           }
                                         }
                                       ]
@@ -234,7 +234,7 @@
                                       "str": "receiver"
                                     },
                                     "value": {
-                                      "str": "a2"
+                                      "str": ""
                                     }
                                   },
                                   {
@@ -242,7 +242,7 @@
                                       "str": "sender"
                                     },
                                     "value": {
-                                      "str": ""
+                                      "str": "a1"
                                     }
                                   }
                                 ]
@@ -253,7 +253,7 @@
                                 "str": "destChannel"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             },
                             {
@@ -261,7 +261,7 @@
                                 "str": "destPort"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             },
                             {
@@ -277,7 +277,7 @@
                                 "str": "sourcePort"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             }
                           ]
@@ -390,7 +390,7 @@
                                 "str": "channel"
                               },
                               "value": {
-                                "str": ""
+                                "str": "zarko"
                               }
                             },
                             {
@@ -398,7 +398,7 @@
                                 "str": "denom"
                               },
                               "value": {
-                                "str": "eth"
+                                "str": ""
                               }
                             },
                             {
@@ -406,7 +406,7 @@
                                 "str": "port"
                               },
                               "value": {
-                                "str": ""
+                                "str": "bucky"
                               }
                             }
                           ]
@@ -417,7 +417,7 @@
                           "str": "receiver"
                         },
                         "value": {
-                          "str": "a2"
+                          "str": ""
                         }
                       },
                       {
@@ -425,7 +425,7 @@
                           "str": "sender"
                         },
                         "value": {
-                          "str": ""
+                          "str": "a1"
                         }
                       }
                     ]
@@ -436,7 +436,7 @@
                     "str": "destChannel"
                   },
                   "value": {
-                    "str": "zarko"
+                    "str": ""
                   }
                 },
                 {
@@ -444,7 +444,7 @@
                     "str": "destPort"
                   },
                   "value": {
-                    "str": "zarko"
+                    "str": ""
                   }
                 },
                 {
@@ -460,7 +460,7 @@
                     "str": "sourcePort"
                   },
                   "value": {
-                    "str": "zarko"
+                    "str": ""
                   }
                 }
               ]
@@ -667,7 +667,7 @@
                                             "str": "channel"
                                           },
                                           "value": {
-                                            "str": ""
+                                            "str": "zarko"
                                           }
                                         },
                                         {
@@ -675,7 +675,7 @@
                                             "str": "denom"
                                           },
                                           "value": {
-                                            "str": "eth"
+                                            "str": ""
                                           }
                                         },
                                         {
@@ -683,7 +683,7 @@
                                             "str": "port"
                                           },
                                           "value": {
-                                            "str": ""
+                                            "str": "bucky"
                                           }
                                         }
                                       ]
@@ -694,7 +694,7 @@
                                       "str": "receiver"
                                     },
                                     "value": {
-                                      "str": "a2"
+                                      "str": ""
                                     }
                                   },
                                   {
@@ -702,7 +702,7 @@
                                       "str": "sender"
                                     },
                                     "value": {
-                                      "str": ""
+                                      "str": "a1"
                                     }
                                   }
                                 ]
@@ -713,7 +713,7 @@
                                 "str": "destChannel"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             },
                             {
@@ -721,7 +721,7 @@
                                 "str": "destPort"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             },
                             {
@@ -737,7 +737,7 @@
                                 "str": "sourcePort"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             }
                           ]
@@ -818,69 +818,6 @@
                                 ]
                               },
                               "arg": 0
-                            },
-                            {
-                              "colonGreater": {
-                                "tuple": [
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "id"
-                                        },
-                                        "value": {
-                                          "str": "a2"
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": "zarko"
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "denom"
-                                        },
-                                        "value": {
-                                          "str": "eth"
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": "zarko"
-                                        }
-                                      }
-                                    ]
-                                  }
-                                ]
-                              },
-                              "arg": 1
                             }
                           ]
                         }
@@ -992,7 +929,7 @@
                                             "str": "channel"
                                           },
                                           "value": {
-                                            "str": ""
+                                            "str": "zarko"
                                           }
                                         },
                                         {
@@ -1000,7 +937,7 @@
                                             "str": "denom"
                                           },
                                           "value": {
-                                            "str": "eth"
+                                            "str": ""
                                           }
                                         },
                                         {
@@ -1008,7 +945,7 @@
                                             "str": "port"
                                           },
                                           "value": {
-                                            "str": ""
+                                            "str": "bucky"
                                           }
                                         }
                                       ]
@@ -1019,7 +956,7 @@
                                       "str": "receiver"
                                     },
                                     "value": {
-                                      "str": "a2"
+                                      "str": ""
                                     }
                                   },
                                   {
@@ -1027,7 +964,7 @@
                                       "str": "sender"
                                     },
                                     "value": {
-                                      "str": ""
+                                      "str": "a1"
                                     }
                                   }
                                 ]
@@ -1038,7 +975,7 @@
                                 "str": "destChannel"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             },
                             {
@@ -1046,7 +983,7 @@
                                 "str": "destPort"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             },
                             {
@@ -1062,7 +999,7 @@
                                 "str": "sourcePort"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             }
                           ]
@@ -1140,69 +1077,6 @@
                     ]
                   },
                   "arg": 0
-                },
-                {
-                  "colonGreater": {
-                    "tuple": [
-                      {
-                        "record": [
-                          {
-                            "key": {
-                              "str": "channel"
-                            },
-                            "value": {
-                              "str": ""
-                            }
-                          },
-                          {
-                            "key": {
-                              "str": "id"
-                            },
-                            "value": {
-                              "str": "a2"
-                            }
-                          },
-                          {
-                            "key": {
-                              "str": "port"
-                            },
-                            "value": {
-                              "str": ""
-                            }
-                          }
-                        ]
-                      },
-                      {
-                        "record": [
-                          {
-                            "key": {
-                              "str": "channel"
-                            },
-                            "value": {
-                              "str": "zarko"
-                            }
-                          },
-                          {
-                            "key": {
-                              "str": "denom"
-                            },
-                            "value": {
-                              "str": "eth"
-                            }
-                          },
-                          {
-                            "key": {
-                              "str": "port"
-                            },
-                            "value": {
-                              "str": "zarko"
-                            }
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  "arg": 1
                 }
               ]
             }
@@ -1225,7 +1099,7 @@
                         "key": {
                           "str": "amount"
                         },
-                        "value": 0
+                        "value": 1
                       },
                       {
                         "key": {
@@ -1246,7 +1120,7 @@
                                 "str": "denom"
                               },
                               "value": {
-                                "str": ""
+                                "str": "atom"
                               }
                             },
                             {
@@ -1273,7 +1147,7 @@
                           "str": "sender"
                         },
                         "value": {
-                          "str": "a1"
+                          "str": "a2"
                         }
                       }
                     ]
@@ -1284,7 +1158,7 @@
                     "str": "destChannel"
                   },
                   "value": {
-                    "str": ""
+                    "str": "zarko"
                   }
                 },
                 {
@@ -1300,7 +1174,7 @@
                     "str": "sourceChannel"
                   },
                   "value": {
-                    "str": ""
+                    "str": "bucky"
                   }
                 },
                 {
@@ -1308,7 +1182,7 @@
                     "str": "sourcePort"
                   },
                   "value": {
-                    "str": ""
+                    "str": "zarko"
                   }
                 }
               ]
@@ -1515,7 +1389,7 @@
                                             "str": "channel"
                                           },
                                           "value": {
-                                            "str": ""
+                                            "str": "zarko"
                                           }
                                         },
                                         {
@@ -1523,7 +1397,7 @@
                                             "str": "denom"
                                           },
                                           "value": {
-                                            "str": "eth"
+                                            "str": ""
                                           }
                                         },
                                         {
@@ -1531,7 +1405,7 @@
                                             "str": "port"
                                           },
                                           "value": {
-                                            "str": ""
+                                            "str": "bucky"
                                           }
                                         }
                                       ]
@@ -1542,7 +1416,7 @@
                                       "str": "receiver"
                                     },
                                     "value": {
-                                      "str": "a2"
+                                      "str": ""
                                     }
                                   },
                                   {
@@ -1550,7 +1424,7 @@
                                       "str": "sender"
                                     },
                                     "value": {
-                                      "str": ""
+                                      "str": "a1"
                                     }
                                   }
                                 ]
@@ -1561,7 +1435,7 @@
                                 "str": "destChannel"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             },
                             {
@@ -1569,7 +1443,7 @@
                                 "str": "destPort"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             },
                             {
@@ -1585,7 +1459,7 @@
                                 "str": "sourcePort"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             }
                           ]
@@ -1596,6 +1470,268 @@
                 },
                 {
                   "colonGreater": 1,
+                  "arg": {
+                    "record": [
+                      {
+                        "key": {
+                          "str": "bankAfter"
+                        },
+                        "value": {
+                          "atat": [
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 0
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "bankBefore"
+                        },
+                        "value": {
+                          "atat": [
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 0
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "error"
+                        },
+                        "value": false
+                      },
+                      {
+                        "key": {
+                          "str": "packet"
+                        },
+                        "value": {
+                          "record": [
+                            {
+                              "key": {
+                                "str": "data"
+                              },
+                              "value": {
+                                "record": [
+                                  {
+                                    "key": {
+                                      "str": "amount"
+                                    },
+                                    "value": 1
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "denomTrace"
+                                    },
+                                    "value": {
+                                      "record": [
+                                        {
+                                          "key": {
+                                            "str": "channel"
+                                          },
+                                          "value": {
+                                            "str": "zarko"
+                                          }
+                                        },
+                                        {
+                                          "key": {
+                                            "str": "denom"
+                                          },
+                                          "value": {
+                                            "str": ""
+                                          }
+                                        },
+                                        {
+                                          "key": {
+                                            "str": "port"
+                                          },
+                                          "value": {
+                                            "str": "bucky"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "receiver"
+                                    },
+                                    "value": {
+                                      "str": ""
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "sender"
+                                    },
+                                    "value": {
+                                      "str": "a1"
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "destChannel"
+                              },
+                              "value": {
+                                "str": ""
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "destPort"
+                              },
+                              "value": {
+                                "str": ""
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "sourceChannel"
+                              },
+                              "value": {
+                                "str": "zarko"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "sourcePort"
+                              },
+                              "value": {
+                                "str": ""
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "colonGreater": 2,
                   "arg": {
                     "record": [
                       {
@@ -1685,7 +1821,7 @@
                                           "str": "id"
                                         },
                                         "value": {
-                                          "str": "a2"
+                                          "str": "a1"
                                         }
                                       },
                                       {
@@ -1713,7 +1849,7 @@
                                           "str": "denom"
                                         },
                                         "value": {
-                                          "str": "eth"
+                                          "str": "atom"
                                         }
                                       },
                                       {
@@ -1721,7 +1857,7 @@
                                           "str": "port"
                                         },
                                         "value": {
-                                          "str": "zarko"
+                                          "str": "bucky"
                                         }
                                       }
                                     ]
@@ -1848,7 +1984,7 @@
                                             "str": "denom"
                                           },
                                           "value": {
-                                            "str": "eth"
+                                            "str": "atom"
                                           }
                                         },
                                         {
@@ -1865,18 +2001,18 @@
                                   {
                                     "key": {
                                       "str": "receiver"
+                                    },
+                                    "value": {
+                                      "str": "a1"
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "sender"
                                     },
                                     "value": {
                                       "str": "a2"
                                     }
-                                  },
-                                  {
-                                    "key": {
-                                      "str": "sender"
-                                    },
-                                    "value": {
-                                      "str": ""
-                                    }
                                   }
                                 ]
                               }
@@ -1887,394 +2023,6 @@
                               },
                               "value": {
                                 "str": "zarko"
-                              }
-                            },
-                            {
-                              "key": {
-                                "str": "destPort"
-                              },
-                              "value": {
-                                "str": "zarko"
-                              }
-                            },
-                            {
-                              "key": {
-                                "str": "sourceChannel"
-                              },
-                              "value": {
-                                "str": "zarko"
-                              }
-                            },
-                            {
-                              "key": {
-                                "str": "sourcePort"
-                              },
-                              "value": {
-                                "str": "zarko"
-                              }
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "colonGreater": 2,
-                  "arg": {
-                    "record": [
-                      {
-                        "key": {
-                          "str": "bankAfter"
-                        },
-                        "value": {
-                          "atat": [
-                            {
-                              "colonGreater": {
-                                "tuple": [
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "id"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "denom"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      }
-                                    ]
-                                  }
-                                ]
-                              },
-                              "arg": 0
-                            },
-                            {
-                              "colonGreater": {
-                                "tuple": [
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "id"
-                                        },
-                                        "value": {
-                                          "str": "a2"
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": "zarko"
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "denom"
-                                        },
-                                        "value": {
-                                          "str": "eth"
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": "zarko"
-                                        }
-                                      }
-                                    ]
-                                  }
-                                ]
-                              },
-                              "arg": 1
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "key": {
-                          "str": "bankBefore"
-                        },
-                        "value": {
-                          "atat": [
-                            {
-                              "colonGreater": {
-                                "tuple": [
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "id"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "denom"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      }
-                                    ]
-                                  }
-                                ]
-                              },
-                              "arg": 0
-                            },
-                            {
-                              "colonGreater": {
-                                "tuple": [
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "id"
-                                        },
-                                        "value": {
-                                          "str": "a2"
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": "zarko"
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "denom"
-                                        },
-                                        "value": {
-                                          "str": "eth"
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": "zarko"
-                                        }
-                                      }
-                                    ]
-                                  }
-                                ]
-                              },
-                              "arg": 1
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "key": {
-                          "str": "error"
-                        },
-                        "value": true
-                      },
-                      {
-                        "key": {
-                          "str": "packet"
-                        },
-                        "value": {
-                          "record": [
-                            {
-                              "key": {
-                                "str": "data"
-                              },
-                              "value": {
-                                "record": [
-                                  {
-                                    "key": {
-                                      "str": "amount"
-                                    },
-                                    "value": 0
-                                  },
-                                  {
-                                    "key": {
-                                      "str": "denomTrace"
-                                    },
-                                    "value": {
-                                      "record": [
-                                        {
-                                          "key": {
-                                            "str": "channel"
-                                          },
-                                          "value": {
-                                            "str": ""
-                                          }
-                                        },
-                                        {
-                                          "key": {
-                                            "str": "denom"
-                                          },
-                                          "value": {
-                                            "str": ""
-                                          }
-                                        },
-                                        {
-                                          "key": {
-                                            "str": "port"
-                                          },
-                                          "value": {
-                                            "str": ""
-                                          }
-                                        }
-                                      ]
-                                    }
-                                  },
-                                  {
-                                    "key": {
-                                      "str": "receiver"
-                                    },
-                                    "value": {
-                                      "str": "a1"
-                                    }
-                                  },
-                                  {
-                                    "key": {
-                                      "str": "sender"
-                                    },
-                                    "value": {
-                                      "str": "a1"
-                                    }
-                                  }
-                                ]
-                              }
-                            },
-                            {
-                              "key": {
-                                "str": "destChannel"
-                              },
-                              "value": {
-                                "str": ""
                               }
                             },
                             {
@@ -2290,7 +2038,7 @@
                                 "str": "sourceChannel"
                               },
                               "value": {
-                                "str": ""
+                                "str": "bucky"
                               }
                             },
                             {
@@ -2298,7 +2046,7 @@
                                 "str": "sourcePort"
                               },
                               "value": {
-                                "str": ""
+                                "str": "zarko"
                               }
                             }
                           ]
@@ -2395,7 +2143,7 @@
                               "str": "id"
                             },
                             "value": {
-                              "str": "a2"
+                              "str": "a1"
                             }
                           },
                           {
@@ -2423,7 +2171,7 @@
                               "str": "denom"
                             },
                             "value": {
-                              "str": "eth"
+                              "str": "atom"
                             }
                           },
                           {
@@ -2431,7 +2179,7 @@
                               "str": "port"
                             },
                             "value": {
-                              "str": "zarko"
+                              "str": "bucky"
                             }
                           }
                         ]
@@ -2445,7 +2193,7 @@
           },
           {
             "eq": "error",
-            "arg": true
+            "arg": false
           },
           {
             "eq": "p",
@@ -2482,7 +2230,7 @@
                                 "str": "denom"
                               },
                               "value": {
-                                "str": "atom"
+                                "str": "eth"
                               }
                             },
                             {
@@ -2490,7 +2238,7 @@
                                 "str": "port"
                               },
                               "value": {
-                                "str": "bucky"
+                                "str": ""
                               }
                             }
                           ]
@@ -2501,7 +2249,7 @@
                           "str": "receiver"
                         },
                         "value": {
-                          "str": "a1"
+                          "str": "a2"
                         }
                       },
                       {
@@ -2509,7 +2257,7 @@
                           "str": "sender"
                         },
                         "value": {
-                          "str": "a2"
+                          "str": ""
                         }
                       }
                     ]
@@ -2528,7 +2276,7 @@
                     "str": "destPort"
                   },
                   "value": {
-                    "str": ""
+                    "str": "zarko"
                   }
                 },
                 {
@@ -2751,7 +2499,7 @@
                                             "str": "channel"
                                           },
                                           "value": {
-                                            "str": ""
+                                            "str": "zarko"
                                           }
                                         },
                                         {
@@ -2759,7 +2507,7 @@
                                             "str": "denom"
                                           },
                                           "value": {
-                                            "str": "eth"
+                                            "str": ""
                                           }
                                         },
                                         {
@@ -2767,7 +2515,7 @@
                                             "str": "port"
                                           },
                                           "value": {
-                                            "str": ""
+                                            "str": "bucky"
                                           }
                                         }
                                       ]
@@ -2778,7 +2526,7 @@
                                       "str": "receiver"
                                     },
                                     "value": {
-                                      "str": "a2"
+                                      "str": ""
                                     }
                                   },
                                   {
@@ -2786,7 +2534,7 @@
                                       "str": "sender"
                                     },
                                     "value": {
-                                      "str": ""
+                                      "str": "a1"
                                     }
                                   }
                                 ]
@@ -2797,7 +2545,7 @@
                                 "str": "destChannel"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             },
                             {
@@ -2805,7 +2553,7 @@
                                 "str": "destPort"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             },
                             {
@@ -2821,7 +2569,7 @@
                                 "str": "sourcePort"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             }
                           ]
@@ -2832,6 +2580,268 @@
                 },
                 {
                   "colonGreater": 1,
+                  "arg": {
+                    "record": [
+                      {
+                        "key": {
+                          "str": "bankAfter"
+                        },
+                        "value": {
+                          "atat": [
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 0
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "bankBefore"
+                        },
+                        "value": {
+                          "atat": [
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 0
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "error"
+                        },
+                        "value": false
+                      },
+                      {
+                        "key": {
+                          "str": "packet"
+                        },
+                        "value": {
+                          "record": [
+                            {
+                              "key": {
+                                "str": "data"
+                              },
+                              "value": {
+                                "record": [
+                                  {
+                                    "key": {
+                                      "str": "amount"
+                                    },
+                                    "value": 1
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "denomTrace"
+                                    },
+                                    "value": {
+                                      "record": [
+                                        {
+                                          "key": {
+                                            "str": "channel"
+                                          },
+                                          "value": {
+                                            "str": "zarko"
+                                          }
+                                        },
+                                        {
+                                          "key": {
+                                            "str": "denom"
+                                          },
+                                          "value": {
+                                            "str": ""
+                                          }
+                                        },
+                                        {
+                                          "key": {
+                                            "str": "port"
+                                          },
+                                          "value": {
+                                            "str": "bucky"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "receiver"
+                                    },
+                                    "value": {
+                                      "str": ""
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "sender"
+                                    },
+                                    "value": {
+                                      "str": "a1"
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "destChannel"
+                              },
+                              "value": {
+                                "str": ""
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "destPort"
+                              },
+                              "value": {
+                                "str": ""
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "sourceChannel"
+                              },
+                              "value": {
+                                "str": "zarko"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "sourcePort"
+                              },
+                              "value": {
+                                "str": ""
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "colonGreater": 2,
                   "arg": {
                     "record": [
                       {
@@ -2921,7 +2931,7 @@
                                           "str": "id"
                                         },
                                         "value": {
-                                          "str": "a2"
+                                          "str": "a1"
                                         }
                                       },
                                       {
@@ -2949,7 +2959,7 @@
                                           "str": "denom"
                                         },
                                         "value": {
-                                          "str": "eth"
+                                          "str": "atom"
                                         }
                                       },
                                       {
@@ -2957,7 +2967,7 @@
                                           "str": "port"
                                         },
                                         "value": {
-                                          "str": "zarko"
+                                          "str": "bucky"
                                         }
                                       }
                                     ]
@@ -3084,7 +3094,7 @@
                                             "str": "denom"
                                           },
                                           "value": {
-                                            "str": "eth"
+                                            "str": "atom"
                                           }
                                         },
                                         {
@@ -3101,18 +3111,18 @@
                                   {
                                     "key": {
                                       "str": "receiver"
+                                    },
+                                    "value": {
+                                      "str": "a1"
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "sender"
                                     },
                                     "value": {
                                       "str": "a2"
                                     }
-                                  },
-                                  {
-                                    "key": {
-                                      "str": "sender"
-                                    },
-                                    "value": {
-                                      "str": ""
-                                    }
                                   }
                                 ]
                               }
@@ -3123,394 +3133,6 @@
                               },
                               "value": {
                                 "str": "zarko"
-                              }
-                            },
-                            {
-                              "key": {
-                                "str": "destPort"
-                              },
-                              "value": {
-                                "str": "zarko"
-                              }
-                            },
-                            {
-                              "key": {
-                                "str": "sourceChannel"
-                              },
-                              "value": {
-                                "str": "zarko"
-                              }
-                            },
-                            {
-                              "key": {
-                                "str": "sourcePort"
-                              },
-                              "value": {
-                                "str": "zarko"
-                              }
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "colonGreater": 2,
-                  "arg": {
-                    "record": [
-                      {
-                        "key": {
-                          "str": "bankAfter"
-                        },
-                        "value": {
-                          "atat": [
-                            {
-                              "colonGreater": {
-                                "tuple": [
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "id"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "denom"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      }
-                                    ]
-                                  }
-                                ]
-                              },
-                              "arg": 0
-                            },
-                            {
-                              "colonGreater": {
-                                "tuple": [
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "id"
-                                        },
-                                        "value": {
-                                          "str": "a2"
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": "zarko"
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "denom"
-                                        },
-                                        "value": {
-                                          "str": "eth"
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": "zarko"
-                                        }
-                                      }
-                                    ]
-                                  }
-                                ]
-                              },
-                              "arg": 1
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "key": {
-                          "str": "bankBefore"
-                        },
-                        "value": {
-                          "atat": [
-                            {
-                              "colonGreater": {
-                                "tuple": [
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "id"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "denom"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      }
-                                    ]
-                                  }
-                                ]
-                              },
-                              "arg": 0
-                            },
-                            {
-                              "colonGreater": {
-                                "tuple": [
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "id"
-                                        },
-                                        "value": {
-                                          "str": "a2"
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": "zarko"
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "denom"
-                                        },
-                                        "value": {
-                                          "str": "eth"
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": "zarko"
-                                        }
-                                      }
-                                    ]
-                                  }
-                                ]
-                              },
-                              "arg": 1
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "key": {
-                          "str": "error"
-                        },
-                        "value": true
-                      },
-                      {
-                        "key": {
-                          "str": "packet"
-                        },
-                        "value": {
-                          "record": [
-                            {
-                              "key": {
-                                "str": "data"
-                              },
-                              "value": {
-                                "record": [
-                                  {
-                                    "key": {
-                                      "str": "amount"
-                                    },
-                                    "value": 0
-                                  },
-                                  {
-                                    "key": {
-                                      "str": "denomTrace"
-                                    },
-                                    "value": {
-                                      "record": [
-                                        {
-                                          "key": {
-                                            "str": "channel"
-                                          },
-                                          "value": {
-                                            "str": ""
-                                          }
-                                        },
-                                        {
-                                          "key": {
-                                            "str": "denom"
-                                          },
-                                          "value": {
-                                            "str": ""
-                                          }
-                                        },
-                                        {
-                                          "key": {
-                                            "str": "port"
-                                          },
-                                          "value": {
-                                            "str": ""
-                                          }
-                                        }
-                                      ]
-                                    }
-                                  },
-                                  {
-                                    "key": {
-                                      "str": "receiver"
-                                    },
-                                    "value": {
-                                      "str": "a1"
-                                    }
-                                  },
-                                  {
-                                    "key": {
-                                      "str": "sender"
-                                    },
-                                    "value": {
-                                      "str": "a1"
-                                    }
-                                  }
-                                ]
-                              }
-                            },
-                            {
-                              "key": {
-                                "str": "destChannel"
-                              },
-                              "value": {
-                                "str": ""
                               }
                             },
                             {
@@ -3526,7 +3148,7 @@
                                 "str": "sourceChannel"
                               },
                               "value": {
-                                "str": ""
+                                "str": "bucky"
                               }
                             },
                             {
@@ -3534,7 +3156,7 @@
                                 "str": "sourcePort"
                               },
                               "value": {
-                                "str": ""
+                                "str": "zarko"
                               }
                             }
                           ]
@@ -3654,7 +3276,7 @@
                                           "str": "channel"
                                         },
                                         "value": {
-                                          "str": "bucky"
+                                          "str": "zarko"
                                         }
                                       },
                                       {
@@ -3670,7 +3292,7 @@
                                           "str": "port"
                                         },
                                         "value": {
-                                          "str": ""
+                                          "str": "bucky"
                                         }
                                       }
                                     ]
@@ -3717,7 +3339,7 @@
                                           "str": "channel"
                                         },
                                         "value": {
-                                          "str": "zarko"
+                                          "str": "bucky"
                                         }
                                       },
                                       {
@@ -3832,7 +3454,7 @@
                                           "str": "id"
                                         },
                                         "value": {
-                                          "str": "a2"
+                                          "str": "a1"
                                         }
                                       },
                                       {
@@ -3860,7 +3482,7 @@
                                           "str": "denom"
                                         },
                                         "value": {
-                                          "str": "eth"
+                                          "str": "atom"
                                         }
                                       },
                                       {
@@ -3868,7 +3490,7 @@
                                           "str": "port"
                                         },
                                         "value": {
-                                          "str": "zarko"
+                                          "str": "bucky"
                                         }
                                       }
                                     ]
@@ -3923,7 +3545,7 @@
                                             "str": "denom"
                                           },
                                           "value": {
-                                            "str": "atom"
+                                            "str": "eth"
                                           }
                                         },
                                         {
@@ -3931,7 +3553,7 @@
                                             "str": "port"
                                           },
                                           "value": {
-                                            "str": "bucky"
+                                            "str": ""
                                           }
                                         }
                                       ]
@@ -3942,7 +3564,7 @@
                                       "str": "receiver"
                                     },
                                     "value": {
-                                      "str": "a1"
+                                      "str": "a2"
                                     }
                                   },
                                   {
@@ -3950,7 +3572,7 @@
                                       "str": "sender"
                                     },
                                     "value": {
-                                      "str": "a2"
+                                      "str": ""
                                     }
                                   }
                                 ]
@@ -3969,7 +3591,7 @@
                                 "str": "destPort"
                               },
                               "value": {
-                                "str": ""
+                                "str": "zarko"
                               }
                             },
                             {
@@ -4102,7 +3724,7 @@
                               "str": "channel"
                             },
                             "value": {
-                              "str": "bucky"
+                              "str": "zarko"
                             }
                           },
                           {
@@ -4118,7 +3740,7 @@
                               "str": "port"
                             },
                             "value": {
-                              "str": ""
+                              "str": "bucky"
                             }
                           }
                         ]
@@ -4165,7 +3787,7 @@
                               "str": "channel"
                             },
                             "value": {
-                              "str": "zarko"
+                              "str": "bucky"
                             }
                           },
                           {
@@ -4211,7 +3833,7 @@
                         "key": {
                           "str": "amount"
                         },
-                        "value": 1
+                        "value": 0
                       },
                       {
                         "key": {
@@ -4259,7 +3881,7 @@
                           "str": "sender"
                         },
                         "value": {
-                          "str": "a1"
+                          "str": ""
                         }
                       }
                     ]
@@ -4270,7 +3892,7 @@
                     "str": "destChannel"
                   },
                   "value": {
-                    "str": "zarko"
+                    "str": ""
                   }
                 },
                 {
@@ -4278,7 +3900,7 @@
                     "str": "destPort"
                   },
                   "value": {
-                    "str": "zarko"
+                    "str": ""
                   }
                 },
                 {
@@ -4286,7 +3908,7 @@
                     "str": "sourceChannel"
                   },
                   "value": {
-                    "str": "zarko"
+                    "str": ""
                   }
                 },
                 {
@@ -4294,7 +3916,7 @@
                     "str": "sourcePort"
                   },
                   "value": {
-                    "str": "zarko"
+                    "str": ""
                   }
                 }
               ]
@@ -4501,7 +4123,7 @@
                                             "str": "channel"
                                           },
                                           "value": {
-                                            "str": ""
+                                            "str": "zarko"
                                           }
                                         },
                                         {
@@ -4509,7 +4131,7 @@
                                             "str": "denom"
                                           },
                                           "value": {
-                                            "str": "eth"
+                                            "str": ""
                                           }
                                         },
                                         {
@@ -4517,7 +4139,7 @@
                                             "str": "port"
                                           },
                                           "value": {
-                                            "str": ""
+                                            "str": "bucky"
                                           }
                                         }
                                       ]
@@ -4528,7 +4150,7 @@
                                       "str": "receiver"
                                     },
                                     "value": {
-                                      "str": "a2"
+                                      "str": ""
                                     }
                                   },
                                   {
@@ -4536,7 +4158,7 @@
                                       "str": "sender"
                                     },
                                     "value": {
-                                      "str": ""
+                                      "str": "a1"
                                     }
                                   }
                                 ]
@@ -4547,7 +4169,7 @@
                                 "str": "destChannel"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             },
                             {
@@ -4555,7 +4177,7 @@
                                 "str": "destPort"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             },
                             {
@@ -4571,7 +4193,7 @@
                                 "str": "sourcePort"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             }
                           ]
@@ -4582,6 +4204,268 @@
                 },
                 {
                   "colonGreater": 1,
+                  "arg": {
+                    "record": [
+                      {
+                        "key": {
+                          "str": "bankAfter"
+                        },
+                        "value": {
+                          "atat": [
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 0
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "bankBefore"
+                        },
+                        "value": {
+                          "atat": [
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 0
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "error"
+                        },
+                        "value": false
+                      },
+                      {
+                        "key": {
+                          "str": "packet"
+                        },
+                        "value": {
+                          "record": [
+                            {
+                              "key": {
+                                "str": "data"
+                              },
+                              "value": {
+                                "record": [
+                                  {
+                                    "key": {
+                                      "str": "amount"
+                                    },
+                                    "value": 1
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "denomTrace"
+                                    },
+                                    "value": {
+                                      "record": [
+                                        {
+                                          "key": {
+                                            "str": "channel"
+                                          },
+                                          "value": {
+                                            "str": "zarko"
+                                          }
+                                        },
+                                        {
+                                          "key": {
+                                            "str": "denom"
+                                          },
+                                          "value": {
+                                            "str": ""
+                                          }
+                                        },
+                                        {
+                                          "key": {
+                                            "str": "port"
+                                          },
+                                          "value": {
+                                            "str": "bucky"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "receiver"
+                                    },
+                                    "value": {
+                                      "str": ""
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "sender"
+                                    },
+                                    "value": {
+                                      "str": "a1"
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "destChannel"
+                              },
+                              "value": {
+                                "str": ""
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "destPort"
+                              },
+                              "value": {
+                                "str": ""
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "sourceChannel"
+                              },
+                              "value": {
+                                "str": "zarko"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "sourcePort"
+                              },
+                              "value": {
+                                "str": ""
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "colonGreater": 2,
                   "arg": {
                     "record": [
                       {
@@ -4671,7 +4555,7 @@
                                           "str": "id"
                                         },
                                         "value": {
-                                          "str": "a2"
+                                          "str": "a1"
                                         }
                                       },
                                       {
@@ -4699,7 +4583,7 @@
                                           "str": "denom"
                                         },
                                         "value": {
-                                          "str": "eth"
+                                          "str": "atom"
                                         }
                                       },
                                       {
@@ -4707,7 +4591,7 @@
                                           "str": "port"
                                         },
                                         "value": {
-                                          "str": "zarko"
+                                          "str": "bucky"
                                         }
                                       }
                                     ]
@@ -4834,7 +4718,7 @@
                                             "str": "denom"
                                           },
                                           "value": {
-                                            "str": "eth"
+                                            "str": "atom"
                                           }
                                         },
                                         {
@@ -4851,18 +4735,18 @@
                                   {
                                     "key": {
                                       "str": "receiver"
+                                    },
+                                    "value": {
+                                      "str": "a1"
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "sender"
                                     },
                                     "value": {
                                       "str": "a2"
                                     }
-                                  },
-                                  {
-                                    "key": {
-                                      "str": "sender"
-                                    },
-                                    "value": {
-                                      "str": ""
-                                    }
                                   }
                                 ]
                               }
@@ -4873,394 +4757,6 @@
                               },
                               "value": {
                                 "str": "zarko"
-                              }
-                            },
-                            {
-                              "key": {
-                                "str": "destPort"
-                              },
-                              "value": {
-                                "str": "zarko"
-                              }
-                            },
-                            {
-                              "key": {
-                                "str": "sourceChannel"
-                              },
-                              "value": {
-                                "str": "zarko"
-                              }
-                            },
-                            {
-                              "key": {
-                                "str": "sourcePort"
-                              },
-                              "value": {
-                                "str": "zarko"
-                              }
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "colonGreater": 2,
-                  "arg": {
-                    "record": [
-                      {
-                        "key": {
-                          "str": "bankAfter"
-                        },
-                        "value": {
-                          "atat": [
-                            {
-                              "colonGreater": {
-                                "tuple": [
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "id"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "denom"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      }
-                                    ]
-                                  }
-                                ]
-                              },
-                              "arg": 0
-                            },
-                            {
-                              "colonGreater": {
-                                "tuple": [
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "id"
-                                        },
-                                        "value": {
-                                          "str": "a2"
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": "zarko"
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "denom"
-                                        },
-                                        "value": {
-                                          "str": "eth"
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": "zarko"
-                                        }
-                                      }
-                                    ]
-                                  }
-                                ]
-                              },
-                              "arg": 1
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "key": {
-                          "str": "bankBefore"
-                        },
-                        "value": {
-                          "atat": [
-                            {
-                              "colonGreater": {
-                                "tuple": [
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "id"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "denom"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      }
-                                    ]
-                                  }
-                                ]
-                              },
-                              "arg": 0
-                            },
-                            {
-                              "colonGreater": {
-                                "tuple": [
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "id"
-                                        },
-                                        "value": {
-                                          "str": "a2"
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": ""
-                                        }
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "record": [
-                                      {
-                                        "key": {
-                                          "str": "channel"
-                                        },
-                                        "value": {
-                                          "str": "zarko"
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "denom"
-                                        },
-                                        "value": {
-                                          "str": "eth"
-                                        }
-                                      },
-                                      {
-                                        "key": {
-                                          "str": "port"
-                                        },
-                                        "value": {
-                                          "str": "zarko"
-                                        }
-                                      }
-                                    ]
-                                  }
-                                ]
-                              },
-                              "arg": 1
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "key": {
-                          "str": "error"
-                        },
-                        "value": true
-                      },
-                      {
-                        "key": {
-                          "str": "packet"
-                        },
-                        "value": {
-                          "record": [
-                            {
-                              "key": {
-                                "str": "data"
-                              },
-                              "value": {
-                                "record": [
-                                  {
-                                    "key": {
-                                      "str": "amount"
-                                    },
-                                    "value": 0
-                                  },
-                                  {
-                                    "key": {
-                                      "str": "denomTrace"
-                                    },
-                                    "value": {
-                                      "record": [
-                                        {
-                                          "key": {
-                                            "str": "channel"
-                                          },
-                                          "value": {
-                                            "str": ""
-                                          }
-                                        },
-                                        {
-                                          "key": {
-                                            "str": "denom"
-                                          },
-                                          "value": {
-                                            "str": ""
-                                          }
-                                        },
-                                        {
-                                          "key": {
-                                            "str": "port"
-                                          },
-                                          "value": {
-                                            "str": ""
-                                          }
-                                        }
-                                      ]
-                                    }
-                                  },
-                                  {
-                                    "key": {
-                                      "str": "receiver"
-                                    },
-                                    "value": {
-                                      "str": "a1"
-                                    }
-                                  },
-                                  {
-                                    "key": {
-                                      "str": "sender"
-                                    },
-                                    "value": {
-                                      "str": "a1"
-                                    }
-                                  }
-                                ]
-                              }
-                            },
-                            {
-                              "key": {
-                                "str": "destChannel"
-                              },
-                              "value": {
-                                "str": ""
                               }
                             },
                             {
@@ -5276,7 +4772,7 @@
                                 "str": "sourceChannel"
                               },
                               "value": {
-                                "str": ""
+                                "str": "bucky"
                               }
                             },
                             {
@@ -5284,7 +4780,7 @@
                                 "str": "sourcePort"
                               },
                               "value": {
-                                "str": ""
+                                "str": "zarko"
                               }
                             }
                           ]
@@ -5404,7 +4900,7 @@
                                           "str": "channel"
                                         },
                                         "value": {
-                                          "str": "bucky"
+                                          "str": "zarko"
                                         }
                                       },
                                       {
@@ -5420,7 +4916,7 @@
                                           "str": "port"
                                         },
                                         "value": {
-                                          "str": ""
+                                          "str": "bucky"
                                         }
                                       }
                                     ]
@@ -5467,7 +4963,7 @@
                                           "str": "channel"
                                         },
                                         "value": {
-                                          "str": "zarko"
+                                          "str": "bucky"
                                         }
                                       },
                                       {
@@ -5582,7 +5078,7 @@
                                           "str": "id"
                                         },
                                         "value": {
-                                          "str": "a2"
+                                          "str": "a1"
                                         }
                                       },
                                       {
@@ -5610,7 +5106,7 @@
                                           "str": "denom"
                                         },
                                         "value": {
-                                          "str": "eth"
+                                          "str": "atom"
                                         }
                                       },
                                       {
@@ -5618,7 +5114,7 @@
                                           "str": "port"
                                         },
                                         "value": {
-                                          "str": "zarko"
+                                          "str": "bucky"
                                         }
                                       }
                                     ]
@@ -5673,7 +5169,7 @@
                                             "str": "denom"
                                           },
                                           "value": {
-                                            "str": "atom"
+                                            "str": "eth"
                                           }
                                         },
                                         {
@@ -5681,7 +5177,7 @@
                                             "str": "port"
                                           },
                                           "value": {
-                                            "str": "bucky"
+                                            "str": ""
                                           }
                                         }
                                       ]
@@ -5692,7 +5188,7 @@
                                       "str": "receiver"
                                     },
                                     "value": {
-                                      "str": "a1"
+                                      "str": "a2"
                                     }
                                   },
                                   {
@@ -5700,7 +5196,7 @@
                                       "str": "sender"
                                     },
                                     "value": {
-                                      "str": "a2"
+                                      "str": ""
                                     }
                                   }
                                 ]
@@ -5719,7 +5215,7 @@
                                 "str": "destPort"
                               },
                               "value": {
-                                "str": ""
+                                "str": "zarko"
                               }
                             },
                             {
@@ -5855,7 +5351,7 @@
                                           "str": "channel"
                                         },
                                         "value": {
-                                          "str": "bucky"
+                                          "str": "zarko"
                                         }
                                       },
                                       {
@@ -5871,7 +5367,7 @@
                                           "str": "port"
                                         },
                                         "value": {
-                                          "str": ""
+                                          "str": "bucky"
                                         }
                                       }
                                     ]
@@ -5918,7 +5414,7 @@
                                           "str": "channel"
                                         },
                                         "value": {
-                                          "str": "zarko"
+                                          "str": "bucky"
                                         }
                                       },
                                       {
@@ -6053,7 +5549,7 @@
                                           "str": "channel"
                                         },
                                         "value": {
-                                          "str": "bucky"
+                                          "str": "zarko"
                                         }
                                       },
                                       {
@@ -6069,7 +5565,7 @@
                                           "str": "port"
                                         },
                                         "value": {
-                                          "str": ""
+                                          "str": "bucky"
                                         }
                                       }
                                     ]
@@ -6116,7 +5612,7 @@
                                           "str": "channel"
                                         },
                                         "value": {
-                                          "str": "zarko"
+                                          "str": "bucky"
                                         }
                                       },
                                       {
@@ -6148,7 +5644,7 @@
                         "key": {
                           "str": "error"
                         },
-                        "value": true
+                        "value": false
                       },
                       {
                         "key": {
@@ -6166,7 +5662,7 @@
                                     "key": {
                                       "str": "amount"
                                     },
-                                    "value": 1
+                                    "value": 0
                                   },
                                   {
                                     "key": {
@@ -6214,7 +5710,7 @@
                                       "str": "sender"
                                     },
                                     "value": {
-                                      "str": "a1"
+                                      "str": ""
                                     }
                                   }
                                 ]
@@ -6225,7 +5721,7 @@
                                 "str": "destChannel"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             },
                             {
@@ -6233,7 +5729,7 @@
                                 "str": "destPort"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             },
                             {
@@ -6241,7 +5737,7 @@
                                 "str": "sourceChannel"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             },
                             {
@@ -6249,7 +5745,7 @@
                                 "str": "sourcePort"
                               },
                               "value": {
-                                "str": "zarko"
+                                "str": ""
                               }
                             }
                           ]
@@ -6366,7 +5862,7 @@
                               "str": "channel"
                             },
                             "value": {
-                              "str": "bucky"
+                              "str": "zarko"
                             }
                           },
                           {
@@ -6382,7 +5878,7 @@
                               "str": "port"
                             },
                             "value": {
-                              "str": ""
+                              "str": "bucky"
                             }
                           }
                         ]
@@ -6429,7 +5925,7 @@
                               "str": "channel"
                             },
                             "value": {
-                              "str": "zarko"
+                              "str": "bucky"
                             }
                           },
                           {
@@ -6573,16 +6069,8 @@
     {
       "operator": "InvariantViolation",
       "body": {
-        "and": [
-          {
-            "eq": "count",
-            "arg": 4
-          },
-          {
-            "eq": "error",
-            "arg": true
-          }
-        ]
+        "eq": "count",
+        "arg": 4
       },
       "params": [
         

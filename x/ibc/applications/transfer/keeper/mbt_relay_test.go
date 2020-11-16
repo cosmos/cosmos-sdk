@@ -62,8 +62,8 @@ type OnRecvPacketTestCase = struct {
 	bankBefore []Balance
 	// The packet to process
 	packet FungibleTokenPacket
-	// The expected changes in the bank
-	bankChange []Balance
+	// The expected bank state after processing (wrt. bankBefore)
+	bankAfter []Balance
 	// Whether OnRecvPacket should pass or fail
 	pass bool
 }
@@ -85,18 +85,14 @@ func AddressFromString(address string) string {
 }
 
 func AddressFromTla(addr []string) string {
-	fmt.Printf("addr: (%+v)", addr)
 	if len(addr) != 3 {
 		panic("failed to convert from TLA+ address: wrong number of address components")
 	}
 	s := ""
 	if len(addr[0]) == 0 && len(addr[1]) == 0 {
-		fmt.Printf("1\n")
-
 		// simple address: id
 		s = addr[2]
 	} else if len(addr[2]) == 0   {
-		fmt.Printf("2\n")
 		// escrow address: port + channel
 		s = addr[0] + addr[1]
 	} else {
@@ -154,7 +150,7 @@ func OnRecvPacketTestCaseFromTla(tc TlaOnRecvPacketTestCase) OnRecvPacketTestCas
 		description: "auto-generated",
 		bankBefore:  BalancesFromTla(tc.BankBefore),
 		packet:      FungibleTokenPacketFromTla(tc.Packet),
-		bankChange:  BalancesFromTla(tc.BankAfter),
+		bankAfter:  BalancesFromTla(tc.BankAfter), // TODO different semantics
 		pass:        !tc.Error,
 	}
 }
@@ -280,7 +276,7 @@ func (suite *KeeperTestSuite) CheckBankBalances(chain *ibctesting.TestChain, ban
 	return nil
 }
 
-func (suite *KeeperTestSuite) TestModelBasedStaticOnRecvPacket() {
+func (suite *KeeperTestSuite) TestModelBasedOnRecvPacket() {
 	var tlaTestCases = []TlaOnRecvPacketTestCase{}
 
 	filename := "recv-test.json"
@@ -305,13 +301,14 @@ func (suite *KeeperTestSuite) TestModelBasedStaticOnRecvPacket() {
 			if err := suite.SetChainBankBalances(suite.chainB, &bankBefore); err != nil {
 				panic("failed to set chain balances: " + err.Error())
 			}
-			bankBefore = BankOfChain(suite.chainB)
+			realBankBefore := BankOfChain(suite.chainB)
 			if err := suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, tc.packet.Data); err != nil {
 				suite.Require().False(tc.pass, err.Error())
 				return
 			}
-			expectedChange := BankFromBalances(tc.bankChange)
-			if err := suite.CheckBankBalances(suite.chainB, &bankBefore, &expectedChange); err != nil {
+			bankAfter := BankFromBalances(tc.bankAfter)
+			expectedBankChange := bankAfter.Sub(&bankBefore)
+			if err := suite.CheckBankBalances(suite.chainB, &realBankBefore, &expectedBankChange); err != nil {
 				suite.Require().False(tc.pass, err.Error())
 				return
 			}

@@ -187,6 +187,42 @@ jobs:
           name: "${{ github.sha }}-${{ matrix.part }}-race-output"
           path: ./${{ matrix.part }}-race-output.txt
 
+  test-rosetta:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v4
+        id: git_diff
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
+      - name: setup rosetta CLI
+        if: env.GIT_DIFF
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/coinbase/rosetta-cli/master/scripts/install.sh | sh -s
+          rosetta configuration:create rosetta.conf
+          sed -i 's/Ethereum/app/g' rosetta.conf
+          sed -i 's/Ropsten/network/g' rosetta.conf
+      - name: setup local net
+        run: |
+          make clean build-simd-linux localnet-start
+        if: env.GIT_DIFF
+      - name: start rosetta
+        if: env.GIT_DIFF
+        run: |
+          simd rosetta
+      - name: check data API
+        if: env.GIT_DIFF
+        run: |
+          rosetta check:data
+      - name: check construction API
+        if: env.GIT_DIFF
+        run: |
+          rosetta check:construction
+
   race-detector-report:
     runs-on: ubuntu-latest
     needs: [test-race, install-tparse]

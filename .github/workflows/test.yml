@@ -203,7 +203,7 @@ jobs:
         # if: env.GIT_DIFF
         run: |
           curl -sSfL https://raw.githubusercontent.com/coinbase/rosetta-cli/master/scripts/install.sh | sh -s
-          rosetta configuration:create rosetta.conf
+          rosetta-cli configuration:create rosetta.conf
           sed -i 's/Ethereum/app/g' rosetta.conf
           sed -i 's/Ropsten/network/g' rosetta.conf
       - name: setup local net
@@ -217,11 +217,11 @@ jobs:
       - name: check data API
         # if: env.GIT_DIFF
         run: |
-          rosetta check:data
+          rosetta-cli check:data
       - name: check construction API
         # if: env.GIT_DIFF
         run: |
-          rosetta check:construction
+          rosetta-cli check:construction
 
   race-detector-report:
     runs-on: ubuntu-latest

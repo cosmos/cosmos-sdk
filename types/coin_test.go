@@ -671,7 +671,6 @@ func (s *coinTestSuite) TestParseCoins() {
 	}
 
 	for tcIndex, tc := range cases {
-		fmt.Println(tc)
 		res, err := sdk.ParseCoinsNormalized(tc.input)
 		if !tc.valid {
 			s.Require().Error(err, "%s: %#v. tc #%d", tc.input, res, tcIndex)

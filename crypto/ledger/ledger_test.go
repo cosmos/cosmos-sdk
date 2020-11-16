@@ -1,13 +1,15 @@
-package ledger
+package ledger_test
 
 import (
 	"fmt"
 	"testing"
 
+	proto "github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
 	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/ledger"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,18 +19,20 @@ func TestErrorHandling(t *testing.T) {
 	// first, try to generate a key, must return an error
 	// (no panic)
 	path := hd.NewParams(44, 555, 0, false, 0)
-	_, err := NewPrivKeySecp256k1Unsafe(path)
+	_, err := ledger.NewPrivKeySecp256k1Unsafe(path)
 	require.Error(t, err)
 }
 
 func TestPublicKeyUnsafe(t *testing.T) {
 	path := hd.NewFundraiserParams(0, sdk.CoinType, 0)
-	priv, err := NewPrivKeySecp256k1Unsafe(path)
+	priv, err := ledger.NewPrivKeySecp256k1Unsafe(path)
 	require.Nil(t, err, "%s", err)
 	require.NotNil(t, priv)
 
+	bs, err := proto.Marshal(priv.PubKey())
+	require.NoError(t, err)
 	require.Equal(t, "eb5ae98721034fef9cd7c4c63588d3b03feb5281b9d232cba34d6f3d71aee59211ffbfe1fe87",
-		fmt.Sprintf("%x", cdc.Amino.MustMarshalBinaryBare(priv.PubKey())),
+		fmt.Sprintf("%x", bs),
 		"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
 	pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
@@ -64,12 +68,12 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 		path := hd.NewFundraiserParams(0, sdk.CoinType, i)
 		fmt.Printf("Checking keys at %v\n", path)
 
-		priv, err := NewPrivKeySecp256k1Unsafe(path)
+		priv, err := ledger.NewPrivKeySecp256k1Unsafe(path)
 		require.Nil(t, err, "%s", err)
 		require.NotNil(t, priv)
 
 		// Check other methods
-		tmp := priv.(*PrivKey)
+		tmp := priv.(*ledger.PrivKey)
 		require.NoError(t, tmp.ValidateKey())
 
 		pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
@@ -97,15 +101,17 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 
 func TestPublicKeySafe(t *testing.T) {
 	path := hd.NewFundraiserParams(0, sdk.CoinType, 0)
-	priv, addr, err := NewPrivKeySecp256k1(path, "cosmos")
+	priv, addr, err := ledger.NewPrivKeySecp256k1(path, "cosmos")
 
 	require.Nil(t, err, "%s", err)
 	require.NotNil(t, priv)
 
-	require.Nil(t, ShowAddress(path, priv.PubKey(), sdk.GetConfig().GetBech32AccountAddrPrefix()))
+	require.Nil(t, ledger.ShowAddress(path, priv.PubKey(), sdk.GetConfig().GetBech32AccountAddrPrefix()))
 
+	bs, err := proto.Marshal(priv.PubKey())
+	require.NoError(t, err)
 	require.Equal(t, "eb5ae98721034fef9cd7c4c63588d3b03feb5281b9d232cba34d6f3d71aee59211ffbfe1fe87",
-		fmt.Sprintf("%x", cdc.Amino.MustMarshalBinaryBare(priv.PubKey())),
+		fmt.Sprintf("%x", bs),
 		"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
 	pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
@@ -156,7 +162,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 		path := hd.NewFundraiserParams(0, sdk.CoinType, i)
 		fmt.Printf("Checking keys at %v\n", path)
 
-		priv, addr, err := NewPrivKeySecp256k1(path, "cosmos")
+		priv, addr, err := ledger.NewPrivKeySecp256k1(path, "cosmos")
 		require.Nil(t, err, "%s", err)
 		require.NotNil(t, addr)
 		require.NotNil(t, priv)
@@ -168,7 +174,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 			"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
 		// Check other methods
-		tmp := priv.(*PrivKey)
+		tmp := priv.(*ledger.PrivKey)
 		require.NoError(t, tmp.ValidateKey())
 
 		pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, priv.PubKey())
@@ -180,7 +186,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 		// Store and restore
 		serializedPk := priv.Bytes()
 		require.NotNil(t, serializedPk)
-		require.True(t, len(serializedPk) >= 50)
+		require.True(t, len(serializedPk) >= 40)
 
 		privKeys[i] = priv
 	}
@@ -209,7 +215,7 @@ func TestSignaturesHD(t *testing.T) {
 		path := hd.NewFundraiserParams(account, sdk.CoinType, account/5)
 		fmt.Printf("Checking signature at %v    ---   PLEASE REVIEW AND ACCEPT IN THE DEVICE\n", path)
 
-		priv, err := NewPrivKeySecp256k1Unsafe(path)
+		priv, err := ledger.NewPrivKeySecp256k1Unsafe(path)
 		require.Nil(t, err, "%s", err)
 
 		pub := priv.PubKey()
@@ -224,7 +230,7 @@ func TestSignaturesHD(t *testing.T) {
 func TestRealDeviceSecp256k1(t *testing.T) {
 	msg := getFakeTx(50)
 	path := hd.NewFundraiserParams(0, sdk.CoinType, 0)
-	priv, err := NewPrivKeySecp256k1Unsafe(path)
+	priv, err := ledger.NewPrivKeySecp256k1Unsafe(path)
 	require.Nil(t, err, "%s", err)
 
 	pub := priv.PubKey()
@@ -235,7 +241,8 @@ func TestRealDeviceSecp256k1(t *testing.T) {
 	require.True(t, valid)
 
 	// now, let's serialize the public key and make sure it still works
-	bs := cdc.Amino.MustMarshalBinaryBare(priv.PubKey())
+	bs, err := proto.Marshal(priv.PubKey())
+	require.NoError(t, err)
 	pub2, err := cryptoAmino.PubKeyFromBytes(bs)
 	require.Nil(t, err, "%+v", err)
 
@@ -249,7 +256,8 @@ func TestRealDeviceSecp256k1(t *testing.T) {
 	require.True(t, valid)
 
 	// make sure pubkeys serialize properly as well
-	bs = cdc.Amino.MustMarshalBinaryBare(pub)
+	bs, err = proto.Marshal(pub)
+	require.NoError(t, err)
 	bpub, err := cryptoAmino.PubKeyFromBytes(bs)
 	require.NoError(t, err)
 	require.Equal(t, pub, bpub)

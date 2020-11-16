@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/btcsuite/btcd/btcec"
+	proto "github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
 
 	tmbtcec "github.com/tendermint/btcd/btcec"
@@ -138,7 +139,12 @@ func (pkl PrivKey) ValidateKey() error {
 // Bytes implements the PrivKey interface. It stores the cached public key so
 // we can verify the same key when we reconnect to a ledger.
 func (pkl *PrivKey) Bytes() []byte {
-	return cdc.MustMarshalBinaryBare(pkl)
+	bz, err := proto.Marshal(pkl)
+	if err != nil {
+		panic(err)
+	}
+
+	return bz
 }
 
 // Equals implements the PrivKey interface. It makes sure two private keys

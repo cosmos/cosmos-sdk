@@ -1,63 +1,47 @@
-package ledger
+package ledger_test
 
 import (
-	"os"
 	"testing"
 
+	proto "github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	hd "github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/ledger"
+	"github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type byter interface {
 	Bytes() []byte
 }
 
-func checkAminoJSON(t *testing.T, src interface{}, dst interface{}, isNil bool) {
+func checkProtoJSON(t *testing.T, src proto.Message, dst proto.Message) {
+	cdc := simapp.MakeTestEncodingConfig().Marshaler
+
 	// Marshal to JSON bytes.
 	js, err := cdc.MarshalJSON(src)
 	require.Nil(t, err, "%+v", err)
-	if isNil {
-		require.Equal(t, string(js), `null`)
-	} else {
-		require.Contains(t, string(js), `"type":`)
-		require.Contains(t, string(js), `"value":`)
-	}
+	require.Contains(t, string(js), `"path":`)
+	require.Contains(t, string(js), `"cached_pub_key":`)
 	// Unmarshal.
 	err = cdc.UnmarshalJSON(js, dst)
 	require.Nil(t, err, "%+v", err)
 }
 
-// nolint: govet
-func ExamplePrintRegisteredTypes() {
-	cdc.PrintTypes(os.Stdout)
-	// | Type | Name | Prefix | Length | Notes |
-	// | ---- | ---- | ------ | ----- | ------ |
-	// | PrivKeyLedgerSecp256k1 | tendermint/PrivKeyLedgerSecp256k1 | 0x10CAB393 | variable |  |
-	// | PubKey | tendermint/PubKeyEd25519 | 0x1624DE64 | variable |  |
-	// | PubKey | tendermint/PubKeySr25519 | 0x0DFB1005 | variable |  |
-	// | PubKey | tendermint/PubKeySecp256k1 | 0xEB5AE987 | variable |  |
-	// | PubKeyMultisigThreshold | tendermint/PubKeyMultisigThreshold | 0x22C1F7E2 | variable |  |
-	// | PrivKey | tendermint/PrivKeyEd25519 | 0xA3288910 | variable |  |
-	// | PrivKey | tendermint/PrivKeySr25519 | 0x2F82D78B | variable |  |
-	// | PrivKey | tendermint/PrivKeySecp256k1 | 0xE1B0F79B | variable |  |
-}
+func TestEncodings(t *testing.T) {
+	// Check PrivKey.
+	path := hd.NewFundraiserParams(0, sdk.CoinType, 0)
+	priv1, err := ledger.NewPrivKeySecp256k1Unsafe(path)
+	require.NoError(t, err)
+	var priv2 types.PrivKey
+	checkProtoJSON(t, priv1, priv2)
+	require.EqualValues(t, priv1, priv2)
 
-func TestNilEncodings(t *testing.T) {
-
-	// Check nil Signature.
-	var a, b []byte
-	checkAminoJSON(t, &a, &b, true)
-	require.EqualValues(t, a, b)
-
-	// Check nil PubKey.
-	var c, d cryptotypes.PubKey
-	checkAminoJSON(t, &c, &d, true)
-	require.EqualValues(t, c, d)
-
-	// Check nil PrivKey.
-	var e, f cryptotypes.PrivKey
-	checkAminoJSON(t, &e, &f, true)
-	require.EqualValues(t, e, f)
-
+	// Check PubKey.
+	// pub1 := priv1.PubKey()
+	// var pub2 types.PubKey
+	// checkProtoJSON(t, pub1, pub2)
+	// require.EqualValues(t, pub1, pub2)
 }

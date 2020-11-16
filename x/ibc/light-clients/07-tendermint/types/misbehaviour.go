@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"math"
 	"time"
 
@@ -107,8 +108,8 @@ func (misbehaviour Misbehaviour) ValidateBasic() error {
 	}
 
 	// Ensure that Commit Hashes are different
-	if blockID1.Equals(*blockID2) {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "headers blockIDs are equal")
+	if bytes.Equal(blockID1.Hash, blockID2.Hash) {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "headers block hashes are equal")
 	}
 	if err := ValidCommit(misbehaviour.Header1.Header.ChainID, misbehaviour.Header1.Commit, misbehaviour.Header1.ValidatorSet); err != nil {
 		return err
@@ -145,8 +146,8 @@ func ValidCommit(chainID string, commit *tmproto.Commit, valSet *tmproto.Validat
 
 	blockID, ok := voteSet.TwoThirdsMajority()
 
-	// Check that ValidatorSet did indeed commit to blockID in Commit
-	if !ok || !blockID.Equals(tmCommit.BlockID) {
+	// Check that ValidatorSet did indeed commit to blockID hash in Commit
+	if !ok || !bytes.Equal(blockID.Hash, tmCommit.BlockID.Hash) {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "validator set did not commit to header")
 	}
 

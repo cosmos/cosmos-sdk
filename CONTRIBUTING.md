@@ -142,11 +142,15 @@ build, in which case we can fall back on `go mod tidy -v`.
 
 We use [Protocol Buffers](https://developers.google.com/protocol-buffers) along with [gogoproto](https://github.com/gogo/protobuf) to generate code for use in Cosmos-SDK.
 
+For determinstic behavior around Protobuf tooling, everything is containerized using Docker. Make sure to have Docker installed on your machine, or head to [Docker's website](https://docs.docker.com/get-docker/) to install it.
+
 For formatting code in `.proto` files, you can run `make proto-format` command.
 
-For linting and checking breaking changes, we use [buf](https://buf.build/). There are two options for linting and to check if your changes will cause a break. The first is that you can install [buf](https://buf.build/docs/installation) locally, the commands for running buf after installing are `make proto-lint` and the breaking changes check will be `make proto-check-breaking`. If you do not want to install buf and have docker installed already then you can use these commands `make proto-lint-docker` and `make proto-check-breaking-docker`.
+For linting and checking breaking changes, we use [buf](https://buf.build/). You can use the commands `make proto-lint` and `make proto-check-breaking` to respectively lint your proto files and check for breaking changes.
 
-To generate the protobuf stubs you must have `protoc` and `protoc-gen-gocosmos` installed. To install these tools run `make proto-tools`. After this step you will be able to run `make proto-gen` to generate the protobuf stubs.
+To generate the protobuf stubs, you can run `make proto-gen`.
+
+We also added the `make proto-all` command to run all the above commands sequentially.
 
 In order for imports to properly compile in your IDE, you may need to manually set your protobuf path in your IDE's workspace settings/config.
 
@@ -268,8 +272,8 @@ and PRs are merged into `master`, if a contributor wishes the PR to be released 
    - **[Impact]** Explanation of how the bug affects users or developers.
    - **[Test Case]** section with detailed instructions on how to reproduce the bug.
    - **[Regression Potential]** section with a discussion how regressions are most likely to manifest, or might
-   manifest even if it's unlikely, as a result of the change. **It is assumed that any SRU candidate PR is
-   well-tested before it is merged in and has an overall low risk of regression**.
+     manifest even if it's unlikely, as a result of the change. **It is assumed that any SRU candidate PR is
+     well-tested before it is merged in and has an overall low risk of regression**.
 
 It is the PR's author's responsibility to fix merge conflicts, update changelog entries, and
 ensure CI passes. If a PR originates from an external contributor, it may be a core team member's
@@ -280,7 +284,7 @@ Finally, when a point release is ready to be made:
 
 1. Create `release/v0.38.N` branch
 2. Ensure changelog entries are verified
-   2. Be sure changelog entries are added to `RELEASE_CHANGELOG.md`
+   1. Be sure changelog entries are added to `RELEASE_CHANGELOG.md`
 3. Add release version date to the changelog
 4. Push release branch along with the annotated tag: **git tag -a**
 5. Create a PR into `master` containing ONLY `CHANGELOG.md` updates

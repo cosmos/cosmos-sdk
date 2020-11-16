@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -71,7 +71,7 @@ func SortByteArrays(src [][]byte) [][]byte {
 const contextKeyBadProposal = "contextKeyBadProposal"
 
 var (
-	pubkeys = []crypto.PubKey{
+	pubkeys = []cryptotypes.PubKey{
 		ed25519.GenPrivKey().PubKey(),
 		ed25519.GenPrivKey().PubKey(),
 		ed25519.GenPrivKey().PubKey(),

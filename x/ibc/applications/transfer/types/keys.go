@@ -25,6 +25,9 @@ const (
 
 	// QuerierRoute is the querier route for IBC transfer
 	QuerierRoute = ModuleName
+
+	// DenomPrefix is the prefix used for internal SDK coin representation.
+	DenomPrefix = "ibc"
 )
 
 var (

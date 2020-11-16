@@ -214,7 +214,8 @@ jobs:
         # if: env.GIT_DIFF
         run: |
           docker container ls
-          simd rosetta
+          docker network ls
+          docker run --network="cosmos-sdk_localnet" -p 8080:8080 -t cosmossdk/simd-env simd rosetta
       - name: check data API
         # if: env.GIT_DIFF
         run: |

@@ -1,8 +1,7 @@
 package signing
 
 import (
-	"github.com/tendermint/tendermint/crypto"
-
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
@@ -12,7 +11,7 @@ import (
 type SigVerifiableTx interface {
 	types.Tx
 	GetSigners() []types.AccAddress
-	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
+	GetPubKeys() []cryptotypes.PubKey // If signer already has pubkey in context, this list will have nil in its place
 	GetSignaturesV2() ([]signing.SignatureV2, error)
 }
 

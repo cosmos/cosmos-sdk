@@ -35,6 +35,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
+* [\#7941](https://github.com/cosmos/cosmos-sdk/pull/7941) `version --long` displays replaced build dependencies
 
 ### Improvements
 - (SDK) [\#7925](https://github.com/cosmos/cosmos-sdk/pull/7925) Updated dependencies to use gRPC v1.33.2
@@ -1610,7 +1611,6 @@ BREAKING CHANGES
   field to `from` in the `base_req` body.
   * [\#3485](https://github.com/cosmos/cosmos-sdk/pull/3485) Error responses are now JSON objects.
   * [\#3477][distribution] endpoint changed "all_delegation_rewards" -> "delegator_total_rewards"
-
 * Gaia CLI  (`gaiacli`)
   - [#3399](https://github.com/cosmos/cosmos-sdk/pull/3399) Add `gaiad validate-genesis` command to facilitate checking of genesis files
   - [\#1894](https://github.com/cosmos/cosmos-sdk/issues/1894) `version` prints out short info by default. Add `--long` flag. Proper handling of `--format` flag introduced.

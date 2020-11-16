@@ -59,8 +59,6 @@ message BroadcastTxRequest {
 
 // BroadcastMode specifies the broadcast mode for the TxService.Broadcast RPC method.
 enum BroadcastMode {
-    option (gogoproto.goproto_enum_prefix) = false;
-
     // zero-value for mode ordering
     BROADCAST_MODE_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "none"];
     // BROADCAST_MODE_BLOCK defines a tx broadcasting mode where the client waits for

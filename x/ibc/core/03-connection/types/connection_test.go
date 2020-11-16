@@ -12,12 +12,13 @@ import (
 )
 
 var (
-	chainID       = "gaiamainnet"
-	connectionID  = "connectionidone"
-	clientID      = "clientidone"
-	connectionID2 = "connectionidtwo"
-	clientID2     = "clientidtwo"
-	clientHeight  = clienttypes.NewHeight(0, 6)
+	chainID             = "gaiamainnet"
+	connectionID        = "connectionidone"
+	clientID            = "clientidone"
+	connectionID2       = "connectionidtwo"
+	clientID2           = "clientidtwo"
+	invalidConnectionID = "(invalidConnectionID)"
+	clientHeight        = clienttypes.NewHeight(0, 6)
 )
 
 func TestConnectionValidateBasic(t *testing.T) {
@@ -43,7 +44,7 @@ func TestConnectionValidateBasic(t *testing.T) {
 		},
 		{
 			"invalid version",
-			types.ConnectionEnd{clientID, []*types.Version{&types.Version{}}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
+			types.ConnectionEnd{clientID, []*types.Version{{}}, types.INIT, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}},
 			false,
 		},
 		{

@@ -215,7 +215,6 @@ jobs:
       - name: check data API
         # if: env.GIT_DIFF
         run: |
-          cat rosetta.conf
           ./bin/rosetta-cli check:data --configuration-file server/rosetta/test/rosetta.json
       - name: check construction API
         # if: env.GIT_DIFF

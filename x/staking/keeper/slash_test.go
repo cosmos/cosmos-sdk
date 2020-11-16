@@ -90,13 +90,13 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 
 	// unbonding started prior to the infraction height, stakw didn't contribute
 	slashAmount := app.StakingKeeper.SlashUnbondingDelegation(ctx, ubd, 1, fraction)
-	require.Equal(t, int64(0), slashAmount.Int64())
+	require.True(t, slashAmount.Equal(sdk.NewInt(0)))
 
 	// after the expiration time, no longer eligible for slashing
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(10, 0)})
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 	slashAmount = app.StakingKeeper.SlashUnbondingDelegation(ctx, ubd, 0, fraction)
-	require.Equal(t, int64(0), slashAmount.Int64())
+	require.True(t, slashAmount.Equal(sdk.NewInt(0)))
 
 	// test valid slash, before expiration timestamp and to which stake contributed
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
@@ -104,7 +104,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(0, 0)})
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 	slashAmount = app.StakingKeeper.SlashUnbondingDelegation(ctx, ubd, 0, fraction)
-	require.Equal(t, int64(5), slashAmount.Int64())
+	require.True(t, slashAmount.Equal(sdk.NewInt(5)))
 	ubd, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
@@ -116,7 +116,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	require.Equal(t, sdk.NewInt(5), ubd.Entries[0].Balance)
 	newUnbondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
 	diffTokens := oldUnbondedPoolBalances.Sub(newUnbondedPoolBalances)
-	require.Equal(t, int64(5), diffTokens.AmountOf(app.StakingKeeper.BondDenom(ctx)).Int64())
+	require.True(t, diffTokens.AmountOf(app.StakingKeeper.BondDenom(ctx)).Equal(sdk.NewInt(5)))
 }
 
 // tests slashRedelegation
@@ -147,7 +147,7 @@ func TestSlashRedelegation(t *testing.T) {
 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[1])
 	require.True(t, found)
 	slashAmount := app.StakingKeeper.SlashRedelegation(ctx, validator, rd, 1, fraction)
-	require.Equal(t, int64(0), slashAmount.Int64())
+	require.True(t, slashAmount.Equal(sdk.NewInt(0)))
 
 	// after the expiration time, no longer eligible for slashing
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(10, 0)})
@@ -155,7 +155,7 @@ func TestSlashRedelegation(t *testing.T) {
 	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[1])
 	require.True(t, found)
 	slashAmount = app.StakingKeeper.SlashRedelegation(ctx, validator, rd, 0, fraction)
-	require.Equal(t, int64(0), slashAmount.Int64())
+	require.True(t, slashAmount.Equal(sdk.NewInt(0)))
 
 	balances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
@@ -165,7 +165,7 @@ func TestSlashRedelegation(t *testing.T) {
 	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[1])
 	require.True(t, found)
 	slashAmount = app.StakingKeeper.SlashRedelegation(ctx, validator, rd, 0, fraction)
-	require.Equal(t, int64(5), slashAmount.Int64())
+	require.True(t, slashAmount.Equal(sdk.NewInt(5)))
 	rd, found = app.StakingKeeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 	require.Len(t, rd.Entries, 1)

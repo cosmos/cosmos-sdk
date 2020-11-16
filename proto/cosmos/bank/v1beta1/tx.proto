@@ -28,15 +28,15 @@ message MsgSend {
 }
 
 // MsgSendResponse defines the Msg/Send response type.
-message MsgSendResponse { }
+message MsgSendResponse {}
 
 // MsgMultiSend represents an arbitrary multi-in, multi-out send message.
 message MsgMultiSend {
   option (gogoproto.equal) = false;
 
-  repeated Input inputs   = 1 [(gogoproto.nullable) = false];
+  repeated Input  inputs  = 1 [(gogoproto.nullable) = false];
   repeated Output outputs = 2 [(gogoproto.nullable) = false];
 }
 
 // MsgMultiSendResponse defines the Msg/MultiSend response type.
-message MsgMultiSendResponse { }
+message MsgMultiSendResponse {}

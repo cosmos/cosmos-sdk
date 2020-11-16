@@ -39,7 +39,7 @@ message MsgCreateClient {
 }
 
 // MsgCreateClientResponse defines the Msg/CreateClient response type.
-message MsgCreateClientResponse { }
+message MsgCreateClientResponse {}
 
 // MsgUpdateClient defines an sdk.Msg to update a IBC client state using
 // the given header.
@@ -56,7 +56,7 @@ message MsgUpdateClient {
 }
 
 // MsgUpdateClientResponse defines the Msg/UpdateClient response type.
-message MsgUpdateClientResponse { }
+message MsgUpdateClientResponse {}
 
 // MsgUpgradeClient defines an sdk.Msg to upgrade an IBC client to a new client state
 message MsgUpgradeClient {
@@ -73,7 +73,7 @@ message MsgUpgradeClient {
 }
 
 // MsgUpgradeClientResponse defines the Msg/UpgradeClient response type.
-message MsgUpgradeClientResponse { }
+message MsgUpgradeClientResponse {}
 
 // MsgSubmitMisbehaviour defines an sdk.Msg type that submits Evidence for
 // light client misbehaviour.
@@ -90,4 +90,4 @@ message MsgSubmitMisbehaviour {
 }
 
 // MsgSubmitMisbehaviourResponse defines the Msg/SubmitMisbehaviour response type.
-message MsgSubmitMisbehaviourResponse { }
+message MsgSubmitMisbehaviourResponse {}

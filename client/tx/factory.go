@@ -120,7 +120,7 @@ func (f Factory) WithGas(gas uint64) Factory {
 
 // WithFees returns a copy of the Factory with an updated fee.
 func (f Factory) WithFees(fees string) Factory {
-	parsedFees, err := sdk.ParseCoins(fees)
+	parsedFees, err := sdk.ParseCoinsNormalized(fees)
 	if err != nil {
 		panic(err)
 	}

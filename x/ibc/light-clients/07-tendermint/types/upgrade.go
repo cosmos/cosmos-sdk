@@ -146,7 +146,7 @@ func constructUpgradeClientMerklePath(upgradePath []string, lastHeight exported.
 
 // construct MerklePath for the committed consensus state from upgradePath
 func constructUpgradeConsStateMerklePath(upgradePath []string, lastHeight exported.Height) commitmenttypes.MerklePath {
-	// append lastHeight and `upgradedClient` to last key in merkle path
+	// append lastHeight and `upgradedConsensusState` to last key in merkle path
 	// this will create the IAVL key that is used to store client in upgrade store
 	upgradePath[len(upgradePath)-1] = fmt.Sprintf("%s/%d/%s", upgradePath[len(upgradePath)-1], lastHeight.GetVersionHeight(), upgradetypes.KeyUpgradedConsState)
 	return commitmenttypes.NewMerklePath(upgradePath...)

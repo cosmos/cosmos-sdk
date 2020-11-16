@@ -3,7 +3,6 @@ package offchain
 import (
 	"errors"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -15,28 +14,28 @@ type signerTestSuite struct {
 	suite.Suite
 	signer   Signer
 	verifier SignatureVerifier
-	privKey  cryptotypes.PrivKey
 	address  sdk.AccAddress
 }
 
 func (ts *signerTestSuite) SetupTest() {
 	encConf := simapp.MakeTestEncodingConfig()
+	privKey := secp256k1.GenPrivKeyFromSecret(nil)
+
 	RegisterInterfaces(encConf.InterfaceRegistry)
 	RegisterLegacyAminoCodec(encConf.Amino)
-	ts.signer = NewSigner(encConf.TxConfig)
+	ts.signer = NewSigner(encConf.TxConfig, privKey)
 	ts.verifier = NewVerifier(encConf.TxConfig.SignModeHandler())
-	ts.privKey = secp256k1.GenPrivKeyFromSecret(nil)
-	ts.address = sdk.AccAddress(ts.privKey.PubKey().Address())
+	ts.address = sdk.AccAddress(privKey.PubKey().Address())
 }
 
 func (ts *signerTestSuite) TestEmptyMsgs() {
-	_, err := ts.signer.Sign(ts.privKey, nil)
+	_, err := ts.signer.Sign(nil)
 	ts.Require().True(errors.Is(err, sdkerrors.ErrInvalidRequest), "unexpected error: %s", err)
 }
 
 // tests sign verify cycle works
 func (ts *signerTestSuite) TestVerifyCompatibility() {
-	tx, err := ts.signer.Sign(ts.privKey, []sdk.Msg{
+	tx, err := ts.signer.Sign([]sdk.Msg{
 		NewMsgSignData(ts.address, []byte("data")),
 	})
 	ts.Require().NoError(err, "error while signing transaction")

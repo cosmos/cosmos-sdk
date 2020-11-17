@@ -21,7 +21,7 @@ func CommitPacket(cdc codec.BinaryMarshaler, packet exported.PacketI) ([]byte, e
 		return nil, sdkerrors.Wrap(ErrInvalidPacket, "could not cast height to clienttypes.Height")
 	}
 
-	timeoutBz, err := codec.MarshalAny(cdc, &height)
+	timeoutBz, err := cdc.MarshalBinaryBare(&height)
 	if err != nil {
 		return nil, err
 	}

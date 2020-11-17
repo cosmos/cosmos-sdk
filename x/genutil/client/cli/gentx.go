@@ -116,7 +116,7 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 			}
 
 			amount, _ := cmd.Flags().GetString(cli.FlagAmount)
-			coins, err := sdk.ParseCoins(amount)
+			coins, err := sdk.ParseCoinsNormalized(amount)
 			if err != nil {
 				return errors.Wrap(err, "failed to parse coins")
 			}

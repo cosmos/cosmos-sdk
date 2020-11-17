@@ -109,3 +109,9 @@ Cosmos Hub for the `uatom`). Sending a token back to the same chain across a dif
 **not** move the token back across its timeline. If a channel in the chain history closes before the
 token can be sent back across that channel, then the token will not be returnable to its original
 form.
+
+
+## Security Considerations
+
+For safety, no other module must be capable of minting tokens with the `ibc/` prefix. The IBC
+transfer module needs a subset of the denomination space that only it can create tokens in.

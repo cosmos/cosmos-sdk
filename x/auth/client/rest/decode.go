@@ -55,9 +55,9 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		response := DecodeResp(stdTx)
 
-		err = checkForJSONMarshalFailure(w, clientCtx, response, "/cosmos/tx/v1beta1/txs/decode")
+		err = checkSignModeError(w, clientCtx, response, "/cosmos/tx/v1beta1/txs/decode")
 		if err != nil {
-			// Error is already returned by checkForJSONMarshalFailure.
+			// Error is already returned by checkSignModeError.
 			return
 		}
 

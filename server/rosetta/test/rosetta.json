@@ -25,7 +25,7 @@
     "broadcast_behind_tip": false,
     "block_broadcast_limit": 0,
     "rebroadcast_all": false,
-    "constructor_dsl_file": "server/rosetta/test/cosmos.ros",
+    "constructor_dsl_file": "cosmos.ros",
     "end_conditions": {
       "create_account": 10,
       "transfer": 10
@@ -41,7 +41,7 @@
     "log_reconciliations": false,
     "ignore_reconciliation_error": false,
     "exempt_accounts": "",
-    "bootstrap_balances": "",
+    "bootstrap_balances": "bootstrap.json",
     "interesting_accounts": "",
     "reconciliation_disabled": false,
     "reconciliation_drain_disabled": false,

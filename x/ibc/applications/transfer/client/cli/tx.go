@@ -46,7 +46,7 @@ to the counterparty channel. Any timeout set to 0 is disabled.`),
 			srcChannel := args[1]
 			receiver := args[2]
 
-			coin, err := sdk.ParseCoin(args[3])
+			coin, err := sdk.ParseCoinNormalized(args[3])
 			if err != nil {
 				return err
 			}

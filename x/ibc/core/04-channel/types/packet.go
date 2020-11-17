@@ -15,7 +15,13 @@ import (
 // sha256_hash(timeout_timestamp + proto_marshal(timeout_height) + data) from a given packet.
 // The function will fail if the timeout height cannot be marshaled to bytes.
 func CommitPacket(cdc codec.BinaryMarshaler, packet exported.PacketI) ([]byte, error) {
-	timeoutBz, err := codec.MarshalAny(cdc, packet.GetTimeoutHeight())
+	timeoutHeight := packet.GetTimeoutHeight()
+	height, ok := timeoutHeight.(clienttypes.Height)
+	if !ok {
+		return nil, sdkerrors.Wrap(ErrInvalidPacket, "could not cast height to clienttypes.Height")
+	}
+
+	timeoutBz, err := codec.MarshalAny(cdc, &height)
 	if err != nil {
 		return nil, err
 	}

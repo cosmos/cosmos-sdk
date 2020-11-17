@@ -18,7 +18,6 @@ func TestCommitPacket(t *testing.T) {
 		errMsg  string
 	}{
 		{types.NewPacket(validPacketData, 1, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp), true, ""},
-		{types.NewPacket(validPacketData, 0, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp), false, "invalid sequence"},
 	}
 
 	for i, tc := range testCases {

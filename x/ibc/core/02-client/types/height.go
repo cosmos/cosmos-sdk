@@ -63,12 +63,7 @@ func (h Height) Compare(other exported.Height) int64 {
 		a.SetUint64(h.VersionHeight)
 		b.SetUint64(height.VersionHeight)
 	}
-	if r := a.Cmp(&b); r < 0 {
-		return -1
-	} else if r > 0 {
-		return 1
-	}
-	return 0
+	return int64(a.Cmp(&b))
 }
 
 // LT Helper comparison function returns true if h < other

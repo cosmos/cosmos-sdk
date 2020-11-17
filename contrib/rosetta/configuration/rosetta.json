@@ -3,7 +3,7 @@
     "blockchain": "app",
     "network": "network"
   },
-  "online_url": "http://localhost:8080",
+  "online_url": "http://rosetta:8080",
   "data_directory": "",
   "http_timeout": 10,
   "max_retries": 5,
@@ -16,7 +16,7 @@
   "compression_disabled": false,
   "memory_limit_disabled": false,
   "construction": {
-    "offline_url": "http://localhost:8080",
+    "offline_url": "http://rosetta:8080",
     "max_offline_connections": 0,
     "stale_depth": 0,
     "broadcast_limit": 0,

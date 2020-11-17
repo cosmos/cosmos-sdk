@@ -23,3 +23,10 @@ services:
     ]
     ports:
       - 8080:8080
+
+  test_rosetta:
+    build:
+      context: ../../
+      dockerfile: contrib/rosetta/node/Dockerfile
+    command: ["./run_tests.sh"]
+    working_dir: /rosetta

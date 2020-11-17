@@ -199,19 +199,10 @@ jobs:
             **/**.go
             go.mod
             go.sum
-      - name: spin up simd node and rosetta instance
+      - name: test rosetta
         run: |
-          docker-compose -f contrib/rosetta/docker-compose.yaml up -d --build
+          docker-compose -f contrib/rosetta/docker-compose.yaml up --abort-on-container-exit --exit-code-from test_rosetta  --build
         # if: env.GIT_DIFF
-      - name: check data API
-        # if: env.GIT_DIFF
-        run: |
-          sleep 20
-          docker exec -w /rosetta rosetta_rosetta_1 rosetta-cli check:data --configuration-file rosetta.json
-      - name: check construction API
-        # if: env.GIT_DIFF
-        run: |
-          echo todo
 
   race-detector-report:
     runs-on: ubuntu-latest

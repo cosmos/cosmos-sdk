@@ -47,8 +47,7 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	// counterparty chain must commit the upgraded client with all client-customizable fields zeroed out
 	// at the upgrade path specified by current client
 	// counterparty must also commit to the upgraded consensus state at a sub-path under the upgrade path specified
-	committedClient := upgradedClient.ZeroCustomFields()
-	tmCommittedClient, ok := committedClient.(*ClientState)
+	tmUpgradeClient, ok := upgradedClient.(*ClientState)
 	if !ok {
 		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "upgraded client must be Tendermint client. expected: %T got: %T",
 			&ClientState{}, upgradedClient)
@@ -81,7 +80,7 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	}
 
 	// Verify client proof
-	bz, err := codec.MarshalAny(cdc, committedClient)
+	bz, err := codec.MarshalAny(cdc, upgradedClient)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "could not marshal client state: %v", err)
 	}
@@ -107,8 +106,8 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	// All chain-chosen parameters come from committed client, all client-chosen parameters
 	// come from current client.
 	newClientState := NewClientState(
-		tmCommittedClient.ChainId, cs.TrustLevel, cs.TrustingPeriod, tmCommittedClient.UnbondingPeriod,
-		cs.MaxClockDrift, tmCommittedClient.LatestHeight, tmCommittedClient.ProofSpecs, tmCommittedClient.UpgradePath,
+		tmUpgradeClient.ChainId, cs.TrustLevel, cs.TrustingPeriod, tmUpgradeClient.UnbondingPeriod,
+		cs.MaxClockDrift, tmUpgradeClient.LatestHeight, tmUpgradeClient.ProofSpecs, tmUpgradeClient.UpgradePath,
 		cs.AllowUpdateAfterExpiry, cs.AllowUpdateAfterMisbehaviour,
 	)
 

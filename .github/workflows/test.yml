@@ -206,6 +206,7 @@ jobs:
       - name: check data API
         # if: env.GIT_DIFF
         run: |
+          sleep 20
           docker exec -w /rosetta rosetta_rosetta_1 rosetta-cli check:data --configuration-file rosetta.json
       - name: check construction API
         # if: env.GIT_DIFF

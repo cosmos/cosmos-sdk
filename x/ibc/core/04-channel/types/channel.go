@@ -55,7 +55,7 @@ func (ch Channel) GetVersion() string {
 
 // ValidateBasic performs a basic validation of the channel fields
 func (ch Channel) ValidateBasic() error {
-	if ch.State.String() == "" {
+	if ch.State == UNINITIALIZED {
 		return ErrInvalidChannelState
 	}
 	if !(ch.Ordering == ORDERED || ch.Ordering == UNORDERED) {

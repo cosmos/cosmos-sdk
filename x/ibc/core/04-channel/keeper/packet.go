@@ -106,7 +106,7 @@ func (k Keeper) SendPacket(
 
 	commitment, err := types.CommitPacket(k.cdc, packet)
 	if err != nil {
-		return sdkerrors.Wrap(types.ErrInvalidPacket, err.Error())
+		return sdkerrors.Wrap(err, "failed to create packet commitment")
 	}
 
 	nextSequenceSend++
@@ -218,7 +218,7 @@ func (k Keeper) RecvPacket(
 
 	commitment, err := types.CommitPacket(k.cdc, packet)
 	if err != nil {
-		return err
+		return sdkerrors.Wrap(err, "failed to create packet commitment")
 	}
 
 	// verify that the counterparty did commit to sending this packet
@@ -450,7 +450,7 @@ func (k Keeper) AcknowledgePacket(
 
 	packetCommitment, err := types.CommitPacket(k.cdc, packet)
 	if err != nil {
-		return sdkerrors.Wrap(types.ErrInvalidPacket, err.Error())
+		return sdkerrors.Wrap(err, "failed to create packet commitment")
 	}
 
 	// verify we sent the packet and haven't cleared it out yet

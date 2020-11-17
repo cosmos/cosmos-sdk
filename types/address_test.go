@@ -10,11 +10,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto"
 	"gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -509,7 +509,7 @@ func (s *addressTestSuite) TestGetConsAddress() {
 	pk := secp256k1.GenPrivKey().PubKey()
 	s.Require().NotEqual(types.GetConsAddress(pk), pk.Address())
 	s.Require().True(bytes.Equal(types.GetConsAddress(pk).Bytes(), pk.Address().Bytes()))
-	s.Require().Panics(func() { types.GetConsAddress(crypto.PubKey(nil)) })
+	s.Require().Panics(func() { types.GetConsAddress(cryptotypes.PubKey(nil)) })
 }
 
 func (s *addressTestSuite) TestGetFromBech32() {

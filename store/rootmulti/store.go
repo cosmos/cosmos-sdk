@@ -315,7 +315,9 @@ func (rs *Store) TracingEnabled() bool {
 // LastCommitID implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
 	if rs.lastCommitInfo == nil {
-		return types.CommitID{}
+		return types.CommitID{
+			Version: getLatestVersion(rs.db),
+		}
 	}
 
 	return rs.lastCommitInfo.CommitID()

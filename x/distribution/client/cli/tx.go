@@ -256,7 +256,7 @@ $ %s tx distribution fund-community-pool 100uatom --from mykey
 			}
 
 			depositorAddr := clientCtx.GetFromAddress()
-			amount, err := sdk.ParseCoins(args[0])
+			amount, err := sdk.ParseCoinsNormalized(args[0])
 			if err != nil {
 				return err
 			}
@@ -315,12 +315,12 @@ Where proposal.json contains:
 				return err
 			}
 
-			amount, err := sdk.ParseCoins(proposal.Amount)
+			amount, err := sdk.ParseCoinsNormalized(proposal.Amount)
 			if err != nil {
 				return err
 			}
 
-			deposit, err := sdk.ParseCoins(proposal.Deposit)
+			deposit, err := sdk.ParseCoinsNormalized(proposal.Deposit)
 			if err != nil {
 				return err
 			}

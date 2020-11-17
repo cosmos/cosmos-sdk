@@ -8,10 +8,10 @@ import (
 	"github.com/pkg/errors"
 
 	tmbtcec "github.com/tendermint/btcd/btcec"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 var (
@@ -43,7 +43,7 @@ type (
 		// CachedPubKey should be private, but we want to encode it via
 		// go-amino so we can view the address later, even without having the
 		// ledger attached.
-		CachedPubKey tmcrypto.PubKey
+		CachedPubKey types.PubKey
 		Path         hd.BIP44Params
 	}
 )
@@ -53,7 +53,7 @@ type (
 // This function is marked as unsafe as it will retrieve a pubkey without user verification.
 // It can only be used to verify a pubkey but never to create new accounts/keys. In that case,
 // please refer to NewPrivKeySecp256k1
-func NewPrivKeySecp256k1Unsafe(path hd.BIP44Params) (tmcrypto.PrivKey, error) {
+func NewPrivKeySecp256k1Unsafe(path hd.BIP44Params) (types.LedgerPrivKey, error) {
 	device, err := getDevice()
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func NewPrivKeySecp256k1Unsafe(path hd.BIP44Params) (tmcrypto.PrivKey, error) {
 
 // NewPrivKeySecp256k1 will generate a new key and store the public key for later use.
 // The request will require user confirmation and will show account and index in the device
-func NewPrivKeySecp256k1(path hd.BIP44Params, hrp string) (tmcrypto.PrivKey, string, error) {
+func NewPrivKeySecp256k1(path hd.BIP44Params, hrp string) (types.LedgerPrivKey, string, error) {
 	device, err := getDevice()
 	if err != nil {
 		return nil, "", err
@@ -86,7 +86,7 @@ func NewPrivKeySecp256k1(path hd.BIP44Params, hrp string) (tmcrypto.PrivKey, str
 }
 
 // PubKey returns the cached public key.
-func (pkl PrivKeyLedgerSecp256k1) PubKey() tmcrypto.PubKey {
+func (pkl PrivKeyLedgerSecp256k1) PubKey() types.PubKey {
 	return pkl.CachedPubKey
 }
 
@@ -102,7 +102,7 @@ func (pkl PrivKeyLedgerSecp256k1) Sign(message []byte) ([]byte, error) {
 }
 
 // ShowAddress triggers a ledger device to show the corresponding address.
-func ShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey,
+func ShowAddress(path hd.BIP44Params, expectedPubKey types.PubKey,
 	accountAddressPrefix string) error {
 	device, err := getDevice()
 	if err != nil {
@@ -154,7 +154,7 @@ func (pkl PrivKeyLedgerSecp256k1) Bytes() []byte {
 
 // Equals implements the PrivKey interface. It makes sure two private keys
 // refer to the same public key.
-func (pkl PrivKeyLedgerSecp256k1) Equals(other tmcrypto.PrivKey) bool {
+func (pkl PrivKeyLedgerSecp256k1) Equals(other types.LedgerPrivKey) bool {
 	if otherKey, ok := other.(PrivKeyLedgerSecp256k1); ok {
 		return pkl.CachedPubKey.Equals(otherKey.CachedPubKey)
 	}
@@ -234,7 +234,7 @@ func sign(device SECP256K1, pkl PrivKeyLedgerSecp256k1, msg []byte) ([]byte, err
 //
 // since this involves IO, it may return an error, which is not exposed
 // in the PubKey interface, so this function allows better error handling
-func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (tmcrypto.PubKey, error) {
+func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (types.PubKey, error) {
 	publicKey, err := device.GetPublicKeySECP256K1(path.DerivationPath())
 	if err != nil {
 		return nil, fmt.Errorf("please open Cosmos app on the Ledger device - error: %v", err)
@@ -258,7 +258,7 @@ func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (tmcrypto.PubKey, er
 //
 // Since this involves IO, it may return an error, which is not exposed
 // in the PubKey interface, so this function allows better error handling.
-func getPubKeyAddrSafe(device SECP256K1, path hd.BIP44Params, hrp string) (tmcrypto.PubKey, string, error) {
+func getPubKeyAddrSafe(device SECP256K1, path hd.BIP44Params, hrp string) (types.PubKey, string, error) {
 	publicKey, addr, err := device.GetAddressPubKeySECP256K1(path.DerivationPath(), hrp)
 	if err != nil {
 		return nil, "", fmt.Errorf("address %s rejected", addr)

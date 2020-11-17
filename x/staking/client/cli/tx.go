@@ -7,19 +7,20 @@ import (
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// default values
 var (
-	defaultTokens                  = sdk.TokensFromConsensusPower(100)
-	defaultAmount                  = defaultTokens.String() + sdk.DefaultBondDenom
+	DefaultTokens                  = sdk.TokensFromConsensusPower(100)
+	defaultAmount                  = DefaultTokens.String() + sdk.DefaultBondDenom
 	defaultCommissionRate          = "0.1"
 	defaultCommissionMaxRate       = "0.2"
 	defaultCommissionMaxChangeRate = "0.01"
@@ -416,7 +417,7 @@ type TxCreateValidatorConfig struct {
 	Identity        string
 }
 
-func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, chainID string, valPubKey crypto.PubKey) (TxCreateValidatorConfig, error) {
+func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, chainID string, valPubKey cryptotypes.PubKey) (TxCreateValidatorConfig, error) {
 	c := TxCreateValidatorConfig{}
 
 	ip, err := flagSet.GetString(FlagIP)

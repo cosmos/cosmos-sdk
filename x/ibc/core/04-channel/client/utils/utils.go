@@ -35,7 +35,7 @@ func QueryChannel(
 }
 
 func queryChannelABCI(clientCtx client.Context, portID, channelID string) (*types.QueryChannelResponse, error) {
-	key := host.KeyChannel(portID, channelID)
+	key := host.ChannelKey(portID, channelID)
 
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
@@ -176,7 +176,7 @@ func QueryNextSequenceReceive(
 }
 
 func queryNextSequenceRecvABCI(clientCtx client.Context, portID, channelID string) (*types.QueryNextSequenceReceiveResponse, error) {
-	key := host.KeyNextSequenceRecv(portID, channelID)
+	key := host.NextSequenceRecvKey(portID, channelID)
 
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
@@ -217,7 +217,7 @@ func QueryPacketCommitment(
 func queryPacketCommitmentABCI(
 	clientCtx client.Context, portID, channelID string, sequence uint64,
 ) (*types.QueryPacketCommitmentResponse, error) {
-	key := host.KeyPacketCommitment(portID, channelID, sequence)
+	key := host.PacketCommitmentKey(portID, channelID, sequence)
 
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
@@ -256,7 +256,7 @@ func QueryPacketReceipt(
 func queryPacketReceiptABCI(
 	clientCtx client.Context, portID, channelID string, sequence uint64,
 ) (*types.QueryPacketReceiptResponse, error) {
-	key := host.KeyPacketReceipt(portID, channelID, sequence)
+	key := host.PacketReceiptKey(portID, channelID, sequence)
 
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
@@ -285,7 +285,7 @@ func QueryPacketAcknowledgement(clientCtx client.Context, portID, channelID stri
 }
 
 func queryPacketAcknowledgementABCI(clientCtx client.Context, portID, channelID string, sequence uint64) (*types.QueryPacketAcknowledgementResponse, error) {
-	key := host.KeyPacketAcknowledgement(portID, channelID, sequence)
+	key := host.PacketAcknowledgementKey(portID, channelID, sequence)
 
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {

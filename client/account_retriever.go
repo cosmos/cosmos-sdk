@@ -1,15 +1,14 @@
 package client
 
 import (
-	"github.com/tendermint/tendermint/crypto"
-
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Account defines a read-only version of the auth module's AccountI.
 type Account interface {
 	GetAddress() sdk.AccAddress
-	GetPubKey() crypto.PubKey // can return nil.
+	GetPubKey() cryptotypes.PubKey // can return nil.
 	GetAccountNumber() uint64
 	GetSequence() uint64
 }

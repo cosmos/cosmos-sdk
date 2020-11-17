@@ -600,7 +600,7 @@ var (
 	// a letter, a number or a separator ('/').
 	reDnmString = `[a-zA-Z][a-zA-Z0-9/]{2,127}`
 	reAmt       = `[[:digit:]]+`
-	reDecAmt    = `[[:digit:]]*\.[[:digit:]]+`
+	reDecAmt    = `[[:digit:]]+(?:\.[[:digit:]]+)?|\.[[:digit:]]+`
 	reSpc       = `[[:space:]]*`
 	reDnm       = returnReDnm
 	reCoin      = returnReCoin
@@ -664,33 +664,18 @@ func ParseCoin(coinStr string) (coin Coin, err error) {
 	return NewCoin(denomStr, amount), nil
 }
 
-// ParseCoins will parse out a list of coins separated by commas. If the parsing is successuful,
-// the provided coins will be sanitized by removing zero coins and sorting the coin set. Lastly
-// a validation of the coin set is executed. If the check passes, ParseCoins will return the sanitized coins.
+// ParseCoinsNormalized will parse out a list of coins separated by commas, and normalize them by converting to smallest
+// unit. If the parsing is successuful, the provided coins will be sanitized by removing zero coins and sorting the coin
+// set. Lastly a validation of the coin set is executed. If the check passes, ParseCoinsNormalized will return the
+// sanitized coins.
 // Otherwise it will return an error.
-// If an empty string is provided to ParseCoins, it returns nil Coins.
+// If an empty string is provided to ParseCoinsNormalized, it returns nil Coins.
+// ParseCoinsNormalized supports decimal coins as inputs, and truncate them to int after converted to smallest unit.
 // Expected format: "{amount0}{denomination},...,{amountN}{denominationN}"
-func ParseCoins(coinsStr string) (Coins, error) {
-	coinsStr = strings.TrimSpace(coinsStr)
-	if len(coinsStr) == 0 {
-		return nil, nil
+func ParseCoinsNormalized(coinStr string) (Coins, error) {
+	coins, err := ParseDecCoins(coinStr)
+	if err != nil {
+		return Coins{}, err
 	}
-
-	coinStrs := strings.Split(coinsStr, ",")
-	coins := make(Coins, len(coinStrs))
-	for i, coinStr := range coinStrs {
-		coin, err := ParseCoin(coinStr)
-		if err != nil {
-			return nil, err
-		}
-
-		coins[i] = coin
-	}
-
-	newCoins := sanitizeCoins(coins)
-	if err := newCoins.Validate(); err != nil {
-		return nil, err
-	}
-
-	return newCoins, nil
+	return NormalizeCoins(coins), nil
 }

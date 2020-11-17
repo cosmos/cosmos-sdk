@@ -29,6 +29,7 @@ COPY --from=build /rosetta/rosetta-cli/rosetta-cli /bin/rosetta-cli
 
 WORKDIR /rosetta
 COPY ./contrib/rosetta/configuration ./
+RUN chmod +x run_tests.sh
 
 WORKDIR /root/.simapp
 

@@ -17,7 +17,7 @@ type IBCModule interface {
 		portID string,
 		channelID string,
 		channelCap *capabilitytypes.Capability,
-		counterParty channeltypes.Counterparty,
+		counterparty channeltypes.Counterparty,
 		version string,
 	) error
 

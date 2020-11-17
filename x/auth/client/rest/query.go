@@ -202,7 +202,6 @@ func checkSignModeError(w http.ResponseWriter, ctx client.Context, resp interfac
 	marshaler := ctx.LegacyAmino
 
 	_, err := marshaler.MarshalJSON(resp)
-
 	if err != nil && strings.Contains(err.Error(), unRegisteredConcreteTypeErr) {
 		rest.WriteErrorResponse(w, http.StatusInternalServerError,
 			"This transaction was created with the new SIGN_MODE_DIRECT signing method, and therefore cannot be displayed"+

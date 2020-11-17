@@ -45,7 +45,7 @@ func (k Keeper) OnChanOpenInit(ctx sdk.Context,
     portID string,
     channelID string,
     channelCap *capabilitytypes.Capability,
-    counterParty channeltypes.Counterparty,
+    counterparty channeltypes.Counterparty,
     version string,
 ) error {
     // OpenInit must claim the channelCapability that IBC passes into the callback

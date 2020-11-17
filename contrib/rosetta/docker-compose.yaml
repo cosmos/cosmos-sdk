@@ -1,0 +1,25 @@
+services:
+  cosmos:
+    build:
+      context: ../../
+      dockerfile: contrib/rosetta/node/Dockerfile
+    command: ["simd", "start", "--pruning", "nothing"]
+    ports:
+      - 9090:9090
+      - 26657:26657
+
+  rosetta:
+    build:
+      context: ../../
+      dockerfile: contrib/rosetta/node/Dockerfile
+    command: [
+      "simd",
+      "rosetta",
+      "--blockchain", "app",
+      "--network", "network",
+      "--tendermint", "cosmos:26657",
+      "--grpc", "cosmos:9090",
+      "--addr", ":8080",
+    ]
+    ports:
+      - 8080:8080

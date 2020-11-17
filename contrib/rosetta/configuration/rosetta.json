@@ -1,0 +1,59 @@
+{
+  "network": {
+    "blockchain": "app",
+    "network": "network"
+  },
+  "online_url": "http://localhost:8080",
+  "data_directory": "",
+  "http_timeout": 10,
+  "max_retries": 5,
+  "retry_elapsed_time": 0,
+  "max_online_connections": 120,
+  "max_sync_concurrency": 64,
+  "tip_delay": 300,
+  "max_reorg_depth": 100,
+  "log_configuration": false,
+  "compression_disabled": false,
+  "memory_limit_disabled": false,
+  "construction": {
+    "offline_url": "http://localhost:8080",
+    "max_offline_connections": 0,
+    "stale_depth": 0,
+    "broadcast_limit": 0,
+    "ignore_broadcast_failures": false,
+    "clear_broadcasts": false,
+    "broadcast_behind_tip": false,
+    "block_broadcast_limit": 0,
+    "rebroadcast_all": false,
+    "constructor_dsl_file": "cosmos.ros",
+    "end_conditions": {
+      "create_account": 10,
+      "transfer": 10
+    }
+  },
+  "data": {
+    "active_reconciliation_concurrency": 16,
+    "inactive_reconciliation_concurrency": 4,
+    "inactive_reconciliation_frequency": 250,
+    "log_blocks": false,
+    "log_transactions": false,
+    "log_balance_changes": false,
+    "log_reconciliations": false,
+    "ignore_reconciliation_error": false,
+    "exempt_accounts": "",
+    "bootstrap_balances": "bootstrap.json",
+    "interesting_accounts": "",
+    "reconciliation_disabled": false,
+    "reconciliation_drain_disabled": false,
+    "inactive_discrepency_search_disabled": false,
+    "balance_tracking_disabled": false,
+    "coin_tracking_disabled": false,
+    "status_port": 9090,
+    "results_output_file": "",
+    "pruning_disabled": false,
+    "initial_balance_fetch_disabled": false,
+    "end_conditions": {
+      "tip": true
+    }
+  }
+}

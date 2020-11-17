@@ -199,27 +199,18 @@ jobs:
             **/**.go
             go.mod
             go.sum
-      - name: setup rosetta CLI
-        # if: env.GIT_DIFF
+      - name: spin up simd node and rosetta instance
         run: |
-          curl -sSfL https://raw.githubusercontent.com/coinbase/rosetta-cli/master/scripts/install.sh | sh -s
-      - name: setup local net
-        run: |
-          make clean build-simd-linux localnet-start
+          docker-compose -f contrib/rosetta/docker-compose.yaml up -d --build
         # if: env.GIT_DIFF
-      - name: start rosetta
-        # if: env.GIT_DIFF
-        run: |
-          docker build -t rosetta:latest -f server/rosetta/Dockerfile .
-          docker run -d --network="cosmos-sdk_localnet" -p 8080:8080 rosetta:latest ./simd rosetta --tendermint="192.168.10.2:26657" --grpc="192.168.10.2:9090"
       - name: check data API
         # if: env.GIT_DIFF
         run: |
-          ./bin/rosetta-cli check:data --configuration-file server/rosetta/test/rosetta.json
+          docker exec -w /rosetta -it rosetta_rosetta_1 rosetta-cli check:data --configuration-file rosetta.json
       - name: check construction API
         # if: env.GIT_DIFF
         run: |
-          ./bin/rosetta-cli check:construction --configuration-file server/rosetta/test/rosetta.json
+          echo todo
 
   race-detector-report:
     runs-on: ubuntu-latest

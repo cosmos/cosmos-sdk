@@ -98,6 +98,29 @@ type APIConfig struct {
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/6420
 }
 
+// RosettaConfig defines the Rosetta API listener configuration.
+type RosettaConfig struct {
+	// Enable defines if the API server should be enabled.
+	Enable bool `mapstructure:"enable"`
+
+	// Address defines the API server to listen on
+	Address string `mapstructure:"address"`
+
+	// Blockchain defines the blockchain name
+	// defaults to DefaultBlockchain
+	Blockchain string `mapstructure:"blockchain"`
+
+	// Network defines the network name
+	Network string `mapstructure:"network"`
+
+	// Retries defines the maximum number of retries
+	// rosetta will do before quitting
+	Retries int `mapstructure:"retries"`
+
+	// Offline defines if the server must be run in offline mode
+	Offline bool `mapstructure:"offline"`
+}
+
 // GRPCConfig defines configuration for the gRPC server.
 type GRPCConfig struct {
 	// Enable defines if the gRPC server should be enabled.
@@ -126,6 +149,7 @@ type Config struct {
 	Telemetry telemetry.Config `mapstructure:"telemetry"`
 	API       APIConfig        `mapstructure:"api"`
 	GRPC      GRPCConfig       `mapstructure:"grpc"`
+	Rosetta   RosettaConfig    `mapstructure:"rosetta"`
 	StateSync StateSyncConfig  `mapstructure:"state-sync"`
 }
 

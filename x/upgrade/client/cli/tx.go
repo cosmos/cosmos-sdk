@@ -61,7 +61,7 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			deposit, err := sdk.ParseCoins(depositStr)
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
 			if err != nil {
 				return err
 			}
@@ -110,7 +110,7 @@ func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 				return err
 			}
 
-			deposit, err := sdk.ParseCoins(depositStr)
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
 			if err != nil {
 				return err
 			}

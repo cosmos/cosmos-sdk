@@ -67,6 +67,11 @@ func (k Keeper) SendPacket(
 		return clienttypes.ErrConsensusStateNotFound
 	}
 
+	// prevent accidental sends with clients that cannot be updated
+	if clientState.IsFrozen() {
+		return sdkerrors.Wrapf(clienttypes.ErrClientFrozen, "cannot send packet on a frozen client with ID %s", connectionEnd.GetClientID())
+	}
+
 	// check if packet timeouted on the receiving chain
 	latestHeight := clientState.GetLatestHeight()
 	timeoutHeight := packet.GetTimeoutHeight()

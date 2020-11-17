@@ -338,7 +338,7 @@ func (s *IntegrationTestSuite) TestLegacyRestErrMessages() {
 		"and therefore cannot be displayed via legacy REST handlers, please use CLI or directly query the Tendermint " +
 		"RPC endpoint to query this transaction."
 
-	s.Require().Equal(errResp.Error, errMsg)
+	s.Require().Contains(errResp.Error, errMsg)
 
 	// try fetching the txn using gRPC req, it will fetch info since it has proto codec.
 	grpcJSON, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/tx/%s", val.APIAddress, txRes.TxHash))
@@ -369,7 +369,7 @@ func (s *IntegrationTestSuite) TestLegacyRestErrMessages() {
 	s.Require().NoError(err)
 
 	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(res, &errResp))
-	s.Require().Equal(errResp.Error, errMsg)
+	s.Require().Contains(errResp.Error, errMsg)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

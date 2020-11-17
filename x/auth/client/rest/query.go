@@ -107,7 +107,7 @@ func QueryTxsRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			packStdTxResponse(w, clientCtx, txRes)
 		}
 
-		err = checkForJSONMarshalFailure(w, clientCtx, searchResult)
+		err = checkForJSONMarshalFailure(w, clientCtx, searchResult, "/cosmos/tx/v1beta1/txs")
 		if err != nil {
 			// Error is already returned by checkForJSONMarshalFailure.
 			return
@@ -149,7 +149,7 @@ func QueryTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusNotFound, fmt.Sprintf("no transaction found with hash %s", hashHexStr))
 		}
 
-		err = checkForJSONMarshalFailure(w, clientCtx, output)
+		err = checkForJSONMarshalFailure(w, clientCtx, output, "/cosmos/tx/v1beta1/tx/{txhash}")
 		if err != nil {
 			// Error is already returned by checkForJSONMarshalFailure.
 			return
@@ -195,7 +195,7 @@ func packStdTxResponse(w http.ResponseWriter, clientCtx client.Context, txRes *s
 	return nil
 }
 
-func checkForJSONMarshalFailure(w http.ResponseWriter, ctx client.Context, resp interface{}) error {
+func checkForJSONMarshalFailure(w http.ResponseWriter, ctx client.Context, resp interface{}, grpcEndPoint string) error {
 	// LegacyAmino used intentionally here to error message
 	const errMsg = "unregistered concrete type"
 	marshaler := ctx.LegacyAmino
@@ -206,7 +206,7 @@ func checkForJSONMarshalFailure(w http.ResponseWriter, ctx client.Context, resp 
 		rest.WriteErrorResponse(w, http.StatusInternalServerError,
 			"This transaction was created with the new SIGN_MODE_DIRECT signing method, and therefore cannot be displayed"+
 				" via legacy REST handlers, please use CLI or directly query the Tendermint RPC endpoint to query"+
-				" this transaction.")
+				" this transaction. gRPC gateway endpoint is "+grpcEndPoint)
 		return err
 	}
 

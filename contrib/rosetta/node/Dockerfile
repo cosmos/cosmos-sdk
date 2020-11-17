@@ -18,7 +18,7 @@ RUN git checkout tags/$ROSETTA_VERSION
 RUN go build -o rosetta-cli ./main.go
 
 FROM alpine
-
+USER 0
 RUN apk add gcc libc-dev --no-cache
 
 ENV PATH=$PATH:/bin
@@ -34,4 +34,5 @@ RUN chmod +x run_tests.sh
 WORKDIR /root/.simapp
 
 COPY ./contrib/rosetta/node/data ./
+RUN chmod -R 0777 /root/.simapp
 

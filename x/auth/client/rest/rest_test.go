@@ -10,14 +10,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	ibccli "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/client/cli"
 
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	rest2 "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -296,6 +301,75 @@ func (s *IntegrationTestSuite) broadcastReq(stdTx legacytx.StdTx, mode string) (
 	s.Require().NoError(err)
 
 	return rest.PostRequest(fmt.Sprintf("%s/txs", val.APIAddress), "application/json", bz)
+}
+
+func (s *IntegrationTestSuite) TestLegacyRestErrMessages() {
+	val := s.network.Validators[0]
+
+	args := []string{
+		"121",         // dummy port-id
+		"21212121212", // dummy channel-id
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+		fmt.Sprintf("--%s=foobar", flags.FlagMemo),
+	}
+
+	// created a dummy txn for IBC, eventually it fails. Our intension is to test the error message of querying a
+	// message which is signed with proto, since IBC won't support legacy amino at all we are considering a message from IBC module.
+	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, ibccli.NewChannelCloseInitCmd(), args)
+	s.Require().NoError(err)
+
+	var txRes sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txRes))
+
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// try to fetch the txn using legacy rest, this won't work since the ibc module doesn't support amino.
+	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs/%s", val.APIAddress, txRes.TxHash))
+	s.Require().NoError(err)
+
+	var errResp rest.ErrorResponse
+	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(txJSON, &errResp))
+
+	errMsg := "This transaction was created with the new SIGN_MODE_DIRECT signing method, " +
+		"and therefore cannot be displayed via legacy REST handlers, please use CLI or directly query the Tendermint " +
+		"RPC endpoint to query this transaction."
+
+	s.Require().Contains(errResp.Error, errMsg)
+
+	// try fetching the txn using gRPC req, it will fetch info since it has proto codec.
+	grpcJSON, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/tx/%s", val.APIAddress, txRes.TxHash))
+	s.Require().NoError(err)
+
+	var getTxRes txtypes.GetTxResponse
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(grpcJSON, &getTxRes))
+	s.Require().Equal(getTxRes.Tx.Body.Memo, "foobar")
+
+	// generate broadcast only txn.
+	args = append(args, fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, ibccli.NewChannelCloseInitCmd(), args)
+	s.Require().NoError(err)
+
+	txFile, cleanup := testutil.WriteToNewTempFile(s.T(), string(out.Bytes()))
+	txFileName := txFile.Name()
+	s.T().Cleanup(cleanup)
+
+	// encode the generated txn.
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.GetEncodeCommand(), []string{txFileName})
+	s.Require().NoError(err)
+
+	bz, err := val.ClientCtx.LegacyAmino.MarshalJSON(rest2.DecodeReq{Tx: string(out.Bytes())})
+	s.Require().NoError(err)
+
+	// try to decode the txn using legacy rest, it fails.
+	res, err := rest.PostRequest(fmt.Sprintf("%s/txs/decode", val.APIAddress), "application/json", bz)
+	s.Require().NoError(err)
+
+	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(res, &errResp))
+	s.Require().Contains(errResp.Error, errMsg)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

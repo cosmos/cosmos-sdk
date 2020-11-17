@@ -78,6 +78,11 @@ func SetSnapshotStore(snapshotStore *snapshots.Store) func(*BaseApp) {
 	return func(app *BaseApp) { app.SetSnapshotStore(snapshotStore) }
 }
 
+// SetChainID sets ChainID.
+func SetChainID(chainID string) func(*BaseApp) {
+	return func(app *BaseApp) { app.SetChainID(chainID) }
+}
+
 func (app *BaseApp) SetName(name string) {
 	if app.sealed {
 		panic("SetName() on sealed BaseApp")
@@ -232,4 +237,9 @@ func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 	app.interfaceRegistry = registry
 	app.grpcQueryRouter.SetInterfaceRegistry(registry)
 	app.msgServiceRouter.SetInterfaceRegistry(registry)
+}
+
+// SetChainID sets the chainID.
+func (app *BaseApp) SetChainID(chainID string) {
+	app.chainID = chainID
 }

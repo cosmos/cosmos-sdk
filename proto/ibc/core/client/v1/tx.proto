@@ -67,7 +67,7 @@ message MsgUpgradeClient {
   // upgraded consensus state, only contains enough information to serve as a basis of trust in update logic
   google.protobuf.Any consensus_state = 3 [(gogoproto.moretags) = "yaml:\"consensus_state\""];
   // last height old chain commits before halting and upgrades (i.e last block executed)
-  Height last_height = 4 [(gogoproto.moretags) = "yaml:\"upgrade_height\""];
+  Height last_height = 4 [(gogoproto.moretags) = "yaml:\"last_height\"", (gogoproto.nullable) = false];
   // proof that old chain committed to new client
   bytes proof_upgrade_client = 5 [(gogoproto.moretags) = "yaml:\"proof_upgrade\""];
   // proof that old chain committed to new consensus state

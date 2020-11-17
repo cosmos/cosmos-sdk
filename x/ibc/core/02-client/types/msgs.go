@@ -182,24 +182,29 @@ func (msg MsgUpdateClient) UnpackInterfaces(unpacker codectypes.AnyUnpacker) err
 
 // NewMsgUpgradeClient creates a new MsgUpgradeClient instance
 // nolint: interfacer
-func NewMsgUpgradeClient(clientID string, clientState exported.ClientState, lastHeight exported.Height,
+func NewMsgUpgradeClient(clientID string, clientState exported.ClientState, consState exported.ConsensusState, lastHeight exported.Height,
 	proofUpgradeClient, proofUpgradeConsState []byte, signer sdk.AccAddress) (*MsgUpgradeClient, error) {
 	anyClient, err := PackClientState(clientState)
+	if err != nil {
+		return nil, err
+	}
+	anyConsState, err := PackConsensusState(consState)
 	if err != nil {
 		return nil, err
 	}
 
 	height, ok := lastHeight.(Height)
 	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid height type. expected: %T, got: %T", &Height{}, lastHeight)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid height type. expected: %T, got: %T", Height{}, lastHeight)
 	}
 
 	return &MsgUpgradeClient{
 		ClientId:                   clientID,
 		ClientState:                anyClient,
+		ConsensusState:             anyConsState,
 		ProofUpgradeClient:         proofUpgradeClient,
 		ProofUpgradeConsensusState: proofUpgradeConsState,
-		LastHeight:                 &height,
+		LastHeight:                 height,
 		Signer:                     signer.String(),
 	}, nil
 }
@@ -216,11 +221,16 @@ func (msg MsgUpgradeClient) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgUpgradeClient) ValidateBasic() error {
-	clientState, err := UnpackClientState(msg.ClientState)
+	// will not validate client state as committed client may not form a valid client state.
+	// client implementations are responsible for ensuring final upgraded client is valid.
+	_, err := UnpackClientState(msg.ClientState)
 	if err != nil {
 		return err
 	}
-	if err := clientState.Validate(); err != nil {
+	// will not validate consensus state here since the trusted kernel may not form a valid consenus state.
+	// client implementations are responsible for ensuring client can submit new headers against this consensus state.
+	_, err = UnpackConsensusState(msg.ConsensusState)
+	if err != nil {
 		return err
 	}
 	if len(msg.ProofUpgradeClient) == 0 {
@@ -228,9 +238,6 @@ func (msg MsgUpgradeClient) ValidateBasic() error {
 	}
 	if len(msg.ProofUpgradeConsensusState) == 0 {
 		return sdkerrors.Wrap(ErrInvalidUpgradeClient, "proof of upgrade consensus state cannot be empty")
-	}
-	if msg.LastHeight == nil {
-		return sdkerrors.Wrap(ErrInvalidUpgradeClient, "upgrade height cannot be nil")
 	}
 	if msg.LastHeight.IsZero() {
 		return sdkerrors.Wrap(ErrInvalidUpgradeClient, "upgrade height cannot be zero")

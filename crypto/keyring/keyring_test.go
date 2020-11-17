@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -25,7 +24,7 @@ const (
 )
 
 func init() {
-	crypto.BcryptSecurityParameter = 1
+	BcryptSecurityParameter = 1
 }
 
 func TestNewKeyring(t *testing.T) {

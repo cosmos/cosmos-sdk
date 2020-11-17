@@ -1,4 +1,4 @@
-package crypto
+package keyring
 
 import (
 	"encoding/hex"
@@ -9,8 +9,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/armor"
 	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -152,7 +150,7 @@ func encryptPrivKey(privKey crypto.PrivKey, passphrase string) (saltBytes []byte
 	}
 
 	key = crypto.Sha256(key) // get 32 bytes
-	privKeyBytes := legacy.Cdc.Amino.MustMarshalBinaryBare(privKey)
+	privKeyBytes := CryptoCdc.MustMarshalBinaryBare(privKey)
 
 	return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
 }
@@ -205,5 +203,5 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (privK
 		return privKey, err
 	}
 
-	return cryptoAmino.PrivKeyFromBytes(privKeyBytes)
+	return PrivKeyFromBytes(privKeyBytes)
 }

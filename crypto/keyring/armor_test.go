@@ -1,4 +1,4 @@
-package crypto_test
+package keyring_test
 
 import (
 	"bytes"
@@ -14,7 +14,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	"github.com/cosmos/cosmos-sdk/crypto"
 	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -24,31 +23,31 @@ import (
 
 func TestArmorUnarmorPrivKey(t *testing.T) {
 	priv := secp256k1.GenPrivKey()
-	armored := crypto.EncryptArmorPrivKey(priv, "passphrase", "")
-	_, _, err := crypto.UnarmorDecryptPrivKey(armored, "wrongpassphrase")
+	armored := keyring.EncryptArmorPrivKey(priv, "passphrase", "")
+	_, _, err := keyring.UnarmorDecryptPrivKey(armored, "wrongpassphrase")
 	require.Error(t, err)
-	decrypted, algo, err := crypto.UnarmorDecryptPrivKey(armored, "passphrase")
+	decrypted, algo, err := keyring.UnarmorDecryptPrivKey(armored, "passphrase")
 	require.NoError(t, err)
 	require.Equal(t, string(hd.Secp256k1Type), algo)
 	require.True(t, priv.Equals(decrypted))
 
 	// empty string
-	decrypted, algo, err = crypto.UnarmorDecryptPrivKey("", "passphrase")
+	decrypted, algo, err = keyring.UnarmorDecryptPrivKey("", "passphrase")
 	require.Error(t, err)
 	require.True(t, errors.Is(io.EOF, err))
 	require.Nil(t, decrypted)
 	require.Empty(t, algo)
 
 	// wrong key type
-	armored = crypto.ArmorPubKeyBytes(priv.PubKey().Bytes(), "")
-	_, _, err = crypto.UnarmorDecryptPrivKey(armored, "passphrase")
+	armored = keyring.ArmorPubKeyBytes(priv.PubKey().Bytes(), "")
+	_, _, err = keyring.UnarmorDecryptPrivKey(armored, "passphrase")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "unrecognized armor type")
 
 	// armor key manually
 	encryptPrivKeyFn := func(privKey tmcrypto.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
 		saltBytes = tmcrypto.CRandBytes(16)
-		key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), crypto.BcryptSecurityParameter)
+		key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), keyring.BcryptSecurityParameter)
 		require.NoError(t, err)
 		key = tmcrypto.Sha256(key) // get 32 bytes
 		privKeyBytes := legacy.Cdc.Amino.MustMarshalBinaryBare(privKey)
@@ -63,7 +62,7 @@ func TestArmorUnarmorPrivKey(t *testing.T) {
 		"type": "secp256k",
 	}
 	armored = armor.EncodeArmor("TENDERMINT PRIVATE KEY", headerWrongKdf, encBytes)
-	_, _, err = crypto.UnarmorDecryptPrivKey(armored, "passphrase")
+	_, _, err = keyring.UnarmorDecryptPrivKey(armored, "passphrase")
 	require.Error(t, err)
 	require.Equal(t, "unrecognized KDF type: wrong", err.Error())
 }
@@ -75,16 +74,16 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 	// Add keys and see they return in alphabetical order
 	info, _, err := cstore.NewMnemonic("Bob", keyring.English, types.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
-	armored := crypto.ArmorPubKeyBytes(legacy.Cdc.Amino.MustMarshalBinaryBare(info.GetPubKey()), "")
-	pubBytes, algo, err := crypto.UnarmorPubKeyBytes(armored)
+	armored := keyring.ArmorPubKeyBytes(legacy.Cdc.Amino.MustMarshalBinaryBare(info.GetPubKey()), "")
+	pubBytes, algo, err := keyring.UnarmorPubKeyBytes(armored)
 	require.NoError(t, err)
 	pub, err := cryptoAmino.PubKeyFromBytes(pubBytes)
 	require.NoError(t, err)
 	require.Equal(t, string(hd.Secp256k1Type), algo)
 	require.True(t, pub.Equals(info.GetPubKey()))
 
-	armored = crypto.ArmorPubKeyBytes(legacy.Cdc.Amino.MustMarshalBinaryBare(info.GetPubKey()), "unknown")
-	pubBytes, algo, err = crypto.UnarmorPubKeyBytes(armored)
+	armored = keyring.ArmorPubKeyBytes(legacy.Cdc.Amino.MustMarshalBinaryBare(info.GetPubKey()), "unknown")
+	pubBytes, algo, err = keyring.UnarmorPubKeyBytes(armored)
 	require.NoError(t, err)
 	pub, err = cryptoAmino.PubKeyFromBytes(pubBytes)
 	require.NoError(t, err)
@@ -93,7 +92,7 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 
 	armored, err = cstore.ExportPrivKeyArmor("Bob", "passphrase")
 	require.NoError(t, err)
-	_, _, err = crypto.UnarmorPubKeyBytes(armored)
+	_, _, err = keyring.UnarmorPubKeyBytes(armored)
 	require.Error(t, err)
 	require.Equal(t, `couldn't unarmor bytes: unrecognized armor type "TENDERMINT PRIVATE KEY", expected: "TENDERMINT PUBLIC KEY"`, err.Error())
 
@@ -103,7 +102,7 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 		"type":    "unknown",
 	}
 	armored = armor.EncodeArmor("TENDERMINT PUBLIC KEY", header, pubBytes)
-	_, algo, err = crypto.UnarmorPubKeyBytes(armored)
+	_, algo, err = keyring.UnarmorPubKeyBytes(armored)
 	require.NoError(t, err)
 	// return secp256k1 if version is 0.0.0
 	require.Equal(t, "secp256k1", algo)
@@ -113,7 +112,7 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 		"type": "unknown",
 	}
 	armored = armor.EncodeArmor("TENDERMINT PUBLIC KEY", header, pubBytes)
-	bz, algo, err := crypto.UnarmorPubKeyBytes(armored)
+	bz, algo, err := keyring.UnarmorPubKeyBytes(armored)
 	require.Nil(t, bz)
 	require.Empty(t, algo)
 	require.Error(t, err)
@@ -125,7 +124,7 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 		"version": "unknown",
 	}
 	armored = armor.EncodeArmor("TENDERMINT PUBLIC KEY", header, pubBytes)
-	bz, algo, err = crypto.UnarmorPubKeyBytes(armored)
+	bz, algo, err = keyring.UnarmorPubKeyBytes(armored)
 	require.Nil(t, bz)
 	require.Empty(t, algo)
 	require.Error(t, err)
@@ -134,14 +133,14 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 
 func TestArmorInfoBytes(t *testing.T) {
 	bs := []byte("test")
-	armoredString := crypto.ArmorInfoBytes(bs)
-	unarmoredBytes, err := crypto.UnarmorInfoBytes(armoredString)
+	armoredString := keyring.ArmorInfoBytes(bs)
+	unarmoredBytes, err := keyring.UnarmorInfoBytes(armoredString)
 	require.NoError(t, err)
 	require.True(t, bytes.Equal(bs, unarmoredBytes))
 }
 
 func TestUnarmorInfoBytesErrors(t *testing.T) {
-	unarmoredBytes, err := crypto.UnarmorInfoBytes("")
+	unarmoredBytes, err := keyring.UnarmorInfoBytes("")
 	require.Error(t, err)
 	require.True(t, errors.Is(io.EOF, err))
 	require.Nil(t, unarmoredBytes)
@@ -150,7 +149,7 @@ func TestUnarmorInfoBytesErrors(t *testing.T) {
 		"type":    "Info",
 		"version": "0.0.1",
 	}
-	unarmoredBytes, err = crypto.UnarmorInfoBytes(armor.EncodeArmor(
+	unarmoredBytes, err = keyring.UnarmorInfoBytes(armor.EncodeArmor(
 		"TENDERMINT KEY INFO", header, []byte("plain-text")))
 	require.Error(t, err)
 	require.Equal(t, "unrecognized version: 0.0.1", err.Error())

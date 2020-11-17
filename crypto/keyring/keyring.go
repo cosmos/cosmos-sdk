@@ -18,7 +18,6 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -196,7 +195,7 @@ func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 		return "", fmt.Errorf("no key to export with name: %s", uid)
 	}
 
-	return crypto.ArmorPubKeyBytes(CryptoCdc.MustMarshalBinaryBare(bz.GetPubKey()), string(bz.GetAlgo())), nil
+	return ArmorPubKeyBytes(CryptoCdc.MustMarshalBinaryBare(bz.GetPubKey()), string(bz.GetAlgo())), nil
 }
 
 func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, error) {
@@ -219,7 +218,7 @@ func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor stri
 		return "", err
 	}
 
-	return crypto.EncryptArmorPrivKey(priv, encryptPassphrase, string(info.GetAlgo())), nil
+	return EncryptArmorPrivKey(priv, encryptPassphrase, string(info.GetAlgo())), nil
 }
 
 // ExportPrivateKeyObject exports an armored private key object.
@@ -264,7 +263,7 @@ func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
 		return fmt.Errorf("cannot overwrite key: %s", uid)
 	}
 
-	privKey, algo, err := crypto.UnarmorDecryptPrivKey(armor, passphrase)
+	privKey, algo, err := UnarmorDecryptPrivKey(armor, passphrase)
 	if err != nil {
 		return errors.Wrap(err, "failed to decrypt private key")
 	}
@@ -282,7 +281,7 @@ func (ks keystore) ImportPubKey(uid string, armor string) error {
 		return fmt.Errorf("cannot overwrite key: %s", uid)
 	}
 
-	pubBytes, algo, err := crypto.UnarmorPubKeyBytes(armor)
+	pubBytes, algo, err := UnarmorPubKeyBytes(armor)
 	if err != nil {
 		return err
 	}

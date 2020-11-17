@@ -8,8 +8,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
@@ -51,16 +51,16 @@ $ <appd> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdgexx
 				return err
 			}
 
-			queryClient := types.NewQueryClient(clientCtx)
-
-			pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, args[0])
+			var pk cryptotypes.PubKey
+			err = clientCtx.JSONMarshaler.UnmarshalJSON([]byte(args[0]), pk)
 			if err != nil {
 				return err
 			}
 
 			consAddr := sdk.ConsAddress(pk.Address())
 			params := &types.QuerySigningInfoRequest{ConsAddress: consAddr.String()}
-			res, err := queryClient.SigningInfo(context.Background(), params)
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.SigningInfo(cmd.Context(), params)
 			if err != nil {
 				return err
 			}

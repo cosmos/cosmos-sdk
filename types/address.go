@@ -387,7 +387,6 @@ func (va ValAddress) String() string {
 	}
 
 	bech32PrefixValAddr := GetConfig().GetBech32ValidatorAddrPrefix()
-
 	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixValAddr, va.Bytes())
 	if err != nil {
 		panic(err)

@@ -1,7 +1,6 @@
 package debug
 
 import (
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"strconv"
@@ -36,23 +35,8 @@ func Cmd() *cobra.Command {
 // to decode the pubkey string from hex, base64, and finally bech32. If all
 // encodings fail, an error is returned.
 func getPubKeyFromString(ctx client.Context, pkstr string) (cryptotypes.PubKey, error) {
-	// TODO: shall we clean it? Do we support HEX / base64 keys
-	bz, err := hex.DecodeString(pkstr)
-	if err == nil {
-		if len(bz) == ed25519.PubKeySize {
-			return &ed25519.PubKey{Key: bz}, nil
-		}
-	}
-
-	bz, err = base64.StdEncoding.DecodeString(pkstr)
-	if err == nil {
-		if len(bz) == ed25519.PubKeySize {
-			return &ed25519.PubKey{Key: bz}, nil
-		}
-	}
-
 	var pk cryptotypes.PubKey
-	err = ctx.JSONMarshaler.UnmarshalJSON([]byte(pkstr), pk)
+	err := ctx.JSONMarshaler.UnmarshalJSON([]byte(pkstr), pk)
 	return pk, err
 }
 

@@ -3,8 +3,10 @@ package ed25519_test
 import (
 	stded25519 "crypto/ed25519"
 	"encoding/base64"
+	"fmt"
 	"testing"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
@@ -14,6 +16,7 @@ import (
 	ed25519 "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
 func TestSignAndValidateEd25519(t *testing.T) {
@@ -230,7 +233,33 @@ func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
 }
 
 // TODO - finish this test to show who the key will be presented in YAML
-func TestMarshalYAML(t *testing.T) {
+func TestMarshalProto(t *testing.T) {
+	require := require.New(t)
+	cdc, _ := simapp.MakeCodecs()
+
 	privKey := ed25519.GenPrivKey()
 	pubKey := privKey.PubKey()
+
+	bz, err := cdc.MarshalJSON(pubKey)
+	require.NoError(err)
+	var pubKey2 cryptotypes.PubKey
+	err = cdc.UnmarshalJSON(bz, pubKey2)
+	require.NoError(err)
+
+	// 	pubKeyM := pubKey.(codec.ProtoMarshaler)
+	// bz, err := cdc.MarshalBinaryBare(pubKeyM)
+	bz, err = proto.Marshal(pubKey)
+	fmt.Println(bz)
+	require.NoError(err)
+
+	// var pk cryptotypes.PubKey
+	// err = proto.Unmarshal(bz, pk)
+	// require.NoError(err)
+
+	/*
+		var pk cryptotypes.PubKey
+		err = cdc.UnmarshalBinaryBare(bz, pk)
+		require.NoError(err)
+		require.True(pk.Equals(pubKey))
+	*/
 }

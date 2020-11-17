@@ -4,10 +4,9 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/internal/protocdc"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
 )
 
-// TODO: Update this file and remove legacybech32 ?
+// TODO: Move this file to client/keys
 
 // KeyOutput defines a structure wrapping around an Info object used for output
 // functionality.
@@ -46,12 +45,12 @@ type multisigPubKeyOutput struct {
 // call to Bech32KeyOutput fails.
 func Bech32KeysOutput(infos []Info) ([]KeyOutput, error) {
 	kos := make([]KeyOutput, len(infos))
+	var err error
 	for i, info := range infos {
-		ko, err := Bech32KeyOutput(info)
+		kos[i], err = Bech32KeyOutput(info)
 		if err != nil {
 			return nil, err
 		}
-		kos[i] = ko
 	}
 
 	return kos, nil
@@ -59,55 +58,40 @@ func Bech32KeysOutput(infos []Info) ([]KeyOutput, error) {
 
 // Bech32ConsKeyOutput create a KeyOutput in with "cons" Bech32 prefixes.
 func Bech32ConsKeyOutput(keyInfo Info) (KeyOutput, error) {
-	consAddr := sdk.ConsAddress(keyInfo.GetPubKey().Address().Bytes())
-
-	bechPubKey, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeConsPub, keyInfo.GetPubKey())
-	if err != nil {
-		return KeyOutput{}, err
-	}
-
-	return NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), consAddr, bechPubKey)
+	pk := keyInfo.GetPubKey()
+	addr := sdk.ConsAddress(pk.Address().Bytes())
+	return NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), addr, pk)
 }
 
 // Bech32ValKeyOutput create a KeyOutput in with "val" Bech32 prefixes.
 func Bech32ValKeyOutput(keyInfo Info) (KeyOutput, error) {
-	valAddr := sdk.ValAddress(keyInfo.GetPubKey().Address().Bytes())
-
-	bechPubKey, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeValPub, keyInfo.GetPubKey())
-	if err != nil {
-		return KeyOutput{}, err
-	}
-
-	return NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), valAddr, bechPubKey)
+	pk := keyInfo.GetPubKey()
+	addr := sdk.ValAddress(pk.Address().Bytes())
+	return NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), addr, pk)
 }
 
 // Bech32KeyOutput create a KeyOutput in with "acc" Bech32 prefixes. If the
 // public key is a multisig public key, then the threshold and constituent
 // public keys will be added.
 func Bech32KeyOutput(keyInfo Info) (KeyOutput, error) {
-	accAddr := sdk.AccAddress(keyInfo.GetPubKey().Address().Bytes())
-	bechPubKey, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeAccPub, keyInfo.GetPubKey())
+	pk := keyInfo.GetPubKey()
+	addr := sdk.AccAddress(pk.Address().Bytes())
+	ko, err := NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), addr, pk)
 	if err != nil {
-		return KeyOutput{}, err
-	}
-
-	ko, err := NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), accAddr, bechPubKey)
-	if err != nil {
-		return KeyOutput{}, err
+		return ko, err
 	}
 
 	if mInfo, ok := keyInfo.(*multiInfo); ok {
 		pubKeys := make([]multisigPubKeyOutput, len(mInfo.PubKeys))
 
-		for i, pk := range mInfo.PubKeys {
-			accAddr := sdk.AccAddress(pk.PubKey.Address().Bytes())
-
-			bechPubKey, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeAccPub, pk.PubKey)
+		for i, pkInfo := range mInfo.PubKeys {
+			pk = pkInfo.PubKey
+			addr = sdk.AccAddress(pk.Address().Bytes())
+			pkBytes, err := protocdc.MarshalJSON(pk, nil)
 			if err != nil {
-				return KeyOutput{}, err
+				return ko, err
 			}
-
-			pubKeys[i] = multisigPubKeyOutput{accAddr.String(), bechPubKey, pk.Weight}
+			pubKeys[i] = multisigPubKeyOutput{addr.String(), string(pkBytes), pkInfo.Weight}
 		}
 
 		ko.Threshold = mInfo.Threshold

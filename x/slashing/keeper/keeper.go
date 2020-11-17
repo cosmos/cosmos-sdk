@@ -3,8 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	gogotypes "github.com/gogo/protobuf/types"
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/gogo/protobuf/proto"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -49,11 +48,11 @@ func (k Keeper) AddPubkey(ctx sdk.Context, pubkey cryptotypes.PubKey) error {
 	if err != nil {
 		return err
 	}
-	store := ctx.KVStore(k.storeKey)
-	bz, err := k.cdc.MarshalBinaryBare(pkProto)
+	bz, err := proto.Marshal(pkProto)
 	if err != nil {
 		return err
 	}
+	store := ctx.KVStore(k.storeKey)
 	store.Set(types.AddrPubkeyRelationKey(addr), bz)
 	return nil
 }
@@ -61,12 +60,13 @@ func (k Keeper) AddPubkey(ctx sdk.Context, pubkey cryptotypes.PubKey) error {
 // GetPubkey returns the pubkey from the adddress-pubkey relation
 func (k Keeper) GetPubkey(ctx sdk.Context, address cryptotypes.Address) (cryptotypes.PubKey, error) {
 	store := ctx.KVStore(k.storeKey)
-	var pubkey crypto.PubKey
 	bz := store.Get(types.AddrPubkeyRelationKey(address))
 	if bz == nil {
 		return nil, fmt.Errorf("address %s not found", sdk.ConsAddress(address))
 	}
-	return pubkey, k.cdc.UnmarshalBinaryBare(bz, &pubkey)
+	// TODO Unmarshal Any? Do we need to use Any here?
+	var pk cryptotypes.PubKey
+	return pk, nil // TODO proto.Unmarshal(pk)
 }
 
 // Slash attempts to slash a validator. The slash is delegated to the staking
@@ -95,13 +95,6 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	)
 
 	k.sk.Jail(ctx, consAddr)
-}
-
-func (k Keeper) setAddrPubkeyRelation(ctx sdk.Context, addr cryptotypes.Address, pubkey string) {
-	store := ctx.KVStore(k.storeKey)
-
-	bz := k.cdc.MustMarshalBinaryBare(&gogotypes.StringValue{Value: pubkey})
-	store.Set(types.AddrPubkeyRelationKey(addr), bz)
 }
 
 func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr cryptotypes.Address) {

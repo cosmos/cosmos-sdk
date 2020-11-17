@@ -209,6 +209,14 @@ func DefaultConfig() *Config {
 			Enable:  true,
 			Address: DefaultGRPCAddress,
 		},
+		Rosetta: RosettaConfig{
+			Enable:     false,
+			Address:    ":8080",
+			Blockchain: "app",
+			Network:    "network",
+			Retries:    3,
+			Offline:    false,
+		},
 		StateSync: StateSyncConfig{
 			SnapshotInterval:   0,
 			SnapshotKeepRecent: 2,

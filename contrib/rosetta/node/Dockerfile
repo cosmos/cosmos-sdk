@@ -28,7 +28,6 @@ RUN apk add gcc libc-dev python3 --no-cache
 
 ENV PATH=$PATH:/bin
 
-WORKDIR /bin
 COPY --from=build /simd/simd /bin/simd
 COPY --from=build /rosetta/rosetta-cli /bin/rosetta-cli
 
@@ -39,7 +38,6 @@ RUN chmod +x send_funds.sh
 RUN chmod +x faucet.py
 
 WORKDIR /root/.simapp
-
-COPY --from=build /node/data /root/.simapp
-RUN chmod -R 0777 /root/.simapp
+COPY --from=build /node/data ./
+RUN chmod -R 0777 ./
 

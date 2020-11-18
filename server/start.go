@@ -307,7 +307,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 	var rosettaSrv *service.Service
 	if config.Rosetta.Enable {
-		offlineMode := false
+		offlineMode := config.Rosetta.Offline
 		if !config.GRPC.Enable { // If GRPC is not enabled rosetta cannot work in online mode, so it works in offline mode.
 			offlineMode = true
 		}

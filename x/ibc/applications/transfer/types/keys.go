@@ -28,6 +28,10 @@ const (
 
 	// DenomPrefix is the prefix used for internal SDK coin representation.
 	DenomPrefix = "ibc"
+
+	// EscrowPrefix is the prefix used for IBC escrow addresses to avoid address collisions
+	// with Public Key addresses.
+	EscrowPrefix = "ibc"
 )
 
 var (
@@ -37,11 +41,15 @@ var (
 	DenomTraceKey = []byte{0x02}
 )
 
-// GetEscrowAddress returns the escrow address for the specified channel
+// GetEscrowAddress returns the escrow address for the specified channel.
+// The escrow address uses a prefix to prevent address collsions with Public Key addresses.
 //
 // CONTRACT: this assumes that there's only one bank bridge module that owns the
 // port associated with the channel ID so that the address created is actually
 // unique.
 func GetEscrowAddress(portID, channelID string) sdk.AccAddress {
-	return sdk.AccAddress(crypto.AddressHash([]byte(portID + channelID)))
+	return append(
+		[]byte(EscrowPrefix),
+		crypto.AddressHash([]byte(portID+channelID))...,
+	)
 }

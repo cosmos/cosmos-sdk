@@ -90,9 +90,8 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 		if err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "could not unpack clientstate: %v", err)
 		}
-		// deletes any previously stored upgraded client and sets the new upgraded client in
-		// last height committed on this chain is at plan.Height - 1, since the chain will panic at plan.Height
-		// and new chain will resume at plan.Height
+		// sets the new upgraded client in last height committed on this chain is at plan.Height - 1,
+		// since the chain will panic at plan.Height and new chain will resume at plan.Height
 		return k.SetUpgradedClient(ctx, plan.Height-1, clientState)
 	}
 	return nil

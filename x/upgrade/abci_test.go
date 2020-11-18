@@ -136,6 +136,42 @@ func VerifyDoIBCLastBlock(t *testing.T) {
 	require.Equal(t, &ibctmtypes.ConsensusState{NextValidatorsHash: nextValsHash}, consState)
 }
 
+func VerifyDoIBCUpgrade(t *testing.T) {
+	t.Log("Verify that a panic happens at the upgrade time/height")
+	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
+
+	// Check IBC state is set before upgrade using last height: s.ctx.BlockHeight()
+	cs, err := s.keeper.GetUpgradedClient(newCtx, s.ctx.BlockHeight())
+	require.NoError(t, err, "could not retrieve upgraded client before upgrade plan is applied")
+	require.NotNil(t, cs, "IBC client is nil before upgrade")
+
+	consState, err := s.keeper.GetUpgradedConsensusState(newCtx, s.ctx.BlockHeight())
+	require.NoError(t, err, "could not retrieve upgraded consensus state before upgrade plan is applied")
+	require.NotNil(t, consState, "IBC consensus state is nil before upgrade")
+
+	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
+	require.Panics(t, func() {
+		s.module.BeginBlock(newCtx, req)
+	})
+
+	t.Log("Verify that the upgrade can be successfully applied with a handler")
+	s.keeper.SetUpgradeHandler("test", func(ctx sdk.Context, plan types.Plan) {})
+	require.NotPanics(t, func() {
+		s.module.BeginBlock(newCtx, req)
+	})
+
+	VerifyCleared(t, newCtx)
+
+	// Check IBC state is cleared after upgrade using last height: s.ctx.BlockHeight()
+	cs, err = s.keeper.GetUpgradedClient(newCtx, s.ctx.BlockHeight())
+	require.Error(t, err, "retrieved upgraded client after upgrade plan is applied")
+	require.Nil(t, cs, "IBC client is not-nil after upgrade")
+
+	consState, err = s.keeper.GetUpgradedConsensusState(newCtx, s.ctx.BlockHeight())
+	require.Error(t, err, "retrieved upgraded consensus state after upgrade plan is applied")
+	require.Nil(t, consState, "IBC consensus state is not-nil after upgrade")
+}
+
 func VerifyDoUpgrade(t *testing.T) {
 	t.Log("Verify that a panic happens at the upgrade time/height")
 	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())

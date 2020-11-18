@@ -118,11 +118,10 @@ func (c *Config) NetworkIdentifier() *types.NetworkIdentifier {
 // Validate validates a configuration and sets
 // its defaults in case they were not provided
 func (c *Config) Validate() error {
-	// why don't we have XOR in golang?
 	if (c.codec == nil) != (c.ir == nil) {
 		return fmt.Errorf("codec and interface registry must be both different from nil or nil")
 	}
-	// set defaults
+
 	if c.Addr == "" {
 		c.Addr = DefaultAddr
 	}
@@ -139,6 +138,7 @@ func (c *Config) Validate() error {
 	if c.Offline {
 		return nil
 	}
+
 	// these are optional but it must be online
 	if c.GRPCEndpoint == "" {
 		return fmt.Errorf("grpc endpoint not provided")
@@ -149,6 +149,7 @@ func (c *Config) Validate() error {
 	if !strings.HasPrefix(c.TendermintRPC, "tcp://") {
 		c.TendermintRPC = fmt.Sprintf("tcp://%s", c.TendermintRPC)
 	}
+
 	return nil
 }
 

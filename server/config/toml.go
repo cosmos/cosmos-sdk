@@ -136,6 +136,24 @@ rpc-max-body-bytes = {{ .API.RPCMaxBodyBytes }}
 enabled-unsafe-cors = {{ .API.EnableUnsafeCORS }}
 
 ###############################################################################
+###                           Rosetta Configuration                         ###
+###############################################################################
+
+[rosetta]
+
+enable = {{ .Rosetta.Enable }}
+
+address = "{{ .Rosetta.Address }}"
+
+blockchain = "{{ .Rosetta.Blockchain }}"
+
+network = "{{ .Rosetta.Network }}"
+
+retries = {{ .Rosetta.Retries }}
+
+offline = {{ .Rosetta.Offline }}
+
+###############################################################################
 ###                           gRPC Configuration                            ###
 ###############################################################################
 

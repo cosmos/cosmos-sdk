@@ -45,5 +45,6 @@ func RosettaCommand(ir codectypes.InterfaceRegistry, cdc codec.Marshaler) *cobra
 		},
 	}
 	config.SetFlags(cmd.Flags())
+
 	return cmd
 }

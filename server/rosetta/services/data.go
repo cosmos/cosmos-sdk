@@ -5,22 +5,20 @@ import (
 	"time"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
-	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/conversion"
 )
-
-// assert interface implementation
-var _ crg.DataAPI = SingleNetwork{}
 
 // genesisBlockFetchTimeout defines a timeout to fetch the genesis block
 const genesisBlockFetchTimeout = 15 * time.Second
 
 // NewSingleNetwork builds a single network client
 // the client will attempt to fetch genesis block too
-func NewSingleNetwork(client rosetta.DataAPIClient, network *types.NetworkIdentifier) (SingleNetwork, error) {
+func NewSingleNetwork(client rosetta.NodeClient, network *types.NetworkIdentifier) (crg.Adapter, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), genesisBlockFetchTimeout)
 	defer cancel()
 	var genesisHeight int64 = 1
@@ -39,7 +37,7 @@ func NewSingleNetwork(client rosetta.DataAPIClient, network *types.NetworkIdenti
 // SingleNetwork groups together all the components required for the full rosetta data API
 // which is running on a single network
 type SingleNetwork struct {
-	client rosetta.DataAPIClient // used to query cosmos app + tendermint
+	client rosetta.NodeClient // used to query cosmos app + tendermint
 
 	network        *types.NetworkIdentifier      // identifies the network, it's static
 	networkOptions *types.NetworkOptionsResponse // identifies the network options, it's static

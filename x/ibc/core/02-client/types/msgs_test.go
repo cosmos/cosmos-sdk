@@ -352,7 +352,6 @@ func (suite *TypesTestSuite) TestMarshalMsgUpgradeClient() {
 				tendermintClient := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
 				// tendermintConsState := &ibctmtypes.ConsensusState{NextValidatorsHash: []byte("nextValsHash")}
 				tmConsState := suite.chainA.CurrentTMClientHeader().ConsensusState()
-				fmt.Println(tmConsState)
 				msg, err = types.NewMsgUpgradeClient("clientid", tendermintClient, tmConsState, newClientHeight, []byte("proofUpgradeClient"), []byte("proofUpgradeConsState"), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
@@ -420,7 +419,7 @@ func (suite *TypesTestSuite) TestMsgUpgradeClient_ValidateBasic() {
 			expPass: false,
 		},
 		{
-			name: "upgrade height is zero",
+			name: "last height is zero",
 			malleate: func(msg *types.MsgUpgradeClient) {
 				msg.LastHeight = types.Height{}
 			},

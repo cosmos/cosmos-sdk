@@ -60,6 +60,9 @@ message MsgUpdateClientResponse {}
 
 // MsgUpgradeClient defines an sdk.Msg to upgrade an IBC client to a new client state
 message MsgUpgradeClient {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
   // client unique identifier
   string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   // upgraded client state

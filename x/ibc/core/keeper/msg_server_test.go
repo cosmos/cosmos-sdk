@@ -636,7 +636,7 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 					NextValidatorsHash: []byte("nextValsHash"),
 				}
 
-				// upgrade Height is at next block
+				// last Height is at next block
 				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
 
 				// zero custom fields and store in upgrade store
@@ -673,7 +673,7 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 					NextValidatorsHash: []byte("nextValsHash"),
 				}
 
-				// upgrade Height is at next block
+				// last Height is at next block
 				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
 
 				// zero custom fields and store in upgrade store

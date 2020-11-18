@@ -85,7 +85,7 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "could not marshal client state: %v", err)
 	}
 	// construct clientState Merkle path
-	upgradeClientPath := constructUpgradeClientMerklePath(cs.UpgradePath[:], lastHeight)
+	upgradeClientPath := constructUpgradeClientMerklePath(cs.UpgradePath, lastHeight)
 	if err := merkleProofClient.VerifyMembership(cs.ProofSpecs, consState.GetRoot(), upgradeClientPath, bz); err != nil {
 		return nil, nil, err
 	}
@@ -96,7 +96,7 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "could not marshal consensus state: %v", err)
 	}
 	// construct consensus state Merkle path
-	upgradeConsStatePath := constructUpgradeConsStateMerklePath(cs.UpgradePath[:], lastHeight)
+	upgradeConsStatePath := constructUpgradeConsStateMerklePath(cs.UpgradePath, lastHeight)
 	if err := merkleProofConsState.VerifyMembership(cs.ProofSpecs, consState.GetRoot(), upgradeConsStatePath, bz); err != nil {
 		return nil, nil, err
 	}

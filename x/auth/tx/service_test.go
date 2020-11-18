@@ -230,8 +230,8 @@ func (s IntegrationTestSuite) TestBroadcastTx() {
 	grpcRes, err := s.queryClient.BroadcastTx(
 		context.Background(),
 		&tx.BroadcastTxRequest{
-			Mode: tx.BroadcastMode_async,
-			Tx:   txBytes,
+			Mode:  tx.BroadcastMode_async,
+			TxRaw: txBytes,
 		},
 	)
 	s.Require().NoError(err)

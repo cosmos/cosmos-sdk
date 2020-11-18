@@ -199,12 +199,12 @@ func normalizeBoradcastMode(mode txtypes.BroadcastMode) string {
 }
 
 func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxRequest) (*txtypes.BroadcastTxResponse, error) {
-	if req.Tx == nil {
+	if req.TxRaw == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
 	}
 
 	clientCtx := s.clientCtx.WithBroadcastMode(normalizeBoradcastMode((req.Mode)))
-	resp, err := clientCtx.BroadcastTx(req.Tx)
+	resp, err := clientCtx.BroadcastTx(req.TxRaw)
 
 	if err != nil {
 		return nil, err

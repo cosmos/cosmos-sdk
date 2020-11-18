@@ -52,8 +52,8 @@ message GetTxsEventResponse {
 // BroadcastTxRequest is the request type for the Service.BroadcastTxRequest
 // RPC method.
 message BroadcastTxRequest {
-    // tx is the list of queried transactions.
-    bytes tx = 1;
+    // txRaw is the raw transaction.
+    bytes txRaw = 1;
     BroadcastMode mode = 2;
 }
 

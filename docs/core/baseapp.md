@@ -340,7 +340,7 @@ Click [here](../basics/gas-fees.md#antehandler) for more on the `anteHandler`.
 
 `RunMsgs` is called from `RunTx` with `runTxModeCheck` as parameter to check the existence of a route for each message the transaction, and with `runTxModeDeliver` to actually process the `Msg`s.
 
-First, it retreives the `Msg`'s fully-qualified service method name, by checking the `type_url` of the Protobuf `Any` representing the service `Msg`. Then, using the application's [`msgServiceRouter`](#msg-service-router), it checks for the existence of this fully-qualified service method. At this point, if `mode == runTxModeCheck`, `RunMsgs` returns. If instead `mode == runTxModeDeliver`, the [`Msg` server](../building-modules/msg-services.md) implementation for the message is executed, before `RunMsgs` returns.
+First, it retrieves the `Msg`'s fully-qualified service method name, by checking the `type_url` of the Protobuf `Any` representing the service `Msg`. Then, using the application's [`msgServiceRouter`](#msg-service-router), it checks for the existence of this fully-qualified service method. At this point, if `mode == runTxModeCheck`, `RunMsgs` returns. If instead `mode == runTxModeDeliver`, the [`Msg` server](../building-modules/msg-services.md) implementation for the message is executed, before `RunMsgs` returns.
 
 ## Other ABCI Messages
 

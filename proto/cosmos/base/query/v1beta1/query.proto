@@ -2,13 +2,16 @@ syntax = "proto3";
 package cosmos.base.query.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "tendermint/p2p/types.proto";
 import "google/api/annotations.proto";
+import "tendermint/p2p/types.proto";
+import "tendermint/types/block.proto";
+import "tendermint/types/types.proto";
+
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/query";
 
-// Query defines the gRPC querier service for tendermint queries.
-service Query { 
+// Service defines the gRPC querier service for tendermint queries.
+service Service { 
   // GetNodeInfo queries the current node info.
   rpc GetNodeInfo(GetNodeInfoRequest) returns (GetNodeInfoResponse) {
     option (google.api.http).get = "/cosmos/base/query/v1beta1/node_info";
@@ -62,7 +65,8 @@ message GetBlockByHeightRequest {
 
 // GetBlockByHeightResponse is the response type for the Query/GetBlockByHeight RPC method.
 message GetBlockByHeightResponse {
-    bytes block_info=1;
+    tendermint.types.BlockID block_id=1;
+    tendermint.types.Block block=2;
 }
 
 // GetLatestBlockRequest is the request type for the Query/GetLatestBlock RPC method.
@@ -72,7 +76,8 @@ message GetLatestBlockRequest {
 
 // GetLatestBlockResponse is the response type for the Query/GetLatestBlock RPC method.
 message GetLatestBlockResponse {
-    bytes block_info=1;
+    tendermint.types.BlockID block_id=1;
+    tendermint.types.Block block=2;
 }
 
 // GetSyncingRequest is the request type for the Query/GetSyncing RPC method.
@@ -96,7 +101,7 @@ message GetNodeInfoResponse {
 }
 
 message VersionInfo {
-    string name  = 1;
+  string name  = 1;
 	string app_name = 2;
 	string version = 3;
 	string git_commit = 4;

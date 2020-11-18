@@ -68,7 +68,7 @@ func startInProcess(cfg Config, val *Validator) error {
 		app.RegisterTxService(val.ClientCtx)
 
 		// Add the tendermint queries service in the gRPC router.
-		app.RegisterQueryService(val.ClientCtx)
+		app.RegisterTendermintService(val.ClientCtx)
 	}
 
 	if val.APIAddress != "" {

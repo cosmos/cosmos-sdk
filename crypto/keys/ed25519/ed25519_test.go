@@ -290,7 +290,8 @@ func TestMarshalProto2(t *testing.T) {
 	bz, err = codec.MarshalAnyJSON(ccfg.Marshaler, pk)
 	require.NoError(err)
 	var pk3 cryptotypes.PubKey
-	err = codec.UnmarshalAnyJSON(ccfg.Marshaler, &pk3, bz)
+	am := codec.NewJSONAnyMarshaler(ccfg.Marshaler, ccfg.InterfaceRegistry)
+	err = codec.UnmarshalAnyJSON(am, &pk3, bz)
 	require.NoError(err)
 	require.True(pk3.Equals(pk))
 }

@@ -3,11 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -43,30 +41,26 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // AddPubkey sets a address-pubkey relation
 func (k Keeper) AddPubkey(ctx sdk.Context, pubkey cryptotypes.PubKey) error {
-	addr := pubkey.Address()
-	// TODO - wrap with ANY
-	bz, err := proto.Marshal(pubkey)
-
+	bz, err := codec.MarshalAny(k.cdc, pubkey)
 	if err != nil {
 		return err
 	}
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.AddrPubkeyRelationKey(addr), bz)
+	key := types.AddrPubkeyRelationKey(pubkey.Address())
+	store.Set(key, bz)
 	return nil
 }
 
 // GetPubkey returns the pubkey from the adddress-pubkey relation
-func (k Keeper) GetPubkey(ctx sdk.Context, address cryptotypes.Address) (cryptotypes.PubKey, error) {
+func (k Keeper) GetPubkey(ctx sdk.Context, a cryptotypes.Address) (cryptotypes.PubKey, error) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.AddrPubkeyRelationKey(address))
+	bz := store.Get(types.AddrPubkeyRelationKey(a))
 	if bz == nil {
-		return nil, fmt.Errorf("address %s not found", sdk.ConsAddress(address))
+		return nil, fmt.Errorf("address %s not found", sdk.ConsAddress(a))
 	}
-	var pkAny codectypes.Any
-	k.cdc.UnmarshalBinaryBare(bz, &pkAny)
-	// TODO Unmarshal Any? Do we need to use Any here?
 	var pk cryptotypes.PubKey
-	return pk, nil // TODO proto.Unmarshal(pk)
+	err := codec.UnmarshalAny(k.cdc, &pk, bz)
+	return pk, err
 }
 
 // Slash attempts to slash a validator. The slash is delegated to the staking

@@ -43,6 +43,11 @@ type (
 		MustUnmarshalJSON(bz []byte, ptr proto.Message)
 	}
 
+	JSONAnyMarshaler interface {
+		types.AnyUnpacker
+		JSONMarshaler
+	}
+
 	// ProtoMarshaler defines an interface a type must implement as protocol buffer
 	// defined message.
 	ProtoMarshaler interface {
@@ -64,3 +69,14 @@ type (
 		UnmarshalAminoJSON([]byte) error
 	}
 )
+
+type jsonAny struct {
+	JSONMarshaler
+	types.InterfaceRegistry
+}
+
+// NewJSONAnyMarshaler creates a JSONAnyMarshaler using JSONMarshaler
+// and InterfaceRegistry
+func NewJSONAnyMarshaler(jm JSONMarshaler, ir types.InterfaceRegistry) JSONAnyMarshaler {
+	return jsonAny{jm, ir}
+}

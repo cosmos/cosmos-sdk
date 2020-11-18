@@ -9,10 +9,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -35,16 +34,21 @@ func Cmd() *cobra.Command {
 // to decode the pubkey string from hex, base64, and finally bech32. If all
 // encodings fail, an error is returned.
 func getPubKeyFromString(ctx client.Context, pkstr string) (cryptotypes.PubKey, error) {
-	var pk cryptotypes.PubKey // FIXME, this won't work
-	err := ctx.JSONMarshaler.UnmarshalJSON([]byte(pkstr), pk)
+	var pk cryptotypes.PubKey
+	// TODO: this won't work, where should we get an Any unpacker?
+	// err := ctx.JSONMarshaler.UnmarshalJSON([]byte(pkstr), pk)
+	am := codec.NewJSONAnyMarshaler(ctx.JSONMarshaler, ctx.InterfaceRegistry)
+	err := codec.UnmarshalAnyJSON(am, &pk, []byte(pkstr))
+
 	return pk, err
 }
 
 func PubkeyCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "pubkey [pubkey]",
-		Short: "Decode a ED25519 pubkey from hex, base64",
-		Long: fmt.Sprintf(`Decode a pubkey from hex, base64.
+		Short: "Decode a pubkey from proto JSON",
+		// TODO: update example
+		Long: fmt.Sprintf(`Decode a pubkey from proto JSON and display it's address.
 
 Example:
 $ %s debug pubkey TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBieSB0aGlz
@@ -53,24 +57,13 @@ $ %s debug pubkey cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-
 			pk, err := getPubKeyFromString(clientCtx, args[0])
 			if err != nil {
 				return err
 			}
-			edPK, ok := pk.(*ed25519.PubKey)
-			if !ok {
-				return errors.Wrapf(errors.ErrInvalidType, "invalid pubkey type; expected ED25519")
-			}
 
-			pubKeyJSONBytes, err := clientCtx.LegacyAmino.MarshalJSON(edPK)
-			if err != nil {
-				return err
-			}
-
-			cmd.Println("Address:", edPK.Address())
-			cmd.Printf("Hex: %X\n", edPK.Key)
-			cmd.Println("JSON (base64):", string(pubKeyJSONBytes))
+			cmd.Println("Address:", pk.Address())
+			cmd.Println("Hex:", pk.String())
 			return nil
 		},
 	}
@@ -108,13 +101,10 @@ $ %s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 				}
 			}
 
-			accAddr := sdk.AccAddress(addr)
-			valAddr := sdk.ValAddress(addr)
-
 			cmd.Println("Address:", addr)
 			cmd.Printf("Address (hex): %X\n", addr)
-			cmd.Printf("Bech32 Acc: %s\n", accAddr)
-			cmd.Printf("Bech32 Val: %s\n", valAddr)
+			cmd.Printf("Bech32 Acc: %s\n", sdk.AccAddress(addr))
+			cmd.Printf("Bech32 Val: %s\n", sdk.ValAddress(addr))
 			return nil
 		},
 	}

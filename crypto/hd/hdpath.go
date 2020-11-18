@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha512"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -36,52 +37,66 @@ func NewParams(purpose, coinType, account uint32, change bool, addressIdx uint32
 	}
 }
 
-// NewParamsFromPath parses the BIP44 path and unmarshal into the struct.
+// NewParamsFromPath parses the BIP44 path and unmarshals it into a Bip44Params. It supports both
+// absolute and relative paths.
 func NewParamsFromPath(path string) (*BIP44Params, error) {
 	spl := strings.Split(path, "/")
+
+	// Handle absolute or relative paths
+	switch {
+	case len(spl) == 0:
+		return nil, errors.New("empty derivation path")
+
+	case strings.TrimSpace(spl[0]) == "":
+		return nil, errors.New("ambiguous path: use 'm/' prefix for absolute paths, or no leading '/' for relative ones")
+
+	case strings.TrimSpace(spl[0]) == "m":
+		spl = spl[1:]
+	}
+
 	if len(spl) != 5 {
-		return nil, fmt.Errorf("path length is wrong. Expected 5, got %d", len(spl))
+		return nil, fmt.Errorf("invalid path length %s", path)
 	}
 
 	// Check items can be parsed
 	purpose, err := hardenedInt(spl[0])
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid HD path purpose %s: %w", spl[0], err)
 	}
 
 	coinType, err := hardenedInt(spl[1])
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid HD path coin type %s: %w", spl[1], err)
 	}
 
 	account, err := hardenedInt(spl[2])
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid HD path account %s: %w", spl[2], err)
 	}
 
 	change, err := hardenedInt(spl[3])
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid HD path change %s: %w", spl[3], err)
 	}
 
 	addressIdx, err := hardenedInt(spl[4])
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid HD path address index %s: %w", spl[4], err)
 	}
 
 	// Confirm valid values
 	if spl[0] != "44'" {
-		return nil, fmt.Errorf("first field in path must be 44', got %v", spl[0])
+		return nil, fmt.Errorf("first field in path must be 44', got %s", spl[0])
 	}
 
 	if !isHardened(spl[1]) || !isHardened(spl[2]) {
 		return nil,
-			fmt.Errorf("second and third field in path must be hardened (ie. contain the suffix ', got %v and %v", spl[1], spl[2])
+			fmt.Errorf("second and third field in path must be hardened (ie. contain the suffix ', got %s and %s", spl[1], spl[2])
 	}
 
 	if isHardened(spl[3]) || isHardened(spl[4]) {
 		return nil,
-			fmt.Errorf("fourth and fifth field in path must not be hardened (ie. not contain the suffix ', got %v and %v", spl[3], spl[4])
+			fmt.Errorf("fourth and fifth field in path must not be hardened (ie. not contain the suffix ', got %s and %s", spl[3], spl[4])
 	}
 
 	if !(change == 0 || change == 1) {
@@ -135,7 +150,7 @@ func (p BIP44Params) DerivationPath() []uint32 {
 	}
 }
 
-// String returns the full HD path of the BIP44 (https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) params:
+// String returns the full absolute HD path of the BIP44 (https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) params:
 // m / purpose' / coin_type' / account' / change / address_index
 func (p BIP44Params) String() string {
 	var changeStr string

@@ -19,20 +19,20 @@ service Query {
   }
   //
   rpc GetLatestBlock(GetLatestBlockRequest) returns (GetLatestBlockResponse) {
-        option (google.api.http).get = "/cosmos/base/v1beta1/blocks/latest";
+        option (google.api.http).get = "/cosmos/base/query/v1beta1/blocks/latest";
   }
   //
   rpc GetBlockByHeight(GetBlockByHeightRequest) returns (GetBlockByHeightResponse) {
-    option (google.api.http).get = "/cosmos/base/v1beta1/blocks/{height}";
+    option (google.api.http).get = "/cosmos/base/query/v1beta1/blocks/{height}";
   }
 
   // 
   rpc GetLatestValidatorSet(GetLatestValidatorSetRequest) returns (GetLatestValidatorSetResponse) {
-    option (google.api.http).get = "/cosmos/base/v1beta1/validators/latest";
+    option (google.api.http).get = "/cosmos/base/query/v1beta1/validators/latest";
   }
   //
   rpc GetValidatorSetByHeight(GetValidatorSetByHeightRequest) returns (GetValidatorSetByHeightResponse) {
-    option (google.api.http).get = "/cosmos/base/v1beta1/validators/{height}";
+    option (google.api.http).get = "/cosmos/base/query/v1beta1/validators/{height}";
   }
 }
 

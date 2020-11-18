@@ -2,12 +2,14 @@ package rpc_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -43,17 +45,17 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s IntegrationTestSuite) TestQueryNodeInfo() {
-	// val := s.network.Validators[0]
+	val := s.network.Validators[0]
 
 	res, err := s.queryClient.GetNodeInfo(context.Background(), &qtypes.GetNodeInfoRequest{})
 	s.Require().NoError(err)
 	s.Require().Equal(res.ApplicationVersion.AppName, version.NewInfo().AppName)
 
-	// restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/query/v1beta1/node_info", val.APIAddress))
-	// fmt.Println(string(restRes))
-	// s.Require().NoError(err)
-	// var getInfoRes qtypes.GetNodeInfoResponse
-	// s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getInfoRes))
+	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/query/v1beta1/node_info", val.APIAddress))
+	s.Require().NoError(err)
+	var getInfoRes qtypes.GetNodeInfoResponse
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getInfoRes))
+	s.Require().Equal(getInfoRes.ApplicationVersion.AppName, version.NewInfo().AppName)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

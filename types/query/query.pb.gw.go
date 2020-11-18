@@ -506,13 +506,13 @@ var (
 
 	pattern_Query_GetSyncing_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"cosmos", "base", "query", "v1beta1", "syncing"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_GetLatestBlock_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"cosmos", "base", "v1beta1", "blocks", "latest"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GetLatestBlock_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "query", "v1beta1", "blocks", "latest"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_GetBlockByHeight_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "base", "v1beta1", "blocks", "height"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GetBlockByHeight_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "base", "query", "v1beta1", "blocks", "height"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_GetLatestValidatorSet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"cosmos", "base", "v1beta1", "validators", "latest"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GetLatestValidatorSet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "query", "v1beta1", "validators", "latest"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_GetValidatorSetByHeight_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "base", "v1beta1", "validators", "height"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GetValidatorSetByHeight_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "base", "query", "v1beta1", "validators", "height"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

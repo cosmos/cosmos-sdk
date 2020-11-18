@@ -3,7 +3,14 @@ FROM golang:1.15-alpine as build
 # required due to rosetta-cli's ethereum's dependencies
 RUN apk add git gcc libc-dev --no-cache
 
+RUN apk add --no-cache tar
+
 ARG ROSETTA_VERSION="v0.6.0"
+
+# prepare node data
+WORKDIR /node
+COPY ./contrib/rosetta/node/data.tar.gz data.tar.gz
+RUN tar -zxvf data.tar.gz -C /node
 
 # build simd
 WORKDIR /simd
@@ -18,7 +25,6 @@ RUN git checkout tags/$ROSETTA_VERSION
 RUN go build -o rosetta-cli ./main.go
 
 FROM alpine
-USER 0
 RUN apk add gcc libc-dev --no-cache
 
 ENV PATH=$PATH:/bin
@@ -33,6 +39,6 @@ RUN chmod +x run_tests.sh
 
 WORKDIR /root/.simapp
 
-COPY ./contrib/rosetta/node/data ./
+COPY --from=build /node/data /root/.simapp
 RUN chmod -R 0777 /root/.simapp
 

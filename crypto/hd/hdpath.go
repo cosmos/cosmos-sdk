@@ -36,7 +36,7 @@ func NewParams(purpose, coinType, account uint32, change bool, addressIdx uint32
 	}
 }
 
-// Parse the BIP44 path and unmarshal into the struct.
+// NewParamsFromPath parses the BIP44 path and unmarshal into the struct.
 func NewParamsFromPath(path string) (*BIP44Params, error) {
 	spl := strings.Split(path, "/")
 	if len(spl) != 5 {
@@ -135,6 +135,8 @@ func (p BIP44Params) DerivationPath() []uint32 {
 	}
 }
 
+// String returns the full HD path of the BIP44 (https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) params:
+// m / purpose' / coin_type' / account' / change / address_index
 func (p BIP44Params) String() string {
 	var changeStr string
 	if p.Change {
@@ -142,8 +144,7 @@ func (p BIP44Params) String() string {
 	} else {
 		changeStr = "0"
 	}
-	// m / Purpose' / coin_type' / Account' / Change / address_index
-	return fmt.Sprintf("%d'/%d'/%d'/%s/%d",
+	return fmt.Sprintf("m/%d'/%d'/%d'/%s/%d",
 		p.Purpose,
 		p.CoinType,
 		p.Account,

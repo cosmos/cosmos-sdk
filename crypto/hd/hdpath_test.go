@@ -265,15 +265,11 @@ func TestDeriveHDPathRange(t *testing.T) {
 		},
 		{
 			// Should pass.
-			path: "m/1'/2147483647/0'/0/0",
+			path: "m/1'/2147483647'/1/0'/0/0",
 		},
 		{
 			// Should pass.
-			path: "m/2147483647'/1/0'/0/0",
-		},
-		{
-			// Should pass.
-			path: "2147483647'/1/0'/0/0",
+			path: "1'/2147483647'/1/0'/0/0",
 		},
 	}
 

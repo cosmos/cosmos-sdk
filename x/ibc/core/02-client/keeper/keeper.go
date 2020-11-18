@@ -220,9 +220,9 @@ func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientS
 	}
 
 	selfHeight := types.NewHeight(version, uint64(ctx.BlockHeight()))
-	if tmClient.LatestHeight.GT(selfHeight) {
-		return sdkerrors.Wrapf(types.ErrInvalidClient, "client has LatestHeight %d greater than chain height %d",
-			tmClient.LatestHeight, ctx.BlockHeight())
+	if tmClient.LatestHeight.GTE(selfHeight) {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "client has LatestHeight %d greater than or equal to chain height %d",
+			tmClient.LatestHeight, selfHeight)
 	}
 
 	expectedProofSpecs := commitmenttypes.GetSDKSpecs()

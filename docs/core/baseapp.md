@@ -198,7 +198,7 @@ The application's `msgServiceRouter` is initialized with all the routes using th
 
 ### gRPC Query Router
 
-Similar to `Msg`s, [`queries`](../building-modules/messages-and-queries.md#queries) need to be routed to the appropriate module's [`Query` service](../building-modules/query-services.md). To do so, `BaseApp` holds a `grpcQueryRouter`, which maps modules' fully-qualified service methods (`string`, defined in their the Protobuf `Query` gRPC) to their `Query` server implementation. The `grpcQueryRouter` is called during the initial stages of query processing, which can be either by directly sending a gRPC query to the gRPC endpoint, or via the [`Query` ABCI message](#query) on the Tendermint RPC endpoint.
+Similar to `Msg`s, [`queries`](../building-modules/messages-and-queries.md#queries) need to be routed to the appropriate module's [`Query` service](../building-modules/query-services.md). To do so, `BaseApp` holds a `grpcQueryRouter`, which maps modules' fully-qualified service methods (`string`, defined in their Protobuf `Query` gRPC) to their `Query` server implementation. The `grpcQueryRouter` is called during the initial stages of query processing, which can be either by directly sending a gRPC query to the gRPC endpoint, or via the [`Query` ABCI message](#query) on the Tendermint RPC endpoint.
 
 Just like the `msgServiceRouter`, the `grpcQueryRouter` is initilalized with all the query routes using the application's [module manager](../building-modules/module-manager.md) (via the `RegisterServices` method), which itself is initialized with all the application's modules in the application's [constructor](../basics/app-anatomy.md#app-constructor).
 

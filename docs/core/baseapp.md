@@ -2,7 +2,7 @@
 order: 1
 -->
 
-# Baseapp
+# BaseApp
 
 This document describes `BaseApp`, the abstraction that implements the core functionalities of an SDK application. {synopsis}
 

@@ -322,7 +322,7 @@ Finally, the [`RunMsgs()`](#runmsgs) function is called to process the `Msg`s in
 
 ### AnteHandler
 
-The `AnteHandler` is a special handler that implements the `anteHandler` interface and is used to authenticate the transaction before the transaction's internal messages are processed.
+The `AnteHandler` is a special handler that implements the `AnteHandler` interface and is used to authenticate the transaction before the transaction's internal messages are processed.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/handler.go#L6-L8
 

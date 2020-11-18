@@ -58,7 +58,7 @@ func ResultTxSearchToTransaction(txs []*rosetta.SdkTxWithHash) []*types.Transact
 		// hasError := tx.Code > 0
 		converted[i] = &types.Transaction{
 			TransactionIdentifier: &types.TransactionIdentifier{Hash: tx.HexHash},
-			Operations:            SdkTxToOperations(tx.Tx, false, false),
+			Operations:            SdkTxToOperations(tx.Tx, false, true),
 			Metadata:              nil,
 		}
 	}
@@ -66,21 +66,17 @@ func ResultTxSearchToTransaction(txs []*rosetta.SdkTxWithHash) []*types.Transact
 }
 
 // SdkTxResponseToOperations converts a tx response to operations
-func SdkTxToOperations(tx sdk.Tx, hasError, withoutStatus bool) []*types.Operation {
+func SdkTxToOperations(tx sdk.Tx, hasError, withStatus bool) []*types.Operation {
 	verifiableTx := tx.(sdk.FeeTx)
 	fee := verifiableTx.GetFee()
 	var feeLen = len(fee)
 	var ops []*types.Operation
 	if fee != nil {
-		feeOps := GetFeeOpFromCoins(fee, verifiableTx.FeePayer().String(), withoutStatus)
-		for _, feeOp := range feeOps {
-			ops = append(ops, feeOp)
-		}
+		feeOps := GetFeeOpFromCoins(fee, verifiableTx.FeePayer().String(), withStatus)
+		ops = append(ops, feeOps...)
 	}
-	sendOps := ToOperations(tx.GetMsgs(), false, false, feeLen)
-	for _, op := range sendOps {
-		ops = append(ops, op)
-	}
+	sendOps := ToOperations(tx.GetMsgs(), false, withStatus, feeLen)
+	ops = append(ops, sendOps...)
 	return ops
 }
 
@@ -101,8 +97,9 @@ func TendermintBlockToBlockIdentifier(block *tmcoretypes.ResultBlock) *types.Blo
 	}
 }
 
-func ToOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool, feeLen int) []*types.Operation {
+func ToOperations(msgs []sdk.Msg, hasError bool, withStatus bool, feeLen int) []*types.Operation {
 	var operations []*types.Operation
+	var status string
 	for i, msg := range msgs {
 		switch msg.Type() { // nolint
 		case rosetta.OperationSend:
@@ -115,11 +112,13 @@ func ToOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool, feeLen int)
 			}
 			coin := amounts[0]
 			sendOp := func(account, amount string, index int) *types.Operation {
-				status := rosetta.StatusSuccess
+				if withStatus {
+					status = rosetta.StatusSuccess
+				}
 				if hasError {
 					status = rosetta.StatusReverted
 				}
-				if withoutStatus {
+				if withStatus {
 					status = ""
 				}
 				return &types.Operation{

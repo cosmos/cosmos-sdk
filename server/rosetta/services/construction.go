@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -21,6 +20,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // interface implementation assertion

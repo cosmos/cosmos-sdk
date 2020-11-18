@@ -114,12 +114,9 @@ func ToOperations(msgs []sdk.Msg, hasError bool, withStatus bool, feeLen int) []
 			sendOp := func(account, amount string, index int) *types.Operation {
 				if withStatus {
 					status = rosetta.StatusSuccess
-				}
-				if hasError {
-					status = rosetta.StatusReverted
-				}
-				if withStatus {
-					status = ""
+					if hasError {
+						status = rosetta.StatusReverted
+					}
 				}
 				return &types.Operation{
 					OperationIdentifier: &types.OperationIdentifier{

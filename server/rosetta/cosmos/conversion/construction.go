@@ -2,12 +2,12 @@ package conversion
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/tendermint/btcd/btcec"
 
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -28,7 +28,7 @@ func RosettaSignatureToCosmos(sig *types.Signature) (signing.SignatureV2, error)
 }
 
 func GetFeeOpFromCoins(coins sdk.Coins, account string, withStatus bool) []*types.Operation {
-	var feeOps []*types.Operation
+	feeOps := make([]*types.Operation, len(coins))
 	var status string
 	if withStatus {
 		status = rosetta.StatusSuccess

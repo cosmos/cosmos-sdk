@@ -43,7 +43,7 @@ type (
 		MustUnmarshalJSON(bz []byte, ptr proto.Message)
 	}
 
-	JSONAnyMarshaler interface {
+	IfcJSONMarshaler interface {
 		types.AnyUnpacker
 		JSONMarshaler
 	}
@@ -75,8 +75,8 @@ type jsonAny struct {
 	types.InterfaceRegistry
 }
 
-// NewJSONAnyMarshaler creates a JSONAnyMarshaler using JSONMarshaler
+// NewIfcJSONAnyMarshaler creates a JSONAnyMarshaler using JSONMarshaler
 // and InterfaceRegistry
-func NewJSONAnyMarshaler(jm JSONMarshaler, ir types.InterfaceRegistry) JSONAnyMarshaler {
+func NewIfcJSONAnyMarshaler(jm JSONMarshaler, ir types.InterfaceRegistry) IfcJSONMarshaler {
 	return jsonAny{jm, ir}
 }

@@ -233,7 +233,7 @@ func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
 	}
 }
 
-// TODO - finish this test to show who the key will be presented in YAML
+// TODO - maybe we should move the tests below to `codec_test` package, WDYT?
 func TestMarshalProto(t *testing.T) {
 	require := require.New(t)
 	ccfg := simapp.MakeTestEncodingConfig()
@@ -258,8 +258,6 @@ func TestMarshalProto(t *testing.T) {
 
 	// **** test binary serialization ****
 
-	// TODO - can we do it without packing into Any?
-	// pkM := pk.(codec.ProtoMarshaler)
 	bz, err = ccfg.Marshaler.MarshalBinaryBare(pkAny)
 	fmt.Println(bz)
 	require.NoError(err)
@@ -287,11 +285,24 @@ func TestMarshalProto2(t *testing.T) {
 	require.NoError(err)
 	require.True(pk2.Equals(pk))
 
-	bz, err = codec.MarshalAnyJSON(ccfg.Marshaler, pk)
+	bz, err = codec.MarshalIfcJSON(ccfg.Marshaler, pk)
+	fmt.Println(string(bz))
+	require.Empty(bz)
 	require.NoError(err)
 	var pk3 cryptotypes.PubKey
-	am := codec.NewJSONAnyMarshaler(ccfg.Marshaler, ccfg.InterfaceRegistry)
-	err = codec.UnmarshalAnyJSON(am, &pk3, bz)
+	// TODO: make a task to integrate the coded.*Marshal helper functiosn (from any.go) to the codec.Marshaler interface
+	// and remove JSONAnyMarshaler
+	am := codec.NewIfcJSONAnyMarshaler(ccfg.Marshaler, ccfg.InterfaceRegistry)
+	err = codec.UnmarshalIfcJSON(am, &pk3, bz)
 	require.NoError(err)
 	require.True(pk3.Equals(pk))
+
+	// Using JSONMarshaler for unpacking won't work
+	// -- Any type doesn't get automatically unpacked!
+
+	var pkAny codectypes.Any
+	err = ccfg.Marshaler.UnmarshalJSON(bz, &pkAny)
+	require.NoError(err)
+	ifce := pkAny.GetCachedValue()
+	require.Nil(ifce)
 }

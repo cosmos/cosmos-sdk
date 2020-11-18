@@ -66,7 +66,7 @@ func MarshalIfcJSON(m JSONMarshaler, x proto.Message) ([]byte, error) {
 // Ex:
 //		var x MyInterface
 //		err := UnmarshalAny(unpacker, &x, bz)
-func UnmarshalIfcJSON(m JSONAnyMarshaler, iface interface{}, bz []byte) error {
+func UnmarshalIfcJSON(m IfcJSONMarshaler, iface interface{}, bz []byte) error {
 	any := &types.Any{}
 	err := m.UnmarshalJSON(bz, any)
 	if err != nil {

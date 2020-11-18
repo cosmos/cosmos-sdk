@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 
 	bip39 "github.com/cosmos/go-bip39"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,26 +19,22 @@ func mnemonicToSeed(mnemonic string) []byte {
 	return bip39.NewSeed(mnemonic, defaultBIP39Passphrase)
 }
 
-// nolint:govet
-func ExampleStringifyPathParams() {
+func TestPathParamsString(t *testing.T) {
 	path := hd.NewParams(44, 0, 0, false, 0)
-	fmt.Println(path.String())
+	require.Equal(t, "m/44'/0'/0'/0/0", path.String())
 	path = hd.NewParams(44, 33, 7, true, 9)
-	fmt.Println(path.String())
-	// Output:
-	// 44'/0'/0'/0/0
-	// 44'/33'/7'/1/9
+	require.Equal(t, "m/44'/33'/7'/1/9", path.String())
 }
 
 func TestStringifyFundraiserPathParams(t *testing.T) {
 	path := hd.NewFundraiserParams(4, types.CoinType, 22)
-	require.Equal(t, "44'/118'/4'/0/22", path.String())
+	require.Equal(t, "m/44'/118'/4'/0/22", path.String())
 
 	path = hd.NewFundraiserParams(4, types.CoinType, 57)
-	require.Equal(t, "44'/118'/4'/0/57", path.String())
+	require.Equal(t, "m/44'/118'/4'/0/57", path.String())
 
 	path = hd.NewFundraiserParams(4, 12345, 57)
-	require.Equal(t, "44'/12345'/4'/0/57", path.String())
+	require.Equal(t, "m/44'/12345'/4'/0/57", path.String())
 }
 
 func TestPathToArray(t *testing.T) {
@@ -55,95 +50,101 @@ func TestParamsFromPath(t *testing.T) {
 		params *hd.BIP44Params
 		path   string
 	}{
-		{&hd.BIP44Params{44, 0, 0, false, 0}, "44'/0'/0'/0/0"},
-		{&hd.BIP44Params{44, 1, 0, false, 0}, "44'/1'/0'/0/0"},
-		{&hd.BIP44Params{44, 0, 1, false, 0}, "44'/0'/1'/0/0"},
-		{&hd.BIP44Params{44, 0, 0, true, 0}, "44'/0'/0'/1/0"},
-		{&hd.BIP44Params{44, 0, 0, false, 1}, "44'/0'/0'/0/1"},
-		{&hd.BIP44Params{44, 1, 1, true, 1}, "44'/1'/1'/1/1"},
-		{&hd.BIP44Params{44, 118, 52, true, 41}, "44'/118'/52'/1/41"},
+		{&hd.BIP44Params{44, 0, 0, false, 0}, "m/44'/0'/0'/0/0"},
+		{&hd.BIP44Params{44, 1, 0, false, 0}, "m/44'/1'/0'/0/0"},
+		{&hd.BIP44Params{44, 0, 1, false, 0}, "m/44'/0'/1'/0/0"},
+		{&hd.BIP44Params{44, 0, 0, true, 0}, "m/44'/0'/0'/1/0"},
+		{&hd.BIP44Params{44, 0, 0, false, 1}, "m/44'/0'/0'/0/1"},
+		{&hd.BIP44Params{44, 1, 1, true, 1}, "m/44'/1'/1'/1/1"},
+		{&hd.BIP44Params{44, 118, 52, true, 41}, "m/44'/118'/52'/1/41"},
 	}
 
 	for i, c := range goodCases {
 		params, err := hd.NewParamsFromPath(c.path)
 		errStr := fmt.Sprintf("%d %v", i, c)
-		assert.NoError(t, err, errStr)
-		assert.EqualValues(t, c.params, params, errStr)
-		assert.Equal(t, c.path, c.params.String())
+		require.NoError(t, err, errStr)
+		require.EqualValues(t, c.params, params, errStr)
+		require.Equal(t, c.path, c.params.String())
 	}
 
 	badCases := []struct {
 		path string
 	}{
-		{"43'/0'/0'/0/0"},   // doesnt start with 44
-		{"44'/1'/0'/0/0/5"}, // too many fields
-		{"44'/0'/1'/0"},     // too few fields
-		{"44'/0'/0'/2/0"},   // change field can only be 0/1
-		{"44/0'/0'/0/0"},    // first field needs '
-		{"44'/0/0'/0/0"},    // second field needs '
-		{"44'/0'/0/0/0"},    // third field needs '
-		{"44'/0'/0'/0'/0"},  // fourth field must not have '
-		{"44'/0'/0'/0/0'"},  // fifth field must not have '
-		{"44'/-1'/0'/0/0"},  // no negatives
-		{"44'/0'/0'/-1/0"},  // no negatives
-		{"a'/0'/0'/-1/0"},   // valid values
-		{"0/X/0'/-1/0"},     // valid values
-		{"44'/0'/X/-1/0"},   // valid values
-		{"44'/0'/0'/%/0"},   // valid values
-		{"44'/0'/0'/0/%"},   // valid values
+		{"m/43'/0'/0'/0/0"},   // doesn't start with 44
+		{"m/44'/1'/0'/0/0/5"}, // too many fields
+		{"m/44'/0'/1'/0"},     // too few fields
+		{"m/44'/0'/0'/2/0"},   // change field can only be 0/1
+		{"m/44/0'/0'/0/0"},    // first field needs '
+		{"m/44'/0/0'/0/0"},    // second field needs '
+		{"m/44'/0'/0/0/0"},    // third field needs '
+		{"m/44'/0'/0'/0'/0"},  // fourth field must not have '
+		{"m/44'/0'/0'/0/0'"},  // fifth field must not have '
+		{"m/44'/-1'/0'/0/0"},  // no negatives
+		{"m/44'/0'/0'/-1/0"},  // no negatives
+		{"m/a'/0'/0'/-1/0"},   // invalid values
+		{"m/0/X/0'/-1/0"},     // invalid values
+		{"m/44'/0'/X/-1/0"},   // invalid values
+		{"m/44'/0'/0'/%/0"},   // invalid values
+		{"m/44'/0'/0'/0/%"},   // invalid values
+		{"m44'0'0'00"},        // no separators
+		{" /44'/0'/0'/0/0"},   // blank first component
 	}
 
 	for i, c := range badCases {
 		params, err := hd.NewParamsFromPath(c.path)
 		errStr := fmt.Sprintf("%d %v", i, c)
-		assert.Nil(t, params, errStr)
-		assert.Error(t, err, errStr)
+		require.Nil(t, params, errStr)
+		require.Error(t, err, errStr)
 	}
 
 }
 
-// nolint:govet
-func ExampleSomeBIP32TestVecs() {
+func TestBIP32Vecs(t *testing.T) {
 
 	seed := mnemonicToSeed("barrel original fuel morning among eternal " +
 		"filter ball stove pluck matrix mechanic")
 	master, ch := hd.ComputeMastersFromSeed(seed)
 	fmt.Println("keys from fundraiser test-vector (cosmos, bitcoin, ether)")
 	fmt.Println()
-	// cosmos
+
+	// cosmos, absolute path
 	priv, err := hd.DerivePrivateKeyForPath(master, ch, types.FullFundraiserPath)
-	if err != nil {
-		fmt.Println("INVALID")
-	} else {
-		fmt.Println(hex.EncodeToString(priv[:]))
-	}
+	require.NoError(t, err)
+	require.NotEmpty(t, priv)
+	fmt.Println(hex.EncodeToString(priv[:]))
+
+	absPrivKey := hex.EncodeToString(priv[:])
+
+	// cosmos, relative path
+	priv, err = hd.DerivePrivateKeyForPath(master, ch, "44'/118'/0'/0/0")
+	require.NoError(t, err)
+	require.NotEmpty(t, priv)
+
+	relPrivKey := hex.EncodeToString(priv[:])
+
+	// check compatibility between relative and absolute HD paths
+	require.Equal(t, relPrivKey, absPrivKey)
+
 	// bitcoin
-	priv, err = hd.DerivePrivateKeyForPath(master, ch, "44'/0'/0'/0/0")
-	if err != nil {
-		fmt.Println("INVALID")
-	} else {
-		fmt.Println(hex.EncodeToString(priv[:]))
-	}
+	priv, err = hd.DerivePrivateKeyForPath(master, ch, "m/44'/0'/0'/0/0")
+	require.NoError(t, err)
+	require.NotEmpty(t, priv)
+	fmt.Println(hex.EncodeToString(priv[:]))
+
 	// ether
-	priv, err = hd.DerivePrivateKeyForPath(master, ch, "44'/60'/0'/0/0")
-	if err != nil {
-		fmt.Println("INVALID")
-	} else {
-		fmt.Println(hex.EncodeToString(priv[:]))
-	}
+	priv, err = hd.DerivePrivateKeyForPath(master, ch, "m/44'/60'/0'/0/0")
+	require.NoError(t, err)
+	require.NotEmpty(t, priv)
+	fmt.Println(hex.EncodeToString(priv[:]))
+
 	// INVALID
-	priv, err = hd.DerivePrivateKeyForPath(master, ch, "X/0'/0'/0/0")
-	if err != nil {
-		fmt.Println("INVALID")
-	} else {
-		fmt.Println(hex.EncodeToString(priv[:]))
-	}
-	priv, err = hd.DerivePrivateKeyForPath(master, ch, "-44/0'/0'/0/0")
-	if err != nil {
-		fmt.Println("INVALID")
-	} else {
-		fmt.Println(hex.EncodeToString(priv[:]))
-	}
+	priv, err = hd.DerivePrivateKeyForPath(master, ch, "m/X/0'/0'/0/0")
+	require.Error(t, err)
+	require.Empty(t, priv)
+
+	priv, err = hd.DerivePrivateKeyForPath(master, ch, "m/-44/0'/0'/0/0")
+	require.Error(t, err)
+	require.Empty(t, priv)
 
 	fmt.Println()
 	fmt.Println("keys generated via https://coinomi.com/recovery-phrase-tool.html")
@@ -153,13 +154,14 @@ func ExampleSomeBIP32TestVecs() {
 		"advice process birth april short trust crater change bacon monkey medal garment " +
 			"gorilla ranch hour rival razor call lunar mention taste vacant woman sister")
 	master, ch = hd.ComputeMastersFromSeed(seed)
-	priv, _ = hd.DerivePrivateKeyForPath(master, ch, "44'/1'/1'/0/4")
+	priv, _ = hd.DerivePrivateKeyForPath(master, ch, "m/44'/1'/1'/0/4")
 	fmt.Println(hex.EncodeToString(priv[:]))
 
 	seed = mnemonicToSeed("idea naive region square margin day captain habit " +
 		"gun second farm pact pulse someone armed")
 	master, ch = hd.ComputeMastersFromSeed(seed)
-	priv, _ = hd.DerivePrivateKeyForPath(master, ch, "44'/0'/0'/0/420")
+	priv, err = hd.DerivePrivateKeyForPath(master, ch, "m/44'/0'/0'/0/420")
+	require.NoError(t, err)
 	fmt.Println(hex.EncodeToString(priv[:]))
 
 	fmt.Println()
@@ -169,7 +171,8 @@ func ExampleSomeBIP32TestVecs() {
 	// bip32 path: m/0/7
 	seed = mnemonicToSeed("monitor flock loyal sick object grunt duty ride develop assault harsh history")
 	master, ch = hd.ComputeMastersFromSeed(seed)
-	priv, _ = hd.DerivePrivateKeyForPath(master, ch, "0/7")
+	priv, err = hd.DerivePrivateKeyForPath(master, ch, "m/0/7")
+	require.NoError(t, err) // TODO: shouldn't this error?
 	fmt.Println(hex.EncodeToString(priv[:]))
 
 	// Output: keys from fundraiser test-vector (cosmos, bitcoin, ether)
@@ -177,8 +180,6 @@ func ExampleSomeBIP32TestVecs() {
 	// bfcb217c058d8bbafd5e186eae936106ca3e943889b0b4a093ae13822fd3170c
 	// e77c3de76965ad89997451de97b95bb65ede23a6bf185a55d80363d92ee37c3d
 	// 7fc4d8a8146dea344ba04c593517d3f377fa6cded36cd55aee0a0bb968e651bc
-	// INVALID
-	// INVALID
 	//
 	// keys generated via https://coinomi.com/recovery-phrase-tool.html
 	//
@@ -201,9 +202,9 @@ func TestCreateHDPath(t *testing.T) {
 		args args
 		want hd.BIP44Params
 	}{
-		{"44'/0'/0'/0/0", args{0, 0, 0}, hd.BIP44Params{Purpose: 44}},
-		{"44'/114'/0'/0/0", args{114, 0, 0}, hd.BIP44Params{Purpose: 44, CoinType: 114, Account: 0, AddressIndex: 0}},
-		{"44'/114'/1'/1/0", args{114, 1, 1}, hd.BIP44Params{Purpose: 44, CoinType: 114, Account: 1, AddressIndex: 1}},
+		{"m/44'/0'/0'/0/0", args{0, 0, 0}, hd.BIP44Params{Purpose: 44}},
+		{"m/44'/114'/0'/0/0", args{114, 0, 0}, hd.BIP44Params{Purpose: 44, CoinType: 114, Account: 0, AddressIndex: 0}},
+		{"m/44'/114'/1'/1/0", args{114, 1, 1}, hd.BIP44Params{Purpose: 44, CoinType: 114, Account: 1, AddressIndex: 1}},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -227,36 +228,44 @@ func TestDeriveHDPathRange(t *testing.T) {
 		wantErr string
 	}{
 		{
-			path:    "1'/2147483648/0'/0/0",
+			path:    "m/1'/2147483648/0'/0/0",
 			wantErr: "out of range",
 		},
 		{
-			path:    "2147483648'/1/0/0",
+			path:    "m/2147483648'/1/0/0",
 			wantErr: "out of range",
 		},
 		{
-			path:    "2147483648'/2147483648/0'/0/0",
+			path:    "m/2147483648'/2147483648/0'/0/0",
 			wantErr: "out of range",
 		},
 		{
-			path:    "1'/-5/0'/0/0",
+			path:    "m/1'/-5/0'/0/0",
 			wantErr: "invalid syntax",
 		},
 		{
-			path:    "-2147483646'/1/0/0",
+			path:    "m/-2147483646'/1/0/0",
 			wantErr: "invalid syntax",
 		},
 		{
-			path:    "-2147483648'/-2147483648/0'/0/0",
+			path:    "m/-2147483648'/-2147483648/0'/0/0",
 			wantErr: "invalid syntax",
+		},
+		{
+			path:    "m44'118'0'00",
+			wantErr: "path 'm44'118'0'00' doesn't contain '/' separators",
+		},
+		{
+			path:    "",
+			wantErr: "path '' doesn't contain '/' separators",
 		},
 		{
 			// Should pass.
-			path: "1'/2147483647/0'/0/0",
+			path: "m/1'/2147483647'/1/0'/0/0",
 		},
 		{
 			// Should pass.
-			path: "2147483647'/1/0'/0/0",
+			path: "1'/2147483647'/1/0'/0/0",
 		},
 	}
 
@@ -267,9 +276,9 @@ func TestDeriveHDPathRange(t *testing.T) {
 			_, err := hd.DerivePrivateKeyForPath(master, ch, tt.path)
 
 			if tt.wantErr == "" {
-				require.Nil(t, err, "unexpected error")
+				require.NoError(t, err, "unexpected error")
 			} else {
-				require.NotNil(t, err, "expected a report of an int overflow")
+				require.Error(t, err, "expected a report of an int overflow")
 				require.Contains(t, err.Error(), tt.wantErr)
 			}
 		})

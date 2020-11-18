@@ -193,9 +193,8 @@ func (sn SingleNetwork) ConstructionParse(ctx context.Context, request *types.Co
 		}
 	}
 
-	ops := conversion.SdkTxToOperations(txBldr.GetTx(), false, false)
 	return &types.ConstructionParseResponse{
-		Operations:               ops,
+		Operations:               conversion.SdkTxToOperations(txBldr.GetTx(), false, false),
 		AccountIdentifierSigners: accountIdentifierSigners,
 	}, nil
 }
@@ -204,8 +203,6 @@ func (sn SingleNetwork) ConstructionPayloads(ctx context.Context, request *types
 	if len(request.Operations) > 3 {
 		return nil, rosetta.ErrInvalidOperation.RosettaError()
 	}
-
-	//TODO: Check if operations is supported
 
 	msg, fee, err := conversion.GetMsgsFromOperations(request.Operations)
 	if err != nil {

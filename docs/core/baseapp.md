@@ -194,13 +194,13 @@ When messages and queries are received by the application, they must be routed t
 
 The [default `msgServiceRouter` included in baseapp](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/baseapp/msg_service_router.go) is stateless. However, some applications may want to make use of more stateful routing mechanisms such as allowing governance to disable certain routes or point them to new modules for upgrade purposes. For this reason, the `sdk.Context` is also passed into each [route handler inside `msgServiceRouter`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/baseapp/msg_service_router.go#L31-L32). For a stateless router that doesn't want to make use of this, you can just ignore the `ctx`.
 
-The application's `msgServiceRouter` is initilalized with all the routes using the application's [module manager](../building-modules/module-manager.md#manager) (via the `RegisterServices` method), which itself is initialized with all the application's modules in the application's [constructor](../basics/app-anatomy.md#app-constructor).
+The application's `msgServiceRouter` is initialized with all the routes using the application's [module manager](../building-modules/module-manager.md#manager) (via the `RegisterServices` method), which itself is initialized with all the application's modules in the application's [constructor](../basics/app-anatomy.md#app-constructor).
 
 ### gRPC Query Router
 
-Similar to `Msg`s, [`queries`](../building-modules/messages-and-queries.md#queries) need to be routed to the appropriate module's [`Query` service](../building-modules/query-services.md). To do so, `BaseApp` holds a `grpcQueryRouter`, which maps modules' fully-qualified service methods (`string`, defined in their the Protobuf `Query` gRPC) to their `Query` server implementation. The `grpcQueryRouter` is called during the initial stages of query processing, which can be either by directly sending a gRPC query to the gRPC endpoint, or via the [`Query` ABCI message](#query) on the Tendermint RPC endpoint.
+Similar to `Msg`s, [`queries`](../building-modules/messages-and-queries.md#queries) need to be routed to the appropriate module's [`Query` service](../building-modules/query-services.md). To do so, `BaseApp` holds a `grpcQueryRouter`, which maps modules' fully-qualified service methods (`string`, defined in their Protobuf `Query` gRPC) to their `Query` server implementation. The `grpcQueryRouter` is called during the initial stages of query processing, which can be either by directly sending a gRPC query to the gRPC endpoint, or via the [`Query` ABCI message](#query) on the Tendermint RPC endpoint.
 
-Just like the `msgServiceRouter`, the `grpcQueryRouter` is initilalized with all the query routes using the application's [module manager](../building-modules/module-manager.md) (via the `RegisterServices` method), which itself is initialized with all the application's modules in the application's [constructor](../basics/app-anatomy.md#app-constructor).
+Just like the `msgServiceRouter`, the `grpcQueryRouter` is initialized with all the query routes using the application's [module manager](../building-modules/module-manager.md) (via the `RegisterServices` method), which itself is initialized with all the application's modules in the application's [constructor](../basics/app-anatomy.md#app-constructor).
 
 ## Main ABCI Messages
 
@@ -236,7 +236,7 @@ to do the following checks:
    as `Msg`s are not processed. Usually, the [`AnteHandler`](../basics/gas-fees.md#antehandler) will check that the `gas` provided
    with the transaction is superior to a minimum reference gas amount based on the raw transaction size,
    in order to avoid spam with transactions that provide 0 gas.
-4. Ensure that a each `Msg`'s fully-qualified service method matches on of the routes inside the `msgServiceRouter`, but do **not** actually
+4. Ensure that each `Msg`'s fully-qualified service method matches on of the routes inside the `msgServiceRouter`, but do **not** actually
    process `Msg`s. `Msg`s only need to be processed when the canonical state need to be updated,
    which happens during `DeliverTx`.
 
@@ -340,7 +340,7 @@ Click [here](../basics/gas-fees.md#antehandler) for more on the `anteHandler`.
 
 `RunMsgs` is called from `RunTx` with `runTxModeCheck` as parameter to check the existence of a route for each message the transaction, and with `runTxModeDeliver` to actually process the `Msg`s.
 
-First, it retreives the `Msg`'s fully-qualified service method name, by checking the `type_url` of the Protobuf `Any` representing the service `Msg`. Then, using the application's [`msgServiceRouter`](#msg-service-router), it checks for the existence of this fully-qualified service method. At this point, if `mode == runTxModeCheck`, `RunMsgs` returns. If instead `mode == runTxModeDeliver`, the [`Msg` server](../building-modules/msg-services.md) implementation for the message is executed, before `RunMsgs` returns.
+First, it retrieves the `Msg`'s fully-qualified service method name, by checking the `type_url` of the Protobuf `Any` representing the service `Msg`. Then, using the application's [`msgServiceRouter`](#msg-service-router), it checks for the existence of this fully-qualified service method. At this point, if `mode == runTxModeCheck`, `RunMsgs` returns. If instead `mode == runTxModeDeliver`, the [`Msg` server](../building-modules/msg-services.md) implementation for the message is executed, before `RunMsgs` returns.
 
 ## Other ABCI Messages
 
@@ -385,7 +385,7 @@ The [`Info` ABCI message](https://tendermint.com/docs/app-dev/abci-spec.html#inf
 
 The [`Query` ABCI message](https://tendermint.com/docs/app-dev/abci-spec.html#query) is used to serve queries received from the underlying consensus engine, including queries received via RPC like Tendermint RPC. It used to be the main entrypoint to build interfaces with the application, but with the introduction of [gRPC queries](../building-modules/query-services.md) in Cosmos SDK v0.40, its usage is more limited. The application must respect a few rules when implementing the `Query` method, which are outlined [here](https://tendermint.com/docs/app-dev/abci-spec.html#query).
 
-Each Tendermint `query` comes with a `path`, which is a `string` which denotes what to query. If the `path` matches a gRPC fully-qualified service method, then `BaseApp` will defer the query to the `grpcQueryRouter` and let it handle it like explained [above](#grpc-query-router). Otherwise, the `path` represents a query that is not (yet) handled by the gRPC router. `BaseApp` splits the `path` string with the `/` delimitier. By convention, the first element of the spliited string (`splitted[0]`) contains the category of `query` (`app`, `p2p`, `store` or `custom` ). The `BaseApp` implementation of the `Query(req abci.RequestQuery)` method is a simple dispatcher serving these 4 main categories of queries:
+Each Tendermint `query` comes with a `path`, which is a `string` which denotes what to query. If the `path` matches a gRPC fully-qualified service method, then `BaseApp` will defer the query to the `grpcQueryRouter` and let it handle it like explained [above](#grpc-query-router). Otherwise, the `path` represents a query that is not (yet) handled by the gRPC router. `BaseApp` splits the `path` string with the `/` delimiter. By convention, the first element of the splitted string (`splitted[0]`) contains the category of `query` (`app`, `p2p`, `store` or `custom` ). The `BaseApp` implementation of the `Query(req abci.RequestQuery)` method is a simple dispatcher serving these 4 main categories of queries:
 
 - Application-related queries like querying the application's version, which are served via the `handleQueryApp` method.
 - Direct queries to the multistore, which are served by the `handlerQueryStore` method. These direct queryeis are different from custom queries which go through `app.queryRouter`, and are mainly used by third-party service provider like block explorers.

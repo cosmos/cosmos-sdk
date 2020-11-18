@@ -12,7 +12,7 @@ This document describes the lifecycle of a transaction from creation to committe
 
 ## Creation
 
-### Transaction Creation using CLI
+### Transaction Creation
 
 One of the main application interfaces is the command-line interface. The transaction `Tx` can be created by the user inputting a command in the following format from the [command-line](../interfaces/cli.md), providing the type of transaction in `[command]`, arguments in `[args]`, and configurations such as gas prices in `[flags]`:
 
@@ -38,7 +38,7 @@ The ultimate value of the fees paid is equal to the gas multiplied by the gas pr
 
 Later, validators decide whether or not to include the transaction in their block by comparing the given or calculated `gas-prices` to their local `min-gas-prices`. `Tx` will be rejected if its `gas-prices` is not high enough, so users are incentivized to pay more.
 
-#### CLI Examples
+#### CLI Example
 
 Users of application `app` can enter the following command into their CLI to generate a transaction to send 1000uatom from a `senderAddress` to a `recipientAddress`. It specifies how much gas they are willing to pay: an automatic estimate scaled up by 1.5 times, with a gas price of 0.025uatom per unit gas.
 

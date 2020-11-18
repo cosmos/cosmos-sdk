@@ -12,23 +12,23 @@ import (
 )
 
 // CommitPacket returns a packet commitment bytes and an error. The commitment consists of:
-// sha256_hash(timeout_timestamp + proto_marshal(timeout_height) + data) from a given packet.
-// The function will fail if the timeout height cannot be marshaled to bytes.
+// sha256_hash(timeout_timestamp + timeout_height.VersionNumber + timeout_height.VersionHeight + sha256_hash(data))
+// from a given packet. This results in a fixed length preimage.
+// NOTE: sdk.Uint64ToBigEndian sets the uint64 to a slice of length 8.
 func CommitPacket(cdc codec.BinaryMarshaler, packet exported.PacketI) ([]byte, error) {
 	timeoutHeight := packet.GetTimeoutHeight()
-	height, ok := timeoutHeight.(clienttypes.Height)
-	if !ok {
-		return nil, sdkerrors.Wrap(ErrInvalidPacket, "could not cast height to clienttypes.Height")
-	}
-
-	timeoutBz, err := cdc.MarshalBinaryBare(&height)
-	if err != nil {
-		return nil, err
-	}
 
 	buf := sdk.Uint64ToBigEndian(packet.GetTimeoutTimestamp())
-	buf = append(buf, timeoutBz...)
-	buf = append(buf, packet.GetData()...)
+
+	versionNumber := sdk.Uint64ToBigEndian(timeoutHeight.GetVersionNumber())
+	buf = append(buf, versionNumber...)
+
+	versionHeight := sdk.Uint64ToBigEndian(timeoutHeight.GetVersionHeight())
+	buf = append(buf, versionHeight...)
+
+	dataHash := sha256.Sum256(packet.GetData())
+	buf = append(buf, dataHash[:]...)
+
 	hash := sha256.Sum256(buf)
 	return hash[:], nil
 }

@@ -198,7 +198,7 @@ Instead of using their `checkState`, full-nodes use `deliverState`:
   [`runMsgs`](../core/baseapp.md#runtx-and-runmsgs) to fully execute each `Msg` within the transaction.
   Since the transaction may have messages from different modules, `BaseApp` needs to know which module
   to find the appropriate handler. This is achieved using `BaseApp`'s `MsgServiceRouter` so that it can be processed by the module's [`Msg` service](../building-modules/msg-services.md).
-  For legacy `Msg` routing, the `Route` function is called via the [module manager](../building-modules/module-manager.md) to retrieve the route name and find the legacy [`Handler`](../building-modules/msg-services.md#handler-type) within the module.
+	For legacy `Msg` routing, the `Route` function is called via the [module manager](../building-modules/module-manager.md) to retrieve the route name and find the legacy [`Handler`](../building-modules/msg-services.md#handler-type) within the module.
 
 - **`Msg` service:** The `Msg` service, a step up from `AnteHandler`, is responsible for executing each
   message in the `Tx` and causes state transitions to persist in `deliverTxState`. It is defined

@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -30,7 +29,7 @@ func TestValidateGenesis(t *testing.T) {
 					types.NewIdentifiedConnection(connectionID, types.NewConnectionEnd(types.INIT, clientID, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []*types.Version{ibctesting.ConnectionVersion})),
 				},
 				[]types.ConnectionPaths{
-					{clientID, []string{host.ConnectionPath(connectionID)}},
+					{clientID, []string{connectionID}},
 				},
 			),
 			expPass: true,
@@ -42,7 +41,7 @@ func TestValidateGenesis(t *testing.T) {
 					types.NewIdentifiedConnection(connectionID, types.NewConnectionEnd(types.INIT, "(CLIENTIDONE)", types.Counterparty{clientID, connectionID, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []*types.Version{ibctesting.ConnectionVersion})),
 				},
 				[]types.ConnectionPaths{
-					{clientID, []string{host.ConnectionPath(connectionID)}},
+					{clientID, []string{connectionID}},
 				},
 			),
 			expPass: false,
@@ -54,7 +53,7 @@ func TestValidateGenesis(t *testing.T) {
 					types.NewIdentifiedConnection(connectionID, types.NewConnectionEnd(types.INIT, clientID, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []*types.Version{ibctesting.ConnectionVersion})),
 				},
 				[]types.ConnectionPaths{
-					{"(CLIENTIDONE)", []string{host.ConnectionPath(connectionID)}},
+					{"(CLIENTIDONE)", []string{connectionID}},
 				},
 			),
 			expPass: false,
@@ -66,7 +65,7 @@ func TestValidateGenesis(t *testing.T) {
 					types.NewIdentifiedConnection(connectionID, types.NewConnectionEnd(types.INIT, clientID, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []*types.Version{ibctesting.ConnectionVersion})),
 				},
 				[]types.ConnectionPaths{
-					{clientID, []string{connectionID}},
+					{clientID, []string{invalidConnectionID}},
 				},
 			),
 			expPass: false,

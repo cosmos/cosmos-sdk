@@ -25,6 +25,7 @@ x/{module}
 │   ├── invariants.go
 │   ├── genesis.go
 │   ├── keeper.go
+│   ├── msg_server.go
 │   ├── ...
 │   └── querier.go
 │   └── grpc_query.go

@@ -18,6 +18,7 @@ func GetQueryCmd() *cobra.Command {
 	queryCmd.AddCommand(
 		GetCmdQueryDenomTrace(),
 		GetCmdQueryDenomTraces(),
+		GetCmdParams(),
 	)
 
 	return queryCmd

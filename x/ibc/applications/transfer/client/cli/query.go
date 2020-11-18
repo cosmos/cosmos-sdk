@@ -86,8 +86,8 @@ func GetCmdQueryDenomTraces() *cobra.Command {
 	return cmd
 }
 
-// QueryParamsCmd returns the command handler for ibc-transfer parameter querying.
-func QueryParamsCmd() *cobra.Command {
+// GetCmdParams returns the command handler for ibc-transfer parameter querying.
+func GetCmdParams() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "params",
 		Short:   "Query the current ibc-transfer parameters",

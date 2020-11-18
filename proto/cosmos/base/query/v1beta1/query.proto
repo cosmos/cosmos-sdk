@@ -1,0 +1,106 @@
+syntax = "proto3";
+package cosmos.base.query.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "tendermint/p2p/types.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/types/query";
+
+// Query defines the gRPC querier service for tendermint queries.
+service Query {
+  // GetNodeInfo queries the current node info.
+  rpc GetNodeInfo(GetNodeInfoRequest) returns (GetNodeInfoResponse) {
+    option (google.api.http).get = "/cosmos/base/v1beta1/query/node_info";
+  }
+  // 
+  rpc GetSyncing(GetSyncingRequest) returns (GetSyncingResponse) {
+    option (google.api.http).get = "/cosmos/base/v1beta1/query/syncing";
+  }
+  //
+  rpc GetLatestBlock(GetLatestBlockRequest) returns (GetLatestBlockResponse) {
+        option (google.api.http).get = "/cosmos/base/v1beta1/query/blocks/latest";
+  }
+  //
+  rpc GetBlockByHeight(GetBlockByHeightRequest) returns (GetBlockByHeightResponse) {
+    option (google.api.http).get = "/cosmos/base/v1beta1/query/blocks/{height}";
+  }
+
+  // 
+  rpc GetLatestValidatorSet(GetLatestValidatorSetRequest) returns (GetLatestValidatorSetResponse) {
+    option (google.api.http).get = "/cosmos/base/v1beta1/query/validators/latest";
+  }
+  //
+  rpc GetValidatorSetByHeight(GetValidatorSetByHeightRequest) returns (GetValidatorSetByHeightResponse) {
+    option (google.api.http).get = "/cosmos/base/v1beta1/query/validators/{height}";
+  }
+}
+
+// GetValidatorSetByHeightRequest is the request type for the Query/GetValidatorSetByHeight RPC method.
+message GetValidatorSetByHeightRequest {
+    int64 height=1;
+}
+
+// GetValidatorSetByHeightResponse is the response type for the Query/GetValidatorSetByHeight RPC method.
+message GetValidatorSetByHeightResponse {
+    bytes block_info=1;
+}
+
+// GetLatestValidatorSetRequest is the request type for the Query/GetValidatorSetByHeight RPC method.
+message GetLatestValidatorSetRequest {
+}
+
+// GetLatestValidatorSetResponse is the response type for the Query/GetValidatorSetByHeight RPC method.
+message GetLatestValidatorSetResponse {
+    bytes block_info=1;
+}
+
+// GetBlockByHeightRequest is the request type for the Query/GetBlockByHeight RPC method.
+message GetBlockByHeightRequest {
+    int64 height=1;
+}
+
+// GetBlockByHeightResponse is the response type for the Query/GetBlockByHeight RPC method.
+message GetBlockByHeightResponse {
+    bytes block_info=1;
+}
+
+// GetLatestBlockRequest is the request type for the Query/GetLatestBlock RPC method.
+message GetLatestBlockRequest {
+
+}
+
+// GetLatestBlockResponse is the response type for the Query/GetLatestBlock RPC method.
+message GetLatestBlockResponse {
+    bytes block_info=1;
+}
+
+// GetSyncingRequest is the request type for the Query/GetSyncing RPC method.
+message GetSyncingRequest {
+
+}
+
+// GetSyncingResponse is the response type for the Query/GetSyncing RPC method.
+message GetSyncingResponse {
+    bool syncing = 1;
+}
+
+// GetNodeInfoRequest is the request type for the Query/GetNodeInfo RPC method.
+message GetNodeInfoRequest {
+}
+
+// GetNodeInfoResponse is the request type for the Query/GetNodeInfo RPC method.
+message GetNodeInfoResponse {
+    tendermint.p2p.DefaultNodeInfo default_node_info = 1;
+    VersionInfo ApplicationVersion = 2;
+}
+
+message VersionInfo {
+    string name  = 1;
+	string app_name = 2;
+	string version = 3;
+	string git_commit = 4;
+	string build_tags = 5;
+	string go_version= 6;
+    // TODO add build_deps
+}

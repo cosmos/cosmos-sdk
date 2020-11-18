@@ -143,3 +143,7 @@ func (s *Server) registerMetrics() {
 
 	s.Router.HandleFunc("/metrics", metricsHandler).Methods("GET")
 }
+
+func (s *Server) registerTMBaseRESTEndpoints() {
+
+}

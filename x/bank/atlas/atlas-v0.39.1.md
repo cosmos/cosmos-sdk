@@ -136,4 +136,73 @@ type MsgMultiSend struct {
 
 ### CLI
 
+The `x/bank` supports the following transactional commands.
+
+1. Send tokens via a `MsgSend` message.
+
+   ```shell
+   $ <app> tx send [from_key_or_address] [to_address] [amount] [...flags]
+   ```
+
+Note, the `x/bank` module does not natively support constructing a `MsgMultiSend`
+message. This type of message must be constructed manually, but it may be signed
+and broadcasted via the CLI.
+
 ### REST
+
+The `x/bank` supports various query API endpoints and a `MsgSend` construction
+endpoint.
+
+1. Construct an unsigned `MsgSend` transaction.
+
+   | Method | Path                     |
+   | :----- | :----------------------- |
+   | `POST` | `/bank/accounts/{address}/transfers` |
+
+   Sample payload:
+
+   ```json
+   {
+       "base_req": {
+           "chain_id": "chain-foo",
+           "from": "cosmos1u3fneykx9carelvurc6av22vpjvptytj9wklk0",
+           "memo": "memo",
+           "fees": [
+               {
+                   "denom": "stake",
+                   "amount": "25000"
+               }
+           ]
+       },
+       "amount": [
+           {
+               "denom": "stake",
+               "amount": "400000000"
+           }
+       ]
+   }
+   ```
+
+2. Query for an account's balance.
+
+   | Method | Path                     |
+   | :----- | :----------------------- |
+   | `GET` | `/bank/balances/{address}` |
+
+   Sample response:
+
+   ```json
+   {
+       "height": "0",
+       "result": [
+           {
+               "denom": "node0token",
+               "amount": "1000000000"
+           },
+           {
+               "denom": "stake",
+               "amount": "400000000"
+           }
+       ]
+   }
+   ```

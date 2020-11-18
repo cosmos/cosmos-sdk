@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -191,13 +192,8 @@ func (sn SingleNetwork) ConstructionParse(ctx context.Context, request *types.Co
 			accountIdentifierSigners = append(accountIdentifierSigners, signer)
 		}
 	}
-	ops := conversion.ToOperations(txBldr.GetTx().GetMsgs(), false, true)
 
-	if txBldr.GetTx().GetFee() != nil {
-		feeOps := conversion.GetFeeOpFromCoins(txBldr.GetTx().GetFee(), txBldr.GetTx().FeePayer().String())
-		ops = append(ops, feeOps...)
-	}
-
+	ops := conversion.SdkTxToOperations(txBldr.GetTx(), false, false)
 	return &types.ConstructionParseResponse{
 		Operations:               ops,
 		AccountIdentifierSigners: accountIdentifierSigners,
@@ -211,10 +207,11 @@ func (sn SingleNetwork) ConstructionPayloads(ctx context.Context, request *types
 
 	//TODO: Check if operations is supported
 
-	sendMsg, err := conversion.GetTransferTxDataFromOperations(request.Operations)
+	msg, fee, err := conversion.GetMsgsFromOperations(request.Operations)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrInvalidOperation, err.Error()).RosettaError()
 	}
+	sendMsg := msg.(*bank.MsgSend)
 
 	metadata, err := GetMetadataFromPayloadReq(request)
 	if err != nil {
@@ -222,7 +219,7 @@ func (sn SingleNetwork) ConstructionPayloads(ctx context.Context, request *types
 	}
 
 	txFactory := tx.Factory{}.WithAccountNumber(metadata.AccountNumber).WithChainID(metadata.ChainID).
-		WithGas(metadata.Gas).WithSequence(metadata.Sequence).WithMemo(metadata.Memo)
+		WithGas(metadata.Gas).WithSequence(metadata.Sequence).WithMemo(metadata.Memo).WithFees(fee.String())
 
 	TxConfig := sn.client.GetTxConfig()
 	txFactory = txFactory.WithTxConfig(TxConfig)
@@ -267,8 +264,8 @@ func (sn SingleNetwork) ConstructionPayloads(ctx context.Context, request *types
 
 func (sn SingleNetwork) ConstructionPreprocess(ctx context.Context, request *types.ConstructionPreprocessRequest) (*types.ConstructionPreprocessResponse, *types.Error) {
 	operations := request.Operations
-	if len(operations) != 2 {
-		return nil, rosetta.ErrInterpreting.RosettaError()
+	if len(operations) > 3 {
+		return nil, rosetta.ErrInvalidRequest.RosettaError()
 	}
 
 	txData, err := conversion.GetTransferTxDataFromOperations(operations)

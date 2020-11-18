@@ -112,7 +112,7 @@ func Allow() *types.Allow {
 				Successful: false,
 			},
 		},
-		OperationTypes:          []string{OperationSend},
+		OperationTypes:          SupportedOperations,
 		Errors:                  AllowedErrors.RosettaErrors(),
 		HistoricalBalanceLookup: true,
 		TimestampStartIndex:     nil,

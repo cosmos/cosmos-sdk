@@ -67,7 +67,21 @@ func ResultTxSearchToTransaction(txs []*rosetta.SdkTxWithHash) []*types.Transact
 
 // SdkTxResponseToOperations converts a tx response to operations
 func SdkTxToOperations(tx sdk.Tx, hasError, withoutStatus bool) []*types.Operation {
-	return ToOperations(tx.GetMsgs(), hasError, withoutStatus)
+	verifiableTx := tx.(sdk.FeeTx)
+	fee := verifiableTx.GetFee()
+	var feeLen = len(fee)
+	var ops []*types.Operation
+	if fee != nil {
+		feeOps := GetFeeOpFromCoins(fee, verifiableTx.FeePayer().String(), withoutStatus)
+		for _, feeOp := range feeOps {
+			ops = append(ops, feeOp)
+		}
+	}
+	sendOps := ToOperations(tx.GetMsgs(), false, false, feeLen)
+	for _, op := range sendOps {
+		ops = append(ops, op)
+	}
+	return ops
 }
 
 // TendermintTxsToTxIdentifiers converts a tendermint raw transaction into a rosetta tx identifier
@@ -87,7 +101,7 @@ func TendermintBlockToBlockIdentifier(block *tmcoretypes.ResultBlock) *types.Blo
 	}
 }
 
-func ToOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) []*types.Operation {
+func ToOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool, feeLen int) []*types.Operation {
 	var operations []*types.Operation
 	for i, msg := range msgs {
 		switch msg.Type() { // nolint
@@ -126,8 +140,8 @@ func ToOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) []*types.Op
 				}
 			}
 			operations = append(operations,
-				sendOp(fromAddress, "-"+coin.Amount.String(), i+1),
-				sendOp(toAddress, coin.Amount.String(), i+2),
+				sendOp(fromAddress, "-"+coin.Amount.String(), feeLen+i),
+				sendOp(toAddress, coin.Amount.String(), feeLen+i+1),
 			)
 		}
 	}
@@ -158,9 +172,17 @@ func GetMsgsFromOperations(ops []*types.Operation) (sdk.Msg, sdk.Coins, error) {
 	return sendMsg, ConvertAmountToCoins(feeAmnt), nil
 }
 
-//TODO
 func ConvertAmountToCoins(amounts []*types.Amount) sdk.Coins {
-	return nil
+	var feeCoins sdk.Coins
+	for _, amount := range amounts {
+		value, err := strconv.ParseInt(amount.Value, 10, 64)
+		if err != nil {
+			return nil
+		}
+		coin := sdk.NewCoin(amount.Currency.Symbol, sdk.NewInt(value))
+		feeCoins = append(feeCoins, coin)
+	}
+	return feeCoins
 }
 
 // GetTransferTxDataFromOperations extracts the from and to addresses from a list of operations.

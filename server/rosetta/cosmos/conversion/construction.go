@@ -27,19 +27,24 @@ func RosettaSignatureToCosmos(sig *types.Signature) (signing.SignatureV2, error)
 	panic("not implemented :(")
 }
 
-func GetFeeOpFromCoins(coins sdk.Coins, account string) []*types.Operation {
+func GetFeeOpFromCoins(coins sdk.Coins, account string, withoutStatus bool) []*types.Operation {
 	var feeOps []*types.Operation
+	var status string
+	if !withoutStatus {
+		status = rosetta.StatusSuccess
+	}
 	for _, coin := range coins {
 		op := &types.Operation{
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: int64(0),
 			},
-			Type: rosetta.OperationFee,
+			Type:   rosetta.OperationFee,
+			Status: status,
 			Account: &types.AccountIdentifier{
 				Address: account,
 			},
 			Amount: &types.Amount{
-				Value: coin.Amount.String(),
+				Value: "-" + coin.Amount.String(),
 				Currency: &types.Currency{
 					Symbol: coin.Denom,
 				},

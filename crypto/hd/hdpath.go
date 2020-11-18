@@ -4,7 +4,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha512"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -44,11 +43,11 @@ func NewParamsFromPath(path string) (*BIP44Params, error) {
 
 	// Handle absolute or relative paths
 	switch {
-	case len(spl) == 0:
-		return nil, errors.New("empty derivation path")
+	case spl[0] == path:
+		return nil, fmt.Errorf("path %s doesn't contain '/' separators", path)
 
 	case strings.TrimSpace(spl[0]) == "":
-		return nil, errors.New("ambiguous path: use 'm/' prefix for absolute paths, or no leading '/' for relative ones")
+		return nil, fmt.Errorf("ambiguous path %s: use 'm/' prefix for absolute paths, or no leading '/' for relative ones", path)
 
 	case strings.TrimSpace(spl[0]) == "m":
 		spl = spl[1:]
@@ -181,6 +180,13 @@ func DerivePrivateKeyForPath(privKeyBytes, chainCode [32]byte, path string) ([]b
 	data := privKeyBytes
 	parts := strings.Split(path, "/")
 
+	switch {
+	case parts[0] == path:
+		return nil, fmt.Errorf("path '%s' doesn't contain '/' separators", path)
+	case strings.TrimSpace(parts[0]) == "m":
+		parts = parts[1:]
+	}
+
 	for _, part := range parts {
 		// do we have an apostrophe?
 		harden := part[len(part)-1:] == "'"
@@ -194,7 +200,7 @@ func DerivePrivateKeyForPath(privKeyBytes, chainCode [32]byte, path string) ([]b
 		// index values are in the range [0, 1<<31-1] aka [0, max(int32)]
 		idx, err := strconv.ParseUint(part, 10, 31)
 		if err != nil {
-			return []byte{}, fmt.Errorf("invalid BIP 32 path: %s", err)
+			return []byte{}, fmt.Errorf("invalid BIP 32 path %s: %w", path, err)
 		}
 
 		data, chainCode = derivePrivateKey(data, chainCode, uint32(idx), harden)
@@ -204,7 +210,7 @@ func DerivePrivateKeyForPath(privKeyBytes, chainCode [32]byte, path string) ([]b
 	n := copy(derivedKey, data[:])
 
 	if n != 32 || len(data) != 32 {
-		return []byte{}, fmt.Errorf("expected a (secp256k1) key of length 32, got length: %v", len(data))
+		return []byte{}, fmt.Errorf("expected a key of length 32, got length: %d", len(data))
 	}
 
 	return derivedKey, nil

@@ -65,6 +65,7 @@ func TestFundraiserCompatibility(t *testing.T) {
 		master, ch := hd.ComputeMastersFromSeed(seed)
 		priv, err := hd.DerivePrivateKeyForPath(master, ch, "m/44'/118'/0'/0/0")
 		require.NoError(t, err)
+
 		privKey := &secp256k1.PrivKey{Key: priv}
 		pub := privKey.PubKey()
 

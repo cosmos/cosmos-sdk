@@ -38,7 +38,7 @@ func getPubKeyFromString(ctx client.Context, pkstr string) (cryptotypes.PubKey, 
 	// TODO: this won't work, where should we get an Any unpacker?
 	// err := ctx.JSONMarshaler.UnmarshalJSON([]byte(pkstr), pk)
 	am := codec.NewJSONAnyMarshaler(ctx.JSONMarshaler, ctx.InterfaceRegistry)
-	err := codec.UnmarshalAnyJSON(am, &pk, []byte(pkstr))
+	err := codec.UnmarshalIfcJSON(am, &pk, []byte(pkstr))
 
 	return pk, err
 }

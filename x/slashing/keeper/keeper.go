@@ -41,7 +41,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // AddPubkey sets a address-pubkey relation
 func (k Keeper) AddPubkey(ctx sdk.Context, pubkey cryptotypes.PubKey) error {
-	bz, err := codec.MarshalAny(k.cdc, pubkey)
+	bz, err := codec.MarshalIfc(k.cdc, pubkey)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func (k Keeper) GetPubkey(ctx sdk.Context, a cryptotypes.Address) (cryptotypes.P
 		return nil, fmt.Errorf("address %s not found", sdk.ConsAddress(a))
 	}
 	var pk cryptotypes.PubKey
-	err := codec.UnmarshalAny(k.cdc, &pk, bz)
+	err := codec.UnmarshalIfc(k.cdc, &pk, bz)
 	return pk, err
 }
 

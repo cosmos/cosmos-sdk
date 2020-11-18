@@ -66,7 +66,7 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	// counterparty chain must commit the upgraded client with all client-customizable fields zeroed out
 	// at the upgrade path specified by current client
 	committedClient := upgradedClient.ZeroCustomFields()
-	bz, err := codec.MarshalAny(cdc, committedClient)
+	bz, err := codec.MarshalIfc(cdc, committedClient)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "could not marshal client state: %v", err)
 	}

@@ -279,11 +279,11 @@ func TestMarshalProto2(t *testing.T) {
 	privKey := ed25519.GenPrivKey()
 	pk := privKey.PubKey()
 
-	bz, err := codec.MarshalAny(ccfg.Marshaler, pk)
+	bz, err := codec.MarshalIfc(ccfg.Marshaler, pk)
 	require.NoError(err)
 
 	var pk2 cryptotypes.PubKey
-	err = codec.UnmarshalAny(ccfg.Marshaler, &pk2, bz)
+	err = codec.UnmarshalIfc(ccfg.Marshaler, &pk2, bz)
 	require.NoError(err)
 	require.True(pk2.Equals(pk))
 

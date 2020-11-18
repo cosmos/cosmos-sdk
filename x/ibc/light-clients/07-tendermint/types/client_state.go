@@ -173,7 +173,7 @@ func (cs ClientState) VerifyClientState(
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "invalid client type %T, expected %T", clientState, &ClientState{})
 	}
 
-	bz, err := codec.MarshalAny(cdc, clientState)
+	bz, err := codec.MarshalIfc(cdc, clientState)
 	if err != nil {
 		return err
 	}
@@ -213,7 +213,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid consensus type %T, expected %T", consensusState, &ConsensusState{})
 	}
 
-	bz, err := codec.MarshalAny(cdc, consensusState)
+	bz, err := codec.MarshalIfc(cdc, consensusState)
 	if err != nil {
 		return err
 	}

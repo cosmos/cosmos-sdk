@@ -53,7 +53,7 @@ func (suite *SoloMachineTestSuite) GetSequenceFromStore() uint64 {
 	suite.Require().NotNil(bz)
 
 	var clientState exported.ClientState
-	err := codec.UnmarshalAny(suite.chainA.Codec, &clientState, bz)
+	err := codec.UnmarshalIfc(suite.chainA.Codec, &clientState, bz)
 	suite.Require().NoError(err)
 	return clientState.GetLatestHeight().GetVersionHeight()
 }

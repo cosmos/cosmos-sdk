@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -349,8 +350,10 @@ func (suite *TypesTestSuite) TestMarshalMsgUpgradeClient() {
 			"client upgrades to new tendermint client",
 			func() {
 				tendermintClient := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
-				tendermintConsState := &ibctmtypes.ConsensusState{NextValidatorsHash: []byte("nextValsHash")}
-				msg, err = types.NewMsgUpgradeClient("clientid", tendermintClient, tendermintConsState, newClientHeight, []byte("proofUpgradeClient"), []byte("proofUpgradeConsState"), suite.chainA.SenderAccount.GetAddress())
+				// tendermintConsState := &ibctmtypes.ConsensusState{NextValidatorsHash: []byte("nextValsHash")}
+				tmConsState := suite.chainA.CurrentTMClientHeader().ConsensusState()
+				fmt.Println(tmConsState)
+				msg, err = types.NewMsgUpgradeClient("clientid", tendermintClient, tmConsState, newClientHeight, []byte("proofUpgradeClient"), []byte("proofUpgradeConsState"), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 		},
@@ -382,6 +385,9 @@ func (suite *TypesTestSuite) TestMarshalMsgUpgradeClient() {
 			newMsg := &types.MsgUpgradeClient{}
 			err = cdc.UnmarshalJSON(bz, newMsg)
 			suite.Require().NoError(err)
+
+			fmt.Printf("%#v\n", msg)
+			fmt.Printf("%#v\n", newMsg)
 
 			suite.Require().True(proto.Equal(msg, newMsg))
 		})

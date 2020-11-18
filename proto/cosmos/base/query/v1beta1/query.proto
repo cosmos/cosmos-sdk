@@ -8,7 +8,7 @@ import "google/api/annotations.proto";
 option go_package = "github.com/cosmos/cosmos-sdk/types/query";
 
 // Query defines the gRPC querier service for tendermint queries.
-service Query {
+service Query { 
   // GetNodeInfo queries the current node info.
   rpc GetNodeInfo(GetNodeInfoRequest) returns (GetNodeInfoResponse) {
     option (google.api.http).get = "/cosmos/base/v1beta1/query/node_info";

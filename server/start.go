@@ -262,6 +262,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			WithClient(local.New(tmNode))
 
 		app.RegisterTxService(clientCtx)
+		app.RegisterQueryService(clientCtx)
 	}
 
 	var apiSrv *api.Server

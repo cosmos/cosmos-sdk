@@ -236,7 +236,7 @@ to do the following checks:
    as `Msg`s are not processed. Usually, the [`AnteHandler`](../basics/gas-fees.md#antehandler) will check that the `gas` provided
    with the transaction is superior to a minimum reference gas amount based on the raw transaction size,
    in order to avoid spam with transactions that provide 0 gas.
-4. Ensure that a each `Msg`'s fully-qualified service method matches on of the routes inside the `msgServiceRouter`, but do **not** actually
+4. Ensure that each `Msg`'s fully-qualified service method matches on of the routes inside the `msgServiceRouter`, but do **not** actually
    process `Msg`s. `Msg`s only need to be processed when the canonical state need to be updated,
    which happens during `DeliverTx`.
 

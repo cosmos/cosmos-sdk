@@ -208,6 +208,8 @@ func (m *QueryAppliedPlanResponse) GetHeight() int64 {
 	return 0
 }
 
+// QueryUpgradedConsensusStateRequest is the request type for the Query/UpgradedConsensusState
+// RPC method.
 type QueryUpgradedConsensusStateRequest struct {
 	// last height of the current chain must be sent in request
 	// as this is the height under which next consensus state is stored
@@ -254,6 +256,8 @@ func (m *QueryUpgradedConsensusStateRequest) GetLastHeight() int64 {
 	return 0
 }
 
+// QueryUpgradedConsensusStateResponse is the response type for the Query/UpgradedConsensusState
+// RPC method.
 type QueryUpgradedConsensusStateResponse struct {
 	UpgradedConsensusState *types.Any `protobuf:"bytes,1,opt,name=upgraded_consensus_state,json=upgradedConsensusState,proto3" json:"upgraded_consensus_state,omitempty"`
 }

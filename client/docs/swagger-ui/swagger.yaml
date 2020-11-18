@@ -15945,6 +15945,11 @@ paths:
                         "@type": "type.googleapis.com/google.protobuf.Duration",
                         "value": "1.212s"
                       }
+            description: >-
+              QueryUpgradedConsensusStateResponse is the response type for the
+              Query/UpgradedConsensusState
+
+              RPC method.
         default:
           description: An unexpected error response.
           schema:
@@ -31985,6 +31990,11 @@ definitions:
                 "@type": "type.googleapis.com/google.protobuf.Duration",
                 "value": "1.212s"
               }
+    description: >-
+      QueryUpgradedConsensusStateResponse is the response type for the
+      Query/UpgradedConsensusState
+
+      RPC method.
   ibc.core.channel.v1.Channel:
     type: object
     properties:

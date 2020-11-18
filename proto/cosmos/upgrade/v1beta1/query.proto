@@ -53,12 +53,16 @@ message QueryAppliedPlanResponse {
   int64 height = 1;
 }
 
+// QueryUpgradedConsensusStateRequest is the request type for the Query/UpgradedConsensusState
+// RPC method.
 message QueryUpgradedConsensusStateRequest {
   // last height of the current chain must be sent in request
   // as this is the height under which next consensus state is stored
   int64 last_height = 1;
 }
 
+// QueryUpgradedConsensusStateResponse is the response type for the Query/UpgradedConsensusState
+// RPC method.
 message QueryUpgradedConsensusStateResponse {
   google.protobuf.Any upgraded_consensus_state = 1;
 }

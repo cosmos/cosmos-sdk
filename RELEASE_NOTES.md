@@ -23,11 +23,15 @@ condition to prevent the client's code from entering an endless loop.
 
 This is the first release of the Launchpad series that has been tested and built with **go 1.15**.
 
-## Tendermint 0.33.8
+## Tendermint's updates
+
+Tendermint has received a few updates in the last development cycle.
+
+The pings frequency for remote private validators and the number of GetPubKey requests
+have been reduced to prevent validators from [failing to sync when using remote signers](https://github.com/tendermint/tendermint/issues/5550).
 
 A security vulnerability that affected the Go's `encoding/binary` package was reported.
-Tendermint's new `v0.33.8` is meant to aid users in using the correct version of Go.
-
+Tendermint's `v0.33.8` release was published with the objective to aid users in using the correct version of Go.
 Please refer to [this bug report](https://github.com/golang/go/issues/40618) for more information.
 
 ## Known issues

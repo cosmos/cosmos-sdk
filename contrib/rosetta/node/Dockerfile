@@ -19,8 +19,7 @@ RUN go build -o simd ./simapp/simd/
 
 # build rosetta CLI
 WORKDIR /rosetta
-RUN git clone https://github.com/coinbase/rosetta-cli
-WORKDIR /rosetta/rosetta-cli
+RUN git clone https://github.com/coinbase/rosetta-cli .
 RUN git checkout tags/$ROSETTA_VERSION
 RUN go build -o rosetta-cli ./main.go
 
@@ -31,7 +30,7 @@ ENV PATH=$PATH:/bin
 
 WORKDIR /bin
 COPY --from=build /simd/simd /bin/simd
-COPY --from=build /rosetta/rosetta-cli/rosetta-cli /bin/rosetta-cli
+COPY --from=build /rosetta/rosetta-cli /bin/rosetta-cli
 
 WORKDIR /rosetta
 COPY ./contrib/rosetta/configuration ./

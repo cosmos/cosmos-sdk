@@ -90,6 +90,9 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/cosmos/staking/v1beta1/params";
   }
+
+  // this could return current estimation of next validator set
+  rpc BufferedValidators(QueryBufferedValidatorsRequest) returns (QueryBufferedValidatorsResponse) {}
 }
 
 // QueryValidatorsRequest is request type for Query/Validators RPC method.

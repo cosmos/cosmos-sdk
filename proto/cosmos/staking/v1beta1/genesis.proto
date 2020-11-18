@@ -38,6 +38,60 @@ message GenesisState {
   repeated Redelegation redelegations = 7 [(gogoproto.nullable) = false];
 
   bool exported = 8;
+
+  // added newly added queues
+  repeated MsgUnjail buffered_unjails = 8;
+  repeated MsgCreateValidator buffered_create_validators = 9;
+  repeated MsgEditValidator buffered_edit_validators = 10;
+
+  // Current logic flow summary:
+  // Current queues: "unbonding validator", "unbonding delegator", “redelegation"
+  // Current Queue management
+  // EndBlocker -> BlockValidatorUpdates -> DequeueAllMatureUBDQueue
+  // EndBlocker -> BlockValidatorUpdates -> DequeueAllMatureRedelegationQueue
+  // EndBlocker -> BlockValidatorUpdates -> UnbondAllMatureValidators 
+  // EndBlocker -> BlockValidatorUpdates -> CompleteUnbonding -> RemoveUnbondingDelegation
+  // EndBlocker -> BlockValidatorUpdates -> CompleteRedelegation -> RemoveRedelegation
+  // BeginBlocker -> HandleValidatorSignature -> Jail
+  // BeginBlocker -> HandleValidatorSignature -> Slash
+
+  // Target logic flow summary:
+  // Epoch -> BlockValidatorUpdates -> DequeueAllMatureUBDQueue
+  // Epoch -> BlockValidatorUpdates -> DequeueAllMatureRedelegationQueue
+  // Epoch -> BlockValidatorUpdates -> UnbondAllMatureValidators 
+  // Epoch -> BlockValidatorUpdates -> CompleteUnbonding -> RemoveUnbondingDelegation
+  // Epoch -> BlockValidatorUpdates -> CompleteRedelegation -> RemoveRedelegation
+  // BeginBlocker -> HandleValidatorSignature -> Jail
+  // BeginBlocker -> HandleValidatorSignature -> Slash
+
+  // Current Msgs management
+  // MsgUnjail -> instant validator update on condition met
+  // MsgCreateValidator -> instant validator creation
+  // MsgEditValidator -> instant validator update
+  // MsgBeginRedelegate -> queue redelegation
+  // MsgUndelegate -> queue undelegate
+  // MsgWithdrawValidatorCommission -> instant
+  // MsgWithdrawDelegatorReward -> instant
+
+  // Target Msgs management
+  // MsgUnjail -> queue validator update on condition met
+  // MsgCreateValidator -> queue validator creation on condition met
+  // MsgEditValidator -> queue validator edit on condition met
+  // MsgBeginRedelegate -> queue redelegation
+  // MsgUndelegate -> queue undelegate
+  // MsgDelegate -> queue delegate
+  // MsgWithdrawValidatorCommission -> instant
+  // MsgWithdrawDelegatorReward -> instant
+
+  // Changes to make for logic flow
+  // BlockValidatorUpdates should be modified to ValidatorUpdates and should be called on Epoch
+  // BeginBlocker -> HandleValidatorSignature run as it is and run ValidatorUpdates when it's updated on EndBlocker
+  // to trigger tendermint validator set update instantly when Jail/Slash case.
+
+  // Changes to make for Msgs flow
+  // BufferMsgUnjail should be added to execute on next epoch: Add when condition met
+  // BufferMsgCreateValidator should be added: send from user account to NotBondedPool and queue action
+  // BufferMsgEditValidator should be added: queue action
 }
 
 // LastValidatorPower required for validator set update logic.

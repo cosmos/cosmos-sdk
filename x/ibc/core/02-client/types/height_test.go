@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -23,6 +24,8 @@ func TestCompareHeights(t *testing.T) {
 		{"version number 1 is greater", types.NewHeight(7, 5), types.NewHeight(4, 5), 1},
 		{"version height 1 is lesser", types.NewHeight(3, 4), types.NewHeight(3, 9), -1},
 		{"version height 1 is greater", types.NewHeight(3, 8), types.NewHeight(3, 3), 1},
+		{"version number is MaxUint64", types.NewHeight(math.MaxUint64, 1), types.NewHeight(0, 1), 1},
+		{"version height is MaxUint64", types.NewHeight(1, math.MaxUint64), types.NewHeight(1, 0), 1},
 		{"height is equal", types.NewHeight(4, 4), types.NewHeight(4, 4), 0},
 	}
 

@@ -267,6 +267,14 @@ func GetConfig(v *viper.Viper) Config {
 			RPCMaxBodyBytes:    v.GetUint("api.rpc-max-body-bytes"),
 			EnableUnsafeCORS:   v.GetBool("api.enabled-unsafe-cors"),
 		},
+		Rosetta: RosettaConfig{
+			Enable:     v.GetBool("rosetta.enable"),
+			Address:    v.GetString("rosetta.address"),
+			Blockchain: v.GetString("rosetta.blockchain"),
+			Network:    v.GetString("rosetta.network"),
+			Retries:    v.GetInt("rosetta.retries"),
+			Offline:    v.GetBool("rosetta.offline"),
+		},
 		GRPC: GRPCConfig{
 			Enable:  v.GetBool("grpc.enable"),
 			Address: v.GetString("grpc.address"),

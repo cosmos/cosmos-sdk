@@ -8,7 +8,12 @@ import (
 	"runtime/pprof"
 	"time"
 
+	rosettacfg "github.com/cosmos/cosmos-sdk/server/rosetta/config"
+
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
+
 	"github.com/spf13/cobra"
+	"github.com/tendermint/cosmos-rosetta-gateway/service"
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -265,7 +270,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	}
 
 	var apiSrv *api.Server
-
 	if config.API.Enable {
 		genDoc, err := genDocProvider()
 		if err != nil {
@@ -298,6 +302,50 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		grpcSrv, err = servergrpc.StartGRPCServer(app, config.GRPC.Address)
 		if err != nil {
 			return err
+		}
+	}
+
+	var rosettaSrv *service.Service
+	if config.Rosetta.Enable {
+		conf := &rosettacfg.Config{
+			Blockchain:    config.Rosetta.Blockchain,
+			Network:       config.Rosetta.Network,
+			TendermintRPC: ctx.Config.RPC.ListenAddress,
+			GRPCEndpoint:  config.GRPC.Address,
+			Addr:          config.Rosetta.Address,
+			Retries:       config.Rosetta.Retries,
+			Offline:       config.Rosetta.Offline,
+		}
+
+		err = conf.Validate()
+		if err != nil {
+			return err
+		}
+
+		adapter, err := rosettacfg.RetryRosettaFromConfig(conf)
+		if err != nil {
+			return err
+		}
+
+		rosettaSrv, err = service.New(
+			service.Options{ListenAddress: conf.Addr},
+			rosetta.NewNetwork(conf.NetworkIdentifier(), adapter),
+		)
+		if err != nil {
+			return err
+		}
+
+		errCh := make(chan error)
+		go func() {
+			if err := rosettaSrv.Start(); err != nil {
+				errCh <- err
+			}
+		}()
+
+		select {
+		case err := <-errCh:
+			return err
+		case <-time.After(5 * time.Second): // assume server started successfully
 		}
 	}
 

@@ -2,18 +2,14 @@ version: "3"
 
 services:
   cosmos:
-    build:
-      context: ../../
-      dockerfile: contrib/rosetta/node/Dockerfile
+    image: rosetta-ci:latest
     command: ["simd", "start", "--pruning", "nothing"]
     ports:
       - 9090:9090
       - 26657:26657
 
   rosetta:
-    build:
-      context: ../../
-      dockerfile: contrib/rosetta/node/Dockerfile
+    image: rosetta-ci:latest
     command: [
       "simd",
       "rosetta",
@@ -27,17 +23,13 @@ services:
       - 8080:8080
 
   faucet:
-    build:
-      context: ../../
-      dockerfile: contrib/rosetta/node/Dockerfile
+    image: rosetta-ci:latest
     working_dir: /rosetta
     command: ["python3", "faucet.py"]
     expose:
       - 8080
 
   test_rosetta:
-    build:
-      context: ../../
-      dockerfile: contrib/rosetta/node/Dockerfile
+    image: rosetta-ci:latest
     command: ["./run_tests.sh"]
     working_dir: /rosetta

@@ -59,7 +59,6 @@ type Any struct {
 // unmarshaling
 func NewAnyWithValue(value proto.Message) (*Any, error) {
 	any := &Any{}
-
 	err := any.Pack(value)
 	if err != nil {
 		return nil, err

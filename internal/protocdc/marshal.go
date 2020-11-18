@@ -19,6 +19,7 @@ func MarshalJSON(msg interface{}, resolver jsonpb.AnyResolver) ([]byte, error) {
 }
 
 // AssertMsg casts i to a proto.Message. Returns an error if it's not possible.
+// TODO remove
 func AssertMsg(i interface{}) (proto.Message, error) {
 	pm, ok := i.(proto.Message)
 	if !ok {

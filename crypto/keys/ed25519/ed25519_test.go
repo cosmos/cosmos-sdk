@@ -6,16 +6,17 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	ed25519 "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
@@ -235,31 +236,61 @@ func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
 // TODO - finish this test to show who the key will be presented in YAML
 func TestMarshalProto(t *testing.T) {
 	require := require.New(t)
-	cdc, _ := simapp.MakeCodecs()
-
+	ccfg := simapp.MakeTestEncodingConfig()
 	privKey := ed25519.GenPrivKey()
-	pubKey := privKey.PubKey()
+	pk := privKey.PubKey()
 
-	bz, err := cdc.MarshalJSON(pubKey)
+	pkAny, err := codectypes.NewAnyWithValue(pk)
 	require.NoError(err)
-	var pubKey2 cryptotypes.PubKey
-	err = cdc.UnmarshalJSON(bz, pubKey2)
+	bz, err := ccfg.Marshaler.MarshalJSON(pkAny)
 	require.NoError(err)
 
-	// 	pubKeyM := pubKey.(codec.ProtoMarshaler)
-	// bz, err := cdc.MarshalBinaryBare(pubKeyM)
-	bz, err = proto.Marshal(pubKey)
+	var pkAny2 codectypes.Any
+	err = ccfg.Marshaler.UnmarshalJSON(bz, &pkAny2)
+	require.NoError(err)
+	// we before getting a cached value we need to unpack it.
+	// Normally this happens in in types which implement UnpackInterfaces
+	var pkI cryptotypes.PubKey
+	err = ccfg.InterfaceRegistry.UnpackAny(&pkAny2, &pkI)
+	require.NoError(err)
+	var pk2 = pkAny2.GetCachedValue().(cryptotypes.PubKey)
+	require.True(pk2.Equals(pk))
+
+	// **** test binary serialization ****
+
+	// TODO - can we do it without packing into Any?
+	// pkM := pk.(codec.ProtoMarshaler)
+	bz, err = ccfg.Marshaler.MarshalBinaryBare(pkAny)
 	fmt.Println(bz)
 	require.NoError(err)
 
-	// var pk cryptotypes.PubKey
-	// err = proto.Unmarshal(bz, pk)
-	// require.NoError(err)
+	var pkAny3 codectypes.Any
+	err = ccfg.Marshaler.UnmarshalBinaryBare(bz, &pkAny3)
+	require.NoError(err)
+	err = ccfg.InterfaceRegistry.UnpackAny(&pkAny3, &pkI)
+	require.NoError(err)
+	var pk3 = pkAny3.GetCachedValue().(cryptotypes.PubKey)
+	require.True(pk3.Equals(pk))
+}
 
-	/*
-		var pk cryptotypes.PubKey
-		err = cdc.UnmarshalBinaryBare(bz, pk)
-		require.NoError(err)
-		require.True(pk.Equals(pubKey))
-	*/
+func TestMarshalProto2(t *testing.T) {
+	require := require.New(t)
+	ccfg := simapp.MakeTestEncodingConfig()
+	privKey := ed25519.GenPrivKey()
+	pk := privKey.PubKey()
+
+	bz, err := codec.MarshalAny(ccfg.Marshaler, pk)
+	require.NoError(err)
+
+	var pk2 cryptotypes.PubKey
+	err = codec.UnmarshalAny(ccfg.Marshaler, &pk2, bz)
+	require.NoError(err)
+	require.True(pk2.Equals(pk))
+
+	bz, err = codec.MarshalAnyJSON(ccfg.Marshaler, pk)
+	require.NoError(err)
+	var pk3 cryptotypes.PubKey
+	err = codec.UnmarshalAnyJSON(ccfg.Marshaler, &pk3, bz)
+	require.NoError(err)
+	require.True(pk3.Equals(pk))
 }

@@ -35,7 +35,7 @@ func Cmd() *cobra.Command {
 // to decode the pubkey string from hex, base64, and finally bech32. If all
 // encodings fail, an error is returned.
 func getPubKeyFromString(ctx client.Context, pkstr string) (cryptotypes.PubKey, error) {
-	var pk cryptotypes.PubKey
+	var pk cryptotypes.PubKey // FIXME, this won't work
 	err := ctx.JSONMarshaler.UnmarshalJSON([]byte(pkstr), pk)
 	return pk, err
 }

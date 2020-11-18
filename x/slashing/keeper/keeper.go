@@ -7,8 +7,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/internal/protocdc"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -44,11 +44,9 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 // AddPubkey sets a address-pubkey relation
 func (k Keeper) AddPubkey(ctx sdk.Context, pubkey cryptotypes.PubKey) error {
 	addr := pubkey.Address()
-	pkProto, err := protocdc.AssertMsg(pubkey)
-	if err != nil {
-		return err
-	}
-	bz, err := proto.Marshal(pkProto)
+	// TODO - wrap with ANY
+	bz, err := proto.Marshal(pubkey)
+
 	if err != nil {
 		return err
 	}
@@ -64,6 +62,8 @@ func (k Keeper) GetPubkey(ctx sdk.Context, address cryptotypes.Address) (cryptot
 	if bz == nil {
 		return nil, fmt.Errorf("address %s not found", sdk.ConsAddress(address))
 	}
+	var pkAny codectypes.Any
+	k.cdc.UnmarshalBinaryBare(bz, &pkAny)
 	// TODO Unmarshal Any? Do we need to use Any here?
 	var pk cryptotypes.PubKey
 	return pk, nil // TODO proto.Unmarshal(pk)

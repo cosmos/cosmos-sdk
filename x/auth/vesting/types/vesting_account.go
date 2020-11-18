@@ -6,11 +6,11 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/internal/protocdc"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 // Compile-time type assertions
@@ -535,7 +535,7 @@ func (dva DelayedVestingAccount) String() string {
 }
 
 type getPK interface {
-	GetPubKey() crypto.PubKey
+	GetPubKey() cryptotypes.PubKey
 }
 
 func getPKString(g getPK) (string, error) {

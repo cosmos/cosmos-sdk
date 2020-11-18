@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,6 +52,6 @@ var (
 func GetEscrowAddress(portID, channelID string) sdk.AccAddress {
 	return append(
 		[]byte(EscrowPrefix),
-		crypto.AddressHash([]byte(portID+channelID))...,
+		crypto.AddressHash([]byte(fmt.Sprintf("%s/%s", portID, channelID)))...,
 	)
 }

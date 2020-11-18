@@ -100,9 +100,6 @@ type APIConfig struct {
 
 // RosettaConfig defines the Rosetta API listener configuration.
 type RosettaConfig struct {
-	// Enable defines if the API server should be enabled.
-	Enable bool `mapstructure:"enable"`
-
 	// Address defines the API server to listen on
 	Address string `mapstructure:"address"`
 
@@ -116,6 +113,9 @@ type RosettaConfig struct {
 	// Retries defines the maximum number of retries
 	// rosetta will do before quitting
 	Retries int `mapstructure:"retries"`
+
+	// Enable defines if the API server should be enabled.
+	Enable bool `mapstructure:"enable"`
 
 	// Offline defines if the server must be run in offline mode
 	Offline bool `mapstructure:"offline"`

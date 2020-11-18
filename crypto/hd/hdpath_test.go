@@ -19,15 +19,11 @@ func mnemonicToSeed(mnemonic string) []byte {
 	return bip39.NewSeed(mnemonic, defaultBIP39Passphrase)
 }
 
-// nolint:govet
-func ExampleStringifyPathParams() {
+func TestPathParamsString(t *testing.T) {
 	path := hd.NewParams(44, 0, 0, false, 0)
-	fmt.Println(path.String())
+	require.Equal(t, "m/44'/0'/0'/0/0", path.String())
 	path = hd.NewParams(44, 33, 7, true, 9)
-	fmt.Println(path.String())
-	// Output:
-	// m/44'/0'/0'/0/0
-	// m/44'/33'/7'/1/9
+	require.Equal(t, "m/44'/33'/7'/1/9", path.String())
 }
 
 func TestStringifyFundraiserPathParams(t *testing.T) {

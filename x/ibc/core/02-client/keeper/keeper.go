@@ -247,12 +247,10 @@ func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientS
 
 	if len(tmClient.UpgradePath) != 0 {
 		// For now, SDK IBC implementation assumes that upgrade path (if defined) is defined by SDK upgrade module
-		merklePath := commitmenttypes.NewMerklePath(tmClient.UpgradePath...)
-		expectedUpgradePath := fmt.Sprintf("/%s/%s", upgradetypes.StoreKey, upgradetypes.KeyUpgradedIBCState)
-		actualUpgradePath := merklePath.Pretty()
-		if actualUpgradePath != expectedUpgradePath {
-			return sdkerrors.Wrapf(types.ErrInvalidClient, "upgrade path must be the upgrade path defined by upgrade module. expected %s, got %s",
-				expectedUpgradePath, actualUpgradePath)
+		expectedUpgradePath := []string{upgradetypes.StoreKey, upgradetypes.KeyUpgradedIBCState}
+		if !reflect.DeepEqual(expectedUpgradePath, tmClient.UpgradePath) {
+			return sdkerrors.Wrapf(types.ErrInvalidClient, "upgrade path must be the upgrade path defined by upgrade module. expected %v, got %v",
+				expectedUpgradePath, tmClient.UpgradePath)
 		}
 	}
 	return nil

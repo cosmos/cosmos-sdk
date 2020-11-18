@@ -104,7 +104,7 @@ func TestCreateLedger(t *testing.T) {
 
 	path, err := restoredKey.GetPath()
 	assert.NoError(t, err)
-	assert.Equal(t, "44'/118'/3'/0/1", path.String())
+	assert.Equal(t, "m/44'/118'/3'/0/1", path.String())
 }
 
 // TestKeyManagement makes sure we can manipulate these keys well

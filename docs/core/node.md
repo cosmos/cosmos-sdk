@@ -67,6 +67,10 @@ Once the Tendermint node is instanciated and in sync with the application, the n
 
 Upon starting, the node will bootstrap its RPC and P2P server and start dialing peers. During handshake with its peers, if the node realizes they are ahead, it will query all the blocks sequentially in order to catch up. Then, it will wait for new block proposals and block signatures from validators in order to make progress.
 
+## Other commands
+
+To discover how to concretely run a node and interact with it, please refer to our [Running a Node](../run-node/README.md) guide.
+
 ## Next {hide}
 
 Learn about the [store](./store.md) {hide}

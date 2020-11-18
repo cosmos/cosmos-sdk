@@ -53,13 +53,13 @@ The first thing defined in `app.go` is the `type` of the application. It is gene
 
 See an example of application type definition from `simapp`, the SDK's own app used for demo and testing purposes:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/simapp/app.go#L139-L181
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L139-L181
 
 ### Constructor Function
 
 This function constructs a new application of the type defined in the section above. It must fulfill the `AppCreator` signature in order to be used in the [`start` command](../core/node.md#start-command) of the application's daemon command.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/server/types/app.go#L42-L44
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/server/types/app.go#L42-L44
 
 Here are the main actions performed by this function:
 
@@ -81,7 +81,7 @@ Note that this function only creates an instance of the app, while the actual st
 
 See an example of application constructor from `simapp`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/simapp/app.go#L192-L429
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L192-L429
 
 ### InitChainer
 
@@ -91,7 +91,7 @@ In general, the `InitChainer` is mostly composed of the [`InitGenesis`](../build
 
 See an example of an `InitChainer` from `simapp`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/simapp/app.go#L452-L459
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L452-L459
 
 ### BeginBlocker and EndBlocker
 
@@ -103,13 +103,13 @@ As a sidenote, it is important to remember that application-specific blockchains
 
 See an example of `BeginBlocker` and `EndBlocker` functions from `simapp`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/simapp/app.go#L442-L450
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L442-L450
 
 ### Register Codec
 
 The `EncodingConfig` structure is the last important part of the `app.go` file. The goal of this structure is to define the codecs that will be used throughout the app.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/simapp/params/encoding.go#L9-L16
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/params/encoding.go#L9-L16
 
 Here are descriptions of what each of the four fields means:
 
@@ -123,7 +123,7 @@ The SDK exposes a `MakeCodecs` function used to create a `EncodingConfig`. It us
 
 See an example of a `MakeCodecs` from `simapp`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/simapp/app.go#L429-L435
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L429-L435
 
 ## Modules
 
@@ -150,7 +150,7 @@ For a more detailed look at a transaction lifecycle, click [here](./tx-lifecycle
 
 Module developers create custom `Msg`s when they build their own module. The general practice is to define all `Msg`s in a Protobuf service called `service Msg {}`, and define each `Msg` as a Protobuf service method, using the `rpc` keyword. These definitions usually reside in a `tx.proto` file. For example, the `x/bank` module defines two `Msg`s to allows users to transfer tokens:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L10-L17
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/proto/cosmos/bank/v1beta1/tx.proto#L10-L17
 
 These two `Msg`s are processed by the `Msg` service of the `x/bank` module, which ultimately calls the `keeper` of the `x/auth` module in order to update the state.
 
@@ -163,12 +163,12 @@ The [handler](../building-modules/msg-services.md#handler-type) refers to the pa
 The `handler` of a module is generally defined in a file called `handler.go` and consists of:
 
 - A **switch function** `NewHandler` to route the message to the appropriate `handler` function. This function returns a `handler` function, and is registered in the [`AppModule`](#application-module-interface) to be used in the application's module manager to initialize the [application's router](../core/baseapp.md#routing). Next is an example from `x/bank`:
-  +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/bank/handler.go#L10-L30
+  +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/bank/handler.go#L10-L30
 - **One handler function for each message type defined by the module**. Developers write the message processing logic in these functions. This generally involves doing stateful checks to ensure the message is valid and calling [`keeper`](#keeper)'s methods to update the state.
 
 Handler functions return a result of type `sdk.Result`, which informs the application on whether the message was successfully processed:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/types/result.go#L15-L40
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/result.go#L15-L40
 
 ### gRPC `Query` Services
 
@@ -201,7 +201,7 @@ Legacy queriers were queriers used before the introduction of Protobuf and gRPC 
 
 [`Legacy queriers`](../building-modules/query-services.md#legacy-queriers) are very similar to `handlers`, except they serve user queries to the state as opposed to processing transactions. A [query](../building-modules/messages-and-queries.md#queries) is initiated from an [interface](#application-interface) by an end-user who provides a `queryRoute` and some `data`. The query is then routed to the correct application's `querier` by `baseapp`'s `handleQueryCustom` method using `queryRoute`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/baseapp/abci.go#L388-L418
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/baseapp/abci.go#L388-L418
 
 The `Querier` of a module is defined in a file called `keeper/querier.go`, and consists of:
 
@@ -257,7 +257,7 @@ The [module's Legacy REST interface](../building-modules/module-interfaces.md#le
 
 - A `RegisterRoutes` function, which registers each route defined in the file. This function is called from the [main application's interface](#application-interfaces) for each module used within the application. The router used in the SDK is [Gorilla's mux](https://github.com/gorilla/mux).
 - Custom request type definitions for each query or transaction creation function that needs to be exposed. These custom request types build on the base `request` type of the Cosmos SDK:
-  +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/types/rest/rest.go#L62-L76
+  +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/rest/rest.go#L62-L76
 - One handler function for each request that can be routed to the given module. These functions implement the core logic necessary to serve the request.
 
 These Legacy API endpoints are present in the SDK for backward compatibility purposes and will be removed in the next release.

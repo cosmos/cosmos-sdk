@@ -72,7 +72,7 @@ func SdkTxToOperations(tx sdk.Tx, hasError, withStatus bool) []*types.Operation 
 	var feeLen = len(fee)
 	var ops []*types.Operation
 	if fee != nil {
-		feeOps := GetFeeOpFromCoins(fee, verifiableTx.FeePayer().String(), withStatus)
+		var feeOps = GetFeeOpFromCoins(fee, verifiableTx.FeePayer().String(), withStatus)
 		ops = append(ops, feeOps...)
 	}
 	sendOps := ToOperations(tx.GetMsgs(), false, withStatus, feeLen)
@@ -171,7 +171,8 @@ func GetMsgsFromOperations(ops []*types.Operation) (sdk.Msg, sdk.Coins, error) {
 func ConvertAmountToCoins(amounts []*types.Amount) sdk.Coins {
 	var feeCoins sdk.Coins
 	for _, amount := range amounts {
-		value, err := strconv.ParseInt(amount.Value, 10, 64)
+		absValue := strings.Trim(amount.Value, "-")
+		value, err := strconv.ParseInt(absValue, 10, 64)
 		if err != nil {
 			return nil
 		}

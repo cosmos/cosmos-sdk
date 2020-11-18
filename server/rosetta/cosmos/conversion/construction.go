@@ -28,15 +28,15 @@ func RosettaSignatureToCosmos(sig *types.Signature) (signing.SignatureV2, error)
 }
 
 func GetFeeOpFromCoins(coins sdk.Coins, account string, withStatus bool) []*types.Operation {
-	feeOps := make([]*types.Operation, len(coins))
+	feeOps := make([]*types.Operation, 0)
 	var status string
 	if withStatus {
 		status = rosetta.StatusSuccess
 	}
-	for _, coin := range coins {
+	for i, coin := range coins {
 		op := &types.Operation{
 			OperationIdentifier: &types.OperationIdentifier{
-				Index: int64(0),
+				Index: int64(i),
 			},
 			Type:   rosetta.OperationFee,
 			Status: status,

@@ -126,12 +126,41 @@ func ToOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) []*types.Op
 				}
 			}
 			operations = append(operations,
-				sendOp(fromAddress, "-"+coin.Amount.String(), i),
-				sendOp(toAddress, coin.Amount.String(), i+1),
+				sendOp(fromAddress, "-"+coin.Amount.String(), i+1),
+				sendOp(toAddress, coin.Amount.String(), i+2),
 			)
 		}
 	}
 	return operations
+}
+
+func GetMsgsFromOperations(ops []*types.Operation) (sdk.Msg, sdk.Coins, error) {
+	var feeAmnt []*types.Amount
+	var sendOps []*types.Operation
+	if len(ops) == 2 {
+		sendMsg, err := GetTransferTxDataFromOperations(ops)
+		return sendMsg, nil, err
+	} else if len(ops) == 3 {
+		for _, op := range ops {
+			if op.Type == rosetta.OperationFee {
+				amount := op.Amount
+				feeAmnt = append(feeAmnt, amount)
+			}
+			if op.Type == rosetta.OperationSend {
+				sendOps = append(sendOps, op)
+			}
+		}
+	}
+	sendMsg, err := GetTransferTxDataFromOperations(sendOps)
+	if err != nil {
+		return nil, nil, err
+	}
+	return sendMsg, ConvertAmountToCoins(feeAmnt), nil
+}
+
+//TODO
+func ConvertAmountToCoins(amounts []*types.Amount) sdk.Coins {
+	return nil
 }
 
 // GetTransferTxDataFromOperations extracts the from and to addresses from a list of operations.

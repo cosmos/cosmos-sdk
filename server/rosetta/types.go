@@ -24,6 +24,7 @@ const (
 	AccountNumber  = "account_number"
 	ChainID        = "chain_id"
 	OperationSend  = "send"
+	OperationFee   = "fee"
 )
 
 // Synchronization stage constants used to determine if a node is synced or catching up
@@ -32,6 +33,8 @@ const (
 	StageSyncing = "syncing"
 )
 
+var SupportedOperations = []string{OperationSend, OperationFee}
+
 // NewNetwork builds a rosetta gateway network
 func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter) service.Network {
 	return service.Network{
@@ -39,7 +42,7 @@ func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter)
 			Blockchain:          networkIdentifier.Blockchain,
 			Network:             networkIdentifier.Network,
 			AddrPrefix:          sdk.GetConfig().GetBech32AccountAddrPrefix(), // since we're inside cosmos sdk the config is supposed to be sealed
-			SupportedOperations: []string{OperationSend},
+			SupportedOperations: SupportedOperations,
 		},
 		Adapter: adapter,
 	}

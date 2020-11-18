@@ -2,6 +2,8 @@ package conversion
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/tendermint/btcd/btcec"
@@ -23,4 +25,27 @@ func RosettaSignatureToCosmos(sig *types.Signature) (signing.SignatureV2, error)
 		return signing.SignatureV2{}, fmt.Errorf("unable to parse public key: %s", err.Error())
 	}
 	panic("not implemented :(")
+}
+
+func GetFeeOpFromCoins(coins sdk.Coins, account string) []*types.Operation {
+	var feeOps []*types.Operation
+	for _, coin := range coins {
+		op := &types.Operation{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: int64(0),
+			},
+			Type: rosetta.OperationFee,
+			Account: &types.AccountIdentifier{
+				Address: account,
+			},
+			Amount: &types.Amount{
+				Value: coin.Amount.String(),
+				Currency: &types.Currency{
+					Symbol: coin.Denom,
+				},
+			},
+		}
+		feeOps = append(feeOps, op)
+	}
+	return feeOps
 }

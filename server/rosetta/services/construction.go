@@ -191,21 +191,25 @@ func (sn SingleNetwork) ConstructionParse(ctx context.Context, request *types.Co
 			accountIdentifierSigners = append(accountIdentifierSigners, signer)
 		}
 	}
+	ops := conversion.ToOperations(txBldr.GetTx().GetMsgs(), false, true)
+
+	if txBldr.GetTx().GetFee() != nil {
+		feeOps := conversion.GetFeeOpFromCoins(txBldr.GetTx().GetFee(), txBldr.GetTx().FeePayer().String())
+		ops = append(ops, feeOps...)
+	}
 
 	return &types.ConstructionParseResponse{
-		Operations:               conversion.ToOperations(txBldr.GetTx().GetMsgs(), false, true),
+		Operations:               ops,
 		AccountIdentifierSigners: accountIdentifierSigners,
 	}, nil
 }
 
 func (sn SingleNetwork) ConstructionPayloads(ctx context.Context, request *types.ConstructionPayloadsRequest) (*types.ConstructionPayloadsResponse, *types.Error) {
-	if len(request.Operations) != 2 {
+	if len(request.Operations) > 3 {
 		return nil, rosetta.ErrInvalidOperation.RosettaError()
 	}
 
-	if request.Operations[0].Type != rosetta.OperationSend || request.Operations[1].Type != rosetta.OperationSend {
-		return nil, rosetta.WrapError(rosetta.ErrInvalidOperation, "the operations are not Transfer").RosettaError()
-	}
+	//TODO: Check if operations is supported
 
 	sendMsg, err := conversion.GetTransferTxDataFromOperations(request.Operations)
 	if err != nil {

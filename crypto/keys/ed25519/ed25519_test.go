@@ -286,8 +286,6 @@ func TestMarshalProto2(t *testing.T) {
 	require.True(pk2.Equals(pk))
 
 	bz, err = codec.MarshalIfcJSON(ccfg.Marshaler, pk)
-	fmt.Println(string(bz))
-	require.Empty(bz)
 	require.NoError(err)
 	var pk3 cryptotypes.PubKey
 	// TODO: make a task to integrate the coded.*Marshal helper functiosn (from any.go) to the codec.Marshaler interface
@@ -297,12 +295,12 @@ func TestMarshalProto2(t *testing.T) {
 	require.NoError(err)
 	require.True(pk3.Equals(pk))
 
-	// Using JSONMarshaler for unpacking won't work
-	// -- Any type doesn't get automatically unpacked!
-
+	// Using JSONMarshaler for unpacking won't work Any type
+	// doesn't get automatically unpacked, and we we can't do it
+	// because Any doesn't know interfaces into which it should unpack
 	var pkAny codectypes.Any
 	err = ccfg.Marshaler.UnmarshalJSON(bz, &pkAny)
 	require.NoError(err)
-	ifce := pkAny.GetCachedValue()
-	require.Nil(ifce)
+	ifc := pkAny.GetCachedValue()
+	require.Nil(ifc)
 }

@@ -5,16 +5,13 @@
   },
   "online_url": "http://rosetta:8080",
   "data_directory": "",
-  "http_timeout": 10,
+  "http_timeout": 300,
   "max_retries": 5,
   "retry_elapsed_time": 0,
-  "max_online_connections": 120,
-  "max_sync_concurrency": 64,
-  "tip_delay": 300,
-  "max_reorg_depth": 100,
-  "log_configuration": false,
-  "compression_disabled": false,
-  "memory_limit_disabled": false,
+  "max_online_connections": 0,
+  "max_sync_concurrency": 0,
+  "tip_delay": 60,
+  "log_configuration": true,
   "construction": {
     "offline_url": "http://rosetta:8080",
     "max_offline_connections": 0,
@@ -27,14 +24,14 @@
     "rebroadcast_all": false,
     "constructor_dsl_file": "cosmos.ros",
     "end_conditions": {
-      "create_account": 10,
-      "transfer": 10
+      "create_account": 1,
+      "transfer": 1
     }
   },
   "data": {
-    "active_reconciliation_concurrency": 16,
-    "inactive_reconciliation_concurrency": 4,
-    "inactive_reconciliation_frequency": 250,
+    "active_reconciliation_concurrency": 0,
+    "inactive_reconciliation_concurrency": 0,
+    "inactive_reconciliation_frequency": 0,
     "log_blocks": false,
     "log_transactions": false,
     "log_balance_changes": false,
@@ -44,14 +41,9 @@
     "bootstrap_balances": "bootstrap.json",
     "interesting_accounts": "",
     "reconciliation_disabled": false,
-    "reconciliation_drain_disabled": false,
     "inactive_discrepency_search_disabled": false,
     "balance_tracking_disabled": false,
     "coin_tracking_disabled": false,
-    "status_port": 9090,
-    "results_output_file": "",
-    "pruning_disabled": false,
-    "initial_balance_fetch_disabled": false,
     "end_conditions": {
       "tip": true
     }

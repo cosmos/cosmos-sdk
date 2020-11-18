@@ -9,6 +9,16 @@ request_funds(1){
       "create_limit":1
     });
   },
+  send_funds{
+    account_identifier = {{random_account.account_identifier}};
+    address = {{account_identifier.address}};
+    idk = http_request({
+      "method": "POST",
+      "url": "http:\/\/faucet:8000",
+      "timeout": 10,
+      "body": {{random_account.account_identifier.address}}
+    });
+  },
   // Create a separate scenario to request funds so that
   // the address we are using to request funds does not
   // get rolled back if funds do not yet exist.
@@ -67,7 +77,7 @@ transfer(10){
     transfer.operations = [
       {
         "operation_identifier":{"index":0},
-        "type":"cosmos-sdk/MsgSend",
+        "type":"send",
         "account":{{sender.account_identifier}},
         "amount":{
           "value":{{sender_amount}},
@@ -76,7 +86,7 @@ transfer(10){
       },
       {
         "operation_identifier":{"index":1},
-        "type":"cosmos-sdk/MsgSend",
+        "type":"send",
         "account":{{recipient.account_identifier}},
         "amount":{
           "value":{{recipient_amount}},

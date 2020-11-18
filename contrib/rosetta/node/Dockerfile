@@ -5,7 +5,7 @@ RUN apk add git gcc libc-dev --no-cache
 
 RUN apk add --no-cache tar
 
-ARG ROSETTA_VERSION="v0.6.0"
+ARG ROSETTA_VERSION="v0.5.23"
 
 # prepare node data
 WORKDIR /node
@@ -25,7 +25,7 @@ RUN git checkout tags/$ROSETTA_VERSION
 RUN go build -o rosetta-cli ./main.go
 
 FROM alpine
-RUN apk add gcc libc-dev --no-cache
+RUN apk add gcc libc-dev python3 --no-cache
 
 ENV PATH=$PATH:/bin
 
@@ -36,6 +36,8 @@ COPY --from=build /rosetta/rosetta-cli/rosetta-cli /bin/rosetta-cli
 WORKDIR /rosetta
 COPY ./contrib/rosetta/configuration ./
 RUN chmod +x run_tests.sh
+RUN chmod +x send_funds.sh
+RUN chmod +x faucet.py
 
 WORKDIR /root/.simapp
 

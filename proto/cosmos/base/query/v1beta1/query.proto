@@ -11,28 +11,28 @@ option go_package = "github.com/cosmos/cosmos-sdk/types/query";
 service Query { 
   // GetNodeInfo queries the current node info.
   rpc GetNodeInfo(GetNodeInfoRequest) returns (GetNodeInfoResponse) {
-    option (google.api.http).get = "/cosmos/base/v1beta1/query/node_info";
+    option (google.api.http).get = "/cosmos/base/query/v1beta1/node_info";
   }
   // 
   rpc GetSyncing(GetSyncingRequest) returns (GetSyncingResponse) {
-    option (google.api.http).get = "/cosmos/base/v1beta1/query/syncing";
+    option (google.api.http).get = "/cosmos/base/query/v1beta1/syncing";
   }
   //
   rpc GetLatestBlock(GetLatestBlockRequest) returns (GetLatestBlockResponse) {
-        option (google.api.http).get = "/cosmos/base/v1beta1/query/blocks/latest";
+        option (google.api.http).get = "/cosmos/base/v1beta1/blocks/latest";
   }
   //
   rpc GetBlockByHeight(GetBlockByHeightRequest) returns (GetBlockByHeightResponse) {
-    option (google.api.http).get = "/cosmos/base/v1beta1/query/blocks/{height}";
+    option (google.api.http).get = "/cosmos/base/v1beta1/blocks/{height}";
   }
 
   // 
   rpc GetLatestValidatorSet(GetLatestValidatorSetRequest) returns (GetLatestValidatorSetResponse) {
-    option (google.api.http).get = "/cosmos/base/v1beta1/query/validators/latest";
+    option (google.api.http).get = "/cosmos/base/v1beta1/validators/latest";
   }
   //
   rpc GetValidatorSetByHeight(GetValidatorSetByHeightRequest) returns (GetValidatorSetByHeightResponse) {
-    option (google.api.http).get = "/cosmos/base/v1beta1/query/validators/{height}";
+    option (google.api.http).get = "/cosmos/base/v1beta1/validators/{height}";
   }
 }
 

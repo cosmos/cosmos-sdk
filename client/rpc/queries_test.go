@@ -43,9 +43,17 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s IntegrationTestSuite) TestQueryNodeInfo() {
+	// val := s.network.Validators[0]
+
 	res, err := s.queryClient.GetNodeInfo(context.Background(), &qtypes.GetNodeInfoRequest{})
 	s.Require().NoError(err)
 	s.Require().Equal(res.ApplicationVersion.AppName, version.NewInfo().AppName)
+
+	// restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/query/v1beta1/node_info", val.APIAddress))
+	// fmt.Println(string(restRes))
+	// s.Require().NoError(err)
+	// var getInfoRes qtypes.GetNodeInfoResponse
+	// s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getInfoRes))
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

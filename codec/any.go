@@ -8,8 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-// MarshalAny is a convenience function for packing the provided value in an
-// Any and then proto marshaling it to bytes
+// MarshalAny is a convenience function for proto marshalling interfaces. It
+// packs the provided value in an Any and then marshals it to bytes.
+// NOTE: if you use a concret type, then you should use BinaryMarshaler.MarshalBinaryBare directly
 func MarshalAny(m BinaryMarshaler, x interface{}) ([]byte, error) {
 	msg, ok := x.(proto.Message)
 	if !ok {
@@ -23,9 +24,10 @@ func MarshalAny(m BinaryMarshaler, x interface{}) ([]byte, error) {
 	return m.MarshalBinaryBare(any)
 }
 
-// UnmarshalAny is a convenience function for proto unmarshaling an Any from
-// bz and then unpacking it to the interface pointer passed in as iface using
-// the provided AnyUnpacker or returning an error
+// UnmarshalAny is a convenience function for proto unmarshaling interfaces. It
+// unmarshals an Any from bz and then unpacks it to the `iface`, which must
+// be a pointer to a non empty interface with registered implementations.
+// NOTE: if you use a concret type, then you should use BinaryMarshaler.UnarshalBinaryBare directly
 //
 // Ex:
 //		var x MyInterface
@@ -41,8 +43,9 @@ func UnmarshalAny(m BinaryMarshaler, iface interface{}, bz []byte) error {
 	return m.UnpackAny(any, iface)
 }
 
-// MarshalAnyJSON is a convenience function for packing the provided value in an
-// Any and then proto marshaling into JSON
+// MarshalAnyJSON is a convenience function for proto marshalling interfaces. It
+// packs the provided value in an Any and then marshals it to bytes.
+// NOTE: if you use a concret type, then you should use JSONMarshaler.MarshalJSON directly
 func MarshalAnyJSON(m JSONMarshaler, x proto.Message) ([]byte, error) {
 	any, err := types.NewAnyWithValue(x)
 	if err != nil {
@@ -51,9 +54,10 @@ func MarshalAnyJSON(m JSONMarshaler, x proto.Message) ([]byte, error) {
 	return m.MarshalJSON(any)
 }
 
-// UnmarshalAnyJSON is a convenience function for unmarshaling an Any from
-// JSON bytes and then unpacking it to the `iface` pointer using the provided
-// AnyUnpacker or returning an error
+// UnmarshalAnyJSON is a convenience function for proto unmarshaling interfaces.
+// It unmarshals an Any from bz and then unpacks it to the `iface`, which must
+// be a pointer to a non empty interface with registered implementations.
+// NOTE: if you use a concret type, then you should use JSONMarshaler.UnarshalJSON directly
 //
 // Ex:
 //		var x MyInterface

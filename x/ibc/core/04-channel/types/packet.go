@@ -15,7 +15,7 @@ import (
 // sha256_hash(timeout_timestamp + timeout_height.VersionNumber + timeout_height.VersionHeight + sha256_hash(data))
 // from a given packet. This results in a fixed length preimage.
 // NOTE: sdk.Uint64ToBigEndian sets the uint64 to a slice of length 8.
-func CommitPacket(cdc codec.BinaryMarshaler, packet exported.PacketI) ([]byte, error) {
+func CommitPacket(cdc codec.BinaryMarshaler, packet exported.PacketI) []byte {
 	timeoutHeight := packet.GetTimeoutHeight()
 
 	buf := sdk.Uint64ToBigEndian(packet.GetTimeoutTimestamp())
@@ -30,7 +30,7 @@ func CommitPacket(cdc codec.BinaryMarshaler, packet exported.PacketI) ([]byte, e
 	buf = append(buf, dataHash[:]...)
 
 	hash := sha256.Sum256(buf)
-	return hash[:], nil
+	return hash[:]
 }
 
 // CommitAcknowledgement returns the hash of commitment bytes

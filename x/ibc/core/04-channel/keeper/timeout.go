@@ -80,10 +80,7 @@ func (k Keeper) TimeoutPacket(
 
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 
-	packetCommitment, err := types.CommitPacket(k.cdc, packet)
-	if err != nil {
-		return sdkerrors.Wrap(err, "failed to create packet commitment")
-	}
+	packetCommitment := types.CommitPacket(k.cdc, packet)
 
 	// verify we sent the packet and haven't cleared it out yet
 	if !bytes.Equal(commitment, packetCommitment) {
@@ -221,10 +218,7 @@ func (k Keeper) TimeoutOnClose(
 
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 
-	packetCommitment, err := types.CommitPacket(k.cdc, packet)
-	if err != nil {
-		return sdkerrors.Wrap(err, "failed to create packet commitment")
-	}
+	packetCommitment := types.CommitPacket(k.cdc, packet)
 
 	// verify we sent the packet and haven't cleared it out yet
 	if !bytes.Equal(commitment, packetCommitment) {
@@ -251,6 +245,7 @@ func (k Keeper) TimeoutOnClose(
 		return err
 	}
 
+	var err error
 	switch channel.Ordering {
 	case types.ORDERED:
 		// check that packet has not been received

@@ -12,29 +12,16 @@ import (
 )
 
 func TestCommitPacket(t *testing.T) {
-	testCases := []struct {
-		packet  types.Packet
-		expPass bool
-		errMsg  string
-	}{
-		{types.NewPacket(validPacketData, 1, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp), true, ""},
-	}
+	packet := types.NewPacket(validPacketData, 1, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp)
 
-	for i, tc := range testCases {
-		registry := codectypes.NewInterfaceRegistry()
-		clienttypes.RegisterInterfaces(registry)
-		types.RegisterInterfaces(registry)
+	registry := codectypes.NewInterfaceRegistry()
+	clienttypes.RegisterInterfaces(registry)
+	types.RegisterInterfaces(registry)
 
-		cdc := codec.NewProtoCodec(registry)
+	cdc := codec.NewProtoCodec(registry)
 
-		commitment, err := types.CommitPacket(cdc, &packet)
-		if tc.expPass {
-			require.NoError(t, err, "case %d failed: %s", i, tc.errMsg)
-			require.NotNil(t, commitment)
-		} else {
-			require.Error(t, err, "case %d passed: %s", i, tc.errMsg)
-		}
-	}
+	commitment := types.CommitPacket(cdc, &packet)
+	require.NotNil(t, commitment)
 }
 
 func TestPacketValidateBasic(t *testing.T) {

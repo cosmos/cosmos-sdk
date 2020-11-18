@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -19,7 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func newMonikerValidator(t *testing.T, operator sdk.ValAddress, pubKey crypto.PubKey, moniker string) types.Validator {
+func newMonikerValidator(t *testing.T, operator sdk.ValAddress, pubKey cryptotypes.PubKey, moniker string) types.Validator {
 	v, err := types.NewValidator(operator, pubKey, types.Description{Moniker: moniker})
 	require.NoError(t, err)
 	return v
@@ -349,19 +349,19 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	app, ctx, addrs, _ := bootstrapValidatorTest(t, 1000, 20)
 
 	// initialize some validators into the state
-	amts := []int64{
-		0,
-		100 * sdk.PowerReduction.Int64(),
-		1 * sdk.PowerReduction.Int64(),
-		400 * sdk.PowerReduction.Int64(),
-		200 * sdk.PowerReduction.Int64()}
+	amts := []sdk.Int{
+		sdk.NewIntFromUint64(0),
+		sdk.PowerReduction.MulRaw(100),
+		sdk.PowerReduction,
+		sdk.PowerReduction.MulRaw(400),
+		sdk.PowerReduction.MulRaw(200)}
 	n := len(amts)
 	var validators [5]types.Validator
 	for i, amt := range amts {
 		validators[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i])
 		validators[i].Status = types.Bonded
-		validators[i].Tokens = sdk.NewInt(amt)
-		validators[i].DelegatorShares = sdk.NewDec(amt)
+		validators[i].Tokens = amt
+		validators[i].DelegatorShares = sdk.NewDecFromInt(amt)
 		keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[i], true)
 	}
 
@@ -445,19 +445,19 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 	app.StakingKeeper.SetParams(ctx, params)
 
 	// initialize some validators into the state
-	amts := []int64{
-		0,
-		100 * sdk.PowerReduction.Int64(),
-		1 * sdk.PowerReduction.Int64(),
-		400 * sdk.PowerReduction.Int64(),
-		200 * sdk.PowerReduction.Int64()}
+	amts := []sdk.Int{
+		sdk.NewIntFromUint64(0),
+		sdk.PowerReduction.MulRaw(100),
+		sdk.PowerReduction,
+		sdk.PowerReduction.MulRaw(400),
+		sdk.PowerReduction.MulRaw(200)}
 
 	var validators [5]types.Validator
 	for i, amt := range amts {
 		validators[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i])
-		validators[i].DelegatorShares = sdk.NewDec(amt)
+		validators[i].DelegatorShares = sdk.NewDecFromInt(amt)
 		validators[i].Status = types.Bonded
-		validators[i].Tokens = sdk.NewInt(amt)
+		validators[i].Tokens = amt
 		keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[i], true)
 	}
 

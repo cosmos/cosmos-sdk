@@ -33,7 +33,7 @@ if there was an error.
 ## Data Folder Layout
 
 `$DAEMON_HOME/cosmovisor` is expected to belong completely to `cosmovisor` and 
-subprocesses the controlled by it. The folder content is organised as follows:
+subprocesses that are controlled by it. The folder content is organised as follows:
 
 ```
 .

@@ -3,7 +3,6 @@ package v039
 import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v038"
 	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v039"
 	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v036"
@@ -17,13 +16,11 @@ import (
 // serialization of accounts do change.
 func Migrate(appState types.AppMap, _ client.Context) types.AppMap {
 	v038Codec := codec.NewLegacyAmino()
-	cryptocodec.RegisterCrypto(v038Codec)
 	v038auth.RegisterLegacyAminoCodec(v038Codec)
 	v036gov.RegisterLegacyAminoCodec(v038Codec)
 	v036distr.RegisterLegacyAminoCodec(v038Codec)
 
 	v039Codec := codec.NewLegacyAmino()
-	cryptocodec.RegisterCrypto(v039Codec)
 	v039auth.RegisterLegacyAminoCodec(v039Codec)
 	v036gov.RegisterLegacyAminoCodec(v039Codec)
 	v036distr.RegisterLegacyAminoCodec(v039Codec)

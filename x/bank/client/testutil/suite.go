@@ -334,7 +334,7 @@ func (s *IntegrationTestSuite) TestBankMsgService() {
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 
-			bz, err := banktestutil.ServiceMsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
+			bz, err := ServiceMsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {

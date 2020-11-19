@@ -256,7 +256,8 @@ func (suite *KeeperTestSuite) SetChainBankBalances(chain *ibctesting.TestChain, 
 		if err != nil {
 			return err
 		}
-		err = chain.App.BankKeeper.SetBalance(chain.GetContext(), address, sdk.NewCoin(coin.Denom, amount))
+		trace := types.ParseDenomTrace(coin.Denom)
+		err = chain.App.BankKeeper.SetBalance(chain.GetContext(), address, sdk.NewCoin(trace.IBCDenom(), amount))
 		if err != nil {
 			return err
 		}
@@ -289,18 +290,14 @@ func (suite *KeeperTestSuite) TestModelBasedOnRecvPacket() {
 		panic(fmt.Errorf("Failed to parse JSON test fixture: %w", err))
 	}
 
+	suite.SetupTest()
 	for i, tlaTc := range tlaTestCases {
 		tc := OnRecvPacketTestCaseFromTla(tlaTc)
 		description := filename + " # " + strconv.Itoa(i)
 		suite.Run(fmt.Sprintf("Case %s", description), func() {
-			suite.SetupTest()
 			seq := uint64(1)
 			packet := channeltypes.NewPacket(tc.packet.Data.GetBytes(), seq, tc.packet.SourcePort, tc.packet.SourceChannel, tc.packet.DestPort, tc.packet.DestChannel, clienttypes.NewHeight(0, 100), 0)
-
 			bankBefore := BankFromBalances(tc.bankBefore)
-			if err := suite.SetChainBankBalances(suite.chainB, &bankBefore); err != nil {
-				panic("failed to set chain balances: " + err.Error())
-			}
 			realBankBefore := BankOfChain(suite.chainB)
 			if err := suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, tc.packet.Data); err != nil {
 				suite.Require().False(tc.pass, err.Error())

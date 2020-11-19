@@ -14,18 +14,22 @@ import (
 
 // CounterpartyHops returns the connection hops of the counterparty channel.
 // The counterparty hops are stored in the inverse order as the channel's.
+// NOTE: Since connectionHops only supports single connection channels for now,
+// this function requires that connection hops only contain a single connection id
 func (k Keeper) CounterpartyHops(ctx sdk.Context, ch types.Channel) ([]string, bool) {
-	counterPartyHops := make([]string, len(ch.ConnectionHops))
-
-	for i, hop := range ch.ConnectionHops {
-		conn, found := k.connectionKeeper.GetConnection(ctx, hop)
-		if !found {
-			return []string{}, false
-		}
-
-		counterPartyHops[len(counterPartyHops)-1-i] = conn.GetCounterparty().GetConnectionID()
+	// Return empty array if connection hops is more than one
+	// ConnectionHops length should be verified earlier
+	if len(ch.ConnectionHops) != 1 {
+		return []string{}, false
+	}
+	counterPartyHops := make([]string, 1)
+	hop := ch.ConnectionHops[0]
+	conn, found := k.connectionKeeper.GetConnection(ctx, hop)
+	if !found {
+		return []string{}, false
 	}
 
+	counterPartyHops[0] = conn.GetCounterparty().GetConnectionID()
 	return counterPartyHops, true
 }
 
@@ -187,16 +191,33 @@ func (k Keeper) ChanOpenTry(
 		return nil, err
 	}
 
-	k.SetChannel(ctx, portID, desiredChannelID, channel)
+	var (
+		capKey *capabilitytypes.Capability
+		err    error
+	)
 
-	capKey, err := k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, desiredChannelID))
-	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, desiredChannelID)
+	// Only create a capability and set the sequences if the previous channel does not exist
+	_, found = k.GetChannel(ctx, portID, desiredChannelID)
+	if !found {
+		capKey, err = k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, desiredChannelID))
+		if err != nil {
+			return nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, desiredChannelID)
+		}
+
+		k.SetNextSequenceSend(ctx, portID, desiredChannelID, 1)
+		k.SetNextSequenceRecv(ctx, portID, desiredChannelID, 1)
+		k.SetNextSequenceAck(ctx, portID, desiredChannelID, 1)
+	} else {
+		// capability initialized in ChanOpenInit
+		capKey, found = k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, desiredChannelID))
+		if !found {
+			return nil, sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound,
+				"capability not found for existing channel, portID (%s) channelID (%s)", portID, desiredChannelID,
+			)
+		}
 	}
 
-	k.SetNextSequenceSend(ctx, portID, desiredChannelID, 1)
-	k.SetNextSequenceRecv(ctx, portID, desiredChannelID, 1)
-	k.SetNextSequenceAck(ctx, portID, desiredChannelID, 1)
+	k.SetChannel(ctx, portID, desiredChannelID, channel)
 
 	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", desiredChannelID, "previous-state", previousChannel.State.String(), "new-state", "TRYOPEN")
 
@@ -364,7 +385,7 @@ func (k Keeper) ChanOpenConfirm(
 //
 // This section defines the set of functions required to close a channel handshake
 // as defined in https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#closing-handshake
-
+//
 // ChanCloseInit is called by either module to close their end of the channel. Once
 // closed, channels cannot be reopened.
 func (k Keeper) ChanCloseInit(

@@ -48,22 +48,61 @@ type TestI interface {
 	DoSomething()
 }
 
+// A struct that has the same typeURL as testdata.Dog, but is actually another
+// concrete type.
+type FakeDog struct{}
+
+var (
+	_ proto.Message   = &FakeDog{}
+	_ testdata.Animal = &FakeDog{}
+)
+
+// dummy implementation of proto.Message and testdata.Animal
+func (dog FakeDog) Reset()                  {}
+func (dog FakeDog) String() string          { return "fakedog" }
+func (dog FakeDog) ProtoMessage()           {}
+func (dog FakeDog) XXX_MessageName() string { return proto.MessageName(&testdata.Dog{}) }
+func (dog FakeDog) Greet() string           { return "fakedog" }
+
 func TestRegister(t *testing.T) {
 	registry := types.NewInterfaceRegistry()
 	registry.RegisterInterface("Animal", (*testdata.Animal)(nil))
 	registry.RegisterInterface("TestI", (*TestI)(nil))
+
+	// Happy path.
 	require.NotPanics(t, func() {
 		registry.RegisterImplementations((*testdata.Animal)(nil), &testdata.Dog{})
 	})
+
+	// testdata.Dog doesn't implement TestI
 	require.Panics(t, func() {
 		registry.RegisterImplementations((*TestI)(nil), &testdata.Dog{})
 	})
+
+	// nil proto message
 	require.Panics(t, func() {
 		registry.RegisterImplementations((*TestI)(nil), nil)
 	})
+
+	// Not an interface.
 	require.Panics(t, func() {
 		registry.RegisterInterface("not_an_interface", (*testdata.Dog)(nil))
 	})
+
+	// Duplicate registration with same concrete type.
+	require.NotPanics(t, func() {
+		registry.RegisterImplementations((*testdata.Animal)(nil), &testdata.Dog{})
+	})
+
+	// Duplicate registration with different concrete type on same typeURL.
+	require.PanicsWithError(
+		t,
+		"concrete type *testdata.Dog has already been registered under typeURL /testdata.Dog, cannot register *types_test.FakeDog under same typeURL. "+
+			"This usually means that there are conflicting modules registering different concrete types for a same interface implementation",
+		func() {
+			registry.RegisterImplementations((*testdata.Animal)(nil), &FakeDog{})
+		},
+	)
 }
 
 func TestUnpackInterfaces(t *testing.T) {

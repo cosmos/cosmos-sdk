@@ -17,7 +17,7 @@ func TestTallyNoOneVotes(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	createValidators(ctx, app, []int64{5, 5, 5})
+	createValidators(t, ctx, app, []int64{5, 5, 5})
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
@@ -39,7 +39,7 @@ func TestTallyNoQuorum(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	createValidators(ctx, app, []int64{2, 5, 0})
+	createValidators(t, ctx, app, []int64{2, 5, 0})
 
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(10000000))
 
@@ -64,7 +64,7 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	addrs, _ := createValidators(ctx, app, []int64{5, 5, 5})
+	addrs, _ := createValidators(t, ctx, app, []int64{5, 5, 5})
 	tp := TestProposal
 
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
@@ -90,7 +90,7 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	valAccAddrs, _ := createValidators(ctx, app, []int64{5, 6, 0})
+	valAccAddrs, _ := createValidators(t, ctx, app, []int64{5, 6, 0})
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
@@ -114,7 +114,7 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	valAccAddrs, _ := createValidators(ctx, app, []int64{5, 6, 0})
+	valAccAddrs, _ := createValidators(t, ctx, app, []int64{5, 6, 0})
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
@@ -139,7 +139,7 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	valAccAddrs, _ := createValidators(ctx, app, []int64{6, 6, 7})
+	valAccAddrs, _ := createValidators(t, ctx, app, []int64{6, 6, 7})
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
@@ -165,7 +165,7 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	valAccAddrs, _ := createValidators(ctx, app, []int64{6, 6, 7})
+	valAccAddrs, _ := createValidators(t, ctx, app, []int64{6, 6, 7})
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
@@ -191,7 +191,7 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	valAccAddrs, _ := createValidators(ctx, app, []int64{6, 6, 7})
+	valAccAddrs, _ := createValidators(t, ctx, app, []int64{6, 6, 7})
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
@@ -217,7 +217,7 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	valAccAddrs, _ := createValidators(ctx, app, []int64{5, 6, 7})
+	valAccAddrs, _ := createValidators(t, ctx, app, []int64{5, 6, 7})
 	valAccAddr1, valAccAddr2 := valAccAddrs[0], valAccAddrs[1]
 
 	tp := TestProposal
@@ -243,7 +243,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	addrs, valAddrs := createValidators(ctx, app, []int64{5, 6, 7})
+	addrs, valAddrs := createValidators(t, ctx, app, []int64{5, 6, 7})
 
 	delTokens := sdk.TokensFromConsensusPower(30)
 	val1, found := app.StakingKeeper.GetValidator(ctx, valAddrs[0])
@@ -279,7 +279,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	addrs, vals := createValidators(ctx, app, []int64{5, 6, 7})
+	addrs, vals := createValidators(t, ctx, app, []int64{5, 6, 7})
 
 	delTokens := sdk.TokensFromConsensusPower(30)
 	val3, found := app.StakingKeeper.GetValidator(ctx, vals[2])
@@ -314,7 +314,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	addrs, vals := createValidators(ctx, app, []int64{5, 6, 7})
+	addrs, vals := createValidators(t, ctx, app, []int64{5, 6, 7})
 
 	delTokens := sdk.TokensFromConsensusPower(10)
 	val1, found := app.StakingKeeper.GetValidator(ctx, vals[0])
@@ -354,9 +354,9 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	createValidators(ctx, app, []int64{25, 6, 7})
+	createValidators(t, ctx, app, []int64{25, 6, 7})
 
-	addrs, vals := createValidators(ctx, app, []int64{5, 6, 7})
+	addrs, vals := createValidators(t, ctx, app, []int64{5, 6, 7})
 
 	delTokens := sdk.TokensFromConsensusPower(10)
 	val2, found := app.StakingKeeper.GetValidator(ctx, vals[1])
@@ -395,7 +395,7 @@ func TestTallyJailedValidator(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	addrs, valAddrs := createValidators(ctx, app, []int64{25, 6, 7})
+	addrs, valAddrs := createValidators(t, ctx, app, []int64{25, 6, 7})
 
 	delTokens := sdk.TokensFromConsensusPower(10)
 	val2, found := app.StakingKeeper.GetValidator(ctx, valAddrs[1])
@@ -410,7 +410,9 @@ func TestTallyJailedValidator(t *testing.T) {
 
 	_ = staking.EndBlocker(ctx, app.StakingKeeper)
 
-	app.StakingKeeper.Jail(ctx, sdk.ConsAddress(val2.GetConsPubKey().Address()))
+	consAddr, err := val2.GetConsAddr()
+	require.NoError(t, err)
+	app.StakingKeeper.Jail(ctx, sdk.ConsAddress(consAddr.Bytes()))
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
@@ -436,7 +438,7 @@ func TestTallyValidatorMultipleDelegations(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	addrs, valAddrs := createValidators(ctx, app, []int64{10, 10, 10})
+	addrs, valAddrs := createValidators(t, ctx, app, []int64{10, 10, 10})
 
 	delTokens := sdk.TokensFromConsensusPower(10)
 	val2, found := app.StakingKeeper.GetValidator(ctx, valAddrs[1])

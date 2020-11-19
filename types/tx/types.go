@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -92,7 +91,7 @@ func (t *Tx) ValidateBasic() error {
 	if len(sigs) != len(t.GetSigners()) {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrUnauthorized,
-			"wrong number of signers; expected %d, got %d", t.GetSigners(), len(sigs),
+			"wrong number of signers; expected %d, got %d", len(t.GetSigners()), len(sigs),
 		)
 	}
 
@@ -180,7 +179,7 @@ func (m *AuthInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (m *SignerInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	return unpacker.UnpackAny(m.PublicKey, new(crypto.PubKey))
+	return unpacker.UnpackAny(m.PublicKey, new(cryptotypes.PubKey))
 }
 
 // RegisterInterfaces registers the sdk.Tx interface.

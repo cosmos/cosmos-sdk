@@ -65,7 +65,10 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnjail, "validator is not jailed"), nil, nil
 		}
 
-		consAddr := sdk.ConsAddress(validator.GetConsPubKey().Address())
+		consAddr, err := validator.GetConsAddr()
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnjail, "unable to get validator consensus key"), nil, err
+		}
 		info, found := k.GetValidatorSigningInfo(ctx, consAddr)
 		if !found {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnjail, "unable to find validator signing info"), nil, nil // skip
@@ -86,7 +89,7 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 
 		msg := types.NewMsgUnjail(validator.GetOperator())
 
-		txGen := simappparams.MakeEncodingConfig().TxConfig
+		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
 			txGen,
 			[]sdk.Msg{msg},

@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,6 +27,9 @@ const (
 
 	// QuerierRoute is the querier route for IBC transfer
 	QuerierRoute = ModuleName
+
+	// DenomPrefix is the prefix used for internal SDK coin representation.
+	DenomPrefix = "ibc"
 )
 
 var (
@@ -40,5 +45,5 @@ var (
 // port associated with the channel ID so that the address created is actually
 // unique.
 func GetEscrowAddress(portID, channelID string) sdk.AccAddress {
-	return sdk.AccAddress(crypto.AddressHash([]byte(portID + channelID)))
+	return sdk.AccAddress(crypto.AddressHash([]byte(fmt.Sprintf("%s/%s", portID, channelID))))
 }

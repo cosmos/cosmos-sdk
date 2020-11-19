@@ -1,6 +1,8 @@
 package types_test
 
 import (
+	"time"
+
 	ics23 "github.com/confio/ics23/go"
 
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
@@ -94,6 +96,41 @@ func (suite *TendermintTestSuite) TestValidate() {
 			suite.Require().NoError(err, tc.name)
 		} else {
 			suite.Require().Error(err, tc.name)
+		}
+	}
+}
+
+func (suite *TendermintTestSuite) Initialize() {
+
+	testCases := []struct {
+		name           string
+		consensusState exported.ConsensusState
+		expPass        bool
+	}{
+		{
+			name:           "valid consensus",
+			consensusState: &types.ConsensusState{},
+			expPass:        true,
+		},
+		{
+			name:           "invalid consensus: consensus state is solomachine consensus",
+			consensusState: ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 2).ConsensusState(),
+			expPass:        false,
+		},
+	}
+
+	clientA, err := suite.coordinator.CreateClient(suite.chainA, suite.chainB, ibctesting.Tendermint)
+	suite.Require().NoError(err)
+
+	clientState := suite.chainA.GetClientState(clientA)
+	store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
+
+	for _, tc := range testCases {
+		err := clientState.Initialize(suite.chainA.GetContext(), suite.chainA.Codec, store, tc.consensusState)
+		if tc.expPass {
+			suite.Require().NoError(err, "valid case returned an error")
+		} else {
+			suite.Require().Error(err, "invalid case didn't return an error")
 		}
 	}
 }
@@ -334,38 +371,72 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 	var (
 		clientState *types.ClientState
+		packet      channeltypes.Packet
 		proof       []byte
 		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
 
 	testCases := []struct {
-		name     string
-		malleate func()
-		expPass  bool
+		name           string
+		malleatePacket func()
+		malleate       func()
+		expPass        bool
 	}{
 		{
-			"successful verification", func() {}, true,
+			name:           "successful verification",
+			malleate:       func() {},
+			malleatePacket: func() {},
+			expPass:        true,
 		},
 		{
-			"ApplyPrefix failed", func() {
+			name:     "delay period has passed",
+			malleate: func() {},
+			malleatePacket: func() {
+				// at least 5 seconds pass between sending and receiving
+				packet.DelayPeriod = uint64(time.Second.Nanoseconds())
+			},
+			expPass: true,
+		},
+		{
+			name:     "delay period has not passed",
+			malleate: func() {},
+			malleatePacket: func() {
+				packet.DelayPeriod = uint64(time.Hour.Nanoseconds())
+			},
+			expPass: false,
+		},
+		{
+			name: "ApplyPrefix failed",
+			malleate: func() {
 				prefix = commitmenttypes.MerklePrefix{}
-			}, false,
+			},
+			malleatePacket: func() {},
+			expPass:        false,
 		},
 		{
-			"latest client height < height", func() {
+			name: "latest client height < height",
+			malleate: func() {
 				proofHeight = clientState.LatestHeight.Increment()
-			}, false,
+			},
+			malleatePacket: func() {},
+			expPass:        false,
 		},
 		{
-			"client is frozen", func() {
+			name: "client is frozen",
+			malleate: func() {
 				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
-			}, false,
+			},
+			malleatePacket: func() {},
+			expPass:        false,
 		},
 		{
-			"proof verification failed", func() {
+			name: "proof verification failed",
+			malleate: func() {
 				proof = invalidProof
-			}, false,
+			},
+			malleatePacket: func() {},
+			expPass:        false,
 		},
 	}
 
@@ -377,7 +448,10 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 
 			// setup testing conditions
 			clientA, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
-			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelB.PortID, channelB.ID, channelA.PortID, channelA.ID, clienttypes.NewHeight(0, 100), 0)
+
+			packet = channeltypes.NewPacket(ibctesting.TestHash, 1, channelB.PortID, channelB.ID, channelA.PortID, channelA.ID, clienttypes.NewHeight(0, 100), 0, 0)
+			tc.malleatePacket()
+
 			err := suite.coordinator.SendPacket(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
@@ -396,8 +470,9 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 
 			store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
 
+			currentTime := uint64(suite.chainA.GetContext().BlockTime().UnixNano())
 			err = clientState.VerifyPacketCommitment(
-				store, suite.chainA.Codec, proofHeight, &prefix, proof,
+				store, suite.chainA.Codec, proofHeight, currentTime, packet.GetDelayPeriod(), &prefix, proof,
 				packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), channeltypes.CommitPacket(packet),
 			)
 
@@ -459,7 +534,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 
 			// setup testing conditions
 			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
-			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0, 0)
 
 			// send packet
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
@@ -484,8 +559,9 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 
 			store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
 
+			currentTime := uint64(suite.chainA.GetContext().BlockTime().UnixNano())
 			err = clientState.VerifyPacketAcknowledgement(
-				store, suite.chainA.Codec, proofHeight, &prefix, proof,
+				store, suite.chainA.Codec, proofHeight, currentTime, packet.GetDelayPeriod(), &prefix, proof,
 				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(), ibcmock.MockAcknowledgement,
 			)
 
@@ -547,7 +623,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketReceiptAbsence() {
 
 			// setup testing conditions
 			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
-			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0, 0)
 
 			// send packet, but no recv
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
@@ -571,8 +647,9 @@ func (suite *TendermintTestSuite) TestVerifyPacketReceiptAbsence() {
 
 			store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
 
+			currentTime := uint64(suite.chainA.GetContext().BlockTime().UnixNano())
 			err = clientState.VerifyPacketReceiptAbsence(
-				store, suite.chainA.Codec, proofHeight, &prefix, proof,
+				store, suite.chainA.Codec, proofHeight, currentTime, packet.GetDelayPeriod(), &prefix, proof,
 				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 			)
 
@@ -634,7 +711,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 
 			// setup testing conditions
 			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.ORDERED)
-			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0, 0)
 
 			// send packet
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
@@ -662,8 +739,9 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 
 			store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
 
+			currentTime := uint64(suite.chainA.GetContext().BlockTime().UnixNano())
 			err = clientState.VerifyNextSequenceRecv(
-				store, suite.chainA.Codec, proofHeight, &prefix, proof,
+				store, suite.chainA.Codec, proofHeight, currentTime, packet.GetDelayPeriod(), &prefix, proof,
 				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()+1,
 			)
 

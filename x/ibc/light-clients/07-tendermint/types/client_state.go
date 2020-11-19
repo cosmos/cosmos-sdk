@@ -365,7 +365,7 @@ func (cs ClientState) VerifyPacketCommitment(
 	}
 	validTime := processedTime + delayPeriod
 	if validTime > currentTimestamp {
-		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %s, current time: %s",
+		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %d, current time: %d",
 			validTime, currentTimestamp)
 	}
 
@@ -409,7 +409,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	}
 	validTime := processedTime + delayPeriod
 	if validTime > currentTimestamp {
-		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %s, current time: %s",
+		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %d, current time: %d",
 			validTime, currentTimestamp)
 	}
 
@@ -453,7 +453,7 @@ func (cs ClientState) VerifyPacketReceiptAbsence(
 	}
 	validTime := processedTime + delayPeriod
 	if validTime > currentTimestamp {
-		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %s, current time: %s",
+		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %d, current time: %d",
 			validTime, currentTimestamp)
 	}
 
@@ -496,7 +496,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	}
 	validTime := processedTime + delayPeriod
 	if validTime > currentTimestamp {
-		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %s, current time: %s",
+		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %d, current time: %d",
 			validTime, currentTimestamp)
 	}
 

@@ -27,7 +27,7 @@ import (
 )
 
 // interface assertion
-var _ rosetta.DataAPIClient = (*Client)(nil)
+var _ rosetta.NodeClient = (*Client)(nil)
 
 const tmWebsocketPath = "/websocket"
 
@@ -111,19 +111,18 @@ func NewSingle(grpcEndpoint, tendermintEndpoint string, optsFunc ...OptionFunc) 
 }
 
 func (c *Client) AccountInfo(ctx context.Context, addr string, height *int64) (auth.AccountI, error) {
-	// if height is set, send height instruction to account
 	if height != nil {
 		strHeight := strconv.FormatInt(*height, 10)
 		ctx = metadata.AppendToOutgoingContext(ctx, grpctypes.GRPCBlockHeightHeader, strHeight)
 	}
-	// retrieve account info
+
 	accountInfo, err := c.auth.Account(ctx, &auth.QueryAccountRequest{
 		Address: addr,
 	})
 	if err != nil {
 		return nil, rosetta.FromGRPCToRosettaError(err)
 	}
-	// success
+
 	var account auth.AccountI
 	err = c.ir.UnpackAny(accountInfo.Account, &account)
 	if err != nil {

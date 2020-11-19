@@ -18,6 +18,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             print("failed " + str(e))
             os._exit(1)
 
+
 if __name__ == "__main__":
     print("starting faucet server...")
     httpd = HTTPServer(('0.0.0.0', 8000), SimpleHTTPRequestHandler)

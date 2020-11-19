@@ -532,22 +532,15 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 	events := ctx.EventManager().ABCIEvents()
 	suite.Require().Equal(2, len(events))
 
-	event1 := sdk.Event{
-		Type:       types.EventTypeTransfer,
-		Attributes: []abci.EventAttribute{},
-	}
-	event1.Attributes = append(
-		event1.Attributes,
-		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr2.String())},
+	event1, err := sdk.TypedEventToEvent(
+		&types.EventTransferWithSender{
+			Recipient: addr2.String(),
+			Sender:    addr.String(),
+			Amount:    newCoins,
+		},
 	)
-	event1.Attributes = append(
-		event1.Attributes,
-		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
-	)
-	event1.Attributes = append(
-		event1.Attributes,
-		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())},
-	)
+	suite.Require().NoError(err)
+
 	event2 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
 		Attributes: []abci.EventAttribute{},
@@ -640,29 +633,22 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 		event2.Attributes,
 		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr2.String())},
 	)
-	event3 := sdk.Event{
-		Type:       types.EventTypeTransfer,
-		Attributes: []abci.EventAttribute{},
-	}
-	event3.Attributes = append(
-		event3.Attributes,
-		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr3.String())},
+
+	event3, err := sdk.TypedEventToEvent(
+		&types.EventTransfer{
+			Recipient: addr3.String(),
+			Amount:    newCoins,
+		},
 	)
-	event3.Attributes = append(
-		event3.Attributes,
-		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())})
-	event4 := sdk.Event{
-		Type:       types.EventTypeTransfer,
-		Attributes: []abci.EventAttribute{},
-	}
-	event4.Attributes = append(
-		event4.Attributes,
-		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr4.String())},
+	suite.Require().NoError(err)
+
+	event4, err := sdk.TypedEventToEvent(
+		&types.EventTransfer{
+			Recipient: addr4.String(),
+			Amount:    newCoins2,
+		},
 	)
-	event4.Attributes = append(
-		event4.Attributes,
-		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins2.String())},
-	)
+	suite.Require().NoError(err)
 
 	suite.Require().Equal(abci.Event(event1), events[1])
 	suite.Require().Equal(abci.Event(event2), events[2])

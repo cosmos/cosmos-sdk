@@ -21,14 +21,6 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		keeper.DeleteProposal(ctx, proposal.ProposalId)
 		keeper.DeleteDeposits(ctx, proposal.ProposalId)
 
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeInactiveProposal,
-				sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.ProposalId)),
-				sdk.NewAttribute(types.AttributeKeyProposalResult, types.AttributeValueProposalDropped),
-			),
-		)
-
 		logger.Info(
 			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %s (had only %s); deleted",
 				proposal.ProposalId,
@@ -37,6 +29,22 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 				proposal.TotalDeposit,
 			),
 		)
+
+		if err := ctx.EventManager().EmitTypedEvent(
+			&types.EventInactiveProposal{
+				ProposalId:     proposal.ProposalId,
+				ProposalResult: types.AttributeValueProposalDropped,
+			},
+		); err != nil {
+			logger.Error(
+				fmt.Sprintf("proposal %d (%s) deleted: inactive proposal event failed with error:%s",
+					proposal.ProposalId,
+					proposal.GetTitle(),
+					err.Error(),
+				),
+			)
+		}
+
 		return false
 	})
 
@@ -96,13 +104,21 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 			),
 		)
 
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeActiveProposal,
-				sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.ProposalId)),
-				sdk.NewAttribute(types.AttributeKeyProposalResult, tagValue),
-			),
-		)
+		if err := ctx.EventManager().EmitTypedEvent(
+			&types.EventActiveProposal{
+				ProposalId:     proposal.ProposalId,
+				ProposalResult: tagValue,
+			},
+		); err != nil {
+			logger.Error(
+				fmt.Sprintf("proposal %d (%s): active proposal event failed with error:%s",
+					proposal.ProposalId,
+					proposal.GetTitle(),
+					err.Error(),
+				),
+			)
+		}
+
 		return false
 	})
 }

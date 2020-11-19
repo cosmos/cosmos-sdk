@@ -1,0 +1,9 @@
+syntax = "proto3";
+package cosmos.crisis.v1beta1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/crisis/types";
+
+// EventInvariant is a typed event emitted on verify invariant
+message EventInvariant {
+    string route = 1;
+}

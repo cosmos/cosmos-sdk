@@ -70,12 +70,14 @@ func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, w
 		return types.ErrSetWithdrawAddrDisabled
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeSetWithdrawAddress,
-			sdk.NewAttribute(types.AttributeKeyWithdrawAddress, withdrawAddr.String()),
-		),
-	)
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventSetWithdrawAddr{
+			DelegatorAddress: delegatorAddr.String(),
+			WithdrawAddress:  withdrawAddr.String(),
+		},
+	); err != nil {
+		return err
+	}
 
 	k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
 	return nil
@@ -99,13 +101,14 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeWithdrawRewards,
-			sdk.NewAttribute(sdk.AttributeKeyAmount, rewards.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, valAddr.String()),
-		),
-	)
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventWithdrawRewards{
+			Validator: valAddr.String(),
+			Rewards:   rewards,
+		},
+	); err != nil {
+		return nil, err
+	}
 
 	// reinitialize the delegation
 	k.initializeDelegation(ctx, valAddr, delAddr)
@@ -136,12 +139,14 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 		}
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeWithdrawCommission,
-			sdk.NewAttribute(sdk.AttributeKeyAmount, commission.String()),
-		),
-	)
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventWithdrawCommission{
+			Validator:  valAddr.String(),
+			Commission: commission,
+		},
+	); err != nil {
+		return nil, err
+	}
 
 	return commission, nil
 }

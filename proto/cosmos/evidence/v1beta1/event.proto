@@ -1,0 +1,11 @@
+syntax = "proto3";
+package cosmos.evidence.v1beta1;
+
+option go_package            = "github.com/cosmos/cosmos-sdk/x/evidence/types";
+
+import "gogoproto/gogo.proto";
+
+// EventSubmitEvidence is a typed event emitted on submit evidence
+message EventSubmitEvidence {
+    string evidence_hash = 1 [(gogoproto.moretags) = "yaml:\"evidence_hash\""];
+}

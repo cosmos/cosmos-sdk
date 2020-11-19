@@ -1,0 +1,25 @@
+syntax = "proto3";
+package cosmos.slashing.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/slashing/types";
+
+// EventLiveness is a typed event for validator liveness
+message EventLiveness {
+    string address = 1;
+    int64 missed_blocks = 2 [(gogoproto.moretags) = "yaml:\"missed_blocks\""];  
+    int64 height = 3;  
+}
+
+// EventSlash is a typed event emitted when validator is slashed
+message EventSlash {
+    string address = 1;
+    int64 power = 2;  
+    string reason = 3;  
+}
+
+// EventJail is a typed event emitted when validator is jailed
+message EventJail {
+    string address = 1;
+}

@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/armon/go-metrics"
@@ -45,14 +44,16 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *types.MsgSubmitPro
 		),
 	)
 
-	submitEvent := sdk.NewEvent(types.EventTypeSubmitProposal, sdk.NewAttribute(types.AttributeKeyProposalType, msg.GetContent().ProposalType()))
 	if votingStarted {
-		submitEvent = submitEvent.AppendAttributes(
-			sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.ProposalId)),
-		)
+		if err := ctx.EventManager().EmitTypedEvent(
+			&types.EventVotingPeriodStarted{
+				ProposalId: proposal.ProposalId,
+			},
+		); err != nil {
+			return nil, err
+		}
 	}
 
-	ctx.EventManager().EmitEvent(submitEvent)
 	return &types.MsgSubmitProposalResponse{
 		ProposalId: proposal.ProposalId,
 	}, nil
@@ -116,12 +117,13 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDeposit) (*types
 	)
 
 	if votingStarted {
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeProposalDeposit,
-				sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", msg.ProposalId)),
-			),
-		)
+		if err := ctx.EventManager().EmitTypedEvent(
+			&types.EventVotingPeriodStarted{
+				ProposalId: msg.ProposalId,
+			},
+		); err != nil {
+			return nil, err
+		}
 	}
 
 	return &types.MsgDepositResponse{}, nil

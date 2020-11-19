@@ -1,0 +1,25 @@
+syntax = "proto3";
+package cosmos.bank.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
+
+// EventTransfer is a typed event emitted on bank transfer
+message EventTransfer {
+    string recipient = 1;
+
+    repeated cosmos.base.v1beta1.Coin amount = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+// EventTransferWithSender is a typed event emitted on bank transfer along with sender address
+message EventTransferWithSender {
+    string sender = 1;
+    
+    string recipient = 2;
+
+    repeated cosmos.base.v1beta1.Coin amount = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}

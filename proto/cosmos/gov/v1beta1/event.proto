@@ -1,0 +1,43 @@
+syntax = "proto3";
+package cosmos.gov.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
+
+// EventInactiveProposal is a typed event for inactive proposal
+message EventInactiveProposal {
+    uint64 proposal_id  = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
+    string proposal_result = 2 [(gogoproto.moretags) = "yaml:\"proposal_result\""];
+}
+
+// EventActiveProposal is a typed event for active proposal
+message EventActiveProposal {
+    uint64 proposal_id  = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
+    string proposal_result = 2 [(gogoproto.moretags) = "yaml:\"proposal_result\""];
+}
+
+// EventProposalDeposit is a typed event for proposal deposit
+message EventProposalDeposit {
+    uint64 proposal_id  = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
+    repeated cosmos.base.v1beta1.Coin amount = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+// EventSubmitProposal is a typed event emitted when proposal is submitted
+message EventSubmitProposal {
+    uint64 proposal_id  = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
+    string proposal_type = 2 [(gogoproto.moretags) = "yaml:\"proposal_type\""];
+}
+
+// EventVotingPeriodStarted is a typed event emitted when voting period started
+message EventVotingPeriodStarted {
+    uint64 proposal_id  = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
+}
+
+// EventVoteProposal is a typed event emitted when voted to proposal
+message EventVoteProposal {
+    uint64 proposal_id  = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
+    string option = 2;
+}

@@ -62,17 +62,21 @@ func (k Keeper) VerifyInvariant(goCtx context.Context, msg *types.MsgVerifyInvar
 		panic(res)
 	}
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeInvariant,
-			sdk.NewAttribute(types.AttributeKeyRoute, msg.InvariantRoute),
-		),
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventInvariant{
+			Route: msg.InvariantRoute,
+		},
+	); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCrisis),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
-	})
+	)
 
 	return &types.MsgVerifyInvariantResponse{}, nil
 }

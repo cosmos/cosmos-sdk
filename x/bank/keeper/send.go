@@ -113,13 +113,15 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 			return err
 		}
 
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeTransfer,
-				sdk.NewAttribute(types.AttributeKeyRecipient, out.Address),
-				sdk.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
-			),
+		err = ctx.EventManager().EmitTypedEvent(
+			&types.EventTransfer{
+				Recipient: out.Address,
+				Amount:    out.Coins,
+			},
 		)
+		if err != nil {
+			return err
+		}
 
 		// Create account if recipient does not exist.
 		//
@@ -138,20 +140,25 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 // SendCoins transfers amt coins from a sending account to a receiving account.
 // An error is returned upon failure.
 func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeTransfer,
-			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
-			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
-		),
+	err := ctx.EventManager().EmitTypedEvent(
+		&types.EventTransferWithSender{
+			Recipient: toAddr.String(),
+			Sender:    fromAddr.String(),
+			Amount:    amt,
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
 		),
-	})
+	)
 
-	err := k.SubtractCoins(ctx, fromAddr, amt)
+	err = k.SubtractCoins(ctx, fromAddr, amt)
 	if err != nil {
 		return err
 	}

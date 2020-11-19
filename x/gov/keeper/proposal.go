@@ -41,12 +41,14 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (typ
 	keeper.InsertInactiveProposalQueue(ctx, proposalID, proposal.DepositEndTime)
 	keeper.SetProposalID(ctx, proposalID+1)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeSubmitProposal,
-			sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
-		),
-	)
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventSubmitProposal{
+			ProposalId:   proposalID,
+			ProposalType: content.ProposalType(),
+		},
+	); err != nil {
+		return types.Proposal{}, err
+	}
 
 	return proposal, nil
 }

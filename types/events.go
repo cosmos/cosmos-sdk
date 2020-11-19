@@ -74,7 +74,7 @@ func (em *EventManager) EmitTypedEvents(tevs ...proto.Message) error {
 
 // TypedEventToEvent takes typed event and converts to Event object
 func TypedEventToEvent(tev proto.Message) (Event, error) {
-	evtType := proto.MessageName(tev)
+	evtType := GetTypedEventType(tev)
 	evtJSON, err := codec.ProtoMarshalJSON(tev, nil)
 	if err != nil {
 		return Event{}, err
@@ -98,6 +98,12 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 		Type:       evtType,
 		Attributes: attrs,
 	}, nil
+}
+
+// GetTypedEventType returns type of typed event
+func GetTypedEventType(tev proto.Message) string {
+	evtType := proto.MessageName(tev)
+	return evtType
 }
 
 // ParseTypedEvent converts abci.Event back to typed event

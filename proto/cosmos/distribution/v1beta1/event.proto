@@ -1,0 +1,54 @@
+syntax = "proto3";
+package cosmos.distribution.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/distribution/types";
+
+// EventProposerReward is a typed event emitted on allocate tokens
+message EventProposerReward {
+    string validator = 1;
+
+    repeated cosmos.base.v1beta1.DecCoin rewards = 2
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+}
+
+// EventCommission is a typed event for commission
+message EventCommission {
+    string validator = 1;
+
+    repeated cosmos.base.v1beta1.DecCoin commission = 2
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+}
+
+// EventRewards is a typed event for rewards
+message EventRewards {
+    string validator = 1;
+
+    repeated cosmos.base.v1beta1.DecCoin rewards = 2
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+}
+
+// EventSetWithdrawAddr is a typed event emitted on setting withdraw address
+message EventSetWithdrawAddr {
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+
+  string withdraw_address = 2 [(gogoproto.moretags) = "yaml:\"withdraw_address\""];
+}
+
+// EventWithdrawCommission is a typed event when commission is withdrawn
+message EventWithdrawCommission {
+    string validator = 1;
+
+    repeated cosmos.base.v1beta1.Coin commission = 2
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+// EventWithdrawRewards is a typed event when rewards are withdrawn
+message EventWithdrawRewards {
+    string validator = 1;
+
+    repeated cosmos.base.v1beta1.Coin rewards = 2
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}

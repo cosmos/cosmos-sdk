@@ -1,0 +1,63 @@
+syntax = "proto3";
+package cosmos.staking.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/staking/v1beta1/staking.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
+
+// EventCreateValidator is a typed event emitted when validator is created
+message EventCreateValidator {
+    string validator = 1;
+    cosmos.base.v1beta1.Coin amount = 2 [(gogoproto.nullable) = false];
+    string delegator = 3 [(gogoproto.moretags) = "yaml:\"delegator\""];
+}
+
+// EventEditValidator is a typed event emitted when validator is edited
+message EventEditValidator {
+    string validator = 1;
+    Commission commission = 2 [(gogoproto.nullable) = false];
+    string min_self_delegation = 3 [(gogoproto.moretags) = "yaml:\"min_self_delegation\""];;
+}
+
+// EventDelegate is a typed event emitted when delegated
+message EventDelegate {
+    string validator = 1;
+    cosmos.base.v1beta1.Coin amount = 2 [(gogoproto.nullable) = false];
+    string delegator = 3 [(gogoproto.moretags) = "yaml:\"delegator\""];
+}
+
+// EventRedelegate is a typed event emitted when redelegated
+message EventRedelegate {
+    string source_validator = 1 [(gogoproto.moretags) = "yaml:\"source_validator\""];
+    string destination_validator = 2 [(gogoproto.moretags) = "yaml:\"destination_validator\""];
+    cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+    string delegator = 4 [(gogoproto.moretags) = "yaml:\"delegator\""];
+    string completion_time = 5 [(gogoproto.moretags) = "yaml:\"completion_time\""];
+}
+
+// EventUnbond is a typed event emitted when unbonded
+message EventUnbond {
+    string validator = 1;
+    cosmos.base.v1beta1.Coin amount = 2 [(gogoproto.nullable) = false];
+    string delegator = 3 [(gogoproto.moretags) = "yaml:\"delegator\""];
+    string completion_time = 4 [(gogoproto.moretags) = "yaml:\"completion_time\""];
+}
+
+// EventCompleteUnbonding is a typed event emitted when unbonding is completed
+message EventCompleteUnbonding {
+    string validator = 1;
+    repeated cosmos.base.v1beta1.Coin amount = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+    string delegator = 3 [(gogoproto.moretags) = "yaml:\"delegator\""];
+}
+
+// EventCompleteRedelegation is a typed event emitted when redelegation is completed
+message EventCompleteRedelegation {
+    string source_validator = 1 [(gogoproto.moretags) = "yaml:\"source_validator\""];
+    string destination_validator = 2 [(gogoproto.moretags) = "yaml:\"destination_validator\""];
+    repeated cosmos.base.v1beta1.Coin amount = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+    string delegator = 4 [(gogoproto.moretags) = "yaml:\"delegator\""];
+}

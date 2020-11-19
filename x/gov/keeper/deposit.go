@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -150,13 +148,14 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 		deposit = types.NewDeposit(proposalID, depositorAddr, depositAmount)
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeProposalDeposit,
-			sdk.NewAttribute(sdk.AttributeKeyAmount, depositAmount.String()),
-			sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
-		),
-	)
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventProposalDeposit{
+			ProposalId: proposalID,
+			Amount:     depositAmount,
+		},
+	); err != nil {
+		return false, err
+	}
 
 	keeper.SetDeposit(ctx, deposit)
 

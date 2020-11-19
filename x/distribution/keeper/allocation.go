@@ -54,13 +54,14 @@ func (k Keeper) AllocateTokens(
 	proposerValidator := k.stakingKeeper.ValidatorByConsAddr(ctx, previousProposer)
 
 	if proposerValidator != nil {
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeProposerReward,
-				sdk.NewAttribute(sdk.AttributeKeyAmount, proposerReward.String()),
-				sdk.NewAttribute(types.AttributeKeyValidator, proposerValidator.GetOperator().String()),
-			),
-		)
+		if err := ctx.EventManager().EmitTypedEvent(
+			&types.EventProposerReward{
+				Validator: proposerValidator.GetOperator().String(),
+				Rewards:   proposerReward,
+			},
+		); err != nil {
+			panic(err)
+		}
 
 		k.AllocateTokensToValidator(ctx, proposerValidator, proposerReward)
 		remaining = remaining.Sub(proposerReward)
@@ -106,13 +107,14 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.Vali
 	shared := tokens.Sub(commission)
 
 	// update current commission
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeCommission,
-			sdk.NewAttribute(sdk.AttributeKeyAmount, commission.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
-		),
-	)
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventCommission{
+			Validator:  val.GetOperator().String(),
+			Commission: commission,
+		},
+	); err != nil {
+		panic(err)
+	}
 	currentCommission := k.GetValidatorAccumulatedCommission(ctx, val.GetOperator())
 	currentCommission.Commission = currentCommission.Commission.Add(commission...)
 	k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), currentCommission)
@@ -123,13 +125,14 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.Vali
 	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), currentRewards)
 
 	// update outstanding rewards
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeRewards,
-			sdk.NewAttribute(sdk.AttributeKeyAmount, tokens.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
-		),
-	)
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventRewards{
+			Validator: val.GetOperator().String(),
+			Rewards:   tokens,
+		},
+	); err != nil {
+		panic(err)
+	}
 	outstanding := k.GetValidatorOutstandingRewards(ctx, val.GetOperator())
 	outstanding.Rewards = outstanding.Rewards.Add(tokens...)
 	k.SetValidatorOutstandingRewards(ctx, val.GetOperator(), outstanding)

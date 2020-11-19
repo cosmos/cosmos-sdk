@@ -1,0 +1,14 @@
+syntax = "proto3";
+package cosmos.mint.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/mint/types";
+
+// EventMint is a typed event emitted when new tokens are minted
+message EventMint {
+    string bonded_ratio = 1 [(gogoproto.moretags) = "yaml:\"bonded_ratio\""];
+    string inflation = 2;
+    string annual_provisions = 3 [(gogoproto.moretags) = "yaml:\"annual_provisions\""];
+    string amount = 4;
+}

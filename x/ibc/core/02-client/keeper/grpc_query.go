@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -58,7 +59,7 @@ func (q Keeper) ClientStates(c context.Context, req *types.QueryClientStatesRequ
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	clientStates := []*types.IdentifiedClientState{}
+	clientStates := types.IdentifiedClientStates{}
 	store := prefix.NewStore(ctx.KVStore(q.storeKey), host.KeyClientStorePrefix)
 
 	pageRes, err := query.Paginate(store, req.Pagination, func(key, value []byte) error {
@@ -78,13 +79,15 @@ func (q Keeper) ClientStates(c context.Context, req *types.QueryClientStatesRequ
 		}
 
 		identifiedClient := types.NewIdentifiedClientState(clientID, clientState)
-		clientStates = append(clientStates, &identifiedClient)
+		clientStates = append(clientStates, identifiedClient)
 		return nil
 	})
 
 	if err != nil {
 		return nil, err
 	}
+
+	sort.Sort(clientStates)
 
 	return &types.QueryClientStatesResponse{
 		ClientStates: clientStates,
@@ -176,5 +179,15 @@ func (q Keeper) ConsensusStates(c context.Context, req *types.QueryConsensusStat
 	return &types.QueryConsensusStatesResponse{
 		ConsensusStates: consensusStates,
 		Pagination:      pageRes,
+	}, nil
+}
+
+// ClientParams implements the Query/ClientParams gRPC method
+func (q Keeper) ClientParams(c context.Context, _ *types.QueryClientParamsRequest) (*types.QueryClientParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	params := q.GetParams(ctx)
+
+	return &types.QueryClientParamsResponse{
+		Params: &params,
 	}, nil
 }

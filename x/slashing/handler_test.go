@@ -58,7 +58,7 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 	slh := slashing.NewHandler(app.SlashingKeeper)
 	addr, val := sdk.ValAddress(pks[0].Address()), pks[0]
 	amt := sdk.TokensFromConsensusPower(100)
-	msg := tstaking.CreateValidatorMsg(addr, val, amt.Int64())
+	msg := tstaking.CreateValidatorMsg(addr, val, amt)
 	msg.MinSelfDelegation = amt
 	tstaking.Handle(msg, true)
 
@@ -101,7 +101,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 
 	// delegate tokens to the validator
 	delAddr := sdk.AccAddress(pks[2].Address())
-	tstaking.Delegate(delAddr, valAddr, amt.Int64())
+	tstaking.Delegate(delAddr, valAddr, amt)
 
 	// unbond validator total self-delegations (which should jail the validator)
 	valAcc := sdk.AccAddress(valAddr)
@@ -120,7 +120,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	require.Nil(t, res)
 
 	// self-delegate to validator
-	tstaking.Delegate(valAcc, valAddr, amt.Int64())
+	tstaking.Delegate(valAcc, valAddr, amt)
 
 	// verify the validator can now unjail itself
 	res, err = slashing.NewHandler(app.SlashingKeeper)(ctx, types.NewMsgUnjail(valAddr))
@@ -214,10 +214,10 @@ func TestHandleAbsentValidator(t *testing.T) {
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, stakingtypes.Unbonding, validator.GetStatus())
 
-	slashAmt := amt.ToDec().Mul(app.SlashingKeeper.SlashFractionDowntime(ctx)).RoundInt64()
+	slashAmt := amt.ToDec().Mul(app.SlashingKeeper.SlashFractionDowntime(ctx)).RoundInt()
 
 	// validator should have been slashed
-	require.Equal(t, amt.Int64()-slashAmt, validator.GetTokens().Int64())
+	require.True(t, amt.Sub(slashAmt).Equal(validator.GetTokens()))
 
 	// 502nd block *also* missed (since the LastCommit would have still included the just-unbonded validator)
 	height++
@@ -233,7 +233,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// validator should not have been slashed any more, since it was already jailed
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, amt.Int64()-slashAmt, validator.GetTokens().Int64())
+	require.True(t, amt.Sub(slashAmt).Equal(validator.GetTokens()))
 
 	// unrevocation should fail prior to jail expiration
 	res, err := slh(ctx, types.NewMsgUnjail(addr))
@@ -254,7 +254,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, stakingtypes.Bonded, validator.GetStatus())
 
 	// validator should have been slashed
-	require.Equal(t, amt.Int64()-slashAmt, app.BankKeeper.GetBalance(ctx, bondPool.GetAddress(), app.StakingKeeper.BondDenom(ctx)).Amount.Int64())
+	require.True(t, amt.Sub(slashAmt).Equal(app.BankKeeper.GetBalance(ctx, bondPool.GetAddress(), app.StakingKeeper.BondDenom(ctx)).Amount))
 
 	// Validator start height should not have been changed
 	info, found = app.SlashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))

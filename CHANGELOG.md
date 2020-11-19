@@ -36,6 +36,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+- (SDK) [\#7925](https://github.com/cosmos/cosmos-sdk/pull/7925) Updated dependencies to use gRPC v1.33.2
+  * Updated gRPC dependency to v1.33.2
+  * Updated iavl dependency to v0.15-rc2
+* (version) [\#7848](https://github.com/cosmos/cosmos-sdk/pull/7848) [\#7941](https://github.com/cosmos/cosmos-sdk/pull/7941) `version --long` output now shows the list of build dependencies and replaced build dependencies.
+
+### Bug Fixes
+
+* (crypto) [\#7966](https://github.com/cosmos/cosmos-sdk/issues/7966) `Bip44Params` `String()` function now correctly returns the absolute HD path by adding the `m/` prefix.
+
 ## [v0.40.0-rc3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc3) - 2020-11-06
 
 ### Client Breaking
@@ -65,6 +75,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `server/types.AppExporter` requires extra argument: `AppOptions`.
   * `server.AddCommands` requires extra argument: `addStartFlags types.ModuleInitFlags`
   * `x/crisis.NewAppModule` has a new attribute: `skipGenesisInvariants`. [PR](https://github.com/cosmos/cosmos-sdk/pull/7764)
+* [#7918](https://github.com/cosmos/cosmos-sdk/pull/7918) Add x/capability safety checks:
+  * All outward facing APIs will now check that capability is not nil and name is not empty before performing any state-machine changes
+  * `SetIndex` has been renamed to `InitializeIndex`
 
 ### Features
 

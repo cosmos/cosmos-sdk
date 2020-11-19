@@ -250,3 +250,30 @@ func GetCmdNodeConsensusState() *cobra.Command {
 
 	return cmd
 }
+
+// GetCmdParams returns the command handler for ibc client parameter querying.
+func GetCmdParams() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "params",
+		Short:   "Query the current ibc client parameters",
+		Long:    "Query the current ibc client parameters",
+		Args:    cobra.NoArgs,
+		Example: fmt.Sprintf("%s query %s %s params", version.AppName, host.ModuleName, types.SubModuleName),
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, _ := queryClient.ClientParams(context.Background(), &types.QueryClientParamsRequest{})
+			return clientCtx.PrintOutput(res.Params)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}

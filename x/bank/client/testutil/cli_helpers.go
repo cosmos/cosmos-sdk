@@ -87,7 +87,7 @@ ignored as it is implied from [from_key_or_address].`,
 				return err
 			}
 
-			coins, err := sdk.ParseCoins(args[2])
+			coins, err := sdk.ParseCoinsNormalized(args[2])
 			if err != nil {
 				return err
 			}

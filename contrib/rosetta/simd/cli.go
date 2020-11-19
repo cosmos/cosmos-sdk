@@ -29,6 +29,8 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 )
 
+var appCliHome = os.ExpandEnv("$HOME/.simcli")
+
 func main() {
 	// Configure cobra to sort commands
 	cobra.EnableCommandSorting = false
@@ -58,7 +60,7 @@ func main() {
 	// Construct Root Command
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
-		client.ConfigCmd(app.DefaultCLIHome),
+		client.ConfigCmd(appCliHome),
 		queryCmd(cdc),
 		txCmd(cdc),
 		flags.LineBreak,
@@ -71,7 +73,7 @@ func main() {
 	)
 
 	// Add flags and prefix all env exposed with AA
-	executor := cli.PrepareMainCmd(rootCmd, "AA", app.DefaultCLIHome)
+	executor := cli.PrepareMainCmd(rootCmd, "AA", appCliHome)
 
 	err := executor.Execute()
 	if err != nil {

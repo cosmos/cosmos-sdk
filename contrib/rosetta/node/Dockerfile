@@ -41,6 +41,6 @@ RUN chmod +x send_funds.sh
 RUN chmod +x faucet.py
 
 WORKDIR /root/.simapp
-COPY --from=build /node/data ./
+# COPY --from=build /node/data ./
 RUN chmod -R 0777 ./
 

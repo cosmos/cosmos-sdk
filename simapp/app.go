@@ -36,6 +36,11 @@ import (
 const appName = "SimApp"
 
 var (
+	/*
+		NOTE(fdymylja): DefaultCLIHome == DefaultNodeHome this ends up with the daemon
+		resetting the keystore on collect-gentx, they need to be different
+		not fixing it since some tests rely on simapp and I don't want to risk breaking them
+	*/
 	// DefaultCLIHome default home directories for the application CLI
 	DefaultCLIHome = os.ExpandEnv("$HOME/.simapp")
 

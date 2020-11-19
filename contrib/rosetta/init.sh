@@ -1,6 +1,5 @@
 set -e
 echo ".simd not found... initting a new chain"
-mkdir config
 # init config files
 simd init simd --chain-id testing
 # configure cli

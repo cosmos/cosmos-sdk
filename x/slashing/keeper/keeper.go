@@ -3,8 +3,6 @@ package keeper
 import (
 	"fmt"
 
-	gogotypes "github.com/gogo/protobuf/types"
-
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -91,13 +89,6 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	)
 
 	k.sk.Jail(ctx, consAddr)
-}
-
-func (k Keeper) setAddrPubkeyRelation(ctx sdk.Context, addr cryptotypes.Address, pubkey string) {
-	store := ctx.KVStore(k.storeKey)
-
-	bz := k.cdc.MustMarshalBinaryBare(&gogotypes.StringValue{Value: pubkey})
-	store.Set(types.AddrPubkeyRelationKey(addr), bz)
 }
 
 func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr cryptotypes.Address) {

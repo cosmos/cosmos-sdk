@@ -92,30 +92,6 @@ func TestParamsFromPath(t *testing.T) {
 
 }
 
-func TestCreateHDPath(t *testing.T) {
-	type args struct {
-		coinType uint32
-		account  uint32
-		index    uint32
-	}
-	tests := []struct {
-		name string
-		args args
-		want hd.BIP44Params
-	}{
-		{"m/44'/0'/0'/0/0", args{0, 0, 0}, hd.BIP44Params{Purpose: 44}},
-		{"m/44'/114'/0'/0/0", args{114, 0, 0}, hd.BIP44Params{Purpose: 44, CoinType: 114, Account: 0, AddressIndex: 0}},
-		{"m/44'/114'/1'/1/0", args{114, 1, 1}, hd.BIP44Params{Purpose: 44, CoinType: 114, Account: 1, AddressIndex: 1}},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			tt := tt
-			require.Equal(t, tt.want, *hd.CreateHDPath(tt.args.coinType, tt.args.account, tt.args.index))
-		})
-	}
-}
-
 // Tests to ensure that any index value is in the range [0, max(int32)] as per
 // the extended keys specification. If the index belongs to that of a hardened key,
 // its 0x80000000 bit will be set, so we can still accept values in [0, max(int32)] and then
@@ -187,9 +163,9 @@ func TestDeriveHDPathRange(t *testing.T) {
 }
 
 func ExampleStringifyPathParams() {
-	path := hd.NewParams(44, 0, 0, false, 0)
+	path := NewParams(44, 0, 0, false, 0)
 	fmt.Println(path.String())
-	path = hd.NewParams(44, 33, 7, true, 9)
+	path = NewParams(44, 33, 7, true, 9)
 	fmt.Println(path.String())
 	// Output:
 	// m/44'/0'/0'/0/0
@@ -199,38 +175,38 @@ func ExampleStringifyPathParams() {
 func ExampleSomeBIP32TestVecs() {
 	seed := mnemonicToSeed("barrel original fuel morning among eternal " +
 		"filter ball stove pluck matrix mechanic")
-	master, ch := hd.ComputeMastersFromSeed(seed)
+	master, ch := ComputeMastersFromSeed(seed)
 	fmt.Println("keys from fundraiser test-vector (cosmos, bitcoin, ether)")
 	fmt.Println()
 	// cosmos
-	priv, err := hd.DerivePrivateKeyForPath(master, ch, types.FullFundraiserPath)
+	priv, err := DerivePrivateKeyForPath(master, ch, types.FullFundraiserPath)
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
 		fmt.Println(hex.EncodeToString(priv[:]))
 	}
 	// bitcoin
-	priv, err = hd.DerivePrivateKeyForPath(master, ch, "44'/0'/0'/0/0")
+	priv, err = DerivePrivateKeyForPath(master, ch, "44'/0'/0'/0/0")
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
 		fmt.Println(hex.EncodeToString(priv[:]))
 	}
 	// ether
-	priv, err = hd.DerivePrivateKeyForPath(master, ch, "44'/60'/0'/0/0")
+	priv, err = DerivePrivateKeyForPath(master, ch, "44'/60'/0'/0/0")
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
 		fmt.Println(hex.EncodeToString(priv[:]))
 	}
 	// INVALID
-	priv, err = hd.DerivePrivateKeyForPath(master, ch, "X/0'/0'/0/0")
+	priv, err = DerivePrivateKeyForPath(master, ch, "X/0'/0'/0/0")
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
 		fmt.Println(hex.EncodeToString(priv[:]))
 	}
-	priv, err = hd.DerivePrivateKeyForPath(master, ch, "-44/0'/0'/0/0")
+	priv, err = DerivePrivateKeyForPath(master, ch, "-44/0'/0'/0/0")
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
@@ -244,14 +220,14 @@ func ExampleSomeBIP32TestVecs() {
 	seed = mnemonicToSeed(
 		"advice process birth april short trust crater change bacon monkey medal garment " +
 			"gorilla ranch hour rival razor call lunar mention taste vacant woman sister")
-	master, ch = hd.ComputeMastersFromSeed(seed)
-	priv, _ = hd.DerivePrivateKeyForPath(master, ch, "44'/1'/1'/0/4")
+	master, ch = ComputeMastersFromSeed(seed)
+	priv, _ = DerivePrivateKeyForPath(master, ch, "44'/1'/1'/0/4")
 	fmt.Println(hex.EncodeToString(priv[:]))
 
 	seed = mnemonicToSeed("idea naive region square margin day captain habit " +
 		"gun second farm pact pulse someone armed")
-	master, ch = hd.ComputeMastersFromSeed(seed)
-	priv, _ = hd.DerivePrivateKeyForPath(master, ch, "44'/0'/0'/0/420")
+	master, ch = ComputeMastersFromSeed(seed)
+	priv, _ = DerivePrivateKeyForPath(master, ch, "44'/0'/0'/0/420")
 	fmt.Println(hex.EncodeToString(priv[:]))
 
 	fmt.Println()
@@ -260,8 +236,8 @@ func ExampleSomeBIP32TestVecs() {
 
 	// bip32 path: m/0/7
 	seed = mnemonicToSeed("monitor flock loyal sick object grunt duty ride develop assault harsh history")
-	master, ch = hd.ComputeMastersFromSeed(seed)
-	priv, _ = hd.DerivePrivateKeyForPath(master, ch, "0/7")
+	master, ch = ComputeMastersFromSeed(seed)
+	priv, _ = DerivePrivateKeyForPath(master, ch, "0/7")
 	fmt.Println(hex.EncodeToString(priv[:]))
 
 	// Output: keys from fundraiser test-vector (cosmos, bitcoin, ether)

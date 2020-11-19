@@ -164,6 +164,18 @@ func (cs ClientState) ZeroCustomFields() exported.ClientState {
 	}
 }
 
+// Initialize will check that initial consensus state is a Tendermint consensus state
+// and will store ProcessedTime for initial consensus state as ctx.BlockTime()
+func (cs ClientState) Initialize(ctx sdk.Context, _ codec.BinaryMarshaler, clientStore sdk.KVStore, consState exported.ConsensusState) error {
+	if _, ok := consState.(*ConsensusState); !ok {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid initial consensus state. expected type: %T, got: %T",
+			&ConsensusState{}, consState)
+	}
+	// set processed time with initial consensus state height equal to initial client state's latest height
+	SetProcessedTime(clientStore, cs.GetLatestHeight(), uint64(ctx.BlockTime().UnixNano()))
+	return nil
+}
+
 // VerifyClientState verifies a proof of the client state of the running chain
 // stored on the target machine
 func (cs ClientState) VerifyClientState(
@@ -347,7 +359,11 @@ func (cs ClientState) VerifyPacketCommitment(
 	}
 
 	// check that executing chain's timestamp has passed consensusState's processed time + delay period
-	validTime := consensusState.GetProcessedTimestamp() + delayPeriod
+	processedTime, ok := GetProcessedTime(store, height)
+	if !ok {
+		return sdkerrors.Wrapf(ErrProcessedTimeNotFound, "processed time not found for height: %s", height)
+	}
+	validTime := processedTime + delayPeriod
 	if validTime > currentTimestamp {
 		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %s, current time: %s",
 			validTime, currentTimestamp)
@@ -387,7 +403,11 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	}
 
 	// check that executing chain's timestamp has passed consensusState's processed time + delay period
-	validTime := consensusState.GetProcessedTimestamp() + delayPeriod
+	processedTime, ok := GetProcessedTime(store, height)
+	if !ok {
+		return sdkerrors.Wrapf(ErrProcessedTimeNotFound, "processed time not found for height: %s", height)
+	}
+	validTime := processedTime + delayPeriod
 	if validTime > currentTimestamp {
 		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %s, current time: %s",
 			validTime, currentTimestamp)
@@ -427,7 +447,11 @@ func (cs ClientState) VerifyPacketReceiptAbsence(
 	}
 
 	// check that executing chain's timestamp has passed consensusState's processed time + delay period
-	validTime := consensusState.GetProcessedTimestamp() + delayPeriod
+	processedTime, ok := GetProcessedTime(store, height)
+	if !ok {
+		return sdkerrors.Wrapf(ErrProcessedTimeNotFound, "processed time not found for height: %s", height)
+	}
+	validTime := processedTime + delayPeriod
 	if validTime > currentTimestamp {
 		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %s, current time: %s",
 			validTime, currentTimestamp)
@@ -466,7 +490,11 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	}
 
 	// check that executing chain's timestamp has passed consensusState's processed time + delay period
-	validTime := consensusState.GetProcessedTimestamp() + delayPeriod
+	processedTime, ok := GetProcessedTime(store, height)
+	if !ok {
+		return sdkerrors.Wrapf(ErrProcessedTimeNotFound, "processed time not found for height: %s", height)
+	}
+	validTime := processedTime + delayPeriod
 	if validTime > currentTimestamp {
 		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %s, current time: %s",
 			validTime, currentTimestamp)

@@ -19,6 +19,7 @@ import (
 const (
 	flagPacketTimeoutHeight    = "packet-timeout-height"
 	flagPacketTimeoutTimestamp = "packet-timeout-timestamp"
+	flagPacketDelayPeriod      = "packet-delay-period"
 	flagAbsoluteTimeouts       = "absolute-timeouts"
 )
 
@@ -70,6 +71,11 @@ to the counterparty channel. Any timeout set to 0 is disabled.`),
 				return err
 			}
 
+			delayPeriod, err := cmd.Flags().GetUint64(flagPacketDelayPeriod)
+			if err != nil {
+				return err
+			}
+
 			absoluteTimeouts, err := cmd.Flags().GetBool(flagAbsoluteTimeouts)
 			if err != nil {
 				return err
@@ -96,7 +102,7 @@ to the counterparty channel. Any timeout set to 0 is disabled.`),
 			}
 
 			msg := types.NewMsgTransfer(
-				srcPort, srcChannel, coin, sender, receiver, timeoutHeight, timeoutTimestamp,
+				srcPort, srcChannel, coin, sender, receiver, timeoutHeight, timeoutTimestamp, delayPeriod,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
@@ -108,6 +114,7 @@ to the counterparty channel. Any timeout set to 0 is disabled.`),
 
 	cmd.Flags().String(flagPacketTimeoutHeight, types.DefaultRelativePacketTimeoutHeight, "Packet timeout block height. The timeout is disabled when set to 0-0.")
 	cmd.Flags().Uint64(flagPacketTimeoutTimestamp, types.DefaultRelativePacketTimeoutTimestamp, "Packet timeout timestamp in nanoseconds. Default is 10 minutes. The timeout is disabled when set to 0.")
+	cmd.Flags().Uint64(flagPacketDelayPeriod, 0, "Packet delay period specifies the amount of time between when a packet is committed by sender and when it can be received on counterparty chain. Default period is 0.")
 	cmd.Flags().Bool(flagAbsoluteTimeouts, false, "Timeout flags are used as absolute timeouts.")
 	flags.AddTxFlagsToCmd(cmd)
 

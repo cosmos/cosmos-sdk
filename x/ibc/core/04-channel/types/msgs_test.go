@@ -48,12 +48,13 @@ var (
 	height            = clienttypes.NewHeight(0, 1)
 	timeoutHeight     = clienttypes.NewHeight(0, 100)
 	timeoutTimestamp  = uint64(100)
+	delayPeriod       = uint64(0)
 	disabledTimeout   = clienttypes.ZeroHeight()
 	validPacketData   = []byte("testdata")
 	unknownPacketData = []byte("unknown")
 
-	packet        = types.NewPacket(validPacketData, 1, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp)
-	invalidPacket = types.NewPacket(unknownPacketData, 0, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp)
+	packet        = types.NewPacket(validPacketData, 1, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp, delayPeriod)
+	invalidPacket = types.NewPacket(unknownPacketData, 0, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp, delayPeriod)
 
 	emptyProof     = []byte{}
 	invalidProofs1 = exported.Proof(nil)

@@ -76,6 +76,17 @@ func (cs ClientState) ZeroCustomFields() exported.ClientState {
 	)
 }
 
+// Initialize will check that initial consensus state is a solomachine consensus state
+// consState.ValidateBasic() already called in MsgCreateClient.ValidateBasic() so we simply need to check that consensus state
+// type is the same as solomachine client state
+func (cs ClientState) Initialize(_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, consState exported.ConsensusState) error {
+	if _, ok := consState.(*ConsensusState); !ok {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid initial consensus state. expected type: %T, got: %T",
+			&ConsensusState{}, consState)
+	}
+	return nil
+}
+
 // VerifyUpgrade returns an error since solomachine client does not support upgrades
 func (cs ClientState) VerifyUpgrade(
 	_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore,

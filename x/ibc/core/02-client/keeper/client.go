@@ -12,8 +12,6 @@ import (
 
 // CreateClient creates a new client state and populates it with a given consensus
 // state as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
-//
-// CONTRACT: ClientState was constructed correctly from given initial consensusState
 func (k Keeper) CreateClient(
 	ctx sdk.Context, clientID string, clientState exported.ClientState, consensusState exported.ConsensusState,
 ) error {
@@ -22,13 +20,19 @@ func (k Keeper) CreateClient(
 		return sdkerrors.Wrapf(types.ErrClientExists, "cannot create client with ID %s", clientID)
 	}
 
+	k.SetClientState(ctx, clientID, clientState)
+	k.Logger(ctx).Info("client created at height", "client-id", clientID, "height", clientState.GetLatestHeight().String())
+
+	// verifies initial consensus state against client state and initializes client store with any client-specific metadata
+	// e.g. set ProcessedTime in Tendermint clients
+	if err := clientState.Initialize(ctx, k.cdc, k.ClientStore(ctx, clientID), consensusState); err != nil {
+		return err
+	}
+
 	// check if consensus state is nil in case the created client is Localhost
 	if consensusState != nil {
 		k.SetClientConsensusState(ctx, clientID, clientState.GetLatestHeight(), consensusState)
 	}
-
-	k.SetClientState(ctx, clientID, clientState)
-	k.Logger(ctx).Info("client created at height", "client-id", clientID, "height", clientState.GetLatestHeight().String())
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(

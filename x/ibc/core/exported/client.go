@@ -26,6 +26,11 @@ type ClientState interface {
 	Validate() error
 	GetProofSpecs() []*ics23.ProofSpec
 
+	// Initialization function
+	// Clients must validate the initial consensus state, and may store any client-specific metadata
+	// necessary for correct light client operation
+	Initialize(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, ConsensusState) error
+
 	// Update and Misbehaviour functions
 
 	CheckHeaderAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Header) (ClientState, ConsensusState, error)

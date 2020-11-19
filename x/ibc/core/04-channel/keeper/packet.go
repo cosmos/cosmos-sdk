@@ -138,6 +138,13 @@ func (k Keeper) SendPacket(
 		return err
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	)
+
 	k.Logger(ctx).Info("packet sent", "packet", fmt.Sprintf("%v", packet))
 	return nil
 }
@@ -300,6 +307,13 @@ func (k Keeper) RecvPacket(
 		return err
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	)
+
 	return nil
 }
 
@@ -382,6 +396,13 @@ func (k Keeper) WriteAcknowledgement(
 	); err != nil {
 		return err
 	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	)
 
 	return nil
 }
@@ -519,6 +540,13 @@ func (k Keeper) AcknowledgePacket(
 	); err != nil {
 		return err
 	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	)
 
 	return nil
 }

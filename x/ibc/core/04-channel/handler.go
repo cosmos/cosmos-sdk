@@ -30,6 +30,13 @@ func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, portCap *capabil
 		return nil, nil, err
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	)
+
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, capKey, nil
@@ -55,6 +62,13 @@ func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capabili
 	); err != nil {
 		return nil, nil, err
 	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	)
 
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),
@@ -84,6 +98,13 @@ func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, channelCap *capab
 		return nil, err
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	)
+
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
@@ -109,6 +130,13 @@ func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *c
 	); err != nil {
 		return nil, err
 	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	)
 
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),
@@ -136,6 +164,13 @@ func HandleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, channelCap *cap
 		return nil, err
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	)
+
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
@@ -161,6 +196,13 @@ func HandleMsgChannelCloseConfirm(ctx sdk.Context, k keeper.Keeper, channelCap *
 	); err != nil {
 		return nil, err
 	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	)
 
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),

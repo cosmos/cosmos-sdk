@@ -172,6 +172,13 @@ func (k Keeper) TimeoutExecuted(
 		return err
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	)
+
 	return nil
 }
 

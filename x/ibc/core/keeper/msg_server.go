@@ -51,6 +51,13 @@ func (k Keeper) CreateClient(goCtx context.Context, msg *clienttypes.MsgCreateCl
 		return nil, err
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, clienttypes.AttributeValueCategory),
+		),
+	)
+
 	return &clienttypes.MsgCreateClientResponse{}, nil
 }
 
@@ -67,6 +74,13 @@ func (k Keeper) UpdateClient(goCtx context.Context, msg *clienttypes.MsgUpdateCl
 		return nil, err
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, clienttypes.AttributeValueCategory),
+		),
+	)
+
 	return &clienttypes.MsgUpdateClientResponse{}, nil
 }
 
@@ -82,6 +96,13 @@ func (k Keeper) UpgradeClient(goCtx context.Context, msg *clienttypes.MsgUpgrade
 	if err = k.ClientKeeper.UpgradeClient(ctx, msg.ClientId, upgradedClient, msg.UpgradeHeight, msg.ProofUpgrade); err != nil {
 		return nil, err
 	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, clienttypes.AttributeValueCategory),
+		),
+	)
 
 	return &clienttypes.MsgUpgradeClientResponse{}, nil
 }
@@ -138,6 +159,13 @@ func (k Keeper) ConnectionOpenInit(goCtx context.Context, msg *connectiontypes.M
 		return nil, err
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, connectiontypes.AttributeValueCategory),
+		),
+	)
+
 	return &connectiontypes.MsgConnectionOpenInitResponse{}, nil
 }
 
@@ -168,6 +196,13 @@ func (k Keeper) ConnectionOpenTry(goCtx context.Context, msg *connectiontypes.Ms
 	); err != nil {
 		return nil, err
 	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, connectiontypes.AttributeValueCategory),
+		),
+	)
 
 	return &connectiontypes.MsgConnectionOpenTryResponse{}, nil
 }
@@ -201,6 +236,13 @@ func (k Keeper) ConnectionOpenAck(goCtx context.Context, msg *connectiontypes.Ms
 		return nil, err
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, connectiontypes.AttributeValueCategory),
+		),
+	)
+
 	return &connectiontypes.MsgConnectionOpenAckResponse{}, nil
 }
 
@@ -226,6 +268,13 @@ func (k Keeper) ConnectionOpenConfirm(goCtx context.Context, msg *connectiontype
 	); err != nil {
 		return nil, err
 	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, connectiontypes.AttributeValueCategory),
+		),
+	)
 
 	return &connectiontypes.MsgConnectionOpenConfirmResponse{}, nil
 }

@@ -34,10 +34,12 @@ func ExamplePrintRegisteredTypes() {
 	// | Type | Name | Prefix | Length | Notes |
 	// | ---- | ---- | ------ | ----- | ------ |
 	// | PrivKeyLedgerSecp256k1 | tendermint/PrivKeyLedgerSecp256k1 | 0x10CAB393 | variable |  |
+	// | PubKeySm2 | tendermint/PubKeySm2 | 0xE7CD5A35 | 0x21 |  |
 	// | PubKey | tendermint/PubKeyEd25519 | 0x1624DE64 | variable |  |
 	// | PubKey | tendermint/PubKeySr25519 | 0x0DFB1005 | variable |  |
 	// | PubKey | tendermint/PubKeySecp256k1 | 0xEB5AE987 | variable |  |
 	// | PubKeyMultisigThreshold | tendermint/PubKeyMultisigThreshold | 0x22C1F7E2 | variable |  |
+	// | PrivKeySm2 | tendermint/PrivKeySm2 | 0x5D16439B | 0x20 |  |
 	// | PrivKey | tendermint/PrivKeyEd25519 | 0xA3288910 | variable |  |
 	// | PrivKey | tendermint/PrivKeySr25519 | 0x2F82D78B | variable |  |
 	// | PrivKey | tendermint/PrivKeySecp256k1 | 0xE1B0F79B | variable |  |

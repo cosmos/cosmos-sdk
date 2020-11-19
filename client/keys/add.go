@@ -75,7 +75,7 @@ the flag --nosort is set.
 	cmd.Flags().Uint32(flagCoinType, sdk.GetConfig().GetCoinType(), "coin type number for HD derivation")
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
-	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
+	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Sm2Type), "Key signing algorithm to generate keys for")
 
 	cmd.SetOut(cmd.OutOrStdout())
 	cmd.SetErr(cmd.ErrOrStderr())

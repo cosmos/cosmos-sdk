@@ -236,6 +236,7 @@ func TestMigrate(t *testing.T) {
     "max_memo_characters": "10",
     "sig_verify_cost_ed25519": "40",
     "sig_verify_cost_secp256k1": "50",
+    "sig_verify_cost_sm2": "0",
     "tx_sig_limit": "20",
     "tx_size_cost_per_byte": "30"
   }

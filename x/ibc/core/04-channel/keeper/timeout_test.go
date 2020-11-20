@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"time"
 
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
@@ -40,6 +41,24 @@ func (suite *KeeperTestSuite) TestTimeoutPacket() {
 			// need to update chainA's client representing chainB to prove missing ack
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 		}, true},
+		{"success: delay period (1s) has passed", func() {
+			ordered = false
+
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.GetSelfHeight(suite.chainB.GetContext()), disabledTimeoutTimestamp, uint64(time.Second.Nanoseconds()))
+			suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+			// need to update chainA's client representing chainB to prove missing ack
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
+		}, true},
+		{"delay period (1h) has not passed", func() {
+			ordered = false
+
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.GetSelfHeight(suite.chainB.GetContext()), disabledTimeoutTimestamp, uint64(time.Hour.Nanoseconds()))
+			suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+			// need to update chainA's client representing chainB to prove missing ack
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
+		}, false},
 		{"channel not found", func() {
 			// use wrong channel naming
 			_, _, _, _, _, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"time"
 
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
@@ -193,7 +194,7 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 			suite.Require().NoError(err)
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 		}, true},
-		{"success UNORDERED channel", func() {
+		{"success: UNORDERED channel", func() {
 			// setup uses an UNORDERED channel
 			_, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp, delayPeriod)
@@ -228,6 +229,22 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 			err = suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 			// attempts to receive packet 2 without receiving packet 1
+			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
+		}, false},
+		{"success: delay period (1s) has passed", func() {
+			// setup uses an UNORDERED channel
+			_, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp, uint64(time.Second.Nanoseconds()))
+			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+			suite.Require().NoError(err)
+			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
+		}, true},
+		{"delay period (1h) has not passed", func() {
+			// setup uses an UNORDERED channel
+			_, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp, uint64(time.Hour.Nanoseconds()))
+			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+			suite.Require().NoError(err)
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 		}, false},
 		{"channel not found", func() {
@@ -497,6 +514,40 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, true},
+		{"success: delay period (1s) has passed", func() {
+			// setup uses an UNORDERED channel
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp, uint64(time.Second.Nanoseconds()))
+
+			// create packet commitment
+			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+			suite.Require().NoError(err)
+
+			// create packet receipt and acknowledgement
+			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
+			suite.Require().NoError(err)
+
+			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
+		}, true},
+		{"delay period (1h) has not passed", func() {
+			// setup uses an UNORDERED channel
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp, uint64(time.Hour.Nanoseconds()))
+
+			// create packet commitment
+			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+			suite.Require().NoError(err)
+
+			// increment receiving chain's (chainB) time by 2 hour to always pass receive
+			suite.coordinator.IncrementTimeBy(time.Hour * 2)
+			suite.coordinator.CommitBlock(suite.chainB)
+
+			// create packet receipt and acknowledgement
+			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
+			suite.Require().NoError(err)
+
+			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
+		}, false},
 		{"channel not found", func() {
 			// use wrong channel naming
 			_, _, _, _, _, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)

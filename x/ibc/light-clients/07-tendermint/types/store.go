@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
-var KeyProcessedTime = []byte("processedTime")
+var KeyProcessedTime = []byte("/processedTime")
 
 // GetConsensusState retrieves the consensus state from the client prefixed
 // store. An error is returned if the consensus state does not exist.

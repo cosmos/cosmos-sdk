@@ -16,7 +16,7 @@ var _ sdk.Msg = &MsgChannelOpenInit{}
 // nolint:interfacer
 func NewMsgChannelOpenInit(
 	portID, version string, channelOrder Order, connectionHops []string,
-	counterpartyPortID, counterpartyChannelID string, signer sdk.AccAddress,
+	counterpartyPortID string, signer sdk.AccAddress,
 ) *MsgChannelOpenInit {
 	counterparty := NewCounterparty(counterpartyPortID, "")
 	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
@@ -125,6 +125,10 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 			TRYOPEN, msg.Channel.State,
 		)
 	}
+	if err := host.ChannelIdentifierValidator(msg.Channel.Counterparty.ChannelId); err != nil {
+		return sdkerrors.Wrap(err, "invalid counterparty channel ID")
+	}
+
 	_, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)

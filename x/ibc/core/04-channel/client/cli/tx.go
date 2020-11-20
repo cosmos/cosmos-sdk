@@ -26,7 +26,7 @@ func NewChannelOpenInitCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "open-init [port-id] [counterparty-port-id] [counterparty-channel-id] [connection-hops]",
 		Short: "Creates and sends a ChannelOpenInit message",
-		Args:  cobra.ExactArgs(4),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
@@ -36,14 +36,13 @@ func NewChannelOpenInitCmd() *cobra.Command {
 
 			portID := args[0]
 			counterpartyPortID := args[1]
-			counterpartyChannelID := args[2]
-			hops := strings.Split(args[3], "/")
+			hops := strings.Split(args[2], "/")
 			order := channelOrder(cmd.Flags())
 			version, _ := cmd.Flags().GetString(FlagIBCVersion)
 
 			msg := types.NewMsgChannelOpenInit(
 				portID, version, order, hops,
-				counterpartyPortID, counterpartyChannelID, clientCtx.GetFromAddress(),
+				counterpartyPortID, clientCtx.GetFromAddress(),
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

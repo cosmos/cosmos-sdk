@@ -786,7 +786,7 @@ func (chain *TestChain) ChanOpenInit(
 	msg := channeltypes.NewMsgChannelOpenInit(
 		ch.PortID,
 		ch.Version, order, []string{connectionID},
-		counterparty.PortID, counterparty.ID,
+		counterparty.PortID,
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.sendMsgs(msg)

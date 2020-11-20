@@ -73,9 +73,9 @@ func TestCoinIsValid(t *testing.T) {
 func TestCustomValidation(t *testing.T) {
 
 	newDnmRegex := `[\x{1F600}-\x{1F6FF}]`
-	CoinDenomRegex = func() string {
+	SetCoinDenomRegex(func() string {
 		return newDnmRegex
-	}
+	})
 
 	cases := []struct {
 		coin       Coin
@@ -92,7 +92,7 @@ func TestCustomValidation(t *testing.T) {
 	for i, tc := range cases {
 		require.Equal(t, tc.expectPass, tc.coin.IsValid(), "unexpected result for IsValid, tc #%d", i)
 	}
-	CoinDenomRegex = DefaultCoinDenomRegex
+	SetCoinDenomRegex(DefaultCoinDenomRegex)
 }
 
 func TestAddCoin(t *testing.T) {

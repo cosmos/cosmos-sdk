@@ -112,18 +112,18 @@ func (suite *KeeperTestSuite) TestQueryConnections() {
 			"success",
 			func() {
 				clientA, clientB, connA0, connB0 := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
-				connA1, connB1, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
+				clientA1, clientB1, connA1, connB1 := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
+				connA2, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 				suite.Require().NoError(err)
 
-				clientA1, clientB1, connA2, connB2 := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
-
 				counterparty1 := types.NewCounterparty(clientB, connB0.ID, suite.chainB.GetPrefix())
-				counterparty2 := types.NewCounterparty(clientB, connB1.ID, suite.chainB.GetPrefix())
-				counterparty3 := types.NewCounterparty(clientB1, connB2.ID, suite.chainB.GetPrefix())
+				counterparty2 := types.NewCounterparty(clientB1, connB1.ID, suite.chainB.GetPrefix())
+				// counterparty connection id is blank after open init
+				counterparty3 := types.NewCounterparty(clientB, "", suite.chainB.GetPrefix())
 
 				conn1 := types.NewConnectionEnd(types.OPEN, clientA, counterparty1, types.ExportedVersionsToProto(types.GetCompatibleVersions()))
-				conn2 := types.NewConnectionEnd(types.INIT, clientA, counterparty2, types.ExportedVersionsToProto(types.GetCompatibleVersions()))
-				conn3 := types.NewConnectionEnd(types.OPEN, clientA1, counterparty3, types.ExportedVersionsToProto(types.GetCompatibleVersions()))
+				conn2 := types.NewConnectionEnd(types.OPEN, clientA1, counterparty2, types.ExportedVersionsToProto(types.GetCompatibleVersions()))
+				conn3 := types.NewConnectionEnd(types.INIT, clientA, counterparty3, types.ExportedVersionsToProto(types.GetCompatibleVersions()))
 
 				iconn1 := types.NewIdentifiedConnection(connA0.ID, conn1)
 				iconn2 := types.NewIdentifiedConnection(connA1.ID, conn2)

@@ -109,26 +109,27 @@ message GetNodeInfoRequest {}
 
 // GetNodeInfoResponse is the request type for the Query/GetNodeInfo RPC method.
 message GetNodeInfoResponse {
-  tendermint.p2p.DefaultNodeInfo default_node_info  = 1;
+  tendermint.p2p.DefaultNodeInfo default_node_info   = 1;
   VersionInfo                    application_version = 2;
 }
 
 // VersionInfo is the type for the GetNodeInfoResponse message.
 message VersionInfo {
-  string name       = 1;
-  string app_name   = 2;
-  string version    = 3;
-  string git_commit = 4;
-  string build_tags = 5;
-  string go_version = 6;
+  string          name       = 1;
+  string          app_name   = 2;
+  string          version    = 3;
+  string          git_commit = 4;
+  string          build_tags = 5;
+  string          go_version = 6;
   repeated Module build_deps = 7;
 }
 
+// Module is the type for VersionInfo
 message Module {
   // module path
-  string path    = 1;
+  string path = 1;
   // module version
-	string version = 2;
-  //checksum
-	string sum     = 3;
+  string version = 2;
+  // checksum
+  string sum = 3;
 }

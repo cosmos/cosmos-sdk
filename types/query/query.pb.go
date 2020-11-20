@@ -777,6 +777,7 @@ func (m *VersionInfo) GetBuildDeps() []*Module {
 	return nil
 }
 
+// Module is the type for VersionInfo
 type Module struct {
 	// module path
 	Path string `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`

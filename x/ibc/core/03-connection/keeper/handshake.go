@@ -60,8 +60,7 @@ func (k Keeper) ConnOpenInit(
 //  - Identifiers are checked on msg validation
 func (k Keeper) ConnOpenTry(
 	ctx sdk.Context,
-	desiredConnectionID, // desiredIdentifier
-	counterpartyChosenConnectionID string, // counterparty used this identifier in proof
+	desiredConnectionID string, // desiredIdentifier
 	counterparty types.Counterparty, // counterpartyConnectionIdentifier, counterpartyPrefix and counterpartyClientIdentifier
 	clientID string, // clientID of chainA
 	clientState exported.ClientState, // clientState that chainA has for chainB
@@ -90,33 +89,26 @@ func (k Keeper) ConnOpenTry(
 		return sdkerrors.Wrap(clienttypes.ErrSelfConsensusStateNotFound, consensusHeight.String())
 	}
 
-	// If the connection id chosen for this connection end by the counterparty is empty then
-	// flexible connection identifier selection is allowed by using the desired connection id.
-	// Otherwise the desiredConnectionID must match the counterpartyChosenConnectionID.
-	if counterpartyChosenConnectionID != "" && counterpartyChosenConnectionID != desiredConnectionID {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidConnectionIdentifier,
-			"counterparty chosen connection ID (%s) must be empty or equal to the desired connection ID (%s)", counterpartyChosenConnectionID, desiredConnectionID,
-		)
-	}
-
 	// expectedConnection defines Chain A's ConnectionEnd
 	// NOTE: chain A's counterparty is chain B (i.e where this code is executed)
 	prefix := k.GetCommitmentPrefix()
-	expectedCounterparty := types.NewCounterparty(clientID, counterpartyChosenConnectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
+	expectedCounterparty := types.NewCounterparty(clientID, "", commitmenttypes.NewMerklePrefix(prefix.Bytes()))
 	expectedConnection := types.NewConnectionEnd(types.INIT, counterparty.ClientId, expectedCounterparty, types.ExportedVersionsToProto(counterpartyVersions))
 
 	// If connection already exists for desiredConnectionID, ensure that the existing connection's
 	// counterparty is chainA and connection is on INIT stage.
 	// Check that existing connection versions for initialized connection is equal to compatible
 	// versions for this chain.
+	connectionID := desiredConnectionID
 	previousConnection, found := k.GetConnection(ctx, desiredConnectionID)
 	if found && !(previousConnection.State == types.INIT &&
-		previousConnection.Counterparty.ConnectionId == counterparty.ConnectionId &&
+		previousConnection.Counterparty.ConnectionId == "" &&
 		bytes.Equal(previousConnection.Counterparty.Prefix.Bytes(), counterparty.Prefix.Bytes()) &&
 		previousConnection.ClientId == clientID &&
 		previousConnection.Counterparty.ClientId == counterparty.ClientId) {
 		return sdkerrors.Wrap(types.ErrInvalidConnection, "cannot relay connection attempt")
+	} else {
+		connectionID = k.GenerateConnectionIdentifier(ctx)
 	}
 
 	supportedVersions := types.GetCompatibleVersions()
@@ -156,12 +148,12 @@ func (k Keeper) ConnOpenTry(
 	}
 
 	// store connection in chainB state
-	if err := k.addConnectionToClient(ctx, clientID, desiredConnectionID); err != nil {
+	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
 		return sdkerrors.Wrapf(err, "failed to add connection with ID %s to client with ID %s", desiredConnectionID, clientID)
 	}
 
-	k.SetConnection(ctx, desiredConnectionID, connection)
-	k.Logger(ctx).Info("connection state updated", "connection-id", desiredConnectionID, "previous-state", previousConnection.State.String(), "new-state", "TRYOPEN")
+	k.SetConnection(ctx, connectionID, connection)
+	k.Logger(ctx).Info("connection state updated", "connection-id", connectionID, "previous-state", previousConnection.State.String(), "new-state", "TRYOPEN")
 
 	defer func() {
 		telemetry.IncrCounter(1, "ibc", "connection", "open-try")
@@ -199,16 +191,6 @@ func (k Keeper) ConnOpenAck(
 	connection, found := k.GetConnection(ctx, connectionID)
 	if !found {
 		return sdkerrors.Wrap(types.ErrConnectionNotFound, connectionID)
-	}
-
-	// If the previously set connection end allowed for the counterparty to select its own
-	// connection identifier then we use the counterpartyConnectionID. Otherwise the
-	// counterpartyConnectionID must match the previously set counterparty connection ID.
-	if connection.Counterparty.ConnectionId != "" && counterpartyConnectionID != connection.Counterparty.ConnectionId {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidConnectionIdentifier,
-			"counterparty connection identifier (%s) must be equal to stored connection ID for counterparty (%s)", counterpartyConnectionID, connection.Counterparty.ConnectionId,
-		)
 	}
 
 	// Verify the provided version against the previously set connection state

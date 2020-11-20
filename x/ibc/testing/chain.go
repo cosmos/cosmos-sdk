@@ -614,7 +614,7 @@ func (chain *TestChain) ConnectionOpenInit(
 ) error {
 	msg := connectiontypes.NewMsgConnectionOpenInit(
 		connection.ClientID,
-		counterpartyConnection.ID, connection.CounterpartyClientID,
+		connection.CounterpartyClientID,
 		counterparty.GetPrefix(), DefaultOpenInitVersion,
 		chain.SenderAccount.GetAddress(),
 	)
@@ -634,7 +634,7 @@ func (chain *TestChain) ConnectionOpenTry(
 	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
 
 	msg := connectiontypes.NewMsgConnectionOpenTry(
-		connection.ID, connection.ID, connection.ClientID, // testing doesn't use flexible selection
+		connection.ID, connection.ClientID, // testing doesn't use flexible selection
 		counterpartyConnection.ID, counterpartyConnection.ClientID,
 		counterpartyClient, counterparty.GetPrefix(), []*connectiontypes.Version{ConnectionVersion},
 		proofInit, proofClient, proofConsensus,
@@ -774,7 +774,7 @@ func (chain *TestChain) ChanOpenTry(
 	proof, height := counterparty.QueryProof(host.ChannelKey(counterpartyCh.PortID, counterpartyCh.ID))
 
 	msg := channeltypes.NewMsgChannelOpenTry(
-		ch.PortID, ch.ID, ch.ID, // testing doesn't use flexible selection
+		ch.PortID, ch.ID,
 		ch.Version, order, []string{connectionID},
 		counterpartyCh.PortID, counterpartyCh.ID,
 		counterpartyCh.Version,

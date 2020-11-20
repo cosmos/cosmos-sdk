@@ -56,7 +56,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GenerateChannelIdentifier returns the next channel identifier.
-func (k Keeper) GenerateConnectionIdentifier(ctx sdk.Context) string {
+func (k Keeper) GenerateChannelIdentifier(ctx sdk.Context) string {
 	nextChannelSeq := k.GetNextChannelSequence(ctx)
 	return fmt.Sprintf("%s%d", types.ChannelPrefix, nextChannelSeq)
 }

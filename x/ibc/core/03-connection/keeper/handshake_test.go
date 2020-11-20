@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
@@ -58,19 +59,20 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 
 			tc.malleate()
 
-			connA := suite.chainA.GetFirstTestConnection(clientA, clientB)
 			connB := suite.chainB.GetFirstTestConnection(clientB, clientA)
 			if emptyConnBID {
 				connB.ID = ""
 			}
 			counterparty := types.NewCounterparty(clientB, connB.ID, suite.chainB.GetPrefix())
 
-			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenInit(suite.chainA.GetContext(), connA.ID, clientA, counterparty, version)
+			connectionID, err := suite.chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenInit(suite.chainA.GetContext(), clientA, counterparty, version)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
+				suite.Require().Equal(fmt.Sprintf("%s/%d", types.ConnectionPrefix, 0), connectionID)
 			} else {
 				suite.Require().Error(err)
+				suite.Require().Equal("", connectionID)
 			}
 		})
 	}
@@ -100,50 +102,6 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			// retrieve client state of chainA to pass as counterpartyClient
 			counterpartyClient = suite.chainA.GetClientState(clientA)
 		}, true},
-		{"success with empty counterpartyChosenConnectionID", func() {
-			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
-			connA, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
-			suite.Require().NoError(err)
-
-			// modify connA to set counterparty connection identifier to empty string
-			connection, found := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), connA.ID)
-			suite.Require().True(found)
-
-			connection.Counterparty.ConnectionId = ""
-
-			suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, connection)
-
-			err = suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
-			suite.Require().NoError(err)
-
-			err = suite.coordinator.UpdateClient(suite.chainB, suite.chainA, clientB, exported.Tendermint)
-			suite.Require().NoError(err)
-
-			// retrieve client state of chainA to pass as counterpartyClient
-			counterpartyClient = suite.chainA.GetClientState(clientA)
-		}, true},
-		{"counterpartyChosenConnectionID does not match desiredConnectionID", func() {
-			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
-			connA, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
-			suite.Require().NoError(err)
-
-			// modify connA to set counterparty connection identifier to invalid identifier
-			connection, found := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), connA.ID)
-			suite.Require().True(found)
-
-			connection.Counterparty.ConnectionId = "badidentifier"
-
-			suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, connection)
-
-			err = suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
-			suite.Require().NoError(err)
-
-			err = suite.coordinator.UpdateClient(suite.chainB, suite.chainA, clientB, exported.Tendermint)
-			suite.Require().NoError(err)
-
-			// retrieve client state of chainA to pass as counterpartyClient
-			counterpartyClient = suite.chainA.GetClientState(clientA)
-		}, false},
 		{"invalid counterparty client", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 			_, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
@@ -298,13 +256,6 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			connB := suite.chainB.GetFirstTestConnection(clientB, clientA)
 			counterparty := types.NewCounterparty(clientA, connA.ID, suite.chainA.GetPrefix())
 
-			// get counterpartyChosenConnectionID
-			var counterpartyChosenConnectionID string
-			connection, found := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), connA.ID)
-			if found {
-				counterpartyChosenConnectionID = connection.Counterparty.ConnectionId
-			}
-
 			connectionKey := host.ConnectionKey(connA.ID)
 			proofInit, proofHeight := suite.chainA.QueryProof(connectionKey)
 
@@ -320,7 +271,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			proofClient, _ := suite.chainA.QueryProof(clientKey)
 
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenTry(
-				suite.chainB.GetContext(), connB.ID, counterpartyChosenConnectionID, counterparty, clientB, counterpartyClient,
+				suite.chainB.GetContext(), connB.ID, counterparty, clientB, counterpartyClient,
 				versions, proofInit, proofClient, proofConsensus,
 				proofHeight, consensusHeight,
 			)

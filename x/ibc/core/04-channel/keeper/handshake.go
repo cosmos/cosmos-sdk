@@ -39,25 +39,19 @@ func (k Keeper) ChanOpenInit(
 	ctx sdk.Context,
 	order types.Order,
 	connectionHops []string,
-	portID,
-	channelID string,
+	portID string,
 	portCap *capabilitytypes.Capability,
 	counterparty types.Counterparty,
 	version string,
-) (*capabilitytypes.Capability, error) {
-	// channel identifier and connection hop length checked on msg.ValidateBasic()
-	_, found := k.GetChannel(ctx, portID, channelID)
-	if found {
-		return nil, sdkerrors.Wrapf(types.ErrChannelExists, "port ID (%s) channel ID (%s)", portID, channelID)
-	}
-
+) (string, *capabilitytypes.Capability, error) {
+	// connection hop length checked on msg.ValidateBasic()
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
 	if !found {
-		return nil, sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, connectionHops[0])
+		return "", nil, sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, connectionHops[0])
 	}
 
 	if len(connectionEnd.GetVersions()) != 1 {
-		return nil, sdkerrors.Wrapf(
+		return "", nil, sdkerrors.Wrapf(
 			connectiontypes.ErrInvalidVersion,
 			"single version must be negotiated on connection before opening channel, got: %v",
 			connectionEnd.GetVersions(),
@@ -65,7 +59,7 @@ func (k Keeper) ChanOpenInit(
 	}
 
 	if !connectiontypes.VerifySupportedFeature(connectionEnd.GetVersions()[0], order.String()) {
-		return nil, sdkerrors.Wrapf(
+		return "", nil, sdkerrors.Wrapf(
 			connectiontypes.ErrInvalidVersion,
 			"connection version %s does not support channel ordering: %s",
 			connectionEnd.GetVersions()[0], order.String(),
@@ -73,15 +67,16 @@ func (k Keeper) ChanOpenInit(
 	}
 
 	if !k.portKeeper.Authenticate(ctx, portCap, portID) {
-		return nil, sdkerrors.Wrapf(porttypes.ErrInvalidPort, "caller does not own port capability for port ID %s", portID)
+		return "", nil, sdkerrors.Wrapf(porttypes.ErrInvalidPort, "caller does not own port capability for port ID %s", portID)
 	}
 
+	channelID := k.GenerateChannelIdentifier(ctx)
 	channel := types.NewChannel(types.INIT, order, counterparty, connectionHops, version)
 	k.SetChannel(ctx, portID, channelID, channel)
 
 	capKey, err := k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, channelID)
+		return "", nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, channelID)
 	}
 
 	k.SetNextSequenceSend(ctx, portID, channelID, 1)
@@ -94,7 +89,7 @@ func (k Keeper) ChanOpenInit(
 		telemetry.IncrCounter(1, "ibc", "channel", "open-init")
 	}()
 
-	return capKey, nil
+	return channelID, capKey, nil
 }
 
 // ChanOpenTry is called by a module to accept the first step of a channel opening
@@ -104,8 +99,7 @@ func (k Keeper) ChanOpenTry(
 	order types.Order,
 	connectionHops []string,
 	portID,
-	desiredChannelID,
-	counterpartyChosenChannelID string,
+	desiredChannelID string,
 	portCap *capabilitytypes.Capability,
 	counterparty types.Counterparty,
 	version,
@@ -156,16 +150,6 @@ func (k Keeper) ChanOpenTry(
 		)
 	}
 
-	// If the channel id chosen for this channel end by the counterparty is empty then
-	// flexible channel identifier selection is allowed by using the desired channel id.
-	// Otherwise the desiredChannelID must match the counterpartyChosenChannelID.
-	if counterpartyChosenChannelID != "" && counterpartyChosenChannelID != desiredChannelID {
-		return nil, sdkerrors.Wrapf(
-			types.ErrInvalidChannelIdentifier,
-			"counterparty chosen channel ID (%s) must be empty or equal to the desired channel ID (%s)", counterpartyChosenChannelID, desiredChannelID,
-		)
-	}
-
 	// NOTE: this step has been switched with the one below to reverse the connection
 	// hops
 	channel := types.NewChannel(types.TRYOPEN, order, counterparty, connectionHops, version)
@@ -178,7 +162,7 @@ func (k Keeper) ChanOpenTry(
 
 	// expectedCounterpaty is the counterparty of the counterparty's channel end
 	// (i.e self)
-	expectedCounterparty := types.NewCounterparty(portID, counterpartyChosenChannelID)
+	expectedCounterparty := types.NewCounterparty(portID, "")
 	expectedChannel := types.NewChannel(
 		types.INIT, channel.Ordering, expectedCounterparty,
 		counterpartyHops, counterpartyVersion,

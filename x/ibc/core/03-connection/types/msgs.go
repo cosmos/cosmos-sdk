@@ -15,11 +15,11 @@ var _ sdk.Msg = &MsgConnectionOpenInit{}
 // NewMsgConnectionOpenInit creates a new MsgConnectionOpenInit instance
 //nolint:interfacer
 func NewMsgConnectionOpenInit(
-	clientID, counterpartyConnectionID,
+	clientID,
 	counterpartyClientID string, counterpartyPrefix commitmenttypes.MerklePrefix,
 	version *Version, signer sdk.AccAddress,
 ) *MsgConnectionOpenInit {
-	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
+	counterparty := NewCounterparty(counterpartyClientID, "", counterpartyPrefix)
 	return &MsgConnectionOpenInit{
 		ClientId:     clientID,
 		Counterparty: counterparty,
@@ -80,7 +80,7 @@ var _ sdk.Msg = &MsgConnectionOpenTry{}
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
 //nolint:interfacer
 func NewMsgConnectionOpenTry(
-	desiredConnectionID, counterpartyChosenConnectionID, clientID, counterpartyConnectionID,
+	desiredConnectionID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyClient exported.ClientState,
 	counterpartyPrefix commitmenttypes.MerklePrefix, counterpartyVersions []*Version,
 	proofInit, proofClient, proofConsensus []byte,
@@ -89,18 +89,17 @@ func NewMsgConnectionOpenTry(
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
 	csAny, _ := clienttypes.PackClientState(counterpartyClient)
 	return &MsgConnectionOpenTry{
-		DesiredConnectionId:            desiredConnectionID,
-		CounterpartyChosenConnectionId: counterpartyChosenConnectionID,
-		ClientId:                       clientID,
-		ClientState:                    csAny,
-		Counterparty:                   counterparty,
-		CounterpartyVersions:           counterpartyVersions,
-		ProofInit:                      proofInit,
-		ProofClient:                    proofClient,
-		ProofConsensus:                 proofConsensus,
-		ProofHeight:                    proofHeight,
-		ConsensusHeight:                consensusHeight,
-		Signer:                         signer.String(),
+		DesiredConnectionId:  desiredConnectionID,
+		ClientId:             clientID,
+		ClientState:          csAny,
+		Counterparty:         counterparty,
+		CounterpartyVersions: counterpartyVersions,
+		ProofInit:            proofInit,
+		ProofClient:          proofClient,
+		ProofConsensus:       proofConsensus,
+		ProofHeight:          proofHeight,
+		ConsensusHeight:      consensusHeight,
+		Signer:               signer.String(),
 	}
 }
 
@@ -118,9 +117,6 @@ func (msg MsgConnectionOpenTry) Type() string {
 func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(msg.DesiredConnectionId); err != nil {
 		return sdkerrors.Wrap(err, "invalid desired connection ID")
-	}
-	if msg.CounterpartyChosenConnectionId != "" && msg.CounterpartyChosenConnectionId != msg.DesiredConnectionId {
-		return sdkerrors.Wrap(ErrInvalidConnectionIdentifier, "counterparty chosen connection identifier must be empty or equal to desired connection identifier")
 	}
 	if err := host.ClientIdentifierValidator(msg.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "invalid client ID")

@@ -24,6 +24,10 @@ type addrData struct {
 	Addr     string
 }
 
+func TestFullFundraiserPath(t *testing.T) {
+	require.Equal(t, "m/44'/118'/0'/0/0", NewFundraiserParams(0, 118, 0).String())
+}
+
 func initFundraiserTestVectors(t *testing.T) []addrData {
 	// NOTE: atom fundraiser address
 	// var hdPath string = "m/44'/118'/0'/0/0"
@@ -57,7 +61,7 @@ func TestFundraiserCompatibility(t *testing.T) {
 		t.Logf("ROUND: %d MNEMONIC: %s", i, d.Mnemonic)
 
 		master, ch := ComputeMastersFromSeed(seed)
-		priv, err := DerivePrivateKeyForPath(master, ch, "44'/118'/0'/0/0")
+		priv, err := DerivePrivateKeyForPath(master, ch, "m/44'/118'/0'/0/0")
 		require.NoError(t, err)
 		pub := secp256k1.PrivKeySecp256k1(priv).PubKey()
 

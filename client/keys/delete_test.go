@@ -46,13 +46,13 @@ func Test_runDeleteCmd(t *testing.T) {
 	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	}
-	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", "0", keys.Secp256k1)
+	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", sdk.FullFundraiserPath, keys.Secp256k1)
 	require.NoError(t, err)
 
 	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	}
-	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", "1", keys.Secp256k1)
+	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", "m/44'/118'/0'/0/1", keys.Secp256k1)
 	require.NoError(t, err)
 
 	if runningUnattended {

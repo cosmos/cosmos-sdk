@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/tests"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_updateKeyCommand(t *testing.T) {
@@ -39,9 +40,9 @@ func Test_runUpdateCmd(t *testing.T) {
 
 	kb, err := NewKeyBaseFromDir(viper.GetString(flags.FlagHome))
 	assert.NoError(t, err)
-	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", "0", keys.Secp256k1)
+	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", sdk.FullFundraiserPath, keys.Secp256k1)
 	assert.NoError(t, err)
-	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", "1", keys.Secp256k1)
+	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", "m/44'/118'/0'/0/1", keys.Secp256k1)
 	assert.NoError(t, err)
 
 	// Try again now that we have keys

@@ -12,4 +12,11 @@ const (
 
 	// QuerierRoute is the querier route for IBC connections
 	QuerierRoute = SubModuleName
+
+	// KeyNextConnectionSequence is the key used to store the next connection sequence in
+	// the keeper.
+	KeyNextConnectionSequence = "nextConnectionSequence"
+
+	// ConnectionPrefix is the prefix used when creating a connection identifier
+	ConnectionPrefix = "connection"
 )

@@ -12,4 +12,11 @@ const (
 
 	// QuerierRoute is the querier route for IBC channels
 	QuerierRoute = SubModuleName
+
+	// KeyNextChannelSequence is the key used to store the next channel sequence in
+	// the keeper.
+	KeyNextConnectionSequence = "nextChannelSequence"
+
+	// ChannelPrefix is the prefix used when creating a channel identifier
+	ConnectionPrefix = "channel"
 )

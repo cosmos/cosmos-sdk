@@ -550,8 +550,8 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
 	)
 
-	suite.Require().Equal(abci.Event(event1), events[0])
-	suite.Require().Equal(abci.Event(event2), events[1])
+	suite.Require().EqualValues(abci.Event(event1), events[0])
+	suite.Require().EqualValues(abci.Event(event2), events[1])
 
 	app.BankKeeper.SetBalances(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50)))
 	newCoins = sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
@@ -560,8 +560,8 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 
 	events = ctx.EventManager().ABCIEvents()
 	suite.Require().Equal(4, len(events))
-	suite.Require().Equal(abci.Event(event1), events[2])
-	suite.Require().Equal(abci.Event(event2), events[3])
+	suite.Require().EqualValues(abci.Event(event1), events[2])
+	suite.Require().EqualValues(abci.Event(event2), events[3])
 }
 
 func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {

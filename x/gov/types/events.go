@@ -16,7 +16,13 @@ const (
 
 // Governance module event types
 var (
-	EventTypeSubmitProposal  = sdk.GetTypedEventType(&EventSubmitProposal{})
-	EventTypeProposalDeposit = sdk.GetTypedEventType(&EventProposalDeposit{})
-	EventTypeProposalVote    = sdk.GetTypedEventType(&EventVoteProposal{})
+	EventTypeSubmitProposal  string
+	EventTypeProposalDeposit string
+	EventTypeProposalVote    string
 )
+
+func init() {
+	EventTypeSubmitProposal = sdk.GetTypedEventType(&EventSubmitProposal{})
+	EventTypeProposalDeposit = sdk.GetTypedEventType(&EventProposalDeposit{})
+	EventTypeProposalVote = sdk.GetTypedEventType(&EventVoteProposal{})
+}

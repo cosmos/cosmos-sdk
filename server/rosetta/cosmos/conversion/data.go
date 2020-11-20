@@ -65,19 +65,26 @@ func ResultTxSearchToTransaction(txs []*rosetta.SdkTxWithHash) []*types.Transact
 	return converted
 }
 
-// SdkTxResponseToOperations converts a tx response to operations
+// SdkTxToOperations converts a tx response to operations
 func SdkTxToOperations(tx sdk.Tx, withStatus bool) []*types.Operation {
+	operations, feeLen := GetFeeOperationsFromTx(tx, withStatus)
+
+	sendOps := ToOperations(tx.GetMsgs(), false, withStatus, feeLen)
+	operations = append(operations, sendOps...)
+
+	return operations
+}
+
+func GetFeeOperationsFromTx(tx sdk.Tx, withStatus bool) ([]*types.Operation, int) {
 	verifiableTx := tx.(sdk.FeeTx)
 	fee := verifiableTx.GetFee()
-	var feeLen = len(fee)
 	var ops []*types.Operation
 	if fee != nil {
 		var feeOps = GetFeeOpFromCoins(fee, verifiableTx.FeePayer().String(), withStatus)
 		ops = append(ops, feeOps...)
 	}
-	sendOps := ToOperations(tx.GetMsgs(), false, withStatus, feeLen)
-	ops = append(ops, sendOps...)
-	return ops
+
+	return ops, len(fee)
 }
 
 // TendermintTxsToTxIdentifiers converts a tendermint raw transaction into a rosetta tx identifier

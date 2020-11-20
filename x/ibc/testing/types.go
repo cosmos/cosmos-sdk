@@ -2,6 +2,8 @@ package ibctesting
 
 import (
 	"fmt"
+
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 )
 
 // TestConnection is a testing helper struct to keep track of the connectionID, source clientID,
@@ -32,7 +34,7 @@ func (conn *TestConnection) AddTestChannel(portID string) TestChannel {
 //
 // The port is passed in by the caller.
 func (conn *TestConnection) NextTestChannel(portID string) TestChannel {
-	channelID := fmt.Sprintf("%s-%s%d", conn.ID, ChannelIDPrefix, len(conn.Channels))
+	channelID := fmt.Sprintf("%s%d", channeltypes.ChannelPrefix, len(conn.Channels))
 	return TestChannel{
 		PortID:               portID,
 		ID:                   channelID,

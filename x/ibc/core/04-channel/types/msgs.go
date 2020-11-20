@@ -18,7 +18,7 @@ func NewMsgChannelOpenInit(
 	portID, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID string, signer sdk.AccAddress,
 ) *MsgChannelOpenInit {
-	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
+	counterparty := NewCounterparty(counterpartyPortID, "")
 	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
 	return &MsgChannelOpenInit{
 		PortId:  portID,
@@ -47,6 +47,9 @@ func (msg MsgChannelOpenInit) ValidateBasic() error {
 			"channel state must be INIT in MsgChannelOpenInit. expected: %s, got: %s",
 			INIT, msg.Channel.State,
 		)
+	}
+	if msg.Channel.Counterparty.ChannelId != "" {
+		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty channel identifier must be empty")
 	}
 	_, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
@@ -79,7 +82,7 @@ func NewMsgChannelOpenTry(
 	counterpartyPortID, counterpartyChannelID, counterpartyVersion string,
 	proofInit []byte, proofHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgChannelOpenTry {
-	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
+	counterparty := NewCounterparty(counterpartyPortID, "")
 	channel := NewChannel(TRYOPEN, channelOrder, counterparty, connectionHops, version)
 	return &MsgChannelOpenTry{
 		PortId:              portID,
@@ -109,6 +112,9 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 	}
 	if err := host.ChannelIdentifierValidator(msg.DesiredChannelId); err != nil {
 		return sdkerrors.Wrap(err, "invalid desired channel ID")
+	}
+	if msg.Channel.Counterparty.ChannelId != "" {
+		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty channel identifier must be empty")
 	}
 	if len(msg.ProofInit) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof init")

@@ -52,7 +52,6 @@ func (k Keeper) GenerateConnectionIdentifier(ctx sdk.Context) string {
 
 	nextConnSeq++
 	k.SetNextConnectionSequence(ctx, nextConnSeq)
-
 	return connectionID
 }
 

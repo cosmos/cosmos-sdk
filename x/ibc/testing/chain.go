@@ -388,7 +388,7 @@ func (chain *TestChain) AddTestConnection(clientID, counterpartyClientID string)
 // created given a clientID and counterparty clientID. The connection id
 // format: <chainID>-conn<index>
 func (chain *TestChain) ConstructNextTestConnection(clientID, counterpartyClientID string) *TestConnection {
-	connectionID := fmt.Sprintf("%s-%s%d", chain.ChainID, ConnectionIDPrefix, len(chain.Connections))
+	connectionID := fmt.Sprintf("%s%d", connectiontypes.ConnectionPrefix, len(chain.Connections))
 	return &TestConnection{
 		ID:                   connectionID,
 		ClientID:             clientID,

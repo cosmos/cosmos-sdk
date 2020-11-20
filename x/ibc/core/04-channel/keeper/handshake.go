@@ -34,7 +34,8 @@ func (k Keeper) CounterpartyHops(ctx sdk.Context, ch types.Channel) ([]string, b
 }
 
 // ChanOpenInit is called by a module to initiate a channel opening handshake with
-// a module on another chain.
+// a module on another chain. The counterparty channel identifier is validated to be
+// empty in msg validation.
 func (k Keeper) ChanOpenInit(
 	ctx sdk.Context,
 	order types.Order,
@@ -112,10 +113,12 @@ func (k Keeper) ChanOpenTry(
 	if found && !(previousChannel.State == types.INIT &&
 		previousChannel.Ordering == order &&
 		previousChannel.Counterparty.PortId == counterparty.PortId &&
-		previousChannel.Counterparty.ChannelId == counterparty.ChannelId &&
+		previousChannel.Counterparty.ChannelId == "" &&
 		previousChannel.ConnectionHops[0] == connectionHops[0] &&
 		previousChannel.Version == version) {
 		return nil, sdkerrors.Wrap(types.ErrInvalidChannel, "cannot relay connection attempt")
+	} else {
+		desiredChannelID = k.GenerateChannelIdentifier(ctx)
 	}
 
 	if !k.portKeeper.Authenticate(ctx, portCap, portID) {
@@ -238,16 +241,6 @@ func (k Keeper) ChanOpenAck(
 
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) {
 		return sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel, port ID (%s) channel ID (%s)", portID, channelID)
-	}
-
-	// If the previously set channel end allowed for the counterparty to select its own
-	// channel identifier then we use the counterpartyChannelID. Otherwise the
-	// counterpartyChannelID must match the previously set counterparty channel ID.
-	if channel.Counterparty.ChannelId != "" && counterpartyChannelID != channel.Counterparty.ChannelId {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidChannelIdentifier,
-			"counterparty channel identifier (%s) must be equal to stored channel ID for counterparty (%s)", counterpartyChannelID, channel.Counterparty.ChannelId,
-		)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])

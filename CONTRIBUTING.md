@@ -324,7 +324,7 @@ the community of this project.
 
 ## Point Release Procedure
 
-*   3 Stages ([Original Document](https://docs.google.com/document/d/1GkVMUyOY6RmFGBjG0ZkBu_Y7wDunYWukkEjFOsejqYA/edit?ts=5eede440#))
+*   3 Stages
     *   **Strategy Discovery**
         *   Develop long term priorities, strategy and roadmap for the SDK
         *   Release committee not yet defined as there is already a roadmap that can be used for the time being

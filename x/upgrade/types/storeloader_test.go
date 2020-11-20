@@ -146,8 +146,11 @@ func TestSetLoader(t *testing.T) {
 			require.NotNil(t, res.Data)
 
 			// check db is properly updated
+			if tc.setLoader != nil {
+				checkStore(t, db, upgradeHeight, tc.origStoreKey, k, nil)
+
+			}
 			checkStore(t, db, upgradeHeight, tc.loadStoreKey, k, v)
-			checkStore(t, db, upgradeHeight, tc.loadStoreKey, []byte("foo"), nil)
 		})
 	}
 }

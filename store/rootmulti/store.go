@@ -219,7 +219,9 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 				return errors.Wrapf(err, "failed to load old store %s", oldName)
 			}
 
-			// move all data
+			// Note: add the deleted store, otherwise it will not be committed,
+			newStores[oldKey] = oldStore
+
 			if err := moveKVStoreData(oldStore.(types.KVStore), store.(types.KVStore)); err != nil {
 				return errors.Wrapf(err, "failed to move store %s -> %s", oldName, key.Name())
 			}

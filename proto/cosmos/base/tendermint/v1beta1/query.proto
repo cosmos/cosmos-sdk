@@ -68,6 +68,7 @@ message GetLatestValidatorSetResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
 }
 
+// Validator is the type for the validator-set.
 message Validator {
   bytes  address           = 1;
   string pub_key           = 2;
@@ -109,9 +110,10 @@ message GetNodeInfoRequest {}
 // GetNodeInfoResponse is the request type for the Query/GetNodeInfo RPC method.
 message GetNodeInfoResponse {
   tendermint.p2p.DefaultNodeInfo default_node_info  = 1;
-  VersionInfo                    ApplicationVersion = 2;
+  VersionInfo                    application_version = 2;
 }
 
+// VersionInfo is the type for the GetNodeInfoResponse message.
 message VersionInfo {
   string name       = 1;
   string app_name   = 2;

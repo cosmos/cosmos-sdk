@@ -2,7 +2,6 @@ package tmservice
 
 import (
 	"context"
-	"fmt"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -12,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	pagination "github.com/cosmos/cosmos-sdk/types/query"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -59,6 +57,7 @@ func (s queryServer) GetLatestBlock(context.Context, *qtypes.GetLatestBlockReque
 	}, nil
 }
 
+// GetBlockByHeight implements ServiceServer.GetBlockByHeight
 func (s queryServer) GetBlockByHeight(_ context.Context, req *qtypes.GetBlockByHeightRequest) (*qtypes.GetBlockByHeightResponse, error) {
 	chainHeight, err := rpc.GetChainHeight(s.clientCtx)
 	if err != nil {
@@ -84,6 +83,7 @@ func (s queryServer) GetBlockByHeight(_ context.Context, req *qtypes.GetBlockByH
 	}, nil
 }
 
+// GetLatestValidatorSet implements ServiceServer.GetLatestValidatorSet
 func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *qtypes.GetLatestValidatorSetRequest) (*qtypes.GetLatestValidatorSetResponse, error) {
 	offset := int(req.Pagination.Offset)
 	limit := int(req.Pagination.Limit)
@@ -94,7 +94,7 @@ func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *qtypes.GetL
 	if limit < 0 {
 		return nil, status.Error(codes.InvalidArgument, "limit must greater than 0")
 	} else if limit == 0 {
-		limit = pagination.DefaultLimit
+		limit = qtypes.DefaultLimit
 	}
 
 	page := offset/limit + 1
@@ -119,6 +119,7 @@ func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *qtypes.GetL
 	return outputValidatorsRes, nil
 }
 
+// GetValidatorSetByHeight implements ServiceServer.GetValidatorSetByHeight
 func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *qtypes.GetValidatorSetByHeightRequest) (*qtypes.GetValidatorSetByHeightResponse, error) {
 	offset := int(req.Pagination.Offset)
 	limit := int(req.Pagination.Limit)
@@ -129,12 +130,10 @@ func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *qtypes.Ge
 	if limit < 0 {
 		return nil, status.Error(codes.InvalidArgument, "limit must greater than 0")
 	} else if limit == 0 {
-		limit = pagination.DefaultLimit
+		limit = qtypes.DefaultLimit
 	}
 
 	page := offset/limit + 1
-
-	fmt.Println("Page = ", page, " Limit = ", limit)
 
 	chainHeight, err := rpc.GetChainHeight(s.clientCtx)
 	if err != nil {
@@ -145,6 +144,10 @@ func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *qtypes.Ge
 	}
 
 	validatorsRes, err := rpc.GetValidators(s.clientCtx, &req.Height, &page, &limit)
+
+	if err != nil {
+		return nil, err
+	}
 
 	outputValidatorsRes := &qtypes.GetValidatorSetByHeightResponse{
 		BlockHeight: validatorsRes.BlockHeight,
@@ -162,6 +165,7 @@ func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *qtypes.Ge
 	return outputValidatorsRes, nil
 }
 
+// GetNodeInfo implements ServiceServer.GetNodeInfo
 func (s queryServer) GetNodeInfo(ctx context.Context, req *qtypes.GetNodeInfoRequest) (*qtypes.GetNodeInfoResponse, error) {
 	status, err := getNodeStatus(s.clientCtx)
 	if err != nil {

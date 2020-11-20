@@ -390,8 +390,6 @@ func (s *IntegrationTestSuite) TestLegacyRestErrMessages() {
 			txJSON, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
-			fmt.Println(string(txJSON))
-
 			var errResp rest.ErrorResponse
 			s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(txJSON, &errResp))
 

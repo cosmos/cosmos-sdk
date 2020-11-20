@@ -17,7 +17,13 @@ import (
 	genutilrest "github.com/cosmos/cosmos-sdk/x/genutil/client/rest"
 )
 
-const unRegisteredConcreteTypeErr = "unregistered concrete type"
+// knownErrors are errors that happen on unmarshalling new proto-only txs using
+// amino. Also see https://github.com/cosmos/cosmos-sdk/issues/7639.
+var knownErrors = []string{
+	"unregistered interface",
+	"unregistered concrete type",
+	"wrong SignMode. Expected SIGN_MODE_LEGACY_AMINO_JSON, got SIGN_MODE_DIRECT",
+}
 
 // query accountREST Handler
 func QueryAccountRequestHandlerFn(storeName string, clientCtx client.Context) http.HandlerFunc {
@@ -109,9 +115,10 @@ func QueryTxsRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			packStdTxResponse(w, clientCtx, txRes)
 		}
 
-		err = checkSignModeError(w, clientCtx, searchResult, "/cosmos/tx/v1beta1/txs")
+		err = checkSignModeError(clientCtx, searchResult, "/cosmos/tx/v1beta1/txs")
 		if err != nil {
-			// Error is already returned by checkSignModeError.
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+
 			return
 		}
 
@@ -151,9 +158,10 @@ func QueryTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusNotFound, fmt.Sprintf("no transaction found with hash %s", hashHexStr))
 		}
 
-		err = checkSignModeError(w, clientCtx, output, "/cosmos/tx/v1beta1/tx/{txhash}")
+		err = checkSignModeError(clientCtx, output, "/cosmos/tx/v1beta1/tx/{txhash}")
 		if err != nil {
-			// Error is already returned by checkSignModeError.
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+
 			return
 		}
 
@@ -197,16 +205,27 @@ func packStdTxResponse(w http.ResponseWriter, clientCtx client.Context, txRes *s
 	return nil
 }
 
-func checkSignModeError(w http.ResponseWriter, ctx client.Context, resp interface{}, grpcEndPoint string) error {
+// checkSignModeError checks if there are errors with marshalling proto-only
+// txs with amino.
+func checkSignModeError(ctx client.Context, resp interface{}, grpcEndPoint string) error {
 	// LegacyAmino used intentionally here to handle the SignMode errors
 	marshaler := ctx.LegacyAmino
 
 	_, err := marshaler.MarshalJSON(resp)
-	if err != nil && strings.Contains(err.Error(), unRegisteredConcreteTypeErr) {
-		rest.WriteErrorResponse(w, http.StatusInternalServerError,
-			"This transaction was created with the new SIGN_MODE_DIRECT signing method, and therefore cannot be displayed"+
+	if err != nil {
+		isKnownError := false
+		for _, knownError := range knownErrors {
+			if strings.Contains(err.Error(), knownError) {
+				isKnownError = true
+			}
+		}
+
+		if isKnownError {
+			return fmt.Errorf("This transaction was created with the new SIGN_MODE_DIRECT signing method, and therefore cannot be displayed"+
 				" via legacy REST handlers. Please either use CLI, gRPC, gRPC-gateway, or directly query the Tendermint RPC"+
-				" endpoint to query this transaction. The new REST endpoint (via gRPC-gateway) is "+grpcEndPoint)
+				" endpoint to query this transaction. The new REST endpoint (via gRPC-gateway) is %s", grpcEndPoint)
+		}
+
 		return err
 	}
 

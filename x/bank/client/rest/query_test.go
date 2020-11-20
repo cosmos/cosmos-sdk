@@ -97,6 +97,7 @@ func (s *IntegrationTestSuite) TestQueryBalancesRequestHandlerFn() {
 			if tc.expHeight >= 0 {
 				s.Require().Equal(resp.Height, tc.expHeight)
 			} else {
+				// To avoid flakiness, just test that height is positive.
 				s.Require().Greater(resp.Height, int64(0))
 			}
 

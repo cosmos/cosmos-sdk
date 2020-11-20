@@ -50,11 +50,12 @@ func QueryBalancesRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		res, _, err := ctx.QueryWithData(route, bz)
+		res, height, err := ctx.QueryWithData(route, bz)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
 
+		ctx = ctx.WithHeight(height)
 		rest.PostProcessResponse(w, ctx, res)
 	}
 }

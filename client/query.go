@@ -102,11 +102,6 @@ func (ctx Context) query(path string, key tmbytes.HexBytes) ([]byte, int64, erro
 		return nil, 0, err
 	}
 
-	// If `ctx.Height` was 0, it means we queried data for the latest height,
-	// so we populate the height back in ctx. If `ctx.Height` wasn't 0, this
-	// doesn't change `ctx.Height`.
-	ctx = ctx.WithHeight(resp.Height)
-
 	return resp.Value, resp.Height, nil
 }
 

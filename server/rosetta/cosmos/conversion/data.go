@@ -58,7 +58,7 @@ func ResultTxSearchToTransaction(txs []*rosetta.SdkTxWithHash) []*types.Transact
 		// hasError := tx.Code > 0
 		converted[i] = &types.Transaction{
 			TransactionIdentifier: &types.TransactionIdentifier{Hash: tx.HexHash},
-			Operations:            SdkTxToOperations(tx.Tx, false, true),
+			Operations:            SdkTxToOperations(tx.Tx, true),
 			Metadata:              nil,
 		}
 	}
@@ -66,7 +66,7 @@ func ResultTxSearchToTransaction(txs []*rosetta.SdkTxWithHash) []*types.Transact
 }
 
 // SdkTxResponseToOperations converts a tx response to operations
-func SdkTxToOperations(tx sdk.Tx, hasError, withStatus bool) []*types.Operation {
+func SdkTxToOperations(tx sdk.Tx, withStatus bool) []*types.Operation {
 	verifiableTx := tx.(sdk.FeeTx)
 	fee := verifiableTx.GetFee()
 	var feeLen = len(fee)

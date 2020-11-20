@@ -358,15 +358,9 @@ func (cs ClientState) VerifyPacketCommitment(
 		return err
 	}
 
-	// check that executing chain's timestamp has passed consensusState's processed time + delay period
-	processedTime, ok := GetProcessedTime(store, height)
-	if !ok {
-		return sdkerrors.Wrapf(ErrProcessedTimeNotFound, "processed time not found for height: %s", height)
-	}
-	validTime := processedTime + delayPeriod
-	if validTime > currentTimestamp {
-		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %d, current time: %d",
-			validTime, currentTimestamp)
+	// check delay period has passed
+	if err := verifyDelayPeriodPassed(store, height, currentTimestamp, delayPeriod); err != nil {
+		return err
 	}
 
 	commitmentPath := commitmenttypes.NewMerklePath(host.PacketCommitmentPath(portID, channelID, sequence))
@@ -402,15 +396,9 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		return err
 	}
 
-	// check that executing chain's timestamp has passed consensusState's processed time + delay period
-	processedTime, ok := GetProcessedTime(store, height)
-	if !ok {
-		return sdkerrors.Wrapf(ErrProcessedTimeNotFound, "processed time not found for height: %s", height)
-	}
-	validTime := processedTime + delayPeriod
-	if validTime > currentTimestamp {
-		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %d, current time: %d",
-			validTime, currentTimestamp)
+	// check delay period has passed
+	if err := verifyDelayPeriodPassed(store, height, currentTimestamp, delayPeriod); err != nil {
+		return err
 	}
 
 	ackPath := commitmenttypes.NewMerklePath(host.PacketAcknowledgementPath(portID, channelID, sequence))
@@ -446,15 +434,9 @@ func (cs ClientState) VerifyPacketReceiptAbsence(
 		return err
 	}
 
-	// check that executing chain's timestamp has passed consensusState's processed time + delay period
-	processedTime, ok := GetProcessedTime(store, height)
-	if !ok {
-		return sdkerrors.Wrapf(ErrProcessedTimeNotFound, "processed time not found for height: %s", height)
-	}
-	validTime := processedTime + delayPeriod
-	if validTime > currentTimestamp {
-		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %d, current time: %d",
-			validTime, currentTimestamp)
+	// check delay period has passed
+	if err := verifyDelayPeriodPassed(store, height, currentTimestamp, delayPeriod); err != nil {
+		return err
 	}
 
 	receiptPath := commitmenttypes.NewMerklePath(host.PacketReceiptPath(portID, channelID, sequence))
@@ -489,15 +471,9 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		return err
 	}
 
-	// check that executing chain's timestamp has passed consensusState's processed time + delay period
-	processedTime, ok := GetProcessedTime(store, height)
-	if !ok {
-		return sdkerrors.Wrapf(ErrProcessedTimeNotFound, "processed time not found for height: %s", height)
-	}
-	validTime := processedTime + delayPeriod
-	if validTime > currentTimestamp {
-		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %d, current time: %d",
-			validTime, currentTimestamp)
+	// check delay period has passed
+	if err := verifyDelayPeriodPassed(store, height, currentTimestamp, delayPeriod); err != nil {
+		return err
 	}
 
 	nextSequenceRecvPath := commitmenttypes.NewMerklePath(host.NextSequenceRecvPath(portID, channelID))
@@ -512,6 +488,20 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		return err
 	}
 
+	return nil
+}
+
+func verifyDelayPeriodPassed(store sdk.KVStore, proofHeight exported.Height, currentTimestamp, delayPeriod uint64) error {
+	// check that executing chain's timestamp has passed consensusState's processed time + delay period
+	processedTime, ok := GetProcessedTime(store, proofHeight)
+	if !ok {
+		return sdkerrors.Wrapf(ErrProcessedTimeNotFound, "processed time not found for height: %s", proofHeight)
+	}
+	validTime := processedTime + delayPeriod
+	if validTime > currentTimestamp {
+		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %d, current time: %d",
+			validTime, currentTimestamp)
+	}
 	return nil
 }
 

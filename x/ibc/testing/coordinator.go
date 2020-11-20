@@ -299,9 +299,17 @@ func (coord *Coordinator) RelayPacket(
 	sourceClient, counterpartyClient string,
 	packet channeltypes.Packet, ack []byte,
 ) error {
+	// increment receiving chain's (chainB) time by delay period always pass receive
+	coord.IncrementTimeBy(time.Duration(packet.GetDelayPeriod()))
+	coord.CommitBlock(counterparty)
+
 	if err := coord.RecvPacket(source, counterparty, sourceClient, packet); err != nil {
 		return err
 	}
+
+	// increment receiving chain's (chainB) time by delay period always pass receive
+	coord.IncrementTimeBy(time.Duration(packet.GetDelayPeriod()))
+	coord.CommitBlock(source)
 
 	return coord.AcknowledgePacket(source, counterparty, counterpartyClient, packet, ack)
 }

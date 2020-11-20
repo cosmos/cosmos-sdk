@@ -67,15 +67,18 @@ func ResultTxSearchToTransaction(txs []*rosetta.SdkTxWithHash) []*types.Transact
 
 // SdkTxToOperations converts a tx response to operations
 func SdkTxToOperations(tx sdk.Tx, withStatus bool) []*types.Operation {
-	operations, feeLen := GetFeeOperationsFromTx(tx, withStatus)
+	var operations []*types.Operation
 
-	sendOps := ToOperations(tx.GetMsgs(), false, withStatus, feeLen)
+	feeOps := GetFeeOperationsFromTx(tx, withStatus)
+	operations = append(operations, feeOps...)
+
+	sendOps := SdkMsgsToOperations(tx.GetMsgs(), false, withStatus, len(feeOps))
 	operations = append(operations, sendOps...)
 
 	return operations
 }
 
-func GetFeeOperationsFromTx(tx sdk.Tx, withStatus bool) ([]*types.Operation, int) {
+func GetFeeOperationsFromTx(tx sdk.Tx, withStatus bool) []*types.Operation {
 	verifiableTx := tx.(sdk.FeeTx)
 	feeCoins := verifiableTx.GetFee()
 	var ops []*types.Operation
@@ -84,7 +87,7 @@ func GetFeeOperationsFromTx(tx sdk.Tx, withStatus bool) ([]*types.Operation, int
 		ops = append(ops, feeOps...)
 	}
 
-	return ops, len(feeCoins)
+	return ops
 }
 
 // TendermintTxsToTxIdentifiers converts a tendermint raw transaction into a rosetta tx identifier
@@ -104,7 +107,7 @@ func TendermintBlockToBlockIdentifier(block *tmcoretypes.ResultBlock) *types.Blo
 	}
 }
 
-func ToOperations(msgs []sdk.Msg, hasError bool, withStatus bool, feeLen int) []*types.Operation {
+func SdkMsgsToOperations(msgs []sdk.Msg, hasError bool, withStatus bool, feeLen int) []*types.Operation {
 	var operations []*types.Operation
 	var status string
 	for i, msg := range msgs {

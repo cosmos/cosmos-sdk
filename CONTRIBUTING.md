@@ -321,3 +321,42 @@ stripped with no prior warning or consent from the member in question.
 Earning this privilege should be considered to be no small feat and is by no
 means guaranteed by any quantifiable metric. It is a symbol of great trust of
 the community of this project.
+
+## Point Release Procedure
+
+*   3 Stages ([Original Document](https://docs.google.com/document/d/1GkVMUyOY6RmFGBjG0ZkBu_Y7wDunYWukkEjFOsejqYA/edit?ts=5eede440#))
+    *   **Strategy Discovery**
+        *   Develop long term priorities, strategy and roadmap for the SDK
+        *   Release committee not yet defined as there is already a roadmap that can be used for the time being
+    *   **Concept Approval**
+        *   Time bound period for Request for Comment (RFC) on Architectural Decision Records (ADR)
+        *   Release committee criteria
+            *   Participation in all or almost all ADR discussions
+            *   Are they already active contributors?
+                *   Are they constantly making substantial contributions to the project's codebase, review process, documentation or RFC?
+            *   Do they have a stake in the Cosmos SDK?
+                *   Are they a client of the SDK?
+                *   Are they “[giving back](https://www.debian.org/social_contract)” to the software?
+            *   Code owners need to maintain participation in a process
+                *   Delegate representation in case of vacation or absence
+            *   ⅔ approval from these initial three
+                *   **Aaron** (Regen), **Bez** (Fission), **Alessio** (AiB)
+            *   Secondary pool of candidates to replace / substitute
+                *   **Chris Goes** (IG), **Sunny** (Sikka)
+            *   Removal
+                *   Missing 3 meetings results in ICF evaluating whether the member should be removed / replaced
+                *   Violation of Code of Conduct
+    *   **Implementation & Release Approval**
+        *   Ensure the PR does exactly what the ADR said it should
+        *   More senior engineering capability
+        *   ⅔ approval from these initial three
+            *   **Aaron**, **Bez** & **Alessio**
+        *   Secondary pool of candidates to replace / substitute
+            *   **Marko**, **Federico**, **Jonathan** **&** **Cory**
+        *   Removal
+            *   Missing 3 meetings results in ICF evaluating whether the member should be removed / replaced
+            *   Violation of Code of Conduct
+*   Addition to committee can be recommended by anyone to the current group or the ICF directly
+    *   The evaluation criteria will be considered and the committee will decide on the addition with final approval from the ICF
+
+

@@ -121,5 +121,14 @@ message VersionInfo {
   string git_commit = 4;
   string build_tags = 5;
   string go_version = 6;
-  // TODO add build_deps
+  repeated Module build_deps = 7;
+}
+
+message Module {
+  // module path
+  string path    = 1;
+  // module version
+	string version = 2;
+  //checksum
+	string sum     = 3;
 }

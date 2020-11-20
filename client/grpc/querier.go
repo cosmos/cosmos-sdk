@@ -31,6 +31,7 @@ func NewQueryServer(clientCtx client.Context, interfaceRegistry codectypes.Inter
 	}
 }
 
+// GetSyncing implements ServiceServer.GetSyncing
 func (s queryServer) GetSyncing(context.Context, *qtypes.GetSyncingRequest) (*qtypes.GetSyncingResponse, error) {
 	status, err := getNodeStatus(s.clientCtx)
 	if err != nil {
@@ -41,6 +42,7 @@ func (s queryServer) GetSyncing(context.Context, *qtypes.GetSyncingRequest) (*qt
 	}, nil
 }
 
+// GetLatestBlock implements ServiceServer.GetLatestBlock
 func (s queryServer) GetLatestBlock(context.Context, *qtypes.GetLatestBlockRequest) (*qtypes.GetLatestBlockResponse, error) {
 	status, err := getBlock(s.clientCtx, nil)
 	if err != nil {
@@ -90,7 +92,6 @@ func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *qtypes.GetL
 	if offset < 0 {
 		return nil, status.Error(codes.InvalidArgument, "offset must greater than 0")
 	}
-
 	if limit < 0 {
 		return nil, status.Error(codes.InvalidArgument, "limit must greater than 0")
 	} else if limit == 0 {
@@ -119,7 +120,7 @@ func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *qtypes.GetL
 	return outputValidatorsRes, nil
 }
 
-// GetValidatorSetByHeight implements ServiceServer.GetValidatorSetByHeight
+// // GetValidatorSetByHeight implements ServiceServer.GetValidatorSetByHeight
 func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *qtypes.GetValidatorSetByHeightRequest) (*qtypes.GetValidatorSetByHeightResponse, error) {
 	offset := int(req.Pagination.Offset)
 	limit := int(req.Pagination.Limit)
@@ -175,6 +176,16 @@ func (s queryServer) GetNodeInfo(ctx context.Context, req *qtypes.GetNodeInfoReq
 	protoNodeInfo := status.NodeInfo.ToProto()
 	nodeInfo := version.NewInfo()
 
+	deps := make([]*qtypes.Module, len(nodeInfo.BuildDeps))
+
+	for i, dep := range nodeInfo.BuildDeps {
+		deps[i] = &qtypes.Module{
+			Path:    dep.Path,
+			Sum:     dep.Sum,
+			Version: dep.Version,
+		}
+	}
+
 	resp := qtypes.GetNodeInfoResponse{
 		DefaultNodeInfo: protoNodeInfo,
 		ApplicationVersion: &qtypes.VersionInfo{
@@ -184,6 +195,7 @@ func (s queryServer) GetNodeInfo(ctx context.Context, req *qtypes.GetNodeInfoReq
 			GoVersion: nodeInfo.GoVersion,
 			Version:   nodeInfo.Version,
 			BuildTags: nodeInfo.BuildTags,
+			BuildDeps: deps,
 		},
 	}
 	return &resp, nil

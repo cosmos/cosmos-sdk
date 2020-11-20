@@ -107,7 +107,7 @@ func (k Keeper) ChanOpenTry(
 	counterpartyVersion string,
 	proofInit []byte,
 	proofHeight exported.Height,
-) (*capabilitytypes.Capability, error) {
+) (string, *capabilitytypes.Capability, error) {
 	// channel identifier and connection hop length checked on msg.ValidateBasic()
 	previousChannel, found := k.GetChannel(ctx, portID, desiredChannelID)
 	if found && !(previousChannel.State == types.INIT &&
@@ -116,29 +116,29 @@ func (k Keeper) ChanOpenTry(
 		previousChannel.Counterparty.ChannelId == "" &&
 		previousChannel.ConnectionHops[0] == connectionHops[0] &&
 		previousChannel.Version == version) {
-		return nil, sdkerrors.Wrap(types.ErrInvalidChannel, "cannot relay connection attempt")
+		return "", nil, sdkerrors.Wrap(types.ErrInvalidChannel, "cannot relay connection attempt")
 	} else {
 		desiredChannelID = k.GenerateChannelIdentifier(ctx)
 	}
 
 	if !k.portKeeper.Authenticate(ctx, portCap, portID) {
-		return nil, sdkerrors.Wrapf(porttypes.ErrInvalidPort, "caller does not own port capability for port ID %s", portID)
+		return "", nil, sdkerrors.Wrapf(porttypes.ErrInvalidPort, "caller does not own port capability for port ID %s", portID)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
 	if !found {
-		return nil, sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, connectionHops[0])
+		return "", nil, sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, connectionHops[0])
 	}
 
 	if connectionEnd.GetState() != int32(connectiontypes.OPEN) {
-		return nil, sdkerrors.Wrapf(
+		return "", nil, sdkerrors.Wrapf(
 			connectiontypes.ErrInvalidConnectionState,
 			"connection state is not OPEN (got %s)", connectiontypes.State(connectionEnd.GetState()).String(),
 		)
 	}
 
 	if len(connectionEnd.GetVersions()) != 1 {
-		return nil, sdkerrors.Wrapf(
+		return "", nil, sdkerrors.Wrapf(
 			connectiontypes.ErrInvalidVersion,
 			"single version must be negotiated on connection before opening channel, got: %v",
 			connectionEnd.GetVersions(),
@@ -146,7 +146,7 @@ func (k Keeper) ChanOpenTry(
 	}
 
 	if !connectiontypes.VerifySupportedFeature(connectionEnd.GetVersions()[0], order.String()) {
-		return nil, sdkerrors.Wrapf(
+		return "", nil, sdkerrors.Wrapf(
 			connectiontypes.ErrInvalidVersion,
 			"connection version %s does not support channel ordering: %s",
 			connectionEnd.GetVersions()[0], order.String(),
@@ -175,7 +175,7 @@ func (k Keeper) ChanOpenTry(
 		ctx, connectionEnd, proofHeight, proofInit,
 		counterparty.PortId, counterparty.ChannelId, expectedChannel,
 	); err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
 	var (
@@ -188,7 +188,7 @@ func (k Keeper) ChanOpenTry(
 	if !found {
 		capKey, err = k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, desiredChannelID))
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, desiredChannelID)
+			return "", nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, desiredChannelID)
 		}
 
 		k.SetNextSequenceSend(ctx, portID, desiredChannelID, 1)
@@ -198,7 +198,7 @@ func (k Keeper) ChanOpenTry(
 		// capability initialized in ChanOpenInit
 		capKey, found = k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, desiredChannelID))
 		if !found {
-			return nil, sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound,
+			return "", nil, sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound,
 				"capability not found for existing channel, portID (%s) channelID (%s)", portID, desiredChannelID,
 			)
 		}
@@ -212,7 +212,7 @@ func (k Keeper) ChanOpenTry(
 		telemetry.IncrCounter(1, "ibc", "channel", "open-try")
 	}()
 
-	return capKey, nil
+	return desiredChannelID, capKey, nil
 }
 
 // ChanOpenAck is called by the handshake-originating module to acknowledge the

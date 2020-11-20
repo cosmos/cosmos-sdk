@@ -107,7 +107,7 @@ func (k Keeper) ConnOpenTry(
 		previousConnection.ClientId == clientID &&
 		previousConnection.Counterparty.ClientId == counterparty.ClientId) {
 		return sdkerrors.Wrap(types.ErrInvalidConnection, "cannot relay connection attempt")
-	} else {
+	} else if !found {
 		connectionID = k.GenerateConnectionIdentifier(ctx)
 	}
 

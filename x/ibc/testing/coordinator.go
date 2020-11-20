@@ -461,8 +461,8 @@ func (coord *Coordinator) ChanOpenInit(
 	sourcePortID, counterpartyPortID string,
 	order channeltypes.Order,
 ) (TestChannel, TestChannel, error) {
-	sourceChannel := connection.AddTestChannel(sourcePortID)
-	counterpartyChannel := counterpartyConnection.AddTestChannel(counterpartyPortID)
+	sourceChannel := source.AddTestChannel(connection, sourcePortID)
+	counterpartyChannel := counterparty.AddTestChannel(counterpartyConnection, counterpartyPortID)
 
 	// NOTE: only creation of a capability for a transfer or mock port is supported
 	// Other applications must bind to the port in InitGenesis or modify this code.
@@ -494,8 +494,8 @@ func (coord *Coordinator) ChanOpenInitOnBothChains(
 	sourcePortID, counterpartyPortID string,
 	order channeltypes.Order,
 ) (TestChannel, TestChannel, error) {
-	sourceChannel := connection.AddTestChannel(sourcePortID)
-	counterpartyChannel := counterpartyConnection.AddTestChannel(counterpartyPortID)
+	sourceChannel := source.AddTestChannel(connection, sourcePortID)
+	counterpartyChannel := counterparty.AddTestChannel(counterpartyConnection, counterpartyPortID)
 
 	// NOTE: only creation of a capability for a transfer or mock port is supported
 	// Other applications must bind to the port in InitGenesis or modify this code.

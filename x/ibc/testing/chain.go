@@ -407,6 +407,34 @@ func (chain *TestChain) GetFirstTestConnection(clientID, counterpartyClientID st
 	return chain.ConstructNextTestConnection(clientID, counterpartyClientID)
 }
 
+// AddTestChannel appends a new TestChannel which contains references to the port and channel ID
+// used for channel creation and interaction. See 'NextTestChannel' for channel ID naming format.
+func (chain *TestChain) AddTestChannel(conn *TestConnection, portID string) TestChannel {
+	channel := chain.NextTestChannel(conn, portID)
+	conn.Channels = append(conn.Channels, channel)
+	return channel
+}
+
+// NextTestChannel returns the next test channel to be created on this connection, but does not
+// add it to the list of created channels. This function is expected to be used when the caller
+// has not created the associated channel in app state, but would still like to refer to the
+// non-existent channel usually to test for its non-existence.
+//
+// channel ID format: <connectionid>-chan<channel-index>
+//
+// The port is passed in by the caller.
+func (chain *TestChain) NextTestChannel(conn *TestConnection, portID string) TestChannel {
+	nextChanSeq := chain.App.IBCKeeper.ChannelKeeper.GetNextChannelSequence(chain.GetContext())
+	channelID := fmt.Sprintf("%s%d", channeltypes.ChannelPrefix, nextChanSeq)
+	return TestChannel{
+		PortID:               portID,
+		ID:                   channelID,
+		ClientID:             conn.ClientID,
+		CounterpartyClientID: conn.CounterpartyClientID,
+		Version:              conn.NextChannelVersion,
+	}
+}
+
 // ConstructMsgCreateClient constructs a message to create a new client state (tendermint or solomachine).
 // NOTE: a solo machine client will be created with an empty diversifier.
 func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, clientID string, clientType string) *clienttypes.MsgCreateClient {

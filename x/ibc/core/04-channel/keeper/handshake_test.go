@@ -34,8 +34,8 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 		{"success", func() {
 			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 			features = []string{"ORDER_ORDERED", "ORDER_UNORDERED"}
-			suite.chainA.CreatePortCapability(connA.NextTestChannel(ibctesting.MockPort).PortID)
-			portCap = suite.chainA.GetPortCapability(connA.NextTestChannel(ibctesting.MockPort).PortID)
+			suite.chainA.CreatePortCapability(suite.chainA.NextTestChannel(connA, ibctesting.MockPort).PortID)
+			portCap = suite.chainA.GetPortCapability(suite.chainA.NextTestChannel(connA, ibctesting.MockPort).PortID)
 		}, true},
 		{"channel already exists", func() {
 			_, _, connA, connB, _, _ = suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
@@ -64,8 +64,8 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 				connA.ID, conn,
 			)
 			features = []string{"ORDER_ORDERED", "ORDER_UNORDERED"}
-			suite.chainA.CreatePortCapability(connA.NextTestChannel(ibctesting.MockPort).PortID)
-			portCap = suite.chainA.GetPortCapability(connA.NextTestChannel(ibctesting.MockPort).PortID)
+			suite.chainA.CreatePortCapability(suite.chainA.NextTestChannel(connA, ibctesting.MockPort).PortID)
+			portCap = suite.chainA.GetPortCapability(suite.chainA.NextTestChannel(connA, ibctesting.MockPort).PortID)
 		}, false},
 		{"connection does not support ORDERED channels", func() {
 			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
@@ -82,8 +82,8 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 			)
 			// NOTE: Opening UNORDERED channels is still expected to pass but ORDERED channels should fail
 			features = []string{"ORDER_UNORDERED"}
-			suite.chainA.CreatePortCapability(connA.NextTestChannel(ibctesting.MockPort).PortID)
-			portCap = suite.chainA.GetPortCapability(connA.NextTestChannel(ibctesting.MockPort).PortID)
+			suite.chainA.CreatePortCapability(suite.chainA.NextTestChannel(connA, ibctesting.MockPort).PortID)
+			portCap = suite.chainA.GetPortCapability(suite.chainA.NextTestChannel(connA, ibctesting.MockPort).PortID)
 		}, true},
 	}
 
@@ -151,14 +151,14 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 			suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
 
-			suite.chainB.CreatePortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
-			portCap = suite.chainB.GetPortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
+			suite.chainB.CreatePortCapability(suite.chainB.NextTestChannel(connB, ibctesting.MockPort).PortID)
+			portCap = suite.chainB.GetPortCapability(suite.chainB.NextTestChannel(connB, ibctesting.MockPort).PortID)
 		}, true},
 		{"success with crossing hello", func() {
 			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 			suite.coordinator.ChanOpenInitOnBothChains(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
 
-			portCap = suite.chainB.GetPortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
+			portCap = suite.chainB.GetPortCapability(suite.chainB.NextTestChannel(connB, ibctesting.MockPort).PortID)
 		}, true},
 		{"previous channel with invalid state", func() {
 			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
@@ -189,15 +189,15 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 			suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
 
-			suite.chainB.CreatePortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
-			portCap = suite.chainB.GetPortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
+			suite.chainB.CreatePortCapability(suite.chainB.NextTestChannel(connB, ibctesting.MockPort).PortID)
+			portCap = suite.chainB.GetPortCapability(suite.chainB.NextTestChannel(connB, ibctesting.MockPort).PortID)
 
 			heightDiff = 3 // consensus state doesn't exist at this height
 		}, false},
 		{"channel verification failed", func() {
 			// not creating a channel on chainA will result in an invalid proof of existence
 			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
-			portCap = suite.chainB.GetPortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
+			portCap = suite.chainB.GetPortCapability(suite.chainB.NextTestChannel(connB, ibctesting.MockPort).PortID)
 		}, false},
 		{"port capability not found", func() {
 			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
@@ -219,8 +219,8 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 				suite.chainB.GetContext(),
 				connB.ID, conn,
 			)
-			suite.chainB.CreatePortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
-			portCap = suite.chainB.GetPortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
+			suite.chainB.CreatePortCapability(suite.chainB.NextTestChannel(connB, ibctesting.MockPort).PortID)
+			portCap = suite.chainB.GetPortCapability(suite.chainB.NextTestChannel(connB, ibctesting.MockPort).PortID)
 		}, false},
 		{"connection does not support ORDERED channels", func() {
 			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
@@ -236,8 +236,8 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 				suite.chainA.GetContext(),
 				connA.ID, conn,
 			)
-			suite.chainA.CreatePortCapability(connA.NextTestChannel(ibctesting.MockPort).PortID)
-			portCap = suite.chainA.GetPortCapability(connA.NextTestChannel(ibctesting.MockPort).PortID)
+			suite.chainA.CreatePortCapability(suite.chainA.NextTestChannel(connA, ibctesting.MockPort).PortID)
+			portCap = suite.chainA.GetPortCapability(suite.chainA.NextTestChannel(connA, ibctesting.MockPort).PortID)
 		}, false},
 	}
 
@@ -255,7 +255,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			channelKey := host.ChannelKey(counterparty.PortId, counterparty.ChannelId)
 			proof, proofHeight := suite.chainA.QueryProof(channelKey)
 
-			cap, err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanOpenTry(
+			channelID, cap, err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanOpenTry(
 				suite.chainB.GetContext(), types.ORDERED, []string{connB.ID},
 				channelB.PortID, channelB.ID, portCap, counterparty, channelB.Version, connA.FirstOrNextTestChannel(ibctesting.MockPort).Version,
 				proof, malleateHeight(proofHeight, heightDiff),
@@ -267,7 +267,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 
 				chanCap, ok := suite.chainB.App.ScopedIBCKeeper.GetCapability(
 					suite.chainB.GetContext(),
-					host.ChannelCapabilityPath(channelB.PortID, channelB.ID),
+					host.ChannelCapabilityPath(channelB.PortID, channelID),
 				)
 				suite.Require().True(ok, "could not retrieve channel capapbility after successful ChanOpenTry")
 				suite.Require().Equal(chanCap.String(), cap.String(), "channel capability is not correct")

@@ -11,7 +11,7 @@ import (
 // HandleMsgChannelOpenInit defines the sdk.Handler for MsgChannelOpenInit
 func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, portCap *capabilitytypes.Capability, msg *types.MsgChannelOpenInit) (*sdk.Result, *capabilitytypes.Capability, error) {
 	capKey, err := k.ChanOpenInit(
-		ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortId, msg.ChannelId,
+		ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortId,
 		portCap, msg.Channel.Counterparty, msg.Channel.Version,
 	)
 	if err != nil {

@@ -29,16 +29,16 @@ const (
 // chain A with a given counterparty chain B
 func NewConnectionOpenInitCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "open-init [connection-id] [client-id] [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json]",
+		Use:   "open-init [client-id] [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json]",
 		Short: "Initialize connection on chain A",
 		Long: `Initialize a connection on chain A with a given counterparty chain B.
 	- 'version-identifier' flag can be a single pre-selected version identifier to be used in the handshake.
 	- 'version-features' flag can be a list of features separated by commas to accompany the version identifier.`,
 		Example: fmt.Sprintf(
-			"%s tx %s %s open-init [connection-id] [client-id] [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] --version-identifier=\"1.0\" --version-features=\"ORDER_UNORDERED\"",
+			"%s tx %s %s open-init [client-id] [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] --version-identifier=\"1.0\" --version-features=\"ORDER_UNORDERED\"",
 			version.AppName, host.ModuleName, types.SubModuleName,
 		),
-		Args: cobra.ExactArgs(5),
+		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
@@ -46,12 +46,11 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 				return err
 			}
 
-			connectionID := args[0]
-			clientID := args[1]
-			counterpartyConnectionID := args[2]
-			counterpartyClientID := args[3]
+			clientID := args[0]
+			counterpartyConnectionID := args[1]
+			counterpartyClientID := args[2]
 
-			counterpartyPrefix, err := utils.ParsePrefix(clientCtx.LegacyAmino, args[4])
+			counterpartyPrefix, err := utils.ParsePrefix(clientCtx.LegacyAmino, args[3])
 			if err != nil {
 				return err
 			}
@@ -71,7 +70,7 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 			}
 
 			msg := types.NewMsgConnectionOpenInit(
-				connectionID, clientID, counterpartyConnectionID, counterpartyClientID,
+				clientID, counterpartyConnectionID, counterpartyClientID,
 				counterpartyPrefix, version, clientCtx.GetFromAddress(),
 			)
 

@@ -14,36 +14,33 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
-// ConnOpenInit initialises a connection attempt on chain A.
+// ConnOpenInit initialises a connection attempt on chain A. The generated connection identifier
+// is returned.
 //
-// NOTE: Identifiers are checked on msg validation.
+// NOTE: Msg validation verifies the supplied identifiers and ensures that the counterparty
+// connection identifier is empty.
 func (k Keeper) ConnOpenInit(
 	ctx sdk.Context,
-	connectionID, // identifier
 	clientID string,
-	counterparty types.Counterparty, // desiredCounterpartyConnectionIdentifier, counterpartyPrefix, counterpartyClientIdentifier
+	counterparty types.Counterparty, // counterpartyPrefix, counterpartyClientIdentifier
 	version *types.Version,
-) error {
-	_, found := k.GetConnection(ctx, connectionID)
-	if found {
-		return sdkerrors.Wrap(types.ErrConnectionExists, connectionID)
-	}
-
+) (string, error) {
 	versions := types.GetCompatibleVersions()
 	if version != nil {
 		if !types.IsSupportedVersion(version) {
-			return sdkerrors.Wrap(types.ErrInvalidVersion, "version is not supported")
+			return "", sdkerrors.Wrap(types.ErrInvalidVersion, "version is not supported")
 		}
 
 		versions = []exported.Version{version}
 	}
 
 	// connection defines chain A's ConnectionEnd
+	connectionID := k.GenerateConnectionIdentifier(ctx)
 	connection := types.NewConnectionEnd(types.INIT, clientID, counterparty, types.ExportedVersionsToProto(versions))
 	k.SetConnection(ctx, connectionID, connection)
 
 	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
-		return err
+		return "", err
 	}
 
 	k.Logger(ctx).Info("connection state updated", "connection-id", connectionID, "previous-state", "NONE", "new-state", "INIT")
@@ -52,7 +49,7 @@ func (k Keeper) ConnOpenInit(
 		telemetry.IncrCounter(1, "ibc", "connection", "open-init")
 	}()
 
-	return nil
+	return connectionID, nil
 }
 
 // ConnOpenTry relays notice of a connection attempt on chain A to chain B (this

@@ -127,16 +127,15 @@ func (k Keeper) SubmitMisbehaviour(goCtx context.Context, msg *clienttypes.MsgSu
 func (k Keeper) ConnectionOpenInit(goCtx context.Context, msg *connectiontypes.MsgConnectionOpenInit) (*connectiontypes.MsgConnectionOpenInitResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := k.ConnectionKeeper.ConnOpenInit(
-		ctx, msg.ConnectionId, msg.ClientId, msg.Counterparty, msg.Version,
-	); err != nil {
+	connectionID, err := k.ConnectionKeeper.ConnOpenInit(ctx, msg.ClientId, msg.Counterparty, msg.Version)
+	if err != nil {
 		return nil, sdkerrors.Wrap(err, "connection handshake open init failed")
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			connectiontypes.EventTypeConnectionOpenInit,
-			sdk.NewAttribute(connectiontypes.AttributeKeyConnectionID, msg.ConnectionId),
+			sdk.NewAttribute(connectiontypes.AttributeKeyConnectionID, connectionID),
 			sdk.NewAttribute(connectiontypes.AttributeKeyClientID, msg.ClientId),
 			sdk.NewAttribute(connectiontypes.AttributeKeyCounterpartyClientID, msg.Counterparty.ClientId),
 			sdk.NewAttribute(connectiontypes.AttributeKeyCounterpartyConnectionID, msg.Counterparty.ConnectionId),

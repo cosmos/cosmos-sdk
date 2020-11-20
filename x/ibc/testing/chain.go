@@ -613,7 +613,7 @@ func (chain *TestChain) ConnectionOpenInit(
 	connection, counterpartyConnection *TestConnection,
 ) error {
 	msg := connectiontypes.NewMsgConnectionOpenInit(
-		connection.ID, connection.ClientID,
+		connection.ClientID,
 		counterpartyConnection.ID, connection.CounterpartyClientID,
 		counterparty.GetPrefix(), DefaultOpenInitVersion,
 		chain.SenderAccount.GetAddress(),
@@ -756,7 +756,7 @@ func (chain *TestChain) ChanOpenInit(
 	connectionID string,
 ) error {
 	msg := channeltypes.NewMsgChannelOpenInit(
-		ch.PortID, ch.ID,
+		ch.PortID,
 		ch.Version, order, []string{connectionID},
 		counterparty.PortID, counterparty.ID,
 		chain.SenderAccount.GetAddress(),

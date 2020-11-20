@@ -15,16 +15,15 @@ var _ sdk.Msg = &MsgChannelOpenInit{}
 // NewMsgChannelOpenInit creates a new MsgChannelOpenInit
 // nolint:interfacer
 func NewMsgChannelOpenInit(
-	portID, channelID string, version string, channelOrder Order, connectionHops []string,
+	portID, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID string, signer sdk.AccAddress,
 ) *MsgChannelOpenInit {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
 	return &MsgChannelOpenInit{
-		PortId:    portID,
-		ChannelId: channelID,
-		Channel:   channel,
-		Signer:    signer.String(),
+		PortId:  portID,
+		Channel: channel,
+		Signer:  signer.String(),
 	}
 }
 
@@ -42,9 +41,6 @@ func (msg MsgChannelOpenInit) Type() string {
 func (msg MsgChannelOpenInit) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.PortId); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
-	}
-	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
-		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	if msg.Channel.State != INIT {
 		return sdkerrors.Wrapf(ErrInvalidChannelState,

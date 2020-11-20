@@ -29,11 +29,10 @@ message MsgConnectionOpenInit {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string       client_id     = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
-  string       connection_id = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
-  Counterparty counterparty  = 3 [(gogoproto.nullable) = false];
-  Version      version       = 4;
-  string       signer        = 5;
+  string       client_id    = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  Counterparty counterparty = 2 [(gogoproto.nullable) = false];
+  Version      version      = 3;
+  string       signer       = 4;
 }
 
 // MsgConnectionOpenInitResponse defines the Msg/ConnectionOpenInit response type.

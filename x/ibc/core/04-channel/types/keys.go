@@ -15,8 +15,8 @@ const (
 
 	// KeyNextChannelSequence is the key used to store the next channel sequence in
 	// the keeper.
-	KeyNextConnectionSequence = "nextChannelSequence"
+	KeyNextChannelSequence = "nextChannelSequence"
 
 	// ChannelPrefix is the prefix used when creating a channel identifier
-	ConnectionPrefix = "channel"
+	ChannelPrefix = "channel"
 )

@@ -15,13 +15,12 @@ var _ sdk.Msg = &MsgConnectionOpenInit{}
 // NewMsgConnectionOpenInit creates a new MsgConnectionOpenInit instance
 //nolint:interfacer
 func NewMsgConnectionOpenInit(
-	connectionID, clientID, counterpartyConnectionID,
+	clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyPrefix commitmenttypes.MerklePrefix,
 	version *Version, signer sdk.AccAddress,
 ) *MsgConnectionOpenInit {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
 	return &MsgConnectionOpenInit{
-		ConnectionId: connectionID,
 		ClientId:     clientID,
 		Counterparty: counterparty,
 		Version:      version,
@@ -41,12 +40,13 @@ func (msg MsgConnectionOpenInit) Type() string {
 
 // ValidateBasic implements sdk.Msg.
 func (msg MsgConnectionOpenInit) ValidateBasic() error {
-	if err := host.ConnectionIdentifierValidator(msg.ConnectionId); err != nil {
-		return sdkerrors.Wrap(err, "invalid connection ID")
-	}
 	if err := host.ClientIdentifierValidator(msg.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "invalid client ID")
 	}
+	if msg.Counterparty.ConnectionId != "" {
+		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty connection identifier must be empty")
+	}
+
 	// NOTE: Version can be nil on MsgConnectionOpenInit
 	if msg.Version != nil {
 		if err := ValidateVersion(msg.Version); err != nil {

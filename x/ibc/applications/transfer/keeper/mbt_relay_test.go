@@ -42,6 +42,8 @@ type TlaOnRecvPacketTestCase = struct {
 	BankBefore []TlaBalance        `json:"bankBefore"`
 	// The packet to process
 	Packet TlaFungibleTokenPacket  `json:"packet"`
+	// The handler to call
+	Handler string                 `json:"handler"`
 	// The expected changes in the bank
 	BankAfter []TlaBalance        `json:"bankAfter"`
 	// Whether OnRecvPacket should fail or not
@@ -62,6 +64,8 @@ type OnRecvPacketTestCase = struct {
 	bankBefore []Balance
 	// The packet to process
 	packet FungibleTokenPacket
+	// The handler to call
+	handler string
 	// The expected bank state after processing (wrt. bankBefore)
 	bankAfter []Balance
 	// Whether OnRecvPacket should pass or fail
@@ -150,6 +154,7 @@ func OnRecvPacketTestCaseFromTla(tc TlaOnRecvPacketTestCase) OnRecvPacketTestCas
 		description: "auto-generated",
 		bankBefore:  BalancesFromTla(tc.BankBefore),
 		packet:      FungibleTokenPacketFromTla(tc.Packet),
+		handler: tc.Handler,
 		bankAfter:  BalancesFromTla(tc.BankAfter), // TODO different semantics
 		pass:        !tc.Error,
 	}
@@ -293,13 +298,24 @@ func (suite *KeeperTestSuite) TestModelBasedOnRecvPacket() {
 	suite.SetupTest()
 	for i, tlaTc := range tlaTestCases {
 		tc := OnRecvPacketTestCaseFromTla(tlaTc)
-		description := filename + " # " + strconv.Itoa(i)
+		description := filename + " # " + strconv.Itoa(i+1)
 		suite.Run(fmt.Sprintf("Case %s", description), func() {
 			seq := uint64(1)
 			packet := channeltypes.NewPacket(tc.packet.Data.GetBytes(), seq, tc.packet.SourcePort, tc.packet.SourceChannel, tc.packet.DestPort, tc.packet.DestChannel, clienttypes.NewHeight(0, 100), 0)
 			bankBefore := BankFromBalances(tc.bankBefore)
 			realBankBefore := BankOfChain(suite.chainB)
-			if err := suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, tc.packet.Data); err != nil {
+			// First validate the packet itself (mimics what happens when the packet is being sent and/or received)
+			err := packet.ValidateBasic()
+			if err != nil {
+				suite.Require().False(tc.pass, err.Error())
+				return
+			}
+			switch tc.handler {
+				case "OnRecvPacket": err = suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, tc.packet.Data)
+				case "OnTimeoutPacket": err = suite.chainB.App.TransferKeeper.OnTimeoutPacket(suite.chainB.GetContext(), packet, tc.packet.Data)
+				default: err = fmt.Errorf("Unknown handler:  %s", tc.handler)
+			}
+			if err != nil {
 				suite.Require().False(tc.pass, err.Error())
 				return
 			}

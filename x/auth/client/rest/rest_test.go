@@ -129,51 +129,99 @@ func (s *IntegrationTestSuite) TestBroadcastTxRequest() {
 	s.Require().NotEmpty(txRes.TxHash)
 }
 
-func (s *IntegrationTestSuite) TestQueryTxByHash() {
+// Helper function to test querying txs. We will use it to query StdTx and service `Msg`s.
+func (s *IntegrationTestSuite) testQueryTx(txHeight int64, txHash, txRecipient string) {
+	val0 := s.network.Validators[0]
+
+	testCases := []struct {
+		desc     string
+		malleate func() *sdk.TxResponse
+	}{
+		{
+			"Query by hash",
+			func() *sdk.TxResponse {
+				txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs/%s", val0.APIAddress, txHash))
+				s.Require().NoError(err)
+
+				var txResAmino sdk.TxResponse
+				s.Require().NoError(val0.ClientCtx.LegacyAmino.UnmarshalJSON(txJSON, &txResAmino))
+				return &txResAmino
+			},
+		},
+		{
+			"Query by height",
+			func() *sdk.TxResponse {
+				txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs?limit=10&page=1&tx.height=%d", val0.APIAddress, txHeight))
+				s.Require().NoError(err)
+
+				var searchTxResult sdk.SearchTxsResult
+				s.Require().NoError(val0.ClientCtx.LegacyAmino.UnmarshalJSON(txJSON, &searchTxResult))
+				s.Require().Len(searchTxResult.Txs, 1)
+				return searchTxResult.Txs[0]
+			},
+		},
+		{
+			"Query by event (transfer.recipient)",
+			func() *sdk.TxResponse {
+				txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs?transfer.recipient=%s", val0.APIAddress, txRecipient))
+				s.Require().NoError(err)
+
+				var searchTxResult sdk.SearchTxsResult
+				s.Require().NoError(val0.ClientCtx.LegacyAmino.UnmarshalJSON(txJSON, &searchTxResult))
+				s.Require().Len(searchTxResult.Txs, 1)
+				return searchTxResult.Txs[0]
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			txResponse := tc.malleate()
+
+			// Check that the height is correct.
+			s.Require().Equal(txHeight, txResponse.Height)
+
+			// Check that the events are correct.
+			s.Require().Contains(
+				txResponse.RawLog,
+				fmt.Sprintf("{\"key\":\"recipient\",\"value\":\"%s\"}", txRecipient),
+			)
+
+			// Check that the Msg is correct.
+			stdTx, ok := txResponse.Tx.GetCachedValue().(legacytx.StdTx)
+			s.Require().True(ok)
+			msgs := stdTx.GetMsgs()
+			s.Require().Equal(len(msgs), 1)
+			msg, ok := msgs[0].(*types.MsgSend)
+			s.Require().True(ok)
+			s.Require().Equal(txRecipient, msg.ToAddress)
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestQueryTxWithStdTx() {
 	val0 := s.network.Validators[0]
 
 	// We broadcasted a StdTx in SetupSuite.
-	// we just check for a non-empty TxHash here, the actual hash will depend on the underlying tx configuration
+	// We just check for a non-empty TxHash here, the actual hash will depend on the underlying tx configuration
 	s.Require().NotEmpty(s.stdTxRes.TxHash)
 
-	// We now fetch the tx by hash on the `/tx/{hash}` route.
-	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs/%s", val0.APIAddress, s.stdTxRes.TxHash))
-	s.Require().NoError(err)
-
-	// txJSON should contain the whole tx, we just make sure that our custom
-	// memo is there.
-	s.Require().Contains(string(txJSON), s.stdTx.Memo)
+	s.testQueryTx(s.stdTxRes.Height, s.stdTxRes.TxHash, val0.Address.String())
 }
 
-func (s *IntegrationTestSuite) TestQueryTxByHeight() {
-	val0 := s.network.Validators[0]
-
-	// We broadcasted a StdTx in SetupSuite.
-	// we just check for a non-empty height here, as we'll need to for querying.
-	s.Require().NotEmpty(s.stdTxRes.Height)
-
-	// We now fetch the tx on `/txs` route, filtering by `tx.height`
-	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs?limit=10&page=1&tx.height=%d", val0.APIAddress, s.stdTxRes.Height))
-	s.Require().NoError(err)
-
-	// txJSON should contain the whole tx, we just make sure that our custom
-	// memo is there.
-	s.Require().Contains(string(txJSON), s.stdTx.Memo)
-}
-
-func (s *IntegrationTestSuite) TestQueryTxByHashWithServiceMessage() {
+func (s *IntegrationTestSuite) TestQueryTxWithServiceMessage() {
 	val := s.network.Validators[0]
 
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
+	_, _, addr := testdata.KeyTestPubAddr()
 
-	// Right after this line, we're sending a tx. Might need to wait a block
-	// to refresh sequences.
+	// Might need to wait a block to refresh sequences from previous setups.
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	out, err := bankcli.ServiceMsgSendExec(
 		val.ClientCtx,
 		val.Address,
-		val.Address,
+		addr,
 		sdk.NewCoins(sendTokens),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -188,17 +236,7 @@ func (s *IntegrationTestSuite) TestQueryTxByHashWithServiceMessage() {
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs/%s", val.APIAddress, txRes.TxHash))
-	s.Require().NoError(err)
-
-	var txResAmino sdk.TxResponse
-	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(txJSON, &txResAmino))
-	stdTx, ok := txResAmino.Tx.GetCachedValue().(legacytx.StdTx)
-	s.Require().True(ok)
-	msgs := stdTx.GetMsgs()
-	s.Require().Equal(len(msgs), 1)
-	_, ok = msgs[0].(*types.MsgSend)
-	s.Require().True(ok)
+	s.testQueryTx(txRes.Height, txRes.TxHash, addr.String())
 }
 
 func (s *IntegrationTestSuite) TestMultipleSyncBroadcastTxRequests() {

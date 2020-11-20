@@ -350,11 +350,10 @@ the community of this project.
         *   Ensure the PR does exactly what the ADR said it should
         *   More senior engineering capability
         *   ⅔ approval from these initial three
-        *   Secondary pool of candidates to replace / substitute
+        *   Secondary pool of candidates to replace / substitute from the **Secondary repo maintainers** in `CODEOWNERS`
             *   **Marko**, **Federico**, **Jonathan** **&** **Cory**
         *   Removal
             *   Missing 3 meetings results in ICF evaluating whether the member should be removed / replaced
             *   Violation of Code of Conduct
 *   Addition to committee can be recommended by anyone to the current group or the ICF directly
     *   The evaluation criteria will be considered and the committee will decide on the addition with final approval from the ICF
-

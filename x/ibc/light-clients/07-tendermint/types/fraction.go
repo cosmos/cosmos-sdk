@@ -19,7 +19,7 @@ func NewFractionFromTm(f tmmath.Fraction) Fraction {
 // ToTendermint converts Fraction to tmmath.Fraction
 func (f Fraction) ToTendermint() tmmath.Fraction {
 	return tmmath.Fraction{
-		Numerator:   int64(f.Numerator),
-		Denominator: int64(f.Denominator),
+		Numerator:   uint64(f.Numerator),
+		Denominator: uint64(f.Denominator),
 	}
 }

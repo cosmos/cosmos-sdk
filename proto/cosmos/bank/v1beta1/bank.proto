@@ -12,6 +12,7 @@ message Params {
   option (gogoproto.goproto_stringer)       = false;
   repeated SendEnabled send_enabled         = 1 [(gogoproto.moretags) = "yaml:\"send_enabled,omitempty\""];
   bool                 default_send_enabled = 2 [(gogoproto.moretags) = "yaml:\"default_send_enabled,omitempty\""];
+  bool unrestricted_token_transfer          = 3 [(gogoproto.moretags) = "yaml:\"unrestricted_token_transfer,omitempty\""];
 }
 
 // SendEnabled maps coin denom to a send_enabled status (whether a denom is

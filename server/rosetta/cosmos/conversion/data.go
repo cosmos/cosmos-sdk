@@ -80,7 +80,7 @@ func GetFeeOperationsFromTx(tx sdk.Tx, withStatus bool) ([]*types.Operation, int
 	feeCoins := verifiableTx.GetFee()
 	var ops []*types.Operation
 	if feeCoins != nil {
-		var feeOps = getFeeOpFromCoins(feeCoins, verifiableTx.FeePayer().String(), withStatus)
+		var feeOps = GetFeeOpFromCoins(feeCoins, verifiableTx.FeePayer().String(), withStatus)
 		ops = append(ops, feeOps...)
 	}
 
@@ -267,8 +267,8 @@ func ParentBlockIdentifierFromLastBlock(block *tmcoretypes.ResultBlock) *types.B
 	}
 }
 
-// getFeeOpFromCoins
-func getFeeOpFromCoins(coins sdk.Coins, account string, withStatus bool) []*types.Operation {
+// GetFeeOpFromCoins returns based on a list of coins a list of operations of type Fee.
+func GetFeeOpFromCoins(coins sdk.Coins, account string, withStatus bool) []*types.Operation {
 	feeOps := make([]*types.Operation, 0)
 	var status string
 	if withStatus {

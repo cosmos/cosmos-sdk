@@ -77,14 +77,14 @@ func SdkTxToOperations(tx sdk.Tx, withStatus bool) []*types.Operation {
 
 func GetFeeOperationsFromTx(tx sdk.Tx, withStatus bool) ([]*types.Operation, int) {
 	verifiableTx := tx.(sdk.FeeTx)
-	fee := verifiableTx.GetFee()
+	feeCoins := verifiableTx.GetFee()
 	var ops []*types.Operation
-	if fee != nil {
-		var feeOps = GetFeeOpFromCoins(fee, verifiableTx.FeePayer().String(), withStatus)
+	if feeCoins != nil {
+		var feeOps = getFeeOpFromCoins(feeCoins, verifiableTx.FeePayer().String(), withStatus)
 		ops = append(ops, feeOps...)
 	}
 
-	return ops, len(fee)
+	return ops, len(feeCoins)
 }
 
 // TendermintTxsToTxIdentifiers converts a tendermint raw transaction into a rosetta tx identifier
@@ -265,4 +265,33 @@ func ParentBlockIdentifierFromLastBlock(block *tmcoretypes.ResultBlock) *types.B
 		Index: block.Block.Height - 1,
 		Hash:  fmt.Sprintf("%X", block.Block.LastBlockID.Hash.Bytes()),
 	}
+}
+
+// getFeeOpFromCoins
+func getFeeOpFromCoins(coins sdk.Coins, account string, withStatus bool) []*types.Operation {
+	feeOps := make([]*types.Operation, 0)
+	var status string
+	if withStatus {
+		status = rosetta.StatusSuccess
+	}
+	for i, coin := range coins {
+		op := &types.Operation{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: int64(i),
+			},
+			Type:   rosetta.OperationFee,
+			Status: status,
+			Account: &types.AccountIdentifier{
+				Address: account,
+			},
+			Amount: &types.Amount{
+				Value: "-" + coin.Amount.String(),
+				Currency: &types.Currency{
+					Symbol: coin.Denom,
+				},
+			},
+		}
+		feeOps = append(feeOps, op)
+	}
+	return feeOps
 }

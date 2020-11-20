@@ -83,11 +83,13 @@ When `Tx` is received by the application from the underlying consensus engine (e
 
 ### ValidateBasic
 
-[`Message`s](../core/transactions.md#messages) are extracted from `Tx` and `ValidateBasic`, a method of the `Msg` interface implemented by the module developer, is run for each one. It should include basic **stateless** sanity checks. For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as account balance of an address.
+[`Msg`s](../core/transactions.md#messages) are extracted from `Tx` and `ValidateBasic`, a method of the `Msg` interface implemented by the module developer, is run for each one. It should include basic **stateless** sanity checks. For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as account balance of an address.
 
 ### AnteHandler
 
-The [`AnteHandler`](../basics/gas-fees.md#antehandler), which is technically optional but should be defined for each application, is run. A deep copy of the internal state, `checkState`, is made and the defined `AnteHandler` performs limited checks specified for the transaction type. Using a copy allows the AnteHandler to do stateful checks for `Tx` without modifying the last committed state, and revert back to the original if the execution fails.
+After the ValidateBasic checks, the `AnteHandler`s are run. Technically, they are optional, but in practice, they are very often present to perform signature verification, gas calculation, fee deduction and other core operations related to blockchain transactions.
+
+A deep copy of the internal state, `checkState`, is made and the defined `AnteHandler` performs limited checks specified for the transaction type. Using a copy allows the AnteHandler to do stateful checks for `Tx` without modifying the last committed state, and revert back to the original if the execution fails.
 
 For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module `AnteHandler` checks and increments sequence numbers, checks signatures and account numbers, and deducts fees from the first signer of the transaction - all state changes are made using the `checkState`.
 

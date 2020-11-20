@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -100,13 +100,13 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 // ExportPrivateKeyObject returns a PrivKey object given the key name and
 // passphrase. An error is returned if the key does not exist or if the Info for
 // the key is invalid.
-func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (tmcrypto.PrivKey, error) {
+func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (types.PrivKey, error) {
 	info, err := kb.Get(name)
 	if err != nil {
 		return nil, err
 	}
 
-	var priv tmcrypto.PrivKey
+	var priv types.PrivKey
 
 	switch i := info.(type) {
 	case localInfo:

@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -74,10 +75,10 @@ type Keyring interface {
 	SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (Info, error)
 
 	// SavePubKey stores a public key and returns the persisted Info structure.
-	SavePubKey(uid string, pubkey tmcrypto.PubKey, algo hd.PubKeyType) (Info, error)
+	SavePubKey(uid string, pubkey types.PubKey, algo hd.PubKeyType) (Info, error)
 
 	// SaveMultisig stores and returns a new multsig (offline) key reference.
-	SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error)
+	SaveMultisig(uid string, pubkey types.PubKey) (Info, error)
 
 	Signer
 
@@ -88,10 +89,10 @@ type Keyring interface {
 // Signer is implemented by key stores that want to provide signing capabilities.
 type Signer interface {
 	// Sign sign byte messages with a user key.
-	Sign(uid string, msg []byte) ([]byte, tmcrypto.PubKey, error)
+	Sign(uid string, msg []byte) ([]byte, types.PubKey, error)
 
 	// SignByAddress sign byte messages with a user key providing the address.
-	SignByAddress(address sdk.Address, msg []byte) ([]byte, tmcrypto.PubKey, error)
+	SignByAddress(address sdk.Address, msg []byte) ([]byte, types.PubKey, error)
 }
 
 // Importer is implemented by key stores that support import of public and private keys.
@@ -222,13 +223,13 @@ func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor stri
 }
 
 // ExportPrivateKeyObject exports an armored private key object.
-func (ks keystore) ExportPrivateKeyObject(uid string) (tmcrypto.PrivKey, error) {
+func (ks keystore) ExportPrivateKeyObject(uid string) (types.PrivKey, error) {
 	info, err := ks.Key(uid)
 	if err != nil {
 		return nil, err
 	}
 
-	var priv tmcrypto.PrivKey
+	var priv types.PrivKey
 
 	switch linfo := info.(type) {
 	case localInfo:
@@ -299,13 +300,13 @@ func (ks keystore) ImportPubKey(uid string, armor string) error {
 	return nil
 }
 
-func (ks keystore) Sign(uid string, msg []byte) ([]byte, tmcrypto.PubKey, error) {
+func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 	info, err := ks.Key(uid)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var priv tmcrypto.PrivKey
+	var priv types.PrivKey
 
 	switch i := info.(type) {
 	case localInfo:
@@ -333,7 +334,7 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, tmcrypto.PubKey, error)
 	return sig, priv.PubKey(), nil
 }
 
-func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, tmcrypto.PubKey, error) {
+func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, types.PubKey, error) {
 	key, err := ks.KeyByAddress(address)
 	if err != nil {
 		return nil, nil, err
@@ -357,7 +358,7 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 	return ks.writeLedgerKey(uid, priv.PubKey(), *hdPath, algo.Name())
 }
 
-func (ks keystore) writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP44Params, algo hd.PubKeyType) (Info, error) {
+func (ks keystore) writeLedgerKey(name string, pub types.PubKey, path hd.BIP44Params, algo hd.PubKeyType) (Info, error) {
 	info := newLedgerInfo(name, pub, path, algo)
 	if err := ks.writeInfo(info); err != nil {
 		return nil, err
@@ -366,11 +367,11 @@ func (ks keystore) writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP4
 	return info, nil
 }
 
-func (ks keystore) SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error) {
+func (ks keystore) SaveMultisig(uid string, pubkey types.PubKey) (Info, error) {
 	return ks.writeMultisigKey(uid, pubkey)
 }
 
-func (ks keystore) SavePubKey(uid string, pubkey tmcrypto.PubKey, algo hd.PubKeyType) (Info, error) {
+func (ks keystore) SavePubKey(uid string, pubkey types.PubKey, algo hd.PubKeyType) (Info, error) {
 	return ks.writeOfflineKey(uid, pubkey, algo)
 }
 
@@ -531,7 +532,7 @@ func (ks keystore) SupportedAlgorithms() (SigningAlgoList, SigningAlgoList) {
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object
 // and returns the signed bytes and the public key. It returns an error if the device could
 // not be queried or it returned an error.
-func SignWithLedger(info Info, msg []byte) (sig []byte, pub tmcrypto.PubKey, err error) {
+func SignWithLedger(info Info, msg []byte) (sig []byte, pub types.PubKey, err error) {
 	switch info.(type) {
 	case *ledgerInfo, ledgerInfo:
 	default:
@@ -689,7 +690,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 	}
 }
 
-func (ks keystore) writeLocalKey(name string, priv tmcrypto.PrivKey, algo hd.PubKeyType) (Info, error) {
+func (ks keystore) writeLocalKey(name string, priv types.PrivKey, algo hd.PubKeyType) (Info, error) {
 	// encrypt private key using keyring
 	pub := priv.PubKey()
 
@@ -751,7 +752,7 @@ func (ks keystore) existsInDb(info Info) (bool, error) {
 	return false, nil
 }
 
-func (ks keystore) writeOfflineKey(name string, pub tmcrypto.PubKey, algo hd.PubKeyType) (Info, error) {
+func (ks keystore) writeOfflineKey(name string, pub types.PubKey, algo hd.PubKeyType) (Info, error) {
 	info := newOfflineInfo(name, pub, algo)
 	err := ks.writeInfo(info)
 	if err != nil {
@@ -761,7 +762,7 @@ func (ks keystore) writeOfflineKey(name string, pub tmcrypto.PubKey, algo hd.Pub
 	return info, nil
 }
 
-func (ks keystore) writeMultisigKey(name string, pub tmcrypto.PubKey) (Info, error) {
+func (ks keystore) writeMultisigKey(name string, pub types.PubKey) (Info, error) {
 	info := NewMultiInfo(name, pub)
 	err := ks.writeInfo(info)
 	if err != nil {

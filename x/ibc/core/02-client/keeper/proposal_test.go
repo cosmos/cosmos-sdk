@@ -21,7 +21,7 @@ func (suite *KeeperTestSuite) TestClientUpdateProposal() {
 	}{
 		{
 			"valid update client proposal", func() {
-				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 				clientState := suite.chainA.GetClientState(clientA)
 
 				tmClientState, ok := clientState.(*ibctmtypes.ClientState)
@@ -58,14 +58,14 @@ func (suite *KeeperTestSuite) TestClientUpdateProposal() {
 		},
 		{
 			"cannot unpack header, header is nil", func() {
-				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 				content = &clienttypes.ClientUpdateProposal{ibctesting.Title, ibctesting.Description, clientA, nil}
 			}, false,
 		},
 		{
 			"update fails", func() {
 				header := &ibctmtypes.Header{}
-				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 				content, err = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, clientA, header)
 				suite.Require().NoError(err)
 			}, false,

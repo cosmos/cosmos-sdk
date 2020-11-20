@@ -6,13 +6,13 @@ import (
 	"time"
 
 	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/crypto"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/privval"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // ExportGenesisFile creates and writes the genesis configuration to disk. An
@@ -47,7 +47,7 @@ func ExportGenesisFileWithTime(
 }
 
 // InitializeNodeValidatorFiles creates private validator and p2p configuration files.
-func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey crypto.PubKey, err error) {
+func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
 		return "", nil, err
@@ -70,7 +70,7 @@ func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey 
 		return "", nil, err
 	}
 
-	valPubKey, err = ed25519.FromTmEd25519(tmValPubKey)
+	valPubKey, err = cryptocodec.FromTmPubKeyInterface(tmValPubKey)
 	if err != nil {
 		return "", nil, err
 	}

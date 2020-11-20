@@ -8,12 +8,12 @@ import (
 	"github.com/99designs/keyring"
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/stretchr/testify/require"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -165,7 +165,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 
 	// let's try to validate and make sure it only works when everything is proper
 	cases := []struct {
-		key   tmcrypto.PubKey
+		key   types.PubKey
 		data  []byte
 		sig   []byte
 		valid bool
@@ -379,7 +379,7 @@ func TestInMemoryCreateMultisig(t *testing.T) {
 	kb, err := New("keybasename", "memory", "", nil)
 	require.NoError(t, err)
 	multi := multisig.NewLegacyAminoPubKey(
-		1, []tmcrypto.PubKey{
+		1, []types.PubKey{
 			secp256k1.GenPrivKey().PubKey(),
 		},
 	)
@@ -520,7 +520,7 @@ func TestInMemorySignVerify(t *testing.T) {
 
 	// let's try to validate and make sure it only works when everything is proper
 	cases := []struct {
-		key   tmcrypto.PubKey
+		key   types.PubKey
 		data  []byte
 		sig   []byte
 		valid bool
@@ -946,7 +946,7 @@ func TestAltKeyring_SaveMultisig(t *testing.T) {
 	key := "multi"
 	pub := multisig.NewLegacyAminoPubKey(
 		2,
-		[]tmcrypto.PubKey{
+		[]types.PubKey{
 			&secp256k1.PubKey{Key: mnemonic1.GetPubKey().Bytes()},
 			&secp256k1.PubKey{Key: mnemonic2.GetPubKey().Bytes()},
 		},

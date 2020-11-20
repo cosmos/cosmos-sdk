@@ -602,18 +602,32 @@ var (
 	reAmt       = `[[:digit:]]+`
 	reDecAmt    = `[[:digit:]]+(?:\.[[:digit:]]+)?|\.[[:digit:]]+`
 	reSpc       = `[[:space:]]*`
-	reDnm       = regexp.MustCompile(fmt.Sprintf(`^%s$`, reDnmString))
-	reCoin      = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnmString))
-	reDecCoin   = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, reDnmString))
+	reDnm       *regexp.Regexp
+	reCoin      *regexp.Regexp
+	reDecCoin   *regexp.Regexp
 )
+
+func init() {
+	SetCoinDenomRegex(DefaultCoinDenomRegex)
+}
 
 // DefaultCoinDenomRegex returns the default regex string
 func DefaultCoinDenomRegex() string {
 	return reDnmString
 }
 
-// CoinDenomRegex returns the current regex string and can be overwritten for custom validation
-var CoinDenomRegex = DefaultCoinDenomRegex
+// coinDenomRegex returns the current regex string and can be overwritten for custom validation
+var coinDenomRegex = DefaultCoinDenomRegex
+
+// SetCoinDenomRegex allows for coin's custom validation by overriding the regular
+// expression string used for denom validation.
+func SetCoinDenomRegex(reFn func() string) {
+	coinDenomRegex = reFn
+
+	reDnm = regexp.MustCompile(fmt.Sprintf(`^%s$`, coinDenomRegex()))
+	reCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, coinDenomRegex()))
+	reDecCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, coinDenomRegex()))
+}
 
 // ValidateDenom is the default validation function for Coin.Denom.
 func ValidateDenom(denom string) error {

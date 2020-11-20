@@ -350,7 +350,6 @@ the community of this project.
         *   Ensure the PR does exactly what the ADR said it should
         *   More senior engineering capability
         *   ⅔ approval from these initial three
-            *   **Aaron**, **Bez** & **Alessio**
         *   Secondary pool of candidates to replace / substitute
             *   **Marko**, **Federico**, **Jonathan** **&** **Cory**
         *   Removal
@@ -358,5 +357,4 @@ the community of this project.
             *   Violation of Code of Conduct
 *   Addition to committee can be recommended by anyone to the current group or the ICF directly
     *   The evaluation criteria will be considered and the committee will decide on the addition with final approval from the ICF
-
 

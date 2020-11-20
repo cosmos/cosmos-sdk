@@ -491,38 +491,72 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 	var (
 		clientState *types.ClientState
+		packet      channeltypes.Packet
 		proof       []byte
 		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
 
 	testCases := []struct {
-		name     string
-		malleate func()
-		expPass  bool
+		name           string
+		malleate       func()
+		malleatePacket func()
+		expPass        bool
 	}{
 		{
-			"successful verification", func() {}, true,
+			name:           "successful verification",
+			malleate:       func() {},
+			malleatePacket: func() {},
+			expPass:        true,
 		},
 		{
-			"ApplyPrefix failed", func() {
+			name:     "delay period has passed",
+			malleate: func() {},
+			malleatePacket: func() {
+				// at least 5 seconds pass between sending and receiving
+				packet.DelayPeriod = uint64(time.Second.Nanoseconds())
+			},
+			expPass: true,
+		},
+		{
+			name:     "delay period has not passed",
+			malleate: func() {},
+			malleatePacket: func() {
+				packet.DelayPeriod = uint64(time.Hour.Nanoseconds())
+			},
+			expPass: false,
+		},
+		{
+			name: "ApplyPrefix failed",
+			malleate: func() {
 				prefix = commitmenttypes.MerklePrefix{}
-			}, false,
+			},
+			malleatePacket: func() {},
+			expPass:        false,
 		},
 		{
-			"latest client height < height", func() {
+			name: "latest client height < height",
+			malleate: func() {
 				proofHeight = clientState.LatestHeight.Increment()
-			}, false,
+			},
+			malleatePacket: func() {},
+			expPass:        false,
 		},
 		{
-			"client is frozen", func() {
+			name: "client is frozen",
+			malleate: func() {
 				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
-			}, false,
+			},
+			malleatePacket: func() {},
+			expPass:        false,
 		},
 		{
-			"proof verification failed", func() {
+			name: "proof verification failed",
+			malleate: func() {
 				proof = invalidProof
-			}, false,
+			},
+			malleatePacket: func() {},
+			expPass:        false,
 		},
 	}
 
@@ -534,11 +568,17 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 
 			// setup testing conditions
 			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
-			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0, 0)
+
+			packet = channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0, 0)
+			tc.malleatePacket()
 
 			// send packet
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
+
+			// increment receiving chain's (chainB) time by 2 hour to always pass receive
+			suite.coordinator.IncrementTimeBy(time.Hour * 2)
+			suite.coordinator.CommitBlock(suite.chainB)
 
 			// write receipt and ack
 			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
@@ -580,38 +620,72 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 func (suite *TendermintTestSuite) TestVerifyPacketReceiptAbsence() {
 	var (
 		clientState *types.ClientState
+		packet      channeltypes.Packet
 		proof       []byte
 		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
 
 	testCases := []struct {
-		name     string
-		malleate func()
-		expPass  bool
+		name           string
+		malleate       func()
+		malleatePacket func()
+		expPass        bool
 	}{
 		{
-			"successful verification", func() {}, true,
+			name:           "successful verification",
+			malleate:       func() {},
+			malleatePacket: func() {},
+			expPass:        true,
 		},
 		{
-			"ApplyPrefix failed", func() {
+			name:     "delay period has passed",
+			malleate: func() {},
+			malleatePacket: func() {
+				// at least 5 seconds pass between sending and receiving
+				packet.DelayPeriod = uint64(time.Second.Nanoseconds())
+			},
+			expPass: true,
+		},
+		{
+			name:     "delay period has not passed",
+			malleate: func() {},
+			malleatePacket: func() {
+				packet.DelayPeriod = uint64(time.Hour.Nanoseconds())
+			},
+			expPass: false,
+		},
+		{
+			name: "ApplyPrefix failed",
+			malleate: func() {
 				prefix = commitmenttypes.MerklePrefix{}
-			}, false,
+			},
+			malleatePacket: func() {},
+			expPass:        false,
 		},
 		{
-			"latest client height < height", func() {
+			name: "latest client height < height",
+			malleate: func() {
 				proofHeight = clientState.LatestHeight.Increment()
-			}, false,
+			},
+			malleatePacket: func() {},
+			expPass:        false,
 		},
 		{
-			"client is frozen", func() {
+			name: "client is frozen",
+			malleate: func() {
 				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
-			}, false,
+			},
+			malleatePacket: func() {},
+			expPass:        false,
 		},
 		{
-			"proof verification failed", func() {
+			name: "proof verification failed",
+			malleate: func() {
 				proof = invalidProof
-			}, false,
+			},
+			malleatePacket: func() {},
+			expPass:        false,
 		},
 	}
 
@@ -623,7 +697,8 @@ func (suite *TendermintTestSuite) TestVerifyPacketReceiptAbsence() {
 
 			// setup testing conditions
 			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
-			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0, 0)
+			packet = channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0, 0)
+			tc.malleatePacket()
 
 			// send packet, but no recv
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
@@ -668,38 +743,72 @@ func (suite *TendermintTestSuite) TestVerifyPacketReceiptAbsence() {
 func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 	var (
 		clientState *types.ClientState
+		packet      channeltypes.Packet
 		proof       []byte
 		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
 
 	testCases := []struct {
-		name     string
-		malleate func()
-		expPass  bool
+		name           string
+		malleate       func()
+		malleatePacket func()
+		expPass        bool
 	}{
 		{
-			"successful verification", func() {}, true,
+			name:           "successful verification",
+			malleate:       func() {},
+			malleatePacket: func() {},
+			expPass:        true,
 		},
 		{
-			"ApplyPrefix failed", func() {
+			name:     "delay period has passed",
+			malleate: func() {},
+			malleatePacket: func() {
+				// at least 5 seconds pass between sending and receiving
+				packet.DelayPeriod = uint64(time.Second.Nanoseconds())
+			},
+			expPass: true,
+		},
+		{
+			name:     "delay period has not passed",
+			malleate: func() {},
+			malleatePacket: func() {
+				packet.DelayPeriod = uint64(time.Hour.Nanoseconds())
+			},
+			expPass: false,
+		},
+		{
+			name: "ApplyPrefix failed",
+			malleate: func() {
 				prefix = commitmenttypes.MerklePrefix{}
-			}, false,
+			},
+			malleatePacket: func() {},
+			expPass:        false,
 		},
 		{
-			"latest client height < height", func() {
+			name: "latest client height < height",
+			malleate: func() {
 				proofHeight = clientState.LatestHeight.Increment()
-			}, false,
+			},
+			malleatePacket: func() {},
+			expPass:        false,
 		},
 		{
-			"client is frozen", func() {
+			name: "client is frozen",
+			malleate: func() {
 				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
-			}, false,
+			},
+			malleatePacket: func() {},
+			expPass:        false,
 		},
 		{
-			"proof verification failed", func() {
+			name: "proof verification failed",
+			malleate: func() {
 				proof = invalidProof
-			}, false,
+			},
+			malleatePacket: func() {},
+			expPass:        false,
 		},
 	}
 
@@ -711,11 +820,16 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 
 			// setup testing conditions
 			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.ORDERED)
-			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0, 0)
+			packet = channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0, 0)
+			tc.malleatePacket()
 
 			// send packet
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
+
+			// increment receiving chain's (chainB) time by 2 hour to always pass receive
+			suite.coordinator.IncrementTimeBy(time.Hour * 2)
+			suite.coordinator.CommitBlock(suite.chainB)
 
 			// next seq recv incremented
 			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)

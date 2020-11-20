@@ -49,17 +49,20 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 	}
 
 	if missed {
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeLiveness,
-				sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
-				sdk.NewAttribute(types.AttributeKeyMissedBlocks, fmt.Sprintf("%d", signInfo.MissedBlocksCounter)),
-				sdk.NewAttribute(types.AttributeKeyHeight, fmt.Sprintf("%d", height)),
-			),
-		)
-
 		logger.Info(
 			fmt.Sprintf("Absent validator %s at height %d, %d missed, threshold %d", consAddr, height, signInfo.MissedBlocksCounter, k.MinSignedPerWindow(ctx)))
+
+		livenessEvent := &types.EventLiveness{
+			Address:      consAddr.String(),
+			MissedBlocks: signInfo.MissedBlocksCounter,
+			Height:       height,
+		}
+
+		if err := ctx.EventManager().EmitTypedEvent(livenessEvent); err != nil {
+			logger.Error(
+				fmt.Sprintf("Validator %s at height %d: liveness event %+v failed with error %s", consAddr, height, livenessEvent, err.Error()),
+			)
+		}
 	}
 
 	minHeight := signInfo.StartHeight + k.SignedBlocksWindow(ctx)
@@ -81,15 +84,28 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 			// That's fine since this is just used to filter unbonding delegations & redelegations.
 			distributionHeight := height - sdk.ValidatorUpdateDelay - 1
 
-			ctx.EventManager().EmitEvent(
-				sdk.NewEvent(
-					types.EventTypeSlash,
-					sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
-					sdk.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
-					sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueMissingSignature),
-					sdk.NewAttribute(types.AttributeKeyJailed, consAddr.String()),
-				),
-			)
+			slashEvent := &types.EventSlash{
+				Address: consAddr.String(),
+				Power:   power,
+				Reason:  types.AttributeValueMissingSignature,
+			}
+
+			if err := ctx.EventManager().EmitTypedEvent(slashEvent); err != nil {
+				logger.Error(
+					fmt.Sprintf("Validator %s: slash event %+v failed with error %s when slashing", consAddr, slashEvent, err.Error()),
+				)
+			}
+
+			jailEvent := &types.EventJail{
+				Address: consAddr.String(),
+			}
+
+			if err := ctx.EventManager().EmitTypedEvent(jailEvent); err != nil {
+				logger.Error(
+					fmt.Sprintf("Validator %s: jail event %+v failed with error %s when jailing", consAddr, jailEvent, err.Error()),
+				)
+			}
+
 			k.sk.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
 			k.sk.Jail(ctx, consAddr)
 

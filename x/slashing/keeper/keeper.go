@@ -74,14 +74,15 @@ func (k Keeper) GetPubkey(ctx sdk.Context, address cryptotypes.Address) (cryptot
 // Slash attempts to slash a validator. The slash is delegated to the staking
 // module to make the necessary validator changes.
 func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdk.Dec, power, distributionHeight int64) {
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeSlash,
-			sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
-			sdk.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
-			sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueDoubleSign),
-		),
-	)
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventSlash{
+			Address: consAddr.String(),
+			Power:   power,
+			Reason:  types.AttributeValueDoubleSign,
+		},
+	); err != nil {
+		panic(err)
+	}
 
 	k.sk.Slash(ctx, consAddr, distributionHeight, power, fraction)
 }
@@ -89,12 +90,13 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdk.De
 // Jail attempts to jail a validator. The slash is delegated to the staking module
 // to make the necessary validator changes.
 func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeSlash,
-			sdk.NewAttribute(types.AttributeKeyJailed, consAddr.String()),
-		),
-	)
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventJail{
+			Address: consAddr.String(),
+		},
+	); err != nil {
+		panic(err)
+	}
 
 	k.sk.Jail(ctx, consAddr)
 }

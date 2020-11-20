@@ -48,14 +48,15 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 			continue
 		}
 
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeCompleteUnbonding,
-				sdk.NewAttribute(sdk.AttributeKeyAmount, balances.String()),
-				sdk.NewAttribute(types.AttributeKeyValidator, dvPair.ValidatorAddress),
-				sdk.NewAttribute(types.AttributeKeyDelegator, dvPair.DelegatorAddress),
-			),
-		)
+		if err := ctx.EventManager().EmitTypedEvent(
+			&types.EventCompleteUnbonding{
+				Validator: dvPair.ValidatorAddress,
+				Amount:    balances,
+				Delegator: dvPair.DelegatorAddress,
+			},
+		); err != nil {
+			panic(err)
+		}
 	}
 
 	// Remove all mature redelegations from the red queue.
@@ -83,15 +84,16 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 			continue
 		}
 
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeCompleteRedelegation,
-				sdk.NewAttribute(sdk.AttributeKeyAmount, balances.String()),
-				sdk.NewAttribute(types.AttributeKeyDelegator, dvvTriplet.DelegatorAddress),
-				sdk.NewAttribute(types.AttributeKeySrcValidator, dvvTriplet.ValidatorSrcAddress),
-				sdk.NewAttribute(types.AttributeKeyDstValidator, dvvTriplet.ValidatorDstAddress),
-			),
-		)
+		if err := ctx.EventManager().EmitTypedEvent(
+			&types.EventCompleteRedelegation{
+				SourceValidator:      dvvTriplet.ValidatorSrcAddress,
+				DestinationValidator: dvvTriplet.ValidatorDstAddress,
+				Amount:               balances,
+				Delegator:            dvvTriplet.DelegatorAddress,
+			},
+		); err != nil {
+			panic(err)
+		}
 	}
 
 	return validatorUpdates

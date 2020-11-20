@@ -103,18 +103,23 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeCreateValidator,
-			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Value.Amount.String()),
-		),
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventCreateValidator{
+			Validator: msg.ValidatorAddress,
+			Amount:    msg.Value,
+			Delegator: msg.DelegatorAddress,
+		},
+	); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
 		),
-	})
+	)
 
 	return &types.MsgCreateValidatorResponse{}, nil
 }
@@ -165,18 +170,23 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 
 	k.SetValidator(ctx, validator)
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeEditValidator,
-			sdk.NewAttribute(types.AttributeKeyCommissionRate, validator.Commission.String()),
-			sdk.NewAttribute(types.AttributeKeyMinSelfDelegation, validator.MinSelfDelegation.String()),
-		),
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventEditValidator{
+			Validator:         msg.ValidatorAddress,
+			Commission:        validator.Commission,
+			MinSelfDelegation: validator.MinSelfDelegation.String(),
+		},
+	); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.ValidatorAddress),
 		),
-	})
+	)
 
 	return &types.MsgEditValidatorResponse{}, nil
 }
@@ -220,18 +230,23 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 		}()
 	}
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeDelegate,
-			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.Amount.String()),
-		),
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventDelegate{
+			Validator: msg.ValidatorAddress,
+			Amount:    msg.Amount,
+			Delegator: msg.DelegatorAddress,
+		},
+	); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
 		),
-	})
+	)
 
 	return &types.MsgDelegateResponse{}, nil
 }
@@ -281,20 +296,25 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		}()
 	}
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeRedelegate,
-			sdk.NewAttribute(types.AttributeKeySrcValidator, msg.ValidatorSrcAddress),
-			sdk.NewAttribute(types.AttributeKeyDstValidator, msg.ValidatorDstAddress),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.Amount.String()),
-			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
-		),
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventRedelegate{
+			SourceValidator:      msg.ValidatorSrcAddress,
+			DestinationValidator: msg.ValidatorDstAddress,
+			Amount:               msg.Amount,
+			Delegator:            msg.DelegatorAddress,
+			CompletionTime:       completionTime.Format(time.RFC3339),
+		},
+	); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
 		),
-	})
+	)
 
 	return &types.MsgBeginRedelegateResponse{
 		CompletionTime: completionTime,
@@ -340,19 +360,24 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 		}()
 	}
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeUnbond,
-			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.Amount.String()),
-			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
-		),
+	if err := ctx.EventManager().EmitTypedEvent(
+		&types.EventUnbond{
+			Validator:      msg.ValidatorAddress,
+			Amount:         msg.Amount,
+			Delegator:      msg.DelegatorAddress,
+			CompletionTime: completionTime.Format(time.RFC3339),
+		},
+	); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
 		),
-	})
+	)
 
 	return &types.MsgUndelegateResponse{
 		CompletionTime: completionTime,

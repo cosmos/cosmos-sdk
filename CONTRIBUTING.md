@@ -349,7 +349,7 @@ the community of this project.
     *   **Implementation & Release Approval**
         *   Ensure the PR does exactly what the ADR said it should
         *   More senior engineering capability
-        *   ⅔ approval from these initial three
+        *   ⅔ approval from the **primary repo maintainers** in `CODEOWNERS`
         *   Secondary pool of candidates to replace / substitute from the **Secondary repo maintainers** in `CODEOWNERS`
         *   Removal
             *   Missing 3 meetings results in ICF evaluating whether the member should be removed / replaced

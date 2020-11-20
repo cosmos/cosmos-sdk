@@ -351,7 +351,6 @@ the community of this project.
         *   More senior engineering capability
         *   ⅔ approval from these initial three
         *   Secondary pool of candidates to replace / substitute from the **Secondary repo maintainers** in `CODEOWNERS`
-            *   **Marko**, **Federico**, **Jonathan** **&** **Cory**
         *   Removal
             *   Missing 3 meetings results in ICF evaluating whether the member should be removed / replaced
             *   Violation of Code of Conduct

@@ -776,8 +776,7 @@ func (chain *TestChain) ChanOpenTry(
 	msg := channeltypes.NewMsgChannelOpenTry(
 		ch.PortID, ch.ID,
 		ch.Version, order, []string{connectionID},
-		counterpartyCh.PortID, counterpartyCh.ID,
-		counterpartyCh.Version,
+		counterpartyCh.PortID, counterpartyCh.ID, counterpartyCh.Version,
 		proof, height,
 		chain.SenderAccount.GetAddress(),
 	)

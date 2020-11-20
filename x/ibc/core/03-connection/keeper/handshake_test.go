@@ -37,9 +37,6 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 			version = types.ExportedVersionsToProto(types.GetCompatibleVersions())[0]
 		}, true},
-		{"connection already exists", func() {
-			clientA, clientB, _, _ = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
-		}, false},
 		{"invalid version", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 			version = &types.Version{}
@@ -69,7 +66,7 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 
 			if tc.expPass {
 				suite.Require().NoError(err)
-				suite.Require().Equal(fmt.Sprintf("%s/%d", types.ConnectionPrefix, 0), connectionID)
+				suite.Require().Equal(fmt.Sprintf("%s%d", types.ConnectionPrefix, 0), connectionID)
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Equal("", connectionID)

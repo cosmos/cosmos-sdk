@@ -82,7 +82,7 @@ func NewMsgChannelOpenTry(
 	counterpartyPortID, counterpartyChannelID, counterpartyVersion string,
 	proofInit []byte, proofHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgChannelOpenTry {
-	counterparty := NewCounterparty(counterpartyPortID, "")
+	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := NewChannel(TRYOPEN, channelOrder, counterparty, connectionHops, version)
 	return &MsgChannelOpenTry{
 		PortId:              portID,
@@ -112,9 +112,6 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 	}
 	if err := host.ChannelIdentifierValidator(msg.DesiredChannelId); err != nil {
 		return sdkerrors.Wrap(err, "invalid desired channel ID")
-	}
-	if msg.Channel.Counterparty.ChannelId != "" {
-		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty channel identifier must be empty")
 	}
 	if len(msg.ProofInit) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof init")

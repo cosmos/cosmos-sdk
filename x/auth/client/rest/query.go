@@ -205,8 +205,8 @@ func checkSignModeError(w http.ResponseWriter, ctx client.Context, resp interfac
 	if err != nil && strings.Contains(err.Error(), unRegisteredConcreteTypeErr) {
 		rest.WriteErrorResponse(w, http.StatusInternalServerError,
 			"This transaction was created with the new SIGN_MODE_DIRECT signing method, and therefore cannot be displayed"+
-				" via legacy REST handlers, please use CLI or directly query the Tendermint RPC endpoint to query"+
-				" this transaction. gRPC gateway endpoint is "+grpcEndPoint)
+				" via legacy REST handlers. Please either use CLI, gRPC, gRPC-gateway, or directly query the Tendermint RPC"+
+				" endpoint to query this transaction. The new REST endpoint (via gRPC-gateway) is "+grpcEndPoint)
 		return err
 	}
 

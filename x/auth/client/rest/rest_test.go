@@ -362,21 +362,42 @@ func (s *IntegrationTestSuite) TestLegacyRestErrMessages() {
 
 	var txRes sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txRes))
+	s.Require().NotEqual(0, txRes.Code) // It fails, see comment above.
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	// try to fetch the txn using legacy rest, this won't work since the ibc module doesn't support amino.
-	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs/%s", val.APIAddress, txRes.TxHash))
-	s.Require().NoError(err)
+	errMsg := "This transaction was created with the new SIGN_MODE_DIRECT signing method, and therefore cannot be displayed" +
+		" via legacy REST handlers. Please either use CLI, gRPC, gRPC-gateway, or directly query the Tendermint RPC" +
+		" endpoint to query this transaction. The new REST endpoint (via gRPC-gateway) is "
 
-	var errResp rest.ErrorResponse
-	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(txJSON, &errResp))
+		// Test that legacy endpoint return the above error message on IBC txs.
+	testCases := []struct {
+		desc string
+		url  string
+	}{
+		{
+			"Query by hash",
+			fmt.Sprintf("%s/txs/%s", val.APIAddress, txRes.TxHash),
+		},
+		{
+			"Query by height",
+			fmt.Sprintf("%s/txs?tx.height=%d", val.APIAddress, txRes.Height),
+		},
+	}
 
-	errMsg := "This transaction was created with the new SIGN_MODE_DIRECT signing method, " +
-		"and therefore cannot be displayed via legacy REST handlers, please use CLI or directly query the Tendermint " +
-		"RPC endpoint to query this transaction."
+	for _, tc := range testCases {
+		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			txJSON, err := rest.GetRequest(tc.url)
+			s.Require().NoError(err)
 
-	s.Require().Contains(errResp.Error, errMsg)
+			fmt.Println(string(txJSON))
+
+			var errResp rest.ErrorResponse
+			s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(txJSON, &errResp))
+
+			s.Require().Contains(errResp.Error, errMsg)
+		})
+	}
 
 	// try fetching the txn using gRPC req, it will fetch info since it has proto codec.
 	grpcJSON, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/tx/%s", val.APIAddress, txRes.TxHash))
@@ -406,6 +427,7 @@ func (s *IntegrationTestSuite) TestLegacyRestErrMessages() {
 	res, err := rest.PostRequest(fmt.Sprintf("%s/txs/decode", val.APIAddress), "application/json", bz)
 	s.Require().NoError(err)
 
+	var errResp rest.ErrorResponse
 	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(res, &errResp))
 	s.Require().Contains(errResp.Error, errMsg)
 }

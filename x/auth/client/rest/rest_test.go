@@ -366,7 +366,7 @@ func (s *IntegrationTestSuite) TestLegacyRestErrMessages() {
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	errMsg := "This transaction was created with the new SIGN_MODE_DIRECT signing method, and therefore cannot be displayed" +
+	errMsg := "this transaction was created with the new SIGN_MODE_DIRECT signing method, and therefore cannot be displayed" +
 		" via legacy REST handlers. Please either use CLI, gRPC, gRPC-gateway, or directly query the Tendermint RPC" +
 		" endpoint to query this transaction. The new REST endpoint (via gRPC-gateway) is "
 

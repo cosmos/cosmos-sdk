@@ -2,6 +2,7 @@ package tmservice
 
 import (
 	"context"
+	"fmt"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -11,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	pagination "github.com/cosmos/cosmos-sdk/types/query"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -46,13 +48,13 @@ func (s queryServer) GetLatestBlock(context.Context, *qtypes.GetLatestBlockReque
 	if err != nil {
 		return nil, err
 	}
-	protoBlockId := status.BlockID.ToProto()
+	protoBlockID := status.BlockID.ToProto()
 	protoBlock, err := status.Block.ToProto()
 	if err != nil {
 		return nil, err
 	}
 	return &qtypes.GetLatestBlockResponse{
-		BlockId: &protoBlockId,
+		BlockId: &protoBlockID,
 		Block:   protoBlock,
 	}, nil
 }
@@ -71,23 +73,93 @@ func (s queryServer) GetBlockByHeight(_ context.Context, req *qtypes.GetBlockByH
 	if err != nil {
 		return nil, err
 	}
-	protoBlockId := res.BlockID.ToProto()
+	protoBlockID := res.BlockID.ToProto()
 	protoBlock, err := res.Block.ToProto()
 	if err != nil {
 		return nil, err
 	}
 	return &qtypes.GetBlockByHeightResponse{
-		BlockId: &protoBlockId,
+		BlockId: &protoBlockID,
 		Block:   protoBlock,
 	}, nil
 }
 
-func (s queryServer) GetLatestValidatorSet(context.Context, *qtypes.GetLatestValidatorSetRequest) (*qtypes.GetLatestValidatorSetResponse, error) {
-	return &qtypes.GetLatestValidatorSetResponse{}, nil
+func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *qtypes.GetLatestValidatorSetRequest) (*qtypes.GetLatestValidatorSetResponse, error) {
+	offset := int(req.Pagination.Offset)
+	limit := int(req.Pagination.Limit)
+	if offset < 0 {
+		return nil, status.Error(codes.InvalidArgument, "offset must greater than 0")
+	}
+
+	if limit < 0 {
+		return nil, status.Error(codes.InvalidArgument, "limit must greater than 0")
+	} else if limit == 0 {
+		limit = pagination.DefaultLimit
+	}
+
+	page := offset/limit + 1
+	validatorsRes, err := rpc.GetValidators(s.clientCtx, nil, &page, &limit)
+	if err != nil {
+		return nil, err
+	}
+
+	outputValidatorsRes := &qtypes.GetLatestValidatorSetResponse{
+		BlockHeight: validatorsRes.BlockHeight,
+		Validators:  make([]*qtypes.Validator, len(validatorsRes.Validators)),
+	}
+
+	for i, validator := range validatorsRes.Validators {
+		outputValidatorsRes.Validators[i] = &qtypes.Validator{
+			Address:          validator.Address,
+			ProposerPriority: validator.ProposerPriority,
+			PubKey:           validator.PubKey,
+			VotingPower:      validator.VotingPower,
+		}
+	}
+	return outputValidatorsRes, nil
 }
 
-func (s queryServer) GetValidatorSetByHeight(context.Context, *qtypes.GetValidatorSetByHeightRequest) (*qtypes.GetValidatorSetByHeightResponse, error) {
-	return &qtypes.GetValidatorSetByHeightResponse{}, nil
+func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *qtypes.GetValidatorSetByHeightRequest) (*qtypes.GetValidatorSetByHeightResponse, error) {
+	offset := int(req.Pagination.Offset)
+	limit := int(req.Pagination.Limit)
+	if offset < 0 {
+		return nil, status.Error(codes.InvalidArgument, "offset must greater than 0")
+	}
+
+	if limit < 0 {
+		return nil, status.Error(codes.InvalidArgument, "limit must greater than 0")
+	} else if limit == 0 {
+		limit = pagination.DefaultLimit
+	}
+
+	page := offset/limit + 1
+
+	fmt.Println("Page = ", page, " Limit = ", limit)
+
+	chainHeight, err := rpc.GetChainHeight(s.clientCtx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to parse chain height")
+	}
+	if req.Height > chainHeight {
+		return nil, status.Error(codes.InvalidArgument, "requested block height is bigger then the chain length")
+	}
+
+	validatorsRes, err := rpc.GetValidators(s.clientCtx, &req.Height, &page, &limit)
+
+	outputValidatorsRes := &qtypes.GetValidatorSetByHeightResponse{
+		BlockHeight: validatorsRes.BlockHeight,
+		Validators:  make([]*qtypes.Validator, len(validatorsRes.Validators)),
+	}
+
+	for i, validator := range validatorsRes.Validators {
+		outputValidatorsRes.Validators[i] = &qtypes.Validator{
+			Address:          validator.Address,
+			ProposerPriority: validator.ProposerPriority,
+			PubKey:           validator.PubKey,
+			VotingPower:      validator.VotingPower,
+		}
+	}
+	return outputValidatorsRes, nil
 }
 
 func (s queryServer) GetNodeInfo(ctx context.Context, req *qtypes.GetNodeInfoRequest) (*qtypes.GetNodeInfoResponse, error) {

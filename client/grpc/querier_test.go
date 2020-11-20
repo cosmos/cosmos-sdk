@@ -51,7 +51,7 @@ func (s IntegrationTestSuite) TestQueryNodeInfo() {
 	s.Require().NoError(err)
 	s.Require().Equal(res.ApplicationVersion.AppName, version.NewInfo().AppName)
 
-	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/query/v1beta1/node_info", val.APIAddress))
+	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/node_info", val.APIAddress))
 	s.Require().NoError(err)
 	var getInfoRes qtypes.GetNodeInfoResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getInfoRes))
@@ -64,7 +64,7 @@ func (s IntegrationTestSuite) TestQuerySyncing() {
 	_, err := s.queryClient.GetSyncing(context.Background(), &qtypes.GetSyncingRequest{})
 	s.Require().NoError(err)
 
-	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/query/v1beta1/syncing", val.APIAddress))
+	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/syncing", val.APIAddress))
 	s.Require().NoError(err)
 	var syncingRes qtypes.GetSyncingResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &syncingRes))
@@ -76,7 +76,7 @@ func (s IntegrationTestSuite) TestQueryLatestBlock() {
 	_, err := s.queryClient.GetLatestBlock(context.Background(), &qtypes.GetLatestBlockRequest{})
 	s.Require().NoError(err)
 
-	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/query/v1beta1/blocks/latest", val.APIAddress))
+	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/blocks/latest", val.APIAddress))
 	s.Require().NoError(err)
 	var blockInfoRes qtypes.GetLatestBlockResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &blockInfoRes))
@@ -87,10 +87,39 @@ func (s IntegrationTestSuite) TestQueryBlockByHeight() {
 	_, err := s.queryClient.GetBlockByHeight(context.Background(), &qtypes.GetBlockByHeightRequest{Height: 1})
 	s.Require().NoError(err)
 
-	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/query/v1beta1/blocks/%d", val.APIAddress, 1))
+	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/blocks/%d", val.APIAddress, 1))
 	s.Require().NoError(err)
+	fmt.Println((string(restRes)))
 	var blockInfoRes qtypes.GetBlockByHeightResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &blockInfoRes))
+}
+
+func (s IntegrationTestSuite) TestQueryLatestValidatorSet() {
+	val := s.network.Validators[0]
+	_, err := s.queryClient.GetLatestValidatorSet(context.Background(), &qtypes.GetLatestValidatorSetRequest{Pagination: &qtypes.PageRequest{
+		Offset: 0,
+		Limit:  10,
+	}})
+	s.Require().NoError(err)
+
+	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validators/latest?offset=%d&limit=%d", val.APIAddress, 0, 1))
+	var validatorSetRes qtypes.GetLatestValidatorSetResponse
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &validatorSetRes))
+}
+
+func (s IntegrationTestSuite) TestQueryValidatorSetByHeight() {
+	val := s.network.Validators[0]
+	_, err := s.queryClient.GetValidatorSetByHeight(context.Background(), &qtypes.GetValidatorSetByHeightRequest{
+		Height: 1,
+		Pagination: &qtypes.PageRequest{
+			Offset: 0,
+			Limit:  10,
+		}})
+	s.Require().NoError(err)
+
+	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validators/%d?offset=%d&limit=%d", val.APIAddress, 1, 0, 1))
+	var validatorSetRes qtypes.GetValidatorSetByHeightResponse
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &validatorSetRes))
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

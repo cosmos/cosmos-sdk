@@ -101,9 +101,9 @@ func (s *coinTestSuite) TestCoinIsValid() {
 func (s *coinTestSuite) TestCustomValidation() {
 
 	newDnmRegex := `[\x{1F600}-\x{1F6FF}]`
-	sdk.CoinDenomRegex = func() string {
+	sdk.SetCoinDenomRegex(func() string {
 		return newDnmRegex
-	}
+	})
 
 	cases := []struct {
 		coin       sdk.Coin
@@ -119,7 +119,7 @@ func (s *coinTestSuite) TestCustomValidation() {
 	for i, tc := range cases {
 		s.Require().Equal(tc.expectPass, tc.coin.IsValid(), "unexpected result for IsValid, tc #%d", i)
 	}
-	sdk.CoinDenomRegex = sdk.DefaultCoinDenomRegex
+	sdk.SetCoinDenomRegex(sdk.DefaultCoinDenomRegex)
 }
 
 func (s *coinTestSuite) TestAddCoin() {

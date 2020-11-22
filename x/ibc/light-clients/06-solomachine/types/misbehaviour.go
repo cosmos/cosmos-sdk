@@ -3,8 +3,6 @@ package types
 import (
 	"bytes"
 
-	yaml "gopkg.in/yaml.v2"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
@@ -17,7 +15,7 @@ var (
 
 // ClientType is a Solo Machine light client.
 func (misbehaviour Misbehaviour) ClientType() string {
-	return SoloMachine
+	return exported.Solomachine
 }
 
 // GetClientID returns the ID of the client that committed a misbehaviour.
@@ -28,12 +26,6 @@ func (misbehaviour Misbehaviour) GetClientID() string {
 // Type implements Evidence interface.
 func (misbehaviour Misbehaviour) Type() string {
 	return exported.TypeClientMisbehaviour
-}
-
-// String implements Evidence interface.
-func (misbehaviour Misbehaviour) String() string {
-	out, _ := yaml.Marshal(misbehaviour)
-	return string(out)
 }
 
 // GetHeight returns the sequence at which misbehaviour occurred.

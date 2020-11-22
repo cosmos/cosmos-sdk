@@ -3,10 +3,9 @@ package simulation
 import (
 	"math/rand"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -14,10 +13,10 @@ import (
 // eventually more useful data can be placed in here.
 // (e.g. number of coins)
 type Account struct {
-	PrivKey crypto.PrivKey
-	PubKey  crypto.PubKey
+	PrivKey cryptotypes.PrivKey
+	PubKey  cryptotypes.PubKey
 	Address sdk.AccAddress
-	ConsKey crypto.PrivKey
+	ConsKey cryptotypes.PrivKey
 }
 
 // Equals returns true if two accounts are equal

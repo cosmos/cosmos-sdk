@@ -73,7 +73,7 @@ Where proposal.json contains:
 				proposal.Title, proposal.Description, proposal.Changes.ToParamChanges(),
 			)
 
-			deposit, err := sdk.ParseCoins(proposal.Deposit)
+			deposit, err := sdk.ParseCoinsNormalized(proposal.Deposit)
 			if err != nil {
 				return err
 			}

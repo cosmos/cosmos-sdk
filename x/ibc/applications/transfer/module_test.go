@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -54,7 +55,7 @@ func (suite *TransferTestSuite) TestOnChanOpenInit() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest() // reset
 
-			_, _, connA, _ = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+			_, _, connA, _ = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 			testChannel = connA.NextTestChannel(ibctesting.TransferPort)
 			counterparty := channeltypes.NewCounterparty(testChannel.PortID, testChannel.ID)
 			channel = &channeltypes.Channel{
@@ -142,7 +143,7 @@ func (suite *TransferTestSuite) TestOnChanOpenTry() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest() // reset
 
-			_, _, connA, _ = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+			_, _, connA, _ = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 			testChannel = connA.NextTestChannel(ibctesting.TransferPort)
 			counterparty := channeltypes.NewCounterparty(testChannel.PortID, testChannel.ID)
 			channel = &channeltypes.Channel{
@@ -208,7 +209,7 @@ func (suite *TransferTestSuite) TestOnChanOpenAck() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest() // reset
 
-			_, _, connA, _ = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+			_, _, connA, _ = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 			testChannel = connA.NextTestChannel(ibctesting.TransferPort)
 			counterpartyVersion = types.Version
 

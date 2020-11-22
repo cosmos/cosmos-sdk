@@ -57,14 +57,6 @@ tools-stamp: statik runsim
 	# in a row.
 	touch $@
 
-proto-tools: proto-tools-stamp
-proto-tools-stamp:
-	bash $(mkfile_dir)/proto-tools-installer.sh
-	# Create dummy file to satisfy dependency and avoid
-	# rebuilding when this Makefile target is hit twice
-	# in a row.
-	touch $@
-
 # Install the runsim binary with a temporary workaround of entering an outside
 # directory as the "go get" command ignores the -mod option and will polute the
 # go.{mod, sum} files.
@@ -87,6 +79,6 @@ $(RUNSIM):
 
 tools-clean:
 	rm -f $(STATIK) $(GOLANGCI_LINT) $(RUNSIM)
-	rm -f proto-tools-stamp tools-stamp
+	rm -f tools-stamp
 
 .PHONY: tools-clean statik runsim

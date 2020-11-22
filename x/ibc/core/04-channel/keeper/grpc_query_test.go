@@ -62,7 +62,7 @@ func (suite *KeeperTestSuite) TestQueryChannel() {
 		{
 			"success",
 			func() {
-				_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 				// init channel
 				channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
 				suite.Require().NoError(err)
@@ -377,7 +377,7 @@ func (suite *KeeperTestSuite) TestQueryChannelClientState() {
 		{
 			"success",
 			func() {
-				clientA, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				clientA, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 				// init channel
 				channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
 				suite.Require().NoError(err)
@@ -505,7 +505,7 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 		{
 			"success",
 			func() {
-				clientA, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				clientA, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 				// init channel
 				channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
 				suite.Require().NoError(err)

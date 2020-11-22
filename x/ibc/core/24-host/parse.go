@@ -25,7 +25,7 @@ func ParseChannelPath(path string) (string, string, error) {
 		return "", "", sdkerrors.Wrapf(ErrInvalidPath, "cannot parse channel path %s", path)
 	}
 
-	if split[1] != "ports" || split[3] != "channels" {
+	if split[1] != KeyPortPrefix || split[3] != KeyChannelPrefix {
 		return "", "", sdkerrors.Wrapf(ErrInvalidPath, "cannot parse channel path %s", path)
 	}
 

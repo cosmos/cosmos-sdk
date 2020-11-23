@@ -217,6 +217,8 @@ func checkSignModeError(ctx client.Context, resp interface{}, grpcEndPoint strin
 		for _, knownError := range knownErrors {
 			if strings.Contains(err.Error(), knownError) {
 				isKnownError = true
+
+				break
 			}
 		}
 

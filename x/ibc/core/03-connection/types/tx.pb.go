@@ -112,7 +112,9 @@ var xxx_messageInfo_MsgConnectionOpenInitResponse proto.InternalMessageInfo
 // MsgConnectionOpenTry defines a msg sent by a Relayer to try to open a
 // connection on Chain B.
 type MsgConnectionOpenTry struct {
-	ClientId             string        `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	// in the case of crossing hello's, when both chains call OpenInit, we need the connection identifier
+	// of the previous connection in state INIT
 	DesiredConnectionId  string        `protobuf:"bytes,2,opt,name=desired_connection_id,json=desiredConnectionId,proto3" json:"desired_connection_id,omitempty" yaml:"desired_connection_id"`
 	ClientState          *types.Any    `protobuf:"bytes,3,opt,name=client_state,json=clientState,proto3" json:"client_state,omitempty" yaml:"client_state"`
 	Counterparty         Counterparty  `protobuf:"bytes,4,opt,name=counterparty,proto3" json:"counterparty"`

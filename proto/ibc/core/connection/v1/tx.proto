@@ -45,6 +45,8 @@ message MsgConnectionOpenTry {
   option (gogoproto.goproto_getters) = false;
 
   string                    client_id             = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // in the case of crossing hello's, when both chains call OpenInit, we need the connection identifier
+  // of the previous connection in state INIT
   string                    desired_connection_id = 2 [(gogoproto.moretags) = "yaml:\"desired_connection_id\""];
   google.protobuf.Any       client_state          = 3 [(gogoproto.moretags) = "yaml:\"client_state\""];
   Counterparty              counterparty          = 4 [(gogoproto.nullable) = false];

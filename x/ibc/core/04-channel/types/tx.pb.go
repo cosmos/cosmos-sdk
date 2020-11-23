@@ -110,7 +110,9 @@ var xxx_messageInfo_MsgChannelOpenInitResponse proto.InternalMessageInfo
 // MsgChannelOpenInit defines a msg sent by a Relayer to try to open a channel
 // on Chain B.
 type MsgChannelOpenTry struct {
-	PortId              string       `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
+	PortId string `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
+	// in the case of crossing hello's, when both chains call OpenInit, we need the channel identifier
+	// of the previous channel in state INIT
 	DesiredChannelId    string       `protobuf:"bytes,2,opt,name=desired_channel_id,json=desiredChannelId,proto3" json:"desired_channel_id,omitempty" yaml:"desired_channel_id"`
 	Channel             Channel      `protobuf:"bytes,3,opt,name=channel,proto3" json:"channel"`
 	CounterpartyVersion string       `protobuf:"bytes,4,opt,name=counterparty_version,json=counterpartyVersion,proto3" json:"counterparty_version,omitempty" yaml:"counterparty_version"`

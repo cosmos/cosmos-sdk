@@ -388,7 +388,7 @@ func (chain *TestChain) AddTestConnection(clientID, counterpartyClientID string)
 // created given a clientID and counterparty clientID. The connection id
 // format: <chainID>-conn<index>
 func (chain *TestChain) ConstructNextTestConnection(clientID, counterpartyClientID string) *TestConnection {
-	connectionID := fmt.Sprintf("%s%d", connectiontypes.ConnectionPrefix, len(chain.Connections))
+	connectionID := connectiontypes.FormatConnectionIdentifier(uint64(len(chain.Connections)))
 	return &TestConnection{
 		ID:                   connectionID,
 		ClientID:             clientID,
@@ -425,7 +425,7 @@ func (chain *TestChain) AddTestChannel(conn *TestConnection, portID string) Test
 // The port is passed in by the caller.
 func (chain *TestChain) NextTestChannel(conn *TestConnection, portID string) TestChannel {
 	nextChanSeq := chain.App.IBCKeeper.ChannelKeeper.GetNextChannelSequence(chain.GetContext())
-	channelID := fmt.Sprintf("%s%d", channeltypes.ChannelPrefix, nextChanSeq)
+	channelID := channeltypes.FormatChannelIdentifier(nextChanSeq)
 	return TestChannel{
 		PortID:               portID,
 		ID:                   channelID,

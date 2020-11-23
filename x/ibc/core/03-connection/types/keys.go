@@ -25,5 +25,5 @@ const (
 
 // FormatConnectionIdentifier returns the connection identifier with the sequence appended.
 func FormatConnectionIdentifier(sequence uint64) string {
-	return fmt.Sprintf("%s%d", ConnectionPrefix, sequence)
+	return fmt.Sprintf("%s-%d", ConnectionPrefix, sequence)
 }

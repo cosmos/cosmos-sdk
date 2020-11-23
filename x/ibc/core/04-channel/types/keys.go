@@ -25,5 +25,5 @@ const (
 
 // FormatChannelIdentifier returns the channel identifier with the sequence appended.
 func FormatChannelIdentifier(sequence uint64) string {
-	return fmt.Sprintf("%s%d", ChannelPrefix, sequence)
+	return fmt.Sprintf("%s-%d", ChannelPrefix, sequence)
 }

@@ -21,3 +21,4 @@ Contains the files for a deterministic network, with fixed keys and some actions
 ## Notes
 
 - Keyring password is 12345678
+- data.sh creates node data, it's required in case consensus breaking changes are made to quickly recreate replicable node data for rosetta

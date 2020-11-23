@@ -1,5 +1,5 @@
 #!/bin/sh
 
 set -e
-
-echo "12345678" | simd tx bank send cosmos1wjmt63j4fv9nqda92nsrp2jp2vsukcke4va3pt "$1" 100stake --chain-id="testing" --node tcp://cosmos:26657 --yes
+addr=$(simd keys show fd -a --keyring-backend=test)
+echo "12345678" | simd tx bank send "$addr" "$1" 100stake --chain-id="testing" --node tcp://cosmos:26657 --yes --keyring-backend=test

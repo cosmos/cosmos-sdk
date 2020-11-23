@@ -6,8 +6,8 @@ See the [Cosmos SDK 0.39.2 milestone](https://github.com/cosmos/cosmos-sdk/miles
 
 ## Allow ValidateDenom() to be customised per application
 
-Applications can now customise `types.Coin` denomination validation by
-replacing `types.CoinDenomRegex` with their application-specific validation function.
+Applications can now customise `types.Coin` denomination validation by passing
+their application-specific validation function to `types.SetCoinDenomRegex()`.
 
 ## Upgrade queries don't work after upgrade
 

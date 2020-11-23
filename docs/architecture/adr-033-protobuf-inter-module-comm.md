@@ -48,9 +48,10 @@ However, these permissions don’t really do much. They control what modules can
 
 ## Decision
 
-Starting from the work in [ADR 31](./adr-031-msg-service.md), we introduce the following inter-module communication system
-to replace the existing keeper paradigm. These two pieces together are intended to form the basis of a Cosmos SDK v1.0
-that provides the necessary stability and encapsulation guarantees that allow a thriving module ecosystem to emerge.
+Starting from the work in [ADR 021](./adr-021-protobuf-query-encoding.md) and [ADR 31](./adr-031-msg-service.md), we introduce
+the following inter-module communication system to replace the existing keeper paradigm. These pieces are
+intended to form the basis of a Cosmos SDK v1.0 that provides the necessary stability and encapsulation guarantees
+that allow a thriving module ecosystem to emerge.
 
 ### New "Keeper" Paradigm
 
@@ -71,7 +72,7 @@ type MsgServer interface {
 }
 ```
 
-[ADR 021](./adr-021-protobuf-query-encoding.md) and [ADR 31]() specifies how modules can implement the generated `QueryServer`
+[ADR 021](./adr-021-protobuf-query-encoding.md) and [ADR 31](./adr-031-msg-service.md) specifies how modules can implement the generated `QueryServer`
 and `MsgServer` interfaces as replacements for the legacy queriers and `Msg` handlers respectively.
 
 In this ADR we explain how modules can make queries and send `Msg`s to other modules using the generated `QueryClient`

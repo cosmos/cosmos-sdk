@@ -396,9 +396,10 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 
 			store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
 
+			commitment := channeltypes.CommitPacket(suite.chainA.App.IBCKeeper.Codec(), packet)
 			err = clientState.VerifyPacketCommitment(
 				store, suite.chainA.Codec, proofHeight, &prefix, proof,
-				packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), channeltypes.CommitPacket(packet),
+				packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), commitment,
 			)
 
 			if tc.expPass {

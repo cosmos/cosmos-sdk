@@ -50,9 +50,6 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 		case types.QueryDelegatorValidator:
 			return queryDelegatorValidator(ctx, req, k, legacyQuerierCdc)
 
-		case types.QueryHistoricalInfo:
-			return queryHistoricalInfo(ctx, req, k, legacyQuerierCdc)
-
 		case types.QueryPool:
 			return queryPool(ctx, k, legacyQuerierCdc)
 
@@ -383,27 +380,6 @@ func queryRedelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacy
 	}
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, redelResponses)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
-	}
-
-	return res, nil
-}
-
-func queryHistoricalInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
-	var params types.QueryHistoricalInfoRequest
-
-	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
-	}
-
-	hi, found := k.GetHistoricalInfo(ctx, params.Height)
-	if !found {
-		return nil, types.ErrNoHistoricalInfo
-	}
-
-	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, hi)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

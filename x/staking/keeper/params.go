@@ -26,13 +26,6 @@ func (k Keeper) MaxEntries(ctx sdk.Context) (res uint32) {
 	return
 }
 
-// HistoricalEntries = number of historical info entries
-// to persist in store
-func (k Keeper) HistoricalEntries(ctx sdk.Context) (res uint32) {
-	k.paramstore.Get(ctx, types.KeyHistoricalEntries, &res)
-	return
-}
-
 // BondDenom - Bondable coin denomination
 func (k Keeper) BondDenom(ctx sdk.Context) (res string) {
 	k.paramstore.Get(ctx, types.KeyBondDenom, &res)
@@ -45,7 +38,6 @@ func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 		k.UnbondingTime(ctx),
 		k.MaxValidators(ctx),
 		k.MaxEntries(ctx),
-		k.HistoricalEntries(ctx),
 		k.BondDenom(ctx),
 	)
 }

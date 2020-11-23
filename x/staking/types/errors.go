@@ -54,7 +54,5 @@ var (
 	ErrDelegatorShareExRateInvalid     = sdkerrors.Register(ModuleName, 42, "cannot delegate to validators with invalid (zero) ex-rate")
 	ErrBothShareMsgsGiven              = sdkerrors.Register(ModuleName, 43, "both shares amount and shares percent provided")
 	ErrNeitherShareMsgsGiven           = sdkerrors.Register(ModuleName, 44, "neither shares amount nor shares percent provided")
-	ErrInvalidHistoricalInfo           = sdkerrors.Register(ModuleName, 45, "invalid historical info")
-	ErrNoHistoricalInfo                = sdkerrors.Register(ModuleName, 46, "no historical info found")
-	ErrEmptyValidatorPubKey            = sdkerrors.Register(ModuleName, 47, "empty validator public key")
+	ErrEmptyValidatorPubKey            = sdkerrors.Register(ModuleName, 45, "empty validator public key")
 )

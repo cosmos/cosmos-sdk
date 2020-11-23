@@ -43,7 +43,7 @@ func (suite *KeeperTestSuite) TestQueryClientState() {
 		{
 			"success",
 			func() {
-				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.ZeroHeight(),  commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
+				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.ZeroHeight(), commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
 				suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 
 				var err error
@@ -204,7 +204,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 		{
 			"success latest height",
 			func() {
-				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight,  commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
+				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
 				cs := ibctmtypes.NewConsensusState(
 					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash1")), nil,
 				)
@@ -365,4 +365,58 @@ func (suite *KeeperTestSuite) TestQueryParams() {
 	expParams := types.DefaultParams()
 	res, _ := suite.queryClient.ClientParams(ctx, &types.QueryClientParamsRequest{})
 	suite.Require().Equal(&expParams, res.Params)
+}
+
+func (suite *KeeperTestSuite) TestGRPCQueryHistoricalInfo() {
+	hi, found := suite.chainA.App.StakingKeeper.GetHistoricalInfo(ctx, 5)
+	suite.True(found)
+
+	var req *types.QueryHistoricalInfoRequest
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{"empty request",
+			func() {
+				req = &types.QueryHistoricalInfoRequest{}
+			},
+			false,
+		},
+		{"invalid request with negative height",
+			func() {
+				req = &types.QueryHistoricalInfoRequest{Height: -1}
+			},
+			false,
+		},
+		{"valid request with old height",
+			func() {
+				req = &types.QueryHistoricalInfoRequest{Height: 4}
+			},
+			false,
+		},
+		{"valid request with current height",
+			func() {
+				req = &types.QueryHistoricalInfoRequest{Height: 5}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			tc.malleate()
+
+			ctx := sdk.WrapSDKContext(suite.ctx)
+			res, err := suite.queryClient.HistoricalInfo(ctx, req)
+			if tc.expPass {
+				suite.NoError(err)
+				suite.NotNil(res)
+				suite.True(hi.Equal(res.Hist))
+			} else {
+				suite.Error(err)
+				suite.Nil(res)
+			}
+		})
+	}
 }

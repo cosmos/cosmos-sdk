@@ -26,10 +26,5 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 				return fmt.Sprintf("\"%d\"", GenUnbondingTime(r))
 			},
 		),
-		simulation.NewSimParamChange(types.ModuleName, string(types.KeyHistoricalEntries),
-			func(r *rand.Rand) string {
-				return fmt.Sprintf("%d", GetHistEntries(r))
-			},
-		),
 	}
 }

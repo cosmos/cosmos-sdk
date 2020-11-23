@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -37,7 +36,6 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryValidatorDelegations(),
 		GetCmdQueryValidatorUnbondingDelegations(),
 		GetCmdQueryValidatorRedelegations(),
-		GetCmdQueryHistoricalInfo(),
 		GetCmdQueryParams(),
 		GetCmdQueryPool(),
 	)
@@ -649,51 +647,6 @@ $ %s query staking redelegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "delegator redelegations")
-
-	return cmd
-}
-
-// GetCmdQueryHistoricalInfo implements the historical info query command
-func GetCmdQueryHistoricalInfo() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "historical-info [height]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Query historical info at given height",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query historical info at given height.
-
-Example:
-$ %s query staking historical-info 5
-`,
-				version.AppName,
-			),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-
-			height, err := strconv.ParseInt(args[0], 10, 64)
-			if err != nil || height < 0 {
-				return fmt.Errorf("height argument provided must be a non-negative-integer: %v", err)
-			}
-
-			params := &types.QueryHistoricalInfoRequest{Height: height}
-			res, err := queryClient.HistoricalInfo(context.Background(), params)
-
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintOutput(res.Hist)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }

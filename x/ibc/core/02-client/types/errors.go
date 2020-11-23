@@ -29,4 +29,6 @@ var (
 	ErrUpdateClientFailed                     = sdkerrors.Register(SubModuleName, 22, "unable to update light client")
 	ErrInvalidUpdateClientProposal            = sdkerrors.Register(SubModuleName, 23, "invalid update client proposal")
 	ErrInvalidUpgradeClient                   = sdkerrors.Register(SubModuleName, 24, "invalid client upgrade")
+	ErrInvalidHistoricalInfo                  = sdkerrors.Register(SubModuleName, 25, "invalid historical info")
+	ErrNoHistoricalInfo                       = sdkerrors.Register(SubModuleName, 26, "no historical info found")
 )

@@ -14,8 +14,9 @@ func TestValidateParams(t *testing.T) {
 		expPass bool
 	}{
 		{"default params", DefaultParams(), true},
-		{"custom params", NewParams(exported.Tendermint), true},
-		{"blank client", NewParams(" "), false},
+		{"custom params", NewParams(1, exported.Tendermint), true},
+		{"blank client", NewParams(1, " "), false},
+		{"0 hist entries", NewParams(0, exported.Tendermint), false},
 	}
 
 	for _, tc := range testCases {

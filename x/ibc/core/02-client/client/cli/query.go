@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/spf13/cobra"
 
@@ -270,6 +271,43 @@ func GetCmdParams() *cobra.Command {
 
 			res, _ := queryClient.ClientParams(context.Background(), &types.QueryClientParamsRequest{})
 			return clientCtx.PrintOutput(res.Params)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdQueryHistoricalInfo return the historical info for a given height.
+func GetCmdQueryHistoricalInfo() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "historical-info [height]",
+		Args:    cobra.ExactArgs(1),
+		Short:   "Query historical info at given height",
+		Long:    "Query historical info at given height",
+		Example: fmt.Sprintf("%s query %s %s historical-info 5", version.AppName, host.ModuleName, types.SubModuleName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			height, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil || height < 0 {
+				return fmt.Errorf("height argument provided must be a non-negative-integer: %w", err)
+			}
+
+			req := &types.QueryHistoricalInfoRequest{Height: height}
+			res, err := queryClient.HistoricalInfo(context.Background(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintOutput(res.Hist)
 		},
 	}
 

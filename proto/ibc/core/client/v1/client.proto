@@ -5,6 +5,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types";
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
+import "tendermint/types/types.proto";
+import "cosmos/staking/v1beta1/staking.proto";
 
 // IdentifiedClientState defines a client state with an additional client
 // identifier field.
@@ -71,4 +73,15 @@ message Height {
 message Params {
   // allowed_clients defines the list of allowed client state types.
   repeated string allowed_clients = 1 [(gogoproto.moretags) = "yaml:\"allowed_clients\""];
+  // historical_entries defines the max number of Historical Info stored.
+  uint32 historical_entries = 2 [(gogoproto.moretags) = "yaml:\"historical_entries\""];
+}
+
+// HistoricalInfo contains header and validator information for a given block.
+// It is stored as part of staking module's state, which persists the `n` most
+// recent HistoricalInfo
+// (`n` is set by the staking module's `historical_entries` parameter).
+message HistoricalInfo {
+  tendermint.types.Header header = 1 [(gogoproto.nullable) = false];
+  repeated cosmos.staking.v1beta1.Validator      valset = 2 [(gogoproto.nullable) = false];
 }

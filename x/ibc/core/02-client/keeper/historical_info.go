@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 )
 
 // GetHistoricalInfo gets the historical info at a given height
@@ -40,7 +40,7 @@ func (k Keeper) DeleteHistoricalInfo(ctx sdk.Context, height int64) {
 func (k Keeper) IterateHistoricalInfo(ctx sdk.Context, cb func(types.HistoricalInfo) bool) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.HistoricalInfoKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.HistoricalInfoKeyPrefix)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -90,7 +90,7 @@ func (k Keeper) TrackHistoricalInfo(ctx sdk.Context) {
 	}
 
 	// Create HistoricalInfo struct
-	lastVals := k.GetLastValidators(ctx)
+	lastVals := k.stakingKeeper.GetLastValidators(ctx)
 	historicalEntry := types.NewHistoricalInfo(ctx.BlockHeader(), lastVals)
 
 	// Set latest HistoricalInfo at current height

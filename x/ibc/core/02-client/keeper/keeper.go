@@ -179,7 +179,8 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height exported.Height) (
 	if version != height.GetVersionNumber() {
 		return nil, false
 	}
-	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(selfHeight.VersionHeight))
+
+	histInfo, found := k.GetHistoricalInfo(ctx, int64(selfHeight.VersionHeight))
 	if !found {
 		return nil, false
 	}

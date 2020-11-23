@@ -3,7 +3,6 @@ package rest
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -85,12 +84,6 @@ func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 	r.HandleFunc(
 		"/staking/validators/{validatorAddr}/unbonding_delegations",
 		validatorUnbondingDelegationsHandlerFn(clientCtx),
-	).Methods("GET")
-
-	// Get HistoricalInfo at a given height
-	r.HandleFunc(
-		"/staking/historical_info/{height}",
-		historicalInfoHandlerFn(clientCtx),
 	).Methods("GET")
 
 	// Get the current state of the staking pool
@@ -314,35 +307,6 @@ func validatorDelegationsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 // HTTP request handler to query all unbonding delegations from a validator
 func validatorUnbondingDelegationsHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return queryValidator(cliCtx, fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryValidatorUnbondingDelegations))
-}
-
-// HTTP request handler to query historical info at a given height
-func historicalInfoHandlerFn(clientCtx client.Context) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		heightStr := vars["height"]
-
-		height, err := strconv.ParseInt(heightStr, 10, 64)
-		if err != nil || height < 0 {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("Must provide non-negative integer for height: %v", err))
-			return
-		}
-
-		params := types.QueryHistoricalInfoRequest{Height: height}
-
-		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
-		if rest.CheckInternalServerError(w, err) {
-			return
-		}
-
-		res, height, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryHistoricalInfo), bz)
-		if rest.CheckBadRequestError(w, err) {
-			return
-		}
-
-		clientCtx = clientCtx.WithHeight(height)
-		rest.PostProcessResponse(w, clientCtx, res)
-	}
 }
 
 // HTTP request handler to query the pool information

@@ -157,9 +157,8 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json
 	return cdc.MustMarshalJSON(gs)
 }
 
-// BeginBlock returns the begin blocker for the staking module.
-func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
-	BeginBlocker(ctx, am.keeper)
+// BeginBlock performs a no-op.
+func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {
 }
 
 // EndBlock returns the end blocker for the staking module. It returns no validator

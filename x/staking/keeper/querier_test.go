@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -32,13 +31,6 @@ func TestNewQuerier(t *testing.T) {
 		app.StakingKeeper.SetValidator(ctx, validators[i])
 		app.StakingKeeper.SetValidatorByPowerIndex(ctx, validators[i])
 	}
-
-	header := tmproto.Header{
-		ChainID: "HelloChain",
-		Height:  5,
-	}
-	hi := types.NewHistoricalInfo(header, validators[:])
-	app.StakingKeeper.SetHistoricalInfo(ctx, 5, &hi)
 
 	query := abci.RequestQuery{
 		Path: "",
@@ -95,16 +87,6 @@ func TestNewQuerier(t *testing.T) {
 	query.Data = bz
 
 	_, err = querier(ctx, []string{"redelegations"}, query)
-	require.NoError(t, err)
-
-	queryHisParams := types.QueryHistoricalInfoRequest{Height: 5}
-	bz, errRes = cdc.MarshalJSON(queryHisParams)
-	require.NoError(t, errRes)
-
-	query.Path = "/custom/staking/historicalInfo"
-	query.Data = bz
-
-	_, err = querier(ctx, []string{"historicalInfo"}, query)
 	require.NoError(t, err)
 }
 
@@ -702,51 +684,4 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 	require.NotNil(t, res)
 	require.NoError(t, cdc.UnmarshalJSON(res, &ubDels))
 	require.Equal(t, 0, len(ubDels))
-}
-
-func TestQueryHistoricalInfo(t *testing.T) {
-	cdc, app, ctx := createTestInput()
-	legacyQuerierCdc := codec.NewAminoCodec(cdc)
-	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc.LegacyAmino)
-
-	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.TokensFromConsensusPower(10000))
-	addrAcc1, addrAcc2 := addrs[0], addrs[1]
-	addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
-
-	// Create Validators and Delegation
-	val1 := teststaking.NewValidator(t, addrVal1, PKs[0])
-	val2 := teststaking.NewValidator(t, addrVal2, PKs[1])
-	vals := []types.Validator{val1, val2}
-	app.StakingKeeper.SetValidator(ctx, val1)
-	app.StakingKeeper.SetValidator(ctx, val2)
-
-	header := tmproto.Header{
-		ChainID: "HelloChain",
-		Height:  5,
-	}
-	hi := types.NewHistoricalInfo(header, vals)
-	app.StakingKeeper.SetHistoricalInfo(ctx, 5, &hi)
-
-	queryHistoricalParams := types.QueryHistoricalInfoRequest{Height: 4}
-	bz, errRes := cdc.MarshalJSON(queryHistoricalParams)
-	require.NoError(t, errRes)
-	query := abci.RequestQuery{
-		Path: "/custom/staking/historicalInfo",
-		Data: bz,
-	}
-	res, err := querier(ctx, []string{types.QueryHistoricalInfo}, query)
-	require.Error(t, err, "Invalid query passed")
-	require.Nil(t, res, "Invalid query returned non-nil result")
-
-	queryHistoricalParams = types.QueryHistoricalInfoRequest{Height: 5}
-	bz, errRes = cdc.MarshalJSON(queryHistoricalParams)
-	require.NoError(t, errRes)
-	query.Data = bz
-	res, err = querier(ctx, []string{types.QueryHistoricalInfo}, query)
-	require.NoError(t, err, "Valid query passed")
-	require.NotNil(t, res, "Valid query returned nil result")
-
-	var recv types.HistoricalInfo
-	require.NoError(t, cdc.UnmarshalJSON(res, &recv))
-	require.Equal(t, hi, recv, "HistoricalInfo query returned wrong result")
 }

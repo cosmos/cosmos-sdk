@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -11,9 +12,13 @@ import (
 var (
 	// DefaultAllowedClients are "06-solomachine" and "07-tendermint"
 	DefaultAllowedClients = []string{exported.Solomachine, exported.Tendermint}
+	// DefaultHistoricalEntries is 100.
+	DefaultHistoricalEntries uint32 = 100
 
-	// KeyAllowedClients is store's key for AllowedClients Params
+	// KeyAllowedClients is the store key for AllowedClients Params
 	KeyAllowedClients = []byte("AllowedClients")
+	// KeyHistoricalEntries is the store key for HistoricalEntries Params
+	KeyHistoricalEntries = []byte("HistoricalEntries")
 )
 
 // ParamKeyTable type declaration for parameters
@@ -21,27 +26,33 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-// NewParams creates a new parameter configuration for the ibc transfer module
-func NewParams(allowedClients ...string) Params {
+// NewParams creates a new parameter configuration for the ibc client.
+func NewParams(historicalEntries uint32, allowedClients ...string) Params {
 	return Params{
-		AllowedClients: allowedClients,
+		AllowedClients:    allowedClients,
+		HistoricalEntries: historicalEntries,
 	}
 }
 
-// DefaultParams is the default parameter configuration for the ibc-transfer module
+// DefaultParams is the default parameter configuration for the ibc client.
 func DefaultParams() Params {
-	return NewParams(DefaultAllowedClients...)
+	return NewParams(DefaultHistoricalEntries, DefaultAllowedClients...)
 }
 
-// Validate all ibc-transfer module parameters
+// Validate all ibc client submodule parameters
 func (p Params) Validate() error {
-	return validateClients(p.AllowedClients)
+	if err := validateClients(p.AllowedClients); err != nil {
+		return err
+	}
+
+	return validateHistoricalEntries(p.HistoricalEntries)
 }
 
 // ParamSetPairs implements params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyAllowedClients, p.AllowedClients, validateClients),
+		paramtypes.NewParamSetPair(KeyHistoricalEntries, &p.HistoricalEntries, validateHistoricalEntries),
 	}
 }
 
@@ -65,6 +76,19 @@ func validateClients(i interface{}) error {
 		if strings.TrimSpace(clientType) == "" {
 			return fmt.Errorf("client type %d cannot be blank", i)
 		}
+	}
+
+	return nil
+}
+
+func validateHistoricalEntries(i interface{}) error {
+	entries, ok := i.(uint32)
+	if !ok {
+		return fmt.Errorf("invalid historical entries parameter type: %T", i)
+	}
+
+	if entries == 0 {
+		return errors.New("historical entries parameter cannot be 0")
 	}
 
 	return nil

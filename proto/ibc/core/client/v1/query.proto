@@ -38,6 +38,11 @@ service Query {
   rpc ClientParams(QueryClientParamsRequest) returns (QueryClientParamsResponse) {
     option (google.api.http).get = "/ibc/client/v1beta1/params";
   }
+
+  // HistoricalInfo queries the historical info for given height.
+  rpc HistoricalInfo(QueryHistoricalInfoRequest) returns (QueryHistoricalInfoResponse) {
+    option (google.api.http).get = "/ibc/client/v1beta1/historical_info/{height}";
+  }
 }
 
 // QueryClientStateRequest is the request type for the Query/ClientState RPC
@@ -127,4 +132,18 @@ message QueryClientParamsRequest {}
 message QueryClientParamsResponse {
   // params defines the parameters of the module.
   Params params = 1;
+}
+
+// QueryHistoricalInfoRequest is request type for the Query/HistoricalInfo RPC
+// method.
+message QueryHistoricalInfoRequest {
+  // height defines at which height to query the historical info.
+  int64 height = 1;
+}
+
+// QueryHistoricalInfoResponse is response type for the Query/HistoricalInfo RPC
+// method.
+message QueryHistoricalInfoResponse {
+  // hist defines the historical info at the given height.
+  HistoricalInfo hist = 1;
 }

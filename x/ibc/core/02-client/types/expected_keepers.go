@@ -9,6 +9,6 @@ import (
 
 // StakingKeeper expected staking keeper
 type StakingKeeper interface {
-	GetHistoricalInfo(ctx sdk.Context, height int64) (stakingtypes.HistoricalInfo, bool)
+	GetLastValidators(ctx sdk.Context) []stakingtypes.Validator
 	UnbondingTime(ctx sdk.Context) time.Duration
 }

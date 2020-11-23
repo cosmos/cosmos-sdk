@@ -5,7 +5,8 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
@@ -15,7 +16,7 @@ var header = tmproto.Header{
 	Height:  5,
 }
 
-func createValidators(t *testing.T) []types.Validator {
+func createValidators(t *testing.T) []stakingtypes.Validator {
 	return []types.Validator{
 		newValidator(t, valAddr1, pk1),
 		newValidator(t, valAddr2, pk2),
@@ -26,7 +27,7 @@ func createValidators(t *testing.T) []types.Validator {
 func TestHistoricalInfo(t *testing.T) {
 	validators := createValidators(t)
 	hi := types.NewHistoricalInfo(header, validators)
-	require.True(t, sort.IsSorted(types.Validators(hi.Valset)), "Validators are not sorted")
+	require.True(t, sort.IsSorted(stakingtypes.Validators(hi.Valset)), "Validators are not sorted")
 
 	var value []byte
 	require.NotPanics(t, func() {
@@ -40,7 +41,7 @@ func TestHistoricalInfo(t *testing.T) {
 	for i := range hi.Valset {
 		require.True(t, hi.Valset[i].Equal(&recv.Valset[i]))
 	}
-	require.True(t, sort.IsSorted(types.Validators(hi.Valset)), "Validators are not sorted")
+	require.True(t, sort.IsSorted(stakingtypes.Validators(hi.Valset)), "Validators are not sorted")
 }
 
 func TestValidateBasic(t *testing.T) {
@@ -52,7 +53,7 @@ func TestValidateBasic(t *testing.T) {
 	require.Error(t, err, "ValidateBasic passed on nil ValSet")
 
 	// Ensure validators are not sorted
-	for sort.IsSorted(types.Validators(validators)) {
+	for sort.IsSorted(stakingtypes.Validators(validators)) {
 		rand.Shuffle(len(validators), func(i, j int) {
 			it := validators[i]
 			validators[i] = validators[j]

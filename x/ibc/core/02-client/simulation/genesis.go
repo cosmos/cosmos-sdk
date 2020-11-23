@@ -11,3 +11,8 @@ import (
 func GenClientGenesis(_ *rand.Rand, _ []simtypes.Account) types.GenesisState {
 	return types.DefaultGenesisState()
 }
+
+// GetHistEntries randomized HistoricalEntries between 0-100.
+func GetHistEntries(r *rand.Rand) uint32 {
+	return uint32(r.Intn(int(types.DefaultHistoricalEntries + 1)))
+}

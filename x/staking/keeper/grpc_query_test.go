@@ -531,60 +531,6 @@ func (suite *KeeperTestSuite) TestGRPCQueryPoolParameters() {
 	suite.Equal(app.StakingKeeper.GetParams(ctx), resp.Params)
 }
 
-func (suite *KeeperTestSuite) TestGRPCQueryHistoricalInfo() {
-	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
-
-	hi, found := app.StakingKeeper.GetHistoricalInfo(ctx, 5)
-	suite.True(found)
-
-	var req *types.QueryHistoricalInfoRequest
-	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
-	}{
-		{"empty request",
-			func() {
-				req = &types.QueryHistoricalInfoRequest{}
-			},
-			false,
-		},
-		{"invalid request with negative height",
-			func() {
-				req = &types.QueryHistoricalInfoRequest{Height: -1}
-			},
-			false,
-		},
-		{"valid request with old height",
-			func() {
-				req = &types.QueryHistoricalInfoRequest{Height: 4}
-			},
-			false,
-		},
-		{"valid request with current height",
-			func() {
-				req = &types.QueryHistoricalInfoRequest{Height: 5}
-			},
-			true,
-		},
-	}
-
-	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			tc.malleate()
-			res, err := queryClient.HistoricalInfo(gocontext.Background(), req)
-			if tc.expPass {
-				suite.NoError(err)
-				suite.NotNil(res)
-				suite.True(hi.Equal(res.Hist))
-			} else {
-				suite.Error(err)
-				suite.Nil(res)
-			}
-		})
-	}
-}
-
 func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
 

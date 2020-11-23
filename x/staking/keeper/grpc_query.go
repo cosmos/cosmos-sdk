@@ -362,24 +362,6 @@ func (k Querier) DelegatorUnbondingDelegations(c context.Context, req *types.Que
 		UnbondingResponses: unbondingDelegations, Pagination: pageRes}, nil
 }
 
-// HistoricalInfo queries the historical info for given height
-func (k Querier) HistoricalInfo(c context.Context, req *types.QueryHistoricalInfoRequest) (*types.QueryHistoricalInfoResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	if req.Height < 0 {
-		return nil, status.Error(codes.InvalidArgument, "height cannot be negative")
-	}
-	ctx := sdk.UnwrapSDKContext(c)
-	hi, found := k.GetHistoricalInfo(ctx, req.Height)
-	if !found {
-		return nil, status.Errorf(codes.NotFound, "historical info for height %d not found", req.Height)
-	}
-
-	return &types.QueryHistoricalInfoResponse{Hist: &hi}, nil
-}
-
 func (k Querier) Redelegations(c context.Context, req *types.QueryRedelegationsRequest) (*types.QueryRedelegationsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

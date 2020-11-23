@@ -9,13 +9,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // NewHistoricalInfo will create a historical information struct from header and valset
 // it will first sort valset before inclusion into historical info
-func NewHistoricalInfo(header tmproto.Header, valSet Validators) HistoricalInfo {
+func NewHistoricalInfo(header tmproto.Header, valSet stakingtypes.Validators) HistoricalInfo {
 	// Must sort in the same way that tendermint does
-	sort.Sort(ValidatorsByVotingPower(valSet))
+	sort.Sort(stakingtypes.ValidatorsByVotingPower(valSet))
 
 	return HistoricalInfo{
 		Header: header,
@@ -45,7 +46,7 @@ func ValidateBasic(hi HistoricalInfo) error {
 		return sdkerrors.Wrap(ErrInvalidHistoricalInfo, "validator set is empty")
 	}
 
-	if !sort.IsSorted(Validators(hi.Valset)) {
+	if !sort.IsSorted(stakingtypes.Validators(hi.Valset)) {
 		return sdkerrors.Wrap(ErrInvalidHistoricalInfo, "validator set is not sorted by address")
 	}
 

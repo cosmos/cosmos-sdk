@@ -25,19 +25,13 @@ const (
 
 	// Default maximum entries in a UBD/RED pair
 	DefaultMaxEntries uint32 = 7
-
-	// DefaultHistorical entries is 100. Apps that don't use IBC can ignore this
-	// value by not adding the staking module to the application module manager's
-	// SetOrderBeginBlockers.
-	DefaultHistoricalEntries uint32 = 100
 )
 
 var (
-	KeyUnbondingTime     = []byte("UnbondingTime")
-	KeyMaxValidators     = []byte("MaxValidators")
-	KeyMaxEntries        = []byte("MaxEntries")
-	KeyBondDenom         = []byte("BondDenom")
-	KeyHistoricalEntries = []byte("HistoricalEntries")
+	KeyUnbondingTime = []byte("UnbondingTime")
+	KeyMaxValidators = []byte("MaxValidators")
+	KeyMaxEntries    = []byte("MaxEntries")
+	KeyBondDenom     = []byte("BondDenom")
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
@@ -48,13 +42,12 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
-func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string) Params {
+func NewParams(unbondingTime time.Duration, maxValidators, maxEntries uint32, bondDenom string) Params {
 	return Params{
-		UnbondingTime:     unbondingTime,
-		MaxValidators:     maxValidators,
-		MaxEntries:        maxEntries,
-		HistoricalEntries: historicalEntries,
-		BondDenom:         bondDenom,
+		UnbondingTime: unbondingTime,
+		MaxValidators: maxValidators,
+		MaxEntries:    maxEntries,
+		BondDenom:     bondDenom,
 	}
 }
 
@@ -64,7 +57,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyUnbondingTime, &p.UnbondingTime, validateUnbondingTime),
 		paramtypes.NewParamSetPair(KeyMaxValidators, &p.MaxValidators, validateMaxValidators),
 		paramtypes.NewParamSetPair(KeyMaxEntries, &p.MaxEntries, validateMaxEntries),
-		paramtypes.NewParamSetPair(KeyHistoricalEntries, &p.HistoricalEntries, validateHistoricalEntries),
 		paramtypes.NewParamSetPair(KeyBondDenom, &p.BondDenom, validateBondDenom),
 	}
 }
@@ -75,7 +67,6 @@ func DefaultParams() Params {
 		DefaultUnbondingTime,
 		DefaultMaxValidators,
 		DefaultMaxEntries,
-		DefaultHistoricalEntries,
 		sdk.DefaultBondDenom,
 	)
 }
@@ -120,11 +111,7 @@ func (p Params) Validate() error {
 		return err
 	}
 
-	if err := validateBondDenom(p.BondDenom); err != nil {
-		return err
-	}
-
-	return nil
+	return validateBondDenom(p.BondDenom)
 }
 
 func validateUnbondingTime(i interface{}) error {
@@ -161,15 +148,6 @@ func validateMaxEntries(i interface{}) error {
 
 	if v == 0 {
 		return fmt.Errorf("max entries must be positive: %d", v)
-	}
-
-	return nil
-}
-
-func validateHistoricalEntries(i interface{}) error {
-	_, ok := i.(uint32)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
 	return nil

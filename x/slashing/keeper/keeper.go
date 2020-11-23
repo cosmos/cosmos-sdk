@@ -3,12 +3,10 @@ package keeper
 import (
 	"fmt"
 
-	gogotypes "github.com/gogo/protobuf/types"
-
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -42,33 +40,27 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // AddPubkey sets a address-pubkey relation
-func (k Keeper) AddPubkey(ctx sdk.Context, pubkey crypto.PubKey) {
-	addr := pubkey.Address()
-
-	pkStr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pubkey)
+func (k Keeper) AddPubkey(ctx sdk.Context, pubkey cryptotypes.PubKey) error {
+	bz, err := codec.MarshalAny(k.cdc, pubkey)
 	if err != nil {
-		panic(fmt.Errorf("error while setting address-pubkey relation: %s", addr))
+		return err
 	}
-
-	k.setAddrPubkeyRelation(ctx, addr, pkStr)
+	store := ctx.KVStore(k.storeKey)
+	key := types.AddrPubkeyRelationKey(pubkey.Address())
+	store.Set(key, bz)
+	return nil
 }
 
 // GetPubkey returns the pubkey from the adddress-pubkey relation
-func (k Keeper) GetPubkey(ctx sdk.Context, address crypto.Address) (crypto.PubKey, error) {
+func (k Keeper) GetPubkey(ctx sdk.Context, a cryptotypes.Address) (cryptotypes.PubKey, error) {
 	store := ctx.KVStore(k.storeKey)
-
-	var pubkey gogotypes.StringValue
-	err := k.cdc.UnmarshalBinaryBare(store.Get(types.AddrPubkeyRelationKey(address)), &pubkey)
-	if err != nil {
-		return nil, fmt.Errorf("address %s not found", sdk.ConsAddress(address))
+	bz := store.Get(types.AddrPubkeyRelationKey(a))
+	if bz == nil {
+		return nil, fmt.Errorf("address %s not found", sdk.ConsAddress(a))
 	}
-
-	pkStr, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, pubkey.Value)
-	if err != nil {
-		return pkStr, err
-	}
-
-	return pkStr, nil
+	var pk cryptotypes.PubKey
+	err := codec.UnmarshalAny(k.cdc, &pk, bz)
+	return pk, err
 }
 
 // Slash attempts to slash a validator. The slash is delegated to the staking
@@ -99,14 +91,7 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	k.sk.Jail(ctx, consAddr)
 }
 
-func (k Keeper) setAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address, pubkey string) {
-	store := ctx.KVStore(k.storeKey)
-
-	bz := k.cdc.MustMarshalBinaryBare(&gogotypes.StringValue{Value: pubkey})
-	store.Set(types.AddrPubkeyRelationKey(addr), bz)
-}
-
-func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address) {
+func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr cryptotypes.Address) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.AddrPubkeyRelationKey(addr))
 }

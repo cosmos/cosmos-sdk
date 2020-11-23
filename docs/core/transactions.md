@@ -12,7 +12,7 @@ order: 2
 
 ## Transactions
 
-Transactions are comprised of metadata held in [contexts](./context.md) and [messages](../building-modules/messages-and-queries.md) that trigger state changes within a module through the module's [Handler](../building-modules/handler.md).
+Transactions are comprised of metadata held in [contexts](./context.md) and [messages](../building-modules/messages-and-queries.md) that trigger state changes within a module through the module's [`Msg` service](../building-modules/msg-services.md).
 
 When users want to interact with an application and make state changes (e.g. sending coins), they create transactions. Each of a transaction's `message`s must be signed using the private key associated with the appropriate account(s), before the transaction is broadcasted to the network. A transaction must then be included in a block, validated, and approved by the network through the consensus process. To read more about the lifecycle of a transaction, click [here](../basics/tx-lifecycle.md).
 
@@ -45,7 +45,7 @@ When users interact with the application's interfaces, they invoke the underlyin
 
 ### Messages
 
-**`Message`s** are module-specific objects that trigger state transitions within the scope of the module they belong to. Module developers define the `message`s for their module by implementing the `Msg` interface, and also define a [`Handler`](../building-modules/handler.md) to process them.
+**`Message`s** are module-specific objects that trigger state transitions within the scope of the module they belong to. Module developers define the messages for their module by implementing the `Msg` interface, and also define a [`Handler`](../building-modules/msg-services.md#handler-type) to process them.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/tx_msg.go#L8-L29
 
@@ -85,7 +85,7 @@ Every message in a transaction must be signed by the addresses specified by `Get
 
 ### Handlers
 
-Since `message`s are module-specific types, each module needs a [`handler`](../building-modules/handler.md) to process all of its `message` types and trigger state changes within the module's scope. This design puts more responsibility on module developers, allowing application developers to reuse common functionalities without having to implement state transition logic repetitively. To read more about `handler`s, click [here](../building-modules/handler.md).
+Since messages are module-specific types, each module needs a [`handler`](../building-modules/msg-services.md#handler-type) to process all of its message types and trigger state changes within the module's scope. This design puts more responsibility on module developers, allowing application developers to reuse common functionalities without having to implement state transition logic repetitively. To read more about `handler`s, click [here](../building-modules/msg-services.md#handler-type).
 
 ## Next {hide}
 

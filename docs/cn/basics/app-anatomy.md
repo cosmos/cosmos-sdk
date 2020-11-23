@@ -148,7 +148,8 @@ AppModule 在模块上公开了一组有用的方法，这些方法有助于将�
 模块的`处理程序`通常在名为 `handler.go` 的文件中定义，并包括：
 
 - NewHandler 将消息发到对应的回调 `handler`。 该函数返回一个 `handler` 函数，此前这个函数在 `AppModule` 中注册，以在应用程序的模块管理器中用于初始化应用程序的路由器。接下来是 [nameservice tutorial](https://github.com/cosmos/sdk-tutorials/tree/master/nameservice) 的一个例子。
-  +++ https://github.com/cosmos/sdk-tutorials/blob/master/nameservice/x/nameservice/handler.go#L12-L26
+
++++ https://github.com/cosmos/sdk-tutorials/blob/86a27321cf89cc637581762e953d0c07f8c78ece/nameservice/x/nameservice/internal/keeper/querier.go#L19-L32
 
 - 模块定义的每种消息类型的处理函数。开发人员在这些函数中编写消息处理逻辑。这通常包括进行状态检查以确保消息有效，并调用 [`keeper`](https://docs.cosmos.network/master/basics/app-anatomy.html#keeper) 的方法来更新状态。
 

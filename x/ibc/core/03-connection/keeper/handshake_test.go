@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
@@ -267,15 +266,17 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			clientKey := host.FullClientStateKey(clientA)
 			proofClient, _ := suite.chainA.QueryProof(clientKey)
 
-			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenTry(
+			connectionID, err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenTry(
 				suite.chainB.GetContext(), connB.ID, counterparty, clientB, counterpartyClient,
 				versions, proofInit, proofClient, proofConsensus,
 				proofHeight, consensusHeight,
 			)
 
 			if tc.expPass {
+				suite.Require().Equal(types.FormatConnectionIdentifier(0), connectionID)
 				suite.Require().NoError(err)
 			} else {
+				suite.Require().Equal("", connectionID)
 				suite.Require().Error(err)
 			}
 		})

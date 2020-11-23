@@ -58,7 +58,7 @@ func NewCmdGrantAuthorization() *cobra.Command {
 			var authorization types.Authorization
 			switch msgType {
 			case (types.SendAuthorization{}.MethodName()):
-				limit, err := sdk.ParseCoins(args[2])
+				limit, err := sdk.ParseCoinsNormalized(args[2])
 				if err != nil {
 					return err
 				}

@@ -50,6 +50,8 @@ Because an account can no longer be pruned from state once its pubkey has change
 	ctx.GasMeter().ConsumeGas(amount, "pubkey change fee")
 ```
 
+Everytime a key for an address is changed, we will store a log of this change in the state of the chain, thus creating a stack of all previous keys for an address and the time intervals for which they were active.  This allows dapps and clients to easily query past keys for an account which may be useful for features such as verifying timestamped off-chain signed messages.
+
 
 ## Consequences
 

@@ -55,19 +55,39 @@ func CoinsToBalance(ownedCoins []sdk.Coin, availableCoins sdk.Coins) []*types.Am
 func ResultTxSearchToTransaction(txs []*rosetta.SdkTxWithHash) []*types.Transaction {
 	converted := make([]*types.Transaction, len(txs))
 	for i, tx := range txs {
-		// hasError := tx.Code > 0
+		// hasError := tx.Code > 0 // TODO find way to check for txs that have error.
 		converted[i] = &types.Transaction{
 			TransactionIdentifier: &types.TransactionIdentifier{Hash: tx.HexHash},
-			Operations:            SdkTxToOperations(tx.Tx, false, false),
+			Operations:            SdkTxToOperations(tx.Tx, true),
 			Metadata:              nil,
 		}
 	}
 	return converted
 }
 
-// SdkTxResponseToOperations converts a tx response to operations
-func SdkTxToOperations(tx sdk.Tx, hasError, withoutStatus bool) []*types.Operation {
-	return ToOperations(tx.GetMsgs(), hasError, withoutStatus)
+// SdkTxToOperations converts a tx response to operations
+func SdkTxToOperations(tx sdk.Tx, withStatus bool) []*types.Operation {
+	var operations []*types.Operation
+
+	feeOps := GetFeeOperationsFromTx(tx, withStatus)
+	operations = append(operations, feeOps...)
+
+	msgOps := SdkMsgsToOperations(tx.GetMsgs(), withStatus, len(feeOps))
+	operations = append(operations, msgOps...)
+
+	return operations
+}
+
+func GetFeeOperationsFromTx(tx sdk.Tx, withStatus bool) []*types.Operation {
+	verifiableTx := tx.(sdk.FeeTx)
+	feeCoins := verifiableTx.GetFee()
+	var ops []*types.Operation
+	if feeCoins != nil {
+		var feeOps = GetFeeOpFromCoins(feeCoins, verifiableTx.FeePayer().String(), withStatus)
+		ops = append(ops, feeOps...)
+	}
+
+	return ops
 }
 
 // TendermintTxsToTxIdentifiers converts a tendermint raw transaction into a rosetta tx identifier
@@ -87,8 +107,9 @@ func TendermintBlockToBlockIdentifier(block *tmcoretypes.ResultBlock) *types.Blo
 	}
 }
 
-func ToOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) []*types.Operation {
+func SdkMsgsToOperations(msgs []sdk.Msg, withStatus bool, feeLen int) []*types.Operation {
 	var operations []*types.Operation
+	var status string
 	for i, msg := range msgs {
 		switch msg.Type() { // nolint
 		case rosetta.OperationSend:
@@ -101,12 +122,8 @@ func ToOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) []*types.Op
 			}
 			coin := amounts[0]
 			sendOp := func(account, amount string, index int) *types.Operation {
-				status := rosetta.StatusSuccess
-				if hasError {
-					status = rosetta.StatusReverted
-				}
-				if withoutStatus {
-					status = ""
+				if withStatus {
+					status = rosetta.StatusSuccess
 				}
 				return &types.Operation{
 					OperationIdentifier: &types.OperationIdentifier{
@@ -126,12 +143,50 @@ func ToOperations(msgs []sdk.Msg, hasError bool, withoutStatus bool) []*types.Op
 				}
 			}
 			operations = append(operations,
-				sendOp(fromAddress, "-"+coin.Amount.String(), i),
-				sendOp(toAddress, coin.Amount.String(), i+1),
+				sendOp(fromAddress, "-"+coin.Amount.String(), feeLen+i),
+				sendOp(toAddress, coin.Amount.String(), feeLen+i+1),
 			)
 		}
 	}
 	return operations
+}
+
+func GetMsgsFromOperations(ops []*types.Operation) (sdk.Msg, sdk.Coins, error) {
+	var feeAmnt []*types.Amount
+	var sendOps []*types.Operation
+	if len(ops) == 2 {
+		sendMsg, err := GetTransferTxDataFromOperations(ops)
+		return sendMsg, nil, err
+	} else if len(ops) == 3 {
+		for _, op := range ops {
+			if op.Type == rosetta.OperationFee {
+				amount := op.Amount
+				feeAmnt = append(feeAmnt, amount)
+			}
+			if op.Type == rosetta.OperationSend {
+				sendOps = append(sendOps, op)
+			}
+		}
+	}
+	sendMsg, err := GetTransferTxDataFromOperations(sendOps)
+	if err != nil {
+		return nil, nil, err
+	}
+	return sendMsg, ConvertAmountToCoins(feeAmnt), nil
+}
+
+func ConvertAmountToCoins(amounts []*types.Amount) sdk.Coins {
+	var feeCoins sdk.Coins
+	for _, amount := range amounts {
+		absValue := strings.Trim(amount.Value, "-")
+		value, err := strconv.ParseInt(absValue, 10, 64)
+		if err != nil {
+			return nil
+		}
+		coin := sdk.NewCoin(amount.Currency.Symbol, sdk.NewInt(value))
+		feeCoins = append(feeCoins, coin)
+	}
+	return feeCoins
 }
 
 // GetTransferTxDataFromOperations extracts the from and to addresses from a list of operations.
@@ -210,4 +265,33 @@ func ParentBlockIdentifierFromLastBlock(block *tmcoretypes.ResultBlock) *types.B
 		Index: block.Block.Height - 1,
 		Hash:  fmt.Sprintf("%X", block.Block.LastBlockID.Hash.Bytes()),
 	}
+}
+
+// GetFeeOpFromCoins returns based on a list of coins a list of operations of type Fee.
+func GetFeeOpFromCoins(coins sdk.Coins, account string, withStatus bool) []*types.Operation {
+	feeOps := make([]*types.Operation, 0)
+	var status string
+	if withStatus {
+		status = rosetta.StatusSuccess
+	}
+	for i, coin := range coins {
+		op := &types.Operation{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: int64(i),
+			},
+			Type:   rosetta.OperationFee,
+			Status: status,
+			Account: &types.AccountIdentifier{
+				Address: account,
+			},
+			Amount: &types.Amount{
+				Value: "-" + coin.Amount.String(),
+				Currency: &types.Currency{
+					Symbol: coin.Denom,
+				},
+			},
+		}
+		feeOps = append(feeOps, op)
+	}
+	return feeOps
 }

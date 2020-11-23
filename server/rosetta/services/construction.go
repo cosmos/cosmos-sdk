@@ -20,6 +20,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // interface implementation assertion
@@ -193,24 +194,21 @@ func (sn SingleNetwork) ConstructionParse(ctx context.Context, request *types.Co
 	}
 
 	return &types.ConstructionParseResponse{
-		Operations:               conversion.ToOperations(txBldr.GetTx().GetMsgs(), false, true),
+		Operations:               conversion.SdkTxToOperations(txBldr.GetTx(), false),
 		AccountIdentifierSigners: accountIdentifierSigners,
 	}, nil
 }
 
 func (sn SingleNetwork) ConstructionPayloads(ctx context.Context, request *types.ConstructionPayloadsRequest) (*types.ConstructionPayloadsResponse, *types.Error) {
-	if len(request.Operations) != 2 {
+	if len(request.Operations) > 3 {
 		return nil, rosetta.ErrInvalidOperation.RosettaError()
 	}
 
-	if request.Operations[0].Type != rosetta.OperationSend || request.Operations[1].Type != rosetta.OperationSend {
-		return nil, rosetta.WrapError(rosetta.ErrInvalidOperation, "the operations are not Transfer").RosettaError()
-	}
-
-	sendMsg, err := conversion.GetTransferTxDataFromOperations(request.Operations)
+	msg, fee, err := conversion.GetMsgsFromOperations(request.Operations)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrInvalidOperation, err.Error()).RosettaError()
 	}
+	sendMsg := msg.(*bank.MsgSend)
 
 	metadata, err := GetMetadataFromPayloadReq(request)
 	if err != nil {
@@ -218,7 +216,7 @@ func (sn SingleNetwork) ConstructionPayloads(ctx context.Context, request *types
 	}
 
 	txFactory := tx.Factory{}.WithAccountNumber(metadata.AccountNumber).WithChainID(metadata.ChainID).
-		WithGas(metadata.Gas).WithSequence(metadata.Sequence).WithMemo(metadata.Memo)
+		WithGas(metadata.Gas).WithSequence(metadata.Sequence).WithMemo(metadata.Memo).WithFees(fee.String())
 
 	TxConfig := sn.client.GetTxConfig()
 	txFactory = txFactory.WithTxConfig(TxConfig)
@@ -263,8 +261,8 @@ func (sn SingleNetwork) ConstructionPayloads(ctx context.Context, request *types
 
 func (sn SingleNetwork) ConstructionPreprocess(ctx context.Context, request *types.ConstructionPreprocessRequest) (*types.ConstructionPreprocessResponse, *types.Error) {
 	operations := request.Operations
-	if len(operations) != 2 {
-		return nil, rosetta.ErrInterpreting.RosettaError()
+	if len(operations) > 3 {
+		return nil, rosetta.ErrInvalidRequest.RosettaError()
 	}
 
 	txData, err := conversion.GetTransferTxDataFromOperations(operations)

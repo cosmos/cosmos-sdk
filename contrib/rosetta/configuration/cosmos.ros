@@ -59,6 +59,8 @@ transfer(10){
     });
     // Set the recipient_amount as some value <= sender.balance-max_fee
     max_fee = "0";
+    fee_amount = "1";
+    fee_value = 0 - {{fee_amount}};
     available_amount = {{sender.balance.value}} - {{max_fee}};
     recipient_amount = random_number({"minimum": "1", "maximum": {{available_amount}}});
     print_message({"recipient_amount":{{recipient_amount}}});
@@ -77,6 +79,15 @@ transfer(10){
     transfer.operations = [
       {
         "operation_identifier":{"index":0},
+        "type":"fee",
+        "account":{{sender.account_identifier}},
+        "amount":{
+          "value":{{fee_value}},
+          "currency":{{currency}}
+        }
+      },
+      {
+        "operation_identifier":{"index":1},
         "type":"send",
         "account":{{sender.account_identifier}},
         "amount":{
@@ -85,7 +96,7 @@ transfer(10){
         }
       },
       {
-        "operation_identifier":{"index":1},
+        "operation_identifier":{"index":2},
         "type":"send",
         "account":{{recipient.account_identifier}},
         "amount":{

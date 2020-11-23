@@ -14,6 +14,3 @@ If the `HistoricalEntries` parameter is 0, then the `BeginBlock` performs a no-o
 Otherwise, the latest historical info is stored under the key `historicalInfoKey|height`, while any entries older than `height - HistoricalEntries` is deleted.
 In most cases, this results in a single entry being pruned per block.
 However, if the parameter `HistoricalEntries` has changed to a lower value there will be multiple entries in the store that must be pruned.
-
-Thoughts: Historical Info tracking
-For this, we could manage only non-staging (active) data set or could manage both staging and non-staging. should discuss.

@@ -28,8 +28,3 @@ Additionally the change and associated height must be recorded in a
 Whenever a validator is slashed or enters/leaves the validator group all of the
 validator entitled reward tokens must be simultaneously withdrawn from
 `Global.Pool` and added to `ValidatorDistInfo.Pool`. 
-
-Thoughts: MsgDelegate and MsgBeginDelegate, MsgUndelegate, Commission rate, validator state change  take action on epoching process
-There are two ways
-1) All hooks happen at epoching process, but it could be too heavy to do all of these at a single endblocker
-2) Staging hooks happen and distribution module take Staging changes without actual distribution change, and make this to take effect on epoching. It involves `DelegationDistInfo` data management.

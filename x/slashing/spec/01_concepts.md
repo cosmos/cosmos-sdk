@@ -16,8 +16,6 @@ For each of these validators we keep a `ValidatorSigningInfo` record that contai
 information partaining to validator's liveness and other infraction related
 attributes.
 
-Thoughts: ValidatorSigningInfo is as part of slashing module?
-
 ## Tombstone Caps
 
 In order to mitigate the impact of initially likely categories of non-malicious

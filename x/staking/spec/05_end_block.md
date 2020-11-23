@@ -7,13 +7,6 @@ order: 4
 Each abci end block call, the operations to update queues and validator set
 changes are specified to execute.
 
-Thoughts:
-Should manage epoching here to update Staging data to active data.
-And as part of this, tendermint validator set should be updated.
-
-For Jail case, this should take effect instantly.
-For unjail case, this can wait for next epoching.
-
 ## Validator Set Changes
 
 The staking validator set is updated during this process by state transitions
@@ -34,10 +27,6 @@ In all cases, any validators leaving or entering the bonded validator set or
 changing balances and staying within the bonded validator set incur an update
 message which is passed back to Tendermint.
 
-Thoughts: After every epoching process, `StagingBondedPool` should be initialized.
-And same for `StagingNotBondedPool`.
-I think `StagingNotBondedPool` should just save the number inside keeper and real cash could be in `NotBondedPool` and `BondedPool` for simplicity.
-
 ## Queues
 
 Within staking, certain state-transitions are not instantaneous but take place
@@ -45,8 +34,6 @@ over a duration of time (typically the unbonding period). When these
 transitions are mature certain operations must take place in order to complete
 the state operation. This is achieved through the use of queues which are
 checked/processed at the end of each block.
-
-Thoughts: Queue processing implementation is good as we require processing queue at every epoching.
 
 ### Unbonding Validators
 
@@ -56,8 +43,6 @@ process along with all its delegations begin unbonding (while still being
 delegated to this validator). At this point the validator is said to be an
 unbonding validator, whereby it will mature to become an "unbonded validator"
 after the unbonding period has passed.
-
-Thoughts: What is the waiting time for jailed validator queue time?
 
 Each block the validator queue is to be checked for mature unbonding validators
 (namely with a completion time <= current time). At this point any mature
@@ -75,8 +60,6 @@ Complete the unbonding of all mature `UnbondingDelegations.Entries` within the
 - remove the mature entry from `UnbondingDelegation.Entries`
 - remove the `UnbondingDelegation` object from the store if there are no
   remaining entries.
-
-Thoughts: Unbonding delegations is done on every epoching queue handling and it seems to be like no problem exist.
 
 ### Redelegations
 

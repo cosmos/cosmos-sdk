@@ -38,8 +38,6 @@ Additionally a self-delegation is made with the initial tokens delegation
 tokens `Delegation`. The validator always starts as unbonded but may be bonded
 in the first end-block.
 
-Thoughts: Seems to be nothing to do with MsgCreateValidator as it seems good.
-
 ## MsgEditValidator
 
 The `Description`, `CommissionRate` of a validator can be updated using the
@@ -61,8 +59,6 @@ This message is expected to fail if:
 - the description fields are too large
 
 This message stores the updated `Validator` object.
-
-Thoughts: EditValidator should take effect on epoching, as commission rates change delegators' income.
 
 ## MsgDelegate
 
@@ -87,8 +83,6 @@ This message is expected to fail if:
 If an existing `Delegation` object for provided addresses does not already
 exist than it is created as part of this message otherwise the existing
 `Delegation` is updated to include the newly received shares.
-
-Thoughts: should have StagingDelegation object to handle this on epoching process.
 
 ## MsgBeginUnbonding
 
@@ -157,5 +151,3 @@ When this message is processed the following actions occur:
 - Delegate the token worth to the destination validator, possibly moving  tokens back to the bonded state.
 - if there are no more `Shares` in the source delegation, then the source delegation object is removed from the store
   - under this situation if the delegation is the validator's self-delegation then also jail the validator.
-
-Thoughts: When redelegating, real bond movement should take effect on epoching process. And even though Unbonding time is passed, it should be doing submission as part of original validator.

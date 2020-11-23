@@ -27,6 +27,4 @@ onValidatorBonded(address sdk.ValAddress)
   }
 
   return
-// Thoughts:
-// Seems to be nothing to do for epoching here.
 ```

@@ -31,6 +31,4 @@ func AllocateTokens(feesCollected sdk.Coins, feePool FeePool, proposer Validator
      SetValidatorDistribution(proposer)
      SetFeePool(feePool)
 
-// Thoughts: I don't understand enough for this distribution logic on endblocker, how it's handling all delegator / validator commissions.
-// Distribution module is saving all the balance by account?
 ```

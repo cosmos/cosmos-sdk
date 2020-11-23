@@ -1,4 +1,4 @@
-# ADR 033: Protobuf-based Inter-Module RPC
+# ADR 033: Protobuf-based Inter-Module Communication
 
 ## Changelog
 
@@ -211,8 +211,8 @@ specify their dependencies on other modules using `RequireServer()`:
 
 ```go
 type Configurator interface {
-   QueryServer() grpc.Server
    MsgServer() grpc.Server
+   QueryServer() grpc.Server
 
    ModuleKey() ModuleKey
    RequireServer(serverInterface interface{})
@@ -259,20 +259,39 @@ any major security threats assuming basic precautions are taken. The basic preca
 need to take is making sure that the `sdk.Context` passed to query methods does not allow writing to the store. This
 can be done for now with a `CacheMultiStore` as is currently done for `BaseApp` queries.
 
+### Internal Methods
+
+In many cases, we may wish for modules to call methods on other modules which are not exposed to clients at all. For this
+purpose, we add the `InternalServer` method to `Configurator`:
+
+```go
+type Configurator interface {
+   MsgServer() grpc.Server
+   QueryServer() grpc.Server
+   InternalServer() grpc.Server
+}
+```
+
+Services registered against `InternalServer` will be callable from other modules but not by external clients.
+
 ### Authorization
 
-TODO
-
-### Hooks
-
-TODO
+By default, the inter-module router requires that modules are sent by the first signer returned by `GetSigners`. The
+inter-module router should also accept authorization middleware such as that provided by [ADR 030](https://github.com/cosmos/cosmos-sdk/pull/7105).
+This middleware will allow accounts to otherwise specific module accounts to perform actions on their behalf.
+Authorization middleware should take into account the need to grant certain modules effectively "admin" privileges to
+other modules. This will be addressed in separate ADRs or updates to this ADR.
 
 ### Future Work
 
 Other future improvements may include:
+* custom code generation that:
+  * simplifies interfaces (ex. generates code with `sdk.Context` instead of `context.Context`)
+  * optimizes inter-module calls - for instance caching resolved methods after first invocation
 * combining `StoreKey`s and `ModuleKey`s into a single interface so that modules have a single Ocaps handle
 * code generation which makes inter-module communication more performant
 * decoupling `ModuleKey` creation from `AppModuleBasic.Name()` so that app's can override root module account names
+* inter-module hooks and plugins
 
 ## Consequences
 
@@ -299,5 +318,6 @@ replacing `Keeper` interfaces altogether.
 
 - [ADR 021](./adr-021-protobuf-query-encoding.md)
 - [ADR 031](./adr-031-msg-service.md)
-- [ADR 028 draft](https://github.com/cosmos/cosmos-sdk/pull/7086)
+- [ADR 028](./adr-028-public-key-addresses.md)
+- [ADR 030 draft](https://github.com/cosmos/cosmos-sdk/pull/7105)
 - [Object-Capability Model](../docs/core/ocap.md)

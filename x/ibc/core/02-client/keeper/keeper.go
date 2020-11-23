@@ -129,8 +129,7 @@ func (k Keeper) GetAllGenesisClients(ctx sdk.Context) types.IdentifiedClientStat
 // of IdentifiedGenesisMetadata necessary for exporting and importing client metadata
 // into the client store.
 func (k Keeper) GetAllClientMetadata(ctx sdk.Context, genClients []types.IdentifiedClientState) ([]types.IdentifiedGenesisMetadata, error) {
-	genMetadata := make([]types.IdentifiedGenesisMetadata, 0, len(genClients))
-	i := 0
+	genMetadata := make([]types.IdentifiedGenesisMetadata, 0)
 	for _, ic := range genClients {
 		cs, ok := ic.ClientState.GetCachedValue().(exported.ClientState)
 		if !ok {
@@ -141,19 +140,18 @@ func (k Keeper) GetAllClientMetadata(ctx sdk.Context, genClients []types.Identif
 			continue
 		}
 		clientMetadata := make([]types.GenesisMetadata, len(gms))
-		for j, metadata := range gms {
+		for i, metadata := range gms {
 			cmd, ok := metadata.(types.GenesisMetadata)
 			if !ok {
 				return nil, sdkerrors.Wrapf(types.ErrInvalidClientMetadata, "expected metadata type: %T, got: %T",
 					types.GenesisMetadata{}, cmd)
 			}
-			clientMetadata[j] = cmd
+			clientMetadata[i] = cmd
 		}
-		genMetadata[i] = types.NewIdentifiedGenesisMetadata(
+		genMetadata = append(genMetadata, types.NewIdentifiedGenesisMetadata(
 			ic.ClientId,
 			clientMetadata,
-		)
-		i++
+		))
 	}
 	return genMetadata, nil
 }

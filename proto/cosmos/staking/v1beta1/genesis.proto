@@ -68,8 +68,8 @@ message GenesisState {
   // MsgUnjail -> instant validator update on condition met
   // MsgCreateValidator -> instant validator creation
   // MsgEditValidator -> instant validator update
-  // MsgBeginRedelegate -> queue redelegation
-  // MsgUndelegate -> queue undelegate
+  // MsgBeginRedelegate -> instant validator update and queue redelegation
+  // MsgUndelegate -> instant pool balance update and queue undelegate
   // MsgDelegate -> instant delegation update
   // MsgWithdrawValidatorCommission -> instant
   // MsgWithdrawDelegatorReward -> instant
@@ -79,8 +79,8 @@ message GenesisState {
   // MsgCreateValidator -> queue validator creation on condition met (BufferedMsgCreateValidatorQueue)
   // MsgEditValidator -> queue validator edit on condition met (BufferedMsgEditValidatorQueue)
   // MsgDelegate -> queue delegate (BufferedMsgDelegateQueue)
-  // MsgBeginRedelegate -> queue redelegation
-  // MsgUndelegate -> queue undelegate
+  // MsgBeginRedelegate -> queue redelegation (BufferedMsgRedelegationQueue) => move tokens between validators on epoch => After 3 weeks time, it should automatically remove redelegation entry for completion even though it's nott the end of epoch
+  // MsgUndelegate -> queue undelegation (BufferedMsgUndelegateQueue) => move tokens to NotBondedPool and start unbonding period on epoch => After 3 weeks time, it should automatically unbond even though it’s not the end of epoch
   // MsgWithdrawValidatorCommission -> instant
   // MsgWithdrawDelegatorReward -> instant
 
@@ -94,6 +94,8 @@ message GenesisState {
   // BufferMsgCreateValidator should be added: send from user account to NotBondedPool and queue action
   // BufferMsgEditValidator should be added: queue action
   // BufferMsgDelegate should be added: queue action
+  // BufferMsgBeginRedelegate should be added: queue action
+  // BufferMsgUnDelegate should be added: queue action
 }
 
 // LastValidatorPower required for validator set update logic.

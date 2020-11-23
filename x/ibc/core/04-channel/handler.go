@@ -39,12 +39,12 @@ func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, portCap *capabil
 }
 
 // HandleMsgChannelOpenTry defines the sdk.Handler for MsgChannelOpenTry
-func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capabilitytypes.Capability, msg *types.MsgChannelOpenTry) (*sdk.Result, *capabilitytypes.Capability, error) {
+func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capabilitytypes.Capability, msg *types.MsgChannelOpenTry) (*sdk.Result, string, *capabilitytypes.Capability, error) {
 	channelID, capKey, err := k.ChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortId, msg.DesiredChannelId,
 		portCap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion, msg.ProofInit, msg.ProofHeight,
 	)
 	if err != nil {
-		return nil, nil, sdkerrors.Wrap(err, "channel handshake open try failed")
+		return nil, "", nil, sdkerrors.Wrap(err, "channel handshake open try failed")
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -64,7 +64,7 @@ func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capabili
 
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),
-	}, capKey, nil
+	}, channelID, capKey, nil
 }
 
 // HandleMsgChannelOpenAck defines the sdk.Handler for MsgChannelOpenAck

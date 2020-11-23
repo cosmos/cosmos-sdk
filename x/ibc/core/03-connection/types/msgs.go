@@ -121,6 +121,10 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	if err := host.ClientIdentifierValidator(msg.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "invalid client ID")
 	}
+	// counterparty validate basic allows empty counterparty connection identifiers
+	if err := host.ConnectionIdentifierValidator(msg.Counterparty.ConnectionId); err != nil {
+		return sdkerrors.Wrap(err, "invalid counterparty connection ID")
+	}
 	if msg.ClientState == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidClient, "counterparty client is nil")
 	}

@@ -125,6 +125,7 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 			TRYOPEN, msg.Channel.State,
 		)
 	}
+	// counterparty validate basic allows empty counterparty channel identifiers
 	if err := host.ChannelIdentifierValidator(msg.Channel.Counterparty.ChannelId); err != nil {
 		return sdkerrors.Wrap(err, "invalid counterparty channel ID")
 	}

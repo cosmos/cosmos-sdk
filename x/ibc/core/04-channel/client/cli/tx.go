@@ -24,7 +24,7 @@ const (
 // NewChannelOpenInitCmd returns the command to create a MsgChannelOpenInit transaction
 func NewChannelOpenInitCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "open-init [port-id] [counterparty-port-id] [counterparty-channel-id] [connection-hops]",
+		Use:   "open-init [port-id] [counterparty-port-id] [connection-hops]",
 		Short: "Creates and sends a ChannelOpenInit message",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {

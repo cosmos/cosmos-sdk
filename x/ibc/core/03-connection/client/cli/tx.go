@@ -34,7 +34,7 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 	- 'version-identifier' flag can be a single pre-selected version identifier to be used in the handshake.
 	- 'version-features' flag can be a list of features separated by commas to accompany the version identifier.`,
 		Example: fmt.Sprintf(
-			"%s tx %s %s open-init [client-id] [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] --version-identifier=\"1.0\" --version-features=\"ORDER_UNORDERED\"",
+			"%s tx %s %s open-init [client-id] [counterparty-client-id] [path/to/counterparty_prefix.json] --version-identifier=\"1.0\" --version-features=\"ORDER_UNORDERED\"",
 			version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(3),

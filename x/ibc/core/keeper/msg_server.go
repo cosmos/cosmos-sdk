@@ -158,18 +158,19 @@ func (k Keeper) ConnectionOpenTry(goCtx context.Context, msg *connectiontypes.Ms
 		return nil, sdkerrors.Wrapf(err, "client in msg is not exported.ClientState. invalid client: %v.", targetClient)
 	}
 
-	if err := k.ConnectionKeeper.ConnOpenTry(
+	connectionID, err := k.ConnectionKeeper.ConnOpenTry(
 		ctx, msg.DesiredConnectionId, msg.Counterparty, msg.ClientId, targetClient,
 		connectiontypes.ProtoVersionsToExported(msg.CounterpartyVersions), msg.ProofInit, msg.ProofClient, msg.ProofConsensus,
 		msg.ProofHeight, msg.ConsensusHeight,
-	); err != nil {
+	)
+	if err != nil {
 		return nil, sdkerrors.Wrap(err, "connection handshake open try failed")
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			connectiontypes.EventTypeConnectionOpenTry,
-			sdk.NewAttribute(connectiontypes.AttributeKeyConnectionID, msg.DesiredConnectionId),
+			sdk.NewAttribute(connectiontypes.AttributeKeyConnectionID, connectionID),
 			sdk.NewAttribute(connectiontypes.AttributeKeyClientID, msg.ClientId),
 			sdk.NewAttribute(connectiontypes.AttributeKeyCounterpartyClientID, msg.Counterparty.ClientId),
 			sdk.NewAttribute(connectiontypes.AttributeKeyCounterpartyConnectionID, msg.Counterparty.ConnectionId),
@@ -284,7 +285,7 @@ func (k Keeper) ChannelOpenTry(goCtx context.Context, msg *channeltypes.MsgChann
 		return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
 	}
 
-	_, cap, err := channel.HandleMsgChannelOpenTry(ctx, k.ChannelKeeper, portCap, msg)
+	_, channelID, cap, err := channel.HandleMsgChannelOpenTry(ctx, k.ChannelKeeper, portCap, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -295,7 +296,7 @@ func (k Keeper) ChannelOpenTry(goCtx context.Context, msg *channeltypes.MsgChann
 		return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 	}
 
-	if err = cbs.OnChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortId, msg.DesiredChannelId, cap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion); err != nil {
+	if err = cbs.OnChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortId, channelID, cap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion); err != nil {
 		return nil, sdkerrors.Wrap(err, "channel open try callback failed")
 	}
 

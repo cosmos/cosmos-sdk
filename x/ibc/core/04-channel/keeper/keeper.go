@@ -96,7 +96,7 @@ func (k Keeper) GetNextChannelSequence(ctx sdk.Context) uint64 {
 	return sdk.BigEndianToUint64(bz)
 }
 
-// SetNextChannelSequence sets the next channel sequence to the store
+// SetNextChannelSequence sets the next channel sequence to the store.
 func (k Keeper) SetNextChannelSequence(ctx sdk.Context, sequence uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := sdk.Uint64ToBigEndian(sequence)

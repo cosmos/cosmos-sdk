@@ -70,10 +70,10 @@ func (k Keeper) ConnOpenTry(
 	proofConsensus []byte, // proof that chainA stored chainB's consensus state at consensus height
 	proofHeight exported.Height, // height at which relayer constructs proof of A storing connectionEnd in state
 	consensusHeight exported.Height, // latest height of chain B which chain A has stored in its chain B client
-) error {
+) (string, error) {
 	selfHeight := clienttypes.GetSelfHeight(ctx)
 	if consensusHeight.GTE(selfHeight) {
-		return sdkerrors.Wrapf(
+		return "", sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
 			"consensus height is greater than or equal to the current block height (%s >= %s)", consensusHeight, selfHeight,
 		)
@@ -81,12 +81,12 @@ func (k Keeper) ConnOpenTry(
 
 	// validate client parameters of a chainB client stored on chainA
 	if err := k.clientKeeper.ValidateSelfClient(ctx, clientState); err != nil {
-		return err
+		return "", err
 	}
 
 	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusState(ctx, consensusHeight)
 	if !found {
-		return sdkerrors.Wrap(clienttypes.ErrSelfConsensusStateNotFound, consensusHeight.String())
+		return "", sdkerrors.Wrap(clienttypes.ErrSelfConsensusStateNotFound, consensusHeight.String())
 	}
 
 	// expectedConnection defines Chain A's ConnectionEnd
@@ -106,7 +106,7 @@ func (k Keeper) ConnOpenTry(
 		bytes.Equal(previousConnection.Counterparty.Prefix.Bytes(), counterparty.Prefix.Bytes()) &&
 		previousConnection.ClientId == clientID &&
 		previousConnection.Counterparty.ClientId == counterparty.ClientId) {
-		return sdkerrors.Wrap(types.ErrInvalidConnection, "cannot relay connection attempt")
+		return "", sdkerrors.Wrap(types.ErrInvalidConnection, "cannot relay connection attempt")
 	} else if !found {
 		connectionID = k.GenerateConnectionIdentifier(ctx)
 	}
@@ -121,7 +121,7 @@ func (k Keeper) ConnOpenTry(
 	// of the supported versions and the counterparty versions.
 	version, err := types.PickVersion(supportedVersions, counterpartyVersions)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// connection defines chain B's ConnectionEnd
@@ -132,24 +132,24 @@ func (k Keeper) ConnOpenTry(
 		ctx, connection, proofHeight, proofInit, counterparty.ConnectionId,
 		expectedConnection,
 	); err != nil {
-		return err
+		return "", err
 	}
 
 	// Check that ChainA stored the clientState provided in the msg
 	if err := k.VerifyClientState(ctx, connection, proofHeight, proofClient, clientState); err != nil {
-		return err
+		return "", err
 	}
 
 	// Check that ChainA stored the correct ConsensusState of chainB at the given consensusHeight
 	if err := k.VerifyClientConsensusState(
 		ctx, connection, proofHeight, consensusHeight, proofConsensus, expectedConsensusState,
 	); err != nil {
-		return err
+		return "", err
 	}
 
 	// store connection in chainB state
 	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
-		return sdkerrors.Wrapf(err, "failed to add connection with ID %s to client with ID %s", desiredConnectionID, clientID)
+		return "", sdkerrors.Wrapf(err, "failed to add connection with ID %s to client with ID %s", desiredConnectionID, clientID)
 	}
 
 	k.SetConnection(ctx, connectionID, connection)
@@ -159,7 +159,7 @@ func (k Keeper) ConnOpenTry(
 		telemetry.IncrCounter(1, "ibc", "connection", "open-try")
 	}()
 
-	return nil
+	return connectionID, nil
 }
 
 // ConnOpenAck relays acceptance of a connection open attempt from chain B back

@@ -117,7 +117,7 @@ func (k Keeper) ChanOpenTry(
 		previousChannel.ConnectionHops[0] == connectionHops[0] &&
 		previousChannel.Version == version) {
 		return "", nil, sdkerrors.Wrap(types.ErrInvalidChannel, "cannot relay connection attempt")
-	} else {
+	} else if !found {
 		desiredChannelID = k.GenerateChannelIdentifier(ctx)
 	}
 

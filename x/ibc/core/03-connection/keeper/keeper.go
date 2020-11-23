@@ -126,7 +126,7 @@ func (k Keeper) GetNextConnectionSequence(ctx sdk.Context) uint64 {
 	return sdk.BigEndianToUint64(bz)
 }
 
-// SetNextConnectionSequence sets the next connection sequence to the store
+// SetNextConnectionSequence sets the next connection sequence to the store.
 func (k Keeper) SetNextConnectionSequence(ctx sdk.Context, sequence uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := sdk.Uint64ToBigEndian(sequence)

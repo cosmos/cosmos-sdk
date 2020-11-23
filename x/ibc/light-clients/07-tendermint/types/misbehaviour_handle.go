@@ -92,7 +92,7 @@ func checkMisbehaviourHeader(
 		return err
 	}
 
-	// assert that the timestamp is not from more than the trusting period ago
+	// assert that the age of the trusted consensus state is not older than the trusting period
 	if currentTimestamp.Sub(consState.Timestamp) >= clientState.TrustingPeriod {
 		return sdkerrors.Wrapf(
 			ErrTrustingPeriodExpired,

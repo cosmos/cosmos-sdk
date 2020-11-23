@@ -480,8 +480,6 @@ func (s *IntegrationTestSuite) TestLegacyRestErrMessages() {
 			s.testQueryIBCTx(txRes, tc.cmd, tc.args)
 		})
 	}
-
-	s.Require().False(true)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

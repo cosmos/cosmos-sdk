@@ -10,11 +10,11 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/authz/types";
 
 // Query defines the gRPC querier service.
 service Query {
-  // Returns any `Authorization` (or `nil`), with the expiration time, granted to the grantee by the granter for the provided msg type.
+  // Returns any `Authorization` (or `nil`), with the expiration time, granted to the grantee by the granter for the
+  // provided msg type.
   rpc Authorization(QueryAuthorizationRequest) returns (QueryAuthorizationResponse) {
     option (google.api.http).get = "/cosmos/msgauth/v1beta1/granters/{granter_addr}/grantees/{grantee_addr}/{msg_type}";
   }
-
 }
 
 // QueryAuthorizationRequest is the request type for the Query/Authorization RPC method.
@@ -24,8 +24,7 @@ message QueryAuthorizationRequest {
 
   string granter_addr = 1;
   string grantee_addr = 2;
-
-  string msg_type = 3;
+  string msg_type     = 3;
 }
 
 // QueryAuthorizationResponse is the response type for the Query/Authorization RPC method.

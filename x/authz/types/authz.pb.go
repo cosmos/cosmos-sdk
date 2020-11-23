@@ -105,7 +105,8 @@ func (m *GenericAuthorization) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GenericAuthorization proto.InternalMessageInfo
 
-// TODO
+// AuthorizationGrant gives permissions to execute
+// the provide method with expiration time.
 type AuthorizationGrant struct {
 	Authorization *types1.Any `protobuf:"bytes,1,opt,name=authorization,proto3" json:"authorization,omitempty"`
 	Expiration    int64       `protobuf:"varint,2,opt,name=expiration,proto3" json:"expiration,omitempty"`

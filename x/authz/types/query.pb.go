@@ -166,7 +166,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Returns any `Authorization` (or `nil`), with the expiration time, granted to the grantee by the granter for the provided msg type.
+	// Returns any `Authorization` (or `nil`), with the expiration time, granted to the grantee by the granter for the
+	// provided msg type.
 	Authorization(ctx context.Context, in *QueryAuthorizationRequest, opts ...grpc.CallOption) (*QueryAuthorizationResponse, error)
 }
 
@@ -189,7 +190,8 @@ func (c *queryClient) Authorization(ctx context.Context, in *QueryAuthorizationR
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Returns any `Authorization` (or `nil`), with the expiration time, granted to the grantee by the granter for the provided msg type.
+	// Returns any `Authorization` (or `nil`), with the expiration time, granted to the grantee by the granter for the
+	// provided msg type.
 	Authorization(context.Context, *QueryAuthorizationRequest) (*QueryAuthorizationResponse, error)
 }
 

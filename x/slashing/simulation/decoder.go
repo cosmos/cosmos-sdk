@@ -7,6 +7,7 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -29,10 +30,14 @@ func NewDecodeStore(cdc codec.Marshaler) func(kvA, kvB kv.Pair) string {
 			return fmt.Sprintf("missedA: %v\nmissedB: %v", missedA.Value, missedB.Value)
 
 		case bytes.Equal(kvA.Key[:1], types.AddrPubkeyRelationKeyPrefix):
-			var pubKeyA, pubKeyB gogotypes.StringValue
-			cdc.MustUnmarshalBinaryBare(kvA.Value, &pubKeyA)
-			cdc.MustUnmarshalBinaryBare(kvB.Value, &pubKeyB)
-			return fmt.Sprintf("PubKeyA: %s\nPubKeyB: %s", pubKeyA.Value, pubKeyB.Value)
+			var pubKeyA, pubKeyB cryptotypes.PubKey
+			if err := codec.UnmarshalIfc(cdc, &pubKeyA, kvA.Value); err != nil {
+				panic(fmt.Sprint("Can't unmarshal kvA; ", err))
+			}
+			if err := codec.UnmarshalIfc(cdc, &pubKeyB, kvB.Value); err != nil {
+				panic(fmt.Sprint("Can't unmarshal kvB; ", err))
+			}
+			return fmt.Sprintf("PubKeyA: %s\nPubKeyB: %s", pubKeyA, pubKeyB)
 
 		default:
 			panic(fmt.Sprintf("invalid slashing key prefix %X", kvA.Key[:1]))

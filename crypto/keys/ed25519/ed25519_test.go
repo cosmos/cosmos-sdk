@@ -240,6 +240,8 @@ func TestMarshalProto(t *testing.T) {
 	privKey := ed25519.GenPrivKey()
 	pk := privKey.PubKey()
 
+	// **** test JSON serialization ****
+
 	pkAny, err := codectypes.NewAnyWithValue(pk)
 	require.NoError(err)
 	bz, err := ccfg.Marshaler.MarshalJSON(pkAny)
@@ -277,15 +279,9 @@ func TestMarshalProto2(t *testing.T) {
 	privKey := ed25519.GenPrivKey()
 	pk := privKey.PubKey()
 
-	bz, err := codec.MarshalIfc(ccfg.Marshaler, pk)
-	require.NoError(err)
+	// **** test JSON serialization ****
 
-	var pk2 cryptotypes.PubKey
-	err = codec.UnmarshalIfc(ccfg.Marshaler, &pk2, bz)
-	require.NoError(err)
-	require.True(pk2.Equals(pk))
-
-	bz, err = codec.MarshalIfcJSON(ccfg.Marshaler, pk)
+	bz, err := codec.MarshalIfcJSON(ccfg.Marshaler, pk)
 	require.NoError(err)
 	var pk3 cryptotypes.PubKey
 	// TODO: make a task to integrate the coded.*Marshal helper functiosn (from any.go) to the codec.Marshaler interface
@@ -303,4 +299,14 @@ func TestMarshalProto2(t *testing.T) {
 	require.NoError(err)
 	ifc := pkAny.GetCachedValue()
 	require.Nil(ifc)
+
+	// **** test binary serialization ****
+
+	bz, err = codec.MarshalIfc(ccfg.Marshaler, pk)
+	require.NoError(err)
+
+	var pk2 cryptotypes.PubKey
+	err = codec.UnmarshalIfc(ccfg.Marshaler, &pk2, bz)
+	require.NoError(err)
+	require.True(pk2.Equals(pk))
 }

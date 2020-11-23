@@ -33,7 +33,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	require.NoError(b, err)
 
 	benchmarkApp.Commit()
-	txGen := simappparams.MakeEncodingConfig().TxConfig
+	txGen := simappparams.MakeTestEncodingConfig().TxConfig
 
 	// Precompute all txs
 	txs, err := simapp.GenSequenceOfTxs(txGen, []sdk.Msg{sendMsg1}, []uint64{0}, []uint64{uint64(0)}, b.N, priv1)
@@ -75,7 +75,7 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	require.NoError(b, err)
 
 	benchmarkApp.Commit()
-	txGen := simappparams.MakeEncodingConfig().TxConfig
+	txGen := simappparams.MakeTestEncodingConfig().TxConfig
 
 	// Precompute all txs
 	txs, err := simapp.GenSequenceOfTxs(txGen, []sdk.Msg{multiSendMsg1}, []uint64{0}, []uint64{uint64(0)}, b.N, priv1)

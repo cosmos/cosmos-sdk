@@ -17,11 +17,20 @@ import (
 func (k Keeper) CreateClient(
 	ctx sdk.Context, clientID string, clientState exported.ClientState, consensusState exported.ConsensusState,
 ) error {
+	params := k.GetParams(ctx)
+	if !params.IsAllowedClient(clientState.ClientType()) {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidClientType,
+			"client state type %s is not registered in the allowlist", clientState.ClientType(),
+		)
+	}
+
 	_, found := k.GetClientState(ctx, clientID)
 	if found {
 		return sdkerrors.Wrapf(types.ErrClientExists, "cannot create client with ID %s", clientID)
 	}
 
+	// check if consensus state is nil in case the created client is Localhost
 	if consensusState != nil {
 		k.SetClientConsensusState(ctx, clientID, clientState.GetLatestHeight(), consensusState)
 	}
@@ -52,19 +61,14 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		return sdkerrors.Wrapf(types.ErrClientFrozen, "cannot update client with ID %s", clientID)
 	}
 
-	var (
-		consensusState  exported.ConsensusState
-		consensusHeight exported.Height
-		err             error
-	)
-
-	clientState, consensusState, err = clientState.CheckHeaderAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, clientID), header)
-
+	clientState, consensusState, err := clientState.CheckHeaderAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, clientID), header)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "cannot update client with ID %s", clientID)
 	}
 
 	k.SetClientState(ctx, clientID, clientState)
+
+	var consensusHeight exported.Height
 
 	// we don't set consensus state for localhost client
 	if header != nil && clientID != exported.Localhost {
@@ -114,21 +118,22 @@ func (k Keeper) UpgradeClient(ctx sdk.Context, clientID string, upgradedClient e
 		return sdkerrors.Wrapf(types.ErrClientFrozen, "cannot update client with ID %s", clientID)
 	}
 
-	err := clientState.VerifyUpgrade(ctx, k.cdc, k.ClientStore(ctx, clientID), upgradedClient, upgradeHeight, proofUpgrade)
+	updatedClientState, updatedConsensusState, err := clientState.VerifyUpgradeAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, clientID), upgradedClient, upgradeHeight, proofUpgrade)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "cannot upgrade client with ID: %s", clientID)
+		return sdkerrors.Wrapf(err, "cannot upgrade client with ID %s", clientID)
 	}
 
-	k.SetClientState(ctx, clientID, upgradedClient)
+	k.SetClientState(ctx, clientID, updatedClientState)
+	k.SetClientConsensusState(ctx, clientID, updatedClientState.GetLatestHeight(), updatedConsensusState)
 
-	k.Logger(ctx).Info("client state upgraded", "client-id", clientID, "height", upgradedClient.GetLatestHeight().String())
+	k.Logger(ctx).Info("client state upgraded", "client-id", clientID, "height", updatedClientState.GetLatestHeight().String())
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{"ibc", "client", "upgrade"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel("client-type", clientState.ClientType()),
+				telemetry.NewLabel("client-type", updatedClientState.ClientType()),
 				telemetry.NewLabel("client-id", clientID),
 			},
 		)
@@ -139,8 +144,8 @@ func (k Keeper) UpgradeClient(ctx sdk.Context, clientID string, upgradedClient e
 		sdk.NewEvent(
 			types.EventTypeUpgradeClient,
 			sdk.NewAttribute(types.AttributeKeyClientID, clientID),
-			sdk.NewAttribute(types.AttributeKeyClientType, clientState.ClientType()),
-			sdk.NewAttribute(types.AttributeKeyConsensusHeight, upgradedClient.GetLatestHeight().String()),
+			sdk.NewAttribute(types.AttributeKeyClientType, updatedClientState.ClientType()),
+			sdk.NewAttribute(types.AttributeKeyConsensusHeight, updatedClientState.GetLatestHeight().String()),
 		),
 	)
 
@@ -153,6 +158,10 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 	clientState, found := k.GetClientState(ctx, misbehaviour.GetClientID())
 	if !found {
 		return sdkerrors.Wrapf(types.ErrClientNotFound, "cannot check misbehaviour for client with ID %s", misbehaviour.GetClientID())
+	}
+
+	if clientState.IsFrozen() && clientState.GetFrozenHeight().LTE(misbehaviour.GetHeight()) {
+		return sdkerrors.Wrapf(types.ErrInvalidMisbehaviour, "client is already frozen at height ≤ misbehaviour height (%s ≤ %s)", clientState.GetFrozenHeight(), misbehaviour.GetHeight())
 	}
 
 	clientState, err := clientState.CheckMisbehaviourAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, misbehaviour.GetClientID()), misbehaviour)

@@ -192,7 +192,7 @@ When messages and queries are received by the application, they must be routed t
 
 ### Message Routing
 
-[`Message`s](#../building-modules/messages-and-queries.md#messages) need to be routed after they are extracted from transactions, which are sent from the underlying Tendermint engine via the [`CheckTx`](#checktx) and [`DeliverTx`](#delivertx) ABCI messages. To do so, `baseapp` holds a `router` which maps `paths` (`string`) to the appropriate module [`handler`](../building-modules/handler.md) using the `.Route(ctx sdk.Context, path string)` function. Usually, the `path` is the name of the module.
+[Messages](#../building-modules/messages-and-queries.md#messages) need to be routed after they are extracted from transactions, which are sent from the underlying Tendermint engine via the [`CheckTx`](#checktx) and [`DeliverTx`](#delivertx) ABCI messages. To do so, `BaseApp` holds a router which maps string paths to the appropriate module [handler](../building-modules/msg-services.md#handler-type) using the `.Route(ctx sdk.Context, path string)` function. Usually, the `path` is the name of the module.
 
 The [default router included in baseapp](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/router.go) is stateless.  However, some applications may want to make use of more stateful routing mechanisms such as allowing governance to disable certain routes or point them to new modules for upgrade purposes.  For this reason, the `sdk.Context` is also passed into the `Route` function of the [Router interface](https://github.com/cosmos/cosmos-sdk/blob/master/types/router.go#L12).  For a stateless router that doesn't want to make use of this, can just ignore the ctx.
 
@@ -285,7 +285,7 @@ Before the first transaction of a given block is processed, a [volatile state](#
 `DeliverTx` performs the **exact same steps as `CheckTx`**, with a little caveat at step 3 and the addition of a fifth step:
 
 1. The `AnteHandler` does **not** check that the transaction's `gas-prices` is sufficient. That is because the `min-gas-prices` value `gas-prices` is checked against is local to the node, and therefore what is enough for one full-node might not be for another. This means that the proposer can potentially include transactions for free, although they are not incentivised to do so, as they earn a bonus on the total fee of the block they propose.
-2. For each `message` in the transaction, route to the appropriate module's [`handler`](../building-modules/handler.md). Additional _stateful_ checks are performed, and the cache-wrapped multistore held in `deliverState`'s `context` is updated by the module's `keeper`. If the `handler` returns successfully, the cache-wrapped multistore held in `context` is written to `deliverState` `CacheMultiStore`.
+2. For each message in the transaction, route to the appropriate module's [`handler`](../building-modules/msg-services.md#handler-type). Additional _stateful_ checks are performed, and the cache-wrapped multistore held in `deliverState`'s `context` is updated by the module's `keeper`. If the `handler` returns successfully, the cache-wrapped multistore held in `context` is written to `deliverState` `CacheMultiStore`.
 
 During step 5., each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation:
 
@@ -342,7 +342,7 @@ Click [here](../basics/gas-fees.md#antehandler) for more on the `anteHandler`.
 
 `RunMsgs` is called from `RunTx` with `runTxModeCheck` as parameter to check the existence of a route for each message the transaction, and with `runTxModeDeliver` to actually process the `message`s. 
 
-First, it retreives the `message`'s `route` using the `Msg.Route()` method. Then, using the application's [`router`](#routing) and the `route`, it checks for the existence of a `handler`. At this point, if `mode == runTxModeCheck`, `RunMsgs` returns. If instead `mode == runTxModeDeliver`, the [`handler`](../building-modules/handler.md) function for the message is executed, before `RunMsgs` returns. 
+First, it retreives the message's `route` using the `Msg.Route()` method. Then, using the application's [`router`](#routing) and the `route`, it checks for the existence of a `handler`. At this point, if `mode == runTxModeCheck`, `RunMsgs` returns. If instead `mode == runTxModeDeliver`, the [`handler`](../building-modules/msg-services.md#handler-type) function for the message is executed, before `RunMsgs` returns. 
 
 ## Other ABCI Messages
 

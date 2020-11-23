@@ -1,6 +1,7 @@
 package ed25519_test
 
 import (
+	stded25519 "crypto/ed25519"
 	"encoding/base64"
 	"testing"
 
@@ -8,10 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/crypto/sr25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	ed25519 "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -19,17 +20,28 @@ func TestSignAndValidateEd25519(t *testing.T) {
 	privKey := ed25519.GenPrivKey()
 	pubKey := privKey.PubKey()
 
-	msg := crypto.CRandBytes(128)
+	msg := crypto.CRandBytes(1000)
 	sig, err := privKey.Sign(msg)
 	require.Nil(t, err)
 
 	// Test the signature
 	assert.True(t, pubKey.VerifySignature(msg, sig))
 
+	// ----
+	// Test cross packages verification
+	stdPrivKey := stded25519.PrivateKey(privKey.Key)
+	stdPubKey := stdPrivKey.Public().(stded25519.PublicKey)
+
+	assert.Equal(t, stdPubKey, pubKey.(*ed25519.PubKey).Key)
+	assert.Equal(t, stdPrivKey, privKey.Key)
+	assert.True(t, stded25519.Verify(stdPubKey, msg, sig))
+	sig2 := stded25519.Sign(stdPrivKey, msg)
+	assert.True(t, pubKey.VerifySignature(msg, sig2))
+
+	// ----
 	// Mutate the signature, just one bit.
 	// TODO: Replace this with a much better fuzzer, tendermint/ed25519/issues/10
 	sig[7] ^= byte(0x01)
-
 	assert.False(t, pubKey.VerifySignature(msg, sig))
 }
 
@@ -39,7 +51,7 @@ func TestPubKeyEquals(t *testing.T) {
 	testCases := []struct {
 		msg      string
 		pubKey   cryptotypes.PubKey
-		other    crypto.PubKey
+		other    cryptotypes.PubKey
 		expectEq bool
 	}{
 		{
@@ -59,7 +71,7 @@ func TestPubKeyEquals(t *testing.T) {
 		{
 			"different types",
 			ed25519PubKey,
-			sr25519.GenPrivKey().PubKey(),
+			secp256k1.GenPrivKey().PubKey(),
 			false,
 		},
 	}
@@ -78,7 +90,7 @@ func TestPrivKeyEquals(t *testing.T) {
 	testCases := []struct {
 		msg      string
 		privKey  cryptotypes.PrivKey
-		other    crypto.PrivKey
+		other    cryptotypes.PrivKey
 		expectEq bool
 	}{
 		{
@@ -98,7 +110,7 @@ func TestPrivKeyEquals(t *testing.T) {
 		{
 			"different types",
 			ed25519PrivKey,
-			sr25519.GenPrivKey(),
+			secp256k1.GenPrivKey(),
 			false,
 		},
 	}

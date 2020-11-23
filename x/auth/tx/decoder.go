@@ -9,7 +9,7 @@ import (
 )
 
 // DefaultTxDecoder returns a default protobuf TxDecoder using the provided Marshaler.
-func DefaultTxDecoder(cdc *codec.ProtoCodec) sdk.TxDecoder {
+func DefaultTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		var raw tx.TxRaw
 
@@ -66,7 +66,7 @@ func DefaultTxDecoder(cdc *codec.ProtoCodec) sdk.TxDecoder {
 }
 
 // DefaultJSONTxDecoder returns a default protobuf JSON TxDecoder using the provided Marshaler.
-func DefaultJSONTxDecoder(cdc *codec.ProtoCodec) sdk.TxDecoder {
+func DefaultJSONTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		var theTx tx.Tx
 		err := cdc.UnmarshalJSON(txBytes, &theTx)

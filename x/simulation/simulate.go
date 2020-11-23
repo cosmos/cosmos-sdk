@@ -14,6 +14,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -23,11 +24,11 @@ const AverageBlockTime = 6 * time.Second
 // initialize the chain for the simulation
 func initChain(
 	r *rand.Rand, params Params, accounts []simulation.Account, app *baseapp.BaseApp,
-	appStateFn simulation.AppStateFn, config simulation.Config,
+	appStateFn simulation.AppStateFn, config simulation.Config, cdc codec.JSONMarshaler,
 ) (mockValidators, time.Time, []simulation.Account, string) {
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
 
-	consensusParams := RandomConsensusParams(r, appState)
+	consensusParams := randomConsensusParams(r, appState, cdc)
 
 	req := abci.RequestInitChain{
 		AppStateBytes:   appState,
@@ -52,6 +53,7 @@ func SimulateFromSeed(
 	ops WeightedOperations,
 	blockedAddrs map[string]bool,
 	config simulation.Config,
+	cdc codec.JSONMarshaler,
 ) (stopEarly bool, exportedParams Params, err error) {
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, _, b := getTestingMode(tb)
@@ -67,7 +69,7 @@ func SimulateFromSeed(
 
 	// Second variable to keep pending validator set (delayed one block since
 	// TM 0.24) Initially this is the same as the initial validator set
-	validators, genesisTimestamp, accs, chainID := initChain(r, params, accs, app, appStateFn, config)
+	validators, genesisTimestamp, accs, chainID := initChain(r, params, accs, app, appStateFn, config, cdc)
 	if len(accs) == 0 {
 		return true, params, fmt.Errorf("must have greater than zero genesis accounts")
 	}
@@ -100,7 +102,7 @@ func SimulateFromSeed(
 	opCount := 0
 
 	// Setup code to catch SIGTERM's
-	c := make(chan os.Signal)
+	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
 	go func() {

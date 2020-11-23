@@ -459,3 +459,27 @@ func Benchmark(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkQuo(b *testing.B) {
+	b.StopTimer()
+	f0, f1 := rand.Float64(), rand.Float64()
+	x, y := apd.New(0, 0), apd.New(0, 0)
+	_, err := x.SetFloat64(f0)
+	if err != nil {
+		panic(err)
+	}
+	_, err = y.SetFloat64(f1)
+	if err != nil {
+		panic(err)
+	}
+
+	z := apd.New(0, 0)
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		_, err = decimal128Context.Quo(z, x, y)
+		if err != nil {
+			panic(err)
+		}
+	}
+}

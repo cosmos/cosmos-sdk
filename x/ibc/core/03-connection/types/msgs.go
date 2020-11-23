@@ -16,8 +16,8 @@ var _ sdk.Msg = &MsgConnectionOpenInit{}
 // counterparty connection identifier to be empty.
 //nolint:interfacer
 func NewMsgConnectionOpenInit(
-	clientID,
-	counterpartyClientID string, counterpartyPrefix commitmenttypes.MerklePrefix,
+	clientID, counterpartyClientID string,
+	counterpartyPrefix commitmenttypes.MerklePrefix,
 	version *Version, signer sdk.AccAddress,
 ) *MsgConnectionOpenInit {
 	counterparty := NewCounterparty(counterpartyClientID, "", counterpartyPrefix)

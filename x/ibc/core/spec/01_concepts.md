@@ -131,16 +131,18 @@ The IBC interfaces expect an `ibcexported.Height` interface, however all clients
 The connection handshake occurs in 4 steps as defined in [ICS 03](https://github.com/cosmos/ics/tree/master/spec/ics-003-connection-semantics).
 
 `ConnOpenInit` is the first attempt to initialize a connection on the executing chain. 
-The handshake is expected to succeed if the connection identifier selected is not used and the
-version selected is supported. The connection identifier for the counterparty connection may 
-be left empty indicating that the counterparty may select its own identifier. The connection
-is set and stored in the INIT state upon success.
+The handshake is expected to succeed if the version selected is supported. The connection 
+identifier for the counterparty connection must be left empty indicating that the counterparty
+must select its own identifier. The connection identifier is auto derived in the format: 
+`connection{N}` where N is the next sequence to be used. The counter begins at 0 and increments
+by 1. The connection is set and stored in the INIT state upon success.
 
 `ConnOpenTry` is a response to a chain executing `ConnOpenInit`. The executing chain will validate
-the chain level parameters the counterparty has stored such as its chainID and consensus parameters.
-The executing chain will also verify that if a previous connection exists for the specified
-connection identifier that all the parameters match and its previous state was in INIT. This
-may occur when both chains execute `ConnOpenInit` simultaneously. The executing chain will verify
+the chain level parameters the counterparty has stored such as its chainID. The executing chain 
+will also verify that if a previous connection exists for the specified connection identifier 
+that all the parameters match and its previous state was in INIT. This may occur when both 
+chains execute `ConnOpenInit` simultaneously. If the connection does not exist then a connection
+identifier is generated in the same format done in `ConnOpenInit`.  The executing chain will verify
 that the counterparty created a connection in INIT state. The executing chain will also verify 
 The `ClientState` and `ConsensusState` the counterparty stores for the executing chain. The 
 executing chain will select a version from the intersection of its supported versions and the 
@@ -208,23 +210,25 @@ versions should have a unique version identifier.
 The channel handshake occurs in 4 steps as defined in [ICS 04](https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics).
 
 `ChanOpenInit` is the first attempt to initialize a channel on top of an existing connection. 
-The handshake is expected to succeed if the channel identifier selected is not used and the
-version selected for the existing connection is a supported IBC version. The portID must correspond
-to a port already binded upon `InitChain`. The channel identifier for the counterparty channel 
-may be left empty indicating that the counterparty may select its own identifier. The channel is 
-set and stored in the INIT state upon success. The channel parameters `NextSequenceSend`, 
-`NextSequenceRecv`, and `NextSequenceAck` are all set to 1 and a channel capability is created 
-for the given portID and channelID path. 
+The handshake is expected to succeed if the version selected for the existing connection is a 
+supported IBC version. The portID must correspond to a port already binded upon `InitChain`. 
+The channel identifier for the counterparty channel must be left empty indicating that the 
+counterparty must select its own identifier. The channel identifier is auto derived in the
+format: `channel{N}` where N is the next sequence to be used. The channel is set and stored 
+in the INIT state upon success. The channel parameters `NextSequenceSend`, `NextSequenceRecv`, 
+and `NextSequenceAck` are all set to 1 and a channel capability is created for the given 
+portID and channelID path. 
 
 `ChanOpenTry` is a response to a chain executing `ChanOpenInit`. If the executing chain is calling
 `ChanOpenTry` after previously executing `ChanOpenInit` then the provided channel parameters must
-match the previously selected parameters. The connection the channel is created on top of must be
-an OPEN state and its IBC version must support the desired channel type being created (ORDERED,
-UNORDERED, etc). The executing chain will verify that the channel state of the counterparty is 
-in INIT. The executing chain will set and store the channel state in TRYOPEN. The channel 
-parameters `NextSequenceSend`, `NextSequenceRecv`, and `NextSequenceAck` are all set to 1 and 
-a channel capability is created for the given portID and channelID path only if the channel
-did not previously exist. 
+match the previously selected parameters. If the previous channel does not exist then a channel
+identifier is generated in the same format as done in `ChanOpenInit`. The connection the channel 
+is created on top of must be an OPEN state and its IBC version must support the desired channel 
+type being created (ORDERED, UNORDERED, etc). The executing chain will verify that the channel 
+state of the counterparty is in INIT. The executing chain will set and store the channel state 
+in TRYOPEN. The channel parameters `NextSequenceSend`, `NextSequenceRecv`, and `NextSequenceAck` 
+are all set to 1 and a channel capability is created for the given portID and channelID path only 
+if the channel did not previously exist. 
 
 `ChanOpenAck` may be called on a chain when the counterparty channel has entered TRYOPEN. A
 previous channel on the executing chain must exist be in either INIT or TRYOPEN state. If the 

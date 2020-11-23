@@ -99,16 +99,13 @@ type Validator struct {
 // Jailed, 
 
 //// Instant change fields
-// DelegatorShares, 
+// DelegatorShares
 
 //// Both epoching and Endblocker change fields
 // Status
 
-//// Should have staging fields
-// Tokens
-
-//// Not sure
-// UnbondingHeight, UnbondingCompletionTime
+//// Could be changed both instantly and on epoching
+// UnbondingHeight, UnbondingCompletionTime, Tokens
 
 type Commission struct {
     CommissionRates
@@ -245,7 +242,6 @@ type RedelegationEntry struct {
     Balance        sdk.Coin  // current balance (current value held in destination validator)
     SharesDst      sdk.Dec   // amount of destination-validator shares created by redelegation
 }
-
 ```
 
 ## Queues

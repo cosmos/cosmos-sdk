@@ -84,6 +84,14 @@ message GenesisState {
   // MsgWithdrawValidatorCommission -> instant
   // MsgWithdrawDelegatorReward -> instant
 
+  // The flow for an unbonding process would be:
+
+  // 1. Submit MsgUnbond which adds it to DelegationChangeQueue
+  // 2. Wait for end of Epoch
+  // 3. Execute "BeginUnbonding", this adds it to UnbondingQueue
+  // 4. Wait till end of Unbonding Period (3 weeks)
+  // 5. Remove from UnbondingQueue
+
   // Changes to make for logic flow
   // BlockValidatorUpdates should be modified to ValidatorUpdates and should be called on Epoch
   // BeginBlocker -> HandleValidatorSignature run as it is and run ValidatorUpdates when it's updated on EndBlocker

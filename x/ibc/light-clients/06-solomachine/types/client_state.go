@@ -1,6 +1,8 @@
 package types
 
 import (
+	"reflect"
+
 	ics23 "github.com/confio/ics23/go"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -76,13 +78,11 @@ func (cs ClientState) ZeroCustomFields() exported.ClientState {
 	)
 }
 
-// Initialize will check that initial consensus state is a solomachine consensus state
-// consState.ValidateBasic() already called in MsgCreateClient.ValidateBasic() so we simply need to check that consensus state
-// type is the same as solomachine client state
+// Initialize will check that initial consensus state is equal to the latest consensus state of the initial client.
 func (cs ClientState) Initialize(_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, consState exported.ConsensusState) error {
-	if _, ok := consState.(*ConsensusState); !ok {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid initial consensus state. expected type: %T, got: %T",
-			&ConsensusState{}, consState)
+	if !reflect.DeepEqual(cs.ConsensusState, consState) {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "consensus state in initial client does not equal initial consensus state. expected: %s, got: %s",
+			cs.ConsensusState, consState)
 	}
 	return nil
 }

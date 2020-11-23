@@ -24,26 +24,6 @@ func createValidators(t *testing.T) []stakingtypes.Validator {
 	}
 }
 
-func TestHistoricalInfo(t *testing.T) {
-	validators := createValidators(t)
-	hi := types.NewHistoricalInfo(header, validators)
-	require.True(t, sort.IsSorted(stakingtypes.Validators(hi.Valset)), "Validators are not sorted")
-
-	var value []byte
-	require.NotPanics(t, func() {
-		value = types.ModuleCdc.MustMarshalBinaryBare(&hi)
-	})
-	require.NotNil(t, value, "Marshalled HistoricalInfo is nil")
-
-	recv, err := types.UnmarshalHistoricalInfo(types.ModuleCdc, value)
-	require.Nil(t, err, "Unmarshalling HistoricalInfo failed")
-	require.Equal(t, hi.Header, recv.Header)
-	for i := range hi.Valset {
-		require.True(t, hi.Valset[i].Equal(&recv.Valset[i]))
-	}
-	require.True(t, sort.IsSorted(stakingtypes.Validators(hi.Valset)), "Validators are not sorted")
-}
-
 func TestValidateBasic(t *testing.T) {
 	validators := createValidators(t)
 	hi := types.HistoricalInfo{

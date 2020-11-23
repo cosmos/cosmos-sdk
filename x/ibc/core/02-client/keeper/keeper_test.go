@@ -112,7 +112,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		validators = append(validators, val)
 
 		hi := types.NewHistoricalInfo(suite.ctx.BlockHeader(), validators)
-		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), &hi)
+		app.IBCKeeper.ClientKeeper.SetHistoricalInfo(suite.ctx, int64(i), &hi)
 	}
 
 	// add localhost client

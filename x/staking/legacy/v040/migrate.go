@@ -124,11 +124,10 @@ func Migrate(stakingState v038staking.GenesisState) *v040staking.GenesisState {
 
 	return &v040staking.GenesisState{
 		Params: v040staking.Params{
-			UnbondingTime:     stakingState.Params.UnbondingTime,
-			MaxValidators:     uint32(stakingState.Params.MaxValidators),
-			MaxEntries:        uint32(stakingState.Params.MaxEntries),
-			HistoricalEntries: uint32(stakingState.Params.HistoricalEntries),
-			BondDenom:         stakingState.Params.BondDenom,
+			UnbondingTime: stakingState.Params.UnbondingTime,
+			MaxValidators: uint32(stakingState.Params.MaxValidators),
+			MaxEntries:    uint32(stakingState.Params.MaxEntries),
+			BondDenom:     stakingState.Params.BondDenom,
 		},
 		LastTotalPower:       stakingState.LastTotalPower,
 		LastValidatorPowers:  newLastValidatorPowers,

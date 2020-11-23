@@ -9,8 +9,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestHistoricalInfo(t *testing.T) {
@@ -19,7 +20,7 @@ func TestHistoricalInfo(t *testing.T) {
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
-	validators := make([]types.Validator, len(addrVals))
+	validators := make([]stakingtypes.Validator, len(addrVals))
 
 	for i, valAddr := range addrVals {
 		validators[i] = teststaking.NewValidator(t, valAddr, PKs[i])
@@ -31,7 +32,7 @@ func TestHistoricalInfo(t *testing.T) {
 	recv, found := app.StakingKeeper.GetHistoricalInfo(ctx, 2)
 	require.True(t, found, "HistoricalInfo not found after set")
 	require.Equal(t, hi, recv, "HistoricalInfo not equal")
-	require.True(t, sort.IsSorted(types.ValidatorsByVotingPower(recv.Valset)), "HistoricalInfo validators is not sorted")
+	require.True(t, sort.IsSorted(stakingtypes.ValidatorsByVotingPower(recv.Valset)), "HistoricalInfo validators is not sorted")
 
 	app.StakingKeeper.DeleteHistoricalInfo(ctx, 2)
 
@@ -61,7 +62,7 @@ func TestTrackHistoricalInfo(t *testing.T) {
 		ChainID: "HelloChain",
 		Height:  5,
 	}
-	valSet := []types.Validator{
+	valSet := []stakingtypes.Validator{
 		teststaking.NewValidator(t, addrVals[0], PKs[0]),
 		teststaking.NewValidator(t, addrVals[1], PKs[1]),
 	}
@@ -84,8 +85,8 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	app.StakingKeeper.SetValidator(ctx, val2)
 	app.StakingKeeper.SetLastValidatorPower(ctx, val2.GetOperator(), 80)
 
-	vals := []types.Validator{val1, val2}
-	sort.Sort(types.ValidatorsByVotingPower(vals))
+	vals := []stakingtypes.Validator{val1, val2}
+	sort.Sort(stakingtypes.ValidatorsByVotingPower(vals))
 
 	// Set Header for BeginBlock context
 	header := tmproto.Header{
@@ -120,7 +121,7 @@ func TestGetAllHistoricalInfo(t *testing.T) {
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
-	valSet := []types.Validator{
+	valSet := []stakingtypes.Validator{
 		teststaking.NewValidator(t, addrVals[0], PKs[0]),
 		teststaking.NewValidator(t, addrVals[1], PKs[1]),
 	}

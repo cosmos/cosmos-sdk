@@ -368,7 +368,7 @@ func (suite *KeeperTestSuite) TestQueryParams() {
 }
 
 func (suite *KeeperTestSuite) TestGRPCQueryHistoricalInfo() {
-	hi, found := suite.chainA.App.StakingKeeper.GetHistoricalInfo(ctx, 5)
+	hi, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetHistoricalInfo(suite.ctx, 5)
 	suite.True(found)
 
 	var req *types.QueryHistoricalInfoRequest
@@ -409,13 +409,14 @@ func (suite *KeeperTestSuite) TestGRPCQueryHistoricalInfo() {
 
 			ctx := sdk.WrapSDKContext(suite.ctx)
 			res, err := suite.queryClient.HistoricalInfo(ctx, req)
+
 			if tc.expPass {
-				suite.NoError(err)
-				suite.NotNil(res)
-				suite.True(hi.Equal(res.Hist))
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().True(hi.Equal(res.Hist))
 			} else {
-				suite.Error(err)
-				suite.Nil(res)
+				suite.Require().Error(err)
+				suite.Require().Nil(res)
 			}
 		})
 	}

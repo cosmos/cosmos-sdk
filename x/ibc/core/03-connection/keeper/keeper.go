@@ -48,7 +48,7 @@ func (k Keeper) GetCommitmentPrefix() exported.Prefix {
 // GenerateConnectionIdentifier returns the next connection identifier.
 func (k Keeper) GenerateConnectionIdentifier(ctx sdk.Context) string {
 	nextConnSeq := k.GetNextConnectionSequence(ctx)
-	connectionID := fmt.Sprintf("%s%d", types.ConnectionPrefix, nextConnSeq)
+	connectionID := types.FormatConnectionIdentifier(nextConnSeq)
 
 	nextConnSeq++
 	k.SetNextConnectionSequence(ctx, nextConnSeq)

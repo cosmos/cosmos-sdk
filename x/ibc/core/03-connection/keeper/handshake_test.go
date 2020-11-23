@@ -66,7 +66,7 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 
 			if tc.expPass {
 				suite.Require().NoError(err)
-				suite.Require().Equal(fmt.Sprintf("%s%d", types.ConnectionPrefix, 0), connectionID)
+				suite.Require().Equal(types.FormatConnectionIdentifier(0), connectionID)
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Equal("", connectionID)

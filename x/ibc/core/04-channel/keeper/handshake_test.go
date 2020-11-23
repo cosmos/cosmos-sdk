@@ -116,7 +116,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 				if tc.expPass && orderSupported {
 					suite.Require().NoError(err)
 					suite.Require().NotNil(cap)
-					suite.Require().Equal(fmt.Sprintf("channel%d", 0), channelID)
+					suite.Require().Equal(types.FormatChannelIdentifier(0), channelID)
 
 					chanCap, ok := suite.chainA.App.ScopedIBCKeeper.GetCapability(
 						suite.chainA.GetContext(),

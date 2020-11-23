@@ -1,5 +1,9 @@
 package ibctesting
 
+import (
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
+)
+
 // TestConnection is a testing helper struct to keep track of the connectionID, source clientID,
 // counterparty clientID, and the next channel version used in creating and interacting with a
 // connection.
@@ -21,7 +25,7 @@ func (conn *TestConnection) FirstOrNextTestChannel(portID string) TestChannel {
 	}
 	return TestChannel{
 		PortID:               portID,
-		ID:                   "channel0",
+		ID:                   channeltypes.FormatChannelIdentifier(0),
 		ClientID:             conn.ClientID,
 		CounterpartyClientID: conn.CounterpartyClientID,
 		Version:              conn.NextChannelVersion,

@@ -12,7 +12,8 @@ import (
 
 var _ sdk.Msg = &MsgChannelOpenInit{}
 
-// NewMsgChannelOpenInit creates a new MsgChannelOpenInit
+// NewMsgChannelOpenInit creates a new MsgChannelOpenInit. It sets the counterparty channel
+// identifier to be empty.
 // nolint:interfacer
 func NewMsgChannelOpenInit(
 	portID, version string, channelOrder Order, connectionHops []string,

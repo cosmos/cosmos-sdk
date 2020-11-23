@@ -12,7 +12,8 @@ import (
 
 var _ sdk.Msg = &MsgConnectionOpenInit{}
 
-// NewMsgConnectionOpenInit creates a new MsgConnectionOpenInit instance
+// NewMsgConnectionOpenInit creates a new MsgConnectionOpenInit instance. It sets the
+// counterparty connection identifier to be empty.
 //nolint:interfacer
 func NewMsgConnectionOpenInit(
 	clientID,

@@ -20,3 +20,8 @@ const (
 	// ChannelPrefix is the prefix used when creating a channel identifier
 	ChannelPrefix = "channel"
 )
+
+// FormatChannelIdentifier returns the channel identifier with the sequence appended.
+func FormatChannelIdentifier(sequence uint64) string {
+	return fmt.Sprintf("%s%d", ChannelPrefix, sequence)
+}

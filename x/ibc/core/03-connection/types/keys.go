@@ -1,5 +1,7 @@
 package types
 
+import "fmt"
+
 const (
 	// SubModuleName defines the IBC connection name
 	SubModuleName = "connection"
@@ -20,3 +22,8 @@ const (
 	// ConnectionPrefix is the prefix used when creating a connection identifier
 	ConnectionPrefix = "connection"
 )
+
+// FormatConnectionIdentifier returns the connection identifier with the sequence appended.
+func FormatConnectionIdentifier(sequence uint64) string {
+	return fmt.Sprintf("%s%d", ConnectionPrefix, sequence)
+}

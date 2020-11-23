@@ -613,7 +613,7 @@ func DefaultCoinDenomRegex() string {
 	return reDnmString
 }
 
-// coinDenomRegex returns the current regex string and can be overwritten for custom validation
+// coinDenomRegex returns the current regex string and can be overwritten through the SetCoinDenomRegex accessor.
 var coinDenomRegex = DefaultCoinDenomRegex
 
 // SetCoinDenomRegex allows for coin's custom validation by overriding the regular

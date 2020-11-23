@@ -1,5 +1,7 @@
 package types
 
+import "fmt"
+
 const (
 	// SubModuleName defines the IBC channels name
 	SubModuleName = "channel"

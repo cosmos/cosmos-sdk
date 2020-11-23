@@ -57,9 +57,9 @@ func (AppModuleBasic) ValidateGenesis(_ codec.JSONMarshaler, _ client.TxEncoding
 // RegisterRESTRoutes registers module's REST handlers. Currently, this is a no-op.
 func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
-// RegisterGRPCRoutes registers the module's gRPC Gateway routes. Currently, this
+// RegisterGRPCGatewayRoutes registers the module's gRPC Gateway routes. Currently, this
 // is a no-op.
-func (a AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {}
+func (a AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *runtime.ServeMux) {}
 
 // GetTxCmd returns the root tx command for the auth module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {

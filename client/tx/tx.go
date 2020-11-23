@@ -8,14 +8,13 @@ import (
 	"os"
 
 	"github.com/spf13/pflag"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	sim "github.com/cosmos/cosmos-sdk/client/grpc/simulate"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -279,7 +278,7 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 		return nil, fmt.Errorf("cannot simulate amino tx")
 	}
 
-	simReq := sim.SimulateRequest{Tx: protoTx}
+	simReq := tx.SimulateRequest{Tx: protoTx}
 
 	return simReq.Marshal()
 }
@@ -288,21 +287,23 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 // simulation response obtained by the query and the adjusted gas amount.
 func CalculateGas(
 	queryFunc func(string, []byte) ([]byte, int64, error), txf Factory, msgs ...sdk.Msg,
-) (sim.SimulateResponse, uint64, error) {
+) (tx.SimulateResponse, uint64, error) {
 	txBytes, err := BuildSimTx(txf, msgs...)
 	if err != nil {
-		return sim.SimulateResponse{}, 0, err
+		return tx.SimulateResponse{}, 0, err
 	}
 
-	bz, _, err := queryFunc("/cosmos.base.simulate.v1beta1.SimulateService/Simulate", txBytes)
+	// TODO This should use the generated tx service Client.
+	// https://github.com/cosmos/cosmos-sdk/issues/7726
+	bz, _, err := queryFunc("/cosmos.tx.v1beta1.Service/Simulate", txBytes)
 	if err != nil {
-		return sim.SimulateResponse{}, 0, err
+		return tx.SimulateResponse{}, 0, err
 	}
 
-	var simRes sim.SimulateResponse
+	var simRes tx.SimulateResponse
 
 	if err := simRes.Unmarshal(bz); err != nil {
-		return sim.SimulateResponse{}, 0, err
+		return tx.SimulateResponse{}, 0, err
 	}
 
 	return simRes, uint64(txf.GasAdjustment() * float64(simRes.GasInfo.GasUsed)), nil
@@ -342,7 +343,7 @@ func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 // corresponding SignatureV2 if the signing is successful.
 func SignWithPrivKey(
 	signMode signing.SignMode, signerData authsigning.SignerData,
-	txBuilder client.TxBuilder, priv crypto.PrivKey, txConfig client.TxConfig,
+	txBuilder client.TxBuilder, priv cryptotypes.PrivKey, txConfig client.TxConfig,
 	accSeq uint64,
 ) (signing.SignatureV2, error) {
 	var sigV2 signing.SignatureV2

@@ -26,7 +26,7 @@ func NewConsensusState(
 
 // ClientType returns Tendermint
 func (ConsensusState) ClientType() string {
-	return Tendermint
+	return exported.Tendermint
 }
 
 // GetRoot returns the commitment Root for the specific

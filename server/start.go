@@ -193,6 +193,25 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
+	var cpuProfileCleanup func()
+
+	if cpuProfile := ctx.Viper.GetString(flagCPUProfile); cpuProfile != "" {
+		f, err := os.Create(cpuProfile)
+		if err != nil {
+			return err
+		}
+
+		ctx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
+		if err := pprof.StartCPUProfile(f); err != nil {
+			return err
+		}
+
+		cpuProfileCleanup = func() {
+			ctx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
+			pprof.StopCPUProfile()
+			f.Close()
+		}
+	}
 
 	traceWriterFile := ctx.Viper.GetString(flagTraceStore)
 	db, err := openDB(home)
@@ -226,14 +245,27 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	if err != nil {
 		return err
 	}
+	ctx.Logger.Debug("Initialization: tmNode created")
 
 	if err := tmNode.Start(); err != nil {
 		return err
 	}
+	ctx.Logger.Debug("Initialization: tmNode started")
+
+	config := config.GetConfig(ctx.Viper)
+
+	// Add the tx service to the gRPC router. We only need to register this
+	// service if API or gRPC is enabled, and avoid doing so in the general
+	// case, because it spawns a new local tendermint RPC client.
+	if config.API.Enable || config.GRPC.Enable {
+		clientCtx = clientCtx.
+			WithClient(local.New(tmNode))
+
+		app.RegisterTxService(clientCtx)
+	}
 
 	var apiSrv *api.Server
 
-	config := config.GetConfig(ctx.Viper)
 	if config.API.Enable {
 		genDoc, err := genDocProvider()
 		if err != nil {
@@ -242,8 +274,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 		clientCtx := clientCtx.
 			WithHomeDir(home).
-			WithChainID(genDoc.ChainID).
-			WithClient(local.New(tmNode))
+			WithChainID(genDoc.ChainID)
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
 		app.RegisterAPIRoutes(apiSrv, config.API)
@@ -267,26 +298,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		grpcSrv, err = servergrpc.StartGRPCServer(app, config.GRPC.Address)
 		if err != nil {
 			return err
-		}
-	}
-
-	var cpuProfileCleanup func()
-
-	if cpuProfile := ctx.Viper.GetString(flagCPUProfile); cpuProfile != "" {
-		f, err := os.Create(cpuProfile)
-		if err != nil {
-			return err
-		}
-
-		ctx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
-		if err := pprof.StartCPUProfile(f); err != nil {
-			return err
-		}
-
-		cpuProfileCleanup = func() {
-			ctx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
-			pprof.StopCPUProfile()
-			f.Close()
 		}
 	}
 

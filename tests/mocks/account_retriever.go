@@ -6,9 +6,9 @@ package mocks
 
 import (
 	client "github.com/cosmos/cosmos-sdk/client"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
-	crypto "github.com/tendermint/tendermint/crypto"
 	reflect "reflect"
 )
 
@@ -50,10 +50,10 @@ func (mr *MockAccountMockRecorder) GetAddress() *gomock.Call {
 }
 
 // GetPubKey mocks base method
-func (m *MockAccount) GetPubKey() crypto.PubKey {
+func (m *MockAccount) GetPubKey() cryptotypes.PubKey {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPubKey")
-	ret0, _ := ret[0].(crypto.PubKey)
+	ret0, _ := ret[0].(cryptotypes.PubKey)
 	return ret0
 }
 

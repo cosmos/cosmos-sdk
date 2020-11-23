@@ -36,30 +36,110 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+* (SDK) [\#7925](https://github.com/cosmos/cosmos-sdk/pull/7925) Updated dependencies to use gRPC v1.33.2
+  * Updated gRPC dependency to v1.33.2
+  * Updated iavl dependency to v0.15-rc2
+* (version) [\#7848](https://github.com/cosmos/cosmos-sdk/pull/7848) [\#7941](https://github.com/cosmos/cosmos-sdk/pull/7941) `version --long` output now shows the list of build dependencies and replaced build dependencies.
+
+### State Machine Breaking Changes
+* (x/upgrade) [\#7979](https://github.com/cosmos/cosmos-sdk/pull/7979) keeper pubkey storage serialization migration from bech32 to protobuf. 
+
+### Bug Fixes
+
+* (crypto) [\#7966](https://github.com/cosmos/cosmos-sdk/issues/7966) `Bip44Params` `String()` function now correctly returns the absolute HD path by adding the `m/` prefix.
+
+## [v0.40.0-rc3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc3) - 2020-11-06
+
 ### Client Breaking
 
-* (x/staking) [\#7499](https://github.com/cosmos/cosmos-sdk/pull/7499) `BondStatus` is now a protobuf `enum` instead of an `int32`, and JSON serialized using its protobuf name, so expect names like `BOND_STATUS_UNBONDING` as opposed to `Unbonding`.
-* (x/evidence) [\#7538](https://github.com/cosmos/cosmos-sdk/pull/7538) The ABCI's `Result.Data` field of `MsgSubmitEvidence` does not contain the raw evidence's hash, but the encoded `MsgSubmitEvidenceResponse` struct.
+* (x/staking) [\#7419](https://github.com/cosmos/cosmos-sdk/pull/7419) The `TmConsPubKey` method on ValidatorI has been removed and replaced instead by `ConsPubKey` (which returns a SDK `cryptotypes.PubKey`) and `TmConsPublicKey` (which returns a Tendermint proto PublicKey).
+
+### Improvements
+* (tendermint) [\#7828](https://github.com/cosmos/cosmos-sdk/pull/7828) Update tendermint dependency to v0.34.0-rc6
+
+## [v0.40.0-rc2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc2) - 2020-11-02
+
+### Client Breaking
+
+* (x/upgrade) [#7697](https://github.com/cosmos/cosmos-sdk/pull/7697) Rename flag name "--time" to "--upgrade-time", "--info" to "--upgrade-info", to keep it consistent with help message.
+* (x/auth) [#7788](https://github.com/cosmos/cosmos-sdk/pull/7788) Remove `tx auth` subcommands, all auth subcommands exist as `tx <subcommand>` 
 
 ### API Breaking
 
-* (AppModule) [\#7518](https://github.com/cosmos/cosmos-sdk/pull/7518) [\#7584](https://github.com/cosmos/cosmos-sdk/pull/7584) Rename `AppModule.RegisterQueryServices` to `AppModule.RegisterServices`, as this method now registers multiple services (the gRPC query service and the protobuf Msg service). A `Configurator` struct is used to hold the different services.
 * (x/staking/types) [\#7447](https://github.com/cosmos/cosmos-sdk/issues/7447) Remove bech32 PubKey support:
   * `ValidatorI` interface update. `GetConsPubKey` renamed to `TmConsPubKey` (consensus public key must be a tendermint key). `TmConsPubKey`, `GetConsAddr` methods return error.
   * `Validator` update. Methods changed in `ValidatorI` (as described above) and `ToTmValidator` return error.
   * `Validator.ConsensusPubkey` type changed from `string` to `codectypes.Any`.
   * `MsgCreateValidator.Pubkey` type changed from `string` to `codectypes.Any`.
 * Deprecating and renaming `MakeEncodingConfig` to `MakeTestEncodingConfig` (both in `simapp` and `simapp/params` packages).
+* (tx) [\#7688](https://github.com/cosmos/cosmos-sdk/pull/7688) The gRPC simulate service method has been moved from `cosmos.base.v1beta1.simulate` to `cosmos.tx.v1beta1`, as a method in the Tx service.
+* [#7764](https://github.com/cosmos/cosmos-sdk/pull/7764) Added module initialization options:
+  * `server/types.AppExporter` requires extra argument: `AppOptions`.
+  * `server.AddCommands` requires extra argument: `addStartFlags types.ModuleInitFlags`
+  * `x/crisis.NewAppModule` has a new attribute: `skipGenesisInvariants`. [PR](https://github.com/cosmos/cosmos-sdk/pull/7764)
+* [#7918](https://github.com/cosmos/cosmos-sdk/pull/7918) Add x/capability safety checks:
+  * All outward facing APIs will now check that capability is not nil and name is not empty before performing any state-machine changes
+  * `SetIndex` has been renamed to `InitializeIndex`
 
 ### Features
 
+* (tx) [\#7688](https://github.com/cosmos/cosmos-sdk/pull/7688) Add a new Tx gRPC service with methods `Simulate` and `GetTx` (by hash).
+* __Modules__
+  * `x/crisis` has a new function: `AddModuleInitFlags`, which will register optional crisis module flags for the start command.
+
+
+### Bug Fixes
+
+* (client) [\#7699](https://github.com/cosmos/cosmos-sdk/pull/7699) Fix panic in context when setting invalid nodeURI. `WithNodeURI` does not set the `Client` in the context.
+* (x/gov) [#7641](https://github.com/cosmos/cosmos-sdk/pull/7641) Fix tally calculation precision error.
+
+### Improvements 
+
+* (rest) [#7649](https://github.com/cosmos/cosmos-sdk/pull/7649) Return an unsigned tx in legacy GET /tx endpoint when signature conversion fails
+* (cli) [#7764](https://github.com/cosmos/cosmos-sdk/pull/7764) Update x/banking and x/crisis InitChain to improve node startup time
+
+
+## [v0.40.0-rc1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc1) - 2020-10-19
+
+### Client Breaking Changes
+
+* __Modules__
+  * (x/staking) [\#7499](https://github.com/cosmos/cosmos-sdk/pull/7499) `BondStatus` is now a protobuf `enum` instead
+    of an `int32`, and JSON serialized using its protobuf name, so expect names like `BOND_STATUS_UNBONDING` as opposed
+    to `Unbonding`.
+  * (x/staking) [\#7556](https://github.com/cosmos/cosmos-sdk/pull/7556) The ABCI's `Result.Data` field for
+    `MsgBeginRedelegate` and `MsgUndelegate` responses does not contain custom binary marshaled `completionTime`, but the
+    protobuf encoded `MsgBeginRedelegateResponse` and `MsgUndelegateResponse` structs respectively
+  * (x/evidence) [\#7538](https://github.com/cosmos/cosmos-sdk/pull/7538) The ABCI's `Result.Data` field for
+    `MsgSubmitEvidence` responses does not contain the raw evidence's hash, but the protobuf encoded
+    `MsgSubmitEvidenceResponse` struct.
+  * (x/gov) [\#7533](https://github.com/cosmos/cosmos-sdk/pull/7533) The ABCI's `Result.Data` field for
+    `MsgSubmitProposal` responses does not contain a raw binary encoding of the `proposalID`, but the protobuf encoded
+    `MsgSubmitSubmitProposalResponse` struct.
+
+### API Breaking
+
+* (AppModule) [\#7518](https://github.com/cosmos/cosmos-sdk/pull/7518) [\#7584](https://github.com/cosmos/cosmos-sdk/pull/7584) Rename `AppModule.RegisterQueryServices` to `AppModule.RegisterServices`, as this method now registers multiple services (the gRPC query service and the protobuf Msg service). A `Configurator` struct is used to hold the different services.
+
+### Features
+
+* (modules) [\#7540](https://github.com/cosmos/cosmos-sdk/issues/7540) Protobuf service definitions can now be used for
+packing `Msg`s in transactions as defined in [ADR 031](./docs/architecture/adr-031-msg-service.md). All modules now 
+define a `Msg` protobuf service.
 * (codec) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) `InterfaceRegistry` now inherits `jsonpb.AnyResolver`, and has a `RegisterCustomTypeURL` method to support ADR 031 packing of `Any`s. `AnyResolver` is now a required parameter to `RejectUnknownFields`.
 * (baseapp) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) Add `ServiceMsgRouter` to BaseApp to handle routing of protobuf service `Msg`s. The two new types defined in ADR 031, `sdk.ServiceMsg` and `sdk.MsgRequest` are introduced with this router.
+* (cli) [\#7221](https://github.com/cosmos/cosmos-sdk/pull/7221) Add the option of emitting amino encoded json from the CLI
 
 ### Bug Fixes
 
 * (kvstore) [\#7415](https://github.com/cosmos/cosmos-sdk/pull/7415) Allow new stores to be registered during on-chain upgrades.
+* (rest) [\#7730](https://github.com/cosmos/cosmos-sdk/pull/7730) Fix fetch txs by height on legacy REST endpoint
 
+### Improvements
+
+* (tendermint) [\#7527](https://github.com/cosmos/cosmos-sdk/pull/7527) Update sdk to tendermint 0.34-rc5
+* (iavl) [\#7549](https://github.com/cosmos/cosmos-sdk/pull/7549) Update sdk to IAVL 0.15.0-rc4
 
 ## [v0.40.0-rc0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc0) - 2020-10-13
 
@@ -649,6 +729,7 @@ generalized genesis accounts through the `GenesisAccount` interface.
 * (sdk) [\#4758](https://github.com/cosmos/cosmos-sdk/issues/4758) update `x/genaccounts` to match module spec
 * (simulation) [\#4824](https://github.com/cosmos/cosmos-sdk/issues/4824) `PrintAllInvariants` flag will print all failed invariants
 * (simulation) [\#4490](https://github.com/cosmos/cosmos-sdk/issues/4490) add `InitialBlockHeight` flag to resume a simulation from a given block
+  
   * Support exporting the simulation stats to a given JSON file
 * (simulation) [\#4847](https://github.com/cosmos/cosmos-sdk/issues/4847), [\#4838](https://github.com/cosmos/cosmos-sdk/pull/4838) and [\#4869](https://github.com/cosmos/cosmos-sdk/pull/4869) `SimApp` and simulation refactors:
   * Implement `SimulationManager` for executing modules' simulation functionalities in a modularized way
@@ -962,6 +1043,7 @@ that error is that the account doesn't exist.
 * (simulation) PrintAllInvariants flag will print all failed invariants
 * (simulation) Add `InitialBlockHeight` flag to resume a simulation from a given block
 * (simulation) [\#4670](https://github.com/cosmos/cosmos-sdk/issues/4670) Update simulation statistics to JSON format
+  
   - Support exporting the simulation stats to a given JSON file
 * [\#4775](https://github.com/cosmos/cosmos-sdk/issues/4775) Refactor CI config
 * Upgrade IAVL to v0.12.4
@@ -1567,8 +1649,9 @@ BREAKING CHANGES
 FEATURES
 
 * Gaia REST API
-  * [\#2358](https://github.com/cosmos/cosmos-sdk/issues/2358) Add distribution module REST interface
-
+  
+* [\#2358](https://github.com/cosmos/cosmos-sdk/issues/2358) Add distribution module REST interface
+  
 * Gaia CLI  (`gaiacli`)
   * [\#3429](https://github.com/cosmos/cosmos-sdk/issues/3429) Support querying
   for all delegator distribution rewards.

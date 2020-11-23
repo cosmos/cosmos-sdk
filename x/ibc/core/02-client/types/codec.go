@@ -6,6 +6,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
@@ -26,9 +27,6 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface(
 		"ibc.core.client.v1.Height",
 		(*exported.Height)(nil),
-	)
-	registry.RegisterImplementations(
-		(*exported.Height)(nil),
 		&Height{},
 	)
 	registry.RegisterInterface(
@@ -41,6 +39,8 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&MsgUpdateClient{},
 		&MsgSubmitMisbehaviour{},
 	)
+
+	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 // PackClientState constructs a new Any packed with the given client state value. It returns

@@ -47,12 +47,12 @@ func (suite *KeeperTestSuite) TestQueryConnection() {
 		{
 			"success",
 			func() {
-				clientA, clientB := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				clientA, clientB := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 				connA := suite.chainA.GetFirstTestConnection(clientA, clientB)
 				connB := suite.chainB.GetFirstTestConnection(clientB, clientA)
 
 				counterparty := types.NewCounterparty(clientB, connB.ID, suite.chainB.GetPrefix())
-				expConnection = types.NewConnectionEnd(types.INIT, clientA, counterparty, types.GetCompatibleEncodedVersions())
+				expConnection = types.NewConnectionEnd(types.INIT, clientA, counterparty, types.ExportedVersionsToProto(types.GetCompatibleVersions()))
 				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, expConnection)
 
 				req = &types.QueryConnectionRequest{
@@ -111,19 +111,19 @@ func (suite *KeeperTestSuite) TestQueryConnections() {
 		{
 			"success",
 			func() {
-				clientA, clientB, connA0, connB0 := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				clientA, clientB, connA0, connB0 := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 				connA1, connB1, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 				suite.Require().NoError(err)
 
-				clientA1, clientB1, connA2, connB2 := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				clientA1, clientB1, connA2, connB2 := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 
 				counterparty1 := types.NewCounterparty(clientB, connB0.ID, suite.chainB.GetPrefix())
 				counterparty2 := types.NewCounterparty(clientB, connB1.ID, suite.chainB.GetPrefix())
 				counterparty3 := types.NewCounterparty(clientB1, connB2.ID, suite.chainB.GetPrefix())
 
-				conn1 := types.NewConnectionEnd(types.OPEN, clientA, counterparty1, types.GetCompatibleEncodedVersions())
-				conn2 := types.NewConnectionEnd(types.INIT, clientA, counterparty2, types.GetCompatibleEncodedVersions())
-				conn3 := types.NewConnectionEnd(types.OPEN, clientA1, counterparty3, types.GetCompatibleEncodedVersions())
+				conn1 := types.NewConnectionEnd(types.OPEN, clientA, counterparty1, types.ExportedVersionsToProto(types.GetCompatibleVersions()))
+				conn2 := types.NewConnectionEnd(types.INIT, clientA, counterparty2, types.ExportedVersionsToProto(types.GetCompatibleVersions()))
+				conn3 := types.NewConnectionEnd(types.OPEN, clientA1, counterparty3, types.ExportedVersionsToProto(types.GetCompatibleVersions()))
 
 				iconn1 := types.NewIdentifiedConnection(connA0.ID, conn1)
 				iconn2 := types.NewIdentifiedConnection(connA1.ID, conn2)
@@ -197,7 +197,7 @@ func (suite *KeeperTestSuite) TestQueryClientConnections() {
 		{
 			"success",
 			func() {
-				clientA, clientB, connA0, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				clientA, clientB, connA0, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 				connA1, _ := suite.coordinator.CreateConnection(suite.chainA, suite.chainB, clientA, clientB)
 				expPaths = []string{connA0.ID, connA1.ID}
 				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetClientConnectionPaths(suite.chainA.GetContext(), clientA, expPaths)
@@ -282,7 +282,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionClientState() {
 		{
 			"success",
 			func() {
-				clientA, _, connA, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				clientA, _, connA, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 
 				expClientState := suite.chainA.GetClientState(clientA)
 				expIdentifiedClientState = clienttypes.NewIdentifiedClientState(clientA, expClientState)
@@ -371,7 +371,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 		{
 			"success",
 			func() {
-				clientA, _, connA, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				clientA, _, connA, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 
 				clientState := suite.chainA.GetClientState(clientA)
 				expConsensusState, _ = suite.chainA.GetConsensusState(clientA, clientState.GetLatestHeight())

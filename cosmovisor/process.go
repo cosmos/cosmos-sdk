@@ -4,9 +4,13 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log"
+	"os"
 	"os/exec"
+	"os/signal"
 	"strings"
 	"sync"
+	"syscall"
 )
 
 // LaunchProcess runs a subprocess and returns when the subprocess exits,
@@ -38,6 +42,15 @@ func LaunchProcess(cfg *Config, args []string, stdout, stderr io.Writer) (bool, 
 	if err := cmd.Start(); err != nil {
 		return false, fmt.Errorf("launching process %s %s: %w", bin, strings.Join(args, " "), err)
 	}
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGQUIT, syscall.SIGTERM)
+	go func() {
+		sig := <-sigs
+		if err := cmd.Process.Signal(sig); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	// three ways to exit - command ends, find regexp in scanOut, find regexp in scanErr
 	upgradeInfo, err := WaitForUpgradeOrExit(cmd, scanOut, scanErr)

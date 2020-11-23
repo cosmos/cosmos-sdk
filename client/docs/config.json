@@ -94,7 +94,7 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/ibc/channel/query.swagger.json",
+      "url": "./tmp-swagger-gen/ibc/core/channel/v1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "IBCChannelParams"
@@ -102,7 +102,7 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/ibc/client/query.swagger.json",
+      "url": "./tmp-swagger-gen/ibc/core/client/v1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "IBCClientParams"
@@ -110,7 +110,7 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/ibc/connection/query.swagger.json",
+      "url": "./tmp-swagger-gen/ibc/core/connection/v1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "IBCConnectionParams"
@@ -118,7 +118,7 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/ibc/transfer/query.swagger.json",
+      "url": "./tmp-swagger-gen/ibc/applications/transfer/v1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "IBCTransferParams"

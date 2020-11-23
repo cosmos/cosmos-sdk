@@ -115,6 +115,11 @@ func (registry *interfaceRegistry) RegisterInterface(protoName string, iface int
 	registry.RegisterImplementations(iface, impls...)
 }
 
+// RegisterImplementations registers a concrete proto Message which implements
+// the given interface.
+//
+// This function PANICs if different concrete types are registered under the
+// same typeURL.
 func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, impls ...proto.Message) {
 	for _, impl := range impls {
 		typeURL := "/" + proto.MessageName(impl)
@@ -122,10 +127,20 @@ func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, im
 	}
 }
 
+// RegisterCustomTypeURL registers a concrete type which implements the given
+// interface under `typeURL`.
+//
+// This function PANICs if different concrete types are registered under the
+// same typeURL.
 func (registry *interfaceRegistry) RegisterCustomTypeURL(iface interface{}, typeURL string, impl proto.Message) {
 	registry.registerImpl(iface, typeURL, impl)
 }
 
+// registerImpl registers a concrete type which implements the given
+// interface under `typeURL`.
+//
+// This function PANICs if different concrete types are registered under the
+// same typeURL.
 func (registry *interfaceRegistry) registerImpl(iface interface{}, typeURL string, impl proto.Message) {
 	ityp := reflect.TypeOf(iface).Elem()
 	imap, found := registry.interfaceImpls[ityp]
@@ -136,6 +151,24 @@ func (registry *interfaceRegistry) registerImpl(iface interface{}, typeURL strin
 	implType := reflect.TypeOf(impl)
 	if !implType.AssignableTo(ityp) {
 		panic(fmt.Errorf("type %T doesn't actually implement interface %+v", impl, ityp))
+	}
+
+	// Check if we already registered something under the given typeURL. It's
+	// okay to register the same concrete type again, but if we are registering
+	// a new concrete type under the same typeURL, then we throw an error (here,
+	// we panic).
+	foundImplType, found := imap[typeURL]
+	if found && foundImplType != implType {
+		panic(
+			fmt.Errorf(
+				"concrete type %s has already been registered under typeURL %s, cannot register %s under same typeURL. "+
+					"This usually means that there are conflicting modules registering different concrete types "+
+					"for a same interface implementation",
+				foundImplType,
+				typeURL,
+				implType,
+			),
+		)
 	}
 
 	imap[typeURL] = implType

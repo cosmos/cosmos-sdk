@@ -13,7 +13,7 @@ import (
 var _ sdk.Msg = &MsgChannelOpenInit{}
 
 // NewMsgChannelOpenInit creates a new MsgChannelOpenInit
-//nolint:interfacer
+// nolint:interfacer
 func NewMsgChannelOpenInit(
 	portID, channelID string, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID string, signer sdk.AccAddress,
@@ -46,7 +46,16 @@ func (msg MsgChannelOpenInit) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
-	// Signer can be empty
+	if msg.Channel.State != INIT {
+		return sdkerrors.Wrapf(ErrInvalidChannelState,
+			"channel state must be INIT in MsgChannelOpenInit. expected: %s, got: %s",
+			INIT, msg.Channel.State,
+		)
+	}
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
+	}
 	return msg.Channel.ValidateBasic()
 }
 
@@ -68,14 +77,14 @@ func (msg MsgChannelOpenInit) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgChannelOpenTry{}
 
 // NewMsgChannelOpenTry creates a new MsgChannelOpenTry instance
-//nolint:interfacer
+// nolint:interfacer
 func NewMsgChannelOpenTry(
 	portID, desiredChannelID, counterpartyChosenChannelID, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID, counterpartyVersion string,
 	proofInit []byte, proofHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgChannelOpenTry {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
-	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
+	channel := NewChannel(TRYOPEN, channelOrder, counterparty, connectionHops, version)
 	return &MsgChannelOpenTry{
 		PortId:                      portID,
 		DesiredChannelId:            desiredChannelID,
@@ -115,7 +124,16 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	// Signer can be empty
+	if msg.Channel.State != TRYOPEN {
+		return sdkerrors.Wrapf(ErrInvalidChannelState,
+			"channel state must be TRYOPEN in MsgChannelOpenTry. expected: %s, got: %s",
+			TRYOPEN, msg.Channel.State,
+		)
+	}
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
+	}
 	return msg.Channel.ValidateBasic()
 }
 
@@ -137,7 +155,7 @@ func (msg MsgChannelOpenTry) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgChannelOpenAck{}
 
 // NewMsgChannelOpenAck creates a new MsgChannelOpenAck instance
-//nolint:interfacer
+// nolint:interfacer
 func NewMsgChannelOpenAck(
 	portID, channelID, counterpartyChannelID string, cpv string, proofTry []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
@@ -180,7 +198,10 @@ func (msg MsgChannelOpenAck) ValidateBasic() error {
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	// Signer can be empty
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
+	}
 	return nil
 }
 
@@ -202,7 +223,7 @@ func (msg MsgChannelOpenAck) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgChannelOpenConfirm{}
 
 // NewMsgChannelOpenConfirm creates a new MsgChannelOpenConfirm instance
-//nolint:interfacer
+// nolint:interfacer
 func NewMsgChannelOpenConfirm(
 	portID, channelID string, proofAck []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
@@ -240,7 +261,10 @@ func (msg MsgChannelOpenConfirm) ValidateBasic() error {
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	// Signer can be empty
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
+	}
 	return nil
 }
 
@@ -262,7 +286,7 @@ func (msg MsgChannelOpenConfirm) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgChannelCloseInit{}
 
 // NewMsgChannelCloseInit creates a new MsgChannelCloseInit instance
-//nolint:interfacer
+// nolint:interfacer
 func NewMsgChannelCloseInit(
 	portID string, channelID string, signer sdk.AccAddress,
 ) *MsgChannelCloseInit {
@@ -291,7 +315,10 @@ func (msg MsgChannelCloseInit) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
-	// Signer can be empty
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
+	}
 	return nil
 }
 
@@ -313,7 +340,7 @@ func (msg MsgChannelCloseInit) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgChannelCloseConfirm{}
 
 // NewMsgChannelCloseConfirm creates a new MsgChannelCloseConfirm instance
-//nolint:interfacer
+// nolint:interfacer
 func NewMsgChannelCloseConfirm(
 	portID, channelID string, proofInit []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
@@ -351,7 +378,10 @@ func (msg MsgChannelCloseConfirm) ValidateBasic() error {
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	// Signer can be empty
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
+	}
 	return nil
 }
 
@@ -373,16 +403,16 @@ func (msg MsgChannelCloseConfirm) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgRecvPacket{}
 
 // NewMsgRecvPacket constructs new MsgRecvPacket
-//nolint:interfacer
+// nolint:interfacer
 func NewMsgRecvPacket(
-	packet Packet, proof []byte, proofHeight clienttypes.Height,
+	packet Packet, proofCommitment []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
 ) *MsgRecvPacket {
 	return &MsgRecvPacket{
-		Packet:      packet,
-		Proof:       proof,
-		ProofHeight: proofHeight,
-		Signer:      signer.String(),
+		Packet:          packet,
+		ProofCommitment: proofCommitment,
+		ProofHeight:     proofHeight,
+		Signer:          signer.String(),
 	}
 }
 
@@ -393,16 +423,16 @@ func (msg MsgRecvPacket) Route() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgRecvPacket) ValidateBasic() error {
-	if len(msg.Proof) == 0 {
+	if len(msg.ProofCommitment) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	if msg.Signer == "" {
-		return sdkerrors.ErrInvalidAddress
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
 	}
-
 	return msg.Packet.ValidateBasic()
 }
 
@@ -436,15 +466,15 @@ func (msg MsgRecvPacket) Type() string {
 var _ sdk.Msg = &MsgTimeout{}
 
 // NewMsgTimeout constructs new MsgTimeout
-//nolint:interfacer
+// nolint:interfacer
 func NewMsgTimeout(
-	packet Packet, nextSequenceRecv uint64, proof []byte,
+	packet Packet, nextSequenceRecv uint64, proofUnreceived []byte,
 	proofHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgTimeout {
 	return &MsgTimeout{
 		Packet:           packet,
 		NextSequenceRecv: nextSequenceRecv,
-		Proof:            proof,
+		ProofUnreceived:  proofUnreceived,
 		ProofHeight:      proofHeight,
 		Signer:           signer.String(),
 	}
@@ -457,16 +487,19 @@ func (msg MsgTimeout) Route() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgTimeout) ValidateBasic() error {
-	if len(msg.Proof) == 0 {
-		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
+	if len(msg.ProofUnreceived) == 0 {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty unreceived proof")
 	}
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	if msg.Signer == "" {
-		return sdkerrors.ErrInvalidAddress
+	if msg.NextSequenceRecv == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, "next sequence receive cannot be 0")
 	}
-
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
+	}
 	return msg.Packet.ValidateBasic()
 }
 
@@ -491,16 +524,16 @@ func (msg MsgTimeout) Type() string {
 }
 
 // NewMsgTimeoutOnClose constructs new MsgTimeoutOnClose
-//nolint:interfacer
+// nolint:interfacer
 func NewMsgTimeoutOnClose(
 	packet Packet, nextSequenceRecv uint64,
-	proof, proofClose []byte,
+	proofUnreceived, proofClose []byte,
 	proofHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgTimeoutOnClose {
 	return &MsgTimeoutOnClose{
 		Packet:           packet,
 		NextSequenceRecv: nextSequenceRecv,
-		Proof:            proof,
+		ProofUnreceived:  proofUnreceived,
 		ProofClose:       proofClose,
 		ProofHeight:      proofHeight,
 		Signer:           signer.String(),
@@ -514,7 +547,10 @@ func (msg MsgTimeoutOnClose) Route() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgTimeoutOnClose) ValidateBasic() error {
-	if len(msg.Proof) == 0 {
+	if msg.NextSequenceRecv == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, "next sequence receive cannot be 0")
+	}
+	if len(msg.ProofUnreceived) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if len(msg.ProofClose) == 0 {
@@ -523,10 +559,10 @@ func (msg MsgTimeoutOnClose) ValidateBasic() error {
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	if msg.Signer == "" {
-		return sdkerrors.ErrInvalidAddress
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
 	}
-
 	return msg.Packet.ValidateBasic()
 }
 
@@ -553,13 +589,17 @@ func (msg MsgTimeoutOnClose) Type() string {
 var _ sdk.Msg = &MsgAcknowledgement{}
 
 // NewMsgAcknowledgement constructs a new MsgAcknowledgement
-//nolint:interfacer
+// nolint:interfacer
 func NewMsgAcknowledgement(
-	packet Packet, ack []byte, proof []byte, proofHeight clienttypes.Height, signer sdk.AccAddress) *MsgAcknowledgement {
+	packet Packet,
+	ack, proofAcked []byte,
+	proofHeight clienttypes.Height,
+	signer sdk.AccAddress,
+) *MsgAcknowledgement {
 	return &MsgAcknowledgement{
 		Packet:          packet,
 		Acknowledgement: ack,
-		Proof:           proof,
+		ProofAcked:      proofAcked,
 		ProofHeight:     proofHeight,
 		Signer:          signer.String(),
 	}
@@ -572,16 +612,19 @@ func (msg MsgAcknowledgement) Route() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgAcknowledgement) ValidateBasic() error {
-	if len(msg.Proof) == 0 {
+	if len(msg.ProofAcked) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	if msg.Signer == "" {
-		return sdkerrors.ErrInvalidAddress
+	if len(msg.Acknowledgement) == 0 {
+		return sdkerrors.Wrap(ErrInvalidAcknowledgement, "ack bytes cannot be empty")
 	}
-
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
+	}
 	return msg.Packet.ValidateBasic()
 }
 

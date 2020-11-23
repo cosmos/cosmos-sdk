@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/rest"
 
 	"github.com/gorilla/mux"
 )
@@ -24,7 +25,9 @@ type EvidenceRESTHandler struct {
 
 // RegisterRoutes registers all Evidence submission handlers for the evidence module's
 // REST service handler.
-func RegisterRoutes(clientCtx client.Context, r *mux.Router, handlers []EvidenceRESTHandler) {
+func RegisterRoutes(clientCtx client.Context, rtr *mux.Router, handlers []EvidenceRESTHandler) {
+	r := rest.WithHTTPDeprecationHeaders(rtr)
+
 	registerQueryRoutes(clientCtx, r)
 	registerTxRoutes(clientCtx, r, handlers)
 }

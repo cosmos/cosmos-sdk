@@ -13,10 +13,16 @@ import (
 // InitGenesis initializes the ibc client submodule's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
+	k.SetParams(ctx, gs.Params)
+
 	for _, client := range gs.Clients {
 		cs, ok := client.ClientState.GetCachedValue().(exported.ClientState)
 		if !ok {
 			panic("invalid client state")
+		}
+
+		if !gs.Params.IsAllowedClient(cs.ClientType()) {
+			panic(fmt.Sprintf("client state type %s is not registered on the allowlist", cs.ClientType()))
 		}
 
 		k.SetClientState(ctx, client.ClientId, cs)
@@ -54,6 +60,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 		ctx.ChainID(), types.NewHeight(version, uint64(ctx.BlockHeight())),
 	)
 
+	if err := clientState.Validate(); err != nil {
+		panic(err)
+	}
+
 	if err := k.CreateClient(ctx, exported.Localhost, clientState, nil); err != nil {
 		panic(err)
 	}
@@ -72,6 +82,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
 		Clients:          genClients,
 		ClientsMetadata:  clientsMetadata,
 		ClientsConsensus: k.GetAllConsensusStates(ctx),
+		Params:           k.GetParams(ctx),
 		CreateLocalhost:  false,
 	}
 }

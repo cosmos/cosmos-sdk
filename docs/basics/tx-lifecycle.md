@@ -179,7 +179,7 @@ explicitly ordered in the block proposal.
 
 ### DeliverTx
 
-The `DeliverTx` ABCI function defined in [`baseapp`](../core/baseapp.md) does the bulk of the
+The `DeliverTx` ABCI function defined in [`BaseApp`](../core/baseapp.md) does the bulk of the
 state transitions: it is run for each transaction in the block in sequential order as committed
 to during consensus. Under the hood, `DeliverTx` is almost identical to `CheckTx` but calls the
 [`runTx`](../core/baseapp.md#runtx) function in deliver mode instead of check mode.
@@ -194,15 +194,15 @@ Instead of using their `checkState`, full-nodes use `deliverState`:
   `AnteHandler` will not compare `gas-prices` to the node's `min-gas-prices` since that value is local
   to each node - differing values across nodes would yield nondeterministic results.
 
-- **Route and Handler:** While `CheckTx` would have exited, `DeliverTx` continues to run
+- **`MsgServiceRouter`:** While `CheckTx` would have exited, `DeliverTx` continues to run
   [`runMsgs`](../core/baseapp.md#runtx-and-runmsgs) to fully execute each `Msg` within the transaction.
-  Since the transaction may have messages from different modules, `baseapp` needs to know which module
-  to find the appropriate Handler. Thus, the `route` function is called via the [module manager](../building-modules/module-manager.md) to
-  retrieve the route name and find the [`Handler`](../building-modules/handler.md) within the module.
+  Since the transaction may have messages from different modules, `BaseApp` needs to know which module
+  to find the appropriate handler. This is achieved using `BaseApp`'s `MsgServiceRouter` so that it can be processed by the module's [`Msg` service](../building-modules/msg-services.md).
+	For legacy `Msg` routing, the `Route` function is called via the [module manager](../building-modules/module-manager.md) to retrieve the route name and find the legacy [`Handler`](../building-modules/msg-services.md#handler-type) within the module.
 
-- **Handler:** The `handler`, a step up from `AnteHandler`, is responsible for executing each
+- **`Msg` service:** The `Msg` service, a step up from `AnteHandler`, is responsible for executing each
   message in the `Tx` and causes state transitions to persist in `deliverTxState`. It is defined
-  within a `Msg`'s module and writes to the appropriate stores within the module.
+  within a module `Msg` protobuf service and writes to the appropriate stores within the module.
 
 - **Gas:** While a `Tx` is being delivered, a `GasMeter` is used to keep track of how much
   gas is being used; if execution completes, `GasUsed` is set and returned in the

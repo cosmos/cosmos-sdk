@@ -81,7 +81,7 @@ func (suite *TendermintTestSuite) TestGetProcessedTime() {
 	// coordinator increments time before creating client
 	expectedTime := suite.chainA.CurrentHeader.Time.Add(ibctesting.TimeIncrement)
 
-	clientA, err := suite.coordinator.CreateClient(suite.chainA, suite.chainB, ibctesting.Tendermint)
+	clientA, err := suite.coordinator.CreateClient(suite.chainA, suite.chainB, exported.Tendermint)
 	suite.Require().NoError(err)
 
 	clientState := suite.chainA.GetClientState(clientA)
@@ -96,7 +96,7 @@ func (suite *TendermintTestSuite) TestGetProcessedTime() {
 	// coordinator increments time before updating client
 	expectedTime = suite.chainA.CurrentHeader.Time.Add(ibctesting.TimeIncrement)
 
-	err = suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
+	err = suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 	suite.Require().NoError(err)
 
 	clientState = suite.chainA.GetClientState(clientA)

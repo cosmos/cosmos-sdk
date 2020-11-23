@@ -69,12 +69,14 @@ func (ccs ClientConsensusStates) UnpackInterfaces(unpacker codectypes.AnyUnpacke
 
 // NewGenesisState creates a GenesisState instance.
 func NewGenesisState(
-	clients []IdentifiedClientState, clientsConsensus ClientsConsensusStates, clientsMetadata []IdentifiedGenesisMetadata, createLocalhost bool,
+	clients []IdentifiedClientState, clientsConsensus ClientsConsensusStates, clientsMetadata []IdentifiedGenesisMetadata,
+	params Params, createLocalhost bool,
 ) GenesisState {
 	return GenesisState{
 		Clients:          clients,
 		ClientsConsensus: clientsConsensus,
 		ClientsMetadata:  clientsMetadata,
+		Params:           params,
 		CreateLocalhost:  createLocalhost,
 	}
 }
@@ -84,6 +86,7 @@ func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		Clients:          []IdentifiedClientState{},
 		ClientsConsensus: ClientsConsensusStates{},
+		Params:           DefaultParams(),
 		CreateLocalhost:  false,
 	}
 }
@@ -149,9 +152,18 @@ func (gs GenesisState) Validate() error {
 		}
 	}
 
+	if err := gs.Params.Validate(); err != nil {
+		return err
+	}
+
+	if gs.CreateLocalhost && !gs.Params.IsAllowedClient(exported.Localhost) {
+		return fmt.Errorf("localhost client is not registered on the allowlist")
+	}
+
 	return nil
 }
 
+// NewGenesisMetadata is a constructor for GenesisMetadata
 func NewGenesisMetadata(key, val []byte) GenesisMetadata {
 	return GenesisMetadata{
 		Key:   key,
@@ -159,14 +171,17 @@ func NewGenesisMetadata(key, val []byte) GenesisMetadata {
 	}
 }
 
+// GetKey returns the key of metadata. Implements exported.GenesisMetadata interface.
 func (gm GenesisMetadata) GetKey() []byte {
 	return gm.Key
 }
 
+// GetValue returns the value of metadata. Implements exported.GenesisMetadata interface.
 func (gm GenesisMetadata) GetValue() []byte {
 	return gm.Value
 }
 
+// Validate ensures key and value of metadata are not empty
 func (gm GenesisMetadata) Validate() error {
 	if len(gm.Key) == 0 {
 		return fmt.Errorf("genesis metadata key cannot be empty")
@@ -177,6 +192,8 @@ func (gm GenesisMetadata) Validate() error {
 	return nil
 }
 
+// NewIdentifiedGenesisMetadata takes in a client ID and list of genesis metadata for that client
+// and constructs a new IdentifiedGenesisMetadata.
 func NewIdentifiedGenesisMetadata(clientID string, gms []GenesisMetadata) IdentifiedGenesisMetadata {
 	return IdentifiedGenesisMetadata{
 		ClientId:       clientID,

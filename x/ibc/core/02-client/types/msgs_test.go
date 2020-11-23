@@ -424,6 +424,16 @@ func (suite *TypesTestSuite) TestMsgUpgradeClient_ValidateBasic() {
 			expPass: false,
 		},
 		{
+			name: "client and consensus type does not match",
+			malleate: func(msg *types.MsgUpgradeClient) {
+				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 2)
+				soloConsensus, err := types.PackConsensusState(soloMachine.ConsensusState())
+				suite.Require().NoError(err)
+				msg.ConsensusState = soloConsensus
+			},
+			expPass: false,
+		},
+		{
 			name: "empty client proof",
 			malleate: func(msg *types.MsgUpgradeClient) {
 				msg.ProofUpgradeClient = nil

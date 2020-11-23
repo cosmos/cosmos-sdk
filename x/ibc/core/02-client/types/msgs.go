@@ -217,15 +217,20 @@ func (msg MsgUpgradeClient) Type() string {
 func (msg MsgUpgradeClient) ValidateBasic() error {
 	// will not validate client state as committed client may not form a valid client state.
 	// client implementations are responsible for ensuring final upgraded client is valid.
-	_, err := UnpackClientState(msg.ClientState)
+	clientState, err := UnpackClientState(msg.ClientState)
 	if err != nil {
 		return err
 	}
 	// will not validate consensus state here since the trusted kernel may not form a valid consenus state.
 	// client implementations are responsible for ensuring client can submit new headers against this consensus state.
-	_, err = UnpackConsensusState(msg.ConsensusState)
+	consensusState, err := UnpackConsensusState(msg.ConsensusState)
 	if err != nil {
 		return err
+	}
+
+	if clientState.ClientType() != consensusState.ClientType() {
+		return sdkerrors.Wrapf(ErrInvalidUpgradeClient, "consensus state's client-type does not match client. expected: %s, got: %s",
+			clientState.ClientType(), consensusState.ClientType())
 	}
 	if len(msg.ProofUpgradeClient) == 0 {
 		return sdkerrors.Wrap(ErrInvalidUpgradeClient, "proof of upgrade client cannot be empty")

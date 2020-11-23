@@ -222,6 +222,8 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 
 	handler(ctx, plan)
 
+	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.
+	// This will prevent resubmission of upgrade msg after upgrade is already completed.
 	if plan.IsIBCPlan() {
 		k.ClearIBCState(ctx, plan.Height-1)
 	}

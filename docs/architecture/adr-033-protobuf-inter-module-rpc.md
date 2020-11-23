@@ -293,6 +293,23 @@ Other future improvements may include:
 * decoupling `ModuleKey` creation from `AppModuleBasic.Name()` so that app's can override root module account names
 * inter-module hooks and plugins
 
+## Alternatives
+
+The `x/capability` module does provide a proper object-capability implementation that can be used by any module in the
+SDK and could even be used for inter-module Ocaps as described in [\#5931](https://github.com/cosmos/cosmos-sdk/issues/5931).
+
+The advantages of the approach described in this ADR are mostly around how it integrates with other parts of the SDK,
+specifically:
+
+* protobuf so that:
+  * code generation of interfaces can be leveraged for a better dev UX
+  * module interfaces are versioned and checked for breakage using [buf](https://docs.buf.build/breaking-overview)
+* sub-module accounts as per ADR 028
+* the general `Msg` passing paradigm and the way signers are specified by `GetSigners`
+
+Also, this a complete replacement for keepers and could be applied to _all_ inter-module communication whereas the
+`x/capability` approach in #5931 would need to be applied method by method.
+
 ## Consequences
 
 ### Backwards Compatibility

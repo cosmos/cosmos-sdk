@@ -33,8 +33,12 @@ func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 	// Once we are at the last block this chain will commit, set the upgraded consensus state
 	// so that IBC clients can use the last NextValidatorsHash as a trusted kernel for verifying
 	// headers on the next version of the chain.
+	// Set the time to the last block time of the current chain.
+	// In order for a client to upgrade successfully, the first block of the new chain must be committed
+	// within the trusting period of the last block time on this chain.
 	if plan.IsIBCPlan() && ctx.BlockHeight() == plan.Height-1 {
 		upgradedConsState := &ibctmtypes.ConsensusState{
+			Timestamp:          ctx.BlockTime(),
 			NextValidatorsHash: ctx.BlockHeader().NextValidatorsHash,
 		}
 		k.SetUpgradedConsensusState(ctx, ctx.BlockHeight(), upgradedConsState)

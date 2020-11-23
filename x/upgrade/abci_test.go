@@ -133,7 +133,7 @@ func VerifyDoIBCLastBlock(t *testing.T) {
 
 	consState, err := s.keeper.GetUpgradedConsensusState(newCtx, s.ctx.BlockHeight())
 	require.NoError(t, err)
-	require.Equal(t, &ibctmtypes.ConsensusState{NextValidatorsHash: nextValsHash}, consState)
+	require.Equal(t, &ibctmtypes.ConsensusState{Timestamp: newCtx.BlockTime(), NextValidatorsHash: nextValsHash}, consState)
 }
 
 func VerifyDoIBCUpgrade(t *testing.T) {

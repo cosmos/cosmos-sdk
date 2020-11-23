@@ -113,11 +113,11 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 
 	// The new consensus state is merely used as a trusted kernel against which headers on the new
 	// chain can be verified. The root is empty as it cannot be known in advance, thus no proof verification will pass.
-	// The timestamp of the consensus state is also this chain's blocktime. This is because starting up a new chain
-	// may take a long time, especially if there are unexpected issues and thus we do not want the new client to be
-	// automatically expired due to unforeseen delays.
+	// The timestamp and the NextValidatorsHash of the consensus state is the blocktime and NextValidatorsHash
+	// of the last block committed by the old chain. This will allow the first block of the new chain to be verified against
+	// the last validators of the old chain so long as it is submitted within the TrustingPeriod of this client.
 	newConsState := NewConsensusState(
-		ctx.BlockTime(), commitmenttypes.MerkleRoot{}, tmUpgradeConsState.NextValidatorsHash,
+		tmUpgradeConsState.Timestamp, commitmenttypes.MerkleRoot{}, tmUpgradeConsState.NextValidatorsHash,
 	)
 
 	return newClientState, newConsState, nil

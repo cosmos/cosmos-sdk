@@ -158,7 +158,7 @@ Each module should also implement the `RegisterServices` method as part of the [
 
 #### Handlers
 
-The [handler](../building-modules/handler.md) refers to the part of the module responsible for processing the `Msg` after it is routed by `baseapp`. Handler functions of modules are only executed if the transaction is relayed from Tendermint by the `DeliverTx` ABCI message. If the transaction is relayed by `CheckTx`, only stateless checks and fee-related stateful checks are performed. To better understand the difference between `DeliverTx`and `CheckTx`, as well as the difference between stateful and stateless checks, click [here](./tx-lifecycle.md).
+The [handler](../building-modules/msg-services.md#handler-type) refers to the part of the module responsible for processing the `Msg` after it is routed by `baseapp`. Handler functions of modules are only executed if the transaction is relayed from Tendermint by the `DeliverTx` ABCI message. If the transaction is relayed by `CheckTx`, only stateless checks and fee-related stateful checks are performed. To better understand the difference between `DeliverTx`and `CheckTx`, as well as the difference between stateful and stateless checks, click [here](./tx-lifecycle.md).
 
 The `handler` of a module is generally defined in a file called `handler.go` and consists of:
 

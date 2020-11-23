@@ -3,9 +3,8 @@ package types
 import (
 	"encoding/json"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	"github.com/cosmos/cosmos-sdk/client"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // DONTCOVER
@@ -32,11 +31,11 @@ type InitConfig struct {
 	ChainID   string
 	GenTxsDir string
 	NodeID    string
-	ValPubKey crypto.PubKey
+	ValPubKey cryptotypes.PubKey
 }
 
 // NewInitConfig creates a new InitConfig object
-func NewInitConfig(chainID, genTxsDir, nodeID string, valPubKey crypto.PubKey) InitConfig {
+func NewInitConfig(chainID, genTxsDir, nodeID string, valPubKey cryptotypes.PubKey) InitConfig {
 	return InitConfig{
 		ChainID:   chainID,
 		GenTxsDir: genTxsDir,

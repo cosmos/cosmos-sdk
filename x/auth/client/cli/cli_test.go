@@ -1,5 +1,3 @@
-// +build norace
-
 package cli_test
 
 import (
@@ -12,7 +10,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -22,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -63,7 +61,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	account2, _, err := kb.NewMnemonic("newAccount2", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
 	s.Require().NoError(err)
 
-	multi := kmultisig.NewLegacyAminoPubKey(2, []tmcrypto.PubKey{account1.GetPubKey(), account2.GetPubKey()})
+	multi := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{account1.GetPubKey(), account2.GetPubKey()})
 	_, err = kb.SaveMultisig("multi", multi)
 	s.Require().NoError(err)
 

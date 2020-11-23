@@ -27,6 +27,7 @@ func GetMetadataFromPayloadReq(req *types.ConstructionPayloadsRequest) (*Payload
 	if !ok {
 		return nil, fmt.Errorf("sequence metadata was not provided")
 	}
+
 	seqNum, ok := sequence.(float64)
 	if !ok {
 		return nil, fmt.Errorf("invalid sequence value")
@@ -36,6 +37,7 @@ func GetMetadataFromPayloadReq(req *types.ConstructionPayloadsRequest) (*Payload
 	if !ok {
 		return nil, fmt.Errorf("account_number metadata was not provided")
 	}
+
 	accNum, ok := accountNum.(float64)
 	if !ok {
 		fmt.Printf("this is type %T", accountNum)
@@ -46,6 +48,7 @@ func GetMetadataFromPayloadReq(req *types.ConstructionPayloadsRequest) (*Payload
 	if !ok {
 		return nil, fmt.Errorf("gas metadata was not provided")
 	}
+
 	gasF64, ok := gasNum.(float64)
 	if !ok {
 		return nil, fmt.Errorf("invalid gas value")
@@ -55,6 +58,7 @@ func GetMetadataFromPayloadReq(req *types.ConstructionPayloadsRequest) (*Payload
 	if !ok {
 		memo = ""
 	}
+
 	memoStr, ok := memo.(string)
 	if !ok {
 		return nil, fmt.Errorf("invalid memo")

@@ -21,11 +21,13 @@ const genesisBlockFetchTimeout = 15 * time.Second
 func NewSingleNetwork(client rosetta.NodeClient, network *types.NetworkIdentifier) (crg.Adapter, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), genesisBlockFetchTimeout)
 	defer cancel()
+
 	var genesisHeight int64 = 1
 	block, _, err := client.BlockByHeight(ctx, &genesisHeight)
 	if err != nil {
 		return SingleNetwork{}, err
 	}
+
 	return SingleNetwork{
 		client:                 client,
 		network:                network,
@@ -54,6 +56,7 @@ func (sn SingleNetwork) AccountBalance(ctx context.Context, request *types.Accou
 		block  *tmtypes.ResultBlock
 		err    error
 	)
+
 	switch {
 	case request.BlockIdentifier == nil:
 		height = nil
@@ -74,21 +77,23 @@ func (sn SingleNetwork) AccountBalance(ctx context.Context, request *types.Accou
 			return nil, rosetta.ToRosettaError(err)
 		}
 	}
+
 	accountCoins, err := sn.client.Balances(ctx, request.AccountIdentifier.Address, height)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
+
 	availableCoins, err := sn.client.Coins(ctx)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
-	resp := &types.AccountBalanceResponse{
+
+	return &types.AccountBalanceResponse{
 		BlockIdentifier: conversion.TendermintBlockToBlockIdentifier(block),
 		Balances:        conversion.CoinsToBalance(accountCoins, availableCoins),
 		Coins:           nil,
 		Metadata:        nil,
-	}
-	return resp, nil
+	}, nil
 }
 
 // Block gets the transactions in the given block
@@ -114,6 +119,7 @@ func (sn SingleNetwork) Block(ctx context.Context, request *types.BlockRequest) 
 	default:
 		return nil, rosetta.WrapError(rosetta.ErrBadArgument, "at least one of hash or index needs to be specified").RosettaError()
 	}
+
 	return &types.BlockResponse{
 		Block: &types.Block{
 			BlockIdentifier:       conversion.TendermintBlockToBlockIdentifier(block),
@@ -131,6 +137,7 @@ func (sn SingleNetwork) BlockTransaction(ctx context.Context, request *types.Blo
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
+
 	return &types.BlockTransactionResponse{
 		Transaction: &types.Transaction{
 			TransactionIdentifier: &types.TransactionIdentifier{Hash: request.TransactionIdentifier.Hash},
@@ -145,6 +152,7 @@ func (sn SingleNetwork) Mempool(ctx context.Context, _ *types.NetworkRequest) (*
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
+
 	return &types.MempoolResponse{
 		TransactionIdentifiers: conversion.TendermintTxsToTxIdentifiers(txs.Txs),
 	}, nil
@@ -155,6 +163,7 @@ func (sn SingleNetwork) MempoolTransaction(ctx context.Context, request *types.M
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
+
 	return &types.MempoolTransactionResponse{
 		Transaction: &types.Transaction{
 			TransactionIdentifier: &types.TransactionIdentifier{Hash: request.TransactionIdentifier.Hash},
@@ -177,21 +186,23 @@ func (sn SingleNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkReque
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
+
 	peers, err := sn.client.Peers(ctx)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
+
 	status, err := sn.client.Status(ctx)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
-	resp := &types.NetworkStatusResponse{
+
+	return &types.NetworkStatusResponse{
 		CurrentBlockIdentifier: conversion.TendermintBlockToBlockIdentifier(block),
 		CurrentBlockTimestamp:  conversion.TimeToMilliseconds(block.Block.Time),
 		GenesisBlockIdentifier: sn.genesisBlockIdentifier,
 		OldestBlockIdentifier:  nil,
 		SyncStatus:             conversion.TendermintStatusToSync(status),
 		Peers:                  conversion.TmPeersToRosettaPeers(peers),
-	}
-	return resp, nil
+	}, nil
 }

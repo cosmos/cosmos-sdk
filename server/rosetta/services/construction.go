@@ -63,8 +63,7 @@ func (sn SingleNetwork) ConstructionCombine(ctx context.Context, request *types.
 		sigs[i] = sig
 	}
 
-	err = txBldr.SetSignatures(sigs...)
-	if err != nil {
+	if err = txBldr.SetSignatures(sigs...); err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
 
@@ -91,6 +90,7 @@ func (sn SingleNetwork) getTxBuilderFromBytesTx(tx string) (client.TxBuilder, er
 	}
 
 	txBldr, _ := TxConfig.WrapTxBuilder(rawTx)
+
 	return txBldr, nil
 }
 
@@ -108,6 +108,7 @@ func (sn SingleNetwork) ConstructionDerive(ctx context.Context, request *types.C
 	copy(compressedPublicKey, cmp.SerializeCompressed())
 
 	pk := secp256k1.PubKey{Key: compressedPublicKey}
+
 	return &types.ConstructionDeriveResponse{
 		AccountIdentifier: &types.AccountIdentifier{
 			Address: sdk.AccAddress(pk.Address()).String(),
@@ -123,7 +124,6 @@ func (sn SingleNetwork) ConstructionHash(ctx context.Context, request *types.Con
 
 	hash := sha256.Sum256(bz)
 	bzHash := hash[:]
-
 	hashString := hex.EncodeToString(bzHash)
 
 	return &types.TransactionIdentifierResponse{
@@ -142,7 +142,9 @@ func (sn SingleNetwork) ConstructionMetadata(ctx context.Context, request *types
 	if !ok {
 		return nil, rosetta.ErrInvalidAddress.RosettaError()
 	}
+
 	addrString := addr.(string)
+
 	accountInfo, err := sn.client.AccountInfo(ctx, addrString, nil)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
@@ -163,7 +165,7 @@ func (sn SingleNetwork) ConstructionMetadata(ctx context.Context, request *types
 		return nil, rosetta.ToRosettaError(err)
 	}
 
-	res := &types.ConstructionMetadataResponse{
+	return &types.ConstructionMetadataResponse{
 		Metadata: map[string]interface{}{
 			rosetta.AccountNumber: accountInfo.GetAccountNumber(),
 			rosetta.Sequence:      accountInfo.GetSequence(),
@@ -171,9 +173,7 @@ func (sn SingleNetwork) ConstructionMetadata(ctx context.Context, request *types
 			rosetta.OptionGas:     gas,
 			rosetta.OptionMemo:    memo,
 		},
-	}
-
-	return res, nil
+	}, nil
 }
 
 func (sn SingleNetwork) ConstructionParse(ctx context.Context, request *types.ConstructionParseRequest) (*types.ConstructionParseResponse, *types.Error) {
@@ -220,6 +220,7 @@ func (sn SingleNetwork) ConstructionPayloads(ctx context.Context, request *types
 
 	TxConfig := sn.client.GetTxConfig()
 	txFactory = txFactory.WithTxConfig(TxConfig)
+
 	txBldr, err := tx.BuildUnsignedTx(txFactory, sendMsg)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
@@ -269,6 +270,7 @@ func (sn SingleNetwork) ConstructionPreprocess(ctx context.Context, request *typ
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrInvalidAddress, err.Error()).RosettaError()
 	}
+
 	if txData.FromAddress == "" {
 		return nil, rosetta.WrapError(rosetta.ErrInvalidAddress, err.Error()).RosettaError()
 	}
@@ -279,18 +281,19 @@ func (sn SingleNetwork) ConstructionPreprocess(ctx context.Context, request *typ
 	}
 
 	defaultGas := float64(200000)
+
 	gas := request.SuggestedFeeMultiplier
 	if gas == nil {
 		gas = &defaultGas
 	}
-	var res = &types.ConstructionPreprocessResponse{
+
+	return &types.ConstructionPreprocessResponse{
 		Options: map[string]interface{}{
 			rosetta.OptionAddress: txData.FromAddress,
 			rosetta.OptionMemo:    memo,
 			rosetta.OptionGas:     gas,
 		},
-	}
-	return res, nil
+	}, nil
 }
 
 func (sn SingleNetwork) ConstructionSubmit(ctx context.Context, request *types.ConstructionSubmitRequest) (*types.TransactionIdentifierResponse, *types.Error) {
@@ -303,6 +306,7 @@ func (sn SingleNetwork) ConstructionSubmit(ctx context.Context, request *types.C
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
+
 	return &types.TransactionIdentifierResponse{
 		TransactionIdentifier: &types.TransactionIdentifier{
 			Hash: res.TxHash,

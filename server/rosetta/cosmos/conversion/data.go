@@ -62,6 +62,7 @@ func ResultTxSearchToTransaction(txs []*rosetta.SdkTxWithHash) []*types.Transact
 			Metadata:              nil,
 		}
 	}
+
 	return converted
 }
 
@@ -148,6 +149,7 @@ func SdkMsgsToOperations(msgs []sdk.Msg, withStatus bool, feeLen int) []*types.O
 			)
 		}
 	}
+
 	return operations
 }
 
@@ -157,7 +159,9 @@ func GetMsgsFromOperations(ops []*types.Operation) (sdk.Msg, sdk.Coins, error) {
 	if len(ops) == 2 {
 		sendMsg, err := GetTransferTxDataFromOperations(ops)
 		return sendMsg, nil, err
-	} else if len(ops) == 3 {
+	}
+
+	if len(ops) == 3 {
 		for _, op := range ops {
 			if op.Type == rosetta.OperationFee {
 				amount := op.Amount
@@ -172,11 +176,13 @@ func GetMsgsFromOperations(ops []*types.Operation) (sdk.Msg, sdk.Coins, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+
 	return sendMsg, ConvertAmountToCoins(feeAmnt), nil
 }
 
 func ConvertAmountToCoins(amounts []*types.Amount) sdk.Coins {
 	var feeCoins sdk.Coins
+
 	for _, amount := range amounts {
 		absValue := strings.Trim(amount.Value, "-")
 		value, err := strconv.ParseInt(absValue, 10, 64)
@@ -186,6 +192,7 @@ func ConvertAmountToCoins(amounts []*types.Amount) sdk.Coins {
 		coin := sdk.NewCoin(amount.Currency.Symbol, sdk.NewInt(value))
 		feeCoins = append(feeCoins, coin)
 	}
+
 	return feeCoins
 }
 
@@ -205,23 +212,24 @@ func GetTransferTxDataFromOperations(ops []*types.Operation) (*banktypes.MsgSend
 			if err != nil {
 				return nil, err
 			}
-		} else {
-			to, err = sdk.AccAddressFromBech32(op.Account.Address)
-			if err != nil {
-				return nil, err
-			}
-
-			amount, err := strconv.ParseInt(op.Amount.Value, 10, 64)
-			if err != nil {
-				return nil, fmt.Errorf("invalid amount")
-			}
-
-			sendAmt = sdk.NewCoin(op.Amount.Currency.Symbol, sdk.NewInt(amount))
+			continue
 		}
+
+		to, err = sdk.AccAddressFromBech32(op.Account.Address)
+		if err != nil {
+			return nil, err
+		}
+
+		amount, err := strconv.ParseInt(op.Amount.Value, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid amount")
+		}
+
+		sendAmt = sdk.NewCoin(op.Amount.Currency.Symbol, sdk.NewInt(amount))
+
 	}
 
-	msg := banktypes.NewMsgSend(from, to, sdk.NewCoins(sendAmt))
-	return msg, nil
+	return banktypes.NewMsgSend(from, to, sdk.NewCoins(sendAmt)), nil
 }
 
 // TmPeersToRosettaPeers converts tendermint peers to rosetta ones
@@ -261,6 +269,7 @@ func ParentBlockIdentifierFromLastBlock(block *tmcoretypes.ResultBlock) *types.B
 			Hash:  fmt.Sprintf("%X", block.BlockID.Hash.Bytes()),
 		}
 	}
+
 	return &types.BlockIdentifier{
 		Index: block.Block.Height - 1,
 		Hash:  fmt.Sprintf("%X", block.Block.LastBlockID.Hash.Bytes()),
@@ -274,6 +283,7 @@ func GetFeeOpFromCoins(coins sdk.Coins, account string, withStatus bool) []*type
 	if withStatus {
 		status = rosetta.StatusSuccess
 	}
+
 	for i, coin := range coins {
 		op := &types.Operation{
 			OperationIdentifier: &types.OperationIdentifier{
@@ -291,7 +301,9 @@ func GetFeeOpFromCoins(coins sdk.Coins, account string, withStatus bool) []*type
 				},
 			},
 		}
+
 		feeOps = append(feeOps, op)
 	}
+
 	return feeOps
 }

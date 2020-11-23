@@ -1,6 +1,7 @@
+package rosetta
+
 // errors.go contains all the errors returned by the adapter implementation
 // plus some extra utilities to parse those errors
-package rosetta
 
 import (
 	"fmt"
@@ -11,10 +12,10 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
-// Error defines an error that can be converted to a rosetta error
+// Error defines an error that can be converted to a Rosetta API error.
 type Error interface {
 	error
-	// RosettaError returns the error as a rosetta error
+	// RosettaError returns the error as a Rosetta API error.
 	RosettaError() *types.Error
 }
 

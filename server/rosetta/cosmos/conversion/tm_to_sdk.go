@@ -25,6 +25,7 @@ func TmTxsToSdkTxs(decode sdk.TxDecoder, txs []tmtypes.Tx) ([]sdk.Tx, error) {
 		}
 		converted[i] = sdkTx
 	}
+
 	return converted, nil
 }
 
@@ -41,5 +42,6 @@ func TmResultTxsToSdkTxs(decode sdk.TxDecoder, txs []*tmcoretypes.ResultTx) ([]*
 			Tx:      sdkTx,
 		}
 	}
+
 	return converted, nil
 }

@@ -36,12 +36,6 @@ func (l launchpad) AccountBalance(ctx context.Context, request *types.AccountBal
 			Hash:  block.BlockID.Hash,
 		},
 		Balances: convertCoinsToRosettaBalances(resp.Result.Value.Coins),
-		Coins: []*types.Coin{
-			{
-				CoinIdentifier: &types.CoinIdentifier{Identifier: "atom"},
-				Amount:         convertCoinsToRosettaBalances(resp.Result.Value.Coins)[1],
-			},
-		},
 	}, nil
 }
 

@@ -8,16 +8,27 @@ services:
       - 9090:9090
       - 26657:26657
 
+  rest:
+    image: rosetta-ci:latest
+    command: [
+      "simcli",
+      "rest-server",
+      "--laddr", "tcp://0.0.0.0:1317",
+      "--node", "tcp://cosmos:26657"
+    ]
+    ports:
+      - 1317:1317
+
   rosetta:
     image: rosetta-ci:latest
     command: [
-      "simd",
+      "simcli",
       "rosetta",
       "--blockchain", "app",
       "--network", "network",
-      "--tendermint", "cosmos:26657",
-      "--grpc", "cosmos:9090",
-      "--addr", ":8080",
+      "--tendermint-rpc", "cosmos:26657",
+      "--app-rpc", "rest:1317",
+      "--listen-addr", ":8080",
     ]
     ports:
       - 8080:8080

@@ -77,7 +77,7 @@ transfer(10){
     transfer.operations = [
       {
         "operation_identifier":{"index":0},
-        "type":"send",
+        "type":"cosmos-sdk/MsgSend",
         "account":{{sender.account_identifier}},
         "amount":{
           "value":{{sender_amount}},
@@ -86,7 +86,7 @@ transfer(10){
       },
       {
         "operation_identifier":{"index":1},
-        "type":"send",
+        "type":"cosmos-sdk/MsgSend",
         "account":{{recipient.account_identifier}},
         "amount":{
           "value":{{recipient_amount}},

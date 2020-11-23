@@ -42,8 +42,8 @@
     "interesting_accounts": "",
     "reconciliation_disabled": false,
     "inactive_discrepency_search_disabled": false,
-    "balance_tracking_disabled": false,
-    "coin_tracking_disabled": false,
+    "balance_tracking_disabled": true,
+    "coin_tracking_disabled": true,
     "end_conditions": {
       "tip": true
     }

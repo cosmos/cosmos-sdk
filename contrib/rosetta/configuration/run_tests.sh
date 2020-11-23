@@ -2,19 +2,18 @@
 
 set -e
 
-addr="abcd"
-
-send_tx() {
-  echo '12345678' | simd tx bank send $addr "$1" "$2"
+wait_for_node() {
+    timeout 30 sh -c 'until nc -z $0 $1; do sleep 1; done' cosmos 26657
+    echo "tendermint rpc is up"
+    timeout 30 sh -c 'until nc -z $0 $1; do sleep 1; done' rest 1317
+    echo "rest server is up"
 }
-
-detect_account() {
-  line=$1
-}
-
 wait_for_rosetta() {
   timeout 30 sh -c 'until nc -z $0 $1; do sleep 1; done' rosetta 8080
 }
+
+echo "waiting for node to be up"
+wait_for_node
 
 echo "waiting for rosetta instance to be up"
 wait_for_rosetta

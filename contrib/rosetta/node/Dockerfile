@@ -10,7 +10,7 @@ ARG ROSETTA_VERSION="v0.5.23"
 # prepare node data
 WORKDIR /node
 COPY ./contrib/rosetta/node/data.tar.gz data.tar.gz
-RUN tar -zxvf data.tar.gz -C /node
+RUN tar -zxvf data.tar.gz -C .
 
 # build simd and simcli
 WORKDIR /simd
@@ -40,7 +40,9 @@ RUN chmod +x run_tests.sh
 RUN chmod +x send_funds.sh
 RUN chmod +x faucet.py
 
+WORKDIR /root/
+COPY --from=build /node/root ./
 WORKDIR /root/.simapp
-# COPY --from=build /node/data ./
+RUN sed -i 's/127.0.0.1/0.0.0.0/g' ./config/config.toml
 RUN chmod -R 0777 ./
 

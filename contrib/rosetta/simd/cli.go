@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/server"
 	app "github.com/cosmos/cosmos-sdk/simapp"
 	"net/http"
 	"os"
@@ -65,6 +66,7 @@ func main() {
 		txCmd(cdc),
 		flags.LineBreak,
 		lcd.ServeCommand(cdc, registerRoutes),
+		server.RosettaCommand(cdc),
 		flags.LineBreak,
 		keys.Commands(),
 		flags.LineBreak,

@@ -29,6 +29,9 @@ services:
     expose:
       - 8080
 
+    volumes:
+      - ./configuration:/wd
+
   test_rosetta:
     image: rosetta-ci:latest
     command: ["./run_tests.sh"]

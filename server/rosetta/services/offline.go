@@ -9,13 +9,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 )
 
-// assert interface implementation
-var _ crg.Adapter = OfflineNetwork{}
-
 // NewOffline instantiates the instance of an offline network
 // whilst the offline network does not support the DataAPI,
 // it supports a subset of the construction API.
-func NewOffline(network *types.NetworkIdentifier) OfflineNetwork {
+func NewOffline(network *types.NetworkIdentifier) crg.Adapter {
 	return OfflineNetwork{
 		SingleNetwork{
 			client:                 nil,

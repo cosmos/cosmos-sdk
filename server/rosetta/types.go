@@ -51,10 +51,10 @@ type SdkTxWithHash struct {
 	Tx      sdk.Tx
 }
 
-// DataAPIClient defines the interface
+// NodeClient defines the interface
 // a client has to implement in order to
 // interact with cosmos-sdk chains
-type DataAPIClient interface {
+type NodeClient interface {
 	AccountInfo(ctx context.Context, addr string, height *int64) (auth.AccountI, error)
 	// Balances fetches the balance of the given address
 	// if height is not nil, then the balance will be displayed

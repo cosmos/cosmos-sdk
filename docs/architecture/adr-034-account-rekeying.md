@@ -62,7 +62,7 @@ Because an account can no longer be pruned from state once its pubkey has change
 
 Breaks the current assumed relationship between address and pubkeys as H(pubkey) = address. This has a couple of consequences.
 
-* We cannot prune accounts with 0 balance that have had their pubkey changed (we currently do not currently do this anyways, but the reason we have account numbers is presumably for this purpose).
+* We cannot prune accounts with 0 balance that have had their pubkey changed. Currently, we do not prune accounts anyways, but the reason we have account numbers is presumably for this purpose.
 * This makes wallets that support this feature more complicated. For example, if an address on chain was updated, the corresponding key in the CLI wallet also needs to be updated.
 
 ### Neutral

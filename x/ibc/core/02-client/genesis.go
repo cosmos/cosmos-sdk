@@ -22,6 +22,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 		k.SetClientState(ctx, client.ClientId, cs)
 	}
 
+	// Set all client metadata
+	if len(gs.ClientsMetadata) != 0 {
+		k.SetAllClientMetadata(ctx, gs.ClientsMetadata)
+	}
+
 	for _, cs := range gs.ClientsConsensus {
 		for _, consState := range cs.ConsensusStates {
 			consensusState, ok := consState.ConsensusState.GetCachedValue().(exported.ConsensusState)
@@ -58,8 +63,14 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 // NOTE: CreateLocalhost should always be false on export since a
 // created localhost will be included in the exported clients.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
+	genClients := k.GetAllGenesisClients(ctx)
+	clientsMetadata, err := k.GetAllClientMetadata(ctx, genClients)
+	if err != nil {
+		panic(err)
+	}
 	return types.GenesisState{
-		Clients:          k.GetAllGenesisClients(ctx),
+		Clients:          genClients,
+		ClientsMetadata:  clientsMetadata,
 		ClientsConsensus: k.GetAllConsensusStates(ctx),
 		CreateLocalhost:  false,
 	}

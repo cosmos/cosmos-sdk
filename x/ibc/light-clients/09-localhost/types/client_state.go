@@ -82,6 +82,10 @@ func (cs ClientState) Initialize(_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.K
 	return nil
 }
 
+func (cs ClientState) ExportMetadata(_ sdk.KVStore) []exported.GenesisMetadata {
+	return nil
+}
+
 // CheckHeaderAndUpdateState updates the localhost client. It only needs access to the context
 func (cs *ClientState) CheckHeaderAndUpdateState(
 	ctx sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ exported.Header,

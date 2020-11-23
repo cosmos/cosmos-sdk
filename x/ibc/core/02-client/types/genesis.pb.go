@@ -29,8 +29,10 @@ type GenesisState struct {
 	Clients []IdentifiedClientState `protobuf:"bytes,1,rep,name=clients,proto3" json:"clients"`
 	// consensus states from each client
 	ClientsConsensus ClientsConsensusStates `protobuf:"bytes,2,rep,name=clients_consensus,json=clientsConsensus,proto3,castrepeated=ClientsConsensusStates" json:"clients_consensus" yaml:"clients_consensus"`
+	// metadata from each client
+	ClientsMetadata []IdentifiedGenesisMetadata `protobuf:"bytes,3,rep,name=clients_metadata,json=clientsMetadata,proto3" json:"clients_metadata" yaml:"clients_metadata"`
 	// create localhost on initialization
-	CreateLocalhost bool `protobuf:"varint,3,opt,name=create_localhost,json=createLocalhost,proto3" json:"create_localhost,omitempty" yaml:"create_localhost"`
+	CreateLocalhost bool `protobuf:"varint,4,opt,name=create_localhost,json=createLocalhost,proto3" json:"create_localhost,omitempty" yaml:"create_localhost"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -80,6 +82,13 @@ func (m *GenesisState) GetClientsConsensus() ClientsConsensusStates {
 	return nil
 }
 
+func (m *GenesisState) GetClientsMetadata() []IdentifiedGenesisMetadata {
+	if m != nil {
+		return m.ClientsMetadata
+	}
+	return nil
+}
+
 func (m *GenesisState) GetCreateLocalhost() bool {
 	if m != nil {
 		return m.CreateLocalhost
@@ -87,35 +96,141 @@ func (m *GenesisState) GetCreateLocalhost() bool {
 	return false
 }
 
+// GenesisMetadata defines the genesis type for metadata that clients may return
+// with ExportMetadata
+type GenesisMetadata struct {
+	// store key of metadata without clientID-prefix
+	Key []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	// metadata value
+	Value []byte `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+}
+
+func (m *GenesisMetadata) Reset()         { *m = GenesisMetadata{} }
+func (m *GenesisMetadata) String() string { return proto.CompactTextString(m) }
+func (*GenesisMetadata) ProtoMessage()    {}
+func (*GenesisMetadata) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcd0c0f1f2e6a91a, []int{1}
+}
+func (m *GenesisMetadata) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GenesisMetadata) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GenesisMetadata.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GenesisMetadata) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GenesisMetadata.Merge(m, src)
+}
+func (m *GenesisMetadata) XXX_Size() int {
+	return m.Size()
+}
+func (m *GenesisMetadata) XXX_DiscardUnknown() {
+	xxx_messageInfo_GenesisMetadata.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GenesisMetadata proto.InternalMessageInfo
+
+// IdentifiedGenesisMetadata has the client metadata with the corresponding client id.
+type IdentifiedGenesisMetadata struct {
+	ClientId       string            `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	ClientMetadata []GenesisMetadata `protobuf:"bytes,2,rep,name=client_metadata,json=clientMetadata,proto3" json:"client_metadata" yaml:"client_metadata"`
+}
+
+func (m *IdentifiedGenesisMetadata) Reset()         { *m = IdentifiedGenesisMetadata{} }
+func (m *IdentifiedGenesisMetadata) String() string { return proto.CompactTextString(m) }
+func (*IdentifiedGenesisMetadata) ProtoMessage()    {}
+func (*IdentifiedGenesisMetadata) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcd0c0f1f2e6a91a, []int{2}
+}
+func (m *IdentifiedGenesisMetadata) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *IdentifiedGenesisMetadata) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_IdentifiedGenesisMetadata.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *IdentifiedGenesisMetadata) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_IdentifiedGenesisMetadata.Merge(m, src)
+}
+func (m *IdentifiedGenesisMetadata) XXX_Size() int {
+	return m.Size()
+}
+func (m *IdentifiedGenesisMetadata) XXX_DiscardUnknown() {
+	xxx_messageInfo_IdentifiedGenesisMetadata.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_IdentifiedGenesisMetadata proto.InternalMessageInfo
+
+func (m *IdentifiedGenesisMetadata) GetClientId() string {
+	if m != nil {
+		return m.ClientId
+	}
+	return ""
+}
+
+func (m *IdentifiedGenesisMetadata) GetClientMetadata() []GenesisMetadata {
+	if m != nil {
+		return m.ClientMetadata
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*GenesisState)(nil), "ibc.core.client.v1.GenesisState")
+	proto.RegisterType((*GenesisMetadata)(nil), "ibc.core.client.v1.GenesisMetadata")
+	proto.RegisterType((*IdentifiedGenesisMetadata)(nil), "ibc.core.client.v1.IdentifiedGenesisMetadata")
 }
 
 func init() { proto.RegisterFile("ibc/core/client/v1/genesis.proto", fileDescriptor_bcd0c0f1f2e6a91a) }
 
 var fileDescriptor_bcd0c0f1f2e6a91a = []byte{
-	// 328 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0xc8, 0x4c, 0x4a, 0xd6,
-	0x4f, 0xce, 0x2f, 0x4a, 0xd5, 0x4f, 0xce, 0xc9, 0x4c, 0xcd, 0x2b, 0xd1, 0x2f, 0x33, 0xd4, 0x4f,
-	0x4f, 0xcd, 0x4b, 0x2d, 0xce, 0x2c, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0xca, 0x4c,
-	0x4a, 0xd6, 0x03, 0xa9, 0xd0, 0x83, 0xa8, 0xd0, 0x2b, 0x33, 0x94, 0x92, 0xc7, 0xa2, 0x0b, 0x2a,
-	0x0b, 0xd6, 0x24, 0x25, 0x92, 0x9e, 0x9f, 0x9e, 0x0f, 0x66, 0xea, 0x83, 0x58, 0x10, 0x51, 0xa5,
-	0x6d, 0x4c, 0x5c, 0x3c, 0xee, 0x10, 0xc3, 0x83, 0x4b, 0x12, 0x4b, 0x52, 0x85, 0x3c, 0xb9, 0xd8,
-	0x21, 0xda, 0x8a, 0x25, 0x18, 0x15, 0x98, 0x35, 0xb8, 0x8d, 0x34, 0xf5, 0x30, 0x6d, 0xd3, 0xf3,
-	0x4c, 0x49, 0xcd, 0x2b, 0xc9, 0x4c, 0xcb, 0x4c, 0x4d, 0x71, 0x06, 0x8b, 0x81, 0xf5, 0x3a, 0xb1,
-	0x9c, 0xb8, 0x27, 0xcf, 0x10, 0x04, 0xd3, 0x2f, 0x34, 0x89, 0x91, 0x4b, 0x10, 0xca, 0x8e, 0x4f,
-	0xce, 0xcf, 0x2b, 0x4e, 0xcd, 0x2b, 0x2e, 0x2d, 0x96, 0x60, 0xc2, 0x6d, 0x2a, 0xc4, 0x2c, 0x67,
-	0x98, 0x52, 0xb0, 0xa1, 0xc5, 0x4e, 0x56, 0x20, 0x53, 0x3f, 0xdd, 0x93, 0x97, 0xa8, 0x4c, 0xcc,
-	0xcd, 0xb1, 0x52, 0xc2, 0x30, 0x51, 0x69, 0xd5, 0x7d, 0x79, 0x31, 0x88, 0xd6, 0x62, 0x34, 0xbd,
-	0x41, 0x02, 0xc9, 0x68, 0xe2, 0x42, 0x6e, 0x5c, 0x02, 0xc9, 0x45, 0xa9, 0x89, 0x25, 0xa9, 0xf1,
-	0x39, 0xf9, 0xc9, 0x89, 0x39, 0x19, 0xf9, 0xc5, 0x25, 0x12, 0xcc, 0x0a, 0x8c, 0x1a, 0x1c, 0x4e,
-	0xd2, 0x9f, 0xee, 0xc9, 0x8b, 0x43, 0xed, 0x40, 0x53, 0xa1, 0x14, 0xc4, 0x0f, 0x11, 0xf2, 0x81,
-	0x89, 0x38, 0x05, 0x9e, 0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c, 0xe3, 0x83, 0x47, 0x72, 0x8c,
-	0x13, 0x1e, 0xcb, 0x31, 0x5c, 0x78, 0x2c, 0xc7, 0x70, 0xe3, 0xb1, 0x1c, 0x43, 0x94, 0x79, 0x7a,
-	0x66, 0x49, 0x46, 0x69, 0x92, 0x5e, 0x72, 0x7e, 0xae, 0x7e, 0x72, 0x7e, 0x71, 0x6e, 0x7e, 0x31,
-	0x94, 0xd2, 0x2d, 0x4e, 0xc9, 0xd6, 0xaf, 0xd0, 0x87, 0x47, 0x94, 0x81, 0x91, 0x2e, 0x34, 0xae,
-	0x4a, 0x2a, 0x0b, 0x52, 0x8b, 0x93, 0xd8, 0xc0, 0x51, 0x62, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff,
-	0x5b, 0xe3, 0x61, 0x24, 0x01, 0x02, 0x00, 0x00,
+	// 470 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x93, 0xc1, 0x6e, 0xd3, 0x30,
+	0x18, 0xc7, 0xe3, 0xb5, 0xc0, 0x66, 0x26, 0x56, 0xac, 0x6a, 0x84, 0x21, 0x25, 0x55, 0xb8, 0x94,
+	0x43, 0x63, 0x3a, 0x0e, 0x48, 0xbd, 0x20, 0x65, 0x12, 0xa8, 0x12, 0x1c, 0x08, 0x37, 0x2e, 0x91,
+	0xeb, 0x98, 0xce, 0x5a, 0x1a, 0x4f, 0xb5, 0x5b, 0x91, 0x37, 0xe0, 0x88, 0x78, 0x02, 0xce, 0xdc,
+	0xb8, 0xf3, 0x00, 0x3b, 0xee, 0xc8, 0xa9, 0xa0, 0xf6, 0x0d, 0xf6, 0x04, 0x28, 0xb6, 0xd3, 0x6d,
+	0xd9, 0xca, 0x29, 0x5f, 0xfe, 0xf9, 0xfe, 0x3f, 0x7f, 0xdf, 0x3f, 0x32, 0xec, 0xf0, 0x11, 0xc5,
+	0x54, 0x4c, 0x19, 0xa6, 0x19, 0x67, 0xb9, 0xc2, 0xf3, 0x3e, 0x1e, 0xb3, 0x9c, 0x49, 0x2e, 0xc3,
+	0xd3, 0xa9, 0x50, 0x02, 0x21, 0x3e, 0xa2, 0x61, 0xd9, 0x11, 0x9a, 0x8e, 0x70, 0xde, 0x3f, 0xf0,
+	0x6f, 0x71, 0xd9, 0xaf, 0xda, 0x74, 0xd0, 0x1e, 0x8b, 0xb1, 0xd0, 0x25, 0x2e, 0x2b, 0xa3, 0x06,
+	0x3f, 0x1b, 0x70, 0xf7, 0x8d, 0x81, 0x7f, 0x50, 0x44, 0x31, 0x34, 0x84, 0xf7, 0x8c, 0x4d, 0xba,
+	0xa0, 0xd3, 0xe8, 0xde, 0x3f, 0x7c, 0x16, 0xde, 0x3c, 0x2d, 0x1c, 0xa6, 0x2c, 0x57, 0xfc, 0x13,
+	0x67, 0xe9, 0x91, 0xd6, 0xb4, 0x37, 0x6a, 0x9e, 0x2d, 0x7c, 0x27, 0xae, 0xfc, 0xe8, 0x1b, 0x80,
+	0x0f, 0x6d, 0x9d, 0x50, 0x91, 0x4b, 0x96, 0xcb, 0x99, 0x74, 0xb7, 0x36, 0x53, 0x0d, 0xeb, 0xa8,
+	0x6a, 0xd5, 0x50, 0x19, 0x0d, 0x4a, 0xea, 0xc5, 0xc2, 0x77, 0x0b, 0x32, 0xc9, 0x06, 0xc1, 0x0d,
+	0x62, 0xf0, 0xe3, 0x8f, 0xbf, 0x6f, 0xac, 0xb2, 0xe6, 0x8d, 0x5b, 0xb4, 0xa6, 0xa3, 0x02, 0x56,
+	0x5a, 0x32, 0x61, 0x8a, 0xa4, 0x44, 0x11, 0xb7, 0xa1, 0x47, 0xea, 0xfd, 0x7f, 0x51, 0x9b, 0xd2,
+	0x3b, 0x6b, 0x8a, 0x7c, 0x3b, 0xd6, 0xa3, 0xeb, 0x63, 0x55, 0xd0, 0x20, 0xde, 0xb3, 0x52, 0xe5,
+	0x40, 0xaf, 0x61, 0x8b, 0x4e, 0x19, 0x51, 0x2c, 0xc9, 0x04, 0x25, 0xd9, 0xb1, 0x90, 0xca, 0x6d,
+	0x76, 0x40, 0x77, 0x3b, 0x7a, 0x72, 0x85, 0x53, 0xeb, 0x28, 0x39, 0x5a, 0x7a, 0xbb, 0x56, 0x5e,
+	0xc1, 0xbd, 0xda, 0x30, 0xa8, 0x05, 0x1b, 0x27, 0xac, 0x70, 0x41, 0x07, 0x74, 0x77, 0xe3, 0xb2,
+	0x44, 0x6d, 0x78, 0x67, 0x4e, 0xb2, 0x19, 0x73, 0xb7, 0xb4, 0x66, 0x5e, 0x06, 0xcd, 0x2f, 0xdf,
+	0x7d, 0x27, 0xf8, 0x05, 0xe0, 0xe3, 0x8d, 0x8b, 0xa1, 0x3e, 0xdc, 0x31, 0x93, 0x27, 0x3c, 0xd5,
+	0xc4, 0x9d, 0xa8, 0x7d, 0xb1, 0xf0, 0x5b, 0x57, 0xf7, 0x4c, 0x78, 0x1a, 0xc4, 0xdb, 0xa6, 0x1e,
+	0xa6, 0x28, 0x83, 0x76, 0xd9, 0xcb, 0x4c, 0xcd, 0x6f, 0x7e, 0x7a, 0x5b, 0xa6, 0xf5, 0x24, 0x3d,
+	0x9b, 0xe4, 0xfe, 0xb5, 0x13, 0x2e, 0x83, 0x7c, 0x60, 0x94, 0x75, 0xff, 0xfb, 0xb3, 0xa5, 0x07,
+	0xce, 0x97, 0x1e, 0xf8, 0xbb, 0xf4, 0xc0, 0xd7, 0x95, 0xe7, 0x9c, 0xaf, 0x3c, 0xe7, 0xf7, 0xca,
+	0x73, 0x3e, 0xbe, 0x1c, 0x73, 0x75, 0x3c, 0x1b, 0x85, 0x54, 0x4c, 0x30, 0x15, 0x72, 0x22, 0xa4,
+	0x7d, 0xf4, 0x64, 0x7a, 0x82, 0x3f, 0xe3, 0xf5, 0x1d, 0x79, 0x7e, 0xd8, 0xb3, 0xd7, 0x44, 0x15,
+	0xa7, 0x4c, 0x8e, 0xee, 0xea, 0xdb, 0xf0, 0xe2, 0x5f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x46, 0x66,
+	0x13, 0x25, 0x7c, 0x03, 0x00, 0x00,
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -146,7 +261,21 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0
 		}
 		i--
-		dAtA[i] = 0x18
+		dAtA[i] = 0x20
+	}
+	if len(m.ClientsMetadata) > 0 {
+		for iNdEx := len(m.ClientsMetadata) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ClientsMetadata[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
 	}
 	if len(m.ClientsConsensus) > 0 {
 		for iNdEx := len(m.ClientsConsensus) - 1; iNdEx >= 0; iNdEx-- {
@@ -175,6 +304,87 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0xa
 		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GenesisMetadata) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GenesisMetadata) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GenesisMetadata) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Value) > 0 {
+		i -= len(m.Value)
+		copy(dAtA[i:], m.Value)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.Value)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Key) > 0 {
+		i -= len(m.Key)
+		copy(dAtA[i:], m.Key)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.Key)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *IdentifiedGenesisMetadata) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IdentifiedGenesisMetadata) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *IdentifiedGenesisMetadata) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ClientMetadata) > 0 {
+		for iNdEx := len(m.ClientMetadata) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ClientMetadata[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.ClientId) > 0 {
+		i -= len(m.ClientId)
+		copy(dAtA[i:], m.ClientId)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.ClientId)))
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -208,8 +418,50 @@ func (m *GenesisState) Size() (n int) {
 			n += 1 + l + sovGenesis(uint64(l))
 		}
 	}
+	if len(m.ClientsMetadata) > 0 {
+		for _, e := range m.ClientsMetadata {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
 	if m.CreateLocalhost {
 		n += 2
+	}
+	return n
+}
+
+func (m *GenesisMetadata) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Key)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	l = len(m.Value)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	return n
+}
+
+func (m *IdentifiedGenesisMetadata) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ClientId)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	if len(m.ClientMetadata) > 0 {
+		for _, e := range m.ClientMetadata {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
 	}
 	return n
 }
@@ -318,6 +570,40 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientsMetadata", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClientsMetadata = append(m.ClientsMetadata, IdentifiedGenesisMetadata{})
+			if err := m.ClientsMetadata[len(m.ClientsMetadata)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CreateLocalhost", wireType)
 			}
@@ -337,6 +623,246 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.CreateLocalhost = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GenesisMetadata) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GenesisMetadata: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GenesisMetadata: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Key = append(m.Key[:0], dAtA[iNdEx:postIndex]...)
+			if m.Key == nil {
+				m.Key = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Value = append(m.Value[:0], dAtA[iNdEx:postIndex]...)
+			if m.Value == nil {
+				m.Value = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *IdentifiedGenesisMetadata) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IdentifiedGenesisMetadata: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IdentifiedGenesisMetadata: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClientId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientMetadata", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClientMetadata = append(m.ClientMetadata, GenesisMetadata{})
+			if err := m.ClientMetadata[len(m.ClientMetadata)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipGenesis(dAtA[iNdEx:])

@@ -1,6 +1,8 @@
 package types
 
 import (
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -36,6 +38,26 @@ func GetConsensusState(store sdk.KVStore, cdc codec.BinaryMarshaler, height expo
 	}
 
 	return consensusState, nil
+}
+
+// IterateProcessedTime iterates through the prefix store and applies the callback.
+// If the cb returns true, then iterator will close and stop.
+func IterateProcessedTime(store sdk.KVStore, cb func(key, val []byte) bool) {
+	iterator := sdk.KVStorePrefixIterator(store, []byte(host.KeyConsensusStatePrefix))
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		keySplit := strings.Split(string(iterator.Key()), "/")
+		// processed time key in prefix store has format: "consensusState/<height>/processedTime
+		if len(keySplit) != 3 {
+			// ignore all consensus state keys
+			continue
+		}
+
+		if cb(iterator.Key(), iterator.Value()) {
+			break
+		}
+	}
 }
 
 // ProcessedTime Store code

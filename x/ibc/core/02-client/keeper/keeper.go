@@ -115,6 +115,51 @@ func (k Keeper) GetAllGenesisClients(ctx sdk.Context) (genClients []types.Identi
 	return
 }
 
+// GetAllClientMetadata will take a list of IdentifiedClientState and return a list
+// of IdentifiedGenesisMetadata necessary for exporting and importing client metadata
+// into the client store.
+func (k Keeper) GetAllClientMetadata(ctx sdk.Context, genClients []types.IdentifiedClientState) ([]types.IdentifiedGenesisMetadata, error) {
+	genMetadata := make([]types.IdentifiedGenesisMetadata, len(genClients))
+	i := 0
+	for _, ic := range genClients {
+		cs, ok := ic.ClientState.GetCachedValue().(exported.ClientState)
+		if !ok {
+			return nil, sdkerrors.Wrapf(types.ErrInvalidClient, "client state is not exported.ClientState")
+		}
+		gms := cs.ExportMetadata(k.ClientStore(ctx, ic.ClientId))
+		if gms == nil {
+			continue
+		}
+		clientMetadata := make([]types.GenesisMetadata, len(gms))
+		for i, metadata := range gms {
+			cmd, ok := metadata.(types.GenesisMetadata)
+			if !ok {
+				return nil, sdkerrors.Wrapf(types.ErrInvalidClientMetadata, "expected metadata type: %T, got: %T",
+					types.GenesisMetadata{}, cmd)
+			}
+			clientMetadata[i] = cmd
+		}
+		genMetadata[i] = types.NewIdentifiedGenesisMetadata(
+			ic.ClientId,
+			clientMetadata,
+		)
+		i++
+	}
+	return genMetadata, nil
+}
+
+// SetClientMetadata takes a list of IdentifiedGenesisMetadata and stores all of the metadata in the client store at the appropriate paths.
+func (k Keeper) SetAllClientMetadata(ctx sdk.Context, genMetadata []types.IdentifiedGenesisMetadata) {
+	for _, igm := range genMetadata {
+		// create client store
+		store := k.ClientStore(ctx, igm.ClientId)
+		// set all metadata kv pairs in client store
+		for _, md := range igm.ClientMetadata {
+			store.Set(md.GetKey(), md.GetValue())
+		}
+	}
+}
+
 // GetAllConsensusStates returns all stored client consensus states.
 func (k Keeper) GetAllConsensusStates(ctx sdk.Context) types.ClientsConsensusStates {
 	clientConsStates := make(types.ClientsConsensusStates, 0)

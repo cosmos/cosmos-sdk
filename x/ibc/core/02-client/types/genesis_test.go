@@ -88,6 +88,15 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						},
 					),
 				},
+				[]types.IdentifiedGenesisMetadata{
+					types.NewIdentifiedGenesisMetadata(
+						clientID,
+						[]types.GenesisMetadata{
+							types.NewGenesisMetadata([]byte("key1"), []byte("val1")),
+							types.NewGenesisMetadata([]byte("key2"), []byte("val2")),
+						},
+					),
+				},
 				true,
 			),
 			expPass: true,
@@ -116,6 +125,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						},
 					),
 				},
+				nil,
 				true,
 			),
 			expPass: false,
@@ -129,6 +139,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 					),
 					types.NewIdentifiedClientState(exported.Localhost, localhosttypes.NewClientState("chaindID", types.ZeroHeight())),
 				},
+				nil,
 				nil,
 				true,
 			),
@@ -150,7 +161,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						"(CLIENTID2)",
 						[]types.ConsensusStateWithHeight{
 							types.NewConsensusStateWithHeight(
-								types.ZeroHeight(),
+								types.NewHeight(0, 1),
 								ibctmtypes.NewConsensusState(
 									header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), header.Header.NextValidatorsHash,
 								),
@@ -158,6 +169,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						},
 					),
 				},
+				nil,
 				true,
 			),
 			expPass: false,
@@ -183,6 +195,44 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 									header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), header.Header.NextValidatorsHash,
 								),
 							),
+						},
+					),
+				},
+				nil,
+				true,
+			),
+			expPass: false,
+		},
+		{
+			name: "invalid metadata",
+			genState: types.NewGenesisState(
+				[]types.IdentifiedClientState{
+					types.NewIdentifiedClientState(
+						clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
+					),
+					types.NewIdentifiedClientState(
+						exported.Localhost, localhosttypes.NewClientState("chaindID", clientHeight),
+					),
+				},
+				[]types.ClientConsensusStates{
+					types.NewClientConsensusStates(
+						clientID,
+						[]types.ConsensusStateWithHeight{
+							types.NewConsensusStateWithHeight(
+								header.GetHeight().(types.Height),
+								ibctmtypes.NewConsensusState(
+									header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), header.Header.NextValidatorsHash,
+								),
+							),
+						},
+					),
+				},
+				[]types.IdentifiedGenesisMetadata{
+					types.NewIdentifiedGenesisMetadata(
+						clientID,
+						[]types.GenesisMetadata{
+							types.NewGenesisMetadata([]byte(""), []byte("val1")),
+							types.NewGenesisMetadata([]byte("key2"), []byte("val2")),
 						},
 					),
 				},

@@ -31,6 +31,9 @@ type ClientState interface {
 	// necessary for correct light client operation
 	Initialize(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, ConsensusState) error
 
+	// Genesis function
+	ExportMetadata(sdk.KVStore) []GenesisMetadata
+
 	// Update and Misbehaviour functions
 
 	CheckHeaderAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Header) (ClientState, ConsensusState, error)
@@ -188,4 +191,13 @@ type Height interface {
 	GetVersionHeight() uint64
 	Decrement() (Height, bool)
 	String() string
+}
+
+// GenesisMetadata is a wrapper interface over clienttypes.GenesisMetadata
+// all clients must use the concrete implementation in types
+type GenesisMetadata interface {
+	// return store key that contains metadata without clientID-prefix
+	GetKey() []byte
+	// returns metadata value
+	GetValue() []byte
 }

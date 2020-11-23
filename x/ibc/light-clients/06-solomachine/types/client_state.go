@@ -87,6 +87,10 @@ func (cs ClientState) Initialize(_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.K
 	return nil
 }
 
+func (cs ClientState) ExportMetadata(_ sdk.KVStore) []exported.GenesisMetadata {
+	return nil
+}
+
 // VerifyUpgrade returns an error since solomachine client does not support upgrades
 func (cs ClientState) VerifyUpgrade(
 	_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore,

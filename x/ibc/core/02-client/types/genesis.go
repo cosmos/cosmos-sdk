@@ -16,7 +16,10 @@ var (
 	_ codectypes.UnpackInterfacesMessage = GenesisState{}
 )
 
-var _ sort.Interface = ClientsConsensusStates{}
+var (
+	_ sort.Interface           = ClientsConsensusStates{}
+	_ exported.GenesisMetadata = GenesisMetadata{}
+)
 
 // ClientsConsensusStates defines a slice of ClientConsensusStates that supports the sort interface
 type ClientsConsensusStates []ClientConsensusStates
@@ -66,11 +69,12 @@ func (ccs ClientConsensusStates) UnpackInterfaces(unpacker codectypes.AnyUnpacke
 
 // NewGenesisState creates a GenesisState instance.
 func NewGenesisState(
-	clients []IdentifiedClientState, clientsConsensus ClientsConsensusStates, createLocalhost bool,
+	clients []IdentifiedClientState, clientsConsensus ClientsConsensusStates, clientsMetadata []IdentifiedGenesisMetadata, createLocalhost bool,
 ) GenesisState {
 	return GenesisState{
 		Clients:          clients,
 		ClientsConsensus: clientsConsensus,
+		ClientsMetadata:  clientsMetadata,
 		CreateLocalhost:  createLocalhost,
 	}
 }
@@ -133,5 +137,49 @@ func (gs GenesisState) Validate() error {
 		}
 	}
 
+	for i, clientMetadata := range gs.ClientsMetadata {
+		if err := host.ClientIdentifierValidator(clientMetadata.ClientId); err != nil {
+			return fmt.Errorf("invalid client consensus state identifier %s index %d: %w", clientMetadata.ClientId, i, err)
+		}
+
+		for _, gm := range clientMetadata.ClientMetadata {
+			if err := gm.Validate(); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
+}
+
+func NewGenesisMetadata(key, val []byte) GenesisMetadata {
+	return GenesisMetadata{
+		Key:   key,
+		Value: val,
+	}
+}
+
+func (gm GenesisMetadata) GetKey() []byte {
+	return gm.Key
+}
+
+func (gm GenesisMetadata) GetValue() []byte {
+	return gm.Value
+}
+
+func (gm GenesisMetadata) Validate() error {
+	if len(gm.Key) == 0 {
+		return fmt.Errorf("genesis metadata key cannot be empty")
+	}
+	if len(gm.Value) == 0 {
+		return fmt.Errorf("genesis metadata value cannot be empty")
+	}
+	return nil
+}
+
+func NewIdentifiedGenesisMetadata(clientID string, gms []GenesisMetadata) IdentifiedGenesisMetadata {
+	return IdentifiedGenesisMetadata{
+		ClientId:       clientID,
+		ClientMetadata: gms,
+	}
 }

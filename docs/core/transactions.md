@@ -77,7 +77,7 @@ The next paragraphs will describe each of these components, in this order.
 Module `Msg`s are not to be confused with [ABCI Messages](https://tendermint.com/docs/spec/abci/abci.html#messages) which define interactions between the Tendermint and application layers.
 :::
 
-**Messages** (or `Msg`s) are module-specific objects that trigger state transitions within the scope of the module they belong to. Module developers define the messages for their module by adding methods to the Protobuf [`Msg` service](../building-modules/msg-services.md), and also implement the corresponding `Msg` server.
+**Messages** (or `Msg`s) are module-specific objects that trigger state transitions within the scope of the module they belong to. Module developers define the messages for their module by adding methods to the Protobuf [`Msg` service](../building-modules/msg-services.md), and also implement the corresponding `MsgServer`.
 
 `Msg`s in a module are defined as methods in the [`Msg` service] inside each module's `tx.proto` file. Since `Msg`s are module-specific, each module needs a to process all of its message types and trigger state changes within the module's scope. This design puts more responsibility on module developers, allowing application developers to reuse common functionalities without having to implement state transition logic repetitively. To achieve this, Protobuf generates a `MsgServer` interface for each module, and the module developer needs to implement this interface. The methods on the `MsgServer` interface corresponds on how to handle each of the different `Msg`.
 

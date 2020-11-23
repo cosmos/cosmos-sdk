@@ -469,6 +469,8 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	return nil
 }
 
+// verifyDelayPeriodPassed will ensure that at least delayPeriod amount of time has passed since consenus state was submitted
+// before allowing verification to continue.
 func verifyDelayPeriodPassed(store sdk.KVStore, proofHeight exported.Height, currentTimestamp, delayPeriod uint64) error {
 	// check that executing chain's timestamp has passed consensusState's processed time + delay period
 	processedTime, ok := GetProcessedTime(store, proofHeight)
@@ -476,6 +478,7 @@ func verifyDelayPeriodPassed(store sdk.KVStore, proofHeight exported.Height, cur
 		return sdkerrors.Wrapf(ErrProcessedTimeNotFound, "processed time not found for height: %s", proofHeight)
 	}
 	validTime := processedTime + delayPeriod
+	// NOTE: delay period is inclusive, so if currentTimestamp is validTime, then we return no error
 	if validTime > currentTimestamp {
 		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %d, current time: %d",
 			validTime, currentTimestamp)

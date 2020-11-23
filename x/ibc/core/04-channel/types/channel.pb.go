@@ -264,7 +264,8 @@ type Packet struct {
 	TimeoutHeight types.Height `protobuf:"bytes,7,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height" yaml:"timeout_height"`
 	// block timestamp (in nanoseconds) after which the packet times out
 	TimeoutTimestamp uint64 `protobuf:"varint,8,opt,name=timeout_timestamp,json=timeoutTimestamp,proto3" json:"timeout_timestamp,omitempty" yaml:"timeout_timestamp"`
-	// delay period before which packet cannot be verified on receiving chain
+	// delay period specified by sender enforces that delay period must pass since consensus state
+	// was submitted before any packet-verification can pass against that consensus state.
 	DelayPeriod uint64 `protobuf:"varint,9,opt,name=delay_period,json=delayPeriod,proto3" json:"delay_period,omitempty" yaml:"delay_period"`
 }
 

@@ -112,7 +112,8 @@ message Packet {
       [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
   // block timestamp (in nanoseconds) after which the packet times out
   uint64 timeout_timestamp = 8 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
-  // delay period before which packet cannot be verified on receiving chain
+  // delay period specified by sender enforces that delay period must pass since consensus state
+  // was submitted before any packet-verification can pass against that consensus state.
   uint64 delay_period = 9 [(gogoproto.moretags) = "yaml:\"delay_period\""];
 }
 

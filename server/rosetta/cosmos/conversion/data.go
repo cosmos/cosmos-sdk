@@ -97,6 +97,7 @@ func TendermintTxsToTxIdentifiers(txs []tmtypes.Tx) []*types.TransactionIdentifi
 	for i, tx := range txs {
 		converted[i] = &types.TransactionIdentifier{Hash: fmt.Sprintf("%x", tx.Hash())} // TODO hash is sha256, so we hex it?
 	}
+
 	return converted
 }
 
@@ -235,6 +236,7 @@ func GetTransferTxDataFromOperations(ops []*types.Operation) (*banktypes.MsgSend
 // TmPeersToRosettaPeers converts tendermint peers to rosetta ones
 func TmPeersToRosettaPeers(peers []tmcoretypes.Peer) []*types.Peer {
 	converted := make([]*types.Peer, len(peers))
+
 	for i, peer := range peers {
 		converted[i] = &types.Peer{
 			PeerID: peer.NodeInfo.Moniker,
@@ -243,6 +245,7 @@ func TmPeersToRosettaPeers(peers []tmcoretypes.Peer) []*types.Peer {
 			},
 		}
 	}
+
 	return converted
 }
 

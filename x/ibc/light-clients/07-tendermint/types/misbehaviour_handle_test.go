@@ -256,7 +256,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			false,
 		},
 		{
-			"unbonding period expired",
+			"trusting period expired",
 			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			types.NewConsensusState(time.Time{}, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
 			heightMinus1,
@@ -267,7 +267,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
 				ClientId: chainID,
 			},
-			suite.now.Add(ubdPeriod),
+			suite.now.Add(trustingPeriod),
 			false,
 		},
 		{

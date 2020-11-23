@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"math/big"
 	"regexp"
 	"strconv"
 	"strings"
@@ -54,18 +55,15 @@ func (h Height) Compare(other exported.Height) int64 {
 	if !ok {
 		panic(fmt.Sprintf("cannot compare against invalid height type: %T. expected height type: %T", other, h))
 	}
-	var cmp int64
+	var a, b big.Int
 	if h.VersionNumber != height.VersionNumber {
-		cmp = int64(h.VersionNumber) - int64(height.VersionNumber)
+		a.SetUint64(h.VersionNumber)
+		b.SetUint64(height.VersionNumber)
 	} else {
-		cmp = int64(h.VersionHeight) - int64(height.VersionHeight)
+		a.SetUint64(h.VersionHeight)
+		b.SetUint64(height.VersionHeight)
 	}
-	if cmp < 0 {
-		return -1
-	} else if cmp > 0 {
-		return 1
-	}
-	return 0
+	return int64(a.Cmp(&b))
 }
 
 // LT Helper comparison function returns true if h < other

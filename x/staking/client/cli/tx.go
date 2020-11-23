@@ -17,9 +17,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// default values
 var (
-	defaultTokens                  = sdk.TokensFromConsensusPower(100)
-	defaultAmount                  = defaultTokens.String() + sdk.DefaultBondDenom
+	DefaultTokens                  = sdk.TokensFromConsensusPower(100)
+	defaultAmount                  = DefaultTokens.String() + sdk.DefaultBondDenom
 	defaultCommissionRate          = "0.1"
 	defaultCommissionMaxRate       = "0.2"
 	defaultCommissionMaxChangeRate = "0.01"

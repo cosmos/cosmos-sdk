@@ -16,9 +16,8 @@ import (
 
 // Simulation parameter constants
 const (
-	unbondingTime     = "unbonding_time"
-	maxValidators     = "max_validators"
-	historicalEntries = "historical_entries"
+	unbondingTime = "unbonding_time"
+	maxValidators = "max_validators"
 )
 
 // GenUnbondingTime randomized UnbondingTime

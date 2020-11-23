@@ -20,7 +20,6 @@ docs/node_modules
 docs/modules
 dist
 tools-stamp
-proto-tools-stamp
 buf-stamp
 artifacts
 

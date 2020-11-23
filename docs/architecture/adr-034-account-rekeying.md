@@ -64,8 +64,9 @@ Everytime a key for an address is changed, we will store a log of this change in
 
 Breaks the current assumed relationship between address and pubkeys as H(pubkey) = address. This has a couple of consequences.
 
-* We cannot prune accounts with 0 balance that have had their pubkey changed. Currently, we do not prune accounts anyways, but the reason we have account numbers is presumably for this purpose.
 * This makes wallets that support this feature more complicated. For example, if an address on chain was updated, the corresponding key in the CLI wallet also needs to be updated.
+* We cannot prune accounts with 0 balance that have had their pubkey changed. This is because if pruned, the original pubkey of the account would be needed to recreate the same address, but the owner of the address may not have the original pubkey anymore.  Currently, we do not automatically prune accounts anyways, but the purpose of account numbers is to allow for this down the road.  One way to allow accounts that have had their pubkeys changed is to allow their owners to manually prune their accounts using a new Msg type such as `MsgDeleteAccount`.  Manually pruning accounts can give a gas refund as an incentive for performing the action.
+
 
 ### Neutral
 

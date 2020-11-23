@@ -741,11 +741,8 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	// Fetch 2 accounts and a multisig.
 	account1, err := val.ClientCtx.Keyring.Key("newAccount1")
 	s.Require().NoError(err)
-	s.T().Log(account1)
 	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
 	s.Require().NoError(err)
-	s.T().Log(account2)
-
 	multisigInfo, err := val.ClientCtx.Keyring.Key("multi")
 
 	// Send coins from validator to multisig.
@@ -769,7 +766,6 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	var balRes banktypes.QueryAllBalancesResponse
 	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
-	s.T().Log(balRes.Balances.AmountOf(s.cfg.BondDenom))
 
 	generatedStd, err := bankcli.MsgSendExec(
 		val.ClientCtx,
@@ -792,16 +788,15 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	val.ClientCtx.HomeDir = strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
 
 	// sign-batch file
-	res, err := authtest.TxSignBatchExec(val.ClientCtx, account1.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String())
+	res, err := authtest.TxSignExec(val.ClientCtx, account1.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String())
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	// write sigs to file
 	file1, cleanup2 := testutil.WriteToNewTempFile(s.T(), res.String())
 	defer cleanup2()
-	s.T().Log("account1 sigs", res)
 
 	// sign-batch file with account2
-	res, err = authtest.TxSignBatchExec(val.ClientCtx, account2.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String())
+	res, err = authtest.TxSignExec(val.ClientCtx, account2.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String())
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	s.T().Log("account2 sigs", res)

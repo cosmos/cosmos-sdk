@@ -1,6 +1,6 @@
 # rosetta
 
-Contains the files required to run the rosetta CI. It builds a simapp based on the current codebase.
+This directory contains the files required to run the rosetta CI. It builds `simapp` based on the current codebase.
 
 ## docker-compose.yaml
 

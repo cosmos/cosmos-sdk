@@ -15,8 +15,8 @@ RUN tar -zxvf data.tar.gz -C .
 # build simd and simcli
 WORKDIR /simd
 COPY . ./
-RUN go build -o simd ./contrib/rosetta/simd/daemon.go
-RUN go build -o simcli ./contrib/rosetta/simd/cli.go
+RUN go build -o simd ./contrib/rosetta/simd/cmd/simd/simd.go
+RUN go build -o simcli ./contrib/rosetta/simd/cmd/simcli/simcli.go
 
 
 # build rosetta CLI

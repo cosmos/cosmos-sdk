@@ -26,22 +26,18 @@ import (
 func (cs ClientState) VerifyUpgradeAndUpdateState(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, clientStore sdk.KVStore,
 	upgradedClient exported.ClientState, upgradedConsState exported.ConsensusState,
-	lastHeight exported.Height, proofUpgradeClient, proofUpgradeConsState []byte,
+	proofUpgradeClient, proofUpgradeConsState []byte,
 ) (exported.ClientState, exported.ConsensusState, error) {
 	if len(cs.UpgradePath) == 0 {
 		return nil, nil, sdkerrors.Wrap(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade client, no upgrade path set")
 	}
 
-	if upgradedClient.GetLatestHeight().GetVersionNumber() <= cs.GetLatestHeight().GetVersionNumber() {
-		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "upgraded client height %s must be at greater version than current client height %s",
-			upgradedClient.GetLatestHeight(), cs.GetLatestHeight())
-	}
+	// last height of current counterparty chain must be client's latest height
+	lastHeight := cs.GetLatestHeight()
 
-	// UpgradeHeight must be the latest height of the client state as client must contain the consensus state
-	// of the last height, and should not contain a greater height before the upgrade.
-	if !cs.GetLatestHeight().EQ(lastHeight) {
-		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "last height before upgrade %s must be latest height of the client %s.",
-			cs.GetLatestHeight(), lastHeight)
+	if upgradedClient.GetLatestHeight().GetVersionNumber() <= lastHeight.GetVersionNumber() {
+		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "upgraded client height %s must be at greater version than current client height %s",
+			upgradedClient.GetLatestHeight(), lastHeight)
 	}
 
 	// counterparty chain must commit the upgraded client with all client-customizable fields zeroed out

@@ -108,7 +108,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 // UpgradeClient upgrades the client to a new client state if this new client was committed to
 // by the old client at the specified upgrade height
 func (k Keeper) UpgradeClient(ctx sdk.Context, clientID string, upgradedClient exported.ClientState, upgradedConsState exported.ConsensusState,
-	lastHeight exported.Height, proofUpgradeClient, proofUpgradeConsState []byte) error {
+	proofUpgradeClient, proofUpgradeConsState []byte) error {
 	clientState, found := k.GetClientState(ctx, clientID)
 	if !found {
 		return sdkerrors.Wrapf(types.ErrClientNotFound, "cannot update client with ID %s", clientID)
@@ -120,7 +120,7 @@ func (k Keeper) UpgradeClient(ctx sdk.Context, clientID string, upgradedClient e
 	}
 
 	updatedClientState, updatedConsState, err := clientState.VerifyUpgradeAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, clientID),
-		upgradedClient, upgradedConsState, lastHeight, proofUpgradeClient, proofUpgradeConsState)
+		upgradedClient, upgradedConsState, proofUpgradeClient, proofUpgradeConsState)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "cannot upgrade client with ID %s", clientID)
 	}

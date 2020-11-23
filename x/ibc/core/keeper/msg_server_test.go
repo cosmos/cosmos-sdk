@@ -656,7 +656,7 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 				proofUpgradedConsState, _ := suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedConsStateKey(int64(lastHeight.GetVersionHeight())), cs.GetLatestHeight().GetVersionHeight())
 
 				msg, err = clienttypes.NewMsgUpgradeClient(clientA, upgradedClient, upgradedConsState,
-					lastHeight, proofUpgradeClient, proofUpgradedConsState, suite.chainA.SenderAccount.GetAddress())
+					proofUpgradeClient, proofUpgradedConsState, suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 			expPass: true,
@@ -686,7 +686,7 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 				suite.Require().NoError(err)
 
-				msg, err = clienttypes.NewMsgUpgradeClient(clientA, upgradedClient, upgradedConsState, lastHeight, nil, nil, suite.chainA.SenderAccount.GetAddress())
+				msg, err = clienttypes.NewMsgUpgradeClient(clientA, upgradedClient, upgradedConsState, nil, nil, suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 			expPass: false,

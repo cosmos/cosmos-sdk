@@ -339,8 +339,6 @@ func (suite *TypesTestSuite) TestMarshalMsgUpgradeClient() {
 		err error
 	)
 
-	lastHeight := types.NewHeight(0, 1000)
-
 	testCases := []struct {
 		name     string
 		malleate func()
@@ -350,7 +348,7 @@ func (suite *TypesTestSuite) TestMarshalMsgUpgradeClient() {
 			func() {
 				tendermintClient := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
 				tendermintConsState := &ibctmtypes.ConsensusState{NextValidatorsHash: []byte("nextValsHash")}
-				msg, err = types.NewMsgUpgradeClient("clientid", tendermintClient, tendermintConsState, lastHeight, []byte("proofUpgradeClient"), []byte("proofUpgradeConsState"), suite.chainA.SenderAccount.GetAddress())
+				msg, err = types.NewMsgUpgradeClient("clientid", tendermintClient, tendermintConsState, []byte("proofUpgradeClient"), []byte("proofUpgradeConsState"), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 		},
@@ -358,7 +356,7 @@ func (suite *TypesTestSuite) TestMarshalMsgUpgradeClient() {
 			"client upgrades to new solomachine client",
 			func() {
 				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 1)
-				msg, err = types.NewMsgUpgradeClient("clientid", soloMachine.ClientState(), soloMachine.ConsensusState(), lastHeight, []byte("proofUpgradeClient"), []byte("proofUpgradeConsState"), suite.chainA.SenderAccount.GetAddress())
+				msg, err = types.NewMsgUpgradeClient("clientid", soloMachine.ClientState(), soloMachine.ConsensusState(), []byte("proofUpgradeClient"), []byte("proofUpgradeConsState"), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 		},
@@ -412,13 +410,6 @@ func (suite *TypesTestSuite) TestMsgUpgradeClient_ValidateBasic() {
 			expPass: false,
 		},
 		{
-			name: "last height is zero",
-			malleate: func(msg *types.MsgUpgradeClient) {
-				msg.LastHeight = types.Height{}
-			},
-			expPass: false,
-		},
-		{
 			name: "unpacking clientstate fails",
 			malleate: func(msg *types.MsgUpgradeClient) {
 				msg.ClientState = nil
@@ -460,8 +451,7 @@ func (suite *TypesTestSuite) TestMsgUpgradeClient_ValidateBasic() {
 
 		clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
 		consState := &ibctmtypes.ConsensusState{NextValidatorsHash: []byte("nextValsHash")}
-		lastHeight := types.NewHeight(0, 1000)
-		msg, err := types.NewMsgUpgradeClient("testclientid", clientState, consState, lastHeight, []byte("proofUpgradeClient"), []byte("proofUpgradeConsState"), suite.chainA.SenderAccount.GetAddress())
+		msg, err := types.NewMsgUpgradeClient("testclientid", clientState, consState, []byte("proofUpgradeClient"), []byte("proofUpgradeConsState"), suite.chainA.SenderAccount.GetAddress())
 		suite.Require().NoError(err)
 
 		tc.malleate(msg)
@@ -472,7 +462,6 @@ func (suite *TypesTestSuite) TestMsgUpgradeClient_ValidateBasic() {
 			suite.Require().Error(err, "invalid case %s passed", tc.name)
 		}
 	}
-
 }
 
 // tests that different misbehaviours within MsgSubmitMisbehaviour can be marshaled

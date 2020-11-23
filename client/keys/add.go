@@ -295,6 +295,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, kb keyring
 
 func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemonic string) error {
 	output, _ := cmd.Flags().GetString(cli.OutputFlag)
+	// TODO: remove Bech32 from here
 
 	switch output {
 	case OutputFormatText:

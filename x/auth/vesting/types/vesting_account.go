@@ -7,7 +7,6 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/internal/protocdc"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
@@ -193,14 +192,12 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 	out := vestingAccountYAML{
 		Address:          accAddr,
 		AccountNumber:    bva.AccountNumber,
+		PubKey:           getPKString(bva),
 		Sequence:         bva.Sequence,
 		OriginalVesting:  bva.OriginalVesting,
 		DelegatedFree:    bva.DelegatedFree,
 		DelegatedVesting: bva.DelegatedVesting,
 		EndTime:          bva.EndTime,
-	}
-	if out.PubKey, err = getPKString(bva); err != nil {
-		return nil, err
 	}
 	return marshalYaml(out)
 }
@@ -308,15 +305,13 @@ func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
 	out := vestingAccountYAML{
 		Address:          accAddr,
 		AccountNumber:    cva.AccountNumber,
+		PubKey:           getPKString(cva),
 		Sequence:         cva.Sequence,
 		OriginalVesting:  cva.OriginalVesting,
 		DelegatedFree:    cva.DelegatedFree,
 		DelegatedVesting: cva.DelegatedVesting,
 		EndTime:          cva.EndTime,
 		StartTime:        cva.StartTime,
-	}
-	if out.PubKey, err = getPKString(cva); err != nil {
-		return nil, err
 	}
 	return marshalYaml(out)
 }
@@ -453,6 +448,7 @@ func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 	out := vestingAccountYAML{
 		Address:          accAddr,
 		AccountNumber:    pva.AccountNumber,
+		PubKey:           getPKString(pva),
 		Sequence:         pva.Sequence,
 		OriginalVesting:  pva.OriginalVesting,
 		DelegatedFree:    pva.DelegatedFree,
@@ -460,9 +456,6 @@ func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 		EndTime:          pva.EndTime,
 		StartTime:        pva.StartTime,
 		VestingPeriods:   pva.VestingPeriods,
-	}
-	if out.PubKey, err = getPKString(pva); err != nil {
-		return nil, err
 	}
 	return marshalYaml(out)
 }
@@ -538,16 +531,11 @@ type getPK interface {
 	GetPubKey() cryptotypes.PubKey
 }
 
-func getPKString(g getPK) (string, error) {
+func getPKString(g getPK) string {
 	if pk := g.GetPubKey(); pk != nil {
-		// TODO check if it's ok to change a type of ValidatorOutput.PubKey to crypto.PubKey
-		pk, err := protocdc.MarshalJSON(pk, nil)
-		if err != nil {
-			return "", err
-		}
-		return string(pk), err
+		return pk.String()
 	}
-	return "", nil
+	return ""
 }
 
 func marshalYaml(i interface{}) (interface{}, error) {

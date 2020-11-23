@@ -8,8 +8,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-// MarshalJSON same as codec.ProtoMarshalJSON, but does msg type inspection to assert
-// that it implements `proto.Message` and return an error if it doesn't.
+// MarshalJSON is a wrapper for codec.ProtoMarshalJSON. It asserts that msg
+// implements `proto.Message` and calls codec.ProtoMarshalJSON.
+// This function should be used only with concrete types. For interface serialization
+// you need to wrap the interface into Any or generally use MarshalIfcJSON.
 func MarshalJSON(msg interface{}, resolver jsonpb.AnyResolver) ([]byte, error) {
 	msgProto, err := AssertMsg(msg)
 	if err != nil {

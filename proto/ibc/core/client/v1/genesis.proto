@@ -18,10 +18,8 @@ message GenesisState {
     (gogoproto.moretags)     = "yaml:\"clients_consensus\""
   ];
   // metadata from each client
-  repeated IdentifiedGenesisMetadata clients_metadata = 3 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.moretags) = "yaml:\"clients_metadata\""
-  ];
+  repeated IdentifiedGenesisMetadata clients_metadata = 3
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"clients_metadata\""];
   Params params = 4 [(gogoproto.nullable) = false];
   // create localhost on initialization
   bool create_localhost = 5 [(gogoproto.moretags) = "yaml:\"create_localhost\""];
@@ -30,7 +28,7 @@ message GenesisState {
 // GenesisMetadata defines the genesis type for metadata that clients may return
 // with ExportMetadata
 message GenesisMetadata {
-  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_getters) = false;
 
   // store key of metadata without clientID-prefix
   bytes key = 1;
@@ -40,9 +38,7 @@ message GenesisMetadata {
 
 // IdentifiedGenesisMetadata has the client metadata with the corresponding client id.
 message IdentifiedGenesisMetadata {
-  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
-  repeated GenesisMetadata client_metadata = 2 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.moretags) = "yaml:\"client_metadata\""
-  ];
+  string                   client_id       = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  repeated GenesisMetadata client_metadata = 2
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"client_metadata\""];
 }

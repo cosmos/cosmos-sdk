@@ -291,10 +291,8 @@ func NewSimApp(
 	)
 
 	// TODO: Add rest of the modules' routes(at the moment only bank routers added).
-	msgAuthRouter := msgauthtypes.NewRouter()
-	msgAuthRouter.AddRoute(banktypes.RouterKey, bank.NewHandler(app.BankKeeper))
 
-	app.MsgAuthKeeper = msgauthkeeper.NewKeeper(keys[msgauthtypes.StoreKey], appCodec, msgAuthRouter)
+	app.MsgAuthKeeper = msgauthkeeper.NewKeeper(keys[msgauthtypes.StoreKey], appCodec, app.BaseApp.MsgServiceRouter())
 
 	// register the proposal types
 	govRouter := govtypes.NewRouter()

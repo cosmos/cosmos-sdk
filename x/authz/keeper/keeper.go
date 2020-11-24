@@ -7,6 +7,7 @@ import (
 
 	proto "github.com/gogo/protobuf/proto"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,17 +19,11 @@ import (
 type Keeper struct {
 	storeKey sdk.StoreKey
 	cdc      codec.BinaryMarshaler
-	router   types.Router
+	router   *baseapp.MsgServiceRouter
 }
 
 // NewKeeper constructs a message authorization Keeper
-func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, router types.Router) Keeper {
-
-	// It is vital to seal the authz proposal router here as to not allow
-	// further handlers to be registered after the keeper is created since this
-	// could create invalid or non-deterministic behavior.
-	router.Seal()
-
+func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, router *baseapp.MsgServiceRouter) Keeper {
 	return Keeper{
 		storeKey: storeKey,
 		cdc:      cdc,
@@ -39,11 +34,6 @@ func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, router types.Ro
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
-}
-
-// Router returns the authz Keeper's Router
-func (k Keeper) Router() types.Router {
-	return k.router
 }
 
 // getAuthorizationGrant returns grant between granter and grantee for the given msg type
@@ -105,13 +95,13 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, service
 				k.update(ctx, grantee, granter, updated)
 			}
 		}
-		handler := k.router.GetRoute(serviceMsg.Route())
+		handler := k.router.Handler(serviceMsg.Route())
 
 		if handler == nil {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", serviceMsg.Route())
 		}
 
-		msgResult, err = handler(ctx, serviceMsg)
+		msgResult, err = handler(ctx, serviceMsg.Request)
 		if err != nil {
 			return nil, sdkerrors.Wrapf(err, "failed to execute message; message %s", serviceMsg.MethodName)
 		}

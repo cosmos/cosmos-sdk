@@ -24,7 +24,7 @@ Some important information concerning all legacy REST endpoints:
 
 Cosmos SDK v0.40 marks as deprecated the legacy REST endpoints, but provides for most legacy endpoint a new REST endpoint. These endpoints are automatically generated from [gRPC `Query` services](../building-modules/query-services.md) using [grpc-gateway](https://grpc-ecosystem.github.io/grpc-gateway/), so they are usually called gGPC-gateway REST endpoints.
 
-Some modules expose legacy `POST` endpoints to generate unsigned transactions for their `Msg`s. These `POST` endpoints have been removed. We recommend to use [service `Msg`s](../building-modules/msg-services.md) directly, and use Protobuf to generate client-side transaction generation. A guide can be found [here (TODO)](https://github.com/cosmos/cosmos-sdk/issues/7657).
+Some modules expose legacy `POST` endpoints to generate unsigned transactions for their `Msg`s. These `POST` endpoints have been removed. We recommend to use [service `Msg`s](../building-modules/msg-services.md) directly, and use Protobuf to do client-side transaction generation. A guide can be found [here (TODO)](https://github.com/cosmos/cosmos-sdk/issues/7657).
 
 | Legacy REST Endpoint                                                            | Description                                                         | New gGPC-gateway REST Endpoint                                                                        |
 | ------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |

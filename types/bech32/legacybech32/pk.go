@@ -2,10 +2,6 @@
 // release.
 package legacybech32
 
-// nolint
-
-// TODO: remove Bech32 prefix, it's already in package
-
 import (
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"

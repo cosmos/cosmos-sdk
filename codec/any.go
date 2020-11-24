@@ -14,7 +14,7 @@ import (
 
 // MarshalIfc is a convenience function for proto marshalling interfaces. It
 // packs the provided value in an Any and then marshals it to bytes.
-// NOTE: if you use a concret type, then you should use BinaryMarshaler.MarshalBinaryBare directly
+// NOTE: if you use a concert type, then you should use BinaryMarshaler.MarshalBinaryBare directly
 func MarshalIfc(m BinaryMarshaler, x interface{}) ([]byte, error) {
 	msg, ok := x.(proto.Message)
 	if !ok {
@@ -31,7 +31,7 @@ func MarshalIfc(m BinaryMarshaler, x interface{}) ([]byte, error) {
 // UnmarshalIfc is a convenience function for proto unmarshaling interfaces. It
 // unmarshals an Any from bz and then unpacks it to the `iface`, which must
 // be a pointer to a non empty interface with registered implementations.
-// NOTE: if you use a concret type, then you should use BinaryMarshaler.UnarshalBinaryBare directly
+// NOTE: if you use a concert type, then you should use BinaryMarshaler.UnarshalBinaryBare directly
 //
 // Ex:
 //		var x MyInterface
@@ -49,7 +49,7 @@ func UnmarshalIfc(m BinaryMarshaler, iface interface{}, bz []byte) error {
 
 // MarshalIfcJSON is a convenience function for proto marshalling interfaces. It
 // packs the provided value in an Any and then marshals it to bytes.
-// NOTE: if you use a concret type, then you should use JSONMarshaler.MarshalJSON directly
+// NOTE: if you use a concert type, then you should use JSONMarshaler.MarshalJSON directly
 func MarshalIfcJSON(m JSONMarshaler, x proto.Message) ([]byte, error) {
 	any, err := types.NewAnyWithValue(x)
 	if err != nil {
@@ -61,7 +61,7 @@ func MarshalIfcJSON(m JSONMarshaler, x proto.Message) ([]byte, error) {
 // UnmarshalIfcJSON is a convenience function for proto unmarshaling interfaces.
 // It unmarshals an Any from bz and then unpacks it to the `iface`, which must
 // be a pointer to a non empty interface with registered implementations.
-// NOTE: if you use a concret type, then you should use JSONMarshaler.UnarshalJSON directly
+// NOTE: if you use a concert type, then you should use JSONMarshaler.UnarshalJSON directly
 //
 // Ex:
 //		var x MyInterface

@@ -16,8 +16,8 @@ Some important information concerning all legacy REST endpoints:
 
 | Legacy REST Endpoint      | Description        | Breaking Change                                                                                                                                                                                                                            |
 | ------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `GET /txs/{hash}`         | Query tx by hash   | Endpoint will error when trying to output non-Amino txs (e.g. IBC txs).                                                                                                                                                                    |
-| `GET /txs`                | Query tx by events | Endpoint will error when trying to output non-Amino txs (e.g. IBC txs).                                                                                                                                                                    |
+| `GET /txs/{hash}`         | Query tx by hash   | Endpoint will error when trying to output transactions that don't support Amino serialization (e.g. IBC txs).                                                                                                                              |
+| `GET /txs`                | Query tx by events | Endpoint will error when trying to output transactions that don't support Amino serialization (e.g. IBC txs).                                                                                                                              |
 | `GET /staking/validators` | Get all validators | BondStatus is now a protobuf enum instead of an int32, and JSON serialized using its protobuf name, so expect query parameters like `?status=BOND_STATUS_{BONDED,UNBONDED,UNBONDING}` as opposed to `?status={bonded,unbonded,unbonding}`. |
 
 ## Migrating to New REST Endpoints

@@ -32,7 +32,7 @@ const (
 
 	// EscrowPrefix is the prefix used for IBC escrow addresses to avoid address collisions
 	// with Public Key addresses.
-	EscrowPrefix = "ibc-transfer-escrow-prefix"
+	EscrowPrefix = "ibc-v1"
 )
 
 var (

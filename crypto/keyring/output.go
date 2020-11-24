@@ -1,6 +1,8 @@
 package keyring
 
 import (
+	"fmt"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/internal/protocdc"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,16 +23,23 @@ type KeyOutput struct {
 }
 
 // NewKeyOutput creates a default KeyOutput instance without Mnemonic, Threshold and PubKeys
+// TODO remove error
 func NewKeyOutput(name string, keyType KeyType, a sdk.Address, pk cryptotypes.PubKey) (KeyOutput, error) {
-	pkBytes, err := protocdc.MarshalJSON(pk, nil)
+	bz, err := protocdc.MarshalJSON(pk, nil)
 	if err != nil {
 		return KeyOutput{}, err
 	}
+	fmt.Println(">>>> bz", string(bz))
+	/* 	if pk != nil {
+	   		fmt.Printf(">>>>>> %t\n", pk)
+	   		pkStr = pk.String()
+	   	}
+	*/
 	return KeyOutput{
 		Name:    name,
 		Type:    keyType.String(),
 		Address: a.String(),
-		PubKey:  string(pkBytes),
+		PubKey:  string(bz),
 	}, nil
 }
 
@@ -76,22 +85,14 @@ func Bech32ValKeyOutput(keyInfo Info) (KeyOutput, error) {
 func Bech32KeyOutput(keyInfo Info) (KeyOutput, error) {
 	pk := keyInfo.GetPubKey()
 	addr := sdk.AccAddress(pk.Address().Bytes())
-	ko, err := NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), addr, pk)
-	if err != nil {
-		return ko, err
-	}
+	ko, _ := NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), addr, pk)
 
 	if mInfo, ok := keyInfo.(*multiInfo); ok {
 		pubKeys := make([]multisigPubKeyOutput, len(mInfo.PubKeys))
 
 		for i, pkInfo := range mInfo.PubKeys {
 			pk = pkInfo.PubKey
-			addr = sdk.AccAddress(pk.Address().Bytes())
-			pkBytes, err := protocdc.MarshalJSON(pk, nil)
-			if err != nil {
-				return ko, err
-			}
-			pubKeys[i] = multisigPubKeyOutput{addr.String(), string(pkBytes), pkInfo.Weight}
+			pubKeys[i] = multisigPubKeyOutput{addr.String(), pk.String(), pkInfo.Weight}
 		}
 
 		ko.Threshold = mInfo.Threshold

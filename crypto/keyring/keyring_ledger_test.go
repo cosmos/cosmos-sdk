@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
 )
 
 func TestInMemoryCreateLedger(t *testing.T) {
@@ -28,7 +29,7 @@ func TestInMemoryCreateLedger(t *testing.T) {
 
 	// The mock is available, check that the address is correct
 	pubKey := ledger.GetPubKey()
-	pk, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
+	pk, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeAccPub, pubKey)
 	require.NoError(t, err)
 	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
 
@@ -39,7 +40,7 @@ func TestInMemoryCreateLedger(t *testing.T) {
 	require.Equal(t, "some_account", restoredKey.GetName())
 	require.Equal(t, TypeLedger, restoredKey.GetType())
 	pubKey = restoredKey.GetPubKey()
-	pk, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
+	pk, err = legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeAccPub, pubKey)
 	require.NoError(t, err)
 	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
 
@@ -106,7 +107,7 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	// The mock is available, check that the address is correct
 	require.Equal(t, "some_account", ledger.GetName())
 	pubKey := ledger.GetPubKey()
-	pk, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
+	pk, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeAccPub, pubKey)
 	require.NoError(t, err)
 	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
 

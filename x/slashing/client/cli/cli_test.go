@@ -15,6 +15,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
 	"github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 )
 
@@ -50,7 +51,8 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) TestGetCmdQuerySigningInfo() {
 	val := s.network.Validators[0]
 
-	valConsPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, val.PubKey)
+	// TODO: don't use bech32 here
+	valConsPubKey, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeConsPub, val.PubKey)
 	s.Require().NoError(err)
 
 	testCases := []struct {

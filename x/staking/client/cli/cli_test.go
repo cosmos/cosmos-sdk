@@ -21,6 +21,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
@@ -79,7 +80,8 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 	val := s.network.Validators[0]
 
 	consPrivKey := ed25519.GenPrivKey()
-	consPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, consPrivKey.PubKey())
+	// TODO: check if we can change this
+	consPubKey, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeConsPub, consPrivKey.PubKey())
 	s.Require().NoError(err)
 
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)

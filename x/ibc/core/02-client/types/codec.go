@@ -37,6 +37,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgCreateClient{},
 		&MsgUpdateClient{},
+		&MsgUpgradeClient{},
 		&MsgSubmitMisbehaviour{},
 	)
 

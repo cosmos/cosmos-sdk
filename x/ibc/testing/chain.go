@@ -67,7 +67,7 @@ var (
 	TestHash                              = tmhash.Sum([]byte("TESTING HASH"))
 	TestCoin                              = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 
-	UpgradePath = fmt.Sprintf("%s/%s", "upgrade", "upgradedClient")
+	UpgradePath = []string{"upgrade", "upgradedIBCState"}
 
 	ConnectionVersion = connectiontypes.ExportedVersionsToProto(connectiontypes.GetCompatibleVersions())[0]
 
@@ -187,12 +187,12 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, clienttypes.Height) {
 	proof, err := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
 	require.NoError(chain.t, err)
 
-	version := clienttypes.ParseChainID(chain.ChainID)
+	revision := clienttypes.ParseChainID(chain.ChainID)
 
 	// proof height + 1 is returned as the proof created corresponds to the height the proof
 	// was created in the IAVL tree. Tendermint and subsequently the clients that rely on it
 	// have heights 1 above the IAVL tree. Thus we return proof height + 1
-	return proof, clienttypes.NewHeight(version, uint64(res.Height)+1)
+	return proof, clienttypes.NewHeight(revision, uint64(res.Height)+1)
 }
 
 // QueryUpgradeProof performs an abci query with the given key and returns the proto encoded merkle proof
@@ -211,12 +211,12 @@ func (chain *TestChain) QueryUpgradeProof(key []byte, height uint64) ([]byte, cl
 	proof, err := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
 	require.NoError(chain.t, err)
 
-	version := clienttypes.ParseChainID(chain.ChainID)
+	revision := clienttypes.ParseChainID(chain.ChainID)
 
 	// proof height + 1 is returned as the proof created corresponds to the height the proof
 	// was created in the IAVL tree. Tendermint and subsequently the clients that rely on it
 	// have heights 1 above the IAVL tree. Thus we return proof height + 1
-	return proof, clienttypes.NewHeight(version, uint64(res.Height+1))
+	return proof, clienttypes.NewHeight(revision, uint64(res.Height+1))
 }
 
 // QueryClientStateProof performs and abci query for a client state
@@ -388,7 +388,7 @@ func (chain *TestChain) AddTestConnection(clientID, counterpartyClientID string)
 // created given a clientID and counterparty clientID. The connection id
 // format: <chainID>-conn<index>
 func (chain *TestChain) ConstructNextTestConnection(clientID, counterpartyClientID string) *TestConnection {
-	connectionID := fmt.Sprintf("%s-%s%d", chain.ChainID, ConnectionIDPrefix, len(chain.Connections))
+	connectionID := connectiontypes.FormatConnectionIdentifier(uint64(len(chain.Connections)))
 	return &TestConnection{
 		ID:                   connectionID,
 		ClientID:             clientID,
@@ -405,6 +405,34 @@ func (chain *TestChain) GetFirstTestConnection(clientID, counterpartyClientID st
 	}
 
 	return chain.ConstructNextTestConnection(clientID, counterpartyClientID)
+}
+
+// AddTestChannel appends a new TestChannel which contains references to the port and channel ID
+// used for channel creation and interaction. See 'NextTestChannel' for channel ID naming format.
+func (chain *TestChain) AddTestChannel(conn *TestConnection, portID string) TestChannel {
+	channel := chain.NextTestChannel(conn, portID)
+	conn.Channels = append(conn.Channels, channel)
+	return channel
+}
+
+// NextTestChannel returns the next test channel to be created on this connection, but does not
+// add it to the list of created channels. This function is expected to be used when the caller
+// has not created the associated channel in app state, but would still like to refer to the
+// non-existent channel usually to test for its non-existence.
+//
+// channel ID format: <connectionid>-chan<channel-index>
+//
+// The port is passed in by the caller.
+func (chain *TestChain) NextTestChannel(conn *TestConnection, portID string) TestChannel {
+	nextChanSeq := chain.App.IBCKeeper.ChannelKeeper.GetNextChannelSequence(chain.GetContext())
+	channelID := channeltypes.FormatChannelIdentifier(nextChanSeq)
+	return TestChannel{
+		PortID:               portID,
+		ID:                   channelID,
+		ClientID:             conn.ClientID,
+		CounterpartyClientID: conn.CounterpartyClientID,
+		Version:              conn.NextChannelVersion,
+	}
 }
 
 // ConstructMsgCreateClient constructs a message to create a new client state (tendermint or solomachine).
@@ -482,13 +510,13 @@ func (chain *TestChain) ConstructUpdateTMClientHeader(counterparty *TestChain, c
 		// since the last trusted validators for a header at height h
 		// is the NextValidators at h+1 committed to in header h by
 		// NextValidatorsHash
-		tmTrustedVals, ok = counterparty.GetValsAtHeight(int64(trustedHeight.VersionHeight + 1))
+		tmTrustedVals, ok = counterparty.GetValsAtHeight(int64(trustedHeight.RevisionHeight + 1))
 		if !ok {
 			return nil, sdkerrors.Wrapf(ibctmtypes.ErrInvalidHeaderHeight, "could not retrieve trusted validators at trustedHeight: %d", trustedHeight)
 		}
 	}
 	// inject trusted fields into last header
-	// for now assume version number is 0
+	// for now assume revision number is 0
 	header.TrustedHeight = trustedHeight
 
 	trustedVals, err := tmTrustedVals.ToProto()
@@ -613,8 +641,8 @@ func (chain *TestChain) ConnectionOpenInit(
 	connection, counterpartyConnection *TestConnection,
 ) error {
 	msg := connectiontypes.NewMsgConnectionOpenInit(
-		connection.ID, connection.ClientID,
-		counterpartyConnection.ID, connection.CounterpartyClientID,
+		connection.ClientID,
+		connection.CounterpartyClientID,
 		counterparty.GetPrefix(), DefaultOpenInitVersion,
 		chain.SenderAccount.GetAddress(),
 	)
@@ -634,7 +662,7 @@ func (chain *TestChain) ConnectionOpenTry(
 	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
 
 	msg := connectiontypes.NewMsgConnectionOpenTry(
-		connection.ID, connection.ID, connection.ClientID, // testing doesn't use flexible selection
+		"", connection.ClientID, // does not support handshake continuation
 		counterpartyConnection.ID, counterpartyConnection.ClientID,
 		counterpartyClient, counterparty.GetPrefix(), []*connectiontypes.Version{ConnectionVersion},
 		proofInit, proofClient, proofConsensus,
@@ -756,9 +784,9 @@ func (chain *TestChain) ChanOpenInit(
 	connectionID string,
 ) error {
 	msg := channeltypes.NewMsgChannelOpenInit(
-		ch.PortID, ch.ID,
+		ch.PortID,
 		ch.Version, order, []string{connectionID},
-		counterparty.PortID, counterparty.ID,
+		counterparty.PortID,
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.sendMsgs(msg)
@@ -774,10 +802,9 @@ func (chain *TestChain) ChanOpenTry(
 	proof, height := counterparty.QueryProof(host.ChannelKey(counterpartyCh.PortID, counterpartyCh.ID))
 
 	msg := channeltypes.NewMsgChannelOpenTry(
-		ch.PortID, ch.ID, ch.ID, // testing doesn't use flexible selection
+		ch.PortID, "", // does not support handshake continuation
 		ch.Version, order, []string{connectionID},
-		counterpartyCh.PortID, counterpartyCh.ID,
-		counterpartyCh.Version,
+		counterpartyCh.PortID, counterpartyCh.ID, counterpartyCh.Version,
 		proof, height,
 		chain.SenderAccount.GetAddress(),
 	)

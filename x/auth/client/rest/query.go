@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	clientrest "github.com/cosmos/cosmos-sdk/client/rest"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -19,7 +20,7 @@ import (
 
 const unRegisteredConcreteTypeErr = "unregistered concrete type"
 
-// query accountREST Handler
+// QueryAccountRequestHandlerFn is the query accountREST Handler.
 func QueryAccountRequestHandlerFn(storeName string, clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -206,7 +207,8 @@ func checkSignModeError(w http.ResponseWriter, ctx client.Context, resp interfac
 		rest.WriteErrorResponse(w, http.StatusInternalServerError,
 			"This transaction was created with the new SIGN_MODE_DIRECT signing method, and therefore cannot be displayed"+
 				" via legacy REST handlers, please use CLI or directly query the Tendermint RPC endpoint to query"+
-				" this transaction. gRPC gateway endpoint is "+grpcEndPoint)
+				" this transaction. gRPC gateway endpoint is "+grpcEndPoint+". Please also see the REST endpoints migration"+
+				" guide at "+clientrest.DeprecationURL+".")
 		return err
 	}
 

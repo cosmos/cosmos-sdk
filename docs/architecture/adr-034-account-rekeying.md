@@ -20,7 +20,7 @@ Transferring all the assets of an account to a new account with the updated pubk
 
 ## Decision
 
-We propose the addition of a new feature to `x/auth` that allows accounts to update the public key associated with their account, while keeping the address the same.  This feature can be enabled using an `EnableChangePubKey` param.
+We propose the addition of a new feature to `x/auth` that allows accounts to update the public key associated with their account, while keeping the address the same.
 
 This is possible because the Cosmos SDK `BaseAccount` stores the public key for an account in state, instead of making the assumption that the public key is included in the transaction (whether explicitly or implicitly through the signature) as in other blockchains such as Bitcoin and Ethereum.  Because the public key is stored on chain, it is okay for the public key to not hash to the address of an account, as the address is not pertinent to the signature checking process.
 

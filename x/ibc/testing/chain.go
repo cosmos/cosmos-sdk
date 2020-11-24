@@ -67,7 +67,7 @@ var (
 	TestHash                              = tmhash.Sum([]byte("TESTING HASH"))
 	TestCoin                              = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 
-	UpgradePath = fmt.Sprintf("%s/%s", "upgrade", "upgradedClient")
+	UpgradePath = []string{"upgrade", "upgradedIBCState"}
 
 	ConnectionVersion = connectiontypes.ExportedVersionsToProto(connectiontypes.GetCompatibleVersions())[0]
 

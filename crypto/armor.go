@@ -1,4 +1,4 @@
-package keyring
+package crypto
 
 import (
 	"encoding/hex"

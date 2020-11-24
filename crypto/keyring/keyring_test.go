@@ -9,6 +9,7 @@ import (
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -24,7 +25,7 @@ const (
 )
 
 func init() {
-	BcryptSecurityParameter = 1
+	crypto.BcryptSecurityParameter = 1
 }
 
 func TestNewKeyring(t *testing.T) {

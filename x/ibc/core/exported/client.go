@@ -39,13 +39,19 @@ type ClientState interface {
 	CheckProposedHeaderAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Header) (ClientState, ConsensusState, error)
 
 	// Upgrade functions
+	// NOTE: proof heights are not included as upgrade to a new version is expected to pass only on the last
+	// height committed by the current version. Clients are responsible for ensuring that the planned last
+	// height of the current version is somehow encoded in the proof verification process.
+	// This is to ensure that no premature upgrades occur, since upgrade plans committed to by the counterparty
+	// may be cancelled or modified before the last planned height.
 	VerifyUpgradeAndUpdateState(
 		ctx sdk.Context,
 		cdc codec.BinaryMarshaler,
 		store sdk.KVStore,
 		newClient ClientState,
-		upgradeHeight Height,
-		proofUpgrade []byte,
+		newConsState ConsensusState,
+		proofUpgradeClient,
+		proofUpgradeConsState []byte,
 	) (ClientState, ConsensusState, error)
 	// Utility function that zeroes out any client customizable fields in client state
 	// Ledger enforced fields are maintained while all custom fields are zero values

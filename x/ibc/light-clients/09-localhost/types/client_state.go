@@ -105,7 +105,7 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 // VerifyUpgradeAndUpdateState returns an error since localhost cannot be upgraded
 func (cs ClientState) VerifyUpgradeAndUpdateState(
 	_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore,
-	_ exported.ClientState, _ exported.Height, _ []byte,
+	_ exported.ClientState, _ exported.ConsensusState, _, _ []byte,
 ) (exported.ClientState, exported.ConsensusState, error) {
 	return nil, nil, sdkerrors.Wrap(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade localhost client")
 }

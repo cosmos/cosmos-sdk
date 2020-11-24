@@ -97,7 +97,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						},
 					),
 				},
-				types.NewParams(exported.Tendermint),
+				types.NewParams(exported.Tendermint, exported.Localhost),
 				false,
 			),
 			expPass: true,
@@ -115,7 +115,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 				},
 				[]types.ClientConsensusStates{
 					types.NewClientConsensusStates(
-						clientID,
+						"/~@$*",
 						[]types.ConsensusStateWithHeight{
 							types.NewConsensusStateWithHeight(
 								header.GetHeight().(types.Height),
@@ -149,7 +149,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 			expPass: false,
 		},
 		{
-			name: "invalid consensus state client id",
+			name: "consensus state client id does not match client id in genesis clients",
 			genState: types.NewGenesisState(
 				[]types.IdentifiedClientState{
 					types.NewIdentifiedClientState(
@@ -161,7 +161,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 				},
 				[]types.ClientConsensusStates{
 					types.NewClientConsensusStates(
-						"(CLIENTID2)",
+						"wrongclientid",
 						[]types.ConsensusStateWithHeight{
 							types.NewConsensusStateWithHeight(
 								types.NewHeight(0, 1),
@@ -204,6 +204,44 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 				},
 				nil,
 				types.NewParams(exported.Tendermint),
+				false,
+			),
+			expPass: false,
+		},
+		{
+			name: "metadata client-id does not match a genesis client",
+			genState: types.NewGenesisState(
+				[]types.IdentifiedClientState{
+					types.NewIdentifiedClientState(
+						clientID, ibctmtypes.NewClientState(chainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
+					),
+					types.NewIdentifiedClientState(
+						exported.Localhost, localhosttypes.NewClientState("chainID", clientHeight),
+					),
+				},
+				[]types.ClientConsensusStates{
+					types.NewClientConsensusStates(
+						clientID,
+						[]types.ConsensusStateWithHeight{
+							types.NewConsensusStateWithHeight(
+								header.GetHeight().(types.Height),
+								ibctmtypes.NewConsensusState(
+									header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), header.Header.NextValidatorsHash,
+								),
+							),
+						},
+					),
+				},
+				[]types.IdentifiedGenesisMetadata{
+					types.NewIdentifiedGenesisMetadata(
+						"wrongclientid",
+						[]types.GenesisMetadata{
+							types.NewGenesisMetadata([]byte("key1"), []byte("val1")),
+							types.NewGenesisMetadata([]byte("key2"), []byte("val2")),
+						},
+					),
+				},
+				types.NewParams(exported.Tendermint, exported.Localhost),
 				false,
 			),
 			expPass: false,
@@ -268,6 +306,36 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 				},
 				nil,
 				types.NewParams(exported.Tendermint),
+				false,
+			),
+			expPass: false,
+		},
+		{
+			name: "client in genesis clients is disallowed by params",
+			genState: types.NewGenesisState(
+				[]types.IdentifiedClientState{
+					types.NewIdentifiedClientState(
+						clientID, ibctmtypes.NewClientState(chainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
+					),
+					types.NewIdentifiedClientState(
+						exported.Localhost, localhosttypes.NewClientState("chainID", clientHeight),
+					),
+				},
+				[]types.ClientConsensusStates{
+					types.NewClientConsensusStates(
+						clientID,
+						[]types.ConsensusStateWithHeight{
+							types.NewConsensusStateWithHeight(
+								header.GetHeight().(types.Height),
+								ibctmtypes.NewConsensusState(
+									header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), header.Header.NextValidatorsHash,
+								),
+							),
+						},
+					),
+				},
+				nil,
+				types.NewParams(exported.Solomachine),
 				false,
 			),
 			expPass: false,

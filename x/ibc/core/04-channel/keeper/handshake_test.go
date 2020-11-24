@@ -140,10 +140,11 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 // ChanOpenTry can succeed.
 func (suite *KeeperTestSuite) TestChanOpenTry() {
 	var (
-		connA      *ibctesting.TestConnection
-		connB      *ibctesting.TestConnection
-		portCap    *capabilitytypes.Capability
-		heightDiff uint64
+		connA             *ibctesting.TestConnection
+		connB             *ibctesting.TestConnection
+		previousChannelID string
+		portCap           *capabilitytypes.Capability
+		heightDiff        uint64
 	)
 
 	testCases := []testCase{
@@ -156,8 +157,10 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 		}, true},
 		{"success with crossing hello", func() {
 			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
-			suite.coordinator.ChanOpenInitOnBothChains(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
+			_, channelB, err := suite.coordinator.ChanOpenInitOnBothChains(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
+			suite.Require().NoError(err)
 
+			previousChannelID = channelB.ID
 			portCap = suite.chainB.GetPortCapability(suite.chainB.NextTestChannel(connB, ibctesting.MockPort).PortID)
 		}, true},
 		{"previous channel with invalid state", func() {
@@ -246,6 +249,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 			heightDiff = 0    // must be explicitly changed in malleate
+			previousChannelID = ""
 
 			tc.malleate()
 			channelA := connA.FirstOrNextTestChannel(ibctesting.MockPort)
@@ -257,7 +261,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 
 			channelID, cap, err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanOpenTry(
 				suite.chainB.GetContext(), types.ORDERED, []string{connB.ID},
-				channelB.PortID, channelB.ID, portCap, counterparty, channelB.Version, connA.FirstOrNextTestChannel(ibctesting.MockPort).Version,
+				channelB.PortID, previousChannelID, portCap, counterparty, channelB.Version, connA.FirstOrNextTestChannel(ibctesting.MockPort).Version,
 				proof, malleateHeight(proofHeight, heightDiff),
 			)
 

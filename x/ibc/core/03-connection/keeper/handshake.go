@@ -60,7 +60,7 @@ func (k Keeper) ConnOpenInit(
 //  - Identifiers are checked on msg validation
 func (k Keeper) ConnOpenTry(
 	ctx sdk.Context,
-	desiredConnectionID string, // desiredIdentifier
+	previousConnectionID string, // previousIdentifier
 	counterparty types.Counterparty, // counterpartyConnectionIdentifier, counterpartyPrefix and counterpartyClientIdentifier
 	clientID string, // clientID of chainA
 	clientState exported.ClientState, // clientState that chainA has for chainB
@@ -71,6 +71,40 @@ func (k Keeper) ConnOpenTry(
 	proofHeight exported.Height, // height at which relayer constructs proof of A storing connectionEnd in state
 	consensusHeight exported.Height, // latest height of chain B which chain A has stored in its chain B client
 ) (string, error) {
+	var (
+		connectionID       string
+		previousConnection types.ConnectionEnd
+		found              bool
+	)
+
+	// empty connection identifier indicates continuing a previous connection handshake
+	if previousConnectionID != "" {
+		// ensure that the previous connection exists
+		previousConnection, found = k.GetConnection(ctx, previousConnectionID)
+		if !found {
+			return "", sdkerrors.Wrapf(types.ErrInvalidConnection, "previous connection does not exist for supplied previous connectionID %s", previousConnectionID)
+		}
+
+		// ensure that the existing connection's
+		// counterparty is chainA and connection is on INIT stage.
+		// Check that existing connection versions for initialized connection is equal to compatible
+		// versions for this chain.
+		if !(previousConnection.State == types.INIT &&
+			previousConnection.Counterparty.ConnectionId == "" &&
+			bytes.Equal(previousConnection.Counterparty.Prefix.Bytes(), counterparty.Prefix.Bytes()) &&
+			previousConnection.ClientId == clientID &&
+			previousConnection.Counterparty.ClientId == counterparty.ClientId) {
+			return "", sdkerrors.Wrap(types.ErrInvalidConnection, "cannot relay connection attempt")
+		}
+
+		// continue with previous connection
+		connectionID = previousConnectionID
+
+	} else {
+		// generate a new connection
+		connectionID = k.GenerateConnectionIdentifier(ctx)
+	}
+
 	selfHeight := clienttypes.GetSelfHeight(ctx)
 	if consensusHeight.GTE(selfHeight) {
 		return "", sdkerrors.Wrapf(
@@ -94,22 +128,6 @@ func (k Keeper) ConnOpenTry(
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(clientID, "", commitmenttypes.NewMerklePrefix(prefix.Bytes()))
 	expectedConnection := types.NewConnectionEnd(types.INIT, counterparty.ClientId, expectedCounterparty, types.ExportedVersionsToProto(counterpartyVersions))
-
-	// If connection already exists for desiredConnectionID, ensure that the existing connection's
-	// counterparty is chainA and connection is on INIT stage.
-	// Check that existing connection versions for initialized connection is equal to compatible
-	// versions for this chain.
-	connectionID := desiredConnectionID
-	previousConnection, found := k.GetConnection(ctx, desiredConnectionID)
-	if found && !(previousConnection.State == types.INIT &&
-		previousConnection.Counterparty.ConnectionId == "" &&
-		bytes.Equal(previousConnection.Counterparty.Prefix.Bytes(), counterparty.Prefix.Bytes()) &&
-		previousConnection.ClientId == clientID &&
-		previousConnection.Counterparty.ClientId == counterparty.ClientId) {
-		return "", sdkerrors.Wrap(types.ErrInvalidConnection, "cannot relay connection attempt")
-	} else if !found {
-		connectionID = k.GenerateConnectionIdentifier(ctx)
-	}
 
 	supportedVersions := types.GetCompatibleVersions()
 	if len(previousConnection.Versions) != 0 {
@@ -149,7 +167,7 @@ func (k Keeper) ConnOpenTry(
 
 	// store connection in chainB state
 	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
-		return "", sdkerrors.Wrapf(err, "failed to add connection with ID %s to client with ID %s", desiredConnectionID, clientID)
+		return "", sdkerrors.Wrapf(err, "failed to add connection with ID %s to client with ID %s", connectionID, clientID)
 	}
 
 	k.SetConnection(ctx, connectionID, connection)

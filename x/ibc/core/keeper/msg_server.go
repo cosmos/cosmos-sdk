@@ -159,7 +159,7 @@ func (k Keeper) ConnectionOpenTry(goCtx context.Context, msg *connectiontypes.Ms
 	}
 
 	connectionID, err := k.ConnectionKeeper.ConnOpenTry(
-		ctx, msg.DesiredConnectionId, msg.Counterparty, msg.ClientId, targetClient,
+		ctx, msg.PreviousConnectionId, msg.Counterparty, msg.ClientId, targetClient,
 		connectiontypes.ProtoVersionsToExported(msg.CounterpartyVersions), msg.ProofInit, msg.ProofClient, msg.ProofConsensus,
 		msg.ProofHeight, msg.ConsensusHeight,
 	)

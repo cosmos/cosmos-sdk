@@ -100,7 +100,7 @@ func (k Keeper) ChanOpenTry(
 	order types.Order,
 	connectionHops []string,
 	portID,
-	desiredChannelID string,
+	previousChannelID string,
 	portCap *capabilitytypes.Capability,
 	counterparty types.Counterparty,
 	version,
@@ -108,17 +108,29 @@ func (k Keeper) ChanOpenTry(
 	proofInit []byte,
 	proofHeight exported.Height,
 ) (string, *capabilitytypes.Capability, error) {
-	// channel identifier and connection hop length checked on msg.ValidateBasic()
-	previousChannel, found := k.GetChannel(ctx, portID, desiredChannelID)
-	if found && !(previousChannel.State == types.INIT &&
-		previousChannel.Ordering == order &&
-		previousChannel.Counterparty.PortId == counterparty.PortId &&
-		previousChannel.Counterparty.ChannelId == "" &&
-		previousChannel.ConnectionHops[0] == connectionHops[0] &&
-		previousChannel.Version == version) {
-		return "", nil, sdkerrors.Wrap(types.ErrInvalidChannel, "cannot relay connection attempt")
-	} else if !found {
-		desiredChannelID = k.GenerateChannelIdentifier(ctx)
+	channelID := previousChannelID
+
+	// empty channel identifier indicates continuing a previous channel handshake
+	if previousChannelID != "" {
+		// channel identifier and connection hop length checked on msg.ValidateBasic()
+		// ensure that the previous channel exists
+		previousChannel, found := k.GetChannel(ctx, portID, previousChannelID)
+		if !found {
+			return "", nil, sdkerrors.Wrapf(types.ErrInvalidChannel, "previous channel does not exist for supplied previous channelID %s", previousChannelID)
+		}
+		// previous channel must use the same fields
+		if !(previousChannel.State == types.INIT &&
+			previousChannel.Ordering == order &&
+			previousChannel.Counterparty.PortId == counterparty.PortId &&
+			previousChannel.Counterparty.ChannelId == "" &&
+			previousChannel.ConnectionHops[0] == connectionHops[0] &&
+			previousChannel.Version == version) {
+			return "", nil, sdkerrors.Wrap(types.ErrInvalidChannel, "channel fields mismatch previous channel fields")
+		}
+
+	} else {
+		// generate a new channel
+		channelID = k.GenerateChannelIdentifier(ctx)
 	}
 
 	if !k.portKeeper.Authenticate(ctx, portCap, portID) {
@@ -184,35 +196,35 @@ func (k Keeper) ChanOpenTry(
 	)
 
 	// Only create a capability and set the sequences if the previous channel does not exist
-	_, found = k.GetChannel(ctx, portID, desiredChannelID)
+	previousChannel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		capKey, err = k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, desiredChannelID))
+		capKey, err = k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
 		if err != nil {
-			return "", nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, desiredChannelID)
+			return "", nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, channelID)
 		}
 
-		k.SetNextSequenceSend(ctx, portID, desiredChannelID, 1)
-		k.SetNextSequenceRecv(ctx, portID, desiredChannelID, 1)
-		k.SetNextSequenceAck(ctx, portID, desiredChannelID, 1)
+		k.SetNextSequenceSend(ctx, portID, channelID, 1)
+		k.SetNextSequenceRecv(ctx, portID, channelID, 1)
+		k.SetNextSequenceAck(ctx, portID, channelID, 1)
 	} else {
 		// capability initialized in ChanOpenInit
-		capKey, found = k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, desiredChannelID))
+		capKey, found = k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
 		if !found {
 			return "", nil, sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound,
-				"capability not found for existing channel, portID (%s) channelID (%s)", portID, desiredChannelID,
+				"capability not found for existing channel, portID (%s) channelID (%s)", portID, channelID,
 			)
 		}
 	}
 
-	k.SetChannel(ctx, portID, desiredChannelID, channel)
+	k.SetChannel(ctx, portID, channelID, channel)
 
-	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", desiredChannelID, "previous-state", previousChannel.State.String(), "new-state", "TRYOPEN")
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", channelID, "previous-state", previousChannel.State.String(), "new-state", "TRYOPEN")
 
 	defer func() {
 		telemetry.IncrCounter(1, "ibc", "channel", "open-try")
 	}()
 
-	return desiredChannelID, capKey, nil
+	return channelID, capKey, nil
 }
 
 // ChanOpenAck is called by the handshake-originating module to acknowledge the

@@ -81,7 +81,7 @@ var _ sdk.Msg = &MsgConnectionOpenTry{}
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
 //nolint:interfacer
 func NewMsgConnectionOpenTry(
-	desiredConnectionID, clientID, counterpartyConnectionID,
+	previousConnectionID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyClient exported.ClientState,
 	counterpartyPrefix commitmenttypes.MerklePrefix, counterpartyVersions []*Version,
 	proofInit, proofClient, proofConsensus []byte,
@@ -90,7 +90,7 @@ func NewMsgConnectionOpenTry(
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
 	csAny, _ := clienttypes.PackClientState(counterpartyClient)
 	return &MsgConnectionOpenTry{
-		DesiredConnectionId:  desiredConnectionID,
+		PreviousConnectionId: previousConnectionID,
 		ClientId:             clientID,
 		ClientState:          csAny,
 		Counterparty:         counterparty,
@@ -116,8 +116,11 @@ func (msg MsgConnectionOpenTry) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenTry) ValidateBasic() error {
-	if err := host.ConnectionIdentifierValidator(msg.DesiredConnectionId); err != nil {
-		return sdkerrors.Wrap(err, "invalid desired connection ID")
+	// an empty connection identifier indicates that a connection identifier should be generated
+	if msg.PreviousConnectionId != "" {
+		if err := host.ConnectionIdentifierValidator(msg.PreviousConnectionId); err != nil {
+			return sdkerrors.Wrap(err, "invalid previous connection ID")
+		}
 	}
 	if err := host.ClientIdentifierValidator(msg.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "invalid client ID")

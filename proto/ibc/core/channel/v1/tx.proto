@@ -63,7 +63,7 @@ message MsgChannelOpenTry {
   string                    port_id              = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
   // in the case of crossing hello's, when both chains call OpenInit, we need the channel identifier
   // of the previous channel in state INIT
-  string                    desired_channel_id   = 2 [(gogoproto.moretags) = "yaml:\"desired_channel_id\""];
+  string                    previous_channel_id   = 2 [(gogoproto.moretags) = "yaml:\"previous_channel_id\""];
   Channel                   channel              = 3 [(gogoproto.nullable) = false];
   string                    counterparty_version = 4 [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
   bytes                     proof_init           = 5 [(gogoproto.moretags) = "yaml:\"proof_init\""];

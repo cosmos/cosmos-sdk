@@ -394,6 +394,46 @@ func (coord *Coordinator) ConnOpenInit(
 	return sourceConnection, counterpartyConnection, nil
 }
 
+// ConnOpenInitOnBothChains initializes a connection on the source chain with the state INIT
+// using the OpenInit handshake call.
+func (coord *Coordinator) ConnOpenInitOnBothChains(
+	source, counterparty *TestChain,
+	clientID, counterpartyClientID string,
+) (*TestConnection, *TestConnection, error) {
+	sourceConnection := source.AddTestConnection(clientID, counterpartyClientID)
+	counterpartyConnection := counterparty.AddTestConnection(counterpartyClientID, clientID)
+
+	// initialize connection on source
+	if err := source.ConnectionOpenInit(counterparty, sourceConnection, counterpartyConnection); err != nil {
+		return sourceConnection, counterpartyConnection, err
+	}
+	coord.IncrementTime()
+
+	// initialize connection on counterparty
+	if err := counterparty.ConnectionOpenInit(source, counterpartyConnection, sourceConnection); err != nil {
+		return sourceConnection, counterpartyConnection, err
+	}
+	coord.IncrementTime()
+
+	// update counterparty client on source connection
+	if err := coord.UpdateClient(
+		source, counterparty,
+		clientID, exported.Tendermint,
+	); err != nil {
+		return sourceConnection, counterpartyConnection, err
+	}
+
+	// update source client on counterparty connection
+	if err := coord.UpdateClient(
+		counterparty, source,
+		counterpartyClientID, exported.Tendermint,
+	); err != nil {
+		return sourceConnection, counterpartyConnection, err
+	}
+
+	return sourceConnection, counterpartyConnection, nil
+}
+
 // ConnOpenTry initializes a connection on the source chain with the state TRYOPEN
 // using the OpenTry handshake call.
 func (coord *Coordinator) ConnOpenTry(

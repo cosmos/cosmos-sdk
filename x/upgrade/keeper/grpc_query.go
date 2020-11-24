@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -31,4 +32,23 @@ func (k Keeper) AppliedPlan(c context.Context, req *types.QueryAppliedPlanReques
 	}
 
 	return &types.QueryAppliedPlanResponse{Height: applied}, nil
+}
+
+// UpgradedConsensusState implements the Query/UpgradedConsensusState gRPC method
+func (k Keeper) UpgradedConsensusState(c context.Context, req *types.QueryUpgradedConsensusStateRequest) (*types.QueryUpgradedConsensusStateResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	consState, err := k.GetUpgradedConsensusState(ctx, req.LastHeight)
+	if err != nil {
+		return nil, err
+	}
+
+	cs, err := clienttypes.PackConsensusState(consState)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryUpgradedConsensusStateResponse{
+		UpgradedConsensusState: cs,
+	}, nil
 }

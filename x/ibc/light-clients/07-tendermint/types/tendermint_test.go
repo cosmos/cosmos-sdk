@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -32,7 +31,7 @@ const (
 var (
 	height          = clienttypes.NewHeight(0, 4)
 	newClientHeight = clienttypes.NewHeight(1, 1)
-	upgradePath     = fmt.Sprintf("%s/%s", "upgrade", "upgradedClient")
+	upgradePath     = []string{"upgrade", "upgradedIBCState"}
 )
 
 type TendermintTestSuite struct {

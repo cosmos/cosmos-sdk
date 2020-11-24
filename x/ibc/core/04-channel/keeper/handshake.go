@@ -108,24 +108,32 @@ func (k Keeper) ChanOpenTry(
 	proofInit []byte,
 	proofHeight exported.Height,
 ) (string, *capabilitytypes.Capability, error) {
+	var (
+		previousChannel      types.Channel
+		previousChannelFound bool
+	)
+
 	channelID := previousChannelID
 
 	// empty channel identifier indicates continuing a previous channel handshake
 	if previousChannelID != "" {
 		// channel identifier and connection hop length checked on msg.ValidateBasic()
 		// ensure that the previous channel exists
-		previousChannel, found := k.GetChannel(ctx, portID, previousChannelID)
-		if !found {
+		previousChannel, previousChannelFound = k.GetChannel(ctx, portID, previousChannelID)
+		if !previousChannelFound {
 			return "", nil, sdkerrors.Wrapf(types.ErrInvalidChannel, "previous channel does not exist for supplied previous channelID %s", previousChannelID)
 		}
 		// previous channel must use the same fields
-		if !(previousChannel.State == types.INIT &&
-			previousChannel.Ordering == order &&
+		if !(previousChannel.Ordering == order &&
 			previousChannel.Counterparty.PortId == counterparty.PortId &&
 			previousChannel.Counterparty.ChannelId == "" &&
 			previousChannel.ConnectionHops[0] == connectionHops[0] &&
 			previousChannel.Version == version) {
 			return "", nil, sdkerrors.Wrap(types.ErrInvalidChannel, "channel fields mismatch previous channel fields")
+		}
+
+		if previousChannel.State != types.INIT {
+			return "", nil, sdkerrors.Wrapf(types.ErrInvalidChannelState, "previous channel state is in %s, expected INIT", previousChannel.State)
 		}
 
 	} else {
@@ -195,9 +203,7 @@ func (k Keeper) ChanOpenTry(
 		err    error
 	)
 
-	// Only create a capability and set the sequences if the previous channel does not exist
-	previousChannel, found := k.GetChannel(ctx, portID, channelID)
-	if !found {
+	if !previousChannelFound {
 		capKey, err = k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
 		if err != nil {
 			return "", nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, channelID)

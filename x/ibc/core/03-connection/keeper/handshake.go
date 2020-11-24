@@ -82,19 +82,22 @@ func (k Keeper) ConnOpenTry(
 		// ensure that the previous connection exists
 		previousConnection, found = k.GetConnection(ctx, previousConnectionID)
 		if !found {
-			return "", sdkerrors.Wrapf(types.ErrInvalidConnection, "previous connection does not exist for supplied previous connectionID %s", previousConnectionID)
+			return "", sdkerrors.Wrapf(types.ErrConnectionNotFound, "previous connection does not exist for supplied previous connectionID %s", previousConnectionID)
 		}
 
 		// ensure that the existing connection's
 		// counterparty is chainA and connection is on INIT stage.
 		// Check that existing connection versions for initialized connection is equal to compatible
 		// versions for this chain.
-		if !(previousConnection.State == types.INIT &&
-			previousConnection.Counterparty.ConnectionId == "" &&
+		if !(previousConnection.Counterparty.ConnectionId == "" &&
 			bytes.Equal(previousConnection.Counterparty.Prefix.Bytes(), counterparty.Prefix.Bytes()) &&
 			previousConnection.ClientId == clientID &&
 			previousConnection.Counterparty.ClientId == counterparty.ClientId) {
-			return "", sdkerrors.Wrap(types.ErrInvalidConnection, "cannot relay connection attempt")
+			return "", sdkerrors.Wrap(types.ErrInvalidConnection, "connection fields mismatch previous connection fields")
+		}
+
+		if !(previousConnection.State == types.INIT) {
+			return "", sdkerrors.Wrapf(types.ErrInvalidConnectionState, "previous connection state is in state %s, expected INIT", previousConnection.State)
 		}
 
 		// continue with previous connection

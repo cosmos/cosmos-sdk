@@ -44,14 +44,14 @@ message MsgConnectionOpenTry {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string                    client_id             = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   // in the case of crossing hello's, when both chains call OpenInit, we need the connection identifier
   // of the previous connection in state INIT
   string                    previous_connection_id = 2 [(gogoproto.moretags) = "yaml:\"previous_connection_id\""];
-  google.protobuf.Any       client_state          = 3 [(gogoproto.moretags) = "yaml:\"client_state\""];
-  Counterparty              counterparty          = 4 [(gogoproto.nullable) = false];
-  repeated Version          counterparty_versions = 5 [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
-  ibc.core.client.v1.Height proof_height          = 6
+  google.protobuf.Any       client_state           = 3 [(gogoproto.moretags) = "yaml:\"client_state\""];
+  Counterparty              counterparty           = 4 [(gogoproto.nullable) = false];
+  repeated Version          counterparty_versions  = 5 [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
+  ibc.core.client.v1.Height proof_height           = 6
       [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
   // proof of the initialization the connection on Chain A: `UNITIALIZED ->
   // INIT`

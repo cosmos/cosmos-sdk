@@ -133,7 +133,7 @@ func (sn SingleNetwork) Block(ctx context.Context, request *types.BlockRequest) 
 }
 
 func (sn SingleNetwork) BlockTransaction(ctx context.Context, request *types.BlockTransactionRequest) (*types.BlockTransactionResponse, *types.Error) {
-	tx, err := sn.client.GetTx(ctx, request.TransactionIdentifier.Hash)
+	tx, log, err := sn.client.GetTx(ctx, request.TransactionIdentifier.Hash)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
@@ -141,8 +141,10 @@ func (sn SingleNetwork) BlockTransaction(ctx context.Context, request *types.Blo
 	return &types.BlockTransactionResponse{
 		Transaction: &types.Transaction{
 			TransactionIdentifier: &types.TransactionIdentifier{Hash: request.TransactionIdentifier.Hash},
-			Operations:            conversion.SdkTxToOperations(tx, false),
-			Metadata:              nil,
+			Operations:            conversion.SdkTxToOperations(tx, false, false),
+			Metadata: map[string]interface{}{
+				rosetta.Log: log,
+			},
 		},
 	}, nil
 }
@@ -167,7 +169,7 @@ func (sn SingleNetwork) MempoolTransaction(ctx context.Context, request *types.M
 	return &types.MempoolTransactionResponse{
 		Transaction: &types.Transaction{
 			TransactionIdentifier: &types.TransactionIdentifier{Hash: request.TransactionIdentifier.Hash},
-			Operations:            conversion.SdkTxToOperations(tx, false),
+			Operations:            conversion.SdkTxToOperations(tx, false, false),
 			Metadata:              nil,
 		},
 	}, nil

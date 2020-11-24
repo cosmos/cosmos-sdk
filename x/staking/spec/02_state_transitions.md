@@ -37,9 +37,6 @@ When a validator begins the unbonding process the following operations occur:
 - update the `Validator` object for this validator
 - insert a new record into the `ValidatorQueue` for this validator
 
-Thoughts: Validator could stop his node at time of unbonding and we could remove validator from validator set instantly.
-If it update status on epoching process, there could be some issues with reward processing. Need to discuss @sunny.
-
 ### Unbonding to Unbonded
 
 A validator moves from unbonding to unbonded when the `ValidatorQueue` object

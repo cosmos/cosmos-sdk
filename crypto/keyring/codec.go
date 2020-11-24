@@ -2,19 +2,12 @@ package keyring
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
-// CryptoCdc defines the codec required for keys and info
-var CryptoCdc *codec.LegacyAmino
-
 func init() {
-	CryptoCdc = codec.NewLegacyAmino()
-	cryptocodec.RegisterCrypto(CryptoCdc)
-	RegisterLegacyAminoCodec(CryptoCdc)
-	CryptoCdc.Seal()
+	RegisterLegacyAminoCodec(legacy.Cdc)
 }
 
 // RegisterLegacyAminoCodec registers concrete types and interfaces on the given codec.
@@ -25,16 +18,4 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(ledgerInfo{}, "crypto/keys/ledgerInfo", nil)
 	cdc.RegisterConcrete(offlineInfo{}, "crypto/keys/offlineInfo", nil)
 	cdc.RegisterConcrete(multiInfo{}, "crypto/keys/multiInfo", nil)
-}
-
-// PrivKeyFromBytes unmarshals private key bytes and returns a PrivKey
-func PrivKeyFromBytes(privKeyBytes []byte) (privKey cryptotypes.PrivKey, err error) {
-	err = CryptoCdc.UnmarshalBinaryBare(privKeyBytes, &privKey)
-	return
-}
-
-// PubKeyFromBytes unmarshals public key bytes and returns a PubKey
-func PubKeyFromBytes(pubKeyBytes []byte) (pubKey cryptotypes.PubKey, err error) {
-	err = CryptoCdc.UnmarshalBinaryBare(pubKeyBytes, &pubKey)
-	return
 }

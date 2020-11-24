@@ -14,7 +14,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -78,7 +77,7 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 	armored := keyring.ArmorPubKeyBytes(legacy.Cdc.Amino.MustMarshalBinaryBare(info.GetPubKey()), "")
 	pubBytes, algo, err := keyring.UnarmorPubKeyBytes(armored)
 	require.NoError(t, err)
-	pub, err := cryptoAmino.PubKeyFromBytes(pubBytes)
+	pub, err := legacy.PubKeyFromBytes(pubBytes)
 	require.NoError(t, err)
 	require.Equal(t, string(hd.Secp256k1Type), algo)
 	require.True(t, pub.Equals(info.GetPubKey()))
@@ -86,7 +85,7 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 	armored = keyring.ArmorPubKeyBytes(legacy.Cdc.Amino.MustMarshalBinaryBare(info.GetPubKey()), "unknown")
 	pubBytes, algo, err = keyring.UnarmorPubKeyBytes(armored)
 	require.NoError(t, err)
-	pub, err = cryptoAmino.PubKeyFromBytes(pubBytes)
+	pub, err = legacy.PubKeyFromBytes(pubBytes)
 	require.NoError(t, err)
 	require.Equal(t, "unknown", algo)
 	require.True(t, pub.Equals(info.GetPubKey()))

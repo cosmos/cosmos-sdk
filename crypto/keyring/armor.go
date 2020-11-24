@@ -9,6 +9,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/armor"
 	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -151,7 +152,7 @@ func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes [
 	}
 
 	key = crypto.Sha256(key) // get 32 bytes
-	privKeyBytes := CryptoCdc.MustMarshalBinaryBare(privKey)
+	privKeyBytes := legacy.Cdc.MustMarshalBinaryBare(privKey)
 
 	return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
 }
@@ -204,5 +205,5 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (privK
 		return privKey, err
 	}
 
-	return PrivKeyFromBytes(privKeyBytes)
+	return legacy.PrivKeyFromBytes(privKeyBytes)
 }

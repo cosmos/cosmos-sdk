@@ -39,9 +39,9 @@ type ClientState interface {
 	CheckProposedHeaderAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Header) (ClientState, ConsensusState, error)
 
 	// Upgrade functions
-	// NOTE: proof heights are not included as upgrade to a new version is expected to pass only on the last
-	// height committed by the current version. Clients are responsible for ensuring that the planned last
-	// height of the current version is somehow encoded in the proof verification process.
+	// NOTE: proof heights are not included as upgrade to a new revision is expected to pass only on the last
+	// height committed by the current revision. Clients are responsible for ensuring that the planned last
+	// height of the current revision is somehow encoded in the proof verification process.
 	// This is to ensure that no premature upgrades occur, since upgrade plans committed to by the counterparty
 	// may be cancelled or modified before the last planned height.
 	VerifyUpgradeAndUpdateState(
@@ -182,8 +182,8 @@ type Height interface {
 	EQ(Height) bool
 	GT(Height) bool
 	GTE(Height) bool
-	GetVersionNumber() uint64
-	GetVersionHeight() uint64
+	GetRevisionNumber() uint64
+	GetRevisionHeight() uint64
 	Decrement() (Height, bool)
 	String() string
 }

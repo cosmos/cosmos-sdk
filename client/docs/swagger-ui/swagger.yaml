@@ -16272,28 +16272,28 @@ paths:
                 title: query block height
                 type: object
                 properties:
-                  version_number:
+                  revision_number:
                     type: string
                     format: uint64
-                    title: the version that the client is currently on
-                  version_height:
+                    title: the revision that the client is currently on
+                  revision_height:
                     type: string
                     format: uint64
-                    title: the height within the given version
+                    title: the height within the given revision
                 description: >-
-                  Normally the VersionHeight is incremented at each height while
-                  keeping version
+                  Normally the RevisionHeight is incremented at each height
+                  while keeping RevisionNumber
 
-                  number the same However some consensus algorithms may choose
-                  to reset the
+                  the same. However some consensus algorithms may choose to
+                  reset the
 
                   height in certain conditions e.g. hard forks, state-machine
                   breaking changes
 
-                  In these cases, the version number is incremented so that
+                  In these cases, the RevisionNumber is incremented so that
                   height continues to
 
-                  be monitonically increasing even as the VersionHeight gets
+                  be monitonically increasing even as the RevisionHeight gets
                   reset
             description: >-
               QueryChannelsResponse is the response type for the Query/Channels
@@ -16628,28 +16628,28 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  version_number:
+                  revision_number:
                     type: string
                     format: uint64
-                    title: the version that the client is currently on
-                  version_height:
+                    title: the revision that the client is currently on
+                  revision_height:
                     type: string
                     format: uint64
-                    title: the height within the given version
+                    title: the height within the given revision
                 description: >-
-                  Normally the VersionHeight is incremented at each height while
-                  keeping version
+                  Normally the RevisionHeight is incremented at each height
+                  while keeping RevisionNumber
 
-                  number the same However some consensus algorithms may choose
-                  to reset the
+                  the same. However some consensus algorithms may choose to
+                  reset the
 
                   height in certain conditions e.g. hard forks, state-machine
                   breaking changes
 
-                  In these cases, the version number is incremented so that
+                  In these cases, the RevisionNumber is incremented so that
                   height continues to
 
-                  be monitonically increasing even as the VersionHeight gets
+                  be monitonically increasing even as the RevisionHeight gets
                   reset
             description: >-
               QueryChannelResponse is the response type for the Query/Channel
@@ -17071,28 +17071,28 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  version_number:
+                  revision_number:
                     type: string
                     format: uint64
-                    title: the version that the client is currently on
-                  version_height:
+                    title: the revision that the client is currently on
+                  revision_height:
                     type: string
                     format: uint64
-                    title: the height within the given version
+                    title: the height within the given revision
                 description: >-
-                  Normally the VersionHeight is incremented at each height while
-                  keeping version
+                  Normally the RevisionHeight is incremented at each height
+                  while keeping RevisionNumber
 
-                  number the same However some consensus algorithms may choose
-                  to reset the
+                  the same. However some consensus algorithms may choose to
+                  reset the
 
                   height in certain conditions e.g. hard forks, state-machine
                   breaking changes
 
-                  In these cases, the version number is incremented so that
+                  In these cases, the RevisionNumber is incremented so that
                   height continues to
 
-                  be monitonically increasing even as the VersionHeight gets
+                  be monitonically increasing even as the RevisionHeight gets
                   reset
             title: |-
               QueryChannelClientStateResponse is the Response type for the
@@ -17299,7 +17299,7 @@ paths:
           type: string
       tags:
         - Query
-  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/consensus_state/version/{version_number}/height/{version_height}':
+  '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/consensus_state/revision/{revision_number}/height/{revision_height}':
     get:
       summary: |-
         ChannelConsensusState queries for the consensus state for the channel
@@ -17494,28 +17494,28 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  version_number:
+                  revision_number:
                     type: string
                     format: uint64
-                    title: the version that the client is currently on
-                  version_height:
+                    title: the revision that the client is currently on
+                  revision_height:
                     type: string
                     format: uint64
-                    title: the height within the given version
+                    title: the height within the given revision
                 description: >-
-                  Normally the VersionHeight is incremented at each height while
-                  keeping version
+                  Normally the RevisionHeight is incremented at each height
+                  while keeping RevisionNumber
 
-                  number the same However some consensus algorithms may choose
-                  to reset the
+                  the same. However some consensus algorithms may choose to
+                  reset the
 
                   height in certain conditions e.g. hard forks, state-machine
                   breaking changes
 
-                  In these cases, the version number is incremented so that
+                  In these cases, the RevisionNumber is incremented so that
                   height continues to
 
-                  be monitonically increasing even as the VersionHeight gets
+                  be monitonically increasing even as the RevisionHeight gets
                   reset
             title: |-
               QueryChannelClientStateResponse is the Response type for the
@@ -17720,14 +17720,14 @@ paths:
           in: path
           required: true
           type: string
-        - name: version_number
-          description: version number of the consensus state
+        - name: revision_number
+          description: revision number of the consensus state
           in: path
           required: true
           type: string
           format: uint64
-        - name: version_height
-          description: version height of the consensus state
+        - name: revision_height
+          description: revision height of the consensus state
           in: path
           required: true
           type: string
@@ -17758,28 +17758,28 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  version_number:
+                  revision_number:
                     type: string
                     format: uint64
-                    title: the version that the client is currently on
-                  version_height:
+                    title: the revision that the client is currently on
+                  revision_height:
                     type: string
                     format: uint64
-                    title: the height within the given version
+                    title: the height within the given revision
                 description: >-
-                  Normally the VersionHeight is incremented at each height while
-                  keeping version
+                  Normally the RevisionHeight is incremented at each height
+                  while keeping RevisionNumber
 
-                  number the same However some consensus algorithms may choose
-                  to reset the
+                  the same. However some consensus algorithms may choose to
+                  reset the
 
                   height in certain conditions e.g. hard forks, state-machine
                   breaking changes
 
-                  In these cases, the version number is incremented so that
+                  In these cases, the RevisionNumber is incremented so that
                   height continues to
 
-                  be monitonically increasing even as the VersionHeight gets
+                  be monitonically increasing even as the RevisionHeight gets
                   reset
             title: |-
               QuerySequenceResponse is the request type for the
@@ -18061,28 +18061,28 @@ paths:
                 title: query block height
                 type: object
                 properties:
-                  version_number:
+                  revision_number:
                     type: string
                     format: uint64
-                    title: the version that the client is currently on
-                  version_height:
+                    title: the revision that the client is currently on
+                  revision_height:
                     type: string
                     format: uint64
-                    title: the height within the given version
+                    title: the height within the given revision
                 description: >-
-                  Normally the VersionHeight is incremented at each height while
-                  keeping version
+                  Normally the RevisionHeight is incremented at each height
+                  while keeping RevisionNumber
 
-                  number the same However some consensus algorithms may choose
-                  to reset the
+                  the same. However some consensus algorithms may choose to
+                  reset the
 
                   height in certain conditions e.g. hard forks, state-machine
                   breaking changes
 
-                  In these cases, the version number is incremented so that
+                  In these cases, the RevisionNumber is incremented so that
                   height continues to
 
-                  be monitonically increasing even as the VersionHeight gets
+                  be monitonically increasing even as the RevisionHeight gets
                   reset
             title: |-
               QueryPacketAcknowledgemetsResponse is the request type for the
@@ -18357,28 +18357,28 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  version_number:
+                  revision_number:
                     type: string
                     format: uint64
-                    title: the version that the client is currently on
-                  version_height:
+                    title: the revision that the client is currently on
+                  revision_height:
                     type: string
                     format: uint64
-                    title: the height within the given version
+                    title: the height within the given revision
                 description: >-
-                  Normally the VersionHeight is incremented at each height while
-                  keeping version
+                  Normally the RevisionHeight is incremented at each height
+                  while keeping RevisionNumber
 
-                  number the same However some consensus algorithms may choose
-                  to reset the
+                  the same. However some consensus algorithms may choose to
+                  reset the
 
                   height in certain conditions e.g. hard forks, state-machine
                   breaking changes
 
-                  In these cases, the version number is incremented so that
+                  In these cases, the RevisionNumber is incremented so that
                   height continues to
 
-                  be monitonically increasing even as the VersionHeight gets
+                  be monitonically increasing even as the RevisionHeight gets
                   reset
             title: >-
               QueryPacketAcknowledgementResponse defines the client query
@@ -18668,28 +18668,28 @@ paths:
                 title: query block height
                 type: object
                 properties:
-                  version_number:
+                  revision_number:
                     type: string
                     format: uint64
-                    title: the version that the client is currently on
-                  version_height:
+                    title: the revision that the client is currently on
+                  revision_height:
                     type: string
                     format: uint64
-                    title: the height within the given version
+                    title: the height within the given revision
                 description: >-
-                  Normally the VersionHeight is incremented at each height while
-                  keeping version
+                  Normally the RevisionHeight is incremented at each height
+                  while keeping RevisionNumber
 
-                  number the same However some consensus algorithms may choose
-                  to reset the
+                  the same. However some consensus algorithms may choose to
+                  reset the
 
                   height in certain conditions e.g. hard forks, state-machine
                   breaking changes
 
-                  In these cases, the version number is incremented so that
+                  In these cases, the RevisionNumber is incremented so that
                   height continues to
 
-                  be monitonically increasing even as the VersionHeight gets
+                  be monitonically increasing even as the RevisionHeight gets
                   reset
             title: |-
               QueryPacketCommitmentsResponse is the request type for the
@@ -18966,28 +18966,28 @@ paths:
                 title: query block height
                 type: object
                 properties:
-                  version_number:
+                  revision_number:
                     type: string
                     format: uint64
-                    title: the version that the client is currently on
-                  version_height:
+                    title: the revision that the client is currently on
+                  revision_height:
                     type: string
                     format: uint64
-                    title: the height within the given version
+                    title: the height within the given revision
                 description: >-
-                  Normally the VersionHeight is incremented at each height while
-                  keeping version
+                  Normally the RevisionHeight is incremented at each height
+                  while keeping RevisionNumber
 
-                  number the same However some consensus algorithms may choose
-                  to reset the
+                  the same. However some consensus algorithms may choose to
+                  reset the
 
                   height in certain conditions e.g. hard forks, state-machine
                   breaking changes
 
-                  In these cases, the version number is incremented so that
+                  In these cases, the RevisionNumber is incremented so that
                   height continues to
 
-                  be monitonically increasing even as the VersionHeight gets
+                  be monitonically increasing even as the RevisionHeight gets
                   reset
             title: |-
               QueryUnreceivedAcksResponse is the response type for the
@@ -19228,28 +19228,28 @@ paths:
                 title: query block height
                 type: object
                 properties:
-                  version_number:
+                  revision_number:
                     type: string
                     format: uint64
-                    title: the version that the client is currently on
-                  version_height:
+                    title: the revision that the client is currently on
+                  revision_height:
                     type: string
                     format: uint64
-                    title: the height within the given version
+                    title: the height within the given revision
                 description: >-
-                  Normally the VersionHeight is incremented at each height while
-                  keeping version
+                  Normally the RevisionHeight is incremented at each height
+                  while keeping RevisionNumber
 
-                  number the same However some consensus algorithms may choose
-                  to reset the
+                  the same. However some consensus algorithms may choose to
+                  reset the
 
                   height in certain conditions e.g. hard forks, state-machine
                   breaking changes
 
-                  In these cases, the version number is incremented so that
+                  In these cases, the RevisionNumber is incremented so that
                   height continues to
 
-                  be monitonically increasing even as the VersionHeight gets
+                  be monitonically increasing even as the RevisionHeight gets
                   reset
             title: |-
               QueryUnreceivedPacketsResponse is the response type for the
@@ -19488,28 +19488,28 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  version_number:
+                  revision_number:
                     type: string
                     format: uint64
-                    title: the version that the client is currently on
-                  version_height:
+                    title: the revision that the client is currently on
+                  revision_height:
                     type: string
                     format: uint64
-                    title: the height within the given version
+                    title: the height within the given revision
                 description: >-
-                  Normally the VersionHeight is incremented at each height while
-                  keeping version
+                  Normally the RevisionHeight is incremented at each height
+                  while keeping RevisionNumber
 
-                  number the same However some consensus algorithms may choose
-                  to reset the
+                  the same. However some consensus algorithms may choose to
+                  reset the
 
                   height in certain conditions e.g. hard forks, state-machine
                   breaking changes
 
-                  In these cases, the version number is incremented so that
+                  In these cases, the RevisionNumber is incremented so that
                   height continues to
 
-                  be monitonically increasing even as the VersionHeight gets
+                  be monitonically increasing even as the RevisionHeight gets
                   reset
             title: >-
               QueryPacketCommitmentResponse defines the client query response
@@ -19750,28 +19750,28 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  version_number:
+                  revision_number:
                     type: string
                     format: uint64
-                    title: the version that the client is currently on
-                  version_height:
+                    title: the revision that the client is currently on
+                  revision_height:
                     type: string
                     format: uint64
-                    title: the height within the given version
+                    title: the height within the given revision
                 description: >-
-                  Normally the VersionHeight is incremented at each height while
-                  keeping version
+                  Normally the RevisionHeight is incremented at each height
+                  while keeping RevisionNumber
 
-                  number the same However some consensus algorithms may choose
-                  to reset the
+                  the same. However some consensus algorithms may choose to
+                  reset the
 
                   height in certain conditions e.g. hard forks, state-machine
                   breaking changes
 
-                  In these cases, the version number is incremented so that
+                  In these cases, the RevisionNumber is incremented so that
                   height continues to
 
-                  be monitonically increasing even as the VersionHeight gets
+                  be monitonically increasing even as the RevisionHeight gets
                   reset
             title: >-
               QueryPacketReceiptResponse defines the client query response for a
@@ -20113,28 +20113,28 @@ paths:
                 title: query block height
                 type: object
                 properties:
-                  version_number:
+                  revision_number:
                     type: string
                     format: uint64
-                    title: the version that the client is currently on
-                  version_height:
+                    title: the revision that the client is currently on
+                  revision_height:
                     type: string
                     format: uint64
-                    title: the height within the given version
+                    title: the height within the given revision
                 description: >-
-                  Normally the VersionHeight is incremented at each height while
-                  keeping version
+                  Normally the RevisionHeight is incremented at each height
+                  while keeping RevisionNumber
 
-                  number the same However some consensus algorithms may choose
-                  to reset the
+                  the same. However some consensus algorithms may choose to
+                  reset the
 
                   height in certain conditions e.g. hard forks, state-machine
                   breaking changes
 
-                  In these cases, the version number is incremented so that
+                  In these cases, the RevisionNumber is incremented so that
                   height continues to
 
-                  be monitonically increasing even as the VersionHeight gets
+                  be monitonically increasing even as the RevisionHeight gets
                   reset
             title: |-
               QueryConnectionChannelsResponse is the Response type for the
@@ -21260,28 +21260,28 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  version_number:
+                  revision_number:
                     type: string
                     format: uint64
-                    title: the version that the client is currently on
-                  version_height:
+                    title: the revision that the client is currently on
+                  revision_height:
                     type: string
                     format: uint64
-                    title: the height within the given version
+                    title: the height within the given revision
                 description: >-
-                  Normally the VersionHeight is incremented at each height while
-                  keeping version
+                  Normally the RevisionHeight is incremented at each height
+                  while keeping RevisionNumber
 
-                  number the same However some consensus algorithms may choose
-                  to reset the
+                  the same. However some consensus algorithms may choose to
+                  reset the
 
                   height in certain conditions e.g. hard forks, state-machine
                   breaking changes
 
-                  In these cases, the version number is incremented so that
+                  In these cases, the RevisionNumber is incremented so that
                   height continues to
 
-                  be monitonically increasing even as the VersionHeight gets
+                  be monitonically increasing even as the RevisionHeight gets
                   reset
             description: >-
               QueryClientStateResponse is the response type for the
@@ -21509,28 +21509,28 @@ paths:
                       title: consensus state height
                       type: object
                       properties:
-                        version_number:
+                        revision_number:
                           type: string
                           format: uint64
-                          title: the version that the client is currently on
-                        version_height:
+                          title: the revision that the client is currently on
+                        revision_height:
                           type: string
                           format: uint64
-                          title: the height within the given version
+                          title: the height within the given revision
                       description: >-
-                        Normally the VersionHeight is incremented at each height
-                        while keeping version
+                        Normally the RevisionHeight is incremented at each
+                        height while keeping RevisionNumber
 
-                        number the same However some consensus algorithms may
-                        choose to reset the
+                        the same. However some consensus algorithms may choose
+                        to reset the
 
                         height in certain conditions e.g. hard forks,
                         state-machine breaking changes
 
-                        In these cases, the version number is incremented so
+                        In these cases, the RevisionNumber is incremented so
                         that height continues to
 
-                        be monitonically increasing even as the VersionHeight
+                        be monitonically increasing even as the RevisionHeight
                         gets reset
                     consensus_state:
                       title: consensus state
@@ -21988,7 +21988,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/ibc/core/client/v1beta1/consensus_states/{client_id}/version/{version_number}/height/{version_height}':
+  '/ibc/core/client/v1beta1/consensus_states/{client_id}/revision/{revision_number}/height/{revision_height}':
     get:
       summary: >-
         ConsensusState queries a consensus state associated with a client state
@@ -22184,28 +22184,28 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  version_number:
+                  revision_number:
                     type: string
                     format: uint64
-                    title: the version that the client is currently on
-                  version_height:
+                    title: the revision that the client is currently on
+                  revision_height:
                     type: string
                     format: uint64
-                    title: the height within the given version
+                    title: the height within the given revision
                 description: >-
-                  Normally the VersionHeight is incremented at each height while
-                  keeping version
+                  Normally the RevisionHeight is incremented at each height
+                  while keeping RevisionNumber
 
-                  number the same However some consensus algorithms may choose
-                  to reset the
+                  the same. However some consensus algorithms may choose to
+                  reset the
 
                   height in certain conditions e.g. hard forks, state-machine
                   breaking changes
 
-                  In these cases, the version number is incremented so that
+                  In these cases, the RevisionNumber is incremented so that
                   height continues to
 
-                  be monitonically increasing even as the VersionHeight gets
+                  be monitonically increasing even as the RevisionHeight gets
                   reset
             title: >-
               QueryConsensusStateResponse is the response type for the
@@ -22407,14 +22407,14 @@ paths:
           in: path
           required: true
           type: string
-        - name: version_number
-          description: consensus state version number
+        - name: revision_number
+          description: consensus state revision number
           in: path
           required: true
           type: string
           format: uint64
-        - name: version_height
-          description: consensus state version height
+        - name: revision_height
+          description: consensus state revision height
           in: path
           required: true
           type: string
@@ -22455,28 +22455,28 @@ paths:
                 title: height at which the proof was generated
                 type: object
                 properties:
-                  version_number:
+                  revision_number:
                     type: string
                     format: uint64
-                    title: the version that the client is currently on
-                  version_height:
+                    title: the revision that the client is currently on
+                  revision_height:
                     type: string
                     format: uint64
-                    title: the height within the given version
+                    title: the height within the given revision
                 description: >-
-                  Normally the VersionHeight is incremented at each height while
-                  keeping version
+                  Normally the RevisionHeight is incremented at each height
+                  while keeping RevisionNumber
 
-                  number the same However some consensus algorithms may choose
-                  to reset the
+                  the same. However some consensus algorithms may choose to
+                  reset the
 
                   height in certain conditions e.g. hard forks, state-machine
                   breaking changes
 
-                  In these cases, the version number is incremented so that
+                  In these cases, the RevisionNumber is incremented so that
                   height continues to
 
-                  be monitonically increasing even as the VersionHeight gets
+                  be monitonically increasing even as the RevisionHeight gets
                   reset
             title: |-
               QueryClientConnectionsResponse is the response type for the
@@ -22796,28 +22796,28 @@ paths:
                 title: query block height
                 type: object
                 properties:
-                  version_number:
+                  revision_number:
                     type: string
                     format: uint64
-                    title: the version that the client is currently on
-                  version_height:
+                    title: the revision that the client is currently on
+                  revision_height:
                     type: string
                     format: uint64
-                    title: the height within the given version
+                    title: the height within the given revision
                 description: >-
-                  Normally the VersionHeight is incremented at each height while
-                  keeping version
+                  Normally the RevisionHeight is incremented at each height
+                  while keeping RevisionNumber
 
-                  number the same However some consensus algorithms may choose
-                  to reset the
+                  the same. However some consensus algorithms may choose to
+                  reset the
 
                   height in certain conditions e.g. hard forks, state-machine
                   breaking changes
 
-                  In these cases, the version number is incremented so that
+                  In these cases, the RevisionNumber is incremented so that
                   height continues to
 
-                  be monitonically increasing even as the VersionHeight gets
+                  be monitonically increasing even as the RevisionHeight gets
                   reset
             description: >-
               QueryConnectionsResponse is the response type for the
@@ -23154,28 +23154,28 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  version_number:
+                  revision_number:
                     type: string
                     format: uint64
-                    title: the version that the client is currently on
-                  version_height:
+                    title: the revision that the client is currently on
+                  revision_height:
                     type: string
                     format: uint64
-                    title: the height within the given version
+                    title: the height within the given revision
                 description: >-
-                  Normally the VersionHeight is incremented at each height while
-                  keeping version
+                  Normally the RevisionHeight is incremented at each height
+                  while keeping RevisionNumber
 
-                  number the same However some consensus algorithms may choose
-                  to reset the
+                  the same. However some consensus algorithms may choose to
+                  reset the
 
                   height in certain conditions e.g. hard forks, state-machine
                   breaking changes
 
-                  In these cases, the version number is incremented so that
+                  In these cases, the RevisionNumber is incremented so that
                   height continues to
 
-                  be monitonically increasing even as the VersionHeight gets
+                  be monitonically increasing even as the RevisionHeight gets
                   reset
             description: >-
               QueryConnectionResponse is the response type for the
@@ -23590,28 +23590,28 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  version_number:
+                  revision_number:
                     type: string
                     format: uint64
-                    title: the version that the client is currently on
-                  version_height:
+                    title: the revision that the client is currently on
+                  revision_height:
                     type: string
                     format: uint64
-                    title: the height within the given version
+                    title: the height within the given revision
                 description: >-
-                  Normally the VersionHeight is incremented at each height while
-                  keeping version
+                  Normally the RevisionHeight is incremented at each height
+                  while keeping RevisionNumber
 
-                  number the same However some consensus algorithms may choose
-                  to reset the
+                  the same. However some consensus algorithms may choose to
+                  reset the
 
                   height in certain conditions e.g. hard forks, state-machine
                   breaking changes
 
-                  In these cases, the version number is incremented so that
+                  In these cases, the RevisionNumber is incremented so that
                   height continues to
 
-                  be monitonically increasing even as the VersionHeight gets
+                  be monitonically increasing even as the RevisionHeight gets
                   reset
             title: |-
               QueryConnectionClientStateResponse is the response type for the
@@ -23813,7 +23813,7 @@ paths:
           type: string
       tags:
         - Query
-  '/ibc/core/connection/v1beta1/connections/{connection_id}/consensus_state/version/{version_number}/height/{version_height}':
+  '/ibc/core/connection/v1beta1/connections/{connection_id}/consensus_state/revision/{revision_number}/height/{revision_height}':
     get:
       summary: |-
         ConnectionConsensusState queries the consensus state associated with the
@@ -24008,28 +24008,28 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  version_number:
+                  revision_number:
                     type: string
                     format: uint64
-                    title: the version that the client is currently on
-                  version_height:
+                    title: the revision that the client is currently on
+                  revision_height:
                     type: string
                     format: uint64
-                    title: the height within the given version
+                    title: the height within the given revision
                 description: >-
-                  Normally the VersionHeight is incremented at each height while
-                  keeping version
+                  Normally the RevisionHeight is incremented at each height
+                  while keeping RevisionNumber
 
-                  number the same However some consensus algorithms may choose
-                  to reset the
+                  the same. However some consensus algorithms may choose to
+                  reset the
 
                   height in certain conditions e.g. hard forks, state-machine
                   breaking changes
 
-                  In these cases, the version number is incremented so that
+                  In these cases, the RevisionNumber is incremented so that
                   height continues to
 
-                  be monitonically increasing even as the VersionHeight gets
+                  be monitonically increasing even as the RevisionHeight gets
                   reset
             title: |-
               QueryConnectionConsensusStateResponse is the response type for the
@@ -24229,12 +24229,12 @@ paths:
           in: path
           required: true
           type: string
-        - name: version_number
+        - name: revision_number
           in: path
           required: true
           type: string
           format: uint64
-        - name: version_height
+        - name: revision_height
           in: path
           required: true
           type: string
@@ -32360,28 +32360,27 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          version_number:
+          revision_number:
             type: string
             format: uint64
-            title: the version that the client is currently on
-          version_height:
+            title: the revision that the client is currently on
+          revision_height:
             type: string
             format: uint64
-            title: the height within the given version
+            title: the height within the given revision
         description: >-
-          Normally the VersionHeight is incremented at each height while keeping
-          version
+          Normally the RevisionHeight is incremented at each height while
+          keeping RevisionNumber
 
-          number the same However some consensus algorithms may choose to reset
-          the
+          the same. However some consensus algorithms may choose to reset the
 
           height in certain conditions e.g. hard forks, state-machine breaking
           changes
 
-          In these cases, the version number is incremented so that height
+          In these cases, the RevisionNumber is incremented so that height
           continues to
 
-          be monitonically increasing even as the VersionHeight gets reset
+          be monitonically increasing even as the RevisionHeight gets reset
     title: |-
       QueryChannelClientStateResponse is the Response type for the
       Query/QueryChannelClientState RPC method
@@ -32559,28 +32558,27 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          version_number:
+          revision_number:
             type: string
             format: uint64
-            title: the version that the client is currently on
-          version_height:
+            title: the revision that the client is currently on
+          revision_height:
             type: string
             format: uint64
-            title: the height within the given version
+            title: the height within the given revision
         description: >-
-          Normally the VersionHeight is incremented at each height while keeping
-          version
+          Normally the RevisionHeight is incremented at each height while
+          keeping RevisionNumber
 
-          number the same However some consensus algorithms may choose to reset
-          the
+          the same. However some consensus algorithms may choose to reset the
 
           height in certain conditions e.g. hard forks, state-machine breaking
           changes
 
-          In these cases, the version number is incremented so that height
+          In these cases, the RevisionNumber is incremented so that height
           continues to
 
-          be monitonically increasing even as the VersionHeight gets reset
+          be monitonically increasing even as the RevisionHeight gets reset
     title: |-
       QueryChannelClientStateResponse is the Response type for the
       Query/QueryChannelClientState RPC method
@@ -32664,28 +32662,27 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          version_number:
+          revision_number:
             type: string
             format: uint64
-            title: the version that the client is currently on
-          version_height:
+            title: the revision that the client is currently on
+          revision_height:
             type: string
             format: uint64
-            title: the height within the given version
+            title: the height within the given revision
         description: >-
-          Normally the VersionHeight is incremented at each height while keeping
-          version
+          Normally the RevisionHeight is incremented at each height while
+          keeping RevisionNumber
 
-          number the same However some consensus algorithms may choose to reset
-          the
+          the same. However some consensus algorithms may choose to reset the
 
           height in certain conditions e.g. hard forks, state-machine breaking
           changes
 
-          In these cases, the version number is incremented so that height
+          In these cases, the RevisionNumber is incremented so that height
           continues to
 
-          be monitonically increasing even as the VersionHeight gets reset
+          be monitonically increasing even as the RevisionHeight gets reset
     description: >-
       QueryChannelResponse is the response type for the Query/Channel RPC
       method.
@@ -32801,28 +32798,27 @@ definitions:
         title: query block height
         type: object
         properties:
-          version_number:
+          revision_number:
             type: string
             format: uint64
-            title: the version that the client is currently on
-          version_height:
+            title: the revision that the client is currently on
+          revision_height:
             type: string
             format: uint64
-            title: the height within the given version
+            title: the height within the given revision
         description: >-
-          Normally the VersionHeight is incremented at each height while keeping
-          version
+          Normally the RevisionHeight is incremented at each height while
+          keeping RevisionNumber
 
-          number the same However some consensus algorithms may choose to reset
-          the
+          the same. However some consensus algorithms may choose to reset the
 
           height in certain conditions e.g. hard forks, state-machine breaking
           changes
 
-          In these cases, the version number is incremented so that height
+          In these cases, the RevisionNumber is incremented so that height
           continues to
 
-          be monitonically increasing even as the VersionHeight gets reset
+          be monitonically increasing even as the RevisionHeight gets reset
     description: >-
       QueryChannelsResponse is the response type for the Query/Channels RPC
       method.
@@ -32934,28 +32930,27 @@ definitions:
         title: query block height
         type: object
         properties:
-          version_number:
+          revision_number:
             type: string
             format: uint64
-            title: the version that the client is currently on
-          version_height:
+            title: the revision that the client is currently on
+          revision_height:
             type: string
             format: uint64
-            title: the height within the given version
+            title: the height within the given revision
         description: >-
-          Normally the VersionHeight is incremented at each height while keeping
-          version
+          Normally the RevisionHeight is incremented at each height while
+          keeping RevisionNumber
 
-          number the same However some consensus algorithms may choose to reset
-          the
+          the same. However some consensus algorithms may choose to reset the
 
           height in certain conditions e.g. hard forks, state-machine breaking
           changes
 
-          In these cases, the version number is incremented so that height
+          In these cases, the RevisionNumber is incremented so that height
           continues to
 
-          be monitonically increasing even as the VersionHeight gets reset
+          be monitonically increasing even as the RevisionHeight gets reset
     title: |-
       QueryConnectionChannelsResponse is the Response type for the
       Query/QueryConnectionChannels RPC method
@@ -32974,28 +32969,27 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          version_number:
+          revision_number:
             type: string
             format: uint64
-            title: the version that the client is currently on
-          version_height:
+            title: the revision that the client is currently on
+          revision_height:
             type: string
             format: uint64
-            title: the height within the given version
+            title: the height within the given revision
         description: >-
-          Normally the VersionHeight is incremented at each height while keeping
-          version
+          Normally the RevisionHeight is incremented at each height while
+          keeping RevisionNumber
 
-          number the same However some consensus algorithms may choose to reset
-          the
+          the same. However some consensus algorithms may choose to reset the
 
           height in certain conditions e.g. hard forks, state-machine breaking
           changes
 
-          In these cases, the version number is incremented so that height
+          In these cases, the RevisionNumber is incremented so that height
           continues to
 
-          be monitonically increasing even as the VersionHeight gets reset
+          be monitonically increasing even as the RevisionHeight gets reset
     title: |-
       QuerySequenceResponse is the request type for the
       Query/QueryNextSequenceReceiveResponse RPC method
@@ -33014,28 +33008,27 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          version_number:
+          revision_number:
             type: string
             format: uint64
-            title: the version that the client is currently on
-          version_height:
+            title: the revision that the client is currently on
+          revision_height:
             type: string
             format: uint64
-            title: the height within the given version
+            title: the height within the given revision
         description: >-
-          Normally the VersionHeight is incremented at each height while keeping
-          version
+          Normally the RevisionHeight is incremented at each height while
+          keeping RevisionNumber
 
-          number the same However some consensus algorithms may choose to reset
-          the
+          the same. However some consensus algorithms may choose to reset the
 
           height in certain conditions e.g. hard forks, state-machine breaking
           changes
 
-          In these cases, the version number is incremented so that height
+          In these cases, the RevisionNumber is incremented so that height
           continues to
 
-          be monitonically increasing even as the VersionHeight gets reset
+          be monitonically increasing even as the RevisionHeight gets reset
     title: |-
       QueryPacketAcknowledgementResponse defines the client query response for a
       packet which also includes a proof and the height from which the
@@ -33101,28 +33094,27 @@ definitions:
         title: query block height
         type: object
         properties:
-          version_number:
+          revision_number:
             type: string
             format: uint64
-            title: the version that the client is currently on
-          version_height:
+            title: the revision that the client is currently on
+          revision_height:
             type: string
             format: uint64
-            title: the height within the given version
+            title: the height within the given revision
         description: >-
-          Normally the VersionHeight is incremented at each height while keeping
-          version
+          Normally the RevisionHeight is incremented at each height while
+          keeping RevisionNumber
 
-          number the same However some consensus algorithms may choose to reset
-          the
+          the same. However some consensus algorithms may choose to reset the
 
           height in certain conditions e.g. hard forks, state-machine breaking
           changes
 
-          In these cases, the version number is incremented so that height
+          In these cases, the RevisionNumber is incremented so that height
           continues to
 
-          be monitonically increasing even as the VersionHeight gets reset
+          be monitonically increasing even as the RevisionHeight gets reset
     title: |-
       QueryPacketAcknowledgemetsResponse is the request type for the
       Query/QueryPacketAcknowledgements RPC method
@@ -33141,28 +33133,27 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          version_number:
+          revision_number:
             type: string
             format: uint64
-            title: the version that the client is currently on
-          version_height:
+            title: the revision that the client is currently on
+          revision_height:
             type: string
             format: uint64
-            title: the height within the given version
+            title: the height within the given revision
         description: >-
-          Normally the VersionHeight is incremented at each height while keeping
-          version
+          Normally the RevisionHeight is incremented at each height while
+          keeping RevisionNumber
 
-          number the same However some consensus algorithms may choose to reset
-          the
+          the same. However some consensus algorithms may choose to reset the
 
           height in certain conditions e.g. hard forks, state-machine breaking
           changes
 
-          In these cases, the version number is incremented so that height
+          In these cases, the RevisionNumber is incremented so that height
           continues to
 
-          be monitonically increasing even as the VersionHeight gets reset
+          be monitonically increasing even as the RevisionHeight gets reset
     title: >-
       QueryPacketCommitmentResponse defines the client query response for a
       packet
@@ -33231,28 +33222,27 @@ definitions:
         title: query block height
         type: object
         properties:
-          version_number:
+          revision_number:
             type: string
             format: uint64
-            title: the version that the client is currently on
-          version_height:
+            title: the revision that the client is currently on
+          revision_height:
             type: string
             format: uint64
-            title: the height within the given version
+            title: the height within the given revision
         description: >-
-          Normally the VersionHeight is incremented at each height while keeping
-          version
+          Normally the RevisionHeight is incremented at each height while
+          keeping RevisionNumber
 
-          number the same However some consensus algorithms may choose to reset
-          the
+          the same. However some consensus algorithms may choose to reset the
 
           height in certain conditions e.g. hard forks, state-machine breaking
           changes
 
-          In these cases, the version number is incremented so that height
+          In these cases, the RevisionNumber is incremented so that height
           continues to
 
-          be monitonically increasing even as the VersionHeight gets reset
+          be monitonically increasing even as the RevisionHeight gets reset
     title: |-
       QueryPacketCommitmentsResponse is the request type for the
       Query/QueryPacketCommitments RPC method
@@ -33270,28 +33260,27 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          version_number:
+          revision_number:
             type: string
             format: uint64
-            title: the version that the client is currently on
-          version_height:
+            title: the revision that the client is currently on
+          revision_height:
             type: string
             format: uint64
-            title: the height within the given version
+            title: the height within the given revision
         description: >-
-          Normally the VersionHeight is incremented at each height while keeping
-          version
+          Normally the RevisionHeight is incremented at each height while
+          keeping RevisionNumber
 
-          number the same However some consensus algorithms may choose to reset
-          the
+          the same. However some consensus algorithms may choose to reset the
 
           height in certain conditions e.g. hard forks, state-machine breaking
           changes
 
-          In these cases, the version number is incremented so that height
+          In these cases, the RevisionNumber is incremented so that height
           continues to
 
-          be monitonically increasing even as the VersionHeight gets reset
+          be monitonically increasing even as the RevisionHeight gets reset
     title: >-
       QueryPacketReceiptResponse defines the client query response for a packet
       receipt
@@ -33312,28 +33301,27 @@ definitions:
         title: query block height
         type: object
         properties:
-          version_number:
+          revision_number:
             type: string
             format: uint64
-            title: the version that the client is currently on
-          version_height:
+            title: the revision that the client is currently on
+          revision_height:
             type: string
             format: uint64
-            title: the height within the given version
+            title: the height within the given revision
         description: >-
-          Normally the VersionHeight is incremented at each height while keeping
-          version
+          Normally the RevisionHeight is incremented at each height while
+          keeping RevisionNumber
 
-          number the same However some consensus algorithms may choose to reset
-          the
+          the same. However some consensus algorithms may choose to reset the
 
           height in certain conditions e.g. hard forks, state-machine breaking
           changes
 
-          In these cases, the version number is incremented so that height
+          In these cases, the RevisionNumber is incremented so that height
           continues to
 
-          be monitonically increasing even as the VersionHeight gets reset
+          be monitonically increasing even as the RevisionHeight gets reset
     title: |-
       QueryUnreceivedAcksResponse is the response type for the
       Query/UnreceivedAcks RPC method
@@ -33350,28 +33338,27 @@ definitions:
         title: query block height
         type: object
         properties:
-          version_number:
+          revision_number:
             type: string
             format: uint64
-            title: the version that the client is currently on
-          version_height:
+            title: the revision that the client is currently on
+          revision_height:
             type: string
             format: uint64
-            title: the height within the given version
+            title: the height within the given revision
         description: >-
-          Normally the VersionHeight is incremented at each height while keeping
-          version
+          Normally the RevisionHeight is incremented at each height while
+          keeping RevisionNumber
 
-          number the same However some consensus algorithms may choose to reset
-          the
+          the same. However some consensus algorithms may choose to reset the
 
           height in certain conditions e.g. hard forks, state-machine breaking
           changes
 
-          In these cases, the version number is incremented so that height
+          In these cases, the RevisionNumber is incremented so that height
           continues to
 
-          be monitonically increasing even as the VersionHeight gets reset
+          be monitonically increasing even as the RevisionHeight gets reset
     title: |-
       QueryUnreceivedPacketsResponse is the response type for the
       Query/UnreceivedPacketCommitments RPC method
@@ -33398,27 +33385,27 @@ definitions:
   ibc.core.client.v1.Height:
     type: object
     properties:
-      version_number:
+      revision_number:
         type: string
         format: uint64
-        title: the version that the client is currently on
-      version_height:
+        title: the revision that the client is currently on
+      revision_height:
         type: string
         format: uint64
-        title: the height within the given version
+        title: the height within the given revision
     description: >-
-      Normally the VersionHeight is incremented at each height while keeping
-      version
+      Normally the RevisionHeight is incremented at each height while keeping
+      RevisionNumber
 
-      number the same However some consensus algorithms may choose to reset the
+      the same. However some consensus algorithms may choose to reset the
 
       height in certain conditions e.g. hard forks, state-machine breaking
       changes
 
-      In these cases, the version number is incremented so that height continues
+      In these cases, the RevisionNumber is incremented so that height continues
       to
 
-      be monitonically increasing even as the VersionHeight gets reset
+      be monitonically increasing even as the RevisionHeight gets reset
     title: >-
       Height is a monotonically increasing data type
 
@@ -33602,28 +33589,27 @@ definitions:
         title: consensus state height
         type: object
         properties:
-          version_number:
+          revision_number:
             type: string
             format: uint64
-            title: the version that the client is currently on
-          version_height:
+            title: the revision that the client is currently on
+          revision_height:
             type: string
             format: uint64
-            title: the height within the given version
+            title: the height within the given revision
         description: >-
-          Normally the VersionHeight is incremented at each height while keeping
-          version
+          Normally the RevisionHeight is incremented at each height while
+          keeping RevisionNumber
 
-          number the same However some consensus algorithms may choose to reset
-          the
+          the same. However some consensus algorithms may choose to reset the
 
           height in certain conditions e.g. hard forks, state-machine breaking
           changes
 
-          In these cases, the version number is incremented so that height
+          In these cases, the RevisionNumber is incremented so that height
           continues to
 
-          be monitonically increasing even as the VersionHeight gets reset
+          be monitonically increasing even as the RevisionHeight gets reset
       consensus_state:
         title: consensus state
         type: object
@@ -33982,28 +33968,27 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          version_number:
+          revision_number:
             type: string
             format: uint64
-            title: the version that the client is currently on
-          version_height:
+            title: the revision that the client is currently on
+          revision_height:
             type: string
             format: uint64
-            title: the height within the given version
+            title: the height within the given revision
         description: >-
-          Normally the VersionHeight is incremented at each height while keeping
-          version
+          Normally the RevisionHeight is incremented at each height while
+          keeping RevisionNumber
 
-          number the same However some consensus algorithms may choose to reset
-          the
+          the same. However some consensus algorithms may choose to reset the
 
           height in certain conditions e.g. hard forks, state-machine breaking
           changes
 
-          In these cases, the version number is incremented so that height
+          In these cases, the RevisionNumber is incremented so that height
           continues to
 
-          be monitonically increasing even as the VersionHeight gets reset
+          be monitonically increasing even as the RevisionHeight gets reset
     description: >-
       QueryClientStateResponse is the response type for the Query/ClientState
       RPC
@@ -34402,28 +34387,27 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          version_number:
+          revision_number:
             type: string
             format: uint64
-            title: the version that the client is currently on
-          version_height:
+            title: the revision that the client is currently on
+          revision_height:
             type: string
             format: uint64
-            title: the height within the given version
+            title: the height within the given revision
         description: >-
-          Normally the VersionHeight is incremented at each height while keeping
-          version
+          Normally the RevisionHeight is incremented at each height while
+          keeping RevisionNumber
 
-          number the same However some consensus algorithms may choose to reset
-          the
+          the same. However some consensus algorithms may choose to reset the
 
           height in certain conditions e.g. hard forks, state-machine breaking
           changes
 
-          In these cases, the version number is incremented so that height
+          In these cases, the RevisionNumber is incremented so that height
           continues to
 
-          be monitonically increasing even as the VersionHeight gets reset
+          be monitonically increasing even as the RevisionHeight gets reset
     title: >-
       QueryConsensusStateResponse is the response type for the
       Query/ConsensusState
@@ -34441,28 +34425,29 @@ definitions:
               title: consensus state height
               type: object
               properties:
-                version_number:
+                revision_number:
                   type: string
                   format: uint64
-                  title: the version that the client is currently on
-                version_height:
+                  title: the revision that the client is currently on
+                revision_height:
                   type: string
                   format: uint64
-                  title: the height within the given version
+                  title: the height within the given revision
               description: >-
-                Normally the VersionHeight is incremented at each height while
-                keeping version
+                Normally the RevisionHeight is incremented at each height while
+                keeping RevisionNumber
 
-                number the same However some consensus algorithms may choose to
-                reset the
+                the same. However some consensus algorithms may choose to reset
+                the
 
                 height in certain conditions e.g. hard forks, state-machine
                 breaking changes
 
-                In these cases, the version number is incremented so that height
+                In these cases, the RevisionNumber is incremented so that height
                 continues to
 
-                be monitonically increasing even as the VersionHeight gets reset
+                be monitonically increasing even as the RevisionHeight gets
+                reset
             consensus_state:
               title: consensus state
               type: object
@@ -34858,28 +34843,27 @@ definitions:
         title: height at which the proof was generated
         type: object
         properties:
-          version_number:
+          revision_number:
             type: string
             format: uint64
-            title: the version that the client is currently on
-          version_height:
+            title: the revision that the client is currently on
+          revision_height:
             type: string
             format: uint64
-            title: the height within the given version
+            title: the height within the given revision
         description: >-
-          Normally the VersionHeight is incremented at each height while keeping
-          version
+          Normally the RevisionHeight is incremented at each height while
+          keeping RevisionNumber
 
-          number the same However some consensus algorithms may choose to reset
-          the
+          the same. However some consensus algorithms may choose to reset the
 
           height in certain conditions e.g. hard forks, state-machine breaking
           changes
 
-          In these cases, the version number is incremented so that height
+          In these cases, the RevisionNumber is incremented so that height
           continues to
 
-          be monitonically increasing even as the VersionHeight gets reset
+          be monitonically increasing even as the RevisionHeight gets reset
     title: |-
       QueryClientConnectionsResponse is the response type for the
       Query/ClientConnections RPC method
@@ -35070,28 +35054,27 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          version_number:
+          revision_number:
             type: string
             format: uint64
-            title: the version that the client is currently on
-          version_height:
+            title: the revision that the client is currently on
+          revision_height:
             type: string
             format: uint64
-            title: the height within the given version
+            title: the height within the given revision
         description: >-
-          Normally the VersionHeight is incremented at each height while keeping
-          version
+          Normally the RevisionHeight is incremented at each height while
+          keeping RevisionNumber
 
-          number the same However some consensus algorithms may choose to reset
-          the
+          the same. However some consensus algorithms may choose to reset the
 
           height in certain conditions e.g. hard forks, state-machine breaking
           changes
 
-          In these cases, the version number is incremented so that height
+          In these cases, the RevisionNumber is incremented so that height
           continues to
 
-          be monitonically increasing even as the VersionHeight gets reset
+          be monitonically increasing even as the RevisionHeight gets reset
     title: |-
       QueryConnectionClientStateResponse is the response type for the
       Query/ConnectionClientState RPC method
@@ -35269,28 +35252,27 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          version_number:
+          revision_number:
             type: string
             format: uint64
-            title: the version that the client is currently on
-          version_height:
+            title: the revision that the client is currently on
+          revision_height:
             type: string
             format: uint64
-            title: the height within the given version
+            title: the height within the given revision
         description: >-
-          Normally the VersionHeight is incremented at each height while keeping
-          version
+          Normally the RevisionHeight is incremented at each height while
+          keeping RevisionNumber
 
-          number the same However some consensus algorithms may choose to reset
-          the
+          the same. However some consensus algorithms may choose to reset the
 
           height in certain conditions e.g. hard forks, state-machine breaking
           changes
 
-          In these cases, the version number is incremented so that height
+          In these cases, the RevisionNumber is incremented so that height
           continues to
 
-          be monitonically increasing even as the VersionHeight gets reset
+          be monitonically increasing even as the RevisionHeight gets reset
     title: |-
       QueryConnectionConsensusStateResponse is the response type for the
       Query/ConnectionConsensusState RPC method
@@ -35377,28 +35359,27 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          version_number:
+          revision_number:
             type: string
             format: uint64
-            title: the version that the client is currently on
-          version_height:
+            title: the revision that the client is currently on
+          revision_height:
             type: string
             format: uint64
-            title: the height within the given version
+            title: the height within the given revision
         description: >-
-          Normally the VersionHeight is incremented at each height while keeping
-          version
+          Normally the RevisionHeight is incremented at each height while
+          keeping RevisionNumber
 
-          number the same However some consensus algorithms may choose to reset
-          the
+          the same. However some consensus algorithms may choose to reset the
 
           height in certain conditions e.g. hard forks, state-machine breaking
           changes
 
-          In these cases, the version number is incremented so that height
+          In these cases, the RevisionNumber is incremented so that height
           continues to
 
-          be monitonically increasing even as the VersionHeight gets reset
+          be monitonically increasing even as the RevisionHeight gets reset
     description: >-
       QueryConnectionResponse is the response type for the Query/Connection RPC
 
@@ -35511,28 +35492,27 @@ definitions:
         title: query block height
         type: object
         properties:
-          version_number:
+          revision_number:
             type: string
             format: uint64
-            title: the version that the client is currently on
-          version_height:
+            title: the revision that the client is currently on
+          revision_height:
             type: string
             format: uint64
-            title: the height within the given version
+            title: the height within the given revision
         description: >-
-          Normally the VersionHeight is incremented at each height while keeping
-          version
+          Normally the RevisionHeight is incremented at each height while
+          keeping RevisionNumber
 
-          number the same However some consensus algorithms may choose to reset
-          the
+          the same. However some consensus algorithms may choose to reset the
 
           height in certain conditions e.g. hard forks, state-machine breaking
           changes
 
-          In these cases, the version number is incremented so that height
+          In these cases, the RevisionNumber is incremented so that height
           continues to
 
-          be monitonically increasing even as the VersionHeight gets reset
+          be monitonically increasing even as the RevisionHeight gets reset
     description: >-
       QueryConnectionsResponse is the response type for the Query/Connections
       RPC

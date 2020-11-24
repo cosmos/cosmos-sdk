@@ -2,12 +2,13 @@ package conversion
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"strconv"
-	"strings"
 )
 
 // RosettaOperationsToSdkMsg converts rosetta operations to sdk.Msg and coins

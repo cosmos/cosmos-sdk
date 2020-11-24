@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"

@@ -381,21 +381,21 @@ proto-lint:
 proto-check-breaking:
 	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=master
 
-TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.0-rc6/proto/tendermint
-GOGO_PROTO_URL      = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
-COSMOS_PROTO_URL    = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
-CONFIO_URL 		    = https://raw.githubusercontent.com/confio/ics23/v0.6.3
+TM_URL				= https://raw.githubusercontent.com/tendermint/tendermint/v0.34.0-rc6/proto/tendermint
+GOGO_PROTO_URL		= https://raw.githubusercontent.com/regen-network/protobuf/cosmos
+COSMOS_PROTO_URL	= https://raw.githubusercontent.com/regen-network/cosmos-proto/master
+CONFIO_URL			= https://raw.githubusercontent.com/confio/ics23/v0.6.3
 
-TM_CRYPTO_TYPES     = third_party/proto/tendermint/crypto
-TM_ABCI_TYPES       = third_party/proto/tendermint/abci
-TM_TYPES     	    = third_party/proto/tendermint/types
-TM_VERSION  	    = third_party/proto/tendermint/version
-TM_LIBS	   		    = third_party/proto/tendermint/libs/bits
-TM_P2P              = third_party/proto/tendermint/p2p
+TM_CRYPTO_TYPES		= third_party/proto/tendermint/crypto
+TM_ABCI_TYPES		= third_party/proto/tendermint/abci
+TM_TYPES			= third_party/proto/tendermint/types
+TM_VERSION			= third_party/proto/tendermint/version
+TM_LIBS				= third_party/proto/tendermint/libs/bits
+TM_P2P				= third_party/proto/tendermint/p2p
 
-GOGO_PROTO_TYPES    = third_party/proto/gogoproto
-COSMOS_PROTO_TYPES  = third_party/proto/cosmos_proto
-CONFIO_TYPES        = third_party/proto/confio
+GOGO_PROTO_TYPES	= third_party/proto/gogoproto
+COSMOS_PROTO_TYPES	= third_party/proto/cosmos_proto
+CONFIO_TYPES		= third_party/proto/confio
 
 proto-update-deps:
 	@mkdir -p $(GOGO_PROTO_TYPES)

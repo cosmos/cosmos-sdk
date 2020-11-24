@@ -349,8 +349,8 @@ func (s *IntegrationTestSuite) broadcastReq(stdTx legacytx.StdTx, mode string) (
 func (s *IntegrationTestSuite) testQueryIBCTx(txRes sdk.TxResponse, cmd *cobra.Command, args []string) {
 	val := s.network.Validators[0]
 
-	errMsg := "this transaction was created with the new SIGN_MODE_DIRECT signing method, and therefore cannot be displayed" +
-		" via legacy REST handlers. Please either use CLI, gRPC, gRPC-gateway, or directly query the Tendermint RPC" +
+	errMsg := "this transaction cannot be displayed via legacy REST endpoints, because it does not support" +
+		" Amino serialization. Please either use CLI, gRPC, gRPC-gateway, or directly query the Tendermint RPC" +
 		" endpoint to query this transaction. The new REST endpoint (via gRPC-gateway) is "
 
 	// Test that legacy endpoint return the above error message on IBC txs.

@@ -209,10 +209,10 @@ func checkSignModeError(ctx client.Context, resp interface{}, grpcEndPoint strin
 
 		// If there's an unmarshalling error, we assume that it's because we're
 		// using amino to unmarshal a proto-only tx.
-		return fmt.Errorf("this transaction was created with the new SIGN_MODE_DIRECT signing method, and therefore cannot be displayed"+
-			" via legacy REST handlers. Please either use CLI, gRPC, gRPC-gateway, or directly query the Tendermint RPC"+
-			" endpoint to query this transaction. The new REST endpoint (via gRPC-gateway) is %s. Please also see the REST endpoints migration"+
-			"guide at %s for more info.", grpcEndPoint, clientrest.DeprecationURL)
+		return fmt.Errorf("this transaction cannot be displayed via legacy REST endpoints, because it does not support"+
+			" Amino serialization. Please either use CLI, gRPC, gRPC-gateway, or directly query the Tendermint RPC"+
+			" endpoint to query this transaction. The new REST endpoint (via gRPC-gateway) is %s. Please also see the"+
+			"REST endpoints migration guide at %s for more info.", grpcEndPoint, clientrest.DeprecationURL)
 
 	}
 

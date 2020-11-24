@@ -1,5 +1,3 @@
-// +build norace
-
 package rest_test
 
 import (
@@ -76,12 +74,12 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 		name      string
 		url       string
 		expectErr bool
-		respType  proto.Message
+		respMsg   proto.Message
 		expected  proto.Message
 	}{
 		{
 			"fail invalid granter address",
-			fmt.Sprintf("%s/cosmos/msgauth/v1beta1/granters/%s/grantees/%s/%s", baseURL, "abcd", "efgh", "aleem"),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s?msg_type=%s", baseURL, "invalid_granter", s.grantee.String(), typeMsgSend),
 			true,
 			&types.QueryAuthorizationResponse{},
 			&types.QueryAuthorizationResponse{
@@ -90,7 +88,7 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 		},
 		{
 			"fail invalid grantee address",
-			fmt.Sprintf("%s/cosmos/msgauth/v1beta1/granters/%s/grantees/%s/%s", baseURL, val.Address.String(), "efgh", typeMsgSend),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s?msg_type=%s", baseURL, val.Address.String(), "invalid_grantee", typeMsgSend),
 			true,
 			&types.QueryAuthorizationResponse{},
 			&types.QueryAuthorizationResponse{
@@ -98,8 +96,8 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 			},
 		},
 		{
-			"fail invalid msgtype",
-			fmt.Sprintf("%s/cosmos/msgauth/v1beta1/granters/%s/grantees/%s/%s", baseURL, val.Address.String(), s.grantee.String(), "invalidMsg"),
+			"fail invalid msg-type",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s?msg_type=%s", baseURL, val.Address.String(), s.grantee.String(), "invalidMsg"),
 			true,
 			&types.QueryAuthorizationResponse{},
 			&types.QueryAuthorizationResponse{
@@ -107,8 +105,8 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 			},
 		},
 		{
-			"fail invalid msgtype",
-			fmt.Sprintf("%s/cosmos/msgauth/v1beta1/granters/%s/grantees/%s/%s", baseURL, val.Address.String(), s.grantee.String(), typeMsgSend),
+			"valid query",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s?msg_type=%s", baseURL, val.Address.String(), s.grantee.String(), typeMsgSend),
 			false,
 			&types.QueryAuthorizationResponse{},
 			&types.QueryAuthorizationResponse{
@@ -120,8 +118,7 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 		tc := tc
 		s.Run(tc.name, func() {
 			resp, err := rest.GetRequest(tc.url)
-			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
-
+			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respMsg)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {

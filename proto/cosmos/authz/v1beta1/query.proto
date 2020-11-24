@@ -13,7 +13,7 @@ service Query {
   // Returns any `Authorization` (or `nil`), with the expiration time, granted to the grantee by the granter for the
   // provided msg type.
   rpc Authorization(QueryAuthorizationRequest) returns (QueryAuthorizationResponse) {
-    option (google.api.http).get = "/cosmos/msgauth/v1beta1/granters/{granter_addr}/grantees/{grantee_addr}/{msg_type}";
+    option (google.api.http).get = "/cosmos/authz/v1beta1/granters/{granter_addr}/grantees/{grantee_addr}";
   }
 }
 

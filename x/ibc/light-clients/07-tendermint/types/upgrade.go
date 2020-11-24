@@ -17,7 +17,7 @@ import (
 // in client state that must be the same across all valid Tendermint clients for the new chain.
 // VerifyUpgrade will return an error if:
 // - the upgradedClient is not a Tendermint ClientState
-// - the lastest height of the client state does not have the same version number or has a greater
+// - the lastest height of the client state does not have the same revision number or has a greater
 // height than the committed client.
 // - the height of upgraded client is not greater than that of current client
 // - the latest height of the new client does not match or is greater than the height in committed client
@@ -35,8 +35,8 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	// last height of current counterparty chain must be client's latest height
 	lastHeight := cs.GetLatestHeight()
 
-	if upgradedClient.GetLatestHeight().GetVersionNumber() <= lastHeight.GetVersionNumber() {
-		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "upgraded client height %s must be at greater version than current client height %s",
+	if upgradedClient.GetLatestHeight().GetRevisionNumber() <= lastHeight.GetRevisionNumber() {
+		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "upgraded client height %s must be at greater revision than current client height %s",
 			upgradedClient.GetLatestHeight(), lastHeight)
 	}
 
@@ -64,7 +64,7 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	}
 
 	// Must prove against latest consensus state to ensure we are verifying against latest upgrade plan
-	// This verifies that upgrade is intended for the provided version, since committed client must exist
+	// This verifies that upgrade is intended for the provided revision, since committed client must exist
 	// at this consensus state
 	consState, err := GetConsensusState(clientStore, cdc, lastHeight)
 	if err != nil {
@@ -132,7 +132,7 @@ func constructUpgradeClientMerklePath(upgradePath []string, lastHeight exported.
 	// append lastHeight and `upgradedClient` to last key of upgradePath and use as lastKey of clientPath
 	// this will create the IAVL key that is used to store client in upgrade store
 	lastKey := upgradePath[len(upgradePath)-1]
-	appendedKey := fmt.Sprintf("%s/%d/%s", lastKey, lastHeight.GetVersionHeight(), upgradetypes.KeyUpgradedClient)
+	appendedKey := fmt.Sprintf("%s/%d/%s", lastKey, lastHeight.GetRevisionHeight(), upgradetypes.KeyUpgradedClient)
 
 	clientPath = append(clientPath, appendedKey)
 	return commitmenttypes.NewMerklePath(clientPath...)
@@ -147,7 +147,7 @@ func constructUpgradeConsStateMerklePath(upgradePath []string, lastHeight export
 	// append lastHeight and `upgradedClient` to last key of upgradePath and use as lastKey of clientPath
 	// this will create the IAVL key that is used to store client in upgrade store
 	lastKey := upgradePath[len(upgradePath)-1]
-	appendedKey := fmt.Sprintf("%s/%d/%s", lastKey, lastHeight.GetVersionHeight(), upgradetypes.KeyUpgradedConsState)
+	appendedKey := fmt.Sprintf("%s/%d/%s", lastKey, lastHeight.GetRevisionHeight(), upgradetypes.KeyUpgradedConsState)
 
 	consPath = append(consPath, appendedKey)
 	return commitmenttypes.NewMerklePath(consPath...)

@@ -105,6 +105,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 					[]connectiontypes.ConnectionPaths{
 						connectiontypes.NewConnectionPaths(clientID, []string{connectionID}),
 					},
+					0,
 				),
 				ChannelGenesis: channeltypes.NewGenesisState(
 					[]channeltypes.IdentifiedChannel{
@@ -133,6 +134,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 					[]channeltypes.PacketSequence{
 						channeltypes.NewPacketSequence(port2, channel2, 1),
 					},
+					0,
 				),
 			},
 			expPass: true,
@@ -168,6 +170,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 					[]connectiontypes.ConnectionPaths{
 						connectiontypes.NewConnectionPaths(clientID, []string{connectionID}),
 					},
+					0,
 				),
 			},
 			expPass: false,
@@ -244,6 +247,7 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 					[]connectiontypes.ConnectionPaths{
 						connectiontypes.NewConnectionPaths(clientID, []string{connectionID}),
 					},
+					0,
 				),
 				ChannelGenesis: channeltypes.NewGenesisState(
 					[]channeltypes.IdentifiedChannel{
@@ -272,6 +276,7 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 					[]channeltypes.PacketSequence{
 						channeltypes.NewPacketSequence(port2, channel2, 1),
 					},
+					0,
 				),
 			},
 		},

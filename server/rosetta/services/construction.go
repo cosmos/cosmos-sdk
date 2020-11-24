@@ -204,7 +204,7 @@ func (on OnlineNetwork) ConstructionPayloads(ctx context.Context, request *types
 		return nil, rosetta.ErrInvalidOperation.RosettaError()
 	}
 
-	msg, fee, err := conversion.GetMsgsFromOperations(request.Operations)
+	msg, fee, err := conversion.RosettaOperationsToSdkMsg(request.Operations)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrInvalidOperation, err.Error()).RosettaError()
 	}
@@ -266,7 +266,7 @@ func (on OnlineNetwork) ConstructionPreprocess(ctx context.Context, request *typ
 		return nil, rosetta.ErrInvalidRequest.RosettaError()
 	}
 
-	txData, err := conversion.GetTransferTxDataFromOperations(operations)
+	txData, err := conversion.RosettaOperationsToSdkBankMsgSend(operations)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrInvalidAddress, err.Error()).RosettaError()
 	}

@@ -32,7 +32,7 @@ func NewSingleNetwork(client rosetta.NodeClient, network *types.NetworkIdentifie
 		client:                 client,
 		network:                network,
 		networkOptions:         &types.NetworkOptionsResponse{Version: rosetta.Version(), Allow: rosetta.Allow()},
-		genesisBlockIdentifier: conversion.TendermintBlockToBlockIdentifier(block),
+		genesisBlockIdentifier: conversion.TMBlockToRosettaBlockIdentifier(block),
 	}, nil
 }
 
@@ -87,8 +87,8 @@ func (on OnlineNetwork) AccountBalance(ctx context.Context, request *types.Accou
 	}
 
 	return &types.AccountBalanceResponse{
-		BlockIdentifier: conversion.TendermintBlockToBlockIdentifier(block),
-		Balances:        conversion.CoinsToBalance(accountCoins, availableCoins),
+		BlockIdentifier: conversion.TMBlockToRosettaBlockIdentifier(block),
+		Balances:        conversion.SdkCoinsToRosettaAmounts(accountCoins, availableCoins),
 		Coins:           nil,
 		Metadata:        nil,
 	}, nil
@@ -120,10 +120,10 @@ func (on OnlineNetwork) Block(ctx context.Context, request *types.BlockRequest) 
 
 	return &types.BlockResponse{
 		Block: &types.Block{
-			BlockIdentifier:       conversion.TendermintBlockToBlockIdentifier(block),
-			ParentBlockIdentifier: conversion.ParentBlockIdentifierFromLastBlock(block),
+			BlockIdentifier:       conversion.TMBlockToRosettaBlockIdentifier(block),
+			ParentBlockIdentifier: conversion.TMBlockToRosettaParentBlockIdentifier(block),
 			Timestamp:             conversion.TimeToMilliseconds(block.Block.Time), // ts is required in milliseconds
-			Transactions:          conversion.ResultTxSearchToTransactions(txs),
+			Transactions:          conversion.SdkTxsWithHashToRosettaTxs(txs),
 			Metadata:              nil,
 		},
 		OtherTransactions: nil,
@@ -155,7 +155,7 @@ func (on OnlineNetwork) Mempool(ctx context.Context, _ *types.NetworkRequest) (*
 	}
 
 	return &types.MempoolResponse{
-		TransactionIdentifiers: conversion.TendermintTxsToTxIdentifiers(txs.Txs),
+		TransactionIdentifiers: conversion.TMTxsToRosettaTxsIdentifiers(txs.Txs),
 	}, nil
 }
 
@@ -201,11 +201,11 @@ func (on OnlineNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkReque
 	}
 
 	return &types.NetworkStatusResponse{
-		CurrentBlockIdentifier: conversion.TendermintBlockToBlockIdentifier(block),
+		CurrentBlockIdentifier: conversion.TMBlockToRosettaBlockIdentifier(block),
 		CurrentBlockTimestamp:  conversion.TimeToMilliseconds(block.Block.Time),
 		GenesisBlockIdentifier: on.genesisBlockIdentifier,
 		OldestBlockIdentifier:  nil,
-		SyncStatus:             conversion.TendermintStatusToSync(status),
+		SyncStatus:             conversion.TMStatusToRosettaSyncStatus(status),
 		Peers:                  conversion.TmPeersToRosettaPeers(peers),
 	}, nil
 }

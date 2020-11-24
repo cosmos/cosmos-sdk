@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
-	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/conversion"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -195,7 +194,7 @@ func (c *Client) ListTransactionsInBlock(ctx context.Context, height int64) ([]*
 		return nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
 	}
 
-	sdkTxs, err := conversion.TmResultTxsToSdkTxs(c.clientCtx.TxConfig.TxDecoder(), txList.Txs)
+	sdkTxs, err := tmResultTxsToSdkTxsWithHash(c.clientCtx.TxConfig.TxDecoder(), txList.Txs)
 	if err != nil {
 		return nil, err
 	}

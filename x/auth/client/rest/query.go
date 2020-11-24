@@ -212,7 +212,7 @@ func checkSignModeError(ctx client.Context, resp interface{}, grpcEndPoint strin
 		return fmt.Errorf("this transaction cannot be displayed via legacy REST endpoints, because it does not support"+
 			" Amino serialization. Please either use CLI, gRPC, gRPC-gateway, or directly query the Tendermint RPC"+
 			" endpoint to query this transaction. The new REST endpoint (via gRPC-gateway) is %s. Please also see the"+
-			"REST endpoints migration guide at %s for more info.", grpcEndPoint, clientrest.DeprecationURL)
+			"REST endpoints migration guide at %s for more info", grpcEndPoint, clientrest.DeprecationURL)
 
 	}
 

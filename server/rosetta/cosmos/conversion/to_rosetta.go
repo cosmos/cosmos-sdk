@@ -56,11 +56,13 @@ func SdkCoinsToRosettaAmounts(ownedCoins []sdk.Coin, availableCoins sdk.Coins) [
 func SdkTxsWithHashToRosettaTxs(txs []*rosetta.SdkTxWithHash) []*types.Transaction {
 	converted := make([]*types.Transaction, len(txs))
 	for i, tx := range txs {
-		// hasError := tx.Code > 0 // TODO find way to check for txs that have error.
+		hasError := tx.Code != 0
 		converted[i] = &types.Transaction{
 			TransactionIdentifier: &types.TransactionIdentifier{Hash: tx.HexHash},
-			Operations:            SdkTxToOperations(tx.Tx, true),
-			Metadata:              nil,
+			Operations:            SdkTxToOperations(tx.Tx, true, hasError),
+			Metadata: map[string]interface{}{
+				rosetta.Log: tx.Log,
+			},
 		}
 	}
 
@@ -68,14 +70,14 @@ func SdkTxsWithHashToRosettaTxs(txs []*rosetta.SdkTxWithHash) []*types.Transacti
 }
 
 // SdkTxToOperations converts an sdk.Tx to rosetta operations
-func SdkTxToOperations(tx sdk.Tx, withStatus bool) []*types.Operation {
+func SdkTxToOperations(tx sdk.Tx, withStatus, hasError bool) []*types.Operation {
 	var operations []*types.Operation
 
 	feeTx := tx.(sdk.FeeTx)
 	feeOps := sdkFeeTxToOperations(feeTx, withStatus)
 	operations = append(operations, feeOps...)
 
-	msgOps := sdkMsgsToRosettaOperations(tx.GetMsgs(), withStatus, len(feeOps))
+	msgOps := sdkMsgsToRosettaOperations(tx.GetMsgs(), withStatus, hasError, len(feeOps))
 	operations = append(operations, msgOps...)
 
 	return operations
@@ -126,7 +128,7 @@ func rosettaFeeOperationsFromCoins(coins sdk.Coins, account string, withStatus b
 }
 
 // sdkMsgsToRosettaOperations converts sdk messages to rosetta operations
-func sdkMsgsToRosettaOperations(msgs []sdk.Msg, withStatus bool, feeLen int) []*types.Operation {
+func sdkMsgsToRosettaOperations(msgs []sdk.Msg, withStatus bool, hasError bool, feeLen int) []*types.Operation {
 	var operations []*types.Operation
 	var status string
 	for i, msg := range msgs {
@@ -143,6 +145,9 @@ func sdkMsgsToRosettaOperations(msgs []sdk.Msg, withStatus bool, feeLen int) []*
 			sendOp := func(account, amount string, index int) *types.Operation {
 				if withStatus {
 					status = rosetta.StatusSuccess
+					if hasError {
+						status = rosetta.StatusReverted
+					}
 				}
 				return &types.Operation{
 					OperationIdentifier: &types.OperationIdentifier{

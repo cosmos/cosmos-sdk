@@ -55,10 +55,10 @@ func CoinsToBalance(ownedCoins []sdk.Coin, availableCoins sdk.Coins) []*types.Am
 func ResultTxSearchToTransaction(txs []*rosetta.SdkTxWithHash) []*types.Transaction {
 	converted := make([]*types.Transaction, len(txs))
 	for i, tx := range txs {
-		// hasError := tx.Code > 0 // TODO find way to check for txs that have error.
+		hasError := tx.Code != 0
 		converted[i] = &types.Transaction{
 			TransactionIdentifier: &types.TransactionIdentifier{Hash: tx.HexHash},
-			Operations:            SdkTxToOperations(tx.Tx, true),
+			Operations:            SdkTxToOperations(tx.Tx, true, hasError),
 			Metadata:              nil,
 		}
 	}
@@ -67,13 +67,13 @@ func ResultTxSearchToTransaction(txs []*rosetta.SdkTxWithHash) []*types.Transact
 }
 
 // SdkTxToOperations converts a tx response to operations
-func SdkTxToOperations(tx sdk.Tx, withStatus bool) []*types.Operation {
+func SdkTxToOperations(tx sdk.Tx, withStatus, hasError bool) []*types.Operation {
 	var operations []*types.Operation
 
 	feeOps := GetFeeOperationsFromTx(tx, withStatus)
 	operations = append(operations, feeOps...)
 
-	msgOps := SdkMsgsToOperations(tx.GetMsgs(), withStatus, len(feeOps))
+	msgOps := SdkMsgsToOperations(tx.GetMsgs(), withStatus, hasError, len(feeOps))
 	operations = append(operations, msgOps...)
 
 	return operations
@@ -109,7 +109,7 @@ func TendermintBlockToBlockIdentifier(block *tmcoretypes.ResultBlock) *types.Blo
 	}
 }
 
-func SdkMsgsToOperations(msgs []sdk.Msg, withStatus bool, feeLen int) []*types.Operation {
+func SdkMsgsToOperations(msgs []sdk.Msg, withStatus, hasError bool, feeLen int) []*types.Operation {
 	var operations []*types.Operation
 	var status string
 	for i, msg := range msgs {
@@ -126,6 +126,9 @@ func SdkMsgsToOperations(msgs []sdk.Msg, withStatus bool, feeLen int) []*types.O
 			sendOp := func(account, amount string, index int) *types.Operation {
 				if withStatus {
 					status = rosetta.StatusSuccess
+					if hasError {
+						status = rosetta.StatusReverted
+					}
 				}
 				return &types.Operation{
 					OperationIdentifier: &types.OperationIdentifier{

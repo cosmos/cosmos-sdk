@@ -141,7 +141,7 @@ func (sn SingleNetwork) BlockTransaction(ctx context.Context, request *types.Blo
 	return &types.BlockTransactionResponse{
 		Transaction: &types.Transaction{
 			TransactionIdentifier: &types.TransactionIdentifier{Hash: request.TransactionIdentifier.Hash},
-			Operations:            conversion.SdkTxToOperations(tx, false),
+			Operations:            conversion.SdkTxToOperations(tx, false, false),
 			Metadata:              nil,
 		},
 	}, nil
@@ -167,7 +167,7 @@ func (sn SingleNetwork) MempoolTransaction(ctx context.Context, request *types.M
 	return &types.MempoolTransactionResponse{
 		Transaction: &types.Transaction{
 			TransactionIdentifier: &types.TransactionIdentifier{Hash: request.TransactionIdentifier.Hash},
-			Operations:            conversion.SdkTxToOperations(tx, false),
+			Operations:            conversion.SdkTxToOperations(tx, false, false),
 			Metadata:              nil,
 		},
 	}, nil

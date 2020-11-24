@@ -51,6 +51,7 @@ func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter)
 // SdkTxWithHash wraps an sdk transaction with its hash and block identifier
 type SdkTxWithHash struct {
 	HexHash string
+	Code    uint32
 	Tx      sdk.Tx
 }
 

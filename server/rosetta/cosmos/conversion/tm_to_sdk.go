@@ -39,6 +39,7 @@ func TmResultTxsToSdkTxs(decode sdk.TxDecoder, txs []*tmcoretypes.ResultTx) ([]*
 		}
 		converted[i] = &rosetta.SdkTxWithHash{
 			HexHash: fmt.Sprintf("%X", tx.Tx.Hash()),
+			Code:    tx.TxResult.Code,
 			Tx:      sdkTx,
 		}
 	}

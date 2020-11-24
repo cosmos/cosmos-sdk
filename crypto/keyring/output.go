@@ -1,8 +1,6 @@
 package keyring
 
 import (
-	"fmt"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/internal/protocdc"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,12 +27,6 @@ func NewKeyOutput(name string, keyType KeyType, a sdk.Address, pk cryptotypes.Pu
 	if err != nil {
 		return KeyOutput{}, err
 	}
-	fmt.Println(">>>> bz", string(bz))
-	/* 	if pk != nil {
-	   		fmt.Printf(">>>>>> %t\n", pk)
-	   		pkStr = pk.String()
-	   	}
-	*/
 	return KeyOutput{
 		Name:    name,
 		Type:    keyType.String(),
@@ -92,7 +84,13 @@ func Bech32KeyOutput(keyInfo Info) (KeyOutput, error) {
 
 		for i, pkInfo := range mInfo.PubKeys {
 			pk = pkInfo.PubKey
-			pubKeys[i] = multisigPubKeyOutput{addr.String(), pk.String(), pkInfo.Weight}
+			addr = sdk.AccAddress(pk.Address())
+			bz, err := protocdc.MarshalJSON(pk, nil)
+			if err != nil {
+				return ko, err
+			}
+			pubKeys[i] = multisigPubKeyOutput{
+				addr.String(), string(bz), pkInfo.Weight}
 		}
 
 		ko.Threshold = mInfo.Threshold

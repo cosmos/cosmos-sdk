@@ -75,7 +75,7 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 		require.NoError(t, tmp.ValidateKey())
 		(&tmp).AssertIsPrivKeyInner()
 
-		pubKeyAddr, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeAccPub, priv.PubKey())
+		pubKeyAddr, err := legacybech32.MarshalPubKey(legacybech32.AccPK, priv.PubKey())
 		require.NoError(t, err)
 		require.Equal(t,
 			expectedAnswers[i], pubKeyAddr,
@@ -111,7 +111,7 @@ func TestPublicKeySafe(t *testing.T) {
 		fmt.Sprintf("%x", cdc.Amino.MustMarshalBinaryBare(priv.PubKey())),
 		"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 
-	pubKeyAddr, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeAccPub, priv.PubKey())
+	pubKeyAddr, err := legacybech32.MarshalPubKey(legacybech32.AccPK, priv.PubKey())
 	require.NoError(t, err)
 	require.Equal(t, "cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0",
 		pubKeyAddr, "Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
@@ -175,7 +175,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 		require.NoError(t, tmp.ValidateKey())
 		(&tmp).AssertIsPrivKeyInner()
 
-		pubKeyAddr, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeAccPub, priv.PubKey())
+		pubKeyAddr, err := legacybech32.MarshalPubKey(legacybech32.AccPK, priv.PubKey())
 		require.NoError(t, err)
 		require.Equal(t,
 			expectedPubKeys[i], pubKeyAddr,

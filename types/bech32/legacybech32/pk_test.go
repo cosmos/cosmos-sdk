@@ -18,7 +18,7 @@ func TestBeach32ifPbKey(t *testing.T) {
 	require.Nil(err, "%s", err)
 	require.NotNil(priv)
 
-	pubKeyAddr, err := Bech32ifyPubKey(Bech32PubKeyTypeAccPub, priv.PubKey())
+	pubKeyAddr, err := MarshalPubKey(AccPK, priv.PubKey())
 	require.NoError(err)
 	require.Equal("cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0",
 		pubKeyAddr, "Is your device using test mnemonic: %s ?", testutil.TestMnemonic)

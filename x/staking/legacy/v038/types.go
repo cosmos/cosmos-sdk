@@ -114,7 +114,7 @@ func NewGenesisState(
 
 // MarshalJSON marshals the validator to JSON using Bech32
 func (v Validator) MarshalJSON() ([]byte, error) {
-	bechConsPubKey, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeConsPub, v.ConsPubKey)
+	bechConsPubKey, err := legacybech32.MarshalPubKey(legacybech32.ConsPub, v.ConsPubKey)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +140,7 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 	if err := legacy.Cdc.UnmarshalJSON(data, bv); err != nil {
 		return err
 	}
-	consPubKey, err := legacybech32.GetPubKeyFromBech32(legacybech32.Bech32PubKeyTypeConsPub, bv.ConsPubKey)
+	consPubKey, err := legacybech32.UnmarshalPubKey(legacybech32.ConsPub, bv.ConsPubKey)
 	if err != nil {
 		return err
 	}

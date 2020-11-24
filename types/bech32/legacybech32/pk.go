@@ -18,22 +18,23 @@ import (
 type Bech32PubKeyType string
 
 // Bech32 conversion constants
+// TODO: check where we can remove this
 const (
-	Bech32PubKeyTypeAccPub  Bech32PubKeyType = "accpub"
-	Bech32PubKeyTypeValPub  Bech32PubKeyType = "valpub"
-	Bech32PubKeyTypeConsPub Bech32PubKeyType = "conspub"
+	AccPK   Bech32PubKeyType = "accpub"
+	ValPub  Bech32PubKeyType = "valpub"
+	ConsPub Bech32PubKeyType = "conspub"
 )
 
-// Deprecated: Bech32ifyPubKey returns a Bech32 encoded string containing the appropriate
+// Deprecated: MarshalPubKey returns a Bech32 encoded string containing the appropriate
 // prefix based on the key type provided for a given PublicKey.
-func Bech32ifyPubKey(pkt Bech32PubKeyType, pubkey cryptotypes.PubKey) (string, error) {
+func MarshalPubKey(pkt Bech32PubKeyType, pubkey cryptotypes.PubKey) (string, error) {
 	bech32Prefix := getPrefix(pkt)
 	return bech32.ConvertAndEncode(bech32Prefix, legacy.Cdc.MustMarshalBinaryBare(pubkey))
 }
 
-// Deprecated: MustBech32ifyPubKey calls Bech32ifyPubKey and panics on error.
-func MustBech32ifyPubKey(pkt Bech32PubKeyType, pubkey cryptotypes.PubKey) string {
-	res, err := Bech32ifyPubKey(pkt, pubkey)
+// Deprecated: MustMarshalPubKey calls Bech32ifyPubKey and panics on error.
+func MustMarshalPubKey(pkt Bech32PubKeyType, pubkey cryptotypes.PubKey) string {
+	res, err := MarshalPubKey(pkt, pubkey)
 	if err != nil {
 		panic(err)
 	}
@@ -44,21 +45,21 @@ func MustBech32ifyPubKey(pkt Bech32PubKeyType, pubkey cryptotypes.PubKey) string
 func getPrefix(pkt Bech32PubKeyType) string {
 	cfg := sdk.GetConfig()
 	switch pkt {
-	case Bech32PubKeyTypeAccPub:
+	case AccPK:
 		return cfg.GetBech32AccountPubPrefix()
 
-	case Bech32PubKeyTypeValPub:
+	case ValPub:
 		return cfg.GetBech32ValidatorPubPrefix()
-	case Bech32PubKeyTypeConsPub:
+	case ConsPub:
 		return cfg.GetBech32ConsensusPubPrefix()
 	}
 
 	return ""
 }
 
-// Deprecated: GetPubKeyFromBech32 returns a PublicKey from a bech32-encoded PublicKey with
+// Deprecated: UnmarshalPubKey returns a PublicKey from a bech32-encoded PublicKey with
 // a given key type.
-func GetPubKeyFromBech32(pkt Bech32PubKeyType, pubkeyStr string) (cryptotypes.PubKey, error) {
+func UnmarshalPubKey(pkt Bech32PubKeyType, pubkeyStr string) (cryptotypes.PubKey, error) {
 	bech32Prefix := getPrefix(pkt)
 
 	bz, err := sdk.GetFromBech32(pubkeyStr, bech32Prefix)
@@ -67,14 +68,4 @@ func GetPubKeyFromBech32(pkt Bech32PubKeyType, pubkeyStr string) (cryptotypes.Pu
 	}
 
 	return cryptocodec.PubKeyFromBytes(bz)
-}
-
-// Deprecated: MustGetPubKeyFromBech32 calls GetPubKeyFromBech32 except it panics on error.
-func MustGetPubKeyFromBech32(pkt Bech32PubKeyType, pubkeyStr string) cryptotypes.PubKey {
-	res, err := GetPubKeyFromBech32(pkt, pubkeyStr)
-	if err != nil {
-		panic(err)
-	}
-
-	return res
 }

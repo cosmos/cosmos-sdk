@@ -21,7 +21,7 @@ func BenchmarkBech32ifyPubKey(b *testing.B) {
 		rng.Read(pk.Key)
 		b.StartTimer()
 
-		_, err := Bech32ifyPubKey(Bech32PubKeyTypeConsPub, pk)
+		_, err := MarshalPubKey(ConsPub, pk)
 		require.NoError(b, err)
 	}
 }
@@ -37,11 +37,11 @@ func BenchmarkGetPubKeyFromBech32(b *testing.B) {
 		b.StopTimer()
 		rng.Read(pk.Key)
 
-		pkStr, err := Bech32ifyPubKey(Bech32PubKeyTypeConsPub, pk)
+		pkStr, err := MarshalPubKey(ConsPub, pk)
 		require.NoError(b, err)
 
 		b.StartTimer()
-		pk2, err := GetPubKeyFromBech32(Bech32PubKeyTypeConsPub, pkStr)
+		pk2, err := UnmarshalPubKey(ConsPub, pkStr)
 		require.NoError(b, err)
 		require.Equal(b, pk, pk2)
 	}

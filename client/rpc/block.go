@@ -11,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
@@ -68,7 +67,7 @@ func getBlock(clientCtx client.Context, height *int64) ([]byte, error) {
 		return nil, err
 	}
 
-	return legacy.Cdc.MarshalJSON(res)
+	return clientCtx.LegacyAmino.MarshalJSON(res)
 }
 
 // get the current blockchain height

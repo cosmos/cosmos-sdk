@@ -18,7 +18,7 @@ import (
 func MarshalIfc(m BinaryMarshaler, x interface{}) ([]byte, error) {
 	msg, ok := x.(proto.Message)
 	if !ok {
-		return nil, fmt.Errorf("can't proto marshal %T - expecting proto.Message", x)
+		return nil, fmt.Errorf("can't proto marshal %T; expecting proto.Message", x)
 	}
 	any, err := types.NewAnyWithValue(msg)
 	if err != nil {

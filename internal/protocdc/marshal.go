@@ -13,9 +13,9 @@ import (
 // This function should be used only with concrete types. For interface serialization
 // you need to wrap the interface into Any or generally use MarshalIfcJSON.
 func MarshalJSON(msg interface{}, resolver jsonpb.AnyResolver) ([]byte, error) {
-	msgProto, ok := i.(proto.Message)
+	msgProto, ok := msg.(proto.Message)
 	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "Expecting protobuf Message type, got %T", i)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "Expecting protobuf Message type, got %T", msg)
 	}
 	return codec.ProtoMarshalJSON(msgProto, resolver)
 }

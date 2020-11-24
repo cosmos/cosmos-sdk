@@ -478,5 +478,5 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 }
 
 func malleateHeight(height exported.Height, diff uint64) exported.Height {
-	return clienttypes.NewHeight(height.GetVersionNumber(), height.GetVersionHeight()+diff)
+	return clienttypes.NewHeight(height.GetRevisionNumber(), height.GetRevisionHeight()+diff)
 }

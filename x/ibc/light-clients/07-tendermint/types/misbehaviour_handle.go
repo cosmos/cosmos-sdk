@@ -102,10 +102,10 @@ func checkMisbehaviourHeader(
 	}
 
 	chainID := clientState.GetChainID()
-	// If chainID is in version format, then set version number of chainID with the version number
+	// If chainID is in revision format, then set revision number of chainID with the revision number
 	// of the misbehaviour header
-	if clienttypes.IsVersionFormat(chainID) {
-		chainID, _ = clienttypes.SetVersionNumber(chainID, header.GetHeight().GetVersionNumber())
+	if clienttypes.IsRevisionFormat(chainID) {
+		chainID, _ = clienttypes.SetRevisionNumber(chainID, header.GetHeight().GetRevisionNumber())
 	}
 
 	// - ValidatorSet must have TrustLevel similarity with trusted FromValidatorSet

@@ -195,8 +195,11 @@ func (am AppModule) OnChanOpenInit(
 	version string,
 ) error {
 	// NOTE: for escrow address security only 2^32 channels are allowed to be created
-	channelSequence := channeltypes.ParseChannelSequence(channelID)
-	if uint64(channelSequence) > math.MaxUint32 {
+	channelSequence, err := channeltypes.ParseChannelSequence(channelID)
+	if err != nil {
+		return err
+	}
+	if channelSequence > math.MaxUint32 {
 		return sdkerrors.Wrapf(types.ErrMaxTransferChannels, "channel sequence %d is greater than max allowed transfer channels %d", channelSequence, math.MaxUint32)
 	}
 	if order != channeltypes.UNORDERED {
@@ -234,8 +237,11 @@ func (am AppModule) OnChanOpenTry(
 	counterpartyVersion string,
 ) error {
 	// NOTE: for escrow address security only 2^32 channels are allowed to be created
-	channelSequence := channeltypes.ParseChannelSequence(channelID)
-	if uint64(channelSequence) > math.MaxUint32 {
+	channelSequence, err := channeltypes.ParseChannelSequence(channelID)
+	if err != nil {
+		return err
+	}
+	if channelSequence > math.MaxUint32 {
 		return sdkerrors.Wrapf(types.ErrMaxTransferChannels, "channel sequence %d is greater than max allowed transfer channels %d", channelSequence, math.MaxUint32)
 	}
 	if order != channeltypes.UNORDERED {

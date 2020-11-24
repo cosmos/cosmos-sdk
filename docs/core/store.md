@@ -122,7 +122,7 @@ Individual `KVStore`s are used by modules to manage a subset of the global state
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/store/types/store.go#L189-L219
 
-Apart from the traditional `Get` and `Set` methods, a `KVStore` is expected to implement an `Iterator()` method which returns an `Iterator` object. The `Iterator()` method is used to iterate over a domain of keys, typically keys that share a common prefix. This is a common pattern of using an `Iterator`, which might be found in a module's `keeper`; below is an example from the bank's module keeper, used to iterate over all account balances:
+Apart from the traditional `Get` and `Set` methods, a `KVStore` must provide an `Iterator(start, end)` method which returns an `Iterator` object. It is used to iterate over a range of keys, typically keys that share a common prefix. Below is an example from the bank's module keeper, used to iterate over all account balances:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/bank/keeper/view.go#L115-L134
 

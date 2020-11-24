@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"testing"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type ProposalWrapper struct {
@@ -23,7 +24,7 @@ func TestContentAccessors(t *testing.T) {
 		str   string
 	}{
 		"upgrade": {
-			p: NewSoftwareUpgradeProposal("Title", "desc", Plan{
+			p: types.NewSoftwareUpgradeProposal("Title", "desc", types.Plan{
 				Name: "due_time",
 				Info: "https://foo.bar",
 				Time: mustParseTime("2019-07-08T11:33:55Z"),
@@ -34,7 +35,7 @@ func TestContentAccessors(t *testing.T) {
 			str:   "Software Upgrade Proposal:\n  Title:       Title\n  Description: desc\n",
 		},
 		"cancel": {
-			p:     NewCancelSoftwareUpgradeProposal("Cancel", "bad idea"),
+			p:     types.NewCancelSoftwareUpgradeProposal("Cancel", "bad idea"),
 			title: "Cancel",
 			desc:  "bad idea",
 			typ:   "CancelSoftwareUpgrade",
@@ -44,7 +45,7 @@ func TestContentAccessors(t *testing.T) {
 
 	cdc := codec.NewLegacyAmino()
 	gov.RegisterLegacyAminoCodec(cdc)
-	RegisterLegacyAminoCodec(cdc)
+	types.RegisterLegacyAminoCodec(cdc)
 
 	for name, tc := range cases {
 		tc := tc // copy to local variable for scopelint

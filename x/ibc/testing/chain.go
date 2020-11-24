@@ -388,7 +388,7 @@ func (chain *TestChain) AddTestConnection(clientID, counterpartyClientID string)
 // created given a clientID and counterparty clientID. The connection id
 // format: <chainID>-conn<index>
 func (chain *TestChain) ConstructNextTestConnection(clientID, counterpartyClientID string) *TestConnection {
-	connectionID := fmt.Sprintf("%s-%s%d", chain.ChainID, ConnectionIDPrefix, len(chain.Connections))
+	connectionID := connectiontypes.FormatConnectionIdentifier(uint64(len(chain.Connections)))
 	return &TestConnection{
 		ID:                   connectionID,
 		ClientID:             clientID,
@@ -405,6 +405,34 @@ func (chain *TestChain) GetFirstTestConnection(clientID, counterpartyClientID st
 	}
 
 	return chain.ConstructNextTestConnection(clientID, counterpartyClientID)
+}
+
+// AddTestChannel appends a new TestChannel which contains references to the port and channel ID
+// used for channel creation and interaction. See 'NextTestChannel' for channel ID naming format.
+func (chain *TestChain) AddTestChannel(conn *TestConnection, portID string) TestChannel {
+	channel := chain.NextTestChannel(conn, portID)
+	conn.Channels = append(conn.Channels, channel)
+	return channel
+}
+
+// NextTestChannel returns the next test channel to be created on this connection, but does not
+// add it to the list of created channels. This function is expected to be used when the caller
+// has not created the associated channel in app state, but would still like to refer to the
+// non-existent channel usually to test for its non-existence.
+//
+// channel ID format: <connectionid>-chan<channel-index>
+//
+// The port is passed in by the caller.
+func (chain *TestChain) NextTestChannel(conn *TestConnection, portID string) TestChannel {
+	nextChanSeq := chain.App.IBCKeeper.ChannelKeeper.GetNextChannelSequence(chain.GetContext())
+	channelID := channeltypes.FormatChannelIdentifier(nextChanSeq)
+	return TestChannel{
+		PortID:               portID,
+		ID:                   channelID,
+		ClientID:             conn.ClientID,
+		CounterpartyClientID: conn.CounterpartyClientID,
+		Version:              conn.NextChannelVersion,
+	}
 }
 
 // ConstructMsgCreateClient constructs a message to create a new client state (tendermint or solomachine).
@@ -613,8 +641,8 @@ func (chain *TestChain) ConnectionOpenInit(
 	connection, counterpartyConnection *TestConnection,
 ) error {
 	msg := connectiontypes.NewMsgConnectionOpenInit(
-		connection.ID, connection.ClientID,
-		counterpartyConnection.ID, connection.CounterpartyClientID,
+		connection.ClientID,
+		connection.CounterpartyClientID,
 		counterparty.GetPrefix(), DefaultOpenInitVersion,
 		chain.SenderAccount.GetAddress(),
 	)
@@ -634,7 +662,7 @@ func (chain *TestChain) ConnectionOpenTry(
 	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
 
 	msg := connectiontypes.NewMsgConnectionOpenTry(
-		connection.ID, connection.ID, connection.ClientID, // testing doesn't use flexible selection
+		"", connection.ClientID, // does not support handshake continuation
 		counterpartyConnection.ID, counterpartyConnection.ClientID,
 		counterpartyClient, counterparty.GetPrefix(), []*connectiontypes.Version{ConnectionVersion},
 		proofInit, proofClient, proofConsensus,
@@ -756,9 +784,9 @@ func (chain *TestChain) ChanOpenInit(
 	connectionID string,
 ) error {
 	msg := channeltypes.NewMsgChannelOpenInit(
-		ch.PortID, ch.ID,
+		ch.PortID,
 		ch.Version, order, []string{connectionID},
-		counterparty.PortID, counterparty.ID,
+		counterparty.PortID,
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.sendMsgs(msg)
@@ -774,10 +802,9 @@ func (chain *TestChain) ChanOpenTry(
 	proof, height := counterparty.QueryProof(host.ChannelKey(counterpartyCh.PortID, counterpartyCh.ID))
 
 	msg := channeltypes.NewMsgChannelOpenTry(
-		ch.PortID, ch.ID, ch.ID, // testing doesn't use flexible selection
+		ch.PortID, "", // does not support handshake continuation
 		ch.Version, order, []string{connectionID},
-		counterpartyCh.PortID, counterpartyCh.ID,
-		counterpartyCh.Version,
+		counterpartyCh.PortID, counterpartyCh.ID, counterpartyCh.Version,
 		proof, height,
 		chain.SenderAccount.GetAddress(),
 	)

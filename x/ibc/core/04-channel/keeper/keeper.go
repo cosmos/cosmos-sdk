@@ -55,6 +55,16 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", host.ModuleName, types.SubModuleName))
 }
 
+// GenerateChannelIdentifier returns the next channel identifier.
+func (k Keeper) GenerateChannelIdentifier(ctx sdk.Context) string {
+	nextChannelSeq := k.GetNextChannelSequence(ctx)
+	channelID := types.FormatChannelIdentifier(nextChannelSeq)
+
+	nextChannelSeq++
+	k.SetNextChannelSequence(ctx, nextChannelSeq)
+	return channelID
+}
+
 // GetChannel returns a channel with a particular identifier binded to a specific port
 func (k Keeper) GetChannel(ctx sdk.Context, portID, channelID string) (types.Channel, bool) {
 	store := ctx.KVStore(k.storeKey)
@@ -73,6 +83,24 @@ func (k Keeper) SetChannel(ctx sdk.Context, portID, channelID string, channel ty
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryBare(&channel)
 	store.Set(host.ChannelKey(portID, channelID), bz)
+}
+
+// GetNextChannelSequence gets the next channel sequence from the store.
+func (k Keeper) GetNextChannelSequence(ctx sdk.Context) uint64 {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get([]byte(types.KeyNextChannelSequence))
+	if bz == nil {
+		panic("next channel sequence is nil")
+	}
+
+	return sdk.BigEndianToUint64(bz)
+}
+
+// SetNextChannelSequence sets the next channel sequence to the store.
+func (k Keeper) SetNextChannelSequence(ctx sdk.Context, sequence uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := sdk.Uint64ToBigEndian(sequence)
+	store.Set([]byte(types.KeyNextChannelSequence), bz)
 }
 
 // GetNextSequenceSend gets a channel's next send sequence from the store

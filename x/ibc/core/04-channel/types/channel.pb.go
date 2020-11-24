@@ -266,6 +266,8 @@ type Packet struct {
 	TimeoutTimestamp uint64 `protobuf:"varint,8,opt,name=timeout_timestamp,json=timeoutTimestamp,proto3" json:"timeout_timestamp,omitempty" yaml:"timeout_timestamp"`
 	// delay period specified by sender enforces that delay period must pass since consensus state
 	// was submitted before any packet-verification can pass against that consensus state.
+	// NOTE: user-chosen delay period is safe on UNORDERED channels, however ORDERED channels
+	// must either use a constant delay period or define a maximum bound to avoid liveness issues.
 	DelayPeriod uint64 `protobuf:"varint,9,opt,name=delay_period,json=delayPeriod,proto3" json:"delay_period,omitempty" yaml:"delay_period"`
 }
 

@@ -166,7 +166,7 @@ func checkValidity(
 	return nil
 }
 
-// update the consensus state from a new header
+// update the consensus state from a new header and set processed time metadata
 func update(ctx sdk.Context, clientStore sdk.KVStore, clientState *ClientState, header *Header) (*ClientState, *ConsensusState) {
 	height := header.GetHeight().(clienttypes.Height)
 	if height.GT(clientState.LatestHeight) {

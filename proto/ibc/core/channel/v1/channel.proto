@@ -114,6 +114,8 @@ message Packet {
   uint64 timeout_timestamp = 8 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
   // delay period specified by sender enforces that delay period must pass since consensus state
   // was submitted before any packet-verification can pass against that consensus state.
+  // NOTE: user-chosen delay period is safe on UNORDERED channels, however ORDERED channels
+  // must either use a constant delay period or define a maximum bound to avoid liveness issues.
   uint64 delay_period = 9 [(gogoproto.moretags) = "yaml:\"delay_period\""];
 }
 

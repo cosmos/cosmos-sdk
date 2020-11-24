@@ -131,9 +131,9 @@ func (k Keeper) GetAllGenesisClients(ctx sdk.Context) types.IdentifiedClientStat
 func (k Keeper) GetAllClientMetadata(ctx sdk.Context, genClients []types.IdentifiedClientState) ([]types.IdentifiedGenesisMetadata, error) {
 	genMetadata := make([]types.IdentifiedGenesisMetadata, 0)
 	for _, ic := range genClients {
-		cs, ok := ic.ClientState.GetCachedValue().(exported.ClientState)
-		if !ok {
-			return nil, sdkerrors.Wrapf(types.ErrInvalidClient, "client state is not exported.ClientState")
+		cs, err := types.UnpackClientState(ic.ClientState)
+		if err != nil {
+			return nil, err
 		}
 		gms := cs.ExportMetadata(k.ClientStore(ctx, ic.ClientId))
 		if len(gms) == 0 {

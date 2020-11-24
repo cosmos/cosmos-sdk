@@ -12,7 +12,7 @@ import (
 )
 
 // CommitPacket returns the packet commitment bytes. The commitment consists of:
-// sha256_hash(timeout_timestamp + timeout_height.VersionNumber + timeout_height.VersionHeight + sha256_hash(data))
+// sha256_hash(timeout_timestamp + timeout_height.VersionNumber + timeout_height.VersionHeight + delayPeriod + sha256_hash(data))
 // from a given packet. This results in a fixed length preimage.
 // NOTE: sdk.Uint64ToBigEndian sets the uint64 to a slice of length 8.
 func CommitPacket(cdc codec.BinaryMarshaler, packet exported.PacketI) []byte {

@@ -196,6 +196,7 @@ func (s *TestSuite) TestKeeperFees() {
 		},
 	})
 
+	s.Require().NoError(msgs.UnpackInterfaces(app.AppCodec()))
 	executeMsgs, err = msgs.GetMsgs()
 	s.Require().NoError(err)
 

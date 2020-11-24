@@ -18,7 +18,7 @@ import (
 	genutilrest "github.com/cosmos/cosmos-sdk/x/genutil/client/rest"
 )
 
-// query accountREST Handler
+// QueryAccountRequestHandlerFn is the query accountREST Handler.
 func QueryAccountRequestHandlerFn(storeName string, clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -198,7 +198,7 @@ func packStdTxResponse(w http.ResponseWriter, clientCtx client.Context, txRes *s
 	return nil
 }
 
-// checkSignModeError checks if there are errors with marshalling proto-only
+// checkSignModeError checks if there are errors with marshalling non-amino
 // txs with amino.
 func checkSignModeError(ctx client.Context, resp interface{}, grpcEndPoint string) error {
 	// LegacyAmino used intentionally here to handle the SignMode errors
@@ -208,7 +208,7 @@ func checkSignModeError(ctx client.Context, resp interface{}, grpcEndPoint strin
 	if err != nil {
 
 		// If there's an unmarshalling error, we assume that it's because we're
-		// using amino to unmarshal a proto-only tx.
+		// using amino to unmarshal a non-amino tx.
 		return fmt.Errorf("this transaction cannot be displayed via legacy REST endpoints, because it does not support"+
 			" Amino serialization. Please either use CLI, gRPC, gRPC-gateway, or directly query the Tendermint RPC"+
 			" endpoint to query this transaction. The new REST endpoint (via gRPC-gateway) is %s. Please also see the"+

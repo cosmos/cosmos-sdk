@@ -36,7 +36,7 @@ type IntegrationTestSuite struct {
 	network *network.Network
 
 	stdTx    legacytx.StdTx
-	stdtxRes sdk.TxResponse
+	stdTxRes sdk.TxResponse
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
@@ -61,8 +61,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	// NOTE: this uses amino explicitly, don't migrate it!
-	s.Require().NoError(s.cfg.LegacyAmino.UnmarshalJSON(res, &s.stdtxRes))
-	s.Require().Equal(uint32(0), s.stdtxRes.Code)
+	s.Require().NoError(s.cfg.LegacyAmino.UnmarshalJSON(res, &s.stdTxRes))
+	s.Require().Equal(uint32(0), s.stdTxRes.Code)
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 }
@@ -205,9 +205,9 @@ func (s *IntegrationTestSuite) TestQueryTxWithStdTx() {
 
 	// We broadcasted a StdTx in SetupSuite.
 	// We just check for a non-empty TxHash here, the actual hash will depend on the underlying tx configuration
-	s.Require().NotEmpty(s.stdtxRes.TxHash)
+	s.Require().NotEmpty(s.stdTxRes.TxHash)
 
-	s.testQueryTx(s.stdtxRes.Height, s.stdtxRes.TxHash, val0.Address.String())
+	s.testQueryTx(s.stdTxRes.Height, s.stdTxRes.TxHash, val0.Address.String())
 }
 
 func (s *IntegrationTestSuite) TestQueryTxWithServiceMessage() {

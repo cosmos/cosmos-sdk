@@ -218,7 +218,7 @@ func (c *Client) GetTx(_ context.Context, hash string) (sdk.Tx, error) {
 
 // GetUnconfirmedTx gets an unconfirmed transaction given its hash
 // NOTE(fdymylja): not implemented yet
-func (c *Client) GetUnconfirmedTx(_ context.Context, hash string) (sdk.Tx, error) {
+func (c *Client) GetUnconfirmedTx(_ context.Context, _ string) (sdk.Tx, error) {
 	return nil, rosetta.WrapError(rosetta.ErrNotImplemented, "get unconfirmed transaction method is not supported")
 }
 

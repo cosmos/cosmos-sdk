@@ -167,18 +167,18 @@ func (k Keeper) GetLatestClientConsensusState(ctx sdk.Context, clientID string) 
 
 // GetSelfConsensusState introspects the (self) past historical info at a given height
 // and returns the expected consensus state at that height.
-// For now, can only retrieve self consensus states for the current version
+// For now, can only retrieve self consensus states for the current revision
 func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height exported.Height) (exported.ConsensusState, bool) {
 	selfHeight, ok := height.(types.Height)
 	if !ok {
 		return nil, false
 	}
-	// check that height version matches chainID version
-	version := types.ParseChainID(ctx.ChainID())
-	if version != height.GetVersionNumber() {
+	// check that height revision matches chainID revision
+	revision := types.ParseChainID(ctx.ChainID())
+	if revision != height.GetRevisionNumber() {
 		return nil, false
 	}
-	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(selfHeight.VersionHeight))
+	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(selfHeight.RevisionHeight))
 	if !found {
 		return nil, false
 	}
@@ -193,7 +193,7 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height exported.Height) (
 
 // ValidateSelfClient validates the client parameters for a client of the running chain
 // This function is only used to validate the client state the counterparty stores for this chain
-// Client must be in same version as the executing chain
+// Client must be in same revision as the executing chain
 func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientState) error {
 	tmClient, ok := clientState.(*ibctmtypes.ClientState)
 	if !ok {
@@ -210,15 +210,15 @@ func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientS
 			ctx.ChainID(), tmClient.ChainId)
 	}
 
-	version := types.ParseChainID(ctx.ChainID())
+	revision := types.ParseChainID(ctx.ChainID())
 
-	// client must be in the same version as executing chain
-	if tmClient.LatestHeight.VersionNumber != version {
-		return sdkerrors.Wrapf(types.ErrInvalidClient, "client is not in the same version as the chain. expected version: %d, got: %d",
-			tmClient.LatestHeight.VersionNumber, version)
+	// client must be in the same revision as executing chain
+	if tmClient.LatestHeight.RevisionNumber != revision {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "client is not in the same revision as the chain. expected revision: %d, got: %d",
+			tmClient.LatestHeight.RevisionNumber, revision)
 	}
 
-	selfHeight := types.NewHeight(version, uint64(ctx.BlockHeight()))
+	selfHeight := types.NewHeight(revision, uint64(ctx.BlockHeight()))
 	if tmClient.LatestHeight.GTE(selfHeight) {
 		return sdkerrors.Wrapf(types.ErrInvalidClient, "client has LatestHeight %d greater than or equal to chain height %d",
 			tmClient.LatestHeight, selfHeight)

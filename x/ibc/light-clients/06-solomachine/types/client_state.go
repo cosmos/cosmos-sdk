@@ -33,7 +33,7 @@ func (cs ClientState) ClientType() string {
 
 // GetLatestHeight returns the latest sequence number.
 // Return exported.Height to satisfy ClientState interface
-// Version number is always 0 for a solo-machine.
+// Revision number is always 0 for a solo-machine.
 func (cs ClientState) GetLatestHeight() exported.Height {
 	return clienttypes.NewHeight(0, cs.Sequence)
 }
@@ -45,7 +45,7 @@ func (cs ClientState) IsFrozen() bool {
 
 // GetFrozenHeight returns the frozen sequence of the client.
 // Return exported.Height to satisfy interface
-// Version number is always 0 for a solo-machine
+// Revision number is always 0 for a solo-machine
 func (cs ClientState) GetFrozenHeight() exported.Height {
 	return clienttypes.NewHeight(0, cs.FrozenSequence)
 }
@@ -398,11 +398,11 @@ func produceVerificationArgs(
 	prefix exported.Prefix,
 	proof []byte,
 ) (cryptotypes.PubKey, signing.SignatureData, uint64, uint64, error) {
-	if version := height.GetVersionNumber(); version != 0 {
-		return nil, nil, 0, 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "version must be 0 for solomachine, got version-number: %d", version)
+	if revision := height.GetRevisionNumber(); revision != 0 {
+		return nil, nil, 0, 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "revision must be 0 for solomachine, got revision-number: %d", revision)
 	}
-	// sequence is encoded in the version height of height struct
-	sequence := height.GetVersionHeight()
+	// sequence is encoded in the revision height of height struct
+	sequence := height.GetRevisionHeight()
 	if cs.IsFrozen() {
 		return nil, nil, 0, 0, clienttypes.ErrClientFrozen
 	}
@@ -440,7 +440,7 @@ func produceVerificationArgs(
 		return nil, nil, 0, 0, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
 	}
 
-	latestSequence := cs.GetLatestHeight().GetVersionHeight()
+	latestSequence := cs.GetLatestHeight().GetRevisionHeight()
 	if latestSequence != sequence {
 		return nil, nil, 0, 0, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,

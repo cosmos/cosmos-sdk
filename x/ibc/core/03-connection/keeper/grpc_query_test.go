@@ -339,8 +339,8 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 			func() {
 				req = &types.QueryConnectionConsensusStateRequest{
 					ConnectionId:  "",
-					VersionNumber: 0,
-					VersionHeight: 1,
+					RevisionNumber: 0,
+					RevisionHeight: 1,
 				}
 			},
 			false,
@@ -350,8 +350,8 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 			func() {
 				req = &types.QueryConnectionConsensusStateRequest{
 					ConnectionId:  "test-connection-id",
-					VersionNumber: 0,
-					VersionHeight: 1,
+					RevisionNumber: 0,
+					RevisionHeight: 1,
 				}
 			},
 			false,
@@ -363,8 +363,8 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 
 				req = &types.QueryConnectionConsensusStateRequest{
 					ConnectionId:  connA.ID,
-					VersionNumber: 0,
-					VersionHeight: uint64(suite.chainA.GetContext().BlockHeight()), // use current height
+					RevisionNumber: 0,
+					RevisionHeight: uint64(suite.chainA.GetContext().BlockHeight()), // use current height
 				}
 			}, false,
 		},
@@ -380,8 +380,8 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 
 				req = &types.QueryConnectionConsensusStateRequest{
 					ConnectionId:  connA.ID,
-					VersionNumber: clientState.GetLatestHeight().GetVersionNumber(),
-					VersionHeight: clientState.GetLatestHeight().GetVersionHeight(),
+					RevisionNumber: clientState.GetLatestHeight().GetRevisionNumber(),
+					RevisionHeight: clientState.GetLatestHeight().GetRevisionHeight(),
 				}
 			},
 			true,

@@ -27,8 +27,8 @@ import (
 )
 
 const (
-	testChainID         = "gaiahub-0"
-	testChainIDVersion1 = "gaiahub-1"
+	testChainID          = "gaiahub-0"
+	testChainIDRevision1 = "gaiahub-1"
 
 	testClientID  = "gaiachain"
 	testClientID2 = "ethbridge"
@@ -42,9 +42,9 @@ const (
 )
 
 var (
-	testClientHeight         = types.NewHeight(0, 5)
-	testClientHeightVersion1 = types.NewHeight(1, 5)
-	newClientHeight          = types.NewHeight(1, 1)
+	testClientHeight          = types.NewHeight(0, 5)
+	testClientHeightRevision1 = types.NewHeight(1, 5)
+	newClientHeight           = types.NewHeight(1, 1)
 )
 
 type KeeperTestSuite struct {
@@ -94,7 +94,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	validator := tmtypes.NewValidator(pubKey, 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	suite.valSetHash = suite.valSet.Hash()
-	suite.header = suite.chainA.CreateTMClientHeader(testChainID, int64(testClientHeight.VersionHeight), testClientHeightMinus1, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	suite.header = suite.chainA.CreateTMClientHeader(testChainID, int64(testClientHeight.RevisionHeight), testClientHeightMinus1, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.consensusState = ibctmtypes.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot([]byte("hash")), suite.valSetHash)
 
 	var validators stakingtypes.Validators
@@ -116,9 +116,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 	}
 
 	// add localhost client
-	version := types.ParseChainID(suite.chainA.ChainID)
+	revision := types.ParseChainID(suite.chainA.ChainID)
 	localHostClient := localhosttypes.NewClientState(
-		suite.chainA.ChainID, types.NewHeight(version, uint64(suite.chainA.GetContext().BlockHeight())),
+		suite.chainA.ChainID, types.NewHeight(revision, uint64(suite.chainA.GetContext().BlockHeight())),
 	)
 	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), exported.Localhost, localHostClient)
 
@@ -190,8 +190,8 @@ func (suite *KeeperTestSuite) TestValidateSelfClient() {
 			false,
 		},
 		{
-			"invalid client version",
-			ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeightVersion1, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
+			"invalid client revision",
+			ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeightRevision1, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
 			false,
 		},
 		{
@@ -295,7 +295,7 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 
 	testClientHeightPlus5 := types.NewHeight(0, height+5)
 
-	header := suite.chainA.CreateTMClientHeader(testClientID, int64(testClientHeightPlus5.VersionHeight), testClientHeight, suite.header.Header.Time.Add(time.Minute),
+	header := suite.chainA.CreateTMClientHeader(testClientID, int64(testClientHeightPlus5.RevisionHeight), testClientHeight, suite.header.Header.Time.Add(time.Minute),
 		suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 
 	// mock update functionality

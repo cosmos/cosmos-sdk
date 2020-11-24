@@ -78,8 +78,8 @@ func QueryConsensusState(
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryConsensusStateRequest{
 		ClientId:      clientID,
-		VersionNumber: height.GetVersionNumber(),
-		VersionHeight: height.GetVersionHeight(),
+		RevisionNumber: height.GetRevisionNumber(),
+		RevisionHeight: height.GetRevisionHeight(),
 		LatestHeight:  latestHeight,
 	}
 

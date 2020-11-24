@@ -122,7 +122,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
 					txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 				}
-				err = authclient.SignTxWithSignerAddress(txFactory, clientCtx, multisigAddr, clientCtx.GetFromName(), txBuilder, true)
+				err = authclient.SignTxWithSignerAddress(txFactory, clientCtx, multisigAddr, clientCtx.GetFromName(), txBuilder, clientCtx.Offline)
 			}
 
 			if err != nil {

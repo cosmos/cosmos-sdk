@@ -277,13 +277,13 @@ func (s *IntegrationTestSuite) TestMultipleSyncBroadcastTxRequests() {
 			if tc.shouldErr {
 				var sigVerifyFailureCode uint32 = 4
 				s.Require().Equal(sigVerifyFailureCode, txRes.Code,
-					"Testcase '%s': Expected signature verification failure {Code: %d} from txResponse. "+
+					"Testcase '%s': Expected signature verification failure {Code: %d} from TxResponse. "+
 						"Found {Code: %d, RawLog: '%v'}",
 					tc.desc, sigVerifyFailureCode, txRes.Code, txRes.RawLog,
 				)
 			} else {
 				s.Require().Equal(uint32(0), txRes.Code,
-					"Testcase '%s': txResponse errored unexpectedly. Err: {Code: %d, RawLog: '%v'}",
+					"Testcase '%s': TxResponse errored unexpectedly. Err: {Code: %d, RawLog: '%v'}",
 					tc.desc, txRes.Code, txRes.RawLog,
 				)
 			}
@@ -384,9 +384,9 @@ func (s *IntegrationTestSuite) testQueryIBCTx(txRes sdk.TxResponse, cmd *cobra.C
 	grpcJSON, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/tx/%s", val.APIAddress, txRes.TxHash))
 	s.Require().NoError(err)
 
-	var gettxRes txtypes.GetTxResponse
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(grpcJSON, &gettxRes))
-	s.Require().Equal(gettxRes.Tx.Body.Memo, "foobar")
+	var getTxRes txtypes.GetTxResponse
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(grpcJSON, &getTxRes))
+	s.Require().Equal(getTxRes.Tx.Body.Memo, "foobar")
 
 	// generate broadcast only txn.
 	args = append(args, fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))

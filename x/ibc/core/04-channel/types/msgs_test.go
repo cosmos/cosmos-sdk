@@ -23,7 +23,7 @@ import (
 const (
 	// valid constatns used for testing
 	portid   = "testportid"
-	chanid   = "testchannel"
+	chanid   = "channel-0"
 	cpportid = "testcpport"
 	cpchanid = "testcpchannel"
 

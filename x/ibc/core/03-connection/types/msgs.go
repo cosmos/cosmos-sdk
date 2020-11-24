@@ -118,8 +118,8 @@ func (msg MsgConnectionOpenTry) Type() string {
 func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	// an empty connection identifier indicates that a connection identifier should be generated
 	if msg.PreviousConnectionId != "" {
-		if err := host.ConnectionIdentifierValidator(msg.PreviousConnectionId); err != nil {
-			return sdkerrors.Wrap(err, "invalid previous connection ID")
+		if !IsValidConnectionID(msg.PreviousConnectionId) {
+			return sdkerrors.Wrap(ErrInvalidConnectionIdentifier, "invalid previous connection ID")
 		}
 	}
 	if err := host.ClientIdentifierValidator(msg.ClientId); err != nil {
@@ -238,8 +238,8 @@ func (msg MsgConnectionOpenAck) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenAck) ValidateBasic() error {
-	if err := host.ConnectionIdentifierValidator(msg.ConnectionId); err != nil {
-		return sdkerrors.Wrap(err, "invalid connection ID")
+	if !IsValidConnectionID(msg.ConnectionId) {
+		return ErrInvalidConnectionIdentifier
 	}
 	if err := host.ConnectionIdentifierValidator(msg.CounterpartyConnectionId); err != nil {
 		return sdkerrors.Wrap(err, "invalid counterparty connection ID")
@@ -322,8 +322,8 @@ func (msg MsgConnectionOpenConfirm) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
-	if err := host.ConnectionIdentifierValidator(msg.ConnectionId); err != nil {
-		return sdkerrors.Wrap(err, "invalid connection ID")
+	if !IsValidConnectionID(msg.ConnectionId) {
+		return ErrInvalidConnectionIdentifier
 	}
 	if len(msg.ProofAck) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof ack")

@@ -112,8 +112,8 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
 	if msg.PreviousChannelId != "" {
-		if err := host.ChannelIdentifierValidator(msg.PreviousChannelId); err != nil {
-			return sdkerrors.Wrap(err, "invalid previous channel ID")
+		if !IsValidChannelID(msg.PreviousChannelId) {
+			return sdkerrors.Wrap(ErrInvalidChannelIdentifier, "invalid previous channel ID")
 		}
 	}
 	if len(msg.ProofInit) == 0 {
@@ -189,8 +189,8 @@ func (msg MsgChannelOpenAck) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.PortId); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
-		return sdkerrors.Wrap(err, "invalid channel ID")
+	if !IsValidChannelID(msg.ChannelId) {
+		return ErrInvalidChannelIdentifier
 	}
 	if err := host.ChannelIdentifierValidator(msg.CounterpartyChannelId); err != nil {
 		return sdkerrors.Wrap(err, "invalid counterparty channel ID")
@@ -255,8 +255,8 @@ func (msg MsgChannelOpenConfirm) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.PortId); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
-		return sdkerrors.Wrap(err, "invalid channel ID")
+	if !IsValidChannelID(msg.ChannelId) {
+		return ErrInvalidChannelIdentifier
 	}
 	if len(msg.ProofAck) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof ack")
@@ -315,8 +315,8 @@ func (msg MsgChannelCloseInit) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.PortId); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
-		return sdkerrors.Wrap(err, "invalid channel ID")
+	if !IsValidChannelID(msg.ChannelId) {
+		return ErrInvalidChannelIdentifier
 	}
 	_, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
@@ -372,8 +372,8 @@ func (msg MsgChannelCloseConfirm) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.PortId); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
-		return sdkerrors.Wrap(err, "invalid channel ID")
+	if !IsValidChannelID(msg.ChannelId) {
+		return ErrInvalidChannelIdentifier
 	}
 	if len(msg.ProofInit) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof init")

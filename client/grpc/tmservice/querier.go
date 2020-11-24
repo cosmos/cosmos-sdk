@@ -87,8 +87,13 @@ func (s queryServer) GetBlockByHeight(_ context.Context, req *qtypes.GetBlockByH
 
 // GetLatestValidatorSet implements ServiceServer.GetLatestValidatorSet
 func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *qtypes.GetLatestValidatorSetRequest) (*qtypes.GetLatestValidatorSetResponse, error) {
-	offset := int(req.Pagination.Offset)
-	limit := int(req.Pagination.Limit)
+	offset := 0
+	limit := qtypes.DefaultLimit
+
+	if req.Pagination != nil {
+		offset = int(req.Pagination.Offset)
+		limit = int(req.Pagination.Limit)
+	}
 	if offset < 0 {
 		return nil, status.Error(codes.InvalidArgument, "offset must greater than 0")
 	}
@@ -122,8 +127,13 @@ func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *qtypes.GetL
 
 // // GetValidatorSetByHeight implements ServiceServer.GetValidatorSetByHeight
 func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *qtypes.GetValidatorSetByHeightRequest) (*qtypes.GetValidatorSetByHeightResponse, error) {
-	offset := int(req.Pagination.Offset)
-	limit := int(req.Pagination.Limit)
+	offset := 0
+	limit := qtypes.DefaultLimit
+
+	if req.Pagination != nil {
+		offset = int(req.Pagination.Offset)
+		limit = int(req.Pagination.Limit)
+	}
 	if offset < 0 {
 		return nil, status.Error(codes.InvalidArgument, "offset must greater than 0")
 	}

@@ -95,12 +95,25 @@ func (s IntegrationTestSuite) TestQueryBlockByHeight() {
 
 func (s IntegrationTestSuite) TestQueryLatestValidatorSet() {
 	val := s.network.Validators[0]
-	_, err := s.queryClient.GetLatestValidatorSet(context.Background(), &qtypes.GetLatestValidatorSetRequest{Pagination: &qtypes.PageRequest{
+
+	// nil pagination
+	_, err := s.queryClient.GetLatestValidatorSet(context.Background(), &qtypes.GetLatestValidatorSetRequest{
+		Pagination: nil,
+	})
+	s.Require().NoError(err)
+
+	//with pagination
+	_, err = s.queryClient.GetLatestValidatorSet(context.Background(), &qtypes.GetLatestValidatorSetRequest{Pagination: &qtypes.PageRequest{
 		Offset: 0,
 		Limit:  10,
 	}})
 	s.Require().NoError(err)
 
+	// rest request without pagination
+	_, err = rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validators/latest", val.APIAddress))
+	s.Require().NoError(err)
+
+	// rest request with pagination
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validators/latest?pagination.offset=%d&pagination.limit=%d", val.APIAddress, 0, 1))
 	s.Require().NoError(err)
 	var validatorSetRes qtypes.GetLatestValidatorSetResponse
@@ -109,13 +122,27 @@ func (s IntegrationTestSuite) TestQueryLatestValidatorSet() {
 
 func (s IntegrationTestSuite) TestQueryValidatorSetByHeight() {
 	val := s.network.Validators[0]
+
+	// nil pagination
 	_, err := s.queryClient.GetValidatorSetByHeight(context.Background(), &qtypes.GetValidatorSetByHeightRequest{
+		Height:     1,
+		Pagination: nil,
+	})
+	s.Require().NoError(err)
+
+	_, err = s.queryClient.GetValidatorSetByHeight(context.Background(), &qtypes.GetValidatorSetByHeightRequest{
 		Height: 1,
 		Pagination: &qtypes.PageRequest{
 			Offset: 0,
 			Limit:  10,
 		}})
 	s.Require().NoError(err)
+
+	// no pagination rest
+	_, err = rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validators/%d", val.APIAddress, 1))
+	s.Require().NoError(err)
+
+	// rest query with pagination
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validators/%d?pagination.offset=%d&pagination.limit=%d", val.APIAddress, 1, 0, 1))
 	var validatorSetRes qtypes.GetValidatorSetByHeightResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &validatorSetRes))

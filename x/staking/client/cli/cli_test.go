@@ -1,4 +1,5 @@
-// +build norace
+// TODO: change this flag
+// xbuild norace
 
 package cli_test
 
@@ -18,10 +19,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/internal/protocdc"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
@@ -80,8 +81,10 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 	val := s.network.Validators[0]
 
 	consPrivKey := ed25519.GenPrivKey()
-	// TODO: check if we can change this
-	consPubKey, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeConsPub, consPrivKey.PubKey())
+	// TODO: fix this
+	//consPubKey, err := legacybech32.Bech32ifyPubKey(legacybech32.Bech32PubKeyTypeConsPub, consPrivKey.PubKey())
+	//s.Require().NoError(err)
+	consPubKey, err := protocdc.MarshalJSON(consPrivKey.PubKey(), nil)
 	s.Require().NoError(err)
 
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)

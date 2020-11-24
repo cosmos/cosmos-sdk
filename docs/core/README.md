@@ -8,7 +8,7 @@ parent:
 
 This repository contains reference documentation on the core concepts of the Cosmos SDK.
 
-1. [`Baseapp`](./baseapp.md)
+1. [`BaseApp`](./baseapp.md)
 2. [Transaction](./transactions.md)
 3. [Context](./context.md)
 4. [Node Client](./node.md)

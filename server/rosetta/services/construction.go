@@ -312,7 +312,7 @@ func (sn SingleNetwork) ConstructionSubmit(ctx context.Context, request *types.C
 			Hash: res.TxHash,
 		},
 		Metadata: map[string]interface{}{
-			"log": res.RawLog,
+			rosetta.Log: res.RawLog,
 		},
 	}, nil
 }

@@ -25,6 +25,7 @@ const (
 	ChainID        = "chain_id"
 	OperationSend  = "send"
 	OperationFee   = "fee"
+	Log            = "log"
 )
 
 // Synchronization stage constants used to determine if a node is synced or catching up
@@ -52,6 +53,7 @@ func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter)
 type SdkTxWithHash struct {
 	HexHash string
 	Code    uint32
+	Log     string
 	Tx      sdk.Tx
 }
 
@@ -71,7 +73,7 @@ type NodeClient interface {
 	// Coins gets the supply of the coins active in the network
 	Coins(ctx context.Context) (sdk.Coins, error)
 	// GetTx gets a transaction given its hash
-	GetTx(ctx context.Context, hash string) (sdk.Tx, error)
+	GetTx(ctx context.Context, hash string) (sdk.Tx, string, error)
 	// GetUnconfirmedTx gets an unconfirmed Tx given its hash
 	// NOTE(fdymylja): NOT IMPLEMENTED YET!
 	GetUnconfirmedTx(ctx context.Context, hash string) (sdk.Tx, error)

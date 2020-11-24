@@ -133,7 +133,7 @@ func (sn SingleNetwork) Block(ctx context.Context, request *types.BlockRequest) 
 }
 
 func (sn SingleNetwork) BlockTransaction(ctx context.Context, request *types.BlockTransactionRequest) (*types.BlockTransactionResponse, *types.Error) {
-	tx, err := sn.client.GetTx(ctx, request.TransactionIdentifier.Hash)
+	tx, log, err := sn.client.GetTx(ctx, request.TransactionIdentifier.Hash)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
@@ -142,7 +142,9 @@ func (sn SingleNetwork) BlockTransaction(ctx context.Context, request *types.Blo
 		Transaction: &types.Transaction{
 			TransactionIdentifier: &types.TransactionIdentifier{Hash: request.TransactionIdentifier.Hash},
 			Operations:            conversion.SdkTxToOperations(tx, false, false),
-			Metadata:              nil,
+			Metadata: map[string]interface{}{
+				rosetta.Log: log,
+			},
 		},
 	}, nil
 }

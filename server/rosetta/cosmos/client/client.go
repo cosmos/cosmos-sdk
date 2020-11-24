@@ -203,17 +203,17 @@ func (c *Client) ListTransactionsInBlock(ctx context.Context, height int64) ([]*
 }
 
 // GetTx returns a transaction given its hash
-func (c *Client) GetTx(_ context.Context, hash string) (sdk.Tx, error) {
+func (c *Client) GetTx(_ context.Context, hash string) (sdk.Tx, string, error) {
 	txResp, err := authclient.QueryTx(c.clientCtx, hash)
 	if err != nil {
-		return nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
+		return nil, "", rosetta.WrapError(rosetta.ErrUnknown, err.Error())
 	}
 	var sdkTx sdk.Tx
 	err = c.ir.UnpackAny(txResp.Tx, &sdkTx)
 	if err != nil {
-		return nil, rosetta.WrapError(rosetta.ErrCodec, err.Error())
+		return nil, "", rosetta.WrapError(rosetta.ErrCodec, err.Error())
 	}
-	return sdkTx, nil
+	return sdkTx, txResp.Logs.String(), nil
 }
 
 // GetUnconfirmedTx gets an unconfirmed transaction given its hash

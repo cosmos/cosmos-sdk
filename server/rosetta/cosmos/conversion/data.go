@@ -59,7 +59,9 @@ func ResultTxSearchToTransaction(txs []*rosetta.SdkTxWithHash) []*types.Transact
 		converted[i] = &types.Transaction{
 			TransactionIdentifier: &types.TransactionIdentifier{Hash: tx.HexHash},
 			Operations:            SdkTxToOperations(tx.Tx, true, hasError),
-			Metadata:              nil,
+			Metadata: map[string]interface{}{
+				rosetta.Log: tx.Log,
+			},
 		}
 	}
 

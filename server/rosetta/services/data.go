@@ -162,7 +162,7 @@ func (on OnlineNetwork) Mempool(ctx context.Context, _ *types.NetworkRequest) (*
 }
 
 // MempoolTransaction fetches a single transaction in the mempool
-// NOTE:
+// NOTE: it is not implemented yet
 func (on OnlineNetwork) MempoolTransaction(ctx context.Context, request *types.MempoolTransactionRequest) (*types.MempoolTransactionResponse, *types.Error) {
 	tx, err := on.client.GetUnconfirmedTx(ctx, request.TransactionIdentifier.Hash)
 	if err != nil {

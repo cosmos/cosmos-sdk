@@ -51,8 +51,8 @@ func CoinsToBalance(ownedCoins []sdk.Coin, availableCoins sdk.Coins) []*types.Am
 	return amounts
 }
 
-// ResultTxSearchToTransaction converts tendermint search transactions to rosetta ones
-func ResultTxSearchToTransaction(txs []*rosetta.SdkTxWithHash) []*types.Transaction {
+// ResultTxSearchToTransactions converts tendermint search transactions to rosetta ones
+func ResultTxSearchToTransactions(txs []*rosetta.SdkTxWithHash) []*types.Transaction {
 	converted := make([]*types.Transaction, len(txs))
 	for i, tx := range txs {
 		// hasError := tx.Code > 0 // TODO find way to check for txs that have error.

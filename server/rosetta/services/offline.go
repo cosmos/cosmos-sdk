@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-
 	"github.com/coinbase/rosetta-sdk-go/types"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 
@@ -14,7 +13,7 @@ import (
 // it supports a subset of the construction API.
 func NewOffline(network *types.NetworkIdentifier) crg.Adapter {
 	return OfflineNetwork{
-		SingleNetwork{
+		OnlineNetwork{
 			client:                 nil,
 			network:                network,
 			genesisBlockIdentifier: nil,
@@ -26,7 +25,7 @@ func NewOffline(network *types.NetworkIdentifier) crg.Adapter {
 // which is basically a data API that constantly
 // returns errors, because it cannot be used if offline
 type OfflineNetwork struct {
-	SingleNetwork
+	OnlineNetwork
 }
 
 // Implement DataAPI in offline mode, which means no method is available

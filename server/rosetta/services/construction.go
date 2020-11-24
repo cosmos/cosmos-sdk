@@ -24,10 +24,10 @@ import (
 )
 
 // interface implementation assertion
-var _ crg.ConstructionAPI = SingleNetwork{}
+var _ crg.ConstructionAPI = OnlineNetwork{}
 
-func (sn SingleNetwork) ConstructionCombine(ctx context.Context, request *types.ConstructionCombineRequest) (*types.ConstructionCombineResponse, *types.Error) {
-	txBldr, err := sn.getTxBuilderFromBytesTx(request.UnsignedTransaction)
+func (on OnlineNetwork) ConstructionCombine(ctx context.Context, request *types.ConstructionCombineRequest) (*types.ConstructionCombineResponse, *types.Error) {
+	txBldr, err := on.getTxBuilderFromBytesTx(request.UnsignedTransaction)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
@@ -47,7 +47,7 @@ func (sn SingleNetwork) ConstructionCombine(ctx context.Context, request *types.
 		copy(compressedPublicKey, cmp.SerializeCompressed())
 		pubKey := &secp256k1.PubKey{Key: compressedPublicKey}
 
-		accountInfo, err := sn.client.AccountInfo(ctx, sdk.AccAddress(pubKey.Address()).String(), nil)
+		accountInfo, err := on.client.AccountInfo(ctx, sdk.AccAddress(pubKey.Address()).String(), nil)
 		if err != nil {
 			return nil, rosetta.ToRosettaError(err)
 		}
@@ -67,7 +67,7 @@ func (sn SingleNetwork) ConstructionCombine(ctx context.Context, request *types.
 		return nil, rosetta.ToRosettaError(err)
 	}
 
-	txBytes, err := sn.client.GetTxConfig().TxEncoder()(txBldr.GetTx())
+	txBytes, err := on.client.GetTxConfig().TxEncoder()(txBldr.GetTx())
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
@@ -77,13 +77,13 @@ func (sn SingleNetwork) ConstructionCombine(ctx context.Context, request *types.
 	}, nil
 }
 
-func (sn SingleNetwork) getTxBuilderFromBytesTx(tx string) (client.TxBuilder, error) {
+func (on OnlineNetwork) getTxBuilderFromBytesTx(tx string) (client.TxBuilder, error) {
 	txBytes, err := hex.DecodeString(tx)
 	if err != nil {
 		return nil, err
 	}
 
-	TxConfig := sn.client.GetTxConfig()
+	TxConfig := on.client.GetTxConfig()
 	rawTx, err := TxConfig.TxDecoder()(txBytes)
 	if err != nil {
 		return nil, err
@@ -94,7 +94,7 @@ func (sn SingleNetwork) getTxBuilderFromBytesTx(tx string) (client.TxBuilder, er
 	return txBldr, nil
 }
 
-func (sn SingleNetwork) ConstructionDerive(ctx context.Context, request *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
+func (on OnlineNetwork) ConstructionDerive(ctx context.Context, request *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
 	if request.PublicKey.CurveType != "secp256k1" {
 		return nil, rosetta.WrapError(rosetta.ErrUnsupportedCurve, "only secp256k1 supported").RosettaError()
 	}
@@ -116,7 +116,7 @@ func (sn SingleNetwork) ConstructionDerive(ctx context.Context, request *types.C
 	}, nil
 }
 
-func (sn SingleNetwork) ConstructionHash(ctx context.Context, request *types.ConstructionHashRequest) (*types.TransactionIdentifierResponse, *types.Error) {
+func (on OnlineNetwork) ConstructionHash(ctx context.Context, request *types.ConstructionHashRequest) (*types.TransactionIdentifierResponse, *types.Error) {
 	bz, err := hex.DecodeString(request.SignedTransaction)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrInvalidTransaction, "error decoding tx").RosettaError()
@@ -133,7 +133,7 @@ func (sn SingleNetwork) ConstructionHash(ctx context.Context, request *types.Con
 	}, nil
 }
 
-func (sn SingleNetwork) ConstructionMetadata(ctx context.Context, request *types.ConstructionMetadataRequest) (*types.ConstructionMetadataResponse, *types.Error) {
+func (on OnlineNetwork) ConstructionMetadata(ctx context.Context, request *types.ConstructionMetadataRequest) (*types.ConstructionMetadataResponse, *types.Error) {
 	if len(request.Options) == 0 {
 		return nil, rosetta.ErrInterpreting.RosettaError()
 	}
@@ -145,7 +145,7 @@ func (sn SingleNetwork) ConstructionMetadata(ctx context.Context, request *types
 
 	addrString := addr.(string)
 
-	accountInfo, err := sn.client.AccountInfo(ctx, addrString, nil)
+	accountInfo, err := on.client.AccountInfo(ctx, addrString, nil)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
@@ -160,7 +160,7 @@ func (sn SingleNetwork) ConstructionMetadata(ctx context.Context, request *types
 		return nil, rosetta.WrapError(rosetta.ErrInvalidMemo, "memo not set").RosettaError()
 	}
 
-	status, err := sn.client.Status(ctx)
+	status, err := on.client.Status(ctx)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
@@ -176,8 +176,8 @@ func (sn SingleNetwork) ConstructionMetadata(ctx context.Context, request *types
 	}, nil
 }
 
-func (sn SingleNetwork) ConstructionParse(ctx context.Context, request *types.ConstructionParseRequest) (*types.ConstructionParseResponse, *types.Error) {
-	txBldr, err := sn.getTxBuilderFromBytesTx(request.Transaction)
+func (on OnlineNetwork) ConstructionParse(ctx context.Context, request *types.ConstructionParseRequest) (*types.ConstructionParseResponse, *types.Error) {
+	txBldr, err := on.getTxBuilderFromBytesTx(request.Transaction)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
@@ -199,7 +199,7 @@ func (sn SingleNetwork) ConstructionParse(ctx context.Context, request *types.Co
 	}, nil
 }
 
-func (sn SingleNetwork) ConstructionPayloads(ctx context.Context, request *types.ConstructionPayloadsRequest) (*types.ConstructionPayloadsResponse, *types.Error) {
+func (on OnlineNetwork) ConstructionPayloads(ctx context.Context, request *types.ConstructionPayloadsRequest) (*types.ConstructionPayloadsResponse, *types.Error) {
 	if len(request.Operations) > 3 {
 		return nil, rosetta.ErrInvalidOperation.RosettaError()
 	}
@@ -218,7 +218,7 @@ func (sn SingleNetwork) ConstructionPayloads(ctx context.Context, request *types
 	txFactory := tx.Factory{}.WithAccountNumber(metadata.AccountNumber).WithChainID(metadata.ChainID).
 		WithGas(metadata.Gas).WithSequence(metadata.Sequence).WithMemo(metadata.Memo).WithFees(fee.String())
 
-	TxConfig := sn.client.GetTxConfig()
+	TxConfig := on.client.GetTxConfig()
 	txFactory = txFactory.WithTxConfig(TxConfig)
 
 	txBldr, err := tx.BuildUnsignedTx(txFactory, sendMsg)
@@ -260,7 +260,7 @@ func (sn SingleNetwork) ConstructionPayloads(ctx context.Context, request *types
 	}, nil
 }
 
-func (sn SingleNetwork) ConstructionPreprocess(ctx context.Context, request *types.ConstructionPreprocessRequest) (*types.ConstructionPreprocessResponse, *types.Error) {
+func (on OnlineNetwork) ConstructionPreprocess(ctx context.Context, request *types.ConstructionPreprocessRequest) (*types.ConstructionPreprocessResponse, *types.Error) {
 	operations := request.Operations
 	if len(operations) > 3 {
 		return nil, rosetta.ErrInvalidRequest.RosettaError()
@@ -296,13 +296,13 @@ func (sn SingleNetwork) ConstructionPreprocess(ctx context.Context, request *typ
 	}, nil
 }
 
-func (sn SingleNetwork) ConstructionSubmit(ctx context.Context, request *types.ConstructionSubmitRequest) (*types.TransactionIdentifierResponse, *types.Error) {
+func (on OnlineNetwork) ConstructionSubmit(ctx context.Context, request *types.ConstructionSubmitRequest) (*types.TransactionIdentifierResponse, *types.Error) {
 	txBytes, err := hex.DecodeString(request.SignedTransaction)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
 
-	res, err := sn.client.PostTx(txBytes)
+	res, err := on.client.PostTx(txBytes)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}

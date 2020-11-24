@@ -37,10 +37,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 
 ### Improvements
-- (SDK) [\#7925](https://github.com/cosmos/cosmos-sdk/pull/7925) Updated dependencies to use gRPC v1.33.2
+* (SDK) [\#7925](https://github.com/cosmos/cosmos-sdk/pull/7925) Updated dependencies to use gRPC v1.33.2
   * Updated gRPC dependency to v1.33.2
   * Updated iavl dependency to v0.15-rc2
 * (version) [\#7848](https://github.com/cosmos/cosmos-sdk/pull/7848) [\#7941](https://github.com/cosmos/cosmos-sdk/pull/7941) `version --long` output now shows the list of build dependencies and replaced build dependencies.
+
+### State Machine Breaking Changes
+* (x/upgrade) [\#7979](https://github.com/cosmos/cosmos-sdk/pull/7979) keeper pubkey storage serialization migration from bech32 to protobuf. 
 
 ### Bug Fixes
 

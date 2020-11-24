@@ -77,7 +77,7 @@ func (cs ClientState) ZeroCustomFields() exported.ClientState {
 // VerifyUpgradeAndUpdateState returns an error since solomachine client does not support upgrades
 func (cs ClientState) VerifyUpgradeAndUpdateState(
 	_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore,
-	_ exported.ClientState, _ exported.Height, _ []byte,
+	_ exported.ClientState, _ exported.ConsensusState, _, _ []byte,
 ) (exported.ClientState, exported.ConsensusState, error) {
 	return nil, nil, sdkerrors.Wrap(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade solomachine client")
 }

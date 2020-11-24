@@ -25,7 +25,7 @@ func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
 	latestHeight clienttypes.Height, specs []*ics23.ProofSpec,
-	upgradePath string, allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour bool,
+	upgradePath []string, allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour bool,
 ) *ClientState {
 	return &ClientState{
 		ChainId:                      chainID,
@@ -105,17 +105,15 @@ func (cs ClientState) Validate() error {
 	if cs.ProofSpecs == nil {
 		return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof specs cannot be nil for tm client")
 	}
-	for _, spec := range cs.ProofSpecs {
+	for i, spec := range cs.ProofSpecs {
 		if spec == nil {
-			return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof spec cannot be nil")
+			return sdkerrors.Wrapf(ErrInvalidProofSpecs, "proof spec cannot be nil at index: %d", i)
 		}
 	}
-	if cs.UpgradePath != "" {
-		keys := strings.Split(cs.UpgradePath, "/")
-		for _, k := range keys {
-			if strings.TrimSpace(k) == "" {
-				return sdkerrors.Wrapf(clienttypes.ErrInvalidUpgradeClient, "upgrade path contains an empty string when splitting by '/': %s", cs.UpgradePath)
-			}
+	// UpgradePath may be empty, but if it isn't, each key must be non-empty
+	for i, k := range cs.UpgradePath {
+		if strings.TrimSpace(k) == "" {
+			return sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "key in upgrade path at index %d cannot be empty", i)
 		}
 	}
 

@@ -3,6 +3,7 @@ package tx_test
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -134,7 +135,7 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 	// Query the tx via gRPC no pagination.
 	_, err = s.queryClient.GetTxsEvent(
 		context.Background(),
-		&tx.GetTxsEventRequest{Event: "message.action=send"},
+		&tx.GetTxsEventRequest{Event: url.QueryEscape(fmt.Sprintf("message.action=%s&transfer.sender=%s", "send", val.Address))},
 	)
 	s.Require().NoError(err)
 
@@ -164,7 +165,7 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 	s.Require().NoError(err)
 
 	// Query the tx via grpc-gateway.
-	restRes, err = rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?event=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action=send", 0, 1))
+	restRes, err = rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?event=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action%3Dsend", 0, 1))
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getTxRes))
 	s.Require().Equal(len(getTxRes.Txs), 1)

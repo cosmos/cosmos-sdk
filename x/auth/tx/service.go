@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"net/url"
 	"strings"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
@@ -56,11 +57,17 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 
 	var events []string
 
-	if strings.Contains(req.Event, "&") {
-		events = strings.Split(req.Event, "&")
-	} else {
-		events = append(events, req.Event)
+	eve, err := url.QueryUnescape(req.Event)
+	if err != nil {
+		return nil, err
 	}
+
+	if strings.Contains(eve, "&") {
+		events = strings.Split(eve, "&")
+	} else {
+		events = append(events, eve)
+	}
+
 	tmEvents := make([]string, len(events))
 	for i, event := range events {
 		if !strings.Contains(event, "=") {

@@ -5,26 +5,27 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	proto "github.com/gogo/protobuf/proto"
+	db "github.com/tendermint/tm-db"
 )
 
 // keys
 var (
-	NextEpochActionIDPrefix = []byte("next_epoch_action_id")
-	EpochActionStorePrefix  = "epoch_action"
+	NextEpochActionID      = []byte("next_epoch_action_id")
+	EpochActionQueuePrefix = "epoch_action"
 )
 
 // SetNextEpochActionID save ID to be used for next epoch action
 func (k Keeper) SetNextEpochActionID(ctx sdk.Context, actionID uint64) {
 	store := ctx.KVStore(k.storeKey)
 
-	store.Set(NextEpochActionIDPrefix, sdk.Uint64ToBigEndian(actionID))
+	store.Set(NextEpochActionID, sdk.Uint64ToBigEndian(actionID))
 }
 
 // GetNextEpochActionID returns ID to be used for next epoch
 func (k Keeper) GetNextEpochActionID(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 
-	bz := store.Get(NextEpochActionIDPrefix)
+	bz := store.Get(NextEpochActionID)
 	if bz == nil {
 		// return default action ID to 1
 		return 1
@@ -35,7 +36,7 @@ func (k Keeper) GetNextEpochActionID(ctx sdk.Context) uint64 {
 
 // ActionStoreKey returns action store key from ID
 func ActionStoreKey(actionID uint64) []byte {
-	return []byte(fmt.Sprintf("%s_%d", EpochActionStorePrefix, actionID))
+	return []byte(fmt.Sprintf("%s_%d", EpochActionQueuePrefix, actionID))
 }
 
 // SaveEpochAction save the actions that need to be executed on next epoch
@@ -66,7 +67,7 @@ func (k Keeper) GetEpochAction(ctx sdk.Context, actionID uint64) proto.Message {
 // GetEpochActions get all actions
 func (k Keeper) GetEpochActions(ctx sdk.Context) []proto.Message {
 	actions := []proto.Message{}
-	iterator := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte(EpochActionStorePrefix))
+	iterator := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte(EpochActionQueuePrefix))
 
 	for ; iterator.Valid(); iterator.Next() {
 		var action proto.Message
@@ -79,10 +80,15 @@ func (k Keeper) GetEpochActions(ctx sdk.Context) []proto.Message {
 	return actions
 }
 
+// GetEpochActionsIterator returns iterator for EpochActions
+func (k Keeper) GetEpochActionsIterator(ctx sdk.Context) db.Iterator {
+	return sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte(EpochActionQueuePrefix))
+}
+
 // DequeueEpochActions dequeue all the actions store on epoch
 func (k Keeper) DequeueEpochActions(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, []byte(EpochActionStorePrefix))
+	iterator := sdk.KVStorePrefixIterator(store, []byte(EpochActionQueuePrefix))
 
 	for ; iterator.Valid(); iterator.Next() {
 		key := iterator.Key()

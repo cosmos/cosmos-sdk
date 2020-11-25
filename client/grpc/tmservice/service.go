@@ -89,23 +89,11 @@ func (s queryServer) GetBlockByHeight(_ context.Context, req *qtypes.GetBlockByH
 
 // GetLatestValidatorSet implements ServiceServer.GetLatestValidatorSet
 func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *qtypes.GetLatestValidatorSetRequest) (*qtypes.GetLatestValidatorSetResponse, error) {
-	offset := 0
-	limit := qtypes.DefaultLimit
-
-	if req.Pagination != nil {
-		offset = int(req.Pagination.Offset)
-		limit = int(req.Pagination.Limit)
-	}
-	if offset < 0 {
-		return nil, status.Error(codes.InvalidArgument, "offset must greater than 0")
-	}
-	if limit < 0 {
-		return nil, status.Error(codes.InvalidArgument, "limit must greater than 0")
-	} else if limit == 0 {
-		limit = qtypes.DefaultLimit
+	page, limit, err := qtypes.ParsePagination(req.Pagination)
+	if err != nil {
+		return nil, err
 	}
 
-	page := offset/limit + 1
 	validatorsRes, err := rpc.GetValidators(s.clientCtx, nil, &page, &limit)
 	if err != nil {
 		return nil, err
@@ -127,26 +115,12 @@ func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *qtypes.GetL
 	return outputValidatorsRes, nil
 }
 
-// // GetValidatorSetByHeight implements ServiceServer.GetValidatorSetByHeight
+// GetValidatorSetByHeight implements ServiceServer.GetValidatorSetByHeight
 func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *qtypes.GetValidatorSetByHeightRequest) (*qtypes.GetValidatorSetByHeightResponse, error) {
-	offset := 0
-	limit := qtypes.DefaultLimit
-
-	if req.Pagination != nil {
-		offset = int(req.Pagination.Offset)
-		limit = int(req.Pagination.Limit)
+	page, limit, err := qtypes.ParsePagination(req.Pagination)
+	if err != nil {
+		return nil, err
 	}
-	if offset < 0 {
-		return nil, status.Error(codes.InvalidArgument, "offset must greater than 0")
-	}
-
-	if limit < 0 {
-		return nil, status.Error(codes.InvalidArgument, "limit must greater than 0")
-	} else if limit == 0 {
-		limit = qtypes.DefaultLimit
-	}
-
-	page := offset/limit + 1
 
 	chainHeight, err := rpc.GetChainHeight(s.clientCtx)
 	if err != nil {

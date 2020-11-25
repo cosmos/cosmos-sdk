@@ -438,8 +438,8 @@ func (s *IntegrationTestSuite) TestLegacyRestErrMessages() {
 			"Failing IBC message",
 			ibccli.NewChannelCloseInitCmd(),
 			[]string{
-				"121",         // dummy port-id
-				"21212121212", // dummy channel-id
+				"121",       // dummy port-id
+				"channel-0", // dummy channel-id
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),

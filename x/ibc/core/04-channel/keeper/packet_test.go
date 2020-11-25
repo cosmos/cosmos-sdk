@@ -148,8 +148,8 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 		}, false},
 		{"next sequence send not found", func() {
 			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
-			channelA := connA.NextTestChannel(ibctesting.TransferPort)
-			channelB := connB.NextTestChannel(ibctesting.TransferPort)
+			channelA := suite.chainA.NextTestChannel(connA, ibctesting.TransferPort)
+			channelB := suite.chainB.NextTestChannel(connB, ibctesting.TransferPort)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 			// manually creating channel prevents next sequence from being set
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(
@@ -298,8 +298,8 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 			connB, connA, err := suite.coordinator.ConnOpenInit(suite.chainB, suite.chainA, clientB, clientA)
 			suite.Require().NoError(err)
 
-			channelA := connA.NextTestChannel(ibctesting.TransferPort)
-			channelB := connB.NextTestChannel(ibctesting.TransferPort)
+			channelA := suite.chainA.NextTestChannel(connA, ibctesting.TransferPort)
+			channelB := suite.chainB.NextTestChannel(connB, ibctesting.TransferPort)
 			// pass channel check
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(
 				suite.chainB.GetContext(),
@@ -322,8 +322,8 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 		}, false},
 		{"next receive sequence is not found", func() {
 			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
-			channelA := connA.NextTestChannel(ibctesting.TransferPort)
-			channelB := connB.NextTestChannel(ibctesting.TransferPort)
+			channelA := suite.chainA.NextTestChannel(connA, ibctesting.TransferPort)
+			channelB := suite.chainB.NextTestChannel(connB, ibctesting.TransferPort)
 
 			// manually creating channel prevents next recv sequence from being set
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(
@@ -570,8 +570,8 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			connA, connB, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
 
-			channelA := connA.NextTestChannel(ibctesting.TransferPort)
-			channelB := connB.NextTestChannel(ibctesting.TransferPort)
+			channelA := suite.chainA.NextTestChannel(connA, ibctesting.TransferPort)
+			channelB := suite.chainB.NextTestChannel(connB, ibctesting.TransferPort)
 			// pass channel check
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(
 				suite.chainA.GetContext(),
@@ -599,8 +599,8 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 		}, false},
 		{"next ack sequence not found", func() {
 			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
-			channelA := connA.NextTestChannel(ibctesting.TransferPort)
-			channelB := connB.NextTestChannel(ibctesting.TransferPort)
+			channelA := suite.chainA.NextTestChannel(connA, ibctesting.TransferPort)
+			channelB := suite.chainB.NextTestChannel(connB, ibctesting.TransferPort)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 			// manually creating channel prevents next sequence acknowledgement from being set
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(

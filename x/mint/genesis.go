@@ -12,7 +12,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState) {
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
 func ExportGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
-	minter := keeper.GetMinter(ctx)
+	minter := keeper.GetMinterCustom(ctx)
 	params := keeper.GetParams(ctx)
-	return NewGenesisState(minter, params)
+	return NewGenesisState(minter, params, keeper.GetOriginalMintedPerBlock())
 }

@@ -59,7 +59,7 @@ func querySupplyOf(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, er
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	supply := k.GetSupply(ctx).GetTotal().AmountOf(params.Denom)
+	supply := k.GetSupplyByDenom(ctx, params.Denom)
 
 	res, err := supply.MarshalJSON()
 	if err != nil {

@@ -35,8 +35,8 @@ type Store struct {
 // LoadStore returns an IAVL Store as a CommitKVStore. Internally, it will load the
 // store's version (id) from the provided DB. An error is returned if the version
 // fails to load.
-func LoadStore(db dbm.DB, id types.CommitID, lazyLoading bool) (types.CommitKVStore, error) {
-	return LoadStoreWithInitialVersion(db, id, lazyLoading, 0)
+func LoadStore(db dbm.DB, id types.CommitID, lazyLoading bool, startVersion int64) (types.CommitKVStore, error) {
+	return LoadStoreWithInitialVersion(db, id, lazyLoading, uint64(startVersion))
 }
 
 // LoadStore returns an IAVL Store as a CommitKVStore setting its initialVersion

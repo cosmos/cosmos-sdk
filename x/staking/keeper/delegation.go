@@ -462,7 +462,7 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time
 // Perform a delegation, set/update everything necessary within the store.
 // tokenSrc indicates the bond status of the incoming funds.
 func (k Keeper) Delegate(
-	ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Int, tokenSrc sdk.BondStatus,
+	ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Dec, tokenSrc sdk.BondStatus,
 	validator types.Validator, subtractAccount bool,
 ) (newShares sdk.Dec, err error) {
 
@@ -519,16 +519,16 @@ func (k Keeper) Delegate(
 			// do nothing
 		case (tokenSrc == sdk.Unbonded || tokenSrc == sdk.Unbonding) && validator.IsBonded():
 			// transfer pools
-			k.notBondedTokensToBonded(ctx, bondAmt)
+			k.notBondedTokensToBonded(ctx, bondAmt.RoundInt())
 		case tokenSrc == sdk.Bonded && !validator.IsBonded():
 			// transfer pools
-			k.bondedTokensToNotBonded(ctx, bondAmt)
+			k.bondedTokensToNotBonded(ctx, bondAmt.RoundInt())
 		default:
 			panic("unknown token source bond status")
 		}
 	}
 
-	validator, newShares = k.AddValidatorTokensAndShares(ctx, validator, bondAmt)
+	validator, newShares = k.AddValidatorTokensAndShares(ctx, validator, bondAmt.RoundInt())
 
 	// Update delegation
 	delegation.Shares = delegation.Shares.Add(newShares)
@@ -753,7 +753,7 @@ func (k Keeper) BeginRedelegation(
 		return time.Time{}, types.ErrTinyRedelegationAmount
 	}
 
-	sharesCreated, err := k.Delegate(ctx, delAddr, returnAmount, srcValidator.GetStatus(), dstValidator, false)
+	sharesCreated, err := k.Delegate(ctx, delAddr, returnAmount.ToDec(), srcValidator.GetStatus(), dstValidator, false)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -826,7 +826,7 @@ func (k Keeper) CompleteRedelegation(
 // valied based on upon the converted shares. If the amount is valid, the total
 // amount of respective shares is returned, otherwise an error is returned.
 func (k Keeper) ValidateUnbondAmount(
-	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int,
+	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Dec,
 ) (shares sdk.Dec, err error) {
 
 	validator, found := k.GetValidator(ctx, valAddr)
@@ -839,12 +839,12 @@ func (k Keeper) ValidateUnbondAmount(
 		return shares, types.ErrNoDelegation
 	}
 
-	shares, err = validator.SharesFromTokens(amt)
+	shares, err = validator.SharesFromTokens(amt.RoundInt())
 	if err != nil {
 		return shares, err
 	}
 
-	sharesTruncated, err := validator.SharesFromTokensTruncated(amt)
+	sharesTruncated, err := validator.SharesFromTokensTruncated(amt.RoundInt())
 	if err != nil {
 		return shares, err
 	}

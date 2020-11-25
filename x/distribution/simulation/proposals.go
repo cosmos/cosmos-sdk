@@ -37,7 +37,7 @@ func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) simulation.Conte
 		}
 
 		denomIndex := r.Intn(len(balance))
-		amount, err := simulation.RandPositiveInt(r, balance[denomIndex].Amount.TruncateInt())
+		amount, err := simulation.RandPositiveInt(r, balance[denomIndex].Amount)
 		if err != nil {
 			return nil
 		}

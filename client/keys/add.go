@@ -37,6 +37,7 @@ const (
 
 	// DefaultKeyPass contains the default key password for genesis transactions
 	DefaultKeyPass = "12345678"
+	flagMnemonic    = "mnemonic"
 )
 
 // AddKeyCommand defines a keys command to add a generated or recovered private key to keybase.
@@ -78,6 +79,9 @@ the flag --nosort is set.
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
 	cmd.Flags().String(flagKeyAlgo, string(keys.Secp256k1), "Key signing algorithm to generate keys for")
+
+	cmd.Flags().BoolP(flagYes, "y", false, "Overwrite the existing account without confirmation")
+	cmd.Flags().StringP(flagMnemonic, "m", "", "Mnemonic words")
 	return cmd
 }
 
@@ -125,8 +129,9 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 	}
 
 	if !viper.GetBool(flagDryRun) {
+		ask := !viper.GetBool(flagYes)
 		_, err = kb.Get(name)
-		if err == nil {
+		if err == nil && ask {
 			// account exists, ask for user confirmation
 			response, err2 := input.GetConfirmation(fmt.Sprintf("override the existing name %s", name), inBuf)
 			if err2 != nil {
@@ -220,11 +225,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 
 	recover, _ := cmd.Flags().GetBool(flagRecover)
 	if recover {
-		mnemonic, err = input.GetString("Enter your bip39 mnemonic", inBuf)
-		if err != nil {
-			return err
-		}
-
+		mnemonic = viper.GetString(flagMnemonic)
 		if !bip39.IsMnemonicValid(mnemonic) {
 			return errors.New("invalid mnemonic")
 		}

@@ -199,7 +199,7 @@ func (kb baseKeybase) CreateLedger(
 
 // CreateMnemonic generates a new key with the given algorithm and language pair.
 func (kb baseKeybase) CreateMnemonic(
-	keyWriter keyWriter, name string, language Language, passwd string, algo SigningAlgo,
+	keyWriter keyWriter, name string, language Language, passwd string, algo SigningAlgo, mnemonicInput string,
 ) (info Info, mnemonic string, err error) {
 
 	if language != English {
@@ -222,6 +222,10 @@ func (kb baseKeybase) CreateMnemonic(
 		return nil, "", err
 	}
 
+	if len(mnemonicInput) > 0{
+		mnemonic = mnemonicInput
+	}
+	
 	info, err = kb.CreateAccount(keyWriter, name, mnemonic, DefaultBIP39Passphrase, passwd, types.GetConfig().GetFullFundraiserPath(), algo)
 	if err != nil {
 		return nil, "", err

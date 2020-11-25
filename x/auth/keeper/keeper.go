@@ -27,6 +27,8 @@ type AccountKeeper struct {
 	cdc *codec.Codec
 
 	paramSubspace subspace.Subspace
+
+	observer ObserverI
 }
 
 // NewAccountKeeper returns a new sdk.AccountKeeper that uses go-amino to

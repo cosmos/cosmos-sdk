@@ -50,7 +50,7 @@ const (
 	DefaultBIP39Passphrase = ""
 
 	// bits of entropy to draw when creating a mnemonic
-	defaultEntropySize = 256
+	defaultEntropySize = 128 //mnemonicEntropySize
 )
 
 var (
@@ -91,10 +91,10 @@ func NewInMemory(opts ...KeybaseOption) Keybase { return newDBKeybase(dbm.NewMem
 // It returns an error if it fails to generate a key for the given key algorithm
 // type, or if another key is already stored under the same name.
 func (kb dbKeybase) CreateMnemonic(
-	name string, language Language, passwd string, algo SigningAlgo,
+	name string, language Language, passwd string, algo SigningAlgo, mnemonicInput string,
 ) (info Info, mnemonic string, err error) {
 
-	return kb.base.CreateMnemonic(kb, name, language, passwd, algo)
+	return kb.base.CreateMnemonic(kb, name, language, passwd, algo, mnemonicInput)
 }
 
 // CreateAccount converts a mnemonic to a private key and persists it, encrypted

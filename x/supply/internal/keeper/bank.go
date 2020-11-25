@@ -110,11 +110,10 @@ func (k Keeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) err
 		return err
 	}
 
-	// update total supply
-	supply := k.GetSupply(ctx)
-	supply = supply.Inflate(amt)
-
-	k.SetSupply(ctx, supply)
+	// update supply
+	for i := 0; i < len(amt); i++ {
+		k.inflate(ctx, amt[i].Denom, amt[i].Amount)
+	}
 
 	logger := k.Logger(ctx)
 	logger.Info(fmt.Sprintf("minted %s from %s module account", amt.String(), moduleName))
@@ -139,13 +138,49 @@ func (k Keeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) err
 		return err
 	}
 
-	// update total supply
-	supply := k.GetSupply(ctx)
-	supply = supply.Deflate(amt)
-	k.SetSupply(ctx, supply)
+	// update supply
+	for i := 0; i < len(amt); i++ {
+		if err = k.deflate(ctx, amt[i].Denom, amt[i].Amount); err != nil {
+			return err
+		}
+	}
 
 	logger := k.Logger(ctx)
 	logger.Info(fmt.Sprintf("burned %s from %s module account", amt.String(), moduleName))
 
+	return nil
+}
+
+// GetSupplyByDenom gets the amount of a token supply from the store
+func (k Keeper) GetSupplyByDenom(ctx sdk.Context, denom string) sdk.Dec {
+	tokenSupplyAmount := sdk.ZeroDec()
+	bytes := ctx.KVStore(k.storeKey).Get(getTokenSupplyKey(denom))
+	if bytes == nil {
+		return tokenSupplyAmount
+	}
+
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bytes, &tokenSupplyAmount)
+	return tokenSupplyAmount
+}
+
+// inflate adds the amount of a token in the store
+func (k Keeper) inflate(ctx sdk.Context, tokenSymbol string, amount sdk.Dec) {
+	if amount.Equal(sdk.ZeroDec()) {
+		return
+	}
+
+	originalSupplyAmount := k.GetSupplyByDenom(ctx, tokenSymbol)
+	k.setTokenSupplyAmount(ctx, tokenSymbol, originalSupplyAmount.Add(amount))
+}
+
+// deflate subtracts the amount of a token from the original in the store
+func (k Keeper) deflate(ctx sdk.Context, tokenSymbol string, deflationAmount sdk.Dec) error {
+	currentSupplyAmount := k.GetSupplyByDenom(ctx, tokenSymbol)
+	supplyAmount := currentSupplyAmount.Sub(deflationAmount)
+	if supplyAmount.IsNegative() {
+		return types.ErrInvalidDeflation
+	}
+
+	k.setTokenSupplyAmount(ctx, tokenSymbol, supplyAmount)
 	return nil
 }

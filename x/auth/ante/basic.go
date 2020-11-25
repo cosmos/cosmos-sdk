@@ -75,6 +75,27 @@ func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 	return next(ctx, tx, simulate)
 }
 
+// ValidateMsgDecorator will validate msg with special requirement
+//type ValidateMsgDecorator struct {
+//	validateMsgHandler ValidateMsgHandler
+//}
+//
+//func NewValidateMsgDecorator(validateMsgHandler ValidateMsgHandler) ValidateMsgDecorator {
+//	return ValidateMsgDecorator{
+//		validateMsgHandler: validateMsgHandler,
+//	}
+//}
+//
+//func (vmd ValidateMsgDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+//	// *ABORT* the tx in case of failing to validate it in checkTx mode
+//	if ctx.IsCheckTx() && !simulate && vmd.validateMsgHandler != nil {
+//		if err := vmd.validateMsgHandler(ctx, tx.GetMsgs()); err != nil {
+//			return ctx, err
+//		}
+//	}
+//	return next(ctx, tx, simulate)
+//}
+
 // ConsumeTxSizeGasDecorator will take in parameters and consume gas proportional
 // to the size of tx before calling next AnteHandler. Note, the gas costs will be
 // slightly over estimated due to the fact that any given signing account may need

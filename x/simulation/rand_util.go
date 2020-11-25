@@ -38,11 +38,11 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 }
 
 // RandPositiveInt get a rand positive sdk.Int
-func RandPositiveInt(r *rand.Rand, max sdk.Int) (sdk.Int, error) {
-	if !max.GTE(sdk.OneInt()) {
+func RandPositiveInt(r *rand.Rand, max sdk.Dec) (sdk.Int, error) {
+	if !max.GTE(sdk.OneDec()) {
 		return sdk.Int{}, errors.New("max too small")
 	}
-	max = max.Sub(sdk.OneInt())
+	max = max.Sub(sdk.OneDec())
 	return sdk.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(sdk.OneInt()), nil
 }
 

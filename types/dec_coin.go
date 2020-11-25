@@ -45,14 +45,16 @@ func NewDecCoinFromDec(denom string, amount Dec) DecCoin {
 
 // NewDecCoinFromCoin creates a new DecCoin from a Coin.
 func NewDecCoinFromCoin(coin Coin) DecCoin {
-	if err := validate(coin.Denom, coin.Amount); err != nil {
-		panic(err)
-	}
+	return coin
 
-	return DecCoin{
-		Denom:  coin.Denom,
-		Amount: coin.Amount.ToDec(),
-	}
+	//if err := validate(coin.Denom, coin.Amount); err != nil {
+	//	panic(err)
+	//}
+	//
+	//return DecCoin{
+	//	Denom:  coin.Denom,
+	//	Amount: coin.Amount.ToDec(),
+	//}
 }
 
 // NewInt64DecCoin returns a new DecCoin with a denomination and amount. It will
@@ -649,3 +651,4 @@ func ParseDecCoins(coinsStr string) (DecCoins, error) {
 
 	return coins, nil
 }
+

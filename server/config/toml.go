@@ -44,6 +44,37 @@ halt-time = {{ .BaseConfig.HaltTime }}
 
 # InterBlockCache enables inter-block caching.
 inter-block-cache = {{ .BaseConfig.InterBlockCache }}
+
+##### backend configuration options #####
+[backend]
+enable_backend = "{{ .BackendConfig.EnableBackend }}"
+enable_mkt_compute = "{{ .BackendConfig.EnableMktCompute }}"
+log_sql = "{{ .BackendConfig.LogSQL }}"
+clean_ups_kept_days = "{{ .BackendConfig.CleanUpsKeptDays }}"
+clean_ups_time = "{{ .BackendConfig.CleanUpsTime }}"
+[backend.orm_engine]
+engine_type = "{{ .BackendConfig.OrmEngine.EngineType }}"
+connect_str = "{{ js .BackendConfig.OrmEngine.ConnectStr }}"
+[stream]
+engine = "{{ .StreamConfig.Engine }}"
+klines_query_connect = "{{ .StreamConfig.KlineQueryConnect }}"
+worker_id = "{{ .StreamConfig.WorkerId }}"
+redis_scheduler = "{{ .StreamConfig.RedisScheduler }}"
+redis_lock = "{{ .StreamConfig.RedisLock }}"
+local_lock_dir = "{{ js .StreamConfig.LocalLockDir }}"
+market_service_enable = "{{ .StreamConfig.MarketServiceEnable }}"
+cache_queue_capacity = "{{ .StreamConfig.CacheQueueCapacity }}"
+market_pulsar_topic = "{{ .StreamConfig.MarketPulsarTopic }}"
+market_pulsar_partition = "{{ .StreamConfig.MarketPulsarPartition }}"
+market_quotations_eureka_name = "{{ .StreamConfig.MarketQuotationsEurekaName }}"
+eureka_server_url = "{{ .StreamConfig.EurekaServerUrl }}"
+rest_application_name = "{{ .StreamConfig.RestApplicationName }}"
+nacos_server_url = "{{ .StreamConfig.NacosServerUrl }}"
+nacos_namespace_id = "{{ .StreamConfig.NacosNamespaceId }}"
+pushservice_pulsar_public_topic = "{{ .StreamConfig.PushservicePulsarPublicTopic }}"
+pushservice_pulsar_private_topic = "{{ .StreamConfig.PushservicePulsarPrivateTopic }}"
+pushservice_pulsar_depth_topic = "{{ .StreamConfig.PushservicePulsarDepthTopic }}"
+redis_require_pass = "{{ .StreamConfig.RedisRequirePass }}"
 `
 
 var configTemplate *template.Template

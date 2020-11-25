@@ -57,10 +57,10 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 
 		k.IterateValidators(ctx, func(_ int64, validator exported.ValidatorI) bool {
 			switch validator.GetStatus() {
-			case sdk.Bonded:
-				bonded = bonded.Add(validator.GetTokens())
-			case sdk.Unbonding, sdk.Unbonded:
-				notBonded = notBonded.Add(validator.GetTokens())
+			//case sdk.Bonded:
+				//bonded = bonded.Add(validator.GetTokens())
+			//case sdk.Unbonding, sdk.Unbonded:
+			//	notBonded = notBonded.Add(validator.GetTokens())
 			default:
 				panic("invalid validator status")
 			}
@@ -76,7 +76,7 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 
 		poolBonded := bondedPool.GetCoins().AmountOf(bondDenom)
 		poolNotBonded := notBondedPool.GetCoins().AmountOf(bondDenom)
-		broken := !poolBonded.Equal(bonded) || !poolNotBonded.Equal(notBonded)
+		broken := !poolBonded.Equal(bonded.ToDec()) || !poolNotBonded.Equal(notBonded.ToDec())
 
 		// Bonded tokens should equal sum of tokens with bonded validators
 		// Not-bonded tokens should equal unbonding delegations	plus tokens on unbonded validators

@@ -27,21 +27,7 @@ var (
 	commissionRates = NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 )
 
-func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) MsgCreateValidator {
-	return types.NewMsgCreateValidator(
-		address, pubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt), Description{}, commissionRates, sdk.OneInt(),
-	)
-}
 
-func NewTestMsgCreateValidatorWithCommission(address sdk.ValAddress, pubKey crypto.PubKey,
-	amt sdk.Int, commissionRate sdk.Dec) MsgCreateValidator {
-
-	commission := NewCommissionRates(commissionRate, sdk.OneDec(), sdk.ZeroDec())
-
-	return types.NewMsgCreateValidator(
-		address, pubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt), Description{}, commission, sdk.OneInt(),
-	)
-}
 
 func NewTestMsgCreateValidatorWithMinSelfDelegation(address sdk.ValAddress, pubKey crypto.PubKey,
 	amt sdk.Int, minSelfDelegation sdk.Int) MsgCreateValidator {

@@ -2,18 +2,20 @@ package keys
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ethcmn "github.com/ethereum/go-ethereum/common"
 )
 
 // KeyOutput defines a structure wrapping around an Info object used for output
 // functionality.
 type KeyOutput struct {
-	Name      string                 `json:"name" yaml:"name"`
-	Type      string                 `json:"type" yaml:"type"`
-	Address   string                 `json:"address" yaml:"address"`
-	PubKey    string                 `json:"pubkey" yaml:"pubkey"`
-	Mnemonic  string                 `json:"mnemonic,omitempty" yaml:"mnemonic"`
-	Threshold uint                   `json:"threshold,omitempty" yaml:"threshold"`
-	PubKeys   []multisigPubKeyOutput `json:"pubkeys,omitempty" yaml:"pubkeys"`
+	Name       string                 `json:"name" yaml:"name"`
+	Type       string                 `json:"type" yaml:"type"`
+	Address    string                 `json:"address" yaml:"address"`
+	EthAddress string                 `json:"eth_address" yaml:"eth_address"`
+	PubKey     string                 `json:"pubkey" yaml:"pubkey"`
+	Mnemonic   string                 `json:"mnemonic,omitempty" yaml:"mnemonic"`
+	Threshold  uint                   `json:"threshold,omitempty" yaml:"threshold"`
+	PubKeys    []multisigPubKeyOutput `json:"pubkeys,omitempty" yaml:"pubkeys"`
 }
 
 // NewKeyOutput creates a default KeyOutput instance without Mnemonic, Threshold and PubKeys
@@ -101,6 +103,7 @@ func Bech32KeyOutput(keyInfo Info) (KeyOutput, error) {
 		ko.Threshold = mInfo.Threshold
 		ko.PubKeys = pubKeys
 	}
+	ko.EthAddress = ethcmn.BytesToAddress(accAddr.Bytes()).String()
 
 	return ko, nil
 }

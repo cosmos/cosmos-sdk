@@ -45,19 +45,25 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 // GetSupply retrieves the Supply from store
 func (k Keeper) GetSupply(ctx sdk.Context) (supply exported.SupplyI) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(SupplyKey)
-	if b == nil {
-		panic("stored supply should not have been nil")
+	iterator := sdk.KVStorePrefixIterator(store, SupplyKey)
+	defer iterator.Close()
+
+	var totalSupply types.Supply
+	for ; iterator.Valid(); iterator.Next() {
+		var amount sdk.Dec
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &amount)
+		totalSupply.Total = append(totalSupply.Total, sdk.NewCoin(string(iterator.Key()[1:]), amount))
 	}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &supply)
-	return
+
+	return totalSupply
 }
 
 // SetSupply sets the Supply to store
 func (k Keeper) SetSupply(ctx sdk.Context, supply exported.SupplyI) {
-	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(supply)
-	store.Set(SupplyKey, b)
+	tokensSupply := supply.GetTotal()
+	for i := 0; i < len(tokensSupply); i++ {
+		k.setTokenSupplyAmount(ctx, tokensSupply[i].Denom, tokensSupply[i].Amount)
+	}
 }
 
 // ValidatePermissions validates that the module account has been granted
@@ -70,4 +76,9 @@ func (k Keeper) ValidatePermissions(macc exported.ModuleAccountI) error {
 		}
 	}
 	return nil
+}
+
+// setTokenSupplyAmount sets the supply amount of a token to the store
+func (k Keeper) setTokenSupplyAmount(ctx sdk.Context, tokenSymbol string, supplyAmount sdk.Dec) {
+	ctx.KVStore(k.storeKey).Set(getTokenSupplyKey(tokenSymbol), k.cdc.MustMarshalBinaryLengthPrefixed(supplyAmount))
 }

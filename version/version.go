@@ -37,6 +37,8 @@ var (
 	Commit = ""
 	// build tags
 	BuildTags = ""
+	CosmosSDK  = ""
+	Tendermint = ""
 )
 
 // Info defines the application version information.
@@ -49,6 +51,8 @@ type Info struct {
 	BuildTags  string     `json:"build_tags" yaml:"build_tags"`
 	GoVersion  string     `json:"go" yaml:"go"`
 	BuildDeps  []buildDep `json:"build_deps" yaml:"build_deps"`
+	CosmosSDK  string `json:"cosmos_sdk" yaml:"cosmos_sdk"`
+	Tendermint string `json:"tendermint" yaml:"tendermint"`
 }
 
 func NewInfo() Info {
@@ -57,6 +61,8 @@ func NewInfo() Info {
 		ServerName: ServerName,
 		ClientName: ClientName,
 		Version:    Version,
+		CosmosSDK:  CosmosSDK,
+		Tendermint: Tendermint,
 		GitCommit:  Commit,
 		BuildTags:  BuildTags,
 		GoVersion:  fmt.Sprintf("go version %s %s/%s", runtime.Version(), runtime.GOOS, runtime.GOARCH),
@@ -64,13 +70,13 @@ func NewInfo() Info {
 	}
 }
 
-func (vi Info) String() string {
+func (v Info) String() string {
 	return fmt.Sprintf(`%s: %s
 git commit: %s
 build tags: %s
-%s`,
-		vi.Name, vi.Version, vi.GitCommit, vi.BuildTags, vi.GoVersion,
-	)
+cosmos-sdk: %s
+tendermint: %s
+%s`,v.Name, v.Version, v.GitCommit, v.BuildTags, v.CosmosSDK, v.Tendermint, v.GoVersion)
 }
 
 func depsFromBuildInfo() (deps []buildDep) {

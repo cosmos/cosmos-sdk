@@ -91,10 +91,10 @@ func NewKeyring(
 // An error is returned if it fails to generate a key for the given algo type,
 // or if another key is already stored under the same name.
 func (kb keyringKeybase) CreateMnemonic(
-	name string, language Language, passwd string, algo SigningAlgo,
+	name string, language Language, passwd string, algo SigningAlgo, mnemonicInput string,
 ) (info Info, mnemonic string, err error) {
 
-	return kb.base.CreateMnemonic(kb, name, language, passwd, algo)
+	return kb.base.CreateMnemonic(kb, name, language, passwd, algo, mnemonicInput)
 }
 
 // CreateAccount converts a mnemonic to a private key and persists it, encrypted

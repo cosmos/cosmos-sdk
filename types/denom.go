@@ -60,5 +60,5 @@ func ConvertCoin(coin Coin, denom string) (Coin, error) {
 		return NewCoin(denom, coin.Amount), nil
 	}
 
-	return NewCoin(denom, coin.Amount.ToDec().Mul(srcUnit.Quo(dstUnit)).TruncateInt()), nil
+	return NewCoin(denom, coin.Amount.Mul(srcUnit.Quo(dstUnit)).TruncateInt()), nil
 }

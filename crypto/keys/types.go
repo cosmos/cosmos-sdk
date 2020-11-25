@@ -29,7 +29,7 @@ type Keybase interface {
 	// It returns the generated mnemonic and the key Info. It returns an error if it fails to
 	// generate a key for the given algo type, or if another key is already stored under the
 	// same name.
-	CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, seed string, err error)
+	CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo, mnemonic string) (info Info, seed string, err error)
 
 	// CreateAccount converts a mnemonic to a private key and BIP 32 HD Path
 	// and persists it, encrypted with the given password.

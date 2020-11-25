@@ -197,9 +197,9 @@ func createValidators(ctx sdk.Context, sk staking.Keeper, powers []int64) {
 	sk.SetNewValidatorByPowerIndex(ctx, val2)
 	sk.SetNewValidatorByPowerIndex(ctx, val3)
 
-	_, _ = sk.Delegate(ctx, valAccAddr1, sdk.TokensFromConsensusPower(powers[0]), sdk.Unbonded, val1, true)
-	_, _ = sk.Delegate(ctx, valAccAddr2, sdk.TokensFromConsensusPower(powers[1]), sdk.Unbonded, val2, true)
-	_, _ = sk.Delegate(ctx, valAccAddr3, sdk.TokensFromConsensusPower(powers[2]), sdk.Unbonded, val3, true)
+	_, _ = sk.Delegate(ctx, valAccAddr1, sdk.TokensFromConsensusPower(powers[0]).ToDec(), sdk.Unbonded, val1, true)
+	_, _ = sk.Delegate(ctx, valAccAddr2, sdk.TokensFromConsensusPower(powers[1]).ToDec(), sdk.Unbonded, val2, true)
+	_, _ = sk.Delegate(ctx, valAccAddr3, sdk.TokensFromConsensusPower(powers[2]).ToDec(), sdk.Unbonded, val3, true)
 
 	_ = staking.EndBlocker(ctx, sk)
 }

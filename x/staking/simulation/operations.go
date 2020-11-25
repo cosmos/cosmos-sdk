@@ -113,7 +113,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		amount, err := simulation.RandPositiveInt(r, amount)
+		_, err := simulation.RandPositiveInt(r, amount)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -261,7 +261,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Ope
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		amount, err := simulation.RandPositiveInt(r, amount)
+		_, err := simulation.RandPositiveInt(r, amount)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -330,7 +330,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		unbondAmt, err := simulation.RandPositiveInt(r, totalBond)
+		unbondAmt, err := simulation.RandPositiveInt(r, totalBond.ToDec())
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -424,7 +424,7 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		redAmt, err := simulation.RandPositiveInt(r, totalBond)
+		redAmt, err := simulation.RandPositiveInt(r, totalBond.ToDec())
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}

@@ -16,6 +16,7 @@ Some important information concerning all legacy REST endpoints:
 
 | Legacy REST Endpoint      | Description        | Breaking Change                                                                                                                                                                                                                            |
 | ------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `POST /txs`               | Query tx by hash   | Endpoint will error when trying to broadcast transactions that don't support Amino serialization (e.g. IBC txs)<sup>1</sup>.                                                                                                               |
 | `GET /txs/{hash}`         | Query tx by hash   | Endpoint will error when trying to output transactions that don't support Amino serialization (e.g. IBC txs)<sup>1</sup>.                                                                                                                  |
 | `GET /txs`                | Query tx by events | Endpoint will error when trying to output transactions that don't support Amino serialization (e.g. IBC txs)<sup>1</sup>.                                                                                                                  |
 | `GET /staking/validators` | Get all validators | BondStatus is now a protobuf enum instead of an int32, and JSON serialized using its protobuf name, so expect query parameters like `?status=BOND_STATUS_{BONDED,UNBONDED,UNBONDING}` as opposed to `?status={bonded,unbonded,unbonding}`. |
@@ -87,3 +88,7 @@ Some modules expose legacy `POST` endpoints to generate unsigned transactions fo
 | `POST /upgrade/*`                                                               | Create unsigned `Msg`s for upgrade                                  | N/A, use Protobuf directly                                                                            |
 | `GET /upgrade/current`                                                          | Get the current plan                                                | `GET /cosmos/upgrade/v1beta1/current_plan`                                                            |
 | `GET /upgrade/applied_plan/{name}`                                              | Get a previously applied plan                                       | `GET /cosmos/upgrade/v1beta1/applied/{name}`                                                          |
+
+## Migrating to gRPC
+
+Instead of hitting REST endpoints as described in the previous paragraph, the SDK also exposes a gRPC server. Any client can use gRPC instead of REST to interact with the node. An overview of different ways to communicate with a node can be found [here (TODO)](https://github.com/cosmos/cosmos-sdk/issues/7657), and a concrete tutorial for setting up a gRPC client [here (TODO)](https://github.com/cosmos/cosmos-sdk/issues/7657).

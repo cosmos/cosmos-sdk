@@ -463,7 +463,7 @@ func GetCmdQueryNextSequenceReceive() *cobra.Command {
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(int64(sequenceRes.ProofHeight.VersionHeight))
+			clientCtx = clientCtx.WithHeight(int64(sequenceRes.ProofHeight.RevisionHeight))
 			return clientCtx.PrintOutput(sequenceRes)
 		},
 	}

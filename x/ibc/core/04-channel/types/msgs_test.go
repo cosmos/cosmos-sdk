@@ -23,7 +23,7 @@ import (
 const (
 	// valid constatns used for testing
 	portid   = "testportid"
-	chanid   = "testchannel"
+	chanid   = "channel-0"
 	cpportid = "testcpport"
 	cpchanid = "testcpchannel"
 
@@ -35,7 +35,7 @@ const (
 	invalidLongPort  = "invalidlongportinvalidlongportinvalidlongportidinvalidlongportidinvalid"
 
 	invalidChannel      = "(invalidchannel1)"
-	invalidShortChannel = "invalidch"
+	invalidShortChannel = "invalid"
 	invalidLongChannel  = "invalidlongchannelinvalidlongchannelinvalidlongchannelinvalidlongchannel"
 
 	invalidConnection      = "(invalidconnection1)"
@@ -114,22 +114,18 @@ func (suite *TypesTestSuite) TestMsgChannelOpenInitValidateBasic() {
 		msg     *types.MsgChannelOpenInit
 		expPass bool
 	}{
-		{"", types.NewMsgChannelOpenInit(portid, chanid, version, types.ORDERED, connHops, cpportid, cpchanid, addr), true},
-		{"too short port id", types.NewMsgChannelOpenInit(invalidShortPort, chanid, version, types.ORDERED, connHops, cpportid, cpchanid, addr), false},
-		{"too long port id", types.NewMsgChannelOpenInit(invalidLongPort, chanid, version, types.ORDERED, connHops, cpportid, cpchanid, addr), false},
-		{"port id contains non-alpha", types.NewMsgChannelOpenInit(invalidPort, chanid, version, types.ORDERED, connHops, cpportid, cpchanid, addr), false},
-		{"too short channel id", types.NewMsgChannelOpenInit(portid, invalidShortChannel, version, types.ORDERED, connHops, cpportid, cpchanid, addr), false},
-		{"too long channel id", types.NewMsgChannelOpenInit(portid, invalidLongChannel, version, types.ORDERED, connHops, cpportid, cpchanid, addr), false},
-		{"channel id contains non-alpha", types.NewMsgChannelOpenInit(portid, invalidChannel, version, types.ORDERED, connHops, cpportid, cpchanid, addr), false},
-		{"invalid channel order", types.NewMsgChannelOpenInit(portid, chanid, version, types.Order(3), connHops, cpportid, cpchanid, addr), false},
-		{"connection hops more than 1 ", types.NewMsgChannelOpenInit(portid, chanid, version, types.ORDERED, invalidConnHops, cpportid, cpchanid, addr), false},
-		{"too short connection id", types.NewMsgChannelOpenInit(portid, chanid, version, types.UNORDERED, invalidShortConnHops, cpportid, cpchanid, addr), false},
-		{"too long connection id", types.NewMsgChannelOpenInit(portid, chanid, version, types.UNORDERED, invalidLongConnHops, cpportid, cpchanid, addr), false},
-		{"connection id contains non-alpha", types.NewMsgChannelOpenInit(portid, chanid, version, types.UNORDERED, []string{invalidConnection}, cpportid, cpchanid, addr), false},
-		{"", types.NewMsgChannelOpenInit(portid, chanid, "", types.UNORDERED, connHops, cpportid, cpchanid, addr), true},
-		{"invalid counterparty port id", types.NewMsgChannelOpenInit(portid, chanid, version, types.UNORDERED, connHops, invalidPort, cpchanid, addr), false},
-		{"invalid counterparty channel id", types.NewMsgChannelOpenInit(portid, chanid, version, types.UNORDERED, connHops, cpportid, invalidChannel, addr), false},
-		{"channel not in INIT state", &types.MsgChannelOpenInit{portid, chanid, tryOpenChannel, addr.String()}, false},
+		{"", types.NewMsgChannelOpenInit(portid, version, types.ORDERED, connHops, cpportid, addr), true},
+		{"too short port id", types.NewMsgChannelOpenInit(invalidShortPort, version, types.ORDERED, connHops, cpportid, addr), false},
+		{"too long port id", types.NewMsgChannelOpenInit(invalidLongPort, version, types.ORDERED, connHops, cpportid, addr), false},
+		{"port id contains non-alpha", types.NewMsgChannelOpenInit(invalidPort, version, types.ORDERED, connHops, cpportid, addr), false},
+		{"invalid channel order", types.NewMsgChannelOpenInit(portid, version, types.Order(3), connHops, cpportid, addr), false},
+		{"connection hops more than 1 ", types.NewMsgChannelOpenInit(portid, version, types.ORDERED, invalidConnHops, cpportid, addr), false},
+		{"too short connection id", types.NewMsgChannelOpenInit(portid, version, types.UNORDERED, invalidShortConnHops, cpportid, addr), false},
+		{"too long connection id", types.NewMsgChannelOpenInit(portid, version, types.UNORDERED, invalidLongConnHops, cpportid, addr), false},
+		{"connection id contains non-alpha", types.NewMsgChannelOpenInit(portid, version, types.UNORDERED, []string{invalidConnection}, cpportid, addr), false},
+		{"", types.NewMsgChannelOpenInit(portid, "", types.UNORDERED, connHops, cpportid, addr), true},
+		{"invalid counterparty port id", types.NewMsgChannelOpenInit(portid, version, types.UNORDERED, connHops, invalidPort, addr), false},
+		{"channel not in INIT state", &types.MsgChannelOpenInit{portid, tryOpenChannel, addr.String()}, false},
 	}
 
 	for _, tc := range testCases {
@@ -155,27 +151,25 @@ func (suite *TypesTestSuite) TestMsgChannelOpenTryValidateBasic() {
 		msg     *types.MsgChannelOpenTry
 		expPass bool
 	}{
-		{"", types.NewMsgChannelOpenTry(portid, chanid, chanid, version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), true},
-		{"too short port id", types.NewMsgChannelOpenTry(invalidShortPort, chanid, chanid, version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
-		{"too long port id", types.NewMsgChannelOpenTry(invalidLongPort, chanid, chanid, version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
-		{"port id contains non-alpha", types.NewMsgChannelOpenTry(invalidPort, chanid, chanid, version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
-		{"too short channel id", types.NewMsgChannelOpenTry(portid, invalidShortChannel, chanid, version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
-		{"too long channel id", types.NewMsgChannelOpenTry(portid, invalidLongChannel, chanid, version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
-		{"channel id contains non-alpha", types.NewMsgChannelOpenTry(portid, invalidChannel, chanid, version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
-		{"", types.NewMsgChannelOpenTry(portid, chanid, chanid, version, types.ORDERED, connHops, cpportid, cpchanid, "", suite.proof, height, addr), true},
-		{"proof height is zero", types.NewMsgChannelOpenTry(portid, chanid, chanid, version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, clienttypes.ZeroHeight(), addr), false},
-		{"invalid channel order", types.NewMsgChannelOpenTry(portid, chanid, chanid, version, types.Order(4), connHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
-		{"connection hops more than 1 ", types.NewMsgChannelOpenTry(portid, chanid, chanid, version, types.UNORDERED, invalidConnHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
-		{"too short connection id", types.NewMsgChannelOpenTry(portid, chanid, chanid, version, types.UNORDERED, invalidShortConnHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
-		{"too long connection id", types.NewMsgChannelOpenTry(portid, chanid, chanid, version, types.UNORDERED, invalidLongConnHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
-		{"connection id contains non-alpha", types.NewMsgChannelOpenTry(portid, chanid, chanid, version, types.UNORDERED, []string{invalidConnection}, cpportid, cpchanid, version, suite.proof, height, addr), false},
-		{"", types.NewMsgChannelOpenTry(portid, chanid, chanid, "", types.UNORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), true},
-		{"invalid counterparty port id", types.NewMsgChannelOpenTry(portid, chanid, chanid, version, types.UNORDERED, connHops, invalidPort, cpchanid, version, suite.proof, height, addr), false},
-		{"invalid counterparty channel id", types.NewMsgChannelOpenTry(portid, chanid, chanid, version, types.UNORDERED, connHops, cpportid, invalidChannel, version, suite.proof, height, addr), false},
-		{"empty proof", types.NewMsgChannelOpenTry(portid, chanid, chanid, version, types.UNORDERED, connHops, cpportid, cpchanid, version, emptyProof, height, addr), false},
-		{"valid empty proved channel id", types.NewMsgChannelOpenTry(portid, chanid, "", version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), true},
-		{"invalid proved channel id, doesn't match channel id", types.NewMsgChannelOpenTry(portid, chanid, "differentchannel", version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
-		{"channel not in TRYOPEN state", &types.MsgChannelOpenTry{portid, chanid, chanid, initChannel, version, suite.proof, height, addr.String()}, false},
+		{"", types.NewMsgChannelOpenTry(portid, chanid, version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), true},
+		{"too short port id", types.NewMsgChannelOpenTry(invalidShortPort, chanid, version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
+		{"too long port id", types.NewMsgChannelOpenTry(invalidLongPort, chanid, version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
+		{"port id contains non-alpha", types.NewMsgChannelOpenTry(invalidPort, chanid, version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
+		{"too short channel id", types.NewMsgChannelOpenTry(portid, invalidShortChannel, version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
+		{"too long channel id", types.NewMsgChannelOpenTry(portid, invalidLongChannel, version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
+		{"channel id contains non-alpha", types.NewMsgChannelOpenTry(portid, invalidChannel, version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
+		{"", types.NewMsgChannelOpenTry(portid, chanid, version, types.ORDERED, connHops, cpportid, cpchanid, "", suite.proof, height, addr), true},
+		{"proof height is zero", types.NewMsgChannelOpenTry(portid, chanid, version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, clienttypes.ZeroHeight(), addr), false},
+		{"invalid channel order", types.NewMsgChannelOpenTry(portid, chanid, version, types.Order(4), connHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
+		{"connection hops more than 1 ", types.NewMsgChannelOpenTry(portid, chanid, version, types.UNORDERED, invalidConnHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
+		{"too short connection id", types.NewMsgChannelOpenTry(portid, chanid, version, types.UNORDERED, invalidShortConnHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
+		{"too long connection id", types.NewMsgChannelOpenTry(portid, chanid, version, types.UNORDERED, invalidLongConnHops, cpportid, cpchanid, version, suite.proof, height, addr), false},
+		{"connection id contains non-alpha", types.NewMsgChannelOpenTry(portid, chanid, version, types.UNORDERED, []string{invalidConnection}, cpportid, cpchanid, version, suite.proof, height, addr), false},
+		{"", types.NewMsgChannelOpenTry(portid, chanid, "", types.UNORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr), true},
+		{"invalid counterparty port id", types.NewMsgChannelOpenTry(portid, chanid, version, types.UNORDERED, connHops, invalidPort, cpchanid, version, suite.proof, height, addr), false},
+		{"invalid counterparty channel id", types.NewMsgChannelOpenTry(portid, chanid, version, types.UNORDERED, connHops, cpportid, invalidChannel, version, suite.proof, height, addr), false},
+		{"empty proof", types.NewMsgChannelOpenTry(portid, chanid, version, types.UNORDERED, connHops, cpportid, cpchanid, version, emptyProof, height, addr), false},
+		{"channel not in TRYOPEN state", &types.MsgChannelOpenTry{portid, chanid, initChannel, version, suite.proof, height, addr.String()}, false},
 	}
 
 	for _, tc := range testCases {

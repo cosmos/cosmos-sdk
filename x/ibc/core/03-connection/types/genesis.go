@@ -17,18 +17,21 @@ func NewConnectionPaths(id string, paths []string) ConnectionPaths {
 // NewGenesisState creates a GenesisState instance.
 func NewGenesisState(
 	connections []IdentifiedConnection, connPaths []ConnectionPaths,
+	nextConnectionSequence uint64,
 ) GenesisState {
 	return GenesisState{
-		Connections:           connections,
-		ClientConnectionPaths: connPaths,
+		Connections:            connections,
+		ClientConnectionPaths:  connPaths,
+		NextConnectionSequence: nextConnectionSequence,
 	}
 }
 
 // DefaultGenesisState returns the ibc connection submodule's default genesis state.
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
-		Connections:           []IdentifiedConnection{},
-		ClientConnectionPaths: []ConnectionPaths{},
+		Connections:            []IdentifiedConnection{},
+		ClientConnectionPaths:  []ConnectionPaths{},
+		NextConnectionSequence: 0,
 	}
 }
 

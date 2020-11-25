@@ -124,6 +124,20 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
+	// Query the tx via gRPC empty params.
+	_, err = s.queryClient.GetTxsEvent(
+		context.Background(),
+		&tx.GetTxsEventRequest{},
+	)
+	s.Require().Error(err)
+
+	// Query the tx via gRPC no pagination.
+	_, err = s.queryClient.GetTxsEvent(
+		context.Background(),
+		&tx.GetTxsEventRequest{Event: "message.action=send"},
+	)
+	s.Require().NoError(err)
+
 	// Query the tx via gRPC.
 	grpcRes, err := s.queryClient.GetTxsEvent(
 		context.Background(),
@@ -139,14 +153,23 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 	s.Require().Equal(len(grpcRes.Txs), 1)
 	s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
 
-	// Query the tx via grpc-gateway.
-	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?event=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action=send", 0, 1))
-	s.Require().NoError(err)
 	var getTxRes tx.GetTxsEventResponse
+
+	// Query the tx via grpc-gateway empty params.
+	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress))
+	s.Require().Error(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getTxRes))
+
+	// Query the tx via grpc-gateway without pagination.
+	_, err = rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?event=%s", val.APIAddress, "message.action=send"))
+	s.Require().NoError(err)
+
+	// Query the tx via grpc-gateway.
+	restRes, err = rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?event=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action=send", 0, 1))
+	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getTxRes))
-	s.Require().Equal(len(grpcRes.Txs), 1)
+	s.Require().Equal(len(getTxRes.Txs), 1)
 	s.Require().Equal("foobar", getTxRes.Txs[0].Body.Memo)
-	s.Require().NotZero(grpcRes.TxResponses[0].Height)
+	s.Require().NotZero(getTxRes.TxResponses[0].Height)
 }
 
 func (s IntegrationTestSuite) TestGetTx() {

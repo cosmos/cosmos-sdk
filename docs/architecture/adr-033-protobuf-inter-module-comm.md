@@ -275,7 +275,7 @@ Services registered against `InternalServer` will be callable from other modules
 
 ### Authorization
 
-By default, the inter-module router requires that modules are sent by the first signer returned by `GetSigners`. The
+By default, the inter-module router requires that messages are sent by the first signer returned by `GetSigners`. The
 inter-module router should also accept authorization middleware such as that provided by [ADR 030](https://github.com/cosmos/cosmos-sdk/pull/7105).
 This middleware will allow accounts to otherwise specific module accounts to perform actions on their behalf.
 Authorization middleware should take into account the need to grant certain modules effectively "admin" privileges to

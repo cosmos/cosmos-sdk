@@ -31,8 +31,6 @@ of module keeper interfaces inevitable because the current interfaces are poorly
 
 ### `x/bank` Case Study
 
-We use `x/bank` of this.
-
 Currently the `x/bank` keeper gives pretty much unrestricted access to any module which references it. For instance, the
 `SetBalance` method allows the caller to set the balance of any account to anything, bypassing even proper tracking of supply.
 

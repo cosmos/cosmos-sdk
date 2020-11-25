@@ -3,13 +3,13 @@ package types
 import (
 	"encoding/json"
 
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/multisig"
+	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	legacycodec "github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -24,14 +24,14 @@ var (
 // NOTE: the first signature responsible for paying fees, either directly,
 // or must be authorized to spend from the provided Fee.FeeAccount
 type FeeGrantTx struct {
-	Msgs       []sdk.Msg                `json:"msg" yaml:"msg"`
-	Fee        GrantedFee               `json:"fee" yaml:"fee"`
-	Signatures []authtypes.StdSignature `json:"signatures" yaml:"signatures"`
-	Memo       string                   `json:"memo" yaml:"memo"`
-	FeeAccount sdk.AccAddress           `json:"fee_account" yaml:"fee_account"`
+	Msgs       []sdk.Msg               `json:"msg" yaml:"msg"`
+	Fee        GrantedFee              `json:"fee" yaml:"fee"`
+	Signatures []legacytx.StdSignature `json:"signatures" yaml:"signatures"`
+	Memo       string                  `json:"memo" yaml:"memo"`
+	FeeAccount sdk.AccAddress          `json:"fee_account" yaml:"fee_account"`
 }
 
-func NewFeeGrantTx(msgs []sdk.Msg, fee GrantedFee, sigs []authtypes.StdSignature, memo string) FeeGrantTx {
+func NewFeeGrantTx(msgs []sdk.Msg, fee GrantedFee, sigs []legacytx.StdSignature, memo string) FeeGrantTx {
 	return FeeGrantTx{
 		Msgs:       msgs,
 		Fee:        fee,
@@ -74,8 +74,8 @@ func (tx FeeGrantTx) ValidateBasic() error {
 }
 
 // CountSubKeys counts the total number of keys for a multi-sig public key.
-func CountSubKeys(pub crypto.PubKey) int {
-	v, ok := pub.(multisig.PubKeyMultisigThreshold)
+func CountSubKeys(pub cryptotypes.PubKey) int {
+	v, ok := pub.(*kmultisig.LegacyAminoPubKey)
 	if !ok {
 		return 1
 	}
@@ -127,16 +127,17 @@ func (tx FeeGrantTx) GetSignatures() [][]byte {
 
 // GetPubkeys returns the pubkeys of signers if the pubkey is included in the signature
 // If pubkey is not included in the signature, then nil is in the slice instead
-func (tx FeeGrantTx) GetPubKeys() []crypto.PubKey {
-	pks := make([]crypto.PubKey, len(tx.Signatures))
+func (tx FeeGrantTx) GetPubKeys() []cryptotypes.PubKey {
+	pks := make([]cryptotypes.PubKey, len(tx.Signatures))
+
 	for i, stdSig := range tx.Signatures {
-		pks[i] = stdSig.PubKey
+		pks[i] = stdSig.GetPubKey()
 	}
 	return pks
 }
 
 // GetSignBytes returns the signBytes of the tx for a given signer
-func (tx FeeGrantTx) GetSignBytes(ctx sdk.Context, acc exported.Account) []byte {
+func (tx FeeGrantTx) GetSignBytes(ctx sdk.Context, acc authtypes.AccountI) []byte {
 	genesis := ctx.BlockHeight() == 0
 	chainID := ctx.ChainID()
 	var accNum uint64
@@ -197,8 +198,8 @@ func (fee GrantedFee) Bytes() []byte {
 	if len(fee.Amount) == 0 {
 		fee.Amount = sdk.NewCoins()
 	}
-	cdc := codec.New()
-	bz, err := cdc.MarshalJSON(fee)
+
+	bz, err := legacycodec.Cdc.MarshalJSON(fee)
 	if err != nil {
 		panic(err)
 	}
@@ -230,12 +231,11 @@ type DelegatedSignDoc struct {
 
 // StdSignBytes returns the bytes to sign for a transaction.
 func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee GrantedFee, msgs []sdk.Msg, memo string) []byte {
-	cdc := codec.New()
 	msgsBytes := make([]json.RawMessage, 0, len(msgs))
 	for _, msg := range msgs {
 		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
 	}
-	bz, err := cdc.MarshalJSON(DelegatedSignDoc{
+	bz, err := legacycodec.Cdc.MarshalJSON(DelegatedSignDoc{
 		AccountNumber: accnum,
 		ChainID:       chainID,
 		Fee:           json.RawMessage(fee.Bytes()),

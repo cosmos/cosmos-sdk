@@ -4,35 +4,27 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addrs := simapp.AddTestAddrs(app, ctx, 3, sdk.NewInt(1234))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
-
-	sh := staking.NewHandler(app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// create validator with 50% commission
-	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	msg := staking.NewMsgCreateValidator(
-		sdk.ValAddress(addrs[0]), valConsPk1,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt(),
-	)
-
-	res, err := sh(ctx, msg)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	tstaking.CreateValidator(sdk.ValAddress(addrs[0]), valConsPk1, sdk.NewInt(100), true)
 	val := app.StakingKeeper.Validator(ctx, valAddrs[0])
 
 	// allocate tokens
@@ -53,29 +45,19 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 
 func TestAllocateTokensToManyValidators(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	sh := staking.NewHandler(app.StakingKeeper)
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1234))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// create validator with 50% commission
-	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	msg := staking.NewMsgCreateValidator(valAddrs[0], valConsPk1,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
-
-	res, err := sh(ctx, msg)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
 
 	// create second validator with 0% commission
-	commission = staking.NewCommissionRates(sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0))
-	msg = staking.NewMsgCreateValidator(valAddrs[1], valConsPk2,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
-
-	res, err = sh(ctx, msg)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0))
+	tstaking.CreateValidator(valAddrs[1], valConsPk2, sdk.NewInt(100), true)
 
 	abciValA := abci.Validator{
 		Address: valConsPk1.Address(),
@@ -100,7 +82,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	feeCollector := app.AccountKeeper.GetModuleAccount(ctx, types.FeeCollectorName)
 	require.NotNil(t, feeCollector)
 
-	err = app.BankKeeper.SetBalances(ctx, feeCollector.GetAddress(), fees)
+	err := app.BankKeeper.SetBalances(ctx, feeCollector.GetAddress(), fees)
 	require.NoError(t, err)
 	app.AccountKeeper.SetAccount(ctx, feeCollector)
 
@@ -133,35 +115,23 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 func TestAllocateTokensTruncation(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addrs := simapp.AddTestAddrs(app, ctx, 3, sdk.NewInt(1234))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
-	sh := staking.NewHandler(app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// create validator with 10% commission
-	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
-	msg := staking.NewMsgCreateValidator(valAddrs[0], valConsPk1,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(110)), staking.Description{}, commission, sdk.OneInt())
-	res, err := sh(ctx, msg)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(110), true)
 
 	// create second validator with 10% commission
-	commission = staking.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
-	msg = staking.NewMsgCreateValidator(valAddrs[1], valConsPk2,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
-	res, err = sh(ctx, msg)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
+	tstaking.CreateValidator(valAddrs[1], valConsPk2, sdk.NewInt(100), true)
 
 	// create third validator with 10% commission
-	commission = staking.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
-	msg = staking.NewMsgCreateValidator(valAddrs[2], valConsPk3,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
-	res, err = sh(ctx, msg)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
+	tstaking.CreateValidator(valAddrs[2], valConsPk3, sdk.NewInt(100), true)
 
 	abciValA := abci.Validator{
 		Address: valConsPk1.Address(),
@@ -192,7 +162,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	feeCollector := app.AccountKeeper.GetModuleAccount(ctx, types.FeeCollectorName)
 	require.NotNil(t, feeCollector)
 
-	err = app.BankKeeper.SetBalances(ctx, feeCollector.GetAddress(), fees)
+	err := app.BankKeeper.SetBalances(ctx, feeCollector.GetAddress(), fees)
 	require.NoError(t, err)
 
 	app.AccountKeeper.SetAccount(ctx, feeCollector)

@@ -11,13 +11,15 @@ import (
 	"github.com/tendermint/crypto/bcrypt"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/armor"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -45,12 +47,12 @@ func TestArmorUnarmorPrivKey(t *testing.T) {
 	require.Contains(t, err.Error(), "unrecognized armor type")
 
 	// armor key manually
-	encryptPrivKeyFn := func(privKey tmcrypto.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
+	encryptPrivKeyFn := func(privKey cryptotypes.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
 		saltBytes = tmcrypto.CRandBytes(16)
 		key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), crypto.BcryptSecurityParameter)
 		require.NoError(t, err)
 		key = tmcrypto.Sha256(key) // get 32 bytes
-		privKeyBytes := privKey.Bytes()
+		privKeyBytes := legacy.Cdc.Amino.MustMarshalBinaryBare(privKey)
 		return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
 	}
 	saltBytes, encBytes := encryptPrivKeyFn(priv, "passphrase")
@@ -74,7 +76,7 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 	// Add keys and see they return in alphabetical order
 	info, _, err := cstore.NewMnemonic("Bob", keyring.English, types.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
-	armored := crypto.ArmorPubKeyBytes(info.GetPubKey().Bytes(), "")
+	armored := crypto.ArmorPubKeyBytes(legacy.Cdc.Amino.MustMarshalBinaryBare(info.GetPubKey()), "")
 	pubBytes, algo, err := crypto.UnarmorPubKeyBytes(armored)
 	require.NoError(t, err)
 	pub, err := cryptoAmino.PubKeyFromBytes(pubBytes)
@@ -82,7 +84,7 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 	require.Equal(t, string(hd.Secp256k1Type), algo)
 	require.True(t, pub.Equals(info.GetPubKey()))
 
-	armored = crypto.ArmorPubKeyBytes(info.GetPubKey().Bytes(), "unknown")
+	armored = crypto.ArmorPubKeyBytes(legacy.Cdc.Amino.MustMarshalBinaryBare(info.GetPubKey()), "unknown")
 	pubBytes, algo, err = crypto.UnarmorPubKeyBytes(armored)
 	require.NoError(t, err)
 	pub, err = cryptoAmino.PubKeyFromBytes(pubBytes)

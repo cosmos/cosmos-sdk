@@ -57,9 +57,9 @@ func queryBonds(clientCtx client.Context, endpoint string) http.HandlerFunc {
 			return
 		}
 
-		params := types.NewQueryBondsParams(delegatorAddr, validatorAddr)
+		params := types.QueryDelegatorValidatorRequest{DelegatorAddr: delegatorAddr.String(), ValidatorAddr: validatorAddr.String()}
 
-		bz, err := clientCtx.Codec.MarshalJSON(params)
+		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -91,7 +91,7 @@ func queryDelegator(clientCtx client.Context, endpoint string) http.HandlerFunc 
 
 		params := types.NewQueryDelegatorParams(delegatorAddr)
 
-		bz, err := clientCtx.Codec.MarshalJSON(params)
+		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -128,7 +128,7 @@ func queryValidator(clientCtx client.Context, endpoint string) http.HandlerFunc 
 
 		params := types.NewQueryValidatorParams(validatorAddr, page, limit)
 
-		bz, err := clientCtx.Codec.MarshalJSON(params)
+		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}

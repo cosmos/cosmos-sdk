@@ -1,159 +1,806 @@
-// +build cli_test
+// +build norace
 
 package cli_test
 
 import (
 	"fmt"
+	"io/ioutil"
+	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/gogo/protobuf/proto"
+	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/cosmos/cosmos-sdk/tests/cli"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktestutils "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-func TestCLISubmitProposal(t *testing.T) {
-	t.Parallel()
-	f := cli.InitFixtures(t)
+type IntegrationTestSuite struct {
+	suite.Suite
 
-	// start simd server
-	proc := f.SDStart()
-	t.Cleanup(func() { proc.Stop(false) })
+	cfg     network.Config
+	network *network.Network
+}
 
-	testutil.QueryGovParamDeposit(f)
-	testutil.QueryGovParamVoting(f)
-	testutil.QueryGovParamTallying(f)
+func (s *IntegrationTestSuite) SetupSuite() {
+	s.T().Log("setting up integration test suite")
 
-	fooAddr := f.KeyAddress(cli.KeyFoo)
+	s.cfg = network.DefaultConfig()
+	s.cfg.NumValidators = 1
 
-	startTokens := sdk.TokensFromConsensusPower(50)
-	require.Equal(t, startTokens, banktestutils.QueryBalances(f, fooAddr).AmountOf(sdk.DefaultBondDenom))
+	s.network = network.New(s.T(), s.cfg)
 
-	proposalsQuery := testutil.QueryGovProposals(f)
-	require.Empty(t, proposalsQuery)
+	_, err := s.network.WaitForHeight(1)
+	s.Require().NoError(err)
 
-	// Test submit generate only for submit proposal
-	proposalTokens := sdk.TokensFromConsensusPower(5)
-	success, stdout, stderr := testutil.TxGovSubmitProposal(f,
-		fooAddr.String(), "Text", "Test", "test", sdk.NewCoin(cli.Denom, proposalTokens), "--generate-only", "-y")
-	require.True(t, success)
-	require.Empty(t, stderr)
-	msg := cli.UnmarshalStdTx(t, f.Cdc, stdout)
-	require.NotZero(t, msg.Fee.Gas)
-	require.Equal(t, len(msg.Msgs), 1)
-	require.Equal(t, 0, len(msg.GetSignatures()))
+	val := s.network.Validators[0]
 
-	// Test --dry-run
-	success, _, _ = testutil.TxGovSubmitProposal(f, cli.KeyFoo, "Text", "Test", "test", sdk.NewCoin(cli.Denom, proposalTokens), "--dry-run")
-	require.True(t, success)
+	// create a proposal with deposit
+	_, err = govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
+		"Text Proposal 1", "Where is the title!?", types.ProposalTypeText,
+		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String()))
+	s.Require().NoError(err)
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
 
-	// Create the proposal
-	testutil.TxGovSubmitProposal(f, cli.KeyFoo, "Text", "Test", "test", sdk.NewCoin(cli.Denom, proposalTokens), "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
+	// vote for proposal
+	_, err = govtestutil.MsgVote(val.ClientCtx, val.Address.String(), "1", "yes")
+	s.Require().NoError(err)
 
-	// Ensure transaction events can be queried
-	searchResult := f.QueryTxs(1, 50, "message.action=submit_proposal", fmt.Sprintf("message.sender=%s", fooAddr))
-	require.Len(t, searchResult.Txs, 1)
+	// create a proposal without deposit
+	_, err = govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
+		"Text Proposal 2", "Where is the title!?", types.ProposalTypeText)
+	s.Require().NoError(err)
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+}
 
-	// Ensure deposit was deducted
-	require.Equal(t, startTokens.Sub(proposalTokens), banktestutils.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
+func (s *IntegrationTestSuite) TearDownSuite() {
+	s.T().Log("tearing down integration test suite")
+	s.network.Cleanup()
+}
 
-	// Ensure propsal is directly queryable
-	proposal1 := testutil.QueryGovProposal(f, 1)
-	require.Equal(t, uint64(1), proposal1.ProposalID)
-	require.Equal(t, gov.StatusDepositPeriod, proposal1.Status)
+func (s *IntegrationTestSuite) TestCmdParams() {
+	val := s.network.Validators[0]
 
-	// Ensure query proposals returns properly
-	proposalsQuery = testutil.QueryGovProposals(f)
-	require.Equal(t, uint64(1), proposalsQuery[0].ProposalID)
+	testCases := []struct {
+		name           string
+		args           []string
+		expectedOutput string
+	}{
+		{
+			"json output",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			`{"voting_params":{"voting_period":"172800000000000"},"tally_params":{"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000"},"deposit_params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800000000000"}}`,
+		},
+		{
+			"text output",
+			[]string{},
+			`
+deposit_params:
+  max_deposit_period: "172800000000000"
+  min_deposit:
+  - amount: "10000000"
+    denom: stake
+tally_params:
+  quorum: "0.334000000000000000"
+  threshold: "0.500000000000000000"
+  veto_threshold: "0.334000000000000000"
+voting_params:
+  voting_period: "172800000000000"
+	`,
+		},
+	}
 
-	// Query the deposits on the proposal
-	deposit := testutil.QueryGovDeposit(f, 1, fooAddr)
-	require.Equal(t, proposalTokens, deposit.Amount.AmountOf(cli.Denom))
+	for _, tc := range testCases {
+		tc := tc
 
-	// Test deposit generate only
-	depositTokens := sdk.TokensFromConsensusPower(10)
-	success, stdout, stderr = testutil.TxGovDeposit(f, 1, fooAddr.String(), sdk.NewCoin(cli.Denom, depositTokens), "--generate-only")
-	require.True(t, success)
-	require.Empty(t, stderr)
-	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
-	require.NotZero(t, msg.Fee.Gas)
-	require.Equal(t, len(msg.Msgs), 1)
-	require.Equal(t, 0, len(msg.GetSignatures()))
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryParams()
+			clientCtx := val.ClientCtx
 
-	// Run the deposit transaction
-	testutil.TxGovDeposit(f, 1, cli.KeyFoo, sdk.NewCoin(cli.Denom, depositTokens), "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+			s.Require().Equal(strings.TrimSpace(tc.expectedOutput), strings.TrimSpace(out.String()))
+		})
+	}
+}
 
-	// test query deposit
-	deposits := testutil.QueryGovDeposits(f, 1)
-	require.Len(t, deposits, 1)
-	require.Equal(t, proposalTokens.Add(depositTokens), deposits[0].Amount.AmountOf(cli.Denom))
+func (s *IntegrationTestSuite) TestCmdParam() {
+	val := s.network.Validators[0]
 
-	// Ensure querying the deposit returns the proper amount
-	deposit = testutil.QueryGovDeposit(f, 1, fooAddr)
-	require.Equal(t, proposalTokens.Add(depositTokens), deposit.Amount.AmountOf(cli.Denom))
+	testCases := []struct {
+		name           string
+		args           []string
+		expectedOutput string
+	}{
+		{
+			"voting params",
+			[]string{
+				"voting",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			`{"voting_period":"172800000000000"}`,
+		},
+		{
+			"tally params",
+			[]string{
+				"tallying",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			`{"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000"}`,
+		},
+		{
+			"deposit params",
+			[]string{
+				"deposit",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			`{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800000000000"}`,
+		},
+	}
 
-	// Ensure events are set on the transaction
-	searchResult = f.QueryTxs(1, 50, "message.action=deposit", fmt.Sprintf("message.sender=%s", fooAddr))
-	require.Len(t, searchResult.Txs, 1)
+	for _, tc := range testCases {
+		tc := tc
 
-	// Ensure account has expected amount of funds
-	require.Equal(t, startTokens.Sub(proposalTokens.Add(depositTokens)), banktestutils.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryParam()
+			clientCtx := val.ClientCtx
 
-	// Fetch the proposal and ensure it is now in the voting period
-	proposal1 = testutil.QueryGovProposal(f, 1)
-	require.Equal(t, uint64(1), proposal1.ProposalID)
-	require.Equal(t, gov.StatusVotingPeriod, proposal1.Status)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+			s.Require().Equal(strings.TrimSpace(tc.expectedOutput), strings.TrimSpace(out.String()))
+		})
+	}
+}
 
-	// Test vote generate only
-	success, stdout, stderr = testutil.TxGovVote(f, 1, gov.OptionYes, fooAddr.String(), "--generate-only")
-	require.True(t, success)
-	require.Empty(t, stderr)
-	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
-	require.NotZero(t, msg.Fee.Gas)
-	require.Equal(t, len(msg.Msgs), 1)
-	require.Equal(t, 0, len(msg.GetSignatures()))
+func (s *IntegrationTestSuite) TestCmdProposer() {
+	val := s.network.Validators[0]
 
-	// Vote on the proposal
-	testutil.TxGovVote(f, 1, gov.OptionYes, cli.KeyFoo, "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
+	testCases := []struct {
+		name           string
+		args           []string
+		expectErr      bool
+		expectedOutput string
+	}{
+		{
+			"without proposal id",
+			[]string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			``,
+		},
+		{
+			"json output",
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			fmt.Sprintf("{\"proposal_id\":\"%s\",\"proposer\":\"%s\"}", "1", val.Address.String()),
+		},
+	}
 
-	// Query the vote
-	vote := testutil.QueryGovVote(f, 1, fooAddr)
-	require.Equal(t, uint64(1), vote.ProposalID)
-	require.Equal(t, gov.OptionYes, vote.Option)
+	for _, tc := range testCases {
+		tc := tc
 
-	// Query the votes
-	votes := testutil.QueryGovVotes(f, 1)
-	require.Len(t, votes, 1)
-	require.Equal(t, uint64(1), votes[0].ProposalID)
-	require.Equal(t, gov.OptionYes, votes[0].Option)
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryProposer()
+			clientCtx := val.ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
-	// Ensure events are applied to voting transaction properly
-	searchResult = f.QueryTxs(1, 50, "message.action=vote", fmt.Sprintf("message.sender=%s", fooAddr))
-	require.Len(t, searchResult.Txs, 1)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(strings.TrimSpace(tc.expectedOutput), strings.TrimSpace(out.String()))
+			}
+		})
+	}
+}
 
-	// Ensure no proposals in deposit period
-	proposalsQuery = testutil.QueryGovProposals(f, "--status=DepositPeriod")
-	require.Empty(t, proposalsQuery)
+func (s *IntegrationTestSuite) TestCmdTally() {
+	val := s.network.Validators[0]
 
-	// Ensure the proposal returns as in the voting period
-	proposalsQuery = testutil.QueryGovProposals(f, "--status=VotingPeriod")
-	require.Equal(t, uint64(1), proposalsQuery[0].ProposalID)
+	testCases := []struct {
+		name           string
+		args           []string
+		expectErr      bool
+		expectedOutput types.TallyResult
+	}{
+		{
+			"without proposal id",
+			[]string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			types.TallyResult{},
+		},
+		{
+			"json output",
+			[]string{
+				"2",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			types.NewTallyResult(sdk.NewInt(0), sdk.NewInt(0), sdk.NewInt(0), sdk.NewInt(0)),
+		},
+		{
+			"json output",
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			types.NewTallyResult(s.cfg.BondedTokens, sdk.NewInt(0), sdk.NewInt(0), sdk.NewInt(0)),
+		},
+	}
 
-	// submit a second test proposal
-	testutil.TxGovSubmitProposal(f, cli.KeyFoo, "Text", "Apples", "test", sdk.NewCoin(cli.Denom, proposalTokens), "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
+	for _, tc := range testCases {
+		tc := tc
 
-	// Test limit on proposals query
-	proposalsQuery = testutil.QueryGovProposals(f, "--limit=2")
-	require.Len(t, proposalsQuery, 2)
-	require.Equal(t, uint64(1), proposalsQuery[0].ProposalID)
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryTally()
+			clientCtx := val.ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
-	f.Cleanup()
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				var tally types.TallyResult
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &tally), out.String())
+				s.Require().Equal(tally, tc.expectedOutput)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
+	val := s.network.Validators[0]
+
+	invalidPropFile, err := ioutil.TempFile(s.T().TempDir(), "invalid_text_proposal.*.json")
+	s.Require().NoError(err)
+
+	invalidProp := `{
+  "title": "",
+	"description": "Where is the title!?",
+	"type": "Text",
+  "deposit": "-324foocoin"
+}`
+
+	_, err = invalidPropFile.WriteString(invalidProp)
+	s.Require().NoError(err)
+
+	validPropFile, err := ioutil.TempFile(s.T().TempDir(), "valid_text_proposal.*.json")
+	s.Require().NoError(err)
+
+	validProp := fmt.Sprintf(`{
+  "title": "Text Proposal",
+	"description": "Hello, World!",
+	"type": "Text",
+  "deposit": "%s"
+}`, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)))
+
+	_, err = validPropFile.WriteString(validProp)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"invalid proposal (file)",
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagProposal, invalidPropFile.Name()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, nil, 0,
+		},
+		{
+			"invalid proposal",
+			[]string{
+				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),
+				fmt.Sprintf("--%s=%s", cli.FlagProposalType, types.ProposalTypeText),
+				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, nil, 0,
+		},
+		{
+			"valid transaction (file)",
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagProposal, validPropFile.Name()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"valid transaction",
+			[]string{
+				fmt.Sprintf("--%s='Text Proposal'", cli.FlagTitle),
+				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),
+				fmt.Sprintf("--%s=%s", cli.FlagProposalType, types.ProposalTypeText),
+				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewCmdSubmitProposal()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestCmdGetProposal() {
+	val := s.network.Validators[0]
+
+	title := "Text Proposal 1"
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"get non existing proposal",
+			[]string{
+				"10",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+		{
+			"get proposal with json response",
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryProposal()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				var proposal types.Proposal
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &proposal), out.String())
+				s.Require().Equal(title, proposal.GetTitle())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestCmdGetProposals() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"get proposals as json response",
+			[]string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryProposals()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				var proposals types.QueryProposalsResponse
+
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &proposals), out.String())
+				s.Require().Len(proposals.Proposals, 2)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestCmdQueryDeposits() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"get deposits of non existing proposal",
+			[]string{
+				"10",
+			},
+			true,
+		},
+		{
+			"get deposits(valid req)",
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryDeposits()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				var deposits types.QueryDepositsResponse
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &deposits), out.String())
+				s.Require().Len(deposits.Deposits, 1)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestCmdQueryDeposit() {
+	val := s.network.Validators[0]
+	depositAmount := sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens)
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"get deposit with no depositer",
+			[]string{
+				"1",
+			},
+			true,
+		},
+		{
+			"get deposit with wrong deposit address",
+			[]string{
+				"1",
+				"wrong address",
+			},
+			true,
+		},
+		{
+			"get deposit (valid req)",
+			[]string{
+				"1",
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryDeposit()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				var deposit types.Deposit
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &deposit), out.String())
+				s.Require().Equal(depositAmount.String(), deposit.Amount.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestNewCmdDeposit() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		expectedCode uint32
+	}{
+		{
+			"without proposal id",
+			[]string{
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(), //10stake
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0,
+		},
+		{
+			"without deposit amount",
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, 0,
+		},
+		{
+			"deposit on non existing proposal",
+			[]string{
+				"10",
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(), //10stake
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, 2,
+		},
+		{
+			"deposit on non existing proposal",
+			[]string{
+				"1",
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(), //10stake
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		var resp sdk.TxResponse
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewCmdDeposit()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().Equal(tc.expectedCode, resp.Code, out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestCmdQueryVotes() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"get votes with no proposal id",
+			[]string{},
+			true,
+		},
+		{
+			"get votes of non existed proposal",
+			[]string{
+				"10",
+			},
+			true,
+		},
+		{
+			"vote for invalid proposal",
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryVotes()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				var votes types.QueryVotesResponse
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &votes), out.String())
+				s.Require().Len(votes.Votes, 1)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestCmdQueryVote() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"get vote of non existing proposal",
+			[]string{
+				"10",
+				val.Address.String(),
+			},
+			true,
+		},
+		{
+			"get vote by wrong voter",
+			[]string{
+				"1",
+				"wrong address",
+			},
+			true,
+		},
+		{
+			"vote for valid proposal",
+			[]string{
+				"1",
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryVote()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				var vote types.Vote
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &vote), out.String())
+				s.Require().Equal(types.OptionYes, vote.Option)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestNewCmdVote() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		expectedCode uint32
+	}{
+		{
+			"invalid vote",
+			[]string{},
+			true, 0,
+		},
+		{
+			"vote for invalid proposal",
+			[]string{
+				"10",
+				fmt.Sprintf("%s", "yes"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, 2,
+		},
+		{
+			"valid vote",
+			[]string{
+				"1",
+				fmt.Sprintf("%s", "yes"),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.NewCmdVote()
+			clientCtx := val.ClientCtx
+			var txResp sdk.TxResponse
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
+func TestIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationTestSuite))
 }

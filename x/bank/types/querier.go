@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 // Querier path constants
@@ -13,16 +14,18 @@ const (
 )
 
 // NewQueryBalanceRequest creates a new instance of QueryBalanceRequest.
+//nolint:interfacer
 func NewQueryBalanceRequest(addr sdk.AccAddress, denom string) *QueryBalanceRequest {
-	return &QueryBalanceRequest{Address: addr, Denom: denom}
+	return &QueryBalanceRequest{Address: addr.String(), Denom: denom}
 }
 
 // NewQueryAllBalancesRequest creates a new instance of QueryAllBalancesRequest.
-func NewQueryAllBalancesRequest(addr sdk.AccAddress) *QueryAllBalancesRequest {
-	return &QueryAllBalancesRequest{Address: addr}
+//nolint:interfacer
+func NewQueryAllBalancesRequest(addr sdk.AccAddress, req *query.PageRequest) *QueryAllBalancesRequest {
+	return &QueryAllBalancesRequest{Address: addr.String(), Pagination: req}
 }
 
-// QueryTotalSupply defines the params for the following queries:
+// QueryTotalSupplyParams defines the params for the following queries:
 //
 // - 'custom/bank/totalSupply'
 type QueryTotalSupplyParams struct {

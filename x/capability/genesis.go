@@ -2,24 +2,28 @@ package capability
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/capability/keeper"
+	"github.com/cosmos/cosmos-sdk/x/capability/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
-func InitGenesis(ctx sdk.Context, k Keeper, genState GenesisState) {
-	k.SetIndex(ctx, genState.Index)
+func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+	if err := k.InitializeIndex(ctx, genState.Index); err != nil {
+		panic(err)
+	}
 
 	// set owners for each index and initialize capability
 	for _, genOwner := range genState.Owners {
-		k.SetOwners(ctx, genOwner.Index, genOwner.Owners)
-		k.InitializeCapability(ctx, genOwner.Index, genOwner.Owners)
+		k.SetOwners(ctx, genOwner.Index, genOwner.IndexOwners)
+		k.InitializeCapability(ctx, genOwner.Index, genOwner.IndexOwners)
 	}
 }
 
 // ExportGenesis returns the capability module's exported genesis.
-func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
+func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	index := k.GetLatestIndex(ctx)
-	owners := []GenesisOwners{}
+	owners := []types.GenesisOwners{}
 
 	for i := uint64(1); i < index; i++ {
 		capabilityOwners, ok := k.GetOwners(ctx, i)
@@ -27,14 +31,14 @@ func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 			continue
 		}
 
-		genOwner := GenesisOwners{
-			Index:  i,
-			Owners: capabilityOwners,
+		genOwner := types.GenesisOwners{
+			Index:       i,
+			IndexOwners: capabilityOwners,
 		}
 		owners = append(owners, genOwner)
 	}
 
-	return GenesisState{
+	return &types.GenesisState{
 		Index:  index,
 		Owners: owners,
 	}

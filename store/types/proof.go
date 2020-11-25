@@ -3,6 +3,7 @@ package types
 import (
 	ics23 "github.com/confio/ics23/go"
 	"github.com/tendermint/tendermint/crypto/merkle"
+	tmmerkle "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -48,7 +49,7 @@ func NewSimpleMerkleCommitmentOp(key []byte, proof *ics23.CommitmentProof) Commi
 // CommitmentOpDecoder takes a merkle.ProofOp and attempts to decode it into a CommitmentOp ProofOperator
 // The proofOp.Data is just a marshalled CommitmentProof. The Key of the CommitmentOp is extracted
 // from the unmarshalled proof.
-func CommitmentOpDecoder(pop merkle.ProofOp) (merkle.ProofOperator, error) {
+func CommitmentOpDecoder(pop tmmerkle.ProofOp) (merkle.ProofOperator, error) {
 	var spec *ics23.ProofSpec
 	switch pop.Type {
 	case ProofOpIAVLCommitment:
@@ -88,79 +89,41 @@ func (op CommitmentOp) GetKey() []byte {
 // If length 0 args is passed in, then CommitmentOp will attempt to prove the absence of the key
 // in the CommitmentOp and return the CommitmentRoot of the proof
 func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
+	// calculate root from proof
+	root, err := op.Proof.Calculate()
+	if err != nil {
+		return nil, sdkerrors.Wrapf(ErrInvalidProof, "could not calculate root for proof: %v", err)
+	}
 	// Only support an existence proof or nonexistence proof (batch proofs currently unsupported)
 	switch len(args) {
 	case 0:
 		// Args are nil, so we verify the absence of the key.
-		nonexistProof, ok := op.Proof.Proof.(*ics23.CommitmentProof_Nonexist)
-		if !ok {
-			return nil, sdkerrors.Wrap(ErrInvalidProof, "proof is not a nonexistence proof and args is nil")
-		}
-
-		// get root from either left or right existence proof. Note they must have the same root if both exist
-		// and at least one proof must be non-nil
-		var (
-			root []byte
-			err  error
-		)
-		switch {
-		// check left proof to calculate root
-		case nonexistProof.Nonexist.Left != nil:
-			root, err = nonexistProof.Nonexist.Left.Calculate()
-			if err != nil {
-				return nil, sdkerrors.Wrap(ErrInvalidProof, "could not calculate root from nonexistence proof")
-			}
-		case nonexistProof.Nonexist.Right != nil:
-			// Left proof is nil, check right proof
-			root, err = nonexistProof.Nonexist.Right.Calculate()
-			if err != nil {
-				return nil, sdkerrors.Wrap(ErrInvalidProof, "could not calculate root from nonexistence proof")
-			}
-		default:
-			// both left and right existence proofs are empty
-			// this only proves absence against a nil root (empty store)
-			return [][]byte{nil}, nil
-		}
-
 		absent := ics23.VerifyNonMembership(op.Spec, root, op.Proof, op.Key)
 		if !absent {
 			return nil, sdkerrors.Wrapf(ErrInvalidProof, "proof did not verify absence of key: %s", string(op.Key))
 		}
 
-		return [][]byte{root}, nil
-
 	case 1:
 		// Args is length 1, verify existence of key with value args[0]
-		existProof, ok := op.Proof.Proof.(*ics23.CommitmentProof_Exist)
-		if !ok {
-			return nil, sdkerrors.Wrap(ErrInvalidProof, "proof is not a existence proof and args is length 1")
-		}
-		// For subtree verification, we simply calculate the root from the proof and use it to prove
-		// against the value
-		root, err := existProof.Exist.Calculate()
-		if err != nil {
-			return nil, sdkerrors.Wrap(ErrInvalidProof, "could not calculate root from existence proof")
-		}
-
 		if !ics23.VerifyMembership(op.Spec, root, op.Proof, op.Key, args[0]) {
 			return nil, sdkerrors.Wrapf(ErrInvalidProof, "proof did not verify existence of key %s with given value %x", op.Key, args[0])
 		}
-
-		return [][]byte{root}, nil
 	default:
 		return nil, sdkerrors.Wrapf(ErrInvalidProof, "args must be length 0 or 1, got: %d", len(args))
 	}
+
+	return [][]byte{root}, nil
 }
 
 // ProofOp implements ProofOperator interface and converts a CommitmentOp
 // into a merkle.ProofOp format that can later be decoded by CommitmentOpDecoder
 // back into a CommitmentOp for proof verification
-func (op CommitmentOp) ProofOp() merkle.ProofOp {
+func (op CommitmentOp) ProofOp() tmmerkle.ProofOp {
 	bz, err := op.Proof.Marshal()
 	if err != nil {
 		panic(err.Error())
 	}
-	return merkle.ProofOp{
+	return tmmerkle.ProofOp{
 		Type: op.Type,
 		Key:  op.Key,
 		Data: bz,

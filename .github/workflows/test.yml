@@ -15,201 +15,246 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
     if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/master'"
 
-  split-test-files: 
+  install-tparse:
     runs-on: ubuntu-latest
-    steps: 
+    steps:
+      - uses: actions/setup-go@v2.1.3
+        with:
+          go-version: 1.15
+      - name: Display go version
+        run: go version
+      - name: install tparse
+        run: |
+          export GO111MODULE="on" && go get github.com/mfridman/tparse@v0.8.3
+      - uses: actions/cache@v2.1.3
+        with:
+          path: ~/go/bin
+          key: ${{ runner.os }}-go-tparse-binary
+
+  test-cosmovisor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2.1.3
+        with:
+          go-version: 1.15
+      - name: Display go version
+        run: go version
+      - uses: technote-space/get-diff-action@v4
+        id: git_diff
+        with:
+          PREFIX_FILTER: |
+            cosmovisor
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
+      - name: Run cosmovisor tests
+        run: cd cosmovisor; make
+        if: env.GIT_DIFF
+
+  split-test-files:
+    runs-on: ubuntu-latest
+    steps:
       - uses: actions/checkout@v2
       - name: Create a file with all the pkgs
         run: go list ./... > pkgs.txt
       - name: Split pkgs into 4 files
-        run: split -n l/4 --additional-suffix=.txt ./pkgs.txt
+        run: split -d -n l/4 pkgs.txt pkgs.txt.part.
       # cache multiple
       - uses: actions/upload-artifact@v2
         with:
-          name: '${{ github.sha }}-aa'
-          path: ./xaa.txt
+          name: "${{ github.sha }}-00"
+          path: ./pkgs.txt.part.00
       - uses: actions/upload-artifact@v2
-        with:          
-          name: '${{ github.sha }}-ab'
-          path: ./xab.txt
+        with:
+          name: "${{ github.sha }}-01"
+          path: ./pkgs.txt.part.01
       - uses: actions/upload-artifact@v2
-        with:        
-          name: '${{ github.sha }}-ac'
-          path: ./xac.txt
+        with:
+          name: "${{ github.sha }}-02"
+          path: ./pkgs.txt.part.02
       - uses: actions/upload-artifact@v2
-        with:        
-          name: '${{ github.sha }}-ad'
-          path: ./xad.txt
+        with:
+          name: "${{ github.sha }}-03"
+          path: ./pkgs.txt.part.03
 
-  test-coverage-run-1:
+  tests:
     runs-on: ubuntu-latest
     needs: split-test-files
-    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        part: ["00", "01", "02", "03"]
     steps:
       - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v1
-        id: git_diff
+      - uses: actions/setup-go@v2.1.3
         with:
-          SUFFIX_FILTER: |
-            .go
-            .mod
-            .sum      
+          go-version: 1.15
+      - uses: technote-space/get-diff-action@v4
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
       - uses: actions/download-artifact@v2
         with:
-          name: '${{ github.sha }}-aa'
-        if: "env.GIT_DIFF != ''"
+          name: "${{ github.sha }}-${{ matrix.part }}"
+        if: env.GIT_DIFF
       - name: test & coverage report creation
         run: |
-          cat xaa.txt | xargs go test -mod=readonly -timeout 8m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
-        if: "env.GIT_DIFF != ''"
+          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='norace ledger test_ledger_mock'
+        if: env.GIT_DIFF
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "${{ github.sha }}-${{ matrix.part }}-coverage"
+          path: ./${{ matrix.part }}profile.out
+
+  upload-coverage-report:
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v4
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
+      - uses: actions/download-artifact@v2
+        with:
+          name: "${{ github.sha }}-00-coverage"
+        if: env.GIT_DIFF
+      - uses: actions/download-artifact@v2
+        with:
+          name: "${{ github.sha }}-01-coverage"
+        if: env.GIT_DIFF
+      - uses: actions/download-artifact@v2
+        with:
+          name: "${{ github.sha }}-02-coverage"
+        if: env.GIT_DIFF
+      - uses: actions/download-artifact@v2
+        with:
+          name: "${{ github.sha }}-03-coverage"
+        if: env.GIT_DIFF
+      - run: |
+          cat ./*profile.out | grep -v "mode: atomic" >> coverage.txt
+        if: env.GIT_DIFF
       - name: filter out DONTCOVER
         run: |
           excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER')"
           excludelist+=" $(find ./ -type f -name '*.pb.go')"
+          excludelist+=" $(find ./ -type f -name '*.pb.gw.go')"
           excludelist+=" $(find ./ -type f -path './tests/mocks/*.go')"
           for filename in ${excludelist}; do
             filename=$(echo $filename | sed 's/^./github.com\/cosmos\/cosmos-sdk/g')
             echo "Excluding ${filename} from coverage report..."
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
-        if: "env.GIT_DIFF != ''"
-      - uses: codecov/codecov-action@v1
+        if: env.GIT_DIFF
+      - uses: codecov/codecov-action@v1.0.15
         with:
           file: ./coverage.txt
-          fail_ci_if_error: true  
-        if: "env.GIT_DIFF != ''"      
+        if: env.GIT_DIFF
 
-  test-coverage-run-2:
+  test-race:
     runs-on: ubuntu-latest
     needs: split-test-files
-    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        part: ["00", "01", "02", "03"]
     steps:
       - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v1
-        id: git_diff
+      - uses: actions/setup-go@v2.1.3
         with:
-          SUFFIX_FILTER: |
-            .go
-            .mod
-            .sum      
+          go-version: 1.15
+      - uses: technote-space/get-diff-action@v4
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
       - uses: actions/download-artifact@v2
         with:
-          name: '${{ github.sha }}-ab'
-        if: "env.GIT_DIFF != ''"
+          name: "${{ github.sha }}-${{ matrix.part }}"
+        if: env.GIT_DIFF
       - name: test & coverage report creation
         run: |
-          cat xab.txt | xargs go test -mod=readonly -timeout 6m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
-        if: "env.GIT_DIFF != ''"
-      - name: filter out DONTCOVER
-        run: |
-          excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER')"
-          excludelist+=" $(find ./ -type f -name '*.pb.go')"
-          excludelist+=" $(find ./ -type f -path './tests/mocks/*.go')"
-          for filename in ${excludelist}; do
-            filename=$(echo $filename | sed 's/^./github.com\/cosmos\/cosmos-sdk/g')
-            echo "Excluding ${filename} from coverage report..."
-            sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
-          done
-        if: "env.GIT_DIFF != ''"
-      - uses: codecov/codecov-action@v1
+          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -json -timeout 30m -race -tags='cgo ledger test_ledger_mock'  > ${{ matrix.part }}-race-output.txt
+        if: env.GIT_DIFF
+      - uses: actions/upload-artifact@v2
         with:
-          file: ./coverage.txt
-          fail_ci_if_error: true  
-        if: "env.GIT_DIFF != ''"   
+          name: "${{ github.sha }}-${{ matrix.part }}-race-output"
+          path: ./${{ matrix.part }}-race-output.txt
 
-  test-coverage-run-3:
+  race-detector-report:
     runs-on: ubuntu-latest
-    needs: split-test-files
-    timeout-minutes: 10
+    needs: [test-race, install-tparse]
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v1
+      - uses: technote-space/get-diff-action@v4
         id: git_diff
         with:
-          SUFFIX_FILTER: |
-            .go
-            .mod
-            .sum      
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
       - uses: actions/download-artifact@v2
         with:
-          name: '${{ github.sha }}-ac'
-        if: "env.GIT_DIFF != ''"
-      - name: test & coverage report creation
-        run: |
-          cat xac.txt | xargs go test -mod=readonly -timeout 6m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
-        if: "env.GIT_DIFF != ''"
-      - name: filter out DONTCOVER
-        run: |
-          excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER')"
-          excludelist+=" $(find ./ -type f -name '*.pb.go')"
-          excludelist+=" $(find ./ -type f -path './tests/mocks/*.go')"
-          for filename in ${excludelist}; do
-            filename=$(echo $filename | sed 's/^./github.com\/cosmos\/cosmos-sdk/g')
-            echo "Excluding ${filename} from coverage report..."
-            sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
-          done
-        if: "env.GIT_DIFF != ''"
-      - uses: codecov/codecov-action@v1
-        with:
-          file: ./coverage.txt
-          fail_ci_if_error: true  
-        if: "env.GIT_DIFF != ''"      
-
-  test-coverage-run-4:
-    runs-on: ubuntu-latest
-    needs: split-test-files
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v1
-        id: git_diff
-        with:
-          SUFFIX_FILTER: |
-            .go
-            .mod
-            .sum      
+          name: "${{ github.sha }}-00-race-output"
+        if: env.GIT_DIFF
       - uses: actions/download-artifact@v2
         with:
-          name: '${{ github.sha }}-ad'
-        if: "env.GIT_DIFF != ''"
-      - name: test & coverage report creation
-        run: |
-          cat xad.txt | xargs go test -mod=readonly -timeout 6m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
-        if: "env.GIT_DIFF != ''"
-      - name: filter out DONTCOVER
-        run: |
-          excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER')"
-          excludelist+=" $(find ./ -type f -name '*.pb.go')"
-          excludelist+=" $(find ./ -type f -path './tests/mocks/*.go')"
-          for filename in ${excludelist}; do
-            filename=$(echo $filename | sed 's/^./github.com\/cosmos\/cosmos-sdk/g')
-            echo "Excluding ${filename} from coverage report..."
-            sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
-          done
-        if: "env.GIT_DIFF != ''"
-      - uses: codecov/codecov-action@v1
+          name: "${{ github.sha }}-01-race-output"
+        if: env.GIT_DIFF
+      - uses: actions/download-artifact@v2
         with:
-          file: ./coverage.txt
-          fail_ci_if_error: true  
-        if: "env.GIT_DIFF != ''"        
+          name: "${{ github.sha }}-02-race-output"
+        if: env.GIT_DIFF
+      - uses: actions/download-artifact@v2
+        with:
+          name: "${{ github.sha }}-03-race-output"
+        if: env.GIT_DIFF
+      - uses: actions/cache@v2.1.3
+        with:
+          path: ~/go/bin
+          key: ${{ runner.os }}-go-tparse-binary
+        if: env.GIT_DIFF
+      - name: Generate test report (go test -race)
+        run: cat ./*-race-output.txt | ~/go/bin/tparse
+        if: env.GIT_DIFF
 
-  integration-tests:
+  liveness-test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v1
+      - uses: actions/setup-go@v2.1.3
+        with:
+          go-version: 1.15
+      - uses: technote-space/get-diff-action@v4
         id: git_diff
         with:
-          SUFFIX_FILTER: |
-            .go
-            .mod
-            .sum
-      - name: build-sim
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
+      - name: start localnet
         run: |
-          make build-sim
-        if: "env.GIT_DIFF != ''"
-      - name: cli-test
+          make clean build-simd-linux localnet-start
+        if: env.GIT_DIFF
+      - name: test liveness
         run: |
-          make test-integration
-        if: "env.GIT_DIFF != ''"
+          ./contrib/localnet_liveness.sh 100 5 50 localhost
+        if: env.GIT_DIFF
+
+  docker-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+      - name: build docker image
+        run: |
+          docker build --pull --rm -f "Dockerfile" -t simapp:latest "."

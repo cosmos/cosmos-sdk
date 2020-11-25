@@ -1,0 +1,137 @@
+syntax = "proto3";
+package cosmos.base.abci.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "tendermint/abci/types.proto";
+import "google/protobuf/any.proto";
+
+option go_package                       = "github.com/cosmos/cosmos-sdk/types";
+option (gogoproto.goproto_stringer_all) = false;
+
+// TxResponse defines a structure containing relevant tx data and metadata. The
+// tags are stringified and the log is JSON decoded.
+message TxResponse {
+  option (gogoproto.goproto_getters) = false;
+  // The block height
+  int64 height = 1;
+  // The transaction hash.
+  string txhash = 2 [(gogoproto.customname) = "TxHash"];
+  // Namespace for the Code
+  string codespace = 3;
+  // Response code.
+  uint32 code = 4;
+  // Result bytes, if any.
+  string data = 5;
+  // The output of the application's logger (raw string). May be
+  // non-deterministic.
+  string raw_log = 6;
+  // The output of the application's logger (typed). May be non-deterministic.
+  repeated ABCIMessageLog logs = 7 [(gogoproto.castrepeated) = "ABCIMessageLogs", (gogoproto.nullable) = false];
+  // Additional information. May be non-deterministic.
+  string info = 8;
+  // Amount of gas requested for transaction.
+  int64 gas_wanted = 9;
+  // Amount of gas consumed by transaction.
+  int64 gas_used = 10;
+  // The request transaction bytes.
+  google.protobuf.Any tx = 11;
+  // Time of the previous block. For heights > 1, it's the weighted median of
+  // the timestamps of the valid votes in the block.LastCommit. For height == 1,
+  // it's genesis time.
+  string timestamp = 12;
+}
+
+// ABCIMessageLog defines a structure containing an indexed tx ABCI message log.
+message ABCIMessageLog {
+  option (gogoproto.stringer) = true;
+
+  uint32 msg_index = 1;
+  string log       = 2;
+
+  // Events contains a slice of Event objects that were emitted during some
+  // execution.
+  repeated StringEvent events = 3 [(gogoproto.castrepeated) = "StringEvents", (gogoproto.nullable) = false];
+}
+
+// StringEvent defines en Event object wrapper where all the attributes
+// contain key/value pairs that are strings instead of raw bytes.
+message StringEvent {
+  option (gogoproto.stringer) = true;
+
+  string             type       = 1;
+  repeated Attribute attributes = 2 [(gogoproto.nullable) = false];
+}
+
+// Attribute defines an attribute wrapper where the key and value are
+// strings instead of raw bytes.
+message Attribute {
+  string key   = 1;
+  string value = 2;
+}
+
+// GasInfo defines tx execution gas context.
+message GasInfo {
+  // GasWanted is the maximum units of work we allow this tx to perform.
+  uint64 gas_wanted = 1 [(gogoproto.moretags) = "yaml:\"gas_wanted\""];
+
+  // GasUsed is the amount of gas actually consumed.
+  uint64 gas_used = 2 [(gogoproto.moretags) = "yaml:\"gas_used\""];
+}
+
+// Result is the union of ResponseFormat and ResponseCheckTx.
+message Result {
+  option (gogoproto.goproto_getters) = false;
+
+  // Data is any data returned from message or handler execution. It MUST be
+  // length prefixed in order to separate data from multiple message executions.
+  bytes data = 1;
+
+  // Log contains the log information from message or handler execution.
+  string log = 2;
+
+  // Events contains a slice of Event objects that were emitted during message
+  // or handler execution.
+  repeated tendermint.abci.Event events = 3 [(gogoproto.nullable) = false];
+}
+
+// SimulationResponse defines the response generated when a transaction is
+// successfully simulated.
+message SimulationResponse {
+  GasInfo gas_info = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false];
+  Result  result   = 2;
+}
+
+// MsgData defines the data returned in a Result object during message
+// execution.
+message MsgData {
+  option (gogoproto.stringer) = true;
+
+  string msg_type = 1;
+  bytes  data     = 2;
+}
+
+// TxMsgData defines a list of MsgData. A transaction will have a MsgData object
+// for each message.
+message TxMsgData {
+  option (gogoproto.stringer) = true;
+
+  repeated MsgData data = 1;
+}
+
+// SearchTxsResult defines a structure for querying txs pageable
+message SearchTxsResult {
+  option (gogoproto.stringer) = true;
+
+  // Count of all txs
+  uint64 total_count = 1 [(gogoproto.moretags) = "yaml:\"total_count\"", (gogoproto.jsontag) = "total_count"];
+  // Count of txs in current page
+  uint64 count = 2;
+  // Index of current page, start from 1
+  uint64 page_number = 3 [(gogoproto.moretags) = "yaml:\"page_number\"", (gogoproto.jsontag) = "page_number"];
+  // Count of total pages
+  uint64 page_total = 4 [(gogoproto.moretags) = "yaml:\"page_total\"", (gogoproto.jsontag) = "page_total"];
+  // Max count txs per page
+  uint64 limit = 5;
+  // List of txs in current page
+  repeated TxResponse txs = 6;
+}

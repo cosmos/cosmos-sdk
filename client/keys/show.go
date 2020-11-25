@@ -5,15 +5,13 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
-	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/ledger"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -48,28 +46,24 @@ consisting of all the keys provided by name and multisig threshold.`,
 	cmd.Flags().BoolP(FlagAddress, "a", false, "Output the address only (overrides --output)")
 	cmd.Flags().BoolP(FlagPublicKey, "p", false, "Output the public key only (overrides --output)")
 	cmd.Flags().BoolP(FlagDevice, "d", false, "Output the address in a ledger device")
-	cmd.Flags().Uint(flagMultiSigThreshold, 1, "K out of N required signatures")
-	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
+	cmd.Flags().Int(flagMultiSigThreshold, 1, "K out of N required signatures")
 
 	return cmd
 }
 
 func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	var info keyring.Info
+	clientCtx := client.GetClientContextFromCmd(cmd)
 
-	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), cmd.InOrStdin())
-	if err != nil {
-		return err
-	}
 	if len(args) == 1 {
-		info, err = fetchKey(kb, args[0])
+		info, err = fetchKey(clientCtx.Keyring, args[0])
 		if err != nil {
 			return fmt.Errorf("%s is not a valid name or address: %v", args[0], err)
 		}
 	} else {
-		pks := make([]tmcrypto.PubKey, len(args))
+		pks := make([]cryptotypes.PubKey, len(args))
 		for i, keyref := range args {
-			info, err := fetchKey(kb, keyref)
+			info, err := fetchKey(clientCtx.Keyring, keyref)
 			if err != nil {
 				return fmt.Errorf("%s is not a valid name or address: %v", keyref, err)
 			}
@@ -77,19 +71,19 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 			pks[i] = info.GetPubKey()
 		}
 
-		multisigThreshold := viper.GetInt(flagMultiSigThreshold)
+		multisigThreshold, _ := cmd.Flags().GetInt(flagMultiSigThreshold)
 		err = validateMultisigThreshold(multisigThreshold, len(args))
 		if err != nil {
 			return err
 		}
 
-		multikey := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
+		multikey := multisig.NewLegacyAminoPubKey(multisigThreshold, pks)
 		info = keyring.NewMultiInfo(defaultMultiSigKeyName, multikey)
 	}
 
-	isShowAddr := viper.GetBool(FlagAddress)
-	isShowPubKey := viper.GetBool(FlagPublicKey)
-	isShowDevice := viper.GetBool(FlagDevice)
+	isShowAddr, _ := cmd.Flags().GetBool(FlagAddress)
+	isShowPubKey, _ := cmd.Flags().GetBool(FlagPublicKey)
+	isShowDevice, _ := cmd.Flags().GetBool(FlagDevice)
 
 	isOutputSet := false
 	tmp := cmd.Flag(cli.OutputFlag)
@@ -105,10 +99,13 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		return errors.New("cannot use --output with --address or --pubkey")
 	}
 
-	bechKeyOut, err := getBechKeyOut(viper.GetString(FlagBechPrefix))
+	bechPrefix, _ := cmd.Flags().GetString(FlagBechPrefix)
+	bechKeyOut, err := getBechKeyOut(bechPrefix)
 	if err != nil {
 		return err
 	}
+
+	output, _ := cmd.Flags().GetString(cli.OutputFlag)
 
 	switch {
 	case isShowAddr:
@@ -116,16 +113,17 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	case isShowPubKey:
 		printPubKey(cmd.OutOrStdout(), info, bechKeyOut)
 	default:
-		printKeyInfo(cmd.OutOrStdout(), info, bechKeyOut)
+		printKeyInfo(cmd.OutOrStdout(), info, bechKeyOut, output)
 	}
 
 	if isShowDevice {
 		if isShowPubKey {
 			return fmt.Errorf("the device flag (-d) can only be used for addresses not pubkeys")
 		}
-		if viper.GetString(FlagBechPrefix) != "acc" {
+		if bechPrefix != "acc" {
 			return fmt.Errorf("the device flag (-d) can only be used for accounts")
 		}
+
 		// Override and show in the device
 		if info.GetType() != keyring.TypeLedger {
 			return fmt.Errorf("the device flag (-d) can only be used for accounts stored in devices")
@@ -136,7 +134,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 			return nil
 		}
 
-		return crypto.LedgerShowAddress(*hdpath, info.GetPubKey(), sdk.GetConfig().GetBech32AccountAddrPrefix())
+		return ledger.ShowAddress(*hdpath, info.GetPubKey(), sdk.GetConfig().GetBech32AccountAddrPrefix())
 	}
 
 	return nil

@@ -4,17 +4,16 @@ import (
 	"bytes"
 	"fmt"
 
-	tmkv "github.com/tendermint/tendermint/libs/kv"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/capability/types"
 )
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
 // Value to the corresponding capaility type.
-func NewDecodeStore(cdc codec.Marshaler) func(kvA, kvB tmkv.Pair) string {
-	return func(kvA, kvB tmkv.Pair) string {
+func NewDecodeStore(cdc codec.Marshaler) func(kvA, kvB kv.Pair) string {
+	return func(kvA, kvB kv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key, types.KeyIndex):
 			idxA := sdk.BigEndianToUint64(kvA.Value)

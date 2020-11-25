@@ -179,7 +179,7 @@ func delegatorTxsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			txs = append(txs, foundTxs)
 		}
 
-		res, err := clientCtx.Codec.MarshalJSON(txs)
+		res, err := clientCtx.LegacyAmino.MarshalJSON(txs)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -234,7 +234,7 @@ func redelegationsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			params.DstValidatorAddr = dstValidatorAddr
 		}
 
-		bz, err := clientCtx.Codec.MarshalJSON(params)
+		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -279,12 +279,12 @@ func validatorsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		status := r.FormValue("status")
 		if status == "" {
-			status = sdk.BondStatusBonded
+			status = types.BondStatusBonded
 		}
 
 		params := types.NewQueryValidatorsParams(page, limit, status)
 
-		bz, err := clientCtx.Codec.MarshalJSON(params)
+		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -328,9 +328,9 @@ func historicalInfoHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		params := types.NewQueryHistoricalInfoParams(height)
+		params := types.QueryHistoricalInfoRequest{Height: height}
 
-		bz, err := clientCtx.Codec.MarshalJSON(params)
+		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}

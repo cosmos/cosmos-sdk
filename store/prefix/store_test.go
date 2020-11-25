@@ -4,16 +4,16 @@ import (
 	"crypto/rand"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	dbm "github.com/tendermint/tm-db"
+
+	tiavl "github.com/cosmos/iavl"
+
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/gaskv"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/stretchr/testify/require"
-
-	tiavl "github.com/tendermint/iavl"
-	dbm "github.com/tendermint/tm-db"
 )
 
 // copied from iavl/store_test.go
@@ -90,7 +90,7 @@ func TestIAVLStorePrefix(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, err := tiavl.NewMutableTree(db, cacheSize)
 	require.NoError(t, err)
-	iavlStore := iavl.UnsafeNewStore(tree, types.PruneNothing)
+	iavlStore := iavl.UnsafeNewStore(tree)
 
 	testPrefixStore(t, iavlStore, []byte("test"))
 }
@@ -246,7 +246,6 @@ func mockStoreWithStuff() types.KVStore {
 	store.Set(bz("key2"), bz("value2"))
 	store.Set(bz("key3"), bz("value3"))
 	store.Set(bz("something"), bz("else"))
-	store.Set(bz(""), bz(""))
 	store.Set(bz("k"), bz(sdk.PrefixValidator))
 	store.Set(bz("ke"), bz("valu"))
 	store.Set(bz("kee"), bz("valuu"))

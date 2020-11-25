@@ -6,7 +6,7 @@ import (
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 )
 
-// param change proposal handler
+// ProposalHandler is the community spend proposal handler.
 var (
 	ProposalHandler = govclient.NewProposalHandler(cli.GetCmdSubmitProposal, rest.ProposalRESTHandler)
 )

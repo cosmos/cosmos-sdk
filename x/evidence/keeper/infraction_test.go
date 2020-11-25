@@ -6,17 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 )
-
-func newTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) *staking.MsgCreateValidator {
-	commission := staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
-	return staking.NewMsgCreateValidator(
-		address, pubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt),
-		staking.Description{}, commission, sdk.OneInt(),
-	)
-}
 
 func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 	ctx := suite.ctx.WithIsCheckTx(false).WithBlockHeight(1)
@@ -24,13 +15,10 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 
 	power := int64(100)
 	stakingParams := suite.app.StakingKeeper.GetParams(ctx)
-	selfDelegation := sdk.TokensFromConsensusPower(power)
 	operatorAddr, val := valAddresses[0], pubkeys[0]
+	tstaking := teststaking.NewHelper(suite.T(), ctx, suite.app.StakingKeeper)
 
-	// create validator
-	res, err := staking.NewHandler(suite.app.StakingKeeper)(ctx, newTestMsgCreateValidator(operatorAddr, val, selfDelegation))
-	suite.NoError(err)
-	suite.NotNil(res)
+	selfDelegation := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, true)
 
 	// execute end-blocker and verify validator attributes
 	staking.EndBlocker(ctx, suite.app.StakingKeeper)
@@ -49,9 +37,9 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 		Height:           0,
 		Time:             time.Unix(0, 0),
 		Power:            power,
-		ConsensusAddress: sdk.ConsAddress(val.Address()),
+		ConsensusAddress: sdk.ConsAddress(val.Address()).String(),
 	}
-	suite.app.EvidenceKeeper.HandleDoubleSign(ctx, evidence)
+	suite.app.EvidenceKeeper.HandleEquivocationEvidence(ctx, evidence)
 
 	// should be jailed and tombstoned
 	suite.True(suite.app.StakingKeeper.Validator(ctx, operatorAddr).IsJailed())
@@ -62,7 +50,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 	suite.True(newTokens.LT(oldTokens))
 
 	// submit duplicate evidence
-	suite.app.EvidenceKeeper.HandleDoubleSign(ctx, evidence)
+	suite.app.EvidenceKeeper.HandleEquivocationEvidence(ctx, evidence)
 
 	// tokens should be the same (capped slash)
 	suite.True(suite.app.StakingKeeper.Validator(ctx, operatorAddr).GetTokens().Equal(newTokens))
@@ -78,10 +66,9 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 	del, _ := suite.app.StakingKeeper.GetDelegation(ctx, sdk.AccAddress(operatorAddr), operatorAddr)
 	validator, _ := suite.app.StakingKeeper.GetValidator(ctx, operatorAddr)
 	totalBond := validator.TokensFromShares(del.GetShares()).TruncateInt()
-	msgUnbond := staking.NewMsgUndelegate(sdk.AccAddress(operatorAddr), operatorAddr, sdk.NewCoin(stakingParams.BondDenom, totalBond))
-	res, err = staking.NewHandler(suite.app.StakingKeeper)(ctx, msgUnbond)
-	suite.NoError(err)
-	suite.NotNil(res)
+	tstaking.Ctx = ctx
+	tstaking.Denom = stakingParams.BondDenom
+	tstaking.Undelegate(sdk.AccAddress(operatorAddr), operatorAddr, totalBond, true)
 }
 
 func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
@@ -90,13 +77,10 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
 
 	power := int64(100)
 	stakingParams := suite.app.StakingKeeper.GetParams(ctx)
-	amt := sdk.TokensFromConsensusPower(power)
 	operatorAddr, val := valAddresses[0], pubkeys[0]
+	tstaking := teststaking.NewHelper(suite.T(), ctx, suite.app.StakingKeeper)
 
-	// create validator
-	res, err := staking.NewHandler(suite.app.StakingKeeper)(ctx, newTestMsgCreateValidator(operatorAddr, val, amt))
-	suite.NoError(err)
-	suite.NotNil(res)
+	amt := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, true)
 
 	// execute end-blocker and verify validator attributes
 	staking.EndBlocker(ctx, suite.app.StakingKeeper)
@@ -110,7 +94,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
 		Height:           0,
 		Time:             ctx.BlockTime(),
 		Power:            power,
-		ConsensusAddress: sdk.ConsAddress(val.Address()),
+		ConsensusAddress: sdk.ConsAddress(val.Address()).String(),
 	}
 
 	cp := suite.app.BaseApp.GetConsensusParams(ctx)
@@ -118,7 +102,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
 	ctx = ctx.WithConsensusParams(cp)
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(cp.Evidence.MaxAgeDuration + 1))
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + cp.Evidence.MaxAgeNumBlocks + 1)
-	suite.app.EvidenceKeeper.HandleDoubleSign(ctx, evidence)
+	suite.app.EvidenceKeeper.HandleEquivocationEvidence(ctx, evidence)
 
 	suite.False(suite.app.StakingKeeper.Validator(ctx, operatorAddr).IsJailed())
 	suite.False(suite.app.SlashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(val.Address())))

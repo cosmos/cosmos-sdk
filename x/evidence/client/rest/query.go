@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"strings"
@@ -39,8 +40,14 @@ func queryEvidenceHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		params := types.NewQueryEvidenceParams(evidenceHash)
-		bz, err := clientCtx.Codec.MarshalJSON(params)
+		decodedHash, err := hex.DecodeString(evidenceHash)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, "invalid evidence hash")
+			return
+		}
+
+		params := types.NewQueryEvidenceRequest(decodedHash)
+		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to marshal query params: %s", err))
 			return
@@ -70,7 +77,7 @@ func queryAllEvidenceHandler(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		params := types.NewQueryAllEvidenceParams(page, limit)
-		bz, err := clientCtx.Codec.MarshalJSON(params)
+		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to marshal query params: %s", err))
 			return

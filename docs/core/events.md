@@ -32,7 +32,7 @@ Events are returned to the underlying consensus engine in the response of the fo
 - [`DeliverTx`](./baseapp.md#delivertx)
 
 Events, the `type` and `attributes`, are defined on a **per-module basis** in the module's
-`/types/events.go` file, and triggered from the module's [`handler`](../building-modules/handler.md)
+`/types/events.go` file, and triggered from the module's [`Msg` service](../building-modules/msg-services.md)
 via the [`EventManager`](#eventmanager). In addition, each module documents its events under
 `spec/xx_events.md`.
 
@@ -68,7 +68,7 @@ func NewHandler(keeper Keeper) sdk.Handler {
         switch msg := msg.(type) {
 ```
 
-See the [`Handler`](../building-modules/handler.md) concept doc for a more detailed
+See the [`Msg` services](../building-modules/msg-services.md) concept doc for a more detailed
 view on how to typically implement `Events` and use the `EventManager` in modules.
 
 ## Subscribing to Events
@@ -109,8 +109,8 @@ The `type` and `attribute` value of the `query` allow you to filter the specific
 }
 ```
 
-where `senderAddress` is an address following the [`AccAddress`](../basics/accounts.md#addresses) format. 
+where `senderAddress` is an address following the [`AccAddress`](../basics/accounts.md#addresses) format.
 
 ## Next {hide}
 
-Learn about [object-capabilities](./ocap.md) {hide}
+Learn about SDK [telemetry](./telemetry.md) {hide}

@@ -20,9 +20,6 @@ const (
 
 	// QuerierRoute is the querier route for gov
 	QuerierRoute = ModuleName
-
-	// DefaultParamspace default name for parameter store
-	DefaultParamspace = ModuleName
 )
 
 // Keys for governance store

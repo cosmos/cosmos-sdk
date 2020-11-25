@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	amino "github.com/tendermint/go-amino"
 
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
 type TypeWithInterface struct {
@@ -26,7 +26,7 @@ type Suite struct {
 func (s *Suite) SetupTest() {
 	s.cdc = amino.NewCodec()
 	s.cdc.RegisterInterface((*testdata.Animal)(nil), nil)
-	s.cdc.RegisterConcrete(&testdata.Dog{}, "testdata/Dob", nil)
+	s.cdc.RegisterConcrete(&testdata.Dog{}, "testdata/Dog", nil)
 
 	s.spot = &testdata.Dog{Size_: "small", Name: "Spot"}
 	s.a = TypeWithInterface{Animal: s.spot}

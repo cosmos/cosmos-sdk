@@ -3,7 +3,7 @@ package iavl
 import (
 	"fmt"
 
-	"github.com/tendermint/iavl"
+	"github.com/cosmos/iavl"
 )
 
 var (
@@ -23,12 +23,14 @@ type (
 		Remove(key []byte) ([]byte, bool)
 		SaveVersion() ([]byte, int64, error)
 		DeleteVersion(version int64) error
+		DeleteVersions(versions ...int64) error
 		Version() int64
 		Hash() []byte
 		VersionExists(version int64) bool
 		GetVersioned(key []byte, version int64) (int64, []byte)
 		GetVersionedWithProof(key []byte, version int64) ([]byte, *iavl.RangeProof, error)
 		GetImmutable(version int64) (*iavl.ImmutableTree, error)
+		SetInitialVersion(version uint64)
 	}
 
 	// immutableTree is a simple wrapper around a reference to an iavl.ImmutableTree
@@ -53,6 +55,14 @@ func (it *immutableTree) SaveVersion() ([]byte, int64, error) {
 
 func (it *immutableTree) DeleteVersion(_ int64) error {
 	panic("cannot call 'DeleteVersion' on an immutable IAVL tree")
+}
+
+func (it *immutableTree) DeleteVersions(_ ...int64) error {
+	panic("cannot call 'DeleteVersions' on an immutable IAVL tree")
+}
+
+func (it *immutableTree) SetInitialVersion(_ uint64) {
+	panic("cannot call 'SetInitialVersion' on an immutable IAVL tree")
 }
 
 func (it *immutableTree) VersionExists(version int64) bool {

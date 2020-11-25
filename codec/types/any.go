@@ -1,6 +1,7 @@
 package types
 
 import (
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/proto"
 )
 
@@ -83,6 +84,38 @@ func (any *Any) Pack(x proto.Message) error {
 	return nil
 }
 
+// UnsafePackAny packs the value x in the Any and instead of returning the error
+// in the case of a packing failure, keeps the cached value. This should only
+// be used in situations where compatibility is needed with amino. Amino-only
+// values can safely be packed using this method when they will only be
+// marshaled with amino and not protobuf.
+func UnsafePackAny(x interface{}) *Any {
+	if msg, ok := x.(proto.Message); ok {
+		any, err := NewAnyWithValue(msg)
+		if err == nil {
+			return any
+		}
+	}
+	return &Any{cachedValue: x}
+}
+
+// PackAny is a checked and safe version of UnsafePackAny. It assures that
+// `x` implements the proto.Message interface and uses it to serialize `x`.
+// [DEPRECATED]: should be moved away: https://github.com/cosmos/cosmos-sdk/issues/7479
+func PackAny(x interface{}) (*Any, error) {
+	if x == nil {
+		return nil, nil
+	}
+	if intoany, ok := x.(IntoAny); ok {
+		return intoany.AsAny(), nil
+	}
+	protoMsg, ok := x.(proto.Message)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "Expecting %T to implement proto.Message", x)
+	}
+	return NewAnyWithValue(protoMsg)
+}
+
 // GetCachedValue returns the cached value from the Any if present
 func (any *Any) GetCachedValue() interface{} {
 	return any.cachedValue
@@ -91,4 +124,9 @@ func (any *Any) GetCachedValue() interface{} {
 // ClearCachedValue clears the cached value from the Any
 func (any *Any) ClearCachedValue() {
 	any.cachedValue = nil
+}
+
+// IntoAny represents a type that can be wrapped into an Any.
+type IntoAny interface {
+	AsAny() *Any
 }

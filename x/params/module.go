@@ -1,10 +1,11 @@
 package params
 
 import (
+	"context"
 	"encoding/json"
 	"math/rand"
 
-	"github.com/gogo/protobuf/grpc"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -12,11 +13,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/params/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/params/keeper"
 	"github.com/cosmos/cosmos-sdk/x/params/simulation"
+	"github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
@@ -24,7 +28,6 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.InterfaceModule     = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the params module.
@@ -35,9 +38,9 @@ func (AppModuleBasic) Name() string {
 	return proposal.ModuleName
 }
 
-// RegisterCodec registers the params module's types for the given codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	proposal.RegisterCodec(cdc)
+// RegisterLegacyAminoCodec registers the params module's types on the given LegacyAmino codec.
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	proposal.RegisterLegacyAminoCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the params
@@ -45,18 +48,27 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 func (AppModuleBasic) DefaultGenesis(_ codec.JSONMarshaler) json.RawMessage { return nil }
 
 // ValidateGenesis performs genesis state validation for the params module.
-func (AppModuleBasic) ValidateGenesis(_ codec.JSONMarshaler, _ json.RawMessage) error { return nil }
+func (AppModuleBasic) ValidateGenesis(_ codec.JSONMarshaler, config client.TxEncodingConfig, _ json.RawMessage) error {
+	return nil
+}
 
 // RegisterRESTRoutes registers the REST routes for the params module.
 func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the params module.
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	proposal.RegisterQueryHandlerClient(context.Background(), mux, proposal.NewQueryClient(clientCtx))
+}
+
 // GetTxCmd returns no root tx command for the params module.
-func (AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command { return nil }
+func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
 
 // GetQueryCmd returns no root query command for the params module.
-func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command { return nil }
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.NewQueryCmd()
+}
 
-func (am AppModuleBasic) RegisterInterfaceTypes(registry types.InterfaceRegistry) {
+func (am AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	proposal.RegisterInterfaces(registry)
 }
 
@@ -66,11 +78,11 @@ func (am AppModuleBasic) RegisterInterfaceTypes(registry types.InterfaceRegistry
 type AppModule struct {
 	AppModuleBasic
 
-	keeper Keeper
+	keeper keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(k Keeper) AppModule {
+func NewAppModule(k keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         k,
@@ -79,27 +91,29 @@ func NewAppModule(k Keeper) AppModule {
 
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-func (am AppModule) NewHandler() sdk.Handler { return nil }
-
 // InitGenesis performs a no-op.
 func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONMarshaler, _ json.RawMessage) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
 
-func (AppModule) Route() string { return "" }
+func (AppModule) Route() sdk.Route { return sdk.Route{} }
 
 // GenerateGenesisState performs a no-op.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {}
 
 // QuerierRoute returns the x/param module's querier route name.
-func (AppModule) QuerierRoute() string { return QuerierRoute }
+func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
-// NewQuerierHandler returns the x/params querier handler.
-func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return NewQuerier(am.keeper)
+// LegacyQuerierHandler returns the x/params querier handler.
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
+	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
 }
 
-func (am AppModule) RegisterQueryService(grpc.Server) {}
+// RegisterServices registers a gRPC query service to respond to the
+// module-specific gRPC queries.
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	proposal.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+}
 
 // ProposalContents returns all the params content functions used to
 // simulate governance proposals.

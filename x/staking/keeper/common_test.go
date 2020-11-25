@@ -1,14 +1,14 @@
 package keeper_test
 
 import (
+	"math/big"
 	"testing"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -17,28 +17,29 @@ var (
 	PKs = simapp.CreateTestPubKeys(500)
 )
 
+func init() {
+	sdk.PowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
+}
+
 // createTestInput Returns a simapp with custom StakingKeeper
 // to avoid messing with the hooks.
-func createTestInput() (*codec.Codec, *simapp.SimApp, sdk.Context) {
+func createTestInput() (*codec.LegacyAmino, *simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
-
-	appCodec := app.AppCodec()
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	app.StakingKeeper = keeper.NewKeeper(
-		appCodec,
-		app.GetKey(staking.StoreKey),
+		app.AppCodec(),
+		app.GetKey(types.StoreKey),
 		app.AccountKeeper,
 		app.BankKeeper,
-		app.GetSubspace(staking.ModuleName),
+		app.GetSubspace(types.ModuleName),
 	)
-
-	return codec.New(), app, ctx
+	return app.LegacyAmino(), app, ctx
 }
 
 // intended to be used with require/assert:  require.True(ValEq(...))
 func ValEq(t *testing.T, exp, got types.Validator) (*testing.T, bool, string, types.Validator, types.Validator) {
-	return t, exp.MinEqual(got), "expected:\n%v\ngot:\n%v", exp, got
+	return t, exp.MinEqual(&got), "expected:\n%v\ngot:\n%v", exp, got
 }
 
 // generateAddresses generates numAddrs of normal AccAddrs and ValAddrs

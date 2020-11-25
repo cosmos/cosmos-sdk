@@ -1,57 +1,79 @@
 package tx
 
 import (
-	"io"
-
-	"github.com/spf13/viper"
+	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // Factory defines a client transaction factory that facilitates generating and
 // signing an application-specific transaction.
 type Factory struct {
 	keybase            keyring.Keyring
-	txGenerator        client.TxGenerator
+	txConfig           client.TxConfig
 	accountRetriever   client.AccountRetriever
 	accountNumber      uint64
 	sequence           uint64
 	gas                uint64
+	timeoutHeight      uint64
 	gasAdjustment      float64
-	simulateAndExecute bool
 	chainID            string
 	memo               string
 	fees               sdk.Coins
 	gasPrices          sdk.DecCoins
+	signMode           signing.SignMode
+	simulateAndExecute bool
 }
 
-func NewFactoryFromCLI(input io.Reader) Factory {
-	kb, err := keyring.New(
-		sdk.KeyringServiceName(),
-		viper.GetString(flags.FlagKeyringBackend),
-		viper.GetString(flags.FlagHome),
-		input,
-	)
-	if err != nil {
-		panic(err)
+const (
+	signModeDirect    = "direct"
+	signModeAminoJSON = "amino-json"
+)
+
+func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
+	signModeStr, _ := flagSet.GetString(flags.FlagSignMode)
+
+	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
+	switch signModeStr {
+	case signModeDirect:
+		signMode = signing.SignMode_SIGN_MODE_DIRECT
+	case signModeAminoJSON:
+		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 	}
+
+	accNum, _ := flagSet.GetUint64(flags.FlagAccountNumber)
+	accSeq, _ := flagSet.GetUint64(flags.FlagSequence)
+	gasAdj, _ := flagSet.GetFloat64(flags.FlagGasAdjustment)
+	memo, _ := flagSet.GetString(flags.FlagMemo)
+	timeoutHeight, _ := flagSet.GetUint64(flags.FlagTimeoutHeight)
+
+	gasStr, _ := flagSet.GetString(flags.FlagGas)
+	gasSetting, _ := flags.ParseGasSetting(gasStr)
 
 	f := Factory{
-		keybase:            kb,
-		accountNumber:      viper.GetUint64(flags.FlagAccountNumber),
-		sequence:           viper.GetUint64(flags.FlagSequence),
-		gas:                flags.GasFlagVar.Gas,
-		gasAdjustment:      viper.GetFloat64(flags.FlagGasAdjustment),
-		simulateAndExecute: flags.GasFlagVar.Simulate,
-		chainID:            viper.GetString(flags.FlagChainID),
-		memo:               viper.GetString(flags.FlagMemo),
+		txConfig:           clientCtx.TxConfig,
+		accountRetriever:   clientCtx.AccountRetriever,
+		keybase:            clientCtx.Keyring,
+		chainID:            clientCtx.ChainID,
+		gas:                gasSetting.Gas,
+		simulateAndExecute: gasSetting.Simulate,
+		accountNumber:      accNum,
+		sequence:           accSeq,
+		timeoutHeight:      timeoutHeight,
+		gasAdjustment:      gasAdj,
+		memo:               memo,
+		signMode:           signMode,
 	}
 
-	f = f.WithFees(viper.GetString(flags.FlagFees))
-	f = f.WithGasPrices(viper.GetString(flags.FlagGasPrices))
+	feesStr, _ := flagSet.GetString(flags.FlagFees)
+	f = f.WithFees(feesStr)
+
+	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
+	f = f.WithGasPrices(gasPricesStr)
 
 	return f
 }
@@ -66,14 +88,15 @@ func (f Factory) Memo() string                              { return f.memo }
 func (f Factory) Fees() sdk.Coins                           { return f.fees }
 func (f Factory) GasPrices() sdk.DecCoins                   { return f.gasPrices }
 func (f Factory) AccountRetriever() client.AccountRetriever { return f.accountRetriever }
+func (f Factory) TimeoutHeight() uint64                     { return f.timeoutHeight }
 
 // SimulateAndExecute returns the option to simulate and then execute the transaction
 // using the gas from the simulation results
 func (f Factory) SimulateAndExecute() bool { return f.simulateAndExecute }
 
-// WithTxGenerator returns a copy of the Factory with an updated TxGenerator.
-func (f Factory) WithTxGenerator(g client.TxGenerator) Factory {
-	f.txGenerator = g
+// WithTxConfig returns a copy of the Factory with an updated TxConfig.
+func (f Factory) WithTxConfig(g client.TxConfig) Factory {
+	f.txConfig = g
 	return f
 }
 
@@ -97,7 +120,7 @@ func (f Factory) WithGas(gas uint64) Factory {
 
 // WithFees returns a copy of the Factory with an updated fee.
 func (f Factory) WithFees(fees string) Factory {
-	parsedFees, err := sdk.ParseCoins(fees)
+	parsedFees, err := sdk.ParseCoinsNormalized(fees)
 	if err != nil {
 		panic(err)
 	}
@@ -151,5 +174,22 @@ func (f Factory) WithGasAdjustment(gasAdj float64) Factory {
 // simulation value.
 func (f Factory) WithSimulateAndExecute(sim bool) Factory {
 	f.simulateAndExecute = sim
+	return f
+}
+
+// SignMode returns the sign mode configured in the Factory
+func (f Factory) SignMode() signing.SignMode {
+	return f.signMode
+}
+
+// WithSignMode returns a copy of the Factory with an updated sign mode value.
+func (f Factory) WithSignMode(mode signing.SignMode) Factory {
+	f.signMode = mode
+	return f
+}
+
+// WithTimeoutHeight returns a copy of the Factory with an updated timeout height.
+func (f Factory) WithTimeoutHeight(height uint64) Factory {
+	f.timeoutHeight = height
 	return f
 }

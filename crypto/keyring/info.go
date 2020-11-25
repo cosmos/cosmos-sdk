@@ -3,10 +3,10 @@ package keyring
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto"
-
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -17,7 +17,7 @@ type Info interface {
 	// Name of the key
 	GetName() string
 	// Public key
-	GetPubKey() crypto.PubKey
+	GetPubKey() cryptotypes.PubKey
 	// Address
 	GetAddress() types.AccAddress
 	// Bip44 Path
@@ -36,13 +36,13 @@ var (
 // localInfo is the public information about a locally stored key
 // Note: Algo must be last field in struct for backwards amino compatibility
 type localInfo struct {
-	Name         string        `json:"name"`
-	PubKey       crypto.PubKey `json:"pubkey"`
-	PrivKeyArmor string        `json:"privkey.armor"`
-	Algo         hd.PubKeyType `json:"algo"`
+	Name         string             `json:"name"`
+	PubKey       cryptotypes.PubKey `json:"pubkey"`
+	PrivKeyArmor string             `json:"privkey.armor"`
+	Algo         hd.PubKeyType      `json:"algo"`
 }
 
-func newLocalInfo(name string, pub crypto.PubKey, privArmor string, algo hd.PubKeyType) Info {
+func newLocalInfo(name string, pub cryptotypes.PubKey, privArmor string, algo hd.PubKeyType) Info {
 	return &localInfo{
 		Name:         name,
 		PubKey:       pub,
@@ -62,7 +62,7 @@ func (i localInfo) GetName() string {
 }
 
 // GetType implements Info interface
-func (i localInfo) GetPubKey() crypto.PubKey {
+func (i localInfo) GetPubKey() cryptotypes.PubKey {
 	return i.PubKey
 }
 
@@ -84,13 +84,13 @@ func (i localInfo) GetPath() (*hd.BIP44Params, error) {
 // ledgerInfo is the public information about a Ledger key
 // Note: Algo must be last field in struct for backwards amino compatibility
 type ledgerInfo struct {
-	Name   string         `json:"name"`
-	PubKey crypto.PubKey  `json:"pubkey"`
-	Path   hd.BIP44Params `json:"path"`
-	Algo   hd.PubKeyType  `json:"algo"`
+	Name   string             `json:"name"`
+	PubKey cryptotypes.PubKey `json:"pubkey"`
+	Path   hd.BIP44Params     `json:"path"`
+	Algo   hd.PubKeyType      `json:"algo"`
 }
 
-func newLedgerInfo(name string, pub crypto.PubKey, path hd.BIP44Params, algo hd.PubKeyType) Info {
+func newLedgerInfo(name string, pub cryptotypes.PubKey, path hd.BIP44Params, algo hd.PubKeyType) Info {
 	return &ledgerInfo{
 		Name:   name,
 		PubKey: pub,
@@ -110,7 +110,7 @@ func (i ledgerInfo) GetName() string {
 }
 
 // GetPubKey implements Info interface
-func (i ledgerInfo) GetPubKey() crypto.PubKey {
+func (i ledgerInfo) GetPubKey() cryptotypes.PubKey {
 	return i.PubKey
 }
 
@@ -133,12 +133,12 @@ func (i ledgerInfo) GetPath() (*hd.BIP44Params, error) {
 // offlineInfo is the public information about an offline key
 // Note: Algo must be last field in struct for backwards amino compatibility
 type offlineInfo struct {
-	Name   string        `json:"name"`
-	PubKey crypto.PubKey `json:"pubkey"`
-	Algo   hd.PubKeyType `json:"algo"`
+	Name   string             `json:"name"`
+	PubKey cryptotypes.PubKey `json:"pubkey"`
+	Algo   hd.PubKeyType      `json:"algo"`
 }
 
-func newOfflineInfo(name string, pub crypto.PubKey, algo hd.PubKeyType) Info {
+func newOfflineInfo(name string, pub cryptotypes.PubKey, algo hd.PubKeyType) Info {
 	return &offlineInfo{
 		Name:   name,
 		PubKey: pub,
@@ -157,7 +157,7 @@ func (i offlineInfo) GetName() string {
 }
 
 // GetPubKey implements Info interface
-func (i offlineInfo) GetPubKey() crypto.PubKey {
+func (i offlineInfo) GetPubKey() cryptotypes.PubKey {
 	return i.PubKey
 }
 
@@ -177,24 +177,24 @@ func (i offlineInfo) GetPath() (*hd.BIP44Params, error) {
 }
 
 type multisigPubKeyInfo struct {
-	PubKey crypto.PubKey `json:"pubkey"`
-	Weight uint          `json:"weight"`
+	PubKey cryptotypes.PubKey `json:"pubkey"`
+	Weight uint               `json:"weight"`
 }
 
 // multiInfo is the public information about a multisig key
 type multiInfo struct {
 	Name      string               `json:"name"`
-	PubKey    crypto.PubKey        `json:"pubkey"`
+	PubKey    cryptotypes.PubKey   `json:"pubkey"`
 	Threshold uint                 `json:"threshold"`
 	PubKeys   []multisigPubKeyInfo `json:"pubkeys"`
 }
 
 // NewMultiInfo creates a new multiInfo instance
-func NewMultiInfo(name string, pub crypto.PubKey) Info {
-	multiPK := pub.(multisig.PubKeyMultisigThreshold)
+func NewMultiInfo(name string, pub cryptotypes.PubKey) Info {
+	multiPK := pub.(*multisig.LegacyAminoPubKey)
 
 	pubKeys := make([]multisigPubKeyInfo, len(multiPK.PubKeys))
-	for i, pk := range multiPK.PubKeys {
+	for i, pk := range multiPK.GetPubKeys() {
 		// TODO: Recursively check pk for total weight?
 		pubKeys[i] = multisigPubKeyInfo{pk, 1}
 	}
@@ -202,7 +202,7 @@ func NewMultiInfo(name string, pub crypto.PubKey) Info {
 	return &multiInfo{
 		Name:      name,
 		PubKey:    pub,
-		Threshold: multiPK.K,
+		Threshold: uint(multiPK.Threshold),
 		PubKeys:   pubKeys,
 	}
 }
@@ -218,7 +218,7 @@ func (i multiInfo) GetName() string {
 }
 
 // GetPubKey implements Info interface
-func (i multiInfo) GetPubKey() crypto.PubKey {
+func (i multiInfo) GetPubKey() cryptotypes.PubKey {
 	return i.PubKey
 }
 
@@ -237,6 +237,13 @@ func (i multiInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
 
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (i multiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	multiPK := i.PubKey.(*multisig.LegacyAminoPubKey)
+
+	return codectypes.UnpackInterfaces(multiPK, unpacker)
+}
+
 // encoding info
 func marshalInfo(i Info) []byte {
 	return CryptoCdc.MustMarshalBinaryLengthPrefixed(i)
@@ -245,5 +252,24 @@ func marshalInfo(i Info) []byte {
 // decoding info
 func unmarshalInfo(bz []byte) (info Info, err error) {
 	err = CryptoCdc.UnmarshalBinaryLengthPrefixed(bz, &info)
+	if err != nil {
+		return nil, err
+	}
+
+	// After unmarshalling into &info, if we notice that the info is a
+	// multiInfo, then we unmarshal again, explicitly in a multiInfo this time.
+	// Since multiInfo implements UnpackInterfacesMessage, this will correctly
+	// unpack the underlying anys inside the multiInfo.
+	//
+	// This is a workaround, as go cannot check that an interface (Info)
+	// implements another interface (UnpackInterfacesMessage).
+	_, ok := info.(multiInfo)
+	if ok {
+		var multi multiInfo
+		err = CryptoCdc.UnmarshalBinaryLengthPrefixed(bz, &multi)
+
+		return multi, err
+	}
+
 	return
 }

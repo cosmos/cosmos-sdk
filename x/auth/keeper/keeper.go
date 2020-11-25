@@ -4,22 +4,51 @@ import (
 	"fmt"
 
 	gogotypes "github.com/gogo/protobuf/types"
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
+// AccountKeeperI is the interface contract that x/auth's keeper implements.
+type AccountKeeperI interface {
+	// Return a new account with the next account number and the specified address. Does not save the new account to the store.
+	NewAccountWithAddress(sdk.Context, sdk.AccAddress) types.AccountI
+
+	// Return a new account with the next account number. Does not save the new account to the store.
+	NewAccount(sdk.Context, types.AccountI) types.AccountI
+
+	// Retrieve an account from the store.
+	GetAccount(sdk.Context, sdk.AccAddress) types.AccountI
+
+	// Set an account in the store.
+	SetAccount(sdk.Context, types.AccountI)
+
+	// Remove an account from the store.
+	RemoveAccount(sdk.Context, types.AccountI)
+
+	// Iterate over all accounts, calling the provided function. Stop iteraiton when it returns false.
+	IterateAccounts(sdk.Context, func(types.AccountI) bool)
+
+	// Fetch the public key of an account at a specified address
+	GetPubKey(sdk.Context, sdk.AccAddress) (cryptotypes.PubKey, error)
+
+	// Fetch the sequence of an account at a specified address.
+	GetSequence(sdk.Context, sdk.AccAddress) (uint64, error)
+
+	// Fetch the next account number, and increment the internal counter.
+	GetNextAccountNumber(sdk.Context) uint64
+}
+
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
 type AccountKeeper struct {
 	key           sdk.StoreKey
-	cdc           codec.Marshaler
+	cdc           codec.BinaryMarshaler
 	paramSubspace paramtypes.Subspace
 	permAddrs     map[string]types.PermissionsForAddress
 
@@ -27,10 +56,12 @@ type AccountKeeper struct {
 	proto func() types.AccountI
 }
 
-// NewAccountKeeper returns a new sdk.AccountKeeper that uses go-amino to
+var _ AccountKeeperI = &AccountKeeper{}
+
+// NewAccountKeeper returns a new AccountKeeperI that uses go-amino to
 // (binary) encode and decode concrete sdk.Accounts.
 func NewAccountKeeper(
-	cdc codec.Marshaler, key sdk.StoreKey, paramstore paramtypes.Subspace, proto func() types.AccountI,
+	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramstore paramtypes.Subspace, proto func() types.AccountI,
 	maccPerms map[string][]string,
 ) AccountKeeper {
 
@@ -59,7 +90,7 @@ func (ak AccountKeeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GetPubKey Returns the PubKey of the account at address
-func (ak AccountKeeper) GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (crypto.PubKey, error) {
+func (ak AccountKeeper) GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (cryptotypes.PubKey, error) {
 	acc := ak.GetAccount(ctx, addr)
 	if acc == nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
@@ -184,15 +215,15 @@ func (ak AccountKeeper) decodeAccount(bz []byte) types.AccountI {
 	return acc
 }
 
-// MarshalEvidence marshals an Evidence interface. If the given type implements
+// MarshalAccount marshals an Account interface. If the given type implements
 // the Marshaler interface, it is treated as a Proto-defined message and
 // serialized that way. Otherwise, it falls back on the internal Amino codec.
 func (ak AccountKeeper) MarshalAccount(accountI types.AccountI) ([]byte, error) {
 	return codec.MarshalAny(ak.cdc, accountI)
 }
 
-// UnmarshalEvidence returns an Evidence interface from raw encoded evidence
-// bytes of a Proto-based Evidence type. An error is returned upon decoding
+// UnmarshalAccount returns an Account interface from raw encoded account
+// bytes of a Proto-based Account type. An error is returned upon decoding
 // failure.
 func (ak AccountKeeper) UnmarshalAccount(bz []byte) (types.AccountI, error) {
 	var acc types.AccountI
@@ -203,19 +234,4 @@ func (ak AccountKeeper) UnmarshalAccount(bz []byte) (types.AccountI, error) {
 	return acc, nil
 }
 
-// UnmarshalAccountJSON returns an AccountI from JSON encoded bytes
-func (ak AccountKeeper) UnmarshalAccountJSON(bz []byte) (types.AccountI, error) {
-	var any codectypes.Any
-	if err := ak.cdc.UnmarshalJSON(bz, &any); err != nil {
-		return nil, err
-	}
-
-	var acc types.AccountI
-	if err := ak.cdc.UnpackAny(&any, &acc); err != nil {
-		return nil, err
-	}
-
-	return acc, nil
-}
-
-func (ak AccountKeeper) GetCodec() codec.Marshaler { return ak.cdc }
+func (ak AccountKeeper) GetCodec() codec.BinaryMarshaler { return ak.cdc }

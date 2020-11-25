@@ -1,16 +1,6 @@
 module.exports = {
   theme: "cosmos",
   title: "Cosmos SDK",
-  head: [
-    [
-      "link",
-      {
-        rel: "stylesheet",
-        type: "text/css",
-        href: "https://cloud.typography.com/6138116/7255612/css/fonts.css"
-      }
-    ],
-  ],
   locales: {
     "/": {
       lang: "en-US"
@@ -26,6 +16,16 @@ module.exports = {
     }
   },
   base: process.env.VUEPRESS_BASE || "/",
+  head: [
+    ['link', { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" }],
+    ['link', { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32x32.png" }],
+    ['link', { rel: "icon", type: "image/png", sizes: "16x16", href: "/favicon-16x16.png" }],
+    ['link', { rel: "manifest", href: "/site.webmanifest" }],
+    ['meta', { name: "msapplication-TileColor", content: "#2e3148" }],
+    ['meta', { name: "theme-color", content: "#ffffff" }],
+    ['link', { rel: "icon", type: "image/svg+xml", href: "/favicon-svg.svg" }],
+    ['link', { rel: "apple-touch-icon-precomposed", href: "/apple-touch-icon-precomposed.png" }],
+  ],
   themeConfig: {
     repo: "cosmos/cosmos-sdk",
     docsRepo: "cosmos/cosmos-sdk",
@@ -37,35 +37,41 @@ module.exports = {
       key: "ac317234e6a42074175369b2f42e9754",
       index: "cosmos-sdk"
     },
-    sidebar: [
-      {
-        title: "Using the SDK",
-        children: [
-          {
-            title: "Modules",
-            directory: true,
-            path: "/modules"
-          }
-        ]
-      },
-      {
-        title: "Resources",
-        children: [
-          {
-            title: "Tutorials",
-            path: "https://tutorials.cosmos.network"
-          },
-          {
-            title: "SDK API Reference",
-            path: "https://godoc.org/github.com/cosmos/cosmos-sdk"
-          },
-          {
-            title: "REST API Spec",
-            path: "https://cosmos.network/rpc/"
-          }
-        ]
-      }
-    ],
+    topbar: {
+      banner: true
+    },
+    sidebar: { 
+      auto: true,
+      nav: [
+        {
+          title: "Using the SDK",
+          children: [
+            {
+              title: "Modules",
+              directory: true,
+              path: "/modules"
+            }
+          ]
+        },
+        {
+          title: "Resources",
+          children: [
+            {
+              title: "Tutorials",
+              path: "https://tutorials.cosmos.network"
+            },
+            {
+              title: "SDK API Reference",
+              path: "https://godoc.org/github.com/cosmos/cosmos-sdk"
+            },
+            {
+              title: "REST API Spec",
+              path: "https://cosmos.network/rpc/"
+            }
+          ]
+        }
+      ]
+    },
     gutter: {
       title: "Help & Support",
       editLink: true,
@@ -88,7 +94,9 @@ module.exports = {
       }
     },
     footer: {
-      questionsText: "Chat with Cosmos developers on [Discord](https://discord.gg/W8trcGV) or reach out on the [SDK Developer Forum](https://forum.cosmos.network/) to learn more.",
+      question: {
+        text: "Chat with Cosmos developers in <a href='https://discord.gg/W8trcGV' target='_blank'>Discord</a> or reach out on the <a href='https://forum.cosmos.network/c/tendermint' target='_blank'>SDK Developer Forum</a> to learn more."
+      },
       logo: "/logo-bw.svg",
       textLink: {
         text: "cosmos.network",
@@ -128,15 +136,15 @@ module.exports = {
           children: [
             {
               title: "Cosmos SDK",
-              url: "https://cosmos.network/docs"
+              url: "https://docs.cosmos.network"
             },
             {
               title: "Cosmos Hub",
-              url: "https://hub.cosmos.network/"
+              url: "https://hub.cosmos.network"
             },
             {
               title: "Tendermint Core",
-              url: "https://docs.tendermint.com/"
+              url: "https://docs.tendermint.com"
             }
           ]
         },
@@ -145,15 +153,15 @@ module.exports = {
           children: [
             {
               title: "Cosmos blog",
-              url: "https://blog.cosmos.network/"
+              url: "https://blog.cosmos.network"
             },
             {
               title: "Forum",
-              url: "https://forum.cosmos.network/"
+              url: "https://forum.cosmos.network"
             },
             {
               title: "Chat",
-              url: "https://riot.im/app/#/room/#cosmos-sdk:matrix.org"
+              url: "https://discord.gg/W8trcGV"
             }
           ]
         },

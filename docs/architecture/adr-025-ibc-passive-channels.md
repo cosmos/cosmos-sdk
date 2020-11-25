@@ -15,7 +15,7 @@ The current "naive" IBC Relayer strategy currently establishes a single predeter
 
 We wish to expand this "naive" strategy to a "passive" one which detects and relays both channel handshake messages and packets on a given connection, without the need to know each channel in advance of relaying it.
 
-In order to accomplish this, we propose adding more comprehensive events to expose channel metadata for each transaction sent from the `x/ibc/04-channel/keeper/handshake.go` and `x/ibc/04-channel/keeper/packet.go` modules.
+In order to accomplish this, we propose adding more comprehensive events to expose channel metadata for each transaction sent from the `x/ibc/core/04-channel/keeper/handshake.go` and `x/ibc/core/04-channel/keeper/packet.go` modules.
 
 Here is an example of what would be in `ChanOpenInit`:
 

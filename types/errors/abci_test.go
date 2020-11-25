@@ -6,11 +6,22 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/stretchr/testify/suite"
 )
 
-func TestABCInfo(t *testing.T) {
+type abciTestSuite struct {
+	suite.Suite
+}
+
+func TestABCITestSuite(t *testing.T) {
+	suite.Run(t, new(abciTestSuite))
+}
+
+func (s *abciTestSuite) SetupSuite() {
+	s.T().Parallel()
+}
+
+func (s *abciTestSuite) TestABCInfo() {
 	cases := map[string]struct {
 		err       error
 		debug     bool
@@ -49,7 +60,7 @@ func TestABCInfo(t *testing.T) {
 		"stdlib is generic message": {
 			err:       io.EOF,
 			debug:     false,
-			wantLog:   "internal error",
+			wantLog:   "internal",
 			wantCode:  1,
 			wantSpace: UndefinedCodespace,
 		},
@@ -63,7 +74,7 @@ func TestABCInfo(t *testing.T) {
 		"wrapped stdlib is only a generic message": {
 			err:       Wrap(io.EOF, "cannot read file"),
 			debug:     false,
-			wantLog:   "internal error",
+			wantLog:   "internal",
 			wantCode:  1,
 			wantSpace: UndefinedCodespace,
 		},
@@ -92,17 +103,14 @@ func TestABCInfo(t *testing.T) {
 	}
 
 	for testName, tc := range cases {
-		tc := tc
-		t.Run(testName, func(t *testing.T) {
-			space, code, log := ABCIInfo(tc.err, tc.debug)
-			require.Equal(t, tc.wantSpace, space)
-			require.Equal(t, tc.wantCode, code)
-			require.Equal(t, tc.wantLog, log)
-		})
+		space, code, log := ABCIInfo(tc.err, tc.debug)
+		s.Require().Equal(tc.wantSpace, space, testName)
+		s.Require().Equal(tc.wantCode, code, testName)
+		s.Require().Equal(tc.wantLog, log, testName)
 	}
 }
 
-func TestABCIInfoStacktrace(t *testing.T) {
+func (s *abciTestSuite) TestABCIInfoStacktrace() {
 	cases := map[string]struct {
 		err            error
 		debug          bool
@@ -131,59 +139,71 @@ func TestABCIInfoStacktrace(t *testing.T) {
 			err:            Wrap(fmt.Errorf("stdlib"), "wrapped"),
 			debug:          false,
 			wantStacktrace: false,
-			wantErrMsg:     "internal error",
+			wantErrMsg:     "internal",
 		},
 	}
 
-	const thisTestSrc = "github.com/cosmos/cosmos-sdk/types/errors.TestABCIInfoStacktrace"
+	const thisTestSrc = "github.com/cosmos/cosmos-sdk/types/errors.(*abciTestSuite).TestABCIInfoStacktrace"
 
 	for testName, tc := range cases {
-		tc := tc
-		t.Run(testName, func(t *testing.T) {
-			_, _, log := ABCIInfo(tc.err, tc.debug)
-			if tc.wantStacktrace {
-				if !strings.Contains(log, thisTestSrc) {
-					t.Errorf("log does not contain this file stack trace: %s", log)
-				}
+		_, _, log := ABCIInfo(tc.err, tc.debug)
+		if !tc.wantStacktrace {
+			s.Require().Equal(tc.wantErrMsg, log, testName)
+			continue
+		}
 
-				if !strings.Contains(log, tc.wantErrMsg) {
-					t.Errorf("log does not contain expected error message: %s", log)
-				}
-			} else if log != tc.wantErrMsg {
-				t.Fatalf("unexpected log message: %s", log)
-			}
-		})
+		s.Require().True(strings.Contains(log, thisTestSrc), testName)
+		s.Require().True(strings.Contains(log, tc.wantErrMsg), testName)
 	}
 }
 
-func TestABCIInfoHidesStacktrace(t *testing.T) {
+func (s *abciTestSuite) TestABCIInfoHidesStacktrace() {
 	err := Wrap(ErrUnauthorized, "wrapped")
 	_, _, log := ABCIInfo(err, false)
-	require.Equal(t, "wrapped: unauthorized", log)
+	s.Require().Equal("wrapped: unauthorized", log)
 }
 
-func TestRedact(t *testing.T) {
-	if err := Redact(ErrPanic); ErrPanic.Is(err) {
-		t.Error("reduct must not pass through panic error")
-	}
-	if err := Redact(ErrUnauthorized); !ErrUnauthorized.Is(err) {
-		t.Error("reduct should pass through SDK error")
+func (s *abciTestSuite) TestRedact() {
+	cases := map[string]struct {
+		err       error
+		untouched bool  // if true we expect the same error after redact
+		changed   error // if untouched == false, expect this error
+	}{
+		"panic looses message": {
+			err:     Wrap(ErrPanic, "some secret stack trace"),
+			changed: ErrPanic,
+		},
+		"sdk errors untouched": {
+			err:       Wrap(ErrUnauthorized, "cannot drop db"),
+			untouched: true,
+		},
+		"pass though custom errors with ABCI code": {
+			err:       customErr{},
+			untouched: true,
+		},
+		"redact stdlib error": {
+			err:     fmt.Errorf("stdlib error"),
+			changed: errInternal,
+		},
 	}
 
-	var cerr customErr
-	if err := Redact(cerr); err != cerr {
-		t.Error("reduct should pass through ABCI code error")
-	}
+	for name, tc := range cases {
+		spec := tc
+		redacted := Redact(spec.err)
+		if spec.untouched {
+			s.Require().Equal(spec.err, redacted, name)
+			continue
+		}
 
-	serr := fmt.Errorf("stdlib error")
-	if err := Redact(serr); err == serr {
-		t.Error("reduct must not pass through a stdlib error")
-	}
+		// see if we got the expected redact
+		s.Require().Equal(spec.changed, redacted, name)
+		// make sure the ABCI code did not change
+		s.Require().Equal(abciCode(spec.err), abciCode(redacted), name)
 
-	require.Nil(t, Redact(nil))
+	}
 }
 
-func TestABCIInfoSerializeErr(t *testing.T) {
+func (s *abciTestSuite) TestABCIInfoSerializeErr() {
 	var (
 		// Create errors with stacktrace for equal comparison.
 		myErrDecode = Wrap(ErrTxDecode, "test")
@@ -211,48 +231,20 @@ func TestABCIInfoSerializeErr(t *testing.T) {
 			debug: true,
 			exp:   fmt.Sprintf("%+v", myErrDecode),
 		},
-		// "multi error default encoder": {
-		// 	src: Append(myErrMsg, myErrAddr),
-		// 	exp: Append(myErrMsg, myErrAddr).Error(),
-		// },
-		// "multi error default with internal": {
-		// 	src: Append(myErrMsg, myPanic),
-		// 	exp: "internal error",
-		// },
 		"redact in default encoder": {
 			src: myPanic,
-			exp: "internal error",
+			exp: "panic",
 		},
 		"do not redact in debug encoder": {
 			src:   myPanic,
 			debug: true,
 			exp:   fmt.Sprintf("%+v", myPanic),
 		},
-		// 		"redact in multi error": {
-		// 			src:   Append(myPanic, myErrMsg),
-		// 			debug: false,
-		// 			exp:   "internal error",
-		// 		},
-		// 		"no redact in multi error": {
-		// 			src:   Append(myPanic, myErrMsg),
-		// 			debug: true,
-		// 			exp: `2 errors occurred:
-		// 	* panic
-		// 	* test: invalid message
-		// `,
-		// 		},
-		// 		"wrapped multi error with redact": {
-		// 			src:   Wrap(Append(myPanic, myErrMsg), "wrap"),
-		// 			debug: false,
-		// 			exp:   "internal error",
-		// 		},
 	}
 	for msg, spec := range specs {
 		spec := spec
-		t.Run(msg, func(t *testing.T) {
-			_, _, log := ABCIInfo(spec.src, spec.debug)
-			require.Equal(t, spec.exp, log)
-		})
+		_, _, log := ABCIInfo(spec.src, spec.debug)
+		s.Require().Equal(spec.exp, log, msg)
 	}
 }
 
@@ -265,30 +257,3 @@ func (customErr) Codespace() string { return "extern" }
 func (customErr) ABCICode() uint32 { return 999 }
 
 func (customErr) Error() string { return "custom" }
-
-func TestResponseCheckDeliverTx(t *testing.T) {
-	t.Parallel()
-	require.Equal(t, abci.ResponseCheckTx{
-		Codespace: "extern",
-		Code:      999,
-		Log:       "custom",
-		GasWanted: int64(1),
-		GasUsed:   int64(2),
-	}, ResponseCheckTx(customErr{}, 1, 2))
-	require.Equal(t, abci.ResponseDeliverTx{
-		Codespace: "extern",
-		Code:      999,
-		Log:       "custom",
-		GasWanted: int64(1),
-		GasUsed:   int64(2),
-	}, ResponseDeliverTx(customErr{}, 1, 2))
-}
-
-func TestQueryResult(t *testing.T) {
-	t.Parallel()
-	require.Equal(t, abci.ResponseQuery{
-		Codespace: "extern",
-		Code:      999,
-		Log:       "custom",
-	}, QueryResult(customErr{}))
-}

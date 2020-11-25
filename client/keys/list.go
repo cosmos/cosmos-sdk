@@ -2,11 +2,9 @@ package keys
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 const flagListNames = "list-names"
@@ -20,25 +18,24 @@ func ListKeysCmd() *cobra.Command {
 along with their associated name and address.`,
 		RunE: runListCmd,
 	}
-	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
+
 	cmd.Flags().BoolP(flagListNames, "n", false, "List names only")
 	return cmd
 }
 
 func runListCmd(cmd *cobra.Command, _ []string) error {
-	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), cmd.InOrStdin())
-	if err != nil {
-		return err
-	}
+	clientCtx := client.GetClientContextFromCmd(cmd)
 
-	infos, err := kb.List()
+	infos, err := clientCtx.Keyring.List()
 	if err != nil {
 		return err
 	}
 
 	cmd.SetOut(cmd.OutOrStdout())
-	if !viper.GetBool(flagListNames) {
-		printInfos(cmd.OutOrStdout(), infos)
+
+	if ok, _ := cmd.Flags().GetBool(flagListNames); !ok {
+		output, _ := cmd.Flags().GetString(cli.OutputFlag)
+		printInfos(cmd.OutOrStdout(), infos, output)
 		return nil
 	}
 

@@ -2,68 +2,70 @@ package types_test
 
 import (
 	"encoding/hex"
+	"fmt"
 	"strings"
 	"testing"
 
+	"github.com/golang/protobuf/proto"
+
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/bytes"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestParseABCILog(t *testing.T) {
-	t.Parallel()
-	logs := `[{"log":"","msg_index":1,"success":true}]`
-
-	res, err := sdk.ParseABCILogs(logs)
-	require.NoError(t, err)
-	require.Len(t, res, 1)
-	require.Equal(t, res[0].Log, "")
-	require.Equal(t, res[0].MsgIndex, uint16(1))
+type resultTestSuite struct {
+	suite.Suite
 }
 
-func TestABCIMessageLog(t *testing.T) {
-	t.Parallel()
+func TestResultTestSuite(t *testing.T) {
+	suite.Run(t, new(resultTestSuite))
+}
+
+func (s *resultTestSuite) SetupSuite() {
+	s.T().Parallel()
+}
+
+func (s *resultTestSuite) TestParseABCILog() {
+	logs := `[{"log":"","msg_index":1,"success":true}]`
+	res, err := sdk.ParseABCILogs(logs)
+
+	s.Require().NoError(err)
+	s.Require().Len(res, 1)
+	s.Require().Equal(res[0].Log, "")
+	s.Require().Equal(res[0].MsgIndex, uint32(1))
+}
+
+func (s *resultTestSuite) TestABCIMessageLog() {
+	cdc := codec.NewLegacyAmino()
 	events := sdk.Events{sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo"))}
 	msgLog := sdk.NewABCIMessageLog(0, "", events)
-
 	msgLogs := sdk.ABCIMessageLogs{msgLog}
-	bz, err := legacy.Cdc.MarshalJSON(msgLogs)
-	require.NoError(t, err)
-	require.Equal(t, string(bz), msgLogs.String())
+	bz, err := cdc.MarshalJSON(msgLogs)
+
+	s.Require().NoError(err)
+	s.Require().Equal(string(bz), msgLogs.String())
 }
 
-func TestNewSearchTxsResult(t *testing.T) {
-	t.Parallel()
-	got := sdk.NewSearchTxsResult(150, 20, 2, 20, []sdk.TxResponse{})
-	require.Equal(t, sdk.SearchTxsResult{
+func (s *resultTestSuite) TestNewSearchTxsResult() {
+	got := sdk.NewSearchTxsResult(150, 20, 2, 20, []*sdk.TxResponse{})
+	s.Require().Equal(&sdk.SearchTxsResult{
 		TotalCount: 150,
 		Count:      20,
 		PageNumber: 2,
 		PageTotal:  8,
 		Limit:      20,
-		Txs:        []sdk.TxResponse{},
+		Txs:        []*sdk.TxResponse{},
 	}, got)
 }
 
-/*
-	Codespace: res.TxResult.Codespace,
-	Code:      res.TxResult.Code,
-	Data:      strings.ToUpper(hex.EncodeToString(res.TxResult.Data)),
-	RawLog:    res.TxResult.Log,
-	Logs:      parsedLogs,
-	Info:      res.TxResult.Info,
-	GasWanted: res.TxResult.GasWanted,
-	GasUsed:   res.TxResult.GasUsed,
-	Tx:        tx,
-	Timestamp: timestamp,
-*/
-
-func TestResponseResultTx(t *testing.T) {
-	t.Parallel()
+func (s *resultTestSuite) TestResponseResultTx() {
 	deliverTxResult := abci.ResponseDeliverTx{
 		Codespace: "codespace",
 		Code:      1,
@@ -79,8 +81,10 @@ func TestResponseResultTx(t *testing.T) {
 		TxResult: deliverTxResult,
 	}
 	logs, err := sdk.ParseABCILogs(`[]`)
-	require.NoError(t, err)
-	want := sdk.TxResponse{
+
+	s.Require().NoError(err)
+
+	want := &sdk.TxResponse{
 		TxHash:    "74657374",
 		Height:    10,
 		Codespace: "codespace",
@@ -91,13 +95,13 @@ func TestResponseResultTx(t *testing.T) {
 		Info:      "info",
 		GasWanted: 100,
 		GasUsed:   90,
-		Tx:        sdk.Tx(nil),
+		Tx:        nil,
 		Timestamp: "timestamp",
 	}
 
-	require.Equal(t, want, sdk.NewResponseResultTx(resultTx, sdk.Tx(nil), "timestamp"))
-	require.Equal(t, sdk.TxResponse{}, sdk.NewResponseResultTx(nil, sdk.Tx(nil), "timestamp"))
-	require.Equal(t, `Response:
+	s.Require().Equal(want, sdk.NewResponseResultTx(resultTx, nil, "timestamp"))
+	s.Require().Equal((*sdk.TxResponse)(nil), sdk.NewResponseResultTx(nil, nil, "timestamp"))
+	s.Require().Equal(`Response:
   Height: 10
   TxHash: 74657374
   Code: 1
@@ -108,9 +112,9 @@ func TestResponseResultTx(t *testing.T) {
   GasWanted: 100
   GasUsed: 90
   Codespace: codespace
-  Timestamp: timestamp`, sdk.NewResponseResultTx(resultTx, sdk.Tx(nil), "timestamp").String())
-	require.True(t, sdk.TxResponse{}.Empty())
-	require.False(t, want.Empty())
+  Timestamp: timestamp`, sdk.NewResponseResultTx(resultTx, nil, "timestamp").String())
+	s.Require().True(sdk.TxResponse{}.Empty())
+	s.Require().False(want.Empty())
 
 	resultBroadcastTx := &ctypes.ResultBroadcastTx{
 		Code:      1,
@@ -119,7 +123,8 @@ func TestResponseResultTx(t *testing.T) {
 		Log:       `[]`,
 		Hash:      bytes.HexBytes([]byte("test")),
 	}
-	require.Equal(t, sdk.TxResponse{
+
+	s.Require().Equal(&sdk.TxResponse{
 		Code:      1,
 		Codespace: "codespace",
 		Data:      "64617461",
@@ -127,15 +132,15 @@ func TestResponseResultTx(t *testing.T) {
 		Logs:      logs,
 		TxHash:    "74657374",
 	}, sdk.NewResponseFormatBroadcastTx(resultBroadcastTx))
-	require.Equal(t, sdk.TxResponse{}, sdk.NewResponseFormatBroadcastTx(nil))
+	s.Require().Equal((*sdk.TxResponse)(nil), sdk.NewResponseFormatBroadcastTx(nil))
 }
 
-func TestResponseFormatBroadcastTxCommit(t *testing.T) {
+func (s *resultTestSuite) TestResponseFormatBroadcastTxCommit() {
 	// test nil
-	require.Equal(t, sdk.TxResponse{}, sdk.NewResponseFormatBroadcastTxCommit(nil))
+	s.Require().Equal((*sdk.TxResponse)(nil), sdk.NewResponseFormatBroadcastTxCommit(nil))
 
 	logs, err := sdk.ParseABCILogs(`[]`)
-	require.NoError(t, err)
+	s.Require().NoError(err)
 
 	// test checkTx
 	checkTxResult := &ctypes.ResultBroadcastTxCommit{
@@ -164,8 +169,7 @@ func TestResponseFormatBroadcastTxCommit(t *testing.T) {
 			Codespace: "codespace",
 		},
 	}
-
-	want := sdk.TxResponse{
+	want := &sdk.TxResponse{
 		Height:    10,
 		TxHash:    "74657374",
 		Codespace: "codespace",
@@ -177,6 +181,37 @@ func TestResponseFormatBroadcastTxCommit(t *testing.T) {
 		GasWanted: 99,
 		GasUsed:   100,
 	}
-	require.Equal(t, want, sdk.NewResponseFormatBroadcastTxCommit(checkTxResult))
-	require.Equal(t, want, sdk.NewResponseFormatBroadcastTxCommit(deliverTxResult))
+
+	s.Require().Equal(want, sdk.NewResponseFormatBroadcastTxCommit(checkTxResult))
+	s.Require().Equal(want, sdk.NewResponseFormatBroadcastTxCommit(deliverTxResult))
+}
+
+func TestWrapServiceResult(t *testing.T) {
+	ctx := sdk.Context{}
+
+	res, err := sdk.WrapServiceResult(ctx, nil, fmt.Errorf("test"))
+	require.Nil(t, res)
+	require.NotNil(t, err)
+
+	res, err = sdk.WrapServiceResult(ctx, nil, nil)
+	require.NotNil(t, res)
+	require.Nil(t, err)
+	require.Empty(t, res.Events)
+
+	ctx = ctx.WithEventManager(sdk.NewEventManager())
+	ctx.EventManager().EmitEvent(sdk.NewEvent("test"))
+	res, err = sdk.WrapServiceResult(ctx, nil, nil)
+	require.NotNil(t, res)
+	require.Nil(t, err)
+	require.Len(t, res.Events, 1)
+
+	spot := testdata.Dog{Name: "spot"}
+	res, err = sdk.WrapServiceResult(ctx, &spot, nil)
+	require.NotNil(t, res)
+	require.Nil(t, err)
+	require.Len(t, res.Events, 1)
+	var spot2 testdata.Dog
+	err = proto.Unmarshal(res.Data, &spot2)
+	require.NoError(t, err)
+	require.Equal(t, spot, spot2)
 }

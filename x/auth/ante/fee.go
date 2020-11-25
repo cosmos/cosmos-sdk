@@ -8,18 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-var (
-	_ FeeTx = (*types.StdTx)(nil) // assert StdTx implements FeeTx
-)
-
-// FeeTx defines the interface to be implemented by Tx to use the FeeDecorators
-type FeeTx interface {
-	sdk.Tx
-	GetGas() uint64
-	GetFee() sdk.Coins
-	FeePayer() sdk.AccAddress
-}
-
 // MempoolFeeDecorator will check if the transaction's fee is at least as large
 // as the local validator's minimum gasFee (defined in validator config).
 // If fee is too low, decorator returns error and tx is rejected from mempool.
@@ -33,10 +21,11 @@ func NewMempoolFeeDecorator() MempoolFeeDecorator {
 }
 
 func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	feeTx, ok := tx.(FeeTx)
+	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
+
 	feeCoins := feeTx.GetFee()
 	gas := feeTx.GetGas()
 
@@ -82,7 +71,7 @@ func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper) DeductFeeDecor
 }
 
 func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	feeTx, ok := tx.(FeeTx)
+	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}

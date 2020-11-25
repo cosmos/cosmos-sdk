@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -36,7 +35,7 @@ func (sga SimGenesisAccount) Validate() error {
 	}
 
 	if sga.ModuleName != "" {
-		ma := auth.ModuleAccount{
+		ma := authtypes.ModuleAccount{
 			BaseAccount: sga.BaseAccount, Name: sga.ModuleName, Permissions: sga.ModulePermissions,
 		}
 		if err := ma.Validate(); err != nil {

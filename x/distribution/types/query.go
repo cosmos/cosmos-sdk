@@ -32,15 +32,9 @@ func (res QueryDelegatorTotalRewardsResponse) String() string {
 	return strings.TrimSpace(out)
 }
 
-// DelegationDelegatorReward defines the properties
-// of a delegator's delegation reward.
-type DelegationDelegatorReward struct {
-	ValidatorAddress sdk.ValAddress `json:"validator_address" yaml:"validator_address"`
-	Reward           sdk.DecCoins   `json:"reward" yaml:"reward"`
-}
-
 // NewDelegationDelegatorReward constructs a DelegationDelegatorReward.
+//nolint:interfacer
 func NewDelegationDelegatorReward(valAddr sdk.ValAddress,
 	reward sdk.DecCoins) DelegationDelegatorReward {
-	return DelegationDelegatorReward{ValidatorAddress: valAddr, Reward: reward}
+	return DelegationDelegatorReward{ValidatorAddress: valAddr.String(), Reward: reward}
 }

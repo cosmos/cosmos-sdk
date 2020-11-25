@@ -9,6 +9,8 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	clientrest "github.com/cosmos/cosmos-sdk/client/rest"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -16,7 +18,9 @@ import (
 	genutilrest "github.com/cosmos/cosmos-sdk/x/genutil/client/rest"
 )
 
-// query accountREST Handler
+const unRegisteredConcreteTypeErr = "unregistered concrete type"
+
+// QueryAccountRequestHandlerFn is the query accountREST Handler.
 func QueryAccountRequestHandlerFn(storeName string, clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -32,7 +36,7 @@ func QueryAccountRequestHandlerFn(storeName string, clientCtx client.Context) ht
 			return
 		}
 
-		accGetter := types.NewAccountRetriever(authclient.Codec)
+		accGetter := types.AccountRetriever{}
 
 		account, height, err := accGetter.GetAccountWithHeight(clientCtx, addr)
 		if err != nil {
@@ -53,7 +57,7 @@ func QueryAccountRequestHandlerFn(storeName string, clientCtx client.Context) ht
 	}
 }
 
-// QueryTxsHandlerFn implements a REST handler that searches for transactions.
+// QueryTxsRequestHandlerFn implements a REST handler that searches for transactions.
 // Genesis transactions are returned if the height parameter is set to zero,
 // otherwise the transactions are searched for by events.
 func QueryTxsRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
@@ -102,6 +106,16 @@ func QueryTxsRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
+		for _, txRes := range searchResult.Txs {
+			packStdTxResponse(w, clientCtx, txRes)
+		}
+
+		err = checkSignModeError(w, clientCtx, searchResult, "/cosmos/tx/v1beta1/txs")
+		if err != nil {
+			// Error is already returned by checkSignModeError.
+			return
+		}
+
 		rest.PostProcessResponseBare(w, clientCtx, searchResult)
 	}
 }
@@ -128,8 +142,20 @@ func QueryTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
+		err = packStdTxResponse(w, clientCtx, output)
+		if err != nil {
+			// Error is already returned by packStdTxResponse.
+			return
+		}
+
 		if output.Empty() {
 			rest.WriteErrorResponse(w, http.StatusNotFound, fmt.Sprintf("no transaction found with hash %s", hashHexStr))
+		}
+
+		err = checkSignModeError(w, clientCtx, output, "/cosmos/tx/v1beta1/tx/{txhash}")
+		if err != nil {
+			// Error is already returned by checkSignModeError.
+			return
 		}
 
 		rest.PostProcessResponseBare(w, clientCtx, output)
@@ -152,4 +178,39 @@ func queryParamsHandler(clientCtx client.Context) http.HandlerFunc {
 		clientCtx = clientCtx.WithHeight(height)
 		rest.PostProcessResponse(w, clientCtx, res)
 	}
+}
+
+// packStdTxResponse takes a sdk.TxResponse, converts the Tx into a StdTx, and
+// packs the StdTx again into the sdk.TxResponse Any. Amino then takes care of
+// seamlessly JSON-outputting the Any.
+func packStdTxResponse(w http.ResponseWriter, clientCtx client.Context, txRes *sdk.TxResponse) error {
+	// We just unmarshalled from Tendermint, we take the proto Tx's raw
+	// bytes, and convert them into a StdTx to be displayed.
+	txBytes := txRes.Tx.Value
+	stdTx, err := convertToStdTx(w, clientCtx, txBytes)
+	if err != nil {
+		return err
+	}
+
+	// Pack the amino stdTx into the TxResponse's Any.
+	txRes.Tx = codectypes.UnsafePackAny(stdTx)
+
+	return nil
+}
+
+func checkSignModeError(w http.ResponseWriter, ctx client.Context, resp interface{}, grpcEndPoint string) error {
+	// LegacyAmino used intentionally here to handle the SignMode errors
+	marshaler := ctx.LegacyAmino
+
+	_, err := marshaler.MarshalJSON(resp)
+	if err != nil && strings.Contains(err.Error(), unRegisteredConcreteTypeErr) {
+		rest.WriteErrorResponse(w, http.StatusInternalServerError,
+			"This transaction was created with the new SIGN_MODE_DIRECT signing method, and therefore cannot be displayed"+
+				" via legacy REST handlers, please use CLI or directly query the Tendermint RPC endpoint to query"+
+				" this transaction. gRPC gateway endpoint is "+grpcEndPoint+". Please also see the REST endpoints migration"+
+				" guide at "+clientrest.DeprecationURL+".")
+		return err
+	}
+
+	return nil
 }

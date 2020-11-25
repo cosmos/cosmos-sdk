@@ -93,7 +93,6 @@ gaiacli advanced rest-server --node=<full_node_address:full_node_port>
 ```
 
 플래그:
-- `--trust-node`: 불리언 값. `true`일 경우, 라이트 클라이언트 검증 절차가 비활성화 됩니다. 만약 `false`일 경우, 절차가 활성화됩니다. 서비스 제공자의 경우 `true` 값을 이용하시면 됩니다. 기본 값은 `true`입니다.
 - `--node`: 플노드의 주소와 포트를 입력하시면 됩니다. 만약 풀노드와 REST 서버가 동일한 머신에서 운영될 경우 주소 값은 `tcp://localhost:26657`로 설정하시면 됩니다.
 - `--laddr`: REST 서버의 주소와 포트를 정하는 플래그입니다(기본 값 `1317`). 대다수의 경우에는 포트를 정하기 위해서 사용됩니다, 이 경우 주소는 "localhost"로 입력하시면 됩니다. 포맷은 <rest_server_address:port>입니다.
 

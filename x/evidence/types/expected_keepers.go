@@ -3,23 +3,22 @@ package types
 import (
 	"time"
 
-	"github.com/tendermint/tendermint/crypto"
-
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingexported "github.com/cosmos/cosmos-sdk/x/staking/exported"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type (
 	// StakingKeeper defines the staking module interface contract needed by the
 	// evidence module.
 	StakingKeeper interface {
-		ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) stakingexported.ValidatorI
+		ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) stakingtypes.ValidatorI
 	}
 
 	// SlashingKeeper defines the slashing module interface contract needed by the
 	// evidence module.
 	SlashingKeeper interface {
-		GetPubkey(sdk.Context, crypto.Address) (crypto.PubKey, error)
+		GetPubkey(sdk.Context, cryptotypes.Address) (cryptotypes.PubKey, error)
 		IsTombstoned(sdk.Context, sdk.ConsAddress) bool
 		HasValidatorSigningInfo(sdk.Context, sdk.ConsAddress) bool
 		Tombstone(sdk.Context, sdk.ConsAddress)

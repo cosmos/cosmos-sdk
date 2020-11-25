@@ -4,15 +4,17 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/client/tx"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 // BroadcastReq defines a tx broadcasting request.
 type BroadcastReq struct {
-	Tx   types.StdTx `json:"tx" yaml:"tx"`
-	Mode string      `json:"mode" yaml:"mode"`
+	Tx   legacytx.StdTx `json:"tx" yaml:"tx"`
+	Mode string         `json:"mode" yaml:"mode"`
 }
 
 // BroadcastTxRequest implements a tx broadcasting handler that is responsible
@@ -27,11 +29,12 @@ func BroadcastTxRequest(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		if err := clientCtx.Codec.UnmarshalJSON(body, &req); rest.CheckBadRequestError(w, err) {
+		// NOTE: amino is used intentionally here, don't migrate it!
+		if err := clientCtx.LegacyAmino.UnmarshalJSON(body, &req); rest.CheckBadRequestError(w, err) {
 			return
 		}
 
-		txBytes, err := clientCtx.Codec.MarshalBinaryBare(req.Tx)
+		txBytes, err := tx.ConvertAndEncodeStdTx(clientCtx.TxConfig, req.Tx)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}

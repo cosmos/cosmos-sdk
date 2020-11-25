@@ -13,7 +13,7 @@ import (
 
 // StakingKeeper defines the expected staking keeper (noalias)
 type StakingKeeper interface {
-	ApplyAndReturnValidatorSetUpdates(sdk.Context) (updates []abci.ValidatorUpdate)
+	ApplyAndReturnValidatorSetUpdates(sdk.Context) (updates []abci.ValidatorUpdate, err error)
 }
 
 // AccountKeeper defines the expected account keeper (noalias)
@@ -26,7 +26,7 @@ type AccountKeeper interface {
 // GenesisAccountsIterator defines the expected iterating genesis accounts object (noalias)
 type GenesisAccountsIterator interface {
 	IterateGenesisAccounts(
-		cdc *codec.Codec,
+		cdc *codec.LegacyAmino,
 		appGenesis map[string]json.RawMessage,
 		cb func(auth.AccountI) (stop bool),
 	)
@@ -35,7 +35,7 @@ type GenesisAccountsIterator interface {
 // GenesisAccountsIterator defines the expected iterating genesis accounts object (noalias)
 type GenesisBalancesIterator interface {
 	IterateGenesisBalances(
-		cdc *codec.Codec,
+		cdc codec.JSONMarshaler,
 		appGenesis map[string]json.RawMessage,
 		cb func(bankexported.GenesisBalance) (stop bool),
 	)

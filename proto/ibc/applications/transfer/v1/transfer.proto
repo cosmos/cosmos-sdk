@@ -1,0 +1,43 @@
+syntax = "proto3";
+package ibc.applications.transfer.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types";
+
+import "gogoproto/gogo.proto";
+
+// FungibleTokenPacketData defines a struct for the packet payload
+// See FungibleTokenPacketData spec:
+// https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
+message FungibleTokenPacketData {
+  // the token denomination to be transferred
+  string denom = 1;
+  // the token amount to be transferred
+  uint64 amount = 2;
+  // the sender address
+  string sender = 3;
+  // the recipient address on the destination chain
+  string receiver = 4;
+}
+
+// DenomTrace contains the base denomination for ICS20 fungible tokens and the
+// source tracing information path.
+message DenomTrace {
+  // path defines the chain of port/channel identifiers used for tracing the
+  // source of the fungible token.
+  string path = 1;
+  // base denomination of the relayed fungible token.
+  string base_denom = 2;
+}
+
+// Params defines the set of IBC transfer parameters.
+// NOTE: To prevent a single token from being transferred, set the
+// TransfersEnabled parameter to true and then set the bank module's SendEnabled
+// parameter for the denomination to false.
+message Params {
+  // send_enabled enables or disables all cross-chain token transfers from this
+  // chain.
+  bool send_enabled = 1 [(gogoproto.moretags) = "yaml:\"send_enabled\""];
+  // receive_enabled enables or disables all cross-chain token transfers to this
+  // chain.
+  bool receive_enabled = 2 [(gogoproto.moretags) = "yaml:\"receive_enabled\""];
+}

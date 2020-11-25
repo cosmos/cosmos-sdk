@@ -1,17 +1,22 @@
 package staking_test
 
 import (
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"math/big"
+
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
+
+func init() {
+	sdk.PowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
+}
 
 // nolint:deadcode,unused,varcheck
 var (
@@ -20,45 +25,37 @@ var (
 	priv2 = secp256k1.GenPrivKey()
 	addr2 = sdk.AccAddress(priv2.PubKey().Address())
 
-	commissionRates = staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	valKey  = ed25519.GenPrivKey()
+	valAddr = sdk.AccAddress(valKey.PubKey().Address())
+
+	commissionRates = types.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 
 	PKs = simapp.CreateTestPubKeys(500)
 )
 
-func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) *staking.MsgCreateValidator {
-	return types.NewMsgCreateValidator(
-		address, pubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt), staking.Description{}, commissionRates, sdk.OneInt(),
-	)
-}
-
-func NewTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int) *staking.MsgDelegate {
-	amount := sdk.NewCoin(sdk.DefaultBondDenom, amt)
-	return staking.NewMsgDelegate(delAddr, valAddr, amount)
-}
-
 // getBaseSimappWithCustomKeeper Returns a simapp with custom StakingKeeper
 // to avoid messing with the hooks.
-func getBaseSimappWithCustomKeeper() (*codec.Codec, *simapp.SimApp, sdk.Context) {
+func getBaseSimappWithCustomKeeper() (*codec.LegacyAmino, *simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	appCodec := app.AppCodec()
 
 	app.StakingKeeper = keeper.NewKeeper(
 		appCodec,
-		app.GetKey(staking.StoreKey),
+		app.GetKey(types.StoreKey),
 		app.AccountKeeper,
 		app.BankKeeper,
-		app.GetSubspace(staking.ModuleName),
+		app.GetSubspace(types.ModuleName),
 	)
 	app.StakingKeeper.SetParams(ctx, types.DefaultParams())
 
-	return codec.New(), app, ctx
+	return codec.NewLegacyAmino(), app, ctx
 }
 
 // generateAddresses generates numAddrs of normal AccAddrs and ValAddrs
-func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int, accAmount int64) ([]sdk.AccAddress, []sdk.ValAddress) {
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, numAddrs, sdk.NewInt(accAmount))
+func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int, accAmount sdk.Int) ([]sdk.AccAddress, []sdk.ValAddress) {
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, numAddrs, accAmount)
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	return addrDels, addrVals

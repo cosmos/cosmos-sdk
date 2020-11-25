@@ -1,25 +1,29 @@
 package keys
 
 import (
+	"context"
+	"fmt"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_multiSigKey_Properties(t *testing.T) {
-	tmpKey1 := secp256k1.GenPrivKeySecp256k1([]byte("mySecret"))
-	pk := multisig.NewPubKeyMultisigThreshold(1, []crypto.PubKey{tmpKey1.PubKey()})
+	tmpKey1 := secp256k1.GenPrivKeyFromSecret([]byte("mySecret"))
+	pk := multisig.NewLegacyAminoPubKey(
+		1,
+		[]cryptotypes.PubKey{tmpKey1.PubKey()},
+	)
 	tmp := keyring.NewMultiInfo("myMultisig", pk)
 
 	require.Equal(t, "myMultisig", tmp.GetName())
@@ -37,72 +41,119 @@ func Test_showKeysCmd(t *testing.T) {
 
 func Test_runShowCmd(t *testing.T) {
 	cmd := ShowKeysCmd()
-	mockIn, _, _ := tests.ApplyMockIO(cmd)
-	require.EqualError(t, runShowCmd(cmd, []string{"invalid"}), "invalid is not a valid name or address: decoding bech32 failed: invalid bech32 string length 7")
-	require.EqualError(t, runShowCmd(cmd, []string{"invalid1", "invalid2"}), "invalid1 is not a valid name or address: decoding bech32 failed: invalid index of 1")
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
-	// Prepare a key base
-	// Now add a temporary keybase
-	kbHome, cleanUp := tests.NewTestCaseDir(t)
-	t.Cleanup(cleanUp)
-	viper.Set(flags.FlagHome, kbHome)
+	kbHome := t.TempDir()
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
+	require.NoError(t, err)
+
+	clientCtx := client.Context{}.WithKeyring(kb)
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+
+	cmd.SetArgs([]string{"invalid"})
+	require.EqualError(t, cmd.ExecuteContext(ctx), "invalid is not a valid name or address: decoding bech32 failed: invalid bech32 string length 7")
+
+	cmd.SetArgs([]string{"invalid1", "invalid2"})
+	require.EqualError(t, cmd.ExecuteContext(ctx), "invalid1 is not a valid name or address: decoding bech32 failed: invalid index of 1")
 
 	fakeKeyName1 := "runShowCmd_Key1"
 	fakeKeyName2 := "runShowCmd_Key2"
-	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), mockIn)
-	require.NoError(t, err)
+
 	t.Cleanup(func() {
 		kb.Delete("runShowCmd_Key1")
 		kb.Delete("runShowCmd_Key2")
 	})
 
 	path := hd.NewFundraiserParams(1, sdk.CoinType, 0).String()
-	_, err = kb.NewAccount(fakeKeyName1, tests.TestMnemonic, "", path, hd.Secp256k1)
+	_, err = kb.NewAccount(fakeKeyName1, testutil.TestMnemonic, "", path, hd.Secp256k1)
 	require.NoError(t, err)
 
 	path2 := hd.NewFundraiserParams(1, sdk.CoinType, 1).String()
-	_, err = kb.NewAccount(fakeKeyName2, tests.TestMnemonic, "", path2, hd.Secp256k1)
+	_, err = kb.NewAccount(fakeKeyName2, testutil.TestMnemonic, "", path2, hd.Secp256k1)
 	require.NoError(t, err)
 
 	// Now try single key
-	require.EqualError(t, runShowCmd(cmd, []string{fakeKeyName1}), "invalid Bech32 prefix encoding provided: ")
+	cmd.SetArgs([]string{
+		fakeKeyName1,
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=", FlagBechPrefix),
+	})
+	require.EqualError(t, cmd.ExecuteContext(ctx), "invalid Bech32 prefix encoding provided: ")
 
-	// Now try single key - set bech to acc
-	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
+	cmd.SetArgs([]string{
+		fakeKeyName1,
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
+	})
 
 	// try fetch by name
-	require.NoError(t, runShowCmd(cmd, []string{fakeKeyName1}))
+	require.NoError(t, cmd.ExecuteContext(ctx))
+
 	// try fetch by addr
 	info, err := kb.Key(fakeKeyName1)
+	cmd.SetArgs([]string{
+		info.GetAddress().String(),
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
+	})
+
 	require.NoError(t, err)
-	require.NoError(t, runShowCmd(cmd, []string{info.GetAddress().String()}))
+	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	// Now try multisig key - set bech to acc
-	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
-	require.EqualError(t, runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2}), "threshold must be a positive integer")
+	cmd.SetArgs([]string{
+		fakeKeyName1, fakeKeyName2,
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
+		fmt.Sprintf("--%s=0", flagMultiSigThreshold),
+	})
+	require.EqualError(t, cmd.ExecuteContext(ctx), "threshold must be a positive integer")
+
+	cmd.SetArgs([]string{
+		fakeKeyName1, fakeKeyName2,
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
+		fmt.Sprintf("--%s=2", flagMultiSigThreshold),
+	})
+	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	// Now try multisig key - set bech to acc + threshold=2
-	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
-	viper.Set(flagMultiSigThreshold, 2)
-	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
-	require.NoError(t, err)
+	cmd.SetArgs([]string{
+		fakeKeyName1, fakeKeyName2,
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=acc", FlagBechPrefix),
+		fmt.Sprintf("--%s=true", FlagDevice),
+		fmt.Sprintf("--%s=2", flagMultiSigThreshold),
+	})
+	require.EqualError(t, cmd.ExecuteContext(ctx), "the device flag (-d) can only be used for accounts stored in devices")
 
-	// Now try multisig key - set bech to acc + threshold=2
-	viper.Set(FlagBechPrefix, "acc")
-	viper.Set(FlagDevice, true)
-	viper.Set(flagMultiSigThreshold, 2)
-	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
-	require.EqualError(t, err, "the device flag (-d) can only be used for accounts stored in devices")
+	cmd.SetArgs([]string{
+		fakeKeyName1, fakeKeyName2,
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=val", FlagBechPrefix),
+		fmt.Sprintf("--%s=true", FlagDevice),
+		fmt.Sprintf("--%s=2", flagMultiSigThreshold),
+	})
+	require.EqualError(t, cmd.ExecuteContext(ctx), "the device flag (-d) can only be used for accounts")
 
-	viper.Set(FlagBechPrefix, "val")
-	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
-	require.EqualError(t, err, "the device flag (-d) can only be used for accounts")
-
-	viper.Set(FlagPublicKey, true)
-	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
-	require.EqualError(t, err, "the device flag (-d) can only be used for addresses not pubkeys")
-
-	// TODO: Capture stdout and compare
+	cmd.SetArgs([]string{
+		fakeKeyName1, fakeKeyName2,
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=val", FlagBechPrefix),
+		fmt.Sprintf("--%s=true", FlagDevice),
+		fmt.Sprintf("--%s=2", flagMultiSigThreshold),
+		fmt.Sprintf("--%s=true", FlagPublicKey),
+	})
+	require.EqualError(t, cmd.ExecuteContext(ctx), "the device flag (-d) can only be used for addresses not pubkeys")
 }
 
 func Test_validateMultisigThreshold(t *testing.T) {

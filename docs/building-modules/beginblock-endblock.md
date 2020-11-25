@@ -16,7 +16,7 @@ order: 6
 
 When needed, `BeginBlocker` and `EndBlocker` are implemented as part of the [`AppModule` interface](./module-manager.md#appmodule). The `BeginBlock` and `EndBlock` methods of the interface implemented in `module.go` generally defer to `BeginBlocker` and `EndBlocker` methods respectively, which are usually implemented in a **`abci.go`** file. 
 
-The actual implementation of `BeginBlocker` and `EndBlocker` in `./abci.go` are very similar to that of a [`handler`](./handler.md):
+The actual implementation of `BeginBlocker` and `EndBlocker` in `./abci.go` are very similar to that of a [`Msg` service](./msg-services.md):
 
 - They generally use the [`keeper`](./keeper.md) and [`ctx`](../core/context.md) to retrieve information about the latest state. 
 - If needed, they use the `keeper` and `ctx` to trigger state-transitions. 
@@ -28,11 +28,11 @@ It is possible for developers to defined the order of execution between the `Beg
 
 See an example implementation of `BeginBlocker` from the `distr` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/distribution/abci.go#L10-L32
++++ https://github.com/cosmos/cosmos-sdk/blob/f33749263f4ecc796115ad6e789cb0f7cddf9148/x/distribution/abci.go#L14-L38
 
 and an example implementation of `EndBlocker` from the `staking` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/staking/handler.go#L44-L96
++++ https://github.com/cosmos/cosmos-sdk/blob/f33749263f4ecc796115ad6e789cb0f7cddf9148/x/staking/abci.go#L22-L27
 
 ## Next {hide}
 

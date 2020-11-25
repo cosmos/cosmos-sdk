@@ -4,12 +4,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -20,13 +20,34 @@ const (
 )
 
 var (
-	multiPermAcc  = auth.NewEmptyModuleAccount(multiPerm, auth.Burner, auth.Minter, auth.Staking)
-	randomPermAcc = auth.NewEmptyModuleAccount(randomPerm, "random")
+	multiPermAcc  = types.NewEmptyModuleAccount(multiPerm, types.Burner, types.Minter, types.Staking)
+	randomPermAcc = types.NewEmptyModuleAccount(randomPerm, "random")
 )
+
+type KeeperTestSuite struct {
+	suite.Suite
+
+	app *simapp.SimApp
+	ctx sdk.Context
+
+	queryClient types.QueryClient
+}
+
+func (suite *KeeperTestSuite) SetupTest() {
+	suite.app, suite.ctx = createTestApp(true)
+
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, suite.app.AccountKeeper)
+	suite.queryClient = types.NewQueryClient(queryHelper)
+}
+
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
+}
 
 func TestAccountMapperGetSet(t *testing.T) {
 	app, ctx := createTestApp(true)
-	addr := sdk.AccAddress([]byte("some-address"))
+	addr := sdk.AccAddress([]byte("some---------address"))
 
 	// no account before its created
 	acc := app.AccountKeeper.GetAccount(ctx, addr)
@@ -56,8 +77,8 @@ func TestAccountMapperGetSet(t *testing.T) {
 
 func TestAccountMapperRemoveAccount(t *testing.T) {
 	app, ctx := createTestApp(true)
-	addr1 := sdk.AccAddress([]byte("addr1"))
-	addr2 := sdk.AccAddress([]byte("addr2"))
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	addr2 := sdk.AccAddress([]byte("addr2---------------"))
 
 	// create accounts
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
@@ -104,13 +125,13 @@ func TestSupply_ValidatePermissions(t *testing.T) {
 	maccPerms := simapp.GetMaccPerms()
 	maccPerms[holder] = nil
 	maccPerms[types.Burner] = []string{types.Burner}
-	maccPerms[auth.Minter] = []string{types.Minter}
+	maccPerms[types.Minter] = []string{types.Minter}
 	maccPerms[multiPerm] = []string{types.Burner, types.Minter, types.Staking}
 	maccPerms[randomPerm] = []string{"random"}
 
-	appCodec := std.NewAppCodec(app.Codec(), codectypes.NewInterfaceRegistry())
-	keeper := auth.NewAccountKeeper(
-		appCodec, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
+	cdc, _ := simapp.MakeCodecs()
+	keeper := keeper.NewAccountKeeper(
+		cdc, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
 		types.ProtoBaseAccount, maccPerms,
 	)
 

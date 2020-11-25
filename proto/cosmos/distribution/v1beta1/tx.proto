@@ -1,0 +1,79 @@
+syntax = "proto3";
+package cosmos.distribution.v1beta1;
+
+option go_package            = "github.com/cosmos/cosmos-sdk/x/distribution/types";
+option (gogoproto.equal_all) = true;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+// Msg defines the distribution Msg service.
+service Msg {
+  // SetWithdrawAddress defines a method to change the withdraw address
+  // for a delegator (or validator self-delegation).
+  rpc SetWithdrawAddress(MsgSetWithdrawAddress) returns (MsgSetWithdrawAddressResponse);
+
+  // WithdrawDelegatorReward defines a method to withdraw rewards of delegator
+  // from a single validator.
+  rpc WithdrawDelegatorReward(MsgWithdrawDelegatorReward) returns (MsgWithdrawDelegatorRewardResponse);
+
+  // WithdrawValidatorCommission defines a method to withdraw the
+  // full commission to the validator address.
+  rpc WithdrawValidatorCommission(MsgWithdrawValidatorCommission) returns (MsgWithdrawValidatorCommissionResponse);
+
+  // FundCommunityPool defines a method to allow an account to directly
+  // fund the community pool.
+  rpc FundCommunityPool(MsgFundCommunityPool) returns (MsgFundCommunityPoolResponse);
+}
+
+// MsgSetWithdrawAddress sets the withdraw address for
+// a delegator (or validator self-delegation).
+message MsgSetWithdrawAddress {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string withdraw_address  = 2 [(gogoproto.moretags) = "yaml:\"withdraw_address\""];
+}
+
+// MsgSetWithdrawAddressResponse defines the Msg/SetWithdrawAddress response type.
+message MsgSetWithdrawAddressResponse {}
+
+// MsgWithdrawDelegatorReward represents delegation withdrawal to a delegator
+// from a single validator.
+message MsgWithdrawDelegatorReward {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+}
+
+// MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward response type.
+message MsgWithdrawDelegatorRewardResponse {}
+
+// MsgWithdrawValidatorCommission withdraws the full commission to the validator
+// address.
+message MsgWithdrawValidatorCommission {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+}
+
+// MsgWithdrawValidatorCommissionResponse defines the Msg/WithdrawValidatorCommission response type.
+message MsgWithdrawValidatorCommissionResponse {}
+
+// MsgFundCommunityPool allows an account to directly
+// fund the community pool.
+message MsgFundCommunityPool {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  string depositor = 2;
+}
+
+// MsgFundCommunityPoolResponse defines the Msg/FundCommunityPool response type.
+message MsgFundCommunityPoolResponse {}

@@ -1,4 +1,4 @@
-package version
+package version_test
 
 import (
 	"encoding/json"
@@ -6,16 +6,16 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 func TestNewInfo(t *testing.T) {
-	info := NewInfo()
+	info := version.NewInfo()
 	want := fmt.Sprintf(`: 
 git commit: 
 build tags: 
@@ -24,14 +24,13 @@ build tags:
 }
 
 func TestInfo_String(t *testing.T) {
-	info := Info{
-		Name:       "testapp",
-		ServerName: "testappd",
-		ClientName: "testappcli",
-		Version:    "1.0.0",
-		GitCommit:  "1b78457135a4104bc3af97f20654d49e2ea87454",
-		BuildTags:  "netgo,ledger",
-		GoVersion:  "go version go1.14 linux/amd64",
+	info := version.Info{
+		Name:      "testapp",
+		AppName:   "testappd",
+		Version:   "1.0.0",
+		GitCommit: "1b78457135a4104bc3af97f20654d49e2ea87454",
+		BuildTags: "netgo,ledger",
+		GoVersion: "go version go1.14 linux/amd64",
 	}
 	want := `testapp: 1.0.0
 git commit: 1b78457135a4104bc3af97f20654d49e2ea87454
@@ -41,20 +40,25 @@ go version go1.14 linux/amd64`
 }
 
 func Test_runVersionCmd(t *testing.T) {
-	require.NotNil(t, Cmd)
-	_, mockOut, _ := tests.ApplyMockIO(Cmd)
+	cmd := version.NewVersionCommand()
+	_, mockOut := testutil.ApplyMockIO(cmd)
 
-	viper.Set(cli.OutputFlag, "")
-	viper.Set(flagLong, false)
-	require.NoError(t, runVersionCmd(Cmd, nil))
+	cmd.SetArgs([]string{
+		fmt.Sprintf("--%s=''", cli.OutputFlag),
+		"--long=false",
+	})
+
+	require.NoError(t, cmd.Execute())
 	assert.Equal(t, "\n", mockOut.String())
 	mockOut.Reset()
 
-	viper.Set(cli.OutputFlag, "json")
-	viper.Set(flagLong, true)
-	info := NewInfo()
+	cmd.SetArgs([]string{
+		fmt.Sprintf("--%s=json", cli.OutputFlag), "--long=true",
+	})
+
+	info := version.NewInfo()
 	stringInfo, err := json.Marshal(info)
 	require.NoError(t, err)
-	require.NoError(t, runVersionCmd(Cmd, nil))
+	require.NoError(t, cmd.Execute())
 	assert.Equal(t, string(stringInfo)+"\n", mockOut.String())
 }

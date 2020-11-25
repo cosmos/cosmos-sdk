@@ -12,20 +12,22 @@ import (
 	"strings"
 
 	"github.com/99designs/keyring"
-	"github.com/cosmos/go-bip39"
+	bip39 "github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
-
 	"github.com/tendermint/crypto/bcrypt"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto"
-	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptoamino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/ledger"
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// Backend options for Keyring
 const (
 	BackendFile    = "file"
 	BackendOS      = "os"
@@ -51,6 +53,9 @@ type Keyring interface {
 	// List all keys.
 	List() ([]Info, error)
 
+	// Supported signing algorithms for Keyring and Ledger respectively.
+	SupportedAlgorithms() (SigningAlgoList, SigningAlgoList)
+
 	// Key and KeyByAddress return keys by uid and address respectively.
 	Key(uid string) (Info, error)
 	KeyByAddress(address sdk.Address) (Info, error)
@@ -72,10 +77,10 @@ type Keyring interface {
 	SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (Info, error)
 
 	// SavePubKey stores a public key and returns the persisted Info structure.
-	SavePubKey(uid string, pubkey tmcrypto.PubKey, algo hd.PubKeyType) (Info, error)
+	SavePubKey(uid string, pubkey types.PubKey, algo hd.PubKeyType) (Info, error)
 
 	// SaveMultisig stores and returns a new multsig (offline) key reference.
-	SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error)
+	SaveMultisig(uid string, pubkey types.PubKey) (Info, error)
 
 	Signer
 
@@ -86,10 +91,10 @@ type Keyring interface {
 // Signer is implemented by key stores that want to provide signing capabilities.
 type Signer interface {
 	// Sign sign byte messages with a user key.
-	Sign(uid string, msg []byte) ([]byte, tmcrypto.PubKey, error)
+	Sign(uid string, msg []byte) ([]byte, types.PubKey, error)
 
 	// SignByAddress sign byte messages with a user key providing the address.
-	SignByAddress(address sdk.Address, msg []byte) ([]byte, tmcrypto.PubKey, error)
+	SignByAddress(address sdk.Address, msg []byte) ([]byte, types.PubKey, error)
 }
 
 // Importer is implemented by key stores that support import of public and private keys.
@@ -114,9 +119,11 @@ type Exporter interface {
 // Option overrides keyring configuration options.
 type Option func(options *Options)
 
-//Options define the options of the Keyring
+// Options define the options of the Keyring.
 type Options struct {
-	SupportedAlgos       SigningAlgoList
+	// supported signing algorithms for keyring
+	SupportedAlgos SigningAlgoList
+	// supported signing algorithms for Ledger
 	SupportedAlgosLedger SigningAlgoList
 }
 
@@ -127,7 +134,7 @@ func NewInMemory(opts ...Option) Keyring {
 	return newKeystore(keyring.NewArrayKeyring(nil), opts...)
 }
 
-// NewKeyring creates a new instance of a keyring.
+// New creates a new instance of a keyring.
 // Keyring ptions can be applied when generating the new instance.
 // Available backends are "os", "file", "kwallet", "memory", "pass", "test".
 func New(
@@ -191,7 +198,7 @@ func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 		return "", fmt.Errorf("no key to export with name: %s", uid)
 	}
 
-	return crypto.ArmorPubKeyBytes(bz.GetPubKey().Bytes(), string(bz.GetAlgo())), nil
+	return crypto.ArmorPubKeyBytes(CryptoCdc.MustMarshalBinaryBare(bz.GetPubKey()), string(bz.GetAlgo())), nil
 }
 
 func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, error) {
@@ -218,13 +225,13 @@ func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor stri
 }
 
 // ExportPrivateKeyObject exports an armored private key object.
-func (ks keystore) ExportPrivateKeyObject(uid string) (tmcrypto.PrivKey, error) {
+func (ks keystore) ExportPrivateKeyObject(uid string) (types.PrivKey, error) {
 	info, err := ks.Key(uid)
 	if err != nil {
 		return nil, err
 	}
 
-	var priv tmcrypto.PrivKey
+	var priv types.PrivKey
 
 	switch linfo := info.(type) {
 	case localInfo:
@@ -233,7 +240,7 @@ func (ks keystore) ExportPrivateKeyObject(uid string) (tmcrypto.PrivKey, error) 
 			return nil, err
 		}
 
-		priv, err = cryptoAmino.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
+		priv, err = cryptoamino.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
 		if err != nil {
 			return nil, err
 		}
@@ -282,7 +289,7 @@ func (ks keystore) ImportPubKey(uid string, armor string) error {
 		return err
 	}
 
-	pubKey, err := cryptoAmino.PubKeyFromBytes(pubBytes)
+	pubKey, err := cryptoamino.PubKeyFromBytes(pubBytes)
 	if err != nil {
 		return err
 	}
@@ -295,13 +302,13 @@ func (ks keystore) ImportPubKey(uid string, armor string) error {
 	return nil
 }
 
-func (ks keystore) Sign(uid string, msg []byte) ([]byte, tmcrypto.PubKey, error) {
+func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 	info, err := ks.Key(uid)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var priv tmcrypto.PrivKey
+	var priv types.PrivKey
 
 	switch i := info.(type) {
 	case localInfo:
@@ -309,7 +316,7 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, tmcrypto.PubKey, error)
 			return nil, nil, fmt.Errorf("private key not available")
 		}
 
-		priv, err = cryptoAmino.PrivKeyFromBytes([]byte(i.PrivKeyArmor))
+		priv, err = cryptoamino.PrivKeyFromBytes([]byte(i.PrivKeyArmor))
 		if err != nil {
 			return nil, nil, err
 		}
@@ -329,7 +336,7 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, tmcrypto.PubKey, error)
 	return sig, priv.PubKey(), nil
 }
 
-func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, tmcrypto.PubKey, error) {
+func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, types.PubKey, error) {
 	key, err := ks.KeyByAddress(address)
 	if err != nil {
 		return nil, nil, err
@@ -345,7 +352,7 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 
 	hdPath := hd.NewFundraiserParams(account, coinType, index)
 
-	priv, _, err := crypto.NewPrivKeyLedgerSecp256k1(*hdPath, hrp)
+	priv, _, err := ledger.NewPrivKeySecp256k1(*hdPath, hrp)
 	if err != nil {
 		return nil, err
 	}
@@ -353,7 +360,7 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 	return ks.writeLedgerKey(uid, priv.PubKey(), *hdPath, algo.Name())
 }
 
-func (ks keystore) writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP44Params, algo hd.PubKeyType) (Info, error) {
+func (ks keystore) writeLedgerKey(name string, pub types.PubKey, path hd.BIP44Params, algo hd.PubKeyType) (Info, error) {
 	info := newLedgerInfo(name, pub, path, algo)
 	if err := ks.writeInfo(info); err != nil {
 		return nil, err
@@ -362,11 +369,11 @@ func (ks keystore) writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP4
 	return info, nil
 }
 
-func (ks keystore) SaveMultisig(uid string, pubkey tmcrypto.PubKey) (Info, error) {
+func (ks keystore) SaveMultisig(uid string, pubkey types.PubKey) (Info, error) {
 	return ks.writeMultisigKey(uid, pubkey)
 }
 
-func (ks keystore) SavePubKey(uid string, pubkey tmcrypto.PubKey, algo hd.PubKeyType) (Info, error) {
+func (ks keystore) SavePubKey(uid string, pubkey types.PubKey, algo hd.PubKeyType) (Info, error) {
 	return ks.writeOfflineKey(uid, pubkey, algo)
 }
 
@@ -518,10 +525,16 @@ func (ks keystore) Key(uid string) (Info, error) {
 	return unmarshalInfo(bs.Data)
 }
 
+// SupportedAlgorithms returns the keystore Options' supported signing algorithm.
+// for the keyring and Ledger.
+func (ks keystore) SupportedAlgorithms() (SigningAlgoList, SigningAlgoList) {
+	return ks.options.SupportedAlgos, ks.options.SupportedAlgosLedger
+}
+
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object
 // and returns the signed bytes and the public key. It returns an error if the device could
 // not be queried or it returned an error.
-func SignWithLedger(info Info, msg []byte) (sig []byte, pub tmcrypto.PubKey, err error) {
+func SignWithLedger(info Info, msg []byte) (sig []byte, pub types.PubKey, err error) {
 	switch info.(type) {
 	case *ledgerInfo, ledgerInfo:
 	default:
@@ -533,7 +546,7 @@ func SignWithLedger(info Info, msg []byte) (sig []byte, pub tmcrypto.PubKey, err
 		return
 	}
 
-	priv, err := crypto.NewPrivKeyLedgerSecp256k1Unsafe(*path)
+	priv, err := ledger.NewPrivKeySecp256k1Unsafe(*path)
 	if err != nil {
 		return
 	}
@@ -631,6 +644,10 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 			buf := bufio.NewReader(buf)
 			pass, err := input.GetPassword("Enter keyring passphrase:", buf)
 			if err != nil {
+				// NOTE: LGTM.io reports a false positive alert that states we are printing the password,
+				// but we only log the error.
+				//
+				// lgtm [go/clear-text-logging]
 				fmt.Fprintln(os.Stderr, err)
 				continue
 			}
@@ -646,6 +663,10 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 
 			reEnteredPass, err := input.GetPassword("Re-enter keyring passphrase:", buf)
 			if err != nil {
+				// NOTE: LGTM.io reports a false positive alert that states we are printing the password,
+				// but we only log the error.
+				//
+				// lgtm [go/clear-text-logging]
 				fmt.Fprintln(os.Stderr, err)
 				continue
 			}
@@ -671,11 +692,11 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 	}
 }
 
-func (ks keystore) writeLocalKey(name string, priv tmcrypto.PrivKey, algo hd.PubKeyType) (Info, error) {
+func (ks keystore) writeLocalKey(name string, priv types.PrivKey, algo hd.PubKeyType) (Info, error) {
 	// encrypt private key using keyring
 	pub := priv.PubKey()
 
-	info := newLocalInfo(name, pub, string(priv.Bytes()), algo)
+	info := newLocalInfo(name, pub, string(CryptoCdc.MustMarshalBinaryBare(priv)), algo)
 	if err := ks.writeInfo(info); err != nil {
 		return nil, err
 	}
@@ -690,7 +711,7 @@ func (ks keystore) writeInfo(info Info) error {
 
 	exists, err := ks.existsInDb(info)
 	if exists {
-		return fmt.Errorf("public key already exist in keybase")
+		return errors.New("public key already exist in keybase")
 	}
 
 	if err != nil {
@@ -733,7 +754,7 @@ func (ks keystore) existsInDb(info Info) (bool, error) {
 	return false, nil
 }
 
-func (ks keystore) writeOfflineKey(name string, pub tmcrypto.PubKey, algo hd.PubKeyType) (Info, error) {
+func (ks keystore) writeOfflineKey(name string, pub types.PubKey, algo hd.PubKeyType) (Info, error) {
 	info := newOfflineInfo(name, pub, algo)
 	err := ks.writeInfo(info)
 	if err != nil {
@@ -743,7 +764,7 @@ func (ks keystore) writeOfflineKey(name string, pub tmcrypto.PubKey, algo hd.Pub
 	return info, nil
 }
 
-func (ks keystore) writeMultisigKey(name string, pub tmcrypto.PubKey) (Info, error) {
+func (ks keystore) writeMultisigKey(name string, pub types.PubKey) (Info, error) {
 	info := NewMultiInfo(name, pub)
 	err := ks.writeInfo(info)
 	if err != nil {

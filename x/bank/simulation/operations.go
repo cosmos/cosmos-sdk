@@ -3,10 +3,9 @@ package simulation
 import (
 	"math/rand"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,7 +23,7 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc *codec.Codec, ak types.AccountKeeper, bk keeper.Keeper,
+	appParams simtypes.AppParams, cdc codec.JSONMarshaler, ak types.AccountKeeper, bk keeper.Keeper,
 ) simulation.WeightedOperations {
 
 	var weightMsgSend, weightMsgMultiSend int
@@ -59,12 +58,12 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-
-		if !bk.GetSendEnabled(ctx) {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, "transfers are not enabled"), nil, nil
-		}
-
 		simAccount, toSimAcc, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
+
+		// Check send_enabled status of each coin denom
+		if err := bk.SendEnabledCoins(ctx, coins...); err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, err.Error()), nil, nil
+		}
 
 		if skip {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, "skip all transfers"), nil, nil
@@ -72,7 +71,7 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 
 		msg := types.NewMsgSend(simAccount.Address, toSimAcc.Address, coins)
 
-		err := sendMsgSend(r, app, bk, ak, msg, ctx, chainID, []crypto.PrivKey{simAccount.PrivKey})
+		err := sendMsgSend(r, app, bk, ak, msg, ctx, chainID, []cryptotypes.PrivKey{simAccount.PrivKey})
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
 		}
@@ -85,7 +84,7 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 // nolint: interfacer
 func sendMsgSend(
 	r *rand.Rand, app *baseapp.BaseApp, bk keeper.Keeper, ak types.AccountKeeper,
-	msg *types.MsgSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey,
+	msg *types.MsgSend, ctx sdk.Context, chainID string, privkeys []cryptotypes.PrivKey,
 ) error {
 
 	var (
@@ -93,7 +92,12 @@ func sendMsgSend(
 		err  error
 	)
 
-	account := ak.GetAccount(ctx, msg.FromAddress)
+	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return err
+	}
+
+	account := ak.GetAccount(ctx, from)
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 	coins, hasNeg := spendable.SafeSub(msg.Amount)
@@ -103,8 +107,9 @@ func sendMsgSend(
 			return err
 		}
 	}
-
-	tx := helpers.GenTx(
+	txGen := simappparams.MakeTestEncodingConfig().TxConfig
+	tx, err := helpers.GenTx(
+		txGen,
 		[]sdk.Msg{msg},
 		fees,
 		helpers.DefaultGenTxGas,
@@ -113,8 +118,11 @@ func sendMsgSend(
 		[]uint64{account.GetSequence()},
 		privkeys...,
 	)
+	if err != nil {
+		return err
+	}
 
-	_, _, err = app.Deliver(tx)
+	_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 	if err != nil {
 		return err
 	}
@@ -130,16 +138,12 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 
-		if !bk.GetSendEnabled(ctx) {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, "transfers are not enabled"), nil, nil
-		}
-
 		// random number of inputs/outputs between [1, 3]
 		inputs := make([]types.Input, r.Intn(3)+1)
 		outputs := make([]types.Output, r.Intn(3)+1)
 
 		// collect signer privKeys
-		privs := make([]crypto.PrivKey, len(inputs))
+		privs := make([]cryptotypes.PrivKey, len(inputs))
 
 		// use map to check if address already exists as input
 		usedAddrs := make(map[string]bool)
@@ -167,6 +171,11 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 			// set next input and accumulate total sent coins
 			inputs[i] = types.NewInput(simAccount.Address, coins)
 			totalSentCoins = totalSentCoins.Add(coins...)
+		}
+
+		// Check send_enabled status of each sent coin denom
+		if err := bk.SendEnabledCoins(ctx, totalSentCoins...); err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, err.Error()), nil, nil
 		}
 
 		for o := range outputs {
@@ -217,14 +226,18 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 // nolint: interfacer
 func sendMsgMultiSend(
 	r *rand.Rand, app *baseapp.BaseApp, bk keeper.Keeper, ak types.AccountKeeper,
-	msg *types.MsgMultiSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey,
+	msg *types.MsgMultiSend, ctx sdk.Context, chainID string, privkeys []cryptotypes.PrivKey,
 ) error {
 
 	accountNumbers := make([]uint64, len(msg.Inputs))
 	sequenceNumbers := make([]uint64, len(msg.Inputs))
 
 	for i := 0; i < len(msg.Inputs); i++ {
-		acc := ak.GetAccount(ctx, msg.Inputs[i].Address)
+		addr, err := sdk.AccAddressFromBech32(msg.Inputs[i].Address)
+		if err != nil {
+			panic(err)
+		}
+		acc := ak.GetAccount(ctx, addr)
 		accountNumbers[i] = acc.GetAccountNumber()
 		sequenceNumbers[i] = acc.GetSequence()
 	}
@@ -234,8 +247,13 @@ func sendMsgMultiSend(
 		err  error
 	)
 
+	addr, err := sdk.AccAddressFromBech32(msg.Inputs[0].Address)
+	if err != nil {
+		panic(err)
+	}
+
 	// feePayer is the first signer, i.e. first input address
-	feePayer := ak.GetAccount(ctx, msg.Inputs[0].Address)
+	feePayer := ak.GetAccount(ctx, addr)
 	spendable := bk.SpendableCoins(ctx, feePayer.GetAddress())
 
 	coins, hasNeg := spendable.SafeSub(msg.Inputs[0].Coins)
@@ -246,7 +264,9 @@ func sendMsgMultiSend(
 		}
 	}
 
-	tx := helpers.GenTx(
+	txGen := simappparams.MakeTestEncodingConfig().TxConfig
+	tx, err := helpers.GenTx(
+		txGen,
 		[]sdk.Msg{msg},
 		fees,
 		helpers.DefaultGenTxGas,
@@ -255,8 +275,11 @@ func sendMsgMultiSend(
 		sequenceNumbers,
 		privkeys...,
 	)
+	if err != nil {
+		return err
+	}
 
-	_, _, err = app.Deliver(tx)
+	_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 	if err != nil {
 		return err
 	}

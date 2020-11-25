@@ -8,10 +8,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tendermint/tendermint/crypto"
 	yaml "gopkg.in/yaml.v2"
 
-	tmamino "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
@@ -30,15 +31,15 @@ const (
 
 	// AddrLen defines a valid address length
 	AddrLen = 20
-	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
+	// Bech32MainPrefix defines the main SDK Bech32 prefix of an account's address
 	Bech32MainPrefix = "cosmos"
 
-	// Atom in https://github.com/satoshilabs/slips/blob/master/slip-0044.md
+	// CoinType is the ATOM coin type as defined in SLIP44 (https://github.com/satoshilabs/slips/blob/master/slip-0044.md)
 	CoinType = 118
 
-	// BIP44Prefix is the parts of the BIP44 HD path that are fixed by
-	// what we used during the fundraiser.
-	FullFundraiserPath = "44'/118'/0'/0/0"
+	// FullFundraiserPath is the parts of the BIP44 HD path that are fixed by
+	// what we used during the ATOM fundraiser.
+	FullFundraiserPath = "m/44'/118'/0'/0/0"
 
 	// PrefixAccount is the prefix for account keys
 	PrefixAccount = "acc"
@@ -111,7 +112,7 @@ func VerifyAddressFormat(bz []byte) error {
 		return verifier(bz)
 	}
 	if len(bz) != AddrLen {
-		return errors.New("incorrect address length")
+		return fmt.Errorf("incorrect address length (expected: %d, actual: %d)", AddrLen, len(bz))
 	}
 	return nil
 }
@@ -119,7 +120,7 @@ func VerifyAddressFormat(bz []byte) error {
 // AccAddressFromBech32 creates an AccAddress from a Bech32 string.
 func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 	if len(strings.TrimSpace(address)) == 0 {
-		return AccAddress{}, nil
+		return AccAddress{}, errors.New("empty address string is not allowed")
 	}
 
 	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
@@ -183,8 +184,13 @@ func (aa AccAddress) MarshalYAML() (interface{}, error) {
 func (aa *AccAddress) UnmarshalJSON(data []byte) error {
 	var s string
 	err := json.Unmarshal(data, &s)
+
 	if err != nil {
 		return err
+	}
+	if s == "" {
+		*aa = AccAddress{}
+		return nil
 	}
 
 	aa2, err := AccAddressFromBech32(s)
@@ -202,6 +208,10 @@ func (aa *AccAddress) UnmarshalYAML(data []byte) error {
 	err := yaml.Unmarshal(data, &s)
 	if err != nil {
 		return err
+	}
+	if s == "" {
+		*aa = AccAddress{}
+		return nil
 	}
 
 	aa2, err := AccAddressFromBech32(s)
@@ -264,7 +274,7 @@ func ValAddressFromHex(address string) (addr ValAddress, err error) {
 // ValAddressFromBech32 creates a ValAddress from a Bech32 string.
 func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 	if len(strings.TrimSpace(address)) == 0 {
-		return ValAddress{}, nil
+		return ValAddress{}, errors.New("empty address string is not allowed")
 	}
 
 	bech32PrefixValAddr := GetConfig().GetBech32ValidatorAddrPrefix()
@@ -332,6 +342,10 @@ func (va *ValAddress) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
+	if s == "" {
+		*va = ValAddress{}
+		return nil
+	}
 
 	va2, err := ValAddressFromBech32(s)
 	if err != nil {
@@ -349,6 +363,10 @@ func (va *ValAddress) UnmarshalYAML(data []byte) error {
 	err := yaml.Unmarshal(data, &s)
 	if err != nil {
 		return err
+	}
+	if s == "" {
+		*va = ValAddress{}
+		return nil
 	}
 
 	va2, err := ValAddressFromBech32(s)
@@ -411,7 +429,7 @@ func ConsAddressFromHex(address string) (addr ConsAddress, err error) {
 // ConsAddressFromBech32 creates a ConsAddress from a Bech32 string.
 func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
 	if len(strings.TrimSpace(address)) == 0 {
-		return ConsAddress{}, nil
+		return ConsAddress{}, errors.New("empty address string is not allowed")
 	}
 
 	bech32PrefixConsAddr := GetConfig().GetBech32ConsensusAddrPrefix()
@@ -430,7 +448,7 @@ func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
 }
 
 // get ConsAddress from pubkey
-func GetConsAddress(pubkey crypto.PubKey) ConsAddress {
+func GetConsAddress(pubkey cryptotypes.PubKey) ConsAddress {
 	return ConsAddress(pubkey.Address())
 }
 
@@ -484,6 +502,10 @@ func (ca *ConsAddress) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
+	if s == "" {
+		*ca = ConsAddress{}
+		return nil
+	}
 
 	ca2, err := ConsAddressFromBech32(s)
 	if err != nil {
@@ -501,6 +523,10 @@ func (ca *ConsAddress) UnmarshalYAML(data []byte) error {
 	err := yaml.Unmarshal(data, &s)
 	if err != nil {
 		return err
+	}
+	if s == "" {
+		*ca = ConsAddress{}
+		return nil
 	}
 
 	ca2, err := ConsAddressFromBech32(s)
@@ -586,7 +612,8 @@ const (
 
 // Bech32ifyPubKey returns a Bech32 encoded string containing the appropriate
 // prefix based on the key type provided for a given PublicKey.
-func Bech32ifyPubKey(pkt Bech32PubKeyType, pubkey crypto.PubKey) (string, error) {
+// TODO: Remove Bech32ifyPubKey and all usages (cosmos/cosmos-sdk/issues/#7357)
+func Bech32ifyPubKey(pkt Bech32PubKeyType, pubkey cryptotypes.PubKey) (string, error) {
 	var bech32Prefix string
 
 	switch pkt {
@@ -601,11 +628,11 @@ func Bech32ifyPubKey(pkt Bech32PubKeyType, pubkey crypto.PubKey) (string, error)
 
 	}
 
-	return bech32.ConvertAndEncode(bech32Prefix, pubkey.Bytes())
+	return bech32.ConvertAndEncode(bech32Prefix, legacy.Cdc.MustMarshalBinaryBare(pubkey))
 }
 
 // MustBech32ifyPubKey calls Bech32ifyPubKey except it panics on error.
-func MustBech32ifyPubKey(pkt Bech32PubKeyType, pubkey crypto.PubKey) string {
+func MustBech32ifyPubKey(pkt Bech32PubKeyType, pubkey cryptotypes.PubKey) string {
 	res, err := Bech32ifyPubKey(pkt, pubkey)
 	if err != nil {
 		panic(err)
@@ -616,7 +643,7 @@ func MustBech32ifyPubKey(pkt Bech32PubKeyType, pubkey crypto.PubKey) string {
 
 // GetPubKeyFromBech32 returns a PublicKey from a bech32-encoded PublicKey with
 // a given key type.
-func GetPubKeyFromBech32(pkt Bech32PubKeyType, pubkeyStr string) (crypto.PubKey, error) {
+func GetPubKeyFromBech32(pkt Bech32PubKeyType, pubkeyStr string) (cryptotypes.PubKey, error) {
 	var bech32Prefix string
 
 	switch pkt {
@@ -636,16 +663,11 @@ func GetPubKeyFromBech32(pkt Bech32PubKeyType, pubkeyStr string) (crypto.PubKey,
 		return nil, err
 	}
 
-	pk, err := tmamino.PubKeyFromBytes(bz)
-	if err != nil {
-		return nil, err
-	}
-
-	return pk, nil
+	return cryptocodec.PubKeyFromBytes(bz)
 }
 
 // MustGetPubKeyFromBech32 calls GetPubKeyFromBech32 except it panics on error.
-func MustGetPubKeyFromBech32(pkt Bech32PubKeyType, pubkeyStr string) crypto.PubKey {
+func MustGetPubKeyFromBech32(pkt Bech32PubKeyType, pubkeyStr string) cryptotypes.PubKey {
 	res, err := GetPubKeyFromBech32(pkt, pubkeyStr)
 	if err != nil {
 		panic(err)

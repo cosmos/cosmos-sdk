@@ -5,15 +5,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/capability"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	"github.com/cosmos/cosmos-sdk/x/capability/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type KeeperTestSuite struct {
@@ -30,15 +29,18 @@ func (suite *KeeperTestSuite) SetupTest() {
 	cdc := app.AppCodec()
 
 	// create new keeper so we can define custom scoping before init and seal
-	keeper := keeper.NewKeeper(cdc, app.GetKey(capability.StoreKey), app.GetMemKey(capability.MemStoreKey))
+	keeper := keeper.NewKeeper(cdc, app.GetKey(types.StoreKey), app.GetMemKey(types.MemStoreKey))
 
 	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1})
+	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1})
 	suite.keeper = keeper
 }
 
 func (suite *KeeperTestSuite) TestInitializeAndSeal() {
-	sk := suite.keeper.ScopeToModule(bank.ModuleName)
+	sk := suite.keeper.ScopeToModule(banktypes.ModuleName)
+	suite.Require().Panics(func() {
+		suite.keeper.ScopeToModule("  ")
+	})
 
 	caps := make([]*types.Capability, 5)
 	// Get Latest Index before creating new ones to sychronize indices correctly
@@ -69,18 +71,22 @@ func (suite *KeeperTestSuite) TestInitializeAndSeal() {
 	})
 
 	suite.Require().Panics(func() {
-		_ = suite.keeper.ScopeToModule(staking.ModuleName)
+		_ = suite.keeper.ScopeToModule(stakingtypes.ModuleName)
 	})
 }
 
 func (suite *KeeperTestSuite) TestNewCapability() {
-	sk := suite.keeper.ScopeToModule(bank.ModuleName)
+	sk := suite.keeper.ScopeToModule(banktypes.ModuleName)
+
+	got, ok := sk.GetCapability(suite.ctx, "transfer")
+	suite.Require().False(ok)
+	suite.Require().Nil(got)
 
 	cap, err := sk.NewCapability(suite.ctx, "transfer")
 	suite.Require().NoError(err)
 	suite.Require().NotNil(cap)
 
-	got, ok := sk.GetCapability(suite.ctx, "transfer")
+	got, ok = sk.GetCapability(suite.ctx, "transfer")
 	suite.Require().True(ok)
 	suite.Require().Equal(cap, got)
 	suite.Require().True(cap == got, "expected memory addresses to be equal")
@@ -89,7 +95,21 @@ func (suite *KeeperTestSuite) TestNewCapability() {
 	suite.Require().False(ok)
 	suite.Require().Nil(got)
 
-	cap, err = sk.NewCapability(suite.ctx, "transfer")
+	got, ok = sk.GetCapability(suite.ctx, "transfer")
+	suite.Require().True(ok)
+	suite.Require().Equal(cap, got)
+	suite.Require().True(cap == got, "expected memory addresses to be equal")
+
+	cap2, err := sk.NewCapability(suite.ctx, "transfer")
+	suite.Require().Error(err)
+	suite.Require().Nil(cap2)
+
+	got, ok = sk.GetCapability(suite.ctx, "transfer")
+	suite.Require().True(ok)
+	suite.Require().Equal(cap, got)
+	suite.Require().True(cap == got, "expected memory addresses to be equal")
+
+	cap, err = sk.NewCapability(suite.ctx, "   ")
 	suite.Require().Error(err)
 	suite.Require().Nil(cap)
 }
@@ -105,14 +125,15 @@ func (suite *KeeperTestSuite) TestOriginalCapabilityKeeper() {
 }
 
 func (suite *KeeperTestSuite) TestAuthenticateCapability() {
-	sk1 := suite.keeper.ScopeToModule(bank.ModuleName)
-	sk2 := suite.keeper.ScopeToModule(staking.ModuleName)
+	sk1 := suite.keeper.ScopeToModule(banktypes.ModuleName)
+	sk2 := suite.keeper.ScopeToModule(stakingtypes.ModuleName)
 
 	cap1, err := sk1.NewCapability(suite.ctx, "transfer")
 	suite.Require().NoError(err)
 	suite.Require().NotNil(cap1)
 
-	forgedCap := types.NewCapability(0) // index should be the same index as the first capability
+	forgedCap := types.NewCapability(cap1.Index) // index should be the same index as the first capability
+	suite.Require().False(sk1.AuthenticateCapability(suite.ctx, forgedCap, "transfer"))
 	suite.Require().False(sk2.AuthenticateCapability(suite.ctx, forgedCap, "transfer"))
 
 	cap2, err := sk2.NewCapability(suite.ctx, "bond")
@@ -137,11 +158,15 @@ func (suite *KeeperTestSuite) TestAuthenticateCapability() {
 	badCap := types.NewCapability(100)
 	suite.Require().False(sk1.AuthenticateCapability(suite.ctx, badCap, "transfer"))
 	suite.Require().False(sk2.AuthenticateCapability(suite.ctx, badCap, "bond"))
+
+	suite.Require().False(sk1.AuthenticateCapability(suite.ctx, cap1, "  "))
+	suite.Require().False(sk1.AuthenticateCapability(suite.ctx, nil, "transfer"))
 }
 
 func (suite *KeeperTestSuite) TestClaimCapability() {
-	sk1 := suite.keeper.ScopeToModule(bank.ModuleName)
-	sk2 := suite.keeper.ScopeToModule(staking.ModuleName)
+	sk1 := suite.keeper.ScopeToModule(banktypes.ModuleName)
+	sk2 := suite.keeper.ScopeToModule(stakingtypes.ModuleName)
+	sk3 := suite.keeper.ScopeToModule("foo")
 
 	cap, err := sk1.NewCapability(suite.ctx, "transfer")
 	suite.Require().NoError(err)
@@ -157,11 +182,14 @@ func (suite *KeeperTestSuite) TestClaimCapability() {
 	got, ok = sk2.GetCapability(suite.ctx, "transfer")
 	suite.Require().True(ok)
 	suite.Require().Equal(cap, got)
+
+	suite.Require().Error(sk3.ClaimCapability(suite.ctx, cap, "  "))
+	suite.Require().Error(sk3.ClaimCapability(suite.ctx, nil, "transfer"))
 }
 
 func (suite *KeeperTestSuite) TestGetOwners() {
-	sk1 := suite.keeper.ScopeToModule(bank.ModuleName)
-	sk2 := suite.keeper.ScopeToModule(staking.ModuleName)
+	sk1 := suite.keeper.ScopeToModule(banktypes.ModuleName)
+	sk2 := suite.keeper.ScopeToModule(stakingtypes.ModuleName)
 	sk3 := suite.keeper.ScopeToModule("foo")
 
 	sks := []keeper.ScopedKeeper{sk1, sk2, sk3}
@@ -173,18 +201,19 @@ func (suite *KeeperTestSuite) TestGetOwners() {
 	suite.Require().NoError(sk2.ClaimCapability(suite.ctx, cap, "transfer"))
 	suite.Require().NoError(sk3.ClaimCapability(suite.ctx, cap, "transfer"))
 
-	expectedOrder := []string{bank.ModuleName, "foo", staking.ModuleName}
+	expectedOrder := []string{banktypes.ModuleName, "foo", stakingtypes.ModuleName}
 	// Ensure all scoped keepers can get owners
 	for _, sk := range sks {
 		owners, ok := sk.GetOwners(suite.ctx, "transfer")
-		mods, cap, err := sk.LookupModules(suite.ctx, "transfer")
+		mods, gotCap, err := sk.LookupModules(suite.ctx, "transfer")
 
 		suite.Require().True(ok, "could not retrieve owners")
 		suite.Require().NotNil(owners, "owners is nil")
 
 		suite.Require().NoError(err, "could not retrieve modules")
-		suite.Require().NotNil(cap, "capability is nil")
+		suite.Require().NotNil(gotCap, "capability is nil")
 		suite.Require().NotNil(mods, "modules is nil")
+		suite.Require().Equal(cap, gotCap, "caps not equal")
 
 		suite.Require().Equal(len(expectedOrder), len(owners.Owners), "length of owners is unexpected")
 		for i, o := range owners.Owners {
@@ -199,7 +228,7 @@ func (suite *KeeperTestSuite) TestGetOwners() {
 	suite.Require().Nil(err, "could not release capability")
 
 	// new expected order and scoped capabilities
-	expectedOrder = []string{bank.ModuleName, staking.ModuleName}
+	expectedOrder = []string{banktypes.ModuleName, stakingtypes.ModuleName}
 	sks = []keeper.ScopedKeeper{sk1, sk2}
 
 	// Ensure all scoped keepers can get owners
@@ -222,11 +251,13 @@ func (suite *KeeperTestSuite) TestGetOwners() {
 		}
 	}
 
+	_, ok := sk1.GetOwners(suite.ctx, "  ")
+	suite.Require().False(ok, "got owners from empty capability name")
 }
 
 func (suite *KeeperTestSuite) TestReleaseCapability() {
-	sk1 := suite.keeper.ScopeToModule(bank.ModuleName)
-	sk2 := suite.keeper.ScopeToModule(staking.ModuleName)
+	sk1 := suite.keeper.ScopeToModule(banktypes.ModuleName)
+	sk2 := suite.keeper.ScopeToModule(stakingtypes.ModuleName)
 
 	cap1, err := sk1.NewCapability(suite.ctx, "transfer")
 	suite.Require().NoError(err)
@@ -249,10 +280,12 @@ func (suite *KeeperTestSuite) TestReleaseCapability() {
 	got, ok = sk1.GetCapability(suite.ctx, "transfer")
 	suite.Require().False(ok)
 	suite.Require().Nil(got)
+
+	suite.Require().Error(sk1.ReleaseCapability(suite.ctx, nil))
 }
 
 func (suite KeeperTestSuite) TestRevertCapability() {
-	sk := suite.keeper.ScopeToModule(bank.ModuleName)
+	sk := suite.keeper.ScopeToModule(banktypes.ModuleName)
 
 	ms := suite.ctx.MultiStore()
 

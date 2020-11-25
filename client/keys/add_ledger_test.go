@@ -3,16 +3,19 @@
 package keys
 
 import (
+	"context"
+	"fmt"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -33,31 +36,35 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	config.SetBech32PrefixForConsensusNode(bech32PrefixConsAddr, bech32PrefixConsPub)
 
 	cmd := AddKeyCommand()
-	require.NotNil(t, cmd)
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 
 	// Prepare a keybase
-	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
-	require.NotNil(t, kbHome)
-	t.Cleanup(kbCleanUp)
-	viper.Set(flags.FlagHome, kbHome)
-	viper.Set(flags.FlagUseLedger, true)
-	viper.Set(flagAccount, "0")
-	viper.Set(flagIndex, "0")
-	viper.Set(flagCoinType, "330")
+	kbHome := t.TempDir()
 
-	/// Test Text
-	viper.Set(cli.OutputFlag, OutputFormatText)
-	// Now enter password
-	mockIn, _, _ := tests.ApplyMockIO(cmd)
+	clientCtx := client.Context{}.WithKeyringDir(kbHome)
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+
+	cmd.SetArgs([]string{
+		"keyname1",
+		fmt.Sprintf("--%s=true", flags.FlagUseLedger),
+		fmt.Sprintf("--%s=0", flagAccount),
+		fmt.Sprintf("--%s=0", flagIndex),
+		fmt.Sprintf("--%s=330", flagCoinType),
+		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	mockIn.Reset("test1234\ntest1234\n")
-	require.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
+	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	// Now check that it has been stored properly
-	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), kbHome, mockIn)
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
 	require.NoError(t, err)
 	require.NotNil(t, kb)
 	t.Cleanup(func() {
-		kb.Delete("keyname1")
+		_ = kb.Delete("keyname1")
 	})
 	mockIn.Reset("test1234\n")
 	key1, err := kb.Key("keyname1")
@@ -79,30 +86,34 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 
 func Test_runAddCmdLedger(t *testing.T) {
 	cmd := AddKeyCommand()
-	require.NotNil(t, cmd)
-	mockIn, _, _ := tests.ApplyMockIO(cmd)
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 
-	// Prepare a keybase
-	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
-	require.NotNil(t, kbHome)
-	t.Cleanup(kbCleanUp)
-	viper.Set(flags.FlagHome, kbHome)
-	viper.Set(flags.FlagUseLedger, true)
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
+	kbHome := t.TempDir()
 
-	/// Test Text
-	viper.Set(cli.OutputFlag, OutputFormatText)
-	// Now enter password
+	clientCtx := client.Context{}.WithKeyringDir(kbHome)
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+
+	cmd.SetArgs([]string{
+		"keyname1",
+		fmt.Sprintf("--%s=true", flags.FlagUseLedger),
+		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%d", flagCoinType, sdk.CoinType),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
 	mockIn.Reset("test1234\ntest1234\n")
-	viper.Set(flagCoinType, sdk.CoinType)
-	require.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
+
+	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	// Now check that it has been stored properly
-	kb, err := keyring.New(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), kbHome, mockIn)
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
 	require.NoError(t, err)
 	require.NotNil(t, kb)
 	t.Cleanup(func() {
-		kb.Delete("keyname1")
+		_ = kb.Delete("keyname1")
 	})
+
 	mockIn.Reset("test1234\n")
 	key1, err := kb.Key("keyname1")
 	require.NoError(t, err)

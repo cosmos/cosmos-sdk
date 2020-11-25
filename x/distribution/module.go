@@ -1,17 +1,18 @@
 package distribution
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
 
-	"github.com/gogo/protobuf/grpc"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,6 +20,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -28,7 +30,6 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.InterfaceModule     = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the distribution module.
@@ -38,47 +39,52 @@ type AppModuleBasic struct {
 
 // Name returns the distribution module's name.
 func (AppModuleBasic) Name() string {
-	return ModuleName
+	return types.ModuleName
 }
 
-// RegisterCodec registers the distribution module's types for the given codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	RegisterCodec(cdc)
+// RegisterLegacyAminoCodec registers the distribution module's types for the given codec.
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the distribution
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
-	return cdc.MustMarshalJSON(DefaultGenesisState())
+	return cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the distribution module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
-	var data GenesisState
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
+	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return ValidateGenesis(data)
+	return types.ValidateGenesis(&data)
 }
 
 // RegisterRESTRoutes registers the REST routes for the distribution module.
-func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx sdkclient.Context, rtr *mux.Router) {
 	rest.RegisterHandlers(clientCtx, rtr)
 }
 
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the distribution module.
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+}
+
 // GetTxCmd returns the root tx command for the distribution module.
-func (AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
-	return cli.NewTxCmd(clientCtx)
+func (AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.NewTxCmd()
 }
 
 // GetQueryCmd returns the root query command for the distribution module.
-func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
-	return cli.GetQueryCmd(StoreKey, clientCtx.Codec)
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd()
 }
 
-// RegisterInterfaceTypes implements InterfaceModule
-func (b AppModuleBasic) RegisterInterfaceTypes(registry cdctypes.InterfaceRegistry) {
+// RegisterInterfaces implements InterfaceModule
+func (b AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
@@ -88,7 +94,7 @@ func (b AppModuleBasic) RegisterInterfaceTypes(registry cdctypes.InterfaceRegist
 type AppModule struct {
 	AppModuleBasic
 
-	keeper        Keeper
+	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper stakingkeeper.Keeper
@@ -96,7 +102,7 @@ type AppModule struct {
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(
-	cdc codec.Marshaler, keeper Keeper, accountKeeper types.AccountKeeper,
+	cdc codec.Marshaler, keeper keeper.Keeper, accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper, stakingKeeper stakingkeeper.Keeper,
 ) AppModule {
 	return AppModule{
@@ -110,49 +116,48 @@ func NewAppModule(
 
 // Name returns the distribution module's name.
 func (AppModule) Name() string {
-	return ModuleName
+	return types.ModuleName
 }
 
 // RegisterInvariants registers the distribution module invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	RegisterInvariants(ir, am.keeper)
+	keeper.RegisterInvariants(ir, am.keeper)
 }
 
 // Route returns the message routing key for the distribution module.
-func (AppModule) Route() string {
-	return RouterKey
-}
-
-// NewHandler returns an sdk.Handler for the distribution module.
-func (am AppModule) NewHandler() sdk.Handler {
-	return NewHandler(am.keeper)
+func (am AppModule) Route() sdk.Route {
+	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
 }
 
 // QuerierRoute returns the distribution module's querier route name.
 func (AppModule) QuerierRoute() string {
-	return QuerierRoute
+	return types.QuerierRoute
 }
 
-// NewQuerierHandler returns the distribution module sdk.Querier.
-func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return NewQuerier(am.keeper)
+// LegacyQuerierHandler returns the distribution module sdk.Querier.
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
+	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
 }
 
-func (am AppModule) RegisterQueryService(grpc.Server) {}
+// RegisterServices registers module services.
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
+	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+}
 
 // InitGenesis performs genesis initialization for the distribution module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
-	var genesisState GenesisState
+	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.accountKeeper, am.bankKeeper, am.keeper, genesisState)
+	am.keeper.InitGenesis(ctx, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the distribution
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
-	gs := ExportGenesis(ctx, am.keeper)
+	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
 }
 
@@ -189,7 +194,7 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 
 // RegisterStoreDecoder registers a decoder for distribution module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[StoreKey] = simulation.NewDecodeStore(am.cdc)
+	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.

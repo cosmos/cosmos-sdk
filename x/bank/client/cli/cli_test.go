@@ -1,223 +1,361 @@
-// +build cli_test
-
 package cli_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/gogo/protobuf/proto"
+	"github.com/stretchr/testify/suite"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/cosmos/cosmos-sdk/tests/cli"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func TestCLISend(t *testing.T) {
-	t.Parallel()
-	f := cli.InitFixtures(t)
+type IntegrationTestSuite struct {
+	suite.Suite
 
-	// start simd server
-	proc := f.SDStart()
-	t.Cleanup(func() { proc.Stop(false) })
+	cfg     network.Config
+	network *network.Network
+}
 
-	// Save key addresses for later uspackage testse
-	fooAddr := f.KeyAddress(cli.KeyFoo)
-	barAddr := f.KeyAddress(cli.KeyBar)
+func (s *IntegrationTestSuite) SetupSuite() {
+	s.T().Log("setting up integration test suite")
 
-	startTokens := sdk.TokensFromConsensusPower(50)
-	require.Equal(t, startTokens, testutil.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
+	cfg := network.DefaultConfig()
+	cfg.NumValidators = 1
 
-	sendTokens := sdk.TokensFromConsensusPower(10)
+	s.cfg = cfg
+	s.network = network.New(s.T(), cfg)
 
-	// It does not allow to send in offline mode
-	success, _, stdErr := testutil.TxSend(f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.Denom, sendTokens), "-y", "--offline")
-	require.Contains(t, stdErr, "no RPC client is defined in offline mode")
-	require.False(f.T, success)
-	tests.WaitForNextNBlocksTM(1, f.Port)
+	_, err := s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+}
 
-	// Send some tokens from one account to the other
-	testutil.TxSend(f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.Denom, sendTokens), "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
+func (s *IntegrationTestSuite) TearDownSuite() {
+	s.T().Log("tearing down integration test suite")
+	s.network.Cleanup()
+}
 
-	// Ensure account balances match expected
-	require.Equal(t, sendTokens.String(), testutil.QueryBalances(f, barAddr).AmountOf(cli.Denom).String())
-	require.Equal(t, startTokens.Sub(sendTokens).String(), testutil.QueryBalances(f, fooAddr).AmountOf(cli.Denom).String())
+func (s *IntegrationTestSuite) TestGetBalancesCmd() {
+	val := s.network.Validators[0]
 
-	// Test --dry-run
-	success, _, _ = testutil.TxSend(f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--dry-run")
-	require.True(t, success)
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+		respType  proto.Message
+		expected  proto.Message
+	}{
+		{"no address provided", []string{}, true, nil, nil},
+		{
+			"total account balance",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=1", flags.FlagHeight),
+			},
+			false,
+			&types.QueryAllBalancesResponse{},
+			&types.QueryAllBalancesResponse{
+				Balances: sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
+					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Sub(s.cfg.BondedTokens)),
+				),
+				Pagination: &query.PageResponse{},
+			},
+		},
+		{
+			"total account balance of a specific denom",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=%s", cli.FlagDenom, s.cfg.BondDenom),
+				fmt.Sprintf("--%s=1", flags.FlagHeight),
+			},
+			false,
+			&sdk.Coin{},
+			NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Sub(s.cfg.BondedTokens)),
+		},
+		{
+			"total account balance of a bogus denom",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=foobar", cli.FlagDenom),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			&sdk.Coin{},
+			NewCoin("foobar", sdk.ZeroInt()),
+		},
+	}
 
-	// Test --generate-only
-	success, stdout, stderr := testutil.TxSend(
-		f, fooAddr.String(), barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--generate-only=true",
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetBalancesCmd()
+			out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, tc.args)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType))
+				s.Require().Equal(tc.expected.String(), tc.respType.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+		respType  proto.Message
+		expected  proto.Message
+	}{
+		{
+			name: "total supply",
+			args: []string{
+				fmt.Sprintf("--%s=1", flags.FlagHeight),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			respType: &types.QueryTotalSupplyResponse{},
+			expected: &types.QueryTotalSupplyResponse{
+				Supply: sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
+					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
+				)},
+		},
+		{
+			name: "total supply of a specific denomination",
+			args: []string{
+				fmt.Sprintf("--%s=1", flags.FlagHeight),
+				fmt.Sprintf("--%s=%s", cli.FlagDenom, s.cfg.BondDenom),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			respType: &sdk.Coin{},
+			expected: &sdk.Coin{s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))},
+		},
+		{
+			name: "total supply of a bogus denom",
+			args: []string{
+				fmt.Sprintf("--%s=1", flags.FlagHeight),
+				fmt.Sprintf("--%s=foobar", cli.FlagDenom),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			respType: &sdk.Coin{},
+			expected: &sdk.Coin{"foobar", sdk.ZeroInt()},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryTotalSupply()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType))
+				s.Require().Equal(tc.expected, tc.respType)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestNewSendTxCmdGenOnly() {
+	val := s.network.Validators[0]
+
+	clientCtx := val.ClientCtx
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+	from := val.Address
+	to := val.Address
+	amount := sdk.NewCoins(
+		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
 	)
-	require.Empty(t, stderr)
-	require.True(t, success)
-	msg := cli.UnmarshalStdTx(f.T, f.Cdc, stdout)
-	t.Log(msg)
-	require.NotZero(t, msg.Fee.Gas)
-	require.Len(t, msg.Msgs, 1)
-	require.Len(t, msg.GetSignatures(), 0)
+	args := []string{
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	}
 
-	// Check state didn't change
-	require.Equal(t, startTokens.Sub(sendTokens), testutil.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
-
-	// test autosequencing
-	testutil.TxSend(f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.Denom, sendTokens), "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
-
-	// Ensure account balances match expected
-	require.Equal(t, sendTokens.MulRaw(2), testutil.QueryBalances(f, barAddr).AmountOf(cli.Denom))
-	require.Equal(t, startTokens.Sub(sendTokens.MulRaw(2)), testutil.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
-
-	// test memo
-	testutil.TxSend(f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.Denom, sendTokens), "--memo='testmemo'", "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
-
-	// Ensure account balances match expected
-	require.Equal(t, sendTokens.MulRaw(3), testutil.QueryBalances(f, barAddr).AmountOf(cli.Denom))
-	require.Equal(t, startTokens.Sub(sendTokens.MulRaw(3)), testutil.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
-
-	f.Cleanup()
+	bz, err := banktestutil.MsgSendExec(clientCtx, from, to, amount, args...)
+	s.Require().NoError(err)
+	tx, err := s.cfg.TxConfig.TxJSONDecoder()(bz.Bytes())
+	s.Require().NoError(err)
+	s.Require().Equal([]sdk.Msg{types.NewMsgSend(from, to, amount)}, tx.GetMsgs())
 }
 
-func TestCLIMinimumFees(t *testing.T) {
-	t.Parallel()
-	f := cli.InitFixtures(t)
+func (s *IntegrationTestSuite) TestNewSendTxCmd() {
+	val := s.network.Validators[0]
 
-	// start simd server with minimum fees
-	minGasPrice, _ := sdk.NewDecFromStr("0.000006")
-	fees := fmt.Sprintf(
-		"--minimum-gas-prices=%s,%s",
-		sdk.NewDecCoinFromDec(cli.FeeDenom, minGasPrice),
-		sdk.NewDecCoinFromDec(cli.Fee2Denom, minGasPrice),
-	)
-	proc := f.SDStart(fees)
-	t.Cleanup(func() { proc.Stop(false) })
+	testCases := []struct {
+		name         string
+		from, to     sdk.AccAddress
+		amount       sdk.Coins
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"valid transaction",
+			val.Address,
+			val.Address,
+			sdk.NewCoins(
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+			),
+			[]string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"not enough fees",
+			val.Address,
+			val.Address,
+			sdk.NewCoins(
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+			),
+			[]string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))).String()),
+			},
+			false,
+			&sdk.TxResponse{},
+			sdkerrors.ErrInsufficientFee.ABCICode(),
+		},
+		{
+			"not enough gas",
+			val.Address,
+			val.Address,
+			sdk.NewCoins(
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+			),
+			[]string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				"--gas=10",
+			},
+			false,
+			&sdk.TxResponse{},
+			sdkerrors.ErrOutOfGas.ABCICode(),
+		},
+	}
 
-	barAddr := f.KeyAddress(cli.KeyBar)
+	for _, tc := range testCases {
+		tc := tc
 
-	// Send a transaction that will get rejected
-	success, stdOut, _ := testutil.TxSend(f, cli.KeyFoo, barAddr, sdk.NewInt64Coin(cli.Fee2Denom, 10), "-y")
-	require.Contains(t, stdOut, "insufficient fees")
-	require.True(f.T, success)
-	tests.WaitForNextNBlocksTM(1, f.Port)
+		s.Run(tc.name, func() {
+			clientCtx := val.ClientCtx
 
-	// Ensure tx w/ correct fees pass
-	txFees := fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(cli.FeeDenom, 2))
-	success, _, _ = testutil.TxSend(f, cli.KeyFoo, barAddr, sdk.NewInt64Coin(cli.Fee2Denom, 10), txFees, "-y")
-	require.True(f.T, success)
-	tests.WaitForNextNBlocksTM(1, f.Port)
+			bz, err := banktestutil.MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
 
-	// Ensure tx w/ improper fees fails
-	txFees = fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(cli.FeeDenom, 1))
-	success, _, _ = testutil.TxSend(f, cli.KeyFoo, barAddr, sdk.NewInt64Coin(cli.FooDenom, 10), txFees, "-y")
-	require.Contains(t, stdOut, "insufficient fees")
-	require.True(f.T, success)
-
-	// Cleanup testing directories
-	f.Cleanup()
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bz.Bytes(), tc.respType), bz.String())
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code)
+			}
+		})
+	}
 }
 
-func TestCLIGasPrices(t *testing.T) {
-	t.Parallel()
-	f := cli.InitFixtures(t)
+// TestBankMsgService does a basic test of whether or not service Msg's as defined
+// in ADR 031 work in the most basic end-to-end case.
+func (s *IntegrationTestSuite) TestBankMsgService() {
+	val := s.network.Validators[0]
 
-	// start simd server with minimum fees
-	minGasPrice, _ := sdk.NewDecFromStr("0.000006")
-	proc := f.SDStart(fmt.Sprintf("--minimum-gas-prices=%s", sdk.NewDecCoinFromDec(cli.FeeDenom, minGasPrice)))
-	t.Cleanup(func() { proc.Stop(false) })
+	testCases := []struct {
+		name           string
+		from, to       sdk.AccAddress
+		amount         sdk.Coins
+		args           []string
+		expectErr      bool
+		respType       proto.Message
+		expectedCode   uint32
+		rawLogContains string
+	}{
+		{
+			"valid transaction",
+			val.Address,
+			val.Address,
+			sdk.NewCoins(
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+			),
+			[]string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			&sdk.TxResponse{},
+			0,
+			"/cosmos.bank.v1beta1.Msg/Send", // indicates we are using ServiceMsg and not a regular Msg
+		},
+	}
 
-	barAddr := f.KeyAddress(cli.KeyBar)
+	for _, tc := range testCases {
+		tc := tc
 
-	// insufficient gas prices (tx fails)
-	badGasPrice, _ := sdk.NewDecFromStr("0.000003")
-	success, stdOut, _ := testutil.TxSend(
-		f, cli.KeyFoo, barAddr, sdk.NewInt64Coin(cli.FooDenom, 50),
-		fmt.Sprintf("--gas-prices=%s", sdk.NewDecCoinFromDec(cli.FeeDenom, badGasPrice)), "-y")
-	require.Contains(t, stdOut, "insufficient fees")
-	require.True(t, success)
+		s.Run(tc.name, func() {
+			clientCtx := val.ClientCtx
 
-	// wait for a block confirmation
-	tests.WaitForNextNBlocksTM(1, f.Port)
+			bz, err := banktestutil.ServiceMsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
 
-	// sufficient gas prices (tx passes)
-	success, _, _ = testutil.TxSend(
-		f, cli.KeyFoo, barAddr, sdk.NewInt64Coin(cli.FooDenom, 50),
-		fmt.Sprintf("--gas-prices=%s", sdk.NewDecCoinFromDec(cli.FeeDenom, minGasPrice)), "-y")
-	require.True(t, success)
-
-	// wait for a block confirmation
-	tests.WaitForNextNBlocksTM(1, f.Port)
-
-	f.Cleanup()
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bz.Bytes(), tc.respType), bz.String())
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code)
+				s.Require().Contains(txResp.RawLog, tc.rawLogContains)
+			}
+		})
+	}
 }
 
-func TestCLIFeesDeduction(t *testing.T) {
-	t.Parallel()
-	f := cli.InitFixtures(t)
-
-	// start simd server with minimum fees
-	minGasPrice, _ := sdk.NewDecFromStr("0.000006")
-	proc := f.SDStart(fmt.Sprintf("--minimum-gas-prices=%s", sdk.NewDecCoinFromDec(cli.FeeDenom, minGasPrice)))
-	t.Cleanup(func() { proc.Stop(false) })
-
-	// Save key addresses for later use
-	fooAddr := f.KeyAddress(cli.KeyFoo)
-	barAddr := f.KeyAddress(cli.KeyBar)
-
-	fooAmt := testutil.QueryBalances(f, fooAddr).AmountOf(cli.FooDenom)
-
-	// test simulation
-	success, _, _ := testutil.TxSend(
-		f, cli.KeyFoo, barAddr, sdk.NewInt64Coin(cli.FooDenom, 1000),
-		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(cli.FeeDenom, 2)), "--dry-run")
-	require.True(t, success)
-
-	// Wait for a block
-	tests.WaitForNextNBlocksTM(1, f.Port)
-
-	// ensure state didn't change
-	require.Equal(t, fooAmt.Int64(), testutil.QueryBalances(f, fooAddr).AmountOf(cli.FooDenom).Int64())
-
-	// insufficient funds (coins + fees) tx fails
-	largeCoins := sdk.TokensFromConsensusPower(10000000)
-	success, stdOut, _ := testutil.TxSend(
-		f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.FooDenom, largeCoins),
-		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(cli.FeeDenom, 2)), "-y")
-	require.Contains(t, stdOut, "insufficient funds")
-	require.True(t, success)
-
-	// Wait for a block
-	tests.WaitForNextNBlocksTM(1, f.Port)
-
-	// ensure state didn't change
-	require.Equal(t, fooAmt.Int64(), testutil.QueryBalances(f, fooAddr).AmountOf(cli.FooDenom).Int64())
-
-	// test success (transfer = coins + fees)
-	success, _, _ = testutil.TxSend(
-		f, cli.KeyFoo, barAddr, sdk.NewInt64Coin(cli.FooDenom, 500),
-		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(cli.FeeDenom, 2)), "-y")
-	require.True(t, success)
-
-	f.Cleanup()
+func TestIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationTestSuite))
 }
 
-func TestCLIQuerySupply(t *testing.T) {
-	t.Parallel()
-	f := cli.InitFixtures(t)
-
-	// start simd server
-	proc := f.SDStart()
-	t.Cleanup(func() { proc.Stop(false) })
-
-	totalSupply := testutil.QueryTotalSupply(f)
-	totalSupplyOf := testutil.QueryTotalSupplyOf(f, cli.FooDenom)
-
-	require.Equal(t, cli.TotalCoins, totalSupply)
-	require.True(sdk.IntEq(t, cli.TotalCoins.AmountOf(cli.FooDenom), totalSupplyOf))
-
-	f.Cleanup()
+func NewCoin(denom string, amount sdk.Int) *sdk.Coin {
+	coin := sdk.NewCoin(denom, amount)
+	return &coin
 }

@@ -1,7 +1,9 @@
-package cli
+package cli_test
 
 import (
 	"bytes"
+	"context"
+	"fmt"
 	"io"
 	"os"
 	"testing"
@@ -9,71 +11,111 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-	abciServer "github.com/tendermint/tendermint/abci/server"
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
+	abci_server "github.com/tendermint/tendermint/abci/server"
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/mock"
-	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 )
 
 var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
 
 func TestInitCmd(t *testing.T) {
-	t.Cleanup(server.SetupViper(t))
-	t.Cleanup(server.SetupViper(t))
-	home, cleanup := tests.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
+	tests := []struct {
+		name      string
+		flags     func(dir string) []string
+		shouldErr bool
+		err       error
+	}{
+		{
+			name: "happy path",
+			flags: func(dir string) []string {
+				return []string{
+					"appnode-test",
+				}
+			},
+			shouldErr: false,
 
-	logger := log.NewNopLogger()
-	cfg, err := tcmd.ParseConfig()
-	require.Nil(t, err)
+			err: nil,
+		},
+	}
 
-	ctx := server.NewContext(cfg, logger)
-	cdc := makeCodec()
-	cmd := InitCmd(ctx, cdc, testMbm, home)
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			home := t.TempDir()
+			logger := log.NewNopLogger()
+			cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+			require.NoError(t, err)
 
-	require.NoError(t, cmd.RunE(nil, []string{"appnode-test"}))
-}
+			serverCtx := server.NewContext(viper.New(), cfg, logger)
+			interfaceRegistry := types.NewInterfaceRegistry()
+			marshaler := codec.NewProtoCodec(interfaceRegistry)
+			clientCtx := client.Context{}.
+				WithJSONMarshaler(marshaler).
+				WithLegacyAmino(makeCodec()).
+				WithHomeDir(home)
 
-func setupClientHome(t *testing.T) func() {
-	clientDir, cleanup := tests.NewTestCaseDir(t)
-	viper.Set(flagClientHome, clientDir)
-	return cleanup
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+
+			cmd := genutilcli.InitCmd(testMbm, home)
+			cmd.SetArgs(
+				tt.flags(home),
+			)
+
+			if tt.shouldErr {
+				err := cmd.ExecuteContext(ctx)
+				require.EqualError(t, err, tt.err.Error())
+			} else {
+				require.NoError(t, cmd.ExecuteContext(ctx))
+			}
+		})
+	}
+
 }
 
 func TestEmptyState(t *testing.T) {
-	t.Cleanup(server.SetupViper(t))
-	t.Cleanup(setupClientHome(t))
-
-	home, cleanup := tests.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
-
+	home := t.TempDir()
 	logger := log.NewNopLogger()
-	cfg, err := tcmd.ParseConfig()
-	require.Nil(t, err)
+	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+	require.NoError(t, err)
 
-	ctx := server.NewContext(cfg, logger)
-	cdc := makeCodec()
+	serverCtx := server.NewContext(viper.New(), cfg, logger)
+	interfaceRegistry := types.NewInterfaceRegistry()
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	clientCtx := client.Context{}.
+		WithJSONMarshaler(marshaler).
+		WithLegacyAmino(makeCodec()).
+		WithHomeDir(home)
 
-	cmd := InitCmd(ctx, cdc, testMbm, home)
-	require.NoError(t, cmd.RunE(nil, []string{"appnode-test"}))
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+
+	cmd := genutilcli.InitCmd(testMbm, home)
+	cmd.SetArgs([]string{"appnode-test", fmt.Sprintf("--%s=%s", cli.HomeFlag, home)})
+
+	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	old := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	cmd = server.ExportCmd(ctx, cdc, nil)
 
-	err = cmd.RunE(nil, nil)
-	require.NoError(t, err)
+	cmd = server.ExportCmd(nil, home)
+	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", cli.HomeFlag, home)})
+	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	outC := make(chan string)
 	go func() {
@@ -94,25 +136,22 @@ func TestEmptyState(t *testing.T) {
 }
 
 func TestStartStandAlone(t *testing.T) {
-	home, cleanup := tests.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
-	viper.Set(cli.HomeFlag, home)
-	t.Cleanup(setupClientHome(t))
-
+	home := t.TempDir()
 	logger := log.NewNopLogger()
-	cfg, err := tcmd.ParseConfig()
-	require.Nil(t, err)
-	ctx := server.NewContext(cfg, logger)
-	cdc := makeCodec()
-	initCmd := InitCmd(ctx, cdc, testMbm, home)
-	require.NoError(t, initCmd.RunE(nil, []string{"appnode-test"}))
+	interfaceRegistry := types.NewInterfaceRegistry()
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	err := genutiltest.ExecInitCmd(testMbm, home, marshaler)
+	require.NoError(t, err)
 
 	app, err := mock.NewApp(home, logger)
-	require.Nil(t, err)
+	require.NoError(t, err)
+
 	svrAddr, _, err := server.FreeTCPAddr()
-	require.Nil(t, err)
-	svr, err := abciServer.NewServer(svrAddr, "socket", app)
-	require.Nil(t, err, "error creating listener")
+	require.NoError(t, err)
+
+	svr, err := abci_server.NewServer(svrAddr, "socket", app)
+	require.NoError(t, err, "error creating listener")
+
 	svr.SetLogger(logger.With("module", "abci-server"))
 	err = svr.Start()
 	require.NoError(t, err)
@@ -126,22 +165,19 @@ func TestStartStandAlone(t *testing.T) {
 }
 
 func TestInitNodeValidatorFiles(t *testing.T) {
-	home, cleanup := tests.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
-	viper.Set(cli.HomeFlag, home)
-	viper.Set(flags.FlagName, "moniker")
-	cfg, err := tcmd.ParseConfig()
-	require.Nil(t, err)
+	home := t.TempDir()
+	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 	nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(cfg)
+
 	require.Nil(t, err)
 	require.NotEqual(t, "", nodeID)
 	require.NotEqual(t, 0, len(valPubKey.Bytes()))
 }
 
 // custom tx codec
-func makeCodec() *codec.Codec {
-	var cdc = codec.New()
-	sdk.RegisterCodec(cdc)
+func makeCodec() *codec.LegacyAmino {
+	var cdc = codec.NewLegacyAmino()
+	sdk.RegisterLegacyAminoCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
 	return cdc
 }

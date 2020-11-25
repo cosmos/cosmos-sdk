@@ -1,7 +1,7 @@
 package rpc
 
 import (
-	"bytes"
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -9,13 +9,12 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
@@ -23,12 +22,14 @@ import (
 // TODO these next two functions feel kinda hacky based on their placement
 
 //ValidatorCommand returns the validator set for a given height
-func ValidatorCommand(cdc *codec.Codec) *cobra.Command {
+func ValidatorCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tendermint-validator-set [height]",
 		Short: "Get the full tendermint validator set at given height",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
 			var height *int64
 
 			// optional height
@@ -43,27 +44,21 @@ func ValidatorCommand(cdc *codec.Codec) *cobra.Command {
 				}
 			}
 
-			clientCtx := client.NewContext().WithCodec(cdc)
+			page, _ := cmd.Flags().GetInt(flags.FlagPage)
+			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 
-			result, err := GetValidators(clientCtx, height, viper.GetInt(flags.FlagPage), viper.GetInt(flags.FlagLimit))
+			result, err := GetValidators(clientCtx, height, &page, &limit)
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(result)
+			return clientCtx.PrintOutputLegacy(result)
 		},
 	}
 
 	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	viper.BindPFlag(flags.FlagNode, cmd.Flags().Lookup(flags.FlagNode))
-	cmd.Flags().Bool(flags.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
-	viper.BindPFlag(flags.FlagTrustNode, cmd.Flags().Lookup(flags.FlagTrustNode))
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
-	viper.BindPFlag(flags.FlagKeyringBackend, cmd.Flags().Lookup(flags.FlagKeyringBackend))
-	cmd.Flags().Bool(flags.FlagIndentResponse, false, "indent JSON response")
-	viper.BindPFlag(flags.FlagIndentResponse, cmd.Flags().Lookup(flags.FlagIndentResponse))
-	cmd.Flags().Int(flags.FlagPage, 0, "Query a specific page of paginated results")
-	viper.BindPFlag(flags.FlagPage, cmd.Flags().Lookup(flags.FlagPage))
+	cmd.Flags().Int(flags.FlagPage, rest.DefaultPage, "Query a specific page of paginated results")
 	cmd.Flags().Int(flags.FlagLimit, 100, "Query number of results returned per page")
 
 	return cmd
@@ -105,7 +100,11 @@ func (rvo ResultValidatorsOutput) String() string {
 }
 
 func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
-	bechValPubkey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, validator.PubKey)
+	pk, err := cryptocodec.FromTmPubKeyInterface(validator.PubKey)
+	if err != nil {
+		return ValidatorOutput{}, err
+	}
+	bechValPubkey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pk)
 	if err != nil {
 		return ValidatorOutput{}, err
 	}
@@ -119,27 +118,16 @@ func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error
 }
 
 // GetValidators from client
-func GetValidators(clientCtx client.Context, height *int64, page, limit int) (ResultValidatorsOutput, error) {
+func GetValidators(clientCtx client.Context, height *int64, page, limit *int) (ResultValidatorsOutput, error) {
 	// get the node
 	node, err := clientCtx.GetNode()
 	if err != nil {
 		return ResultValidatorsOutput{}, err
 	}
 
-	validatorsRes, err := node.Validators(height, page, limit)
+	validatorsRes, err := node.Validators(context.Background(), height, page, limit)
 	if err != nil {
 		return ResultValidatorsOutput{}, err
-	}
-
-	if !clientCtx.TrustNode {
-		check, err := clientCtx.Verify(validatorsRes.BlockHeight)
-		if err != nil {
-			return ResultValidatorsOutput{}, err
-		}
-
-		if !bytes.Equal(check.ValidatorsHash, tmtypes.NewValidatorSet(validatorsRes.Validators).Hash()) {
-			return ResultValidatorsOutput{}, fmt.Errorf("received invalid validatorset")
-		}
 	}
 
 	outputValidatorsRes := ResultValidatorsOutput{
@@ -185,7 +173,7 @@ func ValidatorSetRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		output, err := GetValidators(clientCtx, &height, page, limit)
+		output, err := GetValidators(clientCtx, &height, &page, &limit)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -202,7 +190,7 @@ func LatestValidatorSetRequestHandlerFn(clientCtx client.Context) http.HandlerFu
 			return
 		}
 
-		output, err := GetValidators(clientCtx, nil, page, limit)
+		output, err := GetValidators(clientCtx, nil, &page, &limit)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}

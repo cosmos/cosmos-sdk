@@ -3,15 +3,10 @@ package types
 import (
 	"fmt"
 
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-)
-
-const (
-	// default paramspace for params keeper
-	DefaultParamspace = ModuleName
 )
 
 // Parameter keys

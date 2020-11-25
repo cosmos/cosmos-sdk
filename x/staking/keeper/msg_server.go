@@ -98,6 +98,13 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
 	// NOTE source will always be from a wallet which are unbonded
+
+	// Thoughts: since delegation goes to Unbonded pool, as long as we only run validator set update on epochs, it won't affect
+	// anything. 
+	// Warn: Within slashing module, we should update only partial validator set instead of full since it can automatically
+	// set newly created validators to Bonded status 
+	// I think keeping this as it is is quite good as delegators are not needed to wait for validator to be created
+	// on epochs but just delegate to validators that is going to be activated on next epoch
 	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Value.Amount, types.Unbonded, validator, true)
 	if err != nil {
 		return nil, err
@@ -121,62 +128,8 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 
 func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValidator) (*types.MsgEditValidatorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
-	if err != nil {
-		return nil, err
-	}
-	// validator must already be registered
-	validator, found := k.GetValidator(ctx, valAddr)
-	if !found {
-		return nil, types.ErrNoValidatorFound
-	}
-
-	// replace all editable fields (clients should autofill existing values)
-	description, err := validator.Description.UpdateDescription(msg.Description)
-	if err != nil {
-		return nil, err
-	}
-
-	validator.Description = description
-
-	if msg.CommissionRate != nil {
-		commission, err := k.UpdateValidatorCommission(ctx, validator, *msg.CommissionRate)
-		if err != nil {
-			return nil, err
-		}
-
-		// call the before-modification hook since we're about to update the commission
-		k.BeforeValidatorModified(ctx, valAddr)
-
-		validator.Commission = commission
-	}
-
-	if msg.MinSelfDelegation != nil {
-		if !msg.MinSelfDelegation.GT(validator.MinSelfDelegation) {
-			return nil, types.ErrMinSelfDelegationDecreased
-		}
-
-		if msg.MinSelfDelegation.GT(validator.Tokens) {
-			return nil, types.ErrSelfDelegationBelowMinimum
-		}
-
-		validator.MinSelfDelegation = (*msg.MinSelfDelegation)
-	}
-
-	k.SetValidator(ctx, validator)
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeEditValidator,
-			sdk.NewAttribute(types.AttributeKeyCommissionRate, validator.Commission.String()),
-			sdk.NewAttribute(types.AttributeKeyMinSelfDelegation, validator.MinSelfDelegation.String()),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.ValidatorAddress),
-		),
-	})
+	// Queue epoch action and move all the execution logic to Epoch execution
+	k.SaveEpochAction(ctx, msg)
 
 	return &types.MsgEditValidatorResponse{}, nil
 }

@@ -7,6 +7,9 @@ import (
 	db "github.com/tendermint/tm-db"
 )
 
+// +TODO just copied from staking module
+// There should be a way to simplify this
+
 // keys
 var (
 	NextEpochActionID      = []byte("next_epoch_action_id")

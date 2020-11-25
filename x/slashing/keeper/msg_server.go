@@ -24,23 +24,7 @@ var _ types.MsgServer = msgServer{}
 // having been jailed (and thus unbonded) for downtime
 func (k msgServer) Unjail(goCtx context.Context, msg *types.MsgUnjail) (*types.MsgUnjailResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	valAddr, valErr := sdk.ValAddressFromBech32(msg.ValidatorAddr)
-	if valErr != nil {
-		return nil, valErr
-	}
-	err := k.Keeper.Unjail(ctx, valAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.ValidatorAddr),
-		),
-	)
-
+	// Queue epoch action and move all the execution logic to Epoch execution
+	k.SaveEpochAction(ctx, msg)
 	return &types.MsgUnjailResponse{}, nil
 }

@@ -149,6 +149,7 @@ func (rs *Store) LoadVersion(ver int64) error {
 func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	infos := make(map[string]storeInfo)
 	var cInfo commitInfo
+	cInfo.Version = tmtypes.GetStartBlockHeight()
 
 	// load old data if we are not version 0
 	if ver != 0 {
@@ -221,7 +222,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 func (rs *Store) getCommitID(infos map[string]storeInfo, name string) types.CommitID {
 	info, ok := infos[name]
 	if !ok {
-		return types.CommitID{}
+		return types.CommitID{Version: tmtypes.GetStartBlockHeight()}
 	}
 	return info.Core.CommitID
 }

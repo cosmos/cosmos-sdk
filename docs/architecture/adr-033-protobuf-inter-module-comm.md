@@ -139,7 +139,7 @@ func (key ModuleID) Address() []byte {
 ```
 
 In addition to being able to generate a `ModuleID` and address, a `ModuleKey` contains a special function closure called
-the `Invoker` which is the key to safe inter-module access. This function closure corresponds to the `Invoke` method in
+the `Invoker` which is the key to safe inter-module access. The `InvokeFn` closure corresponds to the `Invoke` method in
 the `grpc.ClientConn` interface and under the hood is able to route messages to the appropriate `Msg` and `Query` handlers
 performing appropriate security checks on `Msg`s. This allows for even safer inter-module access than keeper's whose
 private member variables could be manipulated through reflection. Golang does not support reflection on a function

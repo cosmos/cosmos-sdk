@@ -121,7 +121,7 @@ func (fooMsgServer *MsgServer) Bar(ctx context.Context, req *MsgBar) (*MsgBarRes
 ### `ModuleKey`s and `ModuleID`s
 
 A `ModuleKey` can be thought of as a "private key" for a module account and a `ModuleID` can be thought of as the
-corresponding "public key". From [the ADR 028 draft](https://github.com/cosmos/cosmos-sdk/pull/7086), modules can have both a root module account and any number of sub-accounts
+corresponding "public key". From the [ADR 028](./adr-028-public-key-addresses.md), modules can have both a root module account and any number of sub-accounts
 or derived accounts that can be used for different pools (ex. staking pools) or managed accounts (ex. group
 accounts). We can also think of module sub-accounts as similar to derived keys - there is a root key and then some
 derivation path. `ModuleID` is a simple struct which contains the module name and optional "derivation" path,

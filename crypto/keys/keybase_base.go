@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
@@ -154,8 +155,16 @@ func (kb baseKeybase) CreateAccount(
 	keyWriter keyWriter, name, mnemonic, bip39Passphrase, encryptPasswd, hdPath string, algo SigningAlgo,
 ) (Info, error) {
 
+	var derivedPriv []byte
+	var err error
+
 	// create master key and derive first key for keyring
-	derivedPriv, err := kb.options.deriveFunc(mnemonic, bip39Passphrase, hdPath, algo)
+	if !strings.Contains(mnemonic, " ") {
+		derivedPriv, err = deriveKeyByPrivKey(mnemonic, algo)
+	} else {
+		derivedPriv, err = kb.options.deriveFunc(mnemonic, bip39Passphrase, hdPath, algo)
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -222,10 +231,10 @@ func (kb baseKeybase) CreateMnemonic(
 		return nil, "", err
 	}
 
-	if len(mnemonicInput) > 0{
+	if len(mnemonicInput) > 0 {
 		mnemonic = mnemonicInput
 	}
-	
+
 	info, err = kb.CreateAccount(keyWriter, name, mnemonic, DefaultBIP39Passphrase, passwd, types.GetConfig().GetFullFundraiserPath(), algo)
 	if err != nil {
 		return nil, "", err

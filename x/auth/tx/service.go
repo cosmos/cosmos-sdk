@@ -49,27 +49,10 @@ const (
 
 // TxsByEvents implements the ServiceServer.TxsByEvents RPC method.
 func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventRequest) (*txtypes.GetTxsEventResponse, error) {
-	offset := 0
-	limit := pagination.DefaultLimit
-
-	if req.Pagination != nil {
-		offset = int(req.Pagination.Offset)
-		limit = int(req.Pagination.Limit)
+	page, limit, err := pagination.ParsePagination(req.Pagination)
+	if err != nil {
+		return nil, err
 	}
-	if offset < 0 {
-		return nil, status.Error(codes.InvalidArgument, "offset must greater than 0")
-	}
-	if len(req.Event) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "must declare at least one event to search")
-	}
-
-	if limit < 0 {
-		return nil, status.Error(codes.InvalidArgument, "limit must greater than 0")
-	} else if limit == 0 {
-		limit = pagination.DefaultLimit
-	}
-
-	page := offset/limit + 1
 
 	var events []string
 

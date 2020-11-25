@@ -14,36 +14,33 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
-// ConnOpenInit initialises a connection attempt on chain A.
+// ConnOpenInit initialises a connection attempt on chain A. The generated connection identifier
+// is returned.
 //
-// NOTE: Identifiers are checked on msg validation.
+// NOTE: Msg validation verifies the supplied identifiers and ensures that the counterparty
+// connection identifier is empty.
 func (k Keeper) ConnOpenInit(
 	ctx sdk.Context,
-	connectionID, // identifier
 	clientID string,
-	counterparty types.Counterparty, // desiredCounterpartyConnectionIdentifier, counterpartyPrefix, counterpartyClientIdentifier
+	counterparty types.Counterparty, // counterpartyPrefix, counterpartyClientIdentifier
 	version *types.Version,
-) error {
-	_, found := k.GetConnection(ctx, connectionID)
-	if found {
-		return sdkerrors.Wrap(types.ErrConnectionExists, connectionID)
-	}
-
+) (string, error) {
 	versions := types.GetCompatibleVersions()
 	if version != nil {
 		if !types.IsSupportedVersion(version) {
-			return sdkerrors.Wrap(types.ErrInvalidVersion, "version is not supported")
+			return "", sdkerrors.Wrap(types.ErrInvalidVersion, "version is not supported")
 		}
 
 		versions = []exported.Version{version}
 	}
 
 	// connection defines chain A's ConnectionEnd
+	connectionID := k.GenerateConnectionIdentifier(ctx)
 	connection := types.NewConnectionEnd(types.INIT, clientID, counterparty, types.ExportedVersionsToProto(versions))
 	k.SetConnection(ctx, connectionID, connection)
 
 	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
-		return err
+		return "", err
 	}
 
 	k.Logger(ctx).Info("connection state updated", "connection-id", connectionID, "previous-state", "NONE", "new-state", "INIT")
@@ -52,7 +49,7 @@ func (k Keeper) ConnOpenInit(
 		telemetry.IncrCounter(1, "ibc", "connection", "open-init")
 	}()
 
-	return nil
+	return connectionID, nil
 }
 
 // ConnOpenTry relays notice of a connection attempt on chain A to chain B (this
@@ -63,8 +60,7 @@ func (k Keeper) ConnOpenInit(
 //  - Identifiers are checked on msg validation
 func (k Keeper) ConnOpenTry(
 	ctx sdk.Context,
-	desiredConnectionID, // desiredIdentifier
-	counterpartyChosenConnectionID string, // counterparty used this identifier in proof
+	previousConnectionID string, // previousIdentifier
 	counterparty types.Counterparty, // counterpartyConnectionIdentifier, counterpartyPrefix and counterpartyClientIdentifier
 	clientID string, // clientID of chainA
 	clientState exported.ClientState, // clientState that chainA has for chainB
@@ -74,10 +70,47 @@ func (k Keeper) ConnOpenTry(
 	proofConsensus []byte, // proof that chainA stored chainB's consensus state at consensus height
 	proofHeight exported.Height, // height at which relayer constructs proof of A storing connectionEnd in state
 	consensusHeight exported.Height, // latest height of chain B which chain A has stored in its chain B client
-) error {
+) (string, error) {
+	var (
+		connectionID       string
+		previousConnection types.ConnectionEnd
+		found              bool
+	)
+
+	// empty connection identifier indicates continuing a previous connection handshake
+	if previousConnectionID != "" {
+		// ensure that the previous connection exists
+		previousConnection, found = k.GetConnection(ctx, previousConnectionID)
+		if !found {
+			return "", sdkerrors.Wrapf(types.ErrConnectionNotFound, "previous connection does not exist for supplied previous connectionID %s", previousConnectionID)
+		}
+
+		// ensure that the existing connection's
+		// counterparty is chainA and connection is on INIT stage.
+		// Check that existing connection versions for initialized connection is equal to compatible
+		// versions for this chain.
+		if !(previousConnection.Counterparty.ConnectionId == "" &&
+			bytes.Equal(previousConnection.Counterparty.Prefix.Bytes(), counterparty.Prefix.Bytes()) &&
+			previousConnection.ClientId == clientID &&
+			previousConnection.Counterparty.ClientId == counterparty.ClientId) {
+			return "", sdkerrors.Wrap(types.ErrInvalidConnection, "connection fields mismatch previous connection fields")
+		}
+
+		if !(previousConnection.State == types.INIT) {
+			return "", sdkerrors.Wrapf(types.ErrInvalidConnectionState, "previous connection state is in state %s, expected INIT", previousConnection.State)
+		}
+
+		// continue with previous connection
+		connectionID = previousConnectionID
+
+	} else {
+		// generate a new connection
+		connectionID = k.GenerateConnectionIdentifier(ctx)
+	}
+
 	selfHeight := clienttypes.GetSelfHeight(ctx)
 	if consensusHeight.GTE(selfHeight) {
-		return sdkerrors.Wrapf(
+		return "", sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
 			"consensus height is greater than or equal to the current block height (%s >= %s)", consensusHeight, selfHeight,
 		)
@@ -85,42 +118,19 @@ func (k Keeper) ConnOpenTry(
 
 	// validate client parameters of a chainB client stored on chainA
 	if err := k.clientKeeper.ValidateSelfClient(ctx, clientState); err != nil {
-		return err
+		return "", err
 	}
 
 	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusState(ctx, consensusHeight)
 	if !found {
-		return sdkerrors.Wrap(clienttypes.ErrSelfConsensusStateNotFound, consensusHeight.String())
-	}
-
-	// If the connection id chosen for this connection end by the counterparty is empty then
-	// flexible connection identifier selection is allowed by using the desired connection id.
-	// Otherwise the desiredConnectionID must match the counterpartyChosenConnectionID.
-	if counterpartyChosenConnectionID != "" && counterpartyChosenConnectionID != desiredConnectionID {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidConnectionIdentifier,
-			"counterparty chosen connection ID (%s) must be empty or equal to the desired connection ID (%s)", counterpartyChosenConnectionID, desiredConnectionID,
-		)
+		return "", sdkerrors.Wrap(clienttypes.ErrSelfConsensusStateNotFound, consensusHeight.String())
 	}
 
 	// expectedConnection defines Chain A's ConnectionEnd
 	// NOTE: chain A's counterparty is chain B (i.e where this code is executed)
 	prefix := k.GetCommitmentPrefix()
-	expectedCounterparty := types.NewCounterparty(clientID, counterpartyChosenConnectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
+	expectedCounterparty := types.NewCounterparty(clientID, "", commitmenttypes.NewMerklePrefix(prefix.Bytes()))
 	expectedConnection := types.NewConnectionEnd(types.INIT, counterparty.ClientId, expectedCounterparty, types.ExportedVersionsToProto(counterpartyVersions))
-
-	// If connection already exists for desiredConnectionID, ensure that the existing connection's
-	// counterparty is chainA and connection is on INIT stage.
-	// Check that existing connection versions for initialized connection is equal to compatible
-	// versions for this chain.
-	previousConnection, found := k.GetConnection(ctx, desiredConnectionID)
-	if found && !(previousConnection.State == types.INIT &&
-		previousConnection.Counterparty.ConnectionId == counterparty.ConnectionId &&
-		bytes.Equal(previousConnection.Counterparty.Prefix.Bytes(), counterparty.Prefix.Bytes()) &&
-		previousConnection.ClientId == clientID &&
-		previousConnection.Counterparty.ClientId == counterparty.ClientId) {
-		return sdkerrors.Wrap(types.ErrInvalidConnection, "cannot relay connection attempt")
-	}
 
 	supportedVersions := types.GetCompatibleVersions()
 	if len(previousConnection.Versions) != 0 {
@@ -132,7 +142,7 @@ func (k Keeper) ConnOpenTry(
 	// of the supported versions and the counterparty versions.
 	version, err := types.PickVersion(supportedVersions, counterpartyVersions)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// connection defines chain B's ConnectionEnd
@@ -143,34 +153,34 @@ func (k Keeper) ConnOpenTry(
 		ctx, connection, proofHeight, proofInit, counterparty.ConnectionId,
 		expectedConnection,
 	); err != nil {
-		return err
+		return "", err
 	}
 
 	// Check that ChainA stored the clientState provided in the msg
 	if err := k.VerifyClientState(ctx, connection, proofHeight, proofClient, clientState); err != nil {
-		return err
+		return "", err
 	}
 
 	// Check that ChainA stored the correct ConsensusState of chainB at the given consensusHeight
 	if err := k.VerifyClientConsensusState(
 		ctx, connection, proofHeight, consensusHeight, proofConsensus, expectedConsensusState,
 	); err != nil {
-		return err
+		return "", err
 	}
 
 	// store connection in chainB state
-	if err := k.addConnectionToClient(ctx, clientID, desiredConnectionID); err != nil {
-		return sdkerrors.Wrapf(err, "failed to add connection with ID %s to client with ID %s", desiredConnectionID, clientID)
+	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
+		return "", sdkerrors.Wrapf(err, "failed to add connection with ID %s to client with ID %s", connectionID, clientID)
 	}
 
-	k.SetConnection(ctx, desiredConnectionID, connection)
-	k.Logger(ctx).Info("connection state updated", "connection-id", desiredConnectionID, "previous-state", previousConnection.State.String(), "new-state", "TRYOPEN")
+	k.SetConnection(ctx, connectionID, connection)
+	k.Logger(ctx).Info("connection state updated", "connection-id", connectionID, "previous-state", previousConnection.State.String(), "new-state", "TRYOPEN")
 
 	defer func() {
 		telemetry.IncrCounter(1, "ibc", "connection", "open-try")
 	}()
 
-	return nil
+	return connectionID, nil
 }
 
 // ConnOpenAck relays acceptance of a connection open attempt from chain B back
@@ -202,16 +212,6 @@ func (k Keeper) ConnOpenAck(
 	connection, found := k.GetConnection(ctx, connectionID)
 	if !found {
 		return sdkerrors.Wrap(types.ErrConnectionNotFound, connectionID)
-	}
-
-	// If the previously set connection end allowed for the counterparty to select its own
-	// connection identifier then we use the counterpartyConnectionID. Otherwise the
-	// counterpartyConnectionID must match the previously set counterparty connection ID.
-	if connection.Counterparty.ConnectionId != "" && counterpartyConnectionID != connection.Counterparty.ConnectionId {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidConnectionIdentifier,
-			"counterparty connection identifier (%s) must be equal to stored connection ID for counterparty (%s)", counterpartyConnectionID, connection.Counterparty.ConnectionId,
-		)
 	}
 
 	// Verify the provided version against the previously set connection state

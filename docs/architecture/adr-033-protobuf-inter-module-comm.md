@@ -306,7 +306,7 @@ specifically:
 * sub-module accounts as per ADR 028
 * the general `Msg` passing paradigm and the way signers are specified by `GetSigners`
 
-Also, this a complete replacement for keepers and could be applied to _all_ inter-module communication whereas the
+Also, this is a complete replacement for keepers and could be applied to _all_ inter-module communication whereas the
 `x/capability` approach in #5931 would need to be applied method by method.
 
 ## Consequences

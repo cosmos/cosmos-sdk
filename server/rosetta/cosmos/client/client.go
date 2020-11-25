@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
-	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/conversion"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -195,7 +194,7 @@ func (c *Client) ListTransactionsInBlock(ctx context.Context, height int64) ([]*
 		return nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
 	}
 
-	sdkTxs, err := conversion.TmResultTxsToSdkTxs(c.clientCtx.TxConfig.TxDecoder(), txList.Txs)
+	sdkTxs, err := tmResultTxsToSdkTxsWithHash(c.clientCtx.TxConfig.TxDecoder(), txList.Txs)
 	if err != nil {
 		return nil, err
 	}
@@ -203,22 +202,22 @@ func (c *Client) ListTransactionsInBlock(ctx context.Context, height int64) ([]*
 }
 
 // GetTx returns a transaction given its hash
-func (c *Client) GetTx(_ context.Context, hash string) (sdk.Tx, error) {
+func (c *Client) GetTx(_ context.Context, hash string) (sdk.Tx, string, error) {
 	txResp, err := authclient.QueryTx(c.clientCtx, hash)
 	if err != nil {
-		return nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
+		return nil, "", rosetta.WrapError(rosetta.ErrUnknown, err.Error())
 	}
 	var sdkTx sdk.Tx
 	err = c.ir.UnpackAny(txResp.Tx, &sdkTx)
 	if err != nil {
-		return nil, rosetta.WrapError(rosetta.ErrCodec, err.Error())
+		return nil, "", rosetta.WrapError(rosetta.ErrCodec, err.Error())
 	}
-	return sdkTx, nil
+	return sdkTx, txResp.Logs.String(), nil
 }
 
 // GetUnconfirmedTx gets an unconfirmed transaction given its hash
 // NOTE(fdymylja): not implemented yet
-func (c *Client) GetUnconfirmedTx(_ context.Context, hash string) (sdk.Tx, error) {
+func (c *Client) GetUnconfirmedTx(_ context.Context, _ string) (sdk.Tx, error) {
 	return nil, rosetta.WrapError(rosetta.ErrNotImplemented, "get unconfirmed transaction method is not supported")
 }
 

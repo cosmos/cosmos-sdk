@@ -138,7 +138,9 @@ var (
 	ErrInvalidTransaction = NewError(5, "invalid transaction", false)
 )
 
-// AllowedErrors lists all the rosetta allowed errors
+// AllowedErrors lists all the rosetta errors
+// returned by the API, it's required for the
+// 'allow' network information endpoint
 var AllowedErrors = Errors{
 	ErrUnknown,
 	ErrNotFound,
@@ -151,4 +153,9 @@ var AllowedErrors = Errors{
 	ErrNotImplemented,
 	ErrUnsupportedCurve,
 	ErrInvalidPubkey,
+	ErrInvalidAddress,
+	ErrInvalidMemo,
+	ErrInvalidOperation,
+	ErrInvalidRequest,
+	ErrInvalidTransaction,
 }

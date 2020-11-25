@@ -382,16 +382,17 @@ proto-lint:
 proto-check-breaking:
 	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=master
 
-TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.0-rc6/proto/tendermint
-GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
-COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
-CONFIO_URL 		 = https://raw.githubusercontent.com/confio/ics23/v0.6.3
+TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.0-rc6/proto/tendermint
+GOGO_PROTO_URL      = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
+COSMOS_PROTO_URL    = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
+CONFIO_URL          = https://raw.githubusercontent.com/confio/ics23/v0.6.3
 
 TM_CRYPTO_TYPES     = third_party/proto/tendermint/crypto
 TM_ABCI_TYPES       = third_party/proto/tendermint/abci
-TM_TYPES     			  = third_party/proto/tendermint/types
-TM_VERSION 					= third_party/proto/tendermint/version
-TM_LIBS							= third_party/proto/tendermint/libs/bits
+TM_TYPES            = third_party/proto/tendermint/types
+TM_VERSION          = third_party/proto/tendermint/version
+TM_LIBS             = third_party/proto/tendermint/libs/bits
+TM_P2P              = third_party/proto/tendermint/p2p
 
 GOGO_PROTO_TYPES    = third_party/proto/gogoproto
 COSMOS_PROTO_TYPES  = third_party/proto/cosmos_proto
@@ -419,6 +420,7 @@ proto-update-deps:
 	@curl -sSL $(TM_URL)/types/evidence.proto > $(TM_TYPES)/evidence.proto
 	@curl -sSL $(TM_URL)/types/params.proto > $(TM_TYPES)/params.proto
 	@curl -sSL $(TM_URL)/types/validator.proto > $(TM_TYPES)/validator.proto
+	@curl -sSL $(TM_URL)/types/block.proto > $(TM_TYPES)/block.proto
 
 	@mkdir -p $(TM_CRYPTO_TYPES)
 	@curl -sSL $(TM_URL)/crypto/proof.proto > $(TM_CRYPTO_TYPES)/proof.proto
@@ -426,6 +428,9 @@ proto-update-deps:
 
 	@mkdir -p $(TM_LIBS)
 	@curl -sSL $(TM_URL)/libs/bits/types.proto > $(TM_LIBS)/types.proto
+
+	@mkdir -p $(TM_P2P)
+	@curl -sSL $(TM_URL)/p2p/types.proto > $(TM_P2P)/types.proto
 
 	@mkdir -p $(CONFIO_TYPES)
 	@curl -sSL $(CONFIO_URL)/proofs.proto > $(CONFIO_TYPES)/proofs.proto

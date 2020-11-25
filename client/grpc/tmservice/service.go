@@ -32,7 +32,7 @@ func NewQueryServer(clientCtx client.Context, interfaceRegistry codectypes.Inter
 }
 
 // GetSyncing implements ServiceServer.GetSyncing
-func (s queryServer) GetSyncing(context.Context, *qtypes.GetSyncingRequest) (*qtypes.GetSyncingResponse, error) {
+func (s queryServer) GetSyncing(_ context.Context, _ *qtypes.GetSyncingRequest) (*qtypes.GetSyncingResponse, error) {
 	status, err := getNodeStatus(s.clientCtx)
 	if err != nil {
 		return nil, err
@@ -48,11 +48,13 @@ func (s queryServer) GetLatestBlock(context.Context, *qtypes.GetLatestBlockReque
 	if err != nil {
 		return nil, err
 	}
+
 	protoBlockID := status.BlockID.ToProto()
 	protoBlock, err := status.Block.ToProto()
 	if err != nil {
 		return nil, err
 	}
+
 	return &qtypes.GetLatestBlockResponse{
 		BlockId: &protoBlockID,
 		Block:   protoBlock,

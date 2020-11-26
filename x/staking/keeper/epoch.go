@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
 )
@@ -42,7 +43,11 @@ func ActionStoreKey(actionID uint64) []byte {
 func (k Keeper) SaveEpochAction(ctx sdk.Context, action sdk.Msg) {
 	store := ctx.KVStore(k.storeKey)
 
-	bz := k.cdc.MustMarshalBinaryBare(action)
+	// reference from TestMarshalAny(t *testing.T)
+	bz, err := codec.MarshalAny(k.cdc, action)
+	if err != nil {
+		panic(err)
+	}
 	actionID := k.GetNextEpochActionID(ctx)
 	store.Set(ActionStoreKey(actionID), bz)
 	k.SetNextEpochActionID(ctx, actionID+1)
@@ -58,7 +63,8 @@ func (k Keeper) GetEpochAction(ctx sdk.Context, actionID uint64) sdk.Msg {
 	}
 
 	var action sdk.Msg
-	k.cdc.MustUnmarshalBinaryBare(bz, &action)
+	// reference from TestMarshalAny(t *testing.T)
+	codec.UnmarshalAny(k.cdc, &action, bz)
 
 	return action
 }
@@ -70,9 +76,9 @@ func (k Keeper) GetEpochActions(ctx sdk.Context) []sdk.Msg {
 
 	for ; iterator.Valid(); iterator.Next() {
 		var action sdk.Msg
-		// TODO is this correct to use sdk.Msg for serialization?
 		bz := iterator.Value()
-		k.cdc.MustUnmarshalBinaryBare(bz, &action)
+		// reference from TestMarshalAny(t *testing.T)
+		codec.UnmarshalAny(k.cdc, &action, bz)
 		actions = append(actions, action)
 	}
 

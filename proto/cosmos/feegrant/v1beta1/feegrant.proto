@@ -1,0 +1,90 @@
+syntax = "proto3";
+package cosmos.feegrant.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "tendermint/types/types.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant/types";
+
+// MsgGrantFeeAllowance adds permission for Grantee to spend up to Allowance
+// of fees from the account of Granter.
+message MsgGrantFeeAllowance {
+  option (gogoproto.goproto_getters) = false;
+
+  bytes               granter   = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes               grantee   = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  google.protobuf.Any allowance = 3 [(cosmos_proto.accepts_interface) = "FeeAllowanceI"];
+}
+
+// MsgRevokeFeeAllowance removes any existing FeeAllowance from Granter to Grantee.
+message MsgRevokeFeeAllowance {
+  bytes granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+}
+
+// BasicFeeAllowance implements FeeAllowance with a one-time grant of tokens
+// that optionally expires. The delegatee can use up to SpendLimit to cover fees.
+message BasicFeeAllowance {
+  option (gogoproto.equal)                   = true;
+  option (gogoproto.goproto_getters)         = false;
+  option (cosmos_proto.implements_interface) = "FeeAllowanceI";
+
+  repeated cosmos.base.v1beta1.Coin spend_limit = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags)     = "yaml:\"spend_limit\""
+  ];
+  ExpiresAt expiration = 2 [(gogoproto.nullable) = false];
+}
+
+// PeriodicFeeAllowance extends FeeAllowance to allow for both a maximum cap,
+// as well as a limit per time period.
+message PeriodicFeeAllowance {
+  option (gogoproto.equal)                   = true;
+  option (gogoproto.goproto_getters)         = false;
+  option (cosmos_proto.implements_interface) = "FeeAllowanceI";
+
+  BasicFeeAllowance basic                              = 1 [(gogoproto.nullable) = false];
+  Duration          period                             = 2 [(gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin period_spend_limit = 3 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags)     = "yaml:\"period_spend_limit\""
+  ];
+  repeated cosmos.base.v1beta1.Coin period_can_spend = 4 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags)     = "yaml:\"period_can_spend\""
+  ];
+
+  ExpiresAt period_reset = 5 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"period_reset\""];
+}
+
+// Duration is a repeating unit of either clock time or number of blocks.
+// This is designed to be added to an ExpiresAt struct.
+message Duration {
+  option (gogoproto.equal)        = true;
+  google.protobuf.Timestamp clock = 1 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+  int64                     block = 2;
+}
+
+// ExpiresAt is a point in time where something expires.
+// It may be *either* block time or block height
+message ExpiresAt {
+  option (gogoproto.equal)         = true;
+  google.protobuf.Timestamp time   = 1 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  int64                     height = 2;
+}
+
+// FeeAllowanceGrant is stored in the KVStore to record a grant with full context
+message FeeAllowanceGrant {
+  option (gogoproto.goproto_getters) = false;
+
+  bytes               granter   = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes               grantee   = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  google.protobuf.Any allowance = 3 [(cosmos_proto.accepts_interface) = "FeeAllowanceI"];
+}

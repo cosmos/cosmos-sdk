@@ -84,7 +84,7 @@ func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, m
 	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
-//GetQueryCmd returns the cli query commands for the authz module
+// GetQueryCmd returns the cli query commands for the authz module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
@@ -168,7 +168,7 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 	return []abci.ValidatorUpdate{}
 }
 
-//____________________________________________________________________________
+// ____________________________________________________________________________
 
 // AppModuleSimulation functions
 

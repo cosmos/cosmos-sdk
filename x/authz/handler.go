@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
 )
 
-//NewHandler returns a handler for authz messages.
+// NewHandler returns a handler for authz messages.
 func NewHandler(k types.MsgServer) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())

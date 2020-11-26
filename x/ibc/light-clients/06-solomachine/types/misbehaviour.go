@@ -30,7 +30,7 @@ func (misbehaviour Misbehaviour) Type() string {
 
 // GetHeight returns the sequence at which misbehaviour occurred.
 // Return exported.Height to satisfy interface
-// Version number is always 0 for a solo-machine
+// Revision number is always 0 for a solo-machine
 func (misbehaviour Misbehaviour) GetHeight() exported.Height {
 	return clienttypes.NewHeight(0, misbehaviour.Sequence)
 }

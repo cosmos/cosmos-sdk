@@ -16,6 +16,10 @@ All `Msg` processing is done by a [`Msg`](messages-and-queries.md#msg-services) 
 
 As further described in [ADR 031](../architecture/adr-031-msg-service.md), this approach has the advantage of clearly specifying return types and generating server and client code.
 
+Based on the definition of the `Msg` service, Protobuf generates a `MsgServer` interface. It is the role of the module developer to implement this interface, by implementing the state transition logic that should happen upon receival of each `Msg`. As an example, here is the generated `MsgServer` interface for `x/bank`, which exposes two `Msg`s:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/bank/types/tx.pb.go#L285-L291
+
 When possible, the existing module's [`Keeper`](keeper.md) should implement `MsgServer`, otherwise a `msgServer` struct that embeds the `Keeper` can be created, typically in `./keeper/msg_server.go`:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/bank/keeper/msg_server.go#L14-L16

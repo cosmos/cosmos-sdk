@@ -139,7 +139,7 @@ func (suite *SimTestSuite) TestSimulateExecAuthorization() {
 	suite.app.MsgAuthKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
 
 	// execute operation
-	op := simulation.SimulateMsgExecuteAuthorized(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.MsgAuthKeeper)
+	op := simulation.SimulateMsgExecuteAuthorized(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.MsgAuthKeeper, suite.app.AppCodec())
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 

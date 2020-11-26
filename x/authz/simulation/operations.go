@@ -26,8 +26,7 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONMarshaler, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper,
-) simulation.WeightedOperations {
+	appParams simtypes.AppParams, cdc codec.JSONMarshaler, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, appCdc codec.Marshaler) simulation.WeightedOperations {
 
 	var (
 		weightMsgGrantAuthorization int
@@ -64,7 +63,7 @@ func WeightedOperations(
 		),
 		simulation.NewWeightedOperation(
 			weightExecAuthorized,
-			SimulateMsgExecuteAuthorized(ak, bk, k),
+			SimulateMsgExecuteAuthorized(ak, bk, k, appCdc),
 		),
 	}
 }
@@ -177,7 +176,7 @@ func SimulateMsgRevokeAuthorization(ak types.AccountKeeper, bk types.BankKeeper,
 
 // SimulateMsgExecuteAuthorized generates a MsgExecuteAuthorized with random values.
 // nolint: funlen
-func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, cdc codec.Marshaler) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -256,7 +255,11 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 			}
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgExecDelegated, err.Error()), nil, err
 		}
-
+		msg.UnpackInterfaces(cdc)
+		_, err = msg.GetMsgs()
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgExecDelegated, "unmarshal error"), nil, err
+		}
 		return simtypes.NewOperationMsg(&msg, true, "success"), nil, nil
 	}
 }

@@ -15,6 +15,7 @@ import (
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -38,7 +39,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
-	unbond, err := sdk.ParseCoin("10stake")
+	unbond, err := sdk.ParseCoinNormalized("10stake")
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
@@ -194,7 +195,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorDelegationsGRPC() {
 			&types.QueryValidatorDelegationsResponse{},
 			&types.QueryValidatorDelegationsResponse{
 				DelegationResponses: types.DelegationResponses{
-					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDec(100000000), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000))),
+					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDecFromInt(cli.DefaultTokens), sdk.NewCoin(sdk.DefaultBondDenom, cli.DefaultTokens)),
 				},
 				Pagination: &query.PageResponse{Total: 1},
 			},
@@ -438,7 +439,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
 			&types.QueryDelegatorDelegationsResponse{},
 			&types.QueryDelegatorDelegationsResponse{
 				DelegationResponses: types.DelegationResponses{
-					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDec(100000000), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000))),
+					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDecFromInt(cli.DefaultTokens), sdk.NewCoin(sdk.DefaultBondDenom, cli.DefaultTokens)),
 				},
 				Pagination: &query.PageResponse{Total: 1},
 			},
@@ -775,7 +776,7 @@ func (s *IntegrationTestSuite) TestQueryPoolGRPC() {
 			&types.QueryPoolResponse{
 				Pool: types.Pool{
 					NotBondedTokens: sdk.NewInt(10),
-					BondedTokens:    sdk.NewInt(199999990),
+					BondedTokens:    cli.DefaultTokens.Mul(sdk.NewInt(2)).Sub(sdk.NewInt(10)),
 				},
 			},
 		},

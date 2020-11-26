@@ -43,6 +43,25 @@ func TestPaginationTestSuite(t *testing.T) {
 	suite.Run(t, new(paginationTestSuite))
 }
 
+func (s *paginationTestSuite) TestParsePagination() {
+	s.T().Log("verify default values for empty page request")
+	pageReq := &query.PageRequest{}
+	page, limit, err := query.ParsePagination(pageReq)
+	s.Require().NoError(err)
+	s.Require().Equal(limit, query.DefaultLimit)
+	s.Require().Equal(page, 1)
+
+	s.T().Log("verify with custom values")
+	pageReq = &query.PageRequest{
+		Offset: 0,
+		Limit:  10,
+	}
+	page, limit, err = query.ParsePagination(pageReq)
+	s.Require().NoError(err)
+	s.Require().Equal(page, 1)
+	s.Require().Equal(limit, 10)
+}
+
 func (s *paginationTestSuite) TestPagination() {
 	app, ctx, _ := setupTest()
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())

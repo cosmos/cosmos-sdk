@@ -45,6 +45,16 @@ func (k Keeper) GetCommitmentPrefix() exported.Prefix {
 	return commitmenttypes.NewMerklePrefix([]byte(k.storeKey.Name()))
 }
 
+// GenerateConnectionIdentifier returns the next connection identifier.
+func (k Keeper) GenerateConnectionIdentifier(ctx sdk.Context) string {
+	nextConnSeq := k.GetNextConnectionSequence(ctx)
+	connectionID := types.FormatConnectionIdentifier(nextConnSeq)
+
+	nextConnSeq++
+	k.SetNextConnectionSequence(ctx, nextConnSeq)
+	return connectionID
+}
+
 // GetConnection returns a connection with a particular identifier
 func (k Keeper) GetConnection(ctx sdk.Context, connectionID string) (types.ConnectionEnd, bool) {
 	store := ctx.KVStore(k.storeKey)
@@ -103,6 +113,24 @@ func (k Keeper) SetClientConnectionPaths(ctx sdk.Context, clientID string, paths
 	clientPaths := types.ClientPaths{Paths: paths}
 	bz := k.cdc.MustMarshalBinaryBare(&clientPaths)
 	store.Set(host.ClientConnectionsKey(clientID), bz)
+}
+
+// GetNextConnectionSequence gets the next connection sequence from the store.
+func (k Keeper) GetNextConnectionSequence(ctx sdk.Context) uint64 {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get([]byte(types.KeyNextConnectionSequence))
+	if bz == nil {
+		panic("next connection sequence is nil")
+	}
+
+	return sdk.BigEndianToUint64(bz)
+}
+
+// SetNextConnectionSequence sets the next connection sequence to the store.
+func (k Keeper) SetNextConnectionSequence(ctx sdk.Context, sequence uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := sdk.Uint64ToBigEndian(sequence)
+	store.Set([]byte(types.KeyNextConnectionSequence), bz)
 }
 
 // GetAllClientConnectionPaths returns all stored clients connection id paths. It

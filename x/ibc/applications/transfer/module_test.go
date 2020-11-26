@@ -1,6 +1,8 @@
 package transfer_test
 
 import (
+	"math"
+
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
@@ -25,6 +27,11 @@ func (suite *TransferTestSuite) TestOnChanOpenInit() {
 
 		{
 			"success", func() {}, true,
+		},
+		{
+			"max channels reached", func() {
+				testChannel.ID = channeltypes.FormatChannelIdentifier(math.MaxUint32 + 1)
+			}, false,
 		},
 		{
 			"invalid order - ORDERED", func() {
@@ -108,6 +115,11 @@ func (suite *TransferTestSuite) TestOnChanOpenTry() {
 
 		{
 			"success", func() {}, true,
+		},
+		{
+			"max channels reached", func() {
+				testChannel.ID = channeltypes.FormatChannelIdentifier(math.MaxUint32 + 1)
+			}, false,
 		},
 		{
 			"capability already claimed in INIT should pass", func() {

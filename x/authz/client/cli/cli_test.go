@@ -394,7 +394,6 @@ func (s *IntegrationTestSuite) TestNewExecAuthorized() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
-	fmt.Println(normalGeneratedTx.String())
 	s.Require().NoError(err)
 	execMsg, cleanup1 := testutil.WriteToNewTempFile(s.T(), normalGeneratedTx.String())
 	defer cleanup1()

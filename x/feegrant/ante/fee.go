@@ -5,7 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
@@ -54,8 +55,8 @@ func (d DeductGrantedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	}
 
 	// sanity check from DeductFeeDecorator
-	if addr := d.sk.GetModuleAddress(auth.FeeCollectorName); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", auth.FeeCollectorName))
+	if addr := d.sk.GetModuleAddress(authtypes.FeeCollectorName); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", authtypes.FeeCollectorName))
 	}
 
 	fee := feeTx.GetFee()
@@ -89,7 +90,7 @@ func (d DeductGrantedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	}
 
 	// deduct fee if non-zero
-	err = auth.DeductFees(d.sk, ctx, feePayerAcc, fee)
+	err = authante.DeductFees(d.sk, ctx, feePayerAcc, fee)
 	if err != nil {
 		return ctx, err
 	}

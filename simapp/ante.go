@@ -1,9 +1,11 @@
 package simapp
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	feegrantante "github.com/cosmos/cosmos-sdk/x/feegrant/ante"
 )
@@ -12,10 +14,11 @@ import (
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
 func NewAnteHandler(
-	ak auth.AccountKeeper, supplyKeeper feegrant.SupplyKeeper, feeGrantKeeper feegrant.Keeper,
-	sigGasConsumer auth.SignatureVerificationGasConsumer,
+	ak authkeeper.AccountKeeper, supplyKeeper feegrant.SupplyKeeper, feeGrantKeeper feegrant.Keeper,
+	sigGasConsumer authante.SignatureVerificationGasConsumer,
 ) sdk.AnteHandler {
 
+	txConfig := legacytx.StdTxConfig{Cdc: codec.NewLegacyAmino()}
 	return sdk.ChainAnteDecorators(
 		authante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		authante.NewMempoolFeeDecorator(),
@@ -29,7 +32,7 @@ func NewAnteHandler(
 		authante.NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
 		authante.NewValidateSigCountDecorator(ak),
 		authante.NewSigGasConsumeDecorator(ak, sigGasConsumer),
-		authante.NewSigVerificationDecorator(ak),
+		authante.NewSigVerificationDecorator(ak, txConfig.SignModeHandler()),
 		authante.NewIncrementSequenceDecorator(ak), // innermost AnteDecorator
 	)
 }

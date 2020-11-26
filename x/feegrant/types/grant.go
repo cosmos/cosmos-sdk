@@ -3,7 +3,13 @@ package types
 import (
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+)
+
+var (
+	_ types.UnpackInterfacesMessage = &FeeAllowanceGrant{}
 )
 
 // ValidateBasic performs basic validation on
@@ -23,7 +29,19 @@ func (a FeeAllowanceGrant) ValidateBasic() error {
 }
 
 func (a FeeAllowanceGrant) GetFeeGrant() FeeAllowanceI {
-	return a.Allowance.GetFeeAllowanceI()
+	allowance, ok := a.Allowance.GetCachedValue().(FeeAllowanceI)
+	if !ok {
+		return nil
+	}
+
+	return allowance
+	// return a.Allowance.GetFeeAllowanceI()
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (a FeeAllowanceGrant) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var allowance FeeAllowanceI
+	return unpacker.UnpackAny(a.Allowance, &allowance)
 }
 
 // PrepareForExport will m	ake all needed changes to the allowance to prepare to be

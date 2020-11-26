@@ -24,7 +24,7 @@ const (
 
 var (
 	NewDeductGrantedFeeDecorator = ante.NewDeductGrantedFeeDecorator
-	RegisterCodec                = types.RegisterCodec
+	RegisterCodec                = types.RegisterLegacyAminoCodec
 	ExpiresAtTime                = types.ExpiresAtTime
 	ExpiresAtHeight              = types.ExpiresAtHeight
 	ClockDuration                = types.ClockDuration
@@ -53,7 +53,7 @@ type (
 	BasicFeeAllowance         = types.BasicFeeAllowance
 	ExpiresAt                 = types.ExpiresAt
 	Duration                  = types.Duration
-	FeeAllowance              = types.FeeAllowance
+	FeeAllowance              = types.FeeAllowanceI
 	FeeAllowanceGrant         = types.FeeAllowanceGrant
 	MsgGrantFeeAllowance      = types.MsgGrantFeeAllowance
 	MsgRevokeFeeAllowance     = types.MsgRevokeFeeAllowance

@@ -81,7 +81,7 @@ func CountSubKeys(pub cryptotypes.PubKey) int {
 	}
 
 	numKeys := 0
-	for _, subkey := range v.PubKeys {
+	for _, subkey := range v.GetPubKeys() {
 		numKeys += CountSubKeys(subkey)
 	}
 

@@ -55,8 +55,8 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 }
 
 // LegacyQuerierHandler returns the feegrant module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
-	return keeper.NewQuerier(am.keeper)
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
+	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the feegrant
@@ -148,10 +148,10 @@ func (AppModule) QuerierRoute() string {
 	return QuerierRoute
 }
 
-// NewQuerierHandler returns the feegrant module sdk.Querier.
-func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return NewQuerier(am.keeper)
-}
+// // NewQuerierHandler returns the feegrant module sdk.Querier.
+// func (am AppModule) NewQuerierHandler() sdk.Querier {
+// 	return NewQuerier(am.keeper)
+// }
 
 // InitGenesis performs genesis initialization for the feegrant module. It returns
 // no validator updates.

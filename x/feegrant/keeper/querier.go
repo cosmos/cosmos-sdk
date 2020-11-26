@@ -14,7 +14,7 @@ const (
 )
 
 // NewQuerier creates a new querier
-func NewQuerier(keeper Keeper) sdk.Querier {
+func NewQuerier(keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		var (
 			res []byte
@@ -23,7 +23,7 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 
 		switch path[0] {
 		case QueryGetFeeAllowances:
-			res, err = queryGetFeeAllowances(ctx, path[1:], keeper)
+			res, err = queryGetFeeAllowances(ctx, path[1:], keeper, legacyQuerierCdc)
 
 		default:
 			err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
@@ -33,7 +33,7 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 	}
 }
 
-func queryGetFeeAllowances(ctx sdk.Context, args []string, keeper Keeper) ([]byte, error) {
+func queryGetFeeAllowances(ctx sdk.Context, args []string, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	grantee := args[0]
 	granteeAddr, err := sdk.AccAddressFromBech32(grantee)
 	if err != nil {
@@ -53,7 +53,7 @@ func queryGetFeeAllowances(ctx sdk.Context, args []string, keeper Keeper) ([]byt
 		return []byte("[]"), nil
 	}
 
-	bz, err := codec.MarshalJSONIndent(keeper.cdc, grants)
+	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, grants)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

@@ -100,3 +100,20 @@ func (k Keeper) DequeueEpochActions(ctx sdk.Context) {
 		store.Delete(key)
 	}
 }
+
+// DeleteByKey delete item by key
+func (k Keeper) DeleteByKey(ctx sdk.Context, key []byte) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(key)
+}
+
+// GetEpochActionByIterator get action by iterator
+func (k Keeper) GetEpochActionByIterator(iterator db.Iterator) sdk.Msg {
+	bz := iterator.Value()
+
+	var action sdk.Msg
+	// reference from TestMarshalAny(t *testing.T)
+	codec.UnmarshalAny(k.cdc, &action, bz)
+
+	return action
+}

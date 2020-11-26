@@ -6,14 +6,14 @@ import (
 )
 
 // EpochUnjail logic is moved from msgServer.Unjail
-func (k Keeper) EpochUnjail(ctx sdk.Context, msg *types.MsgUnjail) (*types.MsgUnjailResponse, error) {
+func (k Keeper) EpochUnjail(ctx sdk.Context, msg *types.MsgUnjail) error {
 	valAddr, valErr := sdk.ValAddressFromBech32(msg.ValidatorAddr)
 	if valErr != nil {
-		return nil, valErr
+		return valErr
 	}
 	err := k.Unjail(ctx, valAddr)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -24,5 +24,5 @@ func (k Keeper) EpochUnjail(ctx sdk.Context, msg *types.MsgUnjail) (*types.MsgUn
 		),
 	)
 
-	return &types.MsgUnjailResponse{}, nil
+	return nil
 }

@@ -6,21 +6,21 @@ import (
 )
 
 // EpochEditValidator logic is moved from msgServer.EditValidator
-func (k Keeper) EpochEditValidator(ctx sdk.Context, msg *types.MsgEditValidator) (*types.MsgEditValidatorResponse, error) {
+func (k Keeper) EpochEditValidator(ctx sdk.Context, msg *types.MsgEditValidator) error {
 	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	// validator must already be registered
 	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
-		return nil, types.ErrNoValidatorFound
+		return types.ErrNoValidatorFound
 	}
 
 	// replace all editable fields (clients should autofill existing values)
 	description, err := validator.Description.UpdateDescription(msg.Description)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	validator.Description = description
@@ -28,7 +28,7 @@ func (k Keeper) EpochEditValidator(ctx sdk.Context, msg *types.MsgEditValidator)
 	if msg.CommissionRate != nil {
 		commission, err := k.UpdateValidatorCommission(ctx, validator, *msg.CommissionRate)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		// call the before-modification hook since we're about to update the commission
@@ -39,11 +39,11 @@ func (k Keeper) EpochEditValidator(ctx sdk.Context, msg *types.MsgEditValidator)
 
 	if msg.MinSelfDelegation != nil {
 		if !msg.MinSelfDelegation.GT(validator.MinSelfDelegation) {
-			return nil, types.ErrMinSelfDelegationDecreased
+			return types.ErrMinSelfDelegationDecreased
 		}
 
 		if msg.MinSelfDelegation.GT(validator.Tokens) {
-			return nil, types.ErrSelfDelegationBelowMinimum
+			return types.ErrSelfDelegationBelowMinimum
 		}
 
 		validator.MinSelfDelegation = (*msg.MinSelfDelegation)
@@ -64,5 +64,5 @@ func (k Keeper) EpochEditValidator(ctx sdk.Context, msg *types.MsgEditValidator)
 		),
 	})
 
-	return &types.MsgEditValidatorResponse{}, nil
+	return nil
 }

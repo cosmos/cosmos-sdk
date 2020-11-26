@@ -26,22 +26,20 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 		defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
 		// execute all epoch actions
-		iterator := k.GetEpochActionsIterator()
-	
+		iterator := k.GetEpochActionsIterator(ctx)
+
 		for ; iterator.Valid(); iterator.Next() {
-			var msg sdk.Msg
-			bz := iterator.Value()
-			k.cdc.MustUnmarshalBinaryBare(bz, &msg)
+			msg := k.GetEpochActionByIterator(iterator)
 
 			switch msg := msg.(type) {
 			case *types.MsgEditValidator:
-				res, err := k.EpochEditValidator(sdk.WrapSDKContext(ctx), msg)
+				k.EpochEditValidator(ctx, msg)
 
 			default:
 			}
+			// dequeue processed item
+			k.DeleteByKey(ctx, iterator.Key())
 		}
-		// dequeue all epoch actions after run
-		k.DequeueEpochActions()
 
 		return k.BlockValidatorUpdates(ctx)
 	}

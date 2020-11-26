@@ -3,7 +3,6 @@ package tx_test
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -135,7 +134,7 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 	// Query the tx via gRPC no pagination.
 	_, err = s.queryClient.GetTxsEvent(
 		context.Background(),
-		&tx.GetTxsEventRequest{Event: url.QueryEscape(fmt.Sprintf("message.action=%s&transfer.sender=%s", "send", val.Address))},
+		&tx.GetTxsEventRequest{Event: fmt.Sprintf("message.action=%s&transfer.sender=%s", "send", val.Address)},
 	)
 	s.Require().NoError(err)
 
@@ -154,23 +153,51 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 	s.Require().Equal(len(grpcRes.Txs), 1)
 	s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
 
-	var getTxRes tx.GetTxsEventResponse
-
-	// Query the tx via grpc-gateway empty params.
-	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress))
-	s.Require().Error(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getTxRes))
-
-	// Query the tx via grpc-gateway without pagination.
-	_, err = rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?event=%s", val.APIAddress, "message.action=send"))
-	s.Require().NoError(err)
-
-	// Query the tx via grpc-gateway.
-	restRes, err = rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?event=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action%3Dsend", 0, 1))
-	s.Require().NoError(err)
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getTxRes))
-	s.Require().Equal(len(getTxRes.Txs), 1)
-	s.Require().Equal("foobar", getTxRes.Txs[0].Body.Memo)
-	s.Require().NotZero(getTxRes.TxResponses[0].Height)
+	rpcTests := []struct {
+		name      string
+		url       string
+		expectErr bool
+		expected  *tx.GetTxsEventResponse
+	}{
+		{
+			"empty params",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress),
+			true,
+			&tx.GetTxsEventResponse{},
+		},
+		{
+			"without pagination",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?event=%s", val.APIAddress, "message.action=send"),
+			false,
+			&tx.GetTxsEventResponse{},
+		},
+		{
+			"with pagination",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?event=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action=send", 0, 10),
+			false,
+			&tx.GetTxsEventResponse{},
+		},
+		{
+			"expect pass with multiple-events",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?event=%s", val.APIAddress, "message.action%3Dsend%26message.module%3Dbank"),
+			false,
+			&tx.GetTxsEventResponse{},
+		},
+	}
+	for _, tc := range rpcTests {
+		res, err := rest.GetRequest(tc.url)
+		s.Require().NoError(err)
+		if tc.expectErr {
+			s.Require().Error(val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, tc.expected))
+		} else {
+			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, tc.expected))
+			if len(tc.expected.Txs) > 0 {
+				s.Require().Equal(1, len(tc.expected.Txs))
+				s.Require().Equal("foobar", tc.expected.Txs[0].Body.Memo)
+				s.Require().NotZero(tc.expected.TxResponses[0].Height)
+			}
+		}
+	}
 }
 
 func (s IntegrationTestSuite) TestGetTx() {

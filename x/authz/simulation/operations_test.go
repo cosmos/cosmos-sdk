@@ -36,7 +36,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	appParams := make(simtypes.AppParams)
 
 	weightesOps := simulation.WeightedOperations(appParams, cdc, suite.app.AccountKeeper,
-		suite.app.BankKeeper, suite.app.MsgAuthKeeper,
+		suite.app.BankKeeper, suite.app.MsgAuthKeeper, cdc,
 	)
 
 	// setup 3 accounts

@@ -783,7 +783,7 @@ type Module struct {
 	Path string `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
 	// module version
 	Version string `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
-	//checksum
+	// checksum
 	Sum string `protobuf:"bytes,3,opt,name=sum,proto3" json:"sum,omitempty"`
 }
 

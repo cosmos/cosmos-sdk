@@ -16,16 +16,16 @@ import (
 // CONTRACT: ClientState was constructed correctly from given initial consensusState
 func (k Keeper) CreateClient(
 	ctx sdk.Context, clientState exported.ClientState, consensusState exported.ConsensusState,
-) error {
+) (string, error) {
 	params := k.GetParams(ctx)
 	if !params.IsAllowedClient(clientState.ClientType()) {
-		return sdkerrors.Wrapf(
+		return "", sdkerrors.Wrapf(
 			types.ErrInvalidClientType,
 			"client state type %s is not registered in the allowlist", clientState.ClientType(),
 		)
 	}
 
-	clientID = k.GenerateClientIdentifier(ctx, clientState.ClientType())
+	clientID := k.GenerateClientIdentifier(ctx, clientState.ClientType())
 
 	// check if consensus state is nil in case the created client is Localhost
 	if consensusState != nil {
@@ -43,7 +43,7 @@ func (k Keeper) CreateClient(
 		)
 	}()
 
-	return nil
+	return clientID, nil
 }
 
 // UpdateClient updates the consensus state and the state root from a provided header.

@@ -22,33 +22,26 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 		msg      string
 		clientID string
 		expPass  bool
-		expPanic bool
 	}{
-		{"success", testClientID, true, false},
-		{"client ID exists", testClientID, false, false},
+		{"success", testClientID, true},
 	}
 
 	for i, tc := range cases {
 		tc := tc
 		i := i
-		if tc.expPanic {
-			suite.Require().Panics(func() {
-				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
-				suite.keeper.CreateClient(suite.ctx, tc.clientID, clientState, suite.consensusState)
-			}, "Msg %d didn't panic: %s", i, tc.msg)
-		} else {
-			clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
-			if tc.expPass {
-				suite.Require().NotNil(clientState, "valid test case %d failed: %s", i, tc.msg)
-			}
-			// If we were able to NewClientState clientstate successfully, try persisting it to state
-			err := suite.keeper.CreateClient(suite.ctx, tc.clientID, clientState, suite.consensusState)
 
-			if tc.expPass {
-				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
-			} else {
-				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-			}
+		clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
+		if tc.expPass {
+			suite.Require().NotNil(clientState, "valid test case %d failed: %s", i, tc.msg)
+		}
+		// If we were able to NewClientState clientstate successfully, try persisting it to state
+		clientID, err := suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
+		if tc.expPass {
+			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
+			suite.Require().NotNil(clientID, "valid test case %d failed: %s", i, tc.msg)
+		} else {
+			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
+			suite.Require().Nil(clientID, "invalid test case %d passed: %s", i, tc.msg)
 		}
 	}
 }
@@ -72,6 +65,8 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 	var (
 		updateHeader *ibctmtypes.Header
 		clientState  *ibctmtypes.ClientState
+		clientID     string
+		err          error
 	)
 
 	cases := []struct {
@@ -81,7 +76,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 	}{
 		{"valid update", func() error {
 			clientState = ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
-			err := suite.keeper.CreateClient(suite.ctx, testClientID, clientState, suite.consensusState)
+			clientID, err = suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
 
 			// store intermediate consensus state to check that trustedHeight does not need to be highest consensus state before header height
 			incrementedClientHeight := testClientHeight.Increment()
@@ -89,17 +84,17 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 				Timestamp:          suite.now.Add(time.Minute),
 				NextValidatorsHash: suite.valSetHash,
 			}
-			suite.keeper.SetClientConsensusState(suite.ctx, testClientID, incrementedClientHeight, intermediateConsState)
+			suite.keeper.SetClientConsensusState(suite.ctx, clientID, incrementedClientHeight, intermediateConsState)
 
 			clientState.LatestHeight = incrementedClientHeight
-			suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
+			suite.keeper.SetClientState(suite.ctx, clientID, clientState)
 
 			updateHeader = createFutureUpdateFn(suite)
 			return err
 		}, true},
 		{"valid past update", func() error {
 			clientState = ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
-			err := suite.keeper.CreateClient(suite.ctx, testClientID, clientState, suite.consensusState)
+			clientID, err = suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
 			suite.Require().NoError(err)
 
 			height1 := types.NewHeight(0, 1)
@@ -109,7 +104,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 				Timestamp:          suite.past,
 				NextValidatorsHash: suite.valSetHash,
 			}
-			suite.keeper.SetClientConsensusState(suite.ctx, testClientID, height1, prevConsState)
+			suite.keeper.SetClientConsensusState(suite.ctx, clientID, height1, prevConsState)
 
 			height2 := types.NewHeight(0, 2)
 
@@ -118,7 +113,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 				Timestamp:          suite.past.Add(time.Minute),
 				NextValidatorsHash: suite.valSetHash,
 			}
-			suite.keeper.SetClientConsensusState(suite.ctx, testClientID, height2, intermediateConsState)
+			suite.keeper.SetClientConsensusState(suite.ctx, clientID, height2, intermediateConsState)
 
 			// updateHeader will fill in consensus state between prevConsState and suite.consState
 			// clientState should not be updated
@@ -147,7 +142,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 		{"valid past update before client was frozen", func() error {
 			clientState = ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
 			clientState.FrozenHeight = types.NewHeight(0, testClientHeight.RevisionHeight-1)
-			err := suite.keeper.CreateClient(suite.ctx, testClientID, clientState, suite.consensusState)
+			clientID, err = suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
 			suite.Require().NoError(err)
 
 			height1 := types.NewHeight(0, 1)
@@ -157,7 +152,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 				Timestamp:          suite.past,
 				NextValidatorsHash: suite.valSetHash,
 			}
-			suite.keeper.SetClientConsensusState(suite.ctx, testClientID, height1, prevConsState)
+			suite.keeper.SetClientConsensusState(suite.ctx, clientID, height1, prevConsState)
 
 			// updateHeader will fill in consensus state between prevConsState and suite.consState
 			// clientState should not be updated
@@ -166,7 +161,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 		}, true},
 		{"invalid header", func() error {
 			clientState = ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
-			err := suite.keeper.CreateClient(suite.ctx, testClientID, clientState, suite.consensusState)
+			_, err := suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
 			suite.Require().NoError(err)
 			updateHeader = createPastUpdateFn(suite)
 
@@ -179,13 +174,14 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 		i := i
 		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
 			suite.SetupTest()
+			clientID := testClientID // must be explicitly changed
 
 			err := tc.malleate()
 			suite.Require().NoError(err)
 
 			suite.ctx = suite.ctx.WithBlockTime(updateHeader.Header.Time.Add(time.Minute))
 
-			err = suite.keeper.UpdateClient(suite.ctx, testClientID, updateHeader)
+			err = suite.keeper.UpdateClient(suite.ctx, clientID, updateHeader)
 
 			if tc.expPass {
 				suite.Require().NoError(err, err)
@@ -196,10 +192,10 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 					NextValidatorsHash: updateHeader.Header.NextValidatorsHash,
 				}
 
-				newClientState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
+				newClientState, found := suite.keeper.GetClientState(suite.ctx, clientID)
 				suite.Require().True(found, "valid test case %d failed: %s", i, tc.name)
 
-				consensusState, found := suite.keeper.GetClientConsensusState(suite.ctx, testClientID, updateHeader.GetHeight())
+				consensusState, found := suite.keeper.GetClientConsensusState(suite.ctx, clientID, updateHeader.GetHeight())
 				suite.Require().True(found, "valid test case %d failed: %s", i, tc.name)
 
 				// Determine if clientState should be updated or not
@@ -442,7 +438,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			func() error {
 				suite.consensusState.NextValidatorsHash = bothValsHash
 				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
-				err := suite.keeper.CreateClient(suite.ctx, testClientID, clientState, suite.consensusState)
+				testClientID, err = suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
 
 				return err
 			},

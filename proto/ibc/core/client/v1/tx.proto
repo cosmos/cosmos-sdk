@@ -27,15 +27,13 @@ message MsgCreateClient {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  // client unique identifier
-  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   // light client state
-  google.protobuf.Any client_state = 2 [(gogoproto.moretags) = "yaml:\"client_state\""];
+  google.protobuf.Any client_state = 1 [(gogoproto.moretags) = "yaml:\"client_state\""];
   // consensus state associated with the client that corresponds to a given
   // height.
-  google.protobuf.Any consensus_state = 3 [(gogoproto.moretags) = "yaml:\"consensus_state\""];
+  google.protobuf.Any consensus_state = 2 [(gogoproto.moretags) = "yaml:\"consensus_state\""];
   // signer address
-  string signer = 4;
+  string signer = 3;
 }
 
 // MsgCreateClientResponse defines the Msg/CreateClient response type.

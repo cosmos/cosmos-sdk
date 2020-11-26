@@ -460,7 +460,7 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 	}
 
 	msg, err := clienttypes.NewMsgCreateClient(
-		clientID, clientState, consensusState, chain.SenderAccount.GetAddress(),
+		clientState, consensusState, chain.SenderAccount.GetAddress(),
 	)
 	require.NoError(chain.t, err)
 	return msg

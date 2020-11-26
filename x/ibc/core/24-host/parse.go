@@ -8,7 +8,7 @@ import (
 )
 
 // ParseIdentifier parses the sequence from the identifier using the provided prefix.
-func ParseConnectionSequence(identifier, prefix string) (uint64, error) {
+func ParseIdentifier(identifier, prefix string) (uint64, error) {
 	if !strings.HasPrefix(identifier, prefix) {
 		return 0, sdkerrors.Wrapf(ErrInvalidID, "identifier doesn't contain prefix `%s`", prefix)
 	}

@@ -31,7 +31,7 @@ var (
 // NewMsgCreateClient creates a new MsgCreateClient instance
 //nolint:interfacer
 func NewMsgCreateClient(
-	id string, clientState exported.ClientState, consensusState exported.ConsensusState, signer sdk.AccAddress,
+	clientState exported.ClientState, consensusState exported.ConsensusState, signer sdk.AccAddress,
 ) (*MsgCreateClient, error) {
 
 	anyClientState, err := PackClientState(clientState)
@@ -45,7 +45,6 @@ func NewMsgCreateClient(
 	}
 
 	return &MsgCreateClient{
-		ClientId:       id,
 		ClientState:    anyClientState,
 		ConsensusState: anyConsensusState,
 		Signer:         signer.String(),
@@ -75,17 +74,14 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	if err := clientState.Validate(); err != nil {
 		return err
 	}
-	if clientState.ClientType() == exported.Localhost || msg.ClientId == exported.Localhost {
+	if clientState.ClientType() == exported.Localhost {
 		return sdkerrors.Wrap(ErrInvalidClient, "localhost client can only be created on chain initialization")
 	}
 	consensusState, err := UnpackConsensusState(msg.ConsensusState)
 	if err != nil {
 		return err
 	}
-	if err := consensusState.ValidateBasic(); err != nil {
-		return err
-	}
-	return host.ClientIdentifierValidator(msg.ClientId)
+	return consensusState.ValidateBasic()
 }
 
 // GetSignBytes implements sdk.Msg. The function will panic since it is used

@@ -140,10 +140,11 @@ message LastValidatorPower {
 
 // Development plan
 // — Implement changes for Msgs flow
-// — — There are 6 queues to be newly added for epoching process and should write a common utility to manage queues by considering existing staking module codebase
-// - - - We can manage single queue for epoching per module for simplicity.
-// — — Implement Msgs handling one by one (implement instant change fields, queue actions for epoching)
+// — — Discuss and fix feedback for Msgs flow
+// — — Implement TODOs on the PR #46
 // — Implement logic flow after queue action
+// — — Review logic for Slashing/Jail and check/discuss how to update it
+// — — Review logic for Epoch action and check if there could be a vulnerability from current implementation (mainly moving from Unbonded to Bonded process)
 // — Implement CLI commands for querying
 // — — BufferedValidators
 // — — BufferedMsgCreateValidatorQueue, BufferedMsgEditValidatorQueue

@@ -19,6 +19,8 @@ import (
 const (
 	FlagListenAddr         = "rest.laddr"
 	FlagExternalListenAddr = "rest.external_laddr"
+	FlagUlockKey           = "rest.unlock_key"
+	FlagUlockKeyHome   	   = "rest.unlock_key_home"
 	FlagCORS               = "cors"
 	FlagMaxOpenConnections = "max-open"
 	FlagHookstartInProcess = "startInProcess"
@@ -174,6 +176,9 @@ func Stop() {
 // registerRestServerFlags registers the flags required for rest server
 func registerRestServerFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().String(FlagListenAddr, "tcp://0.0.0.0:26659", "The address for the rest-server to listen on. (0.0.0.0:0 means any interface, any port)")
+	cmd.Flags().String(FlagUlockKey, "", "Select the keys to unlock on the RPC server")
+	cmd.Flags().String(FlagUlockKeyHome, "", "The keybase home path")
+	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	cmd.Flags().String(FlagCORS, "", "Set the rest-server domains that can make CORS requests (* for all)")
 	cmd.Flags().Int(FlagMaxOpenConnections, 1000, "The number of maximum open connections of rest-server")
 	cmd.Flags().String(FlagExternalListenAddr, "127.0.0.1:26659", "Set the rest-server external ip and port, when it is launched by Docker")

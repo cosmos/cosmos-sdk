@@ -23,14 +23,28 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-func handleGrantFee(ctx sdk.Context, k Keeper, msg types.MsgGrantFeeAllowance) (*sdk.Result, error) {
-	feegrant := FeeAllowanceGrant(msg)
+func handleGrantFee(ctx sdk.Context, k Keeper, msg *types.MsgGrantFeeAllowance) (*sdk.Result, error) {
+	grantee, err := sdk.AccAddressFromBech32(msg.Grantee.String())
+	if err != nil {
+		return nil, err
+	}
+
+	granter, err := sdk.AccAddressFromBech32(msg.Granter.String())
+	if err != nil {
+		return nil, err
+	}
+
+	feegrant := types.FeeAllowanceGrant(types.FeeAllowanceGrant{
+		Grantee:   grantee,
+		Granter:   granter,
+		Allowance: msg.Allowance,
+	})
 
 	k.GrantFeeAllowance(ctx, feegrant)
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-func handleRevokeFee(ctx sdk.Context, k Keeper, msg types.MsgRevokeFeeAllowance) (*sdk.Result, error) {
+func handleRevokeFee(ctx sdk.Context, k Keeper, msg *types.MsgRevokeFeeAllowance) (*sdk.Result, error) {
 	k.RevokeFeeAllowance(ctx, msg.Granter, msg.Grantee)
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }

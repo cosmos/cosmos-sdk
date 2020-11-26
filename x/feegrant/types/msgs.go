@@ -5,7 +5,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func (msg MsgGrantFeeAllowance) NewMsgGrantFeeAllowance(feeAllowance *FeeAllowance, granter, grantee sdk.AccAddress) (MsgGrantFeeAllowance, error) {
+func (msg MsgGrantFeeAllowance) NewMsgGrantFeeAllowance(feeAllowance *FeeAllowanceI, granter, grantee sdk.AccAddress) (MsgGrantFeeAllowance, error) {
 	return MsgGrantFeeAllowance{
 		Granter:   granter,
 		Grantee:   grantee,

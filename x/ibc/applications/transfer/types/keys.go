@@ -47,7 +47,7 @@ func GetEscrowAddress(portID, channelID string) sdk.AccAddress {
 	contents := fmt.Sprintf("%s/%s", portID, channelID)
 
 	// ADR 028 AddressHash construction
-	preImage := []byte(EscrowPrefix)
+	preImage := []byte(Version)
 	preImage = append(preImage, 0)
 	preImage = append(preImage, contents...)
 	hash := sha256.Sum256(preImage)

@@ -34,7 +34,10 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 			switch msg := msg.(type) {
 			case *types.MsgEditValidator:
 				k.EpochEditValidator(ctx, msg)
-
+			case *types.MsgBeginRedelegate:
+				k.EpochBeginRedelegate(ctx, msg)
+			case *types.MsgUndelegate:
+				k.EpochUndelegate(ctx, msg)
 			default:
 			}
 			// dequeue processed item

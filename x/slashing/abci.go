@@ -36,7 +36,6 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 			switch msg := msg.(type) {
 			case *types.MsgUnjail:
 				k.EpochUnjail(ctx, msg)
-
 			default:
 			}
 			// dequeue processed item

@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"time"
 
 	metrics "github.com/armon/go-metrics"
 	tmstrings "github.com/tendermint/tendermint/libs/strings"
@@ -156,6 +155,10 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 		return nil, sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
 	}
 
+	// Thoughts: since delegation goes to Unbonded pool, as long as we only run validator set update on epochs, it won't affect
+	// anything. It's same as MsgCreateValidator we have discussed recently, @sunny.
+	// TODO should check where Delegation move from Unbonded to Bonded. (I guess both validator's self-delegation
+	// and other delegations will be processed in a batch)
 	// NOTE: source funds are always unbonded
 	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, types.Unbonded, validator, true)
 	if err != nil {
@@ -189,119 +192,18 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 
 func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRedelegate) (*types.MsgBeginRedelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	valSrcAddr, err := sdk.ValAddressFromBech32(msg.ValidatorSrcAddress)
-	if err != nil {
-		return nil, err
-	}
-	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	if err != nil {
-		return nil, err
-	}
-	shares, err := k.ValidateUnbondAmount(
-		ctx, delegatorAddress, valSrcAddr, msg.Amount.Amount,
-	)
-	if err != nil {
-		return nil, err
-	}
+	// Queue epoch action and move all the execution logic to Epoch execution
+	k.SaveEpochAction(ctx, 0, msg)
 
-	bondDenom := k.BondDenom(ctx)
-	if msg.Amount.Denom != bondDenom {
-		return nil, sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
-	}
-
-	valDstAddr, err := sdk.ValAddressFromBech32(msg.ValidatorDstAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	completionTime, err := k.BeginRedelegation(
-		ctx, delegatorAddress, valSrcAddr, valDstAddr, shares,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		telemetry.IncrCounter(1, types.ModuleName, "redelegate")
-		telemetry.SetGaugeWithLabels(
-			[]string{"tx", "msg", msg.Type()},
-			float32(msg.Amount.Amount.Int64()),
-			[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
-		)
-	}()
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeRedelegate,
-			sdk.NewAttribute(types.AttributeKeySrcValidator, msg.ValidatorSrcAddress),
-			sdk.NewAttribute(types.AttributeKeyDstValidator, msg.ValidatorDstAddress),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.Amount.String()),
-			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
-		),
-	})
-
-	return &types.MsgBeginRedelegateResponse{
-		CompletionTime: completionTime,
-	}, nil
+	// TODO should return completion time based on next epoch time
+	return &types.MsgBeginRedelegateResponse{}, nil
 }
 
 func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (*types.MsgUndelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	// Queue epoch action and move all the execution logic to Epoch execution
+	k.SaveEpochAction(ctx, 0, msg)
 
-	addr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
-	if err != nil {
-		return nil, err
-	}
-	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	if err != nil {
-		return nil, err
-	}
-	shares, err := k.ValidateUnbondAmount(
-		ctx, delegatorAddress, addr, msg.Amount.Amount,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	bondDenom := k.BondDenom(ctx)
-	if msg.Amount.Denom != bondDenom {
-		return nil, sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
-	}
-
-	completionTime, err := k.Keeper.Undelegate(ctx, delegatorAddress, addr, shares)
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		telemetry.IncrCounter(1, types.ModuleName, "undelegate")
-		telemetry.SetGaugeWithLabels(
-			[]string{"tx", "msg", msg.Type()},
-			float32(msg.Amount.Amount.Int64()),
-			[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
-		)
-	}()
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeUnbond,
-			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.Amount.String()),
-			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
-		),
-	})
-
-	return &types.MsgUndelegateResponse{
-		CompletionTime: completionTime,
-	}, nil
+	// TODO should return completion time based on next epoch time
+	return &types.MsgUndelegateResponse{}, nil
 }

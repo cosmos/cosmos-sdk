@@ -15,7 +15,7 @@ import (
 //
 // CONTRACT: ClientState was constructed correctly from given initial consensusState
 func (k Keeper) CreateClient(
-	ctx sdk.Context, clientID string, clientState exported.ClientState, consensusState exported.ConsensusState,
+	ctx sdk.Context, clientState exported.ClientState, consensusState exported.ConsensusState,
 ) error {
 	params := k.GetParams(ctx)
 	if !params.IsAllowedClient(clientState.ClientType()) {
@@ -25,10 +25,7 @@ func (k Keeper) CreateClient(
 		)
 	}
 
-	_, found := k.GetClientState(ctx, clientID)
-	if found {
-		return sdkerrors.Wrapf(types.ErrClientExists, "cannot create client with ID %s", clientID)
-	}
+	clientID = k.GenerateClientIdentifier(ctx, clientState.ClientType())
 
 	// check if consensus state is nil in case the created client is Localhost
 	if consensusState != nil {

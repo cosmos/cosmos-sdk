@@ -2,10 +2,9 @@ package types
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 )
 
 const (
@@ -42,18 +41,10 @@ func IsValidConnectionID(connectionID string) bool {
 
 // ParseConnectionSequence parses the connection sequence from the connection identifier.
 func ParseConnectionSequence(connectionID string) (uint64, error) {
-	if !strings.HasPrefix(connectionID, ConnectionPrefix) {
-		return 0, sdkerrors.Wrapf(ErrInvalidConnectionIdentifier, "doesn't contain prefix `%s`", ConnectionPrefix)
-	}
-
-	splitStr := strings.Split(connectionID, ConnectionPrefix)
-	if len(splitStr) != 2 {
-		return 0, sdkerrors.Wrap(ErrInvalidConnectionIdentifier, "connection identifier must be in format: `connection-{N}`")
-	}
-
-	sequence, err := strconv.ParseUint(splitStr[1], 10, 64)
+	sequence, err := host.ParseIdentifier(connectionID, ConnectionPrefix)
 	if err != nil {
-		return 0, sdkerrors.Wrap(err, "failed to parse connection identifier sequence")
+		return 0, sdkerrors.Wrap(err, "invalid connection identifier")
 	}
+
 	return sequence, nil
 }

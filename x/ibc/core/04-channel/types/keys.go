@@ -2,10 +2,9 @@ package types
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/core/host"
 )
 
 const (
@@ -42,18 +41,10 @@ func IsValidChannelID(channelID string) bool {
 
 // ParseChannelSequence parses the channel sequence from the channel identifier.
 func ParseChannelSequence(channelID string) (uint64, error) {
-	if !strings.HasPrefix(channelID, ChannelPrefix) {
-		return 0, sdkerrors.Wrapf(ErrInvalidChannelIdentifier, "doesn't contain prefix `%s`", ChannelPrefix)
-	}
-
-	splitStr := strings.Split(channelID, ChannelPrefix)
-	if len(splitStr) != 2 {
-		return 0, sdkerrors.Wrap(ErrInvalidChannelIdentifier, "channel identifier must be in format: `channel-{N}`")
-	}
-
-	sequence, err := strconv.ParseUint(splitStr[1], 10, 64)
+	sequence, err := host.ParseIdentifier(channelID, ChannelPrefix)
 	if err != nil {
-		return 0, sdkerrors.Wrap(err, "failed to parse channel identifier sequence")
+		return 0, sdkerrors.Wrap(err, "invalid channel identifier")
 	}
+
 	return sequence, nil
 }

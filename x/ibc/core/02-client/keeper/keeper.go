@@ -50,6 +50,16 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", host.ModuleName, types.SubModuleName))
 }
 
+// GenerateClientIdentifier returns the next client identifier.
+func (k Keeper) GenerateClientIdentifier(ctx sdk.Context, clientType string) string {
+	nextClientSeq := k.GetNextClientSequence(ctx)
+	clientID := types.FormatClientIdentifier(clientType, nextClientSeq)
+
+	nextClientSeq++
+	k.SetNextClientSequence(ctx, nextClientSeq)
+	return clientID
+}
+
 // GetClientState gets a particular client from the store
 func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (exported.ClientState, bool) {
 	store := k.ClientStore(ctx, clientID)
@@ -85,6 +95,24 @@ func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height
 func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height exported.Height, consensusState exported.ConsensusState) {
 	store := k.ClientStore(ctx, clientID)
 	store.Set(host.ConsensusStateKey(height), k.MustMarshalConsensusState(consensusState))
+}
+
+// GetNextClientSequence gets the next client sequence from the store.
+func (k Keeper) GetNextClientSequence(ctx sdk.Context) uint64 {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get([]byte(types.KeyNextClientSequence))
+	if bz == nil {
+		panic("next client sequence is nil")
+	}
+
+	return sdk.BigEndianToUint64(bz)
+}
+
+// SetNextClientSequence sets the next client sequence to the store.
+func (k Keeper) SetNextClientSequence(ctx sdk.Context, sequence uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := sdk.Uint64ToBigEndian(sequence)
+	store.Set([]byte(types.KeyNextClientSequence), bz)
 }
 
 // IterateConsensusStates provides an iterator over all stored consensus states.

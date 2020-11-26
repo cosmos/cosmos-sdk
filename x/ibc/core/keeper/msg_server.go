@@ -32,7 +32,7 @@ func (k Keeper) CreateClient(goCtx context.Context, msg *clienttypes.MsgCreateCl
 		return nil, err
 	}
 
-	if err = k.ClientKeeper.CreateClient(ctx, msg.ClientId, clientState, consensusState); err != nil {
+	if err = k.ClientKeeper.CreateClient(ctx, clientState, consensusState); err != nil {
 		return nil, err
 	}
 

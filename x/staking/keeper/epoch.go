@@ -35,12 +35,12 @@ func (k Keeper) GetNextEpochActionID(ctx sdk.Context) uint64 {
 }
 
 // ActionStoreKey returns action store key from ID
-func ActionStoreKey(actionID uint64) []byte {
-	return []byte(fmt.Sprintf("%s_%d", EpochActionQueuePrefix, actionID))
+func ActionStoreKey(epochIndex uint64, actionID uint64) []byte {
+	return []byte(fmt.Sprintf("%s_%d_%d", EpochActionQueuePrefix, epochIndex, actionID))
 }
 
 // SaveEpochAction save the actions that need to be executed on next epoch
-func (k Keeper) SaveEpochAction(ctx sdk.Context, action sdk.Msg) {
+func (k Keeper) SaveEpochAction(ctx sdk.Context, epochIndex uint64, action sdk.Msg) {
 	store := ctx.KVStore(k.storeKey)
 
 	// reference from TestMarshalAny(t *testing.T)
@@ -49,15 +49,15 @@ func (k Keeper) SaveEpochAction(ctx sdk.Context, action sdk.Msg) {
 		panic(err)
 	}
 	actionID := k.GetNextEpochActionID(ctx)
-	store.Set(ActionStoreKey(actionID), bz)
+	store.Set(ActionStoreKey(epochIndex, actionID), bz)
 	k.SetNextEpochActionID(ctx, actionID+1)
 }
 
 // GetEpochAction get action by ID
-func (k Keeper) GetEpochAction(ctx sdk.Context, actionID uint64) sdk.Msg {
+func (k Keeper) GetEpochAction(ctx sdk.Context, epochIndex uint64, actionID uint64) sdk.Msg {
 	store := ctx.KVStore(k.storeKey)
 
-	bz := store.Get(ActionStoreKey(actionID))
+	bz := store.Get(ActionStoreKey(epochIndex, actionID))
 	if bz == nil {
 		return nil
 	}
@@ -85,9 +85,10 @@ func (k Keeper) GetEpochActions(ctx sdk.Context) []sdk.Msg {
 	return actions
 }
 
-// GetEpochActionsIterator returns iterator for EpochActions
-func (k Keeper) GetEpochActionsIterator(ctx sdk.Context) db.Iterator {
-	return sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte(EpochActionQueuePrefix))
+// GetEpochActionsIteratorByEpochIndex returns iterator for EpochActions
+func (k Keeper) GetEpochActionsIteratorByEpochIndex(ctx sdk.Context, epochIndex uint64) db.Iterator {
+	prefixKey := fmt.Sprintf("%s_%d", EpochActionQueuePrefix, epochIndex)
+	return sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte(prefixKey))
 }
 
 // DequeueEpochActions dequeue all the actions store on epoch

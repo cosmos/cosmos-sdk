@@ -25,6 +25,6 @@ var _ types.MsgServer = msgServer{}
 func (k msgServer) Unjail(goCtx context.Context, msg *types.MsgUnjail) (*types.MsgUnjailResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Queue epoch action and move all the execution logic to Epoch execution
-	k.SaveEpochAction(ctx, msg)
+	k.SaveEpochAction(ctx, 0, msg)
 	return &types.MsgUnjailResponse{}, nil
 }

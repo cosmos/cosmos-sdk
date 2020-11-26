@@ -100,9 +100,9 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	// NOTE source will always be from a wallet which are unbonded
 
 	// Thoughts: since delegation goes to Unbonded pool, as long as we only run validator set update on epochs, it won't affect
-	// anything. 
+	// anything.
 	// Warn: Within slashing module, we should update only partial validator set instead of full since it can automatically
-	// set newly created validators to Bonded status 
+	// set newly created validators to Bonded status
 	// I think keeping this as it is is quite good as delegators are not needed to wait for validator to be created
 	// on epochs but just delegate to validators that is going to be activated on next epoch
 	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Value.Amount, types.Unbonded, validator, true)
@@ -129,7 +129,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValidator) (*types.MsgEditValidatorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Queue epoch action and move all the execution logic to Epoch execution
-	k.SaveEpochAction(ctx, msg)
+	k.SaveEpochAction(ctx, 0, msg)
 
 	return &types.MsgEditValidatorResponse{}, nil
 }

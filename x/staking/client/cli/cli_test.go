@@ -51,7 +51,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
-	unbond, err := sdk.ParseCoin("10stake")
+	unbond, err := sdk.ParseCoinNormalized("10stake")
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]

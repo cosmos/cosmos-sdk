@@ -55,8 +55,7 @@ func NewCmdGrantAuthorization() *cobra.Command {
 			msgType := args[1]
 
 			var authorization types.Authorization
-			switch msgType {
-			case (types.SendAuthorization{}.MethodName()):
+			if msgType == (types.SendAuthorization{}.MethodName()) {
 				limit, err := sdk.ParseCoinsNormalized(args[2])
 				if err != nil {
 					return err
@@ -64,10 +63,8 @@ func NewCmdGrantAuthorization() *cobra.Command {
 				authorization = &types.SendAuthorization{
 					SpendLimit: limit,
 				}
-			case (types.GenericAuthorization{}.MethodName()):
+			} else {
 				authorization = types.NewGenericAuthorization(msgType)
-			default:
-				return errors.New("invalid authorization type")
 			}
 
 			period := time.Duration(viper.GetInt64(FlagExpiration)) * time.Second

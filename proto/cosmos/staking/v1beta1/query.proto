@@ -349,3 +349,15 @@ message QueryParamsResponse {
   // params holds all the parameters of this module.
   Params params = 1 [(gogoproto.nullable) = false];
 }
+
+// QueryBufferedValidatorsRequest is request type for the Query/BufferedValidators RPC method.
+message QueryBufferedValidatorsRequest {}
+
+// QueryBufferedValidatorsResponse is response type for the Query/BufferedValidators RPC method.
+message QueryBufferedValidatorsResponse {
+  // validators contains all the queried validators.
+  repeated Validator validators = 1 [(gogoproto.nullable) = false];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

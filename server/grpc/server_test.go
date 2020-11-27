@@ -11,13 +11,14 @@ import (
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-
 	rpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	"github.com/cosmos/cosmos-sdk/types/tx"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -99,6 +100,19 @@ func (s *IntegrationTestSuite) TestGRPCServer() {
 	}
 	// Make sure the following services are present
 	s.Require().True(servicesMap["cosmos.bank.v1beta1.Query"])
+
+	// Query the tx via gRPC without pagination. This used to panic, see
+	// https://github.com/cosmos/cosmos-sdk/issues/8038.
+	txServiceClient := txtypes.NewServiceClient(conn)
+	_, err = txServiceClient.GetTxsEvent(
+		context.Background(),
+		&tx.GetTxsEventRequest{
+			Event: "message.action=send",
+		},
+	)
+	// TODO Once https://github.com/cosmos/cosmos-sdk/pull/8029 is merged, this
+	// should not error anymore.
+	s.Require().Error(err)
 }
 
 // Test and enforce that we upfront reject any connections to baseapp containing

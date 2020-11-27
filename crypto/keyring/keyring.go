@@ -110,6 +110,10 @@ type Exporter interface {
 	// Export public key
 	ExportPubKeyArmor(uid string) (string, error)
 	ExportPubKeyArmorByAddress(address sdk.Address) (string, error)
+
+	// ExportPrivKeyHex returns a private key in unarmored hex format
+	ExportPrivKeyHex(uid string) (string, error)
+
 	// ExportPrivKey returns a private key in ASCII armored format.
 	// It returns an error if the key does not exist or a wrong encryption passphrase is supplied.
 	ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error)
@@ -208,6 +212,15 @@ func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, erro
 	}
 
 	return ks.ExportPubKeyArmor(info.GetName())
+}
+
+func (ks keystore) ExportPrivKeyHex(uid string) (privkey string, err error) {
+	priv, err := ks.ExportPrivateKeyObject(uid)
+	if err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(priv.Bytes()), nil
 }
 
 func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error) {

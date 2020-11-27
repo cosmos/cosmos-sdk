@@ -2,6 +2,7 @@ package keys
 
 import (
 	"bufio"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -11,7 +12,8 @@ import (
 )
 
 const (
-	flagUnarmored = "unarmored-hex"
+	flagUnarmoredHex = "unarmored-hex"
+	flagUnsafe       = "unsafe"
 )
 
 // ExportKeyCommand exports private keys from the key store.
@@ -19,32 +21,25 @@ func ExportKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export <name>",
 		Short: "Export private keys",
-		Long:  `Export a private key from the local keybase in ASCII-armored encrypted format.`,
-		Args:  cobra.ExactArgs(1),
+		Long: `Export a private key from the local keyring in ASCII-armored encrypted format.
+
+When both the --unarmored-hex and --unsafe flags are selected, cryptographic
+private key material is exported in an INSECURE fashion that is designed to
+allow users to import their keys in hot wallets. This feature is for advanced
+users only that are confident about how to handle private keys work and are
+FULLY AWARE OF THE RISKS. If you are unsure, you may want to do some research
+and export your keys in ASCII-armored encrypted format.`,
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			buf := bufio.NewReader(cmd.InOrStdin())
 			clientCtx := client.GetClientContextFromCmd(cmd)
+			unarmored, _ := cmd.Flags().GetBool(flagUnarmoredHex)
+			unsafe, _ := cmd.Flags().GetBool(flagUnsafe)
 
-			unarmored, _ := cmd.Flags().GetBool(flagUnarmored)
-
-			if unarmored {
-
-				// confirm deletion, unless -y is passed
-				if skip, _ := cmd.Flags().GetBool(flagYes); !skip {
-					if yes, err := input.GetConfirmation("Key will be exported as an unarmored hex string. Continue?", buf, cmd.ErrOrStderr()); err != nil {
-						return err
-					} else if !yes {
-						return nil
-					}
-				}
-
-				hexPrivKey, err := keyring.NewUnsafe(clientCtx.Keyring).UnsafeExportPrivKeyHex(args[0])
-				if err != nil {
-					return err
-				}
-
-				cmd.Println(hexPrivKey)
-				return nil
+			if unarmored && unsafe {
+				return exportUnsafeUnarmored(cmd, args, unarmored, buf, clientCtx)
+			} else if unarmored || unsafe {
+				return fmt.Errorf("the flags %s and %s must be used together", flagUnsafe, flagUnarmoredHex)
 			}
 
 			encryptPassword, err := input.GetPassword("Enter passphrase to encrypt the exported key:", buf)
@@ -58,13 +53,37 @@ func ExportKeyCommand() *cobra.Command {
 			}
 
 			cmd.Println(armored)
-			return nil
 
+			return nil
 		},
 	}
 
-	cmd.Flags().BoolP(flagUnarmored, "u", false, "Export unarmored hex privkey. This is NOT recommended.")
-	cmd.Flags().BoolP(flagYes, "y", false, "Skip confirmation prompt when unsafe exporting unarmored privkey")
+	cmd.Flags().Bool(flagUnarmoredHex, false, "Export unarmored hex privkey. Requires --unsafe.")
+	cmd.Flags().Bool(flagUnsafe, false, "Enable unsafe operations. This flag must be switched on along with all unsafe operation-specific options.")
 
 	return cmd
+}
+
+func exportUnsafeUnarmored(cmd *cobra.Command, args []string, unarmored bool, buf *bufio.Reader, clientCtx client.Context) error {
+	// confirm deletion, unless -y is passed
+	if yes, err := input.GetConfirmation("WARNING: The private key will be exported as an unarmored hexadecimal string. USE AT YOUR OWN RISK. Continue?", buf, cmd.ErrOrStderr()); err != nil {
+		return err
+	} else if !yes {
+		return nil
+	}
+
+	if yes, err := input.GetConfirmation("Confirm your choice again", buf, cmd.ErrOrStderr()); err != nil {
+		return err
+	} else if !yes {
+		return nil
+	}
+
+	hexPrivKey, err := keyring.NewUnsafe(clientCtx.Keyring).UnsafeExportPrivKeyHex(args[0])
+	if err != nil {
+		return err
+	}
+
+	cmd.Println(hexPrivKey)
+
+	return nil
 }

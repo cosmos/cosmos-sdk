@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
 const (
@@ -37,8 +38,7 @@ func ExportKeyCommand() *cobra.Command {
 					}
 				}
 
-				hexPrivKey, err := clientCtx.Keyring.ExportPrivKeyHex(args[0])
-
+				hexPrivKey, err := keyring.NewUnsafe(clientCtx.Keyring).UnsafeExportPrivKeyHex(args[0])
 				if err != nil {
 					return err
 				}

@@ -178,10 +178,8 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			fmt.Println(typeMsgVote)
 			clientCtx := val.ClientCtx
 			viper.Set(cli.FlagExpiration, tc.expiration)
-
 			out, err := execGrantAuthorization(
 				val,
 				tc.args,

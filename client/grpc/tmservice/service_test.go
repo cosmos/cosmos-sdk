@@ -133,7 +133,7 @@ func (s IntegrationTestSuite) TestQueryValidatorSetByHeight() {
 
 	_, err = s.queryClient.GetValidatorSetByHeight(context.Background(), &tmservice.GetValidatorSetByHeightRequest{
 		Height: 1,
-		Pagination: &tmservice.PageRequest{
+		Pagination: &qtypes.PageRequest{
 			Offset: 0,
 			Limit:  10,
 		}})

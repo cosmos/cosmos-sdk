@@ -27,6 +27,16 @@ func ExportKeyCommand() *cobra.Command {
 			unarmored, _ := cmd.Flags().GetBool(flagUnarmored)
 
 			if unarmored {
+
+				// confirm deletion, unless -y is passed
+				if skip, _ := cmd.Flags().GetBool(flagYes); !skip {
+					if yes, err := input.GetConfirmation("Key will be exported as an unarmored hex string. Continue?", buf, cmd.ErrOrStderr()); err != nil {
+						return err
+					} else if !yes {
+						return nil
+					}
+				}
+
 				hexPrivKey, err := clientCtx.Keyring.ExportPrivKeyHex(args[0])
 
 				if err != nil {
@@ -54,6 +64,7 @@ func ExportKeyCommand() *cobra.Command {
 	}
 
 	cmd.Flags().BoolP(flagUnarmored, "u", false, "UNSAFE: Export unarmored hex privkey")
+	cmd.Flags().BoolP(flagYes, "y", false, "Skip confirmation prompt when unsafe exporting unarmored privkey")
 
 	return cmd
 }

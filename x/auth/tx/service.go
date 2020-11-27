@@ -54,12 +54,12 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 		return nil, err
 	}
 
-	if len(req.Event) == 0 {
+	if len(req.Events) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "must declare at least one event to search")
 	}
 
-	tmEvents := make([]string, len(req.Event))
-	for i, event := range req.Event {
+	tmEvents := make([]string, len(req.Events))
+	for i, event := range req.Events {
 		if !strings.Contains(event, "=") {
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid event; event %s should be of the format: %s", event, eventFormat))
 		} else if strings.Count(event, "=") > 1 {

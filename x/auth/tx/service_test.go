@@ -135,7 +135,7 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 	_, err = s.queryClient.GetTxsEvent(
 		context.Background(),
 		&tx.GetTxsEventRequest{
-			Event: []string{"message.action=send", fmt.Sprintf("transfer.sender=%s", val.Address)},
+			Events: []string{"message.action=send", fmt.Sprintf("transfer.sender=%s", val.Address)},
 		},
 	)
 	s.Require().NoError(err)
@@ -144,7 +144,7 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 	grpcRes, err := s.queryClient.GetTxsEvent(
 		context.Background(),
 		&tx.GetTxsEventRequest{
-			Event: []string{"message.action=send"},
+			Events: []string{"message.action=send"},
 			Pagination: &query.PageRequest{
 				CountTotal: false,
 				Offset:     0,
@@ -170,19 +170,19 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 		},
 		{
 			"without pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?event=%s", val.APIAddress, "message.action=send"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action=send"),
 			false,
 			&tx.GetTxsEventResponse{},
 		},
 		{
 			"with pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?event=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action=send", 0, 10),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action=send", 0, 10),
 			false,
 			&tx.GetTxsEventResponse{},
 		},
 		{
 			"expect pass with multiple-events",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?event=%s&event=%s", val.APIAddress, "message.action=send", "message.module=bank"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s", val.APIAddress, "message.action=send", "message.module=bank"),
 			false,
 			&tx.GetTxsEventResponse{},
 		},
@@ -196,7 +196,7 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 			} else {
 				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, tc.expected))
 				if len(tc.expected.Txs) > 0 {
-					s.Require().GreaterOrEqual(1, len(tc.expected.Txs))
+					s.Require().GreaterOrEqual(len(tc.expected.Txs), 1)
 					s.Require().Equal("foobar", tc.expected.Txs[0].Body.Memo)
 					s.Require().NotZero(tc.expected.TxResponses[0].Height)
 				}

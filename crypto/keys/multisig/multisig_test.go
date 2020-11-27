@@ -11,13 +11,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/internal/protocdc"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 func TestAddress(t *testing.T) {
-	msg := []byte{1, 2, 3, 4}
-	pubKeys, _ := generatePubKeysAndSignatures(5, msg)
+	pubKeys := generatePubKeys(5)
 	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pubKeys)
 
 	require.Len(t, multisigKey.Address().Bytes(), 20)
@@ -100,7 +100,7 @@ func TestVerifyMultisignature(t *testing.T) {
 		{
 			"wrong size for sig bit array",
 			func() {
-				pubKeys, _ := generatePubKeysAndSignatures(3, msg)
+				pubKeys := generatePubKeys(3)
 				pk = kmultisig.NewLegacyAminoPubKey(3, pubKeys)
 				sig = multisig.NewMultisig(1)
 			},
@@ -177,7 +177,7 @@ func TestVerifyMultisignature(t *testing.T) {
 		{
 			"unable to verify signature",
 			func() {
-				pubKeys, _ := generatePubKeysAndSignatures(2, msg)
+				pubKeys := generatePubKeys(2)
 				_, sigs := generatePubKeysAndSignatures(2, msg)
 				pk = kmultisig.NewLegacyAminoPubKey(2, pubKeys)
 				sig = multisig.NewMultisig(2)
@@ -246,8 +246,7 @@ func TestMultiSigMigration(t *testing.T) {
 }
 
 func TestPubKeyMultisigThresholdAminoToIface(t *testing.T) {
-	msg := []byte{1, 2, 3, 4}
-	pubkeys, _ := generatePubKeysAndSignatures(5, msg)
+	pubkeys := generatePubKeys(5)
 	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
 
 	ab, err := kmultisig.AminoCdc.MarshalBinaryLengthPrefixed(multisigKey)
@@ -259,6 +258,14 @@ func TestPubKeyMultisigThresholdAminoToIface(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, multisigKey.Equals(&pubKey), true)
+}
+
+func generatePubKeys(n int) []cryptotypes.PubKey {
+	pks := make([]cryptotypes.PubKey, n)
+	for i := 0; i < n; i++ {
+		pks[i] = secp256k1.GenPrivKey().PubKey()
+	}
+	return pks
 }
 
 func generatePubKeysAndSignatures(n int, msg []byte) (pubKeys []cryptotypes.PubKey, signatures []signing.SignatureData) {
@@ -306,4 +313,21 @@ func reorderPubKey(pk *kmultisig.LegacyAminoPubKey) (other *kmultisig.LegacyAmin
 	pubkeysCpy[1] = pk.PubKeys[0]
 	other = &kmultisig.LegacyAminoPubKey{Threshold: 2, PubKeys: pubkeysCpy}
 	return
+}
+
+func TestDisplay(t *testing.T) {
+	require := require.New(t)
+	pubKeys := generatePubKeys(3)
+	msig := kmultisig.NewLegacyAminoPubKey(2, pubKeys)
+
+	// LegacyAminoPubKey wraps PubKeys into Amino (for serialization) and Any String method doesn't work.
+	require.PanicsWithValue("reflect.Value.Interface: cannot return value obtained from unexported field or method",
+		func() { require.Empty(msig.String()) },
+	)
+	msigBz, err := protocdc.MarshalJSON(msig, nil)
+	require.NoError(err)
+	msigStr := string(msigBz)
+	require.Contains(msigStr, `"threshold":2`)
+	require.Contains(msigStr, "cosmos.crypto.secp256k1.PubKey")
+	// example output: {"threshold":2,"public_keys":[{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AoiL9HXu/WDndVCrDptys9fx4NFEbBquhs3SubQG5QMC"},{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"Am8adwKmNfz6klSx6e2gessjP7FznW8Y56NyrUtpTW4n"},{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AtWLgEf+eQXd4ZudD/kjppK1pWRrXJH55joRyghB8WWc"}]}
 }

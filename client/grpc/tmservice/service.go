@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/internal/protocdc"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -94,25 +95,9 @@ func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *qtypes.GetL
 		return nil, err
 	}
 
-	validatorsRes, err := rpc.GetValidators(s.clientCtx, nil, &page, &limit)
-	if err != nil {
-		return nil, err
-	}
-
-	outputValidatorsRes := &qtypes.GetLatestValidatorSetResponse{
-		BlockHeight: validatorsRes.BlockHeight,
-		Validators:  make([]*qtypes.Validator, len(validatorsRes.Validators)),
-	}
-
-	for i, validator := range validatorsRes.Validators {
-		outputValidatorsRes.Validators[i] = &qtypes.Validator{
-			Address:          validator.Address,
-			ProposerPriority: validator.ProposerPriority,
-			PubKey:           validator.PubKey,
-			VotingPower:      validator.VotingPower,
-		}
-	}
-	return outputValidatorsRes, nil
+	r := &qtypes.GetLatestValidatorSetResponse{}
+	r.BlockHeight, r.Validators, err = validatorsOutput(s.clientCtx, nil, page, limit)
+	return r, err
 }
 
 // GetValidatorSetByHeight implements ServiceServer.GetValidatorSetByHeight
@@ -129,27 +114,31 @@ func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *qtypes.Ge
 	if req.Height > chainHeight {
 		return nil, status.Error(codes.InvalidArgument, "requested block height is bigger then the chain length")
 	}
+	r := &qtypes.GetValidatorSetByHeightResponse{}
+	r.BlockHeight, r.Validators, err = validatorsOutput(s.clientCtx, &req.Height, page, limit)
+	return r, err
+}
 
-	validatorsRes, err := rpc.GetValidators(s.clientCtx, &req.Height, &page, &limit)
-
+func validatorsOutput(ctx client.Context, height *int64, page, limit int) (int64, []*qtypes.Validator, error) {
+	vsRes, err := rpc.GetValidators(ctx, height, &page, &limit)
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 
-	outputValidatorsRes := &qtypes.GetValidatorSetByHeightResponse{
-		BlockHeight: validatorsRes.BlockHeight,
-		Validators:  make([]*qtypes.Validator, len(validatorsRes.Validators)),
-	}
-
-	for i, validator := range validatorsRes.Validators {
-		outputValidatorsRes.Validators[i] = &qtypes.Validator{
-			Address:          validator.Address,
-			ProposerPriority: validator.ProposerPriority,
-			PubKey:           validator.PubKey,
-			VotingPower:      validator.VotingPower,
+	out := make([]*qtypes.Validator, len(vsRes.Validators))
+	for i, v := range vsRes.Validators {
+		pkBz, err := protocdc.MarshalJSON(v.PubKey, nil)
+		if err != nil {
+			return 0, nil, err
+		}
+		out[i] = &qtypes.Validator{
+			Address:          v.Address,
+			ProposerPriority: v.ProposerPriority,
+			PubKey:           string(pkBz),
+			VotingPower:      v.VotingPower,
 		}
 	}
-	return outputValidatorsRes, nil
+	return vsRes.BlockHeight, out, nil
 }
 
 // GetNodeInfo implements ServiceServer.GetNodeInfo

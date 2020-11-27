@@ -160,37 +160,37 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 		name      string
 		url       string
 		expectErr bool
-		expected  *tx.GetTxsEventResponse
+		expErrMsg string
 	}{
 		{
 			"empty params",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress),
 			true,
-			&tx.GetTxsEventResponse{},
+			"must declare at least one event to search",
 		},
 		{
 			"without pagination",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action=send"),
 			false,
-			&tx.GetTxsEventResponse{},
+			"",
 		},
 		{
 			"with pagination",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action=send", 0, 10),
 			false,
-			&tx.GetTxsEventResponse{},
+			"",
 		},
 		{
 			"expect pass with multiple-events",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s", val.APIAddress, "message.action=send", "message.module=bank"),
 			false,
-			&tx.GetTxsEventResponse{},
+			"",
 		},
 		{
 			"expect pass with escape event",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action%3Dsend"),
 			false,
-			&tx.GetTxsEventResponse{},
+			"",
 		},
 	}
 	for _, tc := range rpcTests {
@@ -198,14 +198,13 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 			res, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 			if tc.expectErr {
-				s.Require().Error(val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, tc.expected))
+				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
-				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, tc.expected))
-				if len(tc.expected.Txs) > 0 {
-					s.Require().GreaterOrEqual(len(tc.expected.Txs), 1)
-					s.Require().Equal("foobar", tc.expected.Txs[0].Body.Memo)
-					s.Require().NotZero(tc.expected.TxResponses[0].Height)
-				}
+				var result tx.GetTxsEventResponse
+				val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &result)
+				s.Require().GreaterOrEqual(len(result.Txs), 1)
+				s.Require().Equal("foobar", result.Txs[0].Body.Memo)
+				s.Require().NotZero(result.TxResponses[0].Height)
 			}
 		})
 	}

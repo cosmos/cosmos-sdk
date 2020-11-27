@@ -6,10 +6,6 @@ import (
 	"fmt"
 	"math/rand"
 
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-
-	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
 	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -23,6 +19,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
+
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+
+	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
 )
 
 var (

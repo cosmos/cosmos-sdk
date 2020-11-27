@@ -16,7 +16,7 @@ func ValidateGenesis(data GenesisState) error {
 	return nil
 }
 
-//
+// DefaultGenesisState - Return a default genesis state
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{}
 }

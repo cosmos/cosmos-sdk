@@ -3,10 +3,12 @@ package types
 import (
 	"fmt"
 
+	"github.com/gogo/protobuf/proto"
+
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type Authorization interface {

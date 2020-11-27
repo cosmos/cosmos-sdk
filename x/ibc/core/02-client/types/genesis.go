@@ -67,23 +67,25 @@ func (ccs ClientConsensusStates) UnpackInterfaces(unpacker codectypes.AnyUnpacke
 // NewGenesisState creates a GenesisState instance.
 func NewGenesisState(
 	clients []IdentifiedClientState, clientsConsensus ClientsConsensusStates,
-	params Params, createLocalhost bool,
+	params Params, createLocalhost bool, nextClientSequence uint64,
 ) GenesisState {
 	return GenesisState{
-		Clients:          clients,
-		ClientsConsensus: clientsConsensus,
-		Params:           params,
-		CreateLocalhost:  createLocalhost,
+		Clients:            clients,
+		ClientsConsensus:   clientsConsensus,
+		Params:             params,
+		CreateLocalhost:    createLocalhost,
+		NextClientSequence: nextClientSequence,
 	}
 }
 
 // DefaultGenesisState returns the ibc client submodule's default genesis state.
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
-		Clients:          []IdentifiedClientState{},
-		ClientsConsensus: ClientsConsensusStates{},
-		Params:           DefaultParams(),
-		CreateLocalhost:  false,
+		Clients:            []IdentifiedClientState{},
+		ClientsConsensus:   ClientsConsensusStates{},
+		Params:             DefaultParams(),
+		CreateLocalhost:    false,
+		NextClientSequence: 0,
 	}
 }
 

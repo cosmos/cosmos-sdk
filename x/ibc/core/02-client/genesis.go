@@ -38,6 +38,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 		}
 	}
 
+	k.SetNextClientSequence(ctx, gs.NextClientSequence)
+
 	// NOTE: localhost creation is specifically disallowed for the time being.
 	// Issue: https://github.com/cosmos/cosmos-sdk/issues/7871
 	return

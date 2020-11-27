@@ -39,6 +39,10 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.Stak
 		}
 	}
 
+	for _, msg := range data.BufferedUnjails {
+		keeper.SaveEpochAction(ctx, 0, msg)
+	}
+
 	keeper.SetParams(ctx, data.Params)
 }
 

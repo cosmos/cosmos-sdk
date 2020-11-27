@@ -155,6 +155,30 @@ func InitGenesis(
 		}
 	}
 
+	// TODO is it not better to merge  buffered actions into one?
+	// It would be better, but I need some research for proto file definition
+	// Possible below proto file could be used
+	// message MsgData {
+	// 	option (gogoproto.stringer) = true;
+
+	// 	string msg_type = 1;
+	// 	bytes  data     = 2;
+	// }
+	for _, msg := range data.BufferedEditValidators {
+		keeper.SaveEpochAction(ctx, 0, msg)
+	}
+
+	for _, msg := range data.BufferedDelegations {
+		keeper.SaveEpochAction(ctx, 0, msg)
+	}
+
+	for _, msg := range data.BufferedRedelegations {
+		keeper.SaveEpochAction(ctx, 0, msg)
+	}
+
+	for _, msg := range data.BufferedUndelegations {
+		keeper.SaveEpochAction(ctx, 0, msg)
+	}
 	return res
 }
 

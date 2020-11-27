@@ -380,6 +380,12 @@ func (k Querier) HistoricalInfo(c context.Context, req *types.QueryHistoricalInf
 	return &types.QueryHistoricalInfoResponse{Hist: &hi}, nil
 }
 
+// BufferedValidators queries expected validators set on next epoch
+func (k Querier) BufferedValidators(c context.Context, req *types.QueryBufferedValidatorsRequest) (*types.QueryBufferedValidatorsResponse, error) {
+	// TODO implement me
+	return &types.QueryBufferedValidatorsResponse{}, nil
+}
+
 func (k Querier) Redelegations(c context.Context, req *types.QueryRedelegationsRequest) (*types.QueryRedelegationsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

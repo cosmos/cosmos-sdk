@@ -41,8 +41,10 @@ message GenesisState {
   bool exported = 8;
 
   // added newly added queues
-  repeated MsgCreateValidator buffered_create_validators = 9;
-  repeated MsgEditValidator buffered_edit_validators = 10;
+  repeated MsgEditValidator buffered_edit_validators = 9;
+  repeated MsgDelegate buffered_delegations = 10;
+  repeated MsgBeginRedelegate buffered_redelegations = 11;
+  repeated MsgUndelegate buffered_undelegations = 12;
 
   // Current logic flow summary:
   // Current queues: "unbonding validator", "unbonding delegator", “redelegation"

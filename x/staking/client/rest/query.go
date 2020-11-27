@@ -279,6 +279,8 @@ func validatorsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		status := r.FormValue("status")
+		// These are query params that were available in =<0.39. We show a nice
+		// error message for this breaking change.
 		if status == "bonded" || status == "unbonding" || status == "unbonded" {
 			err := fmt.Errorf("cosmos sdk v0.40 introduces a breaking change on this endpoint:"+
 				" instead of querying using `?status=%s`, please use `status=BOND_STATUS_%s`. For more"+

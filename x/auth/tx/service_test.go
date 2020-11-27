@@ -134,14 +134,17 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 	// Query the tx via gRPC no pagination.
 	_, err = s.queryClient.GetTxsEvent(
 		context.Background(),
-		&tx.GetTxsEventRequest{Event: fmt.Sprintf("message.action=%s&transfer.sender=%s", "send", val.Address)},
+		&tx.GetTxsEventRequest{
+			Event: []string{"message.action=send", fmt.Sprintf("transfer.sender=%s", val.Address)},
+		},
 	)
 	s.Require().NoError(err)
 
 	// Query the tx via gRPC.
 	grpcRes, err := s.queryClient.GetTxsEvent(
 		context.Background(),
-		&tx.GetTxsEventRequest{Event: "message.action=send",
+		&tx.GetTxsEventRequest{
+			Event: []string{"message.action=send"},
 			Pagination: &query.PageRequest{
 				CountTotal: false,
 				Offset:     0,
@@ -179,24 +182,26 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 		},
 		{
 			"expect pass with multiple-events",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?event=%s", val.APIAddress, "message.action%3Dsend%26message.module%3Dbank"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?event=%s&event=%s", val.APIAddress, "message.action=send", "message.module=bank"),
 			false,
 			&tx.GetTxsEventResponse{},
 		},
 	}
 	for _, tc := range rpcTests {
-		res, err := rest.GetRequest(tc.url)
-		s.Require().NoError(err)
-		if tc.expectErr {
-			s.Require().Error(val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, tc.expected))
-		} else {
-			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, tc.expected))
-			if len(tc.expected.Txs) > 0 {
-				s.Require().Equal(1, len(tc.expected.Txs))
-				s.Require().Equal("foobar", tc.expected.Txs[0].Body.Memo)
-				s.Require().NotZero(tc.expected.TxResponses[0].Height)
+		s.Run(tc.name, func() {
+			res, err := rest.GetRequest(tc.url)
+			s.Require().NoError(err)
+			if tc.expectErr {
+				s.Require().Error(val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, tc.expected))
+			} else {
+				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, tc.expected))
+				if len(tc.expected.Txs) > 0 {
+					s.Require().Equal(1, len(tc.expected.Txs))
+					s.Require().Equal("foobar", tc.expected.Txs[0].Body.Memo)
+					s.Require().NotZero(tc.expected.TxResponses[0].Height)
+				}
 			}
-		}
+		})
 	}
 }
 

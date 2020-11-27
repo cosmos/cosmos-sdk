@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"net/url"
 	"strings"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
@@ -55,21 +54,12 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 		return nil, err
 	}
 
-	var events []string
-
-	eve, err := url.QueryUnescape(req.Event)
-	if err != nil {
-		return nil, err
+	if len(req.Event) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "must declare at least one event to search")
 	}
 
-	if strings.Contains(eve, "&") {
-		events = strings.Split(eve, "&")
-	} else {
-		events = append(events, eve)
-	}
-
-	tmEvents := make([]string, len(events))
-	for i, event := range events {
+	tmEvents := make([]string, len(req.Event))
+	for i, event := range req.Event {
 		if !strings.Contains(event, "=") {
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid event; event %s should be of the format: %s", event, eventFormat))
 		} else if strings.Count(event, "=") > 1 {

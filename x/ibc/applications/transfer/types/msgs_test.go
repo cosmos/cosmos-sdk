@@ -19,7 +19,7 @@ const (
 
 	validChannel        = "testchannel"
 	invalidChannel      = "(invalidchannel1)"
-	invalidShortChannel = "invalidch"
+	invalidShortChannel = "invalid"
 	invalidLongChannel  = "invalidlongchannelinvalidlongchannelinvalidlongchannelinvalidlongchannel"
 )
 

@@ -167,6 +167,7 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
+// newApp is an AppCreator
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
 	var cache sdk.MultiStorePersistentCache
 

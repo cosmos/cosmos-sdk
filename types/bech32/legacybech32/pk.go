@@ -28,7 +28,7 @@ func MarshalPubKey(pkt Bech32PubKeyType, pubkey cryptotypes.PubKey) (string, err
 	return bech32.ConvertAndEncode(bech32Prefix, legacy.Cdc.MustMarshalBinaryBare(pubkey))
 }
 
-// Deprecated: MustMarshalPubKey calls Bech32ifyPubKey and panics on error.
+// Deprecated: MustMarshalPubKey calls MarshalPubKey and panics on error.
 func MustMarshalPubKey(pkt Bech32PubKeyType, pubkey cryptotypes.PubKey) string {
 	res, err := MarshalPubKey(pkt, pubkey)
 	if err != nil {

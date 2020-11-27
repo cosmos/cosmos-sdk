@@ -16,7 +16,6 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 	nodeID := "nodeID"
 	privKey := ed25519.GenPrivKey()
 	valPubKey := privKey.PubKey()
-	// valPubKey:= sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, "cosmosvalconspub1zcjduepq7jsrkl9fgqk0wj3ahmfr8pgxj6vakj2wzn656s8pehh0zhv2w5as5gd80a")
 	moniker := "DefaultMoniker"
 	mkTxValCfg := func(amount, commission, commissionMax, commissionMaxChange, minSelfDelegation string) TxCreateValidatorConfig {
 		return TxCreateValidatorConfig{

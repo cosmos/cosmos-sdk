@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func BenchmarkBech32ifyPubKey(b *testing.B) {
+func BenchmarkMarshalPubKey(b *testing.B) {
 	pkBz := make([]byte, ed25519.PubKeySize)
 	pk := &ed25519.PubKey{Key: pkBz}
 	rng := rand.New(rand.NewSource(time.Now().Unix()))

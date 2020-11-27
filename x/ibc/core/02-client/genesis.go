@@ -42,7 +42,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 
 	// NOTE: localhost creation is specifically disallowed for the time being.
 	// Issue: https://github.com/cosmos/cosmos-sdk/issues/7871
-	return
 }
 
 // ExportGenesis returns the ibc client submodule's exported genesis.

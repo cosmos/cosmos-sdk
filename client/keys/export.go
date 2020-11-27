@@ -37,7 +37,7 @@ and export your keys in ASCII-armored encrypted format.`,
 			unsafe, _ := cmd.Flags().GetBool(flagUnsafe)
 
 			if unarmored && unsafe {
-				return exportUnsafeUnarmored(cmd, args, unarmored, buf, clientCtx)
+				return exportUnsafeUnarmored(cmd, args[0], buf, clientCtx.Keyring)
 			} else if unarmored || unsafe {
 				return fmt.Errorf("the flags %s and %s must be used together", flagUnsafe, flagUnarmoredHex)
 			}
@@ -64,7 +64,7 @@ and export your keys in ASCII-armored encrypted format.`,
 	return cmd
 }
 
-func exportUnsafeUnarmored(cmd *cobra.Command, args []string, unarmored bool, buf *bufio.Reader, clientCtx client.Context) error {
+func exportUnsafeUnarmored(cmd *cobra.Command, uid string, buf *bufio.Reader, kr keyring.Keyring) error {
 	// confirm deletion, unless -y is passed
 	if yes, err := input.GetConfirmation("WARNING: The private key will be exported as an unarmored hexadecimal string. USE AT YOUR OWN RISK. Continue?", buf, cmd.ErrOrStderr()); err != nil {
 		return err
@@ -78,7 +78,7 @@ func exportUnsafeUnarmored(cmd *cobra.Command, args []string, unarmored bool, bu
 		return nil
 	}
 
-	hexPrivKey, err := keyring.NewUnsafe(clientCtx.Keyring).UnsafeExportPrivKeyHex(args[0])
+	hexPrivKey, err := keyring.NewUnsafe(kr).UnsafeExportPrivKeyHex(uid)
 	if err != nil {
 		return err
 	}

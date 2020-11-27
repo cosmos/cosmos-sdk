@@ -127,12 +127,25 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 	// Query the tx via gRPC.
 	grpcRes, err := s.queryClient.GetTxsEvent(
 		context.Background(),
-		&tx.GetTxsEventRequest{Event: "message.action=send",
+		&tx.GetTxsEventRequest{
+			Event: "message.action=send",
 			Pagination: &query.PageRequest{
 				CountTotal: false,
 				Offset:     0,
 				Limit:      1,
 			},
+		},
+	)
+	s.Require().NoError(err)
+	s.Require().Equal(len(grpcRes.Txs), 1)
+	s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
+
+	// Query the tx via gRPC without pagination. This used to panic, see
+	// https://github.com/cosmos/cosmos-sdk/issues/8038.
+	grpcRes, err = s.queryClient.GetTxsEvent(
+		context.Background(),
+		&tx.GetTxsEventRequest{
+			Event: "message.action=send",
 		},
 	)
 	s.Require().NoError(err)

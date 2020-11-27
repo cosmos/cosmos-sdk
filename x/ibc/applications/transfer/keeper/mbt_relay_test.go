@@ -285,7 +285,7 @@ func (suite *KeeperTestSuite) CheckBankBalances(chain *ibctesting.TestChain, ban
 func (suite *KeeperTestSuite) TestModelBasedOnRecvPacket() {
 	var tlaTestCases = []TlaOnRecvPacketTestCase{}
 
-	filename := "recv-test.json"
+	filename := "relay-test.json"
 	jsonBlob, err := ioutil.ReadFile(filename)
 	if err != nil {
 		panic(fmt.Errorf("Failed to read JSON test fixture: %w", err))
@@ -311,9 +311,18 @@ func (suite *KeeperTestSuite) TestModelBasedOnRecvPacket() {
 				return
 			}
 			switch tc.handler {
+				//case "SendTransfer": err = suite.chainB.App.TransferKeeper.SendTransfer(suite.chainB.GetContext(), packet, tc.packet.Data)
 				case "OnRecvPacket": err = suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, tc.packet.Data)
 				case "OnTimeoutPacket": err = suite.chainB.App.TransferKeeper.OnTimeoutPacket(suite.chainB.GetContext(), packet, tc.packet.Data)
-				default: err = fmt.Errorf("Unknown handler:  %s", tc.handler)
+			    case "OnRecvAcknowledgementResult":
+			    	err = suite.chainB.App.TransferKeeper.OnAcknowledgementPacket(
+			    		suite.chainB.GetContext(), packet, tc.packet.Data,
+			    		channeltypes.NewResultAcknowledgement(nil))
+				case "OnRecvAcknowledgementError":
+					err = suite.chainB.App.TransferKeeper.OnAcknowledgementPacket(
+						suite.chainB.GetContext(), packet, tc.packet.Data,
+						channeltypes.NewErrorAcknowledgement("MBT Error Acknowledgement"))
+ 				default: err = fmt.Errorf("Unknown handler:  %s", tc.handler)
 			}
 			if err != nil {
 				suite.Require().False(tc.pass, err.Error())

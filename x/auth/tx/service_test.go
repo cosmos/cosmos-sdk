@@ -186,6 +186,12 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 			false,
 			&tx.GetTxsEventResponse{},
 		},
+		{
+			"expect pass with escape event",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action%3Dsend"),
+			false,
+			&tx.GetTxsEventResponse{},
+		},
 	}
 	for _, tc := range rpcTests {
 		s.Run(tc.name, func() {

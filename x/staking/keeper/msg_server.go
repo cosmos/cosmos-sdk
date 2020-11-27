@@ -128,6 +128,7 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 	// Queue epoch action and move all the execution logic to Epoch execution
 	k.SaveEpochAction(ctx, 0, msg)
 
+	// TODO should do validation by running with cachedCtx like gov proposal creation
 	return &types.MsgEditValidatorResponse{}, nil
 }
 
@@ -136,6 +137,9 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 	// Queue epoch action and move all the execution logic to Epoch execution
 	k.SaveEpochAction(ctx, 0, msg)
 
+	// TODO should do validation by running with cachedCtx like gov proposal creation
+	// To consider: cachedCtx could have status which contains all the other epoch actions
+	// could add CancelDelegate since they can't do any action until Delegation finish
 	return &types.MsgDelegateResponse{}, nil
 }
 
@@ -143,6 +147,9 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Queue epoch action and move all the execution logic to Epoch execution
 	k.SaveEpochAction(ctx, 0, msg)
+
+	// TODO should do validation by running with cachedCtx like gov proposal creation
+	// To consider: cachedCtx could have status which contains all the other epoch actions
 
 	// TODO should return completion time based on next epoch time
 	return &types.MsgBeginRedelegateResponse{}, nil
@@ -152,6 +159,10 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Queue epoch action and move all the execution logic to Epoch execution
 	k.SaveEpochAction(ctx, 0, msg)
+
+	// TODO should do validation by running with cachedCtx like gov proposal creation
+	// To consider: cachedCtx could have status which contains all the other epoch actions
+	// could add CancelUndelegate since they can't do any action until Delegation finish
 
 	// TODO should return completion time based on next epoch time
 	return &types.MsgUndelegateResponse{}, nil

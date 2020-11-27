@@ -72,6 +72,11 @@ func (p Plan) DueAt() string {
 	return fmt.Sprintf("height: %d", p.Height)
 }
 
+// IsIBCPlan will return true if plan includes IBC client information
+func (p Plan) IsIBCPlan() bool {
+	return p.UpgradedClientState != nil
+}
+
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (p Plan) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	// UpgradedClientState may be nil

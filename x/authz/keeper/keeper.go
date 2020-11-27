@@ -88,7 +88,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, service
 			}
 			allow, updated, del := authorization.Accept(serviceMsg, ctx.BlockHeader())
 			if !allow {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "Requested amount is more than spent limit")
 			}
 			if del {
 				k.Revoke(ctx, grantee, granter, serviceMsg.Type())

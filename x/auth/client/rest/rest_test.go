@@ -101,7 +101,7 @@ func mkIBCStdTx() []byte {
 		  "gas": "350000"
 		},
 		"memo": "",
-		"msgs": [
+		"msg": [
 		  {
 			"type": "cosmos-sdk/MsgTransfer",
 			"value": {
@@ -163,7 +163,7 @@ func (s *IntegrationTestSuite) TestEncodeIBCTx() {
 	res, err := rest.PostRequest(fmt.Sprintf("%s/txs/encode", val.APIAddress), "application/json", []byte(req))
 	s.Require().NoError(err)
 
-	s.Require().Contains(string(res), authrest.ErrEncodeDecode)
+	s.Require().Contains(string(res), authrest.ErrEncodeDecode.Error())
 }
 
 func (s *IntegrationTestSuite) TestBroadcastTxRequest() {
@@ -186,8 +186,8 @@ func (s *IntegrationTestSuite) TestBroadcastIBCTxRequest() {
 	res, err := rest.PostRequest(fmt.Sprintf("%s/txs", val.APIAddress), "application/json", []byte(req))
 	s.Require().NoError(err)
 
-	fmt.Println("res=", string(res))
-	s.Require().False(true)
+	// Make sure the error message is correct.
+	s.Require().Contains(string(res), "this transaction cannot be broadcasted via legacy REST endpoints")
 }
 
 // Helper function to test querying txs. We will use it to query StdTx and service `Msg`s.

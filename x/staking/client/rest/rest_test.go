@@ -4,11 +4,9 @@ package rest_test
 
 import (
 	"fmt"
-	"testing"
 
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/suite"
 )
 
 func (s *IntegrationTestSuite) TestLegacyGetValidators() {
@@ -61,8 +59,4 @@ func (s *IntegrationTestSuite) TestLegacyGetValidators() {
 			}
 		})
 	}
-}
-
-func TestIntegrationTestSuite2(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }

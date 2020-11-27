@@ -1,6 +1,7 @@
 package staking
 
 import (
+	"fmt"
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -26,19 +27,23 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 		defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
 		// execute all epoch actions
-		iterator := k.GetEpochActionsIteratorByEpochIndex(ctx, 0)
+		iterator := k.GetEpochActionsIteratorByEpochNumber(ctx, 0)
 
 		for ; iterator.Valid(); iterator.Next() {
 			msg := k.GetEpochActionByIterator(iterator)
 
 			switch msg := msg.(type) {
 			case *types.MsgEditValidator:
+				// TODO what should we do if error happen for queued action?
 				k.EpochEditValidator(ctx, msg)
+			case *types.MsgDelegate:
+				k.EpochDelegate(ctx, msg)
 			case *types.MsgBeginRedelegate:
 				k.EpochBeginRedelegate(ctx, msg)
 			case *types.MsgUndelegate:
 				k.EpochUndelegate(ctx, msg)
 			default:
+				panic(fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg))
 			}
 			// dequeue processed item
 			k.DeleteByKey(ctx, iterator.Key())

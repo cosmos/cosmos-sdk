@@ -72,6 +72,59 @@ func (k Keeper) EpochEditValidator(ctx sdk.Context, msg *types.MsgEditValidator)
 	return nil
 }
 
+// EpochDelegate logic is moved from msgServer.Delegate
+func (k Keeper) EpochDelegate(ctx sdk.Context, msg *types.MsgDelegate) error {
+	valAddr, valErr := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if valErr != nil {
+		return valErr
+	}
+
+	validator, found := k.GetValidator(ctx, valAddr)
+	if !found {
+		return types.ErrNoValidatorFound
+	}
+
+	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return err
+	}
+
+	bondDenom := k.BondDenom(ctx)
+	if msg.Amount.Denom != bondDenom {
+		return sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
+	}
+
+	// NOTE: source funds are always unbonded
+	_, err = k.Delegate(ctx, delegatorAddress, msg.Amount.Amount, types.Unbonded, validator, true)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		telemetry.IncrCounter(1, types.ModuleName, "delegate")
+		telemetry.SetGaugeWithLabels(
+			[]string{"tx", "msg", msg.Type()},
+			float32(msg.Amount.Amount.Int64()),
+			[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
+		)
+	}()
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeDelegate,
+			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.Amount.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
+		),
+	})
+
+	return nil
+}
+
 // EpochBeginRedelegate logic is moved from msgServer.BeginRedelegate
 func (k Keeper) EpochBeginRedelegate(ctx sdk.Context, msg *types.MsgBeginRedelegate) error {
 	valSrcAddr, err := sdk.ValAddressFromBech32(msg.ValidatorSrcAddress)

@@ -35,12 +35,12 @@ func (k Keeper) GetNextEpochActionID(ctx sdk.Context) uint64 {
 }
 
 // ActionStoreKey returns action store key from ID
-func ActionStoreKey(epochIndex uint64, actionID uint64) []byte {
-	return []byte(fmt.Sprintf("%s_%d_%d", EpochActionQueuePrefix, epochIndex, actionID))
+func ActionStoreKey(epochNumber uint64, actionID uint64) []byte {
+	return []byte(fmt.Sprintf("%s_%d_%d", EpochActionQueuePrefix, epochNumber, actionID))
 }
 
 // SaveEpochAction save the actions that need to be executed on next epoch
-func (k Keeper) SaveEpochAction(ctx sdk.Context, epochIndex uint64, action sdk.Msg) {
+func (k Keeper) SaveEpochAction(ctx sdk.Context, epochNumber uint64, action sdk.Msg) {
 	store := ctx.KVStore(k.storeKey)
 
 	// reference from TestMarshalAny(t *testing.T)
@@ -49,15 +49,15 @@ func (k Keeper) SaveEpochAction(ctx sdk.Context, epochIndex uint64, action sdk.M
 		panic(err)
 	}
 	actionID := k.GetNextEpochActionID(ctx)
-	store.Set(ActionStoreKey(epochIndex, actionID), bz)
+	store.Set(ActionStoreKey(epochNumber, actionID), bz)
 	k.SetNextEpochActionID(ctx, actionID+1)
 }
 
 // GetEpochAction get action by ID
-func (k Keeper) GetEpochAction(ctx sdk.Context, epochIndex uint64, actionID uint64) sdk.Msg {
+func (k Keeper) GetEpochAction(ctx sdk.Context, epochNumber uint64, actionID uint64) sdk.Msg {
 	store := ctx.KVStore(k.storeKey)
 
-	bz := store.Get(ActionStoreKey(epochIndex, actionID))
+	bz := store.Get(ActionStoreKey(epochNumber, actionID))
 	if bz == nil {
 		return nil
 	}
@@ -85,9 +85,9 @@ func (k Keeper) GetEpochActions(ctx sdk.Context) []sdk.Msg {
 	return actions
 }
 
-// GetEpochActionsIteratorByEpochIndex returns iterator for EpochActions
-func (k Keeper) GetEpochActionsIteratorByEpochIndex(ctx sdk.Context, epochIndex uint64) db.Iterator {
-	prefixKey := fmt.Sprintf("%s_%d", EpochActionQueuePrefix, epochIndex)
+// GetEpochActionsIteratorByEpochNumber returns iterator for EpochActions
+func (k Keeper) GetEpochActionsIteratorByEpochNumber(ctx sdk.Context, epochNumber uint64) db.Iterator {
+	prefixKey := fmt.Sprintf("%s_%d", EpochActionQueuePrefix, epochNumber)
 	return sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte(prefixKey))
 }
 

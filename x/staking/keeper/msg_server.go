@@ -3,11 +3,9 @@ package keeper
 import (
 	"context"
 
-	metrics "github.com/armon/go-metrics"
 	tmstrings "github.com/tendermint/tendermint/libs/strings"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -135,57 +133,8 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 
 func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*types.MsgDelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	valAddr, valErr := sdk.ValAddressFromBech32(msg.ValidatorAddress)
-	if valErr != nil {
-		return nil, valErr
-	}
-
-	validator, found := k.GetValidator(ctx, valAddr)
-	if !found {
-		return nil, types.ErrNoValidatorFound
-	}
-
-	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	bondDenom := k.BondDenom(ctx)
-	if msg.Amount.Denom != bondDenom {
-		return nil, sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
-	}
-
-	// Thoughts: since delegation goes to Unbonded pool, as long as we only run validator set update on epochs, it won't affect
-	// anything. It's same as MsgCreateValidator we have discussed recently, @sunny.
-	// TODO should check where Delegation move from Unbonded to Bonded. (I guess both validator's self-delegation
-	// and other delegations will be processed in a batch)
-	// NOTE: source funds are always unbonded
-	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, types.Unbonded, validator, true)
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		telemetry.IncrCounter(1, types.ModuleName, "delegate")
-		telemetry.SetGaugeWithLabels(
-			[]string{"tx", "msg", msg.Type()},
-			float32(msg.Amount.Amount.Int64()),
-			[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
-		)
-	}()
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeDelegate,
-			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.Amount.String()),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
-		),
-	})
+	// Queue epoch action and move all the execution logic to Epoch execution
+	k.SaveEpochAction(ctx, 0, msg)
 
 	return &types.MsgDelegateResponse{}, nil
 }

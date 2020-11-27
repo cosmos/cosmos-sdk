@@ -40,7 +40,6 @@ message GenesisState {
   bool exported = 8;
 
   // added newly added queues
-  repeated MsgUnjail buffered_unjails = 8;
   repeated MsgCreateValidator buffered_create_validators = 9;
   repeated MsgEditValidator buffered_edit_validators = 10;
 

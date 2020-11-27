@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"regexp"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
@@ -28,15 +29,13 @@ const (
 	ChannelPrefix = "channel-"
 )
 
+// IsValidChannelID checks if a channelID is in the format required for parsing channel
+// identifier. The channel identifier must be in the form: `connection-{N}
+var IsValidChannelID = regexp.MustCompile(`^channel-[0-9]{1,20}$`).MatchString
+
 // FormatChannelIdentifier returns the channel identifier with the sequence appended.
 func FormatChannelIdentifier(sequence uint64) string {
 	return fmt.Sprintf("%s%d", ChannelPrefix, sequence)
-}
-
-// IsValidChannelID return true if the channel identifier is valid.
-func IsValidChannelID(channelID string) bool {
-	_, err := ParseChannelSequence(channelID)
-	return err == nil
 }
 
 // ParseChannelSequence parses the channel sequence from the channel identifier.

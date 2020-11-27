@@ -29,8 +29,8 @@ const (
 	ConnectionPrefix = "connection-"
 )
 
-// IsValidConnectionID checks if a connectionID is in the format required for parsing client
-// identifier. The client identifier must be in the form: `connection-{N}
+// IsValidConnectionID checks if a connectionID is in the format required for parsing connection
+// identifier. The connection identifier must be in the form: `connection-{N}
 var IsValidConnectionID = regexp.MustCompile(`^connection-[0-9]{1,20}$`).MatchString
 
 // FormatConnectionIdentifier returns the connection identifier with the sequence appended.

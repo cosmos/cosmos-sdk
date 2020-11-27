@@ -27,7 +27,7 @@ const (
 
 // IsValidClientID checks if a clientID is in the format required for parsing client
 // identifier. The client identifier must be in the form: `{client-type}-{N}
-var IsValidClientID = regexp.MustCompile(`^.+[^-]-[0-9]{1,20}$`).MatchString
+var IsValidClientID = regexp.MustCompile(`^.*[^-]-[0-9]{1,20}$`).MatchString
 
 // FormatClientIdentifier returns the client identifier with the sequence appended.
 func FormatClientIdentifier(clientType string, sequence uint64) string {

@@ -21,6 +21,7 @@ func TestParseClientIdentifier(t *testing.T) {
 		{"valid 1", "tendermint-1", "tendermint", 1, true},
 		{"valid solemachine", "solomachine-v1-1", "solomachine-v1", 1, true},
 		{"valid large sequence", types.FormatClientIdentifier("tendermint", math.MaxUint64), "tendermint", math.MaxUint64, true},
+		{"valid short client type", "t-0", "t", 0, true},
 		// uint64 == 20 characters
 		{"invalid large sequence", "tendermint-2345682193567182931243", "tendermint", 0, false},
 		{"missing dash", "tendermint0", "tendermint", 0, false},

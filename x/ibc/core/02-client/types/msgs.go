@@ -81,6 +81,12 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	if err != nil {
 		return err
 	}
+	if clientState.ClientType() != consensusState.ClientType() {
+		return sdkerrors.Wrap(ErrInvalidClientType, "client type for client state and consensus state do not match")
+	}
+	if err := ValidateClientType(clientState.ClientType()); err != nil {
+		return sdkerrors.Wrap(err, "client type does not meet naming constraints")
+	}
 	return consensusState.ValidateBasic()
 }
 

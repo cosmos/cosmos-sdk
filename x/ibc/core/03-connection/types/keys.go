@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"regexp"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
@@ -28,15 +29,13 @@ const (
 	ConnectionPrefix = "connection-"
 )
 
+// IsValidConnectionID checks if a connectionID is in the format required for parsing client
+// identifier. The client identifier must be in the form: `connection-{N}
+var IsValidConnectionID = regexp.MustCompile(`^connection-[0-9]{1,20}$`).MatchString
+
 // FormatConnectionIdentifier returns the connection identifier with the sequence appended.
 func FormatConnectionIdentifier(sequence uint64) string {
 	return fmt.Sprintf("%s%d", ConnectionPrefix, sequence)
-}
-
-// IsValidConnectionID return true if the connection identifier is valid.
-func IsValidConnectionID(connectionID string) bool {
-	_, err := ParseConnectionSequence(connectionID)
-	return err == nil
 }
 
 // ParseConnectionSequence parses the connection sequence from the connection identifier.

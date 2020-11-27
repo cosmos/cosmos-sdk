@@ -52,7 +52,7 @@ func (s *IntegrationTestSuite) TestGetCmdQuerySigningInfo() {
 	val := s.network.Validators[0]
 
 	// TODO: don't use bech32 here
-	valConsPubKey, err := legacybech32.MarshalPubKey(legacybech32.ConsPub, val.PubKey)
+	valConsPubKey, err := legacybech32.MarshalPubKey(legacybech32.ConsPK, val.PubKey)
 	s.Require().NoError(err)
 
 	testCases := []struct {

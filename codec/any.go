@@ -14,7 +14,7 @@ import (
 
 // MarshalIfc is a convenience function for proto marshalling interfaces. It
 // packs the provided value in an Any and then marshals it to bytes.
-// NOTE: if you use a concret type, then you should use BinaryMarshaler.MarshalBinaryBare directly
+// NOTE: if you use a concert type, then you should use BinaryMarshaler.MarshalBinaryBare directly
 func MarshalIfc(m BinaryMarshaler, x interface{}) ([]byte, error) {
 	msg, ok := x.(proto.Message)
 	if !ok {

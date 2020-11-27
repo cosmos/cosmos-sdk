@@ -82,7 +82,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 
 	consPrivKey := ed25519.GenPrivKey()
 	// TODO: fix this
-	//consPubKey, err := legacybech32.MarshalPubKey(legacybech32.ConsPub, consPrivKey.PubKey())
+	//consPubKey, err := legacybech32.MarshalPubKey(legacybech32.ConsPK, consPrivKey.PubKey())
 	//s.Require().NoError(err)
 	consPubKey, err := protocdc.MarshalJSON(consPrivKey.PubKey(), nil)
 	s.Require().NoError(err)

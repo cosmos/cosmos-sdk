@@ -33,7 +33,7 @@ func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 func signingInfoHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		pk, err := legacybech32.UnmarshalPubKey(legacybech32.ConsPub, vars["validatorPubKey"])
+		pk, err := legacybech32.UnmarshalPubKey(legacybech32.ConsPK, vars["validatorPubKey"])
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}

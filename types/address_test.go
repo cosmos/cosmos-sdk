@@ -250,7 +250,7 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 				val.String(),
 				prefix+types.PrefixValidator+types.PrefixAddress))
 
-			bech32ValPub := legacybech32.MustMarshalPubKey(legacybech32.ValPub, pub)
+			bech32ValPub := legacybech32.MustMarshalPubKey(legacybech32.ValPK, pub)
 			s.Require().True(strings.HasPrefix(
 				bech32ValPub,
 				prefix+types.PrefixValidator+types.PrefixPublic))
@@ -264,7 +264,7 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 				cons.String(),
 				prefix+types.PrefixConsensus+types.PrefixAddress))
 
-			bech32ConsPub := legacybech32.MustMarshalPubKey(legacybech32.ConsPub, pub)
+			bech32ConsPub := legacybech32.MustMarshalPubKey(legacybech32.ConsPK, pub)
 			s.Require().True(strings.HasPrefix(
 				bech32ConsPub,
 				prefix+types.PrefixConsensus+types.PrefixPublic))

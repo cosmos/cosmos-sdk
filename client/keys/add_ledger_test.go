@@ -75,7 +75,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	require.Equal(t, keyring.TypeLedger, key1.GetType())
 	require.Equal(t,
 		"terrapub1addwnpepqvpg7r26nl2pvqqern00m6s9uaax3hauu2rzg8qpjzq9hy6xve7sw0d84m6",
-		legacybech32.MustMarshalPubKey(legacybech32.AccPub, key1.GetPubKey()))
+		legacybech32.MustMarshalPubKey(legacybech32.AccPK, key1.GetPubKey()))
 
 	config.SetCoinType(118)
 	config.SetFullFundraiserPath("44'/118'/0'/0/0")
@@ -123,5 +123,5 @@ func Test_runAddCmdLedger(t *testing.T) {
 	require.Equal(t, keyring.TypeLedger, key1.GetType())
 	require.Equal(t,
 		"cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0",
-		legacybech32.MustMarshalPubKey(legacybech32.AccPub, key1.GetPubKey()))
+		legacybech32.MustMarshalPubKey(legacybech32.AccPK, key1.GetPubKey()))
 }

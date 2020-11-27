@@ -28,7 +28,7 @@ func TestInMemoryCreateLedger(t *testing.T) {
 
 	// The mock is available, check that the address is correct
 	pubKey := ledger.GetPubKey()
-	pk, err := legacybech32.MarshalPubKey(legacybech32.AccPub, pubKey)
+	pk, err := legacybech32.MarshalPubKey(legacybech32.AccPK, pubKey)
 	require.NoError(t, err)
 	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
 
@@ -39,7 +39,7 @@ func TestInMemoryCreateLedger(t *testing.T) {
 	require.Equal(t, "some_account", restoredKey.GetName())
 	require.Equal(t, TypeLedger, restoredKey.GetType())
 	pubKey = restoredKey.GetPubKey()
-	pk, err = legacybech32.MarshalPubKey(legacybech32.AccPub, pubKey)
+	pk, err = legacybech32.MarshalPubKey(legacybech32.AccPK, pubKey)
 	require.NoError(t, err)
 	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
 
@@ -106,7 +106,7 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	// The mock is available, check that the address is correct
 	require.Equal(t, "some_account", ledger.GetName())
 	pubKey := ledger.GetPubKey()
-	pk, err := legacybech32.MarshalPubKey(legacybech32.AccPub, pubKey)
+	pk, err := legacybech32.MarshalPubKey(legacybech32.AccPK, pubKey)
 	require.NoError(t, err)
 	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
 
@@ -117,7 +117,7 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	require.Equal(t, "some_account", restoredKey.GetName())
 	require.Equal(t, TypeLedger, restoredKey.GetType())
 	pubKey = restoredKey.GetPubKey()
-	pk, err = legacybech32.MarshalPubKey(legacybech32.AccPub, pubKey)
+	pk, err = legacybech32.MarshalPubKey(legacybech32.AccPK, pubKey)
 	require.NoError(t, err)
 	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
 

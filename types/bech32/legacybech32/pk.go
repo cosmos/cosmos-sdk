@@ -16,9 +16,9 @@ type Bech32PubKeyType string
 // Bech32 conversion constants
 // TODO: check where we can remove this
 const (
-	AccPK   Bech32PubKeyType = "accpub"
-	ValPub  Bech32PubKeyType = "valpub"
-	ConsPub Bech32PubKeyType = "conspub"
+	AccPK  Bech32PubKeyType = "accpub"
+	ValPK  Bech32PubKeyType = "valpub"
+	ConsPK Bech32PubKeyType = "conspub"
 )
 
 // Deprecated: MarshalPubKey returns a Bech32 encoded string containing the appropriate
@@ -44,9 +44,9 @@ func getPrefix(pkt Bech32PubKeyType) string {
 	case AccPK:
 		return cfg.GetBech32AccountPubPrefix()
 
-	case ValPub:
+	case ValPK:
 		return cfg.GetBech32ValidatorPubPrefix()
-	case ConsPub:
+	case ConsPK:
 		return cfg.GetBech32ConsensusPubPrefix()
 	}
 

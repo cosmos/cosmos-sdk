@@ -56,6 +56,11 @@ issues:
     - text: "ST1016:"
       linters:
         - stylecheck
+    - path: "legacy"
+      text: "SA1019:"
+      linters:
+        - staticcheck
+
   max-issues-per-linter: 10000
   max-same-issues: 10000
 

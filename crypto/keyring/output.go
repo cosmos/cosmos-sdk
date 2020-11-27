@@ -22,7 +22,7 @@ type KeyOutput struct {
 
 // NewKeyOutput creates a default KeyOutput instance without Mnemonic, Threshold and PubKeys
 // TODO remove error
-func NewKeyOutput(name string, keyType KeyType, a sdk.Address, pk cryptotypes.PubKey) (KeyOutput, error) {
+func NewKeyOutput(name string, keyType KeyType, a sdk.Address, pk cryptotypes.PubKey) (KeyOutput, error) { // nolint:interfacer
 	bz, err := protocdc.MarshalJSON(pk, nil)
 	if err != nil {
 		return KeyOutput{}, err

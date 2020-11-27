@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -59,7 +60,8 @@ func NewCreateValidatorCmd() *cobra.Command {
 				return err
 			}
 
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).
+				WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
 			txf, msg, err := NewBuildCreateValidatorMsg(clientCtx, txf, cmd.Flags())
 			if err != nil {
@@ -313,7 +315,8 @@ func NewBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 	}
 
 	var pk cryptotypes.PubKey
-	if err := clientCtx.JSONMarshaler.UnmarshalJSON([]byte(pkStr), pk); err != nil {
+	am := codec.NewIfcJSONAnyMarshaler(clientCtx.JSONMarshaler, clientCtx.InterfaceRegistry)
+	if err := codec.UnmarshalIfcJSON(am, &pk, []byte(pkStr)); err != nil {
 		return txf, nil, err
 	}
 

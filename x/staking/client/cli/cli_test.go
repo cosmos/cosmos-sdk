@@ -1,5 +1,4 @@
-// TODO: change this flag
-// xbuild norace
+// build norace
 
 package cli_test
 
@@ -16,10 +15,10 @@ import (
 	"github.com/tendermint/tendermint/rpc/client/http"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/internal/protocdc"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,10 +43,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.T().Skip("skipping test in unit-tests mode.")
 	}
 
-	cfg := network.DefaultConfig()
-	cfg.NumValidators = 2
-
-	s.cfg = cfg
+	s.cfg = network.DefaultConfig()
+	s.cfg.NumValidators = 2
 	s.network = network.New(s.T(), cfg)
 
 	_, err := s.network.WaitForHeight(1)
@@ -78,17 +75,16 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
+	require := s.Require()
 	val := s.network.Validators[0]
 
 	consPrivKey := ed25519.GenPrivKey()
-	// TODO: fix this
-	//consPubKey, err := legacybech32.MarshalPubKey(legacybech32.ConsPK, consPrivKey.PubKey())
-	//s.Require().NoError(err)
-	consPubKey, err := protocdc.MarshalJSON(consPrivKey.PubKey(), nil)
-	s.Require().NoError(err)
+	consPubKeyBz, err := codec.MarshalIfcJSON(s.cfg.Codec, consPrivKey.PubKey())
+	require.NoError(err)
+	require.NotNil(consPubKeyBz)
 
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
-	s.Require().NoError(err)
+	require.NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
 
@@ -100,7 +96,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	)
-	s.Require().NoError(err)
+	require.NoError(err)
 
 	testCases := []struct {
 		name         string
@@ -149,7 +145,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 		{
 			"invalid transaction (missing moniker)",
 			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagPubKey, consPubKey),
+				fmt.Sprintf("--%s=%s", cli.FlagPubKey, consPubKeyBz),
 				fmt.Sprintf("--%s=100stake", cli.FlagAmount),
 				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
 				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
@@ -169,7 +165,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 		{
 			"valid transaction",
 			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagPubKey, consPubKey),
+				fmt.Sprintf("--%s=%s", cli.FlagPubKey, consPubKeyBz),
 				fmt.Sprintf("--%s=100stake", cli.FlagAmount),
 				fmt.Sprintf("--%s=NewValidator", cli.FlagMoniker),
 				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
@@ -198,13 +194,15 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				s.Require().Error(err)
+				require.Error(err)
 			} else {
-				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				require.NoError(err, "test: %s\noutput: %s", tc.name, out.String())
+				err = clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType)
+				require.NoError(err, out.String(), "test: %s, output\n:", tc.name, out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				require.Equal(tc.expectedCode, txResp.Code,
+					"test: %s, output\n:", tc.name, out.String())
 			}
 		})
 	}

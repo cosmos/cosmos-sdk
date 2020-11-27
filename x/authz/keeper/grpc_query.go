@@ -15,7 +15,7 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-// Authorization implements the Query/Authorization gRPC method
+// Authorization implements the Query/Authorization gRPC method.
 func (k Keeper) Authorization(c context.Context, req *types.QueryAuthorizationRequest) (*types.QueryAuthorizationResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")

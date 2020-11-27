@@ -73,7 +73,7 @@ var xxx_messageInfo_QueryAuthorizationRequest proto.InternalMessageInfo
 
 // QueryAuthorizationResponse is the response type for the Query/Authorization RPC method.
 type QueryAuthorizationResponse struct {
-	// account defines the account of the corresponding address.
+	// authorization is a authorization granted for grantee by granter.
 	Authorization *types.Any `protobuf:"bytes,1,opt,name=authorization,proto3" json:"authorization,omitempty"`
 }
 

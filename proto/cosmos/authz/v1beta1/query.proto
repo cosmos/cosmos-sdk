@@ -29,6 +29,6 @@ message QueryAuthorizationRequest {
 
 // QueryAuthorizationResponse is the response type for the Query/Authorization RPC method.
 message QueryAuthorizationResponse {
-  // account defines the account of the corresponding address.
+  // authorization is a authorization granted for grantee by granter.
   google.protobuf.Any authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
 }

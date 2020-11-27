@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	flagUnarmored = "unsafe-hex"
+	flagUnarmored = "unarmored-hex"
 )
 
 // ExportKeyCommand exports private keys from the key store.
@@ -63,7 +63,7 @@ func ExportKeyCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolP(flagUnarmored, "u", false, "UNSAFE: Export unarmored hex privkey")
+	cmd.Flags().BoolP(flagUnarmored, "u", false, "Export unarmored hex privkey. This is NOT recommended.")
 	cmd.Flags().BoolP(flagYes, "y", false, "Skip confirmation prompt when unsafe exporting unarmored privkey")
 
 	return cmd

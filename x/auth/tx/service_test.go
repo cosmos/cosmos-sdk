@@ -148,6 +148,8 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 			Event: "message.action=send",
 		},
 	)
+	// TODO Once https://github.com/cosmos/cosmos-sdk/pull/8029 is merged, this
+	// should not error anymore.
 	s.Require().Error(err)
 
 	// Query the tx via grpc-gateway.

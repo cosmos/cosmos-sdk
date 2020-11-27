@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	flagHex = "hex"
+	flagUnarmored = "unsafe-hex"
 )
 
 // ExportKeyCommand exports private keys from the key store.
@@ -24,22 +24,9 @@ func ExportKeyCommand() *cobra.Command {
 			buf := bufio.NewReader(cmd.InOrStdin())
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
-			encryptPassword, err := input.GetPassword("Enter passphrase to encrypt the exported key:", buf)
-			if err != nil {
-				return err
-			}
+			unarmored, _ := cmd.Flags().GetBool(flagUnarmored)
 
-			hex, _ := cmd.Flags().GetBool(flagHex)
-
-			if !hex {
-				armored, err := clientCtx.Keyring.ExportPrivKeyArmor(args[0], encryptPassword)
-				if err != nil {
-					return err
-				}
-
-				cmd.Println(armored)
-				return nil
-			} else {
+			if unarmored {
 				hexPrivKey, err := clientCtx.Keyring.ExportPrivKeyHex(args[0])
 
 				if err != nil {
@@ -50,10 +37,23 @@ func ExportKeyCommand() *cobra.Command {
 				return nil
 			}
 
+			encryptPassword, err := input.GetPassword("Enter passphrase to encrypt the exported key:", buf)
+			if err != nil {
+				return err
+			}
+
+			armored, err := clientCtx.Keyring.ExportPrivKeyArmor(args[0], encryptPassword)
+			if err != nil {
+				return err
+			}
+
+			cmd.Println(armored)
+			return nil
+
 		},
 	}
 
-	cmd.Flags().BoolP(flagHex, "x", false, "Export unarmored hex privkey")
+	cmd.Flags().BoolP(flagUnarmored, "u", false, "UNSAFE: Export unarmored hex privkey")
 
 	return cmd
 }

@@ -793,10 +793,6 @@ type unsafeKeystore struct {
 	keystore
 }
 
-func newUnsafeKeystore(ks keystore) unsafeKeystore {
-	return unsafeKeystore{ks}
-}
-
 // NewUnsafe returns a new keyring that provides support for unsafe operations.
 func NewUnsafe(kr Keyring) UnsafeKeyring {
 	ks := kr.(keystore)

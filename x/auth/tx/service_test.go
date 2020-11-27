@@ -196,7 +196,7 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 			} else {
 				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, tc.expected))
 				if len(tc.expected.Txs) > 0 {
-					s.Require().Equal(1, len(tc.expected.Txs))
+					s.Require().GreaterOrEqual(1, len(tc.expected.Txs))
 					s.Require().Equal("foobar", tc.expected.Txs[0].Body.Memo)
 					s.Require().NotZero(tc.expected.TxResponses[0].Height)
 				}

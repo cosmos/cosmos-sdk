@@ -57,7 +57,7 @@ func (s *IntegrationTestSuite) TestLegacyGetVote() {
 				s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(resp.Result, &vote))
 				s.Require().Equal(val.Address.String(), vote.Voter)
 				// Note that option is now an int.
-				s.Require().Equal(1, vote.Option)
+				s.Require().Equal(types.VoteOption(1), vote.Option)
 			}
 		})
 	}

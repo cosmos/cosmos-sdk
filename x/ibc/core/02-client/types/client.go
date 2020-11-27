@@ -85,6 +85,8 @@ func (cswh ConsensusStateWithHeight) UnpackInterfaces(unpacker codectypes.AnyUnp
 	return unpacker.UnpackAny(cswh.ConsensusState, new(exported.ConsensusState))
 }
 
+// ValidateClientType validates the client type. It cannot be blank or empty. It must be a valid
+// client identifier when used with '0' or the maximum uint64 as the sequence.
 func ValidateClientType(clientType string) error {
 	if strings.TrimSpace(clientType) == "" {
 		return sdkerrors.Wrap(ErrInvalidClientType, "client type cannot be blank")

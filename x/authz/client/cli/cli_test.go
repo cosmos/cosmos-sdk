@@ -84,6 +84,171 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 var typeMsgSend = types.SendAuthorization{}.MethodName()
 var typeMsgVote = "/cosmos.gov.v1beta1.Msg/Vote"
 
+func (s *IntegrationTestSuite) TestQueryAuthorizations() {
+	val := s.network.Validators[0]
+
+	grantee := s.grantee
+	twoHours := 3600 * 2 // In seconds
+	viper.Set(cli.FlagExpiration, twoHours)
+
+	_, err := execGrantAuthorization(
+		val,
+		[]string{
+			grantee.String(),
+			typeMsgSend,
+			"100steak",
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		},
+	)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name           string
+		args           []string
+		expectErr      bool
+		expectedOutput string
+	}{
+		{
+			"Error: Invalid grantee",
+			[]string{
+				val.Address.String(),
+				"invalid grantee",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			"",
+		},
+		{
+			"Error: Invalid granter",
+			[]string{
+				"invalid granter",
+				grantee.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			"",
+		},
+		{
+			"Valid txn (json)",
+			[]string{
+				val.Address.String(),
+				grantee.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			``,
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryAuthorizations()
+			clientCtx := val.ClientCtx
+			_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestQueryAuthorization() {
+	val := s.network.Validators[0]
+
+	grantee := s.grantee
+	twoHours := 3600 * 2 // In seconds
+	viper.Set(cli.FlagExpiration, twoHours)
+
+	_, err := execGrantAuthorization(
+		val,
+		[]string{
+			grantee.String(),
+			typeMsgSend,
+			"100steak",
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		},
+	)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name           string
+		args           []string
+		expectErr      bool
+		expectedOutput string
+	}{
+		{
+			"Error: Invalid grantee",
+			[]string{
+				val.Address.String(),
+				"invalid grantee",
+				typeMsgSend,
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			"",
+		},
+		{
+			"Error: Invalid granter",
+			[]string{
+				"invalid granter",
+				grantee.String(),
+				typeMsgSend,
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			"",
+		},
+		{
+			"no authorization found",
+			[]string{
+				val.Address.String(),
+				grantee.String(),
+				"typeMsgSend",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			"",
+		},
+		{
+			"Valid txn (json)",
+			[]string{
+				val.Address.String(),
+				grantee.String(),
+				typeMsgSend,
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			`{"@type":"/cosmos.authz.v1beta1.SendAuthorization","spend_limit":[{"denom":"steak","amount":"100"}]}`,
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryAuthorization()
+			clientCtx := val.ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	val := s.network.Validators[0]
 	grantee := s.grantee
@@ -191,100 +356,6 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
-			}
-		})
-	}
-}
-
-func (s *IntegrationTestSuite) TestQueryAuthorizations() {
-	val := s.network.Validators[0]
-
-	grantee := s.grantee
-	twoHours := 3600 * 2 // In seconds
-	viper.Set(cli.FlagExpiration, twoHours)
-
-	_, err := execGrantAuthorization(
-		val,
-		[]string{
-			grantee.String(),
-			typeMsgSend,
-			"100steak",
-			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
-			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		},
-	)
-	s.Require().NoError(err)
-
-	testCases := []struct {
-		name           string
-		args           []string
-		expectErr      bool
-		expectedOutput string
-	}{
-		{
-			"Error: Invalid grantee",
-			[]string{
-				"authorization",
-				val.Address.String(),
-				"invalid grantee",
-				typeMsgSend,
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			},
-			true,
-			"",
-		},
-		{
-			"Error: Invalid granter",
-			[]string{
-				"authorization",
-				"invalid granter",
-				grantee.String(),
-				typeMsgSend,
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			},
-			true,
-			"",
-		},
-		{
-			"no authorization found",
-			[]string{
-				"authorization",
-				val.Address.String(),
-				grantee.String(),
-				"typeMsgSend",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			},
-			true,
-			"",
-		},
-		{
-			"Valid txn (json)",
-			[]string{
-				"authorization",
-				val.Address.String(),
-				grantee.String(),
-				typeMsgSend,
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			},
-			false,
-			`{"@type":"/cosmos.authz.v1beta1.SendAuthorization","spend_limit":[{"denom":"steak","amount":"100"}]}`,
-		},
-	}
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetQueryCmd()
-			clientCtx := val.ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
 			}
 		})
 	}

@@ -13,7 +13,11 @@ service Query {
   // Returns any `Authorization` (or `nil`), with the expiration time, granted to the grantee by the granter for the
   // provided msg type.
   rpc Authorization(QueryAuthorizationRequest) returns (QueryAuthorizationResponse) {
-    option (google.api.http).get = "/cosmos/authz/v1beta1/granters/{granter_addr}/grantees/{grantee_addr}";
+    option (google.api.http).get = "/cosmos/authz/v1beta1/granters/{granter_addr}/grantees/{grantee_addr}/grant";
+  }
+  // Returns list of `Authorization`, granted to the grantee by the granter.
+  rpc Authorizations(QueryAuthorizationsRequest) returns (QueryAuthorizationsResponse) {
+    option (google.api.http).get = "/cosmos/authz/v1beta1/granters/{granter_addr}/grantees/{grantee_addr}/grants";
   }
 }
 
@@ -31,4 +35,20 @@ message QueryAuthorizationRequest {
 message QueryAuthorizationResponse {
   // authorization is a authorization granted for grantee by granter.
   google.protobuf.Any authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
+}
+
+
+// QueryAuthorizationsRequest is the request type for the Query/Authorizations RPC method.
+message QueryAuthorizationsRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string granter_addr = 1;
+  string grantee_addr = 2;
+}
+
+// QueryAuthorizationsResponse is the response type for the Query/Authorizations RPC method.
+message QueryAuthorizationsResponse {
+  // authorization is a list of grants granted for grantee by granter.
+  repeated google.protobuf.Any authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
 }

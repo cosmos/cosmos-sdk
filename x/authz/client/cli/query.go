@@ -24,12 +24,56 @@ func GetQueryCmd() *cobra.Command {
 
 	authorizationQueryCmd.AddCommand(
 		GetCmdQueryAuthorization(),
+		GetCmdQueryAuthorizations(),
 	)
 
 	return authorizationQueryCmd
 }
 
-// GetCmdQueryAuthorization implements the query authorizations command.
+// GetCmdQueryAuthorizations implements the query authorizations command.
+func GetCmdQueryAuthorizations() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "authorizations [granter-addr] [grantee-addr]",
+		Args:  cobra.ExactArgs(2),
+		Short: "query list of authorizations for a granter-grantee pair",
+		Long:  "query list of authorizations for a granter-grantee pair",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			granterAddr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			granteeAddr, err := sdk.AccAddressFromBech32(args[1])
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.Authorizations(
+				context.Background(),
+				&types.QueryAuthorizationsRequest{
+					GranterAddr: granterAddr.String(),
+					GranteeAddr: granteeAddr.String(),
+				},
+			)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintOutput(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetCmdQueryAuthorization implements the query authorization command.
 func GetCmdQueryAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "authorization [granter-addr] [grantee-addr] [msg-type]",

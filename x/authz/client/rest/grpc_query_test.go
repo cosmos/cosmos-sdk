@@ -67,7 +67,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestQueryGRPC() {
+func (s *IntegrationTestSuite) TestQueryAuthorizationGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 	testCases := []struct {
@@ -79,7 +79,7 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 	}{
 		{
 			"fail invalid granter address",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s?msg_type=%s", baseURL, "invalid_granter", s.grantee.String(), typeMsgSend),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?msg_type=%s", baseURL, "invalid_granter", s.grantee.String(), typeMsgSend),
 			true,
 			&types.QueryAuthorizationResponse{},
 			&types.QueryAuthorizationResponse{
@@ -88,7 +88,7 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 		},
 		{
 			"fail invalid grantee address",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s?msg_type=%s", baseURL, val.Address.String(), "invalid_grantee", typeMsgSend),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?msg_type=%s", baseURL, val.Address.String(), "invalid_grantee", typeMsgSend),
 			true,
 			&types.QueryAuthorizationResponse{},
 			&types.QueryAuthorizationResponse{
@@ -97,7 +97,7 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 		},
 		{
 			"fail invalid msg-type",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s?msg_type=%s", baseURL, val.Address.String(), s.grantee.String(), "invalidMsg"),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?msg_type=%s", baseURL, val.Address.String(), s.grantee.String(), "invalidMsg"),
 			true,
 			&types.QueryAuthorizationResponse{},
 			&types.QueryAuthorizationResponse{
@@ -106,10 +106,62 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 		},
 		{
 			"valid query",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s?msg_type=%s", baseURL, val.Address.String(), s.grantee.String(), typeMsgSend),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?msg_type=%s", baseURL, val.Address.String(), s.grantee.String(), typeMsgSend),
 			false,
 			&types.QueryAuthorizationResponse{},
 			&types.QueryAuthorizationResponse{
+				Authorization: nil,
+			},
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			resp, err := rest.GetRequest(tc.url)
+			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respMsg)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
+	val := s.network.Validators[0]
+	baseURL := val.APIAddress
+	testCases := []struct {
+		name      string
+		url       string
+		expectErr bool
+		respMsg   proto.Message
+		expected  proto.Message
+	}{
+		{
+			"fail invalid granter address",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants", baseURL, "invalid_granter", s.grantee.String()),
+			true,
+			&types.QueryAuthorizationsResponse{},
+			&types.QueryAuthorizationsResponse{
+				Authorization: nil,
+			},
+		},
+		{
+			"fail invalid grantee address",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants", baseURL, val.Address.String(), "invalid_grantee"),
+			true,
+			&types.QueryAuthorizationsResponse{},
+			&types.QueryAuthorizationsResponse{
+				Authorization: nil,
+			},
+		},
+		{
+			"valid query",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants", baseURL, val.Address.String(), s.grantee.String()),
+			false,
+			&types.QueryAuthorizationsResponse{},
+			&types.QueryAuthorizationsResponse{
 				Authorization: nil,
 			},
 		},

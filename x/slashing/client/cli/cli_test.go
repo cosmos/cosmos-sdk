@@ -12,10 +12,10 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
 	"github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 )
 
@@ -50,10 +50,9 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) TestGetCmdQuerySigningInfo() {
 	val := s.network.Validators[0]
-
-	// TODO: don't use bech32 here
-	valConsPubKey, err := legacybech32.MarshalPubKey(legacybech32.ConsPK, val.PubKey)
+	pubKeyBz, err := codec.MarshalIfcJSON(s.cfg.Codec, val.PubKey)
 	s.Require().NoError(err)
+	pubKeyStr := string(pubKeyBz)
 
 	testCases := []struct {
 		name           string
@@ -65,7 +64,7 @@ func (s *IntegrationTestSuite) TestGetCmdQuerySigningInfo() {
 		{
 			"valid address (json output)",
 			[]string{
-				valConsPubKey,
+				pubKeyStr,
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
@@ -75,7 +74,7 @@ func (s *IntegrationTestSuite) TestGetCmdQuerySigningInfo() {
 		{
 			"valid address (text output)",
 			[]string{
-				valConsPubKey,
+				pubKeyStr,
 				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},

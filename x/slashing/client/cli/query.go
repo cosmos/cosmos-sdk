@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -52,8 +53,8 @@ $ <appd> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdgexx
 			}
 
 			var pk cryptotypes.PubKey
-			err = clientCtx.JSONMarshaler.UnmarshalJSON([]byte(args[0]), pk)
-			if err != nil {
+			am := codec.NewIfcJSONAnyMarshaler(clientCtx.JSONMarshaler, clientCtx.InterfaceRegistry)
+			if err := codec.UnmarshalIfcJSON(am, &pk, []byte(args[0])); err != nil {
 				return err
 			}
 

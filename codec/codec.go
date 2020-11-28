@@ -75,8 +75,8 @@ type jsonAny struct {
 	types.InterfaceRegistry
 }
 
-// NewIfcJSONAnyMarshaler creates a JSONAnyMarshaler using JSONMarshaler
+// NewJSONAnyMarshaler creates a JSONAnyMarshaler using JSONMarshaler
 // and InterfaceRegistry
-func NewIfcJSONAnyMarshaler(jm JSONMarshaler, ir types.InterfaceRegistry) IfcJSONMarshaler {
+func NewJSONAnyMarshaler(jm JSONMarshaler, ir types.InterfaceRegistry) IfcJSONMarshaler {
 	return jsonAny{jm, ir}
 }

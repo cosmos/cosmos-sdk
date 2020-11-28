@@ -53,7 +53,7 @@ $ <appd> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdgexx
 			}
 
 			var pk cryptotypes.PubKey
-			am := codec.NewIfcJSONAnyMarshaler(clientCtx.JSONMarshaler, clientCtx.InterfaceRegistry)
+			am := codec.NewJSONAnyMarshaler(clientCtx.JSONMarshaler, clientCtx.InterfaceRegistry)
 			if err := codec.UnmarshalIfcJSON(am, &pk, []byte(args[0])); err != nil {
 				return err
 			}

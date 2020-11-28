@@ -284,7 +284,7 @@ func TestMarshalProto2(t *testing.T) {
 	require.NoError(err)
 
 	var pk3 cryptotypes.PubKey
-	am := codec.NewIfcJSONAnyMarshaler(ccfg.Marshaler, ccfg.InterfaceRegistry)
+	am := codec.NewJSONAnyMarshaler(ccfg.Marshaler, ccfg.InterfaceRegistry)
 	err = codec.UnmarshalIfcJSON(am, &pk3, bz)
 	require.NoError(err)
 	require.True(pk3.Equals(pk))

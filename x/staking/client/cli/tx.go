@@ -315,7 +315,7 @@ func NewBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 	}
 
 	var pk cryptotypes.PubKey
-	am := codec.NewIfcJSONAnyMarshaler(clientCtx.JSONMarshaler, clientCtx.InterfaceRegistry)
+	am := codec.NewJSONAnyMarshaler(clientCtx.JSONMarshaler, clientCtx.InterfaceRegistry)
 	if err := codec.UnmarshalIfcJSON(am, &pk, []byte(pkStr)); err != nil {
 		return txf, nil, err
 	}

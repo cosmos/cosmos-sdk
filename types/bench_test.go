@@ -18,7 +18,7 @@ func BenchmarkParseCoin(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		for _, coinStr := range coinStrs {
-			coin, err := types.ParseCoin(coinStr)
+			coin, err := types.ParseCoinNormalized(coinStr)
 			if err != nil {
 				b.Fatal(err)
 			}

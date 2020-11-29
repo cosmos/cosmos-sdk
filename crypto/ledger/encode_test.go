@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	tcrypto "github.com/tendermint/tendermint/crypto"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 type byter interface {
@@ -51,12 +51,12 @@ func TestNilEncodings(t *testing.T) {
 	require.EqualValues(t, a, b)
 
 	// Check nil PubKey.
-	var c, d tcrypto.PubKey
+	var c, d cryptotypes.PubKey
 	checkAminoJSON(t, &c, &d, true)
 	require.EqualValues(t, c, d)
 
 	// Check nil PrivKey.
-	var e, f tcrypto.PrivKey
+	var e, f cryptotypes.PrivKey
 	checkAminoJSON(t, &e, &f, true)
 	require.EqualValues(t, e, f)
 

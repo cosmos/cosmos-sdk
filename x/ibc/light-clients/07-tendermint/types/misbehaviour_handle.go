@@ -51,35 +51,6 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header2 at TrustedHeight: %s", tmMisbehaviour.Header2)
 	}
 
-	// calculate the age of the misbehaviour
-	infractionTime := tmMisbehaviour.GetTime()
-	ageDuration := ctx.BlockTime().Sub(infractionTime)
-
-	var ageBlocks int64
-	if tmMisbehaviour.GetHeight().GetVersionNumber() == cs.LatestHeight.VersionNumber {
-		// if the misbehaviour is in the same version as the client then
-		// perform expiry check using block height in addition to time
-		infractionHeight := tmMisbehaviour.GetHeight().GetVersionHeight()
-		ageBlocks = int64(cs.LatestHeight.VersionHeight - infractionHeight)
-	} else {
-		// if the misbehaviour is from a different version, then the version-height
-		// of misbehaviour has no correlation with the current version-height
-		// so we disable the block check by setting ageBlocks to 0 and only
-		// rely on the time expiry check with ageDuration
-		ageBlocks = 0
-	}
-
-	// Reject misbehaviour if the age is too old. Misbehaviour is considered stale
-	// if the difference in time and number of blocks is greater than the allowed
-	// parameters defined.
-	if ageDuration > cs.ConsensusParams.Evidence.MaxAgeDuration ||
-		ageBlocks > cs.ConsensusParams.Evidence.MaxAgeNumBlocks {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour,
-			"age duration (%s) and age blocks (%d) are greater than max consensus params for duration (%s) and block (%d)",
-			ageDuration, ageBlocks, cs.ConsensusParams.Evidence.MaxAgeDuration, cs.ConsensusParams.Evidence.MaxAgeNumBlocks,
-		)
-	}
-
 	// Check the validity of the two conflicting headers against their respective
 	// trusted consensus states
 	// NOTE: header height and commitment root assertions are checked in
@@ -121,23 +92,23 @@ func checkMisbehaviourHeader(
 		return err
 	}
 
-	// assert that the timestamp is not from more than an unbonding period ago
-	if currentTimestamp.Sub(consState.Timestamp) >= clientState.UnbondingPeriod {
+	// assert that the age of the trusted consensus state is not older than the trusting period
+	if currentTimestamp.Sub(consState.Timestamp) >= clientState.TrustingPeriod {
 		return sdkerrors.Wrapf(
-			ErrUnbondingPeriodExpired,
-			"current timestamp minus the latest consensus state timestamp is greater than or equal to the unbonding period (%d >= %d)",
-			currentTimestamp.Sub(consState.Timestamp), clientState.UnbondingPeriod,
+			ErrTrustingPeriodExpired,
+			"current timestamp minus the latest consensus state timestamp is greater than or equal to the trusting period (%d >= %d)",
+			currentTimestamp.Sub(consState.Timestamp), clientState.TrustingPeriod,
 		)
 	}
 
 	chainID := clientState.GetChainID()
-	// If chainID is in version format, then set version number of chainID with the version number
+	// If chainID is in revision format, then set revision number of chainID with the revision number
 	// of the misbehaviour header
-	if clienttypes.IsVersionFormat(chainID) {
-		chainID, _ = clienttypes.SetVersionNumber(chainID, header.GetHeight().GetVersionNumber())
+	if clienttypes.IsRevisionFormat(chainID) {
+		chainID, _ = clienttypes.SetRevisionNumber(chainID, header.GetHeight().GetRevisionNumber())
 	}
 
-	// - ValidatorSet must have 2/3 similarity with trusted FromValidatorSet
+	// - ValidatorSet must have TrustLevel similarity with trusted FromValidatorSet
 	// - ValidatorSets on both headers are valid given the last trusted ValidatorSet
 	if err := tmTrustedValset.VerifyCommitLightTrusting(
 		chainID, tmCommit, clientState.TrustLevel.ToTendermint(),

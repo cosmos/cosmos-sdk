@@ -66,6 +66,7 @@ func TestValidateGenesis(t *testing.T) {
 				[]types.PacketSequence{
 					types.NewPacketSequence(testPort2, testChannel2, 1),
 				},
+				0,
 			),
 			expPass: true,
 		},

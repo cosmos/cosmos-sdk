@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -65,7 +65,7 @@ func TestVerifySignature(t *testing.T) {
 	err = signing.VerifySignature(pubKey, signerData, sigV2.Data, handler, stdTx)
 	require.NoError(t, err)
 
-	pkSet := []crypto.PubKey{pubKey, pubKey1}
+	pkSet := []cryptotypes.PubKey{pubKey, pubKey1}
 	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pkSet)
 	multisignature := multisig.NewMultisig(2)
 	msgs = []sdk.Msg{testdata.NewTestMsg(addr, addr1)}

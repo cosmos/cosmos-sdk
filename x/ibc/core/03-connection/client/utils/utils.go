@@ -38,7 +38,7 @@ func QueryConnection(
 }
 
 func queryConnectionABCI(clientCtx client.Context, connectionID string) (*types.QueryConnectionResponse, error) {
-	key := host.KeyConnection(connectionID)
+	key := host.ConnectionKey(connectionID)
 
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
@@ -79,7 +79,7 @@ func QueryClientConnections(
 }
 
 func queryClientConnectionsABCI(clientCtx client.Context, clientID string) (*types.QueryClientConnectionsResponse, error) {
-	key := host.KeyClientConnections(clientID)
+	key := host.ClientConnectionsKey(clientID)
 
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
@@ -143,9 +143,9 @@ func QueryConnectionConsensusState(
 
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryConnectionConsensusStateRequest{
-		ConnectionId:  connectionID,
-		VersionNumber: height.VersionNumber,
-		VersionHeight: height.VersionHeight,
+		ConnectionId:   connectionID,
+		RevisionNumber: height.RevisionNumber,
+		RevisionHeight: height.RevisionHeight,
 	}
 
 	res, err := queryClient.ConnectionConsensusState(context.Background(), req)

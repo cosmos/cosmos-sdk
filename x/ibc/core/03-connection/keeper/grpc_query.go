@@ -51,7 +51,7 @@ func (q Keeper) Connections(c context.Context, req *types.QueryConnectionsReques
 	ctx := sdk.UnwrapSDKContext(c)
 
 	connections := []*types.IdentifiedConnection{}
-	store := prefix.NewStore(ctx.KVStore(q.storeKey), host.KeyConnectionPrefix)
+	store := prefix.NewStore(ctx.KVStore(q.storeKey), []byte(host.KeyConnectionPrefix))
 
 	pageRes, err := query.Paginate(store, req.Pagination, func(key, value []byte) error {
 		var result types.ConnectionEnd
@@ -160,7 +160,7 @@ func (q Keeper) ConnectionConsensusState(c context.Context, req *types.QueryConn
 		)
 	}
 
-	height := clienttypes.NewHeight(req.VersionNumber, req.VersionHeight)
+	height := clienttypes.NewHeight(req.RevisionNumber, req.RevisionHeight)
 	consensusState, found := q.clientKeeper.GetClientConsensusState(ctx, connection.ClientId, height)
 	if !found {
 		return nil, status.Error(

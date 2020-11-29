@@ -107,3 +107,55 @@ transfer(10){
     ];
   }
 }
+staking(10){
+  staking{
+    staking.network = {"network":"network", "blockchain":"app"};
+    currency = {"symbol":"stake", "decimals":0};
+    sender = find_balance({
+      "minimum_balance":{
+        "value": "100",
+        "currency": {{currency}}
+      }
+    });
+    // Set the recipient_amount as some value <= sender.balance-max_fee
+    max_fee = "0";
+    fee_amount = "1";
+    fee_value = 0 - {{fee_amount}};
+    available_amount = {{sender.balance.value}} - {{max_fee}};
+    recipient_amount = random_number({"minimum": "1", "maximum": {{available_amount}}});
+    print_message({"recipient_amount":{{recipient_amount}}});
+    // Find recipient and construct operations
+    recipient = {"address": "cosmosvaloper1q37scqdunf9ad9ra3png4ufqyenzaeydkpufxm"};
+    sender_amount = 0 - {{recipient_amount}};
+    transfer.confirmation_depth = "1";
+    transfer.operations = [
+      {
+        "operation_identifier":{"index":0},
+        "type":"fee",
+        "account":{{sender.account_identifier}},
+        "amount":{
+          "value":{{fee_value}},
+          "currency":{{currency}}
+        }
+      },
+      {
+        "operation_identifier":{"index":1},
+        "type":"delegate",
+        "account":{{sender.account_identifier}},
+        "amount":{
+          "value":{{sender_amount}},
+          "currency":{{currency}}
+        }
+      },
+      {
+        "operation_identifier":{"index":2},
+        "type":"delegate",
+        "account": {{recipient}},
+        "amount":{
+          "value":{{recipient_amount}},
+          "currency":{{currency}}
+        }
+      }
+    ];
+  }
+}

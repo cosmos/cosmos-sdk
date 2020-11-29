@@ -12,6 +12,7 @@ const (
 
 	OptionAddress = "address"
 	OptionGas     = "gas"
+	OperationFee  = "fee"
 )
 
 // TransferTxData represents a Tx that sends value.

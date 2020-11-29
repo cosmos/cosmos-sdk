@@ -357,9 +357,7 @@ func queryVotesOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		params := types.NewQueryProposalVotesParams(proposalID, page, limit)
-
-		bz, err := cliCtx.Codec.MarshalJSON(params)
+		bz, err := cliCtx.Codec.MarshalJSON(types.NewQueryProposalParams(proposalID))
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -379,10 +377,18 @@ func queryVotesOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		// For inactive proposals we must query the txs directly to get the votes
 		// as they're no longer in state.
+		params := types.NewQueryProposalVotesParams(proposalID, page, limit)
+
 		propStatus := proposal.Status
 		if !(propStatus == types.StatusVotingPeriod || propStatus == types.StatusDepositPeriod) {
 			res, err = gcutils.QueryVotesByTxQuery(cliCtx, params)
 		} else {
+			bz, err = cliCtx.Codec.MarshalJSON(params)
+			if err != nil {
+				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				return
+			}
+
 			res, _, err = cliCtx.QueryWithData("custom/gov/votes", bz)
 		}
 

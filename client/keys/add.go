@@ -216,21 +216,25 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 	}
 
 	// Get bip39 mnemonic
-	var mnemonic string
-	var bip39Passphrase string
+	var mnemonic, bip39Passphrase string
 
-	if interactive || viper.GetBool(flagRecover) {
-		bip39Message := "Enter your bip39 mnemonic"
-		if !viper.GetBool(flagRecover) {
-			bip39Message = "Enter your bip39 mnemonic, or hit enter to generate one."
-		}
-
-		mnemonic, err = input.GetString(bip39Message, inBuf)
+	recover, _ := cmd.Flags().GetBool(flagRecover)
+	if recover {
+		mnemonic, err = input.GetString("Enter your bip39 mnemonic", inBuf)
 		if err != nil {
 			return err
 		}
 
 		if !bip39.IsMnemonicValid(mnemonic) {
+			return errors.New("invalid mnemonic")
+		}
+	} else if interactive {
+		mnemonic, err = input.GetString("Enter your bip39 mnemonic, or hit enter to generate one.", inBuf)
+		if err != nil {
+			return err
+		}
+
+		if !bip39.IsMnemonicValid(mnemonic) && mnemonic != "" {
 			return errors.New("invalid mnemonic")
 		}
 	}

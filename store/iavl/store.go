@@ -36,7 +36,14 @@ type Store struct {
 // store's version (id) from the provided DB. An error is returned if the version
 // fails to load.
 func LoadStore(db dbm.DB, id types.CommitID, lazyLoading bool) (types.CommitKVStore, error) {
-	tree, err := iavl.NewMutableTree(db, defaultIAVLCacheSize)
+	return LoadStoreWithInitialVersion(db, id, lazyLoading, 0)
+}
+
+// LoadStore returns an IAVL Store as a CommitKVStore setting its initialVersion
+// to the one given. Internally, it will load the store's version (id) from the
+// provided DB. An error is returned if the version fails to load.
+func LoadStoreWithInitialVersion(db dbm.DB, id types.CommitID, lazyLoading bool, initialVersion uint64) (types.CommitKVStore, error) {
+	tree, err := iavl.NewMutableTreeWithOpts(db, defaultIAVLCacheSize, &iavl.Options{InitialVersion: initialVersion})
 	if err != nil {
 		return nil, err
 	}
@@ -71,11 +78,11 @@ func UnsafeNewStore(tree *iavl.MutableTree) *Store {
 // GetImmutable returns a reference to a new store backed by an immutable IAVL
 // tree at a specific version (height) without any pruning options. This should
 // be used for querying and iteration only. If the version does not exist or has
-// been pruned, an error will be returned. Any mutable operations executed will
-// result in a panic.
+// been pruned, an empty immutable IAVL tree will be used.
+// Any mutable operations executed will result in a panic.
 func (st *Store) GetImmutable(version int64) (*Store, error) {
 	if !st.VersionExists(version) {
-		return nil, iavl.ErrVersionDoesNotExist
+		return &Store{tree: &immutableTree{&iavl.ImmutableTree{}}}, nil
 	}
 
 	iTree, err := st.tree.GetImmutable(version)

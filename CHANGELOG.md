@@ -54,9 +54,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Client Breaking
 
 * (x/staking) [\#7419](https://github.com/cosmos/cosmos-sdk/pull/7419) The `TmConsPubKey` method on ValidatorI has been removed and replaced instead by `ConsPubKey` (which returns a SDK `cryptotypes.PubKey`) and `TmConsPublicKey` (which returns a Tendermint proto PublicKey).
+* [\#7477](https://github.com/cosmos/cosmos-sdk/pull/7477) Changed Bech32 Public Key serialization in the client facing functionality (CLI, MsgServer, QueryServer):
+  * updated the keyring display structure (it uses protobuf JSON serialization) - the output is more verbose.
+  * Renamed `MarshalAny` and `UnmarshalAny` to `MarshalIfc` and `UnmarshalIfc` respectively. These functions must take interface as a parameter (not a concrete type nor `Any` object). Underneeth they use `Any` wrapping for correct protobuf serialization.
+
 
 ### Improvements
 * (tendermint) [\#7828](https://github.com/cosmos/cosmos-sdk/pull/7828) Update tendermint dependency to v0.34.0-rc6
+* [\#7477](https://github.com/cosmos/cosmos-sdk/pull/7477) 
+  * Created `IfcJSONMarshaler` interface and `NewJSONAnyMarshaler` - a helper method to use codec.(Un)marsjalJSON withing a client context.
+  * Added `codec.(Un)marsjalJSON` helper functions (we are planning to move them into `codec.Marshaler` interface).
+
 
 ## [v0.40.0-rc2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc2) - 2020-11-02
 

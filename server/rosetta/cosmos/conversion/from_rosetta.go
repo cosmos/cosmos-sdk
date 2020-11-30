@@ -32,7 +32,7 @@ func RosettaOperationsToSdkMsg(ops []*types.Operation) ([]sdk.Msg, string, sdk.C
 			}
 		}
 	}
-	msgs, signAddr, err := ConvertOpsToMsgs(ops)
+	msgs, signAddr, err := ConvertOpsToMsgs(newOps)
 	if err != nil {
 		return nil, "", nil, err
 	}

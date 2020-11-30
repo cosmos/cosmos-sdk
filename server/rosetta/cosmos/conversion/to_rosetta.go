@@ -133,7 +133,7 @@ func sdkMsgsToRosettaOperations(msgs []sdk.Msg, withStatus bool, hasError bool, 
 	var operations []*types.Operation
 	var status string
 	for i, msg := range msgs {
-		switch msg.Type() { // nolint
+		switch msg.Type() {
 		case rosetta.OperationSend:
 			newMsg := msg.(*banktypes.MsgSend)
 			fromAddress := newMsg.FromAddress

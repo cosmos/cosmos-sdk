@@ -42,8 +42,8 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 	// create client and connections on both chains
 	_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 
-	// check for channel to be created on chainB
-	channelA := connA.NextTestChannel(ibctesting.MockPort)
+	// check for channel to be created on chainA
+	channelA := suite.chainA.NextTestChannel(connA, ibctesting.MockPort)
 	_, found := suite.chainA.App.IBCKeeper.ChannelKeeper.GetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID)
 	suite.False(found)
 
@@ -52,7 +52,8 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 	suite.NoError(err)
 
 	storedChannel, found := suite.chainA.App.IBCKeeper.ChannelKeeper.GetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID)
-	expectedCounterparty := types.NewCounterparty(channelB.PortID, channelB.ID)
+	// counterparty channel id is empty after open init
+	expectedCounterparty := types.NewCounterparty(channelB.PortID, "")
 
 	suite.True(found)
 	suite.Equal(types.INIT, storedChannel.State)
@@ -83,9 +84,10 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	testchannel2, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA1, connB1, ibctesting.MockPort, ibctesting.MockPort, types.UNORDERED)
 	suite.Require().NoError(err)
 
+	// counterparty channel id is empty after open init
 	counterparty2 := types.Counterparty{
 		PortId:    connB1.Channels[0].PortID,
-		ChannelId: connB1.Channels[0].ID,
+		ChannelId: "",
 	}
 
 	channel0 := types.NewChannel(

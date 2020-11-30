@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -186,11 +187,11 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, kb keyring
 	pubKey, _ := cmd.Flags().GetString(FlagPublicKey)
 	if pubKey != "" {
 		var pk cryptotypes.PubKey
-		// TODO: shall we use KeysCdc here (global from this module, = codec.NewLegacyAmino)?
-		if err := ctx.JSONMarshaler.UnmarshalJSON([]byte(pubKey), pk); err != nil {
+		am := codec.NewJSONAnyMarshaler(ctx.JSONMarshaler, ctx.InterfaceRegistry)
+		err = codec.UnmarshalIfcJSON(am, &pk, []byte(pubKey))
+		if err != nil {
 			return err
 		}
-		fmt.Println("TODO: Check", pk)
 		_, err := kb.SavePubKey(name, pk, algo.Name())
 		return err
 	}

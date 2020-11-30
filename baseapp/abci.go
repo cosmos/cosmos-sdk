@@ -386,7 +386,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	// ref: https://github.com/cosmos/cosmos-sdk/pull/8039
 	defer func() {
 		if r := recover(); r != nil {
-			res = sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrPanic, "%s", r))
+			res = sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrPanic, "%v", r))
 		}
 	}()
 

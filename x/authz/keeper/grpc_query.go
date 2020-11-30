@@ -71,6 +71,9 @@ func (k Keeper) Authorizations(c context.Context, req *types.QueryAuthorizations
 		}
 		return true, nil
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.QueryAuthorizationsResponse{
 		Authorizations: authorizations,

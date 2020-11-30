@@ -26,7 +26,7 @@ const (
 )
 
 // FormatClientIdentifier returns the client identifier with the sequence appended.
-// This is a SDK specific format.
+// This is a SDK specific format not enforced by IBC protocol.
 func FormatClientIdentifier(clientType string, sequence uint64) string {
 	return fmt.Sprintf("%s-%d", clientType, sequence)
 }

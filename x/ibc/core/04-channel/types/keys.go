@@ -30,7 +30,7 @@ const (
 )
 
 // FormatChannelIdentifier returns the channel identifier with the sequence appended.
-// This is a SDK specific format.
+// This is a SDK specific format not enforced by IBC protocol.
 func FormatChannelIdentifier(sequence uint64) string {
 	return fmt.Sprintf("%s%d", ChannelPrefix, sequence)
 }

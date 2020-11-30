@@ -14,9 +14,9 @@ import (
 	tversion "github.com/tendermint/tendermint/version"
 	yaml "gopkg.in/yaml.v2"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/internal/protocdc"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -56,11 +56,12 @@ func ShowValidatorCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			out, err := protocdc.MarshalJSON(sdkPK, nil)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			bz, err := codec.MarshalIfcJSON(clientCtx.JSONMarshaler, sdkPK)
 			if err != nil {
 				return err
 			}
-			fmt.Println(string(out))
+			fmt.Println(string(bz))
 			return nil
 		},
 	}
@@ -82,7 +83,8 @@ func ShowAddressCmd() *cobra.Command {
 
 			output, _ := cmd.Flags().GetString(cli.OutputFlag)
 			if strings.ToLower(output) == "json" {
-				return printlnJSON(valConsAddr)
+				fmt.Printf("{\"address\": %q}\n", valConsAddr.String())
+				return nil
 			}
 
 			fmt.Println(valConsAddr.String())
@@ -122,20 +124,6 @@ against which this app has been compiled.
 			return nil
 		},
 	}
-}
-
-// Deprecated: prints the content to the standard output using Legacy Amino
-func printlnJSON(v interface{}) error {
-	cdc := codec.NewLegacyAmino()
-	cryptocodec.RegisterCrypto(cdc)
-
-	marshalled, err := cdc.MarshalJSON(v)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(marshalled))
-	return nil
 }
 
 // UnsafeResetAllCmd - extension of the tendermint command, resets initialization

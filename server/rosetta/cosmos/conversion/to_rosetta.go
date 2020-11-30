@@ -175,13 +175,6 @@ func sdkMsgsToRosettaOperations(msgs []sdk.Msg, withStatus bool, hasError bool, 
 			newMsg := msg.(*stakingtypes.MsgDelegate)
 			delAddr := newMsg.DelegatorAddress
 			valAddr := newMsg.ValidatorAddress
-			//bech32PrefixOperAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
-			//bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
-			//bz, err := sdk.GetFromBech32(valAddr, bech32PrefixOperAddr)
-			//if err != nil {
-			//	return nil
-			//}
-			//valAcc := sdk.AccAddress(bz)
 			coin := newMsg.Amount
 			delOp := func(account, amount string, index int) *types.Operation {
 				if withStatus {

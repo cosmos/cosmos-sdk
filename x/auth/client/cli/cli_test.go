@@ -760,13 +760,6 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err := bankcli.QueryBalancesExec(val.ClientCtx, multisigInfo.GetAddress())
-	s.Require().NoError(err)
-
-	var balRes banktypes.QueryAllBalancesResponse
-	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &balRes)
-	s.Require().NoError(err)
-
 	generatedStd, err := bankcli.MsgSendExec(
 		val.ClientCtx,
 		multisigInfo.GetAddress(),

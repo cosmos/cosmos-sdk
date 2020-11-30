@@ -5,7 +5,7 @@ If you want to open a PR on the Cosmos SDK to update the documentation, please f
 ## Translating
 
 - Docs translations live in a `docs/country-code/` folder, where `country-code` stands for the country code of the language used (`cn` for Chinese, `kr` for Korea, `fr` for France, ...).
-- Always translate content living on `master`. 
+- Always translate content living on `master`.
 - Only content under `/docs/intro/`, `/docs/basics/`, `/docs/core/`, `/docs/building-modules/` and `docs/interfaces` needs to be translated, as well as `docs/README.md`. It is also nice (but not mandatory) to translate `/docs/spec/`.
 - Specify the release/tag of the translation in the README of your translation folder. Update the release/tag each time you update the translation.
 
@@ -103,7 +103,7 @@ We are using [Algolia](https://www.algolia.com) to power full-text search. This 
 ## Consistency
 
 Because the build processes are identical (as is the information contained herein), this file should be kept in sync as
-much as possible with its [counterpart in the Tendermint Core repo](https://github.com/tendermint/tendermint/blob/master/docs/DOCS_README.md).
+much as possible with its [counterpart in the Tendermint Core repo](https://github.com/tendermint/tendermint/blob/v0.34.0/docs/DOCS_README.md).
 
 ### Update and Build the RPC docs
 

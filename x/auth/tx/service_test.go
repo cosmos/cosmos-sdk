@@ -156,6 +156,18 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 	s.Require().Equal(len(grpcRes.Txs), 1)
 	s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
 
+	// Query the tx via gRPC without pagination. This used to panic, see
+	// https://github.com/cosmos/cosmos-sdk/issues/8038.
+	grpcRes, err = s.queryClient.GetTxsEvent(
+		context.Background(),
+		&tx.GetTxsEventRequest{
+			Events: []string{"message.action=send"},
+		},
+	)
+	// TODO Once https://github.com/cosmos/cosmos-sdk/pull/8029 is merged, this
+	// should not error anymore.
+	s.Require().Error(err)
+
 	rpcTests := []struct {
 		name      string
 		url       string
@@ -208,6 +220,15 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 			}
 		})
 	}
+
+	// // Query the tx via grpc-gateway.
+	// restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?event=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action=send", 0, 1))
+	// s.Require().NoError(err)
+	// var getTxRes tx.GetTxsEventResponse
+	// s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getTxRes))
+	// s.Require().Equal(len(getTxRes.Txs), 1)
+	// s.Require().Equal("foobar", getTxRes.Txs[0].Body.Memo)
+	// s.Require().NotZero(getTxRes.TxResponses[0].Height)
 }
 
 func (s IntegrationTestSuite) TestGetTx() {

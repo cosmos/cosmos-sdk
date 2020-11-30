@@ -2,10 +2,10 @@ package types
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
+	"regexp"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 )
 
 const (
@@ -30,11 +30,17 @@ const (
 )
 
 // FormatConnectionIdentifier returns the connection identifier with the sequence appended.
+// This is a SDK specific format not enforced by IBC protocol.
 func FormatConnectionIdentifier(sequence uint64) string {
 	return fmt.Sprintf("%s%d", ConnectionPrefix, sequence)
 }
 
-// IsValidConnectionID return true if the connection identifier is valid.
+// IsConnectionIDFormat checks if a connectionID is in the format required on the SDK for
+// parsing connection identifiers. The connection identifier must be in the form: `connection-{N}
+var IsConnectionIDFormat = regexp.MustCompile(`^connection-[0-9]{1,20}$`).MatchString
+
+// IsValidConnectionID checks if the connection identifier is valid and can be parsed to
+// the connection identifier format.
 func IsValidConnectionID(connectionID string) bool {
 	_, err := ParseConnectionSequence(connectionID)
 	return err == nil
@@ -42,18 +48,14 @@ func IsValidConnectionID(connectionID string) bool {
 
 // ParseConnectionSequence parses the connection sequence from the connection identifier.
 func ParseConnectionSequence(connectionID string) (uint64, error) {
-	if !strings.HasPrefix(connectionID, ConnectionPrefix) {
-		return 0, sdkerrors.Wrapf(ErrInvalidConnectionIdentifier, "doesn't contain prefix `%s`", ConnectionPrefix)
+	if !IsConnectionIDFormat(connectionID) {
+		return 0, sdkerrors.Wrap(host.ErrInvalidID, "connection identifier is not in the format: `connection-{N}`")
 	}
 
-	splitStr := strings.Split(connectionID, ConnectionPrefix)
-	if len(splitStr) != 2 {
-		return 0, sdkerrors.Wrap(ErrInvalidConnectionIdentifier, "connection identifier must be in format: `connection-{N}`")
-	}
-
-	sequence, err := strconv.ParseUint(splitStr[1], 10, 64)
+	sequence, err := host.ParseIdentifier(connectionID, ConnectionPrefix)
 	if err != nil {
-		return 0, sdkerrors.Wrap(err, "failed to parse connection identifier sequence")
+		return 0, sdkerrors.Wrap(err, "invalid connection identifier")
 	}
+
 	return sequence, nil
 }

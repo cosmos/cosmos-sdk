@@ -63,7 +63,7 @@ func Test_runExportCmd(t *testing.T) {
 	require.Error(t, cmd.ExecuteContext(ctx))
 
 	mockIn, mockOut := testutil.ApplyMockIO(cmd)
-	mockIn.Reset("y\ny\n")
+	mockIn.Reset("y\n")
 	require.NoError(t, cmd.ExecuteContext(ctx))
 	require.Equal(t, "2485e33678db4175dc0ecef2d6e1fc493d4a0d7f7ce83324b6ed70afe77f3485\n", mockOut.String())
 }

@@ -72,12 +72,6 @@ func exportUnsafeUnarmored(cmd *cobra.Command, uid string, buf *bufio.Reader, kr
 		return nil
 	}
 
-	if yes, err := input.GetConfirmation("Confirm your choice again", buf, cmd.ErrOrStderr()); err != nil {
-		return err
-	} else if !yes {
-		return nil
-	}
-
 	hexPrivKey, err := keyring.NewUnsafe(kr).UnsafeExportPrivKeyHex(uid)
 	if err != nil {
 		return err

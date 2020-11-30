@@ -111,10 +111,8 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	output, _ := cmd.Flags().GetString(cli.OutputFlag)
 
 	switch {
-	case isShowAddr:
-		printKeyAddress(cmd.OutOrStdout(), info, bechKeyOut)
-	case isShowPubKey:
-		printPubKey(cmd.OutOrStdout(), info, bechKeyOut)
+	case isShowAddr, isShowPubKey:
+		printInfo(cmd.OutOrStdout(), info, bechKeyOut)
 	default:
 		printKeyInfo(cmd.OutOrStdout(), info, bechKeyOut, output)
 	}

@@ -21,7 +21,7 @@ import (
 func bootstrapGenesisTest(t *testing.T, power int64, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
 	_, app, ctx := getBaseSimappWithCustomKeeper()
 
-	addrDels, _ := generateAddresses(app, ctx, numAddrs, 10000)
+	addrDels, _ := generateAddresses(app, ctx, numAddrs, sdk.NewInt(10000))
 
 	amt := sdk.TokensFromConsensusPower(power)
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), amt.MulRaw(int64(len(addrDels)))))

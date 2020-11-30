@@ -1,12 +1,13 @@
 package keyring
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/internal/protocdc"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TODO: Move this file to client/keys
+// Use protobuf interface marshaler rather then generic JSON
 
 // KeyOutput defines a structure wrapping around an Info object used for output
 // functionality.
@@ -20,7 +21,7 @@ type KeyOutput struct {
 
 // NewKeyOutput creates a default KeyOutput instance without Mnemonic, Threshold and PubKeys
 func NewKeyOutput(name string, keyType KeyType, a sdk.Address, pk cryptotypes.PubKey) (KeyOutput, error) { // nolint:interfacer
-	bz, err := protocdc.MarshalJSON(pk, nil)
+	bz, err := codec.ProtoMarshalJSON(pk, nil)
 	if err != nil {
 		return KeyOutput{}, err
 	}

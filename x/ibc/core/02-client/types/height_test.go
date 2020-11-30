@@ -112,6 +112,7 @@ func TestParseChainID(t *testing.T) {
 		{"gaiamainnet--4", 0, false},
 		{"gaiamainnet-3.4", 0, false},
 		{"gaiamainnet", 0, false},
+		{"a--1", 0, false},
 	}
 
 	for i, tc := range cases {

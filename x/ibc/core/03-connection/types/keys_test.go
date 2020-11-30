@@ -19,6 +19,8 @@ func TestParseConnectionSequence(t *testing.T) {
 		{"valid 0", "connection-0", 0, true},
 		{"valid 1", "connection-1", 1, true},
 		{"valid large sequence", types.FormatConnectionIdentifier(math.MaxUint64), math.MaxUint64, true},
+		// one above uint64 max
+		{"invalid uint64", "connection-18446744073709551616", 0, false},
 		// uint64 == 20 characters
 		{"invalid large sequence", "connection-2345682193567182931243", 0, false},
 		{"capital prefix", "Connection-0", 0, false},

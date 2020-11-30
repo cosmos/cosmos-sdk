@@ -19,29 +19,24 @@ import (
 
 func (suite *KeeperTestSuite) TestCreateClient() {
 	cases := []struct {
-		msg      string
-		clientID string
-		expPass  bool
+		msg         string
+		clientState exported.ClientState
+		expPass     bool
 	}{
-		{"success", testClientID, true},
+		{"success", ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false), true},
+		{"client type not supported", localhosttypes.NewClientState(testChainID, clienttypes.NewHeight(0, 1)), false},
 	}
 
 	for i, tc := range cases {
-		tc := tc
-		i := i
 
-		clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
-		if tc.expPass {
-			suite.Require().NotNil(clientState, "valid test case %d failed: %s", i, tc.msg)
-		}
 		// If we were able to NewClientState clientstate successfully, try persisting it to state
-		clientID, err := suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
+		clientID, err := suite.keeper.CreateClient(suite.ctx, tc.clientState, suite.consensusState)
 		if tc.expPass {
 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
 			suite.Require().NotNil(clientID, "valid test case %d failed: %s", i, tc.msg)
 		} else {
 			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.msg)
-			suite.Require().Nil(clientID, "invalid test case %d passed: %s", i, tc.msg)
+			suite.Require().Equal("", clientID, "invalid test case %d passed: %s", i, tc.msg)
 		}
 	}
 }

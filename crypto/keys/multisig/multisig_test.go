@@ -1,6 +1,7 @@
 package multisig_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-	"github.com/cosmos/cosmos-sdk/internal/protocdc"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
@@ -324,10 +325,11 @@ func TestDisplay(t *testing.T) {
 	require.PanicsWithValue("reflect.Value.Interface: cannot return value obtained from unexported field or method",
 		func() { require.Empty(msig.String()) },
 	)
-	msigBz, err := protocdc.MarshalJSON(msig, nil)
+	ccfg := simapp.MakeTestEncodingConfig()
+	bz, err := codec.MarshalIfcJSON(ccfg.Marshaler, msig)
 	require.NoError(err)
-	msigStr := string(msigBz)
-	require.Contains(msigStr, `"threshold":2`)
-	require.Contains(msigStr, "cosmos.crypto.secp256k1.PubKey")
-	// example output: {"threshold":2,"public_keys":[{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AoiL9HXu/WDndVCrDptys9fx4NFEbBquhs3SubQG5QMC"},{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"Am8adwKmNfz6klSx6e2gessjP7FznW8Y56NyrUtpTW4n"},{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AtWLgEf+eQXd4ZudD/kjppK1pWRrXJH55joRyghB8WWc"}]}
+	expectedPrefix := `{"@type":"/cosmos.crypto.multisig.LegacyAminoPubKey","threshold":2,"public_keys":[{"@type":"/cosmos.crypto.secp256k1.PubKey"`
+	require.True(strings.HasPrefix(string(bz), expectedPrefix))
+	// Example output:
+	// {"@type":"/cosmos.crypto.multisig.LegacyAminoPubKey","threshold":2,"public_keys":[{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AymUY3J2HKIyy9cbpGKcBFUTuDQsRH9NO/orKF/0WQ76"},{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AkvnCDzSYF+tQV/FoI217V7CDIRPzjJj7zBE2nw7x3xT"},{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A0yiqgcM5EB1i0h79+sQp+C0jLPFnT3+dFmdZmGa+H1s"}]}
 }

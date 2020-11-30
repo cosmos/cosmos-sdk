@@ -10,8 +10,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/internal/protocdc"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -127,7 +127,7 @@ func validatorsOutput(ctx client.Context, height *int64, page, limit int) (int64
 
 	out := make([]*qtypes.Validator, len(vsRes.Validators))
 	for i, v := range vsRes.Validators {
-		pkBz, err := protocdc.MarshalJSON(v.PubKey, nil)
+		pkBz, err := codec.MarshalIfcJSON(ctx.JSONMarshaler, v.PubKey)
 		if err != nil {
 			return 0, nil, err
 		}

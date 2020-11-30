@@ -68,6 +68,5 @@ func Bech32ValKeyOutput(keyInfo Info) (KeyOutput, error) {
 func Bech32KeyOutput(keyInfo Info) (KeyOutput, error) {
 	pk := keyInfo.GetPubKey()
 	addr := sdk.AccAddress(pk.Address().Bytes())
-	ko, _ := NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), addr, pk)
-	return ko, nil
+	return NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), addr, pk)
 }

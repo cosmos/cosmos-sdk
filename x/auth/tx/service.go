@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
+	"github.com/gogo/protobuf/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -204,11 +205,15 @@ func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxReque
 	}
 
 	clientCtx := s.clientCtx.WithBroadcastMode(normalizeBoradcastMode((req.Mode)))
-	resp, err := clientCtx.BroadcastTx(req.TxRaw)
-
+	txBytes, err := proto.Marshal(req.TxRaw)
 	if err != nil {
 		return nil, err
 	}
+	resp, err := clientCtx.BroadcastTx(txBytes)
+	if err != nil {
+		return nil, err
+	}
+
 	// Create a proto codec, we need it to unmarshal the tx bytes.
 	cdc := codec.NewProtoCodec(s.clientCtx.InterfaceRegistry)
 	var protoTx txtypes.Tx
@@ -221,20 +226,8 @@ func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxReque
 		return nil, err
 	}
 	return &txtypes.BroadcastTxResponse{
-		Tx: &protoTx,
-		TxResponse: &sdk.TxResponse{
-			Code:      resp.Code,
-			Codespace: resp.Codespace,
-			Data:      resp.Data,
-			GasUsed:   resp.GasUsed,
-			GasWanted: resp.GasWanted,
-			Height:    resp.Height,
-			Info:      resp.Info,
-			RawLog:    resp.RawLog,
-			Timestamp: resp.Timestamp,
-			TxHash:    resp.TxHash,
-			Logs:      resp.Logs,
-		},
+		Tx:         &protoTx,
+		TxResponse: resp,
 	}, nil
 
 }

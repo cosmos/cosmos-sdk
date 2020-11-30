@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -222,19 +223,26 @@ func (s IntegrationTestSuite) TestBroadcastTx() {
 	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false)
 	s.Require().NoError(err)
 
+	// To get the TxRaw to be broadcasted, we unforunately need to first encode
+	// the tx into bytes, then decode it into TxRaw.
 	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
-	fmt.Println(string(txBytes))
+	s.Require().NoError(err)
+	// Create a proto codec, we need it to unmarshal the tx bytes.
+	cdc := codec.NewProtoCodec(val.ClientCtx.InterfaceRegistry)
+	var txRaw tx.TxRaw
+	err = cdc.UnmarshalBinaryBare(txBytes, &txRaw)
 	s.Require().NoError(err)
 
 	// Query the tx via gRPC.
 	grpcRes, err := s.queryClient.BroadcastTx(
 		context.Background(),
 		&tx.BroadcastTxRequest{
-			Mode:  tx.BroadcastMode_async,
-			TxRaw: txBytes,
+			Mode:  tx.BroadcastMode_sync,
+			TxRaw: &txRaw,
 		},
 	)
 	s.Require().NoError(err)
+
 	s.Require().Equal("foobar", grpcRes.Tx.Body.Memo)
 }
 

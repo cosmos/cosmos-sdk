@@ -8,9 +8,9 @@ import "ibc/core/client/v1/client.proto";
 
 // EventCreateClient is a typed event emitted on creating client
 message EventCreateClient {
-    string client_id = 1;
+    string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
 
-    string client_type = 2;
+    string client_type = 2 [(gogoproto.moretags) = "yaml:\"client_type\""];
 
     ibc.core.client.v1.Height consensus_height = 3
       [(gogoproto.moretags) = "yaml:\"consensus_height\"", (gogoproto.nullable) = false];
@@ -18,9 +18,9 @@ message EventCreateClient {
 
 // EventUpdateClient is a typed event emitted on updating client
 message EventUpdateClient {
-    string client_id = 1;
+    string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
 
-    string client_type = 2;
+    string client_type = 2 [(gogoproto.moretags) = "yaml:\"client_type\""];
 
     ibc.core.client.v1.Height consensus_height = 3
       [(gogoproto.moretags) = "yaml:\"consensus_height\"", (gogoproto.nullable) = false];
@@ -28,9 +28,9 @@ message EventUpdateClient {
 
 // EventUpgradeClient is a typed event emitted on upgrading client
 message EventUpgradeClient {
-    string client_id = 1;
+    string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
 
-    string client_type = 2;
+    string client_type = 2 [(gogoproto.moretags) = "yaml:\"client_type\""];
 
     ibc.core.client.v1.Height consensus_height = 3
       [(gogoproto.moretags) = "yaml:\"consensus_height\"", (gogoproto.nullable) = false];
@@ -38,9 +38,9 @@ message EventUpgradeClient {
 
 // EventUpdateClientProposal is a typed event emitted on updating client proposal
 message EventUpdateClientProposal {
-    string client_id = 1;
+    string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
 
-    string client_type = 2;
+    string client_type = 2 [(gogoproto.moretags) = "yaml:\"client_type\""];
 
     ibc.core.client.v1.Height consensus_height = 3
       [(gogoproto.moretags) = "yaml:\"consensus_height\"", (gogoproto.nullable) = false];
@@ -48,9 +48,9 @@ message EventUpdateClientProposal {
 
 // EventClientMisbehaviour is a typed event emitted when misbehaviour is submitted
 message EventClientMisbehaviour {
-    string client_id = 1;
+    string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
 
-    string client_type = 2;
+    string client_type = 2 [(gogoproto.moretags) = "yaml:\"client_type\""];
 
     ibc.core.client.v1.Height consensus_height = 3
       [(gogoproto.moretags) = "yaml:\"consensus_height\"", (gogoproto.nullable) = false];

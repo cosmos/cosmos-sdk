@@ -9,80 +9,80 @@ import "ibc/core/client/v1/client.proto";
 
 // EventChannelOpenInit is a typed event emitted on channel open init
 message EventChannelOpenInit {
-    string port_id = 1;
+    string port_id = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
 
-    string channel_id = 2;
+    string channel_id = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
 
-    string counterparty_port_id = 3;
+    string counterparty_port_id = 3 [(gogoproto.moretags) = "yaml:\"counterparty_port_id\""];
 
-    string counterparty_channel_id = 4;
+    string counterparty_channel_id = 4 [(gogoproto.moretags) = "yaml:\"counterparty_channel_id\""];
 
-    string connection_id = 5;
+    string connection_id = 5 [(gogoproto.moretags) = "yaml:\"connection_id\""];
 }
 
 // EventChannelOpenTry is a typed event emitted on channel open try
 message EventChannelOpenTry {
-    string port_id = 1;
+    string port_id = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
 
-    string channel_id = 2;
+    string channel_id = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
 
-    string counterparty_port_id = 3;
+    string counterparty_port_id = 3 [(gogoproto.moretags) = "yaml:\"counterparty_port_id\""];
 
-    string counterparty_channel_id = 4;
+    string counterparty_channel_id = 4 [(gogoproto.moretags) = "yaml:\"counterparty_channel_id\""];
 
-    string connection_id = 5;
+    string connection_id = 5 [(gogoproto.moretags) = "yaml:\"connection_id\""];
 }
 
 // EventChannelOpenAck is a typed event emitted on channel open acknowledgement
 message EventChannelOpenAck {
-    string port_id = 1;
+    string port_id = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
 
-    string channel_id = 2;
+    string channel_id = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
 
-    string counterparty_port_id = 3;
+    string counterparty_port_id = 3 [(gogoproto.moretags) = "yaml:\"counterparty_port_id\""];
 
-    string counterparty_channel_id = 4;
+    string counterparty_channel_id = 4 [(gogoproto.moretags) = "yaml:\"counterparty_channel_id\""];
 
-    string connection_id = 5;
+    string connection_id = 5 [(gogoproto.moretags) = "yaml:\"connection_id\""];
 }
 
 // EventChannelCloseInit is a typed event emitted on channel close init
 message EventChannelCloseInit {
-    string port_id = 1;
+    string port_id = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
 
-    string channel_id = 2;
+    string channel_id = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
 
-    string counterparty_port_id = 3;
+    string counterparty_port_id = 3 [(gogoproto.moretags) = "yaml:\"counterparty_port_id\""];
 
-    string counterparty_channel_id = 4;
+    string counterparty_channel_id = 4 [(gogoproto.moretags) = "yaml:\"counterparty_channel_id\""];
 
-    string connection_id = 5;
+    string connection_id = 5 [(gogoproto.moretags) = "yaml:\"connection_id\""];
 }
 
 // EventChannelOpenConfirm is a typed event emitted on channel open confirm
 message EventChannelOpenConfirm {
-    string port_id = 1;
+    string port_id = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
 
-    string channel_id = 2;
+    string channel_id = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
 
-    string counterparty_port_id = 3;
+    string counterparty_port_id = 3 [(gogoproto.moretags) = "yaml:\"counterparty_port_id\""];
 
-    string counterparty_channel_id = 4;
+    string counterparty_channel_id = 4 [(gogoproto.moretags) = "yaml:\"counterparty_channel_id\""];
 
-    string connection_id = 5;
+    string connection_id = 5 [(gogoproto.moretags) = "yaml:\"connection_id\""];
 }
 
 // EventChannelCloseConfirm is a typed event emitted on channel close confirm
 message EventChannelCloseConfirm {
-    string port_id = 1;
+    string port_id = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
 
-    string channel_id = 2;
+    string channel_id = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
 
-    string counterparty_port_id = 3;
+    string counterparty_port_id = 3 [(gogoproto.moretags) = "yaml:\"counterparty_port_id\""];
 
-    string counterparty_channel_id = 4;
+    string counterparty_channel_id = 4 [(gogoproto.moretags) = "yaml:\"counterparty_channel_id\""];
 
-    string connection_id = 5;
+    string connection_id = 5 [(gogoproto.moretags) = "yaml:\"connection_id\""];
 }
 
 // EventChannelSendPacket is a typed event emitted when packet is sent
@@ -92,19 +92,19 @@ message EventChannelSendPacket {
     ibc.core.client.v1.Height timeout_height = 2
       [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
 
-    uint64 timeout_timestamp = 3;
+    uint64 timeout_timestamp = 3 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
 
     uint64 sequence = 4;
 
-    string src_port = 5;
+    string src_port = 5 [(gogoproto.moretags) = "yaml:\"src_port\""];
 
-    string src_channel = 6;
+    string src_channel = 6 [(gogoproto.moretags) = "yaml:\"src_channel\""];
 
-    string dst_port = 7;
+    string dst_port = 7 [(gogoproto.moretags) = "yaml:\"dst_port\""];
 
-    string dst_channel = 8;
+    string dst_channel = 8 [(gogoproto.moretags) = "yaml:\"dst_channel\""];
 
-    Order channel_ordering = 9;
+    Order channel_ordering = 9 [(gogoproto.moretags) = "yaml:\"channel_ordering\""];
 }
 
 // EventChannelRecvPacket is a typed event emitted when packet is received in channel
@@ -114,19 +114,21 @@ message EventChannelRecvPacket {
     ibc.core.client.v1.Height timeout_height = 2
       [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
 
-    uint64 timeout_timestamp = 3;
+    uint64 timeout_timestamp = 3 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
 
     uint64 sequence = 4;
 
-    string src_port = 5;
+    string src_port = 5 [(gogoproto.moretags) = "yaml:\"src_port\""];
 
-    string src_channel = 6;
+    string src_channel = 6 [(gogoproto.moretags) = "yaml:\"src_channel\""];
 
-    string dst_port = 7;
+    string dst_port = 7 [(gogoproto.moretags) = "yaml:\"dst_port\""];
 
-    string dst_channel = 8;
+    string dst_channel = 8 [(gogoproto.moretags) = "yaml:\"dst_channel\""];
 
-    Order channel_ordering = 9;
+    Order channel_ordering = 9 [(gogoproto.moretags) = "yaml:\"channel_ordering\""];
+
+    bool success = 10;
 }
 
 // EventChannelWriteAck is a typed event emitted on write acknowledgement
@@ -136,57 +138,73 @@ message EventChannelWriteAck {
     ibc.core.client.v1.Height timeout_height = 2
       [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
 
-    uint64 timeout_timestamp = 3;
+    uint64 timeout_timestamp = 3 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
 
     uint64 sequence = 4;
 
-    string src_port = 5;
+    string src_port = 5 [(gogoproto.moretags) = "yaml:\"src_port\""];
 
-    string src_channel = 6;
+    string src_channel = 6 [(gogoproto.moretags) = "yaml:\"src_channel\""];
 
-    string dst_port = 7;
+    string dst_port = 7 [(gogoproto.moretags) = "yaml:\"dst_port\""];
 
-    string dst_channel = 8;
+    string dst_channel = 8 [(gogoproto.moretags) = "yaml:\"dst_channel\""];
 
     bytes acknowledgement = 9;
 }
 
 // EventChannelAckPacket is a typed event emitted when packet acknowledgement is executed
 message EventChannelAckPacket {
-    ibc.core.client.v1.Height timeout_height = 1
+    bytes data = 1;
+
+    ibc.core.client.v1.Height timeout_height = 2
       [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
 
-    uint64 timeout_timestamp = 2;
+    uint64 timeout_timestamp = 3 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
 
-    uint64 sequence = 3;
+    uint64 sequence = 4;
 
-    string src_port = 4;
+    string src_port = 5 [(gogoproto.moretags) = "yaml:\"src_port\""];
 
-    string src_channel = 5;
+    string src_channel = 6 [(gogoproto.moretags) = "yaml:\"src_channel\""];
 
-    string dst_port = 6;
+    string dst_port = 7 [(gogoproto.moretags) = "yaml:\"dst_port\""];
 
-    string dst_channel = 7;
+    string dst_channel = 8 [(gogoproto.moretags) = "yaml:\"dst_channel\""];
 
-    Order channel_ordering = 8;
+    Order channel_ordering = 9 [(gogoproto.moretags) = "yaml:\"channel_ordering\""];
+
+    bytes acknowledgement = 10;
 }
 
 // EventChannelTimeoutPacket is a typed event emitted when packet is timeout
 message EventChannelTimeoutPacket {
-    ibc.core.client.v1.Height timeout_height = 1
+    bytes data = 1;
+
+    ibc.core.client.v1.Height timeout_height = 2
       [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
 
-    uint64 timeout_timestamp = 2;
+    uint64 timeout_timestamp = 3 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
 
-    uint64 sequence = 3;
+    uint64 sequence = 4;
 
-    string src_port = 4;
+    string src_port = 5 [(gogoproto.moretags) = "yaml:\"src_port\""];
 
-    string src_channel = 5;
+    string src_channel = 6 [(gogoproto.moretags) = "yaml:\"src_channel\""];
 
-    string dst_port = 6;
+    string dst_port = 7 [(gogoproto.moretags) = "yaml:\"dst_port\""];
 
-    string dst_channel = 7;
+    string dst_channel = 8 [(gogoproto.moretags) = "yaml:\"dst_channel\""];
 
-    Order channel_ordering = 8;
+    Order channel_ordering = 9 [(gogoproto.moretags) = "yaml:\"channel_ordering\""];
+}
+
+// EventAcknowledgementSuccess is a typed event emitted on packet acknowledgement success
+message EventAcknowledgementSuccess {
+    bytes success = 1;
+}
+
+// EventAcknowledgementError is a typed event emitted on packet acknowledgement error
+message EventAcknowledgementError {
+    string error = 1;
 }

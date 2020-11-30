@@ -3,46 +3,48 @@ package ibc.core.connection.v1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types";
 
+import "gogoproto/gogo.proto";
+
 // EventConnectionOpenInit is a typed event emitted on connection open init
 message EventConnectionOpenInit {
-    string connection_id = 1;
+    string connection_id = 1 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+ 
+    string client_id = 2 [(gogoproto.moretags) = "yaml:\"client_id\""];
 
-    string client_id = 2;
+    string counterparty_connection_id = 3 [(gogoproto.moretags) = "yaml:\"counterparty_connection_id\""];
 
-    string counterparty_connection_id = 3;
-
-    string counterparty_client_id = 4;
+    string counterparty_client_id = 4 [(gogoproto.moretags) = "yaml:\"counterparty_client_id\""];
 }
 
 // EventConnectionOpenTry is a typed event emitted on connection open try
 message EventConnectionOpenTry {
-    string connection_id = 1;
+    string connection_id = 1 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+ 
+    string client_id = 2 [(gogoproto.moretags) = "yaml:\"client_id\""];
 
-    string client_id = 2;
+    string counterparty_connection_id = 3 [(gogoproto.moretags) = "yaml:\"counterparty_connection_id\""];
 
-    string counterparty_connection_id = 3;
-
-    string counterparty_client_id = 4;
+    string counterparty_client_id = 4 [(gogoproto.moretags) = "yaml:\"counterparty_client_id\""];
 }
 
 // EventConnectionOpenAck is a typed event emitted on connection open acknowledgement
 message EventConnectionOpenAck {
-    string connection_id = 1;
+    string connection_id = 1 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+ 
+    string client_id = 2 [(gogoproto.moretags) = "yaml:\"client_id\""];
 
-    string client_id = 2;
+    string counterparty_connection_id = 3 [(gogoproto.moretags) = "yaml:\"counterparty_connection_id\""];
 
-    string counterparty_connection_id = 3;
-
-    string counterparty_client_id = 4;
+    string counterparty_client_id = 4 [(gogoproto.moretags) = "yaml:\"counterparty_client_id\""];
 }
 
 // EventConnectionOpenConfirm is a typed event emitted on connection open init
 message EventConnectionOpenConfirm {
-    string connection_id = 1;
+    string connection_id = 1 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+ 
+    string client_id = 2 [(gogoproto.moretags) = "yaml:\"client_id\""];
 
-    string client_id = 2;
+    string counterparty_connection_id = 3 [(gogoproto.moretags) = "yaml:\"counterparty_connection_id\""];
 
-    string counterparty_connection_id = 3;
-
-    string counterparty_client_id = 4;
+    string counterparty_client_id = 4 [(gogoproto.moretags) = "yaml:\"counterparty_client_id\""];
 }

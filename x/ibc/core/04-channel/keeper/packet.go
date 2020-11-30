@@ -292,6 +292,7 @@ func (k Keeper) RecvPacket(
 			DstPort:          packet.GetDestPort(),
 			DstChannel:       packet.GetDestChannel(),
 			ChannelOrdering:  channel.Ordering,
+			Success:          true,
 		},
 	); err != nil {
 		return err
@@ -508,6 +509,7 @@ func (k Keeper) AcknowledgePacket(
 	// emit an event marking that we have processed the acknowledgement
 	if err := ctx.EventManager().EmitTypedEvent(
 		&types.EventChannelAckPacket{
+			Data:             packet.GetData(),
 			TimeoutHeight:    packet.GetTimeoutHeight().(clienttypes.Height),
 			TimeoutTimestamp: packet.GetTimeoutTimestamp(),
 			Sequence:         packet.GetSequence(),
@@ -516,6 +518,7 @@ func (k Keeper) AcknowledgePacket(
 			DstPort:          packet.GetDestPort(),
 			DstChannel:       packet.GetDestChannel(),
 			ChannelOrdering:  channel.Ordering,
+			Acknowledgement:  acknowledgement,
 		},
 	); err != nil {
 		return err

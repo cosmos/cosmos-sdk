@@ -154,6 +154,7 @@ func (k Keeper) TimeoutExecuted(
 	// emit an event marking that we have processed the timeout
 	if err := ctx.EventManager().EmitTypedEvent(
 		&types.EventChannelTimeoutPacket{
+			Data:             packet.GetData(),
 			TimeoutHeight:    packet.GetTimeoutHeight().(clienttypes.Height),
 			TimeoutTimestamp: packet.GetTimeoutTimestamp(),
 			Sequence:         packet.GetSequence(),

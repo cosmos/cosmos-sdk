@@ -26,11 +26,11 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // EventChannelOpenInit is a typed event emitted on channel open init
 type EventChannelOpenInit struct {
-	PortId                string `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
-	ChannelId             string `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
-	CounterpartyPortId    string `protobuf:"bytes,3,opt,name=counterparty_port_id,json=counterpartyPortId,proto3" json:"counterparty_port_id,omitempty"`
-	CounterpartyChannelId string `protobuf:"bytes,4,opt,name=counterparty_channel_id,json=counterpartyChannelId,proto3" json:"counterparty_channel_id,omitempty"`
-	ConnectionId          string `protobuf:"bytes,5,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+	PortId                string `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
+	ChannelId             string `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty" yaml:"channel_id"`
+	CounterpartyPortId    string `protobuf:"bytes,3,opt,name=counterparty_port_id,json=counterpartyPortId,proto3" json:"counterparty_port_id,omitempty" yaml:"counterparty_port_id"`
+	CounterpartyChannelId string `protobuf:"bytes,4,opt,name=counterparty_channel_id,json=counterpartyChannelId,proto3" json:"counterparty_channel_id,omitempty" yaml:"counterparty_channel_id"`
+	ConnectionId          string `protobuf:"bytes,5,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
 }
 
 func (m *EventChannelOpenInit) Reset()         { *m = EventChannelOpenInit{} }
@@ -103,11 +103,11 @@ func (m *EventChannelOpenInit) GetConnectionId() string {
 
 // EventChannelOpenTry is a typed event emitted on channel open try
 type EventChannelOpenTry struct {
-	PortId                string `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
-	ChannelId             string `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
-	CounterpartyPortId    string `protobuf:"bytes,3,opt,name=counterparty_port_id,json=counterpartyPortId,proto3" json:"counterparty_port_id,omitempty"`
-	CounterpartyChannelId string `protobuf:"bytes,4,opt,name=counterparty_channel_id,json=counterpartyChannelId,proto3" json:"counterparty_channel_id,omitempty"`
-	ConnectionId          string `protobuf:"bytes,5,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+	PortId                string `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
+	ChannelId             string `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty" yaml:"channel_id"`
+	CounterpartyPortId    string `protobuf:"bytes,3,opt,name=counterparty_port_id,json=counterpartyPortId,proto3" json:"counterparty_port_id,omitempty" yaml:"counterparty_port_id"`
+	CounterpartyChannelId string `protobuf:"bytes,4,opt,name=counterparty_channel_id,json=counterpartyChannelId,proto3" json:"counterparty_channel_id,omitempty" yaml:"counterparty_channel_id"`
+	ConnectionId          string `protobuf:"bytes,5,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
 }
 
 func (m *EventChannelOpenTry) Reset()         { *m = EventChannelOpenTry{} }
@@ -180,11 +180,11 @@ func (m *EventChannelOpenTry) GetConnectionId() string {
 
 // EventChannelOpenAck is a typed event emitted on channel open acknowledgement
 type EventChannelOpenAck struct {
-	PortId                string `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
-	ChannelId             string `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
-	CounterpartyPortId    string `protobuf:"bytes,3,opt,name=counterparty_port_id,json=counterpartyPortId,proto3" json:"counterparty_port_id,omitempty"`
-	CounterpartyChannelId string `protobuf:"bytes,4,opt,name=counterparty_channel_id,json=counterpartyChannelId,proto3" json:"counterparty_channel_id,omitempty"`
-	ConnectionId          string `protobuf:"bytes,5,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+	PortId                string `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
+	ChannelId             string `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty" yaml:"channel_id"`
+	CounterpartyPortId    string `protobuf:"bytes,3,opt,name=counterparty_port_id,json=counterpartyPortId,proto3" json:"counterparty_port_id,omitempty" yaml:"counterparty_port_id"`
+	CounterpartyChannelId string `protobuf:"bytes,4,opt,name=counterparty_channel_id,json=counterpartyChannelId,proto3" json:"counterparty_channel_id,omitempty" yaml:"counterparty_channel_id"`
+	ConnectionId          string `protobuf:"bytes,5,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
 }
 
 func (m *EventChannelOpenAck) Reset()         { *m = EventChannelOpenAck{} }
@@ -257,11 +257,11 @@ func (m *EventChannelOpenAck) GetConnectionId() string {
 
 // EventChannelCloseInit is a typed event emitted on channel close init
 type EventChannelCloseInit struct {
-	PortId                string `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
-	ChannelId             string `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
-	CounterpartyPortId    string `protobuf:"bytes,3,opt,name=counterparty_port_id,json=counterpartyPortId,proto3" json:"counterparty_port_id,omitempty"`
-	CounterpartyChannelId string `protobuf:"bytes,4,opt,name=counterparty_channel_id,json=counterpartyChannelId,proto3" json:"counterparty_channel_id,omitempty"`
-	ConnectionId          string `protobuf:"bytes,5,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+	PortId                string `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
+	ChannelId             string `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty" yaml:"channel_id"`
+	CounterpartyPortId    string `protobuf:"bytes,3,opt,name=counterparty_port_id,json=counterpartyPortId,proto3" json:"counterparty_port_id,omitempty" yaml:"counterparty_port_id"`
+	CounterpartyChannelId string `protobuf:"bytes,4,opt,name=counterparty_channel_id,json=counterpartyChannelId,proto3" json:"counterparty_channel_id,omitempty" yaml:"counterparty_channel_id"`
+	ConnectionId          string `protobuf:"bytes,5,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
 }
 
 func (m *EventChannelCloseInit) Reset()         { *m = EventChannelCloseInit{} }
@@ -334,11 +334,11 @@ func (m *EventChannelCloseInit) GetConnectionId() string {
 
 // EventChannelOpenConfirm is a typed event emitted on channel open confirm
 type EventChannelOpenConfirm struct {
-	PortId                string `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
-	ChannelId             string `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
-	CounterpartyPortId    string `protobuf:"bytes,3,opt,name=counterparty_port_id,json=counterpartyPortId,proto3" json:"counterparty_port_id,omitempty"`
-	CounterpartyChannelId string `protobuf:"bytes,4,opt,name=counterparty_channel_id,json=counterpartyChannelId,proto3" json:"counterparty_channel_id,omitempty"`
-	ConnectionId          string `protobuf:"bytes,5,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+	PortId                string `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
+	ChannelId             string `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty" yaml:"channel_id"`
+	CounterpartyPortId    string `protobuf:"bytes,3,opt,name=counterparty_port_id,json=counterpartyPortId,proto3" json:"counterparty_port_id,omitempty" yaml:"counterparty_port_id"`
+	CounterpartyChannelId string `protobuf:"bytes,4,opt,name=counterparty_channel_id,json=counterpartyChannelId,proto3" json:"counterparty_channel_id,omitempty" yaml:"counterparty_channel_id"`
+	ConnectionId          string `protobuf:"bytes,5,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
 }
 
 func (m *EventChannelOpenConfirm) Reset()         { *m = EventChannelOpenConfirm{} }
@@ -411,11 +411,11 @@ func (m *EventChannelOpenConfirm) GetConnectionId() string {
 
 // EventChannelCloseConfirm is a typed event emitted on channel close confirm
 type EventChannelCloseConfirm struct {
-	PortId                string `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
-	ChannelId             string `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
-	CounterpartyPortId    string `protobuf:"bytes,3,opt,name=counterparty_port_id,json=counterpartyPortId,proto3" json:"counterparty_port_id,omitempty"`
-	CounterpartyChannelId string `protobuf:"bytes,4,opt,name=counterparty_channel_id,json=counterpartyChannelId,proto3" json:"counterparty_channel_id,omitempty"`
-	ConnectionId          string `protobuf:"bytes,5,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+	PortId                string `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
+	ChannelId             string `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty" yaml:"channel_id"`
+	CounterpartyPortId    string `protobuf:"bytes,3,opt,name=counterparty_port_id,json=counterpartyPortId,proto3" json:"counterparty_port_id,omitempty" yaml:"counterparty_port_id"`
+	CounterpartyChannelId string `protobuf:"bytes,4,opt,name=counterparty_channel_id,json=counterpartyChannelId,proto3" json:"counterparty_channel_id,omitempty" yaml:"counterparty_channel_id"`
+	ConnectionId          string `protobuf:"bytes,5,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
 }
 
 func (m *EventChannelCloseConfirm) Reset()         { *m = EventChannelCloseConfirm{} }
@@ -490,13 +490,13 @@ func (m *EventChannelCloseConfirm) GetConnectionId() string {
 type EventChannelSendPacket struct {
 	Data             []byte       `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
 	TimeoutHeight    types.Height `protobuf:"bytes,2,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height" yaml:"timeout_height"`
-	TimeoutTimestamp uint64       `protobuf:"varint,3,opt,name=timeout_timestamp,json=timeoutTimestamp,proto3" json:"timeout_timestamp,omitempty"`
+	TimeoutTimestamp uint64       `protobuf:"varint,3,opt,name=timeout_timestamp,json=timeoutTimestamp,proto3" json:"timeout_timestamp,omitempty" yaml:"timeout_timestamp"`
 	Sequence         uint64       `protobuf:"varint,4,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	SrcPort          string       `protobuf:"bytes,5,opt,name=src_port,json=srcPort,proto3" json:"src_port,omitempty"`
-	SrcChannel       string       `protobuf:"bytes,6,opt,name=src_channel,json=srcChannel,proto3" json:"src_channel,omitempty"`
-	DstPort          string       `protobuf:"bytes,7,opt,name=dst_port,json=dstPort,proto3" json:"dst_port,omitempty"`
-	DstChannel       string       `protobuf:"bytes,8,opt,name=dst_channel,json=dstChannel,proto3" json:"dst_channel,omitempty"`
-	ChannelOrdering  Order        `protobuf:"varint,9,opt,name=channel_ordering,json=channelOrdering,proto3,enum=ibc.core.channel.v1.Order" json:"channel_ordering,omitempty"`
+	SrcPort          string       `protobuf:"bytes,5,opt,name=src_port,json=srcPort,proto3" json:"src_port,omitempty" yaml:"src_port"`
+	SrcChannel       string       `protobuf:"bytes,6,opt,name=src_channel,json=srcChannel,proto3" json:"src_channel,omitempty" yaml:"src_channel"`
+	DstPort          string       `protobuf:"bytes,7,opt,name=dst_port,json=dstPort,proto3" json:"dst_port,omitempty" yaml:"dst_port"`
+	DstChannel       string       `protobuf:"bytes,8,opt,name=dst_channel,json=dstChannel,proto3" json:"dst_channel,omitempty" yaml:"dst_channel"`
+	ChannelOrdering  Order        `protobuf:"varint,9,opt,name=channel_ordering,json=channelOrdering,proto3,enum=ibc.core.channel.v1.Order" json:"channel_ordering,omitempty" yaml:"channel_ordering"`
 }
 
 func (m *EventChannelSendPacket) Reset()         { *m = EventChannelSendPacket{} }
@@ -599,13 +599,14 @@ func (m *EventChannelSendPacket) GetChannelOrdering() Order {
 type EventChannelRecvPacket struct {
 	Data             []byte       `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
 	TimeoutHeight    types.Height `protobuf:"bytes,2,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height" yaml:"timeout_height"`
-	TimeoutTimestamp uint64       `protobuf:"varint,3,opt,name=timeout_timestamp,json=timeoutTimestamp,proto3" json:"timeout_timestamp,omitempty"`
+	TimeoutTimestamp uint64       `protobuf:"varint,3,opt,name=timeout_timestamp,json=timeoutTimestamp,proto3" json:"timeout_timestamp,omitempty" yaml:"timeout_timestamp"`
 	Sequence         uint64       `protobuf:"varint,4,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	SrcPort          string       `protobuf:"bytes,5,opt,name=src_port,json=srcPort,proto3" json:"src_port,omitempty"`
-	SrcChannel       string       `protobuf:"bytes,6,opt,name=src_channel,json=srcChannel,proto3" json:"src_channel,omitempty"`
-	DstPort          string       `protobuf:"bytes,7,opt,name=dst_port,json=dstPort,proto3" json:"dst_port,omitempty"`
-	DstChannel       string       `protobuf:"bytes,8,opt,name=dst_channel,json=dstChannel,proto3" json:"dst_channel,omitempty"`
-	ChannelOrdering  Order        `protobuf:"varint,9,opt,name=channel_ordering,json=channelOrdering,proto3,enum=ibc.core.channel.v1.Order" json:"channel_ordering,omitempty"`
+	SrcPort          string       `protobuf:"bytes,5,opt,name=src_port,json=srcPort,proto3" json:"src_port,omitempty" yaml:"src_port"`
+	SrcChannel       string       `protobuf:"bytes,6,opt,name=src_channel,json=srcChannel,proto3" json:"src_channel,omitempty" yaml:"src_channel"`
+	DstPort          string       `protobuf:"bytes,7,opt,name=dst_port,json=dstPort,proto3" json:"dst_port,omitempty" yaml:"dst_port"`
+	DstChannel       string       `protobuf:"bytes,8,opt,name=dst_channel,json=dstChannel,proto3" json:"dst_channel,omitempty" yaml:"dst_channel"`
+	ChannelOrdering  Order        `protobuf:"varint,9,opt,name=channel_ordering,json=channelOrdering,proto3,enum=ibc.core.channel.v1.Order" json:"channel_ordering,omitempty" yaml:"channel_ordering"`
+	Success          bool         `protobuf:"varint,10,opt,name=success,proto3" json:"success,omitempty"`
 }
 
 func (m *EventChannelRecvPacket) Reset()         { *m = EventChannelRecvPacket{} }
@@ -704,16 +705,23 @@ func (m *EventChannelRecvPacket) GetChannelOrdering() Order {
 	return NONE
 }
 
+func (m *EventChannelRecvPacket) GetSuccess() bool {
+	if m != nil {
+		return m.Success
+	}
+	return false
+}
+
 // EventChannelWriteAck is a typed event emitted on write acknowledgement
 type EventChannelWriteAck struct {
 	Data             []byte       `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
 	TimeoutHeight    types.Height `protobuf:"bytes,2,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height" yaml:"timeout_height"`
-	TimeoutTimestamp uint64       `protobuf:"varint,3,opt,name=timeout_timestamp,json=timeoutTimestamp,proto3" json:"timeout_timestamp,omitempty"`
+	TimeoutTimestamp uint64       `protobuf:"varint,3,opt,name=timeout_timestamp,json=timeoutTimestamp,proto3" json:"timeout_timestamp,omitempty" yaml:"timeout_timestamp"`
 	Sequence         uint64       `protobuf:"varint,4,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	SrcPort          string       `protobuf:"bytes,5,opt,name=src_port,json=srcPort,proto3" json:"src_port,omitempty"`
-	SrcChannel       string       `protobuf:"bytes,6,opt,name=src_channel,json=srcChannel,proto3" json:"src_channel,omitempty"`
-	DstPort          string       `protobuf:"bytes,7,opt,name=dst_port,json=dstPort,proto3" json:"dst_port,omitempty"`
-	DstChannel       string       `protobuf:"bytes,8,opt,name=dst_channel,json=dstChannel,proto3" json:"dst_channel,omitempty"`
+	SrcPort          string       `protobuf:"bytes,5,opt,name=src_port,json=srcPort,proto3" json:"src_port,omitempty" yaml:"src_port"`
+	SrcChannel       string       `protobuf:"bytes,6,opt,name=src_channel,json=srcChannel,proto3" json:"src_channel,omitempty" yaml:"src_channel"`
+	DstPort          string       `protobuf:"bytes,7,opt,name=dst_port,json=dstPort,proto3" json:"dst_port,omitempty" yaml:"dst_port"`
+	DstChannel       string       `protobuf:"bytes,8,opt,name=dst_channel,json=dstChannel,proto3" json:"dst_channel,omitempty" yaml:"dst_channel"`
 	Acknowledgement  []byte       `protobuf:"bytes,9,opt,name=acknowledgement,proto3" json:"acknowledgement,omitempty"`
 }
 
@@ -815,14 +823,16 @@ func (m *EventChannelWriteAck) GetAcknowledgement() []byte {
 
 // EventChannelAckPacket is a typed event emitted when packet acknowledgement is executed
 type EventChannelAckPacket struct {
-	TimeoutHeight    types.Height `protobuf:"bytes,1,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height" yaml:"timeout_height"`
-	TimeoutTimestamp uint64       `protobuf:"varint,2,opt,name=timeout_timestamp,json=timeoutTimestamp,proto3" json:"timeout_timestamp,omitempty"`
-	Sequence         uint64       `protobuf:"varint,3,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	SrcPort          string       `protobuf:"bytes,4,opt,name=src_port,json=srcPort,proto3" json:"src_port,omitempty"`
-	SrcChannel       string       `protobuf:"bytes,5,opt,name=src_channel,json=srcChannel,proto3" json:"src_channel,omitempty"`
-	DstPort          string       `protobuf:"bytes,6,opt,name=dst_port,json=dstPort,proto3" json:"dst_port,omitempty"`
-	DstChannel       string       `protobuf:"bytes,7,opt,name=dst_channel,json=dstChannel,proto3" json:"dst_channel,omitempty"`
-	ChannelOrdering  Order        `protobuf:"varint,8,opt,name=channel_ordering,json=channelOrdering,proto3,enum=ibc.core.channel.v1.Order" json:"channel_ordering,omitempty"`
+	Data             []byte       `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	TimeoutHeight    types.Height `protobuf:"bytes,2,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height" yaml:"timeout_height"`
+	TimeoutTimestamp uint64       `protobuf:"varint,3,opt,name=timeout_timestamp,json=timeoutTimestamp,proto3" json:"timeout_timestamp,omitempty" yaml:"timeout_timestamp"`
+	Sequence         uint64       `protobuf:"varint,4,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	SrcPort          string       `protobuf:"bytes,5,opt,name=src_port,json=srcPort,proto3" json:"src_port,omitempty" yaml:"src_port"`
+	SrcChannel       string       `protobuf:"bytes,6,opt,name=src_channel,json=srcChannel,proto3" json:"src_channel,omitempty" yaml:"src_channel"`
+	DstPort          string       `protobuf:"bytes,7,opt,name=dst_port,json=dstPort,proto3" json:"dst_port,omitempty" yaml:"dst_port"`
+	DstChannel       string       `protobuf:"bytes,8,opt,name=dst_channel,json=dstChannel,proto3" json:"dst_channel,omitempty" yaml:"dst_channel"`
+	ChannelOrdering  Order        `protobuf:"varint,9,opt,name=channel_ordering,json=channelOrdering,proto3,enum=ibc.core.channel.v1.Order" json:"channel_ordering,omitempty" yaml:"channel_ordering"`
+	Acknowledgement  []byte       `protobuf:"bytes,10,opt,name=acknowledgement,proto3" json:"acknowledgement,omitempty"`
 }
 
 func (m *EventChannelAckPacket) Reset()         { *m = EventChannelAckPacket{} }
@@ -857,6 +867,13 @@ func (m *EventChannelAckPacket) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_EventChannelAckPacket proto.InternalMessageInfo
+
+func (m *EventChannelAckPacket) GetData() []byte {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
 
 func (m *EventChannelAckPacket) GetTimeoutHeight() types.Height {
 	if m != nil {
@@ -914,16 +931,24 @@ func (m *EventChannelAckPacket) GetChannelOrdering() Order {
 	return NONE
 }
 
+func (m *EventChannelAckPacket) GetAcknowledgement() []byte {
+	if m != nil {
+		return m.Acknowledgement
+	}
+	return nil
+}
+
 // EventChannelTimeoutPacket is a typed event emitted when packet is timeout
 type EventChannelTimeoutPacket struct {
-	TimeoutHeight    types.Height `protobuf:"bytes,1,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height" yaml:"timeout_height"`
-	TimeoutTimestamp uint64       `protobuf:"varint,2,opt,name=timeout_timestamp,json=timeoutTimestamp,proto3" json:"timeout_timestamp,omitempty"`
-	Sequence         uint64       `protobuf:"varint,3,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	SrcPort          string       `protobuf:"bytes,4,opt,name=src_port,json=srcPort,proto3" json:"src_port,omitempty"`
-	SrcChannel       string       `protobuf:"bytes,5,opt,name=src_channel,json=srcChannel,proto3" json:"src_channel,omitempty"`
-	DstPort          string       `protobuf:"bytes,6,opt,name=dst_port,json=dstPort,proto3" json:"dst_port,omitempty"`
-	DstChannel       string       `protobuf:"bytes,7,opt,name=dst_channel,json=dstChannel,proto3" json:"dst_channel,omitempty"`
-	ChannelOrdering  Order        `protobuf:"varint,8,opt,name=channel_ordering,json=channelOrdering,proto3,enum=ibc.core.channel.v1.Order" json:"channel_ordering,omitempty"`
+	Data             []byte       `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	TimeoutHeight    types.Height `protobuf:"bytes,2,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height" yaml:"timeout_height"`
+	TimeoutTimestamp uint64       `protobuf:"varint,3,opt,name=timeout_timestamp,json=timeoutTimestamp,proto3" json:"timeout_timestamp,omitempty" yaml:"timeout_timestamp"`
+	Sequence         uint64       `protobuf:"varint,4,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	SrcPort          string       `protobuf:"bytes,5,opt,name=src_port,json=srcPort,proto3" json:"src_port,omitempty" yaml:"src_port"`
+	SrcChannel       string       `protobuf:"bytes,6,opt,name=src_channel,json=srcChannel,proto3" json:"src_channel,omitempty" yaml:"src_channel"`
+	DstPort          string       `protobuf:"bytes,7,opt,name=dst_port,json=dstPort,proto3" json:"dst_port,omitempty" yaml:"dst_port"`
+	DstChannel       string       `protobuf:"bytes,8,opt,name=dst_channel,json=dstChannel,proto3" json:"dst_channel,omitempty" yaml:"dst_channel"`
+	ChannelOrdering  Order        `protobuf:"varint,9,opt,name=channel_ordering,json=channelOrdering,proto3,enum=ibc.core.channel.v1.Order" json:"channel_ordering,omitempty" yaml:"channel_ordering"`
 }
 
 func (m *EventChannelTimeoutPacket) Reset()         { *m = EventChannelTimeoutPacket{} }
@@ -958,6 +983,13 @@ func (m *EventChannelTimeoutPacket) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_EventChannelTimeoutPacket proto.InternalMessageInfo
+
+func (m *EventChannelTimeoutPacket) GetData() []byte {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
 
 func (m *EventChannelTimeoutPacket) GetTimeoutHeight() types.Height {
 	if m != nil {
@@ -1015,6 +1047,96 @@ func (m *EventChannelTimeoutPacket) GetChannelOrdering() Order {
 	return NONE
 }
 
+// EventAcknowledgementSuccess is a typed event emitted on packet acknowledgement success
+type EventAcknowledgementSuccess struct {
+	Success []byte `protobuf:"bytes,1,opt,name=success,proto3" json:"success,omitempty"`
+}
+
+func (m *EventAcknowledgementSuccess) Reset()         { *m = EventAcknowledgementSuccess{} }
+func (m *EventAcknowledgementSuccess) String() string { return proto.CompactTextString(m) }
+func (*EventAcknowledgementSuccess) ProtoMessage()    {}
+func (*EventAcknowledgementSuccess) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a989ebecceb60589, []int{11}
+}
+func (m *EventAcknowledgementSuccess) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventAcknowledgementSuccess) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventAcknowledgementSuccess.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventAcknowledgementSuccess) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventAcknowledgementSuccess.Merge(m, src)
+}
+func (m *EventAcknowledgementSuccess) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventAcknowledgementSuccess) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventAcknowledgementSuccess.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventAcknowledgementSuccess proto.InternalMessageInfo
+
+func (m *EventAcknowledgementSuccess) GetSuccess() []byte {
+	if m != nil {
+		return m.Success
+	}
+	return nil
+}
+
+// EventAcknowledgementError is a typed event emitted on packet acknowledgement error
+type EventAcknowledgementError struct {
+	Error string `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
+}
+
+func (m *EventAcknowledgementError) Reset()         { *m = EventAcknowledgementError{} }
+func (m *EventAcknowledgementError) String() string { return proto.CompactTextString(m) }
+func (*EventAcknowledgementError) ProtoMessage()    {}
+func (*EventAcknowledgementError) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a989ebecceb60589, []int{12}
+}
+func (m *EventAcknowledgementError) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventAcknowledgementError) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventAcknowledgementError.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventAcknowledgementError) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventAcknowledgementError.Merge(m, src)
+}
+func (m *EventAcknowledgementError) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventAcknowledgementError) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventAcknowledgementError.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventAcknowledgementError proto.InternalMessageInfo
+
+func (m *EventAcknowledgementError) GetError() string {
+	if m != nil {
+		return m.Error
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*EventChannelOpenInit)(nil), "ibc.core.channel.v1.EventChannelOpenInit")
 	proto.RegisterType((*EventChannelOpenTry)(nil), "ibc.core.channel.v1.EventChannelOpenTry")
@@ -1027,54 +1149,66 @@ func init() {
 	proto.RegisterType((*EventChannelWriteAck)(nil), "ibc.core.channel.v1.EventChannelWriteAck")
 	proto.RegisterType((*EventChannelAckPacket)(nil), "ibc.core.channel.v1.EventChannelAckPacket")
 	proto.RegisterType((*EventChannelTimeoutPacket)(nil), "ibc.core.channel.v1.EventChannelTimeoutPacket")
+	proto.RegisterType((*EventAcknowledgementSuccess)(nil), "ibc.core.channel.v1.EventAcknowledgementSuccess")
+	proto.RegisterType((*EventAcknowledgementError)(nil), "ibc.core.channel.v1.EventAcknowledgementError")
 }
 
 func init() { proto.RegisterFile("ibc/core/channel/v1/event.proto", fileDescriptor_a989ebecceb60589) }
 
 var fileDescriptor_a989ebecceb60589 = []byte{
-	// 673 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x57, 0xbf, 0x4f, 0x1b, 0x3f,
-	0x1c, 0xcd, 0x91, 0x90, 0x04, 0xf3, 0xf3, 0x6b, 0xe0, 0x4b, 0x88, 0x44, 0x42, 0xd3, 0x05, 0xa9,
-	0xe2, 0x0e, 0xda, 0xaa, 0xaa, 0xba, 0x41, 0x84, 0xd4, 0x4c, 0xa0, 0x2b, 0x52, 0xa5, 0x2e, 0xf4,
-	0x62, 0xbb, 0x89, 0x95, 0x9c, 0x9d, 0xda, 0x4e, 0xda, 0x8c, 0x1d, 0xba, 0x77, 0xea, 0xdf, 0xc4,
-	0xc8, 0xd8, 0xa1, 0x45, 0x14, 0xfe, 0x83, 0x2e, 0x5d, 0x2b, 0xfb, 0x7c, 0xe1, 0x02, 0x55, 0x44,
-	0x3b, 0xa0, 0x2a, 0x62, 0x3a, 0xdf, 0xe7, 0xf3, 0x9e, 0xad, 0xf7, 0x9e, 0x73, 0x8e, 0x41, 0x99,
-	0xd6, 0x91, 0x87, 0xb8, 0x20, 0x1e, 0x6a, 0x06, 0x8c, 0x91, 0xb6, 0xd7, 0xdb, 0xf6, 0x48, 0x8f,
-	0x30, 0xe5, 0x76, 0x04, 0x57, 0x1c, 0x2e, 0xd2, 0x3a, 0x72, 0x35, 0xc0, 0xb5, 0x00, 0xb7, 0xb7,
-	0x5d, 0xbc, 0xf7, 0x3b, 0x56, 0xdc, 0x37, 0xbc, 0xe2, 0x52, 0x83, 0x37, 0xb8, 0x19, 0x7a, 0x7a,
-	0x64, 0xab, 0x89, 0xe5, 0xda, 0x94, 0x30, 0x65, 0x78, 0x66, 0x14, 0x01, 0x2a, 0xdf, 0x1c, 0xb0,
-	0xb4, 0xa7, 0x97, 0xaf, 0x46, 0xb3, 0xed, 0x77, 0x08, 0xab, 0x31, 0xaa, 0xe0, 0x0a, 0xc8, 0x75,
-	0xb8, 0x50, 0x47, 0x14, 0x17, 0x9c, 0x75, 0x67, 0x63, 0xca, 0xcf, 0xea, 0xd7, 0x1a, 0x86, 0x6b,
-	0x00, 0xd8, 0x95, 0x75, 0x6f, 0xc2, 0xf4, 0xa6, 0x6c, 0xa5, 0x86, 0xe1, 0x16, 0x58, 0x42, 0xbc,
-	0xcb, 0x14, 0x11, 0x9d, 0x40, 0xa8, 0xfe, 0x51, 0x3c, 0x49, 0xda, 0x00, 0x61, 0xb2, 0x77, 0x10,
-	0x4d, 0xf8, 0x04, 0xac, 0x0c, 0x31, 0x12, 0xb3, 0x67, 0x0c, 0x69, 0x39, 0xd9, 0xae, 0x0e, 0x56,
-	0xba, 0x0f, 0x66, 0x11, 0x67, 0x8c, 0x20, 0x45, 0x39, 0xd3, 0xe8, 0x49, 0x83, 0x9e, 0xb9, 0x2c,
-	0xd6, 0x70, 0xe5, 0xab, 0x03, 0x16, 0xaf, 0xea, 0x3b, 0x14, 0xfd, 0x71, 0x96, 0xb7, 0x83, 0x5a,
-	0xe3, 0x22, 0xef, 0xd4, 0x01, 0xcb, 0x49, 0x79, 0xd5, 0x36, 0x97, 0x64, 0x9c, 0xb6, 0xe7, 0x99,
-	0x03, 0x56, 0xae, 0xe6, 0x57, 0xe5, 0xec, 0x0d, 0x15, 0xe1, 0xb8, 0x48, 0xfc, 0xee, 0x80, 0xc2,
-	0xb5, 0x0c, 0xc7, 0x4c, 0xe3, 0xe7, 0x34, 0xf8, 0x3f, 0xa9, 0xf1, 0x05, 0x61, 0xf8, 0x20, 0x40,
-	0x2d, 0xa2, 0x20, 0x04, 0x19, 0x1c, 0xa8, 0xc0, 0xc8, 0x9b, 0xf1, 0xcd, 0x18, 0xbe, 0x06, 0x73,
-	0x8a, 0x86, 0x84, 0x77, 0xd5, 0x51, 0x93, 0xd0, 0x46, 0x53, 0x19, 0x81, 0xd3, 0x0f, 0x8b, 0xee,
-	0xe5, 0xc7, 0x3f, 0xfa, 0x48, 0xf7, 0xb6, 0xdd, 0xe7, 0x06, 0xb1, 0xbb, 0x76, 0x7c, 0x5a, 0x4e,
-	0xfd, 0x38, 0x2d, 0x2f, 0xf7, 0x83, 0xb0, 0xfd, 0xac, 0x32, 0xcc, 0xaf, 0xf8, 0xb3, 0xb6, 0x10,
-	0xa1, 0xe1, 0x03, 0xf0, 0x5f, 0x8c, 0xd0, 0x4f, 0xa9, 0x82, 0xb0, 0x63, 0xcc, 0xc9, 0xf8, 0x0b,
-	0xb6, 0x71, 0x18, 0xd7, 0x61, 0x11, 0xe4, 0x25, 0x79, 0xdb, 0x25, 0x0c, 0x11, 0xe3, 0x45, 0xc6,
-	0x1f, 0xbc, 0xc3, 0x55, 0x90, 0x97, 0x02, 0x19, 0x7f, 0xad, 0xf2, 0x9c, 0x14, 0x48, 0x7b, 0x0a,
-	0xcb, 0x60, 0x5a, 0xb7, 0xac, 0x91, 0x85, 0xac, 0xe9, 0x02, 0x29, 0x90, 0x35, 0x41, 0x73, 0xb1,
-	0x54, 0x11, 0x37, 0x17, 0x71, 0xb1, 0x54, 0x31, 0x57, 0xb7, 0x62, 0x6e, 0x3e, 0xe2, 0x62, 0x19,
-	0x1b, 0x08, 0xf7, 0xc0, 0x42, 0x9c, 0x10, 0x17, 0x98, 0x08, 0xca, 0x1a, 0x85, 0xa9, 0x75, 0x67,
-	0x63, 0x6e, 0xc8, 0xa4, 0xc1, 0x09, 0xe9, 0xee, 0x6b, 0x90, 0x3f, 0x6f, 0x2b, 0xfb, 0x96, 0x72,
-	0x2d, 0x18, 0x9f, 0xa0, 0xde, 0x5d, 0x30, 0xff, 0x40, 0x30, 0x3f, 0x27, 0x86, 0xff, 0x77, 0xbc,
-	0x14, 0x54, 0x11, 0x7d, 0x72, 0xdd, 0xc5, 0xf2, 0x57, 0xb1, 0x6c, 0x80, 0xf9, 0x00, 0xb5, 0x18,
-	0x7f, 0xd7, 0x26, 0xb8, 0x41, 0x42, 0xc2, 0x94, 0x49, 0x65, 0xc6, 0xbf, 0x5a, 0xae, 0x7c, 0x48,
-	0x0f, 0x9f, 0xa9, 0x3b, 0xa8, 0x65, 0x7f, 0x11, 0xd7, 0x6d, 0x76, 0x6e, 0xc3, 0xe6, 0x89, 0x1b,
-	0xd8, 0x9c, 0x1e, 0x61, 0x73, 0x66, 0xa4, 0xcd, 0x93, 0x23, 0x6d, 0xce, 0x8e, 0xb4, 0x39, 0x77,
-	0xa3, 0xdd, 0x9f, 0xff, 0xf3, 0xdd, 0xff, 0x31, 0x0d, 0x56, 0x93, 0x19, 0x1c, 0x46, 0xda, 0xef,
-	0x72, 0xb8, 0xdd, 0x1c, 0x76, 0xfd, 0xe3, 0xf3, 0x92, 0x73, 0x72, 0x5e, 0x72, 0xce, 0xce, 0x4b,
-	0xce, 0xa7, 0x8b, 0x52, 0xea, 0xe4, 0xa2, 0x94, 0xfa, 0x72, 0x51, 0x4a, 0xbd, 0x7a, 0xda, 0xa0,
-	0xaa, 0xd9, 0xad, 0xbb, 0x88, 0x87, 0x1e, 0xe2, 0x32, 0xe4, 0xd2, 0x3e, 0x36, 0x25, 0x6e, 0x79,
-	0xef, 0xbd, 0xc1, 0xbd, 0x6a, 0xeb, 0xf1, 0x66, 0x7c, 0x27, 0x53, 0xfd, 0x0e, 0x91, 0xf5, 0xac,
-	0xb9, 0x58, 0x3d, 0xfa, 0x15, 0x00, 0x00, 0xff, 0xff, 0xcc, 0x29, 0xfb, 0x89, 0xea, 0x0d, 0x00,
+	// 833 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x58, 0x41, 0x6f, 0xe3, 0x44,
+	0x14, 0x4e, 0xb2, 0xd9, 0x26, 0x9d, 0xed, 0xb6, 0xbb, 0xd3, 0x64, 0x6b, 0x52, 0x88, 0xcb, 0x9c,
+	0x22, 0xa1, 0xb5, 0x09, 0xac, 0xb4, 0x08, 0x89, 0x43, 0x13, 0xad, 0x44, 0x4e, 0x5d, 0xa6, 0x95,
+	0x90, 0x7a, 0x29, 0xce, 0x78, 0x48, 0xac, 0x24, 0x33, 0x61, 0x66, 0x12, 0xc8, 0xbf, 0xe0, 0x7f,
+	0x20, 0xf1, 0x2f, 0x90, 0x7a, 0xec, 0x81, 0x03, 0x27, 0x0b, 0xb5, 0x12, 0x20, 0x38, 0x20, 0xf9,
+	0x17, 0x20, 0x8f, 0xed, 0xc4, 0x0e, 0x3e, 0xb6, 0x48, 0x48, 0x3e, 0x65, 0xe6, 0xbd, 0xef, 0xbd,
+	0x37, 0xfa, 0xde, 0x97, 0xf1, 0xb3, 0x81, 0xe9, 0x0d, 0x89, 0x4d, 0xb8, 0xa0, 0x36, 0x19, 0x3b,
+	0x8c, 0xd1, 0xa9, 0xbd, 0xec, 0xda, 0x74, 0x49, 0x99, 0xb2, 0xe6, 0x82, 0x2b, 0x0e, 0x0f, 0xbd,
+	0x21, 0xb1, 0x42, 0x80, 0x15, 0x03, 0xac, 0x65, 0xb7, 0xf5, 0x7e, 0x5e, 0x54, 0xe2, 0xd7, 0x71,
+	0xad, 0xc6, 0x88, 0x8f, 0xb8, 0x5e, 0xda, 0xe1, 0x2a, 0xb6, 0xa6, 0xca, 0x4d, 0x3d, 0xca, 0x94,
+	0x8e, 0xd3, 0xab, 0x08, 0x80, 0x7e, 0xaf, 0x80, 0xc6, 0x9b, 0xb0, 0x7c, 0x3f, 0xca, 0x76, 0x36,
+	0xa7, 0x6c, 0xc0, 0x3c, 0x05, 0x3f, 0x00, 0xb5, 0x39, 0x17, 0xea, 0xca, 0x73, 0x8d, 0xf2, 0x49,
+	0xb9, 0xb3, 0xdb, 0x83, 0x81, 0x6f, 0xee, 0xaf, 0x9c, 0xd9, 0xf4, 0x53, 0x14, 0x3b, 0x10, 0xde,
+	0x09, 0x57, 0x03, 0x17, 0xbe, 0x02, 0x20, 0x3e, 0x4d, 0x88, 0xaf, 0x68, 0x7c, 0x33, 0xf0, 0xcd,
+	0xe7, 0x11, 0x7e, 0xe3, 0x43, 0x78, 0x37, 0xde, 0x0c, 0x5c, 0xf8, 0x05, 0x68, 0x10, 0xbe, 0x60,
+	0x8a, 0x8a, 0xb9, 0x23, 0xd4, 0xea, 0x2a, 0xa9, 0xf7, 0x48, 0xc7, 0x9b, 0x81, 0x6f, 0x1e, 0xc7,
+	0xf1, 0x39, 0x28, 0x84, 0x61, 0xda, 0xfc, 0x36, 0x3a, 0xc8, 0x25, 0x38, 0xca, 0x80, 0x53, 0xa7,
+	0xaa, 0xea, 0xac, 0x28, 0xf0, 0xcd, 0x76, 0x4e, 0xd6, 0xf4, 0x11, 0x9b, 0x69, 0x4f, 0x7f, 0x7d,
+	0xdc, 0xcf, 0xc0, 0x53, 0xc2, 0x19, 0xa3, 0x44, 0x79, 0x9c, 0x85, 0x19, 0x1f, 0xeb, 0x8c, 0x46,
+	0xe0, 0x9b, 0x8d, 0x24, 0x63, 0xca, 0x8d, 0xf0, 0xde, 0x66, 0x3f, 0x70, 0xd1, 0x6f, 0x15, 0x70,
+	0xb8, 0xcd, 0xf4, 0x85, 0x58, 0x15, 0x44, 0xff, 0x17, 0x44, 0x9f, 0x92, 0x49, 0x41, 0xf4, 0x7d,
+	0x13, 0xfd, 0x47, 0x05, 0x34, 0xd3, 0x44, 0xf7, 0xa7, 0x5c, 0xd2, 0xe2, 0xf2, 0x78, 0x08, 0xaa,
+	0xff, 0xac, 0x80, 0xa3, 0x6d, 0x4d, 0xf7, 0x39, 0xfb, 0xda, 0x13, 0xb3, 0x82, 0xec, 0xfb, 0x26,
+	0xfb, 0xaf, 0x0a, 0x30, 0xfe, 0xa5, 0xeb, 0x82, 0xed, 0x07, 0x62, 0xfb, 0x87, 0x2a, 0x78, 0x91,
+	0x66, 0xfb, 0x9c, 0x32, 0xf7, 0xad, 0x43, 0x26, 0x54, 0x41, 0x08, 0xaa, 0xae, 0xa3, 0x1c, 0x4d,
+	0xf4, 0x1e, 0xd6, 0x6b, 0xf8, 0x15, 0xd8, 0x57, 0xde, 0x8c, 0xf2, 0x85, 0xba, 0x1a, 0x53, 0x6f,
+	0x34, 0x56, 0x9a, 0xd6, 0x27, 0x1f, 0xb5, 0xac, 0xcd, 0xe0, 0x14, 0x0d, 0x38, 0xcb, 0xae, 0xf5,
+	0xb9, 0x46, 0xf4, 0xde, 0xbb, 0xf6, 0xcd, 0x52, 0xe0, 0x9b, 0xcd, 0xe8, 0x38, 0xd9, 0x78, 0x84,
+	0x9f, 0xc6, 0x86, 0x08, 0x0d, 0x07, 0xe0, 0x79, 0x82, 0x08, 0x7f, 0xa5, 0x72, 0x66, 0x73, 0xcd,
+	0x7d, 0xb5, 0xf7, 0x6e, 0xe0, 0x9b, 0x46, 0x36, 0xc9, 0x1a, 0x82, 0xf0, 0xb3, 0xd8, 0x76, 0x91,
+	0x98, 0x60, 0x0b, 0xd4, 0x25, 0xfd, 0x66, 0x41, 0x19, 0xa1, 0x9a, 0xe7, 0x2a, 0x5e, 0xef, 0xa1,
+	0x05, 0xea, 0x52, 0x10, 0xdd, 0xb6, 0x98, 0xb1, 0xc3, 0xc0, 0x37, 0x0f, 0xa2, 0xec, 0x89, 0x07,
+	0xe1, 0x9a, 0x14, 0x24, 0x6c, 0x22, 0x7c, 0x0d, 0x9e, 0x84, 0xd6, 0xb8, 0x21, 0xc6, 0x8e, 0x0e,
+	0x79, 0x11, 0xf8, 0x26, 0xdc, 0x84, 0xc4, 0x4e, 0x84, 0x81, 0x14, 0x24, 0xe6, 0x33, 0x2c, 0xe4,
+	0x4a, 0x15, 0x15, 0xaa, 0x6d, 0x17, 0x4a, 0x3c, 0x08, 0xd7, 0x5c, 0xa9, 0x92, 0x42, 0xa1, 0x35,
+	0x29, 0x54, 0xdf, 0x2e, 0x94, 0x72, 0x22, 0x0c, 0x5c, 0x99, 0x34, 0x0e, 0x0e, 0xc1, 0xb3, 0x44,
+	0x2e, 0x5c, 0xb8, 0x54, 0x78, 0x6c, 0x64, 0xec, 0x9e, 0x94, 0x3b, 0xfb, 0x99, 0xe6, 0xac, 0xa7,
+	0x5a, 0xeb, 0x2c, 0x04, 0xf5, 0x8e, 0x03, 0xdf, 0x3c, 0xca, 0xfe, 0x1f, 0x92, 0x68, 0x84, 0x0f,
+	0x62, 0xd3, 0x59, 0x62, 0xf9, 0x69, 0x4b, 0x2d, 0x98, 0x92, 0x65, 0xa1, 0x96, 0x42, 0x2d, 0xb9,
+	0x6a, 0x81, 0x06, 0xa8, 0xc9, 0x05, 0x21, 0x54, 0x4a, 0x03, 0x9c, 0x94, 0x3b, 0x75, 0x9c, 0x6c,
+	0xd1, 0xdf, 0x8f, 0xb2, 0xef, 0x3d, 0x5f, 0x0a, 0x4f, 0xd1, 0x70, 0x4a, 0x2c, 0x54, 0xf4, 0xbf,
+	0x52, 0x51, 0x07, 0x1c, 0x38, 0x64, 0xc2, 0xf8, 0xb7, 0x53, 0xea, 0x8e, 0xe8, 0x8c, 0x32, 0xa5,
+	0x45, 0xb4, 0x87, 0xb7, 0xcd, 0xe8, 0xe7, 0x6a, 0x76, 0x5a, 0x3d, 0x25, 0x93, 0xe2, 0xe2, 0x28,
+	0x2e, 0x8e, 0xfc, 0x8b, 0x23, 0x47, 0x56, 0x20, 0x5f, 0x56, 0x3f, 0x56, 0xc1, 0x3b, 0x69, 0x59,
+	0x5d, 0x44, 0xcd, 0x29, 0xa4, 0x55, 0x48, 0x2b, 0x7f, 0x82, 0x79, 0x0d, 0x8e, 0xb5, 0x5e, 0x4e,
+	0xb3, 0x42, 0x3a, 0x8f, 0x1e, 0x4c, 0xe9, 0x47, 0x56, 0x24, 0x9a, 0xf5, 0x23, 0xab, 0x1b, 0x0b,
+	0x6d, 0x2b, 0xf0, 0x8d, 0x10, 0x5c, 0xc0, 0x06, 0x78, 0x4c, 0xc3, 0x45, 0xf4, 0x52, 0x82, 0xa3,
+	0x4d, 0x0f, 0x5f, 0xdf, 0xb6, 0xcb, 0x37, 0xb7, 0xed, 0xf2, 0xaf, 0xb7, 0xed, 0xf2, 0xf7, 0x77,
+	0xed, 0xd2, 0xcd, 0x5d, 0xbb, 0xf4, 0xcb, 0x5d, 0xbb, 0x74, 0xf9, 0xc9, 0xc8, 0x53, 0xe3, 0xc5,
+	0xd0, 0x22, 0x7c, 0x66, 0x13, 0x2e, 0x67, 0x5c, 0xc6, 0x3f, 0x2f, 0xa5, 0x3b, 0xb1, 0xbf, 0xb3,
+	0xd7, 0xdf, 0x0d, 0x3f, 0x7c, 0xf5, 0x32, 0xf9, 0xe6, 0xa8, 0x56, 0x73, 0x2a, 0x87, 0x3b, 0xfa,
+	0xc3, 0xe1, 0xc7, 0xff, 0x04, 0x00, 0x00, 0xff, 0xff, 0xf5, 0xdd, 0x0c, 0x83, 0xca, 0x14, 0x00,
 	0x00,
 }
 
@@ -1529,6 +1663,16 @@ func (m *EventChannelRecvPacket) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	_ = i
 	var l int
 	_ = l
+	if m.Success {
+		i--
+		if m.Success {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x50
+	}
 	if m.ChannelOrdering != 0 {
 		i = encodeVarintEvent(dAtA, i, uint64(m.ChannelOrdering))
 		i--
@@ -1697,48 +1841,55 @@ func (m *EventChannelAckPacket) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.Acknowledgement) > 0 {
+		i -= len(m.Acknowledgement)
+		copy(dAtA[i:], m.Acknowledgement)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.Acknowledgement)))
+		i--
+		dAtA[i] = 0x52
+	}
 	if m.ChannelOrdering != 0 {
 		i = encodeVarintEvent(dAtA, i, uint64(m.ChannelOrdering))
 		i--
-		dAtA[i] = 0x40
+		dAtA[i] = 0x48
 	}
 	if len(m.DstChannel) > 0 {
 		i -= len(m.DstChannel)
 		copy(dAtA[i:], m.DstChannel)
 		i = encodeVarintEvent(dAtA, i, uint64(len(m.DstChannel)))
 		i--
-		dAtA[i] = 0x3a
+		dAtA[i] = 0x42
 	}
 	if len(m.DstPort) > 0 {
 		i -= len(m.DstPort)
 		copy(dAtA[i:], m.DstPort)
 		i = encodeVarintEvent(dAtA, i, uint64(len(m.DstPort)))
 		i--
-		dAtA[i] = 0x32
+		dAtA[i] = 0x3a
 	}
 	if len(m.SrcChannel) > 0 {
 		i -= len(m.SrcChannel)
 		copy(dAtA[i:], m.SrcChannel)
 		i = encodeVarintEvent(dAtA, i, uint64(len(m.SrcChannel)))
 		i--
-		dAtA[i] = 0x2a
+		dAtA[i] = 0x32
 	}
 	if len(m.SrcPort) > 0 {
 		i -= len(m.SrcPort)
 		copy(dAtA[i:], m.SrcPort)
 		i = encodeVarintEvent(dAtA, i, uint64(len(m.SrcPort)))
 		i--
-		dAtA[i] = 0x22
+		dAtA[i] = 0x2a
 	}
 	if m.Sequence != 0 {
 		i = encodeVarintEvent(dAtA, i, uint64(m.Sequence))
 		i--
-		dAtA[i] = 0x18
+		dAtA[i] = 0x20
 	}
 	if m.TimeoutTimestamp != 0 {
 		i = encodeVarintEvent(dAtA, i, uint64(m.TimeoutTimestamp))
 		i--
-		dAtA[i] = 0x10
+		dAtA[i] = 0x18
 	}
 	{
 		size, err := m.TimeoutHeight.MarshalToSizedBuffer(dAtA[:i])
@@ -1749,7 +1900,14 @@ func (m *EventChannelAckPacket) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintEvent(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0xa
+	dAtA[i] = 0x12
+	if len(m.Data) > 0 {
+		i -= len(m.Data)
+		copy(dAtA[i:], m.Data)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.Data)))
+		i--
+		dAtA[i] = 0xa
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -1776,45 +1934,45 @@ func (m *EventChannelTimeoutPacket) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	if m.ChannelOrdering != 0 {
 		i = encodeVarintEvent(dAtA, i, uint64(m.ChannelOrdering))
 		i--
-		dAtA[i] = 0x40
+		dAtA[i] = 0x48
 	}
 	if len(m.DstChannel) > 0 {
 		i -= len(m.DstChannel)
 		copy(dAtA[i:], m.DstChannel)
 		i = encodeVarintEvent(dAtA, i, uint64(len(m.DstChannel)))
 		i--
-		dAtA[i] = 0x3a
+		dAtA[i] = 0x42
 	}
 	if len(m.DstPort) > 0 {
 		i -= len(m.DstPort)
 		copy(dAtA[i:], m.DstPort)
 		i = encodeVarintEvent(dAtA, i, uint64(len(m.DstPort)))
 		i--
-		dAtA[i] = 0x32
+		dAtA[i] = 0x3a
 	}
 	if len(m.SrcChannel) > 0 {
 		i -= len(m.SrcChannel)
 		copy(dAtA[i:], m.SrcChannel)
 		i = encodeVarintEvent(dAtA, i, uint64(len(m.SrcChannel)))
 		i--
-		dAtA[i] = 0x2a
+		dAtA[i] = 0x32
 	}
 	if len(m.SrcPort) > 0 {
 		i -= len(m.SrcPort)
 		copy(dAtA[i:], m.SrcPort)
 		i = encodeVarintEvent(dAtA, i, uint64(len(m.SrcPort)))
 		i--
-		dAtA[i] = 0x22
+		dAtA[i] = 0x2a
 	}
 	if m.Sequence != 0 {
 		i = encodeVarintEvent(dAtA, i, uint64(m.Sequence))
 		i--
-		dAtA[i] = 0x18
+		dAtA[i] = 0x20
 	}
 	if m.TimeoutTimestamp != 0 {
 		i = encodeVarintEvent(dAtA, i, uint64(m.TimeoutTimestamp))
 		i--
-		dAtA[i] = 0x10
+		dAtA[i] = 0x18
 	}
 	{
 		size, err := m.TimeoutHeight.MarshalToSizedBuffer(dAtA[:i])
@@ -1825,7 +1983,74 @@ func (m *EventChannelTimeoutPacket) MarshalToSizedBuffer(dAtA []byte) (int, erro
 		i = encodeVarintEvent(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0xa
+	dAtA[i] = 0x12
+	if len(m.Data) > 0 {
+		i -= len(m.Data)
+		copy(dAtA[i:], m.Data)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.Data)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventAcknowledgementSuccess) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventAcknowledgementSuccess) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventAcknowledgementSuccess) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Success) > 0 {
+		i -= len(m.Success)
+		copy(dAtA[i:], m.Success)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.Success)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventAcknowledgementError) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventAcknowledgementError) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventAcknowledgementError) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Error) > 0 {
+		i -= len(m.Error)
+		copy(dAtA[i:], m.Error)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.Error)))
+		i--
+		dAtA[i] = 0xa
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -2091,6 +2316,9 @@ func (m *EventChannelRecvPacket) Size() (n int) {
 	if m.ChannelOrdering != 0 {
 		n += 1 + sovEvent(uint64(m.ChannelOrdering))
 	}
+	if m.Success {
+		n += 2
+	}
 	return n
 }
 
@@ -2141,6 +2369,54 @@ func (m *EventChannelAckPacket) Size() (n int) {
 	}
 	var l int
 	_ = l
+	l = len(m.Data)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	l = m.TimeoutHeight.Size()
+	n += 1 + l + sovEvent(uint64(l))
+	if m.TimeoutTimestamp != 0 {
+		n += 1 + sovEvent(uint64(m.TimeoutTimestamp))
+	}
+	if m.Sequence != 0 {
+		n += 1 + sovEvent(uint64(m.Sequence))
+	}
+	l = len(m.SrcPort)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	l = len(m.SrcChannel)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	l = len(m.DstPort)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	l = len(m.DstChannel)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	if m.ChannelOrdering != 0 {
+		n += 1 + sovEvent(uint64(m.ChannelOrdering))
+	}
+	l = len(m.Acknowledgement)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
+	return n
+}
+
+func (m *EventChannelTimeoutPacket) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Data)
+	if l > 0 {
+		n += 1 + l + sovEvent(uint64(l))
+	}
 	l = m.TimeoutHeight.Size()
 	n += 1 + l + sovEvent(uint64(l))
 	if m.TimeoutTimestamp != 0 {
@@ -2171,38 +2447,28 @@ func (m *EventChannelAckPacket) Size() (n int) {
 	return n
 }
 
-func (m *EventChannelTimeoutPacket) Size() (n int) {
+func (m *EventAcknowledgementSuccess) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = m.TimeoutHeight.Size()
-	n += 1 + l + sovEvent(uint64(l))
-	if m.TimeoutTimestamp != 0 {
-		n += 1 + sovEvent(uint64(m.TimeoutTimestamp))
-	}
-	if m.Sequence != 0 {
-		n += 1 + sovEvent(uint64(m.Sequence))
-	}
-	l = len(m.SrcPort)
+	l = len(m.Success)
 	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
 	}
-	l = len(m.SrcChannel)
+	return n
+}
+
+func (m *EventAcknowledgementError) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Error)
 	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
-	}
-	l = len(m.DstPort)
-	if l > 0 {
-		n += 1 + l + sovEvent(uint64(l))
-	}
-	l = len(m.DstChannel)
-	if l > 0 {
-		n += 1 + l + sovEvent(uint64(l))
-	}
-	if m.ChannelOrdering != 0 {
-		n += 1 + sovEvent(uint64(m.ChannelOrdering))
 	}
 	return n
 }
@@ -4077,6 +4343,26 @@ func (m *EventChannelRecvPacket) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Success", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Success = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipEvent(dAtA[iNdEx:])
@@ -4452,6 +4738,40 @@ func (m *EventChannelAckPacket) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Data", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Data = append(m.Data[:0], dAtA[iNdEx:postIndex]...)
+			if m.Data == nil {
+				m.Data = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TimeoutHeight", wireType)
 			}
 			var msglen int
@@ -4483,7 +4803,7 @@ func (m *EventChannelAckPacket) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 2:
+		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TimeoutTimestamp", wireType)
 			}
@@ -4502,7 +4822,7 @@ func (m *EventChannelAckPacket) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 3:
+		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Sequence", wireType)
 			}
@@ -4521,7 +4841,7 @@ func (m *EventChannelAckPacket) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 4:
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SrcPort", wireType)
 			}
@@ -4553,7 +4873,7 @@ func (m *EventChannelAckPacket) Unmarshal(dAtA []byte) error {
 			}
 			m.SrcPort = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 5:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SrcChannel", wireType)
 			}
@@ -4585,7 +4905,7 @@ func (m *EventChannelAckPacket) Unmarshal(dAtA []byte) error {
 			}
 			m.SrcChannel = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 6:
+		case 7:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DstPort", wireType)
 			}
@@ -4617,7 +4937,7 @@ func (m *EventChannelAckPacket) Unmarshal(dAtA []byte) error {
 			}
 			m.DstPort = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 7:
+		case 8:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DstChannel", wireType)
 			}
@@ -4649,7 +4969,7 @@ func (m *EventChannelAckPacket) Unmarshal(dAtA []byte) error {
 			}
 			m.DstChannel = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 8:
+		case 9:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChannelOrdering", wireType)
 			}
@@ -4668,6 +4988,40 @@ func (m *EventChannelAckPacket) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Acknowledgement", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Acknowledgement = append(m.Acknowledgement[:0], dAtA[iNdEx:postIndex]...)
+			if m.Acknowledgement == nil {
+				m.Acknowledgement = []byte{}
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipEvent(dAtA[iNdEx:])
@@ -4723,6 +5077,40 @@ func (m *EventChannelTimeoutPacket) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Data", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Data = append(m.Data[:0], dAtA[iNdEx:postIndex]...)
+			if m.Data == nil {
+				m.Data = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TimeoutHeight", wireType)
 			}
 			var msglen int
@@ -4754,7 +5142,7 @@ func (m *EventChannelTimeoutPacket) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 2:
+		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TimeoutTimestamp", wireType)
 			}
@@ -4773,7 +5161,7 @@ func (m *EventChannelTimeoutPacket) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 3:
+		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Sequence", wireType)
 			}
@@ -4792,7 +5180,7 @@ func (m *EventChannelTimeoutPacket) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 4:
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SrcPort", wireType)
 			}
@@ -4824,7 +5212,7 @@ func (m *EventChannelTimeoutPacket) Unmarshal(dAtA []byte) error {
 			}
 			m.SrcPort = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 5:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SrcChannel", wireType)
 			}
@@ -4856,7 +5244,7 @@ func (m *EventChannelTimeoutPacket) Unmarshal(dAtA []byte) error {
 			}
 			m.SrcChannel = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 6:
+		case 7:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DstPort", wireType)
 			}
@@ -4888,7 +5276,7 @@ func (m *EventChannelTimeoutPacket) Unmarshal(dAtA []byte) error {
 			}
 			m.DstPort = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 7:
+		case 8:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DstChannel", wireType)
 			}
@@ -4920,7 +5308,7 @@ func (m *EventChannelTimeoutPacket) Unmarshal(dAtA []byte) error {
 			}
 			m.DstChannel = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 8:
+		case 9:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChannelOrdering", wireType)
 			}
@@ -4939,6 +5327,178 @@ func (m *EventChannelTimeoutPacket) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvent(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventAcknowledgementSuccess) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvent
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventAcknowledgementSuccess: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventAcknowledgementSuccess: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Success", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Success = append(m.Success[:0], dAtA[iNdEx:postIndex]...)
+			if m.Success == nil {
+				m.Success = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvent(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventAcknowledgementError) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvent
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventAcknowledgementError: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventAcknowledgementError: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Error = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipEvent(dAtA[iNdEx:])

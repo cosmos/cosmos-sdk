@@ -25,6 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/05-port/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
@@ -317,14 +318,23 @@ func (am AppModule) OnRecvPacket(
 		acknowledgement = channeltypes.NewErrorAcknowledgement(err.Error())
 	}
 
+	channel, _ := am.keeper.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
+
 	err = ctx.EventManager().EmitTypedEvent(
-		&types.EventOnRecvPacket{
-			Receiver: data.Receiver,
-			Denom:    data.Denom,
-			Amount:   data.Amount,
-			Success:  err != nil,
+		&channeltypes.EventChannelRecvPacket{
+			Data:             packet.GetData(),
+			TimeoutHeight:    packet.GetTimeoutHeight().(clienttypes.Height),
+			TimeoutTimestamp: packet.GetTimeoutTimestamp(),
+			Sequence:         packet.GetSequence(),
+			SrcPort:          packet.GetSourcePort(),
+			SrcChannel:       packet.GetSourceChannel(),
+			DstPort:          packet.GetDestPort(),
+			DstChannel:       packet.GetDestChannel(),
+			ChannelOrdering:  channel.Ordering,
+			Success:          err != nil,
 		},
 	)
+
 	if err != nil {
 		acknowledgement = channeltypes.NewErrorAcknowledgement(err.Error())
 	}
@@ -354,12 +364,20 @@ func (am AppModule) OnAcknowledgementPacket(
 		return nil, err
 	}
 
+	channel, _ := am.keeper.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
+
 	if err := ctx.EventManager().EmitTypedEvent(
-		&types.EventOnAcknowledgementPacket{
-			Receiver:        data.Receiver,
-			Denom:           data.Denom,
-			Amount:          data.Amount,
-			Acknowledgement: ack,
+		&channeltypes.EventChannelAckPacket{
+			Data:             packet.GetData(),
+			TimeoutHeight:    packet.GetTimeoutHeight().(clienttypes.Height),
+			TimeoutTimestamp: packet.GetTimeoutTimestamp(),
+			Sequence:         packet.GetSequence(),
+			SrcPort:          packet.GetSourcePort(),
+			SrcChannel:       packet.GetSourceChannel(),
+			DstPort:          packet.GetDestPort(),
+			DstChannel:       packet.GetDestChannel(),
+			ChannelOrdering:  channel.Ordering,
+			Acknowledgement:  acknowledgement,
 		},
 	); err != nil {
 		return nil, err
@@ -368,7 +386,7 @@ func (am AppModule) OnAcknowledgementPacket(
 	switch resp := ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Result:
 		if err := ctx.EventManager().EmitTypedEvent(
-			&types.EventAcknowledgementSuccess{
+			&channeltypes.EventAcknowledgementSuccess{
 				Success: resp.Result,
 			},
 		); err != nil {
@@ -376,7 +394,7 @@ func (am AppModule) OnAcknowledgementPacket(
 		}
 	case *channeltypes.Acknowledgement_Error:
 		if err := ctx.EventManager().EmitTypedEvent(
-			&types.EventAcknowledgementError{
+			&channeltypes.EventAcknowledgementError{
 				Error: resp.Error,
 			},
 		); err != nil {
@@ -403,11 +421,19 @@ func (am AppModule) OnTimeoutPacket(
 		return nil, err
 	}
 
+	channel, _ := am.keeper.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
+
 	if err := ctx.EventManager().EmitTypedEvent(
-		&types.EventOnTimeoutPacket{
-			RefundReceiver: data.Sender,
-			RefundDenom:    data.Denom,
-			RefundAmount:   data.Amount,
+		&channeltypes.EventChannelTimeoutPacket{
+			Data:             packet.GetData(),
+			TimeoutHeight:    packet.GetTimeoutHeight().(clienttypes.Height),
+			TimeoutTimestamp: packet.GetTimeoutTimestamp(),
+			Sequence:         packet.GetSequence(),
+			SrcPort:          packet.GetSourcePort(),
+			SrcChannel:       packet.GetSourceChannel(),
+			DstPort:          packet.GetDestPort(),
+			DstChannel:       packet.GetDestChannel(),
+			ChannelOrdering:  channel.Ordering,
 		},
 	); err != nil {
 		return nil, err

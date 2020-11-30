@@ -4,48 +4,6 @@ package ibc.applications.transfer.v1;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types";
 
 import "gogoproto/gogo.proto";
-import "ibc/core/channel/v1/channel.proto";
-
-// EventOnRecvPacket is a typed event emitted on receiving packet
-message EventOnRecvPacket {
-    string receiver = 1;
-
-    string denom = 2;
-
-    uint64 amount = 3;
-
-    bool success = 4; 
-}
-
-// EventOnAcknowledgementPacket is a typed event emitted on packet acknowledgement
-message EventOnAcknowledgementPacket {
-    string receiver = 1;
-
-    string denom = 2;
-
-    uint64 amount = 3;
-
-    ibc.core.channel.v1.Acknowledgement acknowledgement = 4 [(gogoproto.nullable) = false];
-}
-
-// EventAcknowledgementSuccess is a typed event emitted on packet acknowledgement success
-message EventAcknowledgementSuccess {
-    bytes success = 1;
-}
-
-// EventAcknowledgementError is a typed event emitted on packet acknowledgement error
-message EventAcknowledgementError {
-    string error = 1;
-}
-
-// EventOnTimeoutPacket is a typed event emitted on packet timeout
-message EventOnTimeoutPacket {
-    string refund_receiver = 1;
-
-    string refund_denom = 2;
-
-    uint64 refund_amount = 3;
-}
 
 // EventTransfer is a typed event emitted on ibc transfer
 message EventTransfer {
@@ -56,7 +14,10 @@ message EventTransfer {
 
 // EventDenominationTrace is a typed event for denomination trace
 message EventDenominationTrace {
-    bytes trace_hash = 1 [(gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes"];
+    bytes trace_hash = 1 [
+        (gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes",
+        (gogoproto.moretags) = "yaml:\"trace_hash\""
+    ];
     
     string denom = 2;
 }

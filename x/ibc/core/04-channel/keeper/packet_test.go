@@ -132,7 +132,7 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 			clientA, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			// use client state latest height for timeout
 			clientState := suite.chainA.GetClientState(clientA)
-			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clientState.GetLatestHeight().(*clienttypes.Height), disabledTimeoutTimestamp)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clientState.GetLatestHeight().(clienttypes.Height), disabledTimeoutTimestamp)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"timeout timestamp passed", func() {

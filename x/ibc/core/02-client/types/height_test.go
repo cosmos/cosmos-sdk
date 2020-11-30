@@ -10,14 +10,14 @@ import (
 )
 
 func TestZeroHeight(t *testing.T) {
-	require.Equal(t, &types.Height{}, types.ZeroHeight())
+	require.Equal(t, types.Height{}, types.ZeroHeight())
 }
 
 func TestCompareHeights(t *testing.T) {
 	testCases := []struct {
 		name        string
-		height1     *types.Height
-		height2     *types.Height
+		height1     types.Height
+		height2     types.Height
 		compareSign int64
 	}{
 		{"version number 1 is lesser", types.NewHeight(1, 3), types.NewHeight(3, 4), -1},

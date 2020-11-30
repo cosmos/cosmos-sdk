@@ -28,7 +28,7 @@ func (suite *TypesTestSuite) TestMarshalConsensusStateWithHeight() {
 				consensusState, ok := suite.chainA.GetConsensusState(clientA, clientState.GetLatestHeight())
 				suite.Require().True(ok)
 
-				cswh = types.NewConsensusStateWithHeight(clientState.GetLatestHeight().(*types.Height), consensusState)
+				cswh = types.NewConsensusStateWithHeight(clientState.GetLatestHeight().(types.Height), consensusState)
 			},
 		},
 	}

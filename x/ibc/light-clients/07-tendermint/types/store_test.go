@@ -26,7 +26,7 @@ func (suite *TendermintTestSuite) TestGetConsensusState() {
 		{
 			"consensus state not found", func() {
 				// use height with no consensus state set
-				height = height.(*clienttypes.Height).Increment()
+				height = height.(clienttypes.Height).Increment()
 			}, false,
 		},
 		{

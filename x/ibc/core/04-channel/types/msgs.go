@@ -81,7 +81,7 @@ var _ sdk.Msg = &MsgChannelOpenTry{}
 func NewMsgChannelOpenTry(
 	portID, desiredChannelID, counterpartyChosenChannelID, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID, counterpartyVersion string,
-	proofInit []byte, proofHeight *clienttypes.Height, signer sdk.AccAddress,
+	proofInit []byte, proofHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgChannelOpenTry {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := NewChannel(TRYOPEN, channelOrder, counterparty, connectionHops, version)
@@ -157,7 +157,7 @@ var _ sdk.Msg = &MsgChannelOpenAck{}
 // NewMsgChannelOpenAck creates a new MsgChannelOpenAck instance
 // nolint:interfacer
 func NewMsgChannelOpenAck(
-	portID, channelID, counterpartyChannelID string, cpv string, proofTry []byte, proofHeight *clienttypes.Height,
+	portID, channelID, counterpartyChannelID string, cpv string, proofTry []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
 ) *MsgChannelOpenAck {
 	return &MsgChannelOpenAck{
@@ -225,7 +225,7 @@ var _ sdk.Msg = &MsgChannelOpenConfirm{}
 // NewMsgChannelOpenConfirm creates a new MsgChannelOpenConfirm instance
 // nolint:interfacer
 func NewMsgChannelOpenConfirm(
-	portID, channelID string, proofAck []byte, proofHeight *clienttypes.Height,
+	portID, channelID string, proofAck []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
 ) *MsgChannelOpenConfirm {
 	return &MsgChannelOpenConfirm{
@@ -342,7 +342,7 @@ var _ sdk.Msg = &MsgChannelCloseConfirm{}
 // NewMsgChannelCloseConfirm creates a new MsgChannelCloseConfirm instance
 // nolint:interfacer
 func NewMsgChannelCloseConfirm(
-	portID, channelID string, proofInit []byte, proofHeight *clienttypes.Height,
+	portID, channelID string, proofInit []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
 ) *MsgChannelCloseConfirm {
 	return &MsgChannelCloseConfirm{
@@ -405,7 +405,7 @@ var _ sdk.Msg = &MsgRecvPacket{}
 // NewMsgRecvPacket constructs new MsgRecvPacket
 // nolint:interfacer
 func NewMsgRecvPacket(
-	packet Packet, proofCommitment []byte, proofHeight *clienttypes.Height,
+	packet Packet, proofCommitment []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
 ) *MsgRecvPacket {
 	return &MsgRecvPacket{
@@ -469,7 +469,7 @@ var _ sdk.Msg = &MsgTimeout{}
 // nolint:interfacer
 func NewMsgTimeout(
 	packet Packet, nextSequenceRecv uint64, proofUnreceived []byte,
-	proofHeight *clienttypes.Height, signer sdk.AccAddress,
+	proofHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgTimeout {
 	return &MsgTimeout{
 		Packet:           packet,
@@ -528,7 +528,7 @@ func (msg MsgTimeout) Type() string {
 func NewMsgTimeoutOnClose(
 	packet Packet, nextSequenceRecv uint64,
 	proofUnreceived, proofClose []byte,
-	proofHeight *clienttypes.Height, signer sdk.AccAddress,
+	proofHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgTimeoutOnClose {
 	return &MsgTimeoutOnClose{
 		Packet:           packet,
@@ -593,7 +593,7 @@ var _ sdk.Msg = &MsgAcknowledgement{}
 func NewMsgAcknowledgement(
 	packet Packet,
 	ack, proofAcked []byte,
-	proofHeight *clienttypes.Height,
+	proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
 ) *MsgAcknowledgement {
 	return &MsgAcknowledgement{

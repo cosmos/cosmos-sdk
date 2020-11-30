@@ -8,7 +8,7 @@ import (
 
 // NewQueryConnectionResponse creates a new QueryConnectionResponse instance
 func NewQueryConnectionResponse(
-	connection ConnectionEnd, proof []byte, height *clienttypes.Height,
+	connection ConnectionEnd, proof []byte, height clienttypes.Height,
 ) *QueryConnectionResponse {
 	return &QueryConnectionResponse{
 		Connection:  &connection,
@@ -19,7 +19,7 @@ func NewQueryConnectionResponse(
 
 // NewQueryClientConnectionsResponse creates a new ConnectionPaths instance
 func NewQueryClientConnectionsResponse(
-	connectionPaths []string, proof []byte, height *clienttypes.Height,
+	connectionPaths []string, proof []byte, height clienttypes.Height,
 ) *QueryClientConnectionsResponse {
 	return &QueryClientConnectionsResponse{
 		ConnectionPaths: connectionPaths,
@@ -36,7 +36,7 @@ func NewQueryClientConnectionsRequest(clientID string) *QueryClientConnectionsRe
 }
 
 // NewQueryConnectionClientStateResponse creates a newQueryConnectionClientStateResponse instance
-func NewQueryConnectionClientStateResponse(identifiedClientState clienttypes.IdentifiedClientState, proof []byte, height *clienttypes.Height) *QueryConnectionClientStateResponse {
+func NewQueryConnectionClientStateResponse(identifiedClientState clienttypes.IdentifiedClientState, proof []byte, height clienttypes.Height) *QueryConnectionClientStateResponse {
 	return &QueryConnectionClientStateResponse{
 		IdentifiedClientState: &identifiedClientState,
 		Proof:                 proof,
@@ -45,7 +45,7 @@ func NewQueryConnectionClientStateResponse(identifiedClientState clienttypes.Ide
 }
 
 // NewQueryConnectionConsensusStateResponse creates a newQueryConnectionConsensusStateResponse instance
-func NewQueryConnectionConsensusStateResponse(clientID string, anyConsensusState *codectypes.Any, consensusStateHeight exported.Height, proof []byte, height *clienttypes.Height) *QueryConnectionConsensusStateResponse {
+func NewQueryConnectionConsensusStateResponse(clientID string, anyConsensusState *codectypes.Any, consensusStateHeight exported.Height, proof []byte, height clienttypes.Height) *QueryConnectionConsensusStateResponse {
 	return &QueryConnectionConsensusStateResponse{
 		ConsensusState: anyConsensusState,
 		ClientId:       clientID,

@@ -138,7 +138,7 @@ func QueryConnectionClientState(
 // prove is true, it performs an ABCI store query in order to retrieve the
 // merkle proof. Otherwise, it uses the gRPC query client.
 func QueryConnectionConsensusState(
-	clientCtx client.Context, connectionID string, height *clienttypes.Height, prove bool,
+	clientCtx client.Context, connectionID string, height clienttypes.Height, prove bool,
 ) (*types.QueryConnectionConsensusStateResponse, error) {
 
 	queryClient := types.NewQueryClient(clientCtx)

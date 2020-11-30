@@ -159,7 +159,7 @@ If the '--latest' flag is included, the query returns the latest consensus state
 
 			queryLatestHeight, _ := cmd.Flags().GetBool(flagLatestHeight)
 
-			var height *types.Height
+			var height types.Height
 
 			if !queryLatestHeight {
 				if len(args) != 2 {

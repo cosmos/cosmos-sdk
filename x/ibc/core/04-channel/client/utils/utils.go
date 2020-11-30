@@ -96,7 +96,7 @@ func QueryChannelClientState(
 // prove is true, it performs an ABCI store query in order to retrieve the
 // merkle proof. Otherwise, it uses the gRPC query client.
 func QueryChannelConsensusState(
-	clientCtx client.Context, portID, channelID string, height *clienttypes.Height, prove bool,
+	clientCtx client.Context, portID, channelID string, height clienttypes.Height, prove bool,
 ) (*types.QueryChannelConsensusStateResponse, error) {
 
 	queryClient := types.NewQueryClient(clientCtx)
@@ -128,29 +128,29 @@ func QueryChannelConsensusState(
 // latest ConsensusState given the source port ID and source channel ID.
 func QueryLatestConsensusState(
 	clientCtx client.Context, portID, channelID string,
-) (exported.ConsensusState, *clienttypes.Height, *clienttypes.Height, error) {
+) (exported.ConsensusState, clienttypes.Height, clienttypes.Height, error) {
 	clientRes, err := QueryChannelClientState(clientCtx, portID, channelID, false)
 	if err != nil {
-		return nil, &clienttypes.Height{}, &clienttypes.Height{}, err
+		return nil, clienttypes.Height{}, clienttypes.Height{}, err
 	}
 	clientState, err := clienttypes.UnpackClientState(clientRes.IdentifiedClientState.ClientState)
 	if err != nil {
-		return nil, &clienttypes.Height{}, &clienttypes.Height{}, err
+		return nil, clienttypes.Height{}, clienttypes.Height{}, err
 	}
 
-	clientHeight, ok := clientState.GetLatestHeight().(*clienttypes.Height)
+	clientHeight, ok := clientState.GetLatestHeight().(clienttypes.Height)
 	if !ok {
-		return nil, &clienttypes.Height{}, &clienttypes.Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid height type. expected type: %T, got: %T",
-			&clienttypes.Height{}, clientHeight)
+		return nil, clienttypes.Height{}, clienttypes.Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid height type. expected type: %T, got: %T",
+			clienttypes.Height{}, clientHeight)
 	}
 	res, err := QueryChannelConsensusState(clientCtx, portID, channelID, clientHeight, false)
 	if err != nil {
-		return nil, &clienttypes.Height{}, &clienttypes.Height{}, err
+		return nil, clienttypes.Height{}, clienttypes.Height{}, err
 	}
 
 	consensusState, err := clienttypes.UnpackConsensusState(res.ConsensusState)
 	if err != nil {
-		return nil, &clienttypes.Height{}, &clienttypes.Height{}, err
+		return nil, clienttypes.Height{}, clienttypes.Height{}, err
 	}
 
 	return consensusState, clientHeight, res.ProofHeight, nil

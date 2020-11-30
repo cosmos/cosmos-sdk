@@ -168,7 +168,7 @@ func checkValidity(
 
 // update the consensus state from a new header
 func update(clientState *ClientState, header *Header) (*ClientState, *ConsensusState) {
-	height := header.GetHeight().(*clienttypes.Height)
+	height := header.GetHeight().(clienttypes.Height)
 	if height.GT(clientState.LatestHeight) {
 		clientState.LatestHeight = height
 	}

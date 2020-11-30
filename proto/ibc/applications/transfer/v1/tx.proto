@@ -33,7 +33,7 @@ message MsgTransfer {
   // Timeout height relative to the current block height.
   // The timeout is disabled when set to 0.
   ibc.core.client.v1.Height timeout_height = 6
-      [(gogoproto.moretags) = "yaml:\"timeout_height\""];
+      [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
   // Timeout timestamp (in nanoseconds) relative to the current block timestamp.
   // The timeout is disabled when set to 0.
   uint64 timeout_timestamp = 7 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];

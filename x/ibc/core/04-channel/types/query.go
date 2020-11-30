@@ -7,7 +7,7 @@ import (
 )
 
 // NewQueryChannelResponse creates a new QueryChannelResponse instance
-func NewQueryChannelResponse(channel Channel, proof []byte, height *clienttypes.Height) *QueryChannelResponse {
+func NewQueryChannelResponse(channel Channel, proof []byte, height clienttypes.Height) *QueryChannelResponse {
 	return &QueryChannelResponse{
 		Channel:     &channel,
 		Proof:       proof,
@@ -16,7 +16,7 @@ func NewQueryChannelResponse(channel Channel, proof []byte, height *clienttypes.
 }
 
 // NewQueryChannelClientStateResponse creates a newQueryChannelClientStateResponse instance
-func NewQueryChannelClientStateResponse(identifiedClientState clienttypes.IdentifiedClientState, proof []byte, height *clienttypes.Height) *QueryChannelClientStateResponse {
+func NewQueryChannelClientStateResponse(identifiedClientState clienttypes.IdentifiedClientState, proof []byte, height clienttypes.Height) *QueryChannelClientStateResponse {
 	return &QueryChannelClientStateResponse{
 		IdentifiedClientState: &identifiedClientState,
 		Proof:                 proof,
@@ -25,7 +25,7 @@ func NewQueryChannelClientStateResponse(identifiedClientState clienttypes.Identi
 }
 
 // NewQueryChannelConsensusStateResponse creates a newQueryChannelConsensusStateResponse instance
-func NewQueryChannelConsensusStateResponse(clientID string, anyConsensusState *codectypes.Any, consensusStateHeight exported.Height, proof []byte, height *clienttypes.Height) *QueryChannelConsensusStateResponse {
+func NewQueryChannelConsensusStateResponse(clientID string, anyConsensusState *codectypes.Any, consensusStateHeight exported.Height, proof []byte, height clienttypes.Height) *QueryChannelConsensusStateResponse {
 	return &QueryChannelConsensusStateResponse{
 		ConsensusState: anyConsensusState,
 		ClientId:       clientID,
@@ -36,7 +36,7 @@ func NewQueryChannelConsensusStateResponse(clientID string, anyConsensusState *c
 
 // NewQueryPacketCommitmentResponse creates a new QueryPacketCommitmentResponse instance
 func NewQueryPacketCommitmentResponse(
-	commitment []byte, proof []byte, height *clienttypes.Height,
+	commitment []byte, proof []byte, height clienttypes.Height,
 ) *QueryPacketCommitmentResponse {
 	return &QueryPacketCommitmentResponse{
 		Commitment:  commitment,
@@ -47,7 +47,7 @@ func NewQueryPacketCommitmentResponse(
 
 // NewQueryPacketReceiptResponse creates a new QueryPacketReceiptResponse instance
 func NewQueryPacketReceiptResponse(
-	recvd bool, proof []byte, height *clienttypes.Height,
+	recvd bool, proof []byte, height clienttypes.Height,
 ) *QueryPacketReceiptResponse {
 	return &QueryPacketReceiptResponse{
 		Received:    recvd,
@@ -58,7 +58,7 @@ func NewQueryPacketReceiptResponse(
 
 // NewQueryPacketAcknowledgementResponse creates a new QueryPacketAcknowledgementResponse instance
 func NewQueryPacketAcknowledgementResponse(
-	acknowledgement []byte, proof []byte, height *clienttypes.Height,
+	acknowledgement []byte, proof []byte, height clienttypes.Height,
 ) *QueryPacketAcknowledgementResponse {
 	return &QueryPacketAcknowledgementResponse{
 		Acknowledgement: acknowledgement,
@@ -69,7 +69,7 @@ func NewQueryPacketAcknowledgementResponse(
 
 // NewQueryNextSequenceReceiveResponse creates a new QueryNextSequenceReceiveResponse instance
 func NewQueryNextSequenceReceiveResponse(
-	sequence uint64, proof []byte, height *clienttypes.Height,
+	sequence uint64, proof []byte, height clienttypes.Height,
 ) *QueryNextSequenceReceiveResponse {
 	return &QueryNextSequenceReceiveResponse{
 		NextSequenceReceive: sequence,

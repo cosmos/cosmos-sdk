@@ -57,7 +57,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 	// Must create header creation functions since suite.header gets recreated on each test case
 	createFutureUpdateFn := func(s *KeeperTestSuite) *ibctmtypes.Header {
 		heightPlus3 := clienttypes.NewHeight(suite.header.GetHeight().GetVersionNumber(), suite.header.GetHeight().GetVersionHeight()+3)
-		height := suite.header.GetHeight().(*clienttypes.Height)
+		height := suite.header.GetHeight().(clienttypes.Height)
 
 		return suite.chainA.CreateTMClientHeader(testChainID, int64(heightPlus3.VersionHeight), height, suite.header.Header.Time.Add(time.Hour),
 			suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
@@ -230,7 +230,7 @@ func (suite *KeeperTestSuite) TestUpdateClientLocalhost() {
 
 	clientState, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(ctx, exported.Localhost)
 	suite.Require().True(found)
-	suite.Require().Equal(localhostClient.GetLatestHeight().(*types.Height).Increment(), clientState.GetLatestHeight())
+	suite.Require().Equal(localhostClient.GetLatestHeight().(types.Height).Increment(), clientState.GetLatestHeight())
 }
 
 func (suite *KeeperTestSuite) TestUpgradeClient() {

@@ -92,17 +92,12 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		)
 	}()
 
-	anyHeight, err := types.PackHeight(consensusHeight)
-	if err != nil {
-		return err
-	}
-
 	// emitting events in the keeper emits for both begin block and handler client updates
 	if err := ctx.EventManager().EmitTypedEvent(
 		&types.EventUpdateClient{
 			ClientId:        clientID,
 			ClientType:      clientState.ClientType(),
-			ConsensusHeight: anyHeight,
+			ConsensusHeight: consensusHeight.(types.Height),
 		},
 	); err != nil {
 		return err
@@ -145,17 +140,12 @@ func (k Keeper) UpgradeClient(ctx sdk.Context, clientID string, upgradedClient e
 		)
 	}()
 
-	anyHeight, err := types.PackHeight(updatedClientState.GetLatestHeight())
-	if err != nil {
-		return err
-	}
-
 	// emitting events in the keeper emits for client upgrades
 	if err := ctx.EventManager().EmitTypedEvent(
 		&types.EventUpgradeClient{
 			ClientId:        clientID,
 			ClientType:      updatedClientState.ClientType(),
-			ConsensusHeight: anyHeight,
+			ConsensusHeight: updatedClientState.GetLatestHeight().(types.Height),
 		},
 	); err != nil {
 		return err

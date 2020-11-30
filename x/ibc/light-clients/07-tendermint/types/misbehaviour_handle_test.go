@@ -42,9 +42,9 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		name            string
 		clientState     exported.ClientState
 		consensusState1 exported.ConsensusState
-		height1         *clienttypes.Height
+		height1         clienttypes.Height
 		consensusState2 exported.ConsensusState
-		height2         *clienttypes.Height
+		height2         clienttypes.Height
 		misbehaviour    exported.Misbehaviour
 		timestamp       time.Time
 		expPass         bool
@@ -218,7 +218,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			"trusted consensus state does not exist",
 			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			nil, // consensus state for trusted height - 1 does not exist in store
-			&clienttypes.Height{},
+			clienttypes.Height{},
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
 			height,
 			&types.Misbehaviour{

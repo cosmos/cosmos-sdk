@@ -3,8 +3,8 @@ package ibc.core.client.v1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types";
 
-import "google/protobuf/any.proto";
-import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "ibc/core/client/v1/client.proto";
 
 // EventCreateClient is a typed event emitted on creating client
 message EventCreateClient {
@@ -12,7 +12,8 @@ message EventCreateClient {
 
     string client_type = 2;
 
-    google.protobuf.Any consensus_height  = 3 [(cosmos_proto.accepts_interface) = "Height"];
+    ibc.core.client.v1.Height consensus_height = 3
+      [(gogoproto.moretags) = "yaml:\"consensus_height\"", (gogoproto.nullable) = false];
 }
 
 // EventUpdateClient is a typed event emitted on updating client
@@ -21,7 +22,8 @@ message EventUpdateClient {
 
     string client_type = 2;
 
-    google.protobuf.Any consensus_height  = 3 [(cosmos_proto.accepts_interface) = "Height"];
+    ibc.core.client.v1.Height consensus_height = 3
+      [(gogoproto.moretags) = "yaml:\"consensus_height\"", (gogoproto.nullable) = false];
 }
 
 // EventUpgradeClient is a typed event emitted on upgrading client
@@ -30,7 +32,8 @@ message EventUpgradeClient {
 
     string client_type = 2;
 
-    google.protobuf.Any consensus_height  = 3 [(cosmos_proto.accepts_interface) = "Height"];
+    ibc.core.client.v1.Height consensus_height = 3
+      [(gogoproto.moretags) = "yaml:\"consensus_height\"", (gogoproto.nullable) = false];
 }
 
 // EventUpdateClientProposal is a typed event emitted on updating client proposal
@@ -39,7 +42,8 @@ message EventUpdateClientProposal {
 
     string client_type = 2;
 
-    google.protobuf.Any consensus_height  = 3 [(cosmos_proto.accepts_interface) = "Height"];
+    ibc.core.client.v1.Height consensus_height = 3
+      [(gogoproto.moretags) = "yaml:\"consensus_height\"", (gogoproto.nullable) = false];
 }
 
 // EventClientMisbehaviour is a typed event emitted when misbehaviour is submitted
@@ -48,5 +52,6 @@ message EventClientMisbehaviour {
 
     string client_type = 2;
 
-    google.protobuf.Any consensus_height  = 3 [(cosmos_proto.accepts_interface) = "Height"];
+    ibc.core.client.v1.Height consensus_height = 3
+      [(gogoproto.moretags) = "yaml:\"consensus_height\"", (gogoproto.nullable) = false];
 }

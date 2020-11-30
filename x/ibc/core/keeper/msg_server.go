@@ -36,16 +36,11 @@ func (k Keeper) CreateClient(goCtx context.Context, msg *clienttypes.MsgCreateCl
 		return nil, err
 	}
 
-	anyHeight, err := clienttypes.PackHeight(clientState.GetLatestHeight())
-	if err != nil {
-		return nil, err
-	}
-
 	if err := ctx.EventManager().EmitTypedEvent(
 		&clienttypes.EventCreateClient{
 			ClientId:        msg.ClientId,
 			ClientType:      clientState.ClientType(),
-			ConsensusHeight: anyHeight,
+			ConsensusHeight: clientState.GetLatestHeight().(clienttypes.Height),
 		},
 	); err != nil {
 		return nil, err
@@ -120,16 +115,11 @@ func (k Keeper) SubmitMisbehaviour(goCtx context.Context, msg *clienttypes.MsgSu
 		return nil, sdkerrors.Wrap(err, "failed to process misbehaviour for IBC client")
 	}
 
-	anyHeight, err := clienttypes.PackHeight(misbehaviour.GetHeight())
-	if err != nil {
-		return nil, err
-	}
-
 	if err := ctx.EventManager().EmitTypedEvent(
 		&clienttypes.EventClientMisbehaviour{
 			ClientId:        msg.ClientId,
 			ClientType:      misbehaviour.ClientType(),
-			ConsensusHeight: anyHeight,
+			ConsensusHeight: misbehaviour.GetHeight().(clienttypes.Height),
 		},
 	); err != nil {
 		return nil, err

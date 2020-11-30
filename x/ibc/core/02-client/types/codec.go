@@ -180,35 +180,3 @@ func UnpackMisbehaviour(any *codectypes.Any) (exported.Misbehaviour, error) {
 
 	return misbehaviour, nil
 }
-
-// PackHeight constructs a new Any packed with the given height value. It returns
-// an error if the height can't be casted to a protobuf message or if the concrete
-// implemention is not registered to the protobuf codec.
-func PackHeight(height exported.Height) (*codectypes.Any, error) {
-	msg, ok := height.(proto.Message)
-	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", height)
-	}
-
-	anyHeight, err := codectypes.NewAnyWithValue(msg)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrPackAny, err.Error())
-	}
-
-	return anyHeight, nil
-}
-
-// UnpackHeight unpacks an Any into a Height. It returns an error if the
-// consensus state can't be unpacked into a Height.
-func UnpackHeight(any *codectypes.Any) (exported.Height, error) {
-	if any == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnpackAny, "protobuf Any message cannot be nil")
-	}
-
-	height, ok := any.GetCachedValue().(exported.Height)
-	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnpackAny, "cannot unpack Any into Height %T", any)
-	}
-
-	return height, nil
-}

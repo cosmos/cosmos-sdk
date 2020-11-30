@@ -262,7 +262,7 @@ func (suite KeeperTestSuite) TestGetConsensusState() {
 	suite.ctx = suite.ctx.WithBlockHeight(10)
 	cases := []struct {
 		name    string
-		height  *types.Height
+		height  types.Height
 		expPass bool
 	}{
 		{"zero height", types.ZeroHeight(), false},
@@ -299,7 +299,7 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 		suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 
 	// mock update functionality
-	clientState.LatestHeight = header.GetHeight().(*types.Height)
+	clientState.LatestHeight = header.GetHeight().(types.Height)
 	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, header.GetHeight(), nextState)
 	suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 
@@ -345,11 +345,11 @@ func (suite KeeperTestSuite) TestGetAllConsensusStates() {
 
 	expConsensusStates := types.ClientsConsensusStates{
 		types.NewClientConsensusStates(clientA, []types.ConsensusStateWithHeight{
-			types.NewConsensusStateWithHeight(expConsensusHeight0.(*types.Height), expConsensus[0]),
-			types.NewConsensusStateWithHeight(expConsensusHeight1.(*types.Height), expConsensus[1]),
+			types.NewConsensusStateWithHeight(expConsensusHeight0.(types.Height), expConsensus[0]),
+			types.NewConsensusStateWithHeight(expConsensusHeight1.(types.Height), expConsensus[1]),
 		}),
 		types.NewClientConsensusStates(clientA2, []types.ConsensusStateWithHeight{
-			types.NewConsensusStateWithHeight(expConsensusHeight2.(*types.Height), expConsensus2[0]),
+			types.NewConsensusStateWithHeight(expConsensusHeight2.(types.Height), expConsensus2[0]),
 		}),
 	}.Sort()
 

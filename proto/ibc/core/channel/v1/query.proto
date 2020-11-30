@@ -110,7 +110,7 @@ message QueryChannelResponse {
   // merkle proof of existence
   bytes proof = 2;
   // height at which the proof was retrieved
-  ibc.core.client.v1.Height proof_height = 3;
+  ibc.core.client.v1.Height proof_height = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryChannelsRequest is the request type for the Query/Channels RPC method
@@ -126,7 +126,7 @@ message QueryChannelsResponse {
   // pagination response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
   // query block height
-  ibc.core.client.v1.Height height = 3;
+  ibc.core.client.v1.Height height = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryConnectionChannelsRequest is the request type for the
@@ -146,7 +146,7 @@ message QueryConnectionChannelsResponse {
   // pagination response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
   // query block height
-  ibc.core.client.v1.Height height = 3;
+  ibc.core.client.v1.Height height = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryChannelClientStateRequest is the request type for the Query/ClientState
@@ -166,7 +166,7 @@ message QueryChannelClientStateResponse {
   // merkle proof of existence
   bytes proof = 2;
   // height at which the proof was retrieved
-  ibc.core.client.v1.Height proof_height = 3;
+  ibc.core.client.v1.Height proof_height = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryChannelConsensusStateRequest is the request type for the
@@ -192,7 +192,7 @@ message QueryChannelConsensusStateResponse {
   // merkle proof of existence
   bytes proof = 3;
   // height at which the proof was retrieved
-  ibc.core.client.v1.Height proof_height = 4;
+  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
 }
 
 // QueryPacketCommitmentRequest is the request type for the
@@ -215,7 +215,7 @@ message QueryPacketCommitmentResponse {
   // merkle proof of existence
   bytes proof = 2;
   // height at which the proof was retrieved
-  ibc.core.client.v1.Height proof_height = 3;
+  ibc.core.client.v1.Height proof_height = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryPacketCommitmentsRequest is the request type for the
@@ -236,7 +236,7 @@ message QueryPacketCommitmentsResponse {
   // pagination response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
   // query block height
-  ibc.core.client.v1.Height height = 3;
+  ibc.core.client.v1.Height height = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryPacketReceiptRequest is the request type for the
@@ -259,7 +259,7 @@ message QueryPacketReceiptResponse {
   // merkle proof of existence
   bytes proof = 3;
   // height at which the proof was retrieved
-  ibc.core.client.v1.Height proof_height = 4;
+  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
 }
 
 // QueryPacketAcknowledgementRequest is the request type for the
@@ -282,7 +282,7 @@ message QueryPacketAcknowledgementResponse {
   // merkle proof of existence
   bytes proof = 2;
   // height at which the proof was retrieved
-  ibc.core.client.v1.Height proof_height = 3;
+  ibc.core.client.v1.Height proof_height = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryPacketAcknowledgementsRequest is the request type for the
@@ -303,7 +303,7 @@ message QueryPacketAcknowledgementsResponse {
   // pagination response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
   // query block height
-  ibc.core.client.v1.Height height = 3;
+  ibc.core.client.v1.Height height = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryUnreceivedPacketsRequest is the request type for the
@@ -323,7 +323,7 @@ message QueryUnreceivedPacketsResponse {
   // list of unreceived packet sequences
   repeated uint64 sequences = 1;
   // query block height
-  ibc.core.client.v1.Height height = 2;
+  ibc.core.client.v1.Height height = 2 [(gogoproto.nullable) = false];
 }
 
 // QueryUnreceivedAcks is the request type for the
@@ -343,7 +343,7 @@ message QueryUnreceivedAcksResponse {
   // list of unreceived acknowledgement sequences
   repeated uint64 sequences = 1;
   // query block height
-  ibc.core.client.v1.Height height = 2;
+  ibc.core.client.v1.Height height = 2 [(gogoproto.nullable) = false];
 }
 
 // QueryNextSequenceReceiveRequest is the request type for the
@@ -363,5 +363,5 @@ message QueryNextSequenceReceiveResponse {
   // merkle proof of existence
   bytes proof = 2;
   // height at which the proof was retrieved
-  ibc.core.client.v1.Height proof_height = 3;
+  ibc.core.client.v1.Height proof_height = 3 [(gogoproto.nullable) = false];
 }

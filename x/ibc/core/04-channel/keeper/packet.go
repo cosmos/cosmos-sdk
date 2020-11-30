@@ -115,17 +115,12 @@ func (k Keeper) SendPacket(
 	k.SetNextSequenceSend(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), nextSequenceSend)
 	k.SetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), commitment)
 
-	anyTimeoutHeight, err := clienttypes.PackHeight(timeoutHeight)
-	if err != nil {
-		return nil
-	}
-
 	// Emit Event with Packet data along with other packet information for relayer to pick up
 	// and relay to other chain
 	if err := ctx.EventManager().EmitTypedEvent(
 		&types.EventChannelSendPacket{
 			Data:             packet.GetData(),
-			TimeoutHeight:    anyTimeoutHeight,
+			TimeoutHeight:    timeoutHeight.(clienttypes.Height),
 			TimeoutTimestamp: packet.GetTimeoutTimestamp(),
 			Sequence:         packet.GetSequence(),
 			SrcPort:          packet.GetSourcePort(),
@@ -285,16 +280,11 @@ func (k Keeper) RecvPacket(
 	// log that a packet has been received & executed
 	k.Logger(ctx).Info("packet received", "packet", fmt.Sprintf("%v", packet))
 
-	anyTimeoutHeight, err := clienttypes.PackHeight(packet.GetTimeoutHeight())
-	if err != nil {
-		return nil
-	}
-
 	// emit an event that the relayer can query for
 	if err := ctx.EventManager().EmitTypedEvent(
 		&types.EventChannelRecvPacket{
 			Data:             packet.GetData(),
-			TimeoutHeight:    anyTimeoutHeight,
+			TimeoutHeight:    packet.GetTimeoutHeight().(clienttypes.Height),
 			TimeoutTimestamp: packet.GetTimeoutTimestamp(),
 			Sequence:         packet.GetSequence(),
 			SrcPort:          packet.GetSourcePort(),
@@ -375,16 +365,11 @@ func (k Keeper) WriteAcknowledgement(
 	// log that a packet acknowledgement has been written
 	k.Logger(ctx).Info("acknowledged written", "packet", fmt.Sprintf("%v", packet))
 
-	anyTimeoutHeight, err := clienttypes.PackHeight(packet.GetTimeoutHeight())
-	if err != nil {
-		return nil
-	}
-
 	// emit an event that the relayer can query for
 	if err := ctx.EventManager().EmitTypedEvent(
 		&types.EventChannelWriteAck{
 			Data:             packet.GetData(),
-			TimeoutHeight:    anyTimeoutHeight,
+			TimeoutHeight:    packet.GetTimeoutHeight().(clienttypes.Height),
 			TimeoutTimestamp: packet.GetTimeoutTimestamp(),
 			Sequence:         packet.GetSequence(),
 			SrcPort:          packet.GetSourcePort(),
@@ -520,15 +505,10 @@ func (k Keeper) AcknowledgePacket(
 	// log that a packet has been acknowledged
 	k.Logger(ctx).Info("packet acknowledged", "packet", fmt.Sprintf("%v", packet))
 
-	anyTimeoutHeight, err := clienttypes.PackHeight(packet.GetTimeoutHeight())
-	if err != nil {
-		return nil
-	}
-
 	// emit an event marking that we have processed the acknowledgement
 	if err := ctx.EventManager().EmitTypedEvent(
 		&types.EventChannelAckPacket{
-			TimeoutHeight:    anyTimeoutHeight,
+			TimeoutHeight:    packet.GetTimeoutHeight().(clienttypes.Height),
 			TimeoutTimestamp: packet.GetTimeoutTimestamp(),
 			Sequence:         packet.GetSequence(),
 			SrcPort:          packet.GetSourcePort(),

@@ -84,7 +84,7 @@ func NewMsgConnectionOpenTry(
 	counterpartyClientID string, counterpartyClient exported.ClientState,
 	counterpartyPrefix commitmenttypes.MerklePrefix, counterpartyVersions []*Version,
 	proofInit, proofClient, proofConsensus []byte,
-	proofHeight, consensusHeight *clienttypes.Height, signer sdk.AccAddress,
+	proofHeight, consensusHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgConnectionOpenTry {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
 	csAny, _ := clienttypes.PackClientState(counterpartyClient)
@@ -198,7 +198,7 @@ var _ sdk.Msg = &MsgConnectionOpenAck{}
 func NewMsgConnectionOpenAck(
 	connectionID, counterpartyConnectionID string, counterpartyClient exported.ClientState,
 	proofTry, proofClient, proofConsensus []byte,
-	proofHeight, consensusHeight *clienttypes.Height,
+	proofHeight, consensusHeight clienttypes.Height,
 	version *Version,
 	signer sdk.AccAddress,
 ) *MsgConnectionOpenAck {
@@ -295,7 +295,7 @@ var _ sdk.Msg = &MsgConnectionOpenConfirm{}
 // NewMsgConnectionOpenConfirm creates a new MsgConnectionOpenConfirm instance
 //nolint:interfacer
 func NewMsgConnectionOpenConfirm(
-	connectionID string, proofAck []byte, proofHeight *clienttypes.Height,
+	connectionID string, proofAck []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
 ) *MsgConnectionOpenConfirm {
 	return &MsgConnectionOpenConfirm{

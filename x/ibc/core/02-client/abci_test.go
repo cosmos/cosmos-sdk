@@ -55,6 +55,6 @@ func (suite *ClientTestSuite) TestBeginBlocker() {
 
 		localHostClient = suite.chainA.GetClientState(exported.Localhost)
 		suite.Require().Equal(prevHeight.Increment(), localHostClient.GetLatestHeight())
-		prevHeight = localHostClient.GetLatestHeight().(*types.Height)
+		prevHeight = localHostClient.GetLatestHeight().(types.Height)
 	}
 }

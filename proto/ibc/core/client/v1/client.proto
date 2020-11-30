@@ -18,7 +18,7 @@ message IdentifiedClientState {
 // ConsensusStateWithHeight defines a consensus state with an additional height field.
 message ConsensusStateWithHeight {
   // consensus state height
-  Height height = 1;
+  Height height = 1 [(gogoproto.nullable) = false];
   // consensus state
   google.protobuf.Any consensus_state = 2 [(gogoproto.moretags) = "yaml\"consensus_state\""];
 }

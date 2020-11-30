@@ -24,7 +24,7 @@ var _ exported.ClientState = (*ClientState)(nil)
 func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	latestHeight *clienttypes.Height, specs []*ics23.ProofSpec,
+	latestHeight clienttypes.Height, specs []*ics23.ProofSpec,
 	upgradePath string, allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour bool,
 ) *ClientState {
 	return &ClientState{

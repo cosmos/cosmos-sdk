@@ -5,9 +5,8 @@ package types
 
 import (
 	fmt "fmt"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
+	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
-	_ "github.com/regen-network/cosmos-proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -26,9 +25,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // EventCreateClient is a typed event emitted on creating client
 type EventCreateClient struct {
-	ClientId        string     `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	ClientType      string     `protobuf:"bytes,2,opt,name=client_type,json=clientType,proto3" json:"client_type,omitempty"`
-	ConsensusHeight *types.Any `protobuf:"bytes,3,opt,name=consensus_height,json=consensusHeight,proto3" json:"consensus_height,omitempty"`
+	ClientId        string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	ClientType      string `protobuf:"bytes,2,opt,name=client_type,json=clientType,proto3" json:"client_type,omitempty"`
+	ConsensusHeight Height `protobuf:"bytes,3,opt,name=consensus_height,json=consensusHeight,proto3" json:"consensus_height" yaml:"consensus_height"`
 }
 
 func (m *EventCreateClient) Reset()         { *m = EventCreateClient{} }
@@ -78,18 +77,18 @@ func (m *EventCreateClient) GetClientType() string {
 	return ""
 }
 
-func (m *EventCreateClient) GetConsensusHeight() *types.Any {
+func (m *EventCreateClient) GetConsensusHeight() Height {
 	if m != nil {
 		return m.ConsensusHeight
 	}
-	return nil
+	return Height{}
 }
 
 // EventUpdateClient is a typed event emitted on updating client
 type EventUpdateClient struct {
-	ClientId        string     `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	ClientType      string     `protobuf:"bytes,2,opt,name=client_type,json=clientType,proto3" json:"client_type,omitempty"`
-	ConsensusHeight *types.Any `protobuf:"bytes,3,opt,name=consensus_height,json=consensusHeight,proto3" json:"consensus_height,omitempty"`
+	ClientId        string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	ClientType      string `protobuf:"bytes,2,opt,name=client_type,json=clientType,proto3" json:"client_type,omitempty"`
+	ConsensusHeight Height `protobuf:"bytes,3,opt,name=consensus_height,json=consensusHeight,proto3" json:"consensus_height" yaml:"consensus_height"`
 }
 
 func (m *EventUpdateClient) Reset()         { *m = EventUpdateClient{} }
@@ -139,18 +138,18 @@ func (m *EventUpdateClient) GetClientType() string {
 	return ""
 }
 
-func (m *EventUpdateClient) GetConsensusHeight() *types.Any {
+func (m *EventUpdateClient) GetConsensusHeight() Height {
 	if m != nil {
 		return m.ConsensusHeight
 	}
-	return nil
+	return Height{}
 }
 
 // EventUpgradeClient is a typed event emitted on upgrading client
 type EventUpgradeClient struct {
-	ClientId        string     `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	ClientType      string     `protobuf:"bytes,2,opt,name=client_type,json=clientType,proto3" json:"client_type,omitempty"`
-	ConsensusHeight *types.Any `protobuf:"bytes,3,opt,name=consensus_height,json=consensusHeight,proto3" json:"consensus_height,omitempty"`
+	ClientId        string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	ClientType      string `protobuf:"bytes,2,opt,name=client_type,json=clientType,proto3" json:"client_type,omitempty"`
+	ConsensusHeight Height `protobuf:"bytes,3,opt,name=consensus_height,json=consensusHeight,proto3" json:"consensus_height" yaml:"consensus_height"`
 }
 
 func (m *EventUpgradeClient) Reset()         { *m = EventUpgradeClient{} }
@@ -200,18 +199,18 @@ func (m *EventUpgradeClient) GetClientType() string {
 	return ""
 }
 
-func (m *EventUpgradeClient) GetConsensusHeight() *types.Any {
+func (m *EventUpgradeClient) GetConsensusHeight() Height {
 	if m != nil {
 		return m.ConsensusHeight
 	}
-	return nil
+	return Height{}
 }
 
 // EventUpdateClientProposal is a typed event emitted on updating client proposal
 type EventUpdateClientProposal struct {
-	ClientId        string     `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	ClientType      string     `protobuf:"bytes,2,opt,name=client_type,json=clientType,proto3" json:"client_type,omitempty"`
-	ConsensusHeight *types.Any `protobuf:"bytes,3,opt,name=consensus_height,json=consensusHeight,proto3" json:"consensus_height,omitempty"`
+	ClientId        string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	ClientType      string `protobuf:"bytes,2,opt,name=client_type,json=clientType,proto3" json:"client_type,omitempty"`
+	ConsensusHeight Height `protobuf:"bytes,3,opt,name=consensus_height,json=consensusHeight,proto3" json:"consensus_height" yaml:"consensus_height"`
 }
 
 func (m *EventUpdateClientProposal) Reset()         { *m = EventUpdateClientProposal{} }
@@ -261,18 +260,18 @@ func (m *EventUpdateClientProposal) GetClientType() string {
 	return ""
 }
 
-func (m *EventUpdateClientProposal) GetConsensusHeight() *types.Any {
+func (m *EventUpdateClientProposal) GetConsensusHeight() Height {
 	if m != nil {
 		return m.ConsensusHeight
 	}
-	return nil
+	return Height{}
 }
 
 // EventClientMisbehaviour is a typed event emitted when misbehaviour is submitted
 type EventClientMisbehaviour struct {
-	ClientId        string     `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	ClientType      string     `protobuf:"bytes,2,opt,name=client_type,json=clientType,proto3" json:"client_type,omitempty"`
-	ConsensusHeight *types.Any `protobuf:"bytes,3,opt,name=consensus_height,json=consensusHeight,proto3" json:"consensus_height,omitempty"`
+	ClientId        string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	ClientType      string `protobuf:"bytes,2,opt,name=client_type,json=clientType,proto3" json:"client_type,omitempty"`
+	ConsensusHeight Height `protobuf:"bytes,3,opt,name=consensus_height,json=consensusHeight,proto3" json:"consensus_height" yaml:"consensus_height"`
 }
 
 func (m *EventClientMisbehaviour) Reset()         { *m = EventClientMisbehaviour{} }
@@ -322,11 +321,11 @@ func (m *EventClientMisbehaviour) GetClientType() string {
 	return ""
 }
 
-func (m *EventClientMisbehaviour) GetConsensusHeight() *types.Any {
+func (m *EventClientMisbehaviour) GetConsensusHeight() Height {
 	if m != nil {
 		return m.ConsensusHeight
 	}
-	return nil
+	return Height{}
 }
 
 func init() {
@@ -341,28 +340,28 @@ func init() { proto.RegisterFile("ibc/core/client/v1/event.proto", fileDescripto
 
 var fileDescriptor_184b5eb6564931c0 = []byte{
 	// 346 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x93, 0x41, 0x4a, 0x03, 0x31,
-	0x14, 0x86, 0x1b, 0x85, 0x62, 0xd3, 0x85, 0x3a, 0x08, 0xb6, 0x15, 0x62, 0x71, 0xd5, 0x4d, 0x13,
-	0x5b, 0x17, 0xae, 0x6d, 0x11, 0x14, 0x11, 0xb4, 0xe8, 0xc6, 0x4d, 0x99, 0xc9, 0xc4, 0x99, 0x60,
-	0x3b, 0x6f, 0x98, 0x64, 0x06, 0xe7, 0x16, 0x9e, 0x40, 0x37, 0xe2, 0x09, 0x3c, 0x84, 0xb8, 0xea,
-	0xd2, 0xa5, 0xb4, 0x17, 0x91, 0x26, 0x63, 0x5d, 0x78, 0x81, 0x59, 0x85, 0xf7, 0xfe, 0x97, 0xff,
-	0x7d, 0x84, 0xfc, 0x98, 0x48, 0x8f, 0x33, 0x0e, 0x89, 0x60, 0x7c, 0x22, 0x45, 0xa4, 0x59, 0xd6,
-	0x63, 0x22, 0x13, 0x91, 0xa6, 0x71, 0x02, 0x1a, 0x1c, 0x47, 0x7a, 0x9c, 0x2e, 0x75, 0x6a, 0x75,
-	0x9a, 0xf5, 0x5a, 0xcd, 0x00, 0x20, 0x98, 0x08, 0x66, 0x26, 0xbc, 0xf4, 0x9e, 0xb9, 0x51, 0x6e,
-	0xc7, 0x5b, 0x4d, 0x0e, 0x6a, 0x0a, 0x6a, 0x6c, 0x2a, 0x66, 0x0b, 0x2b, 0x1d, 0x3c, 0x23, 0xbc,
-	0x7d, 0xba, 0x74, 0x1e, 0x26, 0xc2, 0xd5, 0x62, 0x68, 0xec, 0x9c, 0x3d, 0x5c, 0xb3, 0xc6, 0x63,
-	0xe9, 0x37, 0x50, 0x1b, 0x75, 0x6a, 0xa3, 0x0d, 0xdb, 0x38, 0xf7, 0x9d, 0x7d, 0x5c, 0x2f, 0x44,
-	0x9d, 0xc7, 0xa2, 0xb1, 0x66, 0x64, 0x6c, 0x5b, 0x37, 0x79, 0x2c, 0x9c, 0x0b, 0xbc, 0xc5, 0x21,
-	0x52, 0x22, 0x52, 0xa9, 0x1a, 0x87, 0x42, 0x06, 0xa1, 0x6e, 0xac, 0xb7, 0x51, 0xa7, 0xde, 0xdf,
-	0xa1, 0x16, 0x92, 0xfe, 0x42, 0xd2, 0x93, 0x28, 0x1f, 0xe0, 0xcf, 0xf7, 0x6e, 0xf5, 0xcc, 0xcc,
-	0x8d, 0x36, 0x57, 0x37, 0x6d, 0xe3, 0x0f, 0xf0, 0x36, 0xf6, 0x4b, 0x09, 0xf8, 0x82, 0xb0, 0x53,
-	0x00, 0x06, 0x89, 0xeb, 0x97, 0x90, 0xf0, 0x0d, 0xe1, 0xe6, 0xbf, 0x27, 0xbc, 0x4a, 0x20, 0x06,
-	0xe5, 0x4e, 0xca, 0x04, 0xfa, 0x8a, 0xf0, 0xae, 0xfd, 0x8c, 0x66, 0xc1, 0xa5, 0x54, 0x9e, 0x08,
-	0xdd, 0x4c, 0x42, 0x9a, 0x94, 0x08, 0x73, 0x70, 0xfd, 0x31, 0x27, 0x68, 0x36, 0x27, 0xe8, 0x7b,
-	0x4e, 0xd0, 0xd3, 0x82, 0x54, 0x66, 0x0b, 0x52, 0xf9, 0x5a, 0x90, 0xca, 0xdd, 0x71, 0x20, 0x75,
-	0x98, 0x7a, 0x94, 0xc3, 0xb4, 0x88, 0x59, 0x71, 0x74, 0x95, 0xff, 0xc0, 0x1e, 0xd9, 0x2a, 0xd6,
-	0x87, 0xfd, 0x6e, 0x91, 0xec, 0x25, 0xb0, 0xf2, 0xaa, 0x66, 0xfb, 0xd1, 0x4f, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0x61, 0x32, 0xd9, 0x02, 0xf9, 0x03, 0x00, 0x00,
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0xcb, 0x4c, 0x4a, 0xd6,
+	0x4f, 0xce, 0x2f, 0x4a, 0xd5, 0x4f, 0xce, 0xc9, 0x4c, 0xcd, 0x2b, 0xd1, 0x2f, 0x33, 0xd4, 0x4f,
+	0x2d, 0x4b, 0xcd, 0x2b, 0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0xca, 0x4c, 0x4a, 0xd6,
+	0x03, 0xc9, 0xeb, 0x41, 0xe4, 0xf5, 0xca, 0x0c, 0xa5, 0x44, 0xd2, 0xf3, 0xd3, 0xf3, 0xc1, 0xd2,
+	0xfa, 0x20, 0x16, 0x44, 0xa5, 0x94, 0x3c, 0x16, 0x93, 0xa0, 0x7a, 0xc0, 0x0a, 0x94, 0x76, 0x32,
+	0x72, 0x09, 0xba, 0x82, 0x8c, 0x76, 0x2e, 0x4a, 0x4d, 0x2c, 0x49, 0x75, 0x06, 0xcb, 0x09, 0x49,
+	0x73, 0x71, 0x42, 0x54, 0xc5, 0x67, 0xa6, 0x48, 0x30, 0x2a, 0x30, 0x6a, 0x70, 0x06, 0x71, 0x40,
+	0x04, 0x3c, 0x53, 0x84, 0xe4, 0xb9, 0xb8, 0xa1, 0x92, 0x25, 0x95, 0x05, 0xa9, 0x12, 0x4c, 0x60,
+	0x69, 0x2e, 0x88, 0x50, 0x48, 0x65, 0x41, 0xaa, 0x50, 0x1a, 0x97, 0x40, 0x72, 0x7e, 0x5e, 0x71,
+	0x6a, 0x5e, 0x71, 0x69, 0x71, 0x7c, 0x46, 0x6a, 0x66, 0x7a, 0x46, 0x89, 0x04, 0xb3, 0x02, 0xa3,
+	0x06, 0xb7, 0x91, 0x94, 0x1e, 0xa6, 0xcb, 0xf5, 0x3c, 0xc0, 0x2a, 0x9c, 0xe4, 0x4f, 0xdc, 0x93,
+	0x67, 0xf8, 0x74, 0x4f, 0x5e, 0xbc, 0x32, 0x31, 0x37, 0xc7, 0x4a, 0x09, 0xdd, 0x04, 0xa5, 0x20,
+	0x7e, 0xb8, 0x10, 0x44, 0x07, 0xc2, 0xed, 0xa1, 0x05, 0x29, 0x43, 0xcd, 0xed, 0xbb, 0x18, 0xb9,
+	0x84, 0xa0, 0x6e, 0x4f, 0x2f, 0x4a, 0x4c, 0x19, 0x5a, 0x8e, 0x3f, 0xc8, 0xc8, 0x25, 0x89, 0x11,
+	0xf0, 0x01, 0x45, 0xf9, 0x05, 0xf9, 0xc5, 0x89, 0x39, 0x43, 0xc4, 0x0f, 0xfb, 0x19, 0xb9, 0xc4,
+	0x21, 0x09, 0x1f, 0x6c, 0x96, 0x6f, 0x66, 0x71, 0x52, 0x6a, 0x46, 0x62, 0x59, 0x66, 0x7e, 0x69,
+	0xd1, 0xd0, 0xf0, 0x81, 0x53, 0xe0, 0x89, 0x47, 0x72, 0x8c, 0x17, 0x1e, 0xc9, 0x31, 0x3e, 0x78,
+	0x24, 0xc7, 0x38, 0xe1, 0xb1, 0x1c, 0xc3, 0x85, 0xc7, 0x72, 0x0c, 0x37, 0x1e, 0xcb, 0x31, 0x44,
+	0x99, 0xa7, 0x67, 0x96, 0x64, 0x94, 0x26, 0xe9, 0x25, 0xe7, 0xe7, 0xea, 0x27, 0xe7, 0x17, 0xe7,
+	0xe6, 0x17, 0x43, 0x29, 0xdd, 0xe2, 0x94, 0x6c, 0xfd, 0x0a, 0x7d, 0x78, 0xa1, 0x60, 0x60, 0xa4,
+	0x0b, 0x2d, 0x17, 0x40, 0x7e, 0x29, 0x4e, 0x62, 0x03, 0x17, 0x0a, 0xc6, 0x80, 0x00, 0x00, 0x00,
+	0xff, 0xff, 0x56, 0x7e, 0xbe, 0x9f, 0x81, 0x04, 0x00, 0x00,
 }
 
 func (m *EventCreateClient) Marshal() (dAtA []byte, err error) {
@@ -385,18 +384,16 @@ func (m *EventCreateClient) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.ConsensusHeight != nil {
-		{
-			size, err := m.ConsensusHeight.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvent(dAtA, i, uint64(size))
+	{
+		size, err := m.ConsensusHeight.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
 		}
-		i--
-		dAtA[i] = 0x1a
+		i -= size
+		i = encodeVarintEvent(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x1a
 	if len(m.ClientType) > 0 {
 		i -= len(m.ClientType)
 		copy(dAtA[i:], m.ClientType)
@@ -434,18 +431,16 @@ func (m *EventUpdateClient) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.ConsensusHeight != nil {
-		{
-			size, err := m.ConsensusHeight.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvent(dAtA, i, uint64(size))
+	{
+		size, err := m.ConsensusHeight.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
 		}
-		i--
-		dAtA[i] = 0x1a
+		i -= size
+		i = encodeVarintEvent(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x1a
 	if len(m.ClientType) > 0 {
 		i -= len(m.ClientType)
 		copy(dAtA[i:], m.ClientType)
@@ -483,18 +478,16 @@ func (m *EventUpgradeClient) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.ConsensusHeight != nil {
-		{
-			size, err := m.ConsensusHeight.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvent(dAtA, i, uint64(size))
+	{
+		size, err := m.ConsensusHeight.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
 		}
-		i--
-		dAtA[i] = 0x1a
+		i -= size
+		i = encodeVarintEvent(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x1a
 	if len(m.ClientType) > 0 {
 		i -= len(m.ClientType)
 		copy(dAtA[i:], m.ClientType)
@@ -532,18 +525,16 @@ func (m *EventUpdateClientProposal) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	_ = i
 	var l int
 	_ = l
-	if m.ConsensusHeight != nil {
-		{
-			size, err := m.ConsensusHeight.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvent(dAtA, i, uint64(size))
+	{
+		size, err := m.ConsensusHeight.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
 		}
-		i--
-		dAtA[i] = 0x1a
+		i -= size
+		i = encodeVarintEvent(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x1a
 	if len(m.ClientType) > 0 {
 		i -= len(m.ClientType)
 		copy(dAtA[i:], m.ClientType)
@@ -581,18 +572,16 @@ func (m *EventClientMisbehaviour) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	_ = i
 	var l int
 	_ = l
-	if m.ConsensusHeight != nil {
-		{
-			size, err := m.ConsensusHeight.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintEvent(dAtA, i, uint64(size))
+	{
+		size, err := m.ConsensusHeight.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
 		}
-		i--
-		dAtA[i] = 0x1a
+		i -= size
+		i = encodeVarintEvent(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x1a
 	if len(m.ClientType) > 0 {
 		i -= len(m.ClientType)
 		copy(dAtA[i:], m.ClientType)
@@ -635,10 +624,8 @@ func (m *EventCreateClient) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
 	}
-	if m.ConsensusHeight != nil {
-		l = m.ConsensusHeight.Size()
-		n += 1 + l + sovEvent(uint64(l))
-	}
+	l = m.ConsensusHeight.Size()
+	n += 1 + l + sovEvent(uint64(l))
 	return n
 }
 
@@ -656,10 +643,8 @@ func (m *EventUpdateClient) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
 	}
-	if m.ConsensusHeight != nil {
-		l = m.ConsensusHeight.Size()
-		n += 1 + l + sovEvent(uint64(l))
-	}
+	l = m.ConsensusHeight.Size()
+	n += 1 + l + sovEvent(uint64(l))
 	return n
 }
 
@@ -677,10 +662,8 @@ func (m *EventUpgradeClient) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
 	}
-	if m.ConsensusHeight != nil {
-		l = m.ConsensusHeight.Size()
-		n += 1 + l + sovEvent(uint64(l))
-	}
+	l = m.ConsensusHeight.Size()
+	n += 1 + l + sovEvent(uint64(l))
 	return n
 }
 
@@ -698,10 +681,8 @@ func (m *EventUpdateClientProposal) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
 	}
-	if m.ConsensusHeight != nil {
-		l = m.ConsensusHeight.Size()
-		n += 1 + l + sovEvent(uint64(l))
-	}
+	l = m.ConsensusHeight.Size()
+	n += 1 + l + sovEvent(uint64(l))
 	return n
 }
 
@@ -719,10 +700,8 @@ func (m *EventClientMisbehaviour) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
 	}
-	if m.ConsensusHeight != nil {
-		l = m.ConsensusHeight.Size()
-		n += 1 + l + sovEvent(uint64(l))
-	}
+	l = m.ConsensusHeight.Size()
+	n += 1 + l + sovEvent(uint64(l))
 	return n
 }
 
@@ -853,9 +832,6 @@ func (m *EventCreateClient) Unmarshal(dAtA []byte) error {
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
-			}
-			if m.ConsensusHeight == nil {
-				m.ConsensusHeight = &types.Any{}
 			}
 			if err := m.ConsensusHeight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -1007,9 +983,6 @@ func (m *EventUpdateClient) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.ConsensusHeight == nil {
-				m.ConsensusHeight = &types.Any{}
-			}
 			if err := m.ConsensusHeight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -1159,9 +1132,6 @@ func (m *EventUpgradeClient) Unmarshal(dAtA []byte) error {
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
-			}
-			if m.ConsensusHeight == nil {
-				m.ConsensusHeight = &types.Any{}
 			}
 			if err := m.ConsensusHeight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -1313,9 +1283,6 @@ func (m *EventUpdateClientProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.ConsensusHeight == nil {
-				m.ConsensusHeight = &types.Any{}
-			}
 			if err := m.ConsensusHeight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -1465,9 +1432,6 @@ func (m *EventClientMisbehaviour) Unmarshal(dAtA []byte) error {
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
-			}
-			if m.ConsensusHeight == nil {
-				m.ConsensusHeight = &types.Any{}
 			}
 			if err := m.ConsensusHeight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

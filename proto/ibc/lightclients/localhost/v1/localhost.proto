@@ -13,5 +13,5 @@ message ClientState {
   // self chain ID
   string chain_id = 1 [(gogoproto.moretags) = "yaml:\"chain_id\""];
   // self latest block height
-  ibc.core.client.v1.Height height = 2;
+  ibc.core.client.v1.Height height = 2 [(gogoproto.nullable) = false];
 }

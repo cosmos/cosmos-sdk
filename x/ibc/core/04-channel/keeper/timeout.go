@@ -151,15 +151,10 @@ func (k Keeper) TimeoutExecuted(
 
 	k.Logger(ctx).Info("packet timed-out", "packet", fmt.Sprintf("%v", packet))
 
-	anyTimeoutHeight, err := clienttypes.PackHeight(packet.GetTimeoutHeight())
-	if err != nil {
-		return nil
-	}
-
 	// emit an event marking that we have processed the timeout
 	if err := ctx.EventManager().EmitTypedEvent(
 		&types.EventChannelTimeoutPacket{
-			TimeoutHeight:    anyTimeoutHeight,
+			TimeoutHeight:    packet.GetTimeoutHeight().(clienttypes.Height),
 			TimeoutTimestamp: packet.GetTimeoutTimestamp(),
 			Sequence:         packet.GetSequence(),
 			SrcPort:          packet.GetSourcePort(),

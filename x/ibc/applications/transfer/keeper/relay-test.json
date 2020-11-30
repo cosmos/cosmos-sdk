@@ -299,7 +299,7 @@
       "data": {
         "sender": "a1",
         "receiver": "a1",
-        "amount": 10,
+        "amount": 0,
         "denom": [
           "zarkozarko",
           "zarkozarko",
@@ -364,6 +364,6 @@
         "amount": 1
       }
     ],
-    "error": false
+    "error": true
   }
 ]

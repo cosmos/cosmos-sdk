@@ -54,7 +54,9 @@ func (l launchpad) ConstructionPayloads(ctx context.Context, req *types.Construc
 		UnsignedTransaction: hex.EncodeToString(txBytes),
 		Payloads: []*types.SigningPayload{
 			{
-				Address:       transferData.From.String(),
+				AccountIdentifier: &types.AccountIdentifier{
+					Address: transferData.From.String(),
+				},
 				Bytes:         crypto.Sha256(signBytes),
 				SignatureType: "ecdsa",
 			},

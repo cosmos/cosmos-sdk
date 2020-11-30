@@ -31,6 +31,7 @@ func TestValidateGenesis(t *testing.T) {
 				[]types.ConnectionPaths{
 					{clientID, []string{connectionID}},
 				},
+				0,
 			),
 			expPass: true,
 		},
@@ -43,6 +44,7 @@ func TestValidateGenesis(t *testing.T) {
 				[]types.ConnectionPaths{
 					{clientID, []string{connectionID}},
 				},
+				0,
 			),
 			expPass: false,
 		},
@@ -55,6 +57,7 @@ func TestValidateGenesis(t *testing.T) {
 				[]types.ConnectionPaths{
 					{"(CLIENTIDONE)", []string{connectionID}},
 				},
+				0,
 			),
 			expPass: false,
 		},
@@ -67,6 +70,7 @@ func TestValidateGenesis(t *testing.T) {
 				[]types.ConnectionPaths{
 					{clientID, []string{invalidConnectionID}},
 				},
+				0,
 			),
 			expPass: false,
 		},

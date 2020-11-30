@@ -50,9 +50,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 	}
 
 	// client id is always "localhost"
-	version := types.ParseChainID(ctx.ChainID())
+	revision := types.ParseChainID(ctx.ChainID())
 	clientState := localhosttypes.NewClientState(
-		ctx.ChainID(), types.NewHeight(version, uint64(ctx.BlockHeight())),
+		ctx.ChainID(), types.NewHeight(revision, uint64(ctx.BlockHeight())),
 	)
 
 	if err := clientState.Validate(); err != nil {

@@ -13,7 +13,7 @@ import (
 
 var (
 	chainID             = "gaiamainnet"
-	connectionID        = "connectionidone"
+	connectionID        = "connection-0"
 	clientID            = "clientidone"
 	connectionID2       = "connectionidtwo"
 	clientID2           = "clientidtwo"

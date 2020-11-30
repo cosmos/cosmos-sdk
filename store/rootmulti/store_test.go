@@ -287,7 +287,7 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	ci, err = getCommitInfo(db, 2)
 	require.NoError(t, err)
 	require.Equal(t, int64(2), ci.Version)
-	require.Equal(t, 4, len(ci.StoreInfos), ci.StoreInfos)
+	require.Equal(t, 5, len(ci.StoreInfos), ci.StoreInfos)
 	checkContains(t, ci.StoreInfos, []string{"store1", "restore2", "store3", "store4"})
 }
 

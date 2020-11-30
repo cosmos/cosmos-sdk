@@ -176,35 +176,21 @@ func (i offlineInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
 
-type multisigPubKeyInfo struct {
-	PubKey cryptotypes.PubKey `json:"pubkey"`
-	Weight uint               `json:"weight"`
-}
-
 // multiInfo is the public information about a multisig key
 type multiInfo struct {
-	Name      string               `json:"name"`
-	PubKey    cryptotypes.PubKey   `json:"pubkey"`
-	Threshold uint                 `json:"threshold"`
-	PubKeys   []multisigPubKeyInfo `json:"pubkeys"`
+	Name   string             `json:"name"`
+	PubKey cryptotypes.PubKey `json:"pubkey"`
 }
 
 // NewMultiInfo creates a new multiInfo instance
-func NewMultiInfo(name string, pub cryptotypes.PubKey) Info {
-	multiPK := pub.(*multisig.LegacyAminoPubKey)
-
-	pubKeys := make([]multisigPubKeyInfo, len(multiPK.PubKeys))
-	for i, pk := range multiPK.GetPubKeys() {
-		// TODO: Recursively check pk for total weight?
-		pubKeys[i] = multisigPubKeyInfo{pk, 1}
+func NewMultiInfo(name string, pub cryptotypes.PubKey) (Info, error) {
+	if _, ok := pub.(*multisig.LegacyAminoPubKey); !ok {
+		return nil, fmt.Errorf("MultiInfo supports only LegacyAminoPubKey, got  %T", pub)
 	}
-
 	return &multiInfo{
-		Name:      name,
-		PubKey:    pub,
-		Threshold: uint(multiPK.Threshold),
-		PubKeys:   pubKeys,
-	}
+		Name:   name,
+		PubKey: pub,
+	}, nil
 }
 
 // GetType implements Info interface
@@ -246,6 +232,7 @@ func (i multiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 // encoding info
 func marshalInfo(i Info) []byte {
+	// TODO: Why do we use Legacy Amino marshaling here?
 	return CryptoCdc.MustMarshalBinaryLengthPrefixed(i)
 }
 

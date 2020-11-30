@@ -765,9 +765,11 @@ func (ks keystore) writeOfflineKey(name string, pub types.PubKey, algo hd.PubKey
 }
 
 func (ks keystore) writeMultisigKey(name string, pub types.PubKey) (Info, error) {
-	info := NewMultiInfo(name, pub)
-	err := ks.writeInfo(info)
+	info, err := NewMultiInfo(name, pub)
 	if err != nil {
+		return nil, err
+	}
+	if err = ks.writeInfo(info); err != nil {
 		return nil, err
 	}
 

@@ -11,17 +11,14 @@ import (
 // KeyOutput defines a structure wrapping around an Info object used for output
 // functionality.
 type KeyOutput struct {
-	Name      string                 `json:"name" yaml:"name"`
-	Type      string                 `json:"type" yaml:"type"`
-	Address   string                 `json:"address" yaml:"address"`
-	PubKey    string                 `json:"pubkey" yaml:"pubkey"`
-	Mnemonic  string                 `json:"mnemonic,omitempty" yaml:"mnemonic"`
-	Threshold uint                   `json:"threshold,omitempty" yaml:"threshold"`
-	PubKeys   []multisigPubKeyOutput `json:"pubkeys,omitempty" yaml:"pubkeys"`
+	Name     string `json:"name" yaml:"name"`
+	Type     string `json:"type" yaml:"type"`
+	Address  string `json:"address" yaml:"address"`
+	PubKey   string `json:"pubkey" yaml:"pubkey"`
+	Mnemonic string `json:"mnemonic,omitempty" yaml:"mnemonic"`
 }
 
 // NewKeyOutput creates a default KeyOutput instance without Mnemonic, Threshold and PubKeys
-// TODO remove error
 func NewKeyOutput(name string, keyType KeyType, a sdk.Address, pk cryptotypes.PubKey) (KeyOutput, error) { // nolint:interfacer
 	bz, err := protocdc.MarshalJSON(pk, nil)
 	if err != nil {
@@ -33,12 +30,6 @@ func NewKeyOutput(name string, keyType KeyType, a sdk.Address, pk cryptotypes.Pu
 		Address: a.String(),
 		PubKey:  string(bz),
 	}, nil
-}
-
-type multisigPubKeyOutput struct {
-	Address string `json:"address" yaml:"address"`
-	PubKey  string `json:"pubkey" yaml:"pubkey"`
-	Weight  uint   `json:"weight" yaml:"weight"`
 }
 
 // Bech32KeysOutput returns a slice of KeyOutput objects, each with the "acc"
@@ -78,24 +69,5 @@ func Bech32KeyOutput(keyInfo Info) (KeyOutput, error) {
 	pk := keyInfo.GetPubKey()
 	addr := sdk.AccAddress(pk.Address().Bytes())
 	ko, _ := NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), addr, pk)
-
-	if mInfo, ok := keyInfo.(*multiInfo); ok {
-		pubKeys := make([]multisigPubKeyOutput, len(mInfo.PubKeys))
-
-		for i, pkInfo := range mInfo.PubKeys {
-			pk = pkInfo.PubKey
-			addr = sdk.AccAddress(pk.Address())
-			bz, err := protocdc.MarshalJSON(pk, nil)
-			if err != nil {
-				return ko, err
-			}
-			pubKeys[i] = multisigPubKeyOutput{
-				addr.String(), string(bz), pkInfo.Weight}
-		}
-
-		ko.Threshold = mInfo.Threshold
-		ko.PubKeys = pubKeys
-	}
-
 	return ko, nil
 }

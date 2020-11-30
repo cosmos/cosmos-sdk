@@ -40,6 +40,9 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, args, reply 
 		}
 
 		broadcastRes, err := TxServiceBroadcast(grpcCtx, ctx, req)
+		if err != nil {
+			return err
+		}
 		*res = *broadcastRes
 
 		return err

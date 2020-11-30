@@ -32,23 +32,45 @@ type IntegrationTestSuite struct {
 	network *network.Network
 
 	queryClient tx.ServiceClient
+	txRes       sdk.TxResponse
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	cfg := network.DefaultConfig()
-	cfg.NumValidators = 1
+	cfg.NumValidators = 2
 
 	s.cfg = cfg
 	s.network = network.New(s.T(), cfg)
-
 	s.Require().NotNil(s.network)
+
+	val := s.network.Validators[0]
 
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
-	s.queryClient = tx.NewServiceClient(s.network.Validators[0].ClientCtx)
+	s.queryClient = tx.NewServiceClient(val.ClientCtx)
+
+	// Create a new MsgSend tx from val to itself.
+	out, err := bankcli.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		val.Address,
+		sdk.NewCoins(
+			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+		fmt.Sprintf("--%s=foobar", flags.FlagMemo),
+	)
+	s.Require().NoError(err)
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &s.txRes))
+	s.Require().Equal(uint32(0), s.txRes.Code)
+
+	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -104,27 +126,6 @@ func (s IntegrationTestSuite) TestSimulate() {
 func (s IntegrationTestSuite) TestGetTxEvents() {
 	val := s.network.Validators[0]
 
-	// Create a new MsgSend tx from val to itself.
-	out, err := bankcli.MsgSendExec(
-		val.ClientCtx,
-		val.Address,
-		val.Address,
-		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
-		),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
-		fmt.Sprintf("--%s=foobar", flags.FlagMemo),
-	)
-	s.Require().NoError(err)
-	var txRes sdk.TxResponse
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txRes))
-	s.Require().Equal(uint32(0), txRes.Code)
-
-	s.Require().NoError(s.network.WaitForNextBlock())
-
 	// Query the tx via gRPC.
 	grpcRes, err := s.queryClient.GetTxsEvent(
 		context.Background(),
@@ -166,38 +167,19 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 func (s IntegrationTestSuite) TestGetTx() {
 	val := s.network.Validators[0]
 
-	// Create a new MsgSend tx from val to itself.
-	out, err := bankcli.MsgSendExec(
-		val.ClientCtx,
-		val.Address,
-		val.Address,
-		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
-		),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
-		fmt.Sprintf("--%s=foobar", flags.FlagMemo),
-	)
-	s.Require().NoError(err)
-	var txRes sdk.TxResponse
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txRes))
-	s.Require().Equal(uint32(0), txRes.Code)
-
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Query the tx via gRPC.
 	grpcRes, err := s.queryClient.GetTx(
 		context.Background(),
-		&tx.GetTxRequest{Hash: txRes.TxHash},
+		&tx.GetTxRequest{Hash: s.txRes.TxHash},
 	)
 	s.Require().NoError(err)
 	s.Require().Equal("foobar", grpcRes.Tx.Body.Memo)
 	s.Require().NotZero(grpcRes.TxResponse.Height)
 
 	// Query the tx via grpc-gateway.
-	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/tx/%s", val.APIAddress, txRes.TxHash))
+	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/tx/%s", val.APIAddress, s.txRes.TxHash))
 	s.Require().NoError(err)
 	var getTxRes tx.GetTxResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getTxRes))

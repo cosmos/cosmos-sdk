@@ -29,7 +29,6 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 
 	for i, tc := range cases {
 
-		// If we were able to NewClientState clientstate successfully, try persisting it to state
 		clientID, err := suite.keeper.CreateClient(suite.ctx, tc.clientState, suite.consensusState)
 		if tc.expPass {
 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)

@@ -11,4 +11,6 @@ message GenesisState {
   repeated IdentifiedConnection connections             = 1 [(gogoproto.nullable) = false];
   repeated ConnectionPaths      client_connection_paths = 2
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"client_connection_paths\""];
+  // the sequence for the next generated connection identifier
+  uint64 next_connection_sequence = 3 [(gogoproto.moretags) = "yaml:\"next_connection_sequence\""];
 }

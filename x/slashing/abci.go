@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 // BeginBlocker check for infraction evidence or downtime of validators
@@ -26,8 +27,9 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 }
 
 // Called every block, update validator set
-func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
-	if ctx.BlockHeight()%10 == 0 { // TODO should update hardcoded 10 to stakingParams.EpochInterval (epoch_interval)
+func EndBlocker(ctx sdk.Context, k keeper.Keeper, stakingKeeper stakingkeeper.Keeper) []abci.ValidatorUpdate {
+	EpochInterval := stakingKeeper.GetParams(ctx).EpochInterval
+	if ctx.BlockHeight()%EpochInterval == 0 {
 		// execute all epoch actions
 		iterator := k.GetEpochActionsIteratorByEpochNumber(ctx, 0)
 

@@ -23,7 +23,8 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 // Called every block, update validator set
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
-	if ctx.BlockHeight()%10 == 0 { // TODO should update hardcoded 10 to params.EpochInterval (epoch_interval)
+	EpochInterval := k.GetParams(ctx).EpochInterval
+	if ctx.BlockHeight()%EpochInterval == 0 {
 		defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
 		// execute all epoch actions

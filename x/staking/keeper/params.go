@@ -39,6 +39,12 @@ func (k Keeper) BondDenom(ctx sdk.Context) (res string) {
 	return
 }
 
+// EpochInterval - interval in blocks for epochs
+func (k Keeper) EpochInterval(ctx sdk.Context) (res int64) {
+	k.paramstore.Get(ctx, types.KeyEpochInterval, &res)
+	return
+}
+
 // Get all parameteras as types.Params
 func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 	return types.NewParams(
@@ -47,6 +53,7 @@ func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 		k.MaxEntries(ctx),
 		k.HistoricalEntries(ctx),
 		k.BondDenom(ctx),
+		k.EpochInterval(ctx),
 	)
 }
 

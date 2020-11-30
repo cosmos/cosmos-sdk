@@ -19,6 +19,7 @@ const (
 	unbondingTime     = "unbonding_time"
 	maxValidators     = "max_validators"
 	historicalEntries = "historical_entries"
+	epochInterval     = "epoch_interval"
 )
 
 // GenUnbondingTime randomized UnbondingTime
@@ -36,6 +37,11 @@ func GetHistEntries(r *rand.Rand) uint32 {
 	return uint32(r.Intn(int(types.DefaultHistoricalEntries + 1)))
 }
 
+// GetEpochInterval randomized EpochInterval between 1-10.
+func GetEpochInterval(r *rand.Rand) int64 {
+	return int64(r.Intn(int(types.DefaultEpochInterval)) + 1)
+}
+
 // RandomizedGenState generates a random GenesisState for staking
 func RandomizedGenState(simState *module.SimulationState) {
 	// params
@@ -43,6 +49,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		unbondTime  time.Duration
 		maxVals     uint32
 		histEntries uint32
+		epochInterv int64
 	)
 
 	simState.AppParams.GetOrGenerate(
@@ -60,10 +67,15 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { histEntries = GetHistEntries(r) },
 	)
 
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, epochInterval, &epochInterv, simState.Rand,
+		func(r *rand.Rand) { epochInterv = GetEpochInterval(r) },
+	)
+
 	// NOTE: the slashing module need to be defined after the staking module on the
 	// NewSimulationManager constructor for this to work
 	simState.UnbondTime = unbondTime
-	params := types.NewParams(simState.UnbondTime, maxVals, 7, histEntries, sdk.DefaultBondDenom)
+	params := types.NewParams(simState.UnbondTime, maxVals, 7, histEntries, sdk.DefaultBondDenom, epochInterv)
 
 	// validators & delegations
 	var (

@@ -142,7 +142,6 @@ message LastValidatorPower {
 
 // Development plan
 // — Implement changes for Msgs flow
-// - - Check if MarshalAny/UnmarshalAny based serialization work (at least build error does not exist now)
 // — — Discuss and fix feedback for Msgs flow
 // — — Implement TODOs on the PR #46
 // — Implement logic flow after queue action

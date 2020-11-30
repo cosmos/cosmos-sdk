@@ -34,15 +34,15 @@ const (
 // in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
 func NewCreateClientCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift]",
+		Use:   "create [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift]",
 		Short: "create new tendermint client",
 		Long: `Create a new tendermint IBC client. 
   - 'trust-level' flag can be a fraction (eg: '1/3') or 'default'
   - 'proof-specs' flag can be JSON input, a path to a .json file or 'default'
   - 'upgrade-path' flag is a string specifying the upgrade path for this chain where a future upgraded client will be stored. The path is a comma-separated list representing the keys in order of the keyPath to the committed upgraded client.
   e.g. 'upgrade/upgradedClient'`,
-		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift] --trust-level default --consensus-params [path/to/consensus-params.json] --proof-specs [path/to/proof-specs.json] --upgrade-path upgrade/upgradedClient --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
-		Args:    cobra.ExactArgs(5),
+		Example: fmt.Sprintf("%s tx ibc %s create [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift] --trust-level default --consensus-params [path/to/consensus-params.json] --proof-specs [path/to/proof-specs.json] --upgrade-path upgrade/upgradedClient --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
+		Args:    cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
@@ -50,15 +50,13 @@ func NewCreateClientCmd() *cobra.Command {
 				return err
 			}
 
-			clientID := args[0]
-
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 			legacyAmino := codec.NewLegacyAmino()
 
 			var header *types.Header
-			if err := cdc.UnmarshalJSON([]byte(args[1]), header); err != nil {
+			if err := cdc.UnmarshalJSON([]byte(args[0]), header); err != nil {
 				// check for file path if JSON input is not provided
-				contents, err := ioutil.ReadFile(args[1])
+				contents, err := ioutil.ReadFile(args[0])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided for consensus header")
 				}
@@ -83,17 +81,17 @@ func NewCreateClientCmd() *cobra.Command {
 				}
 			}
 
-			trustingPeriod, err := time.ParseDuration(args[2])
+			trustingPeriod, err := time.ParseDuration(args[1])
 			if err != nil {
 				return err
 			}
 
-			ubdPeriod, err := time.ParseDuration(args[3])
+			ubdPeriod, err := time.ParseDuration(args[2])
 			if err != nil {
 				return err
 			}
 
-			maxClockDrift, err := time.ParseDuration(args[4])
+			maxClockDrift, err := time.ParseDuration(args[3])
 			if err != nil {
 				return err
 			}
@@ -137,7 +135,7 @@ func NewCreateClientCmd() *cobra.Command {
 			consensusState := header.ConsensusState()
 
 			msg, err := clienttypes.NewMsgCreateClient(
-				clientID, clientState, consensusState, clientCtx.GetFromAddress(),
+				clientState, consensusState, clientCtx.GetFromAddress(),
 			)
 			if err != nil {
 				return err

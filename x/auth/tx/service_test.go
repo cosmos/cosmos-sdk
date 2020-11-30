@@ -225,17 +225,37 @@ func (s IntegrationTestSuite) TestBroadcastTx() {
 	err = cdc.UnmarshalBinaryBare(txBytes, &txRaw)
 	s.Require().NoError(err)
 
-	// Query the tx via gRPC.
-	grpcRes, err := s.queryClient.BroadcastTx(
-		context.Background(),
-		&tx.BroadcastTxRequest{
+	testCases := []struct {
+		name   string
+		req    *tx.BroadcastTxRequest
+		expErr bool
+	}{
+		{"nil request", nil, true},
+		{"empty request", &tx.BroadcastTxRequest{}, true},
+		{"valid request", &tx.BroadcastTxRequest{
 			Mode:  tx.BroadcastMode_sync,
 			TxRaw: &txRaw,
-		},
-	)
-	s.Require().NoError(err)
+		}, false},
+	}
 
-	s.Require().Equal(uint32(0), grpcRes.TxResponse.Code)
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			// Broadcast the tx via gRPC.
+			grpcRes, err := s.queryClient.BroadcastTx(
+				context.Background(),
+				tc.req,
+			)
+
+			if tc.expErr {
+				s.Require().Error(err)
+
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(uint32(0), grpcRes.TxResponse.Code)
+			}
+		})
+	}
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

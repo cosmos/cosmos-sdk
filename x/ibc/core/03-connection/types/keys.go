@@ -49,7 +49,7 @@ func IsValidConnectionID(connectionID string) bool {
 // ParseConnectionSequence parses the connection sequence from the connection identifier.
 func ParseConnectionSequence(connectionID string) (uint64, error) {
 	if !IsConnectionIDFormat(connectionID) {
-		return 0, sdkerrors.Wrap(host.ErrInvalidID, "connection identifier is not in the format `connection-{N}`")
+		return 0, sdkerrors.Wrap(host.ErrInvalidID, "connection identifier is not in the format: `connection-{N}`")
 	}
 
 	sequence, err := host.ParseIdentifier(connectionID, ConnectionPrefix)

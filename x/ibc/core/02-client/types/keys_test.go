@@ -31,7 +31,7 @@ func TestParseClientIdentifier(t *testing.T) {
 		{"empty id", "", "", 0, false},
 		{"negative sequence", "tendermint--1", "tendermint", 0, false},
 		{"invalid format", "tendermint-tm", "tendermint", 0, false},
-		{"empty clientype", " -100", "tendermintt", 0, false},
+		{"empty clientype", " -100", "tendermint", 0, false},
 	}
 
 	for _, tc := range testCases {

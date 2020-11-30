@@ -36,7 +36,7 @@ func FormatChannelIdentifier(sequence uint64) string {
 }
 
 // IsValidChannelID checks if a channelID is in the format required on the SDK for
-// parsing channel identifier. The channel identifier must be in the form: `channel-{N}
+// parsing channel identifiers. The channel identifier must be in the form: `channel-{N}
 var IsChannelIDFormat = regexp.MustCompile(`^channel-[0-9]{1,20}$`).MatchString
 
 // IsValidChannelID checks if a channelID is valid and can be parsed to the channel
@@ -49,7 +49,7 @@ func IsValidChannelID(channelID string) bool {
 // ParseChannelSequence parses the channel sequence from the channel identifier.
 func ParseChannelSequence(channelID string) (uint64, error) {
 	if !IsChannelIDFormat(channelID) {
-		return 0, sdkerrors.Wrap(host.ErrInvalidID, "channel identifier is not in the format `channel-{N}`")
+		return 0, sdkerrors.Wrap(host.ErrInvalidID, "channel identifier is not in the format: `channel-{N}`")
 	}
 
 	sequence, err := host.ParseIdentifier(channelID, ChannelPrefix)

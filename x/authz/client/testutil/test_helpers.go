@@ -24,9 +24,12 @@ func MsgGrantAuthorizationExec(clientCtx client.Context, granter, grantee, msgNa
 	args := []string{
 		grantee,
 		msgName,
-		limit,
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 	}
+	if limit != "" {
+		args = append(args, limit)
+	}
+
+	args = append(args, fmt.Sprintf("--%s=%s", flags.FlagFrom, granter))
 
 	viper.Set(msgauthcli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix())
 

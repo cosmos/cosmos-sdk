@@ -8,8 +8,11 @@ import (
 
 	proto "github.com/gogo/protobuf/proto"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
 )
 
@@ -41,27 +44,67 @@ func (k Keeper) Authorizations(c context.Context, req *types.QueryAuthorizations
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	authorizations := k.GetAuthorizations(ctx, granteeAddr, granterAddr)
-
-	if len(authorizations) == 0 {
-		return nil, status.Errorf(codes.NotFound, "No authorizations found")
-	}
-	result := make([]*codectypes.Any, len(authorizations))
-	for i, authorization := range authorizations {
-		msg, ok := authorization.(proto.Message)
-		if !ok {
-			return nil, status.Errorf(codes.Internal, "can't protomarshal %T", msg)
-		}
-
-		authorizationAny, err := codectypes.NewAnyWithValue(msg)
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetActorAuthorizationKey(granteeAddr, granterAddr, "")
+	authStore := prefix.NewStore(store, key)
+	var authorizations []*types.AuthorizationGrant
+	pageRes, err := query.FilteredPaginate(authStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		auth, err := UnmarshalAuthorization(k.cdc, value)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
+			return false, err
 		}
-		result[i] = authorizationAny
-	}
+		auth1 := auth.GetAuthorization()
+		if accumulate {
+			msg, ok := auth1.(proto.Message)
+			if !ok {
+				return false, status.Errorf(codes.Internal, "can't protomarshal %T", msg)
+			}
+
+			authorizationAny, err := codectypes.NewAnyWithValue(msg)
+			if err != nil {
+				return false, status.Errorf(codes.Internal, err.Error())
+			}
+			authorizations = append(authorizations, &types.AuthorizationGrant{
+				Authorization: authorizationAny,
+				Expiration:    auth.Expiration,
+			})
+		}
+
+		return true, nil
+	})
+
+	// if err != nil {
+	// 	return nil, status.Error(codes.Internal, err.Error())
+	// }
+
+	// authorizations := k.GetAuthorizations(ctx, granteeAddr, granterAddr)
+
+	// if len(authorizations) == 0 {
+	// 	return nil, status.Errorf(codes.NotFound, "No authorizations found")
+	// }
+	// result := make([]*codectypes.Any, len(authorizations))
+	// for i, authorization := range authorizations {
+	// 	msg, ok := authorization.(proto.Message)
+	// 	if !ok {
+	// 		return nil, status.Errorf(codes.Internal, "can't protomarshal %T", msg)
+	// 	}
+
+	// 	authorizationAny, err := codectypes.NewAnyWithValue(msg)
+	// 	if err != nil {
+	// 		return nil, status.Errorf(codes.Internal, err.Error())
+	// 	}
+	// 	result[i] = authorizationAny
+	// }
 	return &types.QueryAuthorizationsResponse{
-		Authorization: result,
+		Authorizations: authorizations,
+		Pagination:     pageRes,
 	}, nil
+}
+
+// unmarshal an authorization from a store value
+func UnmarshalAuthorization(cdc codec.BinaryMarshaler, value []byte) (v types.AuthorizationGrant, err error) {
+	err = cdc.UnmarshalBinaryBare(value, &v)
+	return v, err
 }
 
 // Authorization implements the Query/Authorization gRPC method.
@@ -94,7 +137,7 @@ func (k Keeper) Authorization(c context.Context, req *types.QueryAuthorizationRe
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	authorization, _ := k.GetAuthorization(ctx, granteeAddr, granterAddr, req.MsgType)
+	authorization, expiration := k.GetAuthorization(ctx, granteeAddr, granterAddr, req.MsgType)
 	if authorization == nil {
 		return nil, status.Errorf(codes.NotFound, "no authorization found for %s type", req.MsgType)
 	}
@@ -109,6 +152,11 @@ func (k Keeper) Authorization(c context.Context, req *types.QueryAuthorizationRe
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	return &types.QueryAuthorizationResponse{Authorization: authorizationAny}, nil
+	return &types.QueryAuthorizationResponse{
+		Authorization: &types.AuthorizationGrant{
+			Authorization: authorizationAny,
+			Expiration:    expiration,
+		},
+	}, nil
 
 }

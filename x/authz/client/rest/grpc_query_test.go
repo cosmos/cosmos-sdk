@@ -57,6 +57,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	_, err = msgauthtestutil.MsgGrantAuthorizationExec(val.ClientCtx, val.Address.String(), newAddr.String(), typeMsgSend, "100stake")
 	s.Require().NoError(err)
 
+	_, err = msgauthtestutil.MsgGrantAuthorizationExec(val.ClientCtx, val.Address.String(), newAddr.String(), "GericAuthorization", "")
+	s.Require().NoError(err)
+
 	s.grantee = newAddr
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -82,36 +85,28 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationGRPC() {
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?msg_type=%s", baseURL, "invalid_granter", s.grantee.String(), typeMsgSend),
 			true,
 			&types.QueryAuthorizationResponse{},
-			&types.QueryAuthorizationResponse{
-				Authorization: nil,
-			},
+			&types.QueryAuthorizationResponse{},
 		},
 		{
 			"fail invalid grantee address",
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?msg_type=%s", baseURL, val.Address.String(), "invalid_grantee", typeMsgSend),
 			true,
 			&types.QueryAuthorizationResponse{},
-			&types.QueryAuthorizationResponse{
-				Authorization: nil,
-			},
+			&types.QueryAuthorizationResponse{},
 		},
 		{
 			"fail invalid msg-type",
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?msg_type=%s", baseURL, val.Address.String(), s.grantee.String(), "invalidMsg"),
 			true,
 			&types.QueryAuthorizationResponse{},
-			&types.QueryAuthorizationResponse{
-				Authorization: nil,
-			},
+			&types.QueryAuthorizationResponse{},
 		},
 		{
 			"valid query",
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?msg_type=%s", baseURL, val.Address.String(), s.grantee.String(), typeMsgSend),
 			false,
 			&types.QueryAuthorizationResponse{},
-			&types.QueryAuthorizationResponse{
-				Authorization: nil,
-			},
+			&types.QueryAuthorizationResponse{},
 		},
 	}
 	for _, tc := range testCases {
@@ -143,27 +138,21 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants", baseURL, "invalid_granter", s.grantee.String()),
 			true,
 			&types.QueryAuthorizationsResponse{},
-			&types.QueryAuthorizationsResponse{
-				Authorization: nil,
-			},
+			&types.QueryAuthorizationsResponse{},
 		},
 		{
 			"fail invalid grantee address",
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants", baseURL, val.Address.String(), "invalid_grantee"),
 			true,
 			&types.QueryAuthorizationsResponse{},
-			&types.QueryAuthorizationsResponse{
-				Authorization: nil,
-			},
+			&types.QueryAuthorizationsResponse{},
 		},
 		{
 			"valid query",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants", baseURL, val.Address.String(), s.grantee.String()),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants?pagination.limit=1&pagination.count_total=true", baseURL, val.Address.String(), s.grantee.String()),
 			false,
 			&types.QueryAuthorizationsResponse{},
-			&types.QueryAuthorizationsResponse{
-				Authorization: nil,
-			},
+			&types.QueryAuthorizationsResponse{},
 		},
 	}
 	for _, tc := range testCases {

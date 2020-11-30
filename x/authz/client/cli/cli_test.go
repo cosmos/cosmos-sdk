@@ -243,7 +243,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorization() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+				s.Require().Contains(strings.TrimSpace(out.String()), tc.expectedOutput)
 			}
 		})
 	}

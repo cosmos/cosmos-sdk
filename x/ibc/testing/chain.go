@@ -369,7 +369,7 @@ func (chain *TestChain) GetPrefix() commitmenttypes.MerklePrefix {
 
 // NewClientID appends a new clientID string in the format:
 // ClientFor<counterparty-chain-id><index>
-func (chain *TestChain) NewClientID(clientType, counterpartyChainID string) string {
+func (chain *TestChain) NewClientID(clientType string) string {
 	clientID := fmt.Sprintf("%s-%s", clientType, strconv.Itoa(len(chain.ClientIDs)))
 	chain.ClientIDs = append(chain.ClientIDs, clientID)
 	return clientID

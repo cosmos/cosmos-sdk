@@ -165,6 +165,16 @@ func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 			},
 			false,
 		},
+		{
+			"invalid - client state and consensus state client types do not match",
+			func() {
+				tendermintClient := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
+				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 2)
+				msg, err = types.NewMsgCreateClient(tendermintClient, soloMachine.ConsensusState(), suite.chainA.SenderAccount.GetAddress())
+				suite.Require().NoError(err)
+			},
+			false,
+		},
 	}
 
 	for _, tc := range cases {

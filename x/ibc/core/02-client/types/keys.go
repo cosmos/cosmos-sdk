@@ -26,12 +26,13 @@ const (
 )
 
 // FormatClientIdentifier returns the client identifier with the sequence appended.
+// This is a SDK specific format.
 func FormatClientIdentifier(clientType string, sequence uint64) string {
 	return fmt.Sprintf("%s-%d", clientType, sequence)
 }
 
-// IsClientIDFormat checks if a clientID is in the format required for parsing client
-// identifier. The client identifier must be in the form: `{client-type}-{N}
+// IsClientIDFormat checks if a clientID is in the format required on the SDK for
+// parsing client identifiers. The client identifier must be in the form: `{client-type}-{N}
 var IsClientIDFormat = regexp.MustCompile(`^.*[^-]-[0-9]{1,20}$`).MatchString
 
 // IsValidClientID checks if the clientID is valid and can be parsed into the client

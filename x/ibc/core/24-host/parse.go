@@ -7,7 +7,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// ParseIdentifier parses the sequence from the identifier using the provided prefix.
+// ParseIdentifier parses the sequence from the identifier using the provided prefix. This function
+// does not need to be used by counterparty chains. SDK generated connection and channel identifiers
+// are required to use this format.
 func ParseIdentifier(identifier, prefix string) (uint64, error) {
 	if !strings.HasPrefix(identifier, prefix) {
 		return 0, sdkerrors.Wrapf(ErrInvalidID, "identifier doesn't contain prefix `%s`", prefix)

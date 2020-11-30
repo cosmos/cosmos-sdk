@@ -30,12 +30,13 @@ const (
 )
 
 // FormatConnectionIdentifier returns the connection identifier with the sequence appended.
+// This is a SDK specific format.
 func FormatConnectionIdentifier(sequence uint64) string {
 	return fmt.Sprintf("%s%d", ConnectionPrefix, sequence)
 }
 
-// IsConnectionIDFormat checks if a connectionID is in the format required for parsing connection
-// identifier. The connection identifier must be in the form: `connection-{N}
+// IsConnectionIDFormat checks if a connectionID is in the format required on the SDK for
+// parsing connection identifiers. The connection identifier must be in the form: `connection-{N}
 var IsConnectionIDFormat = regexp.MustCompile(`^connection-[0-9]{1,20}$`).MatchString
 
 // IsValidConnectionID checks if the connection identifier is valid and can be parsed to

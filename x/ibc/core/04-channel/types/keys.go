@@ -30,12 +30,13 @@ const (
 )
 
 // FormatChannelIdentifier returns the channel identifier with the sequence appended.
+// This is a SDK specific format.
 func FormatChannelIdentifier(sequence uint64) string {
 	return fmt.Sprintf("%s%d", ChannelPrefix, sequence)
 }
 
-// IsValidChannelID checks if a channelID is in the format required for parsing channel
-// identifier. The channel identifier must be in the form: `connection-{N}
+// IsValidChannelID checks if a channelID is in the format required on the SDK for
+// parsing channel identifier. The channel identifier must be in the form: `channel-{N}
 var IsChannelIDFormat = regexp.MustCompile(`^channel-[0-9]{1,20}$`).MatchString
 
 // IsValidChannelID checks if a channelID is valid and can be parsed to the channel

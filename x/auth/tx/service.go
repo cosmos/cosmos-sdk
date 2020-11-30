@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
-	"github.com/gogo/protobuf/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -186,50 +185,8 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 	}, nil
 }
 
-func normalizeBoradcastMode(mode txtypes.BroadcastMode) string {
-	switch mode {
-	case txtypes.BroadcastMode_async:
-		return "async"
-	case txtypes.BroadcastMode_sync:
-		return "sync"
-	case txtypes.BroadcastMode_block:
-		return "block"
-	default:
-		return "sync"
-	}
-}
-
 func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxRequest) (*txtypes.BroadcastTxResponse, error) {
-	if req.TxRaw == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
-	}
-
-	clientCtx := s.clientCtx.WithBroadcastMode(normalizeBoradcastMode((req.Mode)))
-	txBytes, err := proto.Marshal(req.TxRaw)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := clientCtx.BroadcastTx(txBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create a proto codec, we need it to unmarshal the tx bytes.
-	cdc := codec.NewProtoCodec(s.clientCtx.InterfaceRegistry)
-	var protoTx txtypes.Tx
-
-	bz, err := resp.Tx.Marshal()
-	if err != nil {
-		return nil, err
-	}
-	if err := cdc.UnmarshalBinaryBare(bz, &protoTx); err != nil {
-		return nil, err
-	}
-	return &txtypes.BroadcastTxResponse{
-		Tx:         &protoTx,
-		TxResponse: resp,
-	}, nil
-
+	return client.TxServiceBroadcast(ctx, s.clientCtx, req)
 }
 
 // RegisterTxService registers the tx service on the gRPC router.

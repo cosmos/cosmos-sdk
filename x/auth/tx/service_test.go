@@ -208,7 +208,6 @@ func (s IntegrationTestSuite) TestBroadcastTx() {
 	)
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
-	txBuilder.SetMemo("foobar")
 
 	// setup txFactory
 	txFactory := clienttx.Factory{}.
@@ -216,8 +215,6 @@ func (s IntegrationTestSuite) TestBroadcastTx() {
 		WithKeybase(val.ClientCtx.Keyring).
 		WithTxConfig(val.ClientCtx.TxConfig).
 		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
-
-	txBuilder.SetTimeoutHeight(txFactory.TimeoutHeight())
 
 	// Sign Tx.
 	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false)
@@ -243,7 +240,7 @@ func (s IntegrationTestSuite) TestBroadcastTx() {
 	)
 	s.Require().NoError(err)
 
-	s.Require().Equal("foobar", grpcRes.Tx.Body.Memo)
+	s.Require().Equal(uint32(0), grpcRes.TxResponse.Code)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

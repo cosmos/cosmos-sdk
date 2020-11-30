@@ -12,10 +12,10 @@ import (
 	"google.golang.org/grpc/encoding/proto"
 	"google.golang.org/grpc/metadata"
 
-	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 var _ gogogrpc.ClientConn = Context{}
@@ -23,7 +23,29 @@ var _ gogogrpc.ClientConn = Context{}
 var protoCodec = encoding.GetCodec(proto.Name)
 
 // Invoke implements the grpc ClientConn.Invoke method
-func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error {
+func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, args, reply interface{}, opts ...grpc.CallOption) (err error) {
+	// Two things can happen here:
+	// 1. either we're broadcasting a Tx, in which call we call Tendermint's broadcast endpoint directly,
+	// 2. or we are querying for state, in which case we call ABCI's Query.
+
+	// Case 1. Broadcasting a Tx.
+	if method == "/cosmos.tx.v1beta1.Service/BroadcastTx" {
+		req, ok := args.(*tx.BroadcastTxRequest)
+		if !ok {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxRequest)(nil), args)
+		}
+		res, ok := reply.(*tx.BroadcastTxResponse)
+		if !ok {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxResponse)(nil), args)
+		}
+
+		broadcastRes, err := TxServiceBroadcast(grpcCtx, ctx, req)
+		*res = *broadcastRes
+
+		return err
+	}
+
+	// Case 2. Querying state.
 	reqBz, err := protoCodec.Marshal(args)
 	if err != nil {
 		return err

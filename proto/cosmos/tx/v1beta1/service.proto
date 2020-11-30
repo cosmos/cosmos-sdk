@@ -76,10 +76,8 @@ enum BroadcastMode {
 // BroadcastTxResponse is the response type for the
 // Service.BroadcastTx method.
 message BroadcastTxResponse {
-  // tx is the queried transaction.
-  cosmos.tx.v1beta1.Tx tx = 1;
   // tx_response is the queried TxResponses.
-  cosmos.base.abci.v1beta1.TxResponse tx_response = 2;
+  cosmos.base.abci.v1beta1.TxResponse tx_response = 1;
 }
 
 // SimulateRequest is the request type for the Service.Simulate

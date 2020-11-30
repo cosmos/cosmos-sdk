@@ -35,7 +35,7 @@ func FormatChannelIdentifier(sequence uint64) string {
 	return fmt.Sprintf("%s%d", ChannelPrefix, sequence)
 }
 
-// IsValidChannelID checks if a channelID is in the format required on the SDK for
+// IsChannelIDFormat checks if a channelID is in the format required on the SDK for
 // parsing channel identifiers. The channel identifier must be in the form: `channel-{N}
 var IsChannelIDFormat = regexp.MustCompile(`^channel-[0-9]{1,20}$`).MatchString
 

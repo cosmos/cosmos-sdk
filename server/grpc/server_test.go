@@ -45,16 +45,16 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	val0 := s.network.Validators[0]
-	conn, err := grpc.Dial(
+	s.conn, err = grpc.Dial(
 		val0.AppConfig.GRPC.Address,
 		grpc.WithInsecure(), // Or else we get "no transport security set"
 	)
 	s.Require().NoError(err)
-	defer conn.Close()
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
+	s.conn.Close()
 	s.network.Cleanup()
 }
 

@@ -1,0 +1,369 @@
+[
+  {
+    "packet": {
+      "sourceChannel": "zarkozarko",
+      "sourcePort": "buckybucky",
+      "destChannel": "buckybucky",
+      "destPort": "buckybucky",
+      "data": {
+        "sender": "",
+        "receiver": "a2",
+        "amount": 1,
+        "denom": [
+          "",
+          "",
+          "atom"
+        ]
+      }
+    },
+    "handler": "OnRecvPacket",
+    "bankBefore": [
+      {
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
+        "amount": 0
+      }
+    ],
+    "bankAfter": [
+      {
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
+        "amount": 0
+      },
+      {
+        "address": [
+          "",
+          "",
+          "a2"
+        ],
+        "denom": [
+          "buckybucky",
+          "buckybucky",
+          "atom"
+        ],
+        "amount": 1
+      }
+    ],
+    "error": false
+  },
+  {
+    "packet": {
+      "sourceChannel": "buckybucky",
+      "sourcePort": "buckybucky",
+      "destChannel": "buckybucky",
+      "destPort": "buckybucky",
+      "data": {
+        "sender": "a2",
+        "receiver": "a1",
+        "amount": 1,
+        "denom": [
+          "buckybucky",
+          "buckybucky",
+          "atom"
+        ]
+      }
+    },
+    "handler": "OnRecvAcknowledgementResult",
+    "bankBefore": [
+      {
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
+        "amount": 0
+      },
+      {
+        "address": [
+          "",
+          "",
+          "a2"
+        ],
+        "denom": [
+          "buckybucky",
+          "buckybucky",
+          "atom"
+        ],
+        "amount": 1
+      }
+    ],
+    "bankAfter": [
+      {
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
+        "amount": 0
+      },
+      {
+        "address": [
+          "",
+          "",
+          "a2"
+        ],
+        "denom": [
+          "buckybucky",
+          "buckybucky",
+          "atom"
+        ],
+        "amount": 1
+      }
+    ],
+    "error": false
+  },
+  {
+    "packet": {
+      "sourceChannel": "",
+      "sourcePort": "",
+      "destChannel": "zarkozarko",
+      "destPort": "zarkozarko",
+      "data": {
+        "sender": "a1",
+        "receiver": "a1",
+        "amount": 0,
+        "denom": [
+          "zarkozarko",
+          "zarkozarko",
+          ""
+        ]
+      }
+    },
+    "handler": "OnRecvAcknowledgementResult",
+    "bankBefore": [
+      {
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
+        "amount": 0
+      },
+      {
+        "address": [
+          "",
+          "",
+          "a2"
+        ],
+        "denom": [
+          "buckybucky",
+          "buckybucky",
+          "atom"
+        ],
+        "amount": 1
+      }
+    ],
+    "bankAfter": [
+      {
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
+        "amount": 0
+      },
+      {
+        "address": [
+          "",
+          "",
+          "a2"
+        ],
+        "denom": [
+          "buckybucky",
+          "buckybucky",
+          "atom"
+        ],
+        "amount": 1
+      }
+    ],
+    "error": true
+  },
+  {
+    "packet": {
+      "sourceChannel": "",
+      "sourcePort": "",
+      "destChannel": "zarkozarko",
+      "destPort": "zarkozarko",
+      "data": {
+        "sender": "",
+        "receiver": "a1",
+        "amount": 1,
+        "denom": [
+          "buckybucky",
+          "buckybucky",
+          "atom"
+        ]
+      }
+    },
+    "handler": "OnRecvAcknowledgementResult",
+    "bankBefore": [
+      {
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
+        "amount": 0
+      },
+      {
+        "address": [
+          "",
+          "",
+          "a2"
+        ],
+        "denom": [
+          "buckybucky",
+          "buckybucky",
+          "atom"
+        ],
+        "amount": 1
+      }
+    ],
+    "bankAfter": [
+      {
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
+        "amount": 0
+      },
+      {
+        "address": [
+          "",
+          "",
+          "a2"
+        ],
+        "denom": [
+          "buckybucky",
+          "buckybucky",
+          "atom"
+        ],
+        "amount": 1
+      }
+    ],
+    "error": true
+  },
+  {
+    "packet": {
+      "sourceChannel": "buckybucky",
+      "sourcePort": "zarkozarko",
+      "destChannel": "zarkozarko",
+      "destPort": "zarkozarko",
+      "data": {
+        "sender": "a1",
+        "receiver": "a1",
+        "amount": 10,
+        "denom": [
+          "zarkozarko",
+          "zarkozarko",
+          ""
+        ]
+      }
+    },
+    "handler": "SendTransfer",
+    "bankBefore": [
+      {
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
+        "amount": 0
+      },
+      {
+        "address": [
+          "",
+          "",
+          "a2"
+        ],
+        "denom": [
+          "buckybucky",
+          "buckybucky",
+          "atom"
+        ],
+        "amount": 1
+      }
+    ],
+    "bankAfter": [
+      {
+        "address": [
+          "",
+          "",
+          ""
+        ],
+        "denom": [
+          "",
+          "",
+          ""
+        ],
+        "amount": 0
+      },
+      {
+        "address": [
+          "",
+          "",
+          "a2"
+        ],
+        "denom": [
+          "buckybucky",
+          "buckybucky",
+          "atom"
+        ],
+        "amount": 1
+      }
+    ],
+    "error": false
+  }
+]

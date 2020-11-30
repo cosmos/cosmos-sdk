@@ -311,7 +311,22 @@ func (suite *KeeperTestSuite) TestModelBasedOnRecvPacket() {
 				return
 			}
 			switch tc.handler {
-				//case "SendTransfer": err = suite.chainB.App.TransferKeeper.SendTransfer(suite.chainB.GetContext(), packet, tc.packet.Data)
+				// TODO for SendTransfer to work, channels need also to be created
+				case "SendTransfer":
+					var sender sdk.AccAddress;
+					sender, err = sdk.AccAddressFromBech32(tc.packet.Data.Sender);
+					if err != nil {
+						panic("MBT failed to convert sender address")
+					}
+					err = suite.chainB.App.TransferKeeper.SendTransfer(
+					suite.chainB.GetContext(),
+					tc.packet.SourcePort,
+					tc.packet.SourceChannel,
+					sdk.NewCoin(tc.packet.Data.Denom, sdk.NewIntFromUint64(tc.packet.Data.Amount)),
+					sender,
+					tc.packet.Data.Receiver,
+					clienttypes.NewHeight(0, 110),
+					0)
 				case "OnRecvPacket": err = suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, tc.packet.Data)
 				case "OnTimeoutPacket": err = suite.chainB.App.TransferKeeper.OnTimeoutPacket(suite.chainB.GetContext(), packet, tc.packet.Data)
 			    case "OnRecvAcknowledgementResult":

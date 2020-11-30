@@ -70,6 +70,31 @@ func TestCoinIsValid(t *testing.T) {
 	}
 }
 
+func TestCustomValidation(t *testing.T) {
+
+	newDnmRegex := `[\x{1F600}-\x{1F6FF}]`
+	SetCoinDenomRegex(func() string {
+		return newDnmRegex
+	})
+
+	cases := []struct {
+		coin       Coin
+		expectPass bool
+	}{
+		{Coin{"🙂", NewInt(1)}, true},
+		{Coin{"😃", NewInt(1)}, true},
+		{Coin{"😄", NewInt(1)}, true},
+		{Coin{"🌶", NewInt(1)}, false}, // outside the unicode range listed above
+		{Coin{"asdf", NewInt(1)}, false},
+		{Coin{"", NewInt(1)}, false},
+	}
+
+	for i, tc := range cases {
+		require.Equal(t, tc.expectPass, tc.coin.IsValid(), "unexpected result for IsValid, tc #%d", i)
+	}
+	SetCoinDenomRegex(DefaultCoinDenomRegex)
+}
+
 func TestAddCoin(t *testing.T) {
 	cases := []struct {
 		inputOne    Coin

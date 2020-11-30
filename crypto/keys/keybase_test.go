@@ -104,7 +104,7 @@ func TestCreateLedger(t *testing.T) {
 
 	path, err := restoredKey.GetPath()
 	assert.NoError(t, err)
-	assert.Equal(t, "44'/118'/3'/0/1", path.String())
+	assert.Equal(t, "m/44'/118'/3'/0/1", path.String())
 }
 
 // TestKeyManagement makes sure we can manipulate these keys well
@@ -225,7 +225,7 @@ func TestSignVerify(t *testing.T) {
 	// Import a public key
 	armor, err := cstore.ExportPubKey(n2)
 	require.Nil(t, err)
-	cstore.ImportPubKey(n3, armor)
+	require.NoError(t, cstore.ImportPubKey(n3, armor))
 	i3, err := cstore.Get(n3)
 	require.NoError(t, err)
 	require.Equal(t, i3.GetName(), n3)
@@ -433,6 +433,29 @@ func TestSeedPhrase(t *testing.T) {
 	require.Equal(t, n2, newInfo.GetName())
 	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())
 	require.Equal(t, info.GetPubKey(), newInfo.GetPubKey())
+}
+
+func TestCreateHDPath(t *testing.T) {
+	type args struct {
+		account uint32
+		index   uint32
+	}
+	tests := []struct {
+		name string
+		args args
+		want hd.BIP44Params
+	}{
+		{"m/44'/0'/0'/0/0", args{0, 0}, hd.BIP44Params{CoinType: 118, Purpose: 44}},
+		{"m/44'/114'/0'/0/0", args{0, 0}, hd.BIP44Params{Purpose: 44, CoinType: 118, Account: 0, AddressIndex: 0}},
+		{"m/44'/114'/1'/1/0", args{1, 1}, hd.BIP44Params{Purpose: 44, CoinType: 118, Account: 1, AddressIndex: 1}},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			tt := tt
+			require.Equal(t, tt.want, *CreateHDPath(tt.args.account, tt.args.index))
+		})
+	}
 }
 
 func ExampleNew() {

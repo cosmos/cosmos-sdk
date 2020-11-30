@@ -453,7 +453,6 @@ func (s *IntegrationTestSuite) TestLegacyRestErrMessages() {
 			"Successful IBC message",
 			ibcsolomachinecli.NewCreateClientCmd(),
 			[]string{
-				"21212121212",        // dummy client-id
 				"1",                  // dummy sequence
 				consensusJSON.Name(), // path to consensus json,
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),

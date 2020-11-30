@@ -32,14 +32,15 @@ func (k Keeper) CreateClient(goCtx context.Context, msg *clienttypes.MsgCreateCl
 		return nil, err
 	}
 
-	if err = k.ClientKeeper.CreateClient(ctx, msg.ClientId, clientState, consensusState); err != nil {
+	clientID, err := k.ClientKeeper.CreateClient(ctx, clientState, consensusState)
+	if err != nil {
 		return nil, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			clienttypes.EventTypeCreateClient,
-			sdk.NewAttribute(clienttypes.AttributeKeyClientID, msg.ClientId),
+			sdk.NewAttribute(clienttypes.AttributeKeyClientID, clientID),
 			sdk.NewAttribute(clienttypes.AttributeKeyClientType, clientState.ClientType()),
 			sdk.NewAttribute(clienttypes.AttributeKeyConsensusHeight, clientState.GetLatestHeight().String()),
 		),

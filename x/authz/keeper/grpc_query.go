@@ -69,32 +69,9 @@ func (k Keeper) Authorizations(c context.Context, req *types.QueryAuthorizations
 				Expiration:    auth.Expiration,
 			})
 		}
-
 		return true, nil
 	})
 
-	// if err != nil {
-	// 	return nil, status.Error(codes.Internal, err.Error())
-	// }
-
-	// authorizations := k.GetAuthorizations(ctx, granteeAddr, granterAddr)
-
-	// if len(authorizations) == 0 {
-	// 	return nil, status.Errorf(codes.NotFound, "No authorizations found")
-	// }
-	// result := make([]*codectypes.Any, len(authorizations))
-	// for i, authorization := range authorizations {
-	// 	msg, ok := authorization.(proto.Message)
-	// 	if !ok {
-	// 		return nil, status.Errorf(codes.Internal, "can't protomarshal %T", msg)
-	// 	}
-
-	// 	authorizationAny, err := codectypes.NewAnyWithValue(msg)
-	// 	if err != nil {
-	// 		return nil, status.Errorf(codes.Internal, err.Error())
-	// 	}
-	// 	result[i] = authorizationAny
-	// }
 	return &types.QueryAuthorizationsResponse{
 		Authorizations: authorizations,
 		Pagination:     pageRes,
@@ -158,5 +135,4 @@ func (k Keeper) Authorization(c context.Context, req *types.QueryAuthorizationRe
 			Expiration:    expiration,
 		},
 	}, nil
-
 }

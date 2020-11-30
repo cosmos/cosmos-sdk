@@ -27,7 +27,7 @@ func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, portCap *capabil
 			ConnectionId:          msg.Channel.ConnectionHops[0],
 		},
 	); err != nil {
-		return nil, nil, err
+		return nil, "", nil, err
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -60,7 +60,7 @@ func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capabili
 			ConnectionId:          msg.Channel.ConnectionHops[0],
 		},
 	); err != nil {
-		return nil, nil, err
+		return nil, "", nil, err
 	}
 
 	ctx.EventManager().EmitEvent(

@@ -66,7 +66,6 @@ callbacks to IBC applications.
 | connection_open_init | connection_id              | {connectionId}              |
 | connection_open_init | client_id                  | {clientId}                  |
 | connection_open_init | counterparty_client_id     | {counterparty.clientId}     |
-| connection_open_init | counterparty_connection_id | {counterparty.connectionId} |
 | message              | action                     | connection_open_init        |
 | message              | module                     | ibc_connection              |
 
@@ -112,7 +111,6 @@ callbacks to IBC applications.
 | channel_open_init | port_id                 | {portId}                         |
 | channel_open_init | channel_id              | {channelId}                      |
 | channel_open_init | counterparty_port_id    | {channel.counterparty.portId}    |
-| channel_open_init | counterparty_channel_id | {channel.counterparty.channelId} |
 | channel_open_init | connection_id           | {channel.connectionHops}         |
 | message           | action                  | channel_open_init                |
 | message           | module                  | ibc_channel                      |

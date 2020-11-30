@@ -122,7 +122,7 @@ func local_request_Query_ClientStates_0(ctx context.Context, marshaler runtime.M
 }
 
 var (
-	filter_Query_ConsensusState_0 = &utilities.DoubleArray{Encoding: map[string]int{"client_id": 0, "version_number": 1, "version_height": 2}, Base: []int{1, 1, 2, 3, 0, 0, 0}, Check: []int{0, 1, 1, 1, 2, 3, 4}}
+	filter_Query_ConsensusState_0 = &utilities.DoubleArray{Encoding: map[string]int{"client_id": 0, "revision_number": 1, "revision_height": 2}, Base: []int{1, 1, 2, 3, 0, 0, 0}, Check: []int{0, 1, 1, 1, 2, 3, 4}}
 )
 
 func request_Query_ConsensusState_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -147,26 +147,26 @@ func request_Query_ConsensusState_0(ctx context.Context, marshaler runtime.Marsh
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "client_id", err)
 	}
 
-	val, ok = pathParams["version_number"]
+	val, ok = pathParams["revision_number"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version_number")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision_number")
 	}
 
-	protoReq.VersionNumber, err = runtime.Uint64(val)
+	protoReq.RevisionNumber, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version_number", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision_number", err)
 	}
 
-	val, ok = pathParams["version_height"]
+	val, ok = pathParams["revision_height"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version_height")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision_height")
 	}
 
-	protoReq.VersionHeight, err = runtime.Uint64(val)
+	protoReq.RevisionHeight, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version_height", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision_height", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -203,26 +203,26 @@ func local_request_Query_ConsensusState_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "client_id", err)
 	}
 
-	val, ok = pathParams["version_number"]
+	val, ok = pathParams["revision_number"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version_number")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision_number")
 	}
 
-	protoReq.VersionNumber, err = runtime.Uint64(val)
+	protoReq.RevisionNumber, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version_number", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision_number", err)
 	}
 
-	val, ok = pathParams["version_height"]
+	val, ok = pathParams["revision_height"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version_height")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision_height")
 	}
 
-	protoReq.VersionHeight, err = runtime.Uint64(val)
+	protoReq.RevisionHeight, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version_height", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision_height", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -582,7 +582,7 @@ var (
 
 	pattern_Query_ClientStates_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"ibc", "core", "client", "v1beta1", "client_states"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ConsensusState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"ibc", "core", "client", "v1beta1", "consensus_states", "client_id", "version", "version_number", "height", "version_height"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ConsensusState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"ibc", "core", "client", "v1beta1", "consensus_states", "client_id", "revision", "revision_number", "height", "revision_height"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_ConsensusStates_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"ibc", "core", "client", "v1beta1", "consensus_states", "client_id"}, "", runtime.AssumeColonVerbOpt(true)))
 

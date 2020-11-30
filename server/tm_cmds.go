@@ -125,7 +125,6 @@ against which this app has been compiled.
 }
 
 // Deprecated: prints the content to the standard output using Legacy Amino
-// TODO: add issue to trace it?
 func printlnJSON(v interface{}) error {
 	cdc := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(cdc)

@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
-// TODO: is this test valuable?
 func TestStdSignatureMarshalYAML(t *testing.T) {
 	_, pk, _ := testdata.KeyTestPubAddr()
 	pkStr := pk.String()

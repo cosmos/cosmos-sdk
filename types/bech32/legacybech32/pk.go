@@ -14,7 +14,6 @@ import (
 type Bech32PubKeyType string
 
 // Bech32 conversion constants
-// TODO: check where we can remove this
 const (
 	AccPK  Bech32PubKeyType = "accpub"
 	ValPK  Bech32PubKeyType = "valpub"

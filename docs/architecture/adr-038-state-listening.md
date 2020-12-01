@@ -23,10 +23,11 @@ We will modify the `MultiStore` interface and its concrete (`rootmulti` and `cac
 We will also introduce two approaches for exposing the data to external consumers: writing to files and writing to a gRPC stream.
 
 ### Listening interface
+
 In a new file- `store/types/listening.go`- we will create a `WriteListener` interface for streaming out state changes from a KVStore.
 
 ```go
-// WriteListener interface for writing data out from a listenkv.Store
+// WriteListener interface for streaming data out from a listenkv.Store
 type WriteListener interface {
   // if value is nil then it was deleted
   OnWrite(key []byte, value []byte)
@@ -34,35 +35,94 @@ type WriteListener interface {
 ```
 
 ### Listener type
-We will create a concrete implementation of the `WriteListener` interface in `store/types/listening.go` that gob
-encodes and writes the key value pair into an underlying `io.Writer`.
+
+We will create two concrete implementation of the `WriteListener` interface in `store/types/listening.go`.
+
+One that writes out length-prefixed key-value pairs to an underlying `io.Writer`:
 
 ```go
-// GobWriteListener is used to configure listening to a KVStore using a gob encoding wrapper around an io.Writer
-type GobWriteListener struct {
-	writer              *gob.Encoder
+// PrefixWriteListener is used to configure listening to a KVStore by writing out big endian length-prefixed
+// key-value pairs to an io.Writer
+type PrefixWriteListener struct {
+	writer io.Writer
+	prefixBuf [6]byte
 }
 
-// NewGobWriteListener wraps a WriteListenerWriter around an io.Writer
-func NewGobWriteListener(w io.Writer) *GobWriteListener {
-	return &GobWriteListener{
-		writer: gob.NewEncoder(w),
+// NewPrefixWriteListener wraps a PrefixWriteListener around an io.Writer
+func NewPrefixWriteListener(w io.Writer) *PrefixWriteListener {
+	return &PrefixWriteListener{
+		writer: w,
 	}
 }
 
-// KVPair for gob encoding
-type KVPair struct {
-	Key []byte
-	Value []byte
-}
-
-// OnWrite satisfies WriteListener interface by writing out key-value gobs to the underlying io.Writer
-func (l *Listener) OnWrite(key []byte, value []byte) {
-	l.writer.Encode(KVPair{Key: key, Value: value})
+// OnWrite satisfies the WriteListener interface by writing out big endian length-prefixed key-value pairs
+// to an underlying io.Writer
+// The first two bytes of the prefix encode the length of the key
+// The last four bytes of the prefix encode the length of the value
+// This WriteListener makes two assumptions
+// 1) The key is no longer than 1<<16 - 1
+// 2) The value is no longer than 1<<32 - 1
+func (swl *PrefixWriteListener) OnWrite(key []byte, value []byte) {
+	keyLen := len(key)
+	valLen := len(key)
+	if keyLen > math.MaxUint16 || valLen > math.MaxUint32 {
+		return
+	}
+	binary.BigEndian.PutUint16(l.prefixBuf[:2], uint16(keyLen))
+	binary.BigEndian.PutUint32(l.prefixBuf[2:], uint32(valLen))
+	l.writer.Write(l.prefixBuf[:])
+	l.writer.Write(key)
+	l.writer.Write(value)
 }
 ```
 
+And one that writes out newline-delineated key-length-prefixed key-value pairs to an underlying io.Writer:
+
+```go
+// NewlineWriteListener is used to configure listening to a KVStore by writing out big endian key-length-prefixed and
+// newline delineated key-value pairs to an io.Writer
+type NewlineWriteListener struct {
+	writer              io.Writer
+	keyLenBuf           [2]byte
+}
+
+// NewNewlineWriteListener wraps a StockWriteListener around an io.Writer
+func NewNewlineWriteListener(w io.Writer) *NewlineWriteListener {
+	return &NewlineWriteListener{
+		writer: w,
+	}
+}
+
+var newline = []byte("\n")
+
+// OnWrite satisfies WriteListener interface by writing out newline delineated big endian key-length-prefixed key-value
+// pairs to the underlying io.Writer
+// The first two bytes encode the length of the key
+// Separate key-value pairs are newline delineated
+// This WriteListener makes three assumptions
+// 1) The key is no longer than 1<<16 - 1
+// 2) The value and keys contain no newline characters
+func (l *NewlineWriteListener) OnWrite(key []byte, value []byte) {
+	keyLen := len(key)
+	if keyLen > math.MaxUint16 {
+		return
+	}
+	binary.BigEndian.PutUint16(l.keyLenBuf[:], uint16(keyLen))
+	l.writer.Write(e.keyLenBuf[:])
+	l.writer.Write(key)
+	l.writer.Write(value)
+	l.writer.Write(newline)
+}
+```
+
+The former makes no assumptions about the presence of newline characters in keys or values, but values
+must be no longer than 1<<32 - 1. The latter assumes newlines are not present in keys or values but can support any length
+of value. Both assume keys are no longer than 1<<16 - 1. Newline delineation improves durability by enabling a consumer to orient
+themselves at the start of a key-value pair at any point in the stream (e.g. tail a file), without character delineation a consumer must start
+at the beginning of the stream and not lose track of their position in the stream.
+
 ### ListenKVStore
+
 We will create a new `Store` type `listenkv.Store` that the `MultiStore` wraps around a `KVStore` to enable state listening.
 We can configure the `Store` with a set of `WriteListener`s which stream the output to specific destinations.
 
@@ -71,8 +131,8 @@ We can configure the `Store` with a set of `WriteListener`s which stream the out
 // Operations are traced on each core KVStore call and written to any of the
 // underlying listeners with the proper key and operation permissions
 type Store struct {
-    parent    types.KVStore
-    listeners []types.WriteListener
+	parent    types.KVStore
+	listeners []types.WriteListener
 }
 
 // NewStore returns a reference to a new traceKVStore given a parent
@@ -97,6 +157,7 @@ func (tkv *Store) Delete(key []byte) {
 }
 
 // onWrite writes a KVStore operation to all of the WriteListeners
+// Note: write out in a goroutine
 func onWrite(listeners []types.WriteListener, key, value []byte) {
 	for _, l := range listeners {
 		l.OnWrite(key, value)
@@ -105,9 +166,9 @@ func onWrite(listeners []types.WriteListener, key, value []byte) {
 ```
 
 ### MultiStore interface updates
+
 We will update the `MultiStore` interface to allow us to wrap a set of listeners around a specific `KVStore`.
-Additionally, we will update the `CacheWrap` and `CacheWrapper` interfaces to enable listening in the caching layer, and add a `MultiStore` method
-to turn on or off this cache listening.
+Additionally, we will update the `CacheWrap` and `CacheWrapper` interfaces to enable listening in the caching layer.
 
 ```go
 type MultiStore interface {
@@ -118,9 +179,6 @@ type MultiStore interface {
 
 	// SetListeners sets the WriteListeners for the KVStore belonging to the provided StoreKey
 	SetListeners(key StoreKey, listeners []WriteListener)
-
-	// CacheListening enables or disables KVStore listening at the cache layer
-	CacheListening(listen bool)
 }
 ```
 
@@ -141,8 +199,9 @@ type CacheWrapper interface {
 ```
 
 ### MultiStore implementation updates
+
 We will modify all of the `Store` and `MultiStore` implementations to satisfy these new interfaces, and adjust the `rootmulti` `GetKVStore` method
-to wrap the returned `KVStore` with a `listenkv.Store` if listening is turned on.
+to wrap the returned `KVStore` with a `listenkv.Store` if listening is turned on for that `Store`.
 
 ```go
 func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
@@ -159,8 +218,8 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 }
 ```
 
-We will also adjust the `cachemulti` constructor methods and the `rootmulti` `CacheMultiStore` method to enable listening
-in the cache layer when `CacheListening` is turned on.
+We will also adjust the `cachemulti` constructor methods and the `rootmulti` `CacheMultiStore` method to forward the listeners
+to and enable listening in the cache layer.
 
 ```go
 func (rs *Store) CacheMultiStore() types.CacheMultiStore {
@@ -168,53 +227,133 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	for k, v := range rs.stores {
 		stores[k] = v
 	}
-	var cacheListeners map[types.StoreKey][]types.WriteListener
-	if rs.cacheListening {
-		cacheListeners = rs.listeners
-	}
-	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext, cacheListeners)
+	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext, rs.listeners)
 }
 ```
 
-### Exposing the data 
+### Exposing the data
+
 We will introduce and document mechanisms for exposing data from the above listeners to external consumers.
 
 #### Writing to file
+
 We will document and provide examples of how to configure a listener to write out to a file.
 No new type implementation will be needed, an `os.File` can be used as the underlying `io.Writer` for a `GobWriteListener`.
 
 Writing to a file is the simplest approach for streaming the data out to consumers.
-This approach also provide the advantages of being persistent and durable, and the files can be read directly
+This approach also provide the advantages of being persistent and durable, and the files can be read directly,
 or an auxiliary streaming services can tail the files and serve the data remotely.
 
 Without pruning the file size can grow indefinitely, this will need to be managed by
-the developer in an application or even module-specific manner.
+the developer in an application or even module-specific manner (e.g. log rotation).
 
 #### Writing to gRPC stream
+
 We will implement and document an `io.Writer` type for exposing our listeners over a gRPC server stream.
 
 Writing to a gRPC stream gRPC will allow us to expose the data over the standard gRPC interface.
-This interface can be exposed directly to consumers or we can implement a message queue or secondary streaming service on top.
-Using gRPC will provide us with all of the regular advantages of gRPC and protobuf: versioning guarantees, client side code generation, and interoperability with the many gRPC plugins and auxillary services.
+This interface can be exposed directly to consumers, or we can implement a message queue or secondary streaming service on top.
+Using gRPC will provide us with all the regular advantages of gRPC and protobuf: versioning guarantees,
+client side code generation, and interoperability with the many gRPC plugins and auxiliary services.
 
 Proceeding through a gRPC intermediate will provide additional overhead, in most cases this is not expected to be rate limiting but in
 instances where it is the developer can implement a more performant streaming mechanism for state listening.
 
 ### Configuration
+
 We will provide detailed documentation on how to configure the state listeners and their external streaming services from within an app's `AppCreator`,
-using the provided `AppOptions`. We will add two methods to the `BaseApp` to enable this configuration:
+using the provided `AppOptions`. We will add a new method to the `BaseApp` to enable this configuration:
 
 ```go
 // SetCommitMultiStoreListeners sets the KVStore listeners for the provided StoreKey
 func (app *BaseApp) SetCommitMultiStoreListeners(key sdk.StoreKey, listeners []storeTypes.WriteListener) {
 	app.cms.SetListeners(key, listeners)
 }
+```
 
-// SetCacheListening turns on or off listening at the cache layer
-func (app *BaseApp) SetCacheListening(listening bool) {
-	app.cms.CacheListening(listening)
+### TOML Configuration
+
+We will provide standard TOML configuration options for configuring the state listeners and their external streaming services.
+Note: the actual namespace is TBD.
+
+```toml
+[store]
+    listeners = [ # if len(listeners) > 0 we are listening
+        "file",
+        "grpc"
+    ]
+```
+
+We will also provide a mapping of these TOML configuration options to helper functions for setting up the specified
+streaming service.
+
+```go
+// StreamingServiceConstructor is used to construct and load a WriteListener onto the provided BaseApp and expose it over a streaming service
+type StreamingServiceConstructor func(bApp *BaseApp, opts servertypes.AppOptions, keys []sdk.StoreKey) error
+
+// StreamingServiceType enum for specifying the type of StreamingService
+type StreamingServiceType int
+
+const (
+	Unknown StreamingServiceType = iota
+	File
+	GRPC
+)
+
+// NewStreamingServiceType returns the StreamingServiceType corresponding to the provided name
+func NewStreamingServiceType(name string) StreamingServiceType {
+	switch strings.ToLower(name) {
+	case "file", "f":
+		return File
+	case "grpc":
+		return GRPC
+	default:
+		return Unknown
+	}
+}
+
+// String returns the string name of a StreamingServiceType
+func (sst StreamingServiceType) String() string {
+	switch sst {
+	case File:
+		return "file"
+	case GRPC:
+		return "grpc"
+	default:
+		return ""
+	}
+}
+
+// StreamingServiceConstructorLookupTable is a mapping of StreamingServiceTypes to StreamingServiceConstructors
+var StreamingServiceConstructorLookupTable = map[StreamingServiceType]StreamingServiceConstructor{
+	File: FileStreamingConstructor,
+	GRPC: GRPCStreamingConstructor,
+}
+
+// NewStreamingServiceConstructor returns the StreamingServiceConstructor corresponding to the provided name
+func NewStreamingServiceConstructor(name string) (StreamingServiceConstructor, error) {
+	ssType := NewStreamingServiceType(name)
+	if ssType == Unknown {
+		return nil, fmt.Errorf("unrecognized streaming service name %s", name)
+	}
+	if constructor, ok := StreamingServiceConstructorLookupTable[ssType]; ok {
+		return constructor, nil
+	}
+	return nil, fmt.Errorf("streaming service constructor of type %s not found", ssType.String())
+}
+
+// FileStreamingConstructor is the StreamingServiceConstructor function for writing out to a file
+func FileStreamingConstructor(bApp *BaseApp, opts servertypes.AppOptions, keys []sdk.StoreKey) error {
+	...
+}
+
+// GRPCStreamingConstructor is the StreamingServiceConstructor function for writing out to a gRPC stream
+func GRPCStreamingConstructor(bApp *BaseApp, opts servertypes.AppOptions, keys []sdk.StoreKey) error {
+	...
 }
 ```
+
+### Example configuration
 
 As a demonstration, we will implement the state watching features as part of SimApp.
 For example, the below is a very rudimentary integration of the state listening features into the SimApp `AppCreator` function:
@@ -237,42 +376,30 @@ func NewSimApp(
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
-
+	
+	// collect the keys for the stores we wish to expose 
+	storeKeys := make([]storeTypes.StoreKey, 0, len(keys))
+	for _, key := range keys {
+		storeKeys = append(storeKeys, key)
+	}
 	// configure state listening capabilities using AppOptions
-	if cast.ToBool(appOpts.Get("simApp.listening")) {
-		writeDir := filepath.Clean(cast.ToString(appOpts.Get("simApp.listening.writeDir")))
-		for _, key := range keys {
-			loadListener(bApp, writeDir, key)
+	listeners := cast.ToStringSlice(appOpts.Get("store.listeners"))
+	for _, listenerName := range listeners {
+		constructor, err := baseapp.NewStreamingServiceConstructor(listenerName)
+		if err != nil {
+			tmos.Exit(err.Error()) // or continue?
 		}
-		for _, key := range tkeys {
-			loadListener(bApp, writeDir, key)
+		if err := constructor(bApp, appOpts, storeKeys); err != nil {
+			tmos.Exit(err.Error())
 		}
-		for _, key := range memKeys {
-			loadListener(bApp, writeDir, key)
-		}
-		bApp.SetCacheListening(cast.ToBool(appOpts.Get("simApp.cacheListening")))
 	}
 	
 	...
 
 	return app
 }
-
-// loadListener creates and adds to the BaseApp a listener that writes out to a file in the provided write directory
-// The file is named after the StoreKey for the KVStore it listens to 
-func loadListener(bApp *baseapp.BaseApp, writeDir string, key sdk.StoreKey) {
-	writePath := filepath.Join(writeDir, key.Name())
-	// TODO: how to handle graceful file closure?
-	fileHandler, err := os.OpenFile(writePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0664)
-	if err != nil {
-		tmos.Exit(err.Error())
-	}
-	// using single io.Writer based listener
-	listener := storeTypes.NewGobWriteListener(fileHandler)
-	bApp.SetCommitMultiStoreListeners(key, []storeTypes.Listening{listener})
-}
-
 ```
+
 ## Consequences
 
 These changes will provide a means of subscribing to KVStore state changes in real time.

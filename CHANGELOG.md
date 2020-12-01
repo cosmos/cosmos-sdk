@@ -36,6 +36,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.40.0-rc4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc4) - 2020-11-30
+
+### Bug Fixes
+
+* (store) [#8048](https://github.com/cosmos/cosmos-sdk/pull/8048) Fix issue where `SetInitialVersion` was never getting called, causing all queries to return empty on chains with non-zero initial height
+
 ## [v0.40.0-rc3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc3) - 2020-11-06
 
 ### Improvements

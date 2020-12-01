@@ -16,70 +16,43 @@ func TestGrant(t *testing.T) {
 	require.NoError(t, err)
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 
-	cdc := codec.New()
-	RegisterCodec(cdc)
+	cdc := codec.NewLegacyAmino()
+	RegisterLegacyAminoCodec(cdc)
 
 	cases := map[string]struct {
 		grant FeeAllowanceGrant
 		valid bool
 	}{
 		"good": {
-			grant: FeeAllowanceGrant{
-				Grantee: addr,
-				Granter: addr2,
-				Allowance: &FeeAllowance{Sum: &FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &BasicFeeAllowance{
-					SpendLimit: atom,
-					Expiration: ExpiresAtHeight(100),
-				},
-				},
-				},
-			},
+			grant: NewFeeAllowanceGrant(addr2, addr, &BasicFeeAllowance{
+				SpendLimit: atom,
+				Expiration: ExpiresAtHeight(100),
+			}),
 			valid: true,
 		},
 		"no grantee": {
-			grant: FeeAllowanceGrant{
-				Granter: addr2,
-				Allowance: &FeeAllowance{Sum: &FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &BasicFeeAllowance{
-					SpendLimit: atom,
-					Expiration: ExpiresAtHeight(100),
-				},
-				},
-				},
-			},
+			grant: NewFeeAllowanceGrant(addr2, nil, &BasicFeeAllowance{
+				SpendLimit: atom,
+				Expiration: ExpiresAtHeight(100),
+			}),
 		},
 		"no granter": {
-			grant: FeeAllowanceGrant{
-				Grantee: addr2,
-				Allowance: &FeeAllowance{Sum: &FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &BasicFeeAllowance{
-					SpendLimit: atom,
-					Expiration: ExpiresAtHeight(100),
-				},
-				},
-				},
-			},
+			grant: NewFeeAllowanceGrant(nil, addr, &BasicFeeAllowance{
+				SpendLimit: atom,
+				Expiration: ExpiresAtHeight(100),
+			}),
 		},
 		"self-grant": {
-			grant: FeeAllowanceGrant{
-				Grantee: addr2,
-				Granter: addr2,
-				Allowance: &FeeAllowance{Sum: &FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &BasicFeeAllowance{
-					SpendLimit: atom,
-					Expiration: ExpiresAtHeight(100),
-				},
-				},
-				},
-			},
+			grant: NewFeeAllowanceGrant(addr2, addr2, &BasicFeeAllowance{
+				SpendLimit: atom,
+				Expiration: ExpiresAtHeight(100),
+			}),
 		},
 		"bad allowance": {
-			grant: FeeAllowanceGrant{
-				Grantee: addr,
-				Granter: addr2,
-				Allowance: &FeeAllowance{Sum: &FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &BasicFeeAllowance{
-					Expiration: ExpiresAtHeight(0),
-				},
-				},
-				},
-			},
+			grant: NewFeeAllowanceGrant(addr2, addr, &BasicFeeAllowance{
+				SpendLimit: atom,
+				Expiration: ExpiresAtHeight(-1),
+			}),
 		},
 	}
 

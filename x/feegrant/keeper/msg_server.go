@@ -35,13 +35,7 @@ func (k msgServer) GrantFeeAllowance(goCtx context.Context, msg *types.MsgGrantF
 		return nil, err
 	}
 
-	feegrant := types.FeeAllowanceGrant{
-		Grantee:   grantee,
-		Granter:   granter,
-		Allowance: msg.Allowance,
-	}
-
-	k.Keeper.GrantFeeAllowance(ctx, feegrant)
+	k.Keeper.GrantFeeAllowance(ctx, granter, grantee, msg.GetFeeAllowanceI())
 
 	return &types.MsgGrantFeeAllowanceResponse{}, nil
 }

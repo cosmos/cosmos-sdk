@@ -45,14 +45,12 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 // RegisterLegacyAminoCodec registers the feegrant module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	// TODO
-	// types.RegisterLegacyAminoCodec(cdc)
+	types.RegisterLegacyAminoCodec(cdc)
 }
 
 // RegisterInterfaces registers the feegrant module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	// TODO
-	// types.RegisterInterfaces(registry)
+	types.RegisterInterfaces(registry)
 }
 
 // LegacyQuerierHandler returns the feegrant module sdk.Querier.
@@ -161,10 +159,11 @@ func (AppModule) QuerierRoute() string {
 // InitGenesis performs genesis initialization for the feegrant module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, bz json.RawMessage) []abci.ValidatorUpdate {
-	var gs types.GenesisState
-	cdc.MustUnmarshalJSON(bz, &gs)
+	// TODO
+	// var gs types.GenesisState
+	// cdc.MustUnmarshalJSON(bz, &gs)
 
-	InitGenesis(ctx, am.keeper, &gs)
+	// InitGenesis(ctx, am.keeper, &gs)
 	return []abci.ValidatorUpdate{}
 }
 

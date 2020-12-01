@@ -16,21 +16,21 @@ var (
 )
 
 // NewFeeAllowanceGrant creates a new FeeAllowanceGrant.
-func NewFeeAllowanceGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllowanceI) (*FeeAllowanceGrant, error) {
+func NewFeeAllowanceGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllowanceI) FeeAllowanceGrant {
 	msg, ok := feeAllowance.(proto.Message)
 	if !ok {
-		return nil, fmt.Errorf("cannot proto marshal %T", msg)
+		panic(fmt.Errorf("cannot proto marshal %T", msg))
 	}
 	any, err := types.NewAnyWithValue(msg)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return &FeeAllowanceGrant{
+	return FeeAllowanceGrant{
 		Granter:   granter,
 		Grantee:   grantee,
 		Allowance: any,
-	}, nil
+	}
 }
 
 // ValidateBasic performs basic validation on

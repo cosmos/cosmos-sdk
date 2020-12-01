@@ -29,9 +29,10 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GrantFeeAllowance creates a new grant
-func (k Keeper) GrantFeeAllowance(ctx sdk.Context, grant types.FeeAllowanceGrant) {
+func (k Keeper) GrantFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance types.FeeAllowanceI) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.FeeAllowanceKey(grant.Granter, grant.Grantee)
+	key := types.FeeAllowanceKey(granter, grantee)
+	grant := types.NewFeeAllowanceGrant(granter, grantee, feeAllowance)
 	bz := k.cdc.MustMarshalBinaryBare(&grant)
 	store.Set(key, bz)
 
@@ -157,6 +158,6 @@ func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	}
 
 	// if we accepted, store the updated state of the allowance
-	k.GrantFeeAllowance(ctx, grant)
+	k.GrantFeeAllowance(ctx, granter, grantee, grant.GetFeeGrant())
 	return nil
 }

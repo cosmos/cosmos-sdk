@@ -22,7 +22,7 @@ func (g GenesisState) ValidateBasic() error {
 // InitGenesis will initialize the keeper from a *previously validated* GenesisState
 func InitGenesis(ctx sdk.Context, k Keeper, data *types.GenesisState) {
 	for _, f := range data.FeeAllowances {
-		k.GrantFeeAllowance(ctx, f)
+		k.GrantFeeAllowance(ctx, f.Granter, f.Grantee, f.GetFeeGrant())
 	}
 }
 

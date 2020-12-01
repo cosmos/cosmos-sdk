@@ -23,7 +23,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// GenesisState defines the feegrant module's genesis state.
+// GenesisState contains a set of fee allowances, persisted from the store
 type GenesisState struct {
 	FeeAllowances []FeeAllowanceGrant `protobuf:"bytes,1,rep,name=fee_allowances,json=feeAllowances,proto3" json:"fee_allowances"`
 }

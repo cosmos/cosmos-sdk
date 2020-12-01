@@ -2,17 +2,38 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
-// RegisterLegacyAminoCodec registers the account types and interface
+// RegisterLegacyAminoCodec registers concrete types and interfaces on the given codec.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	// cdc.RegisterInterface((*isFeeAllowance_Sum)(nil), nil)
-	// cdc.RegisterConcrete(&FeeAllowance_BasicFeeAllowance{}, "cosmos-sdk/ProtoBasicFeeAllowance", nil)
 	cdc.RegisterInterface((*FeeAllowanceI)(nil), nil)
+	cdc.RegisterInterface((*sdk.MsgRequest)(nil), nil)
+	cdc.RegisterConcrete(&MsgGrantFeeAllowance{}, "cosmos-sdk/MsgGrantFeeAllowance", nil)
+	cdc.RegisterConcrete(&MsgRevokeFeeAllowance{}, "cosmos-sdk/MsgRevokeFeeAllowance", nil)
 	cdc.RegisterConcrete(&BasicFeeAllowance{}, "cosmos-sdk/BasicFeeAllowance", nil)
 	cdc.RegisterConcrete(&PeriodicFeeAllowance{}, "cosmos-sdk/PeriodicFeeAllowance", nil)
-	cdc.RegisterConcrete(FeeGrantTx{}, "cosmos-sdk/FeeGrantTx", nil)
+	// cdc.RegisterConcrete(FeeGrantTx{}, "cosmos-sdk/FeeGrantTx", nil)
+}
+
+// RegisterInterfaces registers the interfaces types with the interface registry
+func RegisterInterfaces(registry types.InterfaceRegistry) {
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgGrantFeeAllowance{},
+		&MsgRevokeFeeAllowance{},
+	)
+
+	registry.RegisterInterface(
+		"cosmos.authz.v1beta1.FeeAllowance",
+		(*FeeAllowanceI)(nil),
+		&BasicFeeAllowance{},
+		&PeriodicFeeAllowance{},
+	)
+
+	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 var (

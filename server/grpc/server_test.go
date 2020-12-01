@@ -107,12 +107,12 @@ func (s *IntegrationTestSuite) TestGRPCServer() {
 	_, err = txServiceClient.GetTxsEvent(
 		context.Background(),
 		&tx.GetTxsEventRequest{
-			Event: "message.action=send",
+			Events: []string{"message.action=send"},
 		},
 	)
 	// TODO Once https://github.com/cosmos/cosmos-sdk/pull/8029 is merged, this
 	// should not error anymore.
-	s.Require().Error(err)
+	s.Require().NoError(err)
 }
 
 // Test and enforce that we upfront reject any connections to baseapp containing

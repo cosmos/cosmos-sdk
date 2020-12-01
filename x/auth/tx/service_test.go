@@ -124,11 +124,18 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
+	// Query the tx via gRPC empty params.
+	_, err = s.queryClient.GetTxsEvent(
+		context.Background(),
+		&tx.GetTxsEventRequest{},
+	)
+	s.Require().Error(err)
+
 	// Query the tx via gRPC.
 	grpcRes, err := s.queryClient.GetTxsEvent(
 		context.Background(),
 		&tx.GetTxsEventRequest{
-			Event: "message.action=send",
+			Events: []string{"message.action=send"},
 			Pagination: &query.PageRequest{
 				CountTotal: false,
 				Offset:     0,
@@ -145,21 +152,65 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 	grpcRes, err = s.queryClient.GetTxsEvent(
 		context.Background(),
 		&tx.GetTxsEventRequest{
-			Event: "message.action=send",
+			Events: []string{"message.action=send"},
 		},
 	)
 	// TODO Once https://github.com/cosmos/cosmos-sdk/pull/8029 is merged, this
 	// should not error anymore.
-	s.Require().Error(err)
-
-	// Query the tx via grpc-gateway.
-	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?event=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action=send", 0, 1))
 	s.Require().NoError(err)
-	var getTxRes tx.GetTxsEventResponse
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getTxRes))
-	s.Require().Equal(len(getTxRes.Txs), 1)
-	s.Require().Equal("foobar", getTxRes.Txs[0].Body.Memo)
-	s.Require().NotZero(getTxRes.TxResponses[0].Height)
+
+	rpcTests := []struct {
+		name      string
+		url       string
+		expectErr bool
+		expErrMsg string
+	}{
+		{
+			"empty params",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress),
+			true,
+			"must declare at least one event to search",
+		},
+		{
+			"without pagination",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action=send"),
+			false,
+			"",
+		},
+		{
+			"with pagination",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action=send", 0, 10),
+			false,
+			"",
+		},
+		{
+			"expect pass with multiple-events",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s", val.APIAddress, "message.action=send", "message.module=bank"),
+			false,
+			"",
+		},
+		{
+			"expect pass with escape event",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action%3Dsend"),
+			false,
+			"",
+		},
+	}
+	for _, tc := range rpcTests {
+		s.Run(tc.name, func() {
+			res, err := rest.GetRequest(tc.url)
+			s.Require().NoError(err)
+			if tc.expectErr {
+				s.Require().Contains(string(res), tc.expErrMsg)
+			} else {
+				var result tx.GetTxsEventResponse
+				val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &result)
+				s.Require().GreaterOrEqual(len(result.Txs), 1)
+				s.Require().Equal("foobar", result.Txs[0].Body.Memo)
+				s.Require().NotZero(result.TxResponses[0].Height)
+			}
+		})
+	}
 }
 
 func (s IntegrationTestSuite) TestGetTx() {

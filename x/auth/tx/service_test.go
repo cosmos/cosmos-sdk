@@ -77,49 +77,77 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s IntegrationTestSuite) TestSimulate() {
-	val := s.network.Validators[0]
-
-	// prepare txBuilder with msg
-	txBuilder := val.ClientCtx.TxConfig.NewTxBuilder()
-	feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
-	gasLimit := testdata.NewTestGasLimit()
-	s.Require().NoError(
-		txBuilder.SetMsgs(&banktypes.MsgSend{
-			FromAddress: val.Address.String(),
-			ToAddress:   val.Address.String(),
-			Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
-		}),
-	)
-	txBuilder.SetFeeAmount(feeAmount)
-	txBuilder.SetGasLimit(gasLimit)
-	txBuilder.SetMemo("foobar")
-
-	// setup txFactory
-	txFactory := clienttx.Factory{}.
-		WithChainID(val.ClientCtx.ChainID).
-		WithKeybase(val.ClientCtx.Keyring).
-		WithTxConfig(val.ClientCtx.TxConfig).
-		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
-
-	// Sign Tx.
-	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false)
-	s.Require().NoError(err)
-
+func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
+	txBuilder := s.mkTxBuilder()
 	// Convert the txBuilder to a tx.Tx.
 	protoTx, err := txBuilderToProtoTx(txBuilder)
 	s.Require().NoError(err)
 
-	// Run the simulate gRPC query.
-	res, err := s.queryClient.Simulate(
-		context.Background(),
-		&tx.SimulateRequest{Tx: protoTx},
-	)
+	testCases := []struct {
+		name      string
+		req       *tx.SimulateRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"nil request", nil, true, "request cannot be nil"},
+		{"empty request", &tx.SimulateRequest{}, true, "invalid empty tx"},
+		{"valid request", &tx.SimulateRequest{Tx: protoTx}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			// Broadcast the tx via gRPC via the validator's clientCtx (which goes
+			// through Tendermint).
+			res, err := s.queryClient.Simulate(context.Background(), tc.req)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
+				// Check the result and gas used are correct.
+				s.Require().Equal(len(res.GetResult().GetEvents()), 4) // 1 transfer, 3 messages.
+				s.Require().True(res.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
+			}
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
+	val := s.network.Validators[0]
+	txBuilder := s.mkTxBuilder()
+	// Convert the txBuilder to a tx.Tx.
+	protoTx, err := txBuilderToProtoTx(txBuilder)
 	s.Require().NoError(err)
 
-	// Check the result and gas used are correct.
-	s.Require().Equal(len(res.GetResult().GetEvents()), 4) // 1 transfer, 3 messages.
-	s.Require().True(res.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
+	testCases := []struct {
+		name      string
+		req       *tx.SimulateRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"empty request", &tx.SimulateRequest{}, true, "invalid empty tx"},
+		{"valid request", &tx.SimulateRequest{Tx: protoTx}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			req, err := val.ClientCtx.JSONMarshaler.MarshalJSON(tc.req)
+			s.Require().NoError(err)
+			res, err := rest.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/simulate", val.APIAddress), "application/json", req)
+			s.Require().NoError(err)
+			if tc.expErr {
+				s.Require().Contains(string(res), tc.expErrMsg)
+			} else {
+				var result tx.SimulateResponse
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &result)
+				s.Require().NoError(err)
+				// Check the result and gas used are correct.
+				s.Require().Equal(len(result.GetResult().GetEvents()), 4) // 1 transfer, 3 messages.
+				s.Require().True(result.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
+			}
+		})
+	}
 }
 
 func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
@@ -312,43 +340,11 @@ func (s IntegrationTestSuite) TestGetTx_GRPCGateway() {
 	}
 }
 
-func (s IntegrationTestSuite) mkTx() []byte {
+func (s IntegrationTestSuite) TestBroadcastTx_GRPC() {
 	val := s.network.Validators[0]
-	s.Require().NoError(s.network.WaitForNextBlock())
-
-	// prepare txBuilder with msg
-	txBuilder := val.ClientCtx.TxConfig.NewTxBuilder()
-	feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
-	gasLimit := testdata.NewTestGasLimit()
-	s.Require().NoError(
-		txBuilder.SetMsgs(&banktypes.MsgSend{
-			FromAddress: val.Address.String(),
-			ToAddress:   val.Address.String(),
-			Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
-		}),
-	)
-	txBuilder.SetFeeAmount(feeAmount)
-	txBuilder.SetGasLimit(gasLimit)
-
-	// setup txFactory
-	txFactory := clienttx.Factory{}.
-		WithChainID(val.ClientCtx.ChainID).
-		WithKeybase(val.ClientCtx.Keyring).
-		WithTxConfig(val.ClientCtx.TxConfig).
-		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
-
-	// Sign Tx.
-	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false)
-	s.Require().NoError(err)
-
+	txBuilder := s.mkTxBuilder()
 	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
-
-	return txBytes
-}
-
-func (s IntegrationTestSuite) TestBroadcastTx_GRPC() {
-	txBytes := s.mkTx()
 
 	testCases := []struct {
 		name      string
@@ -386,7 +382,9 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPC() {
 
 func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
 	val := s.network.Validators[0]
-	txBytes := s.mkTx()
+	txBuilder := s.mkTxBuilder()
+	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	s.Require().NoError(err)
 
 	testCases := []struct {
 		name      string
@@ -394,10 +392,10 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
 		expErr    bool
 		expErrMsg string
 	}{
-		{"empty request", &tx.BroadcastTxRequest{}, true, "invalid empty tx"},
+		{"empty request", &tx.BroadcastTxRequest{}, true, "unknown value \"unspecified\" for enum cosmos.tx.v1beta1.BroadcastMode"},
 		{"no mode", &tx.BroadcastTxRequest{
 			TxBytes: txBytes,
-		}, true, "ABC"},
+		}, true, "unknown value \"unspecified\" for enum cosmos.tx.v1beta1.BroadcastMode"},
 		{"valid request", &tx.BroadcastTxRequest{
 			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
 			TxBytes: txBytes,
@@ -424,6 +422,38 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
 
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
+}
+
+func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
+	val := s.network.Validators[0]
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// prepare txBuilder with msg
+	txBuilder := val.ClientCtx.TxConfig.NewTxBuilder()
+	feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
+	gasLimit := testdata.NewTestGasLimit()
+	s.Require().NoError(
+		txBuilder.SetMsgs(&banktypes.MsgSend{
+			FromAddress: val.Address.String(),
+			ToAddress:   val.Address.String(),
+			Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
+		}),
+	)
+	txBuilder.SetFeeAmount(feeAmount)
+	txBuilder.SetGasLimit(gasLimit)
+
+	// setup txFactory
+	txFactory := clienttx.Factory{}.
+		WithChainID(val.ClientCtx.ChainID).
+		WithKeybase(val.ClientCtx.Keyring).
+		WithTxConfig(val.ClientCtx.TxConfig).
+		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
+
+	// Sign Tx.
+	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false)
+	s.Require().NoError(err)
+
+	return txBuilder
 }
 
 // txBuilderToProtoTx converts a txBuilder into a proto tx.Tx.

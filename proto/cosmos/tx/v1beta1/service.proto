@@ -13,7 +13,10 @@ option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
 service Service {
   // Simulate simulates executing a transaction for estimating gas usage.
   rpc Simulate(SimulateRequest) returns (SimulateResponse) {
-    option (google.api.http).post = "/cosmos/tx/v1beta1/simulate";
+    option (google.api.http) = {
+      post: "/cosmos/tx/v1beta1/simulate"
+      body: "*"
+    };
   }
   // GetTx fetches a tx by hash.
   rpc GetTx(GetTxRequest) returns (GetTxResponse) {
@@ -21,7 +24,10 @@ service Service {
   }
   // BroadcastTx broadcast transaction.
   rpc BroadcastTx(BroadcastTxRequest) returns (BroadcastTxResponse) {
-    option (google.api.http).post = "/cosmos/tx/v1beta1/txs";
+    option (google.api.http) = {
+      post: "/cosmos/tx/v1beta1/txs"
+      body: "*"
+    };
   }
   // GetTxsEvent fetches txs by event.
   rpc GetTxsEvent(GetTxsEventRequest) returns (GetTxsEventResponse) {

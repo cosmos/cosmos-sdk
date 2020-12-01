@@ -3,6 +3,7 @@ package client
 import (
 	gocontext "context"
 	"fmt"
+	"reflect"
 	"strconv"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
@@ -27,6 +28,11 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, args, reply 
 	// Two things can happen here:
 	// 1. either we're broadcasting a Tx, in which call we call Tendermint's broadcast endpoint directly,
 	// 2. or we are querying for state, in which case we call ABCI's Query.
+
+	// In both cases, we don't allow empty request args (it will panic unexpectedly).
+	if reflect.ValueOf(args).IsNil() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "request cannot be nil")
+	}
 
 	// Case 1. Broadcasting a Tx.
 	if isBroadcast(method) {

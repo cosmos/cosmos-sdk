@@ -122,48 +122,77 @@ func (s IntegrationTestSuite) TestSimulate() {
 	s.Require().True(res.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
 }
 
-func (s IntegrationTestSuite) TestGetTxEvents() {
-	val := s.network.Validators[0]
-
-	// Query the tx via gRPC empty params.
-	_, err := s.queryClient.GetTxsEvent(
-		context.Background(),
-		&tx.GetTxsEventRequest{},
-	)
-	s.Require().Error(err)
-
-	// Query the tx via gRPC.
-	grpcRes, err := s.queryClient.GetTxsEvent(
-		context.Background(),
-		&tx.GetTxsEventRequest{
-			Events: []string{"message.action=send"},
-			Pagination: &query.PageRequest{
-				CountTotal: false,
-				Offset:     0,
-				Limit:      1,
+func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
+	testCases := []struct {
+		name      string
+		req       *tx.GetTxsEventRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			"nil request",
+			nil,
+			true, "request cannot be nil",
+		},
+		{
+			"empty request",
+			&tx.GetTxsEventRequest{},
+			true, "must declare at least one event to search",
+		},
+		{
+			"request with dummy event",
+			&tx.GetTxsEventRequest{Events: []string{"foobar"}},
+			true, "event foobar should be of the format: {eventType}.{eventAttribute}={value}",
+		},
+		{
+			"without pagination",
+			&tx.GetTxsEventRequest{
+				Events: []string{"message.action=send"},
 			},
+			false, "",
 		},
-	)
-	s.Require().NoError(err)
-	s.Require().Equal(len(grpcRes.Txs), 1)
-	s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
-
-	// Query the tx via gRPC without pagination. This used to panic, see
-	// https://github.com/cosmos/cosmos-sdk/issues/8038.
-	grpcRes, err = s.queryClient.GetTxsEvent(
-		context.Background(),
-		&tx.GetTxsEventRequest{
-			Events: []string{"message.action=send"},
+		{
+			"with pagination",
+			&tx.GetTxsEventRequest{
+				Events: []string{"message.action=send"},
+				Pagination: &query.PageRequest{
+					CountTotal: false,
+					Offset:     0,
+					Limit:      1,
+				},
+			},
+			false, "",
 		},
-	)
-	// TODO Once https://github.com/cosmos/cosmos-sdk/pull/8029 is merged, this
-	// should not error anymore.
-	s.Require().NoError(err)
+		{
+			"with multi events",
+			&tx.GetTxsEventRequest{
+				Events: []string{"message.action=send", "message.module=bank"},
+			},
+			false, "",
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			// Query the tx via gRPC.
+			grpcRes, err := s.queryClient.GetTxsEvent(context.Background(), tc.req)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(len(grpcRes.Txs), 1)
+				s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
+			}
+		})
+	}
+}
 
-	rpcTests := []struct {
+func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
+	val := s.network.Validators[0]
+	testCases := []struct {
 		name      string
 		url       string
-		expectErr bool
+		expErr    bool
 		expErrMsg string
 	}{
 		{
@@ -197,15 +226,16 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 			"",
 		},
 	}
-	for _, tc := range rpcTests {
+	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			res, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
-			if tc.expectErr {
+			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result tx.GetTxsEventResponse
-				val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &result)
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &result)
+				s.Require().NoError(err)
 				s.Require().GreaterOrEqual(len(result.Txs), 1)
 				s.Require().Equal("foobar", result.Txs[0].Body.Memo)
 				s.Require().NotZero(result.TxResponses[0].Height)
@@ -214,31 +244,77 @@ func (s IntegrationTestSuite) TestGetTxEvents() {
 	}
 }
 
-func (s IntegrationTestSuite) TestGetTx() {
-	val := s.network.Validators[0]
-
-	s.Require().NoError(s.network.WaitForNextBlock())
-
-	// Query the tx via gRPC.
-	grpcRes, err := s.queryClient.GetTx(
-		context.Background(),
-		&tx.GetTxRequest{Hash: s.txRes.TxHash},
-	)
-	s.Require().NoError(err)
-	s.Require().Equal("foobar", grpcRes.Tx.Body.Memo)
-	s.Require().NotZero(grpcRes.TxResponse.Height)
-
-	// Query the tx via grpc-gateway.
-	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/tx/%s", val.APIAddress, s.txRes.TxHash))
-	s.Require().NoError(err)
-	var getTxRes tx.GetTxResponse
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getTxRes))
-	s.Require().Equal("foobar", grpcRes.Tx.Body.Memo)
-	s.Require().NotZero(grpcRes.TxResponse.Height)
+func (s IntegrationTestSuite) TestGetTx_GRPC() {
+	testCases := []struct {
+		name      string
+		req       *tx.GetTxRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"nil request", nil, true, "request cannot be nil"},
+		{"empty request", &tx.GetTxRequest{}, true, "transaction hash cannot be empty"},
+		{"request with dummy hash", &tx.GetTxRequest{Hash: "deadbeef"}, true, "tx (DEADBEEF) not found"},
+		{"good request", &tx.GetTxRequest{Hash: s.txRes.TxHash}, false, ""},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			// Query the tx via gRPC.
+			grpcRes, err := s.queryClient.GetTx(context.Background(), tc.req)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal("foobar", grpcRes.Tx.Body.Memo)
+			}
+		})
+	}
 }
 
-func (s IntegrationTestSuite) TestBroadcastTx() {
+func (s IntegrationTestSuite) TestGetTx_GRPCGateway() {
 	val := s.network.Validators[0]
+	testCases := []struct {
+		name      string
+		url       string
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			"empty params",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/tx/", val.APIAddress),
+			true, "transaction hash cannot be empty",
+		},
+		{
+			"dummy hash",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/tx/%s", val.APIAddress, "deadbeef"),
+			true, "tx (DEADBEEF) not found",
+		},
+		{
+			"good hash",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/tx/%s", val.APIAddress, s.txRes.TxHash),
+			false, "",
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			res, err := rest.GetRequest(tc.url)
+			s.Require().NoError(err)
+			if tc.expErr {
+				s.Require().Contains(string(res), tc.expErrMsg)
+			} else {
+				var result tx.GetTxResponse
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &result)
+				s.Require().NoError(err)
+				s.Require().Equal("foobar", result.Tx.Body.Memo)
+				s.Require().NotZero(result.TxResponse.Height)
+			}
+		})
+	}
+}
+
+func (s IntegrationTestSuite) mkTx() []byte {
+	val := s.network.Validators[0]
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// prepare txBuilder with msg
 	txBuilder := val.ClientCtx.TxConfig.NewTxBuilder()
@@ -268,34 +344,76 @@ func (s IntegrationTestSuite) TestBroadcastTx() {
 	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
 
+	return txBytes
+}
+
+func (s IntegrationTestSuite) TestBroadcastTx_GRPC() {
+	txBytes := s.mkTx()
+
 	testCases := []struct {
-		name   string
-		req    *tx.BroadcastTxRequest
-		expErr bool
+		name      string
+		req       *tx.BroadcastTxRequest
+		expErr    bool
+		expErrMsg string
 	}{
-		{"nil request", nil, true},
-		{"empty request", &tx.BroadcastTxRequest{}, true},
+		{"nil request", nil, true, "request cannot be nil"},
+		{"empty request", &tx.BroadcastTxRequest{}, true, "invalid empty tx"},
 		{"valid request", &tx.BroadcastTxRequest{
 			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
 			TxBytes: txBytes,
-		}, false},
+		}, false, ""},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			// Broadcast the tx via gRPC.
-			grpcRes, err := s.queryClient.BroadcastTx(
-				context.Background(),
-				tc.req,
-			)
-
+			// Broadcast the tx via gRPC via the validator's clientCtx (which goes
+			// through Tendermint).
+			grpcRes, err := s.queryClient.BroadcastTx(context.Background(), tc.req)
 			if tc.expErr {
 				s.Require().Error(err)
-
+				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				s.Require().NoError(err)
 				s.Require().Equal(uint32(0), grpcRes.TxResponse.Code)
+			}
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
+	val := s.network.Validators[0]
+	txBytes := s.mkTx()
+
+	testCases := []struct {
+		name      string
+		req       *tx.BroadcastTxRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"empty request", &tx.BroadcastTxRequest{}, true, "invalid empty tx"},
+		{"no mode", &tx.BroadcastTxRequest{
+			TxBytes: txBytes,
+		}, true, "ABC"},
+		{"valid request", &tx.BroadcastTxRequest{
+			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
+			TxBytes: txBytes,
+		}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			req, err := val.ClientCtx.JSONMarshaler.MarshalJSON(tc.req)
+			s.Require().NoError(err)
+			res, err := rest.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress), "application/json", req)
+			s.Require().NoError(err)
+			if tc.expErr {
+				s.Require().Contains(string(res), tc.expErrMsg)
+			} else {
+				var result tx.BroadcastTxResponse
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &result)
+				s.Require().NoError(err)
+				s.Require().Equal(uint32(0), result.TxResponse.Code)
 			}
 		})
 	}

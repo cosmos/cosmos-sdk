@@ -358,6 +358,9 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPC() {
 	}{
 		{"nil request", nil, true, "request cannot be nil"},
 		{"empty request", &tx.BroadcastTxRequest{}, true, "invalid empty tx"},
+		{"no mode", &tx.BroadcastTxRequest{
+			TxBytes: txBytes,
+		}, true, "supported types: sync, async, block"},
 		{"valid request", &tx.BroadcastTxRequest{
 			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
 			TxBytes: txBytes,

@@ -49,32 +49,17 @@ const (
 
 // TxsByEvents implements the ServiceServer.TxsByEvents RPC method.
 func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventRequest) (*txtypes.GetTxsEventResponse, error) {
-	offset := int(req.Pagination.Offset)
-	limit := int(req.Pagination.Limit)
-	if offset < 0 {
-		return nil, status.Error(codes.InvalidArgument, "offset must greater than 0")
+	page, limit, err := pagination.ParsePagination(req.Pagination)
+	if err != nil {
+		return nil, err
 	}
-	if len(req.Event) == 0 {
+
+	if len(req.Events) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "must declare at least one event to search")
 	}
 
-	if limit < 0 {
-		return nil, status.Error(codes.InvalidArgument, "limit must greater than 0")
-	} else if limit == 0 {
-		limit = pagination.DefaultLimit
-	}
-
-	page := offset/limit + 1
-
-	var events []string
-
-	if strings.Contains(req.Event, "&") {
-		events = strings.Split(req.Event, "&")
-	} else {
-		events = append(events, req.Event)
-	}
-	tmEvents := make([]string, len(events))
-	for i, event := range events {
+	tmEvents := make([]string, len(req.Events))
+	for i, event := range req.Events {
 		if !strings.Contains(event, "=") {
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid event; event %s should be of the format: %s", event, eventFormat))
 		} else if strings.Count(event, "=") > 1 {

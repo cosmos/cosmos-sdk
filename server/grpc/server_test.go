@@ -121,12 +121,12 @@ func (s *IntegrationTestSuite) TestGRPCServer_GetTxsEvent() {
 	_, err := txServiceClient.GetTxsEvent(
 		context.Background(),
 		&tx.GetTxsEventRequest{
-			Event: "message.action=send",
+			Events: []string{"message.action=send"},
 		},
 	)
 	// TODO Once https://github.com/cosmos/cosmos-sdk/pull/8029 is merged, this
 	// should not error anymore.
-	s.Require().Error(err)
+	s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TestGRPCServer_BroadcastTx() {

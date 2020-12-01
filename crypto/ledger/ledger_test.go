@@ -35,7 +35,7 @@ func checkDefaultPubKey(t *testing.T, priv types.LedgerPrivKey) {
 	require.Equal(t, "eb5ae98721034fef9cd7c4c63588d3b03feb5281b9d232cba34d6f3d71aee59211ffbfe1fe87",
 		fmt.Sprintf("%x", cdc.Amino.MustMarshalBinaryBare(priv.PubKey())),
 		"Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
-	require.Equal(t, expectedPkStr, priv.PubKey())
+	require.Equal(t, expectedPkStr, priv.PubKey().String())
 	addr := sdk.AccAddress(priv.PubKey().Address()).String()
 	require.Equal(t, "cosmos1w34k53py5v5xyluazqpq65agyajavep2rflq6h",
 		addr, "Is your device using test mnemonic: %s ?", testutil.TestMnemonic)

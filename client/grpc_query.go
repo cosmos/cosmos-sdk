@@ -29,7 +29,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, args, reply 
 	// 2. or we are querying for state, in which case we call ABCI's Query.
 
 	// Case 1. Broadcasting a Tx.
-	if method == "/cosmos.tx.v1beta1.Service/BroadcastTx" {
+	if isBroadcast(method) {
 		req, ok := args.(*tx.BroadcastTxRequest)
 		if !ok {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxRequest)(nil), args)
@@ -110,4 +110,8 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, args, reply 
 // NewStream implements the grpc ClientConn.NewStream method
 func (Context) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
 	return nil, fmt.Errorf("streaming rpc not supported")
+}
+
+func isBroadcast(method string) bool {
+	return method == "/cosmos.tx.v1beta1.Service/BroadcastTx"
 }

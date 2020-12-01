@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -215,14 +214,7 @@ func (s IntegrationTestSuite) TestBroadcastTx() {
 	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false)
 	s.Require().NoError(err)
 
-	// To get the TxRaw to be broadcasted, we unforunately need to first encode
-	// the tx into bytes, then decode it into TxRaw.
 	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
-	s.Require().NoError(err)
-	// Create a proto codec, we need it to unmarshal the tx bytes.
-	cdc := codec.NewProtoCodec(val.ClientCtx.InterfaceRegistry)
-	var txRaw tx.TxRaw
-	err = cdc.UnmarshalBinaryBare(txBytes, &txRaw)
 	s.Require().NoError(err)
 
 	testCases := []struct {
@@ -233,8 +225,8 @@ func (s IntegrationTestSuite) TestBroadcastTx() {
 		{"nil request", nil, true},
 		{"empty request", &tx.BroadcastTxRequest{}, true},
 		{"valid request", &tx.BroadcastTxRequest{
-			Mode:  tx.BroadcastMode_sync,
-			TxRaw: &txRaw,
+			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
+			TxBytes: txBytes,
 		}, false},
 	}
 

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/mempool"
 	"google.golang.org/grpc/codes"
@@ -150,16 +149,12 @@ func (ctx Context) BroadcastTxAsync(txBytes []byte) (*sdk.TxResponse, error) {
 // TxServiceBroadcast is a helper function to broadcast a Tx with the correct gRPC types
 // from the tx service. Calls `clientCtx.BroadcastTx` under the hood.
 func TxServiceBroadcast(grpcCtx context.Context, clientCtx Context, req *tx.BroadcastTxRequest) (*tx.BroadcastTxResponse, error) {
-	if req == nil || req.TxRaw == nil {
+	if req == nil || req.TxBytes == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
 	}
 
-	clientCtx = clientCtx.WithBroadcastMode(normalizeBoradcastMode((req.Mode)))
-	txBytes, err := proto.Marshal(req.TxRaw)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := clientCtx.BroadcastTx(txBytes)
+	clientCtx = clientCtx.WithBroadcastMode(req.Mode.String())
+	resp, err := clientCtx.BroadcastTx(req.TxBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -167,17 +162,4 @@ func TxServiceBroadcast(grpcCtx context.Context, clientCtx Context, req *tx.Broa
 	return &tx.BroadcastTxResponse{
 		TxResponse: resp,
 	}, nil
-}
-
-func normalizeBoradcastMode(mode tx.BroadcastMode) string {
-	switch mode {
-	case tx.BroadcastMode_async:
-		return "async"
-	case tx.BroadcastMode_sync:
-		return "sync"
-	case tx.BroadcastMode_block:
-		return "block"
-	default:
-		return "sync"
-	}
 }

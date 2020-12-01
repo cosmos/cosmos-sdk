@@ -14,7 +14,6 @@ import (
 	rpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -158,14 +157,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_BroadcastTx() {
 	err := authclient.SignTx(txFactory, val0.ClientCtx, val0.Moniker, txBuilder, false)
 	s.Require().NoError(err)
 
-	// To get the TxRaw to be broadcasted, we unforunately need to first encode
-	// the tx into bytes, then decode it into TxRaw.
 	txBytes, err := val0.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
-	s.Require().NoError(err)
-	// Create a proto codec, we need it to unmarshal the tx bytes.
-	cdc := codec.NewProtoCodec(val0.ClientCtx.InterfaceRegistry)
-	var txRaw tx.TxRaw
-	err = cdc.UnmarshalBinaryBare(txBytes, &txRaw)
 	s.Require().NoError(err)
 
 	// Broadcast the tx via gRPC.
@@ -173,8 +165,8 @@ func (s *IntegrationTestSuite) TestGRPCServer_BroadcastTx() {
 	grpcRes, err := queryClient.BroadcastTx(
 		context.Background(),
 		&tx.BroadcastTxRequest{
-			Mode:  tx.BroadcastMode_sync,
-			TxRaw: &txRaw,
+			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
+			TxBytes: txBytes,
 		},
 	)
 	s.Require().NoError(err)

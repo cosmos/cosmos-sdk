@@ -33,6 +33,7 @@ func TestCreateSortedSignerArray(t *testing.T) {
 
 	// smaller address
 	validator1.Address = []byte{1}
+	validator2.Address = []byte{2}
 	validator2.VotingPower = 1
 
 	expected = []tmtypes.PrivValidator{privVal1, privVal2}

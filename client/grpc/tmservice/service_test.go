@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -19,7 +20,7 @@ type IntegrationTestSuite struct {
 	cfg     network.Config
 	network *network.Network
 
-	queryClient qtypes.ServiceClient
+	queryClient tmservice.ServiceClient
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
@@ -36,7 +37,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
-	s.queryClient = qtypes.NewServiceClient(s.network.Validators[0].ClientCtx)
+	s.queryClient = tmservice.NewServiceClient(s.network.Validators[0].ClientCtx)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -47,13 +48,13 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s IntegrationTestSuite) TestQueryNodeInfo() {
 	val := s.network.Validators[0]
 
-	res, err := s.queryClient.GetNodeInfo(context.Background(), &qtypes.GetNodeInfoRequest{})
+	res, err := s.queryClient.GetNodeInfo(context.Background(), &tmservice.GetNodeInfoRequest{})
 	s.Require().NoError(err)
 	s.Require().Equal(res.ApplicationVersion.AppName, version.NewInfo().AppName)
 
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/node_info", val.APIAddress))
 	s.Require().NoError(err)
-	var getInfoRes qtypes.GetNodeInfoResponse
+	var getInfoRes tmservice.GetNodeInfoResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getInfoRes))
 	s.Require().Equal(getInfoRes.ApplicationVersion.AppName, version.NewInfo().AppName)
 }
@@ -61,35 +62,35 @@ func (s IntegrationTestSuite) TestQueryNodeInfo() {
 func (s IntegrationTestSuite) TestQuerySyncing() {
 	val := s.network.Validators[0]
 
-	_, err := s.queryClient.GetSyncing(context.Background(), &qtypes.GetSyncingRequest{})
+	_, err := s.queryClient.GetSyncing(context.Background(), &tmservice.GetSyncingRequest{})
 	s.Require().NoError(err)
 
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/syncing", val.APIAddress))
 	s.Require().NoError(err)
-	var syncingRes qtypes.GetSyncingResponse
+	var syncingRes tmservice.GetSyncingResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &syncingRes))
 }
 
 func (s IntegrationTestSuite) TestQueryLatestBlock() {
 	val := s.network.Validators[0]
 
-	_, err := s.queryClient.GetLatestBlock(context.Background(), &qtypes.GetLatestBlockRequest{})
+	_, err := s.queryClient.GetLatestBlock(context.Background(), &tmservice.GetLatestBlockRequest{})
 	s.Require().NoError(err)
 
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/blocks/latest", val.APIAddress))
 	s.Require().NoError(err)
-	var blockInfoRes qtypes.GetLatestBlockResponse
+	var blockInfoRes tmservice.GetLatestBlockResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &blockInfoRes))
 }
 
 func (s IntegrationTestSuite) TestQueryBlockByHeight() {
 	val := s.network.Validators[0]
-	_, err := s.queryClient.GetBlockByHeight(context.Background(), &qtypes.GetBlockByHeightRequest{Height: 1})
+	_, err := s.queryClient.GetBlockByHeight(context.Background(), &tmservice.GetBlockByHeightRequest{Height: 1})
 	s.Require().NoError(err)
 
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/blocks/%d", val.APIAddress, 1))
 	s.Require().NoError(err)
-	var blockInfoRes qtypes.GetBlockByHeightResponse
+	var blockInfoRes tmservice.GetBlockByHeightResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &blockInfoRes))
 }
 
@@ -97,13 +98,13 @@ func (s IntegrationTestSuite) TestQueryLatestValidatorSet() {
 	val := s.network.Validators[0]
 
 	// nil pagination
-	_, err := s.queryClient.GetLatestValidatorSet(context.Background(), &qtypes.GetLatestValidatorSetRequest{
+	_, err := s.queryClient.GetLatestValidatorSet(context.Background(), &tmservice.GetLatestValidatorSetRequest{
 		Pagination: nil,
 	})
 	s.Require().NoError(err)
 
 	//with pagination
-	_, err = s.queryClient.GetLatestValidatorSet(context.Background(), &qtypes.GetLatestValidatorSetRequest{Pagination: &qtypes.PageRequest{
+	_, err = s.queryClient.GetLatestValidatorSet(context.Background(), &tmservice.GetLatestValidatorSetRequest{Pagination: &qtypes.PageRequest{
 		Offset: 0,
 		Limit:  10,
 	}})
@@ -116,7 +117,7 @@ func (s IntegrationTestSuite) TestQueryLatestValidatorSet() {
 	// rest request with pagination
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validators/latest?pagination.offset=%d&pagination.limit=%d", val.APIAddress, 0, 1))
 	s.Require().NoError(err)
-	var validatorSetRes qtypes.GetLatestValidatorSetResponse
+	var validatorSetRes tmservice.GetLatestValidatorSetResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &validatorSetRes))
 }
 
@@ -124,13 +125,13 @@ func (s IntegrationTestSuite) TestQueryValidatorSetByHeight() {
 	val := s.network.Validators[0]
 
 	// nil pagination
-	_, err := s.queryClient.GetValidatorSetByHeight(context.Background(), &qtypes.GetValidatorSetByHeightRequest{
+	_, err := s.queryClient.GetValidatorSetByHeight(context.Background(), &tmservice.GetValidatorSetByHeightRequest{
 		Height:     1,
 		Pagination: nil,
 	})
 	s.Require().NoError(err)
 
-	_, err = s.queryClient.GetValidatorSetByHeight(context.Background(), &qtypes.GetValidatorSetByHeightRequest{
+	_, err = s.queryClient.GetValidatorSetByHeight(context.Background(), &tmservice.GetValidatorSetByHeightRequest{
 		Height: 1,
 		Pagination: &qtypes.PageRequest{
 			Offset: 0,
@@ -144,7 +145,7 @@ func (s IntegrationTestSuite) TestQueryValidatorSetByHeight() {
 
 	// rest query with pagination
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validators/%d?pagination.offset=%d&pagination.limit=%d", val.APIAddress, 1, 0, 1))
-	var validatorSetRes qtypes.GetValidatorSetByHeightResponse
+	var validatorSetRes tmservice.GetValidatorSetByHeightResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &validatorSetRes))
 }
 

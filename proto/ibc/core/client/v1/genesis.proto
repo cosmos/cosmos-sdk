@@ -20,4 +20,6 @@ message GenesisState {
   Params params = 3 [(gogoproto.nullable) = false];
   // create localhost on initialization
   bool create_localhost = 4 [(gogoproto.moretags) = "yaml:\"create_localhost\""];
+  // the sequence for the next generated client identifier
+  uint64 next_client_sequence = 5 [(gogoproto.moretags) = "yaml:\"next_client_sequence\""];
 }

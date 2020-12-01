@@ -23,12 +23,12 @@ const (
 
 // NewMsgGrantFeeAllowance creates a new MsgGrantFeeAllowance.
 //nolint:interfacer
-func (msg MsgGrantFeeAllowance) NewMsgGrantFeeAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAddress) (*MsgGrantFeeAllowance, error) {
-	msg1, ok := feeAllowance.(proto.Message)
+func NewMsgGrantFeeAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAddress) (*MsgGrantFeeAllowance, error) {
+	msg, ok := feeAllowance.(proto.Message)
 	if !ok {
-		return nil, fmt.Errorf("cannot proto marshal %T", msg1)
+		return nil, fmt.Errorf("cannot proto marshal %T", msg)
 	}
-	any, err := types.NewAnyWithValue(msg1)
+	any, err := types.NewAnyWithValue(msg)
 	if err != nil {
 		return nil, err
 	}

@@ -1,16 +1,37 @@
 package types
 
 import (
+	fmt "fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	proto "github.com/gogo/protobuf/proto"
 )
 
 var (
 	_ types.UnpackInterfacesMessage = &FeeAllowanceGrant{}
 )
+
+// NewFeeAllowanceGrant creates a new FeeAllowanceGrant.
+func NewFeeAllowanceGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllowanceI) (*FeeAllowanceGrant, error) {
+	msg, ok := feeAllowance.(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("cannot proto marshal %T", msg)
+	}
+	any, err := types.NewAnyWithValue(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return &FeeAllowanceGrant{
+		Granter:   granter,
+		Grantee:   grantee,
+		Allowance: any,
+	}, nil
+}
 
 // ValidateBasic performs basic validation on
 // FeeAllowanceGrant

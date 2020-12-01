@@ -2,6 +2,7 @@ package feegrant
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
 
 // GenesisState contains a set of fee allowances, persisted from the store
@@ -19,8 +20,8 @@ func (g GenesisState) ValidateBasic() error {
 }
 
 // InitGenesis will initialize the keeper from a *previously validated* GenesisState
-func InitGenesis(ctx sdk.Context, k Keeper, gen GenesisState) {
-	for _, f := range gen {
+func InitGenesis(ctx sdk.Context, k Keeper, data *types.GenesisState) {
+	for _, f := range data.FeeAllowances {
 		k.GrantFeeAllowance(ctx, f)
 	}
 }
@@ -32,7 +33,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, gen GenesisState) {
 // for export, like if they have expiry at 5000 and current is 4000, they export with
 // expiry of 1000. Every FeeAllowance has a method `PrepareForExport` that allows
 // them to perform any changes needed prior to export.
-func ExportGenesis(ctx sdk.Context, k Keeper) (GenesisState, error) {
+func ExportGenesis(ctx sdk.Context, k Keeper) (*types.GenesisState, error) {
 	time, height := ctx.BlockTime(), ctx.BlockHeight()
 	var grants []FeeAllowanceGrant
 
@@ -41,5 +42,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) (GenesisState, error) {
 		return false
 	})
 
-	return grants, err
+	return &types.GenesisState{
+		FeeAllowances: grants,
+	}, err
 }

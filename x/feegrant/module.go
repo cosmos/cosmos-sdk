@@ -2,6 +2,7 @@ package feegrant
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -67,21 +68,25 @@ func (AppModuleBasic) DefaultGenesis(_ codec.JSONMarshaler) json.RawMessage {
 
 // ValidateGenesis performs genesis state validation for the feegrant module.
 func (a AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
-	_, err := a.getValidatedGenesis(cdc, bz)
-	return err
+	var data types.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+	}
+
+	return types.ValidateGenesis(data)
 }
 
-func (a AppModuleBasic) getValidatedGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) (GenesisState, error) {
-	var data GenesisState
+// func (a AppModuleBasic) getValidatedGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) (GenesisState, error) {
+// 	var data GenesisState
 
-	// TODO migrate genesis types to proto
-	// err := cdc.UnmarshalJSON(bz, &data)
-	// if err != nil {
-	// 	return nil, err
-	// }
+// 	// TODO migrate genesis types to proto
+// 	// err := cdc.UnmarshalJSON(bz, &data)
+// 	// if err != nil {
+// 	// 	return nil, err
+// 	// }
 
-	return data, data.ValidateBasic()
-}
+// 	return data, data.ValidateBasic()
+// }
 
 // RegisterRESTRoutes registers the REST routes for the feegrant module.
 func (AppModuleBasic) RegisterRESTRoutes(ctx sdkclient.Context, rtr *mux.Router) {
@@ -156,26 +161,22 @@ func (AppModule) QuerierRoute() string {
 // InitGenesis performs genesis initialization for the feegrant module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, bz json.RawMessage) []abci.ValidatorUpdate {
-	genesisState, err := am.getValidatedGenesis(cdc, bz)
-	if err != nil {
-		panic(err)
-	}
+	var gs types.GenesisState
+	cdc.MustUnmarshalJSON(bz, &gs)
 
-	InitGenesis(ctx, am.keeper, genesisState)
+	InitGenesis(ctx, am.keeper, &gs)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the feegrant
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
-	// TODO
-	// gs, err := ExportGenesis(ctx, am.keeper)
-	// if err != nil {
-	// 	panic(err)
-	// }
+	gs, err := ExportGenesis(ctx, am.keeper)
+	if err != nil {
+		panic(err)
+	}
 
-	// return cdc.MustMarshalJSON(gs)
-	return nil
+	return cdc.MustMarshalJSON(gs)
 }
 
 // BeginBlock returns the begin blocker for the feegrant module.

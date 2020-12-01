@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
 
+// querier types
 const (
 	QueryGetFeeAllowances = "fees"
 )

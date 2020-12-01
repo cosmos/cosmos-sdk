@@ -174,6 +174,11 @@ test-cover:
 	@export VERSION=$(VERSION); bash -x tests/test_cover.sh
 .PHONY: test-cover
 
+test-rosetta:
+	docker build -t rosetta-ci:latest -f contrib/rosetta/node/Dockerfile .
+	docker-compose -f contrib/rosetta/docker-compose.yaml up --abort-on-container-exit --exit-code-from test_rosetta --build
+.PHONY: test-rosetta
+
 lint: golangci-lint
 	$(BINDIR)/golangci-lint run
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
@@ -214,3 +219,15 @@ devdoc-update:
 	docker pull tendermint/devdoc
 
 .PHONY: devdoc devdoc-clean devdoc-init devdoc-save devdoc-update
+
+###############################################################################
+###                                rosetta                                  ###
+###############################################################################
+# builds rosetta test data dir
+rosetta-data:
+	-docker container rm data_dir_build
+	docker build -t rosetta-ci:latest -f contrib/rosetta/node/Dockerfile .
+	docker run --name data_dir_build -t rosetta-ci:latest sh /rosetta/data.sh
+	docker cp data_dir_build:/tmp/data.tar.gz "$(CURDIR)/contrib/rosetta/node/data.tar.gz"
+	docker container rm data_dir_build
+.PHONY: rosetta-data

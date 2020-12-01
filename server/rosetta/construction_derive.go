@@ -2,6 +2,7 @@ package rosetta
 
 import (
 	"context"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	secp256k12 "github.com/tendermint/tendermint/crypto/secp256k1"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (l launchpad) ConstructionDerive(ctx context.Context, r *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
@@ -26,6 +26,8 @@ func (l launchpad) ConstructionDerive(ctx context.Context, r *types.Construction
 	copy(pubkeyBytes[:], pubKey.SerializeCompressed())
 
 	return &types.ConstructionDeriveResponse{
-		Address: sdk.AccAddress(pubkeyBytes.Address().Bytes()).String(),
+		AccountIdentifier: &types.AccountIdentifier{
+			Address: sdk.AccAddress(pubkeyBytes.Address().Bytes()).String(),
+		},
 	}, nil
 }

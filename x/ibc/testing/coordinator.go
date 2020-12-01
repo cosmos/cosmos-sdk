@@ -95,7 +95,7 @@ func (coord *Coordinator) CreateClient(
 ) (clientID string, err error) {
 	coord.CommitBlock(source, counterparty)
 
-	clientID = source.NewClientID(counterparty.ChainID)
+	clientID = source.NewClientID(clientType)
 
 	switch clientType {
 	case exported.Tendermint:

@@ -174,7 +174,7 @@ $ %s tx staking delegate %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --f
 				return err
 			}
 
-			amount, err := sdk.ParseCoin(args[1])
+			amount, err := sdk.ParseCoinNormalized(args[1])
 			if err != nil {
 				return err
 			}
@@ -233,7 +233,7 @@ $ %s tx staking redelegate %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj %s1l2rsakp3
 				return err
 			}
 
-			amount, err := sdk.ParseCoin(args[2])
+			amount, err := sdk.ParseCoinNormalized(args[2])
 			if err != nil {
 				return err
 			}
@@ -281,7 +281,7 @@ $ %s tx staking unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from
 				return err
 			}
 
-			amount, err := sdk.ParseCoin(args[1])
+			amount, err := sdk.ParseCoinNormalized(args[1])
 			if err != nil {
 				return err
 			}
@@ -303,7 +303,7 @@ $ %s tx staking unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from
 // NewBuildCreateValidatorMsg constructs a CreateValidatorMsg
 func NewBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
 	fAmount, _ := fs.GetString(FlagAmount)
-	amount, err := sdk.ParseCoin(fAmount)
+	amount, err := sdk.ParseCoinNormalized(fAmount)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -521,7 +521,7 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 // BuildCreateValidatorMsg makes a new MsgCreateValidator.
 func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorConfig, txBldr tx.Factory, generateOnly bool) (tx.Factory, sdk.Msg, error) {
 	amounstStr := config.Amount
-	amount, err := sdk.ParseCoin(amounstStr)
+	amount, err := sdk.ParseCoinNormalized(amounstStr)
 
 	if err != nil {
 		return txBldr, nil, err

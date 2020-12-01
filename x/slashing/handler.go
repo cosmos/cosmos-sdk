@@ -8,11 +8,11 @@ import (
 )
 
 // NewHandler creates an sdk.Handler for all the slashing type messages
-func NewHandler(k keeper.Keeper) sdk.Handler {
+func NewHandler(k keeper.Keeper, stakingKeeper types.StakingKeeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
-		msgServer := keeper.NewMsgServerImpl(k)
+		msgServer := keeper.NewMsgServerImpl(k, stakingKeeper)
 
 		switch msg := msg.(type) {
 		case *types.MsgUnjail:

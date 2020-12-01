@@ -164,20 +164,23 @@ func InitGenesis(
 	// 	string msg_type = 1;
 	// 	bytes  data     = 2;
 	// }
+	epochNumber := data.EpochNumber
+	keeper.SetEpochNumber(ctx, epochNumber)
+
 	for _, msg := range data.BufferedEditValidators {
-		keeper.SaveEpochAction(ctx, 0, msg)
+		keeper.SaveEpochAction(ctx, epochNumber, msg)
 	}
 
 	for _, msg := range data.BufferedDelegations {
-		keeper.SaveEpochAction(ctx, 0, msg)
+		keeper.SaveEpochAction(ctx, epochNumber, msg)
 	}
 
 	for _, msg := range data.BufferedRedelegations {
-		keeper.SaveEpochAction(ctx, 0, msg)
+		keeper.SaveEpochAction(ctx, epochNumber, msg)
 	}
 
 	for _, msg := range data.BufferedUndelegations {
-		keeper.SaveEpochAction(ctx, 0, msg)
+		keeper.SaveEpochAction(ctx, epochNumber, msg)
 	}
 	return res
 }

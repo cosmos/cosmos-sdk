@@ -53,6 +53,9 @@ type StakingKeeper interface {
 
 	// MaxValidators returns the maximum amount of bonded validators
 	MaxValidators(sdk.Context) uint32
+
+	// GetEpochNumber fetches epoch number
+	GetEpochNumber(ctx sdk.Context) int64
 }
 
 // StakingHooks event hooks for staking validator object (noalias)

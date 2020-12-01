@@ -126,7 +126,8 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValidator) (*types.MsgEditValidatorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Queue epoch action and move all the execution logic to Epoch execution
-	k.SaveEpochAction(ctx, 0, msg)
+	epochNumber := k.GetEpochNumber(ctx)
+	k.SaveEpochAction(ctx, epochNumber, msg)
 
 	// TODO should do validation by running with cachedCtx like gov proposal creation
 	return &types.MsgEditValidatorResponse{}, nil
@@ -135,7 +136,8 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*types.MsgDelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Queue epoch action and move all the execution logic to Epoch execution
-	k.SaveEpochAction(ctx, 0, msg)
+	epochNumber := k.GetEpochNumber(ctx)
+	k.SaveEpochAction(ctx, epochNumber, msg)
 
 	// TODO should do validation by running with cachedCtx like gov proposal creation
 	// To consider: cachedCtx could have status which contains all the other epoch actions
@@ -146,7 +148,8 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRedelegate) (*types.MsgBeginRedelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Queue epoch action and move all the execution logic to Epoch execution
-	k.SaveEpochAction(ctx, 0, msg)
+	epochNumber := k.GetEpochNumber(ctx)
+	k.SaveEpochAction(ctx, epochNumber, msg)
 
 	// TODO should do validation by running with cachedCtx like gov proposal creation
 	// To consider: cachedCtx could have status which contains all the other epoch actions

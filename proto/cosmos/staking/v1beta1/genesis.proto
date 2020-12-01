@@ -46,6 +46,9 @@ message GenesisState {
   repeated MsgBeginRedelegate buffered_redelegations = 11;
   repeated MsgUndelegate buffered_undelegations = 12;
 
+  // epoch number at the time of genesis
+  int64 epoch_number = 13;
+
   // Current logic flow summary:
   // Current queues: "unbonding validator", "unbonding delegator", “redelegation"
   // Current Queue management

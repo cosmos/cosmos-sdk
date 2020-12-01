@@ -15,12 +15,13 @@ func (suite *KeeperTestSuite) TestEpochSaveLoad() {
 
 	originMsg := types.NewMsgDelegate(delAddr, valAddr, validCoin)
 
-	app.StakingKeeper.SaveEpochAction(ctx, 0, originMsg)
+	epochNumber := int64(0)
+	app.StakingKeeper.SaveEpochAction(ctx, epochNumber, originMsg)
 	nextActionID := app.StakingKeeper.GetNextEpochActionID(ctx)
 	suite.Require().Greater(nextActionID, uint64(1), "nextActionID should be greater than 1")
 
 	actionID := nextActionID - 1
-	savedMsg := app.StakingKeeper.GetEpochAction(ctx, 0, actionID)
+	savedMsg := app.StakingKeeper.GetEpochAction(ctx, epochNumber, actionID)
 
 	suite.Require().Equal(savedMsg, originMsg, "savedMsg should be equal to originMsg")
 }

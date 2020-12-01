@@ -9,11 +9,12 @@ import (
 
 type msgServer struct {
 	Keeper
+	stakingKeeper types.StakingKeeper
 }
 
 // NewMsgServerImpl returns an implementation of the slashing MsgServer interface
 // for the provided Keeper.
-func NewMsgServerImpl(keeper Keeper) types.MsgServer {
+func NewMsgServerImpl(keeper Keeper, stakingKeeper types.StakingKeeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
@@ -25,6 +26,8 @@ var _ types.MsgServer = msgServer{}
 func (k msgServer) Unjail(goCtx context.Context, msg *types.MsgUnjail) (*types.MsgUnjailResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Queue epoch action and move all the execution logic to Epoch execution
-	k.SaveEpochAction(ctx, 0, msg)
+
+	epochNumber := k.stakingKeeper.GetEpochNumber(ctx)
+	k.SaveEpochAction(ctx, epochNumber, msg)
 	return &types.MsgUnjailResponse{}, nil
 }

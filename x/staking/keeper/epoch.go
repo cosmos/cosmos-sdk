@@ -11,6 +11,7 @@ import (
 // keys
 var (
 	NextEpochActionID      = []byte("next_epoch_action_id")
+	EpochNumberID          = []byte("epoch_number_id")
 	EpochActionQueuePrefix = "epoch_action"
 )
 
@@ -35,12 +36,12 @@ func (k Keeper) GetNextEpochActionID(ctx sdk.Context) uint64 {
 }
 
 // ActionStoreKey returns action store key from ID
-func ActionStoreKey(epochNumber uint64, actionID uint64) []byte {
+func ActionStoreKey(epochNumber int64, actionID uint64) []byte {
 	return []byte(fmt.Sprintf("%s_%d_%d", EpochActionQueuePrefix, epochNumber, actionID))
 }
 
 // SaveEpochAction save the actions that need to be executed on next epoch
-func (k Keeper) SaveEpochAction(ctx sdk.Context, epochNumber uint64, action sdk.Msg) {
+func (k Keeper) SaveEpochAction(ctx sdk.Context, epochNumber int64, action sdk.Msg) {
 	store := ctx.KVStore(k.storeKey)
 
 	// reference from TestMarshalAny(t *testing.T)
@@ -54,7 +55,7 @@ func (k Keeper) SaveEpochAction(ctx sdk.Context, epochNumber uint64, action sdk.
 }
 
 // GetEpochAction get action by ID
-func (k Keeper) GetEpochAction(ctx sdk.Context, epochNumber uint64, actionID uint64) sdk.Msg {
+func (k Keeper) GetEpochAction(ctx sdk.Context, epochNumber int64, actionID uint64) sdk.Msg {
 	store := ctx.KVStore(k.storeKey)
 
 	bz := store.Get(ActionStoreKey(epochNumber, actionID))
@@ -117,4 +118,23 @@ func (k Keeper) GetEpochActionByIterator(iterator db.Iterator) sdk.Msg {
 	codec.UnmarshalAny(k.cdc, &action, bz)
 
 	return action
+}
+
+// SetEpochNumber set epoch number
+func (k Keeper) SetEpochNumber(ctx sdk.Context, epochNumber int64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(EpochNumberID, sdk.Uint64ToBigEndian(uint64(epochNumber)))
+}
+
+// GetEpochNumber fetches epoch number
+func (k Keeper) GetEpochNumber(ctx sdk.Context) int64 {
+	store := ctx.KVStore(k.storeKey)
+
+	bz := store.Get(EpochNumberID)
+	if bz == nil {
+		// return default EpochNumber 0
+		return 0
+	}
+
+	return int64(sdk.BigEndianToUint64(bz))
 }

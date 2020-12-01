@@ -82,7 +82,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdk.De
 			sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueDoubleSign),
 		),
 	)
-
+	// delegate action to staking keeper's Slash function
 	k.sk.Slash(ctx, consAddr, distributionHeight, power, fraction)
 }
 
@@ -95,7 +95,7 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 			sdk.NewAttribute(types.AttributeKeyJailed, consAddr.String()),
 		),
 	)
-
+	// delegate action to staking keeper for Jail
 	k.sk.Jail(ctx, consAddr)
 }
 

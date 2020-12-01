@@ -50,7 +50,12 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 			k.DeleteByKey(ctx, iterator.Key())
 		}
 
-		return k.BlockValidatorUpdates(ctx)
+		// defer TODO should update epochNumber after epoch finish
+		// This won't affect slashing module since slashing Endblocker run before staking module
+
+		return k.EpochValidatorUpdates(ctx)
 	}
-	return []abci.ValidatorUpdate{}
+
+	// run block validator updates for slashed, jailed validators
+	return k.BlockValidatorUpdates(ctx)
 }

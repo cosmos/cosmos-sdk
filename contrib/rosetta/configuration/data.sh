@@ -27,7 +27,7 @@ simd gentx fd --chain-id testing --keyring-backend=test
 simd collect-gentxs
 # verify genesis file is fine
 simd validate-genesis
-echo fixing configuration
+echo changing network settings
 sed -i 's/127.0.0.1/0.0.0.0/g' /root/.simapp/config/config.toml
 
 # start simd

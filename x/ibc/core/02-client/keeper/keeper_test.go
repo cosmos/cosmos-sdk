@@ -30,9 +30,9 @@ const (
 	testChainID          = "gaiahub-0"
 	testChainIDRevision1 = "gaiahub-1"
 
-	testClientID  = "gaiachain"
-	testClientID2 = "ethbridge"
-	testClientID3 = "ethermint"
+	testClientID  = "tendermint-0"
+	testClientID2 = "tendermint-1"
+	testClientID3 = "tendermint-2"
 
 	height = 5
 

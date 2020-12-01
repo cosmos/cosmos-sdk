@@ -28,8 +28,8 @@ service Service {
 // GetTxsEventRequest is the request type for the Service.TxsByEvents
 // RPC method.
 message GetTxsEventRequest {
-  // event is the transaction event type.
-  string event = 1;
+  // events is the list of transaction event type.
+  repeated string events = 1;
   // pagination defines an pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }

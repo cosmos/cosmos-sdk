@@ -21,8 +21,9 @@ import (
 )
 
 const (
-	memo = "waboom"
-	gas  = uint64(10000)
+	memo          = "waboom"
+	gas           = uint64(10000)
+	timeoutHeight = 5
 )
 
 var (
@@ -47,6 +48,7 @@ func buildTestTx(t *testing.T, builder client.TxBuilder) {
 	require.NoError(t, err)
 	err = builder.SetSignatures(sig)
 	require.NoError(t, err)
+	builder.SetTimeoutHeight(timeoutHeight)
 }
 
 type TestSuite struct {
@@ -105,6 +107,7 @@ func (s *TestSuite) TestConvertTxToStdTx() {
 	s.Require().Equal(gas, stdTx.Fee.Gas)
 	s.Require().Equal(fee, stdTx.Fee.Amount)
 	s.Require().Equal(msg, stdTx.Msgs[0])
+	s.Require().Equal(timeoutHeight, stdTx.TimeoutHeight)
 	s.Require().Equal(sig.PubKey, stdTx.Signatures[0].PubKey)
 	s.Require().Equal(sig.Data.(*signing2.SingleSignatureData).Signature, stdTx.Signatures[0].Signature)
 
@@ -123,6 +126,7 @@ func (s *TestSuite) TestConvertTxToStdTx() {
 	s.Require().Equal(gas, stdTx.Fee.Gas)
 	s.Require().Equal(fee, stdTx.Fee.Amount)
 	s.Require().Equal(msg, stdTx.Msgs[0])
+	s.Require().Equal(timeoutHeight, stdTx.TimeoutHeight)
 	s.Require().Empty(stdTx.Signatures)
 
 	// std tx

@@ -62,6 +62,6 @@ func QueryTendermintProof(clientCtx client.Context, key []byte) ([]byte, []byte,
 		return nil, nil, clienttypes.Height{}, err
 	}
 
-	version := clienttypes.ParseChainID(clientCtx.ChainID)
-	return res.Value, proofBz, clienttypes.NewHeight(version, uint64(res.Height)+1), nil
+	revision := clienttypes.ParseChainID(clientCtx.ChainID)
+	return res.Value, proofBz, clienttypes.NewHeight(revision, uint64(res.Height)+1), nil
 }

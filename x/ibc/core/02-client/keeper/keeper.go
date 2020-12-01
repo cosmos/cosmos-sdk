@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"net/url"
 	"reflect"
 	"strings"
 
@@ -51,6 +50,16 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", host.ModuleName, types.SubModuleName))
 }
 
+// GenerateClientIdentifier returns the next client identifier.
+func (k Keeper) GenerateClientIdentifier(ctx sdk.Context, clientType string) string {
+	nextClientSeq := k.GetNextClientSequence(ctx)
+	clientID := types.FormatClientIdentifier(clientType, nextClientSeq)
+
+	nextClientSeq++
+	k.SetNextClientSequence(ctx, nextClientSeq)
+	return clientID
+}
+
 // GetClientState gets a particular client from the store
 func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (exported.ClientState, bool) {
 	store := k.ClientStore(ctx, clientID)
@@ -86,6 +95,24 @@ func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height
 func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height exported.Height, consensusState exported.ConsensusState) {
 	store := k.ClientStore(ctx, clientID)
 	store.Set(host.ConsensusStateKey(height), k.MustMarshalConsensusState(consensusState))
+}
+
+// GetNextClientSequence gets the next client sequence from the store.
+func (k Keeper) GetNextClientSequence(ctx sdk.Context) uint64 {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get([]byte(types.KeyNextClientSequence))
+	if bz == nil {
+		panic("next client sequence is nil")
+	}
+
+	return sdk.BigEndianToUint64(bz)
+}
+
+// SetNextClientSequence sets the next client sequence to the store.
+func (k Keeper) SetNextClientSequence(ctx sdk.Context, sequence uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := sdk.Uint64ToBigEndian(sequence)
+	store.Set([]byte(types.KeyNextClientSequence), bz)
 }
 
 // IterateConsensusStates provides an iterator over all stored consensus states.
@@ -168,18 +195,18 @@ func (k Keeper) GetLatestClientConsensusState(ctx sdk.Context, clientID string) 
 
 // GetSelfConsensusState introspects the (self) past historical info at a given height
 // and returns the expected consensus state at that height.
-// For now, can only retrieve self consensus states for the current version
+// For now, can only retrieve self consensus states for the current revision
 func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height exported.Height) (exported.ConsensusState, bool) {
 	selfHeight, ok := height.(types.Height)
 	if !ok {
 		return nil, false
 	}
-	// check that height version matches chainID version
-	version := types.ParseChainID(ctx.ChainID())
-	if version != height.GetVersionNumber() {
+	// check that height revision matches chainID revision
+	revision := types.ParseChainID(ctx.ChainID())
+	if revision != height.GetRevisionNumber() {
 		return nil, false
 	}
-	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(selfHeight.VersionHeight))
+	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(selfHeight.RevisionHeight))
 	if !found {
 		return nil, false
 	}
@@ -194,7 +221,7 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height exported.Height) (
 
 // ValidateSelfClient validates the client parameters for a client of the running chain
 // This function is only used to validate the client state the counterparty stores for this chain
-// Client must be in same version as the executing chain
+// Client must be in same revision as the executing chain
 func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientState) error {
 	tmClient, ok := clientState.(*ibctmtypes.ClientState)
 	if !ok {
@@ -211,15 +238,15 @@ func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientS
 			ctx.ChainID(), tmClient.ChainId)
 	}
 
-	version := types.ParseChainID(ctx.ChainID())
+	revision := types.ParseChainID(ctx.ChainID())
 
-	// client must be in the same version as executing chain
-	if tmClient.LatestHeight.VersionNumber != version {
-		return sdkerrors.Wrapf(types.ErrInvalidClient, "client is not in the same version as the chain. expected version: %d, got: %d",
-			tmClient.LatestHeight.VersionNumber, version)
+	// client must be in the same revision as executing chain
+	if tmClient.LatestHeight.RevisionNumber != revision {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "client is not in the same revision as the chain. expected revision: %d, got: %d",
+			tmClient.LatestHeight.RevisionNumber, revision)
 	}
 
-	selfHeight := types.NewHeight(version, uint64(ctx.BlockHeight()))
+	selfHeight := types.NewHeight(revision, uint64(ctx.BlockHeight()))
 	if tmClient.LatestHeight.GTE(selfHeight) {
 		return sdkerrors.Wrapf(types.ErrInvalidClient, "client has LatestHeight %d greater than or equal to chain height %d",
 			tmClient.LatestHeight, selfHeight)
@@ -246,13 +273,11 @@ func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientS
 			tmClient.UnbondingPeriod, tmClient.TrustingPeriod)
 	}
 
-	if tmClient.UpgradePath != "" {
+	if len(tmClient.UpgradePath) != 0 {
 		// For now, SDK IBC implementation assumes that upgrade path (if defined) is defined by SDK upgrade module
-		// Must escape any merkle key before adding it to upgrade path
-		upgradeKey := url.PathEscape(upgradetypes.KeyUpgradedClient)
-		expectedUpgradePath := fmt.Sprintf("%s/%s", upgradetypes.StoreKey, upgradeKey)
-		if tmClient.UpgradePath != expectedUpgradePath {
-			return sdkerrors.Wrapf(types.ErrInvalidClient, "upgrade path must be the upgrade path defined by upgrade module. expected %s, got %s",
+		expectedUpgradePath := []string{upgradetypes.StoreKey, upgradetypes.KeyUpgradedIBCState}
+		if !reflect.DeepEqual(expectedUpgradePath, tmClient.UpgradePath) {
+			return sdkerrors.Wrapf(types.ErrInvalidClient, "upgrade path must be the upgrade path defined by upgrade module. expected %v, got %v",
 				expectedUpgradePath, tmClient.UpgradePath)
 		}
 	}

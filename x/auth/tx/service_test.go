@@ -125,29 +125,8 @@ func (s IntegrationTestSuite) TestSimulate() {
 func (s IntegrationTestSuite) TestGetTxEvents() {
 	val := s.network.Validators[0]
 
-	// Create a new MsgSend tx from val to itself.
-	out, err := bankcli.MsgSendExec(
-		val.ClientCtx,
-		val.Address,
-		val.Address,
-		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
-		),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
-		fmt.Sprintf("--%s=foobar", flags.FlagMemo),
-	)
-	s.Require().NoError(err)
-	var txRes sdk.TxResponse
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txRes))
-	s.Require().Equal(uint32(0), txRes.Code)
-
-	s.Require().NoError(s.network.WaitForNextBlock())
-
 	// Query the tx via gRPC empty params.
-	_, err = s.queryClient.GetTxsEvent(
+	_, err := s.queryClient.GetTxsEvent(
 		context.Background(),
 		&tx.GetTxsEventRequest{},
 	)

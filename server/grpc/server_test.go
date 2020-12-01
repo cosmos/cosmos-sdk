@@ -112,7 +112,7 @@ func (s *IntegrationTestSuite) TestGRPCServer() {
 	)
 	// TODO Once https://github.com/cosmos/cosmos-sdk/pull/8029 is merged, this
 	// should not error anymore.
-	s.Require().Error(err)
+	s.Require().NoError(err)
 }
 
 // Test and enforce that we upfront reject any connections to baseapp containing

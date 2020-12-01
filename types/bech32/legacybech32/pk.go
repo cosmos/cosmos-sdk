@@ -10,6 +10,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
+// TODO: when removing this package remove:
+// + sdk:config.GetBech32AccountPubPrefix (and other related functions)
+// + Bech32PrefixAccAddr and other related constants
+
 // Deprecated: Bech32PubKeyType defines a string type alias for a Bech32 public key type.
 type Bech32PubKeyType string
 

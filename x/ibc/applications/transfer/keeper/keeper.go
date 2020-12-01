@@ -169,8 +169,3 @@ func (k Keeper) AuthenticateCapability(ctx sdk.Context, cap *capabilitytypes.Cap
 func (k Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error {
 	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
 }
-
-// GetChannel returns a channel with a particular identifier binded to a specific port
-func (k Keeper) GetChannel(ctx sdk.Context, portID, channelID string) (channeltypes.Channel, bool) {
-	return k.channelKeeper.GetChannel(ctx, portID, channelID)
-}

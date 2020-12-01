@@ -12,12 +12,19 @@ message EventTransfer {
     string receiver = 2;
 }
 
+// EventAcknowledgementSuccess is a typed event emitted on packet acknowledgement success
+message EventAcknowledgementSuccess {
+    bytes success = 1;
+}
+
+// EventAcknowledgementError is a typed event emitted on packet acknowledgement error
+message EventAcknowledgementError {
+    string error = 1;
+}
+
 // EventDenominationTrace is a typed event for denomination trace
 message EventDenominationTrace {
-    bytes trace_hash = 1 [
-        (gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes",
-        (gogoproto.moretags) = "yaml:\"trace_hash\""
-    ];
+    string trace_hash = 1 [(gogoproto.moretags) = "yaml:\"trace_hash\""];
     
     string denom = 2;
 }

@@ -15,8 +15,6 @@ message EventChannelOpenInit {
 
     string counterparty_port_id = 3 [(gogoproto.moretags) = "yaml:\"counterparty_port_id\""];
 
-    string counterparty_channel_id = 4 [(gogoproto.moretags) = "yaml:\"counterparty_channel_id\""];
-
     string connection_id = 5 [(gogoproto.moretags) = "yaml:\"connection_id\""];
 }
 
@@ -46,8 +44,8 @@ message EventChannelOpenAck {
     string connection_id = 5 [(gogoproto.moretags) = "yaml:\"connection_id\""];
 }
 
-// EventChannelCloseInit is a typed event emitted on channel close init
-message EventChannelCloseInit {
+// EventChannelOpenConfirm is a typed event emitted on channel open confirm
+message EventChannelOpenConfirm {
     string port_id = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
 
     string channel_id = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
@@ -59,8 +57,8 @@ message EventChannelCloseInit {
     string connection_id = 5 [(gogoproto.moretags) = "yaml:\"connection_id\""];
 }
 
-// EventChannelOpenConfirm is a typed event emitted on channel open confirm
-message EventChannelOpenConfirm {
+// EventChannelCloseInit is a typed event emitted on channel close init
+message EventChannelCloseInit {
     string port_id = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
 
     string channel_id = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
@@ -127,8 +125,6 @@ message EventChannelRecvPacket {
     string dst_channel = 8 [(gogoproto.moretags) = "yaml:\"dst_channel\""];
 
     Order channel_ordering = 9 [(gogoproto.moretags) = "yaml:\"channel_ordering\""];
-
-    bool success = 10;
 }
 
 // EventChannelWriteAck is a typed event emitted on write acknowledgement
@@ -197,14 +193,4 @@ message EventChannelTimeoutPacket {
     string dst_channel = 8 [(gogoproto.moretags) = "yaml:\"dst_channel\""];
 
     Order channel_ordering = 9 [(gogoproto.moretags) = "yaml:\"channel_ordering\""];
-}
-
-// EventAcknowledgementSuccess is a typed event emitted on packet acknowledgement success
-message EventAcknowledgementSuccess {
-    bytes success = 1;
-}
-
-// EventAcknowledgementError is a typed event emitted on packet acknowledgement error
-message EventAcknowledgementError {
-    string error = 1;
 }

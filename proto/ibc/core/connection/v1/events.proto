@@ -11,8 +11,6 @@ message EventConnectionOpenInit {
  
     string client_id = 2 [(gogoproto.moretags) = "yaml:\"client_id\""];
 
-    string counterparty_connection_id = 3 [(gogoproto.moretags) = "yaml:\"counterparty_connection_id\""];
-
     string counterparty_client_id = 4 [(gogoproto.moretags) = "yaml:\"counterparty_client_id\""];
 }
 

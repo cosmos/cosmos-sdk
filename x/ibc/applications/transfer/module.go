@@ -26,7 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/05-port/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
@@ -335,27 +334,6 @@ func (am AppModule) OnRecvPacket(
 		acknowledgement = channeltypes.NewErrorAcknowledgement(err.Error())
 	}
 
-	channel, _ := am.keeper.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
-
-	err = ctx.EventManager().EmitTypedEvent(
-		&channeltypes.EventChannelRecvPacket{
-			Data:             packet.GetData(),
-			TimeoutHeight:    packet.GetTimeoutHeight().(clienttypes.Height),
-			TimeoutTimestamp: packet.GetTimeoutTimestamp(),
-			Sequence:         packet.GetSequence(),
-			SrcPort:          packet.GetSourcePort(),
-			SrcChannel:       packet.GetSourceChannel(),
-			DstPort:          packet.GetDestPort(),
-			DstChannel:       packet.GetDestChannel(),
-			ChannelOrdering:  channel.Ordering,
-			Success:          err != nil,
-		},
-	)
-
-	if err != nil {
-		acknowledgement = channeltypes.NewErrorAcknowledgement(err.Error())
-	}
-
 	// NOTE: acknowledgement will be written synchronously during IBC handler execution.
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),
@@ -381,29 +359,10 @@ func (am AppModule) OnAcknowledgementPacket(
 		return nil, err
 	}
 
-	channel, _ := am.keeper.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
-
-	if err := ctx.EventManager().EmitTypedEvent(
-		&channeltypes.EventChannelAckPacket{
-			Data:             packet.GetData(),
-			TimeoutHeight:    packet.GetTimeoutHeight().(clienttypes.Height),
-			TimeoutTimestamp: packet.GetTimeoutTimestamp(),
-			Sequence:         packet.GetSequence(),
-			SrcPort:          packet.GetSourcePort(),
-			SrcChannel:       packet.GetSourceChannel(),
-			DstPort:          packet.GetDestPort(),
-			DstChannel:       packet.GetDestChannel(),
-			ChannelOrdering:  channel.Ordering,
-			Acknowledgement:  acknowledgement,
-		},
-	); err != nil {
-		return nil, err
-	}
-
 	switch resp := ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Result:
 		if err := ctx.EventManager().EmitTypedEvent(
-			&channeltypes.EventAcknowledgementSuccess{
+			&types.EventAcknowledgementSuccess{
 				Success: resp.Result,
 			},
 		); err != nil {
@@ -411,7 +370,7 @@ func (am AppModule) OnAcknowledgementPacket(
 		}
 	case *channeltypes.Acknowledgement_Error:
 		if err := ctx.EventManager().EmitTypedEvent(
-			&channeltypes.EventAcknowledgementError{
+			&types.EventAcknowledgementError{
 				Error: resp.Error,
 			},
 		); err != nil {
@@ -435,24 +394,6 @@ func (am AppModule) OnTimeoutPacket(
 	}
 	// refund tokens
 	if err := am.keeper.OnTimeoutPacket(ctx, packet, data); err != nil {
-		return nil, err
-	}
-
-	channel, _ := am.keeper.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
-
-	if err := ctx.EventManager().EmitTypedEvent(
-		&channeltypes.EventChannelTimeoutPacket{
-			Data:             packet.GetData(),
-			TimeoutHeight:    packet.GetTimeoutHeight().(clienttypes.Height),
-			TimeoutTimestamp: packet.GetTimeoutTimestamp(),
-			Sequence:         packet.GetSequence(),
-			SrcPort:          packet.GetSourcePort(),
-			SrcChannel:       packet.GetSourceChannel(),
-			DstPort:          packet.GetDestPort(),
-			DstChannel:       packet.GetDestChannel(),
-			ChannelOrdering:  channel.Ordering,
-		},
-	); err != nil {
 		return nil, err
 	}
 

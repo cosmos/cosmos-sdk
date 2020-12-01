@@ -267,7 +267,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	voucherDenom := denomTrace.IBCDenom()
 	if err := ctx.EventManager().EmitTypedEvent(
 		&types.EventDenominationTrace{
-			TraceHash: traceHash,
+			TraceHash: traceHash.String(),
 			Denom:     voucherDenom,
 		},
 	); err != nil {

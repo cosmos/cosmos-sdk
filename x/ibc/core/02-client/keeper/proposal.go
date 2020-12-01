@@ -51,7 +51,7 @@ func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdatePropo
 
 	// emitting events in the keeper for proposal updates to clients
 	if err := ctx.EventManager().EmitTypedEvent(
-		&types.EventUpgradeClient{
+		&types.EventUpdateClientProposal{
 			ClientId:        p.ClientId,
 			ClientType:      clientState.ClientType(),
 			ConsensusHeight: header.GetHeight().(types.Height),

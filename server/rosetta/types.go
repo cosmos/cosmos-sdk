@@ -8,11 +8,13 @@ const (
 	StatusReverted = "Reverted"
 	StatusSuccess  = "Success"
 
-	OperationMsgSend = "cosmos-sdk/MsgSend"
+	OperationMsgSend  = "send"
+	OperationDelegate = "delegate"
 
 	OptionAddress = "address"
 	OptionGas     = "gas"
 	OperationFee  = "fee"
+	OptionMemo    = "memo"
 )
 
 // TransferTxData represents a Tx that sends value.

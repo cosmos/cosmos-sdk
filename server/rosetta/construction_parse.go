@@ -35,7 +35,7 @@ func (l launchpad) ConstructionParse(ctx context.Context, request *types.Constru
 	}
 
 	return &types.ConstructionParseResponse{
-		Operations:               toOperations(stdTx.Msgs, false, true),
+		Operations:               SdkTxToOperations(stdTx, false, false),
 		AccountIdentifierSigners: signers,
 		Metadata:                 nil,
 	}, nil

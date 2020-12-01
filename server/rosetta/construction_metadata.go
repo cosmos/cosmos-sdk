@@ -31,18 +31,23 @@ func (l launchpad) ConstructionMetadata(ctx context.Context, r *types.Constructi
 		return nil, rosetta.WrapError(ErrInvalidAddress, "gas not set")
 	}
 
+	memo, ok := r.Options[OptionMemo]
+	if !ok {
+		return nil, ErrInvalidMemo
+	}
+
 	statusRes, err := l.tendermint.Status()
 	if err != nil {
 		return nil, rosetta.WrapError(ErrInterpreting, err.Error())
 	}
 
-	// TODO: Check if suggested fee can be added
 	res := &types.ConstructionMetadataResponse{
 		Metadata: map[string]interface{}{
 			AccountNumberKey: accRes.Result.Value.AccountNumber,
 			SequenceKey:      accRes.Result.Value.Sequence,
 			ChainIDKey:       statusRes.NodeInfo.Network,
 			GasKey:           gas,
+			OptionMemo:       memo,
 		},
 	}
 

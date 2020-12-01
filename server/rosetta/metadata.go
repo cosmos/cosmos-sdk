@@ -20,6 +20,7 @@ type PayloadReqMetadata struct {
 	Sequence      uint64
 	AccountNumber uint64
 	Gas           uint64
+	Memo          string
 }
 
 // GetMetadataFromPayloadReq obtains the metadata from the request to /construction/payloads endpoint.
@@ -64,10 +65,19 @@ func GetMetadataFromPayloadReq(req *types.ConstructionPayloadsRequest) (*Payload
 		return nil, fmt.Errorf("invalid gas value")
 	}
 
+	memo, ok := req.Metadata["memo"]
+	if !ok {
+		memo = ""
+	}
+	memoStr, ok := memo.(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid account_number value")
+	}
 	return &PayloadReqMetadata{
 		ChainID:       chainID,
 		Sequence:      uint64(seqNum),
 		AccountNumber: uint64(accNum),
 		Gas:           uint64(gasF64),
+		Memo:          memoStr,
 	}, nil
 }

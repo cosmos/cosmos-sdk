@@ -1,6 +1,6 @@
 ------------------------- MODULE counterexample -------------------------
 
-EXTENDS transfer_instance
+EXTENDS relay_tests
 
 (* Initial state *)
 
@@ -40,20 +40,20 @@ State2 ==
             [amount |-> 1,
               denomTrace |-> [channel |-> "", denom |-> "atom", port |-> ""],
               receiver |-> "a2",
-              sender |-> ""],
-          destChannel |-> "buckybucky",
-          destPort |-> "buckybucky",
-          sourceChannel |-> "zarkozarko",
-          sourcePort |-> "buckybucky"]]
+              sender |-> "a1"],
+          destChannel |-> "channel-1",
+          destPort |-> "transfer",
+          sourceChannel |-> "channel-0",
+          sourcePort |-> "transfer"]]
 /\ p = [data |->
     [amount |-> 1,
       denomTrace |-> [channel |-> "", denom |-> "atom", port |-> ""],
       receiver |-> "a2",
-      sender |-> ""],
-  destChannel |-> "buckybucky",
-  destPort |-> "buckybucky",
-  sourceChannel |-> "zarkozarko",
-  sourcePort |-> "buckybucky"]
+      sender |-> "a1"],
+  destChannel |-> "channel-1",
+  destPort |-> "transfer",
+  sourceChannel |-> "channel-0",
+  sourcePort |-> "transfer"]
 
 (* Transition 2 to State3 *)
 
@@ -65,9 +65,9 @@ State3 ==
   >>
     :> 0
   @@ <<
-    [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "buckybucky",
+    [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
       denom |-> "atom",
-      port |-> "buckybucky"]
+      port |-> "transfer"]
   >>
     :> 1
 /\ count = 1
@@ -95,11 +95,11 @@ State3 ==
             [amount |-> 1,
               denomTrace |-> [channel |-> "", denom |-> "atom", port |-> ""],
               receiver |-> "a2",
-              sender |-> ""],
-          destChannel |-> "buckybucky",
-          destPort |-> "buckybucky",
-          sourceChannel |-> "zarkozarko",
-          sourcePort |-> "buckybucky"]]
+              sender |-> "a1"],
+          destChannel |-> "channel-1",
+          destPort |-> "transfer",
+          sourceChannel |-> "channel-0",
+          sourcePort |-> "transfer"]]
   @@ 1
     :> [bankAfter |->
         <<
@@ -109,10 +109,9 @@ State3 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
               denom |-> "atom",
-              port |-> "buckybucky"]
+              port |-> "transfer"]
           >>
             :> 1,
       bankBefore |->
@@ -129,23 +128,23 @@ State3 ==
             [amount |-> 1,
               denomTrace |-> [channel |-> "", denom |-> "atom", port |-> ""],
               receiver |-> "a2",
-              sender |-> ""],
-          destChannel |-> "buckybucky",
-          destPort |-> "buckybucky",
-          sourceChannel |-> "zarkozarko",
-          sourcePort |-> "buckybucky"]]
+              sender |-> "a1"],
+          destChannel |-> "channel-1",
+          destPort |-> "transfer",
+          sourceChannel |-> "channel-0",
+          sourcePort |-> "transfer"]]
 /\ p = [data |->
     [amount |-> 1,
       denomTrace |->
-        [channel |-> "buckybucky", denom |-> "atom", port |-> "buckybucky"],
+        [channel |-> "channel-1", denom |-> "atom", port |-> "transfer"],
       receiver |-> "a1",
       sender |-> "a2"],
-  destChannel |-> "buckybucky",
-  destPort |-> "buckybucky",
-  sourceChannel |-> "buckybucky",
-  sourcePort |-> "buckybucky"]
+  destChannel |-> "channel-0",
+  destPort |-> "transfer",
+  sourceChannel |-> "channel-1",
+  sourcePort |-> "transfer"]
 
-(* Transition 6 to State4 *)
+(* Transition 7 to State4 *)
 
 State4 ==
 /\ bank = <<
@@ -155,12 +154,310 @@ State4 ==
   >>
     :> 0
   @@ <<
-    [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "buckybucky",
+    [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
       denom |-> "atom",
-      port |-> "buckybucky"]
+      port |-> "transfer"]
   >>
-    :> 1
+    :> 2
 /\ count = 2
+/\ error = FALSE
+/\ handler = "OnTimeoutPacket"
+/\ history = 0
+    :> [bankAfter |->
+        <<
+            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
+              denom |-> "",
+              port |-> ""]
+          >>
+            :> 0,
+      bankBefore |->
+        <<
+            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
+              denom |-> "",
+              port |-> ""]
+          >>
+            :> 0,
+      error |-> FALSE,
+      handler |-> "",
+      packet |->
+        [data |->
+            [amount |-> 1,
+              denomTrace |-> [channel |-> "", denom |-> "atom", port |-> ""],
+              receiver |-> "a2",
+              sender |-> "a1"],
+          destChannel |-> "channel-1",
+          destPort |-> "transfer",
+          sourceChannel |-> "channel-0",
+          sourcePort |-> "transfer"]]
+  @@ 1
+    :> [bankAfter |->
+        <<
+            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
+              denom |-> "",
+              port |-> ""]
+          >>
+            :> 0
+          @@ <<
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
+              denom |-> "atom",
+              port |-> "transfer"]
+          >>
+            :> 1,
+      bankBefore |->
+        <<
+            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
+              denom |-> "",
+              port |-> ""]
+          >>
+            :> 0,
+      error |-> FALSE,
+      handler |-> "OnRecvPacket",
+      packet |->
+        [data |->
+            [amount |-> 1,
+              denomTrace |-> [channel |-> "", denom |-> "atom", port |-> ""],
+              receiver |-> "a2",
+              sender |-> "a1"],
+          destChannel |-> "channel-1",
+          destPort |-> "transfer",
+          sourceChannel |-> "channel-0",
+          sourcePort |-> "transfer"]]
+  @@ 2
+    :> [bankAfter |->
+        <<
+            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
+              denom |-> "",
+              port |-> ""]
+          >>
+            :> 0
+          @@ <<
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
+              denom |-> "atom",
+              port |-> "transfer"]
+          >>
+            :> 2,
+      bankBefore |->
+        <<
+            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
+              denom |-> "",
+              port |-> ""]
+          >>
+            :> 0
+          @@ <<
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
+              denom |-> "atom",
+              port |-> "transfer"]
+          >>
+            :> 1,
+      error |-> FALSE,
+      handler |-> "OnTimeoutPacket",
+      packet |->
+        [data |->
+            [amount |-> 1,
+              denomTrace |->
+                [channel |-> "channel-1", denom |-> "atom", port |-> "transfer"],
+              receiver |-> "a1",
+              sender |-> "a2"],
+          destChannel |-> "channel-0",
+          destPort |-> "transfer",
+          sourceChannel |-> "channel-1",
+          sourcePort |-> "transfer"]]
+/\ p = [data |->
+    [amount |-> 2,
+      denomTrace |->
+        [channel |-> "channel-1", denom |-> "atom", port |-> "transfer"],
+      receiver |-> "a3",
+      sender |-> "a2"],
+  destChannel |-> "channel-0",
+  destPort |-> "transfer",
+  sourceChannel |-> "channel-1",
+  sourcePort |-> "transfer"]
+
+(* Transition 10 to State5 *)
+
+State5 ==
+/\ bank = <<
+    [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
+      denom |-> "",
+      port |-> ""]
+  >>
+    :> 0
+  @@ <<
+    [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
+      denom |-> "atom",
+      port |-> "transfer"]
+  >>
+    :> 4
+/\ count = 3
+/\ error = FALSE
+/\ handler = "OnRecvAcknowledgementError"
+/\ history = 0
+    :> [bankAfter |->
+        <<
+            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
+              denom |-> "",
+              port |-> ""]
+          >>
+            :> 0,
+      bankBefore |->
+        <<
+            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
+              denom |-> "",
+              port |-> ""]
+          >>
+            :> 0,
+      error |-> FALSE,
+      handler |-> "",
+      packet |->
+        [data |->
+            [amount |-> 1,
+              denomTrace |-> [channel |-> "", denom |-> "atom", port |-> ""],
+              receiver |-> "a2",
+              sender |-> "a1"],
+          destChannel |-> "channel-1",
+          destPort |-> "transfer",
+          sourceChannel |-> "channel-0",
+          sourcePort |-> "transfer"]]
+  @@ 1
+    :> [bankAfter |->
+        <<
+            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
+              denom |-> "",
+              port |-> ""]
+          >>
+            :> 0
+          @@ <<
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
+              denom |-> "atom",
+              port |-> "transfer"]
+          >>
+            :> 1,
+      bankBefore |->
+        <<
+            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
+              denom |-> "",
+              port |-> ""]
+          >>
+            :> 0,
+      error |-> FALSE,
+      handler |-> "OnRecvPacket",
+      packet |->
+        [data |->
+            [amount |-> 1,
+              denomTrace |-> [channel |-> "", denom |-> "atom", port |-> ""],
+              receiver |-> "a2",
+              sender |-> "a1"],
+          destChannel |-> "channel-1",
+          destPort |-> "transfer",
+          sourceChannel |-> "channel-0",
+          sourcePort |-> "transfer"]]
+  @@ 2
+    :> [bankAfter |->
+        <<
+            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
+              denom |-> "",
+              port |-> ""]
+          >>
+            :> 0
+          @@ <<
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
+              denom |-> "atom",
+              port |-> "transfer"]
+          >>
+            :> 2,
+      bankBefore |->
+        <<
+            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
+              denom |-> "",
+              port |-> ""]
+          >>
+            :> 0
+          @@ <<
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
+              denom |-> "atom",
+              port |-> "transfer"]
+          >>
+            :> 1,
+      error |-> FALSE,
+      handler |-> "OnTimeoutPacket",
+      packet |->
+        [data |->
+            [amount |-> 1,
+              denomTrace |->
+                [channel |-> "channel-1", denom |-> "atom", port |-> "transfer"],
+              receiver |-> "a1",
+              sender |-> "a2"],
+          destChannel |-> "channel-0",
+          destPort |-> "transfer",
+          sourceChannel |-> "channel-1",
+          sourcePort |-> "transfer"]]
+  @@ 3
+    :> [bankAfter |->
+        <<
+            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
+              denom |-> "",
+              port |-> ""]
+          >>
+            :> 0
+          @@ <<
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
+              denom |-> "atom",
+              port |-> "transfer"]
+          >>
+            :> 4,
+      bankBefore |->
+        <<
+            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
+              denom |-> "",
+              port |-> ""]
+          >>
+            :> 0
+          @@ <<
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
+              denom |-> "atom",
+              port |-> "transfer"]
+          >>
+            :> 2,
+      error |-> FALSE,
+      handler |-> "OnRecvAcknowledgementError",
+      packet |->
+        [data |->
+            [amount |-> 2,
+              denomTrace |->
+                [channel |-> "channel-1", denom |-> "atom", port |-> "transfer"],
+              receiver |-> "a3",
+              sender |-> "a2"],
+          destChannel |-> "channel-0",
+          destPort |-> "transfer",
+          sourceChannel |-> "channel-1",
+          sourcePort |-> "transfer"]]
+/\ p = [data |->
+    [amount |-> 1,
+      denomTrace |->
+        [channel |-> "channel-1", denom |-> "atom", port |-> "transfer"],
+      receiver |-> "a2",
+      sender |-> "a2"],
+  destChannel |-> "channel-1",
+  destPort |-> "transfer",
+  sourceChannel |-> "ethereum-hub",
+  sourcePort |-> "bitcoin-hub"]
+
+(* Transition 12 to State6 *)
+
+State6 ==
+/\ bank = <<
+    [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
+      denom |-> "",
+      port |-> ""]
+  >>
+    :> 0
+  @@ <<
+    [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
+      denom |-> "atom",
+      port |-> "transfer"]
+  >>
+    :> 4
+/\ count = 4
 /\ error = FALSE
 /\ handler = "OnRecvAcknowledgementResult"
 /\ history = 0
@@ -185,11 +482,11 @@ State4 ==
             [amount |-> 1,
               denomTrace |-> [channel |-> "", denom |-> "atom", port |-> ""],
               receiver |-> "a2",
-              sender |-> ""],
-          destChannel |-> "buckybucky",
-          destPort |-> "buckybucky",
-          sourceChannel |-> "zarkozarko",
-          sourcePort |-> "buckybucky"]]
+              sender |-> "a1"],
+          destChannel |-> "channel-1",
+          destPort |-> "transfer",
+          sourceChannel |-> "channel-0",
+          sourcePort |-> "transfer"]]
   @@ 1
     :> [bankAfter |->
         <<
@@ -199,10 +496,9 @@ State4 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
               denom |-> "atom",
-              port |-> "buckybucky"]
+              port |-> "transfer"]
           >>
             :> 1,
       bankBefore |->
@@ -219,11 +515,11 @@ State4 ==
             [amount |-> 1,
               denomTrace |-> [channel |-> "", denom |-> "atom", port |-> ""],
               receiver |-> "a2",
-              sender |-> ""],
-          destChannel |-> "buckybucky",
-          destPort |-> "buckybucky",
-          sourceChannel |-> "zarkozarko",
-          sourcePort |-> "buckybucky"]]
+              sender |-> "a1"],
+          destChannel |-> "channel-1",
+          destPort |-> "transfer",
+          sourceChannel |-> "channel-0",
+          sourcePort |-> "transfer"]]
   @@ 2
     :> [bankAfter |->
         <<
@@ -233,12 +529,11 @@ State4 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
               denom |-> "atom",
-              port |-> "buckybucky"]
+              port |-> "transfer"]
           >>
-            :> 1,
+            :> 2,
       bankBefore |->
         <<
             [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
@@ -247,161 +542,24 @@ State4 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
               denom |-> "atom",
-              port |-> "buckybucky"]
+              port |-> "transfer"]
           >>
             :> 1,
       error |-> FALSE,
-      handler |-> "OnRecvAcknowledgementResult",
+      handler |-> "OnTimeoutPacket",
       packet |->
         [data |->
             [amount |-> 1,
               denomTrace |->
-                [channel |-> "buckybucky",
-                  denom |-> "atom",
-                  port |-> "buckybucky"],
+                [channel |-> "channel-1", denom |-> "atom", port |-> "transfer"],
               receiver |-> "a1",
               sender |-> "a2"],
-          destChannel |-> "buckybucky",
-          destPort |-> "buckybucky",
-          sourceChannel |-> "buckybucky",
-          sourcePort |-> "buckybucky"]]
-/\ p = [data |->
-    [amount |-> 0,
-      denomTrace |->
-        [channel |-> "zarkozarko", denom |-> "", port |-> "zarkozarko"],
-      receiver |-> "a1",
-      sender |-> "a1"],
-  destChannel |-> "zarkozarko",
-  destPort |-> "zarkozarko",
-  sourceChannel |-> "",
-  sourcePort |-> ""]
-
-(* Transition 7 to State5 *)
-
-State5 ==
-/\ bank = <<
-    [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
-      denom |-> "",
-      port |-> ""]
-  >>
-    :> 0
-  @@ <<
-    [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "buckybucky",
-      denom |-> "atom",
-      port |-> "buckybucky"]
-  >>
-    :> 1
-/\ count = 3
-/\ error = TRUE
-/\ handler = "OnRecvAcknowledgementResult"
-/\ history = 0
-    :> [bankAfter |->
-        <<
-            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
-              denom |-> "",
-              port |-> ""]
-          >>
-            :> 0,
-      bankBefore |->
-        <<
-            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
-              denom |-> "",
-              port |-> ""]
-          >>
-            :> 0,
-      error |-> FALSE,
-      handler |-> "",
-      packet |->
-        [data |->
-            [amount |-> 1,
-              denomTrace |-> [channel |-> "", denom |-> "atom", port |-> ""],
-              receiver |-> "a2",
-              sender |-> ""],
-          destChannel |-> "buckybucky",
-          destPort |-> "buckybucky",
-          sourceChannel |-> "zarkozarko",
-          sourcePort |-> "buckybucky"]]
-  @@ 1
-    :> [bankAfter |->
-        <<
-            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
-              denom |-> "",
-              port |-> ""]
-          >>
-            :> 0
-          @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
-              denom |-> "atom",
-              port |-> "buckybucky"]
-          >>
-            :> 1,
-      bankBefore |->
-        <<
-            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
-              denom |-> "",
-              port |-> ""]
-          >>
-            :> 0,
-      error |-> FALSE,
-      handler |-> "OnRecvPacket",
-      packet |->
-        [data |->
-            [amount |-> 1,
-              denomTrace |-> [channel |-> "", denom |-> "atom", port |-> ""],
-              receiver |-> "a2",
-              sender |-> ""],
-          destChannel |-> "buckybucky",
-          destPort |-> "buckybucky",
-          sourceChannel |-> "zarkozarko",
-          sourcePort |-> "buckybucky"]]
-  @@ 2
-    :> [bankAfter |->
-        <<
-            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
-              denom |-> "",
-              port |-> ""]
-          >>
-            :> 0
-          @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
-              denom |-> "atom",
-              port |-> "buckybucky"]
-          >>
-            :> 1,
-      bankBefore |->
-        <<
-            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
-              denom |-> "",
-              port |-> ""]
-          >>
-            :> 0
-          @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
-              denom |-> "atom",
-              port |-> "buckybucky"]
-          >>
-            :> 1,
-      error |-> FALSE,
-      handler |-> "OnRecvAcknowledgementResult",
-      packet |->
-        [data |->
-            [amount |-> 1,
-              denomTrace |->
-                [channel |-> "buckybucky",
-                  denom |-> "atom",
-                  port |-> "buckybucky"],
-              receiver |-> "a1",
-              sender |-> "a2"],
-          destChannel |-> "buckybucky",
-          destPort |-> "buckybucky",
-          sourceChannel |-> "buckybucky",
-          sourcePort |-> "buckybucky"]]
+          destChannel |-> "channel-0",
+          destPort |-> "transfer",
+          sourceChannel |-> "channel-1",
+          sourcePort |-> "transfer"]]
   @@ 3
     :> [bankAfter |->
         <<
@@ -411,12 +569,11 @@ State5 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
               denom |-> "atom",
-              port |-> "buckybucky"]
+              port |-> "transfer"]
           >>
-            :> 1,
+            :> 4,
       bankBefore |->
         <<
             [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
@@ -425,201 +582,24 @@ State5 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
               denom |-> "atom",
-              port |-> "buckybucky"]
+              port |-> "transfer"]
           >>
-            :> 1,
-      error |-> TRUE,
-      handler |-> "OnRecvAcknowledgementResult",
+            :> 2,
+      error |-> FALSE,
+      handler |-> "OnRecvAcknowledgementError",
       packet |->
         [data |->
-            [amount |-> 0,
+            [amount |-> 2,
               denomTrace |->
-                [channel |-> "zarkozarko", denom |-> "", port |-> "zarkozarko"],
-              receiver |-> "a1",
-              sender |-> "a1"],
-          destChannel |-> "zarkozarko",
-          destPort |-> "zarkozarko",
-          sourceChannel |-> "",
-          sourcePort |-> ""]]
-/\ p = [data |->
-    [amount |-> 1,
-      denomTrace |->
-        [channel |-> "buckybucky", denom |-> "atom", port |-> "buckybucky"],
-      receiver |-> "a1",
-      sender |-> ""],
-  destChannel |-> "zarkozarko",
-  destPort |-> "zarkozarko",
-  sourceChannel |-> "",
-  sourcePort |-> ""]
-
-(* Transition 7 to State6 *)
-
-State6 ==
-/\ bank = <<
-    [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
-      denom |-> "",
-      port |-> ""]
-  >>
-    :> 0
-  @@ <<
-    [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "buckybucky",
-      denom |-> "atom",
-      port |-> "buckybucky"]
-  >>
-    :> 1
-/\ count = 4
-/\ error = TRUE
-/\ handler = "OnRecvAcknowledgementResult"
-/\ history = 0
-    :> [bankAfter |->
-        <<
-            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
-              denom |-> "",
-              port |-> ""]
-          >>
-            :> 0,
-      bankBefore |->
-        <<
-            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
-              denom |-> "",
-              port |-> ""]
-          >>
-            :> 0,
-      error |-> FALSE,
-      handler |-> "",
-      packet |->
-        [data |->
-            [amount |-> 1,
-              denomTrace |-> [channel |-> "", denom |-> "atom", port |-> ""],
-              receiver |-> "a2",
-              sender |-> ""],
-          destChannel |-> "buckybucky",
-          destPort |-> "buckybucky",
-          sourceChannel |-> "zarkozarko",
-          sourcePort |-> "buckybucky"]]
-  @@ 1
-    :> [bankAfter |->
-        <<
-            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
-              denom |-> "",
-              port |-> ""]
-          >>
-            :> 0
-          @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
-              denom |-> "atom",
-              port |-> "buckybucky"]
-          >>
-            :> 1,
-      bankBefore |->
-        <<
-            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
-              denom |-> "",
-              port |-> ""]
-          >>
-            :> 0,
-      error |-> FALSE,
-      handler |-> "OnRecvPacket",
-      packet |->
-        [data |->
-            [amount |-> 1,
-              denomTrace |-> [channel |-> "", denom |-> "atom", port |-> ""],
-              receiver |-> "a2",
-              sender |-> ""],
-          destChannel |-> "buckybucky",
-          destPort |-> "buckybucky",
-          sourceChannel |-> "zarkozarko",
-          sourcePort |-> "buckybucky"]]
-  @@ 2
-    :> [bankAfter |->
-        <<
-            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
-              denom |-> "",
-              port |-> ""]
-          >>
-            :> 0
-          @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
-              denom |-> "atom",
-              port |-> "buckybucky"]
-          >>
-            :> 1,
-      bankBefore |->
-        <<
-            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
-              denom |-> "",
-              port |-> ""]
-          >>
-            :> 0
-          @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
-              denom |-> "atom",
-              port |-> "buckybucky"]
-          >>
-            :> 1,
-      error |-> FALSE,
-      handler |-> "OnRecvAcknowledgementResult",
-      packet |->
-        [data |->
-            [amount |-> 1,
-              denomTrace |->
-                [channel |-> "buckybucky",
-                  denom |-> "atom",
-                  port |-> "buckybucky"],
-              receiver |-> "a1",
+                [channel |-> "channel-1", denom |-> "atom", port |-> "transfer"],
+              receiver |-> "a3",
               sender |-> "a2"],
-          destChannel |-> "buckybucky",
-          destPort |-> "buckybucky",
-          sourceChannel |-> "buckybucky",
-          sourcePort |-> "buckybucky"]]
-  @@ 3
-    :> [bankAfter |->
-        <<
-            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
-              denom |-> "",
-              port |-> ""]
-          >>
-            :> 0
-          @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
-              denom |-> "atom",
-              port |-> "buckybucky"]
-          >>
-            :> 1,
-      bankBefore |->
-        <<
-            [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
-              denom |-> "",
-              port |-> ""]
-          >>
-            :> 0
-          @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
-              denom |-> "atom",
-              port |-> "buckybucky"]
-          >>
-            :> 1,
-      error |-> TRUE,
-      handler |-> "OnRecvAcknowledgementResult",
-      packet |->
-        [data |->
-            [amount |-> 0,
-              denomTrace |->
-                [channel |-> "zarkozarko", denom |-> "", port |-> "zarkozarko"],
-              receiver |-> "a1",
-              sender |-> "a1"],
-          destChannel |-> "zarkozarko",
-          destPort |-> "zarkozarko",
-          sourceChannel |-> "",
-          sourcePort |-> ""]]
+          destChannel |-> "channel-0",
+          destPort |-> "transfer",
+          sourceChannel |-> "channel-1",
+          sourcePort |-> "transfer"]]
   @@ 4
     :> [bankAfter |->
         <<
@@ -629,12 +609,11 @@ State6 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
               denom |-> "atom",
-              port |-> "buckybucky"]
+              port |-> "transfer"]
           >>
-            :> 1,
+            :> 4,
       bankBefore |->
         <<
             [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
@@ -643,39 +622,36 @@ State6 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
               denom |-> "atom",
-              port |-> "buckybucky"]
+              port |-> "transfer"]
           >>
-            :> 1,
-      error |-> TRUE,
+            :> 4,
+      error |-> FALSE,
       handler |-> "OnRecvAcknowledgementResult",
       packet |->
         [data |->
             [amount |-> 1,
               denomTrace |->
-                [channel |-> "buckybucky",
-                  denom |-> "atom",
-                  port |-> "buckybucky"],
-              receiver |-> "a1",
-              sender |-> ""],
-          destChannel |-> "zarkozarko",
-          destPort |-> "zarkozarko",
-          sourceChannel |-> "",
-          sourcePort |-> ""]]
+                [channel |-> "channel-1", denom |-> "atom", port |-> "transfer"],
+              receiver |-> "a2",
+              sender |-> "a2"],
+          destChannel |-> "channel-1",
+          destPort |-> "transfer",
+          sourceChannel |-> "ethereum-hub",
+          sourcePort |-> "bitcoin-hub"]]
 /\ p = [data |->
-    [amount |-> 0,
+    [amount |-> 1,
       denomTrace |->
-        [channel |-> "zarkozarko", denom |-> "", port |-> "zarkozarko"],
+        [channel |-> "channel-1", denom |-> "atom", port |-> "transfer"],
       receiver |-> "a1",
-      sender |-> "a1"],
-  destChannel |-> "zarkozarko",
-  destPort |-> "zarkozarko",
-  sourceChannel |-> "buckybucky",
-  sourcePort |-> "zarkozarko"]
+      sender |-> "a2"],
+  destChannel |-> "channel-0",
+  destPort |-> "transfer",
+  sourceChannel |-> "channel-0",
+  sourcePort |-> "transfer"]
 
-(* Transition 0 to State7 *)
+(* Transition 1 to State7 *)
 
 State7 ==
 /\ bank = <<
@@ -685,13 +661,20 @@ State7 ==
   >>
     :> 0
   @@ <<
-    [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "buckybucky",
+    [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
       denom |-> "atom",
-      port |-> "buckybucky"]
+      port |-> "transfer"]
+  >>
+    :> 3
+  @@ <<
+    [channel |-> "channel-0", id |-> "", port |-> "transfer"], [channel |->
+        "channel-1",
+      denom |-> "atom",
+      port |-> "transfer"]
   >>
     :> 1
 /\ count = 5
-/\ error = TRUE
+/\ error = FALSE
 /\ handler = "SendTransfer"
 /\ history = 0
     :> [bankAfter |->
@@ -715,11 +698,11 @@ State7 ==
             [amount |-> 1,
               denomTrace |-> [channel |-> "", denom |-> "atom", port |-> ""],
               receiver |-> "a2",
-              sender |-> ""],
-          destChannel |-> "buckybucky",
-          destPort |-> "buckybucky",
-          sourceChannel |-> "zarkozarko",
-          sourcePort |-> "buckybucky"]]
+              sender |-> "a1"],
+          destChannel |-> "channel-1",
+          destPort |-> "transfer",
+          sourceChannel |-> "channel-0",
+          sourcePort |-> "transfer"]]
   @@ 1
     :> [bankAfter |->
         <<
@@ -729,10 +712,9 @@ State7 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
               denom |-> "atom",
-              port |-> "buckybucky"]
+              port |-> "transfer"]
           >>
             :> 1,
       bankBefore |->
@@ -749,11 +731,11 @@ State7 ==
             [amount |-> 1,
               denomTrace |-> [channel |-> "", denom |-> "atom", port |-> ""],
               receiver |-> "a2",
-              sender |-> ""],
-          destChannel |-> "buckybucky",
-          destPort |-> "buckybucky",
-          sourceChannel |-> "zarkozarko",
-          sourcePort |-> "buckybucky"]]
+              sender |-> "a1"],
+          destChannel |-> "channel-1",
+          destPort |-> "transfer",
+          sourceChannel |-> "channel-0",
+          sourcePort |-> "transfer"]]
   @@ 2
     :> [bankAfter |->
         <<
@@ -763,12 +745,11 @@ State7 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
               denom |-> "atom",
-              port |-> "buckybucky"]
+              port |-> "transfer"]
           >>
-            :> 1,
+            :> 2,
       bankBefore |->
         <<
             [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
@@ -777,27 +758,24 @@ State7 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
               denom |-> "atom",
-              port |-> "buckybucky"]
+              port |-> "transfer"]
           >>
             :> 1,
       error |-> FALSE,
-      handler |-> "OnRecvAcknowledgementResult",
+      handler |-> "OnTimeoutPacket",
       packet |->
         [data |->
             [amount |-> 1,
               denomTrace |->
-                [channel |-> "buckybucky",
-                  denom |-> "atom",
-                  port |-> "buckybucky"],
+                [channel |-> "channel-1", denom |-> "atom", port |-> "transfer"],
               receiver |-> "a1",
               sender |-> "a2"],
-          destChannel |-> "buckybucky",
-          destPort |-> "buckybucky",
-          sourceChannel |-> "buckybucky",
-          sourcePort |-> "buckybucky"]]
+          destChannel |-> "channel-0",
+          destPort |-> "transfer",
+          sourceChannel |-> "channel-1",
+          sourcePort |-> "transfer"]]
   @@ 3
     :> [bankAfter |->
         <<
@@ -807,12 +785,11 @@ State7 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
               denom |-> "atom",
-              port |-> "buckybucky"]
+              port |-> "transfer"]
           >>
-            :> 1,
+            :> 4,
       bankBefore |->
         <<
             [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
@@ -821,25 +798,24 @@ State7 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
               denom |-> "atom",
-              port |-> "buckybucky"]
+              port |-> "transfer"]
           >>
-            :> 1,
-      error |-> TRUE,
-      handler |-> "OnRecvAcknowledgementResult",
+            :> 2,
+      error |-> FALSE,
+      handler |-> "OnRecvAcknowledgementError",
       packet |->
         [data |->
-            [amount |-> 0,
+            [amount |-> 2,
               denomTrace |->
-                [channel |-> "zarkozarko", denom |-> "", port |-> "zarkozarko"],
-              receiver |-> "a1",
-              sender |-> "a1"],
-          destChannel |-> "zarkozarko",
-          destPort |-> "zarkozarko",
-          sourceChannel |-> "",
-          sourcePort |-> ""]]
+                [channel |-> "channel-1", denom |-> "atom", port |-> "transfer"],
+              receiver |-> "a3",
+              sender |-> "a2"],
+          destChannel |-> "channel-0",
+          destPort |-> "transfer",
+          sourceChannel |-> "channel-1",
+          sourcePort |-> "transfer"]]
   @@ 4
     :> [bankAfter |->
         <<
@@ -849,12 +825,11 @@ State7 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
               denom |-> "atom",
-              port |-> "buckybucky"]
+              port |-> "transfer"]
           >>
-            :> 1,
+            :> 4,
       bankBefore |->
         <<
             [channel |-> "", id |-> "", port |-> ""], [channel |-> "",
@@ -863,27 +838,24 @@ State7 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
               denom |-> "atom",
-              port |-> "buckybucky"]
+              port |-> "transfer"]
           >>
-            :> 1,
-      error |-> TRUE,
+            :> 4,
+      error |-> FALSE,
       handler |-> "OnRecvAcknowledgementResult",
       packet |->
         [data |->
             [amount |-> 1,
               denomTrace |->
-                [channel |-> "buckybucky",
-                  denom |-> "atom",
-                  port |-> "buckybucky"],
-              receiver |-> "a1",
-              sender |-> ""],
-          destChannel |-> "zarkozarko",
-          destPort |-> "zarkozarko",
-          sourceChannel |-> "",
-          sourcePort |-> ""]]
+                [channel |-> "channel-1", denom |-> "atom", port |-> "transfer"],
+              receiver |-> "a2",
+              sender |-> "a2"],
+          destChannel |-> "channel-1",
+          destPort |-> "transfer",
+          sourceChannel |-> "ethereum-hub",
+          sourcePort |-> "bitcoin-hub"]]
   @@ 5
     :> [bankAfter |->
         <<
@@ -893,10 +865,16 @@ State7 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
               denom |-> "atom",
-              port |-> "buckybucky"]
+              port |-> "transfer"]
+          >>
+            :> 3
+          @@ <<
+            [channel |-> "channel-0", id |-> "", port |-> "transfer"], [channel |->
+                "channel-1",
+              denom |-> "atom",
+              port |-> "transfer"]
           >>
             :> 1,
       bankBefore |->
@@ -907,43 +885,47 @@ State7 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [channel |->
-                "buckybucky",
+            [channel |-> "", id |-> "a2", port |-> ""], [channel |-> "channel-1",
               denom |-> "atom",
-              port |-> "buckybucky"]
+              port |-> "transfer"]
           >>
-            :> 1,
-      error |-> TRUE,
+            :> 4,
+      error |-> FALSE,
       handler |-> "SendTransfer",
       packet |->
         [data |->
-            [amount |-> 0,
+            [amount |-> 1,
               denomTrace |->
-                [channel |-> "zarkozarko", denom |-> "", port |-> "zarkozarko"],
+                [channel |-> "channel-1", denom |-> "atom", port |-> "transfer"],
               receiver |-> "a1",
-              sender |-> "a1"],
-          destChannel |-> "zarkozarko",
-          destPort |-> "zarkozarko",
-          sourceChannel |-> "buckybucky",
-          sourcePort |-> "zarkozarko"]]
+              sender |-> "a2"],
+          destChannel |-> "channel-0",
+          destPort |-> "transfer",
+          sourceChannel |-> "channel-0",
+          sourcePort |-> "transfer"]]
 /\ p = [data |->
     [amount |-> 0,
-      denomTrace |-> [channel |-> "", denom |-> "", port |-> ""],
+      denomTrace |->
+        [channel |-> "transfer", denom |-> "eth", port |-> "transfer"],
       receiver |-> "",
-      sender |-> ""],
-  destChannel |-> "",
-  destPort |-> "",
-  sourceChannel |-> "",
-  sourcePort |-> ""]
+      sender |-> "a1"],
+  destChannel |-> "bitcoin-hub",
+  destPort |-> "channel-0",
+  sourceChannel |-> "channel-0",
+  sourcePort |-> "channel-0"]
 
 (* The following formula holds true in the last state and violates the invariant *)
 
 InvariantViolation ==
   count >= 5
-    /\ BMC!Skolem((\E s1$2 \in DOMAIN history:
-      BMC!Skolem((\E s2$2 \in DOMAIN history:
-        ~(history[s1$2]["handler"] = history[s2$2]["handler"])))))
+    /\ (\A s1$2 \in DOMAIN history:
+      \A s2$2 \in DOMAIN history:
+        s1$2 = s2$2 \/ ~(history[s1$2]["handler"] = history[s2$2]["handler"]))
+    /\ (\A s$2 \in DOMAIN history:
+      s$2 <= 0
+        \/ (history[s$2]["error"] = FALSE
+          /\ history[s$2]["packet"]["data"]["amount"] > 0))
 
 ================================================================================
-\* Created by Apalache on Fri Nov 27 14:00:04 CET 2020
+\* Created by Apalache on Wed Dec 02 21:29:27 CET 2020
 \* https://github.com/informalsystems/apalache

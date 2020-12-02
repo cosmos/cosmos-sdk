@@ -19,7 +19,7 @@ type Keeper struct {
 }
 
 // NewKeeper creates a fee grant Keeper
-func NewKeeper(cdc codec.Marshaler, storeKey sdk.StoreKey) Keeper {
+func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey) Keeper {
 	return Keeper{cdc: cdc, storeKey: storeKey}
 }
 

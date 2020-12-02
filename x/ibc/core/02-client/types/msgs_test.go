@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
-	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/09-localhost/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -50,14 +49,14 @@ func (suite *TypesTestSuite) TestMarshalMsgCreateClient() {
 		{
 			"solo machine client", func() {
 				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 2)
-				msg, err = types.NewMsgCreateClient(soloMachine.ClientID, soloMachine.ClientState(), soloMachine.ConsensusState(), suite.chainA.SenderAccount.GetAddress())
+				msg, err = types.NewMsgCreateClient(soloMachine.ClientState(), soloMachine.ConsensusState(), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 		},
 		{
 			"tendermint client", func() {
 				tendermintClient := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
-				msg, err = types.NewMsgCreateClient("tendermint", tendermintClient, suite.chainA.CurrentTMClientHeader().ConsensusState(), suite.chainA.SenderAccount.GetAddress())
+				msg, err = types.NewMsgCreateClient(tendermintClient, suite.chainA.CurrentTMClientHeader().ConsensusState(), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 		},
@@ -99,17 +98,10 @@ func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 		expPass  bool
 	}{
 		{
-			"invalid client-id",
-			func() {
-				msg.ClientId = ""
-			},
-			false,
-		},
-		{
 			"valid - tendermint client",
 			func() {
 				tendermintClient := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
-				msg, err = types.NewMsgCreateClient("tendermint", tendermintClient, suite.chainA.CurrentTMClientHeader().ConsensusState(), suite.chainA.SenderAccount.GetAddress())
+				msg, err = types.NewMsgCreateClient(tendermintClient, suite.chainA.CurrentTMClientHeader().ConsensusState(), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 			true,
@@ -117,7 +109,7 @@ func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 		{
 			"invalid tendermint client",
 			func() {
-				msg, err = types.NewMsgCreateClient("tendermint", &ibctmtypes.ClientState{}, suite.chainA.CurrentTMClientHeader().ConsensusState(), suite.chainA.SenderAccount.GetAddress())
+				msg, err = types.NewMsgCreateClient(&ibctmtypes.ClientState{}, suite.chainA.CurrentTMClientHeader().ConsensusState(), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 			false,
@@ -133,7 +125,7 @@ func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 			"failed to unpack consensus state",
 			func() {
 				tendermintClient := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
-				msg, err = types.NewMsgCreateClient("tendermint", tendermintClient, suite.chainA.CurrentTMClientHeader().ConsensusState(), suite.chainA.SenderAccount.GetAddress())
+				msg, err = types.NewMsgCreateClient(tendermintClient, suite.chainA.CurrentTMClientHeader().ConsensusState(), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 				msg.ConsensusState = nil
 			},
@@ -150,7 +142,7 @@ func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 			"valid - solomachine client",
 			func() {
 				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 2)
-				msg, err = types.NewMsgCreateClient(soloMachine.ClientID, soloMachine.ClientState(), soloMachine.ConsensusState(), suite.chainA.SenderAccount.GetAddress())
+				msg, err = types.NewMsgCreateClient(soloMachine.ClientState(), soloMachine.ConsensusState(), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 			true,
@@ -159,7 +151,7 @@ func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 			"invalid solomachine client",
 			func() {
 				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 2)
-				msg, err = types.NewMsgCreateClient(soloMachine.ClientID, &solomachinetypes.ClientState{}, soloMachine.ConsensusState(), suite.chainA.SenderAccount.GetAddress())
+				msg, err = types.NewMsgCreateClient(&solomachinetypes.ClientState{}, soloMachine.ConsensusState(), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 			false,
@@ -168,16 +160,17 @@ func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 			"invalid solomachine consensus state",
 			func() {
 				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 2)
-				msg, err = types.NewMsgCreateClient(soloMachine.ClientID, soloMachine.ClientState(), &solomachinetypes.ConsensusState{}, suite.chainA.SenderAccount.GetAddress())
+				msg, err = types.NewMsgCreateClient(soloMachine.ClientState(), &solomachinetypes.ConsensusState{}, suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 			false,
 		},
 		{
-			"unsupported - localhost client",
+			"invalid - client state and consensus state client types do not match",
 			func() {
-				localhostClient := localhosttypes.NewClientState(suite.chainA.ChainID, types.NewHeight(0, uint64(suite.chainA.LastHeader.Header.Height)))
-				msg, err = types.NewMsgCreateClient("localhost", localhostClient, suite.chainA.LastHeader.ConsensusState(), suite.chainA.SenderAccount.GetAddress())
+				tendermintClient := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
+				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 2)
+				msg, err = types.NewMsgCreateClient(tendermintClient, soloMachine.ConsensusState(), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 			false,

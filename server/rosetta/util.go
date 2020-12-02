@@ -3,18 +3,16 @@ package rosetta
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"strconv"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/cosmos/cosmos-sdk/server/rosetta/client/tendermint"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
@@ -140,7 +138,7 @@ func OperationsToSdkMsg(ops []*types.Operation) ([]sdk.Msg, string, sdk.Coins, e
 			}
 		}
 	}
-	msgs, signAddr, err := ConvertOpsToMsgs(ops)
+	msgs, signAddr, err := ConvertOpsToMsgs(newOps)
 	if err != nil {
 		return nil, "", nil, err
 	}

@@ -14,7 +14,7 @@ import (
 // Keeper manages state of all fee grants, as well as calculating approval.
 // It must have a codec with all available allowances registered.
 type Keeper struct {
-	cdc      codec.Marshaler
+	cdc      codec.BinaryMarshaler
 	storeKey sdk.StoreKey
 }
 

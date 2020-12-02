@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	"github.com/tendermint/tendermint/crypto"
 	"io/ioutil"
@@ -296,6 +297,12 @@ func (suite *KeeperTestSuite) TestModelBasedOnRecvPacket() {
 	}
 
 	suite.SetupTest()
+	_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
+	channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.UNORDERED)
+
+	fmt.Printf("\nChannel A: %+v\n", channelA)
+	fmt.Printf("\nChannel B: %+v\n", channelB)
+
 	for i, tlaTc := range tlaTestCases {
 		tc := OnRecvPacketTestCaseFromTla(tlaTc)
 		description := filename + " # " + strconv.Itoa(i+1)
@@ -318,15 +325,20 @@ func (suite *KeeperTestSuite) TestModelBasedOnRecvPacket() {
 					if err != nil {
 						panic("MBT failed to convert sender address")
 					}
-					err = suite.chainB.App.TransferKeeper.SendTransfer(
-					suite.chainB.GetContext(),
-					tc.packet.SourcePort,
-					tc.packet.SourceChannel,
-					sdk.NewCoin(tc.packet.Data.Denom, sdk.NewIntFromUint64(tc.packet.Data.Amount)),
-					sender,
-					tc.packet.Data.Receiver,
-					clienttypes.NewHeight(0, 110),
-					0)
+					denomTrace := types.ParseDenomTrace(tc.packet.Data.Denom)
+					denom := denomTrace.IBCDenom()
+					err = sdk.ValidateDenom(denom);
+					if err == nil {
+						err = suite.chainB.App.TransferKeeper.SendTransfer(
+							suite.chainB.GetContext(),
+							tc.packet.SourcePort,
+							tc.packet.SourceChannel,
+							sdk.NewCoin(denom, sdk.NewIntFromUint64(tc.packet.Data.Amount)),
+							sender,
+							tc.packet.Data.Receiver,
+							clienttypes.NewHeight(0, 110),
+							0)
+					}
 				case "OnRecvPacket": err = suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, tc.packet.Data)
 				case "OnTimeoutPacket": err = suite.chainB.App.TransferKeeper.OnTimeoutPacket(suite.chainB.GetContext(), packet, tc.packet.Data)
 			    case "OnRecvAcknowledgementResult":

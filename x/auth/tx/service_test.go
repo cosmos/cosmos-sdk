@@ -403,11 +403,9 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			req, err := val.ClientCtx.JSONMarshaler.MarshalJSON(tc.req)
-			fmt.Println("ABC req=", string(req))
 			s.Require().NoError(err)
 			res, err := rest.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress), "application/json", req)
 			s.Require().NoError(err)
-			fmt.Println("ABC res=", string(res))
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {

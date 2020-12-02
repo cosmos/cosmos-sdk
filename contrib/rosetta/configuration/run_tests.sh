@@ -26,5 +26,4 @@ echo "checking construction API"
 rosetta-cli check:construction --configuration-file rosetta.json
 
 echo "checking staking API"
-
 rosetta-cli check:construction --configuration-file staking.json

@@ -4,11 +4,13 @@ order: 3
 
 # Interacting with the Node
 
+There are multiple ways to interact with a node: using the CLI, using gRPC or using the REST endpoints. {synopsis}
+
 ## Pre-requisite Readings
 
 - [Running a Node](./run-node.md) {prereq}
 
-## Via CLI
+## Using the CLI
 
 Now that your chain is running, it is time to try sending tokens from the first account you created to a second account. In a new terminal window, start by running the following query command:
 
@@ -44,3 +46,7 @@ simd query staking delegations-to $(simd keys show my_validator --bech val -a --
 ```
 
 You should see two delegations, the first one made from the `gentx`, and the second one you just performed from the `recipient` account.
+
+## Using gRPC
+
+## Using the REST Endpoints

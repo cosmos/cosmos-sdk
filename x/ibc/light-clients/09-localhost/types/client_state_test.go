@@ -178,8 +178,8 @@ func (suite *LocalhostTestSuite) TestProposedHeaderAndUpdateState() {
 
 func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 	counterparty := connectiontypes.NewCounterparty("clientB", testConnectionID, commitmenttypes.NewMerklePrefix([]byte("ibc")))
-	conn1 := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []*connectiontypes.Version{connectiontypes.NewVersion("1", nil)})
-	conn2 := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []*connectiontypes.Version{connectiontypes.NewVersion("2", nil)})
+	conn1 := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []*connectiontypes.Version{connectiontypes.NewVersion("1", nil)}, 0)
+	conn2 := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []*connectiontypes.Version{connectiontypes.NewVersion("2", nil)}, 0)
 
 	testCases := []struct {
 		name        string

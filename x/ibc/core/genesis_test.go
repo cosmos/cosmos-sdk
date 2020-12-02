@@ -110,7 +110,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				),
 				ConnectionGenesis: connectiontypes.NewGenesisState(
 					[]connectiontypes.IdentifiedConnection{
-						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []*connectiontypes.Version{ibctesting.ConnectionVersion})),
+						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []*connectiontypes.Version{ibctesting.ConnectionVersion}, 0)),
 					},
 					[]connectiontypes.ConnectionPaths{
 						connectiontypes.NewConnectionPaths(clientID, []string{connectionID}),
@@ -185,7 +185,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis: clienttypes.DefaultGenesisState(),
 				ConnectionGenesis: connectiontypes.NewGenesisState(
 					[]connectiontypes.IdentifiedConnection{
-						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, "(CLIENTIDONE)", connectiontypes.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []*connectiontypes.Version{connectiontypes.NewVersion("1.1", nil)})),
+						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, "(CLIENTIDONE)", connectiontypes.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []*connectiontypes.Version{connectiontypes.NewVersion("1.1", nil)}, 0)),
 					},
 					[]connectiontypes.ConnectionPaths{
 						connectiontypes.NewConnectionPaths(clientID, []string{connectionID}),
@@ -272,7 +272,7 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 				),
 				ConnectionGenesis: connectiontypes.NewGenesisState(
 					[]connectiontypes.IdentifiedConnection{
-						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []*connectiontypes.Version{ibctesting.ConnectionVersion})),
+						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []*connectiontypes.Version{ibctesting.ConnectionVersion}, 0)),
 					},
 					[]connectiontypes.ConnectionPaths{
 						connectiontypes.NewConnectionPaths(clientID, []string{connectionID}),

@@ -386,7 +386,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 
 func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 	counterparty := connectiontypes.NewCounterparty("clientB", testConnectionID, prefix)
-	conn := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, connectiontypes.ExportedVersionsToProto(connectiontypes.GetCompatibleVersions()))
+	conn := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, connectiontypes.ExportedVersionsToProto(connectiontypes.GetCompatibleVersions()), 0)
 
 	path := suite.solomachine.GetConnectionStatePath(testConnectionID)
 

@@ -52,7 +52,7 @@ func (q Keeper) Channels(c context.Context, req *types.QueryChannelsRequest) (*t
 	ctx := sdk.UnwrapSDKContext(c)
 
 	channels := []*types.IdentifiedChannel{}
-	store := prefix.NewStore(ctx.KVStore(q.storeKey), []byte(host.KeyChannelPrefix))
+	store := prefix.NewStore(ctx.KVStore(q.storeKey), []byte(host.KeyChannelEndPrefix))
 
 	pageRes, err := query.Paginate(store, req.Pagination, func(key, value []byte) error {
 		var result types.Channel
@@ -95,7 +95,7 @@ func (q Keeper) ConnectionChannels(c context.Context, req *types.QueryConnection
 	ctx := sdk.UnwrapSDKContext(c)
 
 	channels := []*types.IdentifiedChannel{}
-	store := prefix.NewStore(ctx.KVStore(q.storeKey), []byte(host.KeyChannelPrefix))
+	store := prefix.NewStore(ctx.KVStore(q.storeKey), []byte(host.KeyChannelEndPrefix))
 
 	pageRes, err := query.Paginate(store, req.Pagination, func(key, value []byte) error {
 		var result types.Channel
@@ -182,7 +182,7 @@ func (q Keeper) ChannelConsensusState(c context.Context, req *types.QueryChannel
 		)
 	}
 
-	consHeight := clienttypes.NewHeight(req.VersionNumber, req.VersionHeight)
+	consHeight := clienttypes.NewHeight(req.RevisionNumber, req.RevisionHeight)
 	consensusState, found := q.clientKeeper.GetClientConsensusState(ctx, connection.ClientId, consHeight)
 	if !found {
 		return nil, status.Error(

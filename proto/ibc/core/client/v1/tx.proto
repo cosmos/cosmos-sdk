@@ -1,0 +1,96 @@
+syntax = "proto3";
+package ibc.core.client.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types";
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "ibc/core/client/v1/client.proto";
+
+// Msg defines the ibc/client Msg service.
+service Msg {
+  // CreateClient defines a rpc handler method for MsgCreateClient.
+  rpc CreateClient(MsgCreateClient) returns (MsgCreateClientResponse);
+
+  // UpdateClient defines a rpc handler method for MsgUpdateClient.
+  rpc UpdateClient(MsgUpdateClient) returns (MsgUpdateClientResponse);
+
+  // UpgradeClient defines a rpc handler method for MsgUpgradeClient.
+  rpc UpgradeClient(MsgUpgradeClient) returns (MsgUpgradeClientResponse);
+
+  // SubmitMisbehaviour defines a rpc handler method for MsgSubmitMisbehaviour.
+  rpc SubmitMisbehaviour(MsgSubmitMisbehaviour) returns (MsgSubmitMisbehaviourResponse);
+}
+
+// MsgCreateClient defines a message to create an IBC client
+message MsgCreateClient {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // light client state
+  google.protobuf.Any client_state = 1 [(gogoproto.moretags) = "yaml:\"client_state\""];
+  // consensus state associated with the client that corresponds to a given
+  // height.
+  google.protobuf.Any consensus_state = 2 [(gogoproto.moretags) = "yaml:\"consensus_state\""];
+  // signer address
+  string signer = 3;
+}
+
+// MsgCreateClientResponse defines the Msg/CreateClient response type.
+message MsgCreateClientResponse {}
+
+// MsgUpdateClient defines an sdk.Msg to update a IBC client state using
+// the given header.
+message MsgUpdateClient {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // client unique identifier
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // header to update the light client
+  google.protobuf.Any header = 2;
+  // signer address
+  string signer = 3;
+}
+
+// MsgUpdateClientResponse defines the Msg/UpdateClient response type.
+message MsgUpdateClientResponse {}
+
+// MsgUpgradeClient defines an sdk.Msg to upgrade an IBC client to a new client state
+message MsgUpgradeClient {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // client unique identifier
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // upgraded client state
+  google.protobuf.Any client_state = 2 [(gogoproto.moretags) = "yaml:\"client_state\""];
+  // upgraded consensus state, only contains enough information to serve as a basis of trust in update logic
+  google.protobuf.Any consensus_state = 3 [(gogoproto.moretags) = "yaml:\"consensus_state\""];
+  // proof that old chain committed to new client
+  bytes proof_upgrade_client = 4 [(gogoproto.moretags) = "yaml:\"proof_upgrade_client\""];
+  // proof that old chain committed to new consensus state
+  bytes proof_upgrade_consensus_state = 5 [(gogoproto.moretags) = "yaml:\"proof_upgrade_consensus_state\""];
+  // signer address
+  string signer = 6;
+}
+
+// MsgUpgradeClientResponse defines the Msg/UpgradeClient response type.
+message MsgUpgradeClientResponse {}
+
+// MsgSubmitMisbehaviour defines an sdk.Msg type that submits Evidence for
+// light client misbehaviour.
+message MsgSubmitMisbehaviour {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // client unique identifier
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // misbehaviour used for freezing the light client
+  google.protobuf.Any misbehaviour = 2;
+  // signer address
+  string signer = 3;
+}
+
+// MsgSubmitMisbehaviourResponse defines the Msg/SubmitMisbehaviour response type.
+message MsgSubmitMisbehaviourResponse {}

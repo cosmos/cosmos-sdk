@@ -41,7 +41,7 @@ func (suite *SoloMachineTestSuite) SetupTest() {
 	suite.solomachine = ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachinesingle", "testing", 1)
 	suite.solomachineMulti = ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachinemulti", "testing", 4)
 
-	suite.store = suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), types.SoloMachine)
+	suite.store = suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), exported.Solomachine)
 }
 
 func TestSoloMachineTestSuite(t *testing.T) {
@@ -49,13 +49,13 @@ func TestSoloMachineTestSuite(t *testing.T) {
 }
 
 func (suite *SoloMachineTestSuite) GetSequenceFromStore() uint64 {
-	bz := suite.store.Get(host.KeyClientState())
+	bz := suite.store.Get(host.ClientStateKey())
 	suite.Require().NotNil(bz)
 
 	var clientState exported.ClientState
 	err := codec.UnmarshalAny(suite.chainA.Codec, &clientState, bz)
 	suite.Require().NoError(err)
-	return clientState.GetLatestHeight().GetVersionHeight()
+	return clientState.GetLatestHeight().GetRevisionHeight()
 }
 
 func (suite *SoloMachineTestSuite) GetInvalidProof() []byte {

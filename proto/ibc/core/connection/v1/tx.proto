@@ -18,7 +18,7 @@ service Msg {
 
   // ConnectionOpenAck defines a rpc handler method for MsgConnectionOpenAck.
   rpc ConnectionOpenAck(MsgConnectionOpenAck) returns (MsgConnectionOpenAckResponse);
-  
+
   // ConnectionOpenConfirm defines a rpc handler method for MsgConnectionOpenConfirm.
   rpc ConnectionOpenConfirm(MsgConnectionOpenConfirm) returns (MsgConnectionOpenConfirmResponse);
 }
@@ -29,15 +29,14 @@ message MsgConnectionOpenInit {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string       client_id     = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
-  string       connection_id = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
-  Counterparty counterparty  = 3 [(gogoproto.nullable) = false];
-  Version      version       = 4;
-  string       signer        = 5;
+  string       client_id    = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  Counterparty counterparty = 2 [(gogoproto.nullable) = false];
+  Version      version      = 3;
+  string       signer       = 4;
 }
 
 // MsgConnectionOpenInitResponse defines the Msg/ConnectionOpenInit response type.
-message MsgConnectionOpenInitResponse { }
+message MsgConnectionOpenInitResponse {}
 
 // MsgConnectionOpenTry defines a msg sent by a Relayer to try to open a
 // connection on Chain B.
@@ -45,28 +44,29 @@ message MsgConnectionOpenTry {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string client_id                         = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
-  string desired_connection_id             = 2 [(gogoproto.moretags) = "yaml:\"desired_connection_id\""];
-  string counterparty_chosen_connection_id = 3 [(gogoproto.moretags) = "yaml:\"counterparty_chosen_connection_id\""];
-  google.protobuf.Any client_state         = 4 [(gogoproto.moretags) = "yaml:\"client_state\""];
-  Counterparty        counterparty         = 5 [(gogoproto.nullable) = false];
-  repeated Version           counterparty_versions = 6 [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
-  ibc.core.client.v1.Height proof_height          = 7
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // in the case of crossing hello's, when both chains call OpenInit, we need the connection identifier
+  // of the previous connection in state INIT
+  string                    previous_connection_id = 2 [(gogoproto.moretags) = "yaml:\"previous_connection_id\""];
+  google.protobuf.Any       client_state           = 3 [(gogoproto.moretags) = "yaml:\"client_state\""];
+  Counterparty              counterparty           = 4 [(gogoproto.nullable) = false];
+  repeated Version          counterparty_versions  = 5 [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
+  ibc.core.client.v1.Height proof_height           = 6
       [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
   // proof of the initialization the connection on Chain A: `UNITIALIZED ->
   // INIT`
-  bytes proof_init = 8 [(gogoproto.moretags) = "yaml:\"proof_init\""];
+  bytes proof_init = 7 [(gogoproto.moretags) = "yaml:\"proof_init\""];
   // proof of client state included in message
-  bytes proof_client = 9 [(gogoproto.moretags) = "yaml:\"proof_client\""];
+  bytes proof_client = 8 [(gogoproto.moretags) = "yaml:\"proof_client\""];
   // proof of client consensus state
-  bytes                     proof_consensus  = 10 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
-  ibc.core.client.v1.Height consensus_height = 11
+  bytes                     proof_consensus  = 9 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
+  ibc.core.client.v1.Height consensus_height = 10
       [(gogoproto.moretags) = "yaml:\"consensus_height\"", (gogoproto.nullable) = false];
-  string signer = 12;
+  string signer = 11;
 }
 
 // MsgConnectionOpenTryResponse defines the Msg/ConnectionOpenTry response type.
-message MsgConnectionOpenTryResponse { }
+message MsgConnectionOpenTryResponse {}
 
 // MsgConnectionOpenAck defines a msg sent by a Relayer to Chain A to
 // acknowledge the change of connection state to TRYOPEN on Chain B.
@@ -93,7 +93,7 @@ message MsgConnectionOpenAck {
 }
 
 // MsgConnectionOpenAckResponse defines the Msg/ConnectionOpenAck response type.
-message MsgConnectionOpenAckResponse { }
+message MsgConnectionOpenAckResponse {}
 
 // MsgConnectionOpenConfirm defines a msg sent by a Relayer to Chain B to
 // acknowledge the change of connection state to OPEN on Chain A.
@@ -110,4 +110,4 @@ message MsgConnectionOpenConfirm {
 }
 
 // MsgConnectionOpenConfirmResponse defines the Msg/ConnectionOpenConfirm response type.
-message MsgConnectionOpenConfirmResponse { }
+message MsgConnectionOpenConfirmResponse {}

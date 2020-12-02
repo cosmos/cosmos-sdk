@@ -8,7 +8,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/store/types";
 // CommitInfo defines commit information used by the multi-store when committing
 // a version/height.
 message CommitInfo {
-  int64    version               = 1;
+  int64              version     = 1;
   repeated StoreInfo store_infos = 2 [(gogoproto.nullable) = false];
 }
 

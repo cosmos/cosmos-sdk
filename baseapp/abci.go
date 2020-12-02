@@ -379,8 +379,21 @@ func (app *BaseApp) snapshot(height int64) {
 
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
 // implements Queryable.
-func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
+func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	defer telemetry.MeasureSince(time.Now(), "abci", "query")
+
+	// Add panic recovery for all queries.
+	// ref: https://github.com/cosmos/cosmos-sdk/pull/8039
+	defer func() {
+		if r := recover(); r != nil {
+			res = sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrPanic, "%v", r))
+		}
+	}()
+
+	// when a client did not provide a query height, manually inject the latest
+	if req.Height == 0 {
+		req.Height = app.LastBlockHeight()
+	}
 
 	// handle gRPC routes first rather than calling splitPath because '/' characters
 	// are used as part of gRPC paths
@@ -741,11 +754,6 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) abci.R
 	}
 
 	req.Path = "/" + strings.Join(path[1:], "/")
-
-	// when a client did not provide a query height, manually inject the latest
-	if req.Height == 0 {
-		req.Height = app.LastBlockHeight()
-	}
 
 	if req.Height <= 1 && req.Prove {
 		return sdkerrors.QueryResult(

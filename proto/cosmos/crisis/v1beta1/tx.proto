@@ -22,4 +22,4 @@ message MsgVerifyInvariant {
 }
 
 // MsgVerifyInvariantResponse defines the Msg/VerifyInvariant response type.
-message MsgVerifyInvariantResponse {  }
+message MsgVerifyInvariantResponse {}

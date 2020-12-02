@@ -3,12 +3,39 @@ package query
 import (
 	"fmt"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-// defaultLimit is the default `limit` for queries
-// if the `limit` is not supplied, paginate will use `defaultLimit`
-const defaultLimit = 100
+// DefaultLimit is the default `limit` for queries
+// if the `limit` is not supplied, paginate will use `DefaultLimit`
+const DefaultLimit = 100
+
+// ParsePagination validate PageRequest and returns page number & limit.
+func ParsePagination(pageReq *PageRequest) (page, limit int, err error) {
+	offset := 0
+	limit = DefaultLimit
+
+	if pageReq != nil {
+		offset = int(pageReq.Offset)
+		limit = int(pageReq.Limit)
+	}
+	if offset < 0 {
+		return 1, 0, status.Error(codes.InvalidArgument, "offset must greater than 0")
+	}
+
+	if limit < 0 {
+		return 1, 0, status.Error(codes.InvalidArgument, "limit must greater than 0")
+	} else if limit == 0 {
+		limit = DefaultLimit
+	}
+
+	page = offset/limit + 1
+
+	return page, limit, nil
+}
 
 // Paginate does pagination of all the results in the PrefixStore based on the
 // provided PageRequest. onResult should be used to do actual unmarshaling.
@@ -33,7 +60,7 @@ func Paginate(
 	}
 
 	if limit == 0 {
-		limit = defaultLimit
+		limit = DefaultLimit
 
 		// count total results when the limit is zero/not supplied
 		countTotal = true

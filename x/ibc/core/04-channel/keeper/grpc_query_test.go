@@ -62,7 +62,7 @@ func (suite *KeeperTestSuite) TestQueryChannel() {
 		{
 			"success",
 			func() {
-				_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 				// init channel
 				channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
 				suite.Require().NoError(err)
@@ -377,7 +377,7 @@ func (suite *KeeperTestSuite) TestQueryChannelClientState() {
 		{
 			"success",
 			func() {
-				clientA, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				clientA, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 				// init channel
 				channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
 				suite.Require().NoError(err)
@@ -439,8 +439,8 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 				req = &types.QueryChannelConsensusStateRequest{
 					PortId:        "",
 					ChannelId:     "test-channel-id",
-					VersionNumber: 0,
-					VersionHeight: 1,
+					RevisionNumber: 0,
+					RevisionHeight: 1,
 				}
 			},
 			false,
@@ -451,8 +451,8 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 				req = &types.QueryChannelConsensusStateRequest{
 					PortId:        "test-port-id",
 					ChannelId:     "",
-					VersionNumber: 0,
-					VersionHeight: 1,
+					RevisionNumber: 0,
+					RevisionHeight: 1,
 				}
 			},
 			false,
@@ -463,8 +463,8 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 				req = &types.QueryChannelConsensusStateRequest{
 					PortId:        "test-port-id",
 					ChannelId:     "test-channel-id",
-					VersionNumber: 0,
-					VersionHeight: 1,
+					RevisionNumber: 0,
+					RevisionHeight: 1,
 				}
 			},
 			false,
@@ -484,8 +484,8 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 				req = &types.QueryChannelConsensusStateRequest{
 					PortId:        channelA.PortID,
 					ChannelId:     channelA.ID,
-					VersionNumber: 0,
-					VersionHeight: 1,
+					RevisionNumber: 0,
+					RevisionHeight: 1,
 				}
 			}, false,
 		},
@@ -497,15 +497,15 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 				req = &types.QueryChannelConsensusStateRequest{
 					PortId:        channelA.PortID,
 					ChannelId:     channelA.ID,
-					VersionNumber: 0,
-					VersionHeight: uint64(suite.chainA.GetContext().BlockHeight()), // use current height
+					RevisionNumber: 0,
+					RevisionHeight: uint64(suite.chainA.GetContext().BlockHeight()), // use current height
 				}
 			}, false,
 		},
 		{
 			"success",
 			func() {
-				clientA, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				clientA, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 				// init channel
 				channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
 				suite.Require().NoError(err)
@@ -518,8 +518,8 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 				req = &types.QueryChannelConsensusStateRequest{
 					PortId:        channelA.PortID,
 					ChannelId:     channelA.ID,
-					VersionNumber: clientState.GetLatestHeight().GetVersionNumber(),
-					VersionHeight: clientState.GetLatestHeight().GetVersionHeight(),
+					RevisionNumber: clientState.GetLatestHeight().GetRevisionNumber(),
+					RevisionHeight: clientState.GetLatestHeight().GetRevisionHeight(),
 				}
 			},
 			true,

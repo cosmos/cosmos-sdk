@@ -14,79 +14,82 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types";
 service Query {
   // Channel queries an IBC Channel.
   rpc Channel(QueryChannelRequest) returns (QueryChannelResponse) {
-    option (google.api.http).get = "/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}";
+    option (google.api.http).get = "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}";
   }
 
   // Channels queries all the IBC channels of a chain.
   rpc Channels(QueryChannelsRequest) returns (QueryChannelsResponse) {
-    option (google.api.http).get = "/ibc/channel/v1beta1/channels";
+    option (google.api.http).get = "/ibc/core/channel/v1beta1/channels";
   }
 
   // ConnectionChannels queries all the channels associated with a connection
   // end.
   rpc ConnectionChannels(QueryConnectionChannelsRequest) returns (QueryConnectionChannelsResponse) {
-    option (google.api.http).get = "/ibc/channel/v1beta1/connections/{connection}/channels";
+    option (google.api.http).get = "/ibc/core/channel/v1beta1/connections/{connection}/channels";
   }
 
   // ChannelClientState queries for the client state for the channel associated
   // with the provided channel identifiers.
   rpc ChannelClientState(QueryChannelClientStateRequest) returns (QueryChannelClientStateResponse) {
-    option (google.api.http).get = "/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/client_state";
+    option (google.api.http).get = "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/client_state";
   }
 
   // ChannelConsensusState queries for the consensus state for the channel
   // associated with the provided channel identifiers.
   rpc ChannelConsensusState(QueryChannelConsensusStateRequest) returns (QueryChannelConsensusStateResponse) {
-    option (google.api.http).get = "/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/consensus_state/version/"
-                                   "{version_number}/height/{version_height}";
+    option (google.api.http).get =
+        "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/consensus_state/revision/"
+        "{revision_number}/height/{revision_height}";
   }
 
   // PacketCommitment queries a stored packet commitment hash.
   rpc PacketCommitment(QueryPacketCommitmentRequest) returns (QueryPacketCommitmentResponse) {
     option (google.api.http).get =
-        "/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{sequence}";
+        "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{sequence}";
   }
 
   // PacketCommitments returns all the packet commitments hashes associated
   // with a channel.
   rpc PacketCommitments(QueryPacketCommitmentsRequest) returns (QueryPacketCommitmentsResponse) {
-    option (google.api.http).get = "/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments";
+    option (google.api.http).get = "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments";
   }
 
   // PacketReceipt queries if a given packet sequence has been received on the queried chain
   rpc PacketReceipt(QueryPacketReceiptRequest) returns (QueryPacketReceiptResponse) {
-    option (google.api.http).get = "/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_receipts/{sequence}";
+    option (google.api.http).get =
+        "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_receipts/{sequence}";
   }
 
   // PacketAcknowledgement queries a stored packet acknowledgement hash.
   rpc PacketAcknowledgement(QueryPacketAcknowledgementRequest) returns (QueryPacketAcknowledgementResponse) {
-    option (google.api.http).get = "/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acks/{sequence}";
+    option (google.api.http).get =
+        "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acks/{sequence}";
   }
 
   // PacketAcknowledgements returns all the packet acknowledgements associated
   // with a channel.
   rpc PacketAcknowledgements(QueryPacketAcknowledgementsRequest) returns (QueryPacketAcknowledgementsResponse) {
-    option (google.api.http).get = "/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acknowledgements";
+    option (google.api.http).get =
+        "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acknowledgements";
   }
-
 
   // UnreceivedPackets returns all the unreceived IBC packets associated with a
   // channel and sequences.
   rpc UnreceivedPackets(QueryUnreceivedPacketsRequest) returns (QueryUnreceivedPacketsResponse) {
-    option (google.api.http).get = "/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/"
+    option (google.api.http).get = "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/"
                                    "{packet_commitment_sequences}/unreceived_packets";
   }
 
   // UnreceivedAcks returns all the unreceived IBC acknowledgements associated with a
   // channel and sequences.
   rpc UnreceivedAcks(QueryUnreceivedAcksRequest) returns (QueryUnreceivedAcksResponse) {
-    option (google.api.http).get = "/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/"
+    option (google.api.http).get = "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/"
                                    "{packet_ack_sequences}/unreceived_acks";
   }
 
   // NextSequenceReceive returns the next receive sequence for a given channel.
   rpc NextSequenceReceive(QueryNextSequenceReceiveRequest) returns (QueryNextSequenceReceiveResponse) {
-    option (google.api.http).get = "/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/next_sequence";
+    option (google.api.http).get = "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/next_sequence";
   }
 }
 
@@ -173,10 +176,10 @@ message QueryChannelConsensusStateRequest {
   string port_id = 1;
   // channel unique identifier
   string channel_id = 2;
-  // version number of the consensus state
-  uint64 version_number = 3;
-  // version height of the consensus state
-  uint64 version_height = 4;
+  // revision number of the consensus state
+  uint64 revision_number = 3;
+  // revision height of the consensus state
+  uint64 revision_height = 4;
 }
 
 // QueryChannelClientStateResponse is the Response type for the

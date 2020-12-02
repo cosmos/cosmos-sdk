@@ -48,12 +48,11 @@ message Header {
 // Misbehaviour defines misbehaviour for a solo machine which consists
 // of a sequence and two signatures over different messages at that sequence.
 message Misbehaviour {
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = false;
-  string           client_id          = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
-  uint64           sequence           = 2;
-  SignatureAndData signature_one      = 3 [(gogoproto.moretags) = "yaml:\"signature_one\""];
-  SignatureAndData signature_two      = 4 [(gogoproto.moretags) = "yaml:\"signature_two\""];
+  option (gogoproto.goproto_getters) = false;
+  string           client_id         = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  uint64           sequence          = 2;
+  SignatureAndData signature_one     = 3 [(gogoproto.moretags) = "yaml:\"signature_one\""];
+  SignatureAndData signature_two     = 4 [(gogoproto.moretags) = "yaml:\"signature_two\""];
 }
 
 // SignatureAndData contains a signature and the data signed over to create that

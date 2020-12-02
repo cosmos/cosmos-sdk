@@ -2,12 +2,15 @@ package cli
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
 )
 
@@ -36,7 +39,12 @@ func GetCmdQueryAuthorizations() *cobra.Command {
 		Use:   "authorizations [granter-addr] [grantee-addr]",
 		Args:  cobra.ExactArgs(2),
 		Short: "query list of authorizations for a granter-grantee pair",
-		Long:  "query list of authorizations for a granter-grantee pair",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query list of authorizations for a granter-grantee pair:
+Example:
+$ %s query %s authorizations cosmos1skj.. cosmos1skjwj..
+`, version.AppName, types.ModuleName),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
@@ -58,8 +66,8 @@ func GetCmdQueryAuthorizations() *cobra.Command {
 			res, err := queryClient.Authorizations(
 				context.Background(),
 				&types.QueryAuthorizationsRequest{
-					GranterAddr: granterAddr.String(),
-					GranteeAddr: granteeAddr.String(),
+					Granter: granterAddr.String(),
+					Grantee: granteeAddr.String(),
 				},
 			)
 			if err != nil {
@@ -79,7 +87,12 @@ func GetCmdQueryAuthorization() *cobra.Command {
 		Use:   "authorization [granter-addr] [grantee-addr] [msg-type]",
 		Args:  cobra.ExactArgs(3),
 		Short: "query authorization for a granter-grantee pair",
-		Long:  "query authorization for a granter-grantee pair",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query authorization for a granter-grantee pair that matches the given msg-type:
+Example:
+$ %s query %s authorization cosmos1skjw.. cosmos1skjwj.. %s
+`, version.AppName, types.ModuleName, types.SendAuthorization{}.MethodName()),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
@@ -88,12 +101,12 @@ func GetCmdQueryAuthorization() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			granterAddr, err := sdk.AccAddressFromBech32(args[0])
+			granter, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			granteeAddr, err := sdk.AccAddressFromBech32(args[1])
+			grantee, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}
@@ -103,9 +116,9 @@ func GetCmdQueryAuthorization() *cobra.Command {
 			res, err := queryClient.Authorization(
 				context.Background(),
 				&types.QueryAuthorizationRequest{
-					GranterAddr: granterAddr.String(),
-					GranteeAddr: granteeAddr.String(),
-					MsgType:     msgAuthorized,
+					Granter: granter.String(),
+					Grantee: grantee.String(),
+					MsgType: msgAuthorized,
 				},
 			)
 			if err != nil {

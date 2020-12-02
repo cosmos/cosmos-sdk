@@ -15,11 +15,12 @@ service Query {
   // Returns any `Authorization` (or `nil`), with the expiration time, granted to the grantee by the granter for the
   // provided msg type.
   rpc Authorization(QueryAuthorizationRequest) returns (QueryAuthorizationResponse) {
-    option (google.api.http).get = "/cosmos/authz/v1beta1/granters/{granter_addr}/grantees/{grantee_addr}/grant";
+    option (google.api.http).get = "/cosmos/authz/v1beta1/granters/{granter}/grantees/{grantee}/grant";
   }
+  
   // Returns list of `Authorization`, granted to the grantee by the granter.
   rpc Authorizations(QueryAuthorizationsRequest) returns (QueryAuthorizationsResponse) {
-    option (google.api.http).get = "/cosmos/authz/v1beta1/granters/{granter_addr}/grantees/{grantee_addr}/grants";
+    option (google.api.http).get = "/cosmos/authz/v1beta1/granters/{granter}/grantees/{grantee}/grants";
   }
 }
 
@@ -28,9 +29,9 @@ message QueryAuthorizationRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string granter_addr = 1;
-  string grantee_addr = 2;
-  string msg_type     = 3;
+  string granter  = 1;
+  string grantee  = 2;
+  string msg_type = 3;
 }
 
 // QueryAuthorizationResponse is the response type for the Query/Authorization RPC method.
@@ -44,8 +45,8 @@ message QueryAuthorizationsRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string granter_addr = 1;
-  string grantee_addr = 2;
+  string granter = 1;
+  string grantee = 2;
   // pagination defines an pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }

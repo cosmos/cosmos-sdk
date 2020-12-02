@@ -32,7 +32,7 @@ var _ = utilities.NewDoubleArray
 var _ = descriptor.ForMessage
 
 var (
-	filter_Query_Authorization_0 = &utilities.DoubleArray{Encoding: map[string]int{"granter_addr": 0, "grantee_addr": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
+	filter_Query_Authorization_0 = &utilities.DoubleArray{Encoding: map[string]int{"granter": 0, "grantee": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
 )
 
 func request_Query_Authorization_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -46,26 +46,26 @@ func request_Query_Authorization_0(ctx context.Context, marshaler runtime.Marsha
 		_   = err
 	)
 
-	val, ok = pathParams["granter_addr"]
+	val, ok = pathParams["granter"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "granter_addr")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "granter")
 	}
 
-	protoReq.GranterAddr, err = runtime.String(val)
+	protoReq.Granter, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "granter_addr", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "granter", err)
 	}
 
-	val, ok = pathParams["grantee_addr"]
+	val, ok = pathParams["grantee"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "grantee_addr")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "grantee")
 	}
 
-	protoReq.GranteeAddr, err = runtime.String(val)
+	protoReq.Grantee, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "grantee_addr", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "grantee", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -91,26 +91,26 @@ func local_request_Query_Authorization_0(ctx context.Context, marshaler runtime.
 		_   = err
 	)
 
-	val, ok = pathParams["granter_addr"]
+	val, ok = pathParams["granter"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "granter_addr")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "granter")
 	}
 
-	protoReq.GranterAddr, err = runtime.String(val)
+	protoReq.Granter, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "granter_addr", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "granter", err)
 	}
 
-	val, ok = pathParams["grantee_addr"]
+	val, ok = pathParams["grantee"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "grantee_addr")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "grantee")
 	}
 
-	protoReq.GranteeAddr, err = runtime.String(val)
+	protoReq.Grantee, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "grantee_addr", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "grantee", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -126,7 +126,7 @@ func local_request_Query_Authorization_0(ctx context.Context, marshaler runtime.
 }
 
 var (
-	filter_Query_Authorizations_0 = &utilities.DoubleArray{Encoding: map[string]int{"granter_addr": 0, "grantee_addr": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
+	filter_Query_Authorizations_0 = &utilities.DoubleArray{Encoding: map[string]int{"granter": 0, "grantee": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
 )
 
 func request_Query_Authorizations_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -140,26 +140,26 @@ func request_Query_Authorizations_0(ctx context.Context, marshaler runtime.Marsh
 		_   = err
 	)
 
-	val, ok = pathParams["granter_addr"]
+	val, ok = pathParams["granter"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "granter_addr")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "granter")
 	}
 
-	protoReq.GranterAddr, err = runtime.String(val)
+	protoReq.Granter, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "granter_addr", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "granter", err)
 	}
 
-	val, ok = pathParams["grantee_addr"]
+	val, ok = pathParams["grantee"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "grantee_addr")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "grantee")
 	}
 
-	protoReq.GranteeAddr, err = runtime.String(val)
+	protoReq.Grantee, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "grantee_addr", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "grantee", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -185,26 +185,26 @@ func local_request_Query_Authorizations_0(ctx context.Context, marshaler runtime
 		_   = err
 	)
 
-	val, ok = pathParams["granter_addr"]
+	val, ok = pathParams["granter"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "granter_addr")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "granter")
 	}
 
-	protoReq.GranterAddr, err = runtime.String(val)
+	protoReq.Granter, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "granter_addr", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "granter", err)
 	}
 
-	val, ok = pathParams["grantee_addr"]
+	val, ok = pathParams["grantee"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "grantee_addr")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "grantee")
 	}
 
-	protoReq.GranteeAddr, err = runtime.String(val)
+	protoReq.Grantee, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "grantee_addr", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "grantee", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -350,9 +350,9 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Authorization_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"cosmos", "authz", "v1beta1", "granters", "granter_addr", "grantees", "grantee_addr", "grant"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Authorization_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"cosmos", "authz", "v1beta1", "granters", "granter", "grantees", "grantee", "grant"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Authorizations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"cosmos", "authz", "v1beta1", "granters", "granter_addr", "grantees", "grantee_addr", "grants"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Authorizations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"cosmos", "authz", "v1beta1", "granters", "granter", "grantees", "grantee", "grants"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

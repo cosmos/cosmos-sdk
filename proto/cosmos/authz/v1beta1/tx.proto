@@ -14,10 +14,12 @@ service Msg {
   // GrantAuthorization grants the provided authorization to the grantee on the granter's
   // account with the provided expiration time.
   rpc GrantAuthorization(MsgGrantAuthorization) returns (MsgGrantAuthorizationResponse);
+
   // ExecAuthorized attempts to execute the provided messages using
   // authorizations granted to the grantee. Each message should have only
   // one signer corresponding to the granter of the authorization.
   rpc ExecAuthorized(MsgExecAuthorized) returns (MsgExecAuthorizedResponse);
+
   // RevokeAuthorization revokes any authorization corresponding to the provided method name on the
   // granter's account that has been granted to the grantee.
   rpc RevokeAuthorization(MsgRevokeAuthorization) returns (MsgRevokeAuthorizationResponse);

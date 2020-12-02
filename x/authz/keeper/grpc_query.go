@@ -24,20 +24,20 @@ func (k Keeper) Authorizations(c context.Context, req *types.QueryAuthorizations
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if req.GranterAddr == "" {
+	if req.Granter == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid granter addr")
 	}
 
-	if req.GranteeAddr == "" {
+	if req.Grantee == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid grantee addr")
 	}
 
-	granterAddr, err := sdk.AccAddressFromBech32(req.GranterAddr)
+	granter, err := sdk.AccAddressFromBech32(req.Granter)
 
 	if err != nil {
 		return nil, err
 	}
-	granteeAddr, err := sdk.AccAddressFromBech32(req.GranteeAddr)
+	grantee, err := sdk.AccAddressFromBech32(req.Grantee)
 
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func (k Keeper) Authorizations(c context.Context, req *types.QueryAuthorizations
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetActorAuthorizationKey(granteeAddr, granterAddr, "")
+	key := types.GetActorAuthorizationKey(grantee, granter, "")
 	authStore := prefix.NewStore(store, key)
 	var authorizations []*types.AuthorizationGrant
 	pageRes, err := query.FilteredPaginate(authStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
@@ -93,11 +93,11 @@ func (k Keeper) Authorization(c context.Context, req *types.QueryAuthorizationRe
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if req.GranterAddr == "" {
+	if req.Granter == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid granter addr")
 	}
 
-	if req.GranteeAddr == "" {
+	if req.Grantee == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid grantee addr")
 	}
 
@@ -105,19 +105,19 @@ func (k Keeper) Authorization(c context.Context, req *types.QueryAuthorizationRe
 		return nil, status.Errorf(codes.InvalidArgument, "invalid msg-type")
 	}
 
-	granterAddr, err := sdk.AccAddressFromBech32(req.GranterAddr)
+	granter, err := sdk.AccAddressFromBech32(req.Granter)
 
 	if err != nil {
 		return nil, err
 	}
-	granteeAddr, err := sdk.AccAddressFromBech32(req.GranteeAddr)
+	grantee, err := sdk.AccAddressFromBech32(req.Grantee)
 
 	if err != nil {
 		return nil, err
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	authorization, expiration := k.GetAuthorization(ctx, granteeAddr, granterAddr, req.MsgType)
+	authorization, expiration := k.GetAuthorization(ctx, grantee, granter, req.MsgType)
 	if authorization == nil {
 		return nil, status.Errorf(codes.NotFound, "no authorization found for %s type", req.MsgType)
 	}

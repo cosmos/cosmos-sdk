@@ -208,7 +208,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Equal(len(grpcRes.Txs), 1)
+				s.Require().GreaterOrEqual(len(grpcRes.Txs), 1)
 				s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
 			}
 		})
@@ -392,10 +392,8 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
 		expErr    bool
 		expErrMsg string
 	}{
-		{"empty request", &tx.BroadcastTxRequest{}, true, "unknown value \"unspecified\" for enum cosmos.tx.v1beta1.BroadcastMode"},
-		{"no mode", &tx.BroadcastTxRequest{
-			TxBytes: txBytes,
-		}, true, "unknown value \"unspecified\" for enum cosmos.tx.v1beta1.BroadcastMode"},
+		{"empty request", &tx.BroadcastTxRequest{}, true, "invalid empty tx"},
+		{"no mode", &tx.BroadcastTxRequest{TxBytes: txBytes}, true, "supported types: sync, async, block"},
 		{"valid request", &tx.BroadcastTxRequest{
 			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
 			TxBytes: txBytes,
@@ -405,9 +403,11 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			req, err := val.ClientCtx.JSONMarshaler.MarshalJSON(tc.req)
+			fmt.Println("ABC req=", string(req))
 			s.Require().NoError(err)
 			res, err := rest.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress), "application/json", req)
 			s.Require().NoError(err)
+			fmt.Println("ABC res=", string(res))
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {

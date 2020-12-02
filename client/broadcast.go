@@ -153,7 +153,7 @@ func TxServiceBroadcast(grpcCtx context.Context, clientCtx Context, req *tx.Broa
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
 	}
 
-	clientCtx = clientCtx.WithBroadcastMode(req.Mode.String())
+	clientCtx = clientCtx.WithBroadcastMode(normalizeBroadcastMode(req.Mode))
 	resp, err := clientCtx.BroadcastTx(req.TxBytes)
 	if err != nil {
 		return nil, err
@@ -162,4 +162,19 @@ func TxServiceBroadcast(grpcCtx context.Context, clientCtx Context, req *tx.Broa
 	return &tx.BroadcastTxResponse{
 		TxResponse: resp,
 	}, nil
+}
+
+// normalizeBroadcastMode converts a broadcast mode into a normalized string
+// to be passed into the clientCtx.
+func normalizeBroadcastMode(mode tx.BroadcastMode) string {
+	switch mode {
+	case tx.BroadcastMode_BROADCAST_MODE_ASYNC:
+		return "async"
+	case tx.BroadcastMode_BROADCAST_MODE_BLOCK:
+		return "block"
+	case tx.BroadcastMode_BROADCAST_MODE_SYNC:
+		return "sync"
+	default:
+		return "unspecified"
+	}
 }

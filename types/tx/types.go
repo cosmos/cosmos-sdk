@@ -193,17 +193,3 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 func isServiceMsg(typeURL string) bool {
 	return strings.Count(typeURL, "/") >= 2
 }
-
-// String implements the Stringer interface.
-func (bm BroadcastMode) String() string {
-	switch bm {
-	case BroadcastMode_BROADCAST_MODE_ASYNC:
-		return "async"
-	case BroadcastMode_BROADCAST_MODE_BLOCK:
-		return "block"
-	case BroadcastMode_BROADCAST_MODE_SYNC:
-		return "sync"
-	default:
-		return "unspecified"
-	}
-}

@@ -14,7 +14,7 @@ This repository contains reference documentation on the core concepts of the Cos
 4. [Node Client](./node.md)
 5. [Store](./store.md)
 6. [Encoding](./encoding.md)
-7. [gRPC, REST and Other Endpoints](./grpc_rest.md)
+7. [gRPC, REST and Tendermint Endpoints](./grpc_rest.md)
 8. [Events](./events.md)
 9. [Telemetry](./telemetry.md)
 10. [Object-Capabilities](./ocap.md)

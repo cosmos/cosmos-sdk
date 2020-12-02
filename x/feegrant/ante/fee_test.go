@@ -3,14 +3,18 @@ package ante_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/cosmos/cosmos-sdk/client"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/ante"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
@@ -21,7 +25,11 @@ import (
 // in order to allow payment of fees via a grant.
 //
 // This is used for our full-stack tests
-func newAnteHandler(ak authkeeper.AccountKeeper, supplyKeeper authtypes.SupplyKeeper, dk keeper.Keeper, sigGasConsumer authante.SignatureVerificationGasConsumer) sdk.AnteHandler {
+func newAnteHandler(
+	ak authkeeper.AccountKeeper, bankKeeper authtypes.BankKeeper,
+	dk keeper.Keeper, sigGasConsumer authante.SignatureVerificationGasConsumer,
+	signModeHandler signing.SignModeHandler,
+) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		authante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		authante.NewMempoolFeeDecorator(),
@@ -30,31 +38,69 @@ func newAnteHandler(ak authkeeper.AccountKeeper, supplyKeeper authtypes.SupplyKe
 		authante.NewConsumeGasForTxSizeDecorator(ak),
 		// DeductGrantedFeeDecorator will create an empty account if we sign with no tokens but valid validation
 		// This must be before SetPubKey, ValidateSigCount, SigVerification, which error if account doesn't exist yet
-		ante.NewDeductGrantedFeeDecorator(ak, supplyKeeper, dk),
+		ante.NewDeductGrantedFeeDecorator(ak, bankKeeper, dk),
 		authante.NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
 		authante.NewValidateSigCountDecorator(ak),
 		authante.NewSigGasConsumeDecorator(ak, sigGasConsumer),
-		authante.NewSigVerificationDecorator(ak),
+		authante.NewSigVerificationDecorator(ak, signModeHandler),
 		authante.NewIncrementSequenceDecorator(ak), // innermost AnteDecorator
 	)
 }
 
-func TestDeductFeesNoDelegation(t *testing.T) {
+// AnteTestSuite is a test suite to be used with ante handler tests.
+type AnteTestSuite struct {
+	suite.Suite
+
+	app         *simapp.SimApp
+	anteHandler sdk.AnteHandler
+	ctx         sdk.Context
+	clientCtx   client.Context
+	txBuilder   client.TxBuilder
+}
+
+// returns context and app with params set on account keeper
+// func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
+// 	app := simapp.Setup(isCheckTx)
+// 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
+// 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+
+// 	return app, ctx
+// }
+
+// SetupTest setups a new test, with new app, context, and anteHandler.
+func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
+	suite.app, suite.ctx = createTestApp(isCheckTx)
+	suite.ctx = suite.ctx.WithBlockHeight(1)
+
+	// Set up TxConfig.
+	encodingConfig := simapp.MakeTestEncodingConfig()
+	// We're using TestMsg encoding in some tests, so register it here.
+	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
+	testdata.RegisterInterfaces(encodingConfig.InterfaceRegistry)
+
+	suite.clientCtx = client.Context{}.
+		WithTxConfig(encodingConfig.TxConfig)
+
+	suite.anteHandler = newAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper, authante.DefaultSigVerificationGasConsumer, encodingConfig.TxConfig.SignModeHandler())
+}
+
+func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
+	suite.SetupTest(true)
 	// setup
-	app, ctx := createTestApp(true)
+	app, ctx := suite.app, suite.ctx
 
 	// this just tests our handler
-	dfd := ante.NewDeductGrantedFeeDecorator(app.AccountKeeper, app.SupplyKeeper, app.FeeGrantKeeper)
+	dfd := ante.NewDeductGrantedFeeDecorator(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper)
 	ourAnteHandler := sdk.ChainAnteDecorators(dfd)
 
 	// this tests the whole stack
-	anteHandlerStack := newAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.FeeGrantKeeper, SigGasNoConsumer)
+	anteHandlerStack := suite.anteHandler
 
 	// keys and addresses
-	priv1, _, addr1 := authtypes.KeyTestPubAddr()
-	priv2, _, addr2 := authtypes.KeyTestPubAddr()
-	priv3, _, addr3 := authtypes.KeyTestPubAddr()
-	priv4, _, addr4 := authtypes.KeyTestPubAddr()
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	priv2, _, addr2 := testdata.KeyTestPubAddr()
+	priv3, _, addr3 := testdata.KeyTestPubAddr()
+	priv4, _, addr4 := testdata.KeyTestPubAddr()
 
 	// Set addr1 with insufficient funds
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
@@ -67,40 +113,26 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 	app.BankKeeper.SetBalances(ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99999))})
 
 	// Set grant from addr2 to addr3 (plenty to pay)
-	app.FeeGrantKeeper.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
-		Granter: addr2,
-		Grantee: addr3,
-		Allowance: &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
-			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
-		},
-		},
-		},
+	app.FeeGrantKeeper.GrantFeeAllowance(ctx, addr2, addr3, &types.BasicFeeAllowance{
+		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
 	})
 
 	// Set low grant from addr2 to addr4 (keeper will reject)
-	app.FeeGrantKeeper.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
-		Granter: addr2,
-		Grantee: addr4,
-		Allowance: &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
-			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 20)),
-		},
-		},
-		},
+	app.FeeGrantKeeper.GrantFeeAllowance(ctx, addr2, addr4, &types.BasicFeeAllowance{
+		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 20)),
 	})
 
 	// Set grant from addr1 to addr4 (cannot cover this )
-	app.FeeGrantKeeper.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
-		Granter: addr2,
-		Grantee: addr3,
-		Allowance: &types.FeeAllowance{Sum: &types.FeeAllowance_BasicFeeAllowance{BasicFeeAllowance: &types.BasicFeeAllowance{
-			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
-		},
-		},
-		},
+	app.FeeGrantKeeper.GrantFeeAllowance(ctx, addr2, addr3, &types.BasicFeeAllowance{
+		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
 	})
 
+	// app.FeeGrantKeeper.GrantFeeAllowance(ctx, addr1, addr4, &types.BasicFeeAllowance{
+	// 	SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
+	// })
+
 	cases := map[string]struct {
-		signerKey  crypto.PrivKey
+		signerKey  cryptotypes.PrivKey
 		signer     sdk.AccAddress
 		feeAccount sdk.AccAddress
 		handler    sdk.AnteHandler
@@ -246,19 +278,19 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 
 	for name, stc := range cases {
 		tc := stc // to make scopelint happy
-		t.Run(name, func(t *testing.T) {
+		suite.T().Run(name, func(t *testing.T) {
 			// msg and signatures
 			fee := types.NewGrantedFee(100000, sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee)), tc.feeAccount)
-			msgs := []sdk.Msg{sdk.NewTestMsg(tc.signer)}
-			privs, accNums, seqs := []crypto.PrivKey{tc.signerKey}, []uint64{0}, []uint64{0}
+			msgs := []sdk.Msg{testdata.NewTestMsg(tc.signer)}
+			privs, accNums, seqs := []cryptotypes.PrivKey{tc.signerKey}, []uint64{0}, []uint64{0}
 
 			tx := types.NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
 			_, err := tc.handler(ctx, tx, false)
 			if tc.valid {
-				require.NoError(t, err)
+				suite.Require().NoError(err)
 			} else {
-				require.Error(t, err)
+				suite.Require().Error(err)
 			}
 		})
 	}
@@ -267,7 +299,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 // returns context and app with params set on account keeper
 func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(isCheckTx)
-	ctx := app.BaseApp.NewContext(isCheckTx, abci.Header{})
+	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
 	return app, ctx
@@ -276,4 +308,8 @@ func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 // don't cosume any gas
 func SigGasNoConsumer(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params authtypes.Params) error {
 	return nil
+}
+
+func TestAnteTestSuite(t *testing.T) {
+	suite.Run(t, new(AnteTestSuite))
 }

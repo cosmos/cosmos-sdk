@@ -10,6 +10,42 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// EpochCreateValidatorSelfDelegation does do self-delegation
+func (k Keeper) EpochCreateValidatorSelfDelegation(ctx sdk.Context, msg *types.MsgCreateValidator) error {
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		return err
+	}
+
+	// check to see if the pubkey or sender has been registered before
+	validator, found := k.GetValidator(ctx, valAddr)
+	if !found {
+		return types.ErrNoValidatorFound
+	}
+
+	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return err
+	}
+
+	// move coins from the msg.Address account to a (self-delegation) delegator account
+	// the validator account and global shares are updated within here
+	// NOTE source will always be from a wallet which are unbonded
+
+	// Thoughts: since delegation goes to Unbonded pool, as long as we only run validator set update on epochs, it won't affect
+	// anything.
+	// Warn: Within slashing module, we should update only partial validator set instead of full since it can automatically
+	// set newly created validators to Bonded status
+	// I think keeping this as it is is quite good as delegators are not needed to wait for validator to be created
+	// on epochs but just delegate to validators that is going to be activated on next epoch
+	_, err = k.Delegate(ctx, delegatorAddress, msg.Value.Amount, types.Unbonded, validator, true)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // EpochEditValidator logic is moved from msgServer.EditValidator
 func (k Keeper) EpochEditValidator(ctx sdk.Context, msg *types.MsgEditValidator) error {
 	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)

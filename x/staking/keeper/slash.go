@@ -7,31 +7,6 @@ import (
 	types "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// keys
-var (
-	FlaggedValidators = []byte("flagged_validators")
-)
-
-// FlagValidator put the validator in flagged list for validator set update  on endblocker
-func (k Keeper) FlagValidator(ctx sdk.Context, validator types.Validator) {
-
-}
-
-// GetFlaggedValidators returns flagged validator listing
-func (k Keeper) GetFlaggedValidators(ctx sdk.Context) []types.Validator {
-	return []types.Validator{}
-}
-
-// CleanFlaggedValidators clean flagged validators
-func (k Keeper) CleanFlaggedValidators(ctx sdk.Context) {
-
-}
-
-// FlaggedValidatorsIterator returns iterator for flagged validators
-func (k Keeper) FlaggedValidatorsIterator(ctx sdk.Context) types.Iterator {
-
-}
-
 // Slash a validator for an infraction committed at a known height
 // Find the contributing stake at that height and burn the specified slashFactor
 // of it, updating unbonding delegations & redelegations appropriately
@@ -157,10 +132,6 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		panic("invalid validator status")
 	}
 
-	// record this validator as flagged and do validator set update on endblocker
-	// even though it's not the epoch
-	k.FlagValidator(ctx, validator)
-
 	// Log that a slash occurred!
 	logger.Info(fmt.Sprintf(
 		"validator %s slashed by slash factor of %s; burned %v tokens",
@@ -171,10 +142,6 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)
 	k.jailValidator(ctx, validator)
-
-	// record this validator as flagged and do validator set update on endblocker
-	// even though it's not the epoch
-	k.FlagValidator(ctx, validator)
 
 	logger := k.Logger(ctx)
 	logger.Info(fmt.Sprintf("validator %s jailed", consAddr))

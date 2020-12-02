@@ -78,11 +78,6 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 		return nil, err
 	}
 
-	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	if err != nil {
-		return nil, err
-	}
-
 	validator.MinSelfDelegation = msg.MinSelfDelegation
 
 	k.SetValidator(ctx, validator)
@@ -92,20 +87,8 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	// call the after-creation hook
 	k.AfterValidatorCreated(ctx, validator.GetOperator())
 
-	// move coins from the msg.Address account to a (self-delegation) delegator account
-	// the validator account and global shares are updated within here
-	// NOTE source will always be from a wallet which are unbonded
-
-	// Thoughts: since delegation goes to Unbonded pool, as long as we only run validator set update on epochs, it won't affect
-	// anything.
-	// Warn: Within slashing module, we should update only partial validator set instead of full since it can automatically
-	// set newly created validators to Bonded status
-	// I think keeping this as it is is quite good as delegators are not needed to wait for validator to be created
-	// on epochs but just delegate to validators that is going to be activated on next epoch
-	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Value.Amount, types.Unbonded, validator, true)
-	if err != nil {
-		return nil, err
-	}
+	epochNumber := k.GetEpochNumber(ctx)
+	k.SaveEpochAction(ctx, epochNumber, msg)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

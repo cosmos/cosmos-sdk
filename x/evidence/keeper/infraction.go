@@ -114,6 +114,7 @@ func (k Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 	// Jail the validator if not already jailed. This will begin unbonding the
 	// validator if not already unbonding (tombstoned).
 	if !validator.IsJailed() {
+		// This initiates jail based on double sign
 		k.slashingKeeper.Jail(ctx, consAddr)
 	}
 

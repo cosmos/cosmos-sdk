@@ -14,7 +14,7 @@ import (
 
 // Calculate the ValidatorUpdates for the epoch
 // Called in each EndBlock
-func (k Keeper) EpochValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
+func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 	// Calculate validator set changes.
 	//
 	// NOTE: ApplyAndReturnValidatorSetUpdates has to come before
@@ -28,12 +28,6 @@ func (k Keeper) EpochValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 	if err != nil {
 		panic(err)
 	}
-
-	// TODO should update BlockValidatorUpdates term to EpochValidatorUpdates
-	//
-	// TODO unbonding/redelegating/undelegating actions which wait for 3 weeks should be put inside a new function
-	// and should be called on every block
-	// TODO should check which function is moving Unbonded to Bonded for new validator or unjailed vaildator (Probably ApplyAndReturnValidatorSetUpdates?)
 
 	// unbond all mature validators from the unbonding queue
 	k.UnbondAllMatureValidators(ctx)
@@ -100,15 +94,11 @@ func (k Keeper) EpochValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 		)
 	}
 
-	return validatorUpdates
-}
+	// TODO should check which function is moving Unbonded to Bonded for new validator or unjailed vaildator
+	// (Probably ApplyAndReturnValidatorSetUpdates?)
+	// We might need to move to Unbonded to Bonded only on epoch and move to Unbonded instantly
 
-// BlockValidatorUpdates is for slash / jail, only update flagged validators to be updated
-func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
-	// TODO should update validator set within the flagged listing
-	// TODO should remove all the flagged validators after use
-	// TODO should use iterator for processing all at 1 iteration
-	return []abci.ValidatorUpdate{}
+	return validatorUpdates
 }
 
 // Apply and return accumulated updates to the bonded validator set. Also,

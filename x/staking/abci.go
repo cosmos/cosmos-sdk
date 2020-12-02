@@ -34,6 +34,8 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 			msg := k.GetEpochActionByIterator(iterator)
 
 			switch msg := msg.(type) {
+			case *types.MsgCreateValidator:
+				k.EpochCreateValidatorSelfDelegation(ctx, msg)
 			case *types.MsgEditValidator:
 				// TODO what should we do if error happen for queued action?
 				k.EpochEditValidator(ctx, msg)
@@ -50,10 +52,9 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 			k.DeleteByKey(ctx, iterator.Key())
 		}
 
-		// defer TODO should update epochNumber after epoch finish
+		// Update epochNumber after epoch finish
 		// This won't affect slashing module since slashing Endblocker run before staking module
-
-		return k.EpochValidatorUpdates(ctx)
+		k.IncreaseEpochNumber(ctx)
 	}
 
 	// run block validator updates for slashed, jailed validators

@@ -138,3 +138,9 @@ func (k Keeper) GetEpochNumber(ctx sdk.Context) int64 {
 
 	return int64(sdk.BigEndianToUint64(bz))
 }
+
+// IncreaseEpochNumber increases epoch number
+func (k Keeper) IncreaseEpochNumber(ctx sdk.Context) {
+	epochNumber := k.GetEpochNumber(ctx)
+	k.SetEpochNumber(ctx, epochNumber+1)
+}

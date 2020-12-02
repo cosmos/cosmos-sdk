@@ -90,9 +90,9 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 					sdk.NewAttribute(types.AttributeKeyJailed, consAddr.String()),
 				),
 			)
-			// This initiate slashing based on down time
+			// This initiates slashing based on down time
 			k.sk.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
-			// This initiate jail based on double sign
+			// This initiates jail based on down time
 			k.sk.Jail(ctx, consAddr)
 
 			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeJailDuration(ctx))

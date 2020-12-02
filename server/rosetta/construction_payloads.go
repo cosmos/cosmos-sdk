@@ -29,7 +29,7 @@ func (l launchpad) ConstructionPayloads(ctx context.Context, req *types.Construc
 	tx := auth.NewStdTx(msgs, auth.StdFee{
 		Amount: fee,
 		Gas:    metadata.Gas,
-	}, nil, "TODO memo") // TODO fees and memo.
+	}, nil, metadata.Memo)
 	signBytes := auth.StdSignBytes(
 		metadata.ChainID, metadata.AccountNumber, metadata.Sequence, tx.Fee, tx.Msgs, tx.Memo,
 	)

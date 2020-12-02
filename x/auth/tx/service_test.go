@@ -309,17 +309,17 @@ func (s IntegrationTestSuite) TestGetTx_GRPCGateway() {
 	}{
 		{
 			"empty params",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/tx/", val.APIAddress),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/", val.APIAddress),
 			true, "transaction hash cannot be empty",
 		},
 		{
 			"dummy hash",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/tx/%s", val.APIAddress, "deadbeef"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/%s", val.APIAddress, "deadbeef"),
 			true, "tx (DEADBEEF) not found",
 		},
 		{
 			"good hash",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/tx/%s", val.APIAddress, s.txRes.TxHash),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/%s", val.APIAddress, s.txRes.TxHash),
 			false, "",
 		},
 	}

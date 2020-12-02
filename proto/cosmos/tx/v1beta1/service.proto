@@ -20,7 +20,7 @@ service Service {
   }
   // GetTx fetches a tx by hash.
   rpc GetTx(GetTxRequest) returns (GetTxResponse) {
-    option (google.api.http).get = "/cosmos/tx/v1beta1/tx/{hash}";
+    option (google.api.http).get = "/cosmos/tx/v1beta1/txs/{hash}";
   }
   // BroadcastTx broadcast transaction.
   rpc BroadcastTx(BroadcastTxRequest) returns (BroadcastTxResponse) {

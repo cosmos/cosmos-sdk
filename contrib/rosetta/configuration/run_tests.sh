@@ -20,10 +20,10 @@ echo "waiting for rosetta instance to be up"
 wait_for_rosetta
 
 echo "checking data API"
-rosetta-cli check:data --configuration-file rosetta.json
+rosetta-cli check:data --configuration-file ./config/rosetta.json
 
 echo "checking construction API"
-rosetta-cli check:construction --configuration-file rosetta.json
+rosetta-cli check:construction --configuration-file ./config/rosetta.json
 
 echo "checking staking API"
-rosetta-cli check:construction --configuration-file staking.json
+rosetta-cli check:construction --configuration-file ./config/staking.json

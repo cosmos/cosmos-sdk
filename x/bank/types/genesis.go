@@ -58,13 +58,6 @@ func NewGenesisState(params Params, balances []Balance, supply sdk.Coins, denomM
 	}
 }
 
-/*
-func DefaultMetadata() []Metadata {
-	defaultMetaData := Metadata{Description: sdk.DefaultBondDenom, Base: sdk.DefaultBondDenom, Display: sdk.DefaultBondDenom}
-	return []Metadata{defaultMetaData}
-}
-*/
-
 // DefaultGenesisState returns a default bank module genesis state.
 func DefaultGenesisState() *GenesisState {
 	return NewGenesisState(DefaultParams(), []Balance{}, DefaultSupply().GetTotal(), []Metadata{})

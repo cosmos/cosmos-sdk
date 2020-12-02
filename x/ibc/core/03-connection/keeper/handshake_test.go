@@ -41,8 +41,9 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 			version = &types.Version{}
 		}, false},
 		{"couldn't add connection to client", func() {
-			// swap client identifiers to result in client that does not exist
-			clientB, clientA = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+			// set clientA to invalid client identifier
+			clientA = "clientidentifier"
 		}, false},
 	}
 

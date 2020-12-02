@@ -37,6 +37,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 
 ### Improvements
+* (crypto) [\#7987](https://github.com/cosmos/cosmos-sdk/pull/7987) Fix the inconsistency of CryptoCdc, only use `codec/legacy.Cdc`.
 * (SDK) [\#7925](https://github.com/cosmos/cosmos-sdk/pull/7925) Updated dependencies to use gRPC v1.33.2
   * Updated gRPC dependency to v1.33.2
   * Updated iavl dependency to v0.15-rc2

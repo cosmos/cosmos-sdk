@@ -405,7 +405,7 @@ func (s *IntegrationTestSuite) broadcastReq(stdTx legacytx.StdTx, mode string) (
 // testQueryIBCTx is a helper function to test querying txs which:
 // - show an error message on legacy REST endpoints
 // - succeed using gRPC
-// In practise, we call this function on IBC txs.
+// In practice, we call this function on IBC txs.
 func (s *IntegrationTestSuite) testQueryIBCTx(txRes sdk.TxResponse, cmd *cobra.Command, args []string) {
 	val := s.network.Validators[0]
 
@@ -441,7 +441,7 @@ func (s *IntegrationTestSuite) testQueryIBCTx(txRes sdk.TxResponse, cmd *cobra.C
 	}
 
 	// try fetching the txn using gRPC req, it will fetch info since it has proto codec.
-	grpcJSON, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/tx/%s", val.APIAddress, txRes.TxHash))
+	grpcJSON, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/%s", val.APIAddress, txRes.TxHash))
 	s.Require().NoError(err)
 
 	var getTxRes txtypes.GetTxResponse
@@ -513,7 +513,6 @@ func (s *IntegrationTestSuite) TestLegacyRestErrMessages() {
 			"Successful IBC message",
 			ibcsolomachinecli.NewCreateClientCmd(),
 			[]string{
-				"21212121212",        // dummy client-id
 				"1",                  // dummy sequence
 				consensusJSON.Name(), // path to consensus json,
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),

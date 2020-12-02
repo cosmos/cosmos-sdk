@@ -151,7 +151,7 @@ func QueryTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusNotFound, fmt.Sprintf("no transaction found with hash %s", hashHexStr))
 		}
 
-		err = checkAminoMarshalError(clientCtx, output, "/cosmos/tx/v1beta1/tx/{txhash}")
+		err = checkAminoMarshalError(clientCtx, output, "/cosmos/tx/v1beta1/txs/{txhash}")
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 

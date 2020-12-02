@@ -33,7 +33,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 			"fail invalid grantee addr",
 			func() {
 				req = &types.QueryAuthorizationRequest{
-					GranterAddr: addrs[0].String(),
+					Granter: addrs[0].String(),
 				}
 			},
 			false,
@@ -43,8 +43,8 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 			"fail invalid msg-type",
 			func() {
 				req = &types.QueryAuthorizationRequest{
-					GranterAddr: addrs[0].String(),
-					GranteeAddr: addrs[1].String(),
+					Granter: addrs[0].String(),
+					Grantee: addrs[1].String(),
 				}
 			},
 			false,
@@ -58,9 +58,9 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 				expAuthorization = &types.SendAuthorization{SpendLimit: newCoins}
 				app.MsgAuthKeeper.Grant(ctx, addrs[0], addrs[1], expAuthorization, now.Add(time.Hour))
 				req = &types.QueryAuthorizationRequest{
-					GranterAddr: addrs[1].String(),
-					GranteeAddr: addrs[0].String(),
-					MsgType:     expAuthorization.MethodName(),
+					Granter: addrs[1].String(),
+					Grantee: addrs[0].String(),
+					MsgType: expAuthorization.MethodName(),
 				}
 			},
 			true,
@@ -112,7 +112,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorizations() {
 			"fail invalid grantee addr",
 			func() {
 				req = &types.QueryAuthorizationsRequest{
-					GranterAddr: addrs[0].String(),
+					Granter: addrs[0].String(),
 				}
 			},
 			false,
@@ -126,8 +126,8 @@ func (suite *TestSuite) TestGRPCQueryAuthorizations() {
 				expAuthorization = &types.SendAuthorization{SpendLimit: newCoins}
 				app.MsgAuthKeeper.Grant(ctx, addrs[0], addrs[1], expAuthorization, now.Add(time.Hour))
 				req = &types.QueryAuthorizationsRequest{
-					GranterAddr: addrs[1].String(),
-					GranteeAddr: addrs[0].String(),
+					Granter: addrs[1].String(),
+					Grantee: addrs[0].String(),
 				}
 			},
 			true,

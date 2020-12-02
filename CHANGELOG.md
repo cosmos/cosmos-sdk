@@ -44,11 +44,25 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (version) [\#7848](https://github.com/cosmos/cosmos-sdk/pull/7848) [\#7941](https://github.com/cosmos/cosmos-sdk/pull/7941) `version --long` output now shows the list of build dependencies and replaced build dependencies.
 
 ### State Machine Breaking Changes
-* (x/upgrade) [\#7979](https://github.com/cosmos/cosmos-sdk/pull/7979) keeper pubkey storage serialization migration from bech32 to protobuf. 
+* (x/upgrade) [\#7979](https://github.com/cosmos/cosmos-sdk/pull/7979) keeper pubkey storage serialization migration from bech32 to protobuf.
 
 ### Bug Fixes
 
 * (crypto) [\#7966](https://github.com/cosmos/cosmos-sdk/issues/7966) `Bip44Params` `String()` function now correctly returns the absolute HD path by adding the `m/` prefix.
+
+
+### API Breaking
+
+* [\#X](https://github.com/cosmos/cosmos-sdk/pull/X) Updated the `codec.Marshaler` interface
+  * Moved `MarshalAny` and `UnmarshalAny` helper functions to `codec.Marshaler` and renamed to `MarshalIfc` and `UnmarshalIfc` respectively. These functions must take interface as a parameter (not a concrete type nor `Any` object). Underneath they use `Any` wrapping for correct protobuf serialization.
+
+
+### Improvements
+
+* [\#X](https://github.com/cosmos/cosmos-sdk/pull/X)
+  * Created `IfcJSONMarshaler` interface and `NewJSONAnyMarshaler` - a helper method to use codec.(Un)marsjalJSON withing a client context.
+  * Added `codec.(Un)marshalIfcJSON` helper functions
+
 
 ## [v0.40.0-rc3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc3) - 2020-11-06
 
@@ -64,7 +78,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Client Breaking
 
 * (x/upgrade) [#7697](https://github.com/cosmos/cosmos-sdk/pull/7697) Rename flag name "--time" to "--upgrade-time", "--info" to "--upgrade-info", to keep it consistent with help message.
-* (x/auth) [#7788](https://github.com/cosmos/cosmos-sdk/pull/7788) Remove `tx auth` subcommands, all auth subcommands exist as `tx <subcommand>` 
+* (x/auth) [#7788](https://github.com/cosmos/cosmos-sdk/pull/7788) Remove `tx auth` subcommands, all auth subcommands exist as `tx <subcommand>`
 
 ### API Breaking
 
@@ -83,6 +97,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * All outward facing APIs will now check that capability is not nil and name is not empty before performing any state-machine changes
   * `SetIndex` has been renamed to `InitializeIndex`
 
+
 ### Features
 
 * (tx) [\#7688](https://github.com/cosmos/cosmos-sdk/pull/7688) Add a new Tx gRPC service with methods `Simulate` and `GetTx` (by hash).
@@ -95,7 +110,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client) [\#7699](https://github.com/cosmos/cosmos-sdk/pull/7699) Fix panic in context when setting invalid nodeURI. `WithNodeURI` does not set the `Client` in the context.
 * (x/gov) [#7641](https://github.com/cosmos/cosmos-sdk/pull/7641) Fix tally calculation precision error.
 
-### Improvements 
+### Improvements
 
 * (rest) [#7649](https://github.com/cosmos/cosmos-sdk/pull/7649) Return an unsigned tx in legacy GET /tx endpoint when signature conversion fails
 * (cli) [#7764](https://github.com/cosmos/cosmos-sdk/pull/7764) Update x/banking and x/crisis InitChain to improve node startup time
@@ -126,7 +141,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * (modules) [\#7540](https://github.com/cosmos/cosmos-sdk/issues/7540) Protobuf service definitions can now be used for
-packing `Msg`s in transactions as defined in [ADR 031](./docs/architecture/adr-031-msg-service.md). All modules now 
+packing `Msg`s in transactions as defined in [ADR 031](./docs/architecture/adr-031-msg-service.md). All modules now
 define a `Msg` protobuf service.
 * (codec) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) `InterfaceRegistry` now inherits `jsonpb.AnyResolver`, and has a `RegisterCustomTypeURL` method to support ADR 031 packing of `Any`s. `AnyResolver` is now a required parameter to `RejectUnknownFields`.
 * (baseapp) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) Add `ServiceMsgRouter` to BaseApp to handle routing of protobuf service `Msg`s. The two new types defined in ADR 031, `sdk.ServiceMsg` and `sdk.MsgRequest` are introduced with this router.
@@ -730,7 +745,7 @@ generalized genesis accounts through the `GenesisAccount` interface.
 * (sdk) [\#4758](https://github.com/cosmos/cosmos-sdk/issues/4758) update `x/genaccounts` to match module spec
 * (simulation) [\#4824](https://github.com/cosmos/cosmos-sdk/issues/4824) `PrintAllInvariants` flag will print all failed invariants
 * (simulation) [\#4490](https://github.com/cosmos/cosmos-sdk/issues/4490) add `InitialBlockHeight` flag to resume a simulation from a given block
-  
+
   * Support exporting the simulation stats to a given JSON file
 * (simulation) [\#4847](https://github.com/cosmos/cosmos-sdk/issues/4847), [\#4838](https://github.com/cosmos/cosmos-sdk/pull/4838) and [\#4869](https://github.com/cosmos/cosmos-sdk/pull/4869) `SimApp` and simulation refactors:
   * Implement `SimulationManager` for executing modules' simulation functionalities in a modularized way
@@ -1044,7 +1059,7 @@ that error is that the account doesn't exist.
 * (simulation) PrintAllInvariants flag will print all failed invariants
 * (simulation) Add `InitialBlockHeight` flag to resume a simulation from a given block
 * (simulation) [\#4670](https://github.com/cosmos/cosmos-sdk/issues/4670) Update simulation statistics to JSON format
-  
+
   - Support exporting the simulation stats to a given JSON file
 * [\#4775](https://github.com/cosmos/cosmos-sdk/issues/4775) Refactor CI config
 * Upgrade IAVL to v0.12.4
@@ -1650,9 +1665,9 @@ BREAKING CHANGES
 FEATURES
 
 * Gaia REST API
-  
+
 * [\#2358](https://github.com/cosmos/cosmos-sdk/issues/2358) Add distribution module REST interface
-  
+
 * Gaia CLI  (`gaiacli`)
   * [\#3429](https://github.com/cosmos/cosmos-sdk/issues/3429) Support querying
   for all delegator distribution rewards.

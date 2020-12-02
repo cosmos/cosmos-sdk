@@ -232,7 +232,7 @@ func (i multiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 // encoding info
 func marshalInfo(i Info) []byte {
-	// TODO: Why do we use Legacy Amino marshaling here?
+	// Legacy. #7108
 	return CryptoCdc.MustMarshalBinaryLengthPrefixed(i)
 }
 

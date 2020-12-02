@@ -105,10 +105,14 @@ func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *GetLatestVa
 	}
 
 	for i, validator := range validatorsRes.Validators {
+		anyPub, err := codectypes.NewAnyWithValue(validator.PubKey)
+		if err != nil {
+			return nil, err
+		}
 		outputValidatorsRes.Validators[i] = &Validator{
 			Address:          validator.Address,
 			ProposerPriority: validator.ProposerPriority,
-			PubKey:           validator.PubKey,
+			PubKey:           anyPub,
 			VotingPower:      validator.VotingPower,
 		}
 	}
@@ -142,10 +146,14 @@ func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValida
 	}
 
 	for i, validator := range validatorsRes.Validators {
+		anyPub, err := codectypes.NewAnyWithValue(validator.PubKey)
+		if err != nil {
+			return nil, err
+		}
 		outputValidatorsRes.Validators[i] = &Validator{
 			Address:          validator.Address,
 			ProposerPriority: validator.ProposerPriority,
-			PubKey:           validator.PubKey,
+			PubKey:           anyPub,
 			VotingPower:      validator.VotingPower,
 		}
 	}

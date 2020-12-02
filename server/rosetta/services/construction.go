@@ -20,7 +20,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // interface implementation assertion
@@ -204,11 +203,10 @@ func (on OnlineNetwork) ConstructionPayloads(ctx context.Context, request *types
 		return nil, rosetta.ErrInvalidOperation.RosettaError()
 	}
 
-	msg, fee, err := conversion.RosettaOperationsToSdkMsg(request.Operations)
+	msgs, signAddr, fee, err := conversion.RosettaOperationsToSdkMsg(request.Operations)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrInvalidOperation, err.Error()).RosettaError()
 	}
-	sendMsg := msg.(*bank.MsgSend)
 
 	metadata, err := GetMetadataFromPayloadReq(request)
 	if err != nil {
@@ -221,7 +219,7 @@ func (on OnlineNetwork) ConstructionPayloads(ctx context.Context, request *types
 	TxConfig := on.client.GetTxConfig()
 	txFactory = txFactory.WithTxConfig(TxConfig)
 
-	txBldr, err := tx.BuildUnsignedTx(txFactory, sendMsg)
+	txBldr, err := tx.BuildUnsignedTx(txFactory, msgs...)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
@@ -251,7 +249,7 @@ func (on OnlineNetwork) ConstructionPayloads(ctx context.Context, request *types
 		Payloads: []*types.SigningPayload{
 			{
 				AccountIdentifier: &types.AccountIdentifier{
-					Address: sendMsg.FromAddress,
+					Address: signAddr,
 				},
 				Bytes:         crypto.Sha256(signBytes),
 				SignatureType: "ecdsa",
@@ -266,12 +264,8 @@ func (on OnlineNetwork) ConstructionPreprocess(ctx context.Context, request *typ
 		return nil, rosetta.ErrInvalidRequest.RosettaError()
 	}
 
-	txData, err := conversion.RosettaOperationsToSdkBankMsgSend(operations)
+	_, fromAddr, err := conversion.ConvertOpsToMsgs(operations)
 	if err != nil {
-		return nil, rosetta.WrapError(rosetta.ErrInvalidAddress, err.Error()).RosettaError()
-	}
-
-	if txData.FromAddress == "" {
 		return nil, rosetta.WrapError(rosetta.ErrInvalidAddress, err.Error()).RosettaError()
 	}
 
@@ -289,7 +283,7 @@ func (on OnlineNetwork) ConstructionPreprocess(ctx context.Context, request *typ
 
 	return &types.ConstructionPreprocessResponse{
 		Options: map[string]interface{}{
-			rosetta.OptionAddress: txData.FromAddress,
+			rosetta.OptionAddress: fromAddr,
 			rosetta.OptionMemo:    memo,
 			rosetta.OptionGas:     gas,
 		},

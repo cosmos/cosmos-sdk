@@ -15,17 +15,18 @@ import (
 
 // list of supported operations
 const (
-	StatusReverted = "Reverted"
-	StatusSuccess  = "Success"
-	OptionAddress  = "address"
-	OptionGas      = "gas"
-	OptionMemo     = "memo"
-	Sequence       = "sequence"
-	AccountNumber  = "account_number"
-	ChainID        = "chain_id"
-	OperationSend  = "send"
-	OperationFee   = "fee"
-	Log            = "log"
+	StatusReverted    = "Reverted"
+	StatusSuccess     = "Success"
+	OptionAddress     = "address"
+	OptionGas         = "gas"
+	OptionMemo        = "memo"
+	Sequence          = "sequence"
+	AccountNumber     = "account_number"
+	ChainID           = "chain_id"
+	OperationSend     = "send"
+	OperationFee      = "fee"
+	Log               = "log"
+	OperationDelegate = "delegate"
 )
 
 // Synchronization stage constants used to determine if a node is synced or catching up
@@ -34,7 +35,7 @@ const (
 	StageSyncing = "syncing"
 )
 
-var SupportedOperations = []string{OperationSend, OperationFee}
+var SupportedOperations = []string{OperationSend, OperationFee, OperationDelegate}
 
 // NewNetwork builds a rosetta gateway network
 func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter) service.Network {

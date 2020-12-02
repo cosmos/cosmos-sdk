@@ -47,7 +47,7 @@ create_account(1){
     });
   }
 }
-transfer(10){
+transfer(3){
   transfer{
     transfer.network = {"network":"network", "blockchain":"app"};
     currency = {"symbol":"stake", "decimals":0};

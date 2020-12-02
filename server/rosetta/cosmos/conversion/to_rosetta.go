@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // TimeToMilliseconds converts time to milliseconds timestamp
@@ -132,7 +133,7 @@ func sdkMsgsToRosettaOperations(msgs []sdk.Msg, withStatus bool, hasError bool, 
 	var operations []*types.Operation
 	var status string
 	for i, msg := range msgs {
-		switch msg.Type() { // nolint
+		switch msg.Type() {
 		case rosetta.OperationSend:
 			newMsg := msg.(*banktypes.MsgSend)
 			fromAddress := newMsg.FromAddress
@@ -170,6 +171,39 @@ func sdkMsgsToRosettaOperations(msgs []sdk.Msg, withStatus bool, hasError bool, 
 				sendOp(fromAddress, "-"+coin.Amount.String(), feeLen+i),
 				sendOp(toAddress, coin.Amount.String(), feeLen+i+1),
 			)
+		case rosetta.OperationDelegate:
+			newMsg := msg.(*stakingtypes.MsgDelegate)
+			delAddr := newMsg.DelegatorAddress
+			valAddr := newMsg.ValidatorAddress
+			coin := newMsg.Amount
+			delOp := func(account, amount string, index int) *types.Operation {
+				if withStatus {
+					status = rosetta.StatusSuccess
+					if hasError {
+						status = rosetta.StatusReverted
+					}
+				}
+				return &types.Operation{
+					OperationIdentifier: &types.OperationIdentifier{
+						Index: int64(index),
+					},
+					Type:   rosetta.OperationDelegate,
+					Status: status,
+					Account: &types.AccountIdentifier{
+						Address: account,
+					},
+					Amount: &types.Amount{
+						Value: amount,
+						Currency: &types.Currency{
+							Symbol: coin.Denom,
+						},
+					},
+				}
+			}
+			operations = append(operations,
+				delOp(delAddr, "-"+coin.Amount.String(), feeLen+i),
+				delOp(valAddr, coin.Amount.String(), feeLen+i+1),
+			)
 		}
 	}
 
@@ -180,7 +214,7 @@ func sdkMsgsToRosettaOperations(msgs []sdk.Msg, withStatus bool, hasError bool, 
 func TMTxsToRosettaTxsIdentifiers(txs []tmtypes.Tx) []*types.TransactionIdentifier {
 	converted := make([]*types.TransactionIdentifier, len(txs))
 	for i, tx := range txs {
-		converted[i] = &types.TransactionIdentifier{Hash: fmt.Sprintf("%x", tx.Hash())} // TODO hash is sha256, so we hex it?
+		converted[i] = &types.TransactionIdentifier{Hash: fmt.Sprintf("%x", tx.Hash())}
 	}
 
 	return converted

@@ -22,10 +22,10 @@
     "broadcast_behind_tip": false,
     "block_broadcast_limit": 0,
     "rebroadcast_all": false,
-    "constructor_dsl_file": "cosmos.ros",
+    "constructor_dsl_file": "transfer.ros",
     "end_conditions": {
       "create_account": 1,
-      "transfer": 1
+      "transfer": 3
     }
   },
   "data": {

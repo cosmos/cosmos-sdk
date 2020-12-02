@@ -145,12 +145,11 @@ message LastValidatorPower {
 
 // Development plan
 // — Implement changes for Msgs flow
+// - - Introduce EpochUnbondedPool which has life time of epoch, it's going to be used on Epoch
 // — — Discuss and fix feedback for Msgs flow
 // — — Implement TODOs on the PR #46
-// — Implement logic flow after queue action
-// - - Slashing/Jail should only update specific validator that's slashed or Jailed
-// — — Review logic for Slashing/Jail and check/discuss how to update it
-// — — Review logic for Epoch action and check if there could be a vulnerability from current implementation (mainly moving from Unbonded to Bonded process)
+// — — Implement changes 
+// — — Should export genesis for newly added genesis fields (should think of modifying proto for buffered msg storage)
 // — Implement CLI commands for querying
 // — — BufferedValidators
 // — — BufferedMsgCreateValidatorQueue, BufferedMsgEditValidatorQueue
@@ -158,6 +157,7 @@ message LastValidatorPower {
 // — Fix existing tests / remove invalid tests
 // — Write epoch related tests with new scenarios
 // — — Simulation test is important for finding bugs [Ask Dev for questions) 
+// — — Can easily add a simulator check to make sure all delegation amounts in queue add up to the same amount that’s in the EpochUnbondedPool
 // — — I’d like it added as an invariant test for the simulator
 // — — the simulator should check that the sum of all the queued delegations always equals the amount kept track in the data
 // — — Staking/Slashing/Distribution module params are being modified by governance based on vote result instantly. We should test the effect.

@@ -37,6 +37,7 @@ module.exports = {
       key: "ac317234e6a42074175369b2f42e9754",
       index: "cosmos-sdk"
     },
+    versions: ['v0.39', 'master'],
     topbar: {
       banner: true
     },

@@ -1,10 +1,11 @@
-package types
+package types_test
 
 import (
 	"testing"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,7 +18,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 1))
 
 	cases := map[string]struct {
-		allow PeriodicFeeAllowance
+		allow types.PeriodicFeeAllowance
 		// all other checks are ignored if valid=false
 		fee           sdk.Coins
 		blockTime     time.Time
@@ -27,46 +28,46 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 		remove        bool
 		remains       sdk.Coins
 		remainsPeriod sdk.Coins
-		periodReset   ExpiresAt
+		periodReset   types.ExpiresAt
 	}{
 		"empty": {
-			allow: PeriodicFeeAllowance{},
+			allow: types.PeriodicFeeAllowance{},
 			valid: false,
 		},
 		"only basic": {
-			allow: PeriodicFeeAllowance{
-				Basic: BasicFeeAllowance{
+			allow: types.PeriodicFeeAllowance{
+				Basic: types.BasicFeeAllowance{
 					SpendLimit: atom,
-					Expiration: ExpiresAtHeight(100),
+					Expiration: types.ExpiresAtHeight(100),
 				},
 			},
 			valid: false,
 		},
 		"empty basic": {
-			allow: PeriodicFeeAllowance{
-				Period:           BlockDuration(50),
+			allow: types.PeriodicFeeAllowance{
+				Period:           types.BlockDuration(50),
 				PeriodSpendLimit: smallAtom,
 			},
 			valid: false,
 		},
 		"mismatched currencies": {
-			allow: PeriodicFeeAllowance{
-				Basic: BasicFeeAllowance{
+			allow: types.PeriodicFeeAllowance{
+				Basic: types.BasicFeeAllowance{
 					SpendLimit: atom,
-					Expiration: ExpiresAtHeight(100),
+					Expiration: types.ExpiresAtHeight(100),
 				},
-				Period:           BlockDuration(10),
+				Period:           types.BlockDuration(10),
 				PeriodSpendLimit: eth,
 			},
 			valid: false,
 		},
 		"first time": {
-			allow: PeriodicFeeAllowance{
-				Basic: BasicFeeAllowance{
+			allow: types.PeriodicFeeAllowance{
+				Basic: types.BasicFeeAllowance{
 					SpendLimit: atom,
-					Expiration: ExpiresAtHeight(100),
+					Expiration: types.ExpiresAtHeight(100),
 				},
-				Period:           BlockDuration(10),
+				Period:           types.BlockDuration(10),
 				PeriodSpendLimit: smallAtom,
 			},
 			valid:         true,
@@ -76,16 +77,16 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			remove:        false,
 			remainsPeriod: nil,
 			remains:       leftAtom,
-			periodReset:   ExpiresAtHeight(85),
+			periodReset:   types.ExpiresAtHeight(85),
 		},
 		"same period": {
-			allow: PeriodicFeeAllowance{
-				Basic: BasicFeeAllowance{
+			allow: types.PeriodicFeeAllowance{
+				Basic: types.BasicFeeAllowance{
 					SpendLimit: atom,
-					Expiration: ExpiresAtHeight(100),
+					Expiration: types.ExpiresAtHeight(100),
 				},
-				Period:           BlockDuration(10),
-				PeriodReset:      ExpiresAtHeight(80),
+				Period:           types.BlockDuration(10),
+				PeriodReset:      types.ExpiresAtHeight(80),
 				PeriodSpendLimit: leftAtom,
 				PeriodCanSpend:   smallAtom,
 			},
@@ -96,16 +97,16 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			remove:        false,
 			remainsPeriod: nil,
 			remains:       leftAtom,
-			periodReset:   ExpiresAtHeight(80),
+			periodReset:   types.ExpiresAtHeight(80),
 		},
 		"step one period": {
-			allow: PeriodicFeeAllowance{
-				Basic: BasicFeeAllowance{
+			allow: types.PeriodicFeeAllowance{
+				Basic: types.BasicFeeAllowance{
 					SpendLimit: atom,
-					Expiration: ExpiresAtHeight(100),
+					Expiration: types.ExpiresAtHeight(100),
 				},
-				Period:           BlockDuration(10),
-				PeriodReset:      ExpiresAtHeight(70),
+				Period:           types.BlockDuration(10),
+				PeriodReset:      types.ExpiresAtHeight(70),
 				PeriodSpendLimit: leftAtom,
 			},
 			valid:         true,
@@ -115,16 +116,16 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			remove:        false,
 			remainsPeriod: nil,
 			remains:       smallAtom,
-			periodReset:   ExpiresAtHeight(80), // one step from last reset, not now
+			periodReset:   types.ExpiresAtHeight(80), // one step from last reset, not now
 		},
 		"step limited by global allowance": {
-			allow: PeriodicFeeAllowance{
-				Basic: BasicFeeAllowance{
+			allow: types.PeriodicFeeAllowance{
+				Basic: types.BasicFeeAllowance{
 					SpendLimit: smallAtom,
-					Expiration: ExpiresAtHeight(100),
+					Expiration: types.ExpiresAtHeight(100),
 				},
-				Period:           BlockDuration(10),
-				PeriodReset:      ExpiresAtHeight(70),
+				Period:           types.BlockDuration(10),
+				PeriodReset:      types.ExpiresAtHeight(70),
 				PeriodSpendLimit: atom,
 			},
 			valid:         true,
@@ -134,15 +135,15 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			remove:        false,
 			remainsPeriod: smallAtom.Sub(oneAtom),
 			remains:       smallAtom.Sub(oneAtom),
-			periodReset:   ExpiresAtHeight(80), // one step from last reset, not now
+			periodReset:   types.ExpiresAtHeight(80), // one step from last reset, not now
 		},
 		"expired": {
-			allow: PeriodicFeeAllowance{
-				Basic: BasicFeeAllowance{
+			allow: types.PeriodicFeeAllowance{
+				Basic: types.BasicFeeAllowance{
 					SpendLimit: atom,
-					Expiration: ExpiresAtHeight(100),
+					Expiration: types.ExpiresAtHeight(100),
 				},
-				Period:           BlockDuration(10),
+				Period:           types.BlockDuration(10),
 				PeriodSpendLimit: smallAtom,
 			},
 			valid:       true,
@@ -152,13 +153,13 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			remove:      true,
 		},
 		"over period limit": {
-			allow: PeriodicFeeAllowance{
-				Basic: BasicFeeAllowance{
+			allow: types.PeriodicFeeAllowance{
+				Basic: types.BasicFeeAllowance{
 					SpendLimit: atom,
-					Expiration: ExpiresAtHeight(100),
+					Expiration: types.ExpiresAtHeight(100),
 				},
-				Period:           BlockDuration(10),
-				PeriodReset:      ExpiresAtHeight(80),
+				Period:           types.BlockDuration(10),
+				PeriodReset:      types.ExpiresAtHeight(80),
 				PeriodSpendLimit: leftAtom,
 				PeriodCanSpend:   smallAtom,
 			},

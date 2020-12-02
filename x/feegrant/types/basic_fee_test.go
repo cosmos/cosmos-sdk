@@ -1,10 +1,11 @@
-package types
+package types_test
 
 import (
 	"testing"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -16,7 +17,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 	leftAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 512))
 
 	cases := map[string]struct {
-		allow *BasicFeeAllowance
+		allow *types.BasicFeeAllowance
 		// all other checks are ignored if valid=false
 		fee         sdk.Coins
 		blockTime   time.Time
@@ -27,11 +28,11 @@ func TestBasicFeeValidAllow(t *testing.T) {
 		remains     sdk.Coins
 	}{
 		"empty": {
-			allow: &BasicFeeAllowance{},
+			allow: &types.BasicFeeAllowance{},
 			valid: false,
 		},
 		"small fee": {
-			allow: &BasicFeeAllowance{
+			allow: &types.BasicFeeAllowance{
 				SpendLimit: atom,
 			},
 			valid:   true,
@@ -41,7 +42,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			remains: leftAtom,
 		},
 		"all fee": {
-			allow: &BasicFeeAllowance{
+			allow: &types.BasicFeeAllowance{
 				SpendLimit: smallAtom,
 			},
 			valid:  true,
@@ -50,7 +51,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			remove: true,
 		},
 		"wrong fee": {
-			allow: &BasicFeeAllowance{
+			allow: &types.BasicFeeAllowance{
 				SpendLimit: smallAtom,
 			},
 			valid:  true,
@@ -58,9 +59,9 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			accept: false,
 		},
 		"non-expired": {
-			allow: &BasicFeeAllowance{
+			allow: &types.BasicFeeAllowance{
 				SpendLimit: atom,
-				Expiration: ExpiresAtHeight(100),
+				Expiration: types.ExpiresAtHeight(100),
 			},
 			valid:       true,
 			fee:         smallAtom,
@@ -70,9 +71,9 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			remains:     leftAtom,
 		},
 		"expired": {
-			allow: &BasicFeeAllowance{
+			allow: &types.BasicFeeAllowance{
 				SpendLimit: atom,
-				Expiration: ExpiresAtHeight(100),
+				Expiration: types.ExpiresAtHeight(100),
 			},
 			valid:       true,
 			fee:         smallAtom,

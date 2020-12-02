@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -22,6 +23,7 @@ type queryServer struct {
 }
 
 var _ ServiceServer = queryServer{}
+var _ codectypes.UnpackInterfacesMessage = &GetLatestValidatorSetResponse{}
 
 // NewQueryServer creates a new tendermint query server.
 func NewQueryServer(clientCtx client.Context, interfaceRegistry codectypes.InterfaceRegistry) ServiceServer {
@@ -117,6 +119,17 @@ func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *GetLatestVa
 		}
 	}
 	return outputValidatorsRes, nil
+}
+
+func (m *GetLatestValidatorSetResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var pubKey cryptotypes.PubKey
+	for _, val := range m.Validators {
+		err := unpacker.UnpackAny(val.PubKey, &pubKey)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // GetValidatorSetByHeight implements ServiceServer.GetValidatorSetByHeight

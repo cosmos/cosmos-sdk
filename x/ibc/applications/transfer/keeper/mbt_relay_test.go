@@ -79,6 +79,7 @@ type OwnedCoin struct {
 }
 
 type Balance struct {
+	Id string
 	Address string
 	Denom string
 	Amount sdk.Int
@@ -98,12 +99,12 @@ func AddressFromTla(addr []string) string {
 		// simple address: id
 		s = addr[2]
 	} else if len(addr[2]) == 0   {
-		// escrow address: port + channel
-		s = addr[0] + addr[1]
+		// escrow address: ics20-1\x00port/channel
+		s = fmt.Sprintf("%s\x00%s/%s", types.Version, addr[0], addr[1])
 	} else {
 		panic("failed to convert from TLA+ address: neither simple nor escrow address")
 	}
-	return AddressFromString(s)
+	return s
 }
 
 func DenomFromTla(denom []string) string {
@@ -122,7 +123,8 @@ func DenomFromTla(denom []string) string {
 
 func BalanceFromTla(balance TlaBalance) Balance {
 	return Balance{
-		Address: AddressFromTla(balance.Address),
+		Id: AddressFromTla(balance.Address),
+		Address: AddressFromString(AddressFromTla(balance.Address)),
 		Denom:   DenomFromTla(balance.Denom),
 		Amount:  sdk.NewInt(balance.Amount),
 	}
@@ -161,6 +163,10 @@ func OnRecvPacketTestCaseFromTla(tc TlaOnRecvPacketTestCase) OnRecvPacketTestCas
 	}
 }
 
+var addressMap = make(map[string]string)
+
+
+
 type Bank struct {
 	balances map[OwnedCoin]sdk.Int
 }
@@ -198,6 +204,7 @@ func (bank *Bank) SetBalance(address string, denom string, amount sdk.Int) {
 func (bank *Bank) SetBalances(balances []Balance) {
 	for _, balance := range balances {
 		bank.balances[OwnedCoin{balance.Address, balance.Denom}] = balance.Amount
+		addressMap[balance.Address] = balance.Id
 	}
 }
 
@@ -215,6 +222,7 @@ func BankFromBalances(balances []Balance) Bank{
 		coin := OwnedCoin{balance.Address, balance.Denom}
 		if coin != NullCoin() { // ignore null coin
 			bank.balances[coin] = balance.Amount
+			addressMap[balance.Address] = balance.Id
 		}
 	}
 	return bank
@@ -225,8 +233,11 @@ func BankFromBalances(balances []Balance) Bank{
 func (bank *Bank) String() string {
 	str := ""
 	for coin, amount := range bank.balances {
-		str += coin.Address + " : " + coin.Denom + " = " + amount.String() + "\n"
-	}
+		str += coin.Address;
+		if addressMap[coin.Address] != "" {
+			str += "(" + addressMap[coin.Address] + ")"
+		}
+		str += " : " + coin.Denom + " = " + amount.String() + "\n"	}
 	return str
 }
 
@@ -297,11 +308,10 @@ func (suite *KeeperTestSuite) TestModelBasedOnRecvPacket() {
 	}
 
 	suite.SetupTest()
-	_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
-	channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.UNORDERED)
-
-	fmt.Printf("\nChannel A: %+v\n", channelA)
-	fmt.Printf("\nChannel B: %+v\n", channelB)
+	_, _, connAB, connBA := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
+	_, _, connBC, connCB := suite.coordinator.SetupClientConnections(suite.chainB, suite.chainC, exported.Tendermint)
+	suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connAB, connBA, channeltypes.UNORDERED)
+	suite.coordinator.CreateTransferChannels(suite.chainB, suite.chainC, connBC, connCB, channeltypes.UNORDERED)
 
 	for i, tlaTc := range tlaTestCases {
 		tc := OnRecvPacketTestCaseFromTla(tlaTc)

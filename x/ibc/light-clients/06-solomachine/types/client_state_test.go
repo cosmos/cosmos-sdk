@@ -7,6 +7,7 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -76,6 +77,55 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 					suite.Require().Error(err)
 				}
 			})
+		}
+	}
+}
+
+func (suite *SoloMachineTestSuite) TestInitialize() {
+	// test singlesig and multisig public keys
+	for _, solomachine := range []*ibctesting.Solomachine{suite.solomachine, suite.solomachineMulti} {
+		malleatedConsensus := solomachine.ClientState().ConsensusState
+		malleatedConsensus.Timestamp = malleatedConsensus.Timestamp + 10
+
+		testCases := []struct {
+			name      string
+			consState exported.ConsensusState
+			expPass   bool
+		}{
+			{
+				"valid consensus state",
+				solomachine.ConsensusState(),
+				true,
+			},
+			{
+				"nil consensus state",
+				nil,
+				false,
+			},
+			{
+				"invalid consensus state: Tendermint consensus state",
+				&ibctmtypes.ConsensusState{},
+				false,
+			},
+			{
+				"invalid consensus state: consensus state does not match consensus state in client",
+				malleatedConsensus,
+				false,
+			},
+		}
+
+		for _, tc := range testCases {
+			err := solomachine.ClientState().Initialize(
+				suite.chainA.GetContext(), suite.chainA.Codec,
+				suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), "solomachine"),
+				tc.consState,
+			)
+
+			if tc.expPass {
+				suite.Require().NoError(err, "valid testcase: %s failed", tc.name)
+			} else {
+				suite.Require().Error(err, "invalid testcase: %s passed", tc.name)
+			}
 		}
 	}
 }

@@ -140,6 +140,18 @@ func (cs ClientState) ZeroCustomFields() exported.ClientState {
 	}
 }
 
+// Initialize will check that initial consensus state is a Tendermint consensus state
+// and will store ProcessedTime for initial consensus state as ctx.BlockTime()
+func (cs ClientState) Initialize(ctx sdk.Context, _ codec.BinaryMarshaler, clientStore sdk.KVStore, consState exported.ConsensusState) error {
+	if _, ok := consState.(*ConsensusState); !ok {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid initial consensus state. expected type: %T, got: %T",
+			&ConsensusState{}, consState)
+	}
+	// set processed time with initial consensus state height equal to initial client state's latest height
+	SetProcessedTime(clientStore, cs.GetLatestHeight(), uint64(ctx.BlockTime().UnixNano()))
+	return nil
+}
+
 // VerifyClientState verifies a proof of the client state of the running chain
 // stored on the target machine
 func (cs ClientState) VerifyClientState(

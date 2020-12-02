@@ -1,6 +1,8 @@
 package types
 
 import (
+	"reflect"
+
 	ics23 "github.com/confio/ics23/go"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -72,6 +74,20 @@ func (cs ClientState) ZeroCustomFields() exported.ClientState {
 	return NewClientState(
 		cs.Sequence, cs.ConsensusState, false,
 	)
+}
+
+// Initialize will check that initial consensus state is equal to the latest consensus state of the initial client.
+func (cs ClientState) Initialize(_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, consState exported.ConsensusState) error {
+	if !reflect.DeepEqual(cs.ConsensusState, consState) {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "consensus state in initial client does not equal initial consensus state. expected: %s, got: %s",
+			cs.ConsensusState, consState)
+	}
+	return nil
+}
+
+// ExportMetadata is a no-op since solomachine does not store any metadata in client store
+func (cs ClientState) ExportMetadata(_ sdk.KVStore) []exported.GenesisMetadata {
+	return nil
 }
 
 // VerifyUpgradeAndUpdateState returns an error since solomachine client does not support upgrades

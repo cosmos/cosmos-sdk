@@ -98,6 +98,41 @@ func (suite *TendermintTestSuite) TestValidate() {
 	}
 }
 
+func (suite *TendermintTestSuite) TestInitialize() {
+
+	testCases := []struct {
+		name           string
+		consensusState exported.ConsensusState
+		expPass        bool
+	}{
+		{
+			name:           "valid consensus",
+			consensusState: &types.ConsensusState{},
+			expPass:        true,
+		},
+		{
+			name:           "invalid consensus: consensus state is solomachine consensus",
+			consensusState: ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 2).ConsensusState(),
+			expPass:        false,
+		},
+	}
+
+	clientA, err := suite.coordinator.CreateClient(suite.chainA, suite.chainB, exported.Tendermint)
+	suite.Require().NoError(err)
+
+	clientState := suite.chainA.GetClientState(clientA)
+	store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
+
+	for _, tc := range testCases {
+		err := clientState.Initialize(suite.chainA.GetContext(), suite.chainA.Codec, store, tc.consensusState)
+		if tc.expPass {
+			suite.Require().NoError(err, "valid case returned an error")
+		} else {
+			suite.Require().Error(err, "invalid case didn't return an error")
+		}
+	}
+}
+
 func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 	testCases := []struct {
 		name           string

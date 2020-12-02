@@ -95,6 +95,15 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 							},
 						),
 					},
+					[]clienttypes.IdentifiedGenesisMetadata{
+						clienttypes.NewIdentifiedGenesisMetadata(
+							clientID,
+							[]clienttypes.GenesisMetadata{
+								clienttypes.NewGenesisMetadata([]byte("key1"), []byte("val1")),
+								clienttypes.NewGenesisMetadata([]byte("key2"), []byte("val2")),
+							},
+						),
+					},
 					clienttypes.NewParams(exported.Tendermint, exported.Localhost),
 					true,
 					0,
@@ -153,6 +162,15 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 						),
 					},
 					nil,
+					[]clienttypes.IdentifiedGenesisMetadata{
+						clienttypes.NewIdentifiedGenesisMetadata(
+							clientID,
+							[]clienttypes.GenesisMetadata{
+								clienttypes.NewGenesisMetadata([]byte(""), []byte("val1")),
+								clienttypes.NewGenesisMetadata([]byte("key2"), []byte("")),
+							},
+						),
+					},
 					clienttypes.NewParams(exported.Tendermint),
 					false,
 					0,
@@ -236,6 +254,15 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 										header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.AppHash), header.Header.NextValidatorsHash,
 									),
 								),
+							},
+						),
+					},
+					[]clienttypes.IdentifiedGenesisMetadata{
+						clienttypes.NewIdentifiedGenesisMetadata(
+							clientID,
+							[]clienttypes.GenesisMetadata{
+								clienttypes.NewGenesisMetadata([]byte("key1"), []byte("val1")),
+								clienttypes.NewGenesisMetadata([]byte("key2"), []byte("val2")),
 							},
 						),
 					},

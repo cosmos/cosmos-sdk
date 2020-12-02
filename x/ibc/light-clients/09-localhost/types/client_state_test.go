@@ -7,6 +7,8 @@ import (
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/09-localhost/types"
 )
 
@@ -46,6 +48,37 @@ func (suite *LocalhostTestSuite) TestValidate() {
 			suite.Require().NoError(err, tc.name)
 		} else {
 			suite.Require().Error(err, tc.name)
+		}
+	}
+}
+
+func (suite *LocalhostTestSuite) TestInitialize() {
+	testCases := []struct {
+		name      string
+		consState exported.ConsensusState
+		expPass   bool
+	}{
+		{
+			"valid initialization",
+			nil,
+			true,
+		},
+		{
+			"invalid consenus state",
+			&ibctmtypes.ConsensusState{},
+			false,
+		},
+	}
+
+	clientState := types.NewClientState("chainID", clienttypes.NewHeight(3, 10))
+
+	for _, tc := range testCases {
+		err := clientState.Initialize(suite.ctx, suite.cdc, suite.store, tc.consState)
+
+		if tc.expPass {
+			suite.Require().NoError(err, "valid testcase: %s failed", tc.name)
+		} else {
+			suite.Require().Error(err, "invalid testcase: %s passed", tc.name)
 		}
 	}
 }

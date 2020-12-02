@@ -18,7 +18,7 @@ import (
 var (
 	ChainIDPrefix   = "testchain"
 	globalStartTime = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
-	timeIncrement   = time.Second * 5
+	TimeIncrement   = time.Second * 5
 )
 
 // Coordinator is a testing struct which contains N TestChain's. It handles keeping all chains
@@ -304,7 +304,7 @@ func (coord *Coordinator) RelayPacket(
 // CONTRACT: this function must be called after every commit on any TestChain.
 func (coord *Coordinator) IncrementTime() {
 	for _, chain := range coord.Chains {
-		chain.CurrentHeader.Time = chain.CurrentHeader.Time.Add(timeIncrement)
+		chain.CurrentHeader.Time = chain.CurrentHeader.Time.Add(TimeIncrement)
 		chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})
 	}
 }

@@ -69,6 +69,9 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 			}
 
 			delayPeriod, err := cmd.Flags().GetUint64(flagDelayPeriod)
+			if err != nil {
+				return err
+			}
 
 			msg := types.NewMsgConnectionOpenInit(
 				clientID, counterpartyClientID,
@@ -179,6 +182,9 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 			}
 
 			delayPeriod, err := cmd.Flags().GetUint64(flagDelayPeriod)
+			if err != nil {
+				return err
+			}
 
 			msg := types.NewMsgConnectionOpenTry(
 				connectionID, clientID, counterpartyConnectionID, counterpartyClientID,

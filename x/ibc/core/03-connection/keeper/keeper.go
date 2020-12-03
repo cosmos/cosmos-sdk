@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -36,7 +34,7 @@ func NewKeeper(cdc codec.BinaryMarshaler, key sdk.StoreKey, ck types.ClientKeepe
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", host.ModuleName, types.SubModuleName))
+	return ctx.Logger().With("module", "x/"+host.ModuleName+"/"+types.SubModuleName)
 }
 
 // GetCommitmentPrefix returns the IBC connection store prefix as a commitment

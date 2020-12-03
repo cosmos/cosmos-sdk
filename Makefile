@@ -150,6 +150,12 @@ test_sim_profile:
 test_cover:
 	@export VERSION=$(VERSION); bash -x tests/test_cover.sh
 
+test-rosetta:
+	docker build -t rosetta-ci:latest -f contrib/rosetta/node/Dockerfile .
+	docker-compose -f contrib/rosetta/docker-compose.yaml up --abort-on-container-exit --exit-code-from test_rosetta --build
+.PHONY: test-rosetta
+
+
 lint: golangci-lint
 	$(BINDIR)/golangci-lint run
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s

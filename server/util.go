@@ -100,33 +100,19 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 	serverCtx.Config = config
 
 	var logWriter io.Writer
-	if strings.ToLower(config.LogFormat) == tmcfg.LogFormatPlain {
+	if strings.ToLower(serverCtx.Viper.GetString(flags.FlagLogFormat)) == tmcfg.LogFormatPlain {
 		logWriter = zerolog.ConsoleWriter{Out: os.Stderr}
 	} else {
 		logWriter = os.Stderr
 	}
 
-	// logLvl, err := zerolog.ParseLevel(config.LogLevel)
-	logLvl, err := zerolog.ParseLevel("info")
+	logLvlStr := serverCtx.Viper.GetString(flags.FlagLogLevel)
+	logLvl, err := zerolog.ParseLevel(logLvlStr)
 	if err != nil {
-		return fmt.Errorf("failed to parse log level (%s): %w", config.LogLevel, err)
+		return fmt.Errorf("failed to parse log level (%s): %w", logLvlStr, err)
 	}
 
 	serverCtx.Logger = ZeroLogWrapper{zerolog.New(logWriter).Level(logLvl).With().Timestamp().Logger()}
-
-	// logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	// logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, tmcfg.DefaultLogLevel())
-	// if err != nil {
-	// 	return err
-	// }
-
-	// // Check if the tendermint flag for trace logging is set
-	// // if it is then setup a tracing logger in this app as well
-	// if serverCtx.Viper.GetBool(tmcli.TraceFlag) {
-	// 	logger = log.NewTracingLogger(logger)
-	// }
-
-	// serverCtx.Logger = logger.With("module", "main")
 
 	return SetCmdServerContext(cmd, serverCtx)
 }

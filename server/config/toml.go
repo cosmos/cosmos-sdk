@@ -146,7 +146,15 @@ enable = {{ .GRPC.Enable }}
 
 # Address defines the gRPC server address to bind to.
 address = "{{ .GRPC.Address }}"
+[grpc-proxy]
+	# GRPCWebProxyEnable defines if the gRPC-web-proxy should be enabled.
+	enable = {{ .GRPC.GRPCWebProxy.Enable }}
 
+	# AllowOrigins
+	allow-all-origin = {{ .GRPC.GRPCWebProxy.AllowAllOrigins }}
+
+	# AllowedOrigins
+	allowed-origins = {{ .GRPC.GRPCWebProxy.AllowedOrigins }}
 ###############################################################################
 ###                        State Sync Configuration                         ###
 ###############################################################################

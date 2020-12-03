@@ -105,6 +105,40 @@ type GRPCConfig struct {
 
 	// Address defines the API server to listen on
 	Address string `mapstructure:"address"`
+
+	// GRPCWebProxy defines the list of flags for grpc-proxy.
+	GRPCWebProxy GRPCProxy `mapstructure:grpc-proxy`
+}
+
+// GRPProxy defines configuration for the gRPC server.
+type GRPCProxy struct {
+	// Enable defines if the proxy should be enabled.
+	Enable bool `mapstructure:"enable"`
+
+	// AllowAllOrigins
+	AllowAllOrigins bool `mapstructure:"allow-all-origins"`
+
+	AllowedOrigins []string `mapstructure:"allowed-origins"`
+
+	AllowedHeaders []string `mapstructure:"allowed-headers"`
+
+	// EnableHTTPServer defines if the HTTP should be enabled.
+	EnableHTTPServer bool `mapstructure:"enable-http-server"`
+
+	// EnableTLSServer defines if the TLS should be enabled.
+	EnableTLSServer bool `mapstructure:"enable-tls-server"`
+
+	// TlsServerCert defines the path to the PEM certificate for server use.
+	TlsServerCert string `mapstructure:"tls-server-cert"`
+
+	// TlsServerKey defines the path to the PEM key for the certificate for the server use.
+	TlsServerKey string `mapstructure:"tls-server-key"`
+
+	// TlsServerClientCertVerification defines controls whether a client certificate is on. Values: none, verify_if_given, require.
+	TlsServerClientCertVerification string `mapstructure:"tls-server-client-cert-verification"`
+
+	// TlsServerClientCAFiles defines Paths (comma separated) to PEM certificate chains used for client-side verification. If empty, host CA chain will be used.
+	TlsServerClientCAFiles string `mapstructure:"tls-server-client-ca-files"`
 }
 
 // StateSyncConfig defines the state sync snapshot configuration.
@@ -184,6 +218,18 @@ func DefaultConfig() *Config {
 		GRPC: GRPCConfig{
 			Enable:  true,
 			Address: DefaultGRPCAddress,
+			GRPCWebProxy: GRPCProxy{
+				Enable:                          true,
+				AllowAllOrigins:                 true,
+				EnableHTTPServer:                true,
+				EnableTLSServer:                 false,
+				AllowedOrigins:                  []string{"*"},
+				TlsServerCert:                   "",
+				AllowedHeaders:                  []string{},
+				TlsServerClientCAFiles:          "",
+				TlsServerClientCertVerification: "",
+				TlsServerKey:                    "",
+			},
 		},
 		StateSync: StateSyncConfig{
 			SnapshotInterval:   0,
@@ -238,6 +284,18 @@ func GetConfig(v *viper.Viper) Config {
 		GRPC: GRPCConfig{
 			Enable:  v.GetBool("grpc.enable"),
 			Address: v.GetString("grpc.address"),
+			GRPCWebProxy: GRPCProxy{
+				Enable:                          v.GetBool("grpc.grpc-proxy.enable"),
+				AllowAllOrigins:                 v.GetBool("grpc.grpc-proxy.allow-all-origins"),
+				AllowedHeaders:                  v.GetStringSlice("grpc.grpc-proxy.allowed-headers"),
+				AllowedOrigins:                  v.GetStringSlice("grpc.grpc-proxy.allowed-origins"),
+				EnableHTTPServer:                v.GetBool("grpc.grpc-proxy.enable-http-server"),
+				EnableTLSServer:                 v.GetBool("grpc.grpc-proxy.enable-tls-server"),
+				TlsServerCert:                   v.GetString("grpc.grpc-proxy.tls-server-cert"),
+				TlsServerClientCAFiles:          v.GetString("grpc.grpc-proxy.tls-server-client-ca-files"),
+				TlsServerClientCertVerification: v.GetString("grpc.grpc-proxy.tls-server-client-cert-verification"),
+				TlsServerKey:                    v.GetString("grpc.grpc-proxy.tls-server-key"),
+			},
 		},
 		StateSync: StateSyncConfig{
 			SnapshotInterval:   v.GetUint64("state-sync.snapshot-interval"),

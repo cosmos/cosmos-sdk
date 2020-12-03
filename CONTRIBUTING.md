@@ -306,9 +306,11 @@ new code owners is as follows: On a bi-monthly basis (or more frequently if
 agreeable) all the existing code owners will privately convene to discuss
 potential new candidates as well as the potential for existing code-owners to
 exit or "pass on the torch". This private meeting is to be a held as a
-phone/video meeting. Subsequently at the end of the meeting, one of the existing
-code owners should open a PR modifying the `CODEOWNERS` file. The other code
-owners should then all approve this PR to publicly display their support.
+phone/video meeting.
+
+Subsequently after the meeting, and pending final approval from the ICF,
+one of the existing code owners should open a PR modifying the `CODEOWNERS` file.
+The other code owners should then all approve this PR to publicly display their support.
 
 Only if unanimous consensus is reached among all the existing code-owners will
 an invitation be extended to a new potential-member. Likewise, when an existing
@@ -328,7 +330,7 @@ means guaranteed by any quantifiable metric. It is a symbol of great trust of
 the community of this project.
 
 
-## Concept & Release Approval Processes
+## Concept & Release Approval Process
 
 The process for how Cosmos SDK maintainers take features and ADRs from concept to release
 is broken up into three distinct stages: **Strategy Discovery**, **Concept Approval**, and 
@@ -407,9 +409,3 @@ well as for PRs made as part of a release process:
 *Note: For any major or minor release series denoted as a "Stable Release" (e.g. v0.39 "Launchpad"), a separate release
 committee is often established. Stable Releases, and their corresponding release committees are documented
 separately in [STABLE_RELEASES.md](./STABLE_RELEASES.md)*
-
- 
-  
-----  
-* Addition to committee can be recommended by anyone to the current group or the ICF directly
-  * The evaluation criteria will be considered and the committee will decide on the addition with final approval from the ICF

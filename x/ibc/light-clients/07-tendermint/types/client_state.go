@@ -467,7 +467,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	return nil
 }
 
-// verifyDelayPeriodPassed will ensure that at least delayPeriod amount of time has passed since consenus state was submitted
+// verifyDelayPeriodPassed will ensure that at least delayPeriod amount of time has passed since consensus state was submitted
 // before allowing verification to continue.
 func verifyDelayPeriodPassed(store sdk.KVStore, proofHeight exported.Height, currentTimestamp, delayPeriod uint64) error {
 	// check that executing chain's timestamp has passed consensusState's processed time + delay period

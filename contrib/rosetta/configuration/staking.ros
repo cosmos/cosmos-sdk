@@ -47,7 +47,8 @@ create_account(1){
     });
   }
 }
-transfer(10){
+
+staking(3){
   transfer{
     transfer.network = {"network":"network", "blockchain":"app"};
     currency = {"symbol":"stake", "decimals":0};
@@ -59,25 +60,28 @@ transfer(10){
     });
     // Set the recipient_amount as some value <= sender.balance-max_fee
     max_fee = "0";
+    fee_amount = "1";
+    fee_value = 0 - {{fee_amount}};
     available_amount = {{sender.balance.value}} - {{max_fee}};
     recipient_amount = random_number({"minimum": "1", "maximum": {{available_amount}}});
     print_message({"recipient_amount":{{recipient_amount}}});
     // Find recipient and construct operations
+    recipient = {"address": "cosmosvaloper16qhazsqdrzw96d03h37rp0p4m06hu8tyc09u7r"};
     sender_amount = 0 - {{recipient_amount}};
-    recipient = find_balance({
-      "not_account_identifier":[{{sender.account_identifier}}],
-      "minimum_balance":{
-        "value": "0",
-        "currency": {{currency}}
-      },
-      "create_limit": 100,
-      "create_probability": 50
-    });
     transfer.confirmation_depth = "1";
     transfer.operations = [
       {
         "operation_identifier":{"index":0},
-        "type":"cosmos-sdk/MsgSend",
+        "type":"fee",
+        "account":{{sender.account_identifier}},
+        "amount":{
+          "value":{{fee_value}},
+          "currency":{{currency}}
+        }
+      },
+      {
+        "operation_identifier":{"index":1},
+        "type":"delegate",
         "account":{{sender.account_identifier}},
         "amount":{
           "value":{{sender_amount}},
@@ -85,9 +89,9 @@ transfer(10){
         }
       },
       {
-        "operation_identifier":{"index":1},
-        "type":"cosmos-sdk/MsgSend",
-        "account":{{recipient.account_identifier}},
+        "operation_identifier":{"index":2},
+        "type":"delegate",
+        "account": {{recipient}},
         "amount":{
           "value":{{recipient_amount}},
           "currency":{{currency}}

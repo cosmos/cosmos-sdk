@@ -52,7 +52,7 @@ func (l launchpad) NetworkOptions(ctx context.Context, _ *types.NetworkRequest) 
 					Successful: false,
 				},
 			},
-			OperationTypes: []string{OperationMsgSend},
+			OperationTypes: []string{OperationMsgSend, OperationFee, OperationDelegate},
 		},
 	}, nil
 }

@@ -12,52 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/rosetta/client/tendermint"
 	types2 "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-
-	"github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 )
-
-func TestPayloadsEndpoint_Errors(t *testing.T) {
-	tests := []struct {
-		name        string
-		req         *types.ConstructionPayloadsRequest
-		expectedErr *types.Error
-	}{
-		{
-			name: "Invalid num of operations",
-			req: &types.ConstructionPayloadsRequest{
-				Operations: []*types.Operation{
-					{
-						Type: OperationMsgSend,
-					},
-				},
-			},
-			expectedErr: ErrInvalidOperation,
-		},
-		{
-			name: "Two operations not equal to transfer",
-			req: &types.ConstructionPayloadsRequest{
-				Operations: []*types.Operation{
-					{
-						Type: OperationMsgSend,
-					},
-					{
-						Type: "otherType",
-					},
-				},
-			},
-			expectedErr: rosetta.WrapError(ErrInvalidOperation, "the operations are not Transfer"),
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			adapter := newAdapter(nil, cosmos.NewClient("", nil), tendermint.NewClient(""), properties{})
-			_, err := adapter.ConstructionPayloads(context.Background(), tt.req)
-			require.Equal(t, err, tt.expectedErr)
-		})
-	}
-}
 
 func TestGetSenderByOperations(t *testing.T) {
 	properties := properties{
@@ -171,6 +126,6 @@ func TestLaunchpad_ConstructionPayloads(t *testing.T) {
 	// Unsigned tx in hex byte representation.
 	//require.Equal(t, expectedUnssignedTx, resp.UnsignedTransaction)
 
-	require.Equal(t, senderAddr, resp.Payloads[0].Address)
+	require.Equal(t, senderAddr, resp.Payloads[0].AccountIdentifier.Address)
 	require.Equal(t, types.SignatureType("ecdsa"), resp.Payloads[0].SignatureType)
 }

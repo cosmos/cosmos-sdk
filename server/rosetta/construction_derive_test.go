@@ -30,7 +30,7 @@ func TestLaunchpad_ConstructionDerive(t *testing.T) {
 	})
 	require.Nil(t, deriveErr)
 	require.NotNil(t, deriveResp)
-	require.Equal(t, "cosmos1f0ykmmcx9cwjlk532w4lvkac875wjrj9z8f0tk", deriveResp.Address)
+	require.Equal(t, "cosmos1f0ykmmcx9cwjlk532w4lvkac875wjrj9z8f0tk", deriveResp.AccountIdentifier.Address)
 
 	// TODO: Use table driven tests
 	// check unsupported curve returns error

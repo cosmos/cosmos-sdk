@@ -14,18 +14,21 @@ func (l launchpad) ConstructionPreprocess(ctx context.Context, r *types.Construc
 		return nil, ErrInterpreting
 	}
 
-	txData, err := getTransferTxDataFromOperations(operations)
+	_, addr, _, err := OperationsToSdkMsg(operations)
 	if err != nil {
 		return nil, rosetta.WrapError(ErrInvalidAddress, err.Error())
 	}
-	if txData.From == nil {
-		return nil, rosetta.WrapError(ErrInvalidAddress, err.Error())
+
+	memo, ok := r.Metadata["memo"]
+	if !ok {
+		memo = ""
 	}
 
 	var res = &types.ConstructionPreprocessResponse{
 		Options: map[string]interface{}{
-			OptionAddress: txData.From.String(),
+			OptionAddress: addr,
 			OptionGas:     200000,
+			OptionMemo:    memo,
 		},
 	}
 	return res, nil

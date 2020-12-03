@@ -13,4 +13,5 @@ var (
 	ErrInvalidPubkey               = rosetta.NewError(8, "invalid pubkey")
 	ErrEndpointDisabledOfflineMode = rosetta.NewError(9, "endpoint disabled in offline mode")
 	ErrInvalidTxHash               = rosetta.NewError(10, "invalid tx hash")
+	ErrInvalidMemo                 = rosetta.NewError(7, "invalid memo")
 )

@@ -22,7 +22,7 @@ func TestLaunchpad_ConstructionPreprocess(t *testing.T) {
 	ops := []*types.Operation{
 		{
 			OperationIdentifier: &types.OperationIdentifier{},
-			Type:                "Transfer",
+			Type:                "send",
 			Status:              "Success",
 			Account: &types.AccountIdentifier{
 				Address: "cosmos12qqzw4tqu32anlcx0a3hupvgdhaf4cc8j9wfyd",
@@ -38,7 +38,7 @@ func TestLaunchpad_ConstructionPreprocess(t *testing.T) {
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: 1,
 			},
-			Type:   "Transfer",
+			Type:   "send",
 			Status: "Success",
 			Account: &types.AccountIdentifier{
 				Address: "cosmos10rpmm9ur87le39hehteha37sg5awdsns6huyvy",
@@ -56,6 +56,7 @@ func TestLaunchpad_ConstructionPreprocess(t *testing.T) {
 	expOptions := map[string]interface{}{
 		OptionAddress: "cosmos12qqzw4tqu32anlcx0a3hupvgdhaf4cc8j9wfyd",
 		OptionGas:     200000,
+		OptionMemo:    "",
 	}
 
 	deriveResp, deriveErr := adapter.ConstructionPreprocess(context.Background(), &types.ConstructionPreprocessRequest{

@@ -57,6 +57,7 @@ func TestLaunchpad_ConstructionMetadata(t *testing.T) {
 	options := map[string]interface{}{
 		OptionAddress: "cosmos15f92rjkapauptyw6lt94rlwq4dcg99nncwc8na",
 		OptionGas:     &feeMultiplier,
+		OptionMemo:    "test",
 	}
 
 	expMetadata := map[string]interface{}{
@@ -64,6 +65,7 @@ func TestLaunchpad_ConstructionMetadata(t *testing.T) {
 		SequenceKey:      "1",
 		ChainIDKey:       "TheNetwork",
 		OptionGas:        &feeMultiplier,
+		OptionMemo:       "test",
 	}
 
 	adapter := newAdapter(nil, m, mt, properties)

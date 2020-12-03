@@ -56,6 +56,7 @@ func TestLaunchpad_ConstructionPreprocess(t *testing.T) {
 	expOptions := map[string]interface{}{
 		OptionAddress: "cosmos12qqzw4tqu32anlcx0a3hupvgdhaf4cc8j9wfyd",
 		OptionGas:     200000,
+		OptionMemo:    "",
 	}
 
 	deriveResp, deriveErr := adapter.ConstructionPreprocess(context.Background(), &types.ConstructionPreprocessRequest{

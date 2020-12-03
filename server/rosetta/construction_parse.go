@@ -24,13 +24,15 @@ func (l launchpad) ConstructionParse(ctx context.Context, request *types.Constru
 	}
 
 	signers := make([]*types.AccountIdentifier, len(stdTx.Signatures))
-	for i, sig := range stdTx.Signatures {
-		addr, err := cosmostypes.AccAddressFromHex(sig.PubKey.Address().String())
-		if err != nil {
-			return nil, ErrInvalidTransaction
-		}
-		signers[i] = &types.AccountIdentifier{
-			Address: addr.String(),
+	if request.Signed {
+		for i, sig := range stdTx.Signatures {
+			addr, err := cosmostypes.AccAddressFromHex(sig.PubKey.Address().String())
+			if err != nil {
+				return nil, ErrInvalidTransaction
+			}
+			signers[i] = &types.AccountIdentifier{
+				Address: addr.String(),
+			}
 		}
 	}
 

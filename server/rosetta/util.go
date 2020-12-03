@@ -74,11 +74,12 @@ func tendermintTxToRosettaTx(res tendermint.TxResponse) *types.Transaction {
 }
 
 // SdkTxToOperations converts an sdk.Tx to rosetta operations
-func SdkTxToOperations(tx auth.StdTx, withStatus, hasError bool) []*types.Operation {
+func SdkTxToOperations(tx sdk.Tx, withStatus, hasError bool) []*types.Operation {
 	var operations []*types.Operation
 
-	feeCoins := tx.Fee.Amount
-	var feeOps = rosettaFeeOperationsFromCoins(feeCoins, tx.FeePayer().String(), withStatus)
+	feeTx := tx.(auth.StdTx)
+	feeCoins := feeTx.Fee.Amount
+	var feeOps = rosettaFeeOperationsFromCoins(feeCoins, feeTx.FeePayer().String(), withStatus)
 	operations = append(operations, feeOps...)
 
 	msgOps := sdkMsgsToRosettaOperations(tx.GetMsgs(), withStatus, hasError, len(feeCoins))
@@ -241,7 +242,7 @@ func cosmosTxToRosettaTx(tx sdk.TxResponse) *types.Transaction {
 		TransactionIdentifier: &types.TransactionIdentifier{
 			Hash: tx.TxHash,
 		},
-		Operations: sdkMsgsToRosettaOperations(tx.Tx.GetMsgs(), true, hasError, 0),
+		Operations: SdkTxToOperations(tx.Tx, true, hasError),
 	}
 }
 
@@ -289,7 +290,7 @@ func sdkMsgsToRosettaOperations(msgs []sdk.Msg, withStatus bool, hasError bool, 
 				sendOp(toAddress.String(), coin.Amount.String(), feeLen+i+1),
 			)
 		case OperationDelegate:
-			newMsg := msg.(*stakingtypes.MsgDelegate)
+			newMsg := msg.(stakingtypes.MsgDelegate)
 			delAddr := newMsg.DelegatorAddress
 			valAddr := newMsg.ValidatorAddress
 			coin := newMsg.Amount

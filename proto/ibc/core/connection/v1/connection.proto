@@ -10,7 +10,7 @@ import "ibc/core/commitment/v1/commitment.proto";
 // https://github.com/cosmos/ics/tree/master/spec/ics-003-connection-semantics#data-structures
 
 // ConnectionEnd defines a stateful object on a chain connected to another
-// separate one. 
+// separate one.
 // NOTE: there must only be 2 defined ConnectionEnds to establish
 // a connection between two chains.
 message ConnectionEnd {

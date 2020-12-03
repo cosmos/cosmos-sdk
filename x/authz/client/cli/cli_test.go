@@ -109,10 +109,10 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 	s.Require().NoError(err)
 
 	testCases := []struct {
-		name           string
-		args           []string
-		expectErr      bool
-		expectedOutput string
+		name      string
+		args      []string
+		expectErr bool
+		expErrMsg string
 	}{
 		{
 			"Error: Invalid grantee",
@@ -122,7 +122,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			true,
-			"",
+			"decoding bech32 failed: invalid character in string: ' '",
 		},
 		{
 			"Error: Invalid granter",
@@ -132,7 +132,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			true,
-			"",
+			"decoding bech32 failed: invalid character in string: ' '",
 		},
 		{
 			"Valid txn (json)",
@@ -151,10 +151,14 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryAuthorizations()
 			clientCtx := val.ClientCtx
-			_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			resp, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
+				s.Require().Contains(string(resp.Bytes()), tc.expErrMsg)
 			} else {
+				s.Require().NoError(err)
+				var grants types.QueryAuthorizationsResponse
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &grants)
 				s.Require().NoError(err)
 			}
 		})

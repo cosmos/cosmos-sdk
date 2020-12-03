@@ -63,11 +63,17 @@ $ %s query %s authorizations cosmos1skj.. cosmos1skjwj..
 				return err
 			}
 
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
 			res, err := queryClient.Authorizations(
 				context.Background(),
 				&types.QueryAuthorizationsRequest{
-					Granter: granterAddr.String(),
-					Grantee: granteeAddr.String(),
+					Granter:    granterAddr.String(),
+					Grantee:    granteeAddr.String(),
+					Pagination: pageReq,
 				},
 			)
 			if err != nil {
@@ -78,6 +84,7 @@ $ %s query %s authorizations cosmos1skj.. cosmos1skjwj..
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "authorizations")
 	return cmd
 }
 

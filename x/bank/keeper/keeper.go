@@ -22,7 +22,7 @@ var _ Keeper = (*BaseKeeper)(nil)
 type Keeper interface {
 	SendKeeper
 
-	InitGenesis(sdk.Context, types.GenesisState)
+	InitGenesis(sdk.Context, *types.GenesisState)
 	ExportGenesis(sdk.Context) *types.GenesisState
 
 	GetSupply(ctx sdk.Context) exported.SupplyI
@@ -186,7 +186,6 @@ func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) types.Metada
 	store = prefix.NewStore(store, types.DenomMetadataKey(denom))
 
 	bz := store.Get([]byte(denom))
-
 	var metadata types.Metadata
 	k.cdc.MustUnmarshalBinaryBare(bz, &metadata)
 

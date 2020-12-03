@@ -16,6 +16,11 @@ func (k Keeper) GetNotBondedPool(ctx sdk.Context) (notBondedPool authtypes.Modul
 	return k.authKeeper.GetModuleAccount(ctx, types.NotBondedPoolName)
 }
 
+// GetEpochTempPool returns the epoch temp tokens pool's module account
+func (k Keeper) GetEpochTempPool(ctx sdk.Context) (epochTempPool authtypes.ModuleAccountI) {
+	return k.authKeeper.GetModuleAccount(ctx, types.EpochTempPoolName)
+}
+
 // bondedTokensToNotBonded transfers coins from the bonded to the not bonded pool within staking
 func (k Keeper) bondedTokensToNotBonded(ctx sdk.Context, tokens sdk.Int) {
 	coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), tokens))

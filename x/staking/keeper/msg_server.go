@@ -87,6 +87,16 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	// call the after-creation hook
 	k.AfterValidatorCreated(ctx, validator.GetOperator())
 
+	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return &types.MsgCreateValidatorResponse{}, err
+	}
+
+	coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), msg.Value.Amount))
+	if err := k.bankKeeper.DelegateCoinsFromAccountToModule(ctx, delegatorAddress, types.EpochTempPoolName, coins); err != nil {
+		return &types.MsgCreateValidatorResponse{}, err
+	}
+
 	epochNumber := k.GetEpochNumber(ctx)
 	k.SaveEpochAction(ctx, epochNumber, msg)
 
@@ -118,6 +128,22 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 
 func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*types.MsgDelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return &types.MsgDelegateResponse{}, err
+	}
+
+	bondDenom := k.BondDenom(ctx)
+	if msg.Amount.Denom != bondDenom {
+		return &types.MsgDelegateResponse{}, sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
+	}
+
+	coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), msg.Amount.Amount))
+	if err := k.bankKeeper.DelegateCoinsFromAccountToModule(ctx, delegatorAddress, types.EpochTempPoolName, coins); err != nil {
+		return &types.MsgDelegateResponse{}, err
+	}
+
 	// Queue epoch action and move all the execution logic to Epoch execution
 	epochNumber := k.GetEpochNumber(ctx)
 	k.SaveEpochAction(ctx, epochNumber, msg)

@@ -10,6 +10,7 @@ import (
 //
 // - BondedPool -> "bonded_tokens_pool"
 const (
+	EpochTempPoolName = "epoch_temp_tokens_pool"
 	NotBondedPoolName = "not_bonded_tokens_pool"
 	BondedPoolName    = "bonded_tokens_pool"
 )

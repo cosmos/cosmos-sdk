@@ -62,6 +62,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Client Breaking
 
+* (crypto) [\#7419](https://github.com/cosmos/cosmos-sdk/pull/7419) The SDK doesn't use Tendermint's `crypto.PubKey` interface anymore, and uses instead it's own `PubKey` interface, defined in `crypto/types`. Replace all instances of `crypto.PubKey` by `cryptotypes.Pubkey`.
 * (x/staking) [\#7419](https://github.com/cosmos/cosmos-sdk/pull/7419) The `TmConsPubKey` method on ValidatorI has been removed and replaced instead by `ConsPubKey` (which returns a SDK `cryptotypes.PubKey`) and `TmConsPublicKey` (which returns a Tendermint proto PublicKey).
 
 ### Improvements

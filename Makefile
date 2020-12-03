@@ -357,7 +357,7 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-proto-all: proto-format proto-lint proto-check-breaking proto-gen
+proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"

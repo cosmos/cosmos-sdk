@@ -2,11 +2,12 @@ package feegrant
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
 
 // GenesisState contains a set of fee allowances, persisted from the store
-type GenesisState []FeeAllowanceGrant
+type GenesisState []types.FeeAllowanceGrant
 
 // ValidateBasic ensures all grants in the genesis state are valid
 func (g GenesisState) ValidateBasic() error {
@@ -20,7 +21,7 @@ func (g GenesisState) ValidateBasic() error {
 }
 
 // InitGenesis will initialize the keeper from a *previously validated* GenesisState
-func InitGenesis(ctx sdk.Context, k Keeper, data *types.GenesisState) {
+func InitGenesis(ctx sdk.Context, k keeper.Keeper, data *types.GenesisState) {
 	for _, f := range data.FeeAllowances {
 		k.GrantFeeAllowance(ctx, f.Granter, f.Grantee, f.GetFeeGrant())
 	}
@@ -33,11 +34,11 @@ func InitGenesis(ctx sdk.Context, k Keeper, data *types.GenesisState) {
 // for export, like if they have expiry at 5000 and current is 4000, they export with
 // expiry of 1000. Every FeeAllowance has a method `PrepareForExport` that allows
 // them to perform any changes needed prior to export.
-func ExportGenesis(ctx sdk.Context, k Keeper) (*types.GenesisState, error) {
+func ExportGenesis(ctx sdk.Context, k keeper.Keeper) (*types.GenesisState, error) {
 	time, height := ctx.BlockTime(), ctx.BlockHeight()
-	var grants []FeeAllowanceGrant
+	var grants []types.FeeAllowanceGrant
 
-	err := k.IterateAllFeeAllowances(ctx, func(grant FeeAllowanceGrant) bool {
+	err := k.IterateAllFeeAllowances(ctx, func(grant types.FeeAllowanceGrant) bool {
 		grants = append(grants, grant.PrepareForExport(time, height))
 		return false
 	})

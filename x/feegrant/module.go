@@ -33,7 +33,7 @@ type AppModuleBasic struct{}
 
 // Name returns the feegrant module's name.
 func (AppModuleBasic) Name() string {
-	return ModuleName
+	return types.ModuleName
 }
 
 // RegisterServices registers a gRPC query service to respond to the
@@ -117,11 +117,11 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 // AppModule implements an application module for the feegrant module.
 type AppModule struct {
 	AppModuleBasic
-	keeper Keeper
+	keeper keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper) AppModule {
+func NewAppModule(keeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
@@ -130,7 +130,7 @@ func NewAppModule(keeper Keeper) AppModule {
 
 // Name returns the feegrant module's name.
 func (AppModule) Name() string {
-	return ModuleName
+	return types.ModuleName
 }
 
 // RegisterInvariants registers the feegrant module invariants.
@@ -148,7 +148,7 @@ func (am AppModule) NewHandler() sdk.Handler {
 
 // QuerierRoute returns the feegrant module's querier route name.
 func (AppModule) QuerierRoute() string {
-	return QuerierRoute
+	return types.QuerierRoute
 }
 
 // // NewQuerierHandler returns the feegrant module sdk.Querier.

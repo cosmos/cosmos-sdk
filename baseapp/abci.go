@@ -379,8 +379,16 @@ func (app *BaseApp) snapshot(height int64) {
 
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
 // implements Queryable.
-func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
+func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	defer telemetry.MeasureSince(time.Now(), "abci", "query")
+
+	// Add panic recovery for all queries.
+	// ref: https://github.com/cosmos/cosmos-sdk/pull/8039
+	defer func() {
+		if r := recover(); r != nil {
+			res = sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrPanic, "%v", r))
+		}
+	}()
 
 	// when a client did not provide a query height, manually inject the latest
 	if req.Height == 0 {

@@ -241,6 +241,10 @@ func (coord *Coordinator) RecvPacket(
 	packetKey := host.PacketCommitmentKey(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 	proof, proofHeight := source.QueryProof(packetKey)
 
+	// Increment time and commit block so that 5 second delay period passes between send and receive
+	coord.IncrementTime()
+	coord.CommitBlock(source, counterparty)
+
 	recvMsg := channeltypes.NewMsgRecvPacket(packet, proof, proofHeight, counterparty.SenderAccount.GetAddress())
 
 	// receive on counterparty and update source client
@@ -280,6 +284,10 @@ func (coord *Coordinator) AcknowledgePacket(
 	packetKey := host.PacketAcknowledgementKey(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 	proof, proofHeight := counterparty.QueryProof(packetKey)
 
+	// Increment time and commit block so that 5 second delay period passes between send and receive
+	coord.IncrementTime()
+	coord.CommitBlock(source, counterparty)
+
 	ackMsg := channeltypes.NewMsgAcknowledgement(packet, ack, proof, proofHeight, source.SenderAccount.GetAddress())
 	return coord.SendMsgs(source, counterparty, counterpartyClient, []sdk.Msg{ackMsg})
 }
@@ -291,9 +299,17 @@ func (coord *Coordinator) RelayPacket(
 	sourceClient, counterpartyClient string,
 	packet channeltypes.Packet, ack []byte,
 ) error {
+	// Increment time and commit block so that 5 second delay period passes between send and receive
+	coord.IncrementTime()
+	coord.CommitBlock(counterparty)
+
 	if err := coord.RecvPacket(source, counterparty, sourceClient, packet); err != nil {
 		return err
 	}
+
+	// Increment time and commit block so that 5 second delay period passes between send and receive
+	coord.IncrementTime()
+	coord.CommitBlock(source)
 
 	return coord.AcknowledgePacket(source, counterparty, counterpartyClient, packet, ack)
 }
@@ -305,6 +321,15 @@ func (coord *Coordinator) RelayPacket(
 func (coord *Coordinator) IncrementTime() {
 	for _, chain := range coord.Chains {
 		chain.CurrentHeader.Time = chain.CurrentHeader.Time.Add(TimeIncrement)
+		chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})
+	}
+}
+
+// IncrementTimeBy iterates through all the TestChain's and increments their current header time
+// by specified time.
+func (coord *Coordinator) IncrementTimeBy(increment time.Duration) {
+	for _, chain := range coord.Chains {
+		chain.CurrentHeader.Time = chain.CurrentHeader.Time.Add(increment)
 		chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})
 	}
 }

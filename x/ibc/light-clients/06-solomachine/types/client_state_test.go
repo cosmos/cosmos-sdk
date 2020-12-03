@@ -637,7 +637,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 			expSeq := tc.clientState.Sequence + 1
 
 			err := tc.clientState.VerifyPacketCommitment(
-				suite.store, suite.chainA.Codec, solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, solomachine.Sequence, commitmentBytes,
+				suite.store, suite.chainA.Codec, solomachine.GetHeight(), 0, 0, tc.prefix, tc.proof, testPortID, testChannelID, solomachine.Sequence, commitmentBytes,
 			)
 
 			if tc.expPass {
@@ -724,7 +724,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 			expSeq := tc.clientState.Sequence + 1
 
 			err := tc.clientState.VerifyPacketAcknowledgement(
-				suite.store, suite.chainA.Codec, solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, solomachine.Sequence, ack,
+				suite.store, suite.chainA.Codec, solomachine.GetHeight(), 0, 0, tc.prefix, tc.proof, testPortID, testChannelID, solomachine.Sequence, ack,
 			)
 
 			if tc.expPass {
@@ -811,7 +811,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketReceiptAbsence() {
 			expSeq := tc.clientState.Sequence + 1
 
 			err := tc.clientState.VerifyPacketReceiptAbsence(
-				suite.store, suite.chainA.Codec, solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, solomachine.Sequence,
+				suite.store, suite.chainA.Codec, solomachine.GetHeight(), 0, 0, tc.prefix, tc.proof, testPortID, testChannelID, solomachine.Sequence,
 			)
 
 			if tc.expPass {
@@ -898,7 +898,7 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 			expSeq := tc.clientState.Sequence + 1
 
 			err := tc.clientState.VerifyNextSequenceRecv(
-				suite.store, suite.chainA.Codec, solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, nextSeqRecv,
+				suite.store, suite.chainA.Codec, solomachine.GetHeight(), 0, 0, tc.prefix, tc.proof, testPortID, testChannelID, nextSeqRecv,
 			)
 
 			if tc.expPass {

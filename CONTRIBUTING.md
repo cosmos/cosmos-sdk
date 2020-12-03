@@ -218,7 +218,7 @@ only pull requests targeted directly against master.
 ### Development Procedure
 
 - the latest state of development is on `master`
-- `master` must never fail `make test` or `make test_cli`
+- `master` must never fail `make test`
 - `master` should not fail `make lint`
 - no `--force` onto `master` (except when reverting a broken commit, which should seldom happen)
 - create a development branch either on github.com/cosmos/cosmos-sdk, or your fork (using `git remote add origin`)
@@ -227,7 +227,7 @@ only pull requests targeted directly against master.
 ### Pull Merge Procedure
 
 - ensure pull branch is rebased on `master`
-- run `make test` and `make test_cli` to ensure that all tests pass
+- run `make test` to ensure that all tests pass
 - merge pull request
 
 ### Release Procedure
@@ -318,41 +318,98 @@ should be taken. If however, a code-owner is demonstrably shown to intentionally
 have had acted maliciously or grossly negligent, code-owner privileges may be
 stripped with no prior warning or consent from the member in question.
 
+Other potential removal criteria:
+  * Missing 3 scheduled meetings results in ICF evaluating whether the member should be
+    removed / replaced
+  * Violation of Code of Conduct
+  
 Earning this privilege should be considered to be no small feat and is by no
 means guaranteed by any quantifiable metric. It is a symbol of great trust of
 the community of this project.
 
-## Point Release Procedure
 
-*   3 Stages
-    *   **Strategy Discovery**
-        *   Develop long term priorities, strategy and roadmap for the SDK
-        *   Release committee not yet defined as there is already a roadmap that can be used for the time being
-    *   **Concept Approval**
-        *   Time bound period for Request for Comment (RFC) on Architectural Decision Records (ADR)
-        *   Release committee criteria
-            *   Participation in all or almost all ADR discussions
-            *   Are they already active contributors?
-                *   Are they constantly making substantial contributions to the project's codebase, review process, documentation or RFC?
-            *   Do they have a stake in the Cosmos SDK?
-                *   Are they a client of the SDK?
-                *   Are they “[giving back](https://www.debian.org/social_contract)” to the software?
-            *   Code owners need to maintain participation in a process
-                *   Delegate representation in case of vacation or absence
-            *   ⅔ approval from these initial three
-                *   **Aaron** (Regen), **Bez** (Fission), **Alessio** (AiB)
-            *   Secondary pool of candidates to replace / substitute
-                *   **Chris Goes** (IG), **Sunny** (Sikka)
-            *   Removal
-                *   Missing 3 meetings results in ICF evaluating whether the member should be removed / replaced
-                *   Violation of Code of Conduct
-    *   **Implementation & Release Approval**
-        *   Ensure the PR does exactly what the ADR said it should
-        *   More senior engineering capability
-        *   ⅔ approval from the **primary repo maintainers** in `CODEOWNERS`
-        *   Secondary pool of candidates to replace / substitute from the **Secondary repo maintainers** in `CODEOWNERS`
-        *   Removal
-            *   Missing 3 meetings results in ICF evaluating whether the member should be removed / replaced
-            *   Violation of Code of Conduct
-*   Addition to committee can be recommended by anyone to the current group or the ICF directly
-    *   The evaluation criteria will be considered and the committee will decide on the addition with final approval from the ICF
+## Concept & Release Approval Processes
+
+The process for how Cosmos SDK maintainers take features and ADRs from concept to release
+is broken up into three distinct stages: **Strategy Discovery**, **Concept Approval**, and 
+**Implementation & Release Approval**
+
+
+### Strategy Discovery
+
+* Develop long term priorities, strategy and roadmap for the SDK
+* Release committee not yet defined as there is already a roadmap that can be used for the time being
+
+### Concept Approval
+
+* Architecture Decision Records (ADRs) may be proposed by any contributors or maintainers of the Cosmos SDK,
+    and should follow the guidelines outlined in the
+    [ADR Creation Process](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/PROCESS.md)
+* After proposal, a time bound period for Request for Comment (RFC) on ADRs commences
+* ADRs are intended to be iterative, and may be merged into `master` while still in a `Proposed` status
+
+**Time Bound Period**
+
+* Time bound period for individual ADR Pull Requests should not exceed 2 weeks
+* Total time bound period for an ADR to reach a decision (`ABANDONED | ACCEPTED | REJECTED`) should not exceed
+    8 weeks
+    
+If an individual Pull Request for an ADR needs more time than 2 weeks, it should be merged
+in current state `Draft` or `Proposed`, with its contents updated to summarize
+the current state of its discussion.
+
+If an ADR is taking longer than 8 weeks to reach a final conclusion, the **Concept Approval Committee** 
+should convene to rectify the situation by either making changes to the Concept Approval
+Process (as outlined here), or making changes to the members of the Approval Committee.
+
+**Approval Committee & Decision Making**
+
+In absense of general consensus, decision making requires ⅔ vote from the three members
+of the **Concept Approval Committee**.
+
+**Committee Members**
+
+* Core Members: **Aaron** (Regen), **Bez** (Fission), **Alessio** (AiB)
+* Secondary pool of candidates to replace / substitute:
+    * **Chris Goes** (IG), **Sunny** (Sikka)
+
+**Committee Criteria**
+
+Members must:
+
+* Participate in all or almost all ADR discussions, both on Github as well as in bi-weekly Architecture Review
+  meetings
+* Be active contributors to the SDK, and furthermore should be continuously making substantial contributions
+  to the project's codebase, review process, documentation and ADRs
+* Have stake in the Cosmos SDK project, represented by:
+  * Being a client / user of the Comsos SDK
+  * "[giving back](https://www.debian.org/social_contract)" to the software
+* Delegate representation in case of vacation or absence
+
+Code owners need to maintain participation in the process, ideally as members of **Concept Approval Committee**
+members, but at the very least as active participants in ADR discussions
+
+Removal criteria:
+
+* Missing 3 meetings results in ICF evaluating whether the member should be removed / replaced
+* Violation of Code of Conduct
+
+### Implementation & Release Approval
+
+The following process should be adhered to both for implementation PRs corresponding to ADRs, as
+well as for PRs made as part of a release process:
+
+* Code reviewers should ensure the PR does exactly what the ADR said it should
+* Code reviewers should have more senior engineering capability
+* ⅔ approval is required from the **primary repo maintainers** in `CODEOWNERS`
+  * Secondary pool of candidates to replace / substitute are listed as **secondary repo maintainers** in `CODEOWNERS`
+ 
+*Note: For any major or minor release series denoted as a "Stable Release" (e.g. v0.39 "Launchpad"), a separate release
+committee is often established. Stable Releases, and their corresponding release committees are documented
+separately in [STABLE_RELEASES.md](./STABLE_RELEASES.md)*
+
+ 
+  
+----  
+* Addition to committee can be recommended by anyone to the current group or the ICF directly
+  * The evaluation criteria will be considered and the committee will decide on the addition with final approval from the ICF

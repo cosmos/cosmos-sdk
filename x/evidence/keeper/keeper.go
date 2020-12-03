@@ -40,7 +40,7 @@ func NewKeeper(
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // SetRouter sets the Evidence Handler router for the x/evidence module. Note,

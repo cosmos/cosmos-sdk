@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -13,16 +11,19 @@ func HandleCommunityPoolSpendProposal(ctx sdk.Context, k Keeper, p *types.Commun
 	if k.blockedAddrs[p.Recipient] {
 		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive external funds", p.Recipient)
 	}
+
 	recipient, addrErr := sdk.AccAddressFromBech32(p.Recipient)
 	if addrErr != nil {
 		return addrErr
 	}
+
 	err := k.DistributeFromFeePool(ctx, p.Amount, recipient)
 	if err != nil {
 		return err
 	}
 
 	logger := k.Logger(ctx)
-	logger.Info(fmt.Sprintf("transferred %s from the community pool to recipient %s", p.Amount, p.Recipient))
+	logger.Info("transferred from the community pool to recipient", "amount", p.Amount.String(), "recipient", p.Recipient)
+
 	return nil
 }

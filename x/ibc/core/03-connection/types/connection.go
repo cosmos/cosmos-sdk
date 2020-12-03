@@ -40,7 +40,7 @@ func (c ConnectionEnd) GetVersions() []exported.Version {
 	return ProtoVersionsToExported(c.Versions)
 }
 
-// GetDelayPeriod implementes the Connection interface
+// GetDelayPeriod implements the Connection interface
 func (c ConnectionEnd) GetDelayPeriod() uint64 {
 	return c.DelayPeriod
 }

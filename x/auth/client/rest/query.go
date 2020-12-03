@@ -151,7 +151,7 @@ func QueryTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusNotFound, fmt.Sprintf("no transaction found with hash %s", hashHexStr))
 		}
 
-		err = checkSignModeError(clientCtx, output, "/cosmos/tx/v1beta1/tx/{txhash}")
+		err = checkSignModeError(clientCtx, output, "/cosmos/tx/v1beta1/txs/{txhash}")
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 

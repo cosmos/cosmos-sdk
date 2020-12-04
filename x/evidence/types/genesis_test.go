@@ -175,6 +175,9 @@ func (*TestEvidence) String() string {
 	return "test-string"
 }
 
+func (*TestEvidence) ProtoMessage() {}
+func (*TestEvidence) Reset()        {}
+
 func (*TestEvidence) Hash() tmbytes.HexBytes {
 	return tmbytes.HexBytes([]byte("test-hash"))
 }

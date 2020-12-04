@@ -39,15 +39,15 @@ func TestAminoMarsharlInterface(t *testing.T) {
 	require.NoError(err)
 	// require.EqualError(err, "can't proto marshal testdata.Dog; expecting ProtoMarshaler")
 	require.PanicsWithValue("Unmarshal expects a pointer", func() {
-		cdc.UnmarshalInterface(animal, bz)
+		cdc.UnmarshalInterface(bz, animal)
 	})
 	var dog2 testdata.Dog
-	require.NoError(cdc.UnmarshalInterface(&dog2, bz))
+	require.NoError(cdc.UnmarshalInterface(bz, &dog2))
 	require.Equal(dog, dog2)
-	require.NoError(cdc.UnmarshalInterface(&animal, bz))
+	require.NoError(cdc.UnmarshalInterface(bz, &animal))
 	require.Equal(dog, animal)
 	var cat testdata.Cat
-	require.Error(cdc.UnmarshalInterface(&cat, bz))
+	require.Error(cdc.UnmarshalInterface(bz, &cat))
 }
 
 func TestAminoCodec(t *testing.T) {

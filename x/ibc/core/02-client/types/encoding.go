@@ -39,7 +39,7 @@ func MarshalClientState(cdc codec.BinaryMarshaler, clientStateI exported.ClientS
 // failure.
 func UnmarshalClientState(cdc codec.BinaryMarshaler, bz []byte) (exported.ClientState, error) {
 	var clientState exported.ClientState
-	if err := cdc.UnmarshalInterface(&clientState, bz); err != nil {
+	if err := cdc.UnmarshalInterface(bz, &clientState); err != nil {
 		return nil, err
 	}
 
@@ -78,7 +78,7 @@ func MarshalConsensusState(cdc codec.BinaryMarshaler, cs exported.ConsensusState
 // failure.
 func UnmarshalConsensusState(cdc codec.BinaryMarshaler, bz []byte) (exported.ConsensusState, error) {
 	var consensusState exported.ConsensusState
-	if err := cdc.UnmarshalInterface(&consensusState, bz); err != nil {
+	if err := cdc.UnmarshalInterface(bz, &consensusState); err != nil {
 		return nil, err
 	}
 

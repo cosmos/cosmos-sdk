@@ -59,7 +59,7 @@ func (k Keeper) GetPubkey(ctx sdk.Context, a cryptotypes.Address) (cryptotypes.P
 		return nil, fmt.Errorf("address %s not found", sdk.ConsAddress(a))
 	}
 	var pk cryptotypes.PubKey
-	return pk, k.cdc.UnmarshalInterface(&pk, bz)
+	return pk, k.cdc.UnmarshalInterface(bz, &pk)
 }
 
 // Slash attempts to slash a validator. The slash is delegated to the staking

@@ -2,7 +2,6 @@ package codec
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/gogo/protobuf/proto"
 )
@@ -95,19 +94,12 @@ func (ac *AminoCodec) MarshalInterface(i interface{}) ([]byte, error) {
 }
 
 // UnmarshalInterface is a convenience function for proto unmarshaling interfaces.
-// `ptr` must be a pointer to an interface. If you use a concret type you should use
+// `ptr` must be a pointer to an interface. If you use a concrete type you should use
 // UnmarshalBinaryBare
-func (ac *AminoCodec) UnmarshalInterface(ptr interface{}, bz []byte) error {
+//
+// Example:
+//   var x MyInterface
+//   err := UnmarshalAny(bz, &x)
+func (ac *AminoCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
 	return ac.LegacyAmino.UnmarshalBinaryBare(bz, ptr)
-}
-
-// TODO remove
-func assertProtoMarshaler(i interface{}) error {
-	return nil
-	// TODO: check this
-	_, ok := i.(ProtoMarshaler)
-	if !ok {
-		return fmt.Errorf("can't amino marshal %T; expecting ProtoMarshaler", i)
-	}
-	return nil
 }

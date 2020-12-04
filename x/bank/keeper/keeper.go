@@ -412,5 +412,5 @@ func (k BaseKeeper) MarshalSupply(supplyI exported.SupplyI) ([]byte, error) {
 // bytes of a Proto-based Supply type
 func (k BaseKeeper) UnmarshalSupply(bz []byte) (exported.SupplyI, error) {
 	var evi exported.SupplyI
-	return evi, k.cdc.UnmarshalInterface(&evi, bz)
+	return evi, k.cdc.UnmarshalInterface(bz, &evi)
 }

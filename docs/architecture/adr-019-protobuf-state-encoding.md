@@ -234,7 +234,7 @@ func MarshalEvidence(cdc codec.BinaryMarshaler, e eviexported.Evidence) ([]byte,
 
 func UnmarshalEvidence(cdc codec.BinaryMarshaler, bz []byte) (eviexported.Evidence, error) {
 	var evi eviexported.Evidence
-	err := cdc.UnmarshalInterface(c.interfaceContext, &evi, bz)
+	err := cdc.UnmarshalInterface(&evi, bz)
     return err, nil
 }
 ```

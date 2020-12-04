@@ -30,7 +30,7 @@ func TestMsgDecode(t *testing.T) {
 	pk1bz, err := cdc.MarshalInterface(pk1)
 	require.NoError(t, err)
 	var pkUnmarshaled cryptotypes.PubKey
-	err = cdc.UnmarshalInterface(&pkUnmarshaled, pk1bz)
+	err = cdc.UnmarshalInterface(pk1bz, &pkUnmarshaled)
 	require.NoError(t, err)
 	require.True(t, pk1.Equals(pkUnmarshaled.(*ed25519.PubKey)))
 
@@ -43,7 +43,7 @@ func TestMsgDecode(t *testing.T) {
 	require.NoError(t, err)
 
 	var msgUnmarshaled sdk.Msg
-	err = cdc.UnmarshalInterface(&msgUnmarshaled, msgSerialized)
+	err = cdc.UnmarshalInterface(msgSerialized, &msgUnmarshaled)
 	require.NoError(t, err)
 	msg2, ok := msgUnmarshaled.(*types.MsgCreateValidator)
 	require.True(t, ok)

@@ -224,7 +224,7 @@ func (ak AccountKeeper) MarshalAccount(accountI types.AccountI) ([]byte, error) 
 // bytes of a Proto-based Account type
 func (ak AccountKeeper) UnmarshalAccount(bz []byte) (types.AccountI, error) {
 	var acc types.AccountI
-	return acc, ak.cdc.UnmarshalInterface(&acc, bz)
+	return acc, ak.cdc.UnmarshalInterface(bz, &acc)
 }
 
 // GetCodec return codec.Marshaler object used by the keeper

@@ -32,8 +32,8 @@ type (
 		UnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler) error
 		MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler)
 
-		MarshalInterface(x interface{}) ([]byte, error)
-		UnmarshalInterface(x interface{}, bz []byte) error
+		MarshalInterface(i interface{}) ([]byte, error)
+		UnmarshalInterface(bz []byte, ptr interface{}) error
 
 		types.AnyUnpacker
 	}
@@ -41,8 +41,8 @@ type (
 	JSONMarshaler interface {
 		MarshalJSON(o proto.Message) ([]byte, error)
 		MustMarshalJSON(o proto.Message) []byte
-		// MarshalInterfaceJSON(x interface{}) ([]byte, error)
-		// UnmarshalInterfaceJSON(x interface{}, bz []byte) error
+		// MarshalInterfaceJSON(i interface{}) ([]byte, error)
+		// UnmarshalInterfaceJSON(bz []byte, ptr interface{}) error
 
 		UnmarshalJSON(bz []byte, ptr proto.Message) error
 		MustUnmarshalJSON(bz []byte, ptr proto.Message)

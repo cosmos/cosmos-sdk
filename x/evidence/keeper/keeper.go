@@ -176,5 +176,5 @@ func (k Keeper) MarshalEvidence(evidenceI exported.Evidence) ([]byte, error) {
 // bytes of a Proto-based Evidence type
 func (k Keeper) UnmarshalEvidence(bz []byte) (exported.Evidence, error) {
 	var evi exported.Evidence
-	return evi, k.cdc.UnmarshalInterface(&evi, bz)
+	return evi, k.cdc.UnmarshalInterface(bz, &evi)
 }

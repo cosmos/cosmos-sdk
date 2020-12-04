@@ -108,7 +108,7 @@ func QueryTxsRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			packStdTxResponse(w, clientCtx, txRes)
 		}
 
-		err = checkSignModeError(clientCtx, searchResult, "/cosmos/tx/v1beta1/txs")
+		err = checkAminoMarshalError(clientCtx, searchResult, "/cosmos/tx/v1beta1/txs")
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 
@@ -151,7 +151,7 @@ func QueryTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusNotFound, fmt.Sprintf("no transaction found with hash %s", hashHexStr))
 		}
 
-		err = checkSignModeError(clientCtx, output, "/cosmos/tx/v1beta1/tx/{txhash}")
+		err = checkAminoMarshalError(clientCtx, output, "/cosmos/tx/v1beta1/txs/{txhash}")
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 
@@ -198,9 +198,9 @@ func packStdTxResponse(w http.ResponseWriter, clientCtx client.Context, txRes *s
 	return nil
 }
 
-// checkSignModeError checks if there are errors with marshalling non-amino
+// checkAminoMarshalError checks if there are errors with marshalling non-amino
 // txs with amino.
-func checkSignModeError(ctx client.Context, resp interface{}, grpcEndPoint string) error {
+func checkAminoMarshalError(ctx client.Context, resp interface{}, grpcEndPoint string) error {
 	// LegacyAmino used intentionally here to handle the SignMode errors
 	marshaler := ctx.LegacyAmino
 

@@ -10,11 +10,11 @@ this [document](https://github.com/cosmos/ics/blob/master/ibc/1_IBC_TERMINOLOGY.
 ## Client Creation, Updates, and Upgrades
 
 IBC clients are on chain light clients. The light client is responsible for verifying
-counterparty state. A light client can be created by any user submitting a client
-identifier and a valid initial `ClientState` and `ConsensusState`. The client identifier
-must not already be used. Clients are given a client identifier prefixed store to
-store their associated client state and consensus states. Consensus states are 
-stored using their associated height. 
+counterparty state. A light client can be created by any user submitting a valid initial 
+`ClientState` and `ConsensusState`. The client identifier is auto generated using the
+client type and the global client counter appended in the format: `{client-type}-{N}`.
+Clients are given a client identifier prefixed store to store their associated client 
+state and consensus states. Consensus states are stored using their associated height. 
 
 Clients can be updated by any user submitting a valid `Header`. The client state callback
 to `CheckHeaderAndUpdateState` is responsible for verifying the header against previously

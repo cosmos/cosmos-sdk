@@ -27,10 +27,10 @@ sections:
     desc: Explore existing modules to build your application with.
     icon: specifications
     url: /modules/
-  - title: Upgrading to v0.40.0
-    desc: Upgrade a chain to use Cosmos-SDK v0.40.0
-    icon: upgrades
-    url: /upgrades
+  - title: Migrating to v0.40.0
+    desc: Migrate a chain to Cosmos-SDK v0.40.0
+    icon: migrations
+    url: /migrations
 stack:
   - title: Cosmos Hub
     desc: The first of thousands of interconnected blockchains on the Cosmos Network.

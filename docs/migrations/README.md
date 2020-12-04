@@ -278,9 +278,48 @@ This section covers the changes to `BaseApp` and related changes in `app.go`, `c
 - `GRPCQueryRouter` routes ABCI Query requests to GRPC handlers.
 - `GRPCQueryHandler` defines a function type which handles ABCI Query requests using gRPC
 
-- [TODO] explain `baseapp/grpcrouter.go` 
-- [TODO] explain `app.go` updates
-- [TODO] explain `server` updates
+##### gRPC Router (baseapp/grpcrouter.go)
+It has `GRPCQueryRouter` and `GRPCQueryHandler`. `GRPCQueryRouter` routes ABCI Query requests to respective GRPC 
+handlers and is used in abci `Route`. `GRPCQueryHandler` defines a function type which handles ABCI Query requests
+using gRPC.
+
+##### Server
+`GRPCRouter` and `Telemetry` are added newly to `Server`.
+```go
+// Server defines the server's API interface.
+type Server struct {
+	Router     *mux.Router
+	GRPCRouter *runtime.ServeMux
+	ClientCtx  client.Context
+
+	logger   log.Logger
+	metrics  *telemetry.Metrics
+	listener net.Listener
+}
+```
+
+`CustomGRPCHeaderMatcher` is an interceptor for gRPC gateway requests. It is useful for mapping request headers to
+GRPC metadata. HTTP headers that start with 'Grpc-Metadata-' are automatically mapped to gRPC metadata after 
+removing prefix 'Grpc-Metadata-'. We can use this CustomGRPCHeaderMatcher if headers don't start with `Grpc-Metadata-`.
+
+
+
+- API is made `in-process` with the node now. The configuration to enable/disable API, Swagger are now available in `app.toml`
+Both legacy REST API and gRPC gateway API are using the same server. Swagger can be accessed via `{baseurl}/swagger/`
+```yaml
+...
+[api]
+
+# Enable defines if the API server should be enabled.
+enable = true
+
+# Swagger defines if swagger documentation should automatically be registered.
+swagger = true
+
+# Address defines the API server to listen on.
+address = "tcp://0.0.0.0:1317"
+...
+```
 
 #### REST Queries and Swagger Generation
 [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway) is a project that translates REST calls into GRPC calls 

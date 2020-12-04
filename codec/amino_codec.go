@@ -1,6 +1,7 @@
 package codec
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
@@ -86,29 +87,27 @@ func (ac *AminoCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 // MarshalInterface implements BinaryMarshaler interface
 // The `o` must be an interface and must must implement ProtoMarshaler (it will panic otherwise).
 // NOTE: if you use a concret type, you should use MarshalBinaryBare instead
-func (ac *AminoCodec) MarshalInterface(o interface{}) ([]byte, error) {
-	// TODO: add tests, check if we need to pack into Any
-	if err := assertProtoMarshaler(o); err != nil {
-		return nil, err
+func (ac *AminoCodec) MarshalInterface(i interface{}) ([]byte, error) {
+	if i == nil {
+		return nil, errors.New("can't marshal <nil> value")
 	}
-	return ac.LegacyAmino.MarshalBinaryBare(o)
+	return ac.LegacyAmino.MarshalBinaryBare(i)
 }
 
 // UnmarshalInterface is a convenience function for proto unmarshaling interfaces.
 // `ptr` must be a pointer to an interface. If you use a concret type you should use
 // UnmarshalBinaryBare
 func (ac *AminoCodec) UnmarshalInterface(ptr interface{}, bz []byte) error {
-	// TODO: add tests, check if we need to pack into Any
-	if err := assertProtoMarshaler(ptr); err != nil {
-		return err
-	}
 	return ac.LegacyAmino.UnmarshalBinaryBare(bz, ptr)
 }
 
+// TODO remove
 func assertProtoMarshaler(i interface{}) error {
+	return nil
+	// TODO: check this
 	_, ok := i.(ProtoMarshaler)
 	if !ok {
-		return fmt.Errorf("can't proto marshal %T; expecting ProtoMarshaler", i)
+		return fmt.Errorf("can't amino marshal %T; expecting ProtoMarshaler", i)
 	}
 	return nil
 }

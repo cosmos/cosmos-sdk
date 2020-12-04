@@ -24,7 +24,6 @@ var (
 
 // StartGRPCProxyServer starts a gRPC-proxy server on the given config.
 func StartGRPCProxyServer(grpcConfig config.GRPCConfig) (*http.Server, error) {
-
 	proxyFlags := grpcConfig.GRPCWebProxy
 
 	grpcSrv, err := buildGrpcProxyServer(proxyFlags, grpcConfig.Address)

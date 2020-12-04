@@ -15,34 +15,20 @@ import (
 
 func createTestCodec() *codec.LegacyAmino {
 	cdc := codec.NewLegacyAmino()
-
 	cdc.RegisterInterface((*testdata.Animal)(nil), nil)
-	cdc.RegisterConcrete(testdata.Dog{}, "testdata/Dog", nil)
-	cdc.RegisterConcrete(testdata.Cat{}, "testdata/Cat", nil)
+	// NOTE: since we unmarshal interface using pointers, we need to register a pointer
+	// types here.
+	cdc.RegisterConcrete(&testdata.Dog{}, "testdata/Dog", nil)
+	cdc.RegisterConcrete(&testdata.Cat{}, "testdata/Cat", nil)
 
 	return cdc
 }
 
 func TestAminoMarsharlInterface(t *testing.T) {
-	require := require.New(t)
 	cdc := codec.NewAminoCodec(createTestCodec())
+	m := marshaler{cdc.MarshalInterface, cdc.UnmarshalInterface}
 
-	dog := &testdata.Dog{Name: "rufus"}
-	var dogI testdata.Animal = dog
-	bz, err := cdc.MarshalInterface(dogI)
-	require.NoError(err)
-	// require.EqualError(err, "can't proto marshal testdata.Dog; expecting ProtoMarshaler")
-	var animal testdata.Animal
-	require.PanicsWithValue("Unmarshal expects a pointer", func() {
-		cdc.UnmarshalInterface(bz, animal)
-	})
-	var dog2 testdata.Dog
-	require.NoError(cdc.UnmarshalInterface(bz, &dog2))
-	require.Equal(*dog, dog2)
-	require.NoError(cdc.UnmarshalInterface(bz, &animal))
-	require.Equal(dog, animal)
-	var cat testdata.Cat
-	require.Error(cdc.UnmarshalInterface(bz, &cat))
+	testInterfaceMarshaling(require.New(t), m)
 }
 
 func TestAminoCodec(t *testing.T) {

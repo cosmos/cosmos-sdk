@@ -184,7 +184,7 @@ func (pc *ProtoCodec) MarshalInterface(i proto.Message) ([]byte, error) {
 //
 // Example:
 //    var x MyInterface
-//    err := UnmarshalInterface(bz, &x, bz)
+//    err := UnmarshalInterface(bz, &x)
 func (pc *ProtoCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
 	any := &types.Any{}
 	err := pc.UnmarshalBinaryBare(bz, any)

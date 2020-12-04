@@ -151,6 +151,12 @@ address = "{{ .GRPC.Address }}"
 	# GRPCWebProxyEnable defines if the gRPC-web-proxy should be enabled.
 	enable = {{ .GRPC.GRPCWebProxy.Enable }}
 
+	# BindAddress defines address to bind the server to.
+	bind-address = "{{ .GRPC.GRPCWebProxy.BindAddress }}"
+
+	# HTTPPort defines TCP port to listen on for HTTP1.1 debug calls.
+	http-port = {{ .GRPC.GRPCWebProxy.HTTPPort }}
+
 	# AllowAllOrigins defines allow requests from any origin.
 	allow-all-origin = {{ .GRPC.GRPCWebProxy.AllowAllOrigins }}
 
@@ -163,20 +169,12 @@ address = "{{ .GRPC.Address }}"
 	# EnableHTTPServer defines if the HTTP should be enabled.
 	enable-http-server = {{ .GRPC.GRPCWebProxy.EnableHTTPServer }}
 
-	# EnableTLSServer defines if the TLS should be enabled.
-	enable-tls-server = {{ .GRPC.GRPCWebProxy.EnableTLSServer }}
+	# MaxCallRecvMsgSize defines maximum receive message size limit. If not specified, the default of 4MB will be used.
+	max-call-recv-msg-size = {{ .GRPC.GRPCWebProxy.MaxCallRecvMsgSize }}
 
-	# TlsServerCert defines the path to the PEM certificate for server use.
-	tls-server-cert = "{{ .GRPC.GRPCWebProxy.TlsServerCert}}"
+	# BackendBackoffMaxDelay defines maximum delay when backing off after failed connection attempts to the backend.
+	backend-backoff-max-delay = "{{ .GRPC.GRPCWebProxy.BackendBackoffMaxDelay }}"
 
-	# TlsServerKey defines the path to the PEM key for the certificate for the server use.
-	tls-server-key = "{{ .GRPC.GRPCWebProxy.TlsServerKey }}"
-
-	# TlsServerClientCertVerification defines controls whether a client certificate is on. Values: none, verify_if_given, require.
-	tls-server-client-cert-verification = "{{ .GRPC.GRPCWebProxy.TlsServerClientCertVerification }}"
-
-	# TlsServerClientCAFiles defines Paths (comma separated) to PEM certificate chains used for client-side verification. If empty, host CA chain will be used.
-	tls-server-client-ca-files = "{{ .GRPC.GRPCWebProxy.TlsServerClientCAFiles }}"
 
 ###############################################################################
 ###                        State Sync Configuration                         ###

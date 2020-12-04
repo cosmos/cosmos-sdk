@@ -3,8 +3,10 @@ package config
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/spf13/viper"
+	"google.golang.org/grpc"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -16,6 +18,12 @@ const (
 
 	// DefaultGRPCAddress is the default address the gRPC server binds to.
 	DefaultGRPCAddress = "0.0.0.0:9090"
+
+	// DefaultGRPCAddress is the address to bind the server to.
+	DefaultBindAddress = "0.0.0.0"
+
+	// TCP port to listen on for HTTP1.1 debug calls.
+	DefaultGRPCProxyPort = 7890
 )
 
 // BaseConfig defines the server's basic configuration
@@ -115,6 +123,12 @@ type GRPCProxy struct {
 	// Enable defines if the proxy should be enabled.
 	Enable bool `mapstructure:"enable"`
 
+	// BindAddress defines address to bind the server to.
+	BindAddress string `mapstructure:"bind-address"`
+
+	// HTTPPort defines TCP port to listen on for HTTP1.1 debug calls.
+	HTTPPort int `mapstructure:"http-port"`
+
 	// AllowAllOrigins defines allow requests from any origin.
 	AllowAllOrigins bool `mapstructure:"allow-all-origins"`
 
@@ -127,20 +141,11 @@ type GRPCProxy struct {
 	// EnableHTTPServer defines if the HTTP should be enabled.
 	EnableHTTPServer bool `mapstructure:"enable-http-server"`
 
-	// EnableTLSServer defines if the TLS should be enabled.
-	EnableTLSServer bool `mapstructure:"enable-tls-server"`
+	// MaxCallRecvMsgSize defines maximum receive message size limit. If not specified, the default of 4MB will be used.
+	MaxCallRecvMsgSize int `mapstructure:"max-call-recv-msg-size"`
 
-	// TlsServerCert defines the path to the PEM certificate for server use.
-	TlsServerCert string `mapstructure:"tls-server-cert"`
-
-	// TlsServerKey defines the path to the PEM key for the certificate for the server use.
-	TlsServerKey string `mapstructure:"tls-server-key"`
-
-	// TlsServerClientCertVerification defines controls whether a client certificate is on. Values: none, verify_if_given, require.
-	TlsServerClientCertVerification string `mapstructure:"tls-server-client-cert-verification"`
-
-	// TlsServerClientCAFiles defines Paths (comma separated) to PEM certificate chains used for client-side verification. If empty, host CA chain will be used.
-	TlsServerClientCAFiles string `mapstructure:"tls-server-client-ca-files"`
+	// BackendBackoffMaxDelay defines maximum delay when backing off after failed connection attempts to the backend.
+	BackendBackoffMaxDelay time.Duration `mapstructure:"backend-backoff-max-delay"`
 }
 
 // StateSyncConfig defines the state sync snapshot configuration.
@@ -221,16 +226,15 @@ func DefaultConfig() *Config {
 			Enable:  true,
 			Address: DefaultGRPCAddress,
 			GRPCWebProxy: GRPCProxy{
-				Enable:                          true,
-				AllowAllOrigins:                 true,
-				EnableHTTPServer:                true,
-				EnableTLSServer:                 false,
-				AllowedOrigins:                  []string{"*"},
-				TlsServerCert:                   "",
-				AllowedHeaders:                  make([]string, 0),
-				TlsServerClientCAFiles:          "",
-				TlsServerClientCertVerification: "",
-				TlsServerKey:                    "",
+				Enable:                 true,
+				AllowAllOrigins:        true,
+				EnableHTTPServer:       true,
+				AllowedOrigins:         []string{"*"},
+				AllowedHeaders:         make([]string, 0),
+				BackendBackoffMaxDelay: grpc.DefaultBackoffConfig.MaxDelay,
+				MaxCallRecvMsgSize:     1024 * 1024 * 4,
+				BindAddress:            DefaultBindAddress,
+				HTTPPort:               DefaultGRPCProxyPort,
 			},
 		},
 		StateSync: StateSyncConfig{
@@ -287,16 +291,15 @@ func GetConfig(v *viper.Viper) Config {
 			Enable:  v.GetBool("grpc.enable"),
 			Address: v.GetString("grpc.address"),
 			GRPCWebProxy: GRPCProxy{
-				Enable:                          v.GetBool("grpc.grpc-proxy.enable"),
-				AllowAllOrigins:                 v.GetBool("grpc.grpc-proxy.allow-all-origins"),
-				AllowedHeaders:                  v.GetStringSlice("grpc.grpc-proxy.allowed-headers"),
-				AllowedOrigins:                  v.GetStringSlice("grpc.grpc-proxy.allowed-origins"),
-				EnableHTTPServer:                v.GetBool("grpc.grpc-proxy.enable-http-server"),
-				EnableTLSServer:                 v.GetBool("grpc.grpc-proxy.enable-tls-server"),
-				TlsServerCert:                   v.GetString("grpc.grpc-proxy.tls-server-cert"),
-				TlsServerClientCAFiles:          v.GetString("grpc.grpc-proxy.tls-server-client-ca-files"),
-				TlsServerClientCertVerification: v.GetString("grpc.grpc-proxy.tls-server-client-cert-verification"),
-				TlsServerKey:                    v.GetString("grpc.grpc-proxy.tls-server-key"),
+				Enable:                 v.GetBool("grpc.grpc-proxy.enable"),
+				AllowAllOrigins:        v.GetBool("grpc.grpc-proxy.allow-all-origins"),
+				AllowedHeaders:         v.GetStringSlice("grpc.grpc-proxy.allowed-headers"),
+				AllowedOrigins:         v.GetStringSlice("grpc.grpc-proxy.allowed-origins"),
+				EnableHTTPServer:       v.GetBool("grpc.grpc-proxy.enable-http-server"),
+				MaxCallRecvMsgSize:     v.GetInt("grpc.grpc-proxy.max-call-recv-msg-size"),
+				BackendBackoffMaxDelay: v.GetDuration("grpc.grpc-proxy.backend-backoff-max-delay"),
+				BindAddress:            v.GetString("grpc.grpc-proxy.bind-address"),
+				HTTPPort:               v.GetInt("grpc.grpc-proxy.http-port"),
 			},
 		},
 		StateSync: StateSyncConfig{

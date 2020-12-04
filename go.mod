@@ -13,6 +13,7 @@ require (
 	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
 	github.com/cosmos/iavl v0.15.0-rc5
 	github.com/cosmos/ledger-cosmos-go v0.11.1
+	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/dgraph-io/ristretto v0.0.3 // indirect
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/enigmampc/btcutil v1.0.3-0.20200723161021-e2fb6adb2a25
@@ -26,8 +27,11 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.2
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/hashicorp/golang-lru v0.5.4
+	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/magiconair/properties v1.8.4
 	github.com/mattn/go-isatty v0.0.12
+	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f
+	github.com/mwitkow/grpc-proxy v0.0.0-20181017164139-0f1106ef9c76
 	github.com/otiai10/copy v1.2.0
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/errors v0.9.1

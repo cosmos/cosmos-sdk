@@ -4,6 +4,7 @@ package server
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"runtime/pprof"
 	"time"
@@ -53,8 +54,15 @@ const (
 
 // GRPC-related flags.
 const (
-	flagGRPCEnable  = "grpc.enable"
-	flagGRPCAddress = "grpc.address"
+	flagGRPCEnable                      = "grpc.enable"
+	flagGRPCAddress                     = "grpc.address"
+	flagGRPCProxyEnable                 = "grpc.grpc-proxy.enable"
+	flagGRPCProxyAllowAllOrigins        = "grpc.grpc-proxy.allow-all-origins"
+	flagGRPCProxyAllowedHeaders         = "grpc.grpc-proxy.allowed-headers"
+	flagGRPCProxyAllowedOrigins         = "grpc.grpc-proxy.allowed-origins"
+	flagGRPCProxyEnableHTTPServer       = "grpc.grpc-proxy.enable-http-server"
+	flagGRPCProxyMaxCallRecvMsgSize     = "grpc.grpc-proxy.max-call-recv-msg-size"
+	flagGRPCProxyBackendBackoffMaxDelay = "grpc.grpc-proxy.backend-backoff-max-delay"
 )
 
 // State sync-related flags.
@@ -140,6 +148,7 @@ which accepts a path for the resulting pprof file.
 
 	cmd.Flags().Bool(flagGRPCEnable, true, "Define if the gRPC server should be enabled")
 	cmd.Flags().String(flagGRPCAddress, config.DefaultGRPCAddress, "the gRPC server address to listen on")
+	cmd.Flags().Bool(flagGRPCProxyEnable, true, "Define if the gRPC-Proxy server should be enabled")
 
 	cmd.Flags().Uint64(FlagStateSyncSnapshotInterval, 0, "State sync snapshot interval")
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
@@ -294,10 +303,18 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	}
 
 	var grpcSrv *grpc.Server
+	var proxySrv *http.Server
 	if config.GRPC.Enable {
 		grpcSrv, err = servergrpc.StartGRPCServer(app, config.GRPC.Address)
 		if err != nil {
 			return err
+		}
+		if config.GRPC.GRPCWebProxy.Enable {
+			fmt.Println("I'm calllllled")
+			proxySrv, err = servergrpc.StartGRPCProxyServer(config.GRPC)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -316,6 +333,10 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 		if grpcSrv != nil {
 			grpcSrv.Stop()
+		}
+
+		if proxySrv != nil {
+			_ = proxySrv.Close()
 		}
 
 		ctx.Logger.Info("exiting...")

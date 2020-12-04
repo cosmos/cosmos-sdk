@@ -92,7 +92,9 @@ service Query {
   }
 
   // this could return current estimation of next validator set
-  rpc BufferedValidators(QueryBufferedValidatorsRequest) returns (QueryBufferedValidatorsResponse) {}
+  rpc BufferedValidators(QueryBufferedValidatorsRequest) returns (QueryBufferedValidatorsResponse) {
+    option (google.api.http).get = "/cosmos/staking/v1beta1/validators";
+  }
 }
 
 // QueryValidatorsRequest is request type for Query/Validators RPC method.
@@ -351,7 +353,13 @@ message QueryParamsResponse {
 }
 
 // QueryBufferedValidatorsRequest is request type for the Query/BufferedValidators RPC method.
-message QueryBufferedValidatorsRequest {}
+message QueryBufferedValidatorsRequest {
+  // status enables to query for validators matching a given status.
+  string status = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
 
 // QueryBufferedValidatorsResponse is response type for the Query/BufferedValidators RPC method.
 message QueryBufferedValidatorsResponse {

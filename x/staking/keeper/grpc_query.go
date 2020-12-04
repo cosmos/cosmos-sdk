@@ -382,8 +382,48 @@ func (k Querier) HistoricalInfo(c context.Context, req *types.QueryHistoricalInf
 
 // BufferedValidators queries expected validators set on next epoch
 func (k Querier) BufferedValidators(c context.Context, req *types.QueryBufferedValidatorsRequest) (*types.QueryBufferedValidatorsResponse, error) {
-	// TODO implement me
-	return &types.QueryBufferedValidatorsResponse{}, nil
+	ctx := sdk.UnwrapSDKContext(c)
+	cacheCtx, _ := ctx.CacheContext()
+	k.Keeper.ExecuteEpoch(cacheCtx)
+
+	// TODO should do slashing ExecuteEpoch
+
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	// validate the provided status, return all the validators if the status is empty
+	if req.Status != "" && !(req.Status == types.Bonded.String() || req.Status == types.Unbonded.String() || req.Status == types.Unbonding.String()) {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid validator status %s", req.Status)
+	}
+
+	var validators types.Validators
+
+	store := cacheCtx.KVStore(k.storeKey)
+	valStore := prefix.NewStore(store, types.ValidatorsKey)
+
+	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		val, err := types.UnmarshalValidator(k.cdc, value)
+		if err != nil {
+			return false, err
+		}
+
+		if req.Status != "" && !strings.EqualFold(val.GetStatus().String(), req.Status) {
+			return false, nil
+		}
+
+		if accumulate {
+			validators = append(validators, val)
+		}
+
+		return true, nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryBufferedValidatorsResponse{Validators: validators, Pagination: pageRes}, nil
 }
 
 func (k Querier) Redelegations(c context.Context, req *types.QueryRedelegationsRequest) (*types.QueryRedelegationsResponse, error) {

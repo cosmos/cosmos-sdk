@@ -104,7 +104,7 @@ func (k Keeper) GetEpochActions(ctx sdk.Context) []*codectypes.Any {
 }
 
 // GetEpochActionsIteratorByEpochNumber returns iterator for EpochActions
-func (k Keeper) GetEpochActionsIteratorByEpochNumber(ctx sdk.Context, epochNumber uint64) db.Iterator {
+func (k Keeper) GetEpochActionsIteratorByEpochNumber(ctx sdk.Context, epochNumber int64) db.Iterator {
 	prefixKey := fmt.Sprintf("%s_%d", EpochActionQueuePrefix, epochNumber)
 	return sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte(prefixKey))
 }

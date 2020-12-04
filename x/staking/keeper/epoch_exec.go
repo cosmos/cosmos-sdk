@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"time"
 
 	metrics "github.com/armon/go-metrics"
@@ -273,4 +274,37 @@ func (k Keeper) EpochUndelegate(ctx sdk.Context, msg *types.MsgUndelegate) error
 	})
 
 	return nil
+}
+
+// ExecuteEpoch execute epoch actions
+func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
+	epochNumber := k.GetEpochNumber(ctx)
+	// execute all epoch actions
+	iterator := k.GetEpochActionsIteratorByEpochNumber(ctx, epochNumber)
+
+	for ; iterator.Valid(); iterator.Next() {
+		msg := k.GetEpochActionByIterator(iterator)
+
+		switch msg := msg.(type) {
+		case *types.MsgCreateValidator:
+			k.EpochCreateValidatorSelfDelegation(ctx, msg)
+		case *types.MsgEditValidator:
+			// TODO what should we do if error happen for queued action?
+			k.EpochEditValidator(ctx, msg)
+		case *types.MsgDelegate:
+			k.EpochDelegate(ctx, msg)
+		case *types.MsgBeginRedelegate:
+			k.EpochBeginRedelegate(ctx, msg)
+		case *types.MsgUndelegate:
+			k.EpochUndelegate(ctx, msg)
+		default:
+			panic(fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg))
+		}
+		// dequeue processed item
+		k.DeleteByKey(ctx, iterator.Key())
+	}
+
+	// Update epochNumber after epoch finish
+	// This won't affect slashing module since slashing Endblocker run before staking module
+	k.IncreaseEpochNumber(ctx)
 }

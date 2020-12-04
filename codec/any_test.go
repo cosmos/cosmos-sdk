@@ -61,5 +61,5 @@ func TestMarshalAnyNonProtoErrors(t *testing.T) {
 
 	_, err := cdc.MarshalInterface(29)
 	require.Error(t, err)
-	require.Equal(t, err, errors.New("can't proto marshal int"))
+	require.Equal(t, err, errors.New("can't proto marshal int; expecting proto.Message"))
 }

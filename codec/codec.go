@@ -35,15 +35,14 @@ type (
 		MarshalInterface(x interface{}) ([]byte, error)
 		UnmarshalInterface(x interface{}, bz []byte) error
 
-		// MarshalInterfaceJSON(x interface{}) ([]byte, error)
-		// UnmarshalInterfaceJSON(x interface{}, bz []byte) error
-
 		types.AnyUnpacker
 	}
 
 	JSONMarshaler interface {
 		MarshalJSON(o proto.Message) ([]byte, error)
 		MustMarshalJSON(o proto.Message) []byte
+		// MarshalInterfaceJSON(x interface{}) ([]byte, error)
+		// UnmarshalInterfaceJSON(x interface{}, bz []byte) error
 
 		UnmarshalJSON(bz []byte, ptr proto.Message) error
 		MustUnmarshalJSON(bz []byte, ptr proto.Message)

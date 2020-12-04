@@ -198,7 +198,7 @@ func (pc *ProtoCodec) UnmarshalInterface(ptr interface{}, bz []byte) error {
 
 // MarshalInterfaceJSON is a convenience function for proto marshalling interfaces. It
 // packs the provided value in an Any and then marshals it to bytes.
-// NOTE: if you use a concert type, then you should use JSONMarshaler.MarshalJSON directly
+// NOTE: if you use a concert type, then you should use JSONMarshaler.MarshalJSON instead
 func (pc *ProtoCodec) MarshalInterfaceJSON(x proto.Message) ([]byte, error) {
 	any, err := types.NewAnyWithValue(x)
 	if err != nil {
@@ -210,7 +210,7 @@ func (pc *ProtoCodec) MarshalInterfaceJSON(x proto.Message) ([]byte, error) {
 // UnmarshalInterfaceJSON is a convenience function for proto unmarshaling interfaces.
 // It unmarshals an Any from bz bytes and then unpacks it to the `iface`, which must
 // be a pointer to a non empty interface, implementing proto.Message with registered implementations.
-// NOTE: if you use a concert type, then you should use JSONMarshaler.UnarshalJSON directly
+// NOTE: if you use a concert type, then you should use JSONMarshaler.UnarshalJSON instead
 //
 // Ex:
 //		var x MyInterface  // must implement proto.Message

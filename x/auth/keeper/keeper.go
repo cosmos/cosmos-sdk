@@ -219,7 +219,7 @@ func (ak AccountKeeper) decodeAccount(bz []byte) types.AccountI {
 // the Marshaler interface, it is treated as a Proto-defined message and
 // serialized that way. Otherwise, it falls back on the internal Amino codec.
 func (ak AccountKeeper) MarshalAccount(accountI types.AccountI) ([]byte, error) {
-	return codec.MarshalAny(ak.cdc, accountI)
+	return codec.MarshalInterface(ak.cdc, accountI)
 }
 
 // UnmarshalAccount returns an Account interface from raw encoded account
@@ -227,7 +227,7 @@ func (ak AccountKeeper) MarshalAccount(accountI types.AccountI) ([]byte, error) 
 // failure.
 func (ak AccountKeeper) UnmarshalAccount(bz []byte) (types.AccountI, error) {
 	var acc types.AccountI
-	if err := codec.UnmarshalAny(ak.cdc, &acc, bz); err != nil {
+	if err := codec.UnmarshalInterface(ak.cdc, &acc, bz); err != nil {
 		return nil, err
 	}
 

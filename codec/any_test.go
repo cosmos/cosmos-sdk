@@ -28,30 +28,30 @@ func TestMarshalAny(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 
 	kitty := &testdata.Cat{Moniker: "Kitty"}
-	bz, err := codec.MarshalAny(cdc, kitty)
+	bz, err := codec.MarshalInterface(cdc, kitty)
 	require.NoError(t, err)
 
 	var animal testdata.Animal
 
 	// empty registry should fail
-	err = codec.UnmarshalAny(cdc, &animal, bz)
+	err = codec.UnmarshalInterface(cdc, &animal, bz)
 	require.Error(t, err)
 
 	// wrong type registration should fail
 	registry.RegisterImplementations((*testdata.Animal)(nil), &testdata.Dog{})
-	err = codec.UnmarshalAny(cdc, &animal, bz)
+	err = codec.UnmarshalInterface(cdc, &animal, bz)
 	require.Error(t, err)
 
 	// should pass
 	registry = NewTestInterfaceRegistry()
 	cdc = codec.NewProtoCodec(registry)
-	err = codec.UnmarshalAny(cdc, &animal, bz)
+	err = codec.UnmarshalInterface(cdc, &animal, bz)
 	require.NoError(t, err)
 	require.Equal(t, kitty, animal)
 
 	// nil should fail
 	registry = NewTestInterfaceRegistry()
-	err = codec.UnmarshalAny(cdc, nil, bz)
+	err = codec.UnmarshalInterface(cdc, nil, bz)
 	require.Error(t, err)
 }
 
@@ -59,7 +59,7 @@ func TestMarshalAnyNonProtoErrors(t *testing.T) {
 	registry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 
-	_, err := codec.MarshalAny(cdc, 29)
+	_, err := codec.MarshalInterface(cdc, 29)
 	require.Error(t, err)
 	require.Equal(t, err, errors.New("can't proto marshal int"))
 }

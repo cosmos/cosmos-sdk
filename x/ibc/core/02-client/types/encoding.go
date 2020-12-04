@@ -33,7 +33,7 @@ func MustMarshalClientState(cdc codec.BinaryMarshaler, clientState exported.Clie
 // the Marshaler interface, it is treated as a Proto-defined message and
 // serialized that way.
 func MarshalClientState(cdc codec.BinaryMarshaler, clientStateI exported.ClientState) ([]byte, error) {
-	return codec.MarshalAny(cdc, clientStateI)
+	return codec.MarshalInterface(cdc, clientStateI)
 }
 
 // UnmarshalClientState returns an ClientState interface from raw encoded clientState
@@ -41,7 +41,7 @@ func MarshalClientState(cdc codec.BinaryMarshaler, clientStateI exported.ClientS
 // failure.
 func UnmarshalClientState(cdc codec.BinaryMarshaler, bz []byte) (exported.ClientState, error) {
 	var clientState exported.ClientState
-	if err := codec.UnmarshalAny(cdc, &clientState, bz); err != nil {
+	if err := codec.UnmarshalInterface(cdc, &clientState, bz); err != nil {
 		return nil, err
 	}
 
@@ -74,7 +74,7 @@ func MustMarshalConsensusState(cdc codec.BinaryMarshaler, consensusState exporte
 // the Marshaler interface, it is treated as a Proto-defined message and
 // serialized that way.
 func MarshalConsensusState(cdc codec.BinaryMarshaler, consensusStateI exported.ConsensusState) ([]byte, error) {
-	return codec.MarshalAny(cdc, consensusStateI)
+	return codec.MarshalInterface(cdc, consensusStateI)
 }
 
 // UnmarshalConsensusState returns an ConsensusState interface from raw encoded clientState
@@ -82,7 +82,7 @@ func MarshalConsensusState(cdc codec.BinaryMarshaler, consensusStateI exported.C
 // failure.
 func UnmarshalConsensusState(cdc codec.BinaryMarshaler, bz []byte) (exported.ConsensusState, error) {
 	var consensusState exported.ConsensusState
-	if err := codec.UnmarshalAny(cdc, &consensusState, bz); err != nil {
+	if err := codec.UnmarshalInterface(cdc, &consensusState, bz); err != nil {
 		return nil, err
 	}
 

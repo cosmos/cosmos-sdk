@@ -17,6 +17,9 @@ type interfaceMarshaler struct {
 }
 
 func testInterfaceMarshaling(require *require.Assertions, cdc interfaceMarshaler, isAminoBin bool) {
+	_, err := cdc.marshal(nil)
+	require.Error(err, "can't marshal a nil value")
+
 	dog := &testdata.Dog{Name: "rufus"}
 	var dogI testdata.Animal = dog
 	bz, err := cdc.marshal(dogI)

@@ -28,6 +28,8 @@ func TestProtoMarsharlInterface(t *testing.T) {
 	cdc := codec.NewProtoCodec(createTestInterfaceRegistry())
 	m := interfaceMarshaler{cdc.MarshalInterface, cdc.UnmarshalInterface}
 	testInterfaceMarshaling(require.New(t), m, false)
+	m = interfaceMarshaler{cdc.MarshalInterfaceJSON, cdc.UnmarshalInterfaceJSON}
+	testInterfaceMarshaling(require.New(t), m, false)
 }
 
 func TestProtoCodec(t *testing.T) {

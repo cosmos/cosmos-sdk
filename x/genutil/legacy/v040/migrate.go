@@ -3,7 +3,6 @@ package v040
 import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v039"
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v040"
 	v036supply "github.com/cosmos/cosmos-sdk/x/bank/legacy/v036"
@@ -11,8 +10,9 @@ import (
 	v040bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v040"
 	v039crisis "github.com/cosmos/cosmos-sdk/x/crisis/legacy/v039"
 	v040crisis "github.com/cosmos/cosmos-sdk/x/crisis/legacy/v040"
-	v038distribution "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v038"
-	v040distribution "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v040"
+	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v036"
+	v038distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v038"
+	v040distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v040"
 	v038evidence "github.com/cosmos/cosmos-sdk/x/evidence/legacy/v038"
 	v040evidence "github.com/cosmos/cosmos-sdk/x/evidence/legacy/v040"
 	v039genutil "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v039"
@@ -21,10 +21,12 @@ import (
 	v040gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v040"
 	v039mint "github.com/cosmos/cosmos-sdk/x/mint/legacy/v039"
 	v040mint "github.com/cosmos/cosmos-sdk/x/mint/legacy/v040"
+	v036params "github.com/cosmos/cosmos-sdk/x/params/legacy/v036"
 	v039slashing "github.com/cosmos/cosmos-sdk/x/slashing/legacy/v039"
 	v040slashing "github.com/cosmos/cosmos-sdk/x/slashing/legacy/v040"
 	v038staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v038"
 	v040staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v040"
+	v038upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/legacy/v038"
 )
 
 func migrateGenutil(oldGenState v039genutil.GenesisState) *types.GenesisState {
@@ -36,8 +38,11 @@ func migrateGenutil(oldGenState v039genutil.GenesisState) *types.GenesisState {
 // Migrate migrates exported state from v0.39 to a v0.40 genesis state.
 func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 	v039Codec := codec.NewLegacyAmino()
-	cryptocodec.RegisterCrypto(v039Codec)
 	v039auth.RegisterLegacyAminoCodec(v039Codec)
+	v036gov.RegisterLegacyAminoCodec(v039Codec)
+	v036distr.RegisterLegacyAminoCodec(v039Codec)
+	v036params.RegisterLegacyAminoCodec(v039Codec)
+	v038upgrade.RegisterLegacyAminoCodec(v039Codec)
 
 	v040Codec := clientCtx.JSONMarshaler
 
@@ -94,17 +99,17 @@ func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 	}
 
 	// Migrate x/distribution.
-	if appState[v038distribution.ModuleName] != nil {
+	if appState[v038distr.ModuleName] != nil {
 		// unmarshal relative source genesis application state
-		var distributionGenState v038distribution.GenesisState
-		v039Codec.MustUnmarshalJSON(appState[v038distribution.ModuleName], &distributionGenState)
+		var distributionGenState v038distr.GenesisState
+		v039Codec.MustUnmarshalJSON(appState[v038distr.ModuleName], &distributionGenState)
 
 		// delete deprecated x/distribution genesis state
-		delete(appState, v038distribution.ModuleName)
+		delete(appState, v038distr.ModuleName)
 
 		// Migrate relative source genesis application state and marshal it into
 		// the respective key.
-		appState[v040distribution.ModuleName] = v040Codec.MustMarshalJSON(v040distribution.Migrate(distributionGenState))
+		appState[v040distr.ModuleName] = v040Codec.MustMarshalJSON(v040distr.Migrate(distributionGenState))
 	}
 
 	// Migrate x/evidence.

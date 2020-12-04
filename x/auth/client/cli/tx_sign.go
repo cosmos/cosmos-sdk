@@ -12,12 +12,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 )
 
 const (
 	flagMultisig = "multisig"
 	flagAppend   = "append"
 	flagSigOnly  = "signature-only"
+	flagAmino    = "amino"
 )
 
 // GetSignBatchCommand returns the transaction sign-batch command.
@@ -117,7 +119,10 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 					return err
 				}
 			} else {
-				err = authclient.SignTxWithSignerAddress(txFactory, clientCtx, multisigAddr, clientCtx.GetFromName(), txBuilder, true)
+				if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
+					txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+				}
+				err = authclient.SignTxWithSignerAddress(txFactory, clientCtx, multisigAddr, clientCtx.GetFromName(), txBuilder, clientCtx.Offline)
 			}
 
 			if err != nil {
@@ -187,6 +192,7 @@ be generated via the 'multisign' command.
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	cmd.Flags().String(flags.FlagChainID, "", "The network chain ID")
+	cmd.Flags().Bool(flagAmino, false, "Generate Amino encoded JSON suitable for submiting to the txs REST endpoint")
 	cmd.MarkFlagRequired(flags.FlagFrom)
 	flags.AddTxFlagsToCmd(cmd)
 
@@ -257,9 +263,34 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		json, err := marshalSignatureJSON(txCfg, txBuilder, generateSignatureOnly)
+		aminoJSON, _ := cmd.Flags().GetBool(flagAmino)
+
 		if err != nil {
 			return err
+		}
+
+		var json []byte
+
+		if aminoJSON {
+			stdTx, err := tx.ConvertTxToStdTx(clientCtx.LegacyAmino, txBuilder.GetTx())
+			if err != nil {
+				return err
+			}
+
+			req := rest.BroadcastReq{
+				Tx:   stdTx,
+				Mode: "block|sync|async",
+			}
+
+			json, err = clientCtx.LegacyAmino.MarshalJSON(req)
+			if err != nil {
+				return err
+			}
+		} else {
+			json, err = marshalSignatureJSON(txCfg, txBuilder, generateSignatureOnly)
+			if err != nil {
+				return err
+			}
 		}
 
 		outputDoc, _ := cmd.Flags().GetString(flags.FlagOutputDocument)

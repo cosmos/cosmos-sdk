@@ -31,9 +31,8 @@ package module
 import (
 	"encoding/json"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -56,7 +55,7 @@ type AppModuleBasic interface {
 
 	// client functionality
 	RegisterRESTRoutes(client.Context, *mux.Router)
-	RegisterGRPCRoutes(client.Context, *runtime.ServeMux)
+	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
 	GetTxCmd() *cobra.Command
 	GetQueryCmd() *cobra.Command
 }
@@ -115,10 +114,10 @@ func (bm BasicManager) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rou
 	}
 }
 
-// RegisterGRPCRoutes registers all module rest routes
-func (bm BasicManager) RegisterGRPCRoutes(clientCtx client.Context, rtr *runtime.ServeMux) {
+// RegisterGRPCGatewayRoutes registers all module rest routes
+func (bm BasicManager) RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *runtime.ServeMux) {
 	for _, b := range bm {
-		b.RegisterGRPCRoutes(clientCtx, rtr)
+		b.RegisterGRPCGatewayRoutes(clientCtx, rtr)
 	}
 }
 
@@ -163,13 +162,13 @@ type AppModule interface {
 	// registers
 	RegisterInvariants(sdk.InvariantRegistry)
 
-	// routes
+	// Deprecated: use RegisterServices
 	Route() sdk.Route
 
-	// Deprecated: use RegisterQueryService
+	// Deprecated: use RegisterServices
 	QuerierRoute() string
 
-	// Deprecated: use RegisterQueryService
+	// Deprecated: use RegisterServices
 	LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier
 
 	// RegisterServices allows a module to register services
@@ -278,11 +277,11 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 // RegisterRoutes registers all module routes and module querier routes
 func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter, legacyQuerierCdc *codec.LegacyAmino) {
 	for _, module := range m.Modules {
-		if !module.Route().Empty() {
-			router.AddRoute(module.Route())
+		if r := module.Route(); !r.Empty() {
+			router.AddRoute(r)
 		}
-		if module.QuerierRoute() != "" {
-			queryRouter.AddRoute(module.QuerierRoute(), module.LegacyQuerierHandler(legacyQuerierCdc))
+		if r := module.QuerierRoute(); r != "" {
+			queryRouter.AddRoute(r, module.LegacyQuerierHandler(legacyQuerierCdc))
 		}
 	}
 }

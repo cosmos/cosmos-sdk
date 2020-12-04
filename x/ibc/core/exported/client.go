@@ -12,9 +12,15 @@ const (
 	// TypeClientMisbehaviour is the shared evidence misbehaviour type
 	TypeClientMisbehaviour string = "client_misbehaviour"
 
+	// Solomachine is used to indicate that the light client is a solo machine.
+	Solomachine string = "06-solomachine"
+
+	// Tendermint is used to indicate that the client uses the Tendermint Consensus Algorithm.
+	Tendermint string = "07-tendermint"
+
 	// Localhost is the client type for a localhost client. It is also used as the clientID
 	// for the localhost client.
-	Localhost string = "localhost"
+	Localhost string = "09-localhost"
 )
 
 // ClientState defines the required common functions for light clients.
@@ -33,14 +39,20 @@ type ClientState interface {
 	CheckProposedHeaderAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Header) (ClientState, ConsensusState, error)
 
 	// Upgrade functions
-	VerifyUpgrade(
+	// NOTE: proof heights are not included as upgrade to a new revision is expected to pass only on the last
+	// height committed by the current revision. Clients are responsible for ensuring that the planned last
+	// height of the current revision is somehow encoded in the proof verification process.
+	// This is to ensure that no premature upgrades occur, since upgrade plans committed to by the counterparty
+	// may be cancelled or modified before the last planned height.
+	VerifyUpgradeAndUpdateState(
 		ctx sdk.Context,
 		cdc codec.BinaryMarshaler,
 		store sdk.KVStore,
 		newClient ClientState,
-		upgradeHeight Height,
-		proofUpgrade []byte,
-	) error
+		newConsState ConsensusState,
+		proofUpgradeClient,
+		proofUpgradeConsState []byte,
+	) (ClientState, ConsensusState, error)
 	// Utility function that zeroes out any client customizable fields in client state
 	// Ledger enforced fields are maintained while all custom fields are zero values
 	// Used to verify upgrades
@@ -51,7 +63,6 @@ type ClientState interface {
 	VerifyClientState(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		root Root,
 		height Height,
 		prefix Prefix,
 		counterpartyClientIdentifier string,
@@ -61,7 +72,6 @@ type ClientState interface {
 	VerifyClientConsensusState(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		root Root,
 		height Height,
 		counterpartyClientIdentifier string,
 		consensusHeight Height,
@@ -150,7 +160,6 @@ type ConsensusState interface {
 type Misbehaviour interface {
 	ClientType() string
 	GetClientID() string
-	String() string
 	ValidateBasic() error
 
 	// Height at which the infraction occurred
@@ -173,8 +182,8 @@ type Height interface {
 	EQ(Height) bool
 	GT(Height) bool
 	GTE(Height) bool
-	GetVersionNumber() uint64
-	GetVersionHeight() uint64
+	GetRevisionNumber() uint64
+	GetRevisionHeight() uint64
 	Decrement() (Height, bool)
 	String() string
 }

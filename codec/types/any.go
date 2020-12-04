@@ -2,6 +2,8 @@ package types
 
 import (
 	"github.com/gogo/protobuf/proto"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type Any struct {
@@ -96,6 +98,23 @@ func UnsafePackAny(x interface{}) *Any {
 		}
 	}
 	return &Any{cachedValue: x}
+}
+
+// PackAny is a checked and safe version of UnsafePackAny. It assures that
+// `x` implements the proto.Message interface and uses it to serialize `x`.
+// [DEPRECATED]: should be moved away: https://github.com/cosmos/cosmos-sdk/issues/7479
+func PackAny(x interface{}) (*Any, error) {
+	if x == nil {
+		return nil, nil
+	}
+	if intoany, ok := x.(IntoAny); ok {
+		return intoany.AsAny(), nil
+	}
+	protoMsg, ok := x.(proto.Message)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "Expecting %T to implement proto.Message", x)
+	}
+	return NewAnyWithValue(protoMsg)
 }
 
 // GetCachedValue returns the cached value from the Any if present

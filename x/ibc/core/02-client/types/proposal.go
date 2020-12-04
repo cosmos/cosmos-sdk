@@ -2,6 +2,7 @@ package types
 
 import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
@@ -33,7 +34,7 @@ func (cup *ClientUpdateProposal) GetTitle() string { return cup.Title }
 // GetDescription returns the description of a client update proposal.
 func (cup *ClientUpdateProposal) GetDescription() string { return cup.Description }
 
-// GetDescription returns the routing key of a client update proposal.
+// ProposalRoute returns the routing key of a client update proposal.
 func (cup *ClientUpdateProposal) ProposalRoute() string { return RouterKey }
 
 // ProposalType returns the type of a client update proposal.
@@ -43,6 +44,10 @@ func (cup *ClientUpdateProposal) ProposalType() string { return ProposalTypeClie
 func (cup *ClientUpdateProposal) ValidateBasic() error {
 	err := govtypes.ValidateAbstract(cup)
 	if err != nil {
+		return err
+	}
+
+	if err := host.ClientIdentifierValidator(cup.ClientId); err != nil {
 		return err
 	}
 

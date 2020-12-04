@@ -4,7 +4,6 @@ package cli_test
 
 import (
 	"context"
-	json "encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -52,7 +51,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
-	unbond, err := sdk.ParseCoin("10stake")
+	unbond, err := sdk.ParseCoinNormalized("10stake")
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
@@ -277,9 +276,9 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidators() {
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			s.Require().NoError(err)
 
-			var result []types.Validator
-			s.Require().NoError(json.Unmarshal(out.Bytes(), &result))
-			s.Require().Equal(len(s.network.Validators), len(result))
+			var result types.QueryValidatorsResponse
+			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().Equal(len(s.network.Validators), len(result.Validators))
 		})
 	}
 }
@@ -382,7 +381,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegations() {
 			&types.QueryDelegatorDelegationsResponse{},
 			&types.QueryDelegatorDelegationsResponse{
 				DelegationResponses: types.DelegationResponses{
-					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDec(100000000), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000))),
+					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDecFromInt(cli.DefaultTokens), sdk.NewCoin(sdk.DefaultBondDenom, cli.DefaultTokens)),
 				},
 				Pagination: &query.PageResponse{},
 			},
@@ -438,7 +437,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegationsTo() {
 			&types.QueryValidatorDelegationsResponse{},
 			&types.QueryValidatorDelegationsResponse{
 				DelegationResponses: types.DelegationResponses{
-					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDec(100000000), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000))),
+					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDecFromInt(cli.DefaultTokens), sdk.NewCoin(sdk.DefaultBondDenom, cli.DefaultTokens)),
 				},
 				Pagination: &query.PageResponse{},
 			},
@@ -892,8 +891,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryPool() {
 				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
-			`bonded_tokens: "200000000"
-not_bonded_tokens: "0"`,
+			fmt.Sprintf(`bonded_tokens: "%s"
+not_bonded_tokens: "0"`, cli.DefaultTokens.Mul(sdk.NewInt(2)).String()),
 		},
 		{
 			"with json",
@@ -901,7 +900,7 @@ not_bonded_tokens: "0"`,
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
-			`{"not_bonded_tokens":"0","bonded_tokens":"200000000"}`,
+			fmt.Sprintf(`{"not_bonded_tokens":"0","bonded_tokens":"%s"}`, cli.DefaultTokens.Mul(sdk.NewInt(2)).String()),
 		},
 	}
 	for _, tc := range testCases {

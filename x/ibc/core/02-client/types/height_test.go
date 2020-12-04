@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -19,10 +20,12 @@ func TestCompareHeights(t *testing.T) {
 		height2     types.Height
 		compareSign int64
 	}{
-		{"version number 1 is lesser", types.NewHeight(1, 3), types.NewHeight(3, 4), -1},
-		{"version number 1 is greater", types.NewHeight(7, 5), types.NewHeight(4, 5), 1},
-		{"version height 1 is lesser", types.NewHeight(3, 4), types.NewHeight(3, 9), -1},
-		{"version height 1 is greater", types.NewHeight(3, 8), types.NewHeight(3, 3), 1},
+		{"revision number 1 is lesser", types.NewHeight(1, 3), types.NewHeight(3, 4), -1},
+		{"revision number 1 is greater", types.NewHeight(7, 5), types.NewHeight(4, 5), 1},
+		{"revision height 1 is lesser", types.NewHeight(3, 4), types.NewHeight(3, 9), -1},
+		{"revision height 1 is greater", types.NewHeight(3, 8), types.NewHeight(3, 3), 1},
+		{"revision number is MaxUint64", types.NewHeight(math.MaxUint64, 1), types.NewHeight(0, 1), 1},
+		{"revision height is MaxUint64", types.NewHeight(1, math.MaxUint64), types.NewHeight(1, 0), 1},
 		{"height is equal", types.NewHeight(4, 4), types.NewHeight(4, 4), 0},
 	}
 
@@ -63,11 +66,11 @@ func TestString(t *testing.T) {
 	_, err := types.ParseHeight("height")
 	require.Error(t, err, "invalid height string passed")
 
-	_, err = types.ParseHeight("version-10")
-	require.Error(t, err, "invalid version string passed")
+	_, err = types.ParseHeight("revision-10")
+	require.Error(t, err, "invalid revision string passed")
 
 	_, err = types.ParseHeight("3-height")
-	require.Error(t, err, "invalid version-height string passed")
+	require.Error(t, err, "invalid revision-height string passed")
 
 	height := types.NewHeight(3, 4)
 	recovered, err := types.ParseHeight(height.String())
@@ -97,10 +100,11 @@ func (suite *TypesTestSuite) TestMustParseHeight() {
 func TestParseChainID(t *testing.T) {
 	cases := []struct {
 		chainID   string
-		version   uint64
+		revision  uint64
 		formatted bool
 	}{
 		{"gaiamainnet-3", 3, true},
+		{"a-1", 1, true},
 		{"gaia-mainnet-40", 40, true},
 		{"gaiamainnet-3-39", 39, true},
 		{"gaiamainnet--", 0, false},
@@ -108,39 +112,42 @@ func TestParseChainID(t *testing.T) {
 		{"gaiamainnet--4", 0, false},
 		{"gaiamainnet-3.4", 0, false},
 		{"gaiamainnet", 0, false},
+		{"a--1", 0, false},
+		{"-1", 0, false},
+		{"--1", 0, false},
 	}
 
 	for i, tc := range cases {
-		require.Equal(t, tc.formatted, types.IsVersionFormat(tc.chainID), "case %d does not match expected format", i)
+		require.Equal(t, tc.formatted, types.IsRevisionFormat(tc.chainID), "id %s does not match expected format", tc.chainID)
 
-		version := types.ParseChainID(tc.chainID)
-		require.Equal(t, tc.version, version, "case %d returns incorrect version", i)
+		revision := types.ParseChainID(tc.chainID)
+		require.Equal(t, tc.revision, revision, "case %d returns incorrect revision", i)
 	}
 
 }
 
-func TestSetVersionNumber(t *testing.T) {
-	// Test SetVersionNumber
-	chainID, err := types.SetVersionNumber("gaiamainnet", 3)
-	require.Error(t, err, "invalid version format passed SetVersionNumber")
-	require.Equal(t, "", chainID, "invalid version format returned non-empty string on SetVersionNumber")
+func TestSetRevisionNumber(t *testing.T) {
+	// Test SetRevisionNumber
+	chainID, err := types.SetRevisionNumber("gaiamainnet", 3)
+	require.Error(t, err, "invalid revision format passed SetRevisionNumber")
+	require.Equal(t, "", chainID, "invalid revision format returned non-empty string on SetRevisionNumber")
 	chainID = "gaiamainnet-3"
 
-	chainID, err = types.SetVersionNumber(chainID, 4)
-	require.NoError(t, err, "valid version format failed SetVersionNumber")
-	require.Equal(t, "gaiamainnet-4", chainID, "valid version format returned incorrect string on SetVersionNumber")
+	chainID, err = types.SetRevisionNumber(chainID, 4)
+	require.NoError(t, err, "valid revision format failed SetRevisionNumber")
+	require.Equal(t, "gaiamainnet-4", chainID, "valid revision format returned incorrect string on SetRevisionNumber")
 }
 
 func (suite *TypesTestSuite) TestSelfHeight() {
 	ctx := suite.chainA.GetContext()
 
-	// Test default version
+	// Test default revision
 	ctx = ctx.WithChainID("gaiamainnet")
 	ctx = ctx.WithBlockHeight(10)
 	height := types.GetSelfHeight(ctx)
 	suite.Require().Equal(types.NewHeight(0, 10), height, "default self height failed")
 
-	// Test successful version format
+	// Test successful revision format
 	ctx = ctx.WithChainID("gaiamainnet-3")
 	ctx = ctx.WithBlockHeight(18)
 	height = types.GetSelfHeight(ctx)

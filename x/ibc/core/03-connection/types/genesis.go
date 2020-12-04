@@ -17,18 +17,21 @@ func NewConnectionPaths(id string, paths []string) ConnectionPaths {
 // NewGenesisState creates a GenesisState instance.
 func NewGenesisState(
 	connections []IdentifiedConnection, connPaths []ConnectionPaths,
+	nextConnectionSequence uint64,
 ) GenesisState {
 	return GenesisState{
-		Connections:           connections,
-		ClientConnectionPaths: connPaths,
+		Connections:            connections,
+		ClientConnectionPaths:  connPaths,
+		NextConnectionSequence: nextConnectionSequence,
 	}
 }
 
 // DefaultGenesisState returns the ibc connection submodule's default genesis state.
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
-		Connections:           []IdentifiedConnection{},
-		ClientConnectionPaths: []ConnectionPaths{},
+		Connections:            []IdentifiedConnection{},
+		ClientConnectionPaths:  []ConnectionPaths{},
+		NextConnectionSequence: 0,
 	}
 }
 
@@ -45,9 +48,9 @@ func (gs GenesisState) Validate() error {
 		if err := host.ClientIdentifierValidator(conPaths.ClientId); err != nil {
 			return fmt.Errorf("invalid client connection path %d: %w", i, err)
 		}
-		for _, path := range conPaths.Paths {
-			if err := host.PathValidator(path); err != nil {
-				return fmt.Errorf("invalid client connection path %d: %w", i, err)
+		for _, connectionID := range conPaths.Paths {
+			if err := host.ConnectionIdentifierValidator(connectionID); err != nil {
+				return fmt.Errorf("invalid client connection ID (%s) in connection paths %d: %w", connectionID, i, err)
 			}
 		}
 	}

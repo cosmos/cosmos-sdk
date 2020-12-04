@@ -1,8 +1,9 @@
 package types
 
 import (
-	"github.com/tendermint/tendermint/crypto/tmhash"
+	"crypto/sha256"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
@@ -10,19 +11,32 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
-// CommitPacket returns a packet commitment bytes. The commitment consists of:
-// hash(timeout_timestamp + timeout_version_number + timeout_version_height + data) from a given packet.
-func CommitPacket(packet exported.PacketI) []byte {
+// CommitPacket returns the packet commitment bytes. The commitment consists of:
+// sha256_hash(timeout_timestamp + timeout_height.RevisionNumber + timeout_height.RevisionHeight + sha256_hash(data))
+// from a given packet. This results in a fixed length preimage.
+// NOTE: sdk.Uint64ToBigEndian sets the uint64 to a slice of length 8.
+func CommitPacket(cdc codec.BinaryMarshaler, packet exported.PacketI) []byte {
+	timeoutHeight := packet.GetTimeoutHeight()
+
 	buf := sdk.Uint64ToBigEndian(packet.GetTimeoutTimestamp())
-	buf = append(buf, sdk.Uint64ToBigEndian(packet.GetTimeoutHeight().GetVersionNumber())...)
-	buf = append(buf, sdk.Uint64ToBigEndian(packet.GetTimeoutHeight().GetVersionHeight())...)
-	buf = append(buf, packet.GetData()...)
-	return tmhash.Sum(buf)
+
+	revisionNumber := sdk.Uint64ToBigEndian(timeoutHeight.GetRevisionNumber())
+	buf = append(buf, revisionNumber...)
+
+	revisionHeight := sdk.Uint64ToBigEndian(timeoutHeight.GetRevisionHeight())
+	buf = append(buf, revisionHeight...)
+
+	dataHash := sha256.Sum256(packet.GetData())
+	buf = append(buf, dataHash[:]...)
+
+	hash := sha256.Sum256(buf)
+	return hash[:]
 }
 
 // CommitAcknowledgement returns the hash of commitment bytes
 func CommitAcknowledgement(data []byte) []byte {
-	return tmhash.Sum(data)
+	hash := sha256.Sum256(data)
+	return hash[:]
 }
 
 var _ exported.PacketI = (*Packet)(nil)

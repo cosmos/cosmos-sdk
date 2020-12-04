@@ -28,6 +28,11 @@ func (q Keeper) ConsensusStates(c context.Context, req *clienttypes.QueryConsens
 	return q.ClientKeeper.ConsensusStates(c, req)
 }
 
+// ClientParams implements the IBC QueryServer interface
+func (q Keeper) ClientParams(c context.Context, req *clienttypes.QueryClientParamsRequest) (*clienttypes.QueryClientParamsResponse, error) {
+	return q.ClientKeeper.ClientParams(c, req)
+}
+
 // Connection implements the IBC QueryServer interface
 func (q Keeper) Connection(c context.Context, req *connectiontypes.QueryConnectionRequest) (*connectiontypes.QueryConnectionResponse, error) {
 	return q.ConnectionKeeper.Connection(c, req)
@@ -88,9 +93,19 @@ func (q Keeper) PacketCommitments(c context.Context, req *channeltypes.QueryPack
 	return q.ChannelKeeper.PacketCommitments(c, req)
 }
 
+// PacketReceipt implements the IBC QueryServer interface
+func (q Keeper) PacketReceipt(c context.Context, req *channeltypes.QueryPacketReceiptRequest) (*channeltypes.QueryPacketReceiptResponse, error) {
+	return q.ChannelKeeper.PacketReceipt(c, req)
+}
+
 // PacketAcknowledgement implements the IBC QueryServer interface
 func (q Keeper) PacketAcknowledgement(c context.Context, req *channeltypes.QueryPacketAcknowledgementRequest) (*channeltypes.QueryPacketAcknowledgementResponse, error) {
 	return q.ChannelKeeper.PacketAcknowledgement(c, req)
+}
+
+// PacketAcknowledgements implements the IBC QueryServer interface
+func (q Keeper) PacketAcknowledgements(c context.Context, req *channeltypes.QueryPacketAcknowledgementsRequest) (*channeltypes.QueryPacketAcknowledgementsResponse, error) {
+	return q.ChannelKeeper.PacketAcknowledgements(c, req)
 }
 
 // UnreceivedPackets implements the IBC QueryServer interface
@@ -98,9 +113,9 @@ func (q Keeper) UnreceivedPackets(c context.Context, req *channeltypes.QueryUnre
 	return q.ChannelKeeper.UnreceivedPackets(c, req)
 }
 
-// UnrelayedAcks implements the IBC QueryServer interface
-func (q Keeper) UnrelayedAcks(c context.Context, req *channeltypes.QueryUnrelayedAcksRequest) (*channeltypes.QueryUnrelayedAcksResponse, error) {
-	return q.ChannelKeeper.UnrelayedAcks(c, req)
+// UnreceivedAcks implements the IBC QueryServer interface
+func (q Keeper) UnreceivedAcks(c context.Context, req *channeltypes.QueryUnreceivedAcksRequest) (*channeltypes.QueryUnreceivedAcksResponse, error) {
+	return q.ChannelKeeper.UnreceivedAcks(c, req)
 }
 
 // NextSequenceReceive implements the IBC QueryServer interface

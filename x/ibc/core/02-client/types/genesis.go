@@ -66,21 +66,26 @@ func (ccs ClientConsensusStates) UnpackInterfaces(unpacker codectypes.AnyUnpacke
 
 // NewGenesisState creates a GenesisState instance.
 func NewGenesisState(
-	clients []IdentifiedClientState, clientsConsensus ClientsConsensusStates, createLocalhost bool,
+	clients []IdentifiedClientState, clientsConsensus ClientsConsensusStates,
+	params Params, createLocalhost bool, nextClientSequence uint64,
 ) GenesisState {
 	return GenesisState{
-		Clients:          clients,
-		ClientsConsensus: clientsConsensus,
-		CreateLocalhost:  createLocalhost,
+		Clients:            clients,
+		ClientsConsensus:   clientsConsensus,
+		Params:             params,
+		CreateLocalhost:    createLocalhost,
+		NextClientSequence: nextClientSequence,
 	}
 }
 
 // DefaultGenesisState returns the ibc client submodule's default genesis state.
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
-		Clients:          []IdentifiedClientState{},
-		ClientsConsensus: ClientsConsensusStates{},
-		CreateLocalhost:  true,
+		Clients:            []IdentifiedClientState{},
+		ClientsConsensus:   ClientsConsensusStates{},
+		Params:             DefaultParams(),
+		CreateLocalhost:    false,
+		NextClientSequence: 0,
 	}
 }
 
@@ -98,6 +103,12 @@ func (gs GenesisState) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
+	if err := gs.Params.Validate(); err != nil {
+		return err
+	}
+
+	validClients := make(map[string]bool)
+
 	for i, client := range gs.Clients {
 		if err := host.ClientIdentifierValidator(client.ClientId); err != nil {
 			return fmt.Errorf("invalid client consensus state identifier %s index %d: %w", client.ClientId, i, err)
@@ -107,14 +118,22 @@ func (gs GenesisState) Validate() error {
 		if !ok {
 			return fmt.Errorf("invalid client state with ID %s", client.ClientId)
 		}
+
+		if !gs.Params.IsAllowedClient(clientState.ClientType()) {
+			return fmt.Errorf("client type %s not allowed by genesis params", clientState.ClientType())
+		}
 		if err := clientState.Validate(); err != nil {
 			return fmt.Errorf("invalid client %v index %d: %w", client, i, err)
 		}
+
+		// add client id to validClients map
+		validClients[client.ClientId] = true
 	}
 
 	for i, cc := range gs.ClientsConsensus {
-		if err := host.ClientIdentifierValidator(cc.ClientId); err != nil {
-			return fmt.Errorf("invalid client consensus state identifier %s index %d: %w", cc.ClientId, i, err)
+		// check that consensus state is for a client in the genesis clients list
+		if !validClients[cc.ClientId] {
+			return fmt.Errorf("consensus state in genesis has a client id %s that does not map to a genesis client", cc.ClientId)
 		}
 
 		for _, consensusState := range cc.ConsensusStates {
@@ -131,6 +150,10 @@ func (gs GenesisState) Validate() error {
 				return fmt.Errorf("invalid client consensus state %v index %d: %w", cs, i, err)
 			}
 		}
+	}
+
+	if gs.CreateLocalhost && !gs.Params.IsAllowedClient(exported.Localhost) {
+		return fmt.Errorf("localhost client is not registered on the allowlist")
 	}
 
 	return nil

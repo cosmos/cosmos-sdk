@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"reflect"
+	"strings"
 	"sync"
 
+	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"google.golang.org/protobuf/encoding/protowire"
@@ -24,8 +26,9 @@ type descriptorIface interface {
 
 // RejectUnknownFieldsStrict rejects any bytes bz with an error that has unknown fields for the provided proto.Message type.
 // This function traverses inside of messages nested via google.protobuf.Any. It does not do any deserialization of the proto.Message.
-func RejectUnknownFieldsStrict(bz []byte, msg proto.Message) error {
-	_, err := RejectUnknownFields(bz, msg, false)
+// An AnyResolver must be provided for traversing inside google.protobuf.Any's.
+func RejectUnknownFieldsStrict(bz []byte, msg proto.Message, resolver jsonpb.AnyResolver) error {
+	_, err := RejectUnknownFields(bz, msg, false, resolver)
 	return err
 }
 
@@ -34,7 +37,8 @@ func RejectUnknownFieldsStrict(bz []byte, msg proto.Message) error {
 // hasUnknownNonCriticals will be set to true if non-critical fields were encountered during traversal. This flag can be
 // used to treat a message with non-critical field different in different security contexts (such as transaction signing).
 // This function traverses inside of messages nested via google.protobuf.Any. It does not do any deserialization of the proto.Message.
-func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals bool) (hasUnknownNonCriticals bool, err error) {
+// An AnyResolver must be provided for traversing inside google.protobuf.Any's.
+func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals bool, resolver jsonpb.AnyResolver) (hasUnknownNonCriticals bool, err error) {
 	if len(bz) == 0 {
 		return hasUnknownNonCriticals, nil
 	}
@@ -88,6 +92,11 @@ func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals 
 		// Skip over the bytes that store fieldNumber and wireType bytes.
 		bz = bz[m:]
 		n := protowire.ConsumeFieldValue(tagNum, wireType, bz)
+		if n < 0 {
+			err = fmt.Errorf("could not consume field value for tagNum: %d, wireType: %q; %w",
+				tagNum, wireTypeToString(wireType), protowire.ParseError(n))
+			return hasUnknownNonCriticals, err
+		}
 		fieldBytes := bz[:n]
 		bz = bz[n:]
 
@@ -115,9 +124,12 @@ func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals 
 		_, o := protowire.ConsumeVarint(fieldBytes)
 		fieldBytes = fieldBytes[o:]
 
+		var msg proto.Message
+		var err error
+
 		if protoMessageName == ".google.protobuf.Any" {
 			// Firstly typecheck types.Any to ensure nothing snuck in.
-			hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, (*types.Any)(nil), allowUnknownNonCriticals)
+			hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, (*types.Any)(nil), allowUnknownNonCriticals, resolver)
 			hasUnknownNonCriticals = hasUnknownNonCriticals || hasUnknownNonCriticalsChild
 			if err != nil {
 				return hasUnknownNonCriticals, err
@@ -129,14 +141,18 @@ func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals 
 			}
 			protoMessageName = any.TypeUrl
 			fieldBytes = any.Value
+			msg, err = resolver.Resolve(protoMessageName)
+			if err != nil {
+				return hasUnknownNonCriticals, err
+			}
+		} else {
+			msg, err = protoMessageForTypeName(protoMessageName[1:])
+			if err != nil {
+				return hasUnknownNonCriticals, err
+			}
 		}
 
-		msg, err := protoMessageForTypeName(protoMessageName[1:])
-		if err != nil {
-			return hasUnknownNonCriticals, err
-		}
-
-		hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, msg, allowUnknownNonCriticals)
+		hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, msg, allowUnknownNonCriticals, resolver)
 		hasUnknownNonCriticals = hasUnknownNonCriticals || hasUnknownNonCriticalsChild
 		if err != nil {
 			return hasUnknownNonCriticals, err
@@ -400,4 +416,24 @@ func getDescriptorInfo(desc descriptorIface, msg proto.Message) (map[int32]*desc
 	descprotoCacheMu.Unlock()
 
 	return tagNumToTypeIndex, md, nil
+}
+
+// DefaultAnyResolver is a default implementation of AnyResolver which uses
+// the default encoding of type URLs as specified by the protobuf specification.
+type DefaultAnyResolver struct{}
+
+var _ jsonpb.AnyResolver = DefaultAnyResolver{}
+
+// Resolve is the AnyResolver.Resolve method.
+func (d DefaultAnyResolver) Resolve(typeURL string) (proto.Message, error) {
+	// Only the part of typeURL after the last slash is relevant.
+	mname := typeURL
+	if slash := strings.LastIndex(mname, "/"); slash >= 0 {
+		mname = mname[slash+1:]
+	}
+	mt := proto.MessageType(mname)
+	if mt == nil {
+		return nil, fmt.Errorf("unknown message type %q", mname)
+	}
+	return reflect.New(mt.Elem()).Interface().(proto.Message), nil
 }

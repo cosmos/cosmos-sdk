@@ -152,9 +152,13 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.Vali
 	rewards := rewardsRaw.Intersect(outstanding)
 	if !rewards.IsEqual(rewardsRaw) {
 		logger := k.Logger(ctx)
-		logger.Info(fmt.Sprintf("missing rewards rounding error, delegator %v"+
-			"withdrawing rewards from validator %v, should have received %v, got %v",
-			val.GetOperator(), del.GetDelegatorAddr(), rewardsRaw, rewards))
+		logger.Info(
+			"rounding error withdrawing rewards from validator",
+			"delegator", del.GetDelegatorAddr().String(),
+			"validator", val.GetOperator().String(),
+			"got", rewards.String(),
+			"expected", rewardsRaw.String(),
+		)
 	}
 
 	// truncate coins, return remainder to community pool

@@ -27,23 +27,18 @@ func TestAminoMarsharlInterface(t *testing.T) {
 	require := require.New(t)
 	cdc := codec.NewAminoCodec(createTestCodec())
 
-	var animal testdata.Animal
-	_, err := cdc.MarshalInterface(animal)
-	require.EqualError(err, "can't marshal <nil> value", "Marshaling nil should fail")
-
-	dog := testdata.Dog{Name: "rufus"}
+	dog := &testdata.Dog{Name: "rufus"}
 	var dogI testdata.Animal = dog
-	_, ok := dogI.(codec.ProtoMarshaler)
-	require.False(ok, "We want to test objects not implementing ProtoMarshaler")
-	bz, err := cdc.MarshalInterface(dog)
+	bz, err := cdc.MarshalInterface(dogI)
 	require.NoError(err)
 	// require.EqualError(err, "can't proto marshal testdata.Dog; expecting ProtoMarshaler")
+	var animal testdata.Animal
 	require.PanicsWithValue("Unmarshal expects a pointer", func() {
 		cdc.UnmarshalInterface(bz, animal)
 	})
 	var dog2 testdata.Dog
 	require.NoError(cdc.UnmarshalInterface(bz, &dog2))
-	require.Equal(dog, dog2)
+	require.Equal(*dog, dog2)
 	require.NoError(cdc.UnmarshalInterface(bz, &animal))
 	require.Equal(dog, animal)
 	var cat testdata.Cat

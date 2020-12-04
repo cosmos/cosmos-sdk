@@ -6,10 +6,14 @@ package testdata
 import (
 	"fmt"
 
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 type Animal interface {
+	proto.Message
+
 	Greet() string
 }
 

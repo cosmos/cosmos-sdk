@@ -32,11 +32,11 @@ func TestNewGenesisState(t *testing.T) {
 		expPass  bool
 	}{
 		{
-			"cannot proto marshal",
+			"can proto marshal",
 			func() {
 				evidence = []exported.Evidence{&TestEvidence{}}
 			},
-			false,
+			true,
 		},
 	}
 

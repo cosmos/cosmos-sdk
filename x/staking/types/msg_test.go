@@ -27,10 +27,10 @@ func TestMsgDecode(t *testing.T) {
 
 	// firstly we start testing the pubkey serialization
 
-	pk1bz, err := codec.MarshalInterface(cdc, pk1)
+	pk1bz, err := cdc.MarshalInterface(pk1)
 	require.NoError(t, err)
 	var pkUnmarshaled cryptotypes.PubKey
-	err = codec.UnmarshalInterface(cdc, &pkUnmarshaled, pk1bz)
+	err = cdc.UnmarshalInterface(&pkUnmarshaled, pk1bz)
 	require.NoError(t, err)
 	require.True(t, pk1.Equals(pkUnmarshaled.(*ed25519.PubKey)))
 
@@ -39,11 +39,11 @@ func TestMsgDecode(t *testing.T) {
 	commission1 := types.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	msg, err := types.NewMsgCreateValidator(valAddr1, pk1, coinPos, types.Description{}, commission1, sdk.OneInt())
 	require.NoError(t, err)
-	msgSerialized, err := codec.MarshalInterface(cdc, msg)
+	msgSerialized, err := cdc.MarshalInterface(msg)
 	require.NoError(t, err)
 
 	var msgUnmarshaled sdk.Msg
-	err = codec.UnmarshalInterface(cdc, &msgUnmarshaled, msgSerialized)
+	err = cdc.UnmarshalInterface(&msgUnmarshaled, msgSerialized)
 	require.NoError(t, err)
 	msg2, ok := msgUnmarshaled.(*types.MsgCreateValidator)
 	require.True(t, ok)

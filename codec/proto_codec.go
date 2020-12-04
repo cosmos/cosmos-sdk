@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
+
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 // ProtoCodecMarshaler defines an interface for codecs that utilize Protobuf for both
@@ -158,6 +158,41 @@ func (pc *ProtoCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 	if err := pc.UnmarshalJSON(bz, ptr); err != nil {
 		panic(err)
 	}
+}
+
+// MarshalInterface is a convenience function for proto marshalling interfaces. It
+// packs the provided value, which must implemenet proto.Message,
+// in an Any and then marshals it to bytes.
+// NOTE: if you use a concret type, then you should use BinaryMarshaler.MarshalBinaryBare instead
+func (pc *ProtoCodec) MarshalInterface(i interface{}) ([]byte, error) {
+	msg, ok := i.(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("can't proto marshal %T; expecting proto.Message", x)
+	}
+	any, err := types.NewAnyWithValue(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return pc.MarshalBinaryBare(any)
+}
+
+// UnmarshalInterface is a convenience function for proto unmarshaling interfaces. It
+// unmarshals an Any from bz and then unpacks it to the `iface`, which must
+// be a pointer to a non empty interface with registered implementations.
+// NOTE: if you use a concert type, then you should use BinaryMarshaler.UnarshalBinaryBare instead
+//
+// Ex:
+//		var x MyInterface
+//		err := UnmarshalInterface(unpacker, &x, bz)
+func (pc *ProtoCodec) UnmarshalInterface(i interface{}, bz []byte) error {
+	any := &types.Any{}
+	err := pc.UnmarshalBinaryBare(bz, any)
+	if err != nil {
+		return err
+	}
+
+	return pc.UnpackAny(any, i)
 }
 
 // UnpackAny implements AnyUnpacker.UnpackAny method,

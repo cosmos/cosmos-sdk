@@ -28,13 +28,13 @@ func TestMarshalAny(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 
 	kitty := &testdata.Cat{Moniker: "Kitty"}
-	bz, err := codec.MarshalInterface(cdc, kitty)
+	bz, err := cdc.MarshalInterface(kitty)
 	require.NoError(t, err)
 
 	var animal testdata.Animal
 
 	// empty registry should fail
-	err = codec.UnmarshalInterface(cdc, &animal, bz)
+	err = cdc.UnmarshalInterface(&animal, bz)
 	require.Error(t, err)
 
 	// wrong type registration should fail
@@ -59,7 +59,7 @@ func TestMarshalAnyNonProtoErrors(t *testing.T) {
 	registry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 
-	_, err := codec.MarshalInterface(cdc, 29)
+	_, err := cdc.MarshalInterface(29)
 	require.Error(t, err)
 	require.Equal(t, err, errors.New("can't proto marshal int"))
 }

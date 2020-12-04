@@ -146,15 +146,38 @@ enable = {{ .GRPC.Enable }}
 
 # Address defines the gRPC server address to bind to.
 address = "{{ .GRPC.Address }}"
-[grpc-proxy]
+
+[grpc.grpc-proxy]
 	# GRPCWebProxyEnable defines if the gRPC-web-proxy should be enabled.
 	enable = {{ .GRPC.GRPCWebProxy.Enable }}
 
-	# AllowOrigins
+	# AllowAllOrigins defines allow requests from any origin.
 	allow-all-origin = {{ .GRPC.GRPCWebProxy.AllowAllOrigins }}
 
-	# AllowedOrigins
-	allowed-origins = {{ .GRPC.GRPCWebProxy.AllowedOrigins }}
+	# AllowedOrigins defines list of origin URLs which are allowed to make cross-origin requests.
+	allowed-origins = [{{ range $k, $v := .GRPC.GRPCWebProxy.AllowedOrigins }} "{{ $v }}", {{ end }}]
+
+	# AllowedHeaders defines list of headers which are allowed to propagate to the gRPC backend.
+	allowed-headers = [{{ range $k, $v := .GRPC.GRPCWebProxy.AllowedHeaders }} "{{ $v }}", {{ end }}]
+
+	# EnableHTTPServer defines if the HTTP should be enabled.
+	enable-http-server = {{ .GRPC.GRPCWebProxy.EnableHTTPServer }}
+
+	# EnableTLSServer defines if the TLS should be enabled.
+	enable-tls-server = {{ .GRPC.GRPCWebProxy.EnableTLSServer }}
+
+	# TlsServerCert defines the path to the PEM certificate for server use.
+	tls-server-cert = "{{ .GRPC.GRPCWebProxy.TlsServerCert}}"
+
+	# TlsServerKey defines the path to the PEM key for the certificate for the server use.
+	tls-server-key = "{{ .GRPC.GRPCWebProxy.TlsServerKey }}"
+
+	# TlsServerClientCertVerification defines controls whether a client certificate is on. Values: none, verify_if_given, require.
+	tls-server-client-cert-verification = "{{ .GRPC.GRPCWebProxy.TlsServerClientCertVerification }}"
+
+	# TlsServerClientCAFiles defines Paths (comma separated) to PEM certificate chains used for client-side verification. If empty, host CA chain will be used.
+	tls-server-client-ca-files = "{{ .GRPC.GRPCWebProxy.TlsServerClientCAFiles }}"
+
 ###############################################################################
 ###                        State Sync Configuration                         ###
 ###############################################################################

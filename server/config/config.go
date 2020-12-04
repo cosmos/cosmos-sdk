@@ -107,7 +107,7 @@ type GRPCConfig struct {
 	Address string `mapstructure:"address"`
 
 	// GRPCWebProxy defines the list of flags for grpc-proxy.
-	GRPCWebProxy GRPCProxy `mapstructure:grpc-proxy`
+	GRPCWebProxy GRPCProxy `mapstructure:"grpc-proxy"`
 }
 
 // GRPProxy defines configuration for the gRPC server.
@@ -115,11 +115,13 @@ type GRPCProxy struct {
 	// Enable defines if the proxy should be enabled.
 	Enable bool `mapstructure:"enable"`
 
-	// AllowAllOrigins
+	// AllowAllOrigins defines allow requests from any origin.
 	AllowAllOrigins bool `mapstructure:"allow-all-origins"`
 
+	// AllowedOrigins defines list of origin URLs which are allowed to make cross-origin requests.
 	AllowedOrigins []string `mapstructure:"allowed-origins"`
 
+	// AllowedHeaders defines list of headers which are allowed to propagate to the gRPC backend.
 	AllowedHeaders []string `mapstructure:"allowed-headers"`
 
 	// EnableHTTPServer defines if the HTTP should be enabled.
@@ -225,7 +227,7 @@ func DefaultConfig() *Config {
 				EnableTLSServer:                 false,
 				AllowedOrigins:                  []string{"*"},
 				TlsServerCert:                   "",
-				AllowedHeaders:                  []string{},
+				AllowedHeaders:                  make([]string, 0),
 				TlsServerClientCAFiles:          "",
 				TlsServerClientCertVerification: "",
 				TlsServerKey:                    "",

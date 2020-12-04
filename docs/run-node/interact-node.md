@@ -8,6 +8,7 @@ There are multiple ways to interact with a node: using the CLI, using gRPC or us
 
 ## Pre-requisite Readings
 
+- [gRPC, REST and Tendermint Endpoints](../core/grpc_rest.md) {prereq}
 - [Running a Node](./run-node.md) {prereq}
 
 ## Using the CLI
@@ -49,9 +50,52 @@ You should see two delegations, the first one made from the `gentx`, and the sec
 
 ## Using gRPC
 
-The Protobuf ecosystem developed multiple gRPC clients. gRPC clients
+The Protobuf ecosystem developed tools for different use cases, including code-generation from `*.proto` files into various languages. These tools allow to build clients easily. Often, the client connection (i.e. the transport) can be plugged and replaced very easily. Let's explore one of the most popular transport: [gRPC](../core/grpc_rest.md).
 
-### grpcurl
+Since the code generation library largely depends on your own tech stack, we will only present two alternatives:
+
+- `grpcurl` for generic debugging and testing,
+- CosmJS for JavaScript/TypeScript developers.
+
+### grpcurl: Reflection, Queries, and Simulation
+
+[grpcurl])https://github.com/fullstorydev/grpcurl is like `curl` but for gRPC. It is also available as a Go library, but we will use it only as a CLI command for debugging and testing purposes. Follow the instructions in the previous link to install it.
+
+Assuming you have a local node running (either a localnet, or connected to our devnet), you should be able to run the following to list the Protobuf services available (you can replace `localhost:9000` by the gRPC server endpoint of another node):
+
+```sh
+grpcurl -plaintext localhost:9090 list
+```
+
+You should see a list of gRPC services, like `cosmos.bank.v1beta1.Query`. This is called reflection, which is a Protobuf endpoint returning a description of all available endpoints. Each of these represents a different Protobuf service, and each service exposes multiple RPC methods you can query against.
+
+In the Cosmos SDK, we use [gogoprotobuf](https://github.com/gogo/protobuf) for code generation, and [grpc-go](https://github.com/grpc/grpc-go) for creating the gRPC server. Unfortunately, these two don't play well together, and more in-depth reflection (such as using grpcurl's `describe`) is not possible. See [this issue](https://github.com/grpc/grpc-go/issues/1873) for more info.
+
+Instead, we need to manually pass the reference to relevant `.proto` files. For example:
+
+```sh
+grpcurl \
+    -import-path ./proto \                              # Import these proto files too
+    -import-path ./third_party/proto \                  # Import these proto files too
+    -proto ./proto/cosmos/bank/v1beta1/query.proto \    # That's the proto file with the description of your service
+    localhost:9090 \
+    describe cosmos.bank.v1beta1.Query                  # Service we want to inspect
+```
+
+#### Queries
+
+Given the Protobuf definitions, mkeing a gRPC query is straightforward
+
+```sh
+grpcurl \
+    -plaintext
+    -import-path ./proto \
+    -import-path ./third_party/proto \
+    -proto ./proto/cosmos/bank/v1beta1/query.proto \
+    -d '{"address":"$MY_VALIDATOR"}'
+    localhost:9090 \
+    cosmos.bank.v1beta1.Query/AllBalances
+```
 
 ### CosmJS
 

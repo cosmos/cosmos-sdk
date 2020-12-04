@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -341,7 +340,7 @@ func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 	k.SetSupply(ctx, supply)
 
 	logger := k.Logger(ctx)
-	logger.Info(fmt.Sprintf("minted %s from %s module account", amt.String(), moduleName))
+	logger.Info("minted coins from module account", "amount", amt.String(), "from", moduleName)
 
 	return nil
 }
@@ -369,7 +368,7 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 	k.SetSupply(ctx, supply)
 
 	logger := k.Logger(ctx)
-	logger.Info(fmt.Sprintf("burned %s from %s module account", amt.String(), moduleName))
+	logger.Info("burned tokens from module account", "amount", amt.String(), "from", moduleName)
 
 	return nil
 }

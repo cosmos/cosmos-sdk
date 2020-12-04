@@ -49,7 +49,7 @@ func IterateProcessedTime(store sdk.KVStore, cb func(key, val []byte) bool) {
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		keySplit := strings.Split(string(iterator.Key()), "/")
-		// processed time key in prefix store has format: "consensusState/<height>/processedTime
+		// processed time key in prefix store has format: "consensusState/<height>/processedTime"
 		if len(keySplit) != 3 || keySplit[2] != "processedTime" {
 			// ignore all consensus state keys
 			continue

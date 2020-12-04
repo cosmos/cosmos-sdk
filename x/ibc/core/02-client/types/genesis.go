@@ -111,7 +111,7 @@ func (gs GenesisState) Validate() error {
 		return err
 	}
 
-	validClients := make(map[string]exported.ClientState)
+	validClients := make(map[string]string)
 
 	for i, client := range gs.Clients {
 		if err := host.ClientIdentifierValidator(client.ClientId); err != nil {
@@ -148,12 +148,12 @@ func (gs GenesisState) Validate() error {
 		}
 
 		// add client id to validClients map
-		validClients[client.ClientId] = clientState
+		validClients[client.ClientId] = clientState.ClientType()
 	}
 
 	for i, cc := range gs.ClientsConsensus {
 		// check that consensus state is for a client in the genesis clients list
-		clientState, ok := validClients[cc.ClientId]
+		clientType, ok := validClients[cc.ClientId]
 		if !ok {
 			return fmt.Errorf("consensus state in genesis has a client id %s that does not map to a genesis client", cc.ClientId)
 		}
@@ -173,8 +173,8 @@ func (gs GenesisState) Validate() error {
 			}
 
 			// ensure consensus state type matches client state type
-			if clientState.ClientType() != cs.ClientType() {
-				return fmt.Errorf("consensus state client type %s does not equal client state client type %s", cs.ClientType(), clientState.ClientType())
+			if clientType != cs.ClientType() {
+				return fmt.Errorf("consensus state client type %s does not equal client state client type %s", cs.ClientType(), clientType)
 			}
 
 		}

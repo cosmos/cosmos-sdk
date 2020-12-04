@@ -49,4 +49,12 @@ You should see two delegations, the first one made from the `gentx`, and the sec
 
 ## Using gRPC
 
+The Protobuf ecosystem developed multiple gRPC clients. gRPC clients
+
+### grpcurl
+
+### CosmJS
+
+CosmJS documentation can be found at https://cosmos.github.io/cosmjs/. As of December 2020, CosmJS documentation is still work in progress.
+
 ## Using the REST Endpoints

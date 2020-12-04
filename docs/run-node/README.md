@@ -4,7 +4,7 @@ parent:
   order: 5
 -->
 
-# Running a Node
+# Running a Node and API
 
 This folder contains documentation on how to run a node and interact with it.
 

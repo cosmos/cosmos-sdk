@@ -32,7 +32,7 @@ type (
 		UnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler) error
 		MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler)
 
-		MarshalInterface(i interface{}) ([]byte, error)
+		MarshalInterface(i proto.Message) ([]byte, error)
 		UnmarshalInterface(bz []byte, ptr interface{}) error
 
 		types.AnyUnpacker

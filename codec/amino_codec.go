@@ -86,7 +86,7 @@ func (ac *AminoCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 // MarshalInterface implements BinaryMarshaler interface
 // The `o` must be an interface and must must implement ProtoMarshaler (it will panic otherwise).
 // NOTE: if you use a concret type, you should use MarshalBinaryBare instead
-func (ac *AminoCodec) MarshalInterface(i interface{}) ([]byte, error) {
+func (ac *AminoCodec) MarshalInterface(i proto.Message) ([]byte, error) {
 	if i == nil {
 		return nil, errors.New("can't marshal <nil> value")
 	}

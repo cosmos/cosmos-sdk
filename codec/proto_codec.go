@@ -164,13 +164,8 @@ func (pc *ProtoCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 // packs the provided value, which must implement proto.Message,
 // in an Any and then marshals it to bytes.
 // NOTE: if you use a concrete type, then you should use MarshalBinaryBare instead
-// TODO: check if we can use proto.Message here
-func (pc *ProtoCodec) MarshalInterface(i interface{}) ([]byte, error) {
-	msg, ok := i.(proto.Message)
-	if !ok {
-		return nil, fmt.Errorf("can't proto marshal %T; expecting proto.Message", i)
-	}
-	any, err := types.NewAnyWithValue(msg)
+func (pc *ProtoCodec) MarshalInterface(i proto.Message) ([]byte, error) {
+	any, err := types.NewAnyWithValue(i)
 	if err != nil {
 		return nil, err
 	}

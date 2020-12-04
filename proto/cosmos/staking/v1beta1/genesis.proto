@@ -142,7 +142,6 @@ message LastValidatorPower {
 
 // Development plan
 // — Implement changes for Msgs flow
-// — — Implement buffered validators query
 // — — Add next epoch time calculation function and for completion time required messages, use that function
 // — — For validator self undelegation, it could be required to do start on end blocker
 // — — If delegation fail, just return money back to user at the time of epoch

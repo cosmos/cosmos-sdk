@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
 )
@@ -54,6 +55,20 @@ func (k Keeper) SaveEpochAction(ctx sdk.Context, epochNumber int64, action sdk.M
 	k.SetNextEpochActionID(ctx, actionID+1)
 }
 
+// RestoreEpochAction restore the actions that need to be exectued on next epoch
+func (k Keeper) RestoreEpochAction(ctx sdk.Context, epochNumber int64, action *codectypes.Any) {
+	store := ctx.KVStore(k.storeKey)
+
+	// reference from TestMarshalAny(t *testing.T)
+	bz, err := codec.MarshalAny(k.cdc, action)
+	if err != nil {
+		panic(err)
+	}
+	actionID := k.GetNextEpochActionID(ctx)
+	store.Set(ActionStoreKey(epochNumber, actionID), bz)
+	k.SetNextEpochActionID(ctx, actionID+1)
+}
+
 // GetEpochAction get action by ID
 func (k Keeper) GetEpochAction(ctx sdk.Context, epochNumber int64, actionID uint64) sdk.Msg {
 	store := ctx.KVStore(k.storeKey)
@@ -71,16 +86,16 @@ func (k Keeper) GetEpochAction(ctx sdk.Context, epochNumber int64, actionID uint
 }
 
 // GetEpochActions get all actions
-func (k Keeper) GetEpochActions(ctx sdk.Context) []sdk.Msg {
-	actions := []sdk.Msg{}
+func (k Keeper) GetEpochActions(ctx sdk.Context) []*codectypes.Any {
+	actions := []*codectypes.Any{}
 	iterator := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte(EpochActionQueuePrefix))
 
 	for ; iterator.Valid(); iterator.Next() {
-		var action sdk.Msg
+		var action codectypes.Any
 		bz := iterator.Value()
 		// reference from TestMarshalAny(t *testing.T)
 		codec.UnmarshalAny(k.cdc, &action, bz)
-		actions = append(actions, action)
+		actions = append(actions, &action)
 	}
 
 	return actions

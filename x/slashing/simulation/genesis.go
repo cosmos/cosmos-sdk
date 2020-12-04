@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"time"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -85,7 +86,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		slashFractionDoubleSign, slashFractionDowntime,
 	)
 
-	slashingGenesis := types.NewGenesisState(params, []types.SigningInfo{}, []types.ValidatorMissedBlocks{})
+	slashingGenesis := types.NewGenesisState(params, []types.SigningInfo{}, []types.ValidatorMissedBlocks{}, []*codectypes.Any{})
 
 	bz, err := json.MarshalIndent(&slashingGenesis, "", " ")
 	if err != nil {

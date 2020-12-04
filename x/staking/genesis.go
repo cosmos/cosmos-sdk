@@ -167,21 +167,10 @@ func InitGenesis(
 	epochNumber := data.EpochNumber
 	keeper.SetEpochNumber(ctx, epochNumber)
 
-	for _, msg := range data.BufferedEditValidators {
-		keeper.SaveEpochAction(ctx, epochNumber, msg)
+	for _, msg := range data.BufferedMsgs {
+		keeper.RestoreEpochAction(ctx, epochNumber, msg)
 	}
 
-	for _, msg := range data.BufferedDelegations {
-		keeper.SaveEpochAction(ctx, epochNumber, msg)
-	}
-
-	for _, msg := range data.BufferedRedelegations {
-		keeper.SaveEpochAction(ctx, epochNumber, msg)
-	}
-
-	for _, msg := range data.BufferedUndelegations {
-		keeper.SaveEpochAction(ctx, epochNumber, msg)
-	}
 	return res
 }
 
@@ -218,6 +207,7 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 		Delegations:          keeper.GetAllDelegations(ctx),
 		UnbondingDelegations: unbondingDelegations,
 		Redelegations:        redelegations,
+		BufferedMsgs:         keeper.GetEpochActions(ctx),
 		Exported:             true,
 	}
 }

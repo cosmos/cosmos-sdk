@@ -5,7 +5,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
 import "gogoproto/gogo.proto";
 import "cosmos/staking/v1beta1/staking.proto";
-import "cosmos/staking/v1beta1/tx.proto";
+import "google/protobuf/any.proto";
 
 // GenesisState defines the staking module's genesis state.
 message GenesisState {
@@ -41,13 +41,10 @@ message GenesisState {
   bool exported = 8;
 
   // added newly added queues
-  repeated MsgEditValidator buffered_edit_validators = 9;
-  repeated MsgDelegate buffered_delegations = 10;
-  repeated MsgBeginRedelegate buffered_redelegations = 11;
-  repeated MsgUndelegate buffered_undelegations = 12;
+  repeated google.protobuf.Any buffered_msgs = 9;
 
   // epoch number at the time of genesis
-  int64 epoch_number = 13;
+  int64 epoch_number = 10;
 
   // Current logic flow summary:
   // Current queues: "unbonding validator", "unbonding delegator", “redelegation"

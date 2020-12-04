@@ -26,12 +26,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-// gaiad custom flags
+// simd custom flags
 const flagInvCheckPeriod = "inv-check-period"
 
 var invCheckPeriod uint
 
-var appDaemonHome = os.ExpandEnv("$HOME/.simd")
+var appDaemonHome = os.ExpandEnv("$HOME/.simapp")
 
 func main() {
 	cdc := app.MakeCodec()

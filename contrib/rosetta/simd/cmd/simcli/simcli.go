@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	app "github.com/cosmos/cosmos-sdk/simapp"
 	"os"
 	"path"
@@ -25,7 +26,7 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 )
 
-var appCLIHome = os.ExpandEnv("$HOME/.simcli")
+var appCLIHome = os.ExpandEnv("$HOME/.simapp")
 
 func main() {
 	// Configure cobra to sort commands
@@ -46,8 +47,8 @@ func main() {
 	// with the cdc
 
 	rootCmd := &cobra.Command{
-		Use:   "gaiacli",
-		Short: "Command line interface for interacting with gaiad",
+		Use:   "simcli",
+		Short: "Command line interface for interacting with simd",
 	}
 
 	// Add --chain-id to persistent flags and mark it required
@@ -69,6 +70,7 @@ func main() {
 		client.LineBreak,
 		version.Cmd,
 		client.NewCompletionCmd(rootCmd, true),
+		rosetta.RosettaCommand(cdc),
 	)
 
 	// Add flags and prefix all env exposed with GA

@@ -196,3 +196,15 @@ devdoc_update:
 	docker pull tendermint/devdoc
 
 .PHONY: devdoc devdoc_clean devdoc_init devdoc_save devdoc_update
+
+###############################################################################
+###                                rosetta                                  ###
+###############################################################################
+# builds rosetta test data dir
+rosetta-data:
+	-docker container rm data_dir_build
+	docker build -t rosetta-ci:latest -f contrib/rosetta/node/Dockerfile .
+	docker run --name data_dir_build -t rosetta-ci:latest sh /rosetta/data.sh
+	docker cp data_dir_build:/tmp/data.tar.gz "$(CURDIR)/contrib/rosetta/node/data.tar.gz"
+	docker container rm data_dir_build
+.PHONY: rosetta-data

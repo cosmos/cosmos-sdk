@@ -2,18 +2,12 @@ package keyring
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 )
 
-// CryptoCdc defines the codec required for keys and info
-var CryptoCdc *codec.LegacyAmino
-
 func init() {
-	CryptoCdc = codec.NewLegacyAmino()
-	cryptocodec.RegisterCrypto(CryptoCdc)
-	RegisterLegacyAminoCodec(CryptoCdc)
-	CryptoCdc.Seal()
+	RegisterLegacyAminoCodec(legacy.Cdc)
 }
 
 // RegisterLegacyAminoCodec registers concrete types and interfaces on the given codec.

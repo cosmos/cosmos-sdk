@@ -161,10 +161,9 @@ func (pc *ProtoCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 	}
 }
 
-// MarshalInterface is a convenience function for proto marshalling interfaces. It
-// packs the provided value, which must implement proto.Message,
-// in an Any and then marshals it to bytes.
-// NOTE: if you use a concrete type, then you should use MarshalBinaryBare instead
+// MarshalInterface is a convenience function for proto marshalling interfaces. It packs
+// the provided value, which must be an interface, in an Any and then marshals it to bytes.
+// NOTE: to marshal a concrete type, you should use MarshalBinaryBare instead
 func (pc *ProtoCodec) MarshalInterface(i proto.Message) ([]byte, error) {
 	if err := assertNotNil(i); err != nil {
 		return nil, err
@@ -180,7 +179,7 @@ func (pc *ProtoCodec) MarshalInterface(i proto.Message) ([]byte, error) {
 // UnmarshalInterface is a convenience function for proto unmarshaling interfaces. It
 // unmarshals an Any from bz bytes and then unpacks it to the `ptr`, which must
 // be a pointer to a non empty interface with registered implementations.
-// NOTE: if you use a concert type, then you should use UnarshalBinaryBare instead
+// NOTE: to unmarshal a concrete type, you should use UnarshalBinaryBare instead
 //
 // Example:
 //    var x MyInterface
@@ -197,7 +196,7 @@ func (pc *ProtoCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
 
 // MarshalInterfaceJSON is a convenience function for proto marshalling interfaces. It
 // packs the provided value in an Any and then marshals it to bytes.
-// NOTE: if you use a conceret type, then you should use JSONMarshaler.MarshalJSON instead
+// NOTE: to marshal a concrete type, you should use MarshalJSON instead
 func (pc *ProtoCodec) MarshalInterfaceJSON(x proto.Message) ([]byte, error) {
 	any, err := types.NewAnyWithValue(x)
 	if err != nil {
@@ -209,11 +208,11 @@ func (pc *ProtoCodec) MarshalInterfaceJSON(x proto.Message) ([]byte, error) {
 // UnmarshalInterfaceJSON is a convenience function for proto unmarshaling interfaces.
 // It unmarshals an Any from bz bytes and then unpacks it to the `iface`, which must
 // be a pointer to a non empty interface, implementing proto.Message with registered implementations.
-// NOTE: if you use a conceret type, then you should use JSONMarshaler.UnarshalJSON instead
+// NOTE: to unmarshal a concrete type, you should use UnarshalJSON instead
 //
 // Example:
 //    var x MyInterface  // must implement proto.Message
-//    err := UnmarshalAny(unpacker, &x, bz)
+//    err := UnmarshalInterfaceJSON(unpacker, &x, bz)
 func (pc *ProtoCodec) UnmarshalInterfaceJSON(bz []byte, iface interface{}) error {
 	any := &types.Any{}
 	err := pc.UnmarshalJSON(bz, any)

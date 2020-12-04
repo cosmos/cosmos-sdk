@@ -81,9 +81,9 @@ func (ac *AminoCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 	ac.LegacyAmino.MustUnmarshalJSON(bz, ptr)
 }
 
-// MarshalInterface implements BinaryMarshaler interface
-// The `o` must be an interface and must must implement ProtoMarshaler (it will panic otherwise).
-// NOTE: if you use a concrete type, you should use MarshalBinaryBare instead
+// MarshalInterface is a convenience function for amino marshaling interfaces.
+// The `i` must be an interface.
+// NOTE: to marshal a concrete type, you should use MarshalBinaryBare instead
 func (ac *AminoCodec) MarshalInterface(i proto.Message) ([]byte, error) {
 	if err := assertNotNil(i); err != nil {
 		return nil, err
@@ -91,13 +91,34 @@ func (ac *AminoCodec) MarshalInterface(i proto.Message) ([]byte, error) {
 	return ac.LegacyAmino.MarshalBinaryBare(i)
 }
 
-// UnmarshalInterface is a convenience function for proto unmarshaling interfaces.
-// `ptr` must be a pointer to an interface. If you use a concrete type you should use
-// UnmarshalBinaryBare
+// UnmarshalInterface is a convenience function for amino unmarshaling interfaces.
+// `ptr` must be a pointer to an interface.
+// NOTE: to unmarshal a concrete type, you should use UnarshalBinaryBare instead
 //
 // Example:
 //   var x MyInterface
-//   err := UnmarshalAny(bz, &x)
+//   err := UnmarshalInterface(bz, &x)
 func (ac *AminoCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
 	return ac.LegacyAmino.UnmarshalBinaryBare(bz, ptr)
+}
+
+// MarshalInterfaceJSON is a convenience function for amino marshaling interfaces.
+// The `i` must be an interface.
+// NOTE: to marshal a concrete type, you should use MarshalJSON instead
+func (ac *AminoCodec) MarshalInterfaceJSON(i proto.Message) ([]byte, error) {
+	if err := assertNotNil(i); err != nil {
+		return nil, err
+	}
+	return ac.LegacyAmino.MarshalJSON(i)
+}
+
+// UnmarshalInterfaceJSON is a convenience function for amino unmarshaling interfaces.
+// `ptr` must be a pointer to an interface.
+// NOTE: to unmarshal a concrete type, you should use UnarshalJSON instead
+//
+// Example:
+//   var x MyInterface
+//   err := UnmarshalInterfaceJSON(bz, &x)
+func (ac *AminoCodec) UnmarshalInterfaceJSON(bz []byte, ptr interface{}) error {
+	return ac.LegacyAmino.UnmarshalJSON(bz, ptr)
 }

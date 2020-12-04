@@ -28,6 +28,9 @@ func TestAminoMarsharlInterface(t *testing.T) {
 	cdc := codec.NewAminoCodec(createTestCodec())
 	m := interfaceMarshaler{cdc.MarshalInterface, cdc.UnmarshalInterface}
 	testInterfaceMarshaling(require.New(t), m, true)
+
+	m = interfaceMarshaler{cdc.MarshalInterfaceJSON, cdc.UnmarshalInterfaceJSON}
+	testInterfaceMarshaling(require.New(t), m, false)
 }
 
 func TestAminoCodec(t *testing.T) {

@@ -41,8 +41,8 @@ type (
 	JSONMarshaler interface {
 		MarshalJSON(o proto.Message) ([]byte, error)
 		MustMarshalJSON(o proto.Message) []byte
-		// MarshalInterfaceJSON(i interface{}) ([]byte, error)
-		// UnmarshalInterfaceJSON(bz []byte, ptr interface{}) error
+		MarshalInterfaceJSON(i proto.Message) ([]byte, error)
+		UnmarshalInterfaceJSON(bz []byte, ptr interface{}) error
 
 		UnmarshalJSON(bz []byte, ptr proto.Message) error
 		MustUnmarshalJSON(bz []byte, ptr proto.Message)

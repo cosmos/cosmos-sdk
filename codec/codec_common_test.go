@@ -16,25 +16,27 @@ type interfaceMarshaler struct {
 	unmarshal func(bz []byte, ptr interface{}) error
 }
 
-func testInterfaceMarshaling(require *require.Assertions, cdc interfaceMarshaler, isAmino bool) {
+func testInterfaceMarshaling(require *require.Assertions, cdc interfaceMarshaler, isAminoBin bool) {
 	dog := &testdata.Dog{Name: "rufus"}
 	var dogI testdata.Animal = dog
 	bz, err := cdc.marshal(dogI)
 	require.NoError(err)
 
 	var animal testdata.Animal
-	if isAmino {
+	if isAminoBin {
 		require.PanicsWithValue("Unmarshal expects a pointer", func() {
 			cdc.unmarshal(bz, animal)
 		})
 	} else {
-		require.EqualError(cdc.unmarshal(bz, animal), "UnpackAny expects a pointer")
+		err = cdc.unmarshal(bz, animal)
+		require.Error(err)
+		require.Contains(err.Error(), "expects a pointer")
 	}
 	require.NoError(cdc.unmarshal(bz, &animal))
 	require.Equal(dog, animal)
 
 	// Amino doesn't wrap into Any, so it doesn't need to register self type
-	if isAmino {
+	if isAminoBin {
 		var dog2 testdata.Dog
 		require.NoError(cdc.unmarshal(bz, &dog2))
 		require.Equal(*dog, dog2)

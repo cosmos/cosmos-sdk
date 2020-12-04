@@ -44,28 +44,30 @@ func (ps PacketSequence) Validate() error {
 // NewGenesisState creates a GenesisState instance.
 func NewGenesisState(
 	channels []IdentifiedChannel, acks, receipts, commitments []PacketState,
-	sendSeqs, recvSeqs, ackSeqs []PacketSequence,
+	sendSeqs, recvSeqs, ackSeqs []PacketSequence, nextChannelSequence uint64,
 ) GenesisState {
 	return GenesisState{
-		Channels:         channels,
-		Acknowledgements: acks,
-		Commitments:      commitments,
-		SendSequences:    sendSeqs,
-		RecvSequences:    recvSeqs,
-		AckSequences:     ackSeqs,
+		Channels:            channels,
+		Acknowledgements:    acks,
+		Commitments:         commitments,
+		SendSequences:       sendSeqs,
+		RecvSequences:       recvSeqs,
+		AckSequences:        ackSeqs,
+		NextChannelSequence: nextChannelSequence,
 	}
 }
 
 // DefaultGenesisState returns the ibc channel submodule's default genesis state.
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
-		Channels:         []IdentifiedChannel{},
-		Acknowledgements: []PacketState{},
-		Receipts:         []PacketState{},
-		Commitments:      []PacketState{},
-		SendSequences:    []PacketSequence{},
-		RecvSequences:    []PacketSequence{},
-		AckSequences:     []PacketSequence{},
+		Channels:            []IdentifiedChannel{},
+		Acknowledgements:    []PacketState{},
+		Receipts:            []PacketState{},
+		Commitments:         []PacketState{},
+		SendSequences:       []PacketSequence{},
+		RecvSequences:       []PacketSequence{},
+		AckSequences:        []PacketSequence{},
+		NextChannelSequence: 0,
 	}
 }
 

@@ -5,6 +5,8 @@ import (
 	"strconv"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
+	grpcmiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -74,7 +76,10 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 			newMethods[i] = grpc.MethodDesc{
 				MethodName: method.MethodName,
 				Handler: func(srv interface{}, ctx context.Context, dec func(interface{}) error, _ grpc.UnaryServerInterceptor) (interface{}, error) {
-					return methodHandler(srv, ctx, dec, interceptor)
+					return methodHandler(srv, ctx, dec, grpcmiddleware.ChainUnaryServer(
+						grpcrecovery.UnaryServerInterceptor(),
+						interceptor,
+					))
 				},
 			}
 		}

@@ -184,8 +184,8 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 			func() {
 				req = &types.QueryConsensusStateRequest{
 					ClientId:      testClientID,
-					VersionNumber: 0,
-					VersionHeight: 0,
+					RevisionNumber: 0,
+					RevisionHeight: 0,
 					LatestHeight:  false,
 				}
 			},
@@ -236,8 +236,8 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 
 				req = &types.QueryConsensusStateRequest{
 					ClientId:      testClientID,
-					VersionNumber: 0,
-					VersionHeight: height,
+					RevisionNumber: 0,
+					RevisionHeight: height,
 				}
 			},
 			true,

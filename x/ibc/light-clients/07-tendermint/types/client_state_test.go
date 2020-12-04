@@ -38,7 +38,7 @@ func (suite *TendermintTestSuite) TestValidate() {
 		},
 		{
 			name:        "valid client with nil upgrade path",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), "", false, false),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), nil, false, false),
 			expPass:     true,
 		},
 		{
@@ -137,7 +137,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			name:        "client is frozen",
-			clientState: &types.ClientState{LatestHeight: height, FrozenHeight: clienttypes.NewHeight(height.VersionNumber, height.VersionHeight-1)},
+			clientState: &types.ClientState{LatestHeight: height, FrozenHeight: clienttypes.NewHeight(height.RevisionNumber, height.RevisionHeight-1)},
 			consensusState: types.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 			},

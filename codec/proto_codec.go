@@ -2,6 +2,7 @@ package codec
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -165,6 +166,9 @@ func (pc *ProtoCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 // in an Any and then marshals it to bytes.
 // NOTE: if you use a concrete type, then you should use MarshalBinaryBare instead
 func (pc *ProtoCodec) MarshalInterface(i proto.Message) ([]byte, error) {
+	if err := assertNotNil(i); err != nil {
+		return nil, err
+	}
 	any, err := types.NewAnyWithValue(i)
 	if err != nil {
 		return nil, err
@@ -228,4 +232,11 @@ func (pc *ProtoCodec) UnpackAny(any *types.Any, iface interface{}) error {
 
 func (pc *ProtoCodec) InterfaceRegistry() types.InterfaceRegistry {
 	return pc.interfaceRegistry
+}
+
+func assertNotNil(i interface{}) error {
+	if i == nil {
+		return errors.New("can't marshal <nil> value")
+	}
+	return nil
 }

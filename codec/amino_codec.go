@@ -1,8 +1,6 @@
 package codec
 
 import (
-	"errors"
-
 	"github.com/gogo/protobuf/proto"
 )
 
@@ -87,8 +85,8 @@ func (ac *AminoCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 // The `o` must be an interface and must must implement ProtoMarshaler (it will panic otherwise).
 // NOTE: if you use a concrete type, you should use MarshalBinaryBare instead
 func (ac *AminoCodec) MarshalInterface(i proto.Message) ([]byte, error) {
-	if i == nil {
-		return nil, errors.New("can't marshal <nil> value")
+	if err := assertNotNil(i); err != nil {
+		return nil, err
 	}
 	return ac.LegacyAmino.MarshalBinaryBare(i)
 }

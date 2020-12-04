@@ -94,10 +94,6 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 		)
 	}
 
-	// TODO should check which function is moving Unbonded to Bonded for new validator or unjailed vaildator
-	// (Probably ApplyAndReturnValidatorSetUpdates?)
-	// We might need to move to Unbonded to Bonded only on epoch and move to Unbonded instantly
-
 	return validatorUpdates
 }
 
@@ -229,8 +225,6 @@ func (k Keeper) bondedToUnbonding(ctx sdk.Context, validator types.Validator) (t
 	return k.beginUnbondingValidator(ctx, validator)
 }
 
-// TODO I think we should make this to be only called on epoch
-// for now, it's called on Endblocker.
 func (k Keeper) unbondingToBonded(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
 	if !validator.IsUnbonding() {
 		panic(fmt.Sprintf("bad state transition unbondingToBonded, validator: %v\n", validator))
@@ -239,8 +233,6 @@ func (k Keeper) unbondingToBonded(ctx sdk.Context, validator types.Validator) (t
 	return k.bondValidator(ctx, validator)
 }
 
-// TODO I think we should make this to be only called on epoch
-// for now, it's called on Endblocker.
 func (k Keeper) unbondedToBonded(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
 	if !validator.IsUnbonded() {
 		panic(fmt.Sprintf("bad state transition unbondedToBonded, validator: %v\n", validator))

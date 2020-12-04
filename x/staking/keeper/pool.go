@@ -29,8 +29,6 @@ func (k Keeper) bondedTokensToNotBonded(ctx sdk.Context, tokens sdk.Int) {
 	}
 }
 
-// TODO I think we should make this to be only called on epoch
-// for now, it's called on Endblocker.
 // notBondedTokensToBonded transfers coins from the not bonded to the bonded pool within staking
 func (k Keeper) notBondedTokensToBonded(ctx sdk.Context, tokens sdk.Int) {
 	coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), tokens))

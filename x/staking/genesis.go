@@ -155,15 +155,6 @@ func InitGenesis(
 		}
 	}
 
-	// TODO is it not better to merge  buffered actions into one?
-	// It would be better, but I need some research for proto file definition
-	// Possible below proto file could be used
-	// message MsgData {
-	// 	option (gogoproto.stringer) = true;
-
-	// 	string msg_type = 1;
-	// 	bytes  data     = 2;
-	// }
 	epochNumber := data.EpochNumber
 	keeper.SetEpochNumber(ctx, epochNumber)
 

@@ -60,15 +60,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking
 
-* [\#X](https://github.com/cosmos/cosmos-sdk/pull/X) Updated the `codec.Marshaler` interface
-  * Moved `MarshalAny` and `UnmarshalAny` helper functions to `codec.Marshaler` and renamed to `MarshalIfc` and `UnmarshalIfc` respectively. These functions must take interface as a parameter (not a concrete type nor `Any` object). Underneath they use `Any` wrapping for correct protobuf serialization.
+* [\#8080](https://github.com/cosmos/cosmos-sdk/pull/8080) Updated the `codec.Marshaler` interface
+  * Moved `MarshalAny` and `UnmarshalAny` helper functions to `codec.Marshaler` and renamed to `MarshalInterface` and `UnmarshalInterface` respectively. These functions must take interface as a parameter (not a concrete type nor `Any` object). Underneath they use `Any` wrapping for correct protobuf serialization.
 
-
-### Improvements
-
-* [\#X](https://github.com/cosmos/cosmos-sdk/pull/X)
-  * Created `IfcJSONMarshaler` interface and `NewJSONAnyMarshaler` - a helper method to use codec.(Un)marsjalJSON withing a client context.
-  * Added `codec.(Un)marshalIfcJSON` helper functions
 
 
 ## [v0.40.0-rc3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc3) - 2020-11-06

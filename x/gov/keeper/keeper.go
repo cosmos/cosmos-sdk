@@ -68,7 +68,7 @@ func NewKeeper(
 
 // Logger returns a module-specific logger.
 func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // Router returns the gov Keeper's Router

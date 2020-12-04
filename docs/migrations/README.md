@@ -4,7 +4,7 @@ parent:
   order: 6
 -->
 
-# Core Concepts
+# Migrations
 
 This folder contains all the migration guides to update your app and modules to Cosmos v0.40 Stargate.
 

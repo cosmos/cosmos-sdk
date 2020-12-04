@@ -338,7 +338,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 			"invalid connection ID",
 			func() {
 				req = &types.QueryConnectionConsensusStateRequest{
-					ConnectionId:  "",
+					ConnectionId:   "",
 					RevisionNumber: 0,
 					RevisionHeight: 1,
 				}
@@ -349,7 +349,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 			"connection not found",
 			func() {
 				req = &types.QueryConnectionConsensusStateRequest{
-					ConnectionId:  "test-connection-id",
+					ConnectionId:   "test-connection-id",
 					RevisionNumber: 0,
 					RevisionHeight: 1,
 				}
@@ -362,7 +362,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 				_, _, connA, _, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 
 				req = &types.QueryConnectionConsensusStateRequest{
-					ConnectionId:  connA.ID,
+					ConnectionId:   connA.ID,
 					RevisionNumber: 0,
 					RevisionHeight: uint64(suite.chainA.GetContext().BlockHeight()), // use current height
 				}
@@ -379,7 +379,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 				expClientID = clientA
 
 				req = &types.QueryConnectionConsensusStateRequest{
-					ConnectionId:  connA.ID,
+					ConnectionId:   connA.ID,
 					RevisionNumber: clientState.GetLatestHeight().GetRevisionNumber(),
 					RevisionHeight: clientState.GetLatestHeight().GetRevisionHeight(),
 				}

@@ -324,7 +324,7 @@ Other potential removal criteria:
   * Missing 3 scheduled meetings results in ICF evaluating whether the member should be
     removed / replaced
   * Violation of Code of Conduct
-  
+
 Earning this privilege should be considered to be no small feat and is by no
 means guaranteed by any quantifiable metric. It is a symbol of great trust of
 the community of this project.
@@ -352,17 +352,20 @@ is broken up into three distinct stages: **Strategy Discovery**, **Concept Appro
 
 **Time Bound Period**
 
-* Time bound period for individual ADR Pull Requests should not exceed 2 weeks
-* Total time bound period for an ADR to reach a decision (`ABANDONED | ACCEPTED | REJECTED`) should not exceed
-    8 weeks
-    
-If an individual Pull Request for an ADR needs more time than 2 weeks, it should be merged
-in current state `Draft` or `Proposed`, with its contents updated to summarize
+* Once a PR for an ADR is opened, reviewers are expected to perform a first
+  review within 1 week of pull request being open
+* Time bound period for individual ADR Pull Requests to be merged should not exceed 2 weeks
+* Total time bound period for an ADR to reach a decision (`ABANDONED | ACCEPTED | REJECTED`) should not exceed 4 weeks
+
+If an individual Pull Request for an ADR needs more time than 2 weeks to reach resolution, it should be merged
+in current state (`Draft` or `Proposed`), with its contents updated to summarize
 the current state of its discussion.
 
-If an ADR is taking longer than 8 weeks to reach a final conclusion, the **Concept Approval Committee** 
-should convene to rectify the situation by either making changes to the Concept Approval
-Process (as outlined here), or making changes to the members of the Approval Committee.
+If an ADR is taking longer than 4 weeks to reach a final conclusion, the **Concept Approval Committee** 
+should convene to rectify the situation by either:
+- unanimously setting a new time bound period for this ADR
+- making changes to the Concept Approval Process (as outlined here)
+- making changes to the members of the Concept Approval Committee
 
 **Approval Committee & Decision Making**
 

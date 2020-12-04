@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -22,7 +21,7 @@ var _ Keeper = (*BaseKeeper)(nil)
 type Keeper interface {
 	SendKeeper
 
-	InitGenesis(sdk.Context, types.GenesisState)
+	InitGenesis(sdk.Context, *types.GenesisState)
 	ExportGenesis(sdk.Context) *types.GenesisState
 
 	GetSupply(ctx sdk.Context) exported.SupplyI
@@ -186,7 +185,6 @@ func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) types.Metada
 	store = prefix.NewStore(store, types.DenomMetadataKey(denom))
 
 	bz := store.Get([]byte(denom))
-
 	var metadata types.Metadata
 	k.cdc.MustUnmarshalBinaryBare(bz, &metadata)
 
@@ -342,7 +340,7 @@ func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 	k.SetSupply(ctx, supply)
 
 	logger := k.Logger(ctx)
-	logger.Info(fmt.Sprintf("minted %s from %s module account", amt.String(), moduleName))
+	logger.Info("minted coins from module account", "amount", amt.String(), "from", moduleName)
 
 	return nil
 }
@@ -370,7 +368,7 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 	k.SetSupply(ctx, supply)
 
 	logger := k.Logger(ctx)
-	logger.Info(fmt.Sprintf("burned %s from %s module account", amt.String(), moduleName))
+	logger.Info("burned tokens from module account", "amount", amt.String(), "from", moduleName)
 
 	return nil
 }

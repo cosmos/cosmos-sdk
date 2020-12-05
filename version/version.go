@@ -23,6 +23,8 @@ import (
 	"runtime/debug"
 )
 
+const X = "X"
+
 var (
 	// application's name
 	Name = ""

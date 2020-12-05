@@ -4,17 +4,20 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/ante"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
@@ -81,13 +84,15 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	suite.clientCtx = client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig)
 
-	suite.anteHandler = newAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper, authante.DefaultSigVerificationGasConsumer, encodingConfig.TxConfig.SignModeHandler())
+	suite.anteHandler = simapp.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper, authante.DefaultSigVerificationGasConsumer, encodingConfig.TxConfig.SignModeHandler())
 }
 
 func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	suite.SetupTest(true)
 	// setup
 	app, ctx := suite.app, suite.ctx
+
+	protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(app.InterfaceRegistry()), tx.DefaultSignModes)
 
 	// this just tests our handler
 	dfd := ante.NewDeductGrantedFeeDecorator(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper)
@@ -280,13 +285,22 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 		tc := stc // to make scopelint happy
 		suite.T().Run(name, func(t *testing.T) {
 			// msg and signatures
-			fee := types.NewGrantedFee(100000, sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee)), tc.feeAccount)
+			// fee := types.NewGrantedFee(100000, sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee)), tc.feeAccount)
+			fee := sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee))
 			msgs := []sdk.Msg{testdata.NewTestMsg(tc.signer)}
-			privs, accNums, seqs := []cryptotypes.PrivKey{tc.signerKey}, []uint64{0}, []uint64{0}
+			_, accNums, seqs := []cryptotypes.PrivKey{tc.signerKey}, []uint64{0}, []uint64{0}
 
-			tx := types.NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
+			// tx := types.NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
-			_, err := tc.handler(ctx, tx, false)
+			tx, err := helpers.GenTx(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, stc.signerKey)
+			protoTx, err := protoTxCfg.WrapTxBuilder(tx)
+
+			suite.Require().NoError(err)
+
+			protoTx.SetFeePayer(tc.feeAccount)
+			protoTx.SetFeeGranter(tc.signer)
+
+			_, err = tc.handler(ctx, protoTx.GetTx(), false)
 			if tc.valid {
 				suite.Require().NoError(err)
 			} else {

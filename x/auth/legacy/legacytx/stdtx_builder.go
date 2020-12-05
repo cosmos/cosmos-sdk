@@ -84,6 +84,10 @@ func (s *StdTxBuilder) SetTimeoutHeight(height uint64) {
 	s.TimeoutHeight = height
 }
 
+func (s *StdTxBuilder) SetFeePayer(_ sdk.AccAddress) {}
+
+func (s *StdTxBuilder) SetFeeGranter(_ sdk.AccAddress) {}
+
 // StdTxConfig is a context.TxConfig for StdTx
 type StdTxConfig struct {
 	Cdc *codec.LegacyAmino

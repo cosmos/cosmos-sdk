@@ -49,7 +49,7 @@ func NewDeductGrantedFeeDecorator(ak types.AccountKeeper, bk types.BankKeeper, k
 // signer, the handler will check if a fee grant has been authorized. If the
 // transaction's signer does not exist, it will be created.
 func (d DeductGrantedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	feeTx, ok := tx.(GrantedFeeTx)
+	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a GrantedFeeTx")
 	}
@@ -61,7 +61,7 @@ func (d DeductGrantedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 
 	fee := feeTx.GetFee()
 	feePayer := feeTx.FeePayer()
-	txSigner := feeTx.MainSigner()
+	txSigner := feeTx.FeeGranter()
 
 	// ensure the grant is allowed, if we request a different fee payer
 	if !txSigner.Equals(feePayer) {

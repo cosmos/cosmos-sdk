@@ -6,6 +6,7 @@ import (
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	feegrantante "github.com/cosmos/cosmos-sdk/x/feegrant/ante"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	feegranttypes "github.com/cosmos/cosmos-sdk/x/feegrant/types"
@@ -16,14 +17,16 @@ import (
 // signer.
 func NewAnteHandler(
 	ak authkeeper.AccountKeeper, bankKeeper feegranttypes.BankKeeper, feeGrantKeeper feegrantkeeper.Keeper,
-	sigGasConsumer authante.SignatureVerificationGasConsumer,
+	sigGasConsumer authante.SignatureVerificationGasConsumer, signModeHandler signing.SignModeHandler,
 ) sdk.AnteHandler {
 
 	txConfig := legacytx.StdTxConfig{Cdc: codec.NewLegacyAmino()}
 	return sdk.ChainAnteDecorators(
 		authante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
+		authante.NewRejectExtensionOptionsDecorator(),
 		authante.NewMempoolFeeDecorator(),
 		authante.NewValidateBasicDecorator(),
+		authante.TxTimeoutHeightDecorator{},
 		authante.NewValidateMemoDecorator(ak),
 		authante.NewConsumeGasForTxSizeDecorator(ak),
 		// DeductGrantedFeeDecorator will create an empty account if we sign with no

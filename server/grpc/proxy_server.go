@@ -5,14 +5,18 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"strings"
+	"os"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/server/config"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/mwitkow/go-conntrack"
 	"github.com/mwitkow/grpc-proxy/proxy"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -25,13 +29,17 @@ var (
 // StartGRPCProxyServer starts a gRPC-proxy server on the given config.
 func StartGRPCProxyServer(grpcConfig config.GRPCConfig) (*http.Server, error) {
 	proxyFlags := grpcConfig.GRPCWebProxy
+	logrus.SetOutput(os.Stdout)
 
-	grpcSrv, err := buildGrpcProxyServer(proxyFlags, grpcConfig.Address)
+	logEntry := logrus.NewEntry(logrus.StandardLogger())
+
+	grpcSrv, err := buildGrpcProxyServer(logEntry, proxyFlags, grpcConfig.Address)
 	if err != nil {
 		return nil, err
 	}
 
 	allowedOrigins := makeAllowedOrigins(proxyFlags.AllowedOrigins)
+	fmt.Println("Allowed origins = ", allowedOrigins)
 	options := []grpcweb.Option{
 		grpcweb.WithCorsForRegisteredEndpointsOnly(false),
 		grpcweb.WithOriginFunc(makeHttpOriginFunc(allowedOrigins, proxyFlags.AllowAllOrigins)),
@@ -40,7 +48,7 @@ func StartGRPCProxyServer(grpcConfig config.GRPCConfig) (*http.Server, error) {
 	if len(proxyFlags.AllowedHeaders) > 0 {
 		options = append(
 			options,
-			grpcweb.WithAllowedRequestHeaders(proxyFlags.AllowedHeaders),
+			grpcweb.WithAllowedRequestHeaders([]string{"*"}),
 		)
 	}
 
@@ -78,7 +86,6 @@ func StartGRPCProxyServer(grpcConfig config.GRPCConfig) (*http.Server, error) {
 
 func buildServer(wrappedGrpc *grpcweb.WrappedGrpcServer, proxyFlags config.GRPCProxy) *http.Server {
 	return &http.Server{
-		// TODO update flags
 		WriteTimeout: flagHttpMaxWriteTimeout,
 		ReadTimeout:  flagHttpMaxReadTimeout,
 		Handler: http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
@@ -87,9 +94,10 @@ func buildServer(wrappedGrpc *grpcweb.WrappedGrpcServer, proxyFlags config.GRPCP
 	}
 }
 
-func buildGrpcProxyServer(proxyFlags config.GRPCProxy, host string) (*grpc.Server, error) {
+func buildGrpcProxyServer(logger *logrus.Entry, proxyFlags config.GRPCProxy, host string) (*grpc.Server, error) {
 	// gRPC-wide changes.
 	grpc.EnableTracing = true
+	grpc_logrus.ReplaceGrpcLogger(logger)
 
 	// gRPC proxy logic.
 	backendConn, err := dialBackendOrFail(proxyFlags, host)
@@ -112,6 +120,14 @@ func buildGrpcProxyServer(proxyFlags config.GRPCProxy, host string) (*grpc.Serve
 	return grpc.NewServer(
 		grpc.CustomCodec(proxy.Codec()), // needed for proxy to function.
 		grpc.UnknownServiceHandler(proxy.TransparentHandler(director)),
+		grpc_middleware.WithUnaryServerChain(
+			grpc_logrus.UnaryServerInterceptor(logger),
+			grpc_prometheus.UnaryServerInterceptor,
+		),
+		grpc_middleware.WithStreamServerChain(
+			grpc_logrus.StreamServerInterceptor(logger),
+			grpc_prometheus.StreamServerInterceptor,
+		),
 	), nil
 }
 
@@ -157,10 +173,10 @@ func (a *allowedOrigins) IsAllowed(origin string) bool {
 }
 
 func dialBackendOrFail(proxyFlags config.GRPCProxy, host string) (*grpc.ClientConn, error) {
-	ip := strings.Split(host, ":")
-	if len(ip) != 2 {
-		return nil, fmt.Errorf("host address must be 0.0.0.0:0000 this format")
+	if host == "" {
+		return nil, fmt.Errorf("host cannot be empty")
 	}
+
 	opt := []grpc.DialOption{}
 	opt = append(opt, grpc.WithCodec(proxy.Codec()))
 
@@ -171,7 +187,7 @@ func dialBackendOrFail(proxyFlags config.GRPCProxy, host string) (*grpc.ClientCo
 		grpc.WithBackoffMaxDelay(proxyFlags.BackendBackoffMaxDelay),
 	)
 
-	cc, err := grpc.Dial(ip[1], opt...)
+	cc, err := grpc.Dial(host, opt...)
 	if err != nil {
 		return nil, fmt.Errorf("failed dialing backend: %v", err)
 	}

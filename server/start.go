@@ -54,15 +54,9 @@ const (
 
 // GRPC-related flags.
 const (
-	flagGRPCEnable                      = "grpc.enable"
-	flagGRPCAddress                     = "grpc.address"
-	flagGRPCProxyEnable                 = "grpc.grpc-proxy.enable"
-	flagGRPCProxyAllowAllOrigins        = "grpc.grpc-proxy.allow-all-origins"
-	flagGRPCProxyAllowedHeaders         = "grpc.grpc-proxy.allowed-headers"
-	flagGRPCProxyAllowedOrigins         = "grpc.grpc-proxy.allowed-origins"
-	flagGRPCProxyEnableHTTPServer       = "grpc.grpc-proxy.enable-http-server"
-	flagGRPCProxyMaxCallRecvMsgSize     = "grpc.grpc-proxy.max-call-recv-msg-size"
-	flagGRPCProxyBackendBackoffMaxDelay = "grpc.grpc-proxy.backend-backoff-max-delay"
+	flagGRPCEnable      = "grpc.enable"
+	flagGRPCAddress     = "grpc.address"
+	flagGRPCProxyEnable = "grpc.grpc-proxy.enable"
 )
 
 // State sync-related flags.

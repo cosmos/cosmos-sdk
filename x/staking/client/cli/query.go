@@ -132,6 +132,7 @@ $ %s query staking validators
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "validators")
 
 	return cmd
 }

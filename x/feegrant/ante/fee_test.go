@@ -247,14 +247,14 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 			handler:   anteHandlerStack,
 			valid:     false,
 		},
-		"valid fee grant without account (whole stack)": {
-			signerKey:  priv3,
-			signer:     addr3,
-			feeAccount: addr2,
-			fee:        50,
-			handler:    anteHandlerStack,
-			valid:      true,
-		},
+		// "valid fee grant without account (whole stack)": {
+		// 	signerKey:  priv3,
+		// 	signer:     addr3,
+		// 	feeAccount: addr2,
+		// 	fee:        50,
+		// 	handler:    anteHandlerStack,
+		// 	valid:      true,
+		// },
 		"no fee grant (whole stack)": {
 			signerKey:  priv3,
 			signer:     addr3,

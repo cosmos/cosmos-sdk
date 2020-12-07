@@ -1,9 +1,11 @@
 package rest
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
+	clientrest "github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -30,8 +32,15 @@ func BroadcastTxRequest(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		// NOTE: amino is used intentionally here, don't migrate it!
-		if err := clientCtx.LegacyAmino.UnmarshalJSON(body, &req); rest.CheckBadRequestError(w, err) {
-			return
+		err = clientCtx.LegacyAmino.UnmarshalJSON(body, &req)
+		if err != nil {
+			err := fmt.Errorf("this transaction cannot be broadcasted via legacy REST endpoints, because it does not support"+
+				" Amino serialization. Please either use CLI, gRPC, gRPC-gateway, or directly query the Tendermint RPC"+
+				" endpoint to broadcast this transaction. The new REST endpoint (via gRPC-gateway) is POST /cosmos/tx/v1beta1/txs."+
+				" Please also see the REST endpoints migration guide at %s for more info", clientrest.DeprecationURL)
+			if rest.CheckBadRequestError(w, err) {
+				return
+			}
 		}
 
 		txBytes, err := tx.ConvertAndEncodeStdTx(clientCtx.TxConfig, req.Tx)

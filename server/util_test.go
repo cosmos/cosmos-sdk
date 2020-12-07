@@ -10,8 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
 var CancelledInPreRun = errors.New("Canelled in prerun")

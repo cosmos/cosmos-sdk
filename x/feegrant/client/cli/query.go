@@ -23,7 +23,10 @@ func GetQueryCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	feegrantQueryCmd.AddCommand()
+	feegrantQueryCmd.AddCommand(
+		GetCmdQueryFeeGrant(),
+		GetCmdQueryGranteeFeeGrant(),
+	)
 
 	return feegrantQueryCmd
 }

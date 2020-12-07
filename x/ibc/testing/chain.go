@@ -41,9 +41,10 @@ import (
 
 const (
 	// Default params constants used to create a TM client
-	TrustingPeriod  time.Duration = time.Hour * 24 * 7 * 2
-	UnbondingPeriod time.Duration = time.Hour * 24 * 7 * 3
-	MaxClockDrift   time.Duration = time.Second * 10
+	TrustingPeriod     time.Duration = time.Hour * 24 * 7 * 2
+	UnbondingPeriod    time.Duration = time.Hour * 24 * 7 * 3
+	MaxClockDrift      time.Duration = time.Second * 10
+	DefaultDelayPeriod uint64        = 0
 
 	DefaultChannelVersion = ibctransfertypes.Version
 	InvalidID             = "IDisInvalid"
@@ -643,7 +644,7 @@ func (chain *TestChain) ConnectionOpenInit(
 	msg := connectiontypes.NewMsgConnectionOpenInit(
 		connection.ClientID,
 		connection.CounterpartyClientID,
-		counterparty.GetPrefix(), DefaultOpenInitVersion,
+		counterparty.GetPrefix(), DefaultOpenInitVersion, DefaultDelayPeriod,
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.sendMsgs(msg)
@@ -664,7 +665,7 @@ func (chain *TestChain) ConnectionOpenTry(
 	msg := connectiontypes.NewMsgConnectionOpenTry(
 		"", connection.ClientID, // does not support handshake continuation
 		counterpartyConnection.ID, counterpartyConnection.ClientID,
-		counterpartyClient, counterparty.GetPrefix(), []*connectiontypes.Version{ConnectionVersion},
+		counterpartyClient, counterparty.GetPrefix(), []*connectiontypes.Version{ConnectionVersion}, DefaultDelayPeriod,
 		proofInit, proofClient, proofConsensus,
 		proofHeight, consensusHeight,
 		chain.SenderAccount.GetAddress(),

@@ -16,7 +16,10 @@ var (
 	_ codectypes.UnpackInterfacesMessage = GenesisState{}
 )
 
-var _ sort.Interface = ClientsConsensusStates{}
+var (
+	_ sort.Interface           = ClientsConsensusStates{}
+	_ exported.GenesisMetadata = GenesisMetadata{}
+)
 
 // ClientsConsensusStates defines a slice of ClientConsensusStates that supports the sort interface
 type ClientsConsensusStates []ClientConsensusStates
@@ -66,12 +69,13 @@ func (ccs ClientConsensusStates) UnpackInterfaces(unpacker codectypes.AnyUnpacke
 
 // NewGenesisState creates a GenesisState instance.
 func NewGenesisState(
-	clients []IdentifiedClientState, clientsConsensus ClientsConsensusStates,
+	clients []IdentifiedClientState, clientsConsensus ClientsConsensusStates, clientsMetadata []IdentifiedGenesisMetadata,
 	params Params, createLocalhost bool, nextClientSequence uint64,
 ) GenesisState {
 	return GenesisState{
 		Clients:            clients,
 		ClientsConsensus:   clientsConsensus,
+		ClientsMetadata:    clientsMetadata,
 		Params:             params,
 		CreateLocalhost:    createLocalhost,
 		NextClientSequence: nextClientSequence,
@@ -151,14 +155,14 @@ func (gs GenesisState) Validate() error {
 		validClients[client.ClientId] = clientState.ClientType()
 	}
 
-	for i, cc := range gs.ClientsConsensus {
+	for _, cc := range gs.ClientsConsensus {
 		// check that consensus state is for a client in the genesis clients list
 		clientType, ok := validClients[cc.ClientId]
 		if !ok {
 			return fmt.Errorf("consensus state in genesis has a client id %s that does not map to a genesis client", cc.ClientId)
 		}
 
-		for _, consensusState := range cc.ConsensusStates {
+		for i, consensusState := range cc.ConsensusStates {
 			if consensusState.Height.IsZero() {
 				return fmt.Errorf("consensus state height cannot be zero")
 			}
@@ -169,12 +173,27 @@ func (gs GenesisState) Validate() error {
 			}
 
 			if err := cs.ValidateBasic(); err != nil {
-				return fmt.Errorf("invalid client consensus state %v index %d: %w", cs, i, err)
+				return fmt.Errorf("invalid client consensus state %v clientID %s index %d: %w", cs, cc.ClientId, i, err)
 			}
 
 			// ensure consensus state type matches client state type
 			if clientType != cs.ClientType() {
 				return fmt.Errorf("consensus state client type %s does not equal client state client type %s", cs.ClientType(), clientType)
+			}
+
+		}
+	}
+
+	for _, clientMetadata := range gs.ClientsMetadata {
+		// check that metadata is for a client in the genesis clients list
+		_, ok := validClients[clientMetadata.ClientId]
+		if !ok {
+			return fmt.Errorf("metadata in genesis has a client id %s that does not map to a genesis client", clientMetadata.ClientId)
+		}
+
+		for i, gm := range clientMetadata.ClientMetadata {
+			if err := gm.Validate(); err != nil {
+				return fmt.Errorf("invalid client metadata %v clientID %s index %d: %w", gm, clientMetadata.ClientId, i, err)
 			}
 
 		}
@@ -190,4 +209,42 @@ func (gs GenesisState) Validate() error {
 	}
 
 	return nil
+}
+
+// NewGenesisMetadata is a constructor for GenesisMetadata
+func NewGenesisMetadata(key, val []byte) GenesisMetadata {
+	return GenesisMetadata{
+		Key:   key,
+		Value: val,
+	}
+}
+
+// GetKey returns the key of metadata. Implements exported.GenesisMetadata interface.
+func (gm GenesisMetadata) GetKey() []byte {
+	return gm.Key
+}
+
+// GetValue returns the value of metadata. Implements exported.GenesisMetadata interface.
+func (gm GenesisMetadata) GetValue() []byte {
+	return gm.Value
+}
+
+// Validate ensures key and value of metadata are not empty
+func (gm GenesisMetadata) Validate() error {
+	if len(gm.Key) == 0 {
+		return fmt.Errorf("genesis metadata key cannot be empty")
+	}
+	if len(gm.Value) == 0 {
+		return fmt.Errorf("genesis metadata value cannot be empty")
+	}
+	return nil
+}
+
+// NewIdentifiedGenesisMetadata takes in a client ID and list of genesis metadata for that client
+// and constructs a new IdentifiedGenesisMetadata.
+func NewIdentifiedGenesisMetadata(clientID string, gms []GenesisMetadata) IdentifiedGenesisMetadata {
+	return IdentifiedGenesisMetadata{
+		ClientId:       clientID,
+		ClientMetadata: gms,
+	}
 }

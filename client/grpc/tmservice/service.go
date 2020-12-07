@@ -112,7 +112,7 @@ func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *GetLatestVa
 			return nil, err
 		}
 		outputValidatorsRes.Validators[i] = &Validator{
-			Address:          validator.Address,
+			Address:          validator.Address.String(),
 			ProposerPriority: validator.ProposerPriority,
 			PubKey:           anyPub,
 			VotingPower:      validator.VotingPower,
@@ -164,7 +164,7 @@ func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValida
 			return nil, err
 		}
 		outputValidatorsRes.Validators[i] = &Validator{
-			Address:          validator.Address,
+			Address:          validator.Address.String(),
 			ProposerPriority: validator.ProposerPriority,
 			PubKey:           anyPub,
 			VotingPower:      validator.VotingPower,

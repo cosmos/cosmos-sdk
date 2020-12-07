@@ -71,7 +71,7 @@ message GetLatestValidatorSetResponse {
 
 // Validator is the type for the validator-set.
 message Validator {
-  bytes               address           = 1;
+  string              address           = 1;
   google.protobuf.Any pub_key           = 2;
   int64               voting_power      = 3;
   int64               proposer_priority = 4;

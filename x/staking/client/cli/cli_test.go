@@ -256,7 +256,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidators() {
 	}{
 		{
 			"one validator case",
-			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{fmt.Sprintf("--%s=json --limit 1", tmcli.OutputFlag)},
 			1,
 		},
 		{
@@ -278,7 +278,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidators() {
 
 			var result types.QueryValidatorsResponse
 			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
-			s.Require().Equal(len(s.network.Validators), len(result.Validators))
+			s.Require().Equal(tc.minValidatorCount, len(result.Validators))
 		})
 	}
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
@@ -66,10 +67,10 @@ func ValidatorCommand() *cobra.Command {
 
 // Validator output in bech32 format
 type ValidatorOutput struct {
-	Address          sdk.ConsAddress `json:"address"`
-	PubKey           string          `json:"pub_key"`
-	ProposerPriority int64           `json:"proposer_priority"`
-	VotingPower      int64           `json:"voting_power"`
+	Address          sdk.ConsAddress    `json:"address"`
+	PubKey           cryptotypes.PubKey `json:"pub_key"`
+	ProposerPriority int64              `json:"proposer_priority"`
+	VotingPower      int64              `json:"voting_power"`
 }
 
 // Validators at a certain height output in bech32 format
@@ -99,19 +100,15 @@ func (rvo ResultValidatorsOutput) String() string {
 	return b.String()
 }
 
-func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
+func validatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
 	pk, err := cryptocodec.FromTmPubKeyInterface(validator.PubKey)
-	if err != nil {
-		return ValidatorOutput{}, err
-	}
-	bechValPubkey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pk)
 	if err != nil {
 		return ValidatorOutput{}, err
 	}
 
 	return ValidatorOutput{
 		Address:          sdk.ConsAddress(validator.Address),
-		PubKey:           bechValPubkey,
+		PubKey:           pk,
 		ProposerPriority: validator.ProposerPriority,
 		VotingPower:      validator.VotingPower,
 	}, nil
@@ -136,7 +133,7 @@ func GetValidators(clientCtx client.Context, height *int64, page, limit *int) (R
 	}
 
 	for i := 0; i < len(validatorsRes.Validators); i++ {
-		outputValidatorsRes.Validators[i], err = bech32ValidatorOutput(validatorsRes.Validators[i])
+		outputValidatorsRes.Validators[i], err = validatorOutput(validatorsRes.Validators[i])
 		if err != nil {
 			return ResultValidatorsOutput{}, err
 		}

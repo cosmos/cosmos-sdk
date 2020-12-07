@@ -160,11 +160,16 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 	epochNumber := k.GetEpochNumber(ctx)
 	k.SaveEpochAction(ctx, epochNumber, msg)
 
-	// TODO should do validation by running with cachedCtx like gov proposal creation
-	// To consider: cachedCtx could have status which contains all the other epoch actions
-
-	// TODO should return completion time based on next epoch time
-	return &types.MsgBeginRedelegateResponse{}, nil
+	cacheCtx, _ := ctx.CacheContext()
+	cacheCtx = cacheCtx.WithBlockHeight(k.GetNextEpochHeight(ctx))
+	cacheCtx = cacheCtx.WithBlockTime(k.GetNextEpochTime(ctx))
+	completionTime, err := k.EpochBeginRedelegate(cacheCtx, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &types.MsgBeginRedelegateResponse{
+		CompletionTime: completionTime,
+	}, nil
 }
 
 func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (*types.MsgUndelegateResponse, error) {
@@ -172,10 +177,14 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	// Queue epoch action and move all the execution logic to Epoch execution
 	k.SaveEpochAction(ctx, 0, msg)
 
-	// TODO should do validation by running with cachedCtx like gov proposal creation
-	// To consider: cachedCtx could have status which contains all the other epoch actions
-	// could add CancelUndelegate since they can't do any action until Delegation finish
-
-	// TODO should return completion time based on next epoch time
-	return &types.MsgUndelegateResponse{}, nil
+	cacheCtx, _ := ctx.CacheContext()
+	cacheCtx = cacheCtx.WithBlockHeight(k.GetNextEpochHeight(ctx))
+	cacheCtx = cacheCtx.WithBlockTime(k.GetNextEpochTime(ctx))
+	completionTime, err := k.EpochUndelegate(cacheCtx, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &types.MsgUndelegateResponse{
+		CompletionTime: completionTime,
+	}, nil
 }

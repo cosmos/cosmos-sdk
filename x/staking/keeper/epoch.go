@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -158,4 +159,21 @@ func (k Keeper) GetEpochNumber(ctx sdk.Context) int64 {
 func (k Keeper) IncreaseEpochNumber(ctx sdk.Context) {
 	epochNumber := k.GetEpochNumber(ctx)
 	k.SetEpochNumber(ctx, epochNumber+1)
+}
+
+// GetNextEpochHeight returns next epoch block height
+func (k Keeper) GetNextEpochHeight(ctx sdk.Context) int64 {
+	currentHeight := ctx.BlockHeight()
+	epochInterval := k.EpochInterval(ctx)
+	return currentHeight + (epochInterval - currentHeight%epochInterval)
+}
+
+// GetNextEpochTime returns estimated next epoch time
+func (k Keeper) GetNextEpochTime(ctx sdk.Context) time.Time {
+	currentTime := ctx.BlockTime()
+	currentHeight := ctx.BlockHeight()
+	timeoutCommit := 5 * time.Second // TODO how to get timeout commit tendermint config?
+	// cp := baseapp.GetConsensusParams(ctx)
+
+	return currentTime.Add(timeoutCommit * time.Duration(k.GetNextEpochHeight(ctx)-currentHeight))
 }

@@ -163,37 +163,37 @@ func (k Keeper) EpochDelegate(ctx sdk.Context, msg *types.MsgDelegate) error {
 }
 
 // EpochBeginRedelegate logic is moved from msgServer.BeginRedelegate
-func (k Keeper) EpochBeginRedelegate(ctx sdk.Context, msg *types.MsgBeginRedelegate) error {
+func (k Keeper) EpochBeginRedelegate(ctx sdk.Context, msg *types.MsgBeginRedelegate) (time.Time, error) {
 	valSrcAddr, err := sdk.ValAddressFromBech32(msg.ValidatorSrcAddress)
 	if err != nil {
-		return err
+		return time.Time{}, err
 	}
 	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
-		return err
+		return time.Time{}, err
 	}
 	shares, err := k.ValidateUnbondAmount(
 		ctx, delegatorAddress, valSrcAddr, msg.Amount.Amount,
 	)
 	if err != nil {
-		return err
+		return time.Time{}, err
 	}
 
 	bondDenom := k.BondDenom(ctx)
 	if msg.Amount.Denom != bondDenom {
-		return sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
+		return time.Time{}, sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
 	}
 
 	valDstAddr, err := sdk.ValAddressFromBech32(msg.ValidatorDstAddress)
 	if err != nil {
-		return err
+		return time.Time{}, err
 	}
 
 	completionTime, err := k.BeginRedelegation(
 		ctx, delegatorAddress, valSrcAddr, valDstAddr, shares,
 	)
 	if err != nil {
-		return err
+		return time.Time{}, err
 	}
 
 	defer func() {
@@ -220,34 +220,34 @@ func (k Keeper) EpochBeginRedelegate(ctx sdk.Context, msg *types.MsgBeginRedeleg
 		),
 	})
 
-	return nil
+	return completionTime, nil
 }
 
 // EpochUndelegate logic is moved from msgServer.Undelegate
-func (k Keeper) EpochUndelegate(ctx sdk.Context, msg *types.MsgUndelegate) error {
+func (k Keeper) EpochUndelegate(ctx sdk.Context, msg *types.MsgUndelegate) (time.Time, error) {
 	addr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
-		return err
+		return time.Time{}, err
 	}
 	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
-		return err
+		return time.Time{}, err
 	}
 	shares, err := k.ValidateUnbondAmount(
 		ctx, delegatorAddress, addr, msg.Amount.Amount,
 	)
 	if err != nil {
-		return err
+		return time.Time{}, err
 	}
 
 	bondDenom := k.BondDenom(ctx)
 	if msg.Amount.Denom != bondDenom {
-		return sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
+		return time.Time{}, sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
 	}
 
 	completionTime, err := k.Undelegate(ctx, delegatorAddress, addr, shares)
 	if err != nil {
-		return err
+		return time.Time{}, err
 	}
 
 	defer func() {
@@ -273,7 +273,7 @@ func (k Keeper) EpochUndelegate(ctx sdk.Context, msg *types.MsgUndelegate) error
 		),
 	})
 
-	return nil
+	return completionTime, nil
 }
 
 // ExecuteEpoch execute epoch actions

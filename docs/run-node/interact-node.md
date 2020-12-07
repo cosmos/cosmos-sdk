@@ -82,8 +82,6 @@ grpcurl \
     describe cosmos.bank.v1beta1.Query                  # Service we want to inspect
 ```
 
-#### Queries
-
 Given the Protobuf definitions, making a gRPC query is straightforward, by calling the correct `Query` service RPC method, and by passing the request argument as data (`-d` flag):
 
 ```bash
@@ -99,7 +97,11 @@ grpcurl \
 
 As described in the previous paragraph, passing the paths to `.proto` files is necessary.
 
-You may also query for historical data by passing some [gRPC metadata](https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-metadata.md): the `x-cosmos-block-height` metadata should contain the block to query:
+The list of all available gRPC query endpoints is [coming soon](https://github.com/cosmos/cosmos-sdk/issues/7786).
+
+### Query for historical state using gRPC
+
+You may also query for historical data by passing some [gRPC metadata](https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-metadata.md) to the query: the `x-cosmos-block-height` metadata should contain the block to query. Using grpcurl as above, the command looks like:
 
 ```bash
 grpcurl \
@@ -115,8 +117,6 @@ grpcurl \
 
 Assuming the state at that block has not yet been pruned by the node, this query should return a non-empty response.
 
-The list of all available gRPC query endpoints is [coming soon](https://github.com/cosmos/cosmos-sdk/issues/7786).
-
 ### CosmJS
 
 CosmJS documentation can be found at https://cosmos.github.io/cosmjs/. As of December 2020, CosmJS documentation is still work in progress.
@@ -130,12 +130,27 @@ As a concrete example, the `curl` command to make balances request is:
 ```bash
 curl \
     -X GET \
+    -H "Content-Type: application/json" \
     http://localhost:1317/cosmos/bank/v1beta1/balances/$MY_VALIDATOR
 ```
 
 Make sure to replace `localhost:1317` with the REST endpoint of your node, configured under the `api.address` field.
 
 The list of all available REST endpoints is available as a Swagger specification file, it can be viewed at `localhost:1317/swagger`. Make sure that the `api.swagger` field is set to true in your `app.toml` file.
+
+### Query for historical state using REST
+
+Querying for historical state is done using the HTTP header `x-cosmos-block-height`. For example, a curl command would look like:
+
+```bash
+curl \
+    -X GET \
+    -H "Content-Type: application/json" \
+    -H "x-cosmos-block-height: 279256"
+    http://localhost:1317/cosmos/bank/v1beta1/balances/$MY_VALIDATOR
+```
+
+Assuming the state at that block has not yet been pruned by the node, this query should return a non-empty response.
 
 ## Next {hide}
 

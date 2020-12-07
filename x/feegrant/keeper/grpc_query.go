@@ -8,7 +8,9 @@ import (
 	"google.golang.org/grpc/status"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
 
@@ -60,4 +62,43 @@ func (q Keeper) FeeAllowance(c context.Context, req *types.QueryFeeAllowanceRequ
 			Allowance: feeAllowanceAny,
 		},
 	}, nil
+}
+
+func (q Keeper) FeeAllowances(c context.Context, req *types.QueryFeeAllowancesRequest) (*types.QueryFeeAllowancesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.Grantee == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid grantee addr")
+	}
+
+	granteeAddr, err := sdk.AccAddressFromBech32(req.Grantee)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	var grants []*types.FeeAllowanceGrant
+
+	store := ctx.KVStore(q.storeKey)
+	grantsStore := prefix.NewStore(store, types.FeeAllowancePrefixByGrantee(granteeAddr))
+
+	pageRes, err := query.Paginate(grantsStore, req.Pagination, func(key []byte, value []byte) error {
+		var grant *types.FeeAllowanceGrant
+
+		if err := q.cdc.UnmarshalBinaryBare(value, grant); err != nil {
+			return err
+		}
+
+		grants = append(grants, grant)
+		return nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryFeeAllowancesResponse{FeeAllowances: grants, Pagination: pageRes}, nil
 }

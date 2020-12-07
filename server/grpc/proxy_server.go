@@ -5,18 +5,13 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/server/config"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
-	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/mwitkow/go-conntrack"
 	"github.com/mwitkow/grpc-proxy/proxy"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -26,30 +21,24 @@ var (
 	flagHttpMaxWriteTimeout = 10 * time.Second
 )
 
+type allowedOrigins struct {
+	origins map[string]struct{}
+}
+
 // StartGRPCProxyServer starts a gRPC-proxy server on the given config.
 func StartGRPCProxyServer(grpcConfig config.GRPCConfig) (*http.Server, error) {
 	proxyFlags := grpcConfig.GRPCWebProxy
-	logrus.SetOutput(os.Stdout)
 
-	logEntry := logrus.NewEntry(logrus.StandardLogger())
-
-	grpcSrv, err := buildGrpcProxyServer(logEntry, proxyFlags, grpcConfig.Address)
+	grpcSrv, err := buildGrpcProxyServer(proxyFlags, grpcConfig.Address)
 	if err != nil {
 		return nil, err
 	}
 
 	allowedOrigins := makeAllowedOrigins(proxyFlags.AllowedOrigins)
-	fmt.Println("Allowed origins = ", allowedOrigins)
+
 	options := []grpcweb.Option{
 		grpcweb.WithCorsForRegisteredEndpointsOnly(false),
 		grpcweb.WithOriginFunc(makeHttpOriginFunc(allowedOrigins, proxyFlags.AllowAllOrigins)),
-	}
-
-	if len(proxyFlags.AllowedHeaders) > 0 {
-		options = append(
-			options,
-			grpcweb.WithAllowedRequestHeaders([]string{"*"}),
-		)
 	}
 
 	wrappedGrpc := grpcweb.WrapServer(grpcSrv, options...)
@@ -58,9 +47,7 @@ func StartGRPCProxyServer(grpcConfig config.GRPCConfig) (*http.Server, error) {
 		return nil, fmt.Errorf("run_http_server is set to false. Enable for grpcweb proxy to function correctly.")
 	}
 
-	// Debug server.
-	debugServer := buildServer(wrappedGrpc, proxyFlags)
-	http.Handle("/metrics", promhttp.Handler())
+	proxyServer := buildServer(wrappedGrpc, proxyFlags)
 	listener, err := buildListenerOrFail("http", proxyFlags.HTTPPort)
 
 	if err != nil {
@@ -69,7 +56,7 @@ func StartGRPCProxyServer(grpcConfig config.GRPCConfig) (*http.Server, error) {
 	errCh := make(chan error)
 
 	go func() {
-		err = debugServer.Serve(listener)
+		err = proxyServer.Serve(listener)
 		if err != nil {
 			errCh <- fmt.Errorf("failed to serve: %w", err)
 		}
@@ -79,7 +66,7 @@ func StartGRPCProxyServer(grpcConfig config.GRPCConfig) (*http.Server, error) {
 	case err := <-errCh:
 		return nil, err
 	case <-time.After(5 * time.Second): // assume server started successfully
-		return debugServer, nil
+		return proxyServer, nil
 	}
 
 }
@@ -94,11 +81,7 @@ func buildServer(wrappedGrpc *grpcweb.WrappedGrpcServer, proxyFlags config.GRPCP
 	}
 }
 
-func buildGrpcProxyServer(logger *logrus.Entry, proxyFlags config.GRPCProxy, host string) (*grpc.Server, error) {
-	// gRPC-wide changes.
-	grpc.EnableTracing = true
-	grpc_logrus.ReplaceGrpcLogger(logger)
-
+func buildGrpcProxyServer(proxyFlags config.GRPCProxy, host string) (*grpc.Server, error) {
 	// gRPC proxy logic.
 	backendConn, err := dialBackendOrFail(proxyFlags, host)
 	if err != nil {
@@ -120,18 +103,13 @@ func buildGrpcProxyServer(logger *logrus.Entry, proxyFlags config.GRPCProxy, hos
 	return grpc.NewServer(
 		grpc.CustomCodec(proxy.Codec()), // needed for proxy to function.
 		grpc.UnknownServiceHandler(proxy.TransparentHandler(director)),
-		grpc_middleware.WithUnaryServerChain(
-			grpc_logrus.UnaryServerInterceptor(logger),
-			grpc_prometheus.UnaryServerInterceptor,
-		),
-		grpc_middleware.WithStreamServerChain(
-			grpc_logrus.StreamServerInterceptor(logger),
-			grpc_prometheus.StreamServerInterceptor,
-		),
+		grpc_middleware.WithUnaryServerChain(),
+		grpc_middleware.WithStreamServerChain(),
 	), nil
 }
 
 func buildListenerOrFail(name string, port int) (net.Listener, error) {
+
 	addr := fmt.Sprintf("%s:%d", "0.0.0.0", port)
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
@@ -163,10 +141,6 @@ func makeAllowedOrigins(origins []string) *allowedOrigins {
 	}
 }
 
-type allowedOrigins struct {
-	origins map[string]struct{}
-}
-
 func (a *allowedOrigins) IsAllowed(origin string) bool {
 	_, ok := a.origins[origin]
 	return ok
@@ -177,10 +151,10 @@ func dialBackendOrFail(proxyFlags config.GRPCProxy, host string) (*grpc.ClientCo
 		return nil, fmt.Errorf("host cannot be empty")
 	}
 
-	opt := []grpc.DialOption{}
+	opt := []grpc.DialOption{
+		grpc.WithInsecure(),
+	}
 	opt = append(opt, grpc.WithCodec(proxy.Codec()))
-
-	opt = append(opt, grpc.WithInsecure())
 
 	opt = append(opt,
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(proxyFlags.MaxCallRecvMsgSize)),

@@ -158,7 +158,7 @@ address = "{{ .GRPC.Address }}"
 	http-port = {{ .GRPC.GRPCWebProxy.HTTPPort }}
 
 	# AllowAllOrigins defines allow requests from any origin.
-	allow-all-origin = {{ .GRPC.GRPCWebProxy.AllowAllOrigins }}
+	allow-all-origins = {{ .GRPC.GRPCWebProxy.AllowAllOrigins }}
 
 	# AllowedOrigins defines list of origin URLs which are allowed to make cross-origin requests.
 	allowed-origins = [{{ range $k, $v := .GRPC.GRPCWebProxy.AllowedOrigins }} "{{ $v }}", {{ end }}]

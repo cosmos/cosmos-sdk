@@ -229,7 +229,7 @@ func DefaultConfig() *Config {
 				Enable:                 true,
 				AllowAllOrigins:        true,
 				EnableHTTPServer:       true,
-				AllowedOrigins:         []string{"*"},
+				AllowedOrigins:         []string{DefaultGRPCAddress},
 				AllowedHeaders:         make([]string, 0),
 				BackendBackoffMaxDelay: grpc.DefaultBackoffConfig.MaxDelay,
 				MaxCallRecvMsgSize:     1024 * 1024 * 4,

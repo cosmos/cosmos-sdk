@@ -305,6 +305,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		}
 		if config.GRPC.GRPCWebProxy.Enable {
 			proxySrv, err = servergrpc.StartGRPCProxyServer(config.GRPC)
+			proxySrv.ListenAndServe()
 			if err != nil {
 				return err
 			}

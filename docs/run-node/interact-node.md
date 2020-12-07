@@ -61,9 +61,9 @@ Since the code generation library largely depends on your own tech stack, we wil
 
 [grpcurl])https://github.com/fullstorydev/grpcurl is like `curl` but for gRPC. It is also available as a Go library, but we will use it only as a CLI command for debugging and testing purposes. Follow the instructions in the previous link to install it.
 
-Assuming you have a local node running (either a localnet, or connected to our devnet), you should be able to run the following to list the Protobuf services available (you can replace `localhost:9000` by the gRPC server endpoint of another node):
+Assuming you have a local node running (either a localnet, or connected to our devnet), you should be able to run the following to list the Protobuf services available (you can replace `localhost:9000` by the gRPC server endpoint of another node, it's configured under the `grpc.address` field inside `app.toml`):
 
-```sh
+```bash
 grpcurl -plaintext localhost:9090 list
 ```
 
@@ -73,7 +73,7 @@ In the Cosmos SDK, we use [gogoprotobuf](https://github.com/gogo/protobuf) for c
 
 Instead, we need to manually pass the reference to relevant `.proto` files. For example:
 
-```sh
+```bash
 grpcurl \
     -import-path ./proto \                              # Import these proto files too
     -import-path ./third_party/proto \                  # Import these proto files too
@@ -84,9 +84,9 @@ grpcurl \
 
 #### Queries
 
-Given the Protobuf definitions, mkeing a gRPC query is straightforward
+Given the Protobuf definitions, mkeing a gRPC query is straightforward, by calling the correct `Query` service RPC method, and by passing the request argument as data (`-d` flag):
 
-```sh
+```bash
 grpcurl \
     -plaintext
     -import-path ./proto \
@@ -97,8 +97,31 @@ grpcurl \
     cosmos.bank.v1beta1.Query/AllBalances
 ```
 
+As described in the previous paragraph, passing the paths to `.proto` files is necessary.
+
+The list of all available gRPC query endpoints is [coming soon](https://github.com/cosmos/cosmos-sdk/issues/7786).
+
 ### CosmJS
 
 CosmJS documentation can be found at https://cosmos.github.io/cosmjs/. As of December 2020, CosmJS documentation is still work in progress.
 
 ## Using the REST Endpoints
+
+As described in the [gRPC guide](../core/grpc_rest.md), all gRPC services on the Cosmos SDK are made available for more convenient REST-based queries through gRPC-gateway. The format of the URL path is based on the Protobuf service method's full-qualified name, but may contain small customizations so that final URLs look more idiomatic. For example, the REST endpoint for the `cosmos.bank.v1beta1.Query/AllBalances` method is `GET /cosmos/bank/v1beta1/balances`.
+
+Concretely, the `curl` command to make this request is:
+
+```bash
+curl \
+    -X GET
+    -d '{"address":"$MY_VALIDATOR"}'
+    http://localhost:1317/cosmos/bank/v1beta1/balances
+```
+
+Make sure to replace `localhost:1317` with the REST endpoint of your node, configured under the `api.address` field.
+
+The list of all available REST endpoints is available as a Swagger specification file, it can be viewed at `localhost:1317/swagger`. Make sure that the `api.swagger` field is set to true in your `app.toml` file.
+
+## Next {hide}
+
+Read about [generating and signing transactions](TODO https://github.com/cosmos/cosmos-sdk/issues/7657). {hide}

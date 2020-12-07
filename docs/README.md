@@ -57,7 +57,7 @@ aside: false
 - **[Core](./core/)**: Documentation on the core concepts of the Cosmos SDK, like `baseapp`, the `store` or the `server`.
 - **[Building Modules](./building-modules/)**: Important concepts for module developers like `message`s, `keeper`s, `handler`s and `querier`s.
 - **[IBC](./ibc/)**: Documentation for the IBC protocol integration and concepts.
-- **[Running a Node and API](./run-node/)**: Documentation on how to run a node, and the API used for interacting with it.
+- **[Running a Node, API, CLI](./run-node/)**: Documentation on how to run a node, and how to interact with it using the CLI and the API.
 - **[Migrations](./migrations/)**: Migration guides for updating to Stargate.
 
 ## Other Resources

@@ -5,6 +5,7 @@ import (
 	"io"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmstrings "github.com/tendermint/tendermint/libs/strings"
 	dbm "github.com/tendermint/tm-db"
 
 	tmstrings "github.com/tendermint/tendermint/libs/strings"

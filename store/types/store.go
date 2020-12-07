@@ -8,8 +8,6 @@ import (
 	tmstrings "github.com/tendermint/tendermint/libs/strings"
 	dbm "github.com/tendermint/tm-db"
 
-	tmstrings "github.com/tendermint/tendermint/libs/strings"
-
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )

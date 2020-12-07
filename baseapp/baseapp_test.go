@@ -106,12 +106,12 @@ func aminoTxEncoder() sdk.TxEncoder {
 	return legacytx.StdTxConfig{Cdc: cdc}.TxEncoder()
 }
 
-// simple one store baseapp
+// simple one store baseapp  in progress
 func setupBaseApp(t *testing.T, options ...func(*BaseApp)) *BaseApp {
 	app := newBaseApp(t.Name(), options...)
 	require.Equal(t, t.Name(), app.Name())
 
-	app.MountStores(capKey1, capKey2)
+	app.MountStores(capKey1, capKey2) // test  for panic use key typedifferent from  sdk.StoreKey
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 
 	// stores are mounted
@@ -195,11 +195,14 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 func TestMountStores(t *testing.T) {
 	app := setupBaseApp(t)
 
-	// check both stores
+	// check  stores
 	store1 := app.cms.GetCommitKVStore(capKey1)
 	require.NotNil(t, store1)
 	store2 := app.cms.GetCommitKVStore(capKey2)
 	require.NotNil(t, store2)
+	store3 := app.cms.GetCommitKVStore(nil)
+	require.Nil(t, store3)
+
 }
 
 // Test that we can make commits and then reload old versions.
@@ -491,16 +494,52 @@ func TestInfo(t *testing.T) {
 
 	// ----- test an empty response -------
 	reqInfo := abci.RequestInfo{}
-	res := app.Info(reqInfo)
+
+	//res := app.Info(reqInfo)
 
 	// should be empty
-	assert.Equal(t, "", res.Version)
-	assert.Equal(t, t.Name(), res.GetData())
-	assert.Equal(t, int64(0), res.LastBlockHeight)
-	require.Equal(t, []uint8(nil), res.LastBlockAppHash)
+
+	//assert.Equal(t, "", res.Version)
+	//assert.Equal(t, t.Name(), res.GetData())
+	//assert.Equal(t, int64(0), res.LastBlockHeight)
+	//require.Equal(t, []uint8(nil), res.LastBlockAppHash)
 
 	// ----- test a proper response -------
 	// TODO
+
+	cases := map[string]struct {
+		data             string
+		lastBlockHeight  int64
+		lastBlockAppHash []byte
+	}{
+		"Zero commit":   {app.name, 0, nil},
+		"First commit":  {app.name, 1, nil},
+		"Second commit": {app.name, 2, nil},
+		"Third commit":  {app.name, 3, nil},
+	}
+
+	for name, tc := range cases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			if name != "Zero commit" {
+				height := app.LastBlockHeight()
+				app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height + 1}})
+				responseCommit := app.Commit()
+				tc.lastBlockAppHash = responseCommit.Data
+			}
+
+			wantResInfo := app.Info(reqInfo)
+
+			//check  appname
+			assert.Equal(t, tc.data, wantResInfo.Data)
+			//check block  height
+			assert.Equal(t, tc.lastBlockHeight, wantResInfo.LastBlockHeight)
+			//checklastblockhhash
+			require.True(t, bytes.Equal(tc.lastBlockAppHash, wantResInfo.LastBlockAppHash))
+
+		})
+
+	}
 }
 
 func TestBaseAppOptionSeal(t *testing.T) {
@@ -1008,9 +1047,65 @@ func TestDeliverTx(t *testing.T) {
 }
 
 // Number of messages doesn't matter to CheckTx.
+
 func TestMultiMsgCheckTx(t *testing.T) {
 	// TODO: ensure we get the same results
 	// with one message or many
+
+	counterKey := []byte("counter-key")
+
+	anteOpt := func(bapp *BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, counterKey)) }
+	routerOpt := func(bapp *BaseApp) {
+		// TODO: can remove this once CheckTx doesnt process msgs.
+		bapp.Router().AddRoute(sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+			return &sdk.Result{}, nil
+		}))
+	}
+
+	app := setupBaseApp(t, anteOpt, routerOpt)
+	app.InitChain(abci.RequestInitChain{})
+
+	// Create same codec used in txDecoder
+	codec := codec.NewLegacyAmino()
+	registerTestCodec(codec)
+
+	cases := map[string]struct {
+		tx *txTest
+	}{
+		"zeromessages":   {newTxCounter(0, 0)},
+		"multmessages1":  {newTxCounter(1, 1)},
+		"multimessages2": {newTxCounter(2, 3, 4, 5)},
+	}
+
+	for name, tc := range cases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			txBytes, err := codec.MarshalBinaryBare(tc.tx)
+			require.NoError(t, err)
+			r := app.CheckTx(abci.RequestCheckTx{Tx: txBytes})
+			require.Empty(t, r.GetEvents())
+			require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
+
+		})
+
+	}
+
+	checkStateStore := app.checkState.ctx.KVStore(capKey1)
+	storedCounter := getIntFromStore(checkStateStore, counterKey)
+
+	// Ensure AnteHandler ran
+	require.Equal(t, len(cases), int(storedCounter))
+
+	// If a block is committed, CheckTx state should be reset.
+	header := tmproto.Header{Height: 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	app.EndBlock(abci.RequestEndBlock{})
+	app.Commit()
+
+	checkStateStore = app.checkState.ctx.KVStore(capKey1)
+	storedBytes := checkStateStore.Get(counterKey)
+	require.Nil(t, storedBytes)
+
 }
 
 // One call to DeliverTx should process all the messages, in order.

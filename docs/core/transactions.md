@@ -141,7 +141,7 @@ simd tx send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000stake
 
 The `Tx` service exposes a handful of utility functions, such as simulating a transaction or querying a transaction, and also one method to broadcast transactions.
 
-An example of broadcasting a transaction is shown in [TODO](https://github.com/cosmos/cosmos-sdk/issues/7657). Please note that the `BroadcastTx` endpoint takes `TxRaw`, not bytes.
+An example of broadcasting a transaction is shown in [TODO](https://github.com/cosmos/cosmos-sdk/issues/7657).
 
 #### REST
 

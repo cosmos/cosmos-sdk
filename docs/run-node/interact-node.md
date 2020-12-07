@@ -84,7 +84,7 @@ grpcurl \
 
 #### Queries
 
-Given the Protobuf definitions, mkeing a gRPC query is straightforward, by calling the correct `Query` service RPC method, and by passing the request argument as data (`-d` flag):
+Given the Protobuf definitions, making a gRPC query is straightforward, by calling the correct `Query` service RPC method, and by passing the request argument as data (`-d` flag):
 
 ```bash
 grpcurl \
@@ -92,12 +92,28 @@ grpcurl \
     -import-path ./proto \
     -import-path ./third_party/proto \
     -proto ./proto/cosmos/bank/v1beta1/query.proto \
-    -d '{"address":"$MY_VALIDATOR"}'
+    -d '{"address":"$MY_VALIDATOR"}' \
     localhost:9090 \
     cosmos.bank.v1beta1.Query/AllBalances
 ```
 
 As described in the previous paragraph, passing the paths to `.proto` files is necessary.
+
+You may also query for historical data by passing some [gRPC metadata](https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-metadata.md): the `x-cosmos-block-height` metadata should contain the block to query:
+
+```bash
+grpcurl \
+    -plaintext
+    -import-path ./proto \
+    -import-path ./third_party/proto \
+    -proto ./proto/cosmos/bank/v1beta1/query.proto \
+    -H "x-cosmos-block-height: 279256" \
+    -d '{"address":"$MY_VALIDATOR"}' \
+    localhost:9090 \
+    cosmos.bank.v1beta1.Query/AllBalances
+```
+
+Assuming the state at that block has not yet been pruned by the node, this query should return a non-empty response.
 
 The list of all available gRPC query endpoints is [coming soon](https://github.com/cosmos/cosmos-sdk/issues/7786).
 
@@ -107,15 +123,14 @@ CosmJS documentation can be found at https://cosmos.github.io/cosmjs/. As of Dec
 
 ## Using the REST Endpoints
 
-As described in the [gRPC guide](../core/grpc_rest.md), all gRPC services on the Cosmos SDK are made available for more convenient REST-based queries through gRPC-gateway. The format of the URL path is based on the Protobuf service method's full-qualified name, but may contain small customizations so that final URLs look more idiomatic. For example, the REST endpoint for the `cosmos.bank.v1beta1.Query/AllBalances` method is `GET /cosmos/bank/v1beta1/balances`.
+As described in the [gRPC guide](../core/grpc_rest.md), all gRPC services on the Cosmos SDK are made available for more convenient REST-based queries through gRPC-gateway. The format of the URL path is based on the Protobuf service method's full-qualified name, but may contain small customizations so that final URLs look more idiomatic. For example, the REST endpoint for the `cosmos.bank.v1beta1.Query/AllBalances` method is `GET /cosmos/bank/v1beta1/balances/{address}`. Request arguments are passed as query parameters.
 
-Concretely, the `curl` command to make this request is:
+As a concrete example, the `curl` command to make balances request is:
 
 ```bash
 curl \
-    -X GET
-    -d '{"address":"$MY_VALIDATOR"}'
-    http://localhost:1317/cosmos/bank/v1beta1/balances
+    -X GET \
+    http://localhost:1317/cosmos/bank/v1beta1/balances/$MY_VALIDATOR
 ```
 
 Make sure to replace `localhost:1317` with the REST endpoint of your node, configured under the `api.address` field.
@@ -124,4 +139,4 @@ The list of all available REST endpoints is available as a Swagger specification
 
 ## Next {hide}
 
-Read about [generating and signing transactions](TODO https://github.com/cosmos/cosmos-sdk/issues/7657). {hide}
+Sending transactions using gRPC and REST requires some additional steps: generating the transaction, signing it, and finally broadcasting it. Read about [generating and signing transactions](TODO https://github.com/cosmos/cosmos-sdk/issues/7657). {hide}

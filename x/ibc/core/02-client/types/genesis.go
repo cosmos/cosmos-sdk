@@ -103,11 +103,15 @@ func (gs GenesisState) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
+	// keep track of the max sequence to ensure it is less than
+	// the next sequence used in creating client identifers.
+	var maxSequence uint64 = 0
+
 	if err := gs.Params.Validate(); err != nil {
 		return err
 	}
 
-	validClients := make(map[string]bool)
+	validClients := make(map[string]string)
 
 	for i, client := range gs.Clients {
 		if err := host.ClientIdentifierValidator(client.ClientId); err != nil {
@@ -126,13 +130,31 @@ func (gs GenesisState) Validate() error {
 			return fmt.Errorf("invalid client %v index %d: %w", client, i, err)
 		}
 
+		clientType, sequence, err := ParseClientIdentifier(client.ClientId)
+		if err != nil {
+			return err
+		}
+
+		if clientType != clientState.ClientType() {
+			return fmt.Errorf("client state type %s does not equal client type in client identifier %s", clientState.ClientType(), clientType)
+		}
+
+		if err := ValidateClientType(clientType); err != nil {
+			return err
+		}
+
+		if sequence > maxSequence {
+			maxSequence = sequence
+		}
+
 		// add client id to validClients map
-		validClients[client.ClientId] = true
+		validClients[client.ClientId] = clientState.ClientType()
 	}
 
 	for i, cc := range gs.ClientsConsensus {
 		// check that consensus state is for a client in the genesis clients list
-		if !validClients[cc.ClientId] {
+		clientType, ok := validClients[cc.ClientId]
+		if !ok {
 			return fmt.Errorf("consensus state in genesis has a client id %s that does not map to a genesis client", cc.ClientId)
 		}
 
@@ -149,11 +171,22 @@ func (gs GenesisState) Validate() error {
 			if err := cs.ValidateBasic(); err != nil {
 				return fmt.Errorf("invalid client consensus state %v index %d: %w", cs, i, err)
 			}
+
+			// ensure consensus state type matches client state type
+			if clientType != cs.ClientType() {
+				return fmt.Errorf("consensus state client type %s does not equal client state client type %s", cs.ClientType(), clientType)
+			}
+
 		}
+
 	}
 
 	if gs.CreateLocalhost && !gs.Params.IsAllowedClient(exported.Localhost) {
 		return fmt.Errorf("localhost client is not registered on the allowlist")
+	}
+
+	if maxSequence != 0 && maxSequence >= gs.NextClientSequence {
+		return fmt.Errorf("next client identifier sequence %d must be greater than the maximum sequence used in the provided client identifiers %d", gs.NextClientSequence, maxSequence)
 	}
 
 	return nil

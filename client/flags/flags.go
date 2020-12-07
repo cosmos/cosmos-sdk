@@ -66,6 +66,10 @@ const (
 	FlagTimeoutHeight    = "timeout-height"
 	FlagKeyAlgorithm     = "algo"
 	FlagFeeAccount       = "fee-account"
+
+	// Tendermint logging flags
+	FlagLogLevel  = "log_level"
+	FlagLogFormat = "log_format"
 )
 
 // LineBreak can be included in a command list to provide a blank line

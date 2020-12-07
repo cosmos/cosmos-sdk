@@ -17,8 +17,8 @@ import (
 )
 
 var (
-	flagHttpMaxReadTimeout  = 10 * time.Second
-	flagHttpMaxWriteTimeout = 10 * time.Second
+	flagHTTPMaxReadTimeout  = 10 * time.Second
+	flagHTTPMaxWriteTimeout = 10 * time.Second
 )
 
 type allowedOrigins struct {
@@ -38,7 +38,7 @@ func StartGRPCProxyServer(grpcConfig config.GRPCConfig) (*http.Server, error) {
 
 	options := []grpcweb.Option{
 		grpcweb.WithCorsForRegisteredEndpointsOnly(false),
-		grpcweb.WithOriginFunc(makeHttpOriginFunc(allowedOrigins, proxyFlags.AllowAllOrigins)),
+		grpcweb.WithOriginFunc(makeHTTPOriginFunc(allowedOrigins, proxyFlags.AllowAllOrigins)),
 	}
 
 	wrappedGrpc := grpcweb.WrapServer(grpcSrv, options...)
@@ -73,8 +73,8 @@ func StartGRPCProxyServer(grpcConfig config.GRPCConfig) (*http.Server, error) {
 
 func buildServer(wrappedGrpc *grpcweb.WrappedGrpcServer, proxyFlags config.GRPCProxy) *http.Server {
 	return &http.Server{
-		WriteTimeout: flagHttpMaxWriteTimeout,
-		ReadTimeout:  flagHttpMaxReadTimeout,
+		ReadTimeout:  flagHTTPMaxReadTimeout,
+		WriteTimeout: flagHTTPMaxWriteTimeout,
 		Handler: http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
 			wrappedGrpc.ServeHTTP(resp, req)
 		}),
@@ -82,7 +82,7 @@ func buildServer(wrappedGrpc *grpcweb.WrappedGrpcServer, proxyFlags config.GRPCP
 }
 
 func buildGrpcProxyServer(proxyFlags config.GRPCProxy, host string) (*grpc.Server, error) {
-	// gRPC proxy logic.
+
 	backendConn, err := dialBackendOrFail(proxyFlags, host)
 	if err != nil {
 		return nil, err
@@ -122,7 +122,7 @@ func buildListenerOrFail(name string, port int) (net.Listener, error) {
 	), nil
 }
 
-func makeHttpOriginFunc(allowedOrigins *allowedOrigins, allowAllOrigins bool) func(origin string) bool {
+func makeHTTPOriginFunc(allowedOrigins *allowedOrigins, allowAllOrigins bool) func(origin string) bool {
 	if allowAllOrigins {
 		return func(origin string) bool {
 			return true

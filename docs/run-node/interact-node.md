@@ -61,7 +61,7 @@ Since the code generation library largely depends on your own tech stack, we wil
 
 [grpcurl])https://github.com/fullstorydev/grpcurl is like `curl` but for gRPC. It is also available as a Go library, but we will use it only as a CLI command for debugging and testing purposes. Follow the instructions in the previous link to install it.
 
-Assuming you have a local node running (either a localnet, or connected to our devnet), you should be able to run the following to list the Protobuf services available (you can replace `localhost:9000` by the gRPC server endpoint of another node, it's configured under the `grpc.address` field inside `app.toml`):
+Assuming you have a local node running (either a localnet, or connected a live network), you should be able to run the following command to list the Protobuf services available (you can replace `localhost:9000` by the gRPC server endpoint of another node, which is configured under the `grpc.address` field inside `app.toml`):
 
 ```bash
 grpcurl -plaintext localhost:9090 list
@@ -82,7 +82,7 @@ grpcurl \
     describe cosmos.bank.v1beta1.Query                  # Service we want to inspect
 ```
 
-Given the Protobuf definitions, making a gRPC query is straightforward, by calling the correct `Query` service RPC method, and by passing the request argument as data (`-d` flag):
+Once the Protobuf definitions are given, making a gRPC query is then straightforward, by calling the correct `Query` service RPC method, and by passing the request argument as data (`-d` flag):
 
 ```bash
 grpcurl \
@@ -94,8 +94,6 @@ grpcurl \
     localhost:9090 \
     cosmos.bank.v1beta1.Query/AllBalances
 ```
-
-As described in the previous paragraph, passing the paths to `.proto` files is necessary.
 
 The list of all available gRPC query endpoints is [coming soon](https://github.com/cosmos/cosmos-sdk/issues/7786).
 

@@ -4,16 +4,21 @@ package cosmos.feegrant.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos/feegrant/v1beta1/feegrant.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "google/api/annotations.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant/types";
 
 // Query defines the gRPC querier service.
 service Query {
   // FeeAllowance returns fee granted to the grantee by the granter.
-  rpc FeeAllowance(QueryFeeAllowanceRequest) returns (QueryFeeAllowanceResponse) {}
+  rpc FeeAllowance(QueryFeeAllowanceRequest) returns (QueryFeeAllowanceResponse) {
+    option (google.api.http).get = "/cosmos/feegrant/v1beta1/granters/{granter}/grantees/{grantee}/grant";
+  }
 
   // FeeAllowances returns all the grants for address.
-  rpc FeeAllowances(QueryFeeAllowancesRequest) returns (QueryFeeAllowancesResponse) {}
+  rpc FeeAllowances(QueryFeeAllowancesRequest) returns (QueryFeeAllowancesResponse) {
+    option (google.api.http).get = "/cosmos/feegrant/v1beta1/grants/{grantee}";
+  }
 }
 
 // QueryFeeAllowanceRequest is the request type for the Query/FeeAllowance RPC method.

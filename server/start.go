@@ -115,6 +115,10 @@ which accepts a path for the resulting pprof file.
 
 			// amino is needed here for backwards compatibility of REST routes
 			err := startInProcess(serverCtx, clientCtx, appCreator)
+			if _, ok := err.(ErrorCode); ok {
+				return nil
+			}
+
 			return err
 		},
 	}

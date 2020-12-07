@@ -2,6 +2,7 @@ package genutil
 
 import (
 	"encoding/json"
+	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
 	"path/filepath"
 	"time"
 
@@ -47,7 +48,7 @@ func ExportGenesisFileWithTime(
 }
 
 // InitializeNodeValidatorFiles creates private validator and p2p configuration files.
-func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
+func InitializeNodeValidatorFiles(config *cfg.Config, seed string) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
 		return "", nil, err
@@ -65,7 +66,15 @@ func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey 
 		return "", nil, err
 	}
 
-	tmValPubKey, err := privval.LoadOrGenFilePV(pvKeyFile, pvStateFile).GetPubKey()
+	var filePV *privval.FilePV
+	if len(seed) == 0 {
+		filePV = privval.LoadOrGenFilePV(pvKeyFile, pvStateFile)
+	} else {
+		privKey := tmed25519.GenPrivKeyFromSecret([]byte(seed))
+		filePV = privval.RecoverFilePV(privKey, pvKeyFile, pvStateFile)
+	}
+
+	tmValPubKey, err := filePV.GetPubKey()
 	if err != nil {
 		return "", nil, err
 	}

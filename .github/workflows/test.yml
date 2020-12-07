@@ -202,4 +202,4 @@ jobs:
       - name: test rosetta
         run: |
           make test-rosetta
-        # if: env.GIT_DIFF
+          if: env.GIT_DIFF

@@ -2,6 +2,7 @@ package genutil
 
 import (
 	"encoding/json"
+	"github.com/cosmos/go-bip39"
 	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
 	"path/filepath"
 	"time"
@@ -48,7 +49,13 @@ func ExportGenesisFileWithTime(
 }
 
 // InitializeNodeValidatorFiles creates private validator and p2p configuration files.
-func InitializeNodeValidatorFiles(config *cfg.Config, seed string) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
+func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
+	return InitializeNodeValidatorFilesFromMnemonic(config, "")
+}
+
+// InitializeNodeValidatorFiles creates private validator and p2p configuration files using the given mnemonic.
+// If no valid mnemonic is given, a random one will be used instead.
+func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic string) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
 		return "", nil, err
@@ -67,10 +74,10 @@ func InitializeNodeValidatorFiles(config *cfg.Config, seed string) (nodeID strin
 	}
 
 	var filePV *privval.FilePV
-	if len(seed) == 0 {
+	if !bip39.IsMnemonicValid(mnemonic) {
 		filePV = privval.LoadOrGenFilePV(pvKeyFile, pvStateFile)
 	} else {
-		privKey := tmed25519.GenPrivKeyFromSecret([]byte(seed))
+		privKey := tmed25519.GenPrivKeyFromSecret([]byte(mnemonic))
 		filePV = privval.NewFilePV(privKey, pvKeyFile, pvStateFile)
 	}
 

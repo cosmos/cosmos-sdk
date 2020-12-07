@@ -71,7 +71,7 @@ func InitializeNodeValidatorFiles(config *cfg.Config, seed string) (nodeID strin
 		filePV = privval.LoadOrGenFilePV(pvKeyFile, pvStateFile)
 	} else {
 		privKey := tmed25519.GenPrivKeyFromSecret([]byte(seed))
-		filePV = privval.RecoverFilePV(privKey, pvKeyFile, pvStateFile)
+		filePV = privval.NewFilePV(privKey, pvKeyFile, pvStateFile)
 	}
 
 	tmValPubKey, err := filePV.GetPubKey()

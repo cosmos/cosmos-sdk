@@ -211,11 +211,12 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		clientCtx := client.GetClientContextFromCmd(cmd)
-		clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+		f := cmd.Flags()
+		clientCtx, err := client.ReadTxCommandFlags(clientCtx, f)
 		if err != nil {
 			return err
 		}
-		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+		txFactory := tx.NewFactoryCLI(clientCtx, f)
 
 		clientCtx, txF, newTx, err := readTxAndInitContexts(clientCtx, cmd, args[0])
 		if err != nil {
@@ -230,11 +231,9 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		// if --signature-only is on, then override --append
-		generateSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
-		multisigAddrStr, _ := cmd.Flags().GetString(flagMultisig)
-
-		from, _ := cmd.Flags().GetString(flags.FlagFrom)
+		generateSignatureOnly, _ := f.GetBool(flagSigOnly)
+		multisigAddrStr, _ := f.GetString(flagMultisig)
+		from, _ := f.GetString(flags.FlagFrom)
 		_, fromName, err := client.GetFromFields(txFactory.Keybase(), from, clientCtx.GenerateOnly)
 		if err != nil {
 			return fmt.Errorf("error getting account from keybase: %w", err)
@@ -242,20 +241,17 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 
 		if multisigAddrStr != "" {
 			var multisigAddr sdk.AccAddress
-
 			multisigAddr, err = sdk.AccAddressFromBech32(multisigAddrStr)
 			if err != nil {
 				return err
 			}
-
 			err = authclient.SignTxWithSignerAddress(
 				txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline,
 			)
 			generateSignatureOnly = true
 		} else {
-			flagAppend, _ := cmd.Flags().GetBool(flagAppend)
-			appendSig := flagAppend && !generateSignatureOnly
-			if appendSig {
+			flagAppend, _ := f.GetBool(flagAppend)
+			if flagAppend || generateSignatureOnly {
 				err = authclient.SignTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, clientCtx.Offline)
 			}
 		}
@@ -263,25 +259,21 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		aminoJSON, _ := cmd.Flags().GetBool(flagAmino)
-
+		aminoJSON, err := f.GetBool(flagAmino)
 		if err != nil {
 			return err
 		}
 
 		var json []byte
-
 		if aminoJSON {
 			stdTx, err := tx.ConvertTxToStdTx(clientCtx.LegacyAmino, txBuilder.GetTx())
 			if err != nil {
 				return err
 			}
-
 			req := rest.BroadcastReq{
 				Tx:   stdTx,
 				Mode: "block|sync|async",
 			}
-
 			json, err = clientCtx.LegacyAmino.MarshalJSON(req)
 			if err != nil {
 				return err
@@ -303,16 +295,17 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		defer fp.Close()
+		if err = fp.Close(); err != nil {
+			return err
+		}
 
-		return clientCtx.PrintString(fmt.Sprintf("%s\n", json))
+		return clientCtx.PrintBytes(json)
 	}
 }
 
-func marshalSignatureJSON(txConfig client.TxConfig, txBldr client.TxBuilder, generateSignatureOnly bool) ([]byte, error) {
+func marshalSignatureJSON(txConfig client.TxConfig, txBldr client.TxBuilder, signatureOnly bool) ([]byte, error) {
 	parsedTx := txBldr.GetTx()
-
-	if generateSignatureOnly {
+	if signatureOnly {
 		sigs, err := parsedTx.GetSignaturesV2()
 		if err != nil {
 			return nil, err

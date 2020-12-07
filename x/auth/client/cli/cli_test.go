@@ -492,10 +492,8 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 	multiSigWith1SignatureFile, cleanup3 := testutil.WriteToNewTempFile(s.T(), multiSigWith1Signature.String())
 	defer cleanup3()
 
-	exec, err := authtest.TxValidateSignaturesExec(val1.ClientCtx, multiSigWith1SignatureFile.Name())
+	_, err = authtest.TxValidateSignaturesExec(val1.ClientCtx, multiSigWith1SignatureFile.Name())
 	s.Require().Error(err)
-
-	fmt.Printf("%s", exec)
 }
 
 func (s *IntegrationTestSuite) TestCLIEncode() {

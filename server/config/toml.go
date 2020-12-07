@@ -169,13 +169,6 @@ address = "{{ .GRPC.Address }}"
 	# EnableHTTPServer defines if the HTTP should be enabled.
 	enable-http-server = {{ .GRPC.GRPCWebProxy.EnableHTTPServer }}
 
-	# MaxCallRecvMsgSize defines maximum receive message size limit. If not specified, the default of 4MB will be used.
-	max-call-recv-msg-size = {{ .GRPC.GRPCWebProxy.MaxCallRecvMsgSize }}
-
-	# BackendBackoffMaxDelay defines maximum delay when backing off after failed connection attempts to the backend.
-	backend-backoff-max-delay = "{{ .GRPC.GRPCWebProxy.BackendBackoffMaxDelay }}"
-
-
 ###############################################################################
 ###                        State Sync Configuration                         ###
 ###############################################################################

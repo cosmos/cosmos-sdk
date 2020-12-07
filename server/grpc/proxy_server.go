@@ -26,10 +26,11 @@ type allowedOrigins struct {
 }
 
 // StartGRPCProxyServer starts a gRPC-proxy server on the given config.
+// https://github.com/improbable-eng/grpc-web/tree/master/go/grpcwebproxy used as a reference.
 func StartGRPCProxyServer(grpcConfig config.GRPCConfig) (*http.Server, error) {
 	proxyFlags := grpcConfig.GRPCWebProxy
 
-	grpcSrv, err := buildGrpcProxyServer(proxyFlags, grpcConfig.Address)
+	grpcSrv, err := buildGrpcProxyServer(grpcConfig.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -44,10 +45,10 @@ func StartGRPCProxyServer(grpcConfig config.GRPCConfig) (*http.Server, error) {
 	wrappedGrpc := grpcweb.WrapServer(grpcSrv, options...)
 
 	if !proxyFlags.EnableHTTPServer {
-		return nil, fmt.Errorf("run_http_server is set to false. Enable for grpcweb proxy to function correctly.")
+		return nil, fmt.Errorf("run_http_server is set to false. enable for grpcweb proxy to function correctly")
 	}
 
-	proxyServer := buildServer(wrappedGrpc, proxyFlags)
+	proxyServer := buildServer(wrappedGrpc)
 	listener, err := buildListenerOrFail("http", proxyFlags.HTTPPort)
 
 	if err != nil {
@@ -71,7 +72,8 @@ func StartGRPCProxyServer(grpcConfig config.GRPCConfig) (*http.Server, error) {
 
 }
 
-func buildServer(wrappedGrpc *grpcweb.WrappedGrpcServer, proxyFlags config.GRPCProxy) *http.Server {
+// nolint:interfacer
+func buildServer(wrappedGrpc *grpcweb.WrappedGrpcServer) *http.Server {
 	return &http.Server{
 		ReadTimeout:  flagHTTPMaxReadTimeout,
 		WriteTimeout: flagHTTPMaxWriteTimeout,
@@ -81,15 +83,15 @@ func buildServer(wrappedGrpc *grpcweb.WrappedGrpcServer, proxyFlags config.GRPCP
 	}
 }
 
-func buildGrpcProxyServer(proxyFlags config.GRPCProxy, host string) (*grpc.Server, error) {
+func buildGrpcProxyServer(host string) (*grpc.Server, error) {
 
-	backendConn, err := dialBackendOrFail(proxyFlags, host)
+	backendConn, err := dialBackendOrFail(host)
 	if err != nil {
 		return nil, err
 	}
 	director := func(ctx context.Context, fullMethodName string) (context.Context, *grpc.ClientConn, error) {
 		md, _ := metadata.FromIncomingContext(ctx)
-		outCtx, _ := context.WithCancel(ctx)
+		outCtx, _ := context.WithCancel(ctx) //nolint
 		mdCopy := md.Copy()
 		delete(mdCopy, "user-agent")
 		// If this header is present in the request from the web client,
@@ -146,7 +148,7 @@ func (a *allowedOrigins) IsAllowed(origin string) bool {
 	return ok
 }
 
-func dialBackendOrFail(proxyFlags config.GRPCProxy, host string) (*grpc.ClientConn, error) {
+func dialBackendOrFail(host string) (*grpc.ClientConn, error) {
 	if host == "" {
 		return nil, fmt.Errorf("host cannot be empty")
 	}
@@ -155,11 +157,6 @@ func dialBackendOrFail(proxyFlags config.GRPCProxy, host string) (*grpc.ClientCo
 		grpc.WithInsecure(),
 	}
 	opt = append(opt, grpc.WithCodec(proxy.Codec()))
-
-	opt = append(opt,
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(proxyFlags.MaxCallRecvMsgSize)),
-		grpc.WithBackoffMaxDelay(proxyFlags.BackendBackoffMaxDelay),
-	)
 
 	cc, err := grpc.Dial(host, opt...)
 	if err != nil {

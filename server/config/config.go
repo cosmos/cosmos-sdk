@@ -3,10 +3,8 @@ package config
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/spf13/viper"
-	"google.golang.org/grpc"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -140,12 +138,6 @@ type GRPCProxy struct {
 
 	// EnableHTTPServer defines if the HTTP should be enabled.
 	EnableHTTPServer bool `mapstructure:"enable-http-server"`
-
-	// MaxCallRecvMsgSize defines maximum receive message size limit. If not specified, the default of 4MB will be used.
-	MaxCallRecvMsgSize int `mapstructure:"max-call-recv-msg-size"`
-
-	// BackendBackoffMaxDelay defines maximum delay when backing off after failed connection attempts to the backend.
-	BackendBackoffMaxDelay time.Duration `mapstructure:"backend-backoff-max-delay"`
 }
 
 // StateSyncConfig defines the state sync snapshot configuration.
@@ -226,15 +218,13 @@ func DefaultConfig() *Config {
 			Enable:  true,
 			Address: DefaultGRPCAddress,
 			GRPCWebProxy: GRPCProxy{
-				Enable:                 true,
-				AllowAllOrigins:        true,
-				EnableHTTPServer:       true,
-				AllowedOrigins:         []string{DefaultGRPCAddress},
-				AllowedHeaders:         make([]string, 0),
-				BackendBackoffMaxDelay: grpc.DefaultBackoffConfig.MaxDelay,
-				MaxCallRecvMsgSize:     1024 * 1024 * 4,
-				BindAddress:            DefaultBindAddress,
-				HTTPPort:               DefaultGRPCProxyPort,
+				Enable:           true,
+				AllowAllOrigins:  true,
+				EnableHTTPServer: true,
+				AllowedOrigins:   []string{DefaultGRPCAddress},
+				AllowedHeaders:   make([]string, 0),
+				BindAddress:      DefaultBindAddress,
+				HTTPPort:         DefaultGRPCProxyPort,
 			},
 		},
 		StateSync: StateSyncConfig{
@@ -291,15 +281,13 @@ func GetConfig(v *viper.Viper) Config {
 			Enable:  v.GetBool("grpc.enable"),
 			Address: v.GetString("grpc.address"),
 			GRPCWebProxy: GRPCProxy{
-				Enable:                 v.GetBool("grpc.grpc-proxy.enable"),
-				AllowAllOrigins:        v.GetBool("grpc.grpc-proxy.allow-all-origins"),
-				AllowedHeaders:         v.GetStringSlice("grpc.grpc-proxy.allowed-headers"),
-				AllowedOrigins:         v.GetStringSlice("grpc.grpc-proxy.allowed-origins"),
-				EnableHTTPServer:       v.GetBool("grpc.grpc-proxy.enable-http-server"),
-				MaxCallRecvMsgSize:     v.GetInt("grpc.grpc-proxy.max-call-recv-msg-size"),
-				BackendBackoffMaxDelay: v.GetDuration("grpc.grpc-proxy.backend-backoff-max-delay"),
-				BindAddress:            v.GetString("grpc.grpc-proxy.bind-address"),
-				HTTPPort:               v.GetInt("grpc.grpc-proxy.http-port"),
+				Enable:           v.GetBool("grpc.grpc-proxy.enable"),
+				AllowAllOrigins:  v.GetBool("grpc.grpc-proxy.allow-all-origins"),
+				AllowedHeaders:   v.GetStringSlice("grpc.grpc-proxy.allowed-headers"),
+				AllowedOrigins:   v.GetStringSlice("grpc.grpc-proxy.allowed-origins"),
+				EnableHTTPServer: v.GetBool("grpc.grpc-proxy.enable-http-server"),
+				BindAddress:      v.GetString("grpc.grpc-proxy.bind-address"),
+				HTTPPort:         v.GetInt("grpc.grpc-proxy.http-port"),
 			},
 		},
 		StateSync: StateSyncConfig{

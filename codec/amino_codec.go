@@ -93,11 +93,11 @@ func (ac *AminoCodec) MarshalInterface(i proto.Message) ([]byte, error) {
 
 // UnmarshalInterface is a convenience function for amino unmarshaling interfaces.
 // `ptr` must be a pointer to an interface.
-// NOTE: to unmarshal a concrete type, you should use UnarshalBinaryBare instead
+// NOTE: to unmarshal a concrete type, you should use UnmarshalBinaryBare instead
 //
 // Example:
 //   var x MyInterface
-//   err := UnmarshalInterface(bz, &x)
+//   err := cdc.UnmarshalInterface(bz, &x)
 func (ac *AminoCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
 	return ac.LegacyAmino.UnmarshalBinaryBare(bz, ptr)
 }
@@ -114,11 +114,11 @@ func (ac *AminoCodec) MarshalInterfaceJSON(i proto.Message) ([]byte, error) {
 
 // UnmarshalInterfaceJSON is a convenience function for amino unmarshaling interfaces.
 // `ptr` must be a pointer to an interface.
-// NOTE: to unmarshal a concrete type, you should use UnarshalJSON instead
+// NOTE: to unmarshal a concrete type, you should use UnmarshalJSON instead
 //
 // Example:
 //   var x MyInterface
-//   err := UnmarshalInterfaceJSON(bz, &x)
+//   err := cdc.UnmarshalInterfaceJSON(bz, &x)
 func (ac *AminoCodec) UnmarshalInterfaceJSON(bz []byte, ptr interface{}) error {
 	return ac.LegacyAmino.UnmarshalJSON(bz, ptr)
 }

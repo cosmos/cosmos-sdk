@@ -3,11 +3,22 @@ package cli
 import (
 	"fmt"
 	"strings"
+	"time"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/simapp/simd/cmd"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
-	"github.com/spf13/cobra"
+)
+
+// flag for feegrant module
+const (
+	FlagExpiration = "expiration"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -29,10 +40,9 @@ func GetTxCmd() *cobra.Command {
 	return feegrantTxCmd
 }
 
-
 func NewCmdFeeGrant() *cobra.Command {
-	cmd:= &cobra.Command{
-		Use: "grant [grantee] [limit] --from [granter]",
+	cmd := &cobra.Command{
+		Use:   "grant [grantee] [limit] --from [granter]",
 		Short: "Grant Fee allowance to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(
@@ -41,10 +51,10 @@ func NewCmdFeeGrant() *cobra.Command {
 Examples:
 %s tx %s grant cosmos1skjw... 1000stake --from=cosmos1skjw...
 				`, version.AppName, types.ModuleName,
-			)
+			),
 		),
 		Args: cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, Args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
@@ -62,10 +72,12 @@ Examples:
 			}
 
 			period := time.Duration(viper.GetInt64(FlagExpiration)) * time.Second
+			_ = period // TODO
 
 			basic := types.BasicFeeAllowance{
 				SpendLimit: limit,
-				Expiration: period,
+				// TODO
+				// Expiration: period,
 			}
 
 			msg, err := types.NewMsgGrantFeeAllowance(&basic, clientCtx.GetFromAddress(), grantee)
@@ -78,7 +90,7 @@ Examples:
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		}, 
+		},
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
@@ -88,7 +100,7 @@ Examples:
 
 func NewCmdRevokeFeegrant() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "revoke [grantee_address] --from=[granter_address]",
+		Use:   "revoke [grantee_address] --from=[granter_address]",
 		Short: "revoke fee-grant",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`revoke fee grant from a granter to a grantee:
@@ -112,13 +124,18 @@ Example:
 
 			granter := clientCtx.GetFromAddress()
 
+			msg := types.MsgRevokeFeeAllowance{
+				Granter: granter,
+				Grantee: grantee,
+			}
+
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
-	}	
+	}
 
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd

@@ -127,7 +127,10 @@ $ %s query feegrant grants [grantee]
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.FeeAllowances)
+			// TODO
+			fmt.Println(res.FeeAllowances)
+			// return clientCtx.PrintOutput(res.FeeAllowances)
+			return nil
 		},
 	}
 

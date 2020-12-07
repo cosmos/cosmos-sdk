@@ -32,6 +32,14 @@ type ClientState interface {
 	Validate() error
 	GetProofSpecs() []*ics23.ProofSpec
 
+	// Initialization function
+	// Clients must validate the initial consensus state, and may store any client-specific metadata
+	// necessary for correct light client operation
+	Initialize(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, ConsensusState) error
+
+	// Genesis function
+	ExportMetadata(sdk.KVStore) []GenesisMetadata
+
 	// Update and Misbehaviour functions
 
 	CheckHeaderAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Header) (ClientState, ConsensusState, error)
@@ -102,6 +110,8 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height Height,
+		currentTimestamp uint64,
+		delayPeriod uint64,
 		prefix Prefix,
 		proof []byte,
 		portID,
@@ -113,6 +123,8 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height Height,
+		currentTimestamp uint64,
+		delayPeriod uint64,
 		prefix Prefix,
 		proof []byte,
 		portID,
@@ -124,6 +136,8 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height Height,
+		currentTimestamp uint64,
+		delayPeriod uint64,
 		prefix Prefix,
 		proof []byte,
 		portID,
@@ -134,6 +148,8 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height Height,
+		currentTimestamp uint64,
+		delayPeriod uint64,
 		prefix Prefix,
 		proof []byte,
 		portID,
@@ -186,4 +202,13 @@ type Height interface {
 	GetRevisionHeight() uint64
 	Decrement() (Height, bool)
 	String() string
+}
+
+// GenesisMetadata is a wrapper interface over clienttypes.GenesisMetadata
+// all clients must use the concrete implementation in types
+type GenesisMetadata interface {
+	// return store key that contains metadata without clientID-prefix
+	GetKey() []byte
+	// returns metadata value
+	GetValue() []byte
 }

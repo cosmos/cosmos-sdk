@@ -91,6 +91,15 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						},
 					),
 				},
+				[]types.IdentifiedGenesisMetadata{
+					types.NewIdentifiedGenesisMetadata(
+						clientID,
+						[]types.GenesisMetadata{
+							types.NewGenesisMetadata([]byte("key1"), []byte("val1")),
+							types.NewGenesisMetadata([]byte("key2"), []byte("val2")),
+						},
+					),
+				},
 				types.NewParams(exported.Tendermint, exported.Localhost),
 				false,
 				2,
@@ -121,6 +130,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						},
 					),
 				},
+				nil,
 				types.NewParams(exported.Tendermint),
 				false,
 				0,
@@ -136,6 +146,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 					),
 					types.NewIdentifiedClientState(exported.Localhost, localhosttypes.NewClientState("chaindID", types.ZeroHeight())),
 				},
+				nil,
 				nil,
 				types.NewParams(exported.Tendermint),
 				false,
@@ -159,7 +170,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						tmClientID1,
 						[]types.ConsensusStateWithHeight{
 							types.NewConsensusStateWithHeight(
-								types.ZeroHeight(),
+								types.NewHeight(0, 1),
 								ibctmtypes.NewConsensusState(
 									header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), header.Header.NextValidatorsHash,
 								),
@@ -167,6 +178,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						},
 					),
 				},
+				nil,
 				types.NewParams(exported.Tendermint),
 				false,
 				0,
@@ -197,6 +209,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						},
 					),
 				},
+				nil,
 				types.NewParams(exported.Tendermint),
 				false,
 				0,
@@ -227,6 +240,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						},
 					),
 				},
+				nil,
 				types.NewParams(exported.Tendermint),
 				false,
 				0,
@@ -257,11 +271,86 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						},
 					),
 				},
+				nil,
 				types.NewParams(exported.Solomachine),
 				false,
 				0,
 			),
 			expPass: false,
+		},
+		{
+			name: "metadata client-id does not match a genesis client",
+			genState: types.NewGenesisState(
+				[]types.IdentifiedClientState{
+					types.NewIdentifiedClientState(
+						clientID, ibctmtypes.NewClientState(chainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
+					),
+					types.NewIdentifiedClientState(
+						exported.Localhost, localhosttypes.NewClientState("chainID", clientHeight),
+					),
+				},
+				[]types.ClientConsensusStates{
+					types.NewClientConsensusStates(
+						clientID,
+						[]types.ConsensusStateWithHeight{
+							types.NewConsensusStateWithHeight(
+								header.GetHeight().(types.Height),
+								ibctmtypes.NewConsensusState(
+									header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), header.Header.NextValidatorsHash,
+								),
+							),
+						},
+					),
+				},
+				[]types.IdentifiedGenesisMetadata{
+					types.NewIdentifiedGenesisMetadata(
+						"wrongclientid",
+						[]types.GenesisMetadata{
+							types.NewGenesisMetadata([]byte("key1"), []byte("val1")),
+							types.NewGenesisMetadata([]byte("key2"), []byte("val2")),
+						},
+					),
+				},
+				types.NewParams(exported.Tendermint, exported.Localhost),
+				false,
+				0,
+			),
+			expPass: false,
+		},
+		{
+			name: "invalid metadata",
+			genState: types.NewGenesisState(
+				[]types.IdentifiedClientState{
+					types.NewIdentifiedClientState(
+						clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
+					),
+				},
+				[]types.ClientConsensusStates{
+					types.NewClientConsensusStates(
+						clientID,
+						[]types.ConsensusStateWithHeight{
+							types.NewConsensusStateWithHeight(
+								header.GetHeight().(types.Height),
+								ibctmtypes.NewConsensusState(
+									header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), header.Header.NextValidatorsHash,
+								),
+							),
+						},
+					),
+				},
+				[]types.IdentifiedGenesisMetadata{
+					types.NewIdentifiedGenesisMetadata(
+						clientID,
+						[]types.GenesisMetadata{
+							types.NewGenesisMetadata([]byte(""), []byte("val1")),
+							types.NewGenesisMetadata([]byte("key2"), []byte("val2")),
+						},
+					),
+				},
+				types.NewParams(exported.Tendermint),
+				false,
+				0,
+			),
 		},
 		{
 			name: "invalid params",
@@ -287,6 +376,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						},
 					),
 				},
+				nil,
 				types.NewParams(" "),
 				false,
 				0,
@@ -317,6 +407,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						},
 					),
 				},
+				nil,
 				types.NewParams(" "),
 				true,
 				0,
@@ -347,6 +438,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						},
 					),
 				},
+				nil,
 				types.NewParams(exported.Tendermint),
 				true,
 				2,
@@ -377,6 +469,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						},
 					),
 				},
+				nil,
 				types.NewParams(exported.Tendermint, exported.Localhost),
 				false,
 				0,
@@ -407,6 +500,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						},
 					),
 				},
+				nil,
 				types.NewParams(exported.Tendermint, exported.Localhost),
 				false,
 				5,
@@ -434,6 +528,7 @@ func (suite *TypesTestSuite) TestValidateGenesis() {
 						},
 					),
 				},
+				nil,
 				types.NewParams(exported.Tendermint, exported.Localhost),
 				false,
 				5,

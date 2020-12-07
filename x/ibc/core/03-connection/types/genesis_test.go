@@ -74,6 +74,32 @@ func TestValidateGenesis(t *testing.T) {
 			),
 			expPass: false,
 		},
+		{
+			name: "invalid connection identifier",
+			genState: types.NewGenesisState(
+				[]types.IdentifiedConnection{
+					types.NewIdentifiedConnection("conn-0", types.NewConnectionEnd(types.INIT, clientID, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []*types.Version{ibctesting.ConnectionVersion})),
+				},
+				[]types.ConnectionPaths{
+					{clientID, []string{connectionID}},
+				},
+				0,
+			),
+			expPass: false,
+		},
+		{
+			name: "next connection sequence is not greater than maximum connection identifier sequence provided",
+			genState: types.NewGenesisState(
+				[]types.IdentifiedConnection{
+					types.NewIdentifiedConnection(types.FormatConnectionIdentifier(10), types.NewConnectionEnd(types.INIT, clientID, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []*types.Version{ibctesting.ConnectionVersion})),
+				},
+				[]types.ConnectionPaths{
+					{clientID, []string{connectionID}},
+				},
+				0,
+			),
+			expPass: false,
+		},
 	}
 
 	for _, tc := range testCases {

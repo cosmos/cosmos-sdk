@@ -403,21 +403,14 @@ func (k BaseKeeper) trackUndelegation(ctx sdk.Context, addr sdk.AccAddress, amt 
 	return nil
 }
 
-// MarshalSupply marshals a Supply interface. If the given type implements
-// the Marshaler interface, it is treated as a Proto-defined message and
-// serialized that way. Otherwise, it falls back on the internal Amino codec.
+// MarshalSupply protobuf serializes a Supply interface
 func (k BaseKeeper) MarshalSupply(supplyI exported.SupplyI) ([]byte, error) {
-	return codec.MarshalAny(k.cdc, supplyI)
+	return k.cdc.MarshalInterface(supplyI)
 }
 
 // UnmarshalSupply returns a Supply interface from raw encoded supply
-// bytes of a Proto-based Supply type. An error is returned upon decoding
-// failure.
+// bytes of a Proto-based Supply type
 func (k BaseKeeper) UnmarshalSupply(bz []byte) (exported.SupplyI, error) {
 	var evi exported.SupplyI
-	if err := codec.UnmarshalAny(k.cdc, &evi, bz); err != nil {
-		return nil, err
-	}
-
-	return evi, nil
+	return evi, k.cdc.UnmarshalInterface(bz, &evi)
 }

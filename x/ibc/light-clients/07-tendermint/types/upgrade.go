@@ -76,7 +76,7 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	}
 
 	// Verify client proof
-	bz, err := codec.MarshalAny(cdc, upgradedClient)
+	bz, err := cdc.MarshalInterface(upgradedClient)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "could not marshal client state: %v", err)
 	}
@@ -87,7 +87,7 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	}
 
 	// Verify consensus state proof
-	bz, err = codec.MarshalAny(cdc, upgradedConsState)
+	bz, err = cdc.MarshalInterface(upgradedConsState)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "could not marshal consensus state: %v", err)
 	}

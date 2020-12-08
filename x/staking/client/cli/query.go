@@ -115,7 +115,7 @@ $ %s query staking validators
 				return err
 			}
 
-			result, err := queryClient.Validators(context.Background(), &types.QueryValidatorsRequest{
+			result, err := queryClient.Validators(cmd.Context(), &types.QueryValidatorsRequest{
 				// Leaving status empty on purpose to query all validators.
 				Pagination: pageReq,
 			})
@@ -172,7 +172,7 @@ $ %s query staking unbonding-delegations-from %s1gghjut3ccd8ay0zduzj64hwre2fxs9l
 				Pagination:    pageReq,
 			}
 
-			res, err := queryClient.ValidatorUnbondingDelegations(context.Background(), params)
+			res, err := queryClient.ValidatorUnbondingDelegations(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
@@ -227,7 +227,7 @@ $ %s query staking redelegations-from %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 				Pagination:       pageReq,
 			}
 
-			res, err := queryClient.Redelegations(context.Background(), params)
+			res, err := queryClient.Redelegations(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
@@ -282,7 +282,7 @@ $ %s query staking delegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p %s1gghju
 				ValidatorAddr: valAddr.String(),
 			}
 
-			res, err := queryClient.Delegation(context.Background(), params)
+			res, err := queryClient.Delegation(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
@@ -336,7 +336,7 @@ $ %s query staking delegations %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 				Pagination:    pageReq,
 			}
 
-			res, err := queryClient.DelegatorDelegations(context.Background(), params)
+			res, err := queryClient.DelegatorDelegations(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
@@ -391,7 +391,7 @@ $ %s query staking delegations-to %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 				Pagination:    pageReq,
 			}
 
-			res, err := queryClient.ValidatorDelegations(context.Background(), params)
+			res, err := queryClient.ValidatorDelegations(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
@@ -447,7 +447,7 @@ $ %s query staking unbonding-delegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9
 				ValidatorAddr: valAddr.String(),
 			}
 
-			res, err := queryClient.UnbondingDelegation(context.Background(), params)
+			res, err := queryClient.UnbondingDelegation(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
@@ -501,7 +501,7 @@ $ %s query staking unbonding-delegations %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru
 				Pagination:    pageReq,
 			}
 
-			res, err := queryClient.DelegatorUnbondingDelegations(context.Background(), params)
+			res, err := queryClient.DelegatorUnbondingDelegations(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
@@ -563,7 +563,7 @@ $ %s query staking redelegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p %s1l2r
 				SrcValidatorAddr: valSrcAddr.String(),
 			}
 
-			res, err := queryClient.Redelegations(context.Background(), params)
+			res, err := queryClient.Redelegations(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
@@ -617,7 +617,7 @@ $ %s query staking redelegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 				Pagination:    pageReq,
 			}
 
-			res, err := queryClient.Redelegations(context.Background(), params)
+			res, err := queryClient.Redelegations(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
@@ -660,7 +660,7 @@ $ %s query staking historical-info 5
 			}
 
 			params := &types.QueryHistoricalInfoRequest{Height: height}
-			res, err := queryClient.HistoricalInfo(context.Background(), params)
+			res, err := queryClient.HistoricalInfo(cmd.Context(), params)
 
 			if err != nil {
 				return err
@@ -697,7 +697,7 @@ $ %s query staking pool
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.Pool(context.Background(), &types.QueryPoolRequest{})
+			res, err := queryClient.Pool(cmd.Context(), &types.QueryPoolRequest{})
 			if err != nil {
 				return err
 			}
@@ -733,7 +733,7 @@ $ %s query staking params
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
+			res, err := queryClient.Params(cmd.Context(), &types.QueryParamsRequest{})
 			if err != nil {
 				return err
 			}

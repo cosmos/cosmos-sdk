@@ -16,7 +16,7 @@ func ExecTestCLICmd(clientCtx client.Context, cmd *cobra.Command, extraArgs []st
 	_, out := testutil.ApplyMockIO(cmd)
 	clientCtx = clientCtx.WithOutput(out)
 
-	ctx := context.Background()
+	ctx := cmd.Context()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	if err := cmd.ExecuteContext(ctx); err != nil {

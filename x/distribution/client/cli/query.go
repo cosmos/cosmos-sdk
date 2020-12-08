@@ -50,7 +50,7 @@ func GetCmdQueryParams() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
+			res, err := queryClient.Params(cmd.Context(), &types.QueryParamsRequest{})
 			if err != nil {
 				return err
 			}
@@ -94,7 +94,7 @@ $ %s query distribution validator-outstanding-rewards %s1lwjmdnks33xwnmfayc64ycp
 			}
 
 			res, err := queryClient.ValidatorOutstandingRewards(
-				context.Background(),
+				cmd.Context(),
 				&types.QueryValidatorOutstandingRewardsRequest{ValidatorAddress: validatorAddr.String()},
 			)
 			if err != nil {
@@ -139,7 +139,7 @@ $ %s query distribution commission %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 			}
 
 			res, err := queryClient.ValidatorCommission(
-				context.Background(),
+				cmd.Context(),
 				&types.QueryValidatorCommissionRequest{ValidatorAddress: validatorAddr.String()},
 			)
 			if err != nil {
@@ -199,7 +199,7 @@ $ %s query distribution slashes %svaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 			}
 
 			res, err := queryClient.ValidatorSlashes(
-				context.Background(),
+				cmd.Context(),
 				&types.QueryValidatorSlashesRequest{
 					ValidatorAddress: validatorAddr.String(),
 					StartingHeight:   startHeight,
@@ -252,6 +252,7 @@ $ %s query distribution rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p %s1ggh
 			}
 
 			// query for rewards from a particular delegation
+			ctx  := cmd.Context()
 			if len(args) == 2 {
 				validatorAddr, err := sdk.ValAddressFromBech32(args[1])
 				if err != nil {
@@ -259,7 +260,7 @@ $ %s query distribution rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p %s1ggh
 				}
 
 				res, err := queryClient.DelegationRewards(
-					context.Background(),
+					ctx,
 					&types.QueryDelegationRewardsRequest{DelegatorAddress: delegatorAddr.String(), ValidatorAddress: validatorAddr.String()},
 				)
 				if err != nil {
@@ -270,7 +271,7 @@ $ %s query distribution rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p %s1ggh
 			}
 
 			res, err := queryClient.DelegationTotalRewards(
-				context.Background(),
+				ctx,
 				&types.QueryDelegationTotalRewardsRequest{DelegatorAddress: delegatorAddr.String()},
 			)
 			if err != nil {
@@ -307,7 +308,7 @@ $ %s query distribution community-pool
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.CommunityPool(context.Background(), &types.QueryCommunityPoolRequest{})
+			res, err := queryClient.CommunityPool(cmd.Context(), &types.QueryCommunityPoolRequest{})
 			if err != nil {
 				return err
 			}

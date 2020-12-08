@@ -43,8 +43,8 @@ func PrintUnsignedStdTx(txBldr tx.Factory, clientCtx client.Context, msgs []sdk.
 	return err
 }
 
-// SignTx appends a signature to a transaction. If appendSig
-// is false, it replaces the signatures already attached with the new signature.
+// SignTx signs a transaction managed by the TxBuilder using a `name` key stored in Keybase.
+// The new signature is appended to to the TxBuilder.
 // Don't perform online validation or lookups if offline is true.
 func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, stdTx client.TxBuilder, offline bool) error {
 	info, err := txFactory.Keybase().Key(name)

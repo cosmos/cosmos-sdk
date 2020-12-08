@@ -171,7 +171,7 @@ func GetSignCommand() *cobra.Command {
 It will read a transaction from [file], sign it, and print its JSON encoding.
 
 If the flag --signature-only flag is set, it will output a JSON representation
-of the generated signature only.
+of the signatures only.
 
 The --offline flag makes sure that the client will not reach out to full node.
 As a result, the account and sequence number queries will not be performed and
@@ -189,7 +189,7 @@ be generated via the 'multisign' command.
 
 	cmd.Flags().String(flagMultisig, "", "Address of the multisig account on behalf of which the transaction shall be signed")
 	cmd.Flags().Bool(flagAppend, true, "Append the signature to the existing ones. If disabled, old signatures would be overwritten. Ignored if --multisig is on")
-	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
+	cmd.Flags().Bool(flagSigOnly, false, "Print only the signature")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	cmd.Flags().String(flags.FlagChainID, "", "The network chain ID")
 	cmd.Flags().Bool(flagAmino, false, "Generate Amino encoded JSON suitable for submiting to the txs REST endpoint")
@@ -251,7 +251,8 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			generateSignatureOnly = true
 		} else {
 			flagAppend, _ := f.GetBool(flagAppend)
-			if flagAppend || generateSignatureOnly {
+			// txBuilder.GetTx().GetSignaturesV2()
+			if flagAppend {
 				err = authclient.SignTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, clientCtx.Offline)
 			}
 		}

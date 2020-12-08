@@ -375,8 +375,9 @@ func SignWithPrivKey(
 	return sigV2, nil
 }
 
-// Sign signs a given tx with the provided name and passphrase. The bytes signed
-// over are canconical. The resulting signature will be set on the transaction.
+// Sign signs a given tx with a named key. The bytes signed over are canconical.
+// The resulting signature will be set in the transaction builder
+// overwriting previous signatures.
 // An error is returned upon failure.
 func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 	if txf.keybase == nil {
@@ -423,13 +424,13 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 	}
 
 	// Generate the bytes to be signed.
-	signBytes, err := txf.txConfig.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
+	bytesToSign, err := txf.txConfig.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return err
 	}
 
 	// Sign those bytes
-	sigBytes, _, err := txf.keybase.Sign(name, signBytes)
+	sigBytes, _, err := txf.keybase.Sign(name, bytesToSign)
 	if err != nil {
 		return err
 	}

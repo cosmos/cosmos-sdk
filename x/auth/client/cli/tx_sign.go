@@ -251,7 +251,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			generateSignatureOnly = true
 		} else {
 			flagAppend, _ := f.GetBool(flagAppend)
-			// txBuilder.GetTx().GetSignaturesV2()
+			// txBuilder.GetTx().Si
 			if flagAppend {
 				err = authclient.SignTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, clientCtx.Offline)
 			}

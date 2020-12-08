@@ -157,10 +157,6 @@ func (w *wrapper) GetMemo() string {
 	return w.tx.Body.Memo
 }
 
-func (w *wrapper) GetSignatures() [][]byte {
-	return w.tx.Signatures
-}
-
 // GetTimeoutHeight returns the transaction's timeout height (if set).
 func (w *wrapper) GetTimeoutHeight() uint64 {
 	return w.tx.Body.TimeoutHeight

@@ -44,7 +44,7 @@ func GetCmdQueryClientStates() *cobra.Command {
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.ClientStates(context.Background(), req)
+			res, err := queryClient.ClientStates(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -118,7 +118,7 @@ func GetCmdQueryConsensusStates() *cobra.Command {
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.ConsensusStates(context.Background(), req)
+			res, err := queryClient.ConsensusStates(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -250,8 +250,8 @@ func GetCmdParams() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, _ := queryClient.ClientParams(context.Background(), &types.QueryClientParamsRequest{})
-			return clientCtx.PrintProto(res.Params)
+			res, _ := queryClient.ClientParams(cmd.Context(), &types.QueryClientParamsRequest{})
+			return clientCtx.PrintOutput(res.Params)
 		},
 	}
 

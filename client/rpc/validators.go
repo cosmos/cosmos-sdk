@@ -50,7 +50,7 @@ func ValidatorCommand() *cobra.Command {
 			page, _ := cmd.Flags().GetInt(flags.FlagPage)
 			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 
-			result, err := GetValidators(context.Background(), clientCtx, height, &page, &limit)
+			result, err := GetValidators(cmd.Context(), clientCtx, height, &page, &limit)
 			if err != nil {
 				return err
 			}
@@ -172,7 +172,7 @@ func ValidatorSetRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		output, err := GetValidators(context.Background(), clientCtx, &height, &page, &limit)
+		output, err := GetValidators(r.Context(), clientCtx, &height, &page, &limit)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -189,7 +189,7 @@ func LatestValidatorSetRequestHandlerFn(clientCtx client.Context) http.HandlerFu
 			return
 		}
 
-		output, err := GetValidators(context.Background(), clientCtx, nil, &page, &limit)
+		output, err := GetValidators(r.Context(), clientCtx, nil, &page, &limit)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}

@@ -44,7 +44,7 @@ func GetCmdQueryChannels() *cobra.Command {
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.Channels(context.Background(), req)
+			res, err := queryClient.Channels(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -118,7 +118,7 @@ func GetCmdQueryConnectionChannels() *cobra.Command {
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.ConnectionChannels(context.Background(), req)
+			res, err := queryClient.ConnectionChannels(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -189,7 +189,7 @@ func GetCmdQueryPacketCommitments() *cobra.Command {
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.PacketCommitments(context.Background(), req)
+			res, err := queryClient.PacketCommitments(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -357,7 +357,7 @@ The return value represents:
 				PacketCommitmentSequences: seqs,
 			}
 
-			res, err := queryClient.UnreceivedPackets(context.Background(), req)
+			res, err := queryClient.UnreceivedPackets(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -407,7 +407,7 @@ The return value represents:
 				PacketAckSequences: seqs,
 			}
 
-			res, err := queryClient.UnreceivedAcks(context.Background(), req)
+			res, err := queryClient.UnreceivedAcks(cmd.Context(), req)
 			if err != nil {
 				return err
 			}

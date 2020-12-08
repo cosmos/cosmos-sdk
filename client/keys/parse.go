@@ -86,7 +86,7 @@ hexadecimal into bech32 cosmos prefixed format and vice versa.
 }
 
 func parseKey(cmd *cobra.Command, args []string) error {
-	config, _ := sdk.GetSealedConfig(context.Background())
+	config, _ := sdk.GetSealedConfig(cmd.Context())
 	return doParseKey(cmd, config, args)
 }
 

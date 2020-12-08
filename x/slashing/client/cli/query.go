@@ -58,7 +58,7 @@ $ <appd> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdgexx
 
 			consAddr := sdk.ConsAddress(pk.Address())
 			params := &types.QuerySigningInfoRequest{ConsAddress: consAddr.String()}
-			res, err := queryClient.SigningInfo(context.Background(), params)
+			res, err := queryClient.SigningInfo(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
@@ -95,7 +95,7 @@ $ <appd> query slashing signing-infos
 			}
 
 			params := &types.QuerySigningInfosRequest{Pagination: pageReq}
-			res, err := queryClient.SigningInfos(context.Background(), params)
+			res, err := queryClient.SigningInfos(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
@@ -128,7 +128,7 @@ $ <appd> query slashing params
 			queryClient := types.NewQueryClient(clientCtx)
 
 			params := &types.QueryParamsRequest{}
-			res, err := queryClient.Params(context.Background(), params)
+			res, err := queryClient.Params(cmd.Context(), params)
 			if err != nil {
 				return err
 			}

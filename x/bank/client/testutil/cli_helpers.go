@@ -59,7 +59,7 @@ ignored as it is implied from [from_key_or_address].`,
 			msg := types.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 			bankMsgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = bankMsgClient.Send(context.Background(), msg)
+			_, err = bankMsgClient.Send(cmd.Context(), msg)
 			if err != nil {
 				return err
 			}

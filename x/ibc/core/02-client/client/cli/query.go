@@ -51,7 +51,7 @@ func GetCmdQueryClientStates() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintObject(res)
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
@@ -84,7 +84,7 @@ func GetCmdQueryClientState() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(clientStateRes)
+			return clientCtx.PrintObject(clientStateRes)
 		},
 	}
 
@@ -129,7 +129,7 @@ func GetCmdQueryConsensusStates() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintObject(res)
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
@@ -179,7 +179,7 @@ If the '--latest' flag is included, the query returns the latest consensus state
 				return err
 			}
 
-			return clientCtx.PrintOutput(csRes)
+			return clientCtx.PrintObject(csRes)
 		},
 	}
 
@@ -211,7 +211,7 @@ func GetCmdQueryHeader() *cobra.Command {
 			}
 
 			clientCtx = clientCtx.WithHeight(height)
-			return clientCtx.PrintOutput(&header)
+			return clientCtx.PrintObject(&header)
 		},
 	}
 
@@ -242,7 +242,7 @@ func GetCmdNodeConsensusState() *cobra.Command {
 			}
 
 			clientCtx = clientCtx.WithHeight(height)
-			return clientCtx.PrintOutput(state)
+			return clientCtx.PrintObject(state)
 		},
 	}
 
@@ -269,7 +269,7 @@ func GetCmdParams() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, _ := queryClient.ClientParams(context.Background(), &types.QueryClientParamsRequest{})
-			return clientCtx.PrintOutput(res.Params)
+			return clientCtx.PrintObject(res.Params)
 		},
 	}
 

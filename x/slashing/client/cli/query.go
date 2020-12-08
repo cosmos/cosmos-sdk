@@ -65,7 +65,7 @@ $ <appd> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdgexx
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res.ValSigningInfo)
+			return clientCtx.PrintObject(&res.ValSigningInfo)
 		},
 	}
 
@@ -104,7 +104,7 @@ $ <appd> query slashing signing-infos
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintObject(res)
 		},
 	}
 
@@ -139,7 +139,7 @@ $ <appd> query slashing params
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res.Params)
+			return clientCtx.PrintObject(&res.Params)
 		},
 	}
 

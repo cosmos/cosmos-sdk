@@ -23,7 +23,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestContext_PrintOutput(t *testing.T) {
+func TestContext_PrintObject(t *testing.T) {
 	ctx := client.Context{}
 
 	animal := &testdata.Dog{
@@ -47,7 +47,7 @@ func TestContext_PrintOutput(t *testing.T) {
 	buf := &bytes.Buffer{}
 	ctx = ctx.WithOutput(buf)
 	ctx.OutputFormat = "json"
-	err = ctx.PrintOutput(hasAnimal)
+	err = ctx.PrintObject(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,
 		`{"animal":{"@type":"/testdata.Dog","size":"big","name":"Spot"},"x":"10"}
@@ -57,7 +57,7 @@ func TestContext_PrintOutput(t *testing.T) {
 	buf = &bytes.Buffer{}
 	ctx = ctx.WithOutput(buf)
 	ctx.OutputFormat = "text"
-	err = ctx.PrintOutput(hasAnimal)
+	err = ctx.PrintObject(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,
 		`animal:

@@ -37,7 +37,7 @@ func GetCmdQueryDenomTrace() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintObject(res)
 		},
 	}
 
@@ -77,7 +77,7 @@ func GetCmdQueryDenomTraces() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintObject(res)
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
@@ -104,7 +104,7 @@ func GetCmdParams() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, _ := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
-			return clientCtx.PrintOutput(res.Params)
+			return clientCtx.PrintObject(res.Params)
 		},
 	}
 

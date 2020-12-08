@@ -84,7 +84,7 @@ Example:
 				if err != nil {
 					return err
 				}
-				return clientCtx.PrintOutput(res)
+				return clientCtx.PrintObject(res)
 			}
 
 			params := types.NewQueryBalanceRequest(addr, denom)
@@ -93,7 +93,7 @@ Example:
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Balance)
+			return clientCtx.PrintObject(res.Balance)
 		},
 	}
 
@@ -140,7 +140,7 @@ To query for the total supply of a specific coin denomination use:
 					return err
 				}
 
-				return clientCtx.PrintOutput(res)
+				return clientCtx.PrintObject(res)
 			}
 
 			res, err := queryClient.SupplyOf(context.Background(), &types.QuerySupplyOfRequest{Denom: denom})
@@ -148,7 +148,7 @@ To query for the total supply of a specific coin denomination use:
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res.Amount)
+			return clientCtx.PrintObject(&res.Amount)
 		},
 	}
 

@@ -81,7 +81,7 @@ func queryEvidence(clientCtx client.Context, hash string) error {
 		return err
 	}
 
-	return clientCtx.PrintObject(res.Evidence)
+	return clientCtx.PrintProto(res.Evidence)
 }
 
 func queryAllEvidence(clientCtx client.Context, pageReq *query.PageRequest) error {
@@ -96,5 +96,5 @@ func queryAllEvidence(clientCtx client.Context, pageReq *query.PageRequest) erro
 		return err
 	}
 
-	return clientCtx.PrintObject(res)
+	return clientCtx.PrintProto(res)
 }

@@ -46,7 +46,7 @@ $ <appd> tx broadcast ./mytxn.json
 				return err
 			}
 
-			return clientCtx.PrintObject(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 

@@ -82,7 +82,7 @@ $ %s query gov proposal 1
 				return err
 			}
 
-			return clientCtx.PrintObject(&res.Proposal)
+			return clientCtx.PrintProto(&res.Proposal)
 		},
 	}
 
@@ -167,7 +167,7 @@ $ %s query gov proposals --page=2 --limit=100
 				return fmt.Errorf("no proposals found")
 			}
 
-			return clientCtx.PrintObject(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -246,7 +246,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				}
 			}
 
-			return clientCtx.PrintObject(&res.Vote)
+			return clientCtx.PrintProto(&res.Vote)
 		},
 	}
 
@@ -327,7 +327,7 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 				return err
 			}
 
-			return clientCtx.PrintObject(res)
+			return clientCtx.PrintProto(res)
 
 		},
 	}
@@ -400,7 +400,7 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				clientCtx.JSONMarshaler.MustUnmarshalJSON(resByTxQuery, &deposit)
 			}
 
-			return clientCtx.PrintObject(&deposit)
+			return clientCtx.PrintProto(&deposit)
 		},
 	}
 
@@ -478,7 +478,7 @@ $ %s query gov deposits 1
 				return err
 			}
 
-			return clientCtx.PrintObject(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -536,7 +536,7 @@ $ %s query gov tally 1
 				return err
 			}
 
-			return clientCtx.PrintObject(&res.Tally)
+			return clientCtx.PrintProto(&res.Tally)
 		},
 	}
 

@@ -60,7 +60,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Client Breaking
 
-* (client) [\#8107](https://github.com/cosmos/cosmos-sdk/pull/8107) Renamed `PrintOutput` and `PrintOutputLegacy` methods of the `context.Client` object to `PrintObject` and `PrintObjectLegacy`.
+* (client) [\#8107](https://github.com/cosmos/cosmos-sdk/pull/8107) Renamed `PrintOutput` and `PrintOutputLegacy` methods of the `context.Client` object to `PrintProto` and `PrintObjectLegacy`.
 
 ## [v0.40.0-rc3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc3) - 2020-11-06
 

@@ -133,7 +133,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		return err
 	}
 
-	return clientCtx.PrintObject(res)
+	return clientCtx.PrintProto(res)
 }
 
 // WriteGeneratedTxResponse writes a generated unsigned transaction to the

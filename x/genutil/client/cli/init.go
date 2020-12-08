@@ -4,10 +4,12 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/go-bip39"
 	"os"
 	"path/filepath"
+
+	"github.com/cosmos/go-bip39"
+
+	"github.com/cosmos/cosmos-sdk/client/input"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"

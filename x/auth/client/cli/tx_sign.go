@@ -209,10 +209,10 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 }
 
 func makeSignCmd() func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) (err error) {
 		clientCtx := client.GetClientContextFromCmd(cmd)
 		f := cmd.Flags()
-		clientCtx, err := client.ReadTxCommandFlags(clientCtx, f)
+		clientCtx, err = client.ReadTxCommandFlags(clientCtx, f)
 		if err != nil {
 			return err
 		}
@@ -295,11 +295,17 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		if err = fp.Close(); err != nil {
-			return err
-		}
 
-		return clientCtx.PrintBytes(json)
+		defer func() {
+			err2 := fp.Close()
+			if err == nil {
+				err = err2
+			}
+		}()
+
+		err = clientCtx.PrintBytes(json)
+
+		return
 	}
 }
 

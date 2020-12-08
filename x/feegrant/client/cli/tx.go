@@ -74,12 +74,10 @@ Examples:
 			}
 
 			period := time.Duration(viper.GetInt64(FlagExpiration)) * time.Second
-			_ = period // TODO
 
 			basic := types.BasicFeeAllowance{
 				SpendLimit: limit,
-				// TODO
-				// Expiration: period,
+				Expiration: types.ExpiresAtTime(time.Now().Add(period)),
 			}
 
 			msg, err := types.NewMsgGrantFeeAllowance(&basic, granter, grantee)

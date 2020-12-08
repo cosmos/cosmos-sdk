@@ -49,6 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * Updated gRPC dependency to v1.33.2
   * Updated iavl dependency to v0.15-rc2
 * (version) [\#7848](https://github.com/cosmos/cosmos-sdk/pull/7848) [\#7941](https://github.com/cosmos/cosmos-sdk/pull/7941) `version --long` output now shows the list of build dependencies and replaced build dependencies.
+* (x/genutil) [\#8099](https://github.com/cosmos/cosmos-sdk/pull/8099) `init` now supports a `--recover` flag to recover the private validator key from a given mnemonic
 
 ### State Machine Breaking Changes
 
@@ -58,9 +59,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (crypto) [\#7966](https://github.com/cosmos/cosmos-sdk/issues/7966) `Bip44Params` `String()` function now correctly returns the absolute HD path by adding the `m/` prefix.
 
-### Client Breaking
+### API Breaking
 
+* [\#8080](https://github.com/cosmos/cosmos-sdk/pull/8080) Updated the `codec.Marshaler` interface
+  * Moved `MarshalAny` and `UnmarshalAny` helper functions to `codec.Marshaler` and renamed to `MarshalInterface` and `UnmarshalInterface` respectively. These functions must take interface as a parameter (not a concrete type nor `Any` object). Underneath they use `Any` wrapping for correct protobuf serialization.
 * (client) [\#8107](https://github.com/cosmos/cosmos-sdk/pull/8107) Renamed `PrintOutput` and `PrintOutputLegacy` methods of the `context.Client` object to `PrintProto` and `PrintObjectLegacy`.
+
 
 ## [v0.40.0-rc3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc3) - 2020-11-06
 
@@ -96,6 +100,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#7918](https://github.com/cosmos/cosmos-sdk/pull/7918) Add x/capability safety checks:
   * All outward facing APIs will now check that capability is not nil and name is not empty before performing any state-machine changes
   * `SetIndex` has been renamed to `InitializeIndex`
+
 
 ### Features
 

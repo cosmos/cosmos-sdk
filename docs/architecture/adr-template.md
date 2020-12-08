@@ -53,6 +53,12 @@
 {neutral consequences}
 
 
+## Further Discussions
+
+If the ADR is the DRAFT or PROPOSED stage, this section should contain issues to be solved in future iterations (usually referencing comments from the PR discussion).
+Later, this section can optionally list ideas or improvements we the author or reviewers found during the analysis of this ADR.
+
+
 ## Test Cases [optional]
 
 Test cases for an implementation are mandatory for ADRs that are affecting consensus changes. Other ADRs can choose to include links to test cases if applicable.

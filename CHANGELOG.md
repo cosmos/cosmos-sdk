@@ -99,6 +99,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#7918](https://github.com/cosmos/cosmos-sdk/pull/7918) Add x/capability safety checks:
   * All outward facing APIs will now check that capability is not nil and name is not empty before performing any state-machine changes
   * `SetIndex` has been renamed to `InitializeIndex`
+* (client/tx, x/auth/client) [\#8106](https://github.com/cosmos/cosmos-sdk/pull/8106) Added `overwrite` option to the `tx.Sign` and `client.SignTx` functions.
 
 
 ### Features

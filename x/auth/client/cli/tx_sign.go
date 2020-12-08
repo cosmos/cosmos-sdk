@@ -253,7 +253,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			flagAppend, _ := f.GetBool(flagAppend)
 			// txBuilder.GetTx().Si
 			if flagAppend {
-				err = authclient.SignTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, clientCtx.Offline)
+				err = authclient.SignTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, !flagAppend)
 			}
 		}
 		if err != nil {

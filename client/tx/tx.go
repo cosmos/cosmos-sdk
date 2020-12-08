@@ -376,10 +376,10 @@ func SignWithPrivKey(
 }
 
 // Sign signs a given tx with a named key. The bytes signed over are canconical.
-// The resulting signature will be set in the transaction builder
-// overwriting previous signatures.
+// The resulting signature will be added to the transaction builder overwriting the previous
+// ones if overwrite=true (otherwise, ne signature will be appended).
 // An error is returned upon failure.
-func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
+func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwrite bool) error {
 	if txf.keybase == nil {
 		return errors.New("keybase must be set prior to signing a transaction")
 	}
@@ -419,6 +419,10 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 		Data:     &sigData,
 		Sequence: txf.Sequence(),
 	}
+	var previousSignatures []signing.SignatureV2
+	if overwrite {
+		previousSignatures = txBuilder.GetTx().GetSignaturesV2()
+	}
 	if err := txBuilder.SetSignatures(sig); err != nil {
 		return err
 	}
@@ -446,7 +450,10 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 		Sequence: txf.Sequence(),
 	}
 
-	// And here the tx is populated with the signature
+	if overwrite {
+		previousSignatures = append(previousSignatures, sig)
+		return txBuilder.SetSignatures(previousSignatures...)
+	}
 	return txBuilder.SetSignatures(sig)
 }
 

@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"io"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/testutil"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"

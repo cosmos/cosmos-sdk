@@ -2,10 +2,11 @@ package genutil
 
 import (
 	"encoding/json"
-	"github.com/tendermint/tendermint/config"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/tendermint/tendermint/config"
 
 	"github.com/stretchr/testify/require"
 )

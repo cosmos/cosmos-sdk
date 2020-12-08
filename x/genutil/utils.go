@@ -3,10 +3,11 @@ package genutil
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/go-bip39"
-	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
 	"path/filepath"
 	"time"
+
+	"github.com/cosmos/go-bip39"
+	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
 
 	cfg "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"

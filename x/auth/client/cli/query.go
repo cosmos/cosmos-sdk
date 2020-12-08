@@ -64,7 +64,7 @@ $ <appd> query auth params
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res.Params)
+			return clientCtx.PrintProto(&res.Params)
 		},
 	}
 
@@ -98,7 +98,7 @@ func GetAccountCmd() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Account)
+			return clientCtx.PrintProto(res.Account)
 		},
 	}
 
@@ -167,7 +167,7 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 				return err
 			}
 
-			return clientCtx.PrintOutput(txs)
+			return clientCtx.PrintProto(txs)
 		},
 	}
 
@@ -203,7 +203,7 @@ func QueryTxCmd() *cobra.Command {
 				return fmt.Errorf("no transaction found with hash %s", args[0])
 			}
 
-			return clientCtx.PrintOutput(output)
+			return clientCtx.PrintProto(output)
 		},
 	}
 

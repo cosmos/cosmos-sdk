@@ -121,23 +121,23 @@ type GRPCProxy struct {
 	// Enable defines if the proxy should be enabled.
 	Enable bool `mapstructure:"enable"`
 
-	// BindAddress defines address to bind the server to.
-	BindAddress string `mapstructure:"bind-address"`
+	// EnableHTTPServer defines if the HTTP should be enabled.
+	EnableHTTPServer bool `mapstructure:"enable-http-server"`
+
+	// AllowAllOrigins defines allow requests from any origin.
+	AllowAllOrigins bool `mapstructure:"allow-all-origins"`
 
 	// HTTPPort defines TCP port to listen on for HTTP1.1 debug calls.
 	HTTPPort int `mapstructure:"http-port"`
 
-	// AllowAllOrigins defines allow requests from any origin.
-	AllowAllOrigins bool `mapstructure:"allow-all-origins"`
+	// BindAddress defines address to bind the server to.
+	BindAddress string `mapstructure:"bind-address"`
 
 	// AllowedOrigins defines list of origin URLs which are allowed to make cross-origin requests.
 	AllowedOrigins []string `mapstructure:"allowed-origins"`
 
 	// AllowedHeaders defines list of headers which are allowed to propagate to the gRPC backend.
 	AllowedHeaders []string `mapstructure:"allowed-headers"`
-
-	// EnableHTTPServer defines if the HTTP should be enabled.
-	EnableHTTPServer bool `mapstructure:"enable-http-server"`
 }
 
 // StateSyncConfig defines the state sync snapshot configuration.

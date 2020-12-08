@@ -55,8 +55,8 @@
 
 ## Further Discussions
 
-If the ADR is the DRAFT or PROPOSED stage, this section should contain issues to be solved in future iterations (usually referencing comments from the PR discussion).
-Later, this section can optionally list ideas or improvements we the author or reviewers found during the analysis of this ADR.
+While an ADR is the DRAFT or PROPOSED stage, this section should contain a summary of issues to be solved in future iterations (usually referencing comments from a pull-request discussion).
+Later, this section can optionally list ideas or improvements the author or reviewers found during the analysis of this ADR.
 
 
 ## Test Cases [optional]

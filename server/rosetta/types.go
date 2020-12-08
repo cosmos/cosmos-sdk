@@ -88,6 +88,10 @@ type NodeClient interface {
 	PostTx(txBytes []byte) (res *sdk.TxResponse, err error)
 }
 
+type Msg interface {
+	ToOperations(withStatus bool, hasError bool, feeLen int) []*types.Operation
+}
+
 // Version returns the version for rosetta
 // since this value is static, we can wrap it here
 func Version() *types.Version {

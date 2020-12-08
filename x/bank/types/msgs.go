@@ -1,6 +1,9 @@
 package types
 
 import (
+	"github.com/coinbase/rosetta-sdk-go/types"
+
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -12,6 +15,7 @@ const (
 )
 
 var _ sdk.Msg = &MsgSend{}
+var _ rosetta.Msg = &MsgSend{}
 
 // NewMsgSend - construct a msg to send coins from one account to another.
 //nolint:interfacer
@@ -60,6 +64,51 @@ func (msg MsgSend) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{from}
+}
+
+// Rosetta interface
+func (msg *MsgSend) ToOperations(withStatus bool, hasError bool, feeLen int) []*types.Operation {
+	var operations []*types.Operation
+
+	fromAddress := msg.FromAddress
+	toAddress := msg.ToAddress
+	amounts := msg.Amount
+	if len(amounts) == 0 {
+		return []*types.Operation{}
+	}
+
+	coin := amounts[0]
+	sendOp := func(account, amount string, index int) *types.Operation {
+		var status string
+		if withStatus {
+			status = rosetta.StatusSuccess
+			if hasError {
+				status = rosetta.StatusReverted
+			}
+		}
+		return &types.Operation{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: int64(index),
+			},
+			Type:   rosetta.OperationSend,
+			Status: status,
+			Account: &types.AccountIdentifier{
+				Address: account,
+			},
+			Amount: &types.Amount{
+				Value: amount,
+				Currency: &types.Currency{
+					Symbol: coin.Denom,
+				},
+			},
+		}
+	}
+	operations = append(operations,
+		sendOp(fromAddress, "-"+coin.Amount.String(), feeLen+1),
+		sendOp(toAddress, coin.Amount.String(), feeLen+2),
+	)
+
+	return operations
 }
 
 var _ sdk.Msg = &MsgMultiSend{}

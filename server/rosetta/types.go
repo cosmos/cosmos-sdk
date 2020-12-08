@@ -1,25 +1,137 @@
 package rosetta
 
 import (
-	"github.com/cosmos/cosmos-sdk/types"
+	"context"
+	"github.com/coinbase/rosetta-sdk-go/server"
+	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
 const (
-	StatusReverted = "Reverted"
-	StatusSuccess  = "Success"
-
-	OperationMsgSend  = "send"
-	OperationDelegate = "delegate"
-
-	OptionAddress = "address"
-	OptionGas     = "gas"
-	OperationFee  = "fee"
-	OptionMemo    = "memo"
+	RosettaSpecVersion = "1.4.6"
 )
 
-// TransferTxData represents a Tx that sends value.
-type TransferTxData struct {
-	From   types.AccAddress
-	To     types.AccAddress
-	Amount types.Coin
+const (
+	StatusSuccess  = "Success"
+	StatusReverted = "Reverted"
+)
+
+// BlockTransactionsResponse is a convenience wrapper
+type BlockTransactionsResponse struct {
+	BlockResponse
+	Transactions []*types.Transaction
+}
+
+// BlockResponse is a convenience wrapper
+// since some rosetta API calls require
+// the block timestamp too
+type BlockResponse struct {
+	Block                *types.BlockIdentifier
+	ParentBlock          *types.BlockIdentifier
+	MillisecondTimestamp int64
+	TxCount              int64
+}
+
+type CosmosClient interface {
+	CosmosDataAPIClient
+	CosmosConstructionAPIClient
+}
+
+// CosmosConstructionAPIClient defines the interface cosmos sdk implementation
+// must satisfy in order to provide access to the construction API
+type CosmosConstructionAPIClient interface {
+}
+
+// CosmosDataAPIClient defines the cosmos client that
+// is used to interact with the data API service
+// it returns rosetta types relative to the version
+// of the rosetta module used.
+type CosmosDataAPIClient interface {
+	// Balances fetches the balance given an account identifier
+	// if height is nil, last height balance must be returned
+	Balances(ctx context.Context, address string, height *int64) ([]*types.Amount, error)
+	// BlockByHeight fetches a block given its height, if height is nil
+	// last block must be fetched
+	BlockByHeight(ctx context.Context, height *int64) (BlockResponse, error)
+	// BlockByHash fetches a block given its hash
+	BlockByHash(ctx context.Context, hash string) (BlockResponse, error)
+	// BlockTransactionsByHeight gets the block, parent block and transactions
+	// given the block height, if height is nil then last height is used
+	BlockTransactionsByHeight(ctx context.Context, height *int64) (BlockTransactionsResponse, error)
+	// BlockTransactionsByHash gets the block, parent block and transactions
+	// given the block hash
+	BlockTransactionsByHash(ctx context.Context, hash string) (BlockTransactionsResponse, error)
+	// GetTransaction gets a transaction given its hash
+	GetTransaction(ctx context.Context, hash string) (tx *types.Transaction, err error)
+	// GetMempoolTransactions returns the transactions from the mempool
+	GetMempoolTransactions(ctx context.Context) (txs []*types.TransactionIdentifier, err error)
+	// GetMempoolTransaction returns the full transaction by hash in the mempool
+	GetMempoolTransaction(ctx context.Context, hash string) (tx *types.Transaction, err error)
+	// Peers returns the peers
+	Peers(ctx context.Context) (peers []*types.Peer, err error)
+	// Status returns the current synchronization status
+	Status(ctx context.Context) (status *types.SyncStatus, err error)
+	// SupportedOperations returns the list of supported ops
+	SupportedOperations() []string
+	// NodeVersion returns the cosmos sdk version
+	NodeVersion() string
+}
+
+// OnlineAPI defines the exposed APIs
+// if the service is online
+type OnlineAPI interface {
+	DataAPI
+	ConstructionAPI
+}
+
+type OfflineAPI interface {
+	ConstructionAPI
+}
+
+// DataAPI defines the full data OnlineAPI implementation
+type DataAPI interface {
+	server.NetworkAPIServicer
+	server.AccountAPIServicer
+	server.BlockAPIServicer
+	server.MempoolAPIServicer
+}
+
+// ConstructionAPI defines the construction OnlineAPI implementation
+type ConstructionAPI interface {
+	server.ConstructionAPIServicer
+}
+
+// Version returns the version for rosetta
+// which contains static data for rosetta spec
+// version and the variable data regarding the node
+func Version(nodeVersion string) *types.Version {
+	return &types.Version{
+		RosettaVersion:    RosettaSpecVersion,
+		NodeVersion:       nodeVersion,
+		MiddlewareVersion: nil,
+		Metadata:          nil,
+	}
+}
+
+// Allow returns the allow operations
+// some values are default, as statuses
+// others depend on version of the node
+func Allow(supportedOperations []string) *types.Allow {
+	return &types.Allow{
+		OperationStatuses: []*types.OperationStatus{
+			{
+				Status:     StatusSuccess,
+				Successful: true,
+			},
+			{
+				Status:     StatusReverted,
+				Successful: false,
+			},
+		},
+		OperationTypes:          supportedOperations,
+		Errors:                  AllowedErrors.RosettaErrors(),
+		HistoricalBalanceLookup: true,
+		TimestampStartIndex:     nil,
+		CallMethods:             nil,
+		BalanceExemptions:       nil,
+	}
 }

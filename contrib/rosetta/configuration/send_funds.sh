@@ -2,4 +2,4 @@
 
 set -e
 
-simcli tx send cosmos16qhazsqdrzw96d03h37rp0p4m06hu8tyam3fjs "$1" 100stake --chain-id="testing" --node tcp://cosmos:26657 --yes
+simcli tx send cosmos17mmasmn306ztay8lx5kfyvqkv55anha7fpf4sq "$1" 100stake --chain-id="testing" --node tcp://cosmos:26657 --yes

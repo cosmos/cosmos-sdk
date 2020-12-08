@@ -1,7 +1,16 @@
-package rosetta
+package config
 
 import (
 	"fmt"
+	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
+	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos"
+	"github.com/cosmos/cosmos-sdk/server/rosetta/services"
+	"github.com/cosmos/cosmos-sdk/server/rosetta/util"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
+	"strings"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
@@ -19,6 +28,14 @@ const (
 	flagListenAddr    = "listen-addr"
 )
 
+type Options struct {
+	AppEndpoint        string
+	TendermintEndpoint string
+	Blockchain         string
+	Network            string
+	OfflineMode        bool
+}
+
 // RosettaCommand will start the application Rosetta API service as a blocking process.
 func RosettaCommand(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
@@ -34,10 +51,38 @@ func RosettaCommand(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
+			var client rosetta.CosmosClient
+			err = util.TryFunction(5, 5*time.Second, func() (err error) {
+				client, err = cosmos.NewDataClient(options.TendermintEndpoint, options.AppEndpoint, cdc)
+				if err != nil {
+					return err
+				}
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+
+			svc, err := services.NewOnline(client, &types.NetworkIdentifier{
+				Blockchain:           options.Blockchain,
+				Network:              options.Network,
+				SubNetworkIdentifier: nil,
+			})
+			if err != nil {
+				return err
+			}
+
 			s, err := service.New(
 				service.Options{ListenAddress: listenAddr},
-				NewNetwork(cdc, options),
-			)
+				service.Network{
+					Properties: crg.NetworkProperties{
+						Blockchain:          options.Blockchain,
+						Network:             options.Network,
+						AddrPrefix:          sdk.GetConfig().GetBech32AccountAddrPrefix(),
+						SupportedOperations: client.SupportedOperations(),
+					},
+					Adapter: svc,
+				})
 			if err != nil {
 				panic(err)
 			}
@@ -78,10 +123,16 @@ func getRosettaOptionsFromFlags(flags *flag.FlagSet) (Options, error) {
 	if err != nil {
 		return Options{}, fmt.Errorf("invalid app rpc value: %w", err)
 	}
+	if !strings.HasPrefix(appRPC, "http://") {
+		appRPC = fmt.Sprintf("http://%s", appRPC)
+	}
 
 	tendermintRPC, err := flags.GetString(flagTendermintRPC)
 	if err != nil {
 		return Options{}, fmt.Errorf("invalid tendermint rpc value: %w", err)
+	}
+	if !strings.HasPrefix(tendermintRPC, "tcp://") {
+		tendermintRPC = fmt.Sprintf("tcp://%s", tendermintRPC)
 	}
 
 	offline, err := flags.GetBool(flagOfflineMode)

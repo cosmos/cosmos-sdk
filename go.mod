@@ -11,7 +11,7 @@ require (
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/mock v1.3.1
-	github.com/google/go-cmp v0.5.2
+	github.com/google/go-cmp v0.5.2 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/mattn/go-isatty v0.0.12
 	github.com/pelletier/go-toml v1.8.1
@@ -29,6 +29,7 @@ require (
 	github.com/tendermint/iavl v0.12.4
 	github.com/tendermint/tendermint v0.32.13
 	github.com/tendermint/tm-db v0.2.0
-	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
+	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208 // indirect
+	google.golang.org/grpc v1.27.0
 	gopkg.in/yaml.v2 v2.3.0
 )

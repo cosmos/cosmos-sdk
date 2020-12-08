@@ -67,7 +67,7 @@ type Client struct {
 }
 
 // NewSingle instantiates a single network client
-func NewSingle(grpcEndpoint, tendermintEndpoint string, optsFunc ...OptionFunc) (*Client, error) {
+func NewSingle(grpcEndpoint, tendermintEndpoint string, optsFunc ...OptionFunc) (rosetta.NodeClient, error) {
 	opts := newDefaultOptions()
 	for _, optFunc := range optsFunc {
 		optFunc(&opts)
@@ -202,7 +202,7 @@ func (c *Client) ListTransactionsInBlock(ctx context.Context, height int64) ([]*
 }
 
 // GetTx returns a transaction given its hash
-func (c *Client) GetTx(_ context.Context, hash string) (sdk.Tx, string, error) {
+func (c *Client) GetTx(_ context.Context, hash string) (*rosetta.SdkTxWithHash, string, error) {
 	txResp, err := authclient.QueryTx(c.clientCtx, hash)
 	if err != nil {
 		return nil, "", rosetta.WrapError(rosetta.ErrUnknown, err.Error())
@@ -212,7 +212,12 @@ func (c *Client) GetTx(_ context.Context, hash string) (sdk.Tx, string, error) {
 	if err != nil {
 		return nil, "", rosetta.WrapError(rosetta.ErrCodec, err.Error())
 	}
-	return sdkTx, txResp.Logs.String(), nil
+	return &rosetta.SdkTxWithHash{
+		HexHash: txResp.TxHash,
+		Code:    txResp.Code,
+		Log:     txResp.RawLog,
+		Tx:      sdkTx,
+	}, txResp.Logs.String(), nil
 }
 
 // GetUnconfirmedTx gets an unconfirmed transaction given its hash

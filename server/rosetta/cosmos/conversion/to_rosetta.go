@@ -57,17 +57,21 @@ func SdkCoinsToRosettaAmounts(ownedCoins []sdk.Coin, availableCoins sdk.Coins) [
 func SdkTxsWithHashToRosettaTxs(txs []*rosetta.SdkTxWithHash) []*types.Transaction {
 	converted := make([]*types.Transaction, len(txs))
 	for i, tx := range txs {
-		hasError := tx.Code != 0
-		converted[i] = &types.Transaction{
-			TransactionIdentifier: &types.TransactionIdentifier{Hash: tx.HexHash},
-			Operations:            SdkTxToOperations(tx.Tx, true, hasError),
-			Metadata: map[string]interface{}{
-				rosetta.Log: tx.Log,
-			},
-		}
+		converted[i] = SdkTxWithHashToRosettaTx(tx)
 	}
 
 	return converted
+}
+
+func SdkTxWithHashToRosettaTx(tx *rosetta.SdkTxWithHash) *types.Transaction {
+	hasError := tx.Code != 0
+	return &types.Transaction{
+		TransactionIdentifier: &types.TransactionIdentifier{Hash: tx.HexHash},
+		Operations:            SdkTxToOperations(tx.Tx, true, hasError),
+		Metadata: map[string]interface{}{
+			rosetta.Log: tx.Log,
+		},
+	}
 }
 
 // SdkTxToOperations converts an sdk.Tx to rosetta operations

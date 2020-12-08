@@ -133,19 +133,13 @@ func (on OnlineNetwork) Block(ctx context.Context, request *types.BlockRequest) 
 // BlockTransaction gets the given transaction in the specified block, we do not need to check the block itself too
 // due to the fact that tendermint achieves instant finality
 func (on OnlineNetwork) BlockTransaction(ctx context.Context, request *types.BlockTransactionRequest) (*types.BlockTransactionResponse, *types.Error) {
-	tx, log, err := on.client.GetTx(ctx, request.TransactionIdentifier.Hash)
+	tx, _, err := on.client.GetTx(ctx, request.TransactionIdentifier.Hash)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
 
 	return &types.BlockTransactionResponse{
-		Transaction: &types.Transaction{
-			TransactionIdentifier: &types.TransactionIdentifier{Hash: request.TransactionIdentifier.Hash},
-			Operations:            conversion.SdkTxToOperations(tx, false, false),
-			Metadata: map[string]interface{}{
-				rosetta.Log: log,
-			},
-		},
+		Transaction: conversion.SdkTxWithHashToRosettaTx(tx),
 	}, nil
 }
 

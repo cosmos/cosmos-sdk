@@ -74,7 +74,7 @@ type NodeClient interface {
 	// Coins gets the supply of the coins active in the network
 	Coins(ctx context.Context) (sdk.Coins, error)
 	// GetTx gets a transaction given its hash
-	GetTx(ctx context.Context, hash string) (sdk.Tx, string, error)
+	GetTx(ctx context.Context, hash string) (*SdkTxWithHash, string, error)
 	// GetUnconfirmedTx gets an unconfirmed Tx given its hash
 	// NOTE(fdymylja): NOT IMPLEMENTED YET!
 	GetUnconfirmedTx(ctx context.Context, hash string) (sdk.Tx, error)

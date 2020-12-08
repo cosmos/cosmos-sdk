@@ -66,6 +66,8 @@ Examples:
 				return err
 			}
 
+			granter := clientCtx.GetFromAddress()
+
 			limit, err := sdk.ParseCoinsNormalized(args[2])
 			if err != nil {
 				return err
@@ -80,7 +82,7 @@ Examples:
 				// Expiration: period,
 			}
 
-			msg, err := types.NewMsgGrantFeeAllowance(&basic, clientCtx.GetFromAddress(), grantee)
+			msg, err := types.NewMsgGrantFeeAllowance(&basic, granter, grantee)
 			if err != nil {
 				return err
 			}

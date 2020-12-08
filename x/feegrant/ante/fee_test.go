@@ -292,15 +292,11 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 
 			// tx := types.NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
-			tx, err := helpers.GenTx(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, stc.signerKey)
-			protoTx, err := protoTxCfg.WrapTxBuilder(tx)
+			tx, err := helpers.GenTxWithFeePayer(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, tc.signer, stc.signerKey)
 
 			suite.Require().NoError(err)
 
-			protoTx.SetFeePayer(tc.feeAccount)
-			protoTx.SetFeeGranter(tc.signer)
-
-			_, err = tc.handler(ctx, protoTx.GetTx(), false)
+			_, err = tc.handler(ctx, tx, false)
 			if tc.valid {
 				suite.Require().NoError(err)
 			} else {

@@ -220,9 +220,9 @@ func (ctx Context) PrintObject(toPrint proto.Message) error {
 	return ctx.printOutput(out)
 }
 
-// PrintOutputLegacy is a variant of PrintObject that doesn't require a proto type
+// PrintObjectLegacy is a variant of PrintObject that doesn't require a proto type
 // and uses amino JSON encoding. It will be removed in the near future!
-func (ctx Context) PrintOutputLegacy(toPrint interface{}) error {
+func (ctx Context) PrintObjectLegacy(toPrint interface{}) error {
 	out, err := ctx.LegacyAmino.MarshalJSON(toPrint)
 	if err != nil {
 		return err

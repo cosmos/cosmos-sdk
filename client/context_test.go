@@ -77,7 +77,7 @@ x: "10"
 	buf = &bytes.Buffer{}
 	ctx = ctx.WithOutput(buf)
 	ctx.OutputFormat = "json"
-	err = ctx.PrintOutputLegacy(hasAnimal)
+	err = ctx.PrintObjectLegacy(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,
 		`{"type":"testdata/HasAnimal","value":{"animal":{"type":"testdata/Dog","value":{"size":"big","name":"Spot"}},"x":"10"}}
@@ -87,7 +87,7 @@ x: "10"
 	buf = &bytes.Buffer{}
 	ctx = ctx.WithOutput(buf)
 	ctx.OutputFormat = "text"
-	err = ctx.PrintOutputLegacy(hasAnimal)
+	err = ctx.PrintObjectLegacy(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,
 		`type: testdata/HasAnimal

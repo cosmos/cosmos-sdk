@@ -309,7 +309,7 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 				// TODO migrate to use JSONMarshaler (implement MarshalJSONArray
 				// or wrap lists of proto.Message in some other message)
 				clientCtx.LegacyAmino.MustUnmarshalJSON(resByTxQuery, &votes)
-				return clientCtx.PrintOutputLegacy(votes)
+				return clientCtx.PrintObjectLegacy(votes)
 
 			}
 
@@ -461,7 +461,7 @@ $ %s query gov deposits 1
 				// or wrap lists of proto.Message in some other message)
 				clientCtx.LegacyAmino.MustUnmarshalJSON(resByTxQuery, &dep)
 
-				return clientCtx.PrintOutputLegacy(dep)
+				return clientCtx.PrintObjectLegacy(dep)
 			}
 
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
@@ -599,7 +599,7 @@ $ %s query gov params
 				depositRes.GetDepositParams(),
 			)
 
-			return clientCtx.PrintOutputLegacy(params)
+			return clientCtx.PrintObjectLegacy(params)
 		},
 	}
 
@@ -654,7 +654,7 @@ $ %s query gov param deposit
 				return fmt.Errorf("argument must be one of (voting|tallying|deposit), was %s", args[0])
 			}
 
-			return clientCtx.PrintOutputLegacy(out)
+			return clientCtx.PrintObjectLegacy(out)
 		},
 	}
 
@@ -696,7 +696,7 @@ $ %s query gov proposer 1
 				return err
 			}
 
-			return clientCtx.PrintOutputLegacy(prop)
+			return clientCtx.PrintObjectLegacy(prop)
 		},
 	}
 

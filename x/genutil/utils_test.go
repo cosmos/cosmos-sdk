@@ -2,13 +2,13 @@ package genutil
 
 import (
 	"encoding/json"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/tendermint/tendermint/config"
-
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/config"
 )
 
 func TestExportGenesisFileWithTime(t *testing.T) {
@@ -24,28 +24,25 @@ func TestInitializeNodeValidatorFilesFromMnemonic(t *testing.T) {
 
 	cfg := config.TestConfig()
 	cfg.RootDir = t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(cfg.RootDir, "config"), 0755))
 
 	tests := []struct {
 		name     string
-		config   *config.Config
 		mnemonic string
 		expError bool
 	}{
 		{
 			name:     "invalid mnemonic returns error",
-			config:   cfg,
 			mnemonic: "side video kiss hotel essence",
 			expError: true,
 		},
 		{
 			name:     "empty mnemonic does not return error",
-			config:   cfg,
 			mnemonic: "",
 			expError: false,
 		},
 		{
 			name:     "valid mnemonic does not return error",
-			config:   cfg,
 			mnemonic: "side video kiss hotel essence door angle student degree during vague adjust submit trick globe muscle frozen vacuum artwork million shield bind useful wave",
 			expError: false,
 		},
@@ -54,7 +51,7 @@ func TestInitializeNodeValidatorFilesFromMnemonic(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			_, _, err := InitializeNodeValidatorFilesFromMnemonic(tt.config, tt.mnemonic)
+			_, _, err := InitializeNodeValidatorFilesFromMnemonic(cfg, tt.mnemonic)
 
 			if tt.expError {
 				require.Error(t, err)

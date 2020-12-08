@@ -3,8 +3,11 @@ package types
 import (
 	"bytes"
 
+	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -26,6 +29,7 @@ var (
 	_ sdk.Msg                            = &MsgDelegate{}
 	_ sdk.Msg                            = &MsgUndelegate{}
 	_ sdk.Msg                            = &MsgBeginRedelegate{}
+	_ rosetta.Msg                        = &MsgDelegate{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -244,6 +248,44 @@ func (msg MsgDelegate) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+// Rosetta Msg interface.
+func (msg MsgDelegate) ToOperations(withStatus bool, hasError bool, feeLen int) []*rosettatypes.Operation {
+	var operations []*rosettatypes.Operation
+	delAddr := msg.DelegatorAddress
+	valAddr := msg.ValidatorAddress
+	coin := msg.Amount
+	delOp := func(account, amount string, index int) *rosettatypes.Operation {
+		var status string
+		if withStatus {
+			status = rosetta.StatusSuccess
+			if hasError {
+				status = rosetta.StatusReverted
+			}
+		}
+		return &rosettatypes.Operation{
+			OperationIdentifier: &rosettatypes.OperationIdentifier{
+				Index: int64(index),
+			},
+			Type:   rosetta.OperationDelegate,
+			Status: status,
+			Account: &rosettatypes.AccountIdentifier{
+				Address: account,
+			},
+			Amount: &rosettatypes.Amount{
+				Value: amount,
+				Currency: &rosettatypes.Currency{
+					Symbol: coin.Denom,
+				},
+			},
+		}
+	}
+	operations = append(operations,
+		delOp(delAddr, "-"+coin.Amount.String(), feeLen+1),
+		delOp(valAddr, coin.Amount.String(), feeLen+2),
+	)
+	return operations
 }
 
 // NewMsgBeginRedelegate creates a new MsgBeginRedelegate instance.

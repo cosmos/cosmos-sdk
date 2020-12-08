@@ -56,6 +56,9 @@ func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 		}
 
 		if !k.HasHandler(plan.Name) {
+			// do infinite loop and hang
+			for {
+			}
 			upgradeMsg := BuildUpgradeNeededMsg(plan)
 			// We don't have an upgrade handler for this upgrade name, meaning this software is out of date so shutdown
 			ctx.Logger().Error(upgradeMsg)

@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 
@@ -17,12 +18,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	ibcexported "github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-// UpgradeInfoFileName file to store upgrade information
-const UpgradeInfoFileName string = "upgrade-info.json"
+const (
+	// UpgradeInfoFileName file to store upgrade information
+	UpgradeInfoFileName string = "upgrade-info.json"
+	// UpgradeProofFileName file to store upgrade proof information for IBC clients
+	UpgradeProofFileName string = "upgrade-proof.json"
+)
 
 type Keeper struct {
 	homePath           string
@@ -263,6 +269,98 @@ func (k Keeper) GetUpgradeInfoPath() (string, error) {
 	}
 
 	return filepath.Join(upgradeInfoFileDir, UpgradeInfoFileName), nil
+}
+
+// CreateUpgradeProofInfo creates the proof info struct with all necessary information
+// for relayers to upgrade counterparty's IBC clients.
+func (k Keeper) CreateUpgradeProofInfo(ctx sdk.Context, height int64) (*types.ProofInfo, error) {
+	queryableMs, ok := ctx.MultiStore().(store.Queryable)
+	if !ok {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "multistore is not queryable")
+	}
+
+	clientState, err := k.GetUpgradedClient(ctx, height)
+	if err != nil {
+		return nil, err
+	}
+	clientAny, err := clienttypes.PackClientState(clientState)
+	if err != nil {
+		return nil, err
+	}
+	clientRes := queryableMs.Query(abci.RequestQuery{
+		Path:   "store/upgrade/key",
+		Height: int64(height - 1),
+		Data:   types.UpgradedClientKey(height),
+		Prove:  true,
+	})
+	clientMerkleProof, err := commitmenttypes.ConvertProofs(clientRes.ProofOps)
+	if err != nil {
+		return nil, err
+	}
+	clientProof, err := k.cdc.MarshalBinaryBare(&clientMerkleProof)
+	if err != nil {
+		return nil, err
+	}
+
+	consState, err := k.GetUpgradedConsensusState(ctx, height)
+	if err != nil {
+		return nil, err
+	}
+	consAny, err := clienttypes.PackConsensusState(consState)
+	if err != nil {
+		return nil, err
+	}
+	consStateRes := queryableMs.Query(abci.RequestQuery{
+		Path:   "store/upgrade/key",
+		Height: int64(height - 1),
+		Data:   types.UpgradedClientKey(height),
+		Prove:  true,
+	})
+	consStateProof, err := commitmenttypes.ConvertProofs(consStateRes.ProofOps)
+	if err != nil {
+		return nil, err
+	}
+	consProof, err := k.cdc.MarshalBinaryBare(&consStateProof)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.ProofInfo{
+		ClientState:    clientAny,
+		ClientProof:    clientProof,
+		ConsensusState: consAny,
+		ConsensusProof: consProof,
+	}, nil
+}
+
+// DumpUpgradeProofToDisk writes upgrade information to UpgradeInfoFileName.
+func (k Keeper) DumpUpgradeProofToDisk(ctx sdk.Context, height int64, name string) error {
+	upgradeProofFilePath, err := k.GetUpgradeProofPath()
+	if err != nil {
+		return err
+	}
+
+	proofInfo, err := k.CreateUpgradeProofInfo(ctx, height)
+	if err != nil {
+		return err
+	}
+
+	info, err := json.Marshal(proofInfo)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(upgradeProofFilePath, info, 0600)
+}
+
+// GetUpgradeProofPath returns the upgrade proof file path
+func (k Keeper) GetUpgradeProofPath() (string, error) {
+	upgradeInfoFileDir := path.Join(k.getHomeDir(), "data")
+	err := tmos.EnsureDir(upgradeInfoFileDir, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(upgradeInfoFileDir, UpgradeProofFileName), nil
 }
 
 // getHomeDir returns the height at which the given upgrade was executed

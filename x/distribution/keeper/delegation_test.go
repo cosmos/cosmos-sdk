@@ -216,6 +216,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	tstaking.CreateValidator(valAddrs[0], valConsPk1, 100, true)
+	app.ExecuteEpoch(ctx)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -235,6 +236,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	// second delegation
 	tstaking.Ctx = ctx
 	tstaking.Delegate(sdk.AccAddress(valAddrs[1]), valAddrs[0], 100)
+	app.ExecuteEpoch(ctx)
 	del2 := app.StakingKeeper.Delegation(ctx, sdk.AccAddress(valAddrs[1]), valAddrs[0])
 
 	// fetch updated validator
@@ -419,6 +421,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	valPower := int64(100)
 	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, true)
+	app.ExecuteEpoch(ctx)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -442,6 +445,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 
 	// second delegation
 	tstaking.DelegateWithPower(sdk.AccAddress(valAddrs[1]), valAddrs[0], 100)
+	app.ExecuteEpoch(ctx)
 
 	del2 := app.StakingKeeper.Delegation(ctx, sdk.AccAddress(valAddrs[1]), valAddrs[0])
 
@@ -501,6 +505,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	tstaking.CreateValidator(valAddrs[0], valConsPk1, 100, true)
+	app.ExecuteEpoch(ctx)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -520,6 +525,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 
 	// second delegation
 	tstaking.Delegate(sdk.AccAddress(valAddrs[1]), valAddrs[0], 100)
+	app.ExecuteEpoch(ctx)
 
 	// historical count should be 3 (second delegation init)
 	require.Equal(t, uint64(3), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))

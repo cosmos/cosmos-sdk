@@ -72,7 +72,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	})
 
 	if err != nil {
-		return &types.QueryAllBalancesResponse{}, err
+		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
 	}
 
 	return &types.QueryAllBalancesResponse{Balances: balances, Pagination: pageRes}, nil

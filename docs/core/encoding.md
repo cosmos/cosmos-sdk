@@ -82,7 +82,7 @@ Protobuf types can be defined to encode:
   - [`Msg`s](../building-modules/messages-and-queries.md#messages)
   - [Query services](../building-modules/query-services.md)
   - [genesis](../building-modules/genesis.md)
-  
+
 **Naming and conventions**
 
 We encourage developers to follow industry guidelines: [Protocol Buffers style guide](https://developers.google.com/protocol-buffers/docs/style)
@@ -95,11 +95,9 @@ may simply migrate any existing types that
 are encoded and persisted via their concrete Amino codec to Protobuf (see 1. for further guidelines) and accept a `Marshaler` as the codec which is implemented via the `ProtoCodec`
 without any further customization.
 
-However, if modules are to handle type interfaces, module-level .proto files should define messages which encode interfaces
-using [`google.protobuf.Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto).
+However, if a module type composes an interface, it must wrap it in the `skd.Any` (from `/types` package) type. To do that, a module-level .proto file must use [`google.protobuf.Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto) for respective message type interface types.
 
-For example, we can define `MsgSubmitEvidence` as follows where `Evidence` is
-an interface:
+For example, in the `x/evidence` module defines an `Evidence` interface, which is used by the `MsgSubmitEvidence`. The structure definition must use `sdk.Any` to wrap the evidence file. In the proto file we define it as follows:
 
 ```protobuf
 // proto/cosmos/evidence/v1beta1/tx.proto
@@ -110,8 +108,7 @@ message MsgSubmitEvidence {
 }
 ```
 
-The SDK provides support methods `MarshalAny` and `UnmarshalAny` to allow
-easy encoding of state to `Any`.
+The SDK `codec.Marshaler` interface provides support methods `MarshalInterface` and `UnmarshalInterface` to easy encoding of state to `Any`.
 
 Module should register interfaces using `InterfaceRegistry` which provides a mechanism for registering interfaces: `RegisterInterface(protoName string, iface interface{})` and implementations: `RegisterImplementations(iface interface{}, impls ...proto.Message)` that can be safely unpacked from Any, similarly to type registration with Amino:
 

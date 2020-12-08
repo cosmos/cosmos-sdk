@@ -23,7 +23,7 @@ func (p Plan) String() string {
 	if err != nil {
 		upgradedClientStr = "no upgraded client provided"
 	} else {
-		upgradedClientStr = fmt.Sprintf("%s", upgradedClient)
+		upgradedClientStr = upgradedClient.String()
 	}
 	return fmt.Sprintf(`Upgrade Plan
   Name: %s

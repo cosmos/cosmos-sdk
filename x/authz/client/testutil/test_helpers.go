@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/spf13/viper"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -30,10 +28,7 @@ func MsgGrantAuthorizationExec(clientCtx client.Context, granter, grantee, msgNa
 	}
 
 	args = append(args, fmt.Sprintf("--%s=%s", flags.FlagFrom, granter))
-
-	viper.Set(msgauthcli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix())
-
+	args = append(args, fmt.Sprintf("--%s=%d", msgauthcli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix()))
 	args = append(args, commonArgs...)
 	return clitestutil.ExecTestCLICmd(clientCtx, msgauthcli.NewCmdGrantAuthorization(), args)
-
 }

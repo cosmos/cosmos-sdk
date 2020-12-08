@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -32,7 +31,7 @@ func GetTxCmd() *cobra.Command {
 	AuthorizationTxCmd.AddCommand(
 		NewCmdGrantAuthorization(),
 		NewCmdRevokeAuthorization(),
-		NewCmdSendAs(),
+		NewCmdExecAuthorization(),
 	)
 
 	return AuthorizationTxCmd
@@ -77,7 +76,11 @@ Examples:
 				authorization = types.NewGenericAuthorization(msgType)
 			}
 
-			period := time.Duration(viper.GetInt64(FlagExpiration)) * time.Second
+			exp, err := cmd.Flags().GetInt64(FlagExpiration)
+			if err != nil {
+				return err
+			}
+			period := time.Duration(exp) * time.Second
 
 			msg, err := types.NewMsgGrantAuthorization(clientCtx.GetFromAddress(), grantee, authorization, time.Now().Add(period))
 			if err != nil {
@@ -133,7 +136,7 @@ Example:
 	return cmd
 }
 
-func NewCmdSendAs() *cobra.Command {
+func NewCmdExecAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exec [msg_tx_json_file] --from [grantee]",
 		Short: "execute tx on behalf of granter account",

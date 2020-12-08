@@ -1,10 +1,11 @@
+// +build norace
+
 package rest_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -57,9 +58,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	_, err = msgauthtestutil.MsgGrantAuthorizationExec(val.ClientCtx, val.Address.String(), newAddr.String(), typeMsgSend, "100stake")
 	s.Require().NoError(err)
 
-	_, err = msgauthtestutil.MsgGrantAuthorizationExec(val.ClientCtx, val.Address.String(), newAddr.String(), "GericAuthorization", "")
-	s.Require().NoError(err)
-
 	s.grantee = newAddr
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -77,47 +75,58 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationGRPC() {
 		name      string
 		url       string
 		expectErr bool
-		respMsg   proto.Message
-		expected  proto.Message
+		errorMsg  string
 	}{
 		{
 			"fail invalid granter address",
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?msg_type=%s", baseURL, "invalid_granter", s.grantee.String(), typeMsgSend),
 			true,
-			&types.QueryAuthorizationResponse{},
-			&types.QueryAuthorizationResponse{},
+			"decoding bech32 failed: invalid index of 1: invalid request",
 		},
 		{
 			"fail invalid grantee address",
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?msg_type=%s", baseURL, val.Address.String(), "invalid_grantee", typeMsgSend),
 			true,
-			&types.QueryAuthorizationResponse{},
-			&types.QueryAuthorizationResponse{},
+			"decoding bech32 failed: invalid index of 1: invalid request",
+		},
+		{
+			"fail with empty granter",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?msg_type=%s", baseURL, "", s.grantee.String(), typeMsgSend),
+			true,
+			"Not Implemented",
+		},
+		{
+			"fail with empty grantee",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?msg_type=%s", baseURL, val.Address.String(), "", typeMsgSend),
+			true,
+			"Not Implemented",
 		},
 		{
 			"fail invalid msg-type",
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?msg_type=%s", baseURL, val.Address.String(), s.grantee.String(), "invalidMsg"),
 			true,
-			&types.QueryAuthorizationResponse{},
-			&types.QueryAuthorizationResponse{},
+			"rpc error: code = NotFound desc = no authorization found for invalidMsg type: key not found",
 		},
 		{
 			"valid query",
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?msg_type=%s", baseURL, val.Address.String(), s.grantee.String(), typeMsgSend),
 			false,
-			&types.QueryAuthorizationResponse{},
-			&types.QueryAuthorizationResponse{},
+			"",
 		},
 	}
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
-			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respMsg)
+			resp, _ := rest.GetRequest(tc.url)
 			if tc.expectErr {
-				s.Require().Error(err)
+				s.Require().Contains(string(resp), tc.errorMsg)
 			} else {
+				var authorization types.QueryAuthorizationResponse
+				err := val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &authorization)
 				s.Require().NoError(err)
+				authorization.Authorization.UnpackInterfaces(val.ClientCtx.InterfaceRegistry)
+				auth := authorization.Authorization.GetAuthorization()
+				s.Require().Equal(auth.MethodName(), types.SendAuthorization{}.MethodName())
 			}
 		})
 	}
@@ -130,41 +139,93 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 		name      string
 		url       string
 		expectErr bool
-		respMsg   proto.Message
-		expected  proto.Message
+		errMsg    string
+		preRun    func()
+		postRun   func(*types.QueryAuthorizationsResponse)
 	}{
 		{
 			"fail invalid granter address",
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants", baseURL, "invalid_granter", s.grantee.String()),
 			true,
-			&types.QueryAuthorizationsResponse{},
-			&types.QueryAuthorizationsResponse{},
+			"decoding bech32 failed: invalid index of 1: invalid request",
+			func() {},
+			func(_ *types.QueryAuthorizationsResponse) {},
 		},
 		{
 			"fail invalid grantee address",
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants", baseURL, val.Address.String(), "invalid_grantee"),
 			true,
-			&types.QueryAuthorizationsResponse{},
-			&types.QueryAuthorizationsResponse{},
+			"decoding bech32 failed: invalid index of 1: invalid request",
+			func() {},
+			func(_ *types.QueryAuthorizationsResponse) {},
 		},
 		{
-			"valid query",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants?pagination.limit=1&pagination.count_total=true", baseURL, val.Address.String(), s.grantee.String()),
+			"fail empty grantee address",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants", baseURL, "", "invalid_grantee"),
+			true,
+			"Not Implemented",
+			func() {},
+			func(_ *types.QueryAuthorizationsResponse) {},
+		},
+		{
+			"valid query: expect single grant",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants", baseURL, val.Address.String(), s.grantee.String()),
 			false,
-			&types.QueryAuthorizationsResponse{},
-			&types.QueryAuthorizationsResponse{},
+			"",
+			func() {
+			},
+			func(authorizations *types.QueryAuthorizationsResponse) {
+				s.Require().Equal(len(authorizations.Authorizations), 1)
+			},
+		},
+		{
+			"valid query: expect two grants",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants", baseURL, val.Address.String(), s.grantee.String()),
+			false,
+			"",
+			func() {
+				_, err := msgauthtestutil.MsgGrantAuthorizationExec(val.ClientCtx, val.Address.String(), s.grantee.String(), "/cosmos.gov.v1beta1.Msg/Vote", "")
+				s.Require().NoError(err)
+			},
+			func(authorizations *types.QueryAuthorizationsResponse) {
+				s.Require().Equal(len(authorizations.Authorizations), 2)
+			},
+		},
+		{
+			"valid query: expect single grant with pagination",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants?pagination.limit=1", baseURL, val.Address.String(), s.grantee.String()),
+			false,
+			"",
+			func() {},
+			func(authorizations *types.QueryAuthorizationsResponse) {
+				s.Require().Equal(len(authorizations.Authorizations), 1)
+			},
+		},
+		{
+			"valid query: expect two grants with pagination",
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants?pagination.limit=2", baseURL, val.Address.String(), s.grantee.String()),
+			false,
+			"",
+			func() {},
+			func(authorizations *types.QueryAuthorizationsResponse) {
+				s.Require().Equal(len(authorizations.Authorizations), 2)
+			},
 		},
 	}
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
-			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respMsg)
+			tc.preRun()
+			resp, _ := rest.GetRequest(tc.url)
 			if tc.expectErr {
-				s.Require().Error(err)
+				s.Require().Contains(string(resp), tc.errMsg)
 			} else {
+				var authorizations types.QueryAuthorizationsResponse
+				err := val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &authorizations)
 				s.Require().NoError(err)
+				tc.postRun(&authorizations)
 			}
+
 		})
 	}
 }

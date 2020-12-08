@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/spf13/viper"
 
 	"github.com/stretchr/testify/suite"
 
@@ -91,7 +90,6 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 
 	grantee := s.grantee
 	twoHours := 3600 * 2 // In seconds
-	viper.Set(cli.FlagExpiration, twoHours)
 
 	_, err := execGrantAuthorization(
 		val,
@@ -170,7 +168,6 @@ func (s *IntegrationTestSuite) TestQueryAuthorization() {
 
 	grantee := s.grantee
 	twoHours := 3600 * 2 // In seconds
-	viper.Set(cli.FlagExpiration, twoHours)
 
 	_, err := execGrantAuthorization(
 		val,
@@ -268,7 +265,6 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 		respType     proto.Message
 		expectedCode uint32
 		expectErr    bool
-		expiration   int
 	}{
 		{
 			"Invalid granter Address",
@@ -283,7 +279,6 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			nil,
 			0,
 			true,
-			twoHours,
 		},
 		{
 			"Invalid grantee Address",
@@ -297,7 +292,6 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			nil, 0,
 			true,
-			twoHours,
 		},
 		{
 			"Invalid expiration time",
@@ -311,7 +305,6 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			nil, 0,
 			true,
-			pastHour,
 		},
 		{
 			"Valid tx send authorization",
@@ -327,7 +320,6 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			&sdk.TxResponse{}, 0,
 			false,
-			twoHours,
 		},
 		{
 			"Valid tx generic authorization",
@@ -342,7 +334,6 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			},
 			&sdk.TxResponse{}, 0,
 			false,
-			twoHours,
 		},
 	}
 
@@ -350,7 +341,6 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 		tc := tc
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
-			viper.Set(cli.FlagExpiration, tc.expiration)
 			out, err := execGrantAuthorization(
 				val,
 				tc.args,
@@ -378,8 +368,6 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 
 	grantee := s.grantee
 	twoHours := 3600 * 2 // In seconds
-
-	viper.Set(cli.FlagExpiration, twoHours)
 
 	// send-authorization
 	_, err := execGrantAuthorization(
@@ -496,7 +484,6 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 	now := time.Now()
 	twoHours := now.Add(time.Minute * time.Duration(120)).Unix()
 
-	viper.Set(cli.FlagExpiration, twoHours)
 	_, err := execGrantAuthorization(
 		val,
 		[]string{
@@ -565,7 +552,7 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 		tc := tc
 		s.Run(tc.name, func() {
 
-			cmd := cli.NewCmdSendAs()
+			cmd := cli.NewCmdExecAuthorization()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -589,7 +576,6 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 	now := time.Now()
 	twoHours := now.Add(time.Minute * time.Duration(120)).Unix()
 
-	viper.Set(cli.FlagExpiration, twoHours)
 	_, err := execGrantAuthorization(
 		val,
 		[]string{
@@ -669,7 +655,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 		tc := tc
 		s.Run(tc.name, func() {
 
-			cmd := cli.NewCmdSendAs()
+			cmd := cli.NewCmdExecAuthorization()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)

@@ -6,9 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tendermint/tendermint/config"
-
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/config"
 )
 
 func TestExportGenesisFileWithTime(t *testing.T) {

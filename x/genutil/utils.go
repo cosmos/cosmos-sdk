@@ -7,9 +7,8 @@ import (
 	"time"
 
 	"github.com/cosmos/go-bip39"
-	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
-
 	cfg "github.com/tendermint/tendermint/config"
+	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/privval"

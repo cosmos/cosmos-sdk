@@ -10,8 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // TimeToMilliseconds converts time to milliseconds timestamp
@@ -135,79 +133,9 @@ func rosettaFeeOperationsFromCoins(coins sdk.Coins, account string, withStatus b
 // sdkMsgsToRosettaOperations converts sdk messages to rosetta operations
 func sdkMsgsToRosettaOperations(msgs []sdk.Msg, withStatus bool, hasError bool, feeLen int) []*types.Operation {
 	var operations []*types.Operation
-	var status string
-	for i, msg := range msgs {
-		switch msg.Type() {
-		case rosetta.OperationSend:
-			newMsg := msg.(*banktypes.MsgSend)
-			fromAddress := newMsg.FromAddress
-			toAddress := newMsg.ToAddress
-			amounts := newMsg.Amount
-			if len(amounts) == 0 {
-				continue
-			}
-			coin := amounts[0]
-			sendOp := func(account, amount string, index int) *types.Operation {
-				if withStatus {
-					status = rosetta.StatusSuccess
-					if hasError {
-						status = rosetta.StatusReverted
-					}
-				}
-				return &types.Operation{
-					OperationIdentifier: &types.OperationIdentifier{
-						Index: int64(index),
-					},
-					Type:   rosetta.OperationSend,
-					Status: status,
-					Account: &types.AccountIdentifier{
-						Address: account,
-					},
-					Amount: &types.Amount{
-						Value: amount,
-						Currency: &types.Currency{
-							Symbol: coin.Denom,
-						},
-					},
-				}
-			}
-			operations = append(operations,
-				sendOp(fromAddress, "-"+coin.Amount.String(), feeLen+i),
-				sendOp(toAddress, coin.Amount.String(), feeLen+i+1),
-			)
-		case rosetta.OperationDelegate:
-			newMsg := msg.(*stakingtypes.MsgDelegate)
-			delAddr := newMsg.DelegatorAddress
-			valAddr := newMsg.ValidatorAddress
-			coin := newMsg.Amount
-			delOp := func(account, amount string, index int) *types.Operation {
-				if withStatus {
-					status = rosetta.StatusSuccess
-					if hasError {
-						status = rosetta.StatusReverted
-					}
-				}
-				return &types.Operation{
-					OperationIdentifier: &types.OperationIdentifier{
-						Index: int64(index),
-					},
-					Type:   rosetta.OperationDelegate,
-					Status: status,
-					Account: &types.AccountIdentifier{
-						Address: account,
-					},
-					Amount: &types.Amount{
-						Value: amount,
-						Currency: &types.Currency{
-							Symbol: coin.Denom,
-						},
-					},
-				}
-			}
-			operations = append(operations,
-				delOp(delAddr, "-"+coin.Amount.String(), feeLen+i),
-				delOp(valAddr, coin.Amount.String(), feeLen+i+1),
-			)
+	for _, msg := range msgs {
+		if rosettaMsg, ok := msg.(rosetta.Msg); ok {
+			operations = append(operations, rosettaMsg.ToOperations(withStatus, hasError, feeLen)...)
 		}
 	}
 

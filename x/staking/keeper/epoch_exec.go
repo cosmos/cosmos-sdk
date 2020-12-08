@@ -278,9 +278,8 @@ func (k Keeper) EpochUndelegate(ctx sdk.Context, msg *types.MsgUndelegate) (time
 
 // ExecuteEpoch execute epoch actions
 func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
-	epochNumber := k.GetEpochNumber(ctx)
 	// execute all epoch actions
-	iterator := k.GetEpochActionsIteratorByEpochNumber(ctx, epochNumber)
+	iterator := k.GetEpochActionsIterator(ctx)
 
 	for ; iterator.Valid(); iterator.Next() {
 		msg := k.GetEpochActionByIterator(iterator)

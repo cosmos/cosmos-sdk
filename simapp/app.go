@@ -465,6 +465,13 @@ func (app *SimApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Re
 	return app.mm.EndBlock(ctx, req)
 }
 
+// ExecuteEpoch run epoch execution for testing
+func (app *SimApp) ExecuteEpoch(ctx sdk.Context) {
+	// order should be same as one in SetOrderEndBlockers
+	app.SlashingKeeper.ExecuteEpoch(ctx)
+	app.StakingKeeper.ExecuteEpoch(ctx)
+}
+
 // InitChainer application update at chain initialization
 func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState

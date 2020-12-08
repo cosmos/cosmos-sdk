@@ -43,6 +43,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	msg := tstaking.CreateValidatorMsg(addr, val, amt.Int64())
 	msg.MinSelfDelegation = amt
 	tstaking.Handle(msg, true)
+	app.ExecuteEpoch(ctx)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
@@ -52,6 +53,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	// unbond below minimum self-delegation
 	require.Equal(t, p.BondDenom, tstaking.Denom)
 	tstaking.Undelegate(sdk.AccAddress(addr), addr, sdk.TokensFromConsensusPower(1), true)
+	app.ExecuteEpoch(ctx)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
@@ -66,6 +68,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	// bond to meet minimum self-delegation
 	tstaking.DelegateWithPower(sdk.AccAddress(addr), addr, 1)
+	app.ExecuteEpoch(ctx)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
@@ -92,7 +95,7 @@ func TestHandleNewValidator(t *testing.T) {
 
 	// Validator created
 	amt := tstaking.CreateValidatorWithValPower(addr, val, 100, true)
-
+	app.ExecuteEpoch(ctx)
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	require.Equal(
 		t, app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr)),
@@ -207,6 +210,8 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// kick first validator out of validator set
 	tstaking.CreateValidatorWithValPower(sdk.ValAddress(pks[1].Address()), pks[1], 101, true)
+	app.ExecuteEpoch(ctx)
+
 	validatorUpdates := staking.EndBlocker(ctx, app.StakingKeeper)
 	require.Equal(t, 2, len(validatorUpdates))
 	tstaking.CheckValidator(valAddr, stakingtypes.Unbonding, false)

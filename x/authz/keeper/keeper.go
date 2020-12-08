@@ -48,26 +48,27 @@ func (k Keeper) getAuthorizationGrant(ctx sdk.Context, actor []byte) (grant type
 	return grant, true
 }
 
-func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated types.Authorization) {
+func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated types.Authorization) error {
 	actor := types.GetActorAuthorizationKey(grantee, granter, updated.MethodName())
 	grant, found := k.getAuthorizationGrant(ctx, actor)
 	if !found {
-		return
+		return fmt.Errorf("No authorization found")
 	}
 
 	msg, ok := updated.(proto.Message)
 	if !ok {
-		panic(fmt.Errorf("cannot proto marshal %T", updated))
+		return fmt.Errorf("cannot proto marshal %T", updated)
 	}
 
 	any, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	grant.Authorization = any
 	store := ctx.KVStore(k.storeKey)
 	store.Set(actor, k.cdc.MustMarshalBinaryBare(&grant))
+	return nil
 }
 
 // DispatchActions attempts to execute the provided messages via authorization
@@ -93,7 +94,10 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, service
 			if del {
 				k.Revoke(ctx, grantee, granter, serviceMsg.Type())
 			} else if updated != nil {
-				k.update(ctx, grantee, granter, updated)
+				err = k.update(ctx, grantee, granter, updated)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 		handler := k.router.Handler(serviceMsg.Route())
@@ -114,17 +118,18 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, service
 // Grant method grants the provided authorization to the grantee on the granter's account with the provided expiration
 // time. If there is an existing authorization grant for the same `sdk.Msg` type, this grant
 // overwrites that.
-func (k Keeper) Grant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization types.Authorization, expiration time.Time) {
+func (k Keeper) Grant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization types.Authorization, expiration time.Time) error {
 	store := ctx.KVStore(k.storeKey)
 
 	grant, err := types.NewAuthorizationGrant(authorization, expiration.Unix())
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	bz := k.cdc.MustMarshalBinaryBare(&grant)
 	actor := types.GetActorAuthorizationKey(grantee, granter, authorization.MethodName())
 	store.Set(actor, bz)
+	return nil
 }
 
 // Revoke method revokes any authorization for the provided message type granted to the grantee by the granter.

@@ -14,7 +14,7 @@ type Keeper interface {
 
 	// Grants the provided authorization to the grantee on the granter's account with the provided expiration time
 	// If there is an existing authorization grant for the same sdk.Msg type, this grant overwrites that.
-	Grant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, authorization types.Authorization, expiration time.Time)
+	Grant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, authorization types.Authorization, expiration time.Time) error
 
 	// Revokes any authorization for the provided message type granted to the grantee by the granter.
 	Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType sdk.Msg)

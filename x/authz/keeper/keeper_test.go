@@ -63,13 +63,15 @@ func (s *TestSuite) TestKeeper() {
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
 	s.T().Log("verify if expired authorization is rejected")
 	x := &types.SendAuthorization{SpendLimit: newCoins}
-	app.MsgAuthKeeper.Grant(ctx, granterAddr, granteeAddr, x, now.Add(-1*time.Hour))
+	err = app.MsgAuthKeeper.Grant(ctx, granterAddr, granteeAddr, x, now.Add(-1*time.Hour))
+	s.Require().NoError(err)
 	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, types.SendAuthorization{}.MethodName())
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify if authorization is accepted")
 	x = &types.SendAuthorization{SpendLimit: newCoins}
-	app.MsgAuthKeeper.Grant(ctx, granteeAddr, granterAddr, x, now.Add(time.Hour))
+	err = app.MsgAuthKeeper.Grant(ctx, granteeAddr, granterAddr, x, now.Add(time.Hour))
+	s.Require().NoError(err)
 	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, types.SendAuthorization{}.MethodName())
 	s.Require().NotNil(authorization)
 	s.Require().Equal(authorization.MethodName(), types.SendAuthorization{}.MethodName())
@@ -116,7 +118,8 @@ func (s *TestSuite) TestKeeperIter() {
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
 	s.T().Log("verify if expired authorization is rejected")
 	x := &types.SendAuthorization{SpendLimit: newCoins}
-	app.MsgAuthKeeper.Grant(ctx, granteeAddr, granterAddr, x, now.Add(-1*time.Hour))
+	err = app.MsgAuthKeeper.Grant(ctx, granteeAddr, granterAddr, x, now.Add(-1*time.Hour))
+	s.Require().NoError(err)
 	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, "abcd")
 	s.Require().Nil(authorization)
 
@@ -167,7 +170,8 @@ func (s *TestSuite) TestKeeperFees() {
 
 	s.T().Log("verify dispatch executes with correct information")
 	// grant authorization
-	app.MsgAuthKeeper.Grant(s.ctx, granteeAddr, granterAddr, &types.SendAuthorization{SpendLimit: smallCoin}, now)
+	err = app.MsgAuthKeeper.Grant(s.ctx, granteeAddr, granterAddr, &types.SendAuthorization{SpendLimit: smallCoin}, now)
+	s.Require().NoError(err)
 	authorization, expiration := app.MsgAuthKeeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, types.SendAuthorization{}.MethodName())
 	s.Require().NotNil(authorization)
 	s.Require().NotZero(expiration)

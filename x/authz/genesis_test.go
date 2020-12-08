@@ -42,7 +42,8 @@ func (suite *GenesisTestSuite) TestImportExportGenesis() {
 
 	now := suite.ctx.BlockHeader().Time
 	grant := &types.SendAuthorization{SpendLimit: coins}
-	suite.keeper.Grant(suite.ctx, granteeAddr, granterAddr, grant, now.Add(time.Hour))
+	err := suite.keeper.Grant(suite.ctx, granteeAddr, granterAddr, grant, now.Add(time.Hour))
+	suite.Require().NoError(err)
 	genesis := msgauth.ExportGenesis(suite.ctx, suite.keeper)
 
 	// Clear keeper

@@ -103,7 +103,8 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 	grantee := accounts[1]
 	authorization := types.NewSendAuthorization(initCoins)
 
-	suite.app.MsgAuthKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
+	err := suite.app.MsgAuthKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
+	suite.Require().NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgRevokeAuthorization(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.MsgAuthKeeper)
@@ -137,8 +138,9 @@ func (suite *SimTestSuite) TestSimulateExecAuthorization() {
 	grantee := accounts[1]
 	authorization := types.NewSendAuthorization(initCoins)
 
-	suite.app.MsgAuthKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
-
+	err := suite.app.MsgAuthKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
+	suite.Require().NoError(err)
+	
 	// execute operation
 	op := simulation.SimulateMsgExecuteAuthorized(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.MsgAuthKeeper, suite.app.AppCodec())
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")

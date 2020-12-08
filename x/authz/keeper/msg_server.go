@@ -21,7 +21,10 @@ func (k Keeper) GrantAuthorization(goCtx context.Context, msg *types.MsgGrantAut
 		return nil, err
 	}
 	authorization := msg.GetAuthorization()
-	k.Grant(ctx, grantee, granter, authorization, msg.Expiration)
+	err = k.Grant(ctx, grantee, granter, authorization, msg.Expiration)
+	if err != nil {
+		return nil, err
+	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

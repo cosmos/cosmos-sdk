@@ -52,7 +52,7 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 	actor := types.GetActorAuthorizationKey(grantee, granter, updated.MethodName())
 	grant, found := k.getAuthorizationGrant(ctx, actor)
 	if !found {
-		return fmt.Errorf("No authorization found")
+		return fmt.Errorf("no authorization found")
 	}
 
 	msg, ok := updated.(proto.Message)

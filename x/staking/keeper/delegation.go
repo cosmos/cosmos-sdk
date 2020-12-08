@@ -546,7 +546,7 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time
 // tokenSrc indicates the bond status of the incoming funds.
 func (k Keeper) Delegate(
 	ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Int, tokenSrc types.BondStatus,
-	validator types.Validator, subtractEpochPool bool,
+	validator types.Validator, subtractEpochPool bool, subtractAccount bool,
 ) (newShares sdk.Dec, err error) {
 	// In some situations, the exchange rate becomes invalid, e.g. if
 	// Validator loses all tokens due to slashing. In this case,
@@ -573,10 +573,30 @@ func (k Keeper) Delegate(
 		panic(err)
 	}
 
-	// if subtractEpochPool is true then we are
-	// performing a delegation and not a redelegation, thus the source tokens are
-	// all non bonded
-	if subtractEpochPool {
+	if subtractAccount {
+		// if subtractAccount is true then we are
+		// performing a delegation without epoching (within tests)
+		if tokenSrc == types.Bonded {
+			panic("delegation token source cannot be bonded")
+		}
+		var sendName string
+		switch {
+		case validator.IsBonded():
+			sendName = types.BondedPoolName
+		case validator.IsUnbonding(), validator.IsUnbonded():
+			sendName = types.NotBondedPoolName
+		default:
+			panic("invalid validator status")
+		}
+
+		coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), bondAmt))
+		if err := k.bankKeeper.DelegateCoinsFromAccountToModule(ctx, delegatorAddress, sendName, coins); err != nil {
+			return sdk.Dec{}, err
+		}
+	} else if subtractEpochPool {
+		// if subtractEpochPool is true then we are
+		// performing a delegation and not a redelegation, thus the source tokens are
+		// all non bonded
 		if tokenSrc == types.Bonded {
 			panic("delegation token source cannot be bonded")
 		}
@@ -836,7 +856,7 @@ func (k Keeper) BeginRedelegation(
 		return time.Time{}, types.ErrTinyRedelegationAmount
 	}
 
-	sharesCreated, err := k.Delegate(ctx, delAddr, returnAmount, srcValidator.GetStatus(), dstValidator, false)
+	sharesCreated, err := k.Delegate(ctx, delAddr, returnAmount, srcValidator.GetStatus(), dstValidator, false, false)
 	if err != nil {
 		return time.Time{}, err
 	}

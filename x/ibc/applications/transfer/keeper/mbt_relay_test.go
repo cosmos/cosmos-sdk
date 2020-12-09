@@ -108,17 +108,11 @@ func AddressFromTla(addr []string) string {
 }
 
 func DenomFromTla(denom []string) string {
-	if len(denom) != 3 {
-		panic("failed to convert from TLA+ denom")
+	var i int
+	for i = 0; i+1 < len(denom) && len(denom[i])==0  && len(denom[i+1])==0; i+=2 {
+		// skip empty prefixes
 	}
-	s := ""
-	if len(denom[0]) == 0 && len(denom[1]) == 0 {
-		// native denomination
-		s = denom[2]
-	} else  {
-		s = strings.Join(denom, "/")
-	}
-	return s
+	return strings.Join(denom[i:], "/")
 }
 
 func BalanceFromTla(balance TlaBalance) Balance {

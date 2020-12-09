@@ -39,7 +39,7 @@ func (k Keeper) EpochCreateValidatorSelfDelegation(ctx sdk.Context, msg *types.M
 	// set newly created validators to Bonded status
 	// I think keeping this as it is is quite good as delegators are not needed to wait for validator to be created
 	// on epochs but just delegate to validators that is going to be activated on next epoch
-	_, err = k.Delegate(ctx, delegatorAddress, msg.Value.Amount, types.Unbonded, validator, true, false)
+	_, err = k.Delegate(ctx, delegatorAddress, msg.Value.Amount, types.Unbonded, validator, true)
 	if err != nil {
 		return err
 	}
@@ -132,7 +132,7 @@ func (k Keeper) EpochDelegate(ctx sdk.Context, msg *types.MsgDelegate) error {
 	}
 
 	// NOTE: source funds are always unbonded
-	_, err = k.Delegate(ctx, delegatorAddress, msg.Amount.Amount, types.Unbonded, validator, true, false)
+	_, err = k.Delegate(ctx, delegatorAddress, msg.Amount.Amount, types.Unbonded, validator, true)
 	if err != nil {
 		return err
 	}

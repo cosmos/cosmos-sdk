@@ -47,11 +47,19 @@ func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers 
 	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val2)
 	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val3)
 
-	_, _ = app.StakingKeeper.Delegate(ctx, addrs[0], sdk.TokensFromConsensusPower(powers[0]), stakingtypes.Unbonded, val1, false, true)
-	_, _ = app.StakingKeeper.Delegate(ctx, addrs[1], sdk.TokensFromConsensusPower(powers[1]), stakingtypes.Unbonded, val2, false, true)
-	_, _ = app.StakingKeeper.Delegate(ctx, addrs[2], sdk.TokensFromConsensusPower(powers[2]), stakingtypes.Unbonded, val3, false, true)
+	_ = delegateCoinsFromAccount(ctx, app, addrs[0], sdk.TokensFromConsensusPower(powers[0]), val1)
+	_ = delegateCoinsFromAccount(ctx, app, addrs[1], sdk.TokensFromConsensusPower(powers[1]), val2)
+	_ = delegateCoinsFromAccount(ctx, app, addrs[2], sdk.TokensFromConsensusPower(powers[2]), val3)
 
 	_ = staking.EndBlocker(ctx, app.StakingKeeper)
 
 	return addrs, valAddrs
+}
+
+func delegateCoinsFromAccount(ctx sdk.Context, app *simapp.SimApp, addr sdk.AccAddress, amount sdk.Int, val stakingtypes.Validator) error {
+	bondDenom := app.StakingKeeper.BondDenom(ctx)
+	coins := sdk.Coins{sdk.NewCoin(bondDenom, amount)}
+	app.BankKeeper.DelegateCoinsFromAccountToModule(ctx, addr, stakingtypes.EpochTempPoolName, coins)
+	_, err := app.StakingKeeper.Delegate(ctx, addr, amount, stakingtypes.Unbonded, val, true)
+	return err
 }

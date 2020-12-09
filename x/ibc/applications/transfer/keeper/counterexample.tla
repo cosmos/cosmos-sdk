@@ -37,26 +37,26 @@ State2 ==
       handler |-> "",
       packet |->
         [data |->
-            [amount |-> 3,
+            [amount |-> 2,
               denomTrace |->
                 [denom |-> "eth",
-                  prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
+                  prefix0 |-> [channel |-> "", port |-> ""],
                   prefix1 |-> [channel |-> "", port |-> ""]],
-              receiver |-> "a2",
-              sender |-> "a3"],
-          destChannel |-> "channel-0",
+              receiver |-> "a1",
+              sender |-> ""],
+          destChannel |-> "channel-1",
           destPort |-> "transfer",
           sourceChannel |-> "channel-0",
           sourcePort |-> "transfer"]]
 /\ p = [data |->
-    [amount |-> 3,
+    [amount |-> 2,
       denomTrace |->
         [denom |-> "eth",
-          prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
+          prefix0 |-> [channel |-> "", port |-> ""],
           prefix1 |-> [channel |-> "", port |-> ""]],
-      receiver |-> "a2",
-      sender |-> "a3"],
-  destChannel |-> "channel-0",
+      receiver |-> "a1",
+      sender |-> ""],
+  destChannel |-> "channel-1",
   destPort |-> "transfer",
   sourceChannel |-> "channel-0",
   sourcePort |-> "transfer"]
@@ -71,11 +71,11 @@ State3 ==
   >>
     :> 0
   @@ <<
-    [channel |-> "", id |-> "a2", port |-> ""], [denom |-> "eth",
-      prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-      prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]]
+    [channel |-> "", id |-> "a1", port |-> ""], [denom |-> "eth",
+      prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+      prefix1 |-> [channel |-> "", port |-> ""]]
   >>
-    :> 3
+    :> 2
 /\ count = 1
 /\ error = FALSE
 /\ handler = "OnRecvPacket"
@@ -98,14 +98,14 @@ State3 ==
       handler |-> "",
       packet |->
         [data |->
-            [amount |-> 3,
+            [amount |-> 2,
               denomTrace |->
                 [denom |-> "eth",
-                  prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
+                  prefix0 |-> [channel |-> "", port |-> ""],
                   prefix1 |-> [channel |-> "", port |-> ""]],
-              receiver |-> "a2",
-              sender |-> "a3"],
-          destChannel |-> "channel-0",
+              receiver |-> "a1",
+              sender |-> ""],
+          destChannel |-> "channel-1",
           destPort |-> "transfer",
           sourceChannel |-> "channel-0",
           sourcePort |-> "transfer"]]
@@ -118,11 +118,11 @@ State3 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [denom |-> "eth",
-              prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-              prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]]
+            [channel |-> "", id |-> "a1", port |-> ""], [denom |-> "eth",
+              prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+              prefix1 |-> [channel |-> "", port |-> ""]]
           >>
-            :> 3,
+            :> 2,
       bankBefore |->
         <<
             [channel |-> "", id |-> "", port |-> ""], [denom |-> "",
@@ -134,28 +134,28 @@ State3 ==
       handler |-> "OnRecvPacket",
       packet |->
         [data |->
-            [amount |-> 3,
+            [amount |-> 2,
               denomTrace |->
                 [denom |-> "eth",
-                  prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
+                  prefix0 |-> [channel |-> "", port |-> ""],
                   prefix1 |-> [channel |-> "", port |-> ""]],
-              receiver |-> "a2",
-              sender |-> "a3"],
-          destChannel |-> "channel-0",
+              receiver |-> "a1",
+              sender |-> ""],
+          destChannel |-> "channel-1",
           destPort |-> "transfer",
           sourceChannel |-> "channel-0",
           sourcePort |-> "transfer"]]
 /\ p = [data |->
-    [amount |-> 3,
+    [amount |-> 2,
       denomTrace |->
         [denom |-> "eth",
-          prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-          prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]],
-      receiver |-> "a3",
-      sender |-> "a2"],
+          prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+          prefix1 |-> [channel |-> "", port |-> ""]],
+      receiver |-> "",
+      sender |-> "a1"],
   destChannel |-> "channel-0",
   destPort |-> "transfer",
-  sourceChannel |-> "channel-1",
+  sourceChannel |-> "channel-0",
   sourcePort |-> "transfer"]
 
 (* Transition 1 to State4 *)
@@ -168,17 +168,17 @@ State4 ==
   >>
     :> 0
   @@ <<
-    [channel |-> "", id |-> "a2", port |-> ""], [denom |-> "eth",
-      prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-      prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]]
+    [channel |-> "", id |-> "a1", port |-> ""], [denom |-> "eth",
+      prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+      prefix1 |-> [channel |-> "", port |-> ""]]
   >>
     :> 0
   @@ <<
-    [channel |-> "channel-1", id |-> "", port |-> "transfer"], [denom |-> "eth",
-      prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-      prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]]
+    [channel |-> "channel-0", id |-> "", port |-> "transfer"], [denom |-> "eth",
+      prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+      prefix1 |-> [channel |-> "", port |-> ""]]
   >>
-    :> 3
+    :> 2
 /\ count = 2
 /\ error = FALSE
 /\ handler = "SendTransfer"
@@ -201,14 +201,14 @@ State4 ==
       handler |-> "",
       packet |->
         [data |->
-            [amount |-> 3,
+            [amount |-> 2,
               denomTrace |->
                 [denom |-> "eth",
-                  prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
+                  prefix0 |-> [channel |-> "", port |-> ""],
                   prefix1 |-> [channel |-> "", port |-> ""]],
-              receiver |-> "a2",
-              sender |-> "a3"],
-          destChannel |-> "channel-0",
+              receiver |-> "a1",
+              sender |-> ""],
+          destChannel |-> "channel-1",
           destPort |-> "transfer",
           sourceChannel |-> "channel-0",
           sourcePort |-> "transfer"]]
@@ -221,11 +221,11 @@ State4 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [denom |-> "eth",
-              prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-              prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]]
+            [channel |-> "", id |-> "a1", port |-> ""], [denom |-> "eth",
+              prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+              prefix1 |-> [channel |-> "", port |-> ""]]
           >>
-            :> 3,
+            :> 2,
       bankBefore |->
         <<
             [channel |-> "", id |-> "", port |-> ""], [denom |-> "",
@@ -237,14 +237,14 @@ State4 ==
       handler |-> "OnRecvPacket",
       packet |->
         [data |->
-            [amount |-> 3,
+            [amount |-> 2,
               denomTrace |->
                 [denom |-> "eth",
-                  prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
+                  prefix0 |-> [channel |-> "", port |-> ""],
                   prefix1 |-> [channel |-> "", port |-> ""]],
-              receiver |-> "a2",
-              sender |-> "a3"],
-          destChannel |-> "channel-0",
+              receiver |-> "a1",
+              sender |-> ""],
+          destChannel |-> "channel-1",
           destPort |-> "transfer",
           sourceChannel |-> "channel-0",
           sourcePort |-> "transfer"]]
@@ -257,18 +257,18 @@ State4 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [denom |-> "eth",
-              prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-              prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]]
+            [channel |-> "", id |-> "a1", port |-> ""], [denom |-> "eth",
+              prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+              prefix1 |-> [channel |-> "", port |-> ""]]
           >>
             :> 0
           @@ <<
-            [channel |-> "channel-1", id |-> "", port |-> "transfer"], [denom |->
+            [channel |-> "channel-0", id |-> "", port |-> "transfer"], [denom |->
                 "eth",
-              prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-              prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]]
+              prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+              prefix1 |-> [channel |-> "", port |-> ""]]
           >>
-            :> 3,
+            :> 2,
       bankBefore |->
         <<
             [channel |-> "", id |-> "", port |-> ""], [denom |-> "",
@@ -277,35 +277,35 @@ State4 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [denom |-> "eth",
-              prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-              prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]]
+            [channel |-> "", id |-> "a1", port |-> ""], [denom |-> "eth",
+              prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+              prefix1 |-> [channel |-> "", port |-> ""]]
           >>
-            :> 3,
+            :> 2,
       error |-> FALSE,
       handler |-> "SendTransfer",
       packet |->
         [data |->
-            [amount |-> 3,
+            [amount |-> 2,
               denomTrace |->
                 [denom |-> "eth",
-                  prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-                  prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]],
-              receiver |-> "a3",
-              sender |-> "a2"],
+                  prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+                  prefix1 |-> [channel |-> "", port |-> ""]],
+              receiver |-> "",
+              sender |-> "a1"],
           destChannel |-> "channel-0",
           destPort |-> "transfer",
-          sourceChannel |-> "channel-1",
+          sourceChannel |-> "channel-0",
           sourcePort |-> "transfer"]]
 /\ p = [data |->
     [amount |-> 1,
       denomTrace |->
         [denom |-> "eth",
-          prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
+          prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
           prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]],
-      receiver |-> "a1",
-      sender |-> "a1"],
-  destChannel |-> "channel-1",
+      receiver |-> "a3",
+      sender |-> "a3"],
+  destChannel |-> "channel-0",
   destPort |-> "transfer",
   sourceChannel |-> "channel-0",
   sourcePort |-> "transfer"]
@@ -321,22 +321,22 @@ State5 ==
     :> 0
   @@ <<
     [channel |-> "", id |-> "a1", port |-> ""], [denom |-> "eth",
-      prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-      prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]]
-  >>
-    :> 1
-  @@ <<
-    [channel |-> "", id |-> "a2", port |-> ""], [denom |-> "eth",
-      prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-      prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]]
+      prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+      prefix1 |-> [channel |-> "", port |-> ""]]
   >>
     :> 0
   @@ <<
-    [channel |-> "channel-1", id |-> "", port |-> "transfer"], [denom |-> "eth",
-      prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-      prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]]
+    [channel |-> "", id |-> "a3", port |-> ""], [denom |-> "eth",
+      prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+      prefix1 |-> [channel |-> "", port |-> ""]]
   >>
-    :> 2
+    :> 1
+  @@ <<
+    [channel |-> "channel-0", id |-> "", port |-> "transfer"], [denom |-> "eth",
+      prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+      prefix1 |-> [channel |-> "", port |-> ""]]
+  >>
+    :> 1
 /\ count = 3
 /\ error = FALSE
 /\ handler = "OnRecvPacket"
@@ -359,14 +359,14 @@ State5 ==
       handler |-> "",
       packet |->
         [data |->
-            [amount |-> 3,
+            [amount |-> 2,
               denomTrace |->
                 [denom |-> "eth",
-                  prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
+                  prefix0 |-> [channel |-> "", port |-> ""],
                   prefix1 |-> [channel |-> "", port |-> ""]],
-              receiver |-> "a2",
-              sender |-> "a3"],
-          destChannel |-> "channel-0",
+              receiver |-> "a1",
+              sender |-> ""],
+          destChannel |-> "channel-1",
           destPort |-> "transfer",
           sourceChannel |-> "channel-0",
           sourcePort |-> "transfer"]]
@@ -379,11 +379,11 @@ State5 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [denom |-> "eth",
-              prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-              prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]]
+            [channel |-> "", id |-> "a1", port |-> ""], [denom |-> "eth",
+              prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+              prefix1 |-> [channel |-> "", port |-> ""]]
           >>
-            :> 3,
+            :> 2,
       bankBefore |->
         <<
             [channel |-> "", id |-> "", port |-> ""], [denom |-> "",
@@ -395,14 +395,14 @@ State5 ==
       handler |-> "OnRecvPacket",
       packet |->
         [data |->
-            [amount |-> 3,
+            [amount |-> 2,
               denomTrace |->
                 [denom |-> "eth",
-                  prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
+                  prefix0 |-> [channel |-> "", port |-> ""],
                   prefix1 |-> [channel |-> "", port |-> ""]],
-              receiver |-> "a2",
-              sender |-> "a3"],
-          destChannel |-> "channel-0",
+              receiver |-> "a1",
+              sender |-> ""],
+          destChannel |-> "channel-1",
           destPort |-> "transfer",
           sourceChannel |-> "channel-0",
           sourcePort |-> "transfer"]]
@@ -415,18 +415,18 @@ State5 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [denom |-> "eth",
-              prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-              prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]]
+            [channel |-> "", id |-> "a1", port |-> ""], [denom |-> "eth",
+              prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+              prefix1 |-> [channel |-> "", port |-> ""]]
           >>
             :> 0
           @@ <<
-            [channel |-> "channel-1", id |-> "", port |-> "transfer"], [denom |->
+            [channel |-> "channel-0", id |-> "", port |-> "transfer"], [denom |->
                 "eth",
-              prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-              prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]]
+              prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+              prefix1 |-> [channel |-> "", port |-> ""]]
           >>
-            :> 3,
+            :> 2,
       bankBefore |->
         <<
             [channel |-> "", id |-> "", port |-> ""], [denom |-> "",
@@ -435,25 +435,25 @@ State5 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [denom |-> "eth",
-              prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-              prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]]
+            [channel |-> "", id |-> "a1", port |-> ""], [denom |-> "eth",
+              prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+              prefix1 |-> [channel |-> "", port |-> ""]]
           >>
-            :> 3,
+            :> 2,
       error |-> FALSE,
       handler |-> "SendTransfer",
       packet |->
         [data |->
-            [amount |-> 3,
+            [amount |-> 2,
               denomTrace |->
                 [denom |-> "eth",
-                  prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-                  prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]],
-              receiver |-> "a3",
-              sender |-> "a2"],
+                  prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+                  prefix1 |-> [channel |-> "", port |-> ""]],
+              receiver |-> "",
+              sender |-> "a1"],
           destChannel |-> "channel-0",
           destPort |-> "transfer",
-          sourceChannel |-> "channel-1",
+          sourceChannel |-> "channel-0",
           sourcePort |-> "transfer"]]
   @@ 3
     :> [bankAfter |->
@@ -465,23 +465,23 @@ State5 ==
             :> 0
           @@ <<
             [channel |-> "", id |-> "a1", port |-> ""], [denom |-> "eth",
-              prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-              prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]]
-          >>
-            :> 1
-          @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [denom |-> "eth",
-              prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-              prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]]
+              prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+              prefix1 |-> [channel |-> "", port |-> ""]]
           >>
             :> 0
           @@ <<
-            [channel |-> "channel-1", id |-> "", port |-> "transfer"], [denom |->
-                "eth",
-              prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-              prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]]
+            [channel |-> "", id |-> "a3", port |-> ""], [denom |-> "eth",
+              prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+              prefix1 |-> [channel |-> "", port |-> ""]]
           >>
-            :> 2,
+            :> 1
+          @@ <<
+            [channel |-> "channel-0", id |-> "", port |-> "transfer"], [denom |->
+                "eth",
+              prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+              prefix1 |-> [channel |-> "", port |-> ""]]
+          >>
+            :> 1,
       bankBefore |->
         <<
             [channel |-> "", id |-> "", port |-> ""], [denom |-> "",
@@ -490,18 +490,18 @@ State5 ==
           >>
             :> 0
           @@ <<
-            [channel |-> "", id |-> "a2", port |-> ""], [denom |-> "eth",
-              prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-              prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]]
+            [channel |-> "", id |-> "a1", port |-> ""], [denom |-> "eth",
+              prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+              prefix1 |-> [channel |-> "", port |-> ""]]
           >>
             :> 0
           @@ <<
-            [channel |-> "channel-1", id |-> "", port |-> "transfer"], [denom |->
+            [channel |-> "channel-0", id |-> "", port |-> "transfer"], [denom |->
                 "eth",
-              prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
-              prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]]
+              prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
+              prefix1 |-> [channel |-> "", port |-> ""]]
           >>
-            :> 3,
+            :> 2,
       error |-> FALSE,
       handler |-> "OnRecvPacket",
       packet |->
@@ -509,33 +509,32 @@ State5 ==
             [amount |-> 1,
               denomTrace |->
                 [denom |-> "eth",
-                  prefix0 |-> [channel |-> "bitcoin-hub", port |-> "cosmos-hub"],
+                  prefix0 |-> [channel |-> "channel-1", port |-> "transfer"],
                   prefix1 |-> [channel |-> "channel-0", port |-> "transfer"]],
-              receiver |-> "a1",
-              sender |-> "a1"],
-          destChannel |-> "channel-1",
+              receiver |-> "a3",
+              sender |-> "a3"],
+          destChannel |-> "channel-0",
           destPort |-> "transfer",
           sourceChannel |-> "channel-0",
           sourcePort |-> "transfer"]]
 /\ p = [data |->
     [amount |-> 0,
       denomTrace |->
-        [denom |-> "eth",
-          prefix0 |-> [channel |-> "bitcoin-hub", port |-> "bitcoin-hub"],
+        [denom |-> "",
+          prefix0 |-> [channel |-> "", port |-> ""],
           prefix1 |-> [channel |-> "", port |-> ""]],
       receiver |-> "",
       sender |-> ""],
-  destChannel |-> "transfer",
-  destPort |-> "transfer",
-  sourceChannel |-> "bitcoin-hub",
-  sourcePort |-> "ethereum-hub"]
+  destChannel |-> "",
+  destPort |-> "",
+  sourceChannel |-> "",
+  sourcePort |-> ""]
 
 (* The following formula holds true in the last state and violates the invariant *)
 
 InvariantViolation ==
   BMC!Skolem((\E s$2 \in DOMAIN history:
-    s$2 > 0
-      /\ ((IF history[s$2]["packet"]["data"]["denomTrace"]["prefix0"]
+    ((IF history[s$2]["packet"]["data"]["denomTrace"]["prefix0"]
           = [port |-> "", channel |-> ""]
         THEN [port |-> "", channel |-> ""]
         ELSE IF history[s$2]["packet"]["data"]["denomTrace"]["prefix1"]
@@ -555,9 +554,9 @@ InvariantViolation ==
           "channel"
         ]
           = history[s$2]["packet"]["sourceChannel"])
-      /\ history[s$2]["error"] = FALSE
-      /\ history[s$2]["handler"] = "OnRecvPacket"))
+      /\ history[s$2]["handler"] = "OnRecvPacket"
+      /\ history[s$2]["error"] = FALSE))
 
 ================================================================================
-\* Created by Apalache on Wed Dec 09 12:05:46 CET 2020
+\* Created by Apalache on Wed Dec 09 21:53:47 CET 2020
 \* https://github.com/informalsystems/apalache

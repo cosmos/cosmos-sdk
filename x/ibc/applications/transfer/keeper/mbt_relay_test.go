@@ -344,7 +344,7 @@ func (suite *KeeperTestSuite) TestModelBasedRelay() {
 					}
 				case "OnRecvPacket": err = suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, tc.packet.Data)
 				case "OnTimeoutPacket": err = suite.chainB.App.TransferKeeper.OnTimeoutPacket(suite.chainB.GetContext(), packet, tc.packet.Data)
-			    case "OnRecvAcknowledgementResult":
+				case "OnRecvAcknowledgementResult":
 			    	err = suite.chainB.App.TransferKeeper.OnAcknowledgementPacket(
 			    		suite.chainB.GetContext(), packet, tc.packet.Data,
 			    		channeltypes.NewResultAcknowledgement(nil))

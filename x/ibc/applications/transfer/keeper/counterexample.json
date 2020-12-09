@@ -270,7 +270,7 @@
                                     "key": {
                                       "str": "amount"
                                     },
-                                    "value": 3
+                                    "value": 2
                                   },
                                   {
                                     "key": {
@@ -297,7 +297,7 @@
                                                   "str": "channel"
                                                 },
                                                 "value": {
-                                                  "str": "bitcoin-hub"
+                                                  "str": ""
                                                 }
                                               },
                                               {
@@ -305,7 +305,7 @@
                                                   "str": "port"
                                                 },
                                                 "value": {
-                                                  "str": "cosmos-hub"
+                                                  "str": ""
                                                 }
                                               }
                                             ]
@@ -344,7 +344,7 @@
                                       "str": "receiver"
                                     },
                                     "value": {
-                                      "str": "a2"
+                                      "str": "a1"
                                     }
                                   },
                                   {
@@ -352,7 +352,7 @@
                                       "str": "sender"
                                     },
                                     "value": {
-                                      "str": "a3"
+                                      "str": ""
                                     }
                                   }
                                 ]
@@ -363,7 +363,7 @@
                                 "str": "destChannel"
                               },
                               "value": {
-                                "str": "channel-0"
+                                "str": "channel-1"
                               }
                             },
                             {
@@ -521,7 +521,7 @@
                         "key": {
                           "str": "amount"
                         },
-                        "value": 3
+                        "value": 2
                       },
                       {
                         "key": {
@@ -548,7 +548,7 @@
                                       "str": "channel"
                                     },
                                     "value": {
-                                      "str": "bitcoin-hub"
+                                      "str": ""
                                     }
                                   },
                                   {
@@ -556,7 +556,7 @@
                                       "str": "port"
                                     },
                                     "value": {
-                                      "str": "cosmos-hub"
+                                      "str": ""
                                     }
                                   }
                                 ]
@@ -595,7 +595,7 @@
                           "str": "receiver"
                         },
                         "value": {
-                          "str": "a2"
+                          "str": "a1"
                         }
                       },
                       {
@@ -603,7 +603,7 @@
                           "str": "sender"
                         },
                         "value": {
-                          "str": "a3"
+                          "str": ""
                         }
                       }
                     ]
@@ -614,7 +614,7 @@
                     "str": "destChannel"
                   },
                   "value": {
-                    "str": "channel-0"
+                    "str": "channel-1"
                   }
                 },
                 {
@@ -914,7 +914,7 @@
                                     "key": {
                                       "str": "amount"
                                     },
-                                    "value": 3
+                                    "value": 2
                                   },
                                   {
                                     "key": {
@@ -941,7 +941,7 @@
                                                   "str": "channel"
                                                 },
                                                 "value": {
-                                                  "str": "bitcoin-hub"
+                                                  "str": ""
                                                 }
                                               },
                                               {
@@ -949,7 +949,7 @@
                                                   "str": "port"
                                                 },
                                                 "value": {
-                                                  "str": "cosmos-hub"
+                                                  "str": ""
                                                 }
                                               }
                                             ]
@@ -988,7 +988,7 @@
                                       "str": "receiver"
                                     },
                                     "value": {
-                                      "str": "a2"
+                                      "str": "a1"
                                     }
                                   },
                                   {
@@ -996,7 +996,7 @@
                                       "str": "sender"
                                     },
                                     "value": {
-                                      "str": "a3"
+                                      "str": ""
                                     }
                                   }
                                 ]
@@ -1007,7 +1007,7 @@
                                 "str": "destChannel"
                               },
                               "value": {
-                                "str": "channel-0"
+                                "str": "channel-1"
                               }
                             },
                             {
@@ -1165,7 +1165,7 @@
                                           "str": "id"
                                         },
                                         "value": {
-                                          "str": "a2"
+                                          "str": "a1"
                                         }
                                       },
                                       {
@@ -1199,7 +1199,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "bitcoin-hub"
+                                                "str": "channel-1"
                                               }
                                             },
                                             {
@@ -1207,7 +1207,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "cosmos-hub"
+                                                "str": "transfer"
                                               }
                                             }
                                           ]
@@ -1224,7 +1224,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "channel-0"
+                                                "str": ""
                                               }
                                             },
                                             {
@@ -1232,7 +1232,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "transfer"
+                                                "str": ""
                                               }
                                             }
                                           ]
@@ -1242,7 +1242,7 @@
                                   }
                                 ]
                               },
-                              "arg": 3
+                              "arg": 2
                             }
                           ]
                         }
@@ -1383,7 +1383,7 @@
                                     "key": {
                                       "str": "amount"
                                     },
-                                    "value": 3
+                                    "value": 2
                                   },
                                   {
                                     "key": {
@@ -1410,7 +1410,7 @@
                                                   "str": "channel"
                                                 },
                                                 "value": {
-                                                  "str": "bitcoin-hub"
+                                                  "str": ""
                                                 }
                                               },
                                               {
@@ -1418,7 +1418,7 @@
                                                   "str": "port"
                                                 },
                                                 "value": {
-                                                  "str": "cosmos-hub"
+                                                  "str": ""
                                                 }
                                               }
                                             ]
@@ -1457,7 +1457,7 @@
                                       "str": "receiver"
                                     },
                                     "value": {
-                                      "str": "a2"
+                                      "str": "a1"
                                     }
                                   },
                                   {
@@ -1465,7 +1465,7 @@
                                       "str": "sender"
                                     },
                                     "value": {
-                                      "str": "a3"
+                                      "str": ""
                                     }
                                   }
                                 ]
@@ -1476,7 +1476,7 @@
                                 "str": "destChannel"
                               },
                               "value": {
-                                "str": "channel-0"
+                                "str": "channel-1"
                               }
                             },
                             {
@@ -1631,7 +1631,7 @@
                               "str": "id"
                             },
                             "value": {
-                              "str": "a2"
+                              "str": "a1"
                             }
                           },
                           {
@@ -1665,7 +1665,7 @@
                                     "str": "channel"
                                   },
                                   "value": {
-                                    "str": "bitcoin-hub"
+                                    "str": "channel-1"
                                   }
                                 },
                                 {
@@ -1673,7 +1673,7 @@
                                     "str": "port"
                                   },
                                   "value": {
-                                    "str": "cosmos-hub"
+                                    "str": "transfer"
                                   }
                                 }
                               ]
@@ -1690,7 +1690,7 @@
                                     "str": "channel"
                                   },
                                   "value": {
-                                    "str": "channel-0"
+                                    "str": ""
                                   }
                                 },
                                 {
@@ -1698,7 +1698,7 @@
                                     "str": "port"
                                   },
                                   "value": {
-                                    "str": "transfer"
+                                    "str": ""
                                   }
                                 }
                               ]
@@ -1708,7 +1708,7 @@
                       }
                     ]
                   },
-                  "arg": 3
+                  "arg": 2
                 }
               ]
             }
@@ -1731,7 +1731,7 @@
                         "key": {
                           "str": "amount"
                         },
-                        "value": 3
+                        "value": 2
                       },
                       {
                         "key": {
@@ -1758,7 +1758,7 @@
                                       "str": "channel"
                                     },
                                     "value": {
-                                      "str": "bitcoin-hub"
+                                      "str": "channel-1"
                                     }
                                   },
                                   {
@@ -1766,7 +1766,7 @@
                                       "str": "port"
                                     },
                                     "value": {
-                                      "str": "cosmos-hub"
+                                      "str": "transfer"
                                     }
                                   }
                                 ]
@@ -1783,7 +1783,7 @@
                                       "str": "channel"
                                     },
                                     "value": {
-                                      "str": "channel-0"
+                                      "str": ""
                                     }
                                   },
                                   {
@@ -1791,7 +1791,7 @@
                                       "str": "port"
                                     },
                                     "value": {
-                                      "str": "transfer"
+                                      "str": ""
                                     }
                                   }
                                 ]
@@ -1805,7 +1805,7 @@
                           "str": "receiver"
                         },
                         "value": {
-                          "str": "a3"
+                          "str": ""
                         }
                       },
                       {
@@ -1813,7 +1813,7 @@
                           "str": "sender"
                         },
                         "value": {
-                          "str": "a2"
+                          "str": "a1"
                         }
                       }
                     ]
@@ -1840,7 +1840,7 @@
                     "str": "sourceChannel"
                   },
                   "value": {
-                    "str": "channel-1"
+                    "str": "channel-0"
                   }
                 },
                 {
@@ -2124,7 +2124,7 @@
                                     "key": {
                                       "str": "amount"
                                     },
-                                    "value": 3
+                                    "value": 2
                                   },
                                   {
                                     "key": {
@@ -2151,7 +2151,7 @@
                                                   "str": "channel"
                                                 },
                                                 "value": {
-                                                  "str": "bitcoin-hub"
+                                                  "str": ""
                                                 }
                                               },
                                               {
@@ -2159,7 +2159,7 @@
                                                   "str": "port"
                                                 },
                                                 "value": {
-                                                  "str": "cosmos-hub"
+                                                  "str": ""
                                                 }
                                               }
                                             ]
@@ -2198,7 +2198,7 @@
                                       "str": "receiver"
                                     },
                                     "value": {
-                                      "str": "a2"
+                                      "str": "a1"
                                     }
                                   },
                                   {
@@ -2206,7 +2206,7 @@
                                       "str": "sender"
                                     },
                                     "value": {
-                                      "str": "a3"
+                                      "str": ""
                                     }
                                   }
                                 ]
@@ -2217,7 +2217,7 @@
                                 "str": "destChannel"
                               },
                               "value": {
-                                "str": "channel-0"
+                                "str": "channel-1"
                               }
                             },
                             {
@@ -2375,7 +2375,7 @@
                                           "str": "id"
                                         },
                                         "value": {
-                                          "str": "a2"
+                                          "str": "a1"
                                         }
                                       },
                                       {
@@ -2409,7 +2409,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "bitcoin-hub"
+                                                "str": "channel-1"
                                               }
                                             },
                                             {
@@ -2417,7 +2417,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "cosmos-hub"
+                                                "str": "transfer"
                                               }
                                             }
                                           ]
@@ -2434,7 +2434,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "channel-0"
+                                                "str": ""
                                               }
                                             },
                                             {
@@ -2442,7 +2442,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "transfer"
+                                                "str": ""
                                               }
                                             }
                                           ]
@@ -2452,7 +2452,7 @@
                                   }
                                 ]
                               },
-                              "arg": 3
+                              "arg": 2
                             }
                           ]
                         }
@@ -2593,7 +2593,7 @@
                                     "key": {
                                       "str": "amount"
                                     },
-                                    "value": 3
+                                    "value": 2
                                   },
                                   {
                                     "key": {
@@ -2620,7 +2620,7 @@
                                                   "str": "channel"
                                                 },
                                                 "value": {
-                                                  "str": "bitcoin-hub"
+                                                  "str": ""
                                                 }
                                               },
                                               {
@@ -2628,7 +2628,7 @@
                                                   "str": "port"
                                                 },
                                                 "value": {
-                                                  "str": "cosmos-hub"
+                                                  "str": ""
                                                 }
                                               }
                                             ]
@@ -2667,7 +2667,7 @@
                                       "str": "receiver"
                                     },
                                     "value": {
-                                      "str": "a2"
+                                      "str": "a1"
                                     }
                                   },
                                   {
@@ -2675,7 +2675,7 @@
                                       "str": "sender"
                                     },
                                     "value": {
-                                      "str": "a3"
+                                      "str": ""
                                     }
                                   }
                                 ]
@@ -2686,7 +2686,7 @@
                                 "str": "destChannel"
                               },
                               "value": {
-                                "str": "channel-0"
+                                "str": "channel-1"
                               }
                             },
                             {
@@ -2844,7 +2844,7 @@
                                           "str": "id"
                                         },
                                         "value": {
-                                          "str": "a2"
+                                          "str": "a1"
                                         }
                                       },
                                       {
@@ -2878,7 +2878,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "bitcoin-hub"
+                                                "str": "channel-1"
                                               }
                                             },
                                             {
@@ -2886,7 +2886,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "cosmos-hub"
+                                                "str": "transfer"
                                               }
                                             }
                                           ]
@@ -2903,7 +2903,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "channel-0"
+                                                "str": ""
                                               }
                                             },
                                             {
@@ -2911,7 +2911,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "transfer"
+                                                "str": ""
                                               }
                                             }
                                           ]
@@ -2933,7 +2933,7 @@
                                           "str": "channel"
                                         },
                                         "value": {
-                                          "str": "channel-1"
+                                          "str": "channel-0"
                                         }
                                       },
                                       {
@@ -2975,7 +2975,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "bitcoin-hub"
+                                                "str": "channel-1"
                                               }
                                             },
                                             {
@@ -2983,7 +2983,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "cosmos-hub"
+                                                "str": "transfer"
                                               }
                                             }
                                           ]
@@ -3000,7 +3000,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "channel-0"
+                                                "str": ""
                                               }
                                             },
                                             {
@@ -3008,7 +3008,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "transfer"
+                                                "str": ""
                                               }
                                             }
                                           ]
@@ -3018,7 +3018,7 @@
                                   }
                                 ]
                               },
-                              "arg": 3
+                              "arg": 2
                             }
                           ]
                         }
@@ -3144,7 +3144,7 @@
                                           "str": "id"
                                         },
                                         "value": {
-                                          "str": "a2"
+                                          "str": "a1"
                                         }
                                       },
                                       {
@@ -3178,7 +3178,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "bitcoin-hub"
+                                                "str": "channel-1"
                                               }
                                             },
                                             {
@@ -3186,7 +3186,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "cosmos-hub"
+                                                "str": "transfer"
                                               }
                                             }
                                           ]
@@ -3203,7 +3203,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "channel-0"
+                                                "str": ""
                                               }
                                             },
                                             {
@@ -3211,7 +3211,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "transfer"
+                                                "str": ""
                                               }
                                             }
                                           ]
@@ -3221,7 +3221,7 @@
                                   }
                                 ]
                               },
-                              "arg": 3
+                              "arg": 2
                             }
                           ]
                         }
@@ -3256,7 +3256,7 @@
                                     "key": {
                                       "str": "amount"
                                     },
-                                    "value": 3
+                                    "value": 2
                                   },
                                   {
                                     "key": {
@@ -3283,7 +3283,7 @@
                                                   "str": "channel"
                                                 },
                                                 "value": {
-                                                  "str": "bitcoin-hub"
+                                                  "str": "channel-1"
                                                 }
                                               },
                                               {
@@ -3291,7 +3291,7 @@
                                                   "str": "port"
                                                 },
                                                 "value": {
-                                                  "str": "cosmos-hub"
+                                                  "str": "transfer"
                                                 }
                                               }
                                             ]
@@ -3308,7 +3308,7 @@
                                                   "str": "channel"
                                                 },
                                                 "value": {
-                                                  "str": "channel-0"
+                                                  "str": ""
                                                 }
                                               },
                                               {
@@ -3316,7 +3316,7 @@
                                                   "str": "port"
                                                 },
                                                 "value": {
-                                                  "str": "transfer"
+                                                  "str": ""
                                                 }
                                               }
                                             ]
@@ -3330,7 +3330,7 @@
                                       "str": "receiver"
                                     },
                                     "value": {
-                                      "str": "a3"
+                                      "str": ""
                                     }
                                   },
                                   {
@@ -3338,7 +3338,7 @@
                                       "str": "sender"
                                     },
                                     "value": {
-                                      "str": "a2"
+                                      "str": "a1"
                                     }
                                   }
                                 ]
@@ -3365,7 +3365,7 @@
                                 "str": "sourceChannel"
                               },
                               "value": {
-                                "str": "channel-1"
+                                "str": "channel-0"
                               }
                             },
                             {
@@ -3504,7 +3504,7 @@
                               "str": "id"
                             },
                             "value": {
-                              "str": "a2"
+                              "str": "a1"
                             }
                           },
                           {
@@ -3538,7 +3538,7 @@
                                     "str": "channel"
                                   },
                                   "value": {
-                                    "str": "bitcoin-hub"
+                                    "str": "channel-1"
                                   }
                                 },
                                 {
@@ -3546,7 +3546,7 @@
                                     "str": "port"
                                   },
                                   "value": {
-                                    "str": "cosmos-hub"
+                                    "str": "transfer"
                                   }
                                 }
                               ]
@@ -3563,7 +3563,7 @@
                                     "str": "channel"
                                   },
                                   "value": {
-                                    "str": "channel-0"
+                                    "str": ""
                                   }
                                 },
                                 {
@@ -3571,7 +3571,7 @@
                                     "str": "port"
                                   },
                                   "value": {
-                                    "str": "transfer"
+                                    "str": ""
                                   }
                                 }
                               ]
@@ -3593,7 +3593,7 @@
                               "str": "channel"
                             },
                             "value": {
-                              "str": "channel-1"
+                              "str": "channel-0"
                             }
                           },
                           {
@@ -3635,7 +3635,7 @@
                                     "str": "channel"
                                   },
                                   "value": {
-                                    "str": "bitcoin-hub"
+                                    "str": "channel-1"
                                   }
                                 },
                                 {
@@ -3643,7 +3643,7 @@
                                     "str": "port"
                                   },
                                   "value": {
-                                    "str": "cosmos-hub"
+                                    "str": "transfer"
                                   }
                                 }
                               ]
@@ -3660,7 +3660,7 @@
                                     "str": "channel"
                                   },
                                   "value": {
-                                    "str": "channel-0"
+                                    "str": ""
                                   }
                                 },
                                 {
@@ -3668,7 +3668,7 @@
                                     "str": "port"
                                   },
                                   "value": {
-                                    "str": "transfer"
+                                    "str": ""
                                   }
                                 }
                               ]
@@ -3678,7 +3678,7 @@
                       }
                     ]
                   },
-                  "arg": 3
+                  "arg": 2
                 }
               ]
             }
@@ -3728,7 +3728,7 @@
                                       "str": "channel"
                                     },
                                     "value": {
-                                      "str": "bitcoin-hub"
+                                      "str": "channel-1"
                                     }
                                   },
                                   {
@@ -3736,7 +3736,7 @@
                                       "str": "port"
                                     },
                                     "value": {
-                                      "str": "cosmos-hub"
+                                      "str": "transfer"
                                     }
                                   }
                                 ]
@@ -3775,7 +3775,7 @@
                           "str": "receiver"
                         },
                         "value": {
-                          "str": "a1"
+                          "str": "a3"
                         }
                       },
                       {
@@ -3783,7 +3783,7 @@
                           "str": "sender"
                         },
                         "value": {
-                          "str": "a1"
+                          "str": "a3"
                         }
                       }
                     ]
@@ -3794,7 +3794,7 @@
                     "str": "destChannel"
                   },
                   "value": {
-                    "str": "channel-1"
+                    "str": "channel-0"
                   }
                 },
                 {
@@ -4094,7 +4094,7 @@
                                     "key": {
                                       "str": "amount"
                                     },
-                                    "value": 3
+                                    "value": 2
                                   },
                                   {
                                     "key": {
@@ -4121,7 +4121,7 @@
                                                   "str": "channel"
                                                 },
                                                 "value": {
-                                                  "str": "bitcoin-hub"
+                                                  "str": ""
                                                 }
                                               },
                                               {
@@ -4129,7 +4129,7 @@
                                                   "str": "port"
                                                 },
                                                 "value": {
-                                                  "str": "cosmos-hub"
+                                                  "str": ""
                                                 }
                                               }
                                             ]
@@ -4168,7 +4168,7 @@
                                       "str": "receiver"
                                     },
                                     "value": {
-                                      "str": "a2"
+                                      "str": "a1"
                                     }
                                   },
                                   {
@@ -4176,7 +4176,7 @@
                                       "str": "sender"
                                     },
                                     "value": {
-                                      "str": "a3"
+                                      "str": ""
                                     }
                                   }
                                 ]
@@ -4187,7 +4187,7 @@
                                 "str": "destChannel"
                               },
                               "value": {
-                                "str": "channel-0"
+                                "str": "channel-1"
                               }
                             },
                             {
@@ -4345,7 +4345,7 @@
                                           "str": "id"
                                         },
                                         "value": {
-                                          "str": "a2"
+                                          "str": "a1"
                                         }
                                       },
                                       {
@@ -4379,7 +4379,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "bitcoin-hub"
+                                                "str": "channel-1"
                                               }
                                             },
                                             {
@@ -4387,7 +4387,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "cosmos-hub"
+                                                "str": "transfer"
                                               }
                                             }
                                           ]
@@ -4404,7 +4404,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "channel-0"
+                                                "str": ""
                                               }
                                             },
                                             {
@@ -4412,7 +4412,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "transfer"
+                                                "str": ""
                                               }
                                             }
                                           ]
@@ -4422,7 +4422,7 @@
                                   }
                                 ]
                               },
-                              "arg": 3
+                              "arg": 2
                             }
                           ]
                         }
@@ -4563,7 +4563,7 @@
                                     "key": {
                                       "str": "amount"
                                     },
-                                    "value": 3
+                                    "value": 2
                                   },
                                   {
                                     "key": {
@@ -4590,7 +4590,7 @@
                                                   "str": "channel"
                                                 },
                                                 "value": {
-                                                  "str": "bitcoin-hub"
+                                                  "str": ""
                                                 }
                                               },
                                               {
@@ -4598,7 +4598,7 @@
                                                   "str": "port"
                                                 },
                                                 "value": {
-                                                  "str": "cosmos-hub"
+                                                  "str": ""
                                                 }
                                               }
                                             ]
@@ -4637,7 +4637,7 @@
                                       "str": "receiver"
                                     },
                                     "value": {
-                                      "str": "a2"
+                                      "str": "a1"
                                     }
                                   },
                                   {
@@ -4645,7 +4645,7 @@
                                       "str": "sender"
                                     },
                                     "value": {
-                                      "str": "a3"
+                                      "str": ""
                                     }
                                   }
                                 ]
@@ -4656,7 +4656,7 @@
                                 "str": "destChannel"
                               },
                               "value": {
-                                "str": "channel-0"
+                                "str": "channel-1"
                               }
                             },
                             {
@@ -4814,7 +4814,7 @@
                                           "str": "id"
                                         },
                                         "value": {
-                                          "str": "a2"
+                                          "str": "a1"
                                         }
                                       },
                                       {
@@ -4848,7 +4848,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "bitcoin-hub"
+                                                "str": "channel-1"
                                               }
                                             },
                                             {
@@ -4856,7 +4856,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "cosmos-hub"
+                                                "str": "transfer"
                                               }
                                             }
                                           ]
@@ -4873,7 +4873,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "channel-0"
+                                                "str": ""
                                               }
                                             },
                                             {
@@ -4881,7 +4881,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "transfer"
+                                                "str": ""
                                               }
                                             }
                                           ]
@@ -4903,7 +4903,7 @@
                                           "str": "channel"
                                         },
                                         "value": {
-                                          "str": "channel-1"
+                                          "str": "channel-0"
                                         }
                                       },
                                       {
@@ -4945,7 +4945,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "bitcoin-hub"
+                                                "str": "channel-1"
                                               }
                                             },
                                             {
@@ -4953,7 +4953,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "cosmos-hub"
+                                                "str": "transfer"
                                               }
                                             }
                                           ]
@@ -4970,7 +4970,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "channel-0"
+                                                "str": ""
                                               }
                                             },
                                             {
@@ -4978,7 +4978,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "transfer"
+                                                "str": ""
                                               }
                                             }
                                           ]
@@ -4988,7 +4988,7 @@
                                   }
                                 ]
                               },
-                              "arg": 3
+                              "arg": 2
                             }
                           ]
                         }
@@ -5114,7 +5114,7 @@
                                           "str": "id"
                                         },
                                         "value": {
-                                          "str": "a2"
+                                          "str": "a1"
                                         }
                                       },
                                       {
@@ -5148,7 +5148,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "bitcoin-hub"
+                                                "str": "channel-1"
                                               }
                                             },
                                             {
@@ -5156,7 +5156,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "cosmos-hub"
+                                                "str": "transfer"
                                               }
                                             }
                                           ]
@@ -5173,7 +5173,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "channel-0"
+                                                "str": ""
                                               }
                                             },
                                             {
@@ -5181,7 +5181,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "transfer"
+                                                "str": ""
                                               }
                                             }
                                           ]
@@ -5191,7 +5191,7 @@
                                   }
                                 ]
                               },
-                              "arg": 3
+                              "arg": 2
                             }
                           ]
                         }
@@ -5226,7 +5226,7 @@
                                     "key": {
                                       "str": "amount"
                                     },
-                                    "value": 3
+                                    "value": 2
                                   },
                                   {
                                     "key": {
@@ -5253,7 +5253,7 @@
                                                   "str": "channel"
                                                 },
                                                 "value": {
-                                                  "str": "bitcoin-hub"
+                                                  "str": "channel-1"
                                                 }
                                               },
                                               {
@@ -5261,7 +5261,7 @@
                                                   "str": "port"
                                                 },
                                                 "value": {
-                                                  "str": "cosmos-hub"
+                                                  "str": "transfer"
                                                 }
                                               }
                                             ]
@@ -5278,7 +5278,7 @@
                                                   "str": "channel"
                                                 },
                                                 "value": {
-                                                  "str": "channel-0"
+                                                  "str": ""
                                                 }
                                               },
                                               {
@@ -5286,7 +5286,7 @@
                                                   "str": "port"
                                                 },
                                                 "value": {
-                                                  "str": "transfer"
+                                                  "str": ""
                                                 }
                                               }
                                             ]
@@ -5300,7 +5300,7 @@
                                       "str": "receiver"
                                     },
                                     "value": {
-                                      "str": "a3"
+                                      "str": ""
                                     }
                                   },
                                   {
@@ -5308,7 +5308,7 @@
                                       "str": "sender"
                                     },
                                     "value": {
-                                      "str": "a2"
+                                      "str": "a1"
                                     }
                                   }
                                 ]
@@ -5335,7 +5335,7 @@
                                 "str": "sourceChannel"
                               },
                               "value": {
-                                "str": "channel-1"
+                                "str": "channel-0"
                               }
                             },
                             {
@@ -5511,7 +5511,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "bitcoin-hub"
+                                                "str": "channel-1"
                                               }
                                             },
                                             {
@@ -5519,7 +5519,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "cosmos-hub"
+                                                "str": "transfer"
                                               }
                                             }
                                           ]
@@ -5536,7 +5536,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "channel-0"
+                                                "str": ""
                                               }
                                             },
                                             {
@@ -5544,7 +5544,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "transfer"
+                                                "str": ""
                                               }
                                             }
                                           ]
@@ -5554,7 +5554,7 @@
                                   }
                                 ]
                               },
-                              "arg": 1
+                              "arg": 0
                             },
                             {
                               "colonGreater": {
@@ -5574,7 +5574,7 @@
                                           "str": "id"
                                         },
                                         "value": {
-                                          "str": "a2"
+                                          "str": "a3"
                                         }
                                       },
                                       {
@@ -5608,7 +5608,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "bitcoin-hub"
+                                                "str": "channel-1"
                                               }
                                             },
                                             {
@@ -5616,7 +5616,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "cosmos-hub"
+                                                "str": "transfer"
                                               }
                                             }
                                           ]
@@ -5633,7 +5633,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "channel-0"
+                                                "str": ""
                                               }
                                             },
                                             {
@@ -5641,7 +5641,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "transfer"
+                                                "str": ""
                                               }
                                             }
                                           ]
@@ -5651,7 +5651,7 @@
                                   }
                                 ]
                               },
-                              "arg": 0
+                              "arg": 1
                             },
                             {
                               "colonGreater": {
@@ -5663,7 +5663,7 @@
                                           "str": "channel"
                                         },
                                         "value": {
-                                          "str": "channel-1"
+                                          "str": "channel-0"
                                         }
                                       },
                                       {
@@ -5705,7 +5705,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "bitcoin-hub"
+                                                "str": "channel-1"
                                               }
                                             },
                                             {
@@ -5713,7 +5713,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "cosmos-hub"
+                                                "str": "transfer"
                                               }
                                             }
                                           ]
@@ -5730,7 +5730,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "channel-0"
+                                                "str": ""
                                               }
                                             },
                                             {
@@ -5738,7 +5738,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "transfer"
+                                                "str": ""
                                               }
                                             }
                                           ]
@@ -5748,7 +5748,7 @@
                                   }
                                 ]
                               },
-                              "arg": 2
+                              "arg": 1
                             }
                           ]
                         }
@@ -5874,7 +5874,7 @@
                                           "str": "id"
                                         },
                                         "value": {
-                                          "str": "a2"
+                                          "str": "a1"
                                         }
                                       },
                                       {
@@ -5908,7 +5908,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "bitcoin-hub"
+                                                "str": "channel-1"
                                               }
                                             },
                                             {
@@ -5916,7 +5916,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "cosmos-hub"
+                                                "str": "transfer"
                                               }
                                             }
                                           ]
@@ -5933,7 +5933,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "channel-0"
+                                                "str": ""
                                               }
                                             },
                                             {
@@ -5941,7 +5941,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "transfer"
+                                                "str": ""
                                               }
                                             }
                                           ]
@@ -5963,7 +5963,7 @@
                                           "str": "channel"
                                         },
                                         "value": {
-                                          "str": "channel-1"
+                                          "str": "channel-0"
                                         }
                                       },
                                       {
@@ -6005,7 +6005,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "bitcoin-hub"
+                                                "str": "channel-1"
                                               }
                                             },
                                             {
@@ -6013,7 +6013,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "cosmos-hub"
+                                                "str": "transfer"
                                               }
                                             }
                                           ]
@@ -6030,7 +6030,7 @@
                                                 "str": "channel"
                                               },
                                               "value": {
-                                                "str": "channel-0"
+                                                "str": ""
                                               }
                                             },
                                             {
@@ -6038,7 +6038,7 @@
                                                 "str": "port"
                                               },
                                               "value": {
-                                                "str": "transfer"
+                                                "str": ""
                                               }
                                             }
                                           ]
@@ -6048,7 +6048,7 @@
                                   }
                                 ]
                               },
-                              "arg": 3
+                              "arg": 2
                             }
                           ]
                         }
@@ -6110,7 +6110,7 @@
                                                   "str": "channel"
                                                 },
                                                 "value": {
-                                                  "str": "bitcoin-hub"
+                                                  "str": "channel-1"
                                                 }
                                               },
                                               {
@@ -6118,7 +6118,7 @@
                                                   "str": "port"
                                                 },
                                                 "value": {
-                                                  "str": "cosmos-hub"
+                                                  "str": "transfer"
                                                 }
                                               }
                                             ]
@@ -6157,7 +6157,7 @@
                                       "str": "receiver"
                                     },
                                     "value": {
-                                      "str": "a1"
+                                      "str": "a3"
                                     }
                                   },
                                   {
@@ -6165,7 +6165,7 @@
                                       "str": "sender"
                                     },
                                     "value": {
-                                      "str": "a1"
+                                      "str": "a3"
                                     }
                                   }
                                 ]
@@ -6176,7 +6176,7 @@
                                 "str": "destChannel"
                               },
                               "value": {
-                                "str": "channel-1"
+                                "str": "channel-0"
                               }
                             },
                             {
@@ -6365,7 +6365,7 @@
                                     "str": "channel"
                                   },
                                   "value": {
-                                    "str": "bitcoin-hub"
+                                    "str": "channel-1"
                                   }
                                 },
                                 {
@@ -6373,7 +6373,7 @@
                                     "str": "port"
                                   },
                                   "value": {
-                                    "str": "cosmos-hub"
+                                    "str": "transfer"
                                   }
                                 }
                               ]
@@ -6390,7 +6390,7 @@
                                     "str": "channel"
                                   },
                                   "value": {
-                                    "str": "channel-0"
+                                    "str": ""
                                   }
                                 },
                                 {
@@ -6398,7 +6398,7 @@
                                     "str": "port"
                                   },
                                   "value": {
-                                    "str": "transfer"
+                                    "str": ""
                                   }
                                 }
                               ]
@@ -6408,7 +6408,7 @@
                       }
                     ]
                   },
-                  "arg": 1
+                  "arg": 0
                 },
                 {
                   "colonGreater": {
@@ -6428,7 +6428,7 @@
                               "str": "id"
                             },
                             "value": {
-                              "str": "a2"
+                              "str": "a3"
                             }
                           },
                           {
@@ -6462,7 +6462,7 @@
                                     "str": "channel"
                                   },
                                   "value": {
-                                    "str": "bitcoin-hub"
+                                    "str": "channel-1"
                                   }
                                 },
                                 {
@@ -6470,7 +6470,7 @@
                                     "str": "port"
                                   },
                                   "value": {
-                                    "str": "cosmos-hub"
+                                    "str": "transfer"
                                   }
                                 }
                               ]
@@ -6487,7 +6487,7 @@
                                     "str": "channel"
                                   },
                                   "value": {
-                                    "str": "channel-0"
+                                    "str": ""
                                   }
                                 },
                                 {
@@ -6495,7 +6495,7 @@
                                     "str": "port"
                                   },
                                   "value": {
-                                    "str": "transfer"
+                                    "str": ""
                                   }
                                 }
                               ]
@@ -6505,7 +6505,7 @@
                       }
                     ]
                   },
-                  "arg": 0
+                  "arg": 1
                 },
                 {
                   "colonGreater": {
@@ -6517,7 +6517,7 @@
                               "str": "channel"
                             },
                             "value": {
-                              "str": "channel-1"
+                              "str": "channel-0"
                             }
                           },
                           {
@@ -6559,7 +6559,7 @@
                                     "str": "channel"
                                   },
                                   "value": {
-                                    "str": "bitcoin-hub"
+                                    "str": "channel-1"
                                   }
                                 },
                                 {
@@ -6567,7 +6567,7 @@
                                     "str": "port"
                                   },
                                   "value": {
-                                    "str": "cosmos-hub"
+                                    "str": "transfer"
                                   }
                                 }
                               ]
@@ -6584,7 +6584,7 @@
                                     "str": "channel"
                                   },
                                   "value": {
-                                    "str": "channel-0"
+                                    "str": ""
                                   }
                                 },
                                 {
@@ -6592,7 +6592,7 @@
                                     "str": "port"
                                   },
                                   "value": {
-                                    "str": "transfer"
+                                    "str": ""
                                   }
                                 }
                               ]
@@ -6602,7 +6602,7 @@
                       }
                     ]
                   },
-                  "arg": 2
+                  "arg": 1
                 }
               ]
             }
@@ -6638,7 +6638,7 @@
                                 "str": "denom"
                               },
                               "value": {
-                                "str": "eth"
+                                "str": ""
                               }
                             },
                             {
@@ -6652,7 +6652,7 @@
                                       "str": "channel"
                                     },
                                     "value": {
-                                      "str": "bitcoin-hub"
+                                      "str": ""
                                     }
                                   },
                                   {
@@ -6660,7 +6660,7 @@
                                       "str": "port"
                                     },
                                     "value": {
-                                      "str": "bitcoin-hub"
+                                      "str": ""
                                     }
                                   }
                                 ]
@@ -6718,7 +6718,7 @@
                     "str": "destChannel"
                   },
                   "value": {
-                    "str": "transfer"
+                    "str": ""
                   }
                 },
                 {
@@ -6726,7 +6726,7 @@
                     "str": "destPort"
                   },
                   "value": {
-                    "str": "transfer"
+                    "str": ""
                   }
                 },
                 {
@@ -6734,7 +6734,7 @@
                     "str": "sourceChannel"
                   },
                   "value": {
-                    "str": "bitcoin-hub"
+                    "str": ""
                   }
                 },
                 {
@@ -6742,7 +6742,7 @@
                     "str": "sourcePort"
                   },
                   "value": {
-                    "str": "ethereum-hub"
+                    "str": ""
                   }
                 }
               ]

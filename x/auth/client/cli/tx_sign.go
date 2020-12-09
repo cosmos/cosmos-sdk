@@ -16,10 +16,10 @@ import (
 )
 
 const (
-	flagMultisig = "multisig"
-	flagAppend   = "append"
-	flagSigOnly  = "signature-only"
-	flagAmino    = "amino"
+	flagMultisig  = "multisig"
+	flagOverwrite = "overwrite"
+	flagSigOnly   = "signature-only"
+	flagAmino     = "amino"
 )
 
 // GetSignBatchCommand returns the transaction sign-batch command.
@@ -188,7 +188,7 @@ be generated via the 'multisign' command.
 	}
 
 	cmd.Flags().String(flagMultisig, "", "Address of the multisig account on behalf of which the transaction shall be signed")
-	cmd.Flags().Bool(flagAppend, true, "Append the signature to the existing ones. If disabled, old signatures would be overwritten. Ignored if --multisig is on")
+	cmd.Flags().Bool(flagOverwrite, false, "Append the signature to the existing ones. If disabled, old signatures would be overwritten. Ignored if --multisig is on")
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the signature")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	cmd.Flags().String(flags.FlagChainID, "", "The network chain ID")
@@ -250,7 +250,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			)
 			generateSignatureOnly = true
 		} else {
-			flagAppend, _ := f.GetBool(flagAppend)
+			flagAppend, _ := f.GetBool(flagOverwrite)
 			err = authclient.SignTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, !flagAppend)
 		}
 		if err != nil {

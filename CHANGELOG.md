@@ -56,14 +56,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * (crypto) [\#7966](https://github.com/cosmos/cosmos-sdk/issues/7966) `Bip44Params` `String()` function now correctly returns the absolute HD path by adding the `m/` prefix.
-
+* (x/auth/client/cli) [\#7632](https://github.com/cosmos/cosmos-sdk/issues/7632) fixing regression bugs in transaction signing.
 
 ### API Breaking
 
 * [\#8080](https://github.com/cosmos/cosmos-sdk/pull/8080) Updated the `codec.Marshaler` interface
   * Moved `MarshalAny` and `UnmarshalAny` helper functions to `codec.Marshaler` and renamed to `MarshalInterface` and `UnmarshalInterface` respectively. These functions must take interface as a parameter (not a concrete type nor `Any` object). Underneath they use `Any` wrapping for correct protobuf serialization.
-
-
+* (x/auth/tx) [\#8106](https://github.com/cosmos/cosmos-sdk/pull/8106) change related to missing append functionality in client transaction signing
+  + added `overwriteSig` argument to `x/auth/client.SignTx` and `client/tx.Sign` functions.
+  + removed `x/auth/tx.go:wrapper.GetSignatures`. The `wrapper` provides `TxBuilder` functionality, and it's a private structure. That function was not used at all and it's not exposed through the `TxBuilder` interface.
 
 ## [v0.40.0-rc3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc3) - 2020-11-06
 

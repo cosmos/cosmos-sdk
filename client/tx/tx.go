@@ -379,7 +379,7 @@ func SignWithPrivKey(
 // The resulting signature will be added to the transaction builder overwriting the previous
 // ones if overwrite=true (otherwise, ne signature will be appended).
 // An error is returned upon failure.
-func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwrite bool) error {
+func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig bool) error {
 	if txf.keybase == nil {
 		return errors.New("keybase must be set prior to signing a transaction")
 	}
@@ -420,7 +420,7 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwrite bool) 
 		Sequence: txf.Sequence(),
 	}
 	var previousSignatures []signing.SignatureV2
-	if overwrite {
+	if overwriteSig {
 		previousSignatures = txBuilder.GetTx().GetSignaturesV2()
 	}
 	if err := txBuilder.SetSignatures(sig); err != nil {
@@ -450,11 +450,11 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwrite bool) 
 		Sequence: txf.Sequence(),
 	}
 
-	if overwrite {
-		previousSignatures = append(previousSignatures, sig)
-		return txBuilder.SetSignatures(previousSignatures...)
+	if overwriteSig {
+		return txBuilder.SetSignatures(sig)
 	}
-	return txBuilder.SetSignatures(sig)
+	previousSignatures = append(previousSignatures, sig)
+	return txBuilder.SetSignatures(previousSignatures...)
 }
 
 // GasEstimateResponse defines a response definition for tx gas estimation.

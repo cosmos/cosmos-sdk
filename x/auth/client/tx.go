@@ -46,7 +46,7 @@ func PrintUnsignedStdTx(txBldr tx.Factory, clientCtx client.Context, msgs []sdk.
 // SignTx signs a transaction managed by the TxBuilder using a `name` key stored in Keybase.
 // The new signature is appended to to the TxBuilder.
 // Don't perform online validation or lookups if offline is true.
-func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, stdTx client.TxBuilder, offline, overwrite bool) error {
+func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, stdTx client.TxBuilder, offline, overwriteSig bool) error {
 	info, err := txFactory.Keybase().Key(name)
 	if err != nil {
 		return err
@@ -62,7 +62,7 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, stdTx c
 		}
 	}
 
-	return tx.Sign(txFactory, name, stdTx, overwrite)
+	return tx.Sign(txFactory, name, stdTx, overwriteSig)
 }
 
 // SignTxWithSignerAddress attaches a signature to a transaction.

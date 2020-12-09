@@ -64,7 +64,7 @@ func (d DeductGrantedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	txSigner := feeTx.FeeGranter()
 
 	// ensure the grant is allowed, if we request a different fee payer
-	if !txSigner.Equals(feePayer) {
+	if txSigner != nil && !txSigner.Equals(feePayer) {
 		err := d.k.UseGrantedFees(ctx, feePayer, txSigner, fee)
 		if err != nil {
 			return ctx, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", txSigner, feePayer)

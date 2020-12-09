@@ -240,17 +240,17 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		genDocProvider,
 		node.DefaultDBProvider,
 		node.DefaultMetricsProvider(cfg.Instrumentation),
-		ctx.Logger.With("module", "node"),
+		ctx.Logger,
 	)
 	if err != nil {
 		return err
 	}
-	ctx.Logger.Debug("Initialization: tmNode created")
 
+	ctx.Logger.Debug("initialization: tmNode created")
 	if err := tmNode.Start(); err != nil {
 		return err
 	}
-	ctx.Logger.Debug("Initialization: tmNode started")
+	ctx.Logger.Debug("initialization: tmNode started")
 
 	config := config.GetConfig(ctx.Viper)
 
@@ -258,10 +258,10 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	// service if API or gRPC is enabled, and avoid doing so in the general
 	// case, because it spawns a new local tendermint RPC client.
 	if config.API.Enable || config.GRPC.Enable {
-		clientCtx = clientCtx.
-			WithClient(local.New(tmNode))
+		clientCtx = clientCtx.WithClient(local.New(tmNode))
 
 		app.RegisterTxService(clientCtx)
+		app.RegisterTendermintService(clientCtx)
 	}
 
 	var apiSrv *api.Server

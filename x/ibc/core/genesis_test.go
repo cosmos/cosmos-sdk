@@ -97,6 +97,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 					},
 					clienttypes.NewParams(exported.Tendermint, exported.Localhost),
 					true,
+					0,
 				),
 				ConnectionGenesis: connectiontypes.NewGenesisState(
 					[]connectiontypes.IdentifiedConnection{
@@ -105,6 +106,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 					[]connectiontypes.ConnectionPaths{
 						connectiontypes.NewConnectionPaths(clientID, []string{connectionID}),
 					},
+					0,
 				),
 				ChannelGenesis: channeltypes.NewGenesisState(
 					[]channeltypes.IdentifiedChannel{
@@ -133,6 +135,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 					[]channeltypes.PacketSequence{
 						channeltypes.NewPacketSequence(port2, channel2, 1),
 					},
+					0,
 				),
 			},
 			expPass: true,
@@ -152,6 +155,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 					nil,
 					clienttypes.NewParams(exported.Tendermint),
 					false,
+					0,
 				),
 				ConnectionGenesis: connectiontypes.DefaultGenesisState(),
 			},
@@ -168,6 +172,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 					[]connectiontypes.ConnectionPaths{
 						connectiontypes.NewConnectionPaths(clientID, []string{connectionID}),
 					},
+					0,
 				),
 			},
 			expPass: false,
@@ -236,6 +241,7 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 					},
 					clienttypes.NewParams(exported.Tendermint, exported.Localhost),
 					true,
+					0,
 				),
 				ConnectionGenesis: connectiontypes.NewGenesisState(
 					[]connectiontypes.IdentifiedConnection{
@@ -244,6 +250,7 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 					[]connectiontypes.ConnectionPaths{
 						connectiontypes.NewConnectionPaths(clientID, []string{connectionID}),
 					},
+					0,
 				),
 				ChannelGenesis: channeltypes.NewGenesisState(
 					[]channeltypes.IdentifiedChannel{
@@ -272,6 +279,7 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 					[]channeltypes.PacketSequence{
 						channeltypes.NewPacketSequence(port2, channel2, 1),
 					},
+					0,
 				),
 			},
 		},

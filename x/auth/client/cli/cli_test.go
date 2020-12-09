@@ -983,6 +983,46 @@ func (s *IntegrationTestSuite) TestTxWithoutPublicKey() {
 	s.Require().NoError(err)
 }
 
+func (s *IntegrationTestSuite) TestFlagOutputDocument() {
+	val0 := s.network.Validators[0]
+	res, err := bankcli.MsgSendExec(
+		val0.ClientCtx,
+		val0.Address,
+		val0.Address,
+		sdk.NewCoins(
+			sdk.NewCoin(fmt.Sprintf("%stoken", val0.Moniker), sdk.NewInt(10)),
+			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+		),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	)
+	s.Require().NoError(err)
+
+	// Write  unsigned tx to file.
+	unsignedTx, cleanup1 := testutil.WriteToNewTempFile(s.T(), res.String())
+	defer cleanup1()
+
+	// Create a temp file to hold the signed tx.
+	tempfile, err := ioutil.TempFile(s.T().TempDir(), "testtx")
+	s.Require().NoError(err)
+	err = tempfile.Chmod(0644)
+	s.Require().NoError(err)
+	err = tempfile.Close()
+	s.Require().NoError(err)
+
+	res, err = authtest.TxSignExec(
+		val0.ClientCtx, val0.Address, unsignedTx.Name(),
+		fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, tempfile.Name()),
+		fmt.Sprint("--amino=true"),
+	)
+	s.Require().NoError(err)
+	s.Require().Zero(res.String())
+
+	signedTx, err := ioutil.ReadFile(tempfile.Name())
+	s.Require().NoError(err)
+	s.Require().NotZero(signedTx)
+}
+
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }

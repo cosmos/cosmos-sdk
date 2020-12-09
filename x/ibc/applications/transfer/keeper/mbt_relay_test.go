@@ -288,7 +288,7 @@ func (suite *KeeperTestSuite) CheckBankBalances(chain *ibctesting.TestChain, ban
 	return nil
 }
 
-func (suite *KeeperTestSuite) TestModelBasedOnRecvPacket() {
+func (suite *KeeperTestSuite) TestModelBasedRelay() {
 	var tlaTestCases = []TlaOnRecvPacketTestCase{}
 
 	filename := "relay-test.json"
@@ -322,7 +322,6 @@ func (suite *KeeperTestSuite) TestModelBasedOnRecvPacket() {
 				return
 			}
 			switch tc.handler {
-				// TODO for SendTransfer to work, channels need also to be created
 				case "SendTransfer":
 					var sender sdk.AccAddress;
 					sender, err = sdk.AccAddressFromBech32(tc.packet.Data.Sender);

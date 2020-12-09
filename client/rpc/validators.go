@@ -53,7 +53,7 @@ func ValidatorCommand() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutputLegacy(result)
+			return clientCtx.PrintObjectLegacy(result)
 		},
 	}
 

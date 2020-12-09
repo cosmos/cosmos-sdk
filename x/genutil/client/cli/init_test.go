@@ -21,6 +21,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/mock"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -84,6 +85,37 @@ func TestInitCmd(t *testing.T) {
 		})
 	}
 
+}
+
+func TestInitRecover(t *testing.T) {
+	home := t.TempDir()
+	logger := log.NewNopLogger()
+	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+	require.NoError(t, err)
+
+	serverCtx := server.NewContext(viper.New(), cfg, logger)
+	interfaceRegistry := types.NewInterfaceRegistry()
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	clientCtx := client.Context{}.
+		WithJSONMarshaler(marshaler).
+		WithLegacyAmino(makeCodec()).
+		WithHomeDir(home)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+
+	cmd := genutilcli.InitCmd(testMbm, home)
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
+
+	cmd.SetArgs([]string{
+		"appnode-test",
+		fmt.Sprintf("--%s=true", genutilcli.FlagRecover),
+	})
+
+	// use valid mnemonic and complete recovery key generation successfully
+	mockIn.Reset("decide praise business actor peasant farm drastic weather extend front hurt later song give verb rhythm worry fun pond reform school tumble august one\n")
+	require.NoError(t, cmd.ExecuteContext(ctx))
 }
 
 func TestEmptyState(t *testing.T) {

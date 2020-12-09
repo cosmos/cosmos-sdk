@@ -12,14 +12,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// sdk operation identifiers
-var (
-	opDelegate          = stakingtypes.MsgDelegate{}.Type()
-	opFee               = "fee"
-	opBankSend          = bank.MsgSend{}.Type()
-	supportedOperations = []string{opDelegate, opFee, opBankSend}
-)
-
 func timeToMilliseconds(t time.Time) int64 {
 	return t.UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
 }

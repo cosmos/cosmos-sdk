@@ -8,47 +8,13 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/tendermint/go-amino"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 )
 
-type DataClient struct {
-	tm        rpcclient.Client
-	lcd       string
-	cdc       *amino.Codec
-	txDecoder sdk.TxDecoder
-}
-
-func (d DataClient) SupportedOperations() []string {
-	return supportedOperations
-}
-
-func (d DataClient) NodeVersion() string {
-	return "0.37.12"
-}
-
-func NewDataClient(tmEndpoint string, lcdEndpoint string, cdc *amino.Codec) (DataClient, error) {
-	tmClient := rpcclient.NewHTTP(tmEndpoint, "/websocket")
-	// test it works
-	_, err := tmClient.Health()
-	if err != nil {
-		return DataClient{}, err
-	}
-	dc := DataClient{
-		tm:        tmClient,
-		lcd:       lcdEndpoint,
-		cdc:       cdc,
-		txDecoder: auth.DefaultTxDecoder(cdc),
-	}
-	return dc, nil
-}
-
-func (d DataClient) Balances(ctx context.Context, address string, height *int64) (amounts []*types.Amount, err error) {
+func (d Client) Balances(ctx context.Context, address string, height *int64) (amounts []*types.Amount, err error) {
 	balance, err := d.balance(ctx, address, height)
 	if err != nil {
 		return
@@ -66,7 +32,7 @@ func (d DataClient) Balances(ctx context.Context, address string, height *int64)
 	return
 }
 
-func (d DataClient) do(ctx context.Context, path string, height *int64, req interface{}, resp interface{}) error {
+func (d Client) do(ctx context.Context, path string, height *int64, req interface{}, resp interface{}) error {
 	u := fmt.Sprintf("%s/%s", d.lcd, path)
 	if height != nil {
 		u += "?height=" + strconv.FormatInt(*height, 10)
@@ -112,7 +78,7 @@ func (d DataClient) do(ctx context.Context, path string, height *int64, req inte
 	return nil
 }
 
-func (d DataClient) balance(ctx context.Context, address string, height *int64) (coins sdk.Coins, err error) {
+func (d Client) balance(ctx context.Context, address string, height *int64) (coins sdk.Coins, err error) {
 	const path = "bank/balances"
 	sdkAddr, err := sdk.AccAddressFromBech32(address)
 	if err != nil {
@@ -123,7 +89,7 @@ func (d DataClient) balance(ctx context.Context, address string, height *int64) 
 	return
 }
 
-func (d DataClient) supply(ctx context.Context, height *int64) (coins sdk.Coins, err error) {
+func (d Client) supply(ctx context.Context, height *int64) (coins sdk.Coins, err error) {
 	const path = "supply/total_supply"
 	supplyReq := struct {
 		Page, Limit int
@@ -132,7 +98,7 @@ func (d DataClient) supply(ctx context.Context, height *int64) (coins sdk.Coins,
 	return
 }
 
-func (d DataClient) BlockByHeight(_ context.Context, height *int64) (block rosetta.BlockResponse, err error) {
+func (d Client) BlockByHeight(_ context.Context, height *int64) (block rosetta.BlockResponse, err error) {
 	tmBlock, err := d.tm.Block(height)
 	if err != nil {
 		return block, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
@@ -152,11 +118,11 @@ func (d DataClient) BlockByHeight(_ context.Context, height *int64) (block roset
 	return block, nil
 }
 
-func (d DataClient) BlockByHash(_ context.Context, _ string) (block rosetta.BlockResponse, err error) {
+func (d Client) BlockByHash(_ context.Context, _ string) (block rosetta.BlockResponse, err error) {
 	return block, rosetta.WrapError(rosetta.ErrNotImplemented, "unable to get block by hash")
 }
 
-func (d DataClient) BlockTransactionsByHeight(ctx context.Context, height *int64) (block rosetta.BlockTransactionsResponse, err error) {
+func (d Client) BlockTransactionsByHeight(ctx context.Context, height *int64) (block rosetta.BlockTransactionsResponse, err error) {
 	tmBlock, err := d.BlockByHeight(ctx, height)
 	if err != nil {
 		return block, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
@@ -189,11 +155,11 @@ func (d DataClient) BlockTransactionsByHeight(ctx context.Context, height *int64
 	return block, nil
 }
 
-func (d DataClient) BlockTransactionsByHash(_ context.Context, _ string) (block rosetta.BlockTransactionsResponse, err error) {
+func (d Client) BlockTransactionsByHash(_ context.Context, _ string) (block rosetta.BlockTransactionsResponse, err error) {
 	return block, rosetta.WrapError(rosetta.ErrNotImplemented, "unable to get block transactions given a block hash")
 }
 
-func (d DataClient) GetTransaction(_ context.Context, hash string) (tx *types.Transaction, err error) {
+func (d Client) GetTransaction(_ context.Context, hash string) (tx *types.Transaction, err error) {
 	tmTx, err := d.tm.Tx([]byte(hash), false)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
@@ -210,7 +176,7 @@ func (d DataClient) GetTransaction(_ context.Context, hash string) (tx *types.Tr
 	return tx, nil
 }
 
-func (d DataClient) GetMempoolTransactions(_ context.Context) (txs []*types.TransactionIdentifier, err error) {
+func (d Client) GetMempoolTransactions(_ context.Context) (txs []*types.TransactionIdentifier, err error) {
 	tmTxs, err := d.tm.UnconfirmedTxs(0)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
@@ -222,11 +188,11 @@ func (d DataClient) GetMempoolTransactions(_ context.Context) (txs []*types.Tran
 	return
 }
 
-func (d DataClient) GetMempoolTransaction(_ context.Context, _ string) (tx *types.Transaction, err error) {
+func (d Client) GetMempoolTransaction(_ context.Context, _ string) (tx *types.Transaction, err error) {
 	return nil, rosetta.ErrNotImplemented
 }
 
-func (d DataClient) Peers(_ context.Context) (peers []*types.Peer, err error) {
+func (d Client) Peers(_ context.Context) (peers []*types.Peer, err error) {
 	netInfo, err := d.tm.NetInfo()
 	if err != nil {
 		return peers, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
@@ -240,7 +206,7 @@ func (d DataClient) Peers(_ context.Context) (peers []*types.Peer, err error) {
 	return
 }
 
-func (d DataClient) Status(_ context.Context) (status *types.SyncStatus, err error) {
+func (d Client) Status(_ context.Context) (status *types.SyncStatus, err error) {
 	tmStatus, err := d.tm.Status()
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())

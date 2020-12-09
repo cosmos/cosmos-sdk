@@ -12,7 +12,7 @@ import (
 const genesisBlockFetchTimeout = 15 * time.Second
 
 // NewOnline builds a new online network
-func NewOnline(client rosetta.CosmosDataAPIClient, network *types.NetworkIdentifier) (rosetta.OnlineAPI, error) {
+func NewOnline(client rosetta.CosmosClient, network *types.NetworkIdentifier) (rosetta.OnlineAPI, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), genesisBlockFetchTimeout)
 	defer cancel()
 
@@ -32,7 +32,7 @@ func NewOnline(client rosetta.CosmosDataAPIClient, network *types.NetworkIdentif
 
 // OnlineNetwork groups together all the components required for the full rosetta implementation
 type OnlineNetwork struct {
-	client rosetta.CosmosDataAPIClient // used to query cosmos app + tendermint
+	client rosetta.CosmosClient // used to query cosmos app + tendermint
 
 	network        *types.NetworkIdentifier      // identifies the network, it's static
 	networkOptions *types.NetworkOptionsResponse // identifies the network options, it's static

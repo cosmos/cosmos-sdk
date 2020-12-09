@@ -109,7 +109,7 @@ var (
 	// the library is ignoring an error
 	ErrUnknown = NewError(0, "unknown", false)
 	// ErrBadArgument is returned when the request is malformed
-	ErrBadArgument = NewError(400, "bad argument", false)
+	ErrBadArgument = NewError(400, "invalid request", false)
 	// ErrNotFound is returned when the required object was not found
 	// retry is set to true because something that is not found now
 	// might be found later, example: a TX
@@ -130,11 +130,9 @@ var (
 	ErrUnsupportedCurve = NewError(15, "unsupported curve, expected secp256k1", false)
 	// ErrInvalidPubkey is returned when the public key is invalid
 	ErrInvalidPubkey      = NewError(8, "invalid pubkey", false)
-	ErrInterpreting       = NewError(1, "error interpreting data from node", false)
 	ErrInvalidAddress     = NewError(7, "invalid address", false)
 	ErrInvalidMemo        = NewError(11, "invalid memo", false)
 	ErrInvalidOperation   = NewError(4, "invalid operation", false)
-	ErrInvalidRequest     = NewError(6, "invalid request", false)
 	ErrInvalidTransaction = NewError(5, "invalid transaction", false)
 )
 
@@ -143,8 +141,8 @@ var (
 // 'allow' network information endpoint
 var AllowedErrors = Errors{
 	ErrUnknown,
-	ErrNotFound,
 	ErrBadArgument,
+	ErrNotFound,
 	ErrInternal,
 	ErrBadGateway,
 	ErrOffline,
@@ -156,6 +154,5 @@ var AllowedErrors = Errors{
 	ErrInvalidAddress,
 	ErrInvalidMemo,
 	ErrInvalidOperation,
-	ErrInvalidRequest,
 	ErrInvalidTransaction,
 }

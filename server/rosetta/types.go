@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	RosettaSpecVersion = "1.4.6"
+	SpecVersion = "1.4.6"
 )
 
 const (
@@ -39,6 +39,14 @@ type CosmosClient interface {
 // CosmosConstructionAPIClient defines the interface cosmos sdk implementation
 // must satisfy in order to provide access to the construction API
 type CosmosConstructionAPIClient interface {
+	AccountIdentifierFromPubKeyBytes(curveType string, pkBytes []byte) (account *types.AccountIdentifier, err error)
+	TransactionIdentifierFromHexBytes(hexBytes []byte) (txIdentifier *types.TransactionIdentifier, err error)
+	TxOperationsAndSignersAccountIdentifiers(signed bool, hexBytes []byte) (ops []*types.Operation, signers []*types.AccountIdentifier, err error)
+	PostTxBytes(ctx context.Context, txBytes []byte) (txResp *types.TransactionIdentifier, meta map[string]interface{}, err error)
+	ConstructionMetadataFromOptions(ctx context.Context, options map[string]interface{}) (meta map[string]interface{}, err error)
+	SignedTx(ctx context.Context, txBytes []byte, sigs []*types.Signature) (signedTxBytes []byte, err error)
+	OperationsToMetadata(ctx context.Context, ops []*types.Operation) (meta map[string]interface{}, err error)
+	ConstructionPayload(ctx context.Context, req *types.ConstructionPayloadsRequest) (resp *types.ConstructionPayloadsResponse, err error)
 }
 
 // CosmosDataAPIClient defines the cosmos client that
@@ -73,6 +81,7 @@ type CosmosDataAPIClient interface {
 	// SupportedOperations returns the list of supported ops
 	SupportedOperations() []string
 	// NodeVersion returns the cosmos sdk version
+	// and possibly the tendermint version
 	NodeVersion() string
 }
 
@@ -105,7 +114,7 @@ type ConstructionAPI interface {
 // version and the variable data regarding the node
 func Version(nodeVersion string) *types.Version {
 	return &types.Version{
-		RosettaVersion:    RosettaSpecVersion,
+		RosettaVersion:    SpecVersion,
 		NodeVersion:       nodeVersion,
 		MiddlewareVersion: nil,
 		Metadata:          nil,
@@ -129,7 +138,7 @@ func Allow(supportedOperations []string) *types.Allow {
 		},
 		OperationTypes:          supportedOperations,
 		Errors:                  AllowedErrors.RosettaErrors(),
-		HistoricalBalanceLookup: true,
+		HistoricalBalanceLookup: false,
 		TimestampStartIndex:     nil,
 		CallMethods:             nil,
 		BalanceExemptions:       nil,

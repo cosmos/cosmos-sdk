@@ -13,11 +13,13 @@ seek advice from the validator community.
 ### Recovery
 * Prior to exporting the state, the validators are encouraged to take a full data snapshot at exported height. Exported
 height will be determined by a governance proposal. Data backup is usually done by copying daemon home directory,
-ex: `~/.gaiad`
+ex: `~/.simd`
+  
+**Note:** we use "simd" as our app throughout this doc, be sure to replace with the name of your own binary
 
-It is critically important to back-up the validator state file, ex: `~/.gaiad/data/priv_validator_state.json` file
+It is critically important to back-up the validator state file, ex: `~/.simd/data/priv_validator_state.json` file
 after stopping your daemon process. This file is updated every block as your validator participates in a consensus
-rounds. It is a critical file needed to prevent double-signing, in case the upgrade fails and the previous chain needs
+rounds. It is a critical file needed to prevent double-signing, in case the upgrade fails, and the previous chain needs
 to be restarted.
 
 In the event that the upgrade does not succeed, validators and operators must downgrade back to old version of the
@@ -28,7 +30,7 @@ software and restore to their latest snapshot before restarting their nodes.
 - Export the state from existing chain using old-binary (which uses `sdk@0.39.x`).
 Example:
     ```sh
-    gaiad export --for-zero-height --height <height> > 039_exported_state.json
+    simd export --for-zero-height --height <height> > 039_exported_state.json
     ```
 - Verify the SHA256 of the (sorted) exported genesis file:
     ```shell
@@ -39,7 +41,7 @@ Example:
 - Install the latest binary (which uses `0.40`)
 - Migrate the exported state to `0.40` compatible genesis state
     ```shell
-    gaiad migrate v40 039_exported_state.json --chain-id <new_chain_id> --genesis-time <new_genesis_time_in_utc> > new_v40_genesis.json
+    simd migrate v40 039_exported_state.json --chain-id <new_chain_id> --genesis-time <new_genesis_time_in_utc> > new_v40_genesis.json
     ```
   NOTE: The migrate command takes an input genesis state and migrates it to a targeted version. New `genesis-time` will
   be as mentioned in the governance proposal.
@@ -56,14 +58,14 @@ the genesis are not required
 NOTE: Be sure you have a complete backed up state of your node before proceeding with this step.
 See Recovery for details on how to proceed.
 ```shell
-gaiad unsafe-reset-all
+simd unsafe-reset-all
 ```
 - Move the new genesis.json to your daemon config directory. Ex
 ```shell script
-cp new_v40_genesis.json ~/.gaiad/config/genesis.json
+cp new_v40_genesis.json ~/.simd/config/genesis.json
 ```
 
-- Update `~/.gaiad/config/app.toml` to include latest app configurations. Below is an example `app.toml`. Make sure to
+- Update `~/.simd/config/app.toml` to include latest app configurations. Below is an example `app.toml`. Make sure to
 update your custom configurations as per your validator design ex: `gas_price`.
 
 ```yaml
@@ -224,5 +226,5 @@ snapshot-keep-recent = 2
 before starting the daemon. Ex:
 
 ```
-gaiad version --long
+simd version --long
 ```

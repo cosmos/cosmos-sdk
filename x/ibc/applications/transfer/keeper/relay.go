@@ -222,7 +222,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		// coin denomination used in sending from the escrow address
 		denom := unprefixedDenom
 
-		// the denomination used to send the coins is either the native denom or the hash of the path
+		// The denomination used to send the coins is either the native denom or the hash of the path
 		// if the denomination is not native.
 		denomTrace := types.ParseDenomTrace(unprefixedDenom)
 		if denomTrace.Path != "" {

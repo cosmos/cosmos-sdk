@@ -142,7 +142,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			}
 
 			if err != nil {
-				return
+				return err
 			}
 
 			var json []byte

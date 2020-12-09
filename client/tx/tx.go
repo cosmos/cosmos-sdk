@@ -420,7 +420,7 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 		Sequence: txf.Sequence(),
 	}
 	var prevSignatures []signing.SignatureV2
-	if overwriteSig {
+	if !overwriteSig {
 		prevSignatures, err = txBuilder.GetTx().GetSignaturesV2()
 		if err != nil {
 			return err

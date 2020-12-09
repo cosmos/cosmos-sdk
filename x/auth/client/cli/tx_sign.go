@@ -91,7 +91,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 		}
 
 		defer closeFunc()
-		clientCtx.WithOutput(cmd.OutOrStdout())
+		clientCtx = clientCtx.WithOutput(cmd.OutOrStdout())
 
 		if args[0] != "-" {
 			infile, err = os.Open(args[0])
@@ -293,17 +293,13 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		outputDoc, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
-		if outputDoc == "" {
-			cmd.Printf("%s\n", json)
-			return nil
-		}
-
-		fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+		// prepare output document
+		closeFunc, err := setOutputFile(cmd)
 		if err != nil {
 			return err
 		}
-		defer fp.Close()
+		defer closeFunc()
+		clientCtx = clientCtx.WithOutput(cmd.OutOrStdout())
 
 		return clientCtx.PrintString(fmt.Sprintf("%s\n", json))
 	}

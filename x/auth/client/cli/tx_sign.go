@@ -60,11 +60,11 @@ account key. It implies --signature-only.
 }
 
 func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) (err error) {
 		clientCtx := client.GetClientContextFromCmd(cmd)
-		clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+		clientCtx, err = client.ReadTxCommandFlags(clientCtx, cmd.Flags())
 		if err != nil {
-			return err
+			return
 		}
 		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 
@@ -80,86 +80,107 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 		if ms, _ := cmd.Flags().GetString(flagMultisig); ms != "" {
 			multisigAddr, err = sdk.AccAddressFromBech32(ms)
 			if err != nil {
-				return err
+				return
 			}
 		}
 
 		// prepare output document
-		closeFunc, err := setOutputFile(cmd)
+		var closeFunc func() error
+
+		closeFunc, err = setOutputFile(cmd)
 		if err != nil {
-			return err
+			return
 		}
 
-		defer closeFunc()
+		defer func() {
+			err2 := closeFunc()
+			if err == nil {
+				err = err2
+			}
+		}()
+
 		clientCtx = clientCtx.WithOutput(cmd.OutOrStdout())
 
 		if args[0] != "-" {
 			infile, err = os.Open(args[0])
 			if err != nil {
-				return err
+				return
 			}
 		}
 		scanner := authclient.NewBatchScanner(txCfg, infile)
 
 		for sequence := txFactory.Sequence(); scanner.Scan(); sequence++ {
 			unsignedStdTx := scanner.Tx()
+			var txBuilder client.TxBuilder
+
 			txFactory = txFactory.WithSequence(sequence)
-			txBuilder, err := txCfg.WrapTxBuilder(unsignedStdTx)
+			txBuilder, err = txCfg.WrapTxBuilder(unsignedStdTx)
 			if err != nil {
-				return err
+				return
 			}
 			if multisigAddr.Empty() {
+				var fromName string
+
 				from, _ := cmd.Flags().GetString(flags.FlagFrom)
-				_, fromName, err := client.GetFromFields(txFactory.Keybase(), from, clientCtx.GenerateOnly)
+				_, fromName, err = client.GetFromFields(txFactory.Keybase(), from, clientCtx.GenerateOnly)
 				if err != nil {
-					return fmt.Errorf("error getting account from keybase: %w", err)
+					err = fmt.Errorf("error getting account from keybase: %w", err)
+
+					return
 				}
+
 				err = authclient.SignTx(txFactory, clientCtx, fromName, txBuilder, true)
 				if err != nil {
-					return err
+					return
 				}
 			} else {
 				if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
 					txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 				}
+
 				err = authclient.SignTxWithSignerAddress(txFactory, clientCtx, multisigAddr, clientCtx.GetFromName(), txBuilder, clientCtx.Offline)
 			}
 
 			if err != nil {
-				return err
+				return
 			}
 
-			json, err := marshalSignatureJSON(txCfg, txBuilder, generateSignatureOnly)
+			var json []byte
+
+			json, err = marshalSignatureJSON(txCfg, txBuilder, generateSignatureOnly)
 			if err != nil {
-				return err
+				return
 			}
 
 			cmd.Printf("%s\n", json)
 		}
 
-		if err := scanner.UnmarshalErr(); err != nil {
-			return err
+		err = scanner.UnmarshalErr()
+		if err != nil {
+			return
 		}
 
-		return scanner.Err()
+		err = scanner.Err()
+
+		return
 	}
 }
 
-func setOutputFile(cmd *cobra.Command) (func(), error) {
+func setOutputFile(cmd *cobra.Command) (func() error, error) {
 	outputDoc, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
 	if outputDoc == "" {
 		cmd.SetOut(cmd.OutOrStdout())
-		return func() {}, nil
+		return func() error { return nil }, nil
 	}
 
 	fp, err := os.OpenFile(outputDoc, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return func() {}, err
+		return func() error { return nil }, err
 	}
 
 	cmd.SetOut(fp)
 
-	return func() { fp.Close() }, nil
+	return fp.Close, nil
 }
 
 // GetSignCommand returns the transaction sign command.

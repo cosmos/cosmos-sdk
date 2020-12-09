@@ -1,0 +1,140 @@
+- [ ] dd9ef12 x/cap: fix comments, SetIndex, and some tests (#7845)
+- [ ] 0e0ed66 build(deps): bump actions/cache from v2.1.2 to v2.1.3 (#7850)
+- [ ] f294db9 x/ibc: transfer specs (#7580)
+- [ ] 70fa17b ibc: spec overview (#7853)
+- [ ] ebb7698 status update for power reduction test
+- [ ] e172a08 enrich versioning with build deps (#7848)
+- [ ] 90e9370 Replace tmcrypto.PubKey by our own cryptotypes.PubKey (#7419)
+- [ ] 55772ae update err to match others (#7857)
+- [ ] fe8a891 unknownproto: check result from protowire.ConsumeFieldValue and return an error (#7770)
+- [ ] c432e28 docs: remove v0.40.x from versions
+- [ ] 15b285d Fix creation of local RPC node in clientCtx (#7840)
+- [ ] 7bc08c4 Disable telemetry.SetGaugeWithLabels when amount overflow int64 && Update CreateValidator, CreateValidatorMsg, Delegate helper functions to fix int64 overflow
+- [ ] fdcb028 ibc: proof fixes (#7869)
+- [ ] cc96ee3 fix staking cli, grcp_query, keeper test for power reduction
+- [ ] 705e26e give enough balance to operations test validator based on TokensFromConsensusPower to consider PowerReduction
+- [ ] 4582dcd remove comment
+- [ ] 67b3f90 fix build issues && telemetry.SetGaugeWithLabels int64 range validation
+- [ ] 300b739 Update IBC host keys + cleanup (#7873)
+- [ ] bcdd6ee ibc: fix grpc gateway routes (#7881)
+- [ ] 131a942 Merge branch 'master' into cyrus/docs-0.40.x
+- [ ] 0895a2a Merge pull request #7868 from cosmos/cyrus/docs-0.40.x
+- [ ] 0bd4657 fix mismatched solomachine signature data type verification (#7882)
+- [ ] 116d046 solo machine GetPubKey returns an error instead of panicing (#7883)
+- [ ] 136f3ad ibc: client params allowlist (#7855)
+- [ ] e564d7f cosmovisor: tests -> test suites (#7887)
+- [ ] 0eb0cbe set PowerReduction=10^18 for staking tests
+- [ ] 76ffdcc IBC Fraction for trust level changed to uints (#7892)
+- [ ] 0b20e23 fix random values testing
+- [ ] 4515b87 Merge branch 'master' of github.com:cosmos/cosmos-sdk into fix_power_reduction_test_cast_int64
+- [ ] a0c1deb reassign to adr 037
+- [ ] c1557a2 Merge branch 'master' into adr_gov_split_vote
+- [ ] e9f1922 IBC Upgrades function interface return client/consensus (#7895)
+- [ ] 104a203 docker: proto (#7893)
+- [ ] c8afb2c Remove consensus params from IBC tm client (#7891)
+- [ ] f3e4964 Add TxsByEvent gRPC endpoint (#7842)
+- [ ] 96f239d remove timestamp check from solomachine misbehaviour (#7915)
+- [ ] 956e1cf move sdk denom validation to top of validateibcdenom (#7917)
+- [ ] c0d7233 Minor fixes for ibc tendermint (#7916)
+- [ ] 6f5eaba Add support for TM secp256k1 (#7838)
+- [ ] 15103b6 x/ibc/24-host: fix some comments (#7923)
+- [ ] 4b529a4 Capability Fixes (#7918)
+- [ ] 6c9a02b Fixed help message for export's 'jail-whitelist' command to be clearer (#7885)
+- [ ] e77c950 ibc: packet fixes (#7810)
+- [ ] ddc777c remove chainid from ibc tm misbehaviour (#7932)
+- [ ] 0b1a3ee add docs and make prefix a const (#7926)
+- [ ] 5f580a1 cosmovisor: pass quit signals to subprocess (#7776)
+- [ ] 5a95db6 Merge branch 'master' into fix_power_reduction_test_cast_int64
+- [ ] 6e3fab8 Fix upgrade store loader (#7817)
+- [ ] 8bc429d fix int64
+- [ ] 9e9dbf3 Merge branch 'master' into fix_power_reduction_test_cast_int64
+- [ ] 17ba10f Merge branch 'master' into adr_gov_split_vote
+- [ ] a8ef4a3 All Makefile proto commands use Docker (#7931)
+- [ ] 7e6978a ibc: tendermint misbehaviour should use block hash for equality check (#7928)
+- [ ] 2802529 prune testdata (#7937)
+- [ ] 6cbbe0d Update dependencies to use gRPC v1.33.2 (#7925)
+- [ ] 862453d Merge branch 'master' into adr_gov_split_vote
+- [ ] 6261df8 Merge pull request #7733 from sikkatech/adr_gov_split_vote
+- [ ] 6b62d26 use verifycommitlight (#7936)
+- [ ] cd29fd6 Fix connection path validation and remove unused PathValidator function (#7930)
+- [ ] b5e873c version --long displays replaced build dependencies (#7941)
+- [ ] 0d0c969 build(deps): bump github.com/prometheus/common from 0.14.0 to 0.15.0 (#7942)
+- [ ] 54201d1 cli: convert coins to smallest unit registered (#7777)
+- [ ] be10bcb counterParty -> counterparty (#7946)
+- [ ] 479ad6b Merge branch 'master' into fix_power_reduction_test_cast_int64
+- [ ] 10d5ce3 Merge pull request #7897 from sikkatech/fix_power_reduction_test_cast_int64
+- [ ] 2f6ebb7 build(deps): bump codecov/codecov-action from v1.0.14 to v1.0.15 (#7953)
+- [ ] f962f3a Fix int64 overflow error for height comparison (#7944)
+- [ ] e93b18e self height uses GTE in self client check (#7945)
+- [ ] 0647d89 add is frozen client state check to send packet (#7957)
+- [ ] 9369a00 x/simulation: make signals channel buffered to avoid missing signals (#7952)
+- [ ] ab71048 improve error messages for legacy rest endpoints (#7856)
+- [ ] 715933b reduce redundancy (#7959)
+- [ ] a7435d0 fix validate basic check (#7962)
+- [ ] 03c8fb3 add domain separation between port and channel (#7960)
+- [ ] b90bacb docs: add newline to versions file (#7938)
+- [ ] 1cc8af8 [docs]: update building modules section to reflect ADR31 (#7702)
+- [ ] f02a462 update transfer error messages (#7968)
+- [ ] 97d9661 crypto/hd: add 'm/' prefix to hd path (#7970)
+- [ ] 87315a6 ibc: commit packet and hash (#7808)
+- [ ] 35183a3 Fix StatusCommand (#7974)
+- [ ] fe58ee9 ADR-031: elaborate consequences and encapsulation of module client-se… (#7839)
+- [ ] 0034e48 Bech32 PubKey: use protobuf in slashing keeper
+- [ ] a4130f5 remove unused function
+- [ ] ba4bc4b exclude *.pb.gw.go files from codecov.io report (#7981)
+- [ ] fdac398 changelog update
+- [ ] fcb6c33 revert tiny portion of #7970 (#7984)
+- [ ] 4be5cd3 docs: x/bank: Atlas Doc (#7961)
+- [ ] 07cfed4 Merge branch 'master' into robert/bech32-pubkey-slashing
+- [ ] a054da8 Merge pull request #7979 from cosmos/robert/bech32-pubkey-slashing
+- [ ] d8928c6 CI: Fix codecov flag project config (#7994)
+- [ ] a7296d3 Bump Tendermint v0.34.0 (#7995)
+- [ ] 6344d62 types/Coin: compile and reuse Regexps to reduce massive RAM+CPU burn (#7989)
+- [ ] 966e26d Fix tendermint misbehaviour trusted consensus state age check (#8006)
+- [ ] 251a27d Update ADR status (#8009)
+- [ ] 20617d0 Update docs/architecture/adr-034-account-rekeying.md
+- [ ] 045e787 Update adr-034-account-rekeying.md
+- [ ] 101d62a Add details about pruning
+- [ ] 972095e pruning info
+- [ ] fd6f07b Merge branch 'master' into sunny/change-pubkey-adr
+- [ ] 7443513 Show height on legacy REST endpoints (#7997)
+- [ ] def3c5b Add ConsensusState to IBC Upgrades (#7919)
+- [ ] 53294f5 check clients against params and consensus against clients (#8016)
+- [ ] 13bc504 docs: Add REST endpoints migration guide (#8011)
+- [ ] ccd0d63 Update "Core Concepts" docs (#7948)
+- [ ] 88e03e4 Deterministic connection and channel identifiers (#7993)
+- [ ] c15884a Rename Version to Revision in IBC Height (#8020)
+- [ ] 12a02b9 CopyTx also copies timeoutHeight (#8015)
+- [ ] b5442e1 Update adr-034-account-rekeying.md
+- [ ] dc9d36b Merge branch 'master' into sunny/change-pubkey-adr
+- [ ] 1b3ce2c CLI `migrate` command for x/{upgrade,params} proposals (#7875)
+- [ ] 9c47612 Makefile: use docker run --rm whenever possible (#8026)
+- [ ] a9dd334 Fix legacy querying tx ("unregistered type" bug) (#7992)
+- [ ] c58a892 gRPC-gateway routes as alternative to legacy tendermint REST endpoints (#7965)
+- [ ] 512b533 cli: ParseCoin doesn't do normalize (#7954)
+- [ ] ed9fc05 Add an IBC prefix to transfer escrow addresses (#7967)
+- [ ] b6bd4f5 docs: Remove legacy Msg/queriers in "Basics" section (#7782)
+- [ ] a77eb25 Merge branch 'master' into sunny/change-pubkey-adr
+- [ ] a648325 Merge pull request #7491 from sikkatech/sunny/change-pubkey-adr
+- [ ] bcb3240 Use generated client identifiers (#8034)
+- [ ] 7ad2aab Add panic handler on queries (#8039)
+- [ ] 6476b09 multistore: fix SetInitialVersion (#8048)
+- [ ] 513daba client/keys: support export of unarmored private key (#8043)
+- [ ] a51eac4 Fix QueryByEvents with multiple events and empty pagination request (#8029)
+- [ ] f57828c Fix CryptoCdc inconsistent (#7987)
+- [ ] b6c8d5e Add tx broadcast gRPC endpoint (#7852)
+- [ ] bac31be evidence: fix query command (#8066)
+- [ ] 6040d1b fix: Metadata is not initialized in x/bank InitGenesis #7951 (#8065)
+- [ ] 183593f Update signbatch multisig to work online (#7801)
+- [ ] 5291a8f Refactor Logging using Zerolog (#8072)
+- [ ] 379c2ad build(deps): bump vuepress-theme-cosmos from 1.0.175 to 1.0.176 in /docs (#8052)
+- [ ] 1b00c01 Audit through legacy endpoints to find breaking changes (#8037)
+- [ ] 7ec3bcd fix: bank gRPC error status codes (#7814)
+- [ ] 4a233b8 Rename GRPCRouter (#8079)
+- [ ] c6b8e5f build(deps): bump vuepress-theme-cosmos from 1.0.176 to 1.0.177 in /docs (#8075)
+- [ ] c8a9da1 increase ibc basic genesis validation (#8081)
+- [ ] a8c3b44 x/bank/keeper: fix a missing gRPC error in AllBalances (#8085)
+- [ ] 29091c1 build(deps): bump vuepress-theme-cosmos from 1.0.177 to 1.0.178 in /docs (#8098)
+- [ ] de11477 fix typo (#8097)
+- [ ] 971d253 Implement Connection-specified delay (#8069)
+- [ ] d4a919b change TmService's validator pubkey type to any (#8060)

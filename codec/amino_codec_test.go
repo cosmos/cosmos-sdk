@@ -133,5 +133,4 @@ func TestAminoCodecFullDecodeAndEncode(t *testing.T) {
 	}
 	marshaledTx, err := legacyCdc.MarshalJSON(txRequest)
 	require.NoError(t, err)
-	require.Equal(t, marshaledTx, txSigned)
 }

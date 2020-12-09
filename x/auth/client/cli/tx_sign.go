@@ -89,7 +89,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 
 		closeFunc, err = setOutputFile(cmd)
 		if err != nil {
-			return
+			return err
 		}
 
 		defer func() {

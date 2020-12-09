@@ -104,8 +104,8 @@ func (msg *MsgSend) ToOperations(withStatus bool, hasError bool, feeLen int) []*
 		}
 	}
 	operations = append(operations,
-		sendOp(fromAddress, "-"+coin.Amount.String(), feeLen+1),
-		sendOp(toAddress, coin.Amount.String(), feeLen+2),
+		sendOp(fromAddress, "-"+coin.Amount.String(), feeLen),
+		sendOp(toAddress, coin.Amount.String(), feeLen+1),
 	)
 
 	return operations

@@ -126,7 +126,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				if err != nil {
 					err = fmt.Errorf("error getting account from keybase: %w", err)
 
-					return
+					return err
 				}
 
 				err = authclient.SignTx(txFactory, clientCtx, fromName, txBuilder, true)

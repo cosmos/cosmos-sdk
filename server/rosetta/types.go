@@ -89,7 +89,7 @@ type NodeClient interface {
 }
 
 type Msg interface {
-	ToOperations(withStatus bool, hasError bool, feeLen int) []*types.Operation
+	ToOperations(withStatus bool, hasError bool) []*types.Operation
 }
 
 // Version returns the version for rosetta

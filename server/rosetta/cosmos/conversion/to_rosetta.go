@@ -76,22 +76,22 @@ func SdkTxWithHashToRosettaTx(tx *rosetta.SdkTxWithHash) *types.Transaction {
 func SdkTxToOperations(tx sdk.Tx, withStatus, hasError bool) []*types.Operation {
 	var operations []*types.Operation
 
-	feeTx := tx.(sdk.FeeTx)
-	feeOps := sdkFeeTxToOperations(feeTx, withStatus)
-	operations = append(operations, feeOps...)
-
-	msgOps := sdkMsgsToRosettaOperations(tx.GetMsgs(), withStatus, hasError, len(feeOps))
+	msgOps := sdkMsgsToRosettaOperations(tx.GetMsgs(), withStatus, hasError)
 	operations = append(operations, msgOps...)
+
+	feeTx := tx.(sdk.FeeTx)
+	feeOps := sdkFeeTxToOperations(feeTx, withStatus, len(msgOps))
+	operations = append(operations, feeOps...)
 
 	return operations
 }
 
 // sdkFeeTxToOperations converts sdk.FeeTx to rosetta operations
-func sdkFeeTxToOperations(feeTx sdk.FeeTx, withStatus bool) []*types.Operation {
+func sdkFeeTxToOperations(feeTx sdk.FeeTx, withStatus bool, previousOps int) []*types.Operation {
 	feeCoins := feeTx.GetFee()
 	var ops []*types.Operation
 	if feeCoins != nil {
-		var feeOps = rosettaFeeOperationsFromCoins(feeCoins, feeTx.FeePayer().String(), withStatus)
+		var feeOps = rosettaFeeOperationsFromCoins(feeCoins, feeTx.FeePayer().String(), withStatus, previousOps)
 		ops = append(ops, feeOps...)
 	}
 
@@ -99,7 +99,7 @@ func sdkFeeTxToOperations(feeTx sdk.FeeTx, withStatus bool) []*types.Operation {
 }
 
 // rosettaFeeOperationsFromCoins returns the list of rosetta fee operations given sdk coins
-func rosettaFeeOperationsFromCoins(coins sdk.Coins, account string, withStatus bool) []*types.Operation {
+func rosettaFeeOperationsFromCoins(coins sdk.Coins, account string, withStatus bool, previousOps int) []*types.Operation {
 	feeOps := make([]*types.Operation, 0)
 	var status string
 	if withStatus {
@@ -109,7 +109,7 @@ func rosettaFeeOperationsFromCoins(coins sdk.Coins, account string, withStatus b
 	for i, coin := range coins {
 		op := &types.Operation{
 			OperationIdentifier: &types.OperationIdentifier{
-				Index: int64(i),
+				Index: int64(previousOps + i),
 			},
 			Type:   rosetta.OperationFee,
 			Status: status,
@@ -131,11 +131,11 @@ func rosettaFeeOperationsFromCoins(coins sdk.Coins, account string, withStatus b
 }
 
 // sdkMsgsToRosettaOperations converts sdk messages to rosetta operations
-func sdkMsgsToRosettaOperations(msgs []sdk.Msg, withStatus bool, hasError bool, feeLen int) []*types.Operation {
+func sdkMsgsToRosettaOperations(msgs []sdk.Msg, withStatus bool, hasError bool) []*types.Operation {
 	var operations []*types.Operation
 	for _, msg := range msgs {
 		if rosettaMsg, ok := msg.(rosetta.Msg); ok {
-			operations = append(operations, rosettaMsg.ToOperations(withStatus, hasError, feeLen)...)
+			operations = append(operations, rosettaMsg.ToOperations(withStatus, hasError)...)
 		}
 	}
 

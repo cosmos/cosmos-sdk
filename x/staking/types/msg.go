@@ -251,7 +251,7 @@ func (msg MsgDelegate) ValidateBasic() error {
 }
 
 // Rosetta Msg interface.
-func (msg MsgDelegate) ToOperations(withStatus bool, hasError bool, feeLen int) []*rosettatypes.Operation {
+func (msg MsgDelegate) ToOperations(withStatus bool, hasError bool) []*rosettatypes.Operation {
 	var operations []*rosettatypes.Operation
 	delAddr := msg.DelegatorAddress
 	valAddr := msg.ValidatorAddress
@@ -282,8 +282,8 @@ func (msg MsgDelegate) ToOperations(withStatus bool, hasError bool, feeLen int) 
 		}
 	}
 	operations = append(operations,
-		delOp(delAddr, "-"+coin.Amount.String(), feeLen),
-		delOp(valAddr, coin.Amount.String(), feeLen+1),
+		delOp(delAddr, "-"+coin.Amount.String(), 0),
+		delOp(valAddr, coin.Amount.String(), 1),
 	)
 	return operations
 }

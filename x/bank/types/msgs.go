@@ -67,7 +67,7 @@ func (msg MsgSend) GetSigners() []sdk.AccAddress {
 }
 
 // Rosetta interface
-func (msg *MsgSend) ToOperations(withStatus bool, hasError bool, feeLen int) []*types.Operation {
+func (msg *MsgSend) ToOperations(withStatus bool, hasError bool) []*types.Operation {
 	var operations []*types.Operation
 
 	fromAddress := msg.FromAddress
@@ -104,8 +104,8 @@ func (msg *MsgSend) ToOperations(withStatus bool, hasError bool, feeLen int) []*
 		}
 	}
 	operations = append(operations,
-		sendOp(fromAddress, "-"+coin.Amount.String(), feeLen),
-		sendOp(toAddress, coin.Amount.String(), feeLen+1),
+		sendOp(fromAddress, "-"+coin.Amount.String(), 0),
+		sendOp(toAddress, coin.Amount.String(), 1),
 	)
 
 	return operations

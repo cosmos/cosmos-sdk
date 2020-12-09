@@ -104,7 +104,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 		if args[0] != "-" {
 			infile, err = os.Open(args[0])
 			if err != nil {
-				return
+				return err
 			}
 		}
 		scanner := authclient.NewBatchScanner(txCfg, infile)

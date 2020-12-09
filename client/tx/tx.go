@@ -117,7 +117,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		}
 	}
 
-	err = Sign(txf, clientCtx.GetFromName(), tx)
+	err = Sign(txf, clientCtx.GetFromName(), tx, true)
 	if err != nil {
 		return err
 	}
@@ -419,9 +419,12 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 		Data:     &sigData,
 		Sequence: txf.Sequence(),
 	}
-	var previousSignatures []signing.SignatureV2
+	var prevSignatures []signing.SignatureV2
 	if overwriteSig {
-		previousSignatures = txBuilder.GetTx().GetSignaturesV2()
+		prevSignatures, err = txBuilder.GetTx().GetSignaturesV2()
+		if err != nil {
+			return err
+		}
 	}
 	if err := txBuilder.SetSignatures(sig); err != nil {
 		return err
@@ -453,8 +456,8 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 	if overwriteSig {
 		return txBuilder.SetSignatures(sig)
 	}
-	previousSignatures = append(previousSignatures, sig)
-	return txBuilder.SetSignatures(previousSignatures...)
+	prevSignatures = append(prevSignatures, sig)
+	return txBuilder.SetSignatures(prevSignatures...)
 }
 
 // GasEstimateResponse defines a response definition for tx gas estimation.

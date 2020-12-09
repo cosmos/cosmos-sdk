@@ -44,7 +44,7 @@ func PrintUnsignedStdTx(txBldr tx.Factory, clientCtx client.Context, msgs []sdk.
 }
 
 // SignTx signs a transaction managed by the TxBuilder using a `name` key stored in Keybase.
-// The new signature is appended to to the TxBuilder.
+// The new signature is appended to the TxBuilder when overwrite=false or overwritten otherwise.
 // Don't perform online validation or lookups if offline is true.
 func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, stdTx client.TxBuilder, offline, overwriteSig bool) error {
 	info, err := txFactory.Keybase().Key(name)
@@ -69,7 +69,7 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, stdTx c
 // Don't perform online validation or lookups if offline is true, else
 // populate account and sequence numbers from a foreign account.
 func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, addr sdk.AccAddress,
-	name string, txBuilder client.TxBuilder, offline bool) (err error) {
+	name string, txBuilder client.TxBuilder, offline, overwrite bool) (err error) {
 
 	// check whether the address is a signer
 	if !isTxSigner(addr, txBuilder.GetTx().GetSigners()) {
@@ -83,7 +83,7 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 		}
 	}
 
-	return tx.Sign(txFactory, name, txBuilder)
+	return tx.Sign(txFactory, name, txBuilder, overwrite)
 }
 
 // Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.

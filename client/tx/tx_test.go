@@ -147,7 +147,7 @@ func TestSign(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Log("should failed if txf without keyring")
-	err = tx.Sign(txf, from, txn)
+	err = tx.Sign(txf, from, txn, true)
 	require.Error(t, err)
 
 	txf = tx.Factory{}.
@@ -160,10 +160,10 @@ func TestSign(t *testing.T) {
 		WithChainID("test-chain")
 
 	t.Log("should succeed if txf with keyring")
-	err = tx.Sign(txf, from, txn)
+	err = tx.Sign(txf, from, txn, true)
 	require.NoError(t, err)
 
 	t.Log("should fail for non existing key")
-	err = tx.Sign(txf, "non_existing_key", txn)
+	err = tx.Sign(txf, "non_existing_key", txn, true)
 	require.Error(t, err)
 }

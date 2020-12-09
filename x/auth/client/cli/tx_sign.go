@@ -67,14 +67,10 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
-
 		txCfg := clientCtx.TxConfig
-		generateSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
-
-		var (
-			multisigAddr sdk.AccAddress
-			infile       = os.Stdin
-		)
+		printSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
+		infile := os.Stdin
+		var multisigAddr sdk.AccAddress
 
 		// validate multisig address if there's any
 		if ms, _ := cmd.Flags().GetString(flagMultisig); ms != "" {
@@ -114,7 +110,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				if err != nil {
 					return fmt.Errorf("error getting account from keybase: %w", err)
 				}
-				err = authclient.SignTx(txFactory, clientCtx, fromName, txBuilder, true)
+				err = authclient.SignTx(txFactory, clientCtx, fromName, txBuilder, true, true)
 				if err != nil {
 					return err
 				}
@@ -122,14 +118,15 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
 					txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 				}
-				err = authclient.SignTxWithSignerAddress(txFactory, clientCtx, multisigAddr, clientCtx.GetFromName(), txBuilder, clientCtx.Offline)
+				err = authclient.SignTxWithSignerAddress(
+					txFactory, clientCtx, multisigAddr, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, true)
 			}
 
 			if err != nil {
 				return err
 			}
 
-			json, err := marshalSignatureJSON(txCfg, txBuilder, generateSignatureOnly)
+			json, err := marshalSignatureJSON(txCfg, txBuilder, printSignatureOnly)
 			if err != nil {
 				return err
 			}
@@ -231,7 +228,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		generateSignatureOnly, _ := f.GetBool(flagSigOnly)
+		printSignatureOnly, _ := f.GetBool(flagSigOnly)
 		multisigAddrStr, _ := f.GetString(flagMultisig)
 		from, _ := f.GetString(flags.FlagFrom)
 		_, fromName, err := client.GetFromFields(txFactory.Keybase(), from, clientCtx.GenerateOnly)
@@ -239,6 +236,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("error getting account from keybase: %w", err)
 		}
 
+		overwrite, _ := f.GetBool(flagOverwrite)
 		if multisigAddrStr != "" {
 			var multisigAddr sdk.AccAddress
 			multisigAddr, err = sdk.AccAddressFromBech32(multisigAddrStr)
@@ -246,12 +244,10 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 				return err
 			}
 			err = authclient.SignTxWithSignerAddress(
-				txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline,
-			)
-			generateSignatureOnly = true
+				txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite)
+			printSignatureOnly = true
 		} else {
-			flagAppend, _ := f.GetBool(flagOverwrite)
-			err = authclient.SignTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, !flagAppend)
+			err = authclient.SignTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, overwrite)
 		}
 		if err != nil {
 			return err
@@ -277,7 +273,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 				return err
 			}
 		} else {
-			json, err = marshalSignatureJSON(txCfg, txBuilder, generateSignatureOnly)
+			json, err = marshalSignatureJSON(txCfg, txBuilder, printSignatureOnly)
 			if err != nil {
 				return err
 			}

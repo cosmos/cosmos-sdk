@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) TestQueryConnection() {
 				connB := suite.chainB.GetFirstTestConnection(clientB, clientA)
 
 				counterparty := types.NewCounterparty(clientB, connB.ID, suite.chainB.GetPrefix())
-				expConnection = types.NewConnectionEnd(types.INIT, clientA, counterparty, types.ExportedVersionsToProto(types.GetCompatibleVersions()))
+				expConnection = types.NewConnectionEnd(types.INIT, clientA, counterparty, types.ExportedVersionsToProto(types.GetCompatibleVersions()), 500)
 				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, expConnection)
 
 				req = &types.QueryConnectionRequest{
@@ -121,9 +121,9 @@ func (suite *KeeperTestSuite) TestQueryConnections() {
 				// counterparty connection id is blank after open init
 				counterparty3 := types.NewCounterparty(clientB, "", suite.chainB.GetPrefix())
 
-				conn1 := types.NewConnectionEnd(types.OPEN, clientA, counterparty1, types.ExportedVersionsToProto(types.GetCompatibleVersions()))
-				conn2 := types.NewConnectionEnd(types.OPEN, clientA1, counterparty2, types.ExportedVersionsToProto(types.GetCompatibleVersions()))
-				conn3 := types.NewConnectionEnd(types.INIT, clientA, counterparty3, types.ExportedVersionsToProto(types.GetCompatibleVersions()))
+				conn1 := types.NewConnectionEnd(types.OPEN, clientA, counterparty1, types.ExportedVersionsToProto(types.GetCompatibleVersions()), 0)
+				conn2 := types.NewConnectionEnd(types.OPEN, clientA1, counterparty2, types.ExportedVersionsToProto(types.GetCompatibleVersions()), 0)
+				conn3 := types.NewConnectionEnd(types.INIT, clientA, counterparty3, types.ExportedVersionsToProto(types.GetCompatibleVersions()), 0)
 
 				iconn1 := types.NewIdentifiedConnection(connA0.ID, conn1)
 				iconn2 := types.NewIdentifiedConnection(connA1.ID, conn2)
@@ -338,7 +338,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 			"invalid connection ID",
 			func() {
 				req = &types.QueryConnectionConsensusStateRequest{
-					ConnectionId:  "",
+					ConnectionId:   "",
 					RevisionNumber: 0,
 					RevisionHeight: 1,
 				}
@@ -349,7 +349,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 			"connection not found",
 			func() {
 				req = &types.QueryConnectionConsensusStateRequest{
-					ConnectionId:  "test-connection-id",
+					ConnectionId:   "test-connection-id",
 					RevisionNumber: 0,
 					RevisionHeight: 1,
 				}
@@ -362,7 +362,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 				_, _, connA, _, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 
 				req = &types.QueryConnectionConsensusStateRequest{
-					ConnectionId:  connA.ID,
+					ConnectionId:   connA.ID,
 					RevisionNumber: 0,
 					RevisionHeight: uint64(suite.chainA.GetContext().BlockHeight()), // use current height
 				}
@@ -379,7 +379,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 				expClientID = clientA
 
 				req = &types.QueryConnectionConsensusStateRequest{
-					ConnectionId:  connA.ID,
+					ConnectionId:   connA.ID,
 					RevisionNumber: clientState.GetLatestHeight().GetRevisionNumber(),
 					RevisionHeight: clientState.GetLatestHeight().GetRevisionHeight(),
 				}

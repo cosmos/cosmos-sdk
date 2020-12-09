@@ -29,11 +29,10 @@ func GetSignBatchCommand() *cobra.Command {
 		Short: "Sign transaction batch files",
 		Long: `Sign batch files of transactions generated with --generate-only.
 The command processes list of transactions from file (one StdTx each line), generate
-signed transactions or signatures and print their JSON encoding, delimited by '\n'.
-As the signatures are generated, the command updates the sequence number accordingly.
+signed transactions print their JSON encoding, delimited by '\n'.
+As the signatures are generated, the command updates the account sequence number accordingly.
 
-If the flag --signature-only flag is set, it will output a JSON representation
-of the generated signature only.
+If the --signature-only flag is set, it will output the signatures part only.
 
 The --offline flag makes sure that the client will not reach out to full node.
 As a result, the account and the sequence number queries will not be performed and
@@ -163,12 +162,11 @@ func setOutputFile(cmd *cobra.Command) (func(), error) {
 func GetSignCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sign [file]",
-		Short: "Sign transactions generated offline",
-		Long: `Sign transactions created with the --generate-only flag.
+		Short: "Sign transaction generated offline",
+		Long: `Sign transaction created with the --generate-only flag.
 It will read a transaction from [file], sign it, and print its JSON encoding.
 
-If the flag --signature-only flag is set, it will output a JSON representation
-of the signatures only.
+If the --signature-only flag is set, it will output the signatures part only.
 
 The --offline flag makes sure that the client will not reach out to full node.
 As a result, the account and sequence number queries will not be performed and
@@ -185,8 +183,8 @@ be generated via the 'multisign' command.
 	}
 
 	cmd.Flags().String(flagMultisig, "", "Address of the multisig account on behalf of which the transaction shall be signed")
-	cmd.Flags().Bool(flagOverwrite, false, "Append the signature to the existing ones. If disabled, old signatures would be overwritten. Ignored if --multisig is on")
-	cmd.Flags().Bool(flagSigOnly, false, "Print only the signature")
+	cmd.Flags().Bool(flagOverwrite, false, "Overwrite existing signatures with a new one. If disabled, new signature will be appended")
+	cmd.Flags().Bool(flagSigOnly, false, "Print only the signatures")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	cmd.Flags().String(flags.FlagChainID, "", "The network chain ID")
 	cmd.Flags().Bool(flagAmino, false, "Generate Amino encoded JSON suitable for submiting to the txs REST endpoint")

@@ -377,7 +377,7 @@ func SignWithPrivKey(
 
 // Sign signs a given tx with a named key. The bytes signed over are canconical.
 // The resulting signature will be added to the transaction builder overwriting the previous
-// ones if overwrite=true (otherwise, ne signature will be appended).
+// ones if overwrite=true (otherwise, the signature will be appended).
 // An error is returned upon failure.
 func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig bool) error {
 	if txf.keybase == nil {

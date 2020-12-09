@@ -56,7 +56,7 @@ func GetCmdQueryParams() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res.Params)
+			return clientCtx.PrintProto(&res.Params)
 		},
 	}
 
@@ -103,7 +103,7 @@ $ %s query distribution validator-outstanding-rewards %s1lwjmdnks33xwnmfayc64ycp
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res.Rewards)
+			return clientCtx.PrintProto(&res.Rewards)
 		},
 	}
 
@@ -149,7 +149,7 @@ $ %s query distribution commission %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res.Commission)
+			return clientCtx.PrintProto(&res.Commission)
 		},
 	}
 
@@ -215,7 +215,7 @@ $ %s query distribution slashes %svaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -271,7 +271,7 @@ $ %s query distribution rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p %s1ggh
 					return err
 				}
 
-				return clientCtx.PrintOutput(res)
+				return clientCtx.PrintProto(res)
 			}
 
 			res, err := queryClient.DelegationTotalRewards(
@@ -282,7 +282,7 @@ $ %s query distribution rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p %s1ggh
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -318,7 +318,7 @@ $ %s query distribution community-pool
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 

@@ -121,6 +121,7 @@ which accepts a path for the resulting pprof file.
 			}
 
 			serverCtx.Logger.Info(fmt.Sprintf("received quit signal: %d", errCode.Code))
+			os.Exit(errCode.Code)
 			return nil
 		},
 	}

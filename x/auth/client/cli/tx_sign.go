@@ -289,7 +289,6 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-
 		defer func() {
 			err2 := fp.Close()
 			if err == nil {
@@ -297,8 +296,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			}
 		}()
 
-		err = clientCtx.PrintBytes(json)
-
+		_, err = fp.Write(json)
 		return
 	}
 }

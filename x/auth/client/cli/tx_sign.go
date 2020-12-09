@@ -131,7 +131,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 
 				err = authclient.SignTx(txFactory, clientCtx, fromName, txBuilder, true)
 				if err != nil {
-					return
+					return err
 				}
 			} else {
 				if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {

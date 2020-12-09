@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -1006,16 +1005,12 @@ func (s *IntegrationTestSuite) TestFlagOutputDocument() {
 	defer cleanup1()
 
 	// Create a temp file to hold the signed tx.
-	tempfile, err := ioutil.TempFile("", "testtx")
+	tempfile, err := ioutil.TempFile(s.T().TempDir(), "testtx")
 	s.Require().NoError(err)
 	err = tempfile.Chmod(0644)
 	s.Require().NoError(err)
 	err = tempfile.Close()
 	s.Require().NoError(err)
-	defer func() {
-		err = os.Remove(tempfile.Name())
-		s.Require().NoError(err)
-	}()
 
 	res, err = authtest.TxSignExec(
 		val0.ClientCtx, val0.Address, unsignedTx.Name(),

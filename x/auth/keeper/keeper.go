@@ -86,7 +86,7 @@ func NewAccountKeeper(
 
 // Logger returns a module-specific logger.
 func (ak AccountKeeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // GetPubKey Returns the PubKey of the account at address
@@ -215,23 +215,17 @@ func (ak AccountKeeper) decodeAccount(bz []byte) types.AccountI {
 	return acc
 }
 
-// MarshalAccount marshals an Account interface. If the given type implements
-// the Marshaler interface, it is treated as a Proto-defined message and
-// serialized that way. Otherwise, it falls back on the internal Amino codec.
-func (ak AccountKeeper) MarshalAccount(accountI types.AccountI) ([]byte, error) {
-	return codec.MarshalAny(ak.cdc, accountI)
+// MarshalAccount protobuf serializes an Account interface
+func (ak AccountKeeper) MarshalAccount(accountI types.AccountI) ([]byte, error) { // nolint:interfacer
+	return ak.cdc.MarshalInterface(accountI)
 }
 
 // UnmarshalAccount returns an Account interface from raw encoded account
-// bytes of a Proto-based Account type. An error is returned upon decoding
-// failure.
+// bytes of a Proto-based Account type
 func (ak AccountKeeper) UnmarshalAccount(bz []byte) (types.AccountI, error) {
 	var acc types.AccountI
-	if err := codec.UnmarshalAny(ak.cdc, &acc, bz); err != nil {
-		return nil, err
-	}
-
-	return acc, nil
+	return acc, ak.cdc.UnmarshalInterface(bz, &acc)
 }
 
+// GetCodec return codec.Marshaler object used by the keeper
 func (ak AccountKeeper) GetCodec() codec.BinaryMarshaler { return ak.cdc }

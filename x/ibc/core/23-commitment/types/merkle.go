@@ -269,9 +269,14 @@ func verifyChainedMembershipProof(root []byte, specs []*ics23.ProofSpec, proofs 
 	return nil
 }
 
+// blankMerkleProof and blankProofOps will be used to compare against their zero values,
+// and are declared as globals to avoid having to unnecessarily re-allocate on every comparison.
+var blankMerkleProof = &MerkleProof{}
+var blankProofOps = &tmcrypto.ProofOps{}
+
 // Empty returns true if the root is empty
-func (proof MerkleProof) Empty() bool {
-	return proto.Equal(&proof, nil) || proto.Equal(&proof, &MerkleProof{}) || proto.Equal(&proof, &tmcrypto.ProofOps{})
+func (proof *MerkleProof) Empty() bool {
+	return proof == nil || proto.Equal(proof, blankMerkleProof) || proto.Equal(proof, blankProofOps)
 }
 
 // ValidateBasic checks if the proof is empty.

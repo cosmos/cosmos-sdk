@@ -1,6 +1,8 @@
 package types
 
 import (
+	"reflect"
+
 	ics23 "github.com/confio/ics23/go"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -33,7 +35,7 @@ func (cs ClientState) ClientType() string {
 
 // GetLatestHeight returns the latest sequence number.
 // Return exported.Height to satisfy ClientState interface
-// Version number is always 0 for a solo-machine.
+// Revision number is always 0 for a solo-machine.
 func (cs ClientState) GetLatestHeight() exported.Height {
 	return clienttypes.NewHeight(0, cs.Sequence)
 }
@@ -45,7 +47,7 @@ func (cs ClientState) IsFrozen() bool {
 
 // GetFrozenHeight returns the frozen sequence of the client.
 // Return exported.Height to satisfy interface
-// Version number is always 0 for a solo-machine
+// Revision number is always 0 for a solo-machine
 func (cs ClientState) GetFrozenHeight() exported.Height {
 	return clienttypes.NewHeight(0, cs.FrozenSequence)
 }
@@ -74,10 +76,24 @@ func (cs ClientState) ZeroCustomFields() exported.ClientState {
 	)
 }
 
+// Initialize will check that initial consensus state is equal to the latest consensus state of the initial client.
+func (cs ClientState) Initialize(_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, consState exported.ConsensusState) error {
+	if !reflect.DeepEqual(cs.ConsensusState, consState) {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "consensus state in initial client does not equal initial consensus state. expected: %s, got: %s",
+			cs.ConsensusState, consState)
+	}
+	return nil
+}
+
+// ExportMetadata is a no-op since solomachine does not store any metadata in client store
+func (cs ClientState) ExportMetadata(_ sdk.KVStore) []exported.GenesisMetadata {
+	return nil
+}
+
 // VerifyUpgradeAndUpdateState returns an error since solomachine client does not support upgrades
 func (cs ClientState) VerifyUpgradeAndUpdateState(
 	_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore,
-	_ exported.ClientState, _ exported.Height, _ []byte,
+	_ exported.ClientState, _ exported.ConsensusState, _, _ []byte,
 ) (exported.ClientState, exported.ConsensusState, error) {
 	return nil, nil, sdkerrors.Wrap(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade solomachine client")
 }
@@ -238,6 +254,8 @@ func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	height exported.Height,
+	_ uint64,
+	_ uint64,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
@@ -277,6 +295,8 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	height exported.Height,
+	_ uint64,
+	_ uint64,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
@@ -317,6 +337,8 @@ func (cs ClientState) VerifyPacketReceiptAbsence(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	height exported.Height,
+	_ uint64,
+	_ uint64,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
@@ -355,6 +377,8 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	height exported.Height,
+	_ uint64,
+	_ uint64,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
@@ -398,11 +422,11 @@ func produceVerificationArgs(
 	prefix exported.Prefix,
 	proof []byte,
 ) (cryptotypes.PubKey, signing.SignatureData, uint64, uint64, error) {
-	if version := height.GetVersionNumber(); version != 0 {
-		return nil, nil, 0, 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "version must be 0 for solomachine, got version-number: %d", version)
+	if revision := height.GetRevisionNumber(); revision != 0 {
+		return nil, nil, 0, 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "revision must be 0 for solomachine, got revision-number: %d", revision)
 	}
-	// sequence is encoded in the version height of height struct
-	sequence := height.GetVersionHeight()
+	// sequence is encoded in the revision height of height struct
+	sequence := height.GetRevisionHeight()
 	if cs.IsFrozen() {
 		return nil, nil, 0, 0, clienttypes.ErrClientFrozen
 	}
@@ -440,7 +464,7 @@ func produceVerificationArgs(
 		return nil, nil, 0, 0, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
 	}
 
-	latestSequence := cs.GetLatestHeight().GetVersionHeight()
+	latestSequence := cs.GetLatestHeight().GetRevisionHeight()
 	if latestSequence != sequence {
 		return nil, nil, 0, 0, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,

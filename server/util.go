@@ -14,12 +14,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	tmcfg "github.com/tendermint/tendermint/config"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
-	"github.com/tendermint/tendermint/libs/log"
+	tmlog "github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -39,7 +39,7 @@ const ServerContextKey = sdk.ContextKey("server.context")
 type Context struct {
 	Viper  *viper.Viper
 	Config *tmcfg.Config
-	Logger log.Logger
+	Logger tmlog.Logger
 }
 
 // ErrorCode contains the exit code for server exit.
@@ -52,10 +52,14 @@ func (e ErrorCode) Error() string {
 }
 
 func NewDefaultContext() *Context {
-	return NewContext(viper.New(), tmcfg.DefaultConfig(), log.NewTMLogger(log.NewSyncWriter(os.Stdout)))
+	return NewContext(
+		viper.New(),
+		tmcfg.DefaultConfig(),
+		ZeroLogWrapper{log.Logger},
+	)
 }
 
-func NewContext(v *viper.Viper, config *tmcfg.Config, logger log.Logger) *Context {
+func NewContext(v *viper.Viper, config *tmcfg.Config, logger tmlog.Logger) *Context {
 	return &Context{v, config, logger}
 }
 
@@ -86,27 +90,29 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 	serverCtx.Viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
 	serverCtx.Viper.AutomaticEnv()
 
-	// Intercept configuration files, using both Viper instances separately
+	// intercept configuration files, using both Viper instances separately
 	config, err := interceptConfigs(serverCtx.Viper)
 	if err != nil {
 		return err
 	}
-	// Return value is a tendermint configuration object
+
+	// return value is a tendermint configuration object
 	serverCtx.Config = config
 
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, tmcfg.DefaultLogLevel())
+	var logWriter io.Writer
+	if strings.ToLower(serverCtx.Viper.GetString(flags.FlagLogFormat)) == tmcfg.LogFormatPlain {
+		logWriter = zerolog.ConsoleWriter{Out: os.Stderr}
+	} else {
+		logWriter = os.Stderr
+	}
+
+	logLvlStr := serverCtx.Viper.GetString(flags.FlagLogLevel)
+	logLvl, err := zerolog.ParseLevel(logLvlStr)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse log level (%s): %w", logLvlStr, err)
 	}
 
-	// Check if the tendermint flag for trace logging is set
-	// if it is then setup a tracing logger in this app as well
-	if serverCtx.Viper.GetBool(tmcli.TraceFlag) {
-		logger = log.NewTracingLogger(logger)
-	}
-
-	serverCtx.Logger = logger.With("module", "main")
+	serverCtx.Logger = ZeroLogWrapper{zerolog.New(logWriter).Level(logLvl).With().Timestamp().Logger()}
 
 	return SetCmdServerContext(cmd, serverCtx)
 }

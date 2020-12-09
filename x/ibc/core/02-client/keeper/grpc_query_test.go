@@ -183,10 +183,10 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 			"invalid height",
 			func() {
 				req = &types.QueryConsensusStateRequest{
-					ClientId:      testClientID,
-					VersionNumber: 0,
-					VersionHeight: 0,
-					LatestHeight:  false,
+					ClientId:       testClientID,
+					RevisionNumber: 0,
+					RevisionHeight: 0,
+					LatestHeight:   false,
 				}
 			},
 			false,
@@ -235,9 +235,9 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 				suite.Require().NoError(err)
 
 				req = &types.QueryConsensusStateRequest{
-					ClientId:      testClientID,
-					VersionNumber: 0,
-					VersionHeight: height,
+					ClientId:       testClientID,
+					RevisionNumber: 0,
+					RevisionHeight: height,
 				}
 			},
 			true,

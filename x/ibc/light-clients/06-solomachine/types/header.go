@@ -18,7 +18,7 @@ func (Header) ClientType() string {
 
 // GetHeight returns the current sequence number as the height.
 // Return clientexported.Height to satisfy interface
-// Version number is always 0 for a solo-machine
+// Revision number is always 0 for a solo-machine
 func (h Header) GetHeight() exported.Height {
 	return clienttypes.NewHeight(0, h.Sequence)
 }

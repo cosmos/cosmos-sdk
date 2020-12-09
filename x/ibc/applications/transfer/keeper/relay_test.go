@@ -51,8 +51,8 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 		{"next seq send not found",
 			func() {
 				_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
-				channelA = connA.NextTestChannel(ibctesting.TransferPort)
-				channelB = connB.NextTestChannel(ibctesting.TransferPort)
+				channelA = suite.chainA.NextTestChannel(connA, ibctesting.TransferPort)
+				channelB = suite.chainB.NextTestChannel(connB, ibctesting.TransferPort)
 				// manually create channel so next seq send is never set
 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(
 					suite.chainA.GetContext(),

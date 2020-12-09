@@ -80,7 +80,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 		if ms, _ := cmd.Flags().GetString(flagMultisig); ms != "" {
 			multisigAddr, err = sdk.AccAddressFromBech32(ms)
 			if err != nil {
-				return
+				return err
 			}
 		}
 

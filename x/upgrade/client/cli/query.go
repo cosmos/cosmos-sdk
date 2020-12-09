@@ -51,7 +51,7 @@ func GetCurrentPlanCmd() *cobra.Command {
 				return fmt.Errorf("no upgrade scheduled")
 			}
 
-			return clientCtx.PrintOutput(res.GetPlan())
+			return clientCtx.PrintProto(res.GetPlan())
 		},
 	}
 

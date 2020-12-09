@@ -116,7 +116,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			txFactory = txFactory.WithSequence(sequence)
 			txBuilder, err = txCfg.WrapTxBuilder(unsignedStdTx)
 			if err != nil {
-				return
+				return err
 			}
 			if multisigAddr.Empty() {
 				var fromName string

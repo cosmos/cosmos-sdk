@@ -64,7 +64,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 		clientCtx := client.GetClientContextFromCmd(cmd)
 		clientCtx, err = client.ReadTxCommandFlags(clientCtx, cmd.Flags())
 		if err != nil {
-			return
+			return err
 		}
 		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 

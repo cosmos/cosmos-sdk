@@ -20,7 +20,7 @@ const (
 	FlagListenAddr         = "rest.laddr"
 	FlagExternalListenAddr = "rest.external_laddr"
 	FlagUlockKey           = "rest.unlock_key"
-	FlagUlockKeyHome   	   = "rest.unlock_key_home"
+	FlagUlockKeyHome       = "rest.unlock_key_home"
 	FlagCORS               = "cors"
 	FlagMaxOpenConnections = "max-open"
 	FlagHookstartInProcess = "startInProcess"
@@ -40,15 +40,20 @@ const (
 	FlagStreamRedisScheduler                = "stream.redis_scheduler"
 	FlagStreamRedisLock                     = "stream.redis_lock"
 	FlagStreamLocalLockDir                  = "stream.local_lock_dir"
-	FlagStreamMarketServiceEnable           = "stream.market_service_enable"
 	FlagStreamCacheQueueCapacity            = "stream.cache_queue_capacity"
-	FlagStreamMarketPulsarTopic             = "stream.market_pulsar_topic"
-	FlagStreamMarketPulsarPartition         = "stream.market_pulsar_partition"
-	FlagStreamMarketQuotationsEurekaName    = "stream.market_quotations_eureka_name"
+	FlagStreamMarketTopic                   = "stream.market_topic"
+	FlagStreamMarketPartition               = "stream.market_partition"
+	FlagStreamMarketServiceEnable           = "stream.market_service_enable"
+	FlagStreamMarketNacosUrls               = "stream.market_nacos_urls"
+	FlagStreamMarketNacosNamespaceId        = "stream.market_nacos_namespace_id"
+	FlagStreamMarketNacosClusters           = "stream.market_nacos_clusters"
+	FlagStreamMarketNacosServiceName        = "stream.market_nacos_service_name"
+	FlagStreamMarketNacosGroupName          = "stream.market_nacos_group_name"
+	FlagStreamMarketEurekaName              = "stream.market_eureka_name"
 	FlagStreamEurekaServerUrl               = "stream.eureka_server_url"
 	FlagStreamRestApplicationName           = "stream.rest_application_name"
-	FlagStreamNacosServerUrl                = "stream.nacos_server_url"
-	FlagStreamNacosNamespaceId              = "stream.nacos_namespace_id"
+	FlagStreamRestNacosUrls                 = "stream.rest_nacos_urls"
+	FlagStreamRestNacosNamespaceId          = "stream.rest_nacos_namespace_id"
 	FlagStreamPushservicePulsarPublicTopic  = "stream.pushservice_pulsar_public_topic"
 	FlagStreamPushservicePulsarPrivateTopic = "stream.pushservice_pulsar_private_topic"
 	FlagStreamPushservicePulsarDepthTopic   = "stream.pushservice_pulsar_depth_topic"
@@ -199,19 +204,36 @@ func registerokexchainPluginFlags(cmd *cobra.Command) *cobra.Command {
 
 	cmd.Flags().String(FlagStreamEngine, streamConf.Engine, "Stream plugin`s engine config")
 	cmd.Flags().String(FlagStreamKlineQueryConnect, streamConf.KlineQueryConnect, "Stream plugin`s kiline query connect url")
+
+	// distr-lock flags
 	cmd.Flags().String(FlagStreamWorkerId, streamConf.WorkerId, "Stream plugin`s worker id")
 	cmd.Flags().String(FlagStreamRedisScheduler, streamConf.RedisScheduler, "Stream plugin`s redis url for scheduler job")
 	cmd.Flags().String(FlagStreamRedisLock, streamConf.RedisLock, "Stream plugin`s redis url for distributed lock")
 	cmd.Flags().String(FlagStreamLocalLockDir, streamConf.LocalLockDir, "Stream plugin`s local lock dir")
-	cmd.Flags().Bool(FlagStreamMarketServiceEnable, streamConf.MarketServiceEnable, "Stream plugin`s market service enable config")
 	cmd.Flags().Int(FlagStreamCacheQueueCapacity, streamConf.CacheQueueCapacity, "Stream plugin`s cache queue capacity config")
-	cmd.Flags().String(FlagStreamMarketPulsarTopic, streamConf.MarketPulsarTopic, "Stream plugin`s pulsar topic for market quotation")
-	cmd.Flags().Int(FlagStreamMarketPulsarPartition, streamConf.MarketPulsarPartition, "Stream plugin`s pulsar partition for market quotation")
-	cmd.Flags().String(FlagStreamMarketQuotationsEurekaName, streamConf.MarketQuotationsEurekaName, "Stream plugin`s market quotation service name in eureka")
+
+	// kafka/pulsar service flags
+	cmd.Flags().String(FlagStreamMarketTopic, streamConf.MarketTopic, "Stream plugin`s pulsar/kafka topic for market quotation")
+	cmd.Flags().Int(FlagStreamMarketPartition, streamConf.MarketPartition, "Stream plugin`s pulsar/kafka partition for market quotation")
+
+	// market service flags for nacos config
+	cmd.Flags().Bool(FlagStreamMarketServiceEnable, streamConf.MarketServiceEnable, "Stream plugin`s market service enable config")
+	cmd.Flags().String(FlagStreamMarketNacosUrls, streamConf.MarketNacosUrls, "Stream plugin`s nacos server urls for getting market service info")
+	cmd.Flags().String(FlagStreamMarketNacosNamespaceId, streamConf.MarketNacosNamespaceId, "Stream plugin`s nacos name space id for getting market service info")
+	cmd.Flags().StringArray(FlagStreamMarketNacosClusters, streamConf.MarketNacosClusters, "Stream plugin`s nacos clusters array list for getting market service info")
+	cmd.Flags().String(FlagStreamMarketNacosServiceName, streamConf.MarketNacosServiceName, "Stream plugin`s nacos service name for getting market service info")
+	cmd.Flags().String(FlagStreamMarketNacosGroupName, streamConf.MarketNacosGroupName, "Stream plugin`s nacos group name for getting market service info")
+
+	// market service flags for eureka config
+	cmd.Flags().String(FlagStreamMarketEurekaName, streamConf.MarketEurekaName, "Stream plugin`s market service name in eureka")
 	cmd.Flags().String(FlagStreamEurekaServerUrl, streamConf.EurekaServerUrl, "Eureka server url for discovery service of rest api")
-	cmd.Flags().String(FlagStreamRestApplicationName, streamConf.RestApplicationName, "Rest application name in eureka or nacos")
-	cmd.Flags().String(FlagStreamNacosServerUrl, streamConf.NacosServerUrl, "Nacos server url for discovery service of rest api")
-	cmd.Flags().String(FlagStreamNacosNamespaceId, streamConf.NacosNamespaceId, "Nacos namepace id")
+
+	// restful service flags
+	cmd.Flags().String(FlagStreamRestApplicationName, streamConf.RestApplicationName, "Stream plugin`s rest application name in eureka or nacos")
+	cmd.Flags().String(FlagStreamRestNacosUrls, streamConf.RestNacosUrls, "Stream plugin`s nacos server urls for discovery service of rest api")
+	cmd.Flags().String(FlagStreamRestNacosNamespaceId, streamConf.RestNacosNamespaceId, "Stream plugin`s nacos namepace id for discovery service of rest api")
+
+	// push service flags
 	cmd.Flags().String(FlagStreamPushservicePulsarPublicTopic, streamConf.PushservicePulsarPublicTopic, "Stream plugin`s pulsar public topic of push service")
 	cmd.Flags().String(FlagStreamPushservicePulsarPrivateTopic, streamConf.PushservicePulsarPrivateTopic, "Stream plugin`s pulsar private topic of push service")
 	cmd.Flags().String(FlagStreamPushservicePulsarDepthTopic, streamConf.PushservicePulsarDepthTopic, "Stream plugin`s pulsar depth topic of push service")

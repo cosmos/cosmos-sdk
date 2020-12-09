@@ -67,21 +67,38 @@ func DefaultBackendConfig() *BackendConfig {
 
 // StreamConfig - config for okchain stream module
 type StreamConfig struct {
-	Engine                        string `json:"engine" mapstructure:"engine"`
-	KlineQueryConnect             string `json:"klines_query_connect" mapstructure:"klines_query_connect"`
-	WorkerId                      string `json:"worker_id" mapstructure:"worker_id"`
-	RedisScheduler                string `json:"redis_scheduler" mapstructure:"redis_scheduler"`
-	RedisLock                     string `json:"redis_lock" mapstructure:"redis_lock"`
-	LocalLockDir                  string `json:"local_lock_dir" mapstructure:"local_lock_dir"`
-	MarketServiceEnable           bool   `json:"market_service_enable" mapstructure:"market_service_enable"`
-	CacheQueueCapacity            int    `json:"cache_queue_capacity" mapstructure:"cache_queue_capacity"`
-	MarketPulsarTopic             string `json:"market_pulsar_topic" mapstructure:"market_pulsar_topic"`
-	MarketPulsarPartition         int    `json:"market_pulsar_partition" mapstructure:"market_pulsar_partition"`
-	MarketQuotationsEurekaName    string `json:"market_quotations_eureka_name" mapstructure:"market_quotations_eureka_name"`
-	EurekaServerUrl               string `json:"eureka_server_url" mapstructure:"eureka_server_url"`
-	RestApplicationName           string `json:"rest_application_name" mapstructure:"rest_application_name"`
-	NacosServerUrl                string `json:"nacos_server_url" mapstructure:"nacos_server_url"`
-	NacosNamespaceId              string `json:"nacos_namespace_id" mapstructure:"nacos_namespace_id"`
+	Engine            string `json:"engine" mapstructure:"engine"`
+	KlineQueryConnect string `json:"klines_query_connect" mapstructure:"klines_query_connect"`
+
+	// distr-lock config
+	WorkerId           string `json:"worker_id" mapstructure:"worker_id"`
+	RedisScheduler     string `json:"redis_scheduler" mapstructure:"redis_scheduler"`
+	RedisLock          string `json:"redis_lock" mapstructure:"redis_lock"`
+	LocalLockDir       string `json:"local_lock_dir" mapstructure:"local_lock_dir"`
+	CacheQueueCapacity int    `json:"cache_queue_capacity" mapstructure:"cache_queue_capacity"`
+
+	// kafka/pulsar service config for transfering match results
+	MarketTopic     string `json:"market_topic" mapstructure:"market_topic"`
+	MarketPartition int    `json:"market_partition" mapstructure:"market_partition"`
+
+	// market service of nacos config for getting market service url, used for registering token
+	MarketServiceEnable    bool     `json:"market_service_enable" mapstructure:"market_service_enable"`
+	MarketNacosUrls        string   `json:"market_nacos_urls" mapstructure:"market_nacos_urls"`
+	MarketNacosNamespaceId string   `json:"market_nacos_namespace_id" mapstructure:"market_nacos_namespace_id"`
+	MarketNacosClusters    []string `json:"market_nacos_clusters" mapstructure:"market_nacos_clusters"`
+	MarketNacosServiceName string   `json:"market_nacos_service_name" mapstructure:"market_nacos_service_name"`
+	MarketNacosGroupName   string   `json:"market_nacos_group_name" mapstructure:"market_nacos_group_name"`
+
+	// market service of eurka config for getting market service url, used for registering token
+	MarketEurekaName string `json:"market_eureka_name" mapstructure:"market_eureka_name"`
+	EurekaServerUrl  string `json:"eureka_server_url" mapstructure:"eureka_server_url"`
+
+	// restful service config for registering restful-node
+	RestApplicationName  string `json:"rest_application_name" mapstructure:"rest_application_name"`
+	RestNacosUrls        string `json:"rest_nacos_urls" mapstructure:"rest_nacos_urls"`
+	RestNacosNamespaceId string `json:"rest_nacos_namespace_id" mapstructure:"rest_nacos_namespace_id"`
+
+	// push service config
 	PushservicePulsarPublicTopic  string `json:"pushservice_pulsar_public_topic" mapstructure:"pushservice_pulsar_public_topic"`
 	PushservicePulsarPrivateTopic string `json:"pushservice_pulsar_private_topic" mapstructure:"pushservice_pulsar_private_topic"`
 	PushservicePulsarDepthTopic   string `json:"pushservice_pulsar_depth_topic" mapstructure:"pushservice_pulsar_depth_topic"`

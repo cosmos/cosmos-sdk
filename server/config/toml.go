@@ -58,19 +58,30 @@ connect_str = "{{ js .BackendConfig.OrmEngine.ConnectStr }}"
 [stream]
 engine = "{{ .StreamConfig.Engine }}"
 klines_query_connect = "{{ .StreamConfig.KlineQueryConnect }}"
+
 worker_id = "{{ .StreamConfig.WorkerId }}"
 redis_scheduler = "{{ .StreamConfig.RedisScheduler }}"
 redis_lock = "{{ .StreamConfig.RedisLock }}"
 local_lock_dir = "{{ js .StreamConfig.LocalLockDir }}"
-market_service_enable = "{{ .StreamConfig.MarketServiceEnable }}"
 cache_queue_capacity = "{{ .StreamConfig.CacheQueueCapacity }}"
-market_pulsar_topic = "{{ .StreamConfig.MarketPulsarTopic }}"
-market_pulsar_partition = "{{ .StreamConfig.MarketPulsarPartition }}"
-market_quotations_eureka_name = "{{ .StreamConfig.MarketQuotationsEurekaName }}"
+
+market_topic = "{{ .StreamConfig.MarketTopic }}"
+market_partition = "{{ .StreamConfig.MarketPartition }}"
+
+market_service_enable = "{{ .StreamConfig.MarketServiceEnable }}"
+market_nacos_urls = "{{ .StreamConfig.MarketNacosUrls }}"
+market_nacos_namespace_id = "{{ .StreamConfig.MarketNacosNamespaceId }}"
+market_nacos_clusters = "{{ .StreamConfig.MarketNacosClusters }}"
+market_nacos_service_name = "{{ .StreamConfig.MarketNacosServiceName }}"
+market_nacos_group_name = "{{ .StreamConfig.MarketNacosGroupName }}"
+
+market_eureka_name = "{{ .StreamConfig.MarketEurekaName }}"
 eureka_server_url = "{{ .StreamConfig.EurekaServerUrl }}"
+
 rest_application_name = "{{ .StreamConfig.RestApplicationName }}"
-nacos_server_url = "{{ .StreamConfig.NacosServerUrl }}"
-nacos_namespace_id = "{{ .StreamConfig.NacosNamespaceId }}"
+rest_nacos_urls = "{{ .StreamConfig.RestNacosUrls }}"
+rest_nacos_namespace_id = "{{ .StreamConfig.RestNacosNamespaceId }}"
+
 pushservice_pulsar_public_topic = "{{ .StreamConfig.PushservicePulsarPublicTopic }}"
 pushservice_pulsar_private_topic = "{{ .StreamConfig.PushservicePulsarPrivateTopic }}"
 pushservice_pulsar_depth_topic = "{{ .StreamConfig.PushservicePulsarDepthTopic }}"

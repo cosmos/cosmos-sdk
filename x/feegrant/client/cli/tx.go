@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -68,12 +67,17 @@ Examples:
 
 			granter := clientCtx.GetFromAddress()
 
-			limit, err := sdk.ParseCoinsNormalized(args[2])
+			limit, err := sdk.ParseCoinsNormalized(args[1])
 			if err != nil {
 				return err
 			}
 
-			period := time.Duration(viper.GetInt64(FlagExpiration)) * time.Second
+			exp, err := cmd.Flags().GetInt64(FlagExpiration)
+			if err != nil {
+				return err
+			}
+
+			period := time.Duration(exp) * time.Second
 
 			basic := types.BasicFeeAllowance{
 				SpendLimit: limit,

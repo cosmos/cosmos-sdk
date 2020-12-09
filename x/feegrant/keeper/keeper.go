@@ -46,9 +46,13 @@ func (k Keeper) GrantFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddre
 }
 
 // RevokeFeeAllowance removes an existing grant
-func (k Keeper) RevokeFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) {
+func (k Keeper) RevokeFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) error {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(granter, grantee)
+	_, found := k.GetFeeGrant(ctx, granter, grantee)
+	if !found {
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "fee-grant not found")
+	}
 
 	store.Delete(key)
 
@@ -59,6 +63,7 @@ func (k Keeper) RevokeFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddr
 			sdk.NewAttribute(types.AttributeKeyGrantee, grantee.String()),
 		),
 	)
+	return nil
 }
 
 // GetFeeAllowance returns the allowance between the granter and grantee.

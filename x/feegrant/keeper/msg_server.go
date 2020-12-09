@@ -53,7 +53,10 @@ func (k msgServer) RevokeFeeAllowance(goCtx context.Context, msg *types.MsgRevok
 		return nil, err
 	}
 
-	k.Keeper.RevokeFeeAllowance(ctx, granter, grantee)
+	err = k.Keeper.RevokeFeeAllowance(ctx, granter, grantee)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.MsgRevokeFeeAllowanceResponse{}, nil
 }

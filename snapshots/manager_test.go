@@ -12,8 +12,7 @@ import (
 )
 
 func TestManager_List(t *testing.T) {
-	store, teardown := setupStore(t)
-	defer teardown()
+	store := setupStore(t)
 	manager := snapshots.NewManager(store, nil)
 
 	mgrList, err := manager.List()
@@ -25,16 +24,14 @@ func TestManager_List(t *testing.T) {
 	assert.Equal(t, storeList, mgrList)
 
 	// list should not block or error on busy managers
-	manager, teardown = setupBusyManager(t)
-	defer teardown()
+	manager = setupBusyManager(t)
 	list, err := manager.List()
 	require.NoError(t, err)
 	assert.Equal(t, []*types.Snapshot{}, list)
 }
 
 func TestManager_LoadChunk(t *testing.T) {
-	store, teardown := setupStore(t)
-	defer teardown()
+	store := setupStore(t)
 	manager := snapshots.NewManager(store, nil)
 
 	// Existing chunk should return body
@@ -48,16 +45,14 @@ func TestManager_LoadChunk(t *testing.T) {
 	assert.Nil(t, chunk)
 
 	// LoadChunk should not block or error on busy managers
-	manager, teardown = setupBusyManager(t)
-	defer teardown()
+	manager = setupBusyManager(t)
 	chunk, err = manager.LoadChunk(2, 1, 0)
 	require.NoError(t, err)
 	assert.Nil(t, chunk)
 }
 
 func TestManager_Take(t *testing.T) {
-	store, teardown := setupStore(t)
-	defer teardown()
+	store := setupStore(t)
 	snapshotter := &mockSnapshotter{
 		chunks: [][]byte{
 			{1, 2, 3},
@@ -98,15 +93,13 @@ func TestManager_Take(t *testing.T) {
 	assert.Equal(t, [][]byte{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}, readChunks(chunks))
 
 	// creating a snapshot while a different snapshot is being created should error
-	manager, teardown = setupBusyManager(t)
-	defer teardown()
+	manager = setupBusyManager(t)
 	_, err = manager.Create(9)
 	require.Error(t, err)
 }
 
 func TestManager_Prune(t *testing.T) {
-	store, teardown := setupStore(t)
-	defer teardown()
+	store := setupStore(t)
 	manager := snapshots.NewManager(store, nil)
 
 	pruned, err := manager.Prune(2)
@@ -118,15 +111,13 @@ func TestManager_Prune(t *testing.T) {
 	assert.Len(t, list, 3)
 
 	// Prune should error while a snapshot is being taken
-	manager, teardown = setupBusyManager(t)
-	defer teardown()
+	manager = setupBusyManager(t)
 	_, err = manager.Prune(2)
 	require.Error(t, err)
 }
 
 func TestManager_Restore(t *testing.T) {
-	store, teardown := setupStore(t)
-	defer teardown()
+	store := setupStore(t)
 	target := &mockSnapshotter{}
 	manager := snapshots.NewManager(store, target)
 

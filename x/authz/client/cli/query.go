@@ -80,7 +80,7 @@ $ %s query %s authorizations cosmos1skj.. cosmos1skjwj..
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
@@ -132,7 +132,7 @@ $ %s query %s authorization cosmos1skjw.. cosmos1skjwj.. %s
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Authorization)
+			return clientCtx.PrintProto(res.Authorization)
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)

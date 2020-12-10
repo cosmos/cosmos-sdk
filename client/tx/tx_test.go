@@ -151,8 +151,10 @@ func TestSign(t *testing.T) {
 		WithSequence(23).
 		WithFees("50stake").
 		WithMemo("memo").
-		WithChainID("test-chain")
+		WithChainID("test-chain").
+		WithSignMode(signingtypes.SignMode_SIGN_MODE_DIRECT)
 	txf := txfNoKeybase.WithKeybase(kr)
+	txfAmino := txf.WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	msg := banktypes.NewMsgSend(info1.GetAddress(), sdk.AccAddress("to"), nil)
 	txn, err := tx.BuildUnsignedTx(txfNoKeybase, msg)
 	requireT.NoError(err)
@@ -172,10 +174,12 @@ func TestSign(t *testing.T) {
 		{"should succeed if txf with keyring",
 			txf, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
 		/**** test overwrite ****/
-		{"should succeed to append a second signature and not overwrite",
+		{"should append a second signature and not overwrite",
 			txf, from2, false, []cryptotypes.PubKey{pubKey1, pubKey2}, []int{0, 0}},
-		{"should succeed to overwrite a signature",
+		{"should overwrite a signature",
 			txf, from2, true, []cryptotypes.PubKey{pubKey2}, []int{1, 0}},
+		{"should append a signature with different mode",
+			txfAmino, from1, false, []cryptotypes.PubKey{pubKey2, pubKey1}, []int{0, 0}},
 	}
 	var prevSigs []signingtypes.SignatureV2
 	for _, tc := range testCases {

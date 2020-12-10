@@ -223,7 +223,7 @@ func ReadTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 
 	if clientCtx.From == "" || flagSet.Changed(flags.FlagFrom) {
 		from, _ := flagSet.GetString(flags.FlagFrom)
-		fromAddr, fromName, keyringInfo, err := GetFromFields(clientCtx.Keyring, from, clientCtx.GenerateOnly)
+		fromAddr, fromName, keyType, err := GetFromFields(clientCtx.Keyring, from, clientCtx.GenerateOnly)
 		if err != nil {
 			return clientCtx, err
 		}
@@ -233,7 +233,7 @@ func ReadTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		// If the `from` signer account is a ledger key, we need to use
 		// SIGN_MODE_AMINO_JSON, because ledger doesn't support proto yet.
 		// ref: https://github.com/cosmos/cosmos-sdk/issues/8109
-		if keyringInfo.GetType() == keyring.TypeLedger && clientCtx.SignModeStr != flags.SignModeLegacyAminoJSON {
+		if keyType == keyring.TypeLedger && clientCtx.SignModeStr != flags.SignModeLegacyAminoJSON {
 			clientCtx = clientCtx.WithSignModeStr(flags.SignModeLegacyAminoJSON)
 		}
 	}

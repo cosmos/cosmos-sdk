@@ -276,37 +276,37 @@ func (ctx Context) printOutput(out []byte) error {
 	return nil
 }
 
-// GetFromFields returns a from account address, account name and keyring info, given either
+// GetFromFields returns a from account address, account name and keyring type, given either
 // an address or key name. If genOnly is true, only a valid Bech32 cosmos
 // address is returned.
-func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddress, string, keyring.Info, error) {
+func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddress, string, keyring.KeyType, error) {
 	if from == "" {
-		return nil, "", nil, nil
+		return nil, "", 0, nil
 	}
 
 	if genOnly {
 		addr, err := sdk.AccAddressFromBech32(from)
 		if err != nil {
-			return nil, "", nil, errors.Wrap(err, "must provide a valid Bech32 address in generate-only mode")
+			return nil, "", 0, errors.Wrap(err, "must provide a valid Bech32 address in generate-only mode")
 		}
 
-		return addr, "", nil, nil
+		return addr, "", 0, nil
 	}
 
 	var info keyring.Info
 	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
 		info, err = kr.KeyByAddress(addr)
 		if err != nil {
-			return nil, "", nil, err
+			return nil, "", 0, err
 		}
 	} else {
 		info, err = kr.Key(from)
 		if err != nil {
-			return nil, "", nil, err
+			return nil, "", 0, err
 		}
 	}
 
-	return info.GetAddress(), info.GetName(), info, nil
+	return info.GetAddress(), info.GetName(), info.GetType(), nil
 }
 
 func newKeyringFromFlags(ctx Context, backend string) (keyring.Keyring, error) {

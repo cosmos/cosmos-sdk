@@ -566,8 +566,9 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 			chunks, err := store.Snapshot(version, tc.format)
 			require.NoError(t, err)
 			hashes := []string{}
+			hasher := sha256.New()
 			for chunk := range chunks {
-				hasher := sha256.New()
+				hasher.Reset()
 				_, err := io.Copy(hasher, chunk)
 				require.NoError(t, err)
 				hashes = append(hashes, hex.EncodeToString(hasher.Sum(nil)))

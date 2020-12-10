@@ -16,15 +16,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
 )
 
-func checksum(b []byte) []byte {
-	hash := sha256.Sum256(b)
-	return hash[:]
-}
-
 func checksums(slice [][]byte) [][]byte {
-	checksums := [][]byte{}
-	for _, chunk := range slice {
-		checksums = append(checksums, checksum(chunk))
+	hasher := sha256.New()
+	checksums := make([][]byte, len(slice))
+	for i, chunk := range slice {
+		hasher.Write(chunk)
+		checksums[i] = hasher.Sum(nil)
+		hasher.Reset()
 	}
 	return checksums
 }

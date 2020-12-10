@@ -183,12 +183,20 @@ func (s *IntegrationTestSuite) TestCLISign() {
 	/****  try to overwrite the previously signed transaction  ****/
 
 	// We can't sign with other address, because the bank send message supports only one signer for a simple
-	// account. We may update this test with other message or multisig account.
-	// Changing the file is too much hacking, because TxDecoder returns sdk.Tx, which doesn't provide
-	// functionality to check / manage `auth_info`
+	// account. Changing the file is too much hacking, because TxDecoder returns sdk.Tx, which doesn't
+	// provide functionality to check / manage `auth_info`.
+	// Cases with different keys are are covered in unit tests of `tx.Sign`.
 	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
 		sigOnlyFlag, "--overwrite")
 	checkSignatures(require, txCfg, res.Bytes(), valInfo.GetPubKey())
+
+	/****  test flagAmino  ****/
+	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
+		sigOnlyFlag, "--amino=true")
+	require.NoError(err)
+	err = json.Unmarshal(res.Bytes(), &txOut)
+	require.NoError(err)
+	require.Len(txOut.Signatures, 1)
 }
 
 func checkSignatures(require *require.Assertions, txCfg client.TxConfig, output []byte, pks ...cryptotypes.PubKey) {

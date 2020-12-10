@@ -1075,8 +1075,6 @@ func (s *IntegrationTestSuite) TestSignWithMultiSigners() {
 	err = val0.ClientCtx.JSONMarshaler.UnmarshalJSON(queryResJSON.Bytes(), &queryRes)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewCoins(val0Coin, val1Coin), queryRes.Balances)
-
-	s.Require().False(true)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

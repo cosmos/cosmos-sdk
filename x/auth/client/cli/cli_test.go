@@ -164,11 +164,20 @@ func (s *IntegrationTestSuite) TestCLISign() {
 	err = json.Unmarshal(res.Bytes(), &txOut)
 	require.NoError(err)
 	require.Len(txOut.Signatures, 1)
-	fileSigned := testutil.WriteToNewTempFile(s.T(), res.String())
+
+	/****  test file output  ****/
+	filenameSigned := filepath.Join(s.T().TempDir(), "test_sign_out.json")
+	fileFlag := fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, filenameSigned)
+	_, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag, fileFlag)
+	require.NoError(err)
+	fContent, err := ioutil.ReadFile(filenameSigned)
+	require.NoError(err)
+	require.Equal(res.String(), string(fContent))
 
 	/****  try to append to the previously signed transaction  ****/
-	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, fileSigned.Name(), chainFlag,
+	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
 		sigOnlyFlag)
+	require.NoError(err)
 	checkSignatures(require, txCfg, res.Bytes(), valInfo.GetPubKey(), valInfo.GetPubKey())
 
 	/****  try to overwrite the previously signed transaction  ****/
@@ -177,7 +186,7 @@ func (s *IntegrationTestSuite) TestCLISign() {
 	// account. We may update this test with other message or multisig account.
 	// Changing the file is too much hacking, because TxDecoder returns sdk.Tx, which doesn't provide
 	// functionality to check / manage `auth_info`
-	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, fileSigned.Name(), chainFlag,
+	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
 		sigOnlyFlag, "--overwrite")
 	checkSignatures(require, txCfg, res.Bytes(), valInfo.GetPubKey())
 }

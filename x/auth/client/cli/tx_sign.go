@@ -294,7 +294,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			}
 		}()
 
-		_, err = fp.Write(json)
+		_, err = fp.Write(append(json, '\n'))
 		return
 	}
 }

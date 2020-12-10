@@ -500,8 +500,7 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 
 	// msg vote
 	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1beta1.Msg/Vote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
-	execMsg, cleanup := testutil.WriteToNewTempFile(s.T(), voteTx)
-	defer cleanup()
+	execMsg := testutil.WriteToNewTempFile(s.T(), voteTx)
 
 	testCases := []struct {
 		name         string
@@ -604,8 +603,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
 	s.Require().NoError(err)
-	execMsg, cleanup1 := testutil.WriteToNewTempFile(s.T(), normalGeneratedTx.String())
-	defer cleanup1()
+	execMsg := testutil.WriteToNewTempFile(s.T(), normalGeneratedTx.String())
 	testCases := []struct {
 		name         string
 		args         []string

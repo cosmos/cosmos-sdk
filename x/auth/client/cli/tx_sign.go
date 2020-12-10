@@ -162,8 +162,8 @@ func setOutputFile(cmd *cobra.Command) (func(), error) {
 func GetSignCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sign [file]",
-		Short: "Sign transaction generated offline",
-		Long: `Sign transaction created with the --generate-only flag.
+		Short: "Sign a transaction generated offline",
+		Long: `Sign a transaction created with the --generate-only flag.
 It will read a transaction from [file], sign it, and print its JSON encoding.
 
 If the --signature-only flag is set, it will output the signatures part only.

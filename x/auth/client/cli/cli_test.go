@@ -774,6 +774,68 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	s.Require().NoError(err)
 }
 
+func (s *IntegrationTestSuite) TestMultisignBatch() {
+	val := s.network.Validators[0]
+
+	// Fetch 2 accounts and a multisig.
+	account1, err := val.ClientCtx.Keyring.Key("newAccount1")
+	s.Require().NoError(err)
+	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
+	s.Require().NoError(err)
+	multisigInfo, err := val.ClientCtx.Keyring.Key("multi")
+
+	// Send coins from validator to multisig.
+	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
+	_, err = bankcli.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		multisigInfo.GetAddress(),
+		sdk.NewCoins(sendTokens),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+	)
+	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	generatedStd, err := bankcli.MsgSendExec(
+		val.ClientCtx,
+		multisigInfo.GetAddress(),
+		val.Address,
+		sdk.NewCoins(
+			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1)),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	)
+	s.Require().NoError(err)
+
+	// Write the output to disk
+	filename := testutil.WriteToNewTempFile(s.T(), strings.Repeat(generatedStd.String(), 3))
+	val.ClientCtx.HomeDir = strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
+
+	// sign-batch file
+	res, err := authtest.TxSignBatchExec(val.ClientCtx, account1.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String())
+	s.Require().NoError(err)
+	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
+	// write sigs to file
+	file1 := testutil.WriteToNewTempFile(s.T(), res.String())
+
+	// sign-batch file with account2
+	res, err = authtest.TxSignBatchExec(val.ClientCtx, account2.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String())
+	s.Require().NoError(err)
+	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
+
+	// write sigs to file2
+	file2 := testutil.WriteToNewTempFile(s.T(), res.String())
+	res, err = authtest.TxMultiSignBatchExec(val.ClientCtx, filename.Name(), multisigInfo.GetName(), file1.Name(), file2.Name())
+	s.T().Log(res)
+	s.Require().NoError(err)
+}
+
 func (s *IntegrationTestSuite) TestGetAccountCmd() {
 	val := s.network.Validators[0]
 	_, _, addr1 := testdata.KeyTestPubAddr()

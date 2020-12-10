@@ -42,6 +42,7 @@ func (on OnlineNetwork) ConstructionHash(_ context.Context, request *types.Const
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
+
 	return &types.TransactionIdentifierResponse{
 		TransactionIdentifier: txIdentifier,
 		Metadata:              nil,

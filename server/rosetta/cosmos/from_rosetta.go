@@ -177,26 +177,19 @@ func GetMetadataFromPayloadReq(metadata map[string]interface{}) (*payloadReqMeta
 	if !ok {
 		return nil, fmt.Errorf("sequence metadata was not provided")
 	}
-	seqStr, ok := sequence.(string)
+
+	seqNum, ok := sequence.(float64)
 	if !ok {
 		return nil, fmt.Errorf("invalid sequence value")
-	}
-	seqNum, err := strconv.Atoi(seqStr)
-	if err != nil {
-		return nil, fmt.Errorf("error converting sequence num to int")
 	}
 
 	accountNum, ok := metadata[AccountNumberKey]
 	if !ok {
 		return nil, fmt.Errorf("account_number metadata was not provided")
 	}
-	accStr, ok := accountNum.(string)
+	accNum, ok := accountNum.(float64)
 	if !ok {
 		return nil, fmt.Errorf("invalid account_number value")
-	}
-	accNum, err := strconv.Atoi(accStr)
-	if err != nil {
-		return nil, fmt.Errorf("error converting account num to int")
 	}
 
 	gasNum, ok := metadata[GasKey]
@@ -216,6 +209,7 @@ func GetMetadataFromPayloadReq(metadata map[string]interface{}) (*payloadReqMeta
 	if !ok {
 		return nil, fmt.Errorf("invalid account_number value")
 	}
+
 	return &payloadReqMeta{
 		ChainID:       chainID,
 		Sequence:      uint64(seqNum),

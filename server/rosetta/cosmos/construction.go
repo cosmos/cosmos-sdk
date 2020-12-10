@@ -12,6 +12,7 @@ import (
 	secp256k1 "github.com/tendermint/btcd/btcec"
 	"github.com/tendermint/tendermint/crypto"
 	tmsecp256k1 "github.com/tendermint/tendermint/crypto/secp256k1"
+	"strings"
 )
 
 func (d Client) AccountIdentifierFromPubKeyBytes(curveType string, pkBytes []byte) (*types.AccountIdentifier, error) {
@@ -53,7 +54,7 @@ func (d Client) TransactionIdentifierFromHexBytes(hexBytes []byte) (txIdentifier
 	bzHash := hash[:]
 	hashString := hex.EncodeToString(bzHash)
 
-	return &types.TransactionIdentifier{Hash: hashString}, nil
+	return &types.TransactionIdentifier{Hash: strings.ToUpper(hashString)}, nil
 }
 
 func (d Client) TxOperationsAndSignersAccountIdentifiers(signed bool, txBytes []byte) (ops []*types.Operation, signers []*types.AccountIdentifier, err error) {
@@ -146,13 +147,10 @@ func (d Client) getAccount(ctx context.Context, address string) (auth.Account, e
 }
 
 func (d Client) SignedTx(ctx context.Context, txBytes []byte, sigs []*types.Signature) (signedTxBytes []byte, err error) {
-	sdkTx, err := d.txDecoder(txBytes)
+	var stdTx auth.StdTx
+	err = d.cdc.UnmarshalJSON(txBytes, &stdTx)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrInvalidTransaction, err.Error())
-	}
-	stdTx, ok := sdkTx.(auth.StdTx)
-	if !ok {
-		return nil, rosetta.WrapError(rosetta.ErrInvalidTransaction, fmt.Sprintf("tx is of type %T, expected %T", sdkTx, auth.StdTx{}))
 	}
 	sdkSig := make([]auth.StdSignature, len(sigs))
 	for i, signature := range sigs {
@@ -176,7 +174,7 @@ func (d Client) SignedTx(ctx context.Context, txBytes []byte, sigs []*types.Sign
 	}
 
 	stdTx.Signatures = sdkSig
-	signedTxBytes, err = d.txEncoder(sdkTx)
+	signedTxBytes, err = d.cdc.MarshalJSON(stdTx)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrCodec, "unable to marshal signed tx: "+err.Error())
 	}
@@ -208,7 +206,7 @@ func (d Client) ConstructionPayload(ctx context.Context, req *types.Construction
 
 	metadata, err := GetMetadataFromPayloadReq(req.Metadata)
 	if err != nil {
-		return nil, rosetta.ErrBadArgument
+		return nil, rosetta.WrapError(rosetta.ErrInvalidOperation, err.Error())
 	}
 
 	tx := auth.NewStdTx(msgs, auth.StdFee{
@@ -218,7 +216,7 @@ func (d Client) ConstructionPayload(ctx context.Context, req *types.Construction
 	signBytes := auth.StdSignBytes(
 		metadata.ChainID, metadata.AccountNumber, metadata.Sequence, tx.Fee, tx.Msgs, tx.Memo,
 	)
-	txBytes, err := d.txEncoder(tx)
+	txBytes, err := d.cdc.MarshalJSON(tx)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrBadArgument, err.Error())
 	}

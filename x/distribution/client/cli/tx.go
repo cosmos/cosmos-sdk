@@ -159,7 +159,7 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			delValsRes, err := queryClient.DelegatorValidators(context.Background(), &types.QueryDelegatorValidatorsRequest{DelegatorAddress: delAddr})
+			delValsRes, err := queryClient.DelegatorValidators(context.Background(), &types.QueryDelegatorValidatorsRequest{DelegatorAddress: delAddr.String()})
 			if err != nil {
 				return err
 			}
@@ -168,7 +168,12 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 			// build multi-message transaction
 			msgs := make([]sdk.Msg, 0, len(validators))
 			for _, valAddr := range validators {
-				msg := types.NewMsgWithdrawDelegatorReward(delAddr, valAddr)
+				val, err := sdk.ValAddressFromBech32(valAddr)
+				if err != nil {
+					return err
+				}
+
+				msg := types.NewMsgWithdrawDelegatorReward(delAddr, val)
 				if err := msg.ValidateBasic(); err != nil {
 					return err
 				}
@@ -251,7 +256,7 @@ $ %s tx distribution fund-community-pool 100uatom --from mykey
 			}
 
 			depositorAddr := clientCtx.GetFromAddress()
-			amount, err := sdk.ParseCoins(args[0])
+			amount, err := sdk.ParseCoinsNormalized(args[0])
 			if err != nil {
 				return err
 			}
@@ -310,18 +315,22 @@ Where proposal.json contains:
 				return err
 			}
 
-			amount, err := sdk.ParseCoins(proposal.Amount)
+			amount, err := sdk.ParseCoinsNormalized(proposal.Amount)
 			if err != nil {
 				return err
 			}
 
-			deposit, err := sdk.ParseCoins(proposal.Deposit)
+			deposit, err := sdk.ParseCoinsNormalized(proposal.Deposit)
 			if err != nil {
 				return err
 			}
 
 			from := clientCtx.GetFromAddress()
-			content := types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, proposal.Recipient, amount)
+			recpAddr, err := sdk.AccAddressFromBech32(proposal.Recipient)
+			if err != nil {
+				return err
+			}
+			content := types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, recpAddr, amount)
 
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {

@@ -1,0 +1,111 @@
+syntax = "proto3";
+package ibc.lightclients.tendermint.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types";
+
+import "tendermint/types/validator.proto";
+import "tendermint/types/types.proto";
+import "confio/proofs.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "ibc/core/client/v1/client.proto";
+import "ibc/core/commitment/v1/commitment.proto";
+import "gogoproto/gogo.proto";
+
+// ClientState from Tendermint tracks the current validator set, latest height,
+// and a possible frozen height.
+message ClientState {
+  option (gogoproto.goproto_getters) = false;
+
+  string   chain_id    = 1;
+  Fraction trust_level = 2 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"trust_level\""];
+  // duration of the period since the LastestTimestamp during which the
+  // submitted headers are valid for upgrade
+  google.protobuf.Duration trusting_period = 3
+      [(gogoproto.nullable) = false, (gogoproto.stdduration) = true, (gogoproto.moretags) = "yaml:\"trusting_period\""];
+  // duration of the staking unbonding period
+  google.protobuf.Duration unbonding_period = 4 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags)    = "yaml:\"unbonding_period\""
+  ];
+  // defines how much new (untrusted) header's Time can drift into the future.
+  google.protobuf.Duration max_clock_drift = 5
+      [(gogoproto.nullable) = false, (gogoproto.stdduration) = true, (gogoproto.moretags) = "yaml:\"max_clock_drift\""];
+  // Block height when the client was frozen due to a misbehaviour
+  ibc.core.client.v1.Height frozen_height = 6
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"frozen_height\""];
+  // Latest height the client was updated to
+  ibc.core.client.v1.Height latest_height = 7
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"latest_height\""];
+
+  // Proof specifications used in verifying counterparty state
+  repeated ics23.ProofSpec proof_specs = 8 [(gogoproto.moretags) = "yaml:\"proof_specs\""];
+
+  // Path at which next upgraded client will be committed.
+  // Each element corresponds to the key for a single CommitmentProof in the chained proof.
+  // NOTE: ClientState must stored under `{upgradePath}/{upgradeHeight}/clientState`
+  // ConsensusState must be stored under `{upgradepath}/{upgradeHeight}/consensusState`
+  // For SDK chains using the default upgrade module, upgrade_path should be []string{"upgrade", "upgradedIBCState"}`
+  repeated string upgrade_path = 9 [(gogoproto.moretags) = "yaml:\"upgrade_path\""];
+
+  // This flag, when set to true, will allow governance to recover a client
+  // which has expired
+  bool allow_update_after_expiry = 10 [(gogoproto.moretags) = "yaml:\"allow_update_after_expiry\""];
+  // This flag, when set to true, will allow governance to unfreeze a client
+  // whose chain has experienced a misbehaviour event
+  bool allow_update_after_misbehaviour = 11 [(gogoproto.moretags) = "yaml:\"allow_update_after_misbehaviour\""];
+}
+
+// ConsensusState defines the consensus state from Tendermint.
+message ConsensusState {
+  option (gogoproto.goproto_getters) = false;
+
+  // timestamp that corresponds to the block height in which the ConsensusState
+  // was stored.
+  google.protobuf.Timestamp timestamp = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  // commitment root (i.e app hash)
+  ibc.core.commitment.v1.MerkleRoot root                 = 2 [(gogoproto.nullable) = false];
+  bytes                             next_validators_hash = 3 [
+    (gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes",
+    (gogoproto.moretags) = "yaml:\"next_validators_hash\""
+  ];
+}
+
+// Misbehaviour is a wrapper over two conflicting Headers
+// that implements Misbehaviour interface expected by ICS-02
+message Misbehaviour {
+  option (gogoproto.goproto_getters) = false;
+
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  Header header_1  = 2 [(gogoproto.customname) = "Header1", (gogoproto.moretags) = "yaml:\"header_1\""];
+  Header header_2  = 3 [(gogoproto.customname) = "Header2", (gogoproto.moretags) = "yaml:\"header_2\""];
+}
+
+// Header defines the Tendermint client consensus Header.
+// It encapsulates all the information necessary to update from a trusted
+// Tendermint ConsensusState. The inclusion of TrustedHeight and
+// TrustedValidators allows this update to process correctly, so long as the
+// ConsensusState for the TrustedHeight exists, this removes race conditions
+// among relayers The SignedHeader and ValidatorSet are the new untrusted update
+// fields for the client. The TrustedHeight is the height of a stored
+// ConsensusState on the client that will be used to verify the new untrusted
+// header. The Trusted ConsensusState must be within the unbonding period of
+// current time in order to correctly verify, and the TrustedValidators must
+// hash to TrustedConsensusState.NextValidatorsHash since that is the last
+// trusted validator set at the TrustedHeight.
+message Header {
+  .tendermint.types.SignedHeader signed_header = 1
+      [(gogoproto.embed) = true, (gogoproto.moretags) = "yaml:\"signed_header\""];
+
+  .tendermint.types.ValidatorSet validator_set  = 2 [(gogoproto.moretags) = "yaml:\"validator_set\""];
+  ibc.core.client.v1.Height      trusted_height = 3
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"trusted_height\""];
+  .tendermint.types.ValidatorSet trusted_validators = 4 [(gogoproto.moretags) = "yaml:\"trusted_validators\""];
+}
+
+// Fraction defines the protobuf message type for tmmath.Fraction that only supports positive values.
+message Fraction {
+  uint64 numerator   = 1;
+  uint64 denominator = 2;
+}

@@ -5,20 +5,18 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-
-	"github.com/cosmos/cosmos-sdk/client"
-
-	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -33,7 +31,7 @@ func TestParseQueryResponse(t *testing.T) {
 		Result:  &sdk.Result{Data: []byte("tx data"), Log: "log"},
 	}
 
-	bz, err := codec.ProtoMarshalJSON(simRes)
+	bz, err := codec.ProtoMarshalJSON(simRes, nil)
 	require.NoError(t, err)
 
 	res, err := authclient.ParseQueryResponse(bz)
@@ -49,7 +47,7 @@ func TestParseQueryResponse(t *testing.T) {
 func TestDefaultTxEncoder(t *testing.T) {
 	cdc := makeCodec()
 
-	defaultEncoder := authtypes.DefaultTxEncoder(cdc)
+	defaultEncoder := legacytx.DefaultTxEncoder(cdc)
 	encoder := authclient.GetTxEncoder(cdc)
 
 	compareEncoders(t, defaultEncoder, encoder)
@@ -57,7 +55,7 @@ func TestDefaultTxEncoder(t *testing.T) {
 
 func TestReadTxFromFile(t *testing.T) {
 	t.Parallel()
-	encodingConfig := simapp.MakeEncodingConfig()
+	encodingConfig := simapp.MakeTestEncodingConfig()
 
 	txCfg := encodingConfig.TxConfig
 	clientCtx := client.Context{}
@@ -76,9 +74,8 @@ func TestReadTxFromFile(t *testing.T) {
 	// Write it to the file
 	encodedTx, err := txCfg.TxJSONEncoder()(txBuilder.GetTx())
 	require.NoError(t, err)
-	jsonTxFile, cleanup := testutil.WriteToNewTempFile(t, string(encodedTx))
-	t.Cleanup(cleanup)
 
+	jsonTxFile := testutil.WriteToNewTempFile(t, string(encodedTx))
 	// Read it back
 	decodedTx, err := authclient.ReadTxFromFile(clientCtx, jsonTxFile.Name())
 	require.NoError(t, err)
@@ -92,7 +89,7 @@ func TestReadTxFromFile(t *testing.T) {
 
 func TestBatchScanner_Scan(t *testing.T) {
 	t.Parallel()
-	encodingConfig := simapp.MakeEncodingConfig()
+	encodingConfig := simapp.MakeTestEncodingConfig()
 
 	txGen := encodingConfig.TxConfig
 	clientCtx := client.Context{}
@@ -142,7 +139,7 @@ func TestBatchScanner_Scan(t *testing.T) {
 
 func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder) {
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
-	tx := authtypes.NewStdTx(msgs, authtypes.StdFee{}, []authtypes.StdSignature{}, "")
+	tx := legacytx.NewStdTx(msgs, legacytx.StdFee{}, []legacytx.StdSignature{}, "")
 
 	defaultEncoderBytes, err := expected(tx)
 	require.NoError(t, err)

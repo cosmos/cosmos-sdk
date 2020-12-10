@@ -1,14 +1,17 @@
 package exported
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	"github.com/gogo/protobuf/proto"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Evidence defines the contract which concrete evidence types of misbehavior
 // must implement.
 type Evidence interface {
+	proto.Message
+
 	Route() string
 	Type() string
 	String() string
@@ -34,10 +37,10 @@ type ValidatorEvidence interface {
 	GetTotalPower() int64
 }
 
-// MsgSubmitEvidence defines the specific interface a concrete message must
+// MsgSubmitEvidenceI defines the specific interface a concrete message must
 // implement in order to process submitted evidence. The concrete MsgSubmitEvidence
 // must be defined at the application-level.
-type MsgSubmitEvidence interface {
+type MsgSubmitEvidenceI interface {
 	sdk.Msg
 
 	GetEvidence() Evidence

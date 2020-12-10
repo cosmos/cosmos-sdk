@@ -2,15 +2,20 @@ package genutil
 
 import (
 	"encoding/json"
+	"fmt"
 	"path/filepath"
 	"time"
 
+	"github.com/cosmos/go-bip39"
 	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/crypto"
+	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/privval"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // ExportGenesisFile creates and writes the genesis configuration to disk. An
@@ -45,7 +50,17 @@ func ExportGenesisFileWithTime(
 }
 
 // InitializeNodeValidatorFiles creates private validator and p2p configuration files.
-func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey crypto.PubKey, err error) {
+func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
+	return InitializeNodeValidatorFilesFromMnemonic(config, "")
+}
+
+// InitializeNodeValidatorFiles creates private validator and p2p configuration files using the given mnemonic.
+// If no valid mnemonic is given, a random one will be used instead.
+func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic string) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
+	if len(mnemonic) > 0 && !bip39.IsMnemonicValid(mnemonic) {
+		return "", nil, fmt.Errorf("invalid mnemonic")
+	}
+
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
 		return "", nil, err
@@ -63,7 +78,20 @@ func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey 
 		return "", nil, err
 	}
 
-	valPubKey, err = privval.LoadOrGenFilePV(pvKeyFile, pvStateFile).GetPubKey()
+	var filePV *privval.FilePV
+	if len(mnemonic) == 0 {
+		filePV = privval.LoadOrGenFilePV(pvKeyFile, pvStateFile)
+	} else {
+		privKey := tmed25519.GenPrivKeyFromSecret([]byte(mnemonic))
+		filePV = privval.NewFilePV(privKey, pvKeyFile, pvStateFile)
+	}
+
+	tmValPubKey, err := filePV.GetPubKey()
+	if err != nil {
+		return "", nil, err
+	}
+
+	valPubKey, err = cryptocodec.FromTmPubKeyInterface(tmValPubKey)
 	if err != nil {
 		return "", nil, err
 	}

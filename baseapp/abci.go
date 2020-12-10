@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"os"
@@ -81,9 +82,25 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		}
 	}
 
+	// In the case of a new chain, AppHash will be the hash of an empty string.
+	// During an upgrade, it'll be the hash of the last committed block.
+	var appHash []byte
+	if !app.LastCommitID().IsZero() {
+		appHash = app.LastCommitID().Hash
+	} else {
+		// $ echo -n '' | sha256sum
+		// e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+		emptyHash := sha256.Sum256([]byte{})
+		appHash = emptyHash[:]
+	}
+
 	// NOTE: We don't commit, but BeginBlock for block `initial_height` starts from this
 	// deliverState.
-	return res
+	return abci.ResponseInitChain{
+		ConsensusParams: res.ConsensusParams,
+		Validators:      res.Validators,
+		AppHash:         appHash,
+	}
 }
 
 // Info implements the ABCI interface.
@@ -196,11 +213,6 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 	defer telemetry.MeasureSince(time.Now(), "abci", "check_tx")
 
-	tx, err := app.txDecoder(req.Tx)
-	if err != nil {
-		return sdkerrors.ResponseCheckTx(err, 0, 0, app.trace)
-	}
-
 	var mode runTxMode
 
 	switch {
@@ -214,7 +226,7 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 		panic(fmt.Sprintf("unknown RequestCheckTx type: %s", req.Type))
 	}
 
-	gInfo, result, err := app.runTx(mode, req.Tx, tx)
+	gInfo, result, err := app.runTx(mode, req.Tx)
 	if err != nil {
 		return sdkerrors.ResponseCheckTx(err, gInfo.GasWanted, gInfo.GasUsed, app.trace)
 	}
@@ -236,11 +248,6 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
 	defer telemetry.MeasureSince(time.Now(), "abci", "deliver_tx")
 
-	tx, err := app.txDecoder(req.Tx)
-	if err != nil {
-		return sdkerrors.ResponseDeliverTx(err, 0, 0, app.trace)
-	}
-
 	gInfo := sdk.GasInfo{}
 	resultStr := "successful"
 
@@ -251,7 +258,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
 	}()
 
-	gInfo, result, err := app.runTx(runTxModeDeliver, req.Tx, tx)
+	gInfo, result, err := app.runTx(runTxModeDeliver, req.Tx)
 	if err != nil {
 		resultStr = "failed"
 		return sdkerrors.ResponseDeliverTx(err, gInfo.GasWanted, gInfo.GasUsed, app.trace)
@@ -277,13 +284,14 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	defer telemetry.MeasureSince(time.Now(), "abci", "commit")
 
 	header := app.deliverState.ctx.BlockHeader()
+	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
 	// Write the DeliverTx state which is cache-wrapped and commit the MultiStore.
 	// The write to the DeliverTx state writes all state transitions to the root
 	// MultiStore (app.cms) so when Commit() is called is persists those values.
 	app.deliverState.ms.Write()
 	commitID := app.cms.Commit()
-	app.logger.Debug("Commit synced", "commit", fmt.Sprintf("%X", commitID))
+	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitID))
 
 	// Reset the Check state to the latest committed.
 	//
@@ -317,7 +325,8 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	}
 
 	return abci.ResponseCommit{
-		Data: commitID.Hash,
+		Data:         commitID.Hash,
+		RetainHeight: retainHeight,
 	}
 }
 
@@ -345,29 +354,51 @@ func (app *BaseApp) halt() {
 
 // snapshot takes a snapshot of the current state and prunes any old snapshottypes.
 func (app *BaseApp) snapshot(height int64) {
-	app.logger.Info("Creating state snapshot", "height", height)
-	snapshot, err := app.snapshotManager.Create(uint64(height))
-	if err != nil {
-		app.logger.Error("Failed to create state snapshot", "height", height, "err", err)
+	if app.snapshotManager == nil {
+		app.logger.Info("snapshot manager not configured")
 		return
 	}
-	app.logger.Info("Completed state snapshot", "height", height, "format", snapshot.Format)
+
+	app.logger.Info("creating state snapshot", "height", height)
+
+	snapshot, err := app.snapshotManager.Create(uint64(height))
+	if err != nil {
+		app.logger.Error("failed to create state snapshot", "height", height, "err", err)
+		return
+	}
+
+	app.logger.Info("completed state snapshot", "height", height, "format", snapshot.Format)
 
 	if app.snapshotKeepRecent > 0 {
-		app.logger.Debug("Pruning state snapshots")
+		app.logger.Debug("pruning state snapshots")
+
 		pruned, err := app.snapshotManager.Prune(app.snapshotKeepRecent)
 		if err != nil {
 			app.logger.Error("Failed to prune state snapshots", "err", err)
 			return
 		}
-		app.logger.Debug("Pruned state snapshots", "pruned", pruned)
+
+		app.logger.Debug("pruned state snapshots", "pruned", pruned)
 	}
 }
 
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
 // implements Queryable.
-func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
+func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	defer telemetry.MeasureSince(time.Now(), "abci", "query")
+
+	// Add panic recovery for all queries.
+	// ref: https://github.com/cosmos/cosmos-sdk/pull/8039
+	defer func() {
+		if r := recover(); r != nil {
+			res = sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrPanic, "%v", r))
+		}
+	}()
+
+	// when a client did not provide a query height, manually inject the latest
+	if req.Height == 0 {
+		req.Height = app.LastBlockHeight()
+	}
 
 	// handle gRPC routes first rather than calling splitPath because '/' characters
 	// are used as part of gRPC paths
@@ -407,13 +438,14 @@ func (app *BaseApp) ListSnapshots(req abci.RequestListSnapshots) abci.ResponseLi
 
 	snapshots, err := app.snapshotManager.List()
 	if err != nil {
-		app.logger.Error("Failed to list snapshots", "err", err)
+		app.logger.Error("failed to list snapshots", "err", err)
 		return resp
 	}
+
 	for _, snapshot := range snapshots {
 		abciSnapshot, err := snapshot.ToABCI()
 		if err != nil {
-			app.logger.Error("Failed to list snapshots", "err", err)
+			app.logger.Error("failed to list snapshots", "err", err)
 			return resp
 		}
 		resp.Snapshots = append(resp.Snapshots, &abciSnapshot)
@@ -429,8 +461,13 @@ func (app *BaseApp) LoadSnapshotChunk(req abci.RequestLoadSnapshotChunk) abci.Re
 	}
 	chunk, err := app.snapshotManager.LoadChunk(req.Height, req.Format, req.Chunk)
 	if err != nil {
-		app.logger.Error("Failed to load snapshot chunk", "height", req.Height, "format", req.Format,
-			"chunk", req.Chunk, "err")
+		app.logger.Error(
+			"failed to load snapshot chunk",
+			"height", req.Height,
+			"format", req.Format,
+			"chunk", req.Chunk,
+			"err", err,
+		)
 		return abci.ResponseLoadSnapshotChunk{}
 	}
 	return abci.ResponseLoadSnapshotChunk{Chunk: chunk}
@@ -438,16 +475,22 @@ func (app *BaseApp) LoadSnapshotChunk(req abci.RequestLoadSnapshotChunk) abci.Re
 
 // OfferSnapshot implements the ABCI interface. It delegates to app.snapshotManager if set.
 func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOfferSnapshot {
+	if app.snapshotManager == nil {
+		app.logger.Error("snapshot manager not configured")
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}
+	}
+
 	if req.Snapshot == nil {
-		app.logger.Error("Received nil snapshot")
+		app.logger.Error("received nil snapshot")
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
 	}
 
 	snapshot, err := snapshottypes.SnapshotFromABCI(req.Snapshot)
 	if err != nil {
-		app.logger.Error("Failed to decode snapshot metadata", "err", err)
+		app.logger.Error("failed to decode snapshot metadata", "err", err)
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
 	}
+
 	err = app.snapshotManager.Restore(snapshot)
 	switch {
 	case err == nil:
@@ -457,13 +500,22 @@ func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOf
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT_FORMAT}
 
 	case errors.Is(err, snapshottypes.ErrInvalidMetadata):
-		app.logger.Error("Rejecting invalid snapshot", "height", req.Snapshot.Height,
-			"format", req.Snapshot.Format, "err", err)
+		app.logger.Error(
+			"rejecting invalid snapshot",
+			"height", req.Snapshot.Height,
+			"format", req.Snapshot.Format,
+			"err", err,
+		)
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
 
 	default:
-		app.logger.Error("Failed to restore snapshot", "height", req.Snapshot.Height,
-			"format", req.Snapshot.Format, "err", err)
+		app.logger.Error(
+			"failed to restore snapshot",
+			"height", req.Snapshot.Height,
+			"format", req.Snapshot.Format,
+			"err", err,
+		)
+
 		// We currently don't support resetting the IAVL stores and retrying a different snapshot,
 		// so we ask Tendermint to abort all snapshot restoration.
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}
@@ -472,14 +524,23 @@ func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOf
 
 // ApplySnapshotChunk implements the ABCI interface. It delegates to app.snapshotManager if set.
 func (app *BaseApp) ApplySnapshotChunk(req abci.RequestApplySnapshotChunk) abci.ResponseApplySnapshotChunk {
+	if app.snapshotManager == nil {
+		app.logger.Error("snapshot manager not configured")
+		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}
+	}
+
 	_, err := app.snapshotManager.RestoreChunk(req.Chunk)
 	switch {
 	case err == nil:
 		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ACCEPT}
 
 	case errors.Is(err, snapshottypes.ErrChunkHashMismatch):
-		app.logger.Error("Chunk checksum mismatch, rejecting sender and requesting refetch",
-			"chunk", req.Index, "sender", req.Sender, "err", err)
+		app.logger.Error(
+			"chunk checksum mismatch; rejecting sender and requesting refetch",
+			"chunk", req.Index,
+			"sender", req.Sender,
+			"err", err,
+		)
 		return abci.ResponseApplySnapshotChunk{
 			Result:        abci.ResponseApplySnapshotChunk_RETRY,
 			RefetchChunks: []uint32{req.Index},
@@ -487,7 +548,7 @@ func (app *BaseApp) ApplySnapshotChunk(req abci.RequestApplySnapshotChunk) abci.
 		}
 
 	default:
-		app.logger.Error("Failed to restore snapshot", "err", err)
+		app.logger.Error("failed to restore snapshot", "err", err)
 		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}
 	}
 }
@@ -528,9 +589,24 @@ func gRPCErrorToSDKError(err error) error {
 	}
 }
 
+func checkNegativeHeight(height int64) error {
+	if height < 0 {
+		// Reject invalid heights.
+		return sdkerrors.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"cannot query with height < 0; please provide a valid height",
+		)
+	}
+	return nil
+}
+
 // createQueryContext creates a new sdk.Context for a query, taking as args
 // the block height and whether the query needs a proof or not.
 func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, error) {
+	if err := checkNegativeHeight(height); err != nil {
+		return sdk.Context{}, err
+	}
+
 	// when a client did not provide a query height, manually inject the latest
 	if height == 0 {
 		height = app.LastBlockHeight()
@@ -561,18 +637,100 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 	return ctx, nil
 }
 
+// GetBlockRetentionHeight returns the height for which all blocks below this height
+// are pruned from Tendermint. Given a commitment height and a non-zero local
+// minRetainBlocks configuration, the retentionHeight is the smallest height that
+// satisfies:
+//
+// - Unbonding (safety threshold) time: The block interval in which validators
+// can be economically punished for misbehavior. Blocks in this interval must be
+// auditable e.g. by the light client.
+//
+// - Logical store snapshot interval: The block interval at which the underlying
+// logical store database is persisted to disk, e.g. every 10000 heights. Blocks
+// since the last IAVL snapshot must be available for replay on application restart.
+//
+// - State sync snapshots: Blocks since the oldest available snapshot must be
+// available for state sync nodes to catch up (oldest because a node may be
+// restoring an old snapshot while a new snapshot was taken).
+//
+// - Local (minRetainBlocks) config: Archive nodes may want to retain more or
+// all blocks, e.g. via a local config option min-retain-blocks. There may also
+// be a need to vary retention for other nodes, e.g. sentry nodes which do not
+// need historical blocks.
+func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
+	// pruning is disabled if minRetainBlocks is zero
+	if app.minRetainBlocks == 0 {
+		return 0
+	}
+
+	minNonZero := func(x, y int64) int64 {
+		switch {
+		case x == 0:
+			return y
+		case y == 0:
+			return x
+		case x < y:
+			return x
+		default:
+			return y
+		}
+	}
+
+	// Define retentionHeight as the minimum value that satisfies all non-zero
+	// constraints. All blocks below (commitHeight-retentionHeight) are pruned
+	// from Tendermint.
+	var retentionHeight int64
+
+	// Define the number of blocks needed to protect against misbehaving validators
+	// which allows light clients to operate safely. Note, we piggy back of the
+	// evidence parameters instead of computing an estimated nubmer of blocks based
+	// on the unbonding period and block commitment time as the two should be
+	// equivalent.
+	cp := app.GetConsensusParams(app.deliverState.ctx)
+	if cp != nil && cp.Evidence != nil && cp.Evidence.MaxAgeNumBlocks > 0 {
+		retentionHeight = commitHeight - cp.Evidence.MaxAgeNumBlocks
+	}
+
+	// Define the state pruning offset, i.e. the block offset at which the
+	// underlying logical database is persisted to disk.
+	statePruningOffset := int64(app.cms.GetPruning().KeepEvery)
+	if statePruningOffset > 0 {
+		if commitHeight > statePruningOffset {
+			v := commitHeight - (commitHeight % statePruningOffset)
+			retentionHeight = minNonZero(retentionHeight, v)
+		} else {
+			// Hitting this case means we have persisting enabled but have yet to reach
+			// a height in which we persist state, so we return zero regardless of other
+			// conditions. Otherwise, we could end up pruning blocks without having
+			// any state committed to disk.
+			return 0
+		}
+	}
+
+	if app.snapshotInterval > 0 && app.snapshotKeepRecent > 0 {
+		v := commitHeight - int64((app.snapshotInterval * uint64(app.snapshotKeepRecent)))
+		retentionHeight = minNonZero(retentionHeight, v)
+	}
+
+	v := commitHeight - int64(app.minRetainBlocks)
+	retentionHeight = minNonZero(retentionHeight, v)
+
+	if retentionHeight <= 0 {
+		// prune nothing in the case of a non-positive height
+		return 0
+	}
+
+	return retentionHeight
+}
+
 func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {
 	if len(path) >= 2 {
 		switch path[1] {
 		case "simulate":
 			txBytes := req.Data
 
-			tx, err := app.txDecoder(txBytes)
-			if err != nil {
-				return sdkerrors.QueryResult(sdkerrors.Wrap(err, "failed to decode tx"))
-			}
-
-			gInfo, res, err := app.Simulate(txBytes, tx)
+			gInfo, res, err := app.Simulate(txBytes)
 			if err != nil {
 				return sdkerrors.QueryResult(sdkerrors.Wrap(err, "failed to simulate tx"))
 			}
@@ -582,7 +740,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 				Result:  res,
 			}
 
-			bz, err := codec.ProtoMarshalJSON(simRes)
+			bz, err := codec.ProtoMarshalJSON(simRes, app.interfaceRegistry)
 			if err != nil {
 				return sdkerrors.QueryResult(sdkerrors.Wrap(err, "failed to JSON encode simulation response"))
 			}
@@ -621,11 +779,6 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) abci.R
 	}
 
 	req.Path = "/" + strings.Join(path[1:], "/")
-
-	// when a client did not provide a query height, manually inject the latest
-	if req.Height == 0 {
-		req.Height = app.LastBlockHeight()
-	}
 
 	if req.Height <= 1 && req.Prove {
 		return sdkerrors.QueryResult(

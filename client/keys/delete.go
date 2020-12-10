@@ -3,10 +3,9 @@ package keys
 import (
 	"bufio"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/spf13/cobra"
 )
@@ -30,16 +29,10 @@ private keys stored in a ledger device cannot be deleted with the CLI.
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			buf := bufio.NewReader(cmd.InOrStdin())
-
-			backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-			homeDir, _ := cmd.Flags().GetString(flags.FlagHome)
-			kb, err := keyring.New(sdk.KeyringServiceName(), backend, homeDir, buf)
-			if err != nil {
-				return err
-			}
+			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			for _, name := range args {
-				info, err := kb.Key(name)
+				info, err := clientCtx.Keyring.Key(name)
 				if err != nil {
 					return err
 				}
@@ -53,7 +46,7 @@ private keys stored in a ledger device cannot be deleted with the CLI.
 					}
 				}
 
-				if err := kb.Delete(name); err != nil {
+				if err := clientCtx.Keyring.Delete(name); err != nil {
 					return err
 				}
 

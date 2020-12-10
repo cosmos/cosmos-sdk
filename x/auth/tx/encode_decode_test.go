@@ -14,19 +14,16 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestDefaultTxDecoderError(t *testing.T) {
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
-	pubKeyCdc := std.DefaultPublicKeyCodec{}
 	encoder := DefaultTxEncoder()
-	decoder := DefaultTxDecoder(cdc, pubKeyCdc)
+	decoder := DefaultTxDecoder(cdc)
 
-	builder := newBuilder(pubKeyCdc)
+	builder := newBuilder()
 	err := builder.SetMsgs(testdata.NewTestMsg())
 	require.NoError(t, err)
 
@@ -34,9 +31,9 @@ func TestDefaultTxDecoderError(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = decoder(txBz)
-	require.EqualError(t, err, "no registered implementations of type types.Msg: tx parse error")
+	require.EqualError(t, err, "unable to resolve type URL /testdata.TestMsg: tx parse error")
 
-	registry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
+	testdata.RegisterInterfaces(registry)
 	_, err = decoder(txBz)
 	require.NoError(t, err)
 }
@@ -44,8 +41,7 @@ func TestDefaultTxDecoderError(t *testing.T) {
 func TestUnknownFields(t *testing.T) {
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
-	pubKeyCdc := std.DefaultPublicKeyCodec{}
-	decoder := DefaultTxDecoder(cdc, pubKeyCdc)
+	decoder := DefaultTxDecoder(cdc)
 
 	tests := []struct {
 		name           string
@@ -128,7 +124,7 @@ func TestUnknownFields(t *testing.T) {
 
 			if tt.shouldAminoErr != "" {
 				handler := signModeLegacyAminoJSONHandler{}
-				decoder := DefaultTxDecoder(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()), std.DefaultPublicKeyCodec{})
+				decoder := DefaultTxDecoder(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()))
 				theTx, err := decoder(txBz)
 				require.NoError(t, err)
 				_, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signing.SignerData{}, theTx)

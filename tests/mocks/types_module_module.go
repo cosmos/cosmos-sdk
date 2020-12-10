@@ -10,10 +10,10 @@ import (
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	types0 "github.com/cosmos/cosmos-sdk/types"
-	grpc "github.com/gogo/protobuf/grpc"
+	module "github.com/cosmos/cosmos-sdk/types/module"
 	gomock "github.com/golang/mock/gomock"
 	mux "github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	cobra "github.com/spf13/cobra"
 	types1 "github.com/tendermint/tendermint/abci/types"
 	reflect "reflect"
@@ -120,16 +120,16 @@ func (mr *MockAppModuleBasicMockRecorder) RegisterRESTRoutes(arg0, arg1 interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterRESTRoutes", reflect.TypeOf((*MockAppModuleBasic)(nil).RegisterRESTRoutes), arg0, arg1)
 }
 
-// RegisterGRPCRoutes mocks base method
-func (m *MockAppModuleBasic) RegisterGRPCRoutes(arg0 client.Context, arg1 *runtime.ServeMux) {
+// RegisterGRPCGatewayRoutes mocks base method
+func (m *MockAppModuleBasic) RegisterGRPCGatewayRoutes(arg0 client.Context, arg1 *runtime.ServeMux) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterGRPCRoutes", arg0, arg1)
+	m.ctrl.Call(m, "RegisterGRPCGatewayRoutes", arg0, arg1)
 }
 
-// RegisterGRPCRoutes indicates an expected call of RegisterGRPCRoutes
-func (mr *MockAppModuleBasicMockRecorder) RegisterGRPCRoutes(arg0, arg1 interface{}) *gomock.Call {
+// RegisterGRPCGatewayRoutes indicates an expected call of RegisterGRPCGatewayRoutes
+func (mr *MockAppModuleBasicMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCRoutes", reflect.TypeOf((*MockAppModuleBasic)(nil).RegisterGRPCRoutes), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCGatewayRoutes", reflect.TypeOf((*MockAppModuleBasic)(nil).RegisterGRPCGatewayRoutes), arg0, arg1)
 }
 
 // GetTxCmd mocks base method
@@ -261,16 +261,16 @@ func (mr *MockAppModuleGenesisMockRecorder) RegisterRESTRoutes(arg0, arg1 interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterRESTRoutes", reflect.TypeOf((*MockAppModuleGenesis)(nil).RegisterRESTRoutes), arg0, arg1)
 }
 
-// RegisterGRPCRoutes mocks base method
-func (m *MockAppModuleGenesis) RegisterGRPCRoutes(arg0 client.Context, arg1 *runtime.ServeMux) {
+// RegisterGRPCGatewayRoutes mocks base method
+func (m *MockAppModuleGenesis) RegisterGRPCGatewayRoutes(arg0 client.Context, arg1 *runtime.ServeMux) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterRESTRoutes", arg0, arg1)
+	m.ctrl.Call(m, "RegisterGRPCGatewayRoutes", arg0, arg1)
 }
 
-// RegisterGRPCRoutes indicates an expected call of RegisterGRPCRoutes
-func (mr *MockAppModuleGenesisMockRecorder) RegisterGRPCRoutes(arg0, arg1 interface{}) *gomock.Call {
+// RegisterGRPCGatewayRoutes indicates an expected call of RegisterGRPCGatewayRoutes
+func (mr *MockAppModuleGenesisMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCRoutes", reflect.TypeOf((*MockAppModuleGenesis)(nil).RegisterGRPCRoutes), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCGatewayRoutes", reflect.TypeOf((*MockAppModuleGenesis)(nil).RegisterGRPCGatewayRoutes), arg0, arg1)
 }
 
 // GetTxCmd mocks base method
@@ -430,16 +430,16 @@ func (mr *MockAppModuleMockRecorder) RegisterRESTRoutes(arg0, arg1 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterRESTRoutes", reflect.TypeOf((*MockAppModule)(nil).RegisterRESTRoutes), arg0, arg1)
 }
 
-// RegisterGRPCRoutes mocks base method
-func (m *MockAppModule) RegisterGRPCRoutes(arg0 client.Context, arg1 *runtime.ServeMux) {
+// RegisterGRPCGatewayRoutes mocks base method
+func (m *MockAppModule) RegisterGRPCGatewayRoutes(arg0 client.Context, arg1 *runtime.ServeMux) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterGRPCRoutes", arg0, arg1)
+	m.ctrl.Call(m, "RegisterGRPCGatewayRoutes", arg0, arg1)
 }
 
-// RegisterGRPCRoutes indicates an expected call of RegisterGRPCRoutes
-func (mr *MockAppModuleMockRecorder) RegisterGRPCRoutes(arg0, arg1 interface{}) *gomock.Call {
+// RegisterGRPCGatewayRoutes indicates an expected call of RegisterGRPCGatewayRoutes
+func (mr *MockAppModuleMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCRoutes", reflect.TypeOf((*MockAppModule)(nil).RegisterGRPCRoutes), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCGatewayRoutes", reflect.TypeOf((*MockAppModule)(nil).RegisterGRPCGatewayRoutes), arg0, arg1)
 }
 
 // GetTxCmd mocks base method
@@ -539,29 +539,29 @@ func (mr *MockAppModuleMockRecorder) QuerierRoute() *gomock.Call {
 }
 
 // LegacyQuerierHandler mocks base method
-func (m *MockAppModule) LegacyQuerierHandler(*codec.LegacyAmino) types0.Querier {
+func (m *MockAppModule) LegacyQuerierHandler(arg0 *codec.LegacyAmino) types0.Querier {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LegacyQuerierHandler")
+	ret := m.ctrl.Call(m, "LegacyQuerierHandler", arg0)
 	ret0, _ := ret[0].(types0.Querier)
 	return ret0
 }
 
 // LegacyQuerierHandler indicates an expected call of LegacyQuerierHandler
-func (mr *MockAppModuleMockRecorder) NewQuerierHandler() *gomock.Call {
+func (mr *MockAppModuleMockRecorder) LegacyQuerierHandler(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LegacyQuerierHandler", reflect.TypeOf((*MockAppModule)(nil).LegacyQuerierHandler))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LegacyQuerierHandler", reflect.TypeOf((*MockAppModule)(nil).LegacyQuerierHandler), arg0)
 }
 
-// RegisterQueryService mocks base method
-func (m *MockAppModule) RegisterQueryService(arg0 grpc.Server) {
+// RegisterServices mocks base method
+func (m *MockAppModule) RegisterServices(arg0 module.Configurator) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterQueryService", arg0)
+	m.ctrl.Call(m, "RegisterServices", arg0)
 }
 
-// RegisterQueryService indicates an expected call of RegisterQueryService
-func (mr *MockAppModuleMockRecorder) RegisterQueryService(arg0 interface{}) *gomock.Call {
+// RegisterServices indicates an expected call of RegisterServices
+func (mr *MockAppModuleMockRecorder) RegisterServices(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterQueryService", reflect.TypeOf((*MockAppModule)(nil).RegisterQueryService), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterServices", reflect.TypeOf((*MockAppModule)(nil).RegisterServices), arg0)
 }
 
 // BeginBlock mocks base method

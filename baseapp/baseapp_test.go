@@ -29,6 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 var (
@@ -97,6 +98,14 @@ func registerTestCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&msgNoRoute{}, "cosmos-sdk/baseapp/msgNoRoute", nil)
 }
 
+// aminoTxEncoder creates a amino TxEncoder for testing purposes.
+func aminoTxEncoder() sdk.TxEncoder {
+	cdc := codec.NewLegacyAmino()
+	registerTestCodec(cdc)
+
+	return legacytx.StdTxConfig{Cdc: cdc}.TxEncoder()
+}
+
 // simple one store baseapp
 func setupBaseApp(t *testing.T, options ...func(*BaseApp)) *BaseApp {
 	app := newBaseApp(t.Name(), options...)
@@ -123,6 +132,8 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 		}))
 	}
 
+	snapshotInterval := uint64(2)
+	snapshotTimeout := 1 * time.Minute
 	snapshotDir, err := ioutil.TempDir("", "baseapp")
 	require.NoError(t, err)
 	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), snapshotDir)
@@ -133,7 +144,7 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 
 	app := setupBaseApp(t, append(options,
 		SetSnapshotStore(snapshotStore),
-		SetSnapshotInterval(2),
+		SetSnapshotInterval(snapshotInterval),
 		SetPruning(sdk.PruningOptions{KeepEvery: 1}),
 		routerOpt)...)
 
@@ -161,9 +172,21 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 
-		// Wait for snapshot to be taken, since it happens asynchronously. This
-		// heuristic is likely to be flaky on low-IO machines.
-		time.Sleep(time.Duration(int(height)*blockTxs) * 200 * time.Millisecond)
+		// Wait for snapshot to be taken, since it happens asynchronously.
+		if uint64(height)%snapshotInterval == 0 {
+			start := time.Now()
+			for {
+				if time.Since(start) > snapshotTimeout {
+					t.Errorf("timed out waiting for snapshot after %v", snapshotTimeout)
+				}
+				snapshot, err := snapshotStore.Get(uint64(height), snapshottypes.CurrentFormat)
+				require.NoError(t, err)
+				if snapshot != nil {
+					break
+				}
+				time.Sleep(100 * time.Millisecond)
+			}
+		}
 	}
 
 	return app, teardown
@@ -408,7 +431,7 @@ func TestLoadVersionPruning(t *testing.T) {
 
 	for _, v := range []int64{1, 2, 4} {
 		_, err = app.cms.CacheMultiStoreWithVersion(v)
-		require.Error(t, err)
+		require.NoError(t, err)
 	}
 
 	for _, v := range []int64{3, 5, 6, 7} {
@@ -564,7 +587,16 @@ func TestInitChainer(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, int64(0), app.LastBlockHeight())
 
-	app.InitChain(abci.RequestInitChain{AppStateBytes: []byte("{}"), ChainId: "test-chain-id"}) // must have valid JSON genesis file, even if empty
+	initChainRes := app.InitChain(abci.RequestInitChain{AppStateBytes: []byte("{}"), ChainId: "test-chain-id"}) // must have valid JSON genesis file, even if empty
+
+	// The AppHash returned by a new chain is the sha256 hash of "".
+	// $ echo -n '' | sha256sum
+	// e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+	require.Equal(
+		t,
+		[]byte{0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14, 0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9, 0x24, 0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c, 0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55},
+		initChainRes.AppHash,
+	)
 
 	// assert that chainID is set correctly in InitChain
 	chainID := app.deliverState.ctx.ChainID()
@@ -1095,13 +1127,13 @@ func TestSimulateTx(t *testing.T) {
 		require.Nil(t, err)
 
 		// simulate a message, check gas reported
-		gInfo, result, err := app.Simulate(txBytes, tx)
+		gInfo, result, err := app.Simulate(txBytes)
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		require.Equal(t, gasConsumed, gInfo.GasUsed)
 
 		// simulate again, same result
-		gInfo, result, err = app.Simulate(txBytes, tx)
+		gInfo, result, err = app.Simulate(txBytes)
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		require.Equal(t, gasConsumed, gInfo.GasUsed)
@@ -1148,7 +1180,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 	// transaction with no messages
 	{
 		emptyTx := &txTest{}
-		_, result, err := app.Deliver(emptyTx)
+		_, result, err := app.Deliver(aminoTxEncoder(), emptyTx)
 		require.Error(t, err)
 		require.Nil(t, result)
 
@@ -1175,7 +1207,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 
 		for _, testCase := range testCases {
 			tx := testCase.tx
-			_, result, err := app.Deliver(tx)
+			_, result, err := app.Deliver(aminoTxEncoder(), tx)
 
 			if testCase.fail {
 				require.Error(t, err)
@@ -1192,7 +1224,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 	// transaction with no known route
 	{
 		unknownRouteTx := txTest{[]sdk.Msg{msgNoRoute{}}, 0, false}
-		_, result, err := app.Deliver(unknownRouteTx)
+		_, result, err := app.Deliver(aminoTxEncoder(), unknownRouteTx)
 		require.Error(t, err)
 		require.Nil(t, result)
 
@@ -1201,7 +1233,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 
 		unknownRouteTx = txTest{[]sdk.Msg{msgCounter{}, msgNoRoute{}}, 0, false}
-		_, result, err = app.Deliver(unknownRouteTx)
+		_, result, err = app.Deliver(aminoTxEncoder(), unknownRouteTx)
 		require.Error(t, err)
 		require.Nil(t, result)
 
@@ -1251,7 +1283,7 @@ func TestTxGasLimits(t *testing.T) {
 				}
 			}()
 
-			count := tx.(*txTest).Counter
+			count := tx.(txTest).Counter
 			newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
 
 			return newCtx, nil
@@ -1261,7 +1293,7 @@ func TestTxGasLimits(t *testing.T) {
 
 	routerOpt := func(bapp *BaseApp) {
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			count := msg.(msgCounter).Counter
+			count := msg.(*msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
 			return &sdk.Result{}, nil
 		})
@@ -1299,7 +1331,7 @@ func TestTxGasLimits(t *testing.T) {
 
 	for i, tc := range testCases {
 		tx := tc.tx
-		gInfo, result, err := app.Deliver(tx)
+		gInfo, result, err := app.Deliver(aminoTxEncoder(), tx)
 
 		// check gas used and wanted
 		require.Equal(t, tc.gasUsed, gInfo.GasUsed, fmt.Sprintf("tc #%d; gas: %v, result: %v, err: %s", i, gInfo, result, err))
@@ -1336,7 +1368,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 				}
 			}()
 
-			count := tx.(*txTest).Counter
+			count := tx.(txTest).Counter
 			newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
 
 			return
@@ -1345,7 +1377,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 
 	routerOpt := func(bapp *BaseApp) {
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			count := msg.(msgCounter).Counter
+			count := msg.(*msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
 			return &sdk.Result{}, nil
 		})
@@ -1389,7 +1421,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 
 		// execute the transaction multiple times
 		for j := 0; j < tc.numDelivers; j++ {
-			_, result, err := app.Deliver(tx)
+			_, result, err := app.Deliver(aminoTxEncoder(), tx)
 
 			ctx := app.getState(runTxModeDeliver).ctx
 
@@ -1457,7 +1489,7 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 	{
 		tx := newTxCounter(0, 0)
 
-		require.PanicsWithValue(t, customPanicMsg, func() { app.Deliver(tx) })
+		require.PanicsWithValue(t, customPanicMsg, func() { app.Deliver(aminoTxEncoder(), tx) })
 	}
 }
 
@@ -1566,7 +1598,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 
 	routerOpt := func(bapp *BaseApp) {
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			count := msg.(msgCounter).Counter
+			count := msg.(*msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
 			return &sdk.Result{}, nil
 		})
@@ -1645,7 +1677,7 @@ func TestQuery(t *testing.T) {
 	require.Equal(t, 0, len(res.Value))
 
 	// query is still empty after a CheckTx
-	_, resTx, err := app.Check(tx)
+	_, resTx, err := app.Check(aminoTxEncoder(), tx)
 	require.NoError(t, err)
 	require.NotNil(t, resTx)
 	res = app.Query(query)
@@ -1655,7 +1687,7 @@ func TestQuery(t *testing.T) {
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	_, resTx, err = app.Deliver(tx)
+	_, resTx, err = app.Deliver(aminoTxEncoder(), tx)
 	require.NoError(t, err)
 	require.NotNil(t, resTx)
 	res = app.Query(query)
@@ -1669,9 +1701,9 @@ func TestQuery(t *testing.T) {
 
 func TestGRPCQuery(t *testing.T) {
 	grpcQueryOpt := func(bapp *BaseApp) {
-		testdata.RegisterTestServiceServer(
+		testdata.RegisterQueryServer(
 			bapp.GRPCQueryRouter(),
-			testdata.TestServiceImpl{},
+			testdata.QueryImpl{},
 		)
 	}
 
@@ -1688,7 +1720,7 @@ func TestGRPCQuery(t *testing.T) {
 
 	reqQuery := abci.RequestQuery{
 		Data: reqBz,
-		Path: "/testdata.TestService/SayHello",
+		Path: "/testdata.Query/SayHello",
 	}
 
 	resQuery := app.Query(reqQuery)

@@ -25,14 +25,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
 func TestExportCmd_ConsensusParams(t *testing.T) {
-	tempDir, clean := testutil.NewTestCaseDir(t)
-	defer clean()
+	tempDir := t.TempDir()
 
 	_, ctx, genDoc, cmd := setupApp(t, tempDir)
 
@@ -58,12 +56,10 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 }
 
 func TestExportCmd_HomeDir(t *testing.T) {
-	tempDir, clean := testutil.NewTestCaseDir(t)
-	defer clean()
-
-	_, ctx, _, cmd := setupApp(t, tempDir)
+	_, ctx, _, cmd := setupApp(t, t.TempDir())
 
 	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", flags.FlagHome, "foobar")})
+
 	err := cmd.ExecuteContext(ctx)
 	require.EqualError(t, err, "stat foobar/config/genesis.json: no such file or directory")
 }
@@ -98,9 +94,7 @@ func TestExportCmd_Height(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tempDir, clean := testutil.NewTestCaseDir(t)
-			defer clean()
-
+			tempDir := t.TempDir()
 			app, ctx, _, cmd := setupApp(t, tempDir)
 
 			// Fast forward to block `tc.fastForward`.
@@ -128,25 +122,22 @@ func TestExportCmd_Height(t *testing.T) {
 }
 
 func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *tmtypes.GenesisDoc, *cobra.Command) {
-	err := createConfigFolder(tempDir)
-	if err != nil {
+	if err := createConfigFolder(tempDir); err != nil {
 		t.Fatalf("error creating config folder: %s", err)
 	}
 
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	db := dbm.NewMemDB()
-	encCfg := simapp.MakeEncodingConfig()
-	app := simapp.NewSimApp(logger, db, nil, true, map[int64]bool{}, tempDir, 0, encCfg)
+	encCfg := simapp.MakeTestEncodingConfig()
+	app := simapp.NewSimApp(logger, db, nil, true, map[int64]bool{}, tempDir, 0, encCfg, simapp.EmptyAppOptions{})
 
 	serverCtx := server.NewDefaultContext()
 	serverCtx.Config.RootDir = tempDir
 
 	clientCtx := client.Context{}.WithJSONMarshaler(app.AppCodec())
-
 	genDoc := newDefaultGenesisDoc()
-	err = saveGenesisFile(genDoc, serverCtx.Config.GenesisFile())
-	require.NoError(t, err)
 
+	require.NoError(t, saveGenesisFile(genDoc, serverCtx.Config.GenesisFile()))
 	app.InitChain(
 		abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
@@ -154,22 +145,21 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 			AppStateBytes:   genDoc.AppState,
 		},
 	)
-
 	app.Commit()
 
 	cmd := server.ExportCmd(
-		func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string) (types.ExportedApp, error) {
-			encCfg := simapp.MakeEncodingConfig()
+		func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptons types.AppOptions) (types.ExportedApp, error) {
+			encCfg := simapp.MakeTestEncodingConfig()
 
 			var simApp *simapp.SimApp
 			if height != -1 {
-				simApp = simapp.NewSimApp(logger, db, nil, false, map[int64]bool{}, "", 0, encCfg)
+				simApp = simapp.NewSimApp(logger, db, nil, false, map[int64]bool{}, "", 0, encCfg, appOptons)
 
 				if err := simApp.LoadHeight(height); err != nil {
 					return types.ExportedApp{}, err
 				}
 			} else {
-				simApp = simapp.NewSimApp(logger, db, nil, true, map[int64]bool{}, "", 0, encCfg)
+				simApp = simapp.NewSimApp(logger, db, nil, true, map[int64]bool{}, "", 0, encCfg, appOptons)
 			}
 
 			return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)

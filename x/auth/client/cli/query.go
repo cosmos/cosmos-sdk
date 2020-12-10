@@ -49,7 +49,7 @@ func QueryParamsCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Long: strings.TrimSpace(`Query the current auth parameters:
 
-$ <appcli> query auth params
+$ <appd> query auth params
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -64,7 +64,7 @@ $ <appcli> query auth params
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res.Params)
+			return clientCtx.PrintProto(&res.Params)
 		},
 	}
 
@@ -93,12 +93,12 @@ func GetAccountCmd() *cobra.Command {
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.Account(context.Background(), &types.QueryAccountRequest{Address: key})
+			res, err := queryClient.Account(context.Background(), &types.QueryAccountRequest{Address: key.String()})
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Account)
+			return clientCtx.PrintProto(res.Account)
 		},
 	}
 
@@ -167,13 +167,7 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 				return err
 			}
 
-			output, err := clientCtx.LegacyAmino.MarshalJSON(txs)
-			if err != nil {
-				return err
-			}
-
-			fmt.Println(string(output))
-			return nil
+			return clientCtx.PrintProto(txs)
 		},
 	}
 
@@ -209,12 +203,11 @@ func QueryTxCmd() *cobra.Command {
 				return fmt.Errorf("no transaction found with hash %s", args[0])
 			}
 
-			return clientCtx.PrintOutput(output)
+			return clientCtx.PrintProto(output)
 		},
 	}
 
-	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }

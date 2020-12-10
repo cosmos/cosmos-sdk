@@ -9,14 +9,15 @@ import (
 
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -84,20 +85,19 @@ the flag --nosort is set.
 
 func runAddCmd(cmd *cobra.Command, args []string) error {
 	buf := bufio.NewReader(cmd.InOrStdin())
-
-	homeDir, _ := cmd.Flags().GetString(flags.FlagHome)
-	dryRun, _ := cmd.Flags().GetBool(flags.FlagHome)
+	clientCtx := client.GetClientContextFromCmd(cmd)
 
 	var (
 		kr  keyring.Keyring
 		err error
 	)
 
+	dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun)
 	if dryRun {
-		kr, err = keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, homeDir, buf)
+		kr, err = keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, clientCtx.KeyringDir, buf)
 	} else {
 		backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-		kr, err = keyring.New(sdk.KeyringServiceName(), backend, homeDir, buf)
+		kr, err = keyring.New(sdk.KeyringServiceName(), backend, clientCtx.KeyringDir, buf)
 	}
 
 	if err != nil {
@@ -152,7 +152,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 
 		multisigKeys, _ := cmd.Flags().GetStringSlice(flagMultisig)
 		if len(multisigKeys) != 0 {
-			var pks []crypto.PubKey
+			var pks []cryptotypes.PubKey
 
 			multisigThreshold, _ := cmd.Flags().GetInt(flagMultiSigThreshold)
 			if err := validateMultisigThreshold(multisigThreshold, len(multisigKeys)); err != nil {
@@ -174,7 +174,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 				})
 			}
 
-			pk := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
+			pk := multisig.NewLegacyAminoPubKey(multisigThreshold, pks)
 			if _, err := kb.SaveMultisig(name, pk); err != nil {
 				return err
 			}
@@ -247,7 +247,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 	}
 
 	if len(mnemonic) == 0 {
-		// read entropy seed straight from crypto.Rand and convert to mnemonic
+		// read entropy seed straight from tmcrypto.Rand and convert to mnemonic
 		entropySeed, err := bip39.NewEntropy(mnemonicEntropySize)
 		if err != nil {
 			return err
@@ -306,7 +306,6 @@ func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemo
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {
-			fmt.Fprintln(cmd.ErrOrStderr(), "\n**Important** write this mnemonic phrase in a safe place.")
 			fmt.Fprintln(cmd.ErrOrStderr(), "\n**Important** write this mnemonic phrase in a safe place.")
 			fmt.Fprintln(cmd.ErrOrStderr(), "It is the only way to recover your account if you ever forget your password.")
 			fmt.Fprintln(cmd.ErrOrStderr(), "")

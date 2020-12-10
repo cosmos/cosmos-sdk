@@ -1,23 +1,20 @@
 package tx
 
 import (
-	"github.com/tendermint/tendermint/crypto"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/unknownproto"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-// DefaultTxDecoder returns a default protobuf TxDecoder using the provided Marshaler and PublicKeyCodec
-func DefaultTxDecoder(cdc *codec.ProtoCodec, keyCodec cryptotypes.PublicKeyCodec) sdk.TxDecoder {
+// DefaultTxDecoder returns a default protobuf TxDecoder using the provided Marshaler.
+func DefaultTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		var raw tx.TxRaw
 
 		// reject all unknown proto fields in the root TxRaw
-		err := unknownproto.RejectUnknownFieldsStrict(txBytes, &raw)
+		err := unknownproto.RejectUnknownFieldsStrict(txBytes, &raw, cdc.InterfaceRegistry())
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
@@ -30,7 +27,7 @@ func DefaultTxDecoder(cdc *codec.ProtoCodec, keyCodec cryptotypes.PublicKeyCodec
 		var body tx.TxBody
 
 		// allow non-critical unknown fields in TxBody
-		txBodyHasUnknownNonCriticals, err := unknownproto.RejectUnknownFields(raw.BodyBytes, &body, true)
+		txBodyHasUnknownNonCriticals, err := unknownproto.RejectUnknownFields(raw.BodyBytes, &body, true, cdc.InterfaceRegistry())
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
@@ -43,7 +40,7 @@ func DefaultTxDecoder(cdc *codec.ProtoCodec, keyCodec cryptotypes.PublicKeyCodec
 		var authInfo tx.AuthInfo
 
 		// reject all unknown proto fields in AuthInfo
-		err = unknownproto.RejectUnknownFieldsStrict(raw.AuthInfoBytes, &authInfo)
+		err = unknownproto.RejectUnknownFieldsStrict(raw.AuthInfoBytes, &authInfo, cdc.InterfaceRegistry())
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
@@ -59,24 +56,17 @@ func DefaultTxDecoder(cdc *codec.ProtoCodec, keyCodec cryptotypes.PublicKeyCodec
 			Signatures: raw.Signatures,
 		}
 
-		pks, err := extractPubKeys(theTx, keyCodec)
-		if err != nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
-		}
-
 		return &wrapper{
 			tx:                           theTx,
 			bodyBz:                       raw.BodyBytes,
 			authInfoBz:                   raw.AuthInfoBytes,
-			pubKeys:                      pks,
-			pubkeyCodec:                  keyCodec,
 			txBodyHasUnknownNonCriticals: txBodyHasUnknownNonCriticals,
 		}, nil
 	}
 }
 
-// DefaultTxDecoder returns a default protobuf JSON TxDecoder using the provided Marshaler and PublicKeyCodec
-func DefaultJSONTxDecoder(cdc *codec.ProtoCodec, keyCodec cryptotypes.PublicKeyCodec) sdk.TxDecoder {
+// DefaultJSONTxDecoder returns a default protobuf JSON TxDecoder using the provided Marshaler.
+func DefaultJSONTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		var theTx tx.Tx
 		err := cdc.UnmarshalJSON(txBytes, &theTx)
@@ -84,32 +74,8 @@ func DefaultJSONTxDecoder(cdc *codec.ProtoCodec, keyCodec cryptotypes.PublicKeyC
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 
-		pks, err := extractPubKeys(&theTx, keyCodec)
-		if err != nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
-		}
-
 		return &wrapper{
-			tx:          &theTx,
-			pubKeys:     pks,
-			pubkeyCodec: keyCodec,
+			tx: &theTx,
 		}, nil
 	}
-}
-
-func extractPubKeys(tx *tx.Tx, keyCodec cryptotypes.PublicKeyCodec) ([]crypto.PubKey, error) {
-	if tx.AuthInfo == nil {
-		return []crypto.PubKey{}, nil
-	}
-
-	signerInfos := tx.AuthInfo.SignerInfos
-	pks := make([]crypto.PubKey, len(signerInfos))
-	for i, si := range signerInfos {
-		pk, err := keyCodec.Decode(si.PublicKey)
-		if err != nil {
-			return nil, err
-		}
-		pks[i] = pk
-	}
-	return pks, nil
 }

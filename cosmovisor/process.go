@@ -2,12 +2,15 @@ package cosmovisor
 
 import (
 	"bufio"
+	"fmt"
 	"io"
+	"log"
+	"os"
 	"os/exec"
+	"os/signal"
 	"strings"
 	"sync"
-
-	"github.com/pkg/errors"
+	"syscall"
 )
 
 // LaunchProcess runs a subprocess and returns when the subprocess exits,
@@ -15,11 +18,11 @@ import (
 func LaunchProcess(cfg *Config, args []string, stdout, stderr io.Writer) (bool, error) {
 	bin, err := cfg.CurrentBin()
 	if err != nil {
-		return false, errors.Wrap(err, "error creating symlink to genesis")
+		return false, fmt.Errorf("error creating symlink to genesis: %w", err)
 	}
-	err = EnsureBinary(bin)
-	if err != nil {
-		return false, errors.Wrap(err, "current binary invalid")
+
+	if err := EnsureBinary(bin); err != nil {
+		return false, fmt.Errorf("current binary invalid: %w", err)
 	}
 
 	cmd := exec.Command(bin, args...)
@@ -27,23 +30,34 @@ func LaunchProcess(cfg *Config, args []string, stdout, stderr io.Writer) (bool, 
 	if err != nil {
 		return false, err
 	}
+
 	errpipe, err := cmd.StderrPipe()
 	if err != nil {
 		return false, err
 	}
+
 	scanOut := bufio.NewScanner(io.TeeReader(outpipe, stdout))
 	scanErr := bufio.NewScanner(io.TeeReader(errpipe, stderr))
 
-	err = cmd.Start()
-	if err != nil {
-		return false, errors.Wrapf(err, "launching process %s %s", bin, strings.Join(args, " "))
+	if err := cmd.Start(); err != nil {
+		return false, fmt.Errorf("launching process %s %s: %w", bin, strings.Join(args, " "), err)
 	}
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGQUIT, syscall.SIGTERM)
+	go func() {
+		sig := <-sigs
+		if err := cmd.Process.Signal(sig); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	// three ways to exit - command ends, find regexp in scanOut, find regexp in scanErr
 	upgradeInfo, err := WaitForUpgradeOrExit(cmd, scanOut, scanErr)
 	if err != nil {
 		return false, err
 	}
+
 	if upgradeInfo != nil {
 		return true, DoUpgrade(cfg, upgradeInfo)
 	}

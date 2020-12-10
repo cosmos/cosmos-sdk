@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	store "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -66,16 +65,18 @@ func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte
 // Test that we can make commits and then reload old versions.
 // Test that LoadLatestVersion actually does.
 func TestSetLoader(t *testing.T) {
-	// set a temporary home dir
-	homeDir, cleanup := testutil.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
+	upgradeHeight := int64(5)
 
+	// set a temporary home dir
+	homeDir := t.TempDir()
 	upgradeInfoFilePath := filepath.Join(homeDir, "upgrade-info.json")
 	upgradeInfo := &store.UpgradeInfo{
-		Name: "test", Height: 0,
+		Name: "test", Height: upgradeHeight,
 	}
+
 	data, err := json.Marshal(upgradeInfo)
 	require.NoError(t, err)
+
 	err = ioutil.WriteFile(upgradeInfoFilePath, data, 0644)
 	require.NoError(t, err)
 
@@ -93,7 +94,7 @@ func TestSetLoader(t *testing.T) {
 			loadStoreKey: "foo",
 		},
 		"rename with inline opts": {
-			setLoader: useUpgradeLoader(0, &store.StoreUpgrades{
+			setLoader: useUpgradeLoader(upgradeHeight, &store.StoreUpgrades{
 				Renamed: []store.StoreRename{{
 					OldKey: "foo",
 					NewKey: "bar",
@@ -117,25 +118,36 @@ func TestSetLoader(t *testing.T) {
 
 			// load the app with the existing db
 			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(store.PruneNothing)}
+
+			origapp := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
+			origapp.MountStores(sdk.NewKVStoreKey(tc.origStoreKey))
+			err := origapp.LoadLatestVersion()
+			require.Nil(t, err)
+
+			for i := int64(2); i <= upgradeHeight-1; i++ {
+				origapp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: i}})
+				res := origapp.Commit()
+				require.NotNil(t, res.Data)
+			}
+
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)
 			}
 
+			// load the new app with the original app db
 			app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
-			capKey := sdk.NewKVStoreKey("main")
-			app.MountStores(capKey)
 			app.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
-			err := app.LoadLatestVersion()
+			err = app.LoadLatestVersion()
 			require.Nil(t, err)
 
 			// "execute" one block
-			app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
+			app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: upgradeHeight}})
 			res := app.Commit()
 			require.NotNil(t, res.Data)
 
 			// check db is properly updated
-			checkStore(t, db, 2, tc.loadStoreKey, k, v)
-			checkStore(t, db, 2, tc.loadStoreKey, []byte("foo"), nil)
+			checkStore(t, db, upgradeHeight, tc.loadStoreKey, k, v)
+			checkStore(t, db, upgradeHeight, tc.loadStoreKey, []byte("foo"), nil)
 		})
 	}
 }

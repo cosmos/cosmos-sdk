@@ -15,30 +15,39 @@ Accounts are exposed externally as an interface, and stored internally as
 either a base account or vesting account. Module clients wishing to add more
 account types may do so.
 
-- `0x01 | Address -> amino(account)`
+- `0x01 | Address -> ProtocolBuffer(account)`
 
 ### Account Interface
 
 The account interface exposes methods to read and write standard account information.
-Note that all of these methods operate on an account struct confirming to the interface
-- in order to write the account to the store, the account keeper will need to be used.
+Note that all of these methods operate on an account struct confirming to the
+interface - in order to write the account to the store, the account keeper will
+need to be used.
 
 ```go
-type Account interface {
-  GetAddress() AccAddress
-  SetAddress(AccAddress)
+// AccountI is an interface used to store coins at a given address within state.
+// It presumes a notion of sequence numbers for replay protection,
+// a notion of account numbers for replay protection for previously pruned accounts,
+// and a pubkey for authentication purposes.
+//
+// Many complex conditions can be used in the concrete struct which implements AccountI.
+type AccountI interface {
+	proto.Message
 
-  GetPubKey() PubKey
-  SetPubKey(PubKey)
+	GetAddress() sdk.AccAddress
+	SetAddress(sdk.AccAddress) error // errors if already set.
 
-  GetAccountNumber() uint64
-  SetAccountNumber(uint64)
+	GetPubKey() crypto.PubKey // can return nil.
+	SetPubKey(crypto.PubKey) error
 
-  GetSequence() uint64
-  SetSequence(uint64)
+	GetAccountNumber() uint64
+	SetAccountNumber(uint64) error
 
-  GetCoins() Coins
-  SetCoins(Coins)
+	GetSequence() uint64
+	SetSequence(uint64) error
+
+	// Ensure that account implements stringer
+	String() string
 }
 ```
 
@@ -47,13 +56,15 @@ type Account interface {
 A base account is the simplest and most common account type, which just stores all requisite
 fields directly in a struct.
 
-```go
-type BaseAccount struct {
-  Address       AccAddress
-  Coins         Coins
-  PubKey        PubKey
-  AccountNumber uint64
-  Sequence      uint64
+```protobuf
+// BaseAccount defines a base account type. It contains all the necessary fields
+// for basic account functionality. Any custom account type should extend this
+// type for additional functionality (e.g. vesting).
+message BaseAccount {
+  string address = 1;
+  google.protobuf.Any pub_key = 2;
+  uint64 account_number = 3;
+  uint64 sequence       = 4;
 }
 ```
 

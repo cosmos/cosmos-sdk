@@ -7,21 +7,19 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/grpc/simulate"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func NewTestTxConfig() client.TxConfig {
-	_, cdc := simapp.MakeCodecs()
-	return types.StdTxConfig{Cdc: cdc}
+	cfg := simapp.MakeTestEncodingConfig()
+	return cfg.TxConfig
 }
 
 func TestCalculateGas(t *testing.T) {
@@ -30,7 +28,7 @@ func TestCalculateGas(t *testing.T) {
 			if wantErr {
 				return nil, 0, errors.New("query failed")
 			}
-			simRes := &simulate.SimulateResponse{
+			simRes := &txtypes.SimulateResponse{
 				GasInfo: &sdk.GasInfo{GasUsed: gasUsed, GasWanted: gasUsed},
 				Result:  &sdk.Result{Data: []byte("tx data"), Log: "log"},
 			}
@@ -123,11 +121,8 @@ func TestBuildUnsignedTx(t *testing.T) {
 }
 
 func TestSign(t *testing.T) {
-	dir, clean := testutil.NewTestCaseDir(t)
-	t.Cleanup(clean)
-
 	path := hd.CreateHDPath(118, 0, 0).String()
-	kr, err := keyring.New(t.Name(), "test", dir, nil)
+	kr, err := keyring.New(t.Name(), "test", t.TempDir(), nil)
 	require.NoError(t, err)
 
 	var from = "test_sign"

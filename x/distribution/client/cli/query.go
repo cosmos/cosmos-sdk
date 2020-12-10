@@ -56,7 +56,7 @@ func GetCmdQueryParams() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res.Params)
+			return clientCtx.PrintProto(&res.Params)
 		},
 	}
 
@@ -97,13 +97,13 @@ $ %s query distribution validator-outstanding-rewards %s1lwjmdnks33xwnmfayc64ycp
 
 			res, err := queryClient.ValidatorOutstandingRewards(
 				context.Background(),
-				&types.QueryValidatorOutstandingRewardsRequest{ValidatorAddress: validatorAddr},
+				&types.QueryValidatorOutstandingRewardsRequest{ValidatorAddress: validatorAddr.String()},
 			)
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res.Rewards)
+			return clientCtx.PrintProto(&res.Rewards)
 		},
 	}
 
@@ -143,13 +143,13 @@ $ %s query distribution commission %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 
 			res, err := queryClient.ValidatorCommission(
 				context.Background(),
-				&types.QueryValidatorCommissionRequest{ValidatorAddress: validatorAddr},
+				&types.QueryValidatorCommissionRequest{ValidatorAddress: validatorAddr.String()},
 			)
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res.Commission)
+			return clientCtx.PrintProto(&res.Commission)
 		},
 	}
 
@@ -205,7 +205,7 @@ $ %s query distribution slashes %svaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 			res, err := queryClient.ValidatorSlashes(
 				context.Background(),
 				&types.QueryValidatorSlashesRequest{
-					ValidatorAddress: validatorAddr,
+					ValidatorAddress: validatorAddr.String(),
 					StartingHeight:   startHeight,
 					EndingHeight:     endHeight,
 					Pagination:       pageReq,
@@ -215,7 +215,7 @@ $ %s query distribution slashes %svaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -265,24 +265,24 @@ $ %s query distribution rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p %s1ggh
 
 				res, err := queryClient.DelegationRewards(
 					context.Background(),
-					&types.QueryDelegationRewardsRequest{DelegatorAddress: delegatorAddr, ValidatorAddress: validatorAddr},
+					&types.QueryDelegationRewardsRequest{DelegatorAddress: delegatorAddr.String(), ValidatorAddress: validatorAddr.String()},
 				)
 				if err != nil {
 					return err
 				}
 
-				return clientCtx.PrintOutput(res)
+				return clientCtx.PrintProto(res)
 			}
 
 			res, err := queryClient.DelegationTotalRewards(
 				context.Background(),
-				&types.QueryDelegationTotalRewardsRequest{DelegatorAddress: delegatorAddr},
+				&types.QueryDelegationTotalRewardsRequest{DelegatorAddress: delegatorAddr.String()},
 			)
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -318,7 +318,7 @@ $ %s query distribution community-pool
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 

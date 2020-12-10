@@ -14,8 +14,22 @@ the validator an be accordingly punished.
 
 ### Equivocation
 
-Currently, the evidence module only handles evidence of type `Equivocation` which is derived from
-Tendermint's `ABCIEvidenceTypeDuplicateVote` during `BeginBlock`.
+Currently, the SDK handles two types of evidence inside ABCI's `BeginBlock`:
+
+- `DuplicateVoteEvidence`,
+- `LightClientAttackEvidence`.
+
+These two evidence types are handled the same way by the evidence module. First, the SDK converts the Tendermint concrete evidence type to a SDK `Evidence` interface using `Equivocation` as the concrete type.
+
+```proto
+// Equivocation implements the Evidence interface.
+message Equivocation {
+  int64                     height            = 1;
+  google.protobuf.Timestamp time              = 2;
+  int64                     power             = 3;
+  string                    consensus_address = 4;
+}
+```
 
 For some `Equivocation` submitted in `block` to be valid, it must satisfy:
 
@@ -36,62 +50,103 @@ validator to ever re-enter the validator set.
 The `Equivocation` evidence is handled as follows:
 
 ```go
-func (k Keeper) HandleDoubleSign(ctx Context, evidence Equivocation) {
-  consAddr := evidence.GetConsensusAddress()
-  infractionHeight := evidence.GetHeight()
+func (k Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equivocation) {
+	logger := k.Logger(ctx)
+	consAddr := evidence.GetConsensusAddress()
 
-  // calculate the age of the evidence
-  blockTime := ctx.BlockHeader().Time
-  age := blockTime.Sub(evidence.GetTime())
+	if _, err := k.slashingKeeper.GetPubkey(ctx, consAddr.Bytes()); err != nil {
+		// Ignore evidence that cannot be handled.
+		//
+		// NOTE: We used to panic with:
+		// `panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))`,
+		// but this couples the expectations of the app to both Tendermint and
+		// the simulator.  Both are expected to provide the full range of
+		// allowable but none of the disallowed evidence types.  Instead of
+		// getting this coordination right, it is easier to relax the
+		// constraints and ignore evidence that cannot be handled.
+		return
+	}
 
-  // reject evidence we cannot handle
-  if _, err := k.slashingKeeper.GetPubkey(ctx, consAddr.Bytes()); err != nil {
-    return
-  }
+	// calculate the age of the evidence
+	infractionHeight := evidence.GetHeight()
+	infractionTime := evidence.GetTime()
+	ageDuration := ctx.BlockHeader().Time.Sub(infractionTime)
+	ageBlocks := ctx.BlockHeader().Height - infractionHeight
 
-  // reject evidence if it is too old
-  if age > k.MaxEvidenceAge(ctx) {
-    return
-  }
+	// Reject evidence if the double-sign is too old. Evidence is considered stale
+	// if the difference in time and number of blocks is greater than the allowed
+	// parameters defined.
+	cp := ctx.ConsensusParams()
+	if cp != nil && cp.Evidence != nil {
+		if ageDuration > cp.Evidence.MaxAgeDuration && ageBlocks > cp.Evidence.MaxAgeNumBlocks {
+			logger.Info(
+				"ignored equivocation; evidence too old",
+				"validator", consAddr,
+				"infraction_height", infractionHeight,
+				"max_age_num_blocks", cp.Evidence.MaxAgeNumBlocks,
+				"infraction_time", infractionTime,
+				"max_age_duration", cp.Evidence.MaxAgeDuration,
+			)
+			return
+		}
+	}
 
-  // reject evidence if the validator is already unbonded
-  validator := k.stakingKeeper.ValidatorByConsAddr(ctx, consAddr)
-  if validator == nil || validator.IsUnbonded() {
-    return
-  }
+	validator := k.stakingKeeper.ValidatorByConsAddr(ctx, consAddr)
+	if validator == nil || validator.IsUnbonded() {
+		// Defensive: Simulation doesn't take unbonding periods into account, and
+		// Tendermint might break this assumption at some point.
+		return
+	}
 
-  // verify the validator has signing info in order to be slashed and tombstoned
-  if ok := k.slashingKeeper.HasValidatorSigningInfo(ctx, consAddr); !ok {
-    panic(...)
-  }
+	if ok := k.slashingKeeper.HasValidatorSigningInfo(ctx, consAddr); !ok {
+		panic(fmt.Sprintf("expected signing info for validator %s but not found", consAddr))
+	}
 
-  // reject evidence if the validator is already tombstoned
-  if k.slashingKeeper.IsTombstoned(ctx, consAddr) {
-    return
-  }
+	// ignore if the validator is already tombstoned
+	if k.slashingKeeper.IsTombstoned(ctx, consAddr) {
+		logger.Info(
+			"ignored equivocation; validator already tombstoned",
+			"validator", consAddr,
+			"infraction_height", infractionHeight,
+			"infraction_time", infractionTime,
+		)
+		return
+	}
 
-  // We need to retrieve the stake distribution which signed the block, so we
-  // subtract ValidatorUpdateDelay from the evidence height.
-  // Note, that this *can* result in a negative "distributionHeight", up to
-  // -ValidatorUpdateDelay, i.e. at the end of the
-  // pre-genesis block (none) = at the beginning of the genesis block.
-  // That's fine since this is just used to filter unbonding delegations & redelegations.
-  distributionHeight := infractionHeight - sdk.ValidatorUpdateDelay
+	logger.Info(
+		"confirmed equivocation",
+		"validator", consAddr,
+		"infraction_height", infractionHeight,
+		"infraction_time", infractionTime,
+	)
 
-  // Slash validator. The `power` is the int64 power of the validator as provided
-  // to/by Tendermint. This value is validator.Tokens as sent to Tendermint via
-  // ABCI, and now received as evidence. The fraction is passed in to separately
-  // to slash unbonding and rebonding delegations.
-  k.slashingKeeper.Slash(ctx, consAddr, evidence.GetValidatorPower(), distributionHeight)
+	// We need to retrieve the stake distribution which signed the block, so we
+	// subtract ValidatorUpdateDelay from the evidence height.
+	// Note, that this *can* result in a negative "distributionHeight", up to
+	// -ValidatorUpdateDelay, i.e. at the end of the
+	// pre-genesis block (none) = at the beginning of the genesis block.
+	// That's fine since this is just used to filter unbonding delegations & redelegations.
+	distributionHeight := infractionHeight - sdk.ValidatorUpdateDelay
 
-  // Jail the validator if not already jailed. This will begin unbonding the
-  // validator if not already unbonding (tombstoned).
-  if !validator.IsJailed() {
-    k.slashingKeeper.Jail(ctx, consAddr)
-  }
+	// Slash validator. The `power` is the int64 power of the validator as provided
+	// to/by Tendermint. This value is validator.Tokens as sent to Tendermint via
+	// ABCI, and now received as evidence. The fraction is passed in to separately
+	// to slash unbonding and rebonding delegations.
+	k.slashingKeeper.Slash(
+		ctx,
+		consAddr,
+		k.slashingKeeper.SlashFractionDoubleSign(ctx),
+		evidence.GetValidatorPower(), distributionHeight,
+	)
 
-  k.slashingKeeper.JailUntil(ctx, consAddr, types.DoubleSignJailEndTime)
-  k.slashingKeeper.Tombstone(ctx, consAddr)
+	// Jail the validator if not already jailed. This will begin unbonding the
+	// validator if not already unbonding (tombstoned).
+	if !validator.IsJailed() {
+		k.slashingKeeper.Jail(ctx, consAddr)
+	}
+
+	k.slashingKeeper.JailUntil(ctx, consAddr, types.DoubleSignJailEndTime)
+	k.slashingKeeper.Tombstone(ctx, consAddr)
 }
 ```
 

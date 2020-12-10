@@ -49,7 +49,7 @@ func NewBaseViewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, ak type
 
 // Logger returns a module-specific logger.
 func (k BaseViewKeeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // HasBalance returns whether or not an account has at least amt balance.
@@ -83,7 +83,7 @@ func (k BaseViewKeeper) GetAccountsBalances(ctx sdk.Context) []types.Balance {
 		}
 
 		accountBalance := types.Balance{
-			Address: addr,
+			Address: addr.String(),
 			Coins:   sdk.NewCoins(balance),
 		}
 		balances = append(balances, accountBalance)

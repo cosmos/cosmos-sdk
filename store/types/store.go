@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"io"
 
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmstrings "github.com/tendermint/tendermint/libs/strings"
 	dbm "github.com/tendermint/tm-db"
 
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
@@ -21,8 +22,8 @@ type Committer interface {
 	Commit() CommitID
 	LastCommitID() CommitID
 
-	// TODO: Deprecate after 0.38.5
 	SetPruning(PruningOptions)
+	GetPruning() PruningOptions
 }
 
 // Stores of MultiStore must implement CommitStore.
@@ -44,6 +45,7 @@ type Queryable interface {
 
 // StoreUpgrades defines a series of transformations to apply the multistore db upon load
 type StoreUpgrades struct {
+	Added   []string      `json:"added"`
 	Renamed []StoreRename `json:"renamed"`
 	Deleted []string      `json:"deleted"`
 }
@@ -61,6 +63,14 @@ type UpgradeInfo struct {
 type StoreRename struct {
 	OldKey string `json:"old_key"`
 	NewKey string `json:"new_key"`
+}
+
+// IsDeleted returns true if the given key should be added
+func (s *StoreUpgrades) IsAdded(key string) bool {
+	if s == nil {
+		return false
+	}
+	return tmstrings.StringInSlice(key, s.Added)
 }
 
 // IsDeleted returns true if the given key should be deleted

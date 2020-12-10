@@ -4,12 +4,16 @@
 package types
 
 import (
-	bytes "bytes"
+	context "context"
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
+	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -28,9 +32,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // MsgSend represents a message to send coins from one account to another.
 type MsgSend struct {
-	FromAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"from_address,omitempty" yaml:"from_address"`
-	ToAddress   github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"to_address,omitempty" yaml:"to_address"`
-	Amount      github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	FromAddress string                                   `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty" yaml:"from_address"`
+	ToAddress   string                                   `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty" yaml:"to_address"`
+	Amount      github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
 }
 
 func (m *MsgSend) Reset()         { *m = MsgSend{} }
@@ -66,26 +70,42 @@ func (m *MsgSend) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSend proto.InternalMessageInfo
 
-func (m *MsgSend) GetFromAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.FromAddress
-	}
-	return nil
+// MsgSendResponse defines the Msg/Send response type.
+type MsgSendResponse struct {
 }
 
-func (m *MsgSend) GetToAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.ToAddress
+func (m *MsgSendResponse) Reset()         { *m = MsgSendResponse{} }
+func (m *MsgSendResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSendResponse) ProtoMessage()    {}
+func (*MsgSendResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1d8cb1613481f5b7, []int{1}
+}
+func (m *MsgSendResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSendResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSendResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
 	}
-	return nil
+}
+func (m *MsgSendResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSendResponse.Merge(m, src)
+}
+func (m *MsgSendResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSendResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSendResponse.DiscardUnknown(m)
 }
 
-func (m *MsgSend) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
-	if m != nil {
-		return m.Amount
-	}
-	return nil
-}
+var xxx_messageInfo_MsgSendResponse proto.InternalMessageInfo
 
 // MsgMultiSend represents an arbitrary multi-in, multi-out send message.
 type MsgMultiSend struct {
@@ -97,7 +117,7 @@ func (m *MsgMultiSend) Reset()         { *m = MsgMultiSend{} }
 func (m *MsgMultiSend) String() string { return proto.CompactTextString(m) }
 func (*MsgMultiSend) ProtoMessage()    {}
 func (*MsgMultiSend) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1d8cb1613481f5b7, []int{1}
+	return fileDescriptor_1d8cb1613481f5b7, []int{2}
 }
 func (m *MsgMultiSend) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -140,113 +160,204 @@ func (m *MsgMultiSend) GetOutputs() []Output {
 	return nil
 }
 
+// MsgMultiSendResponse defines the Msg/MultiSend response type.
+type MsgMultiSendResponse struct {
+}
+
+func (m *MsgMultiSendResponse) Reset()         { *m = MsgMultiSendResponse{} }
+func (m *MsgMultiSendResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgMultiSendResponse) ProtoMessage()    {}
+func (*MsgMultiSendResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1d8cb1613481f5b7, []int{3}
+}
+func (m *MsgMultiSendResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgMultiSendResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgMultiSendResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgMultiSendResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgMultiSendResponse.Merge(m, src)
+}
+func (m *MsgMultiSendResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgMultiSendResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgMultiSendResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgMultiSendResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgSend)(nil), "cosmos.bank.v1beta1.MsgSend")
+	proto.RegisterType((*MsgSendResponse)(nil), "cosmos.bank.v1beta1.MsgSendResponse")
 	proto.RegisterType((*MsgMultiSend)(nil), "cosmos.bank.v1beta1.MsgMultiSend")
+	proto.RegisterType((*MsgMultiSendResponse)(nil), "cosmos.bank.v1beta1.MsgMultiSendResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/bank/v1beta1/tx.proto", fileDescriptor_1d8cb1613481f5b7) }
 
 var fileDescriptor_1d8cb1613481f5b7 = []byte{
-	// 383 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x49, 0xce, 0x2f, 0xce,
-	0xcd, 0x2f, 0xd6, 0x4f, 0x4a, 0xcc, 0xcb, 0xd6, 0x2f, 0x33, 0x4c, 0x4a, 0x2d, 0x49, 0x34, 0xd4,
-	0x2f, 0xa9, 0xd0, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x86, 0xc8, 0xea, 0x81, 0x64, 0xf5,
-	0xa0, 0xb2, 0x52, 0x22, 0xe9, 0xf9, 0xe9, 0xf9, 0x60, 0x79, 0x7d, 0x10, 0x0b, 0xa2, 0x54, 0x4a,
-	0x0e, 0x6e, 0x50, 0x71, 0x2a, 0xdc, 0xa0, 0xe4, 0xfc, 0xcc, 0x3c, 0x0c, 0x79, 0x24, 0x8b, 0xc0,
-	0xe6, 0x82, 0xe5, 0x95, 0x4e, 0x30, 0x71, 0xb1, 0xfb, 0x16, 0xa7, 0x07, 0xa7, 0xe6, 0xa5, 0x08,
-	0x65, 0x73, 0xf1, 0xa4, 0x15, 0xe5, 0xe7, 0xc6, 0x27, 0xa6, 0xa4, 0x14, 0xa5, 0x16, 0x17, 0x4b,
-	0x30, 0x2a, 0x30, 0x6a, 0xf0, 0x38, 0x79, 0x7c, 0xba, 0x27, 0x2f, 0x5c, 0x99, 0x98, 0x9b, 0x63,
-	0xa5, 0x84, 0x2c, 0xab, 0xf4, 0xeb, 0x9e, 0xbc, 0x6e, 0x7a, 0x66, 0x49, 0x46, 0x69, 0x92, 0x5e,
-	0x72, 0x7e, 0xae, 0x3e, 0xd4, 0x1e, 0x08, 0xa5, 0x5b, 0x9c, 0x92, 0xad, 0x5f, 0x52, 0x59, 0x90,
-	0x5a, 0xac, 0xe7, 0x98, 0x9c, 0xec, 0x08, 0xd1, 0x11, 0xc4, 0x0d, 0xd2, 0x0f, 0xe5, 0x08, 0xa5,
-	0x72, 0x71, 0x95, 0xe4, 0xc3, 0xad, 0x62, 0x02, 0x5b, 0xe5, 0xf6, 0xe9, 0x9e, 0xbc, 0x20, 0xc4,
-	0x2a, 0x84, 0x1c, 0x19, 0x16, 0x71, 0x96, 0xe4, 0xc3, 0xac, 0x49, 0xe6, 0x62, 0x4b, 0xcc, 0xcd,
-	0x2f, 0xcd, 0x2b, 0x91, 0x60, 0x56, 0x60, 0xd6, 0xe0, 0x36, 0x92, 0xd4, 0x83, 0x87, 0x6d, 0x71,
-	0x2a, 0x2c, 0x6c, 0xf5, 0x9c, 0xf3, 0x33, 0xf3, 0x9c, 0x0c, 0x4e, 0xdc, 0x93, 0x67, 0x58, 0x75,
-	0x5f, 0x5e, 0x83, 0x08, 0xcb, 0x40, 0x1a, 0x8a, 0x83, 0xa0, 0x46, 0x5b, 0xb1, 0xbc, 0x58, 0x20,
-	0xcf, 0xa8, 0xd4, 0xcd, 0xc8, 0xc5, 0xe3, 0x5b, 0x9c, 0xee, 0x5b, 0x9a, 0x53, 0x92, 0x09, 0x0e,
-	0x4f, 0x0b, 0x2e, 0xb6, 0xcc, 0xbc, 0x82, 0xd2, 0x12, 0x50, 0x48, 0x82, 0xec, 0x96, 0xd2, 0xc3,
-	0x12, 0xaf, 0x7a, 0x9e, 0x20, 0x25, 0x4e, 0x2c, 0x20, 0xcb, 0x83, 0xa0, 0xea, 0x85, 0xac, 0xb9,
-	0xd8, 0xf3, 0x4b, 0x4b, 0xc0, 0x5a, 0x99, 0xc0, 0x5a, 0xa5, 0xb1, 0x6a, 0xf5, 0x07, 0xab, 0x81,
-	0xea, 0x85, 0xe9, 0x80, 0xb8, 0xc6, 0xc9, 0xf9, 0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x8f, 0xe4, 0x18,
-	0x1f, 0x3c, 0x92, 0x63, 0x9c, 0xf0, 0x58, 0x8e, 0xe1, 0xc2, 0x63, 0x39, 0x86, 0x1b, 0x8f, 0xe5,
-	0x18, 0xa2, 0x34, 0xf1, 0xfa, 0xaf, 0x02, 0x92, 0x54, 0xc0, 0xde, 0x4c, 0x62, 0x03, 0x27, 0x12,
-	0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0xd4, 0x04, 0xdf, 0x97, 0xaf, 0x02, 0x00, 0x00,
+	// 436 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x92, 0x3f, 0xef, 0xd2, 0x40,
+	0x1c, 0xc6, 0x7b, 0x3f, 0x08, 0x3f, 0x39, 0x48, 0x0c, 0x05, 0x15, 0x2b, 0x69, 0xb1, 0x71, 0x80,
+	0xc1, 0xab, 0xa0, 0x83, 0xa9, 0x93, 0x65, 0xd2, 0xa4, 0x31, 0xa9, 0x93, 0x2e, 0xa6, 0x7f, 0xce,
+	0xda, 0x40, 0x7b, 0x0d, 0x77, 0x35, 0xf0, 0x0e, 0x4c, 0x5c, 0x7c, 0x09, 0xcc, 0xc6, 0x17, 0xc2,
+	0xc8, 0xe8, 0x84, 0x06, 0x16, 0xe3, 0xc8, 0x2b, 0x30, 0xbd, 0xfe, 0x81, 0x44, 0xc4, 0xa9, 0xbd,
+	0x3c, 0xdf, 0xcf, 0xd3, 0xe7, 0xe9, 0xf7, 0x60, 0xcf, 0x25, 0x34, 0x24, 0x54, 0x73, 0xec, 0x68,
+	0xaa, 0x7d, 0x1c, 0x39, 0x98, 0xd9, 0x23, 0x8d, 0x2d, 0x50, 0x3c, 0x27, 0x8c, 0x88, 0xed, 0x4c,
+	0x45, 0xa9, 0x8a, 0x72, 0x55, 0xea, 0xf8, 0xc4, 0x27, 0x5c, 0xd7, 0xd2, 0xb7, 0x6c, 0x54, 0x92,
+	0x4b, 0x23, 0x8a, 0x4b, 0x23, 0x97, 0x04, 0xd1, 0x5f, 0xfa, 0xc9, 0x87, 0xb8, 0x2f, 0xd7, 0xd5,
+	0xdf, 0x00, 0x5e, 0x9b, 0xd4, 0x7f, 0x8d, 0x23, 0x4f, 0xd4, 0x61, 0xf3, 0xfd, 0x9c, 0x84, 0xef,
+	0x6c, 0xcf, 0x9b, 0x63, 0x4a, 0xbb, 0xa0, 0x0f, 0x06, 0x75, 0xe3, 0xce, 0x61, 0xab, 0xb4, 0x97,
+	0x76, 0x38, 0xd3, 0xd5, 0x53, 0x55, 0xb5, 0x1a, 0xe9, 0xf1, 0x79, 0x76, 0x12, 0x9f, 0x40, 0xc8,
+	0x48, 0x49, 0x5e, 0x71, 0xf2, 0xd6, 0x61, 0xab, 0xb4, 0x32, 0xf2, 0xa8, 0xa9, 0x56, 0x9d, 0x91,
+	0x82, 0x72, 0x61, 0xcd, 0x0e, 0x49, 0x12, 0xb1, 0x6e, 0xa5, 0x5f, 0x19, 0x34, 0xc6, 0x77, 0x51,
+	0xd9, 0x9c, 0xe2, 0xa2, 0x39, 0x9a, 0x90, 0x20, 0x32, 0x1e, 0xad, 0xb7, 0x8a, 0xf0, 0xf5, 0x87,
+	0x32, 0xf0, 0x03, 0xf6, 0x21, 0x71, 0x90, 0x4b, 0x42, 0x2d, 0xef, 0x96, 0x3d, 0x1e, 0x52, 0x6f,
+	0xaa, 0xb1, 0x65, 0x8c, 0x29, 0x07, 0xa8, 0x95, 0x5b, 0xeb, 0x37, 0x3e, 0xad, 0x14, 0xe1, 0xd7,
+	0x4a, 0x11, 0xd4, 0x16, 0xbc, 0x99, 0x77, 0xb5, 0x30, 0x8d, 0x49, 0x44, 0xb1, 0xfa, 0x19, 0xc0,
+	0xa6, 0x49, 0x7d, 0x33, 0x99, 0xb1, 0x80, 0xff, 0x84, 0xa7, 0xb0, 0x16, 0x44, 0x71, 0xc2, 0xd2,
+	0xfa, 0x69, 0x24, 0x09, 0x9d, 0x59, 0x06, 0x7a, 0x91, 0x8e, 0x18, 0xd5, 0x34, 0x93, 0x95, 0xcf,
+	0x8b, 0xcf, 0xe0, 0x35, 0x49, 0x18, 0x47, 0xaf, 0x38, 0x7a, 0xef, 0x2c, 0xfa, 0x8a, 0xcf, 0xe4,
+	0x6c, 0x41, 0xe8, 0x55, 0x1e, 0xf0, 0x36, 0xec, 0x9c, 0x86, 0x29, 0x52, 0x8e, 0xbf, 0x01, 0x58,
+	0x31, 0xa9, 0x2f, 0xbe, 0x84, 0x55, 0x1e, 0xb2, 0x77, 0xd6, 0x39, 0xef, 0x26, 0x3d, 0xb8, 0xa4,
+	0x16, 0x9e, 0xe2, 0x1b, 0x58, 0x3f, 0xb6, 0xbe, 0xff, 0x2f, 0xa4, 0x1c, 0x91, 0x86, 0xff, 0x1d,
+	0x29, 0xac, 0x8d, 0xc9, 0x7a, 0x27, 0x83, 0xcd, 0x4e, 0x06, 0x3f, 0x77, 0x32, 0xf8, 0xb2, 0x97,
+	0x85, 0xcd, 0x5e, 0x16, 0xbe, 0xef, 0x65, 0xe1, 0xed, 0xf0, 0xe2, 0xf6, 0x16, 0xd9, 0x35, 0xe5,
+	0x4b, 0x74, 0x6a, 0xfc, 0x82, 0x3e, 0xfe, 0x13, 0x00, 0x00, 0xff, 0xff, 0x78, 0xdc, 0x7c, 0x0b,
+	0x2b, 0x03, 0x00, 0x00,
 }
 
-func (this *MsgSend) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConn
 
-	that1, ok := that.(*MsgSend)
-	if !ok {
-		that2, ok := that.(MsgSend)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !bytes.Equal(this.FromAddress, that1.FromAddress) {
-		return false
-	}
-	if !bytes.Equal(this.ToAddress, that1.ToAddress) {
-		return false
-	}
-	if len(this.Amount) != len(that1.Amount) {
-		return false
-	}
-	for i := range this.Amount {
-		if !this.Amount[i].Equal(&that1.Amount[i]) {
-			return false
-		}
-	}
-	return true
-}
-func (this *MsgMultiSend) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion4
 
-	that1, ok := that.(*MsgMultiSend)
-	if !ok {
-		that2, ok := that.(MsgMultiSend)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if len(this.Inputs) != len(that1.Inputs) {
-		return false
-	}
-	for i := range this.Inputs {
-		if !this.Inputs[i].Equal(&that1.Inputs[i]) {
-			return false
-		}
-	}
-	if len(this.Outputs) != len(that1.Outputs) {
-		return false
-	}
-	for i := range this.Outputs {
-		if !this.Outputs[i].Equal(&that1.Outputs[i]) {
-			return false
-		}
-	}
-	return true
+// MsgClient is the client API for Msg service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type MsgClient interface {
+	// Send defines a method for sending coins from one account to another account.
+	Send(ctx context.Context, in *MsgSend, opts ...grpc.CallOption) (*MsgSendResponse, error)
+	// MultiSend defines a method for sending coins from some accounts to other accounts.
+	MultiSend(ctx context.Context, in *MsgMultiSend, opts ...grpc.CallOption) (*MsgMultiSendResponse, error)
 }
+
+type msgClient struct {
+	cc grpc1.ClientConn
+}
+
+func NewMsgClient(cc grpc1.ClientConn) MsgClient {
+	return &msgClient{cc}
+}
+
+func (c *msgClient) Send(ctx context.Context, in *MsgSend, opts ...grpc.CallOption) (*MsgSendResponse, error) {
+	out := new(MsgSendResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Msg/Send", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) MultiSend(ctx context.Context, in *MsgMultiSend, opts ...grpc.CallOption) (*MsgMultiSendResponse, error) {
+	out := new(MsgMultiSendResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Msg/MultiSend", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// MsgServer is the server API for Msg service.
+type MsgServer interface {
+	// Send defines a method for sending coins from one account to another account.
+	Send(context.Context, *MsgSend) (*MsgSendResponse, error)
+	// MultiSend defines a method for sending coins from some accounts to other accounts.
+	MultiSend(context.Context, *MsgMultiSend) (*MsgMultiSendResponse, error)
+}
+
+// UnimplementedMsgServer can be embedded to have forward compatible implementations.
+type UnimplementedMsgServer struct {
+}
+
+func (*UnimplementedMsgServer) Send(ctx context.Context, req *MsgSend) (*MsgSendResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Send not implemented")
+}
+func (*UnimplementedMsgServer) MultiSend(ctx context.Context, req *MsgMultiSend) (*MsgMultiSendResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MultiSend not implemented")
+}
+
+func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
+	s.RegisterService(&_Msg_serviceDesc, srv)
+}
+
+func _Msg_Send_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSend)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).Send(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.bank.v1beta1.Msg/Send",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).Send(ctx, req.(*MsgSend))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_MultiSend_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgMultiSend)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).MultiSend(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.bank.v1beta1.Msg/MultiSend",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).MultiSend(ctx, req.(*MsgMultiSend))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _Msg_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "cosmos.bank.v1beta1.Msg",
+	HandlerType: (*MsgServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Send",
+			Handler:    _Msg_Send_Handler,
+		},
+		{
+			MethodName: "MultiSend",
+			Handler:    _Msg_MultiSend_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "cosmos/bank/v1beta1/tx.proto",
+}
+
 func (m *MsgSend) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -295,6 +406,29 @@ func (m *MsgSend) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0xa
 	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSendResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSendResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSendResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
 	return len(dAtA) - i, nil
 }
 
@@ -349,6 +483,29 @@ func (m *MsgMultiSend) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgMultiSendResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgMultiSendResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgMultiSendResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -383,6 +540,15 @@ func (m *MsgSend) Size() (n int) {
 	return n
 }
 
+func (m *MsgSendResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *MsgMultiSend) Size() (n int) {
 	if m == nil {
 		return 0
@@ -401,6 +567,15 @@ func (m *MsgMultiSend) Size() (n int) {
 			n += 1 + l + sovTx(uint64(l))
 		}
 	}
+	return n
+}
+
+func (m *MsgMultiSendResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
 	return n
 }
 
@@ -443,7 +618,7 @@ func (m *MsgSend) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field FromAddress", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -453,31 +628,29 @@ func (m *MsgSend) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.FromAddress = append(m.FromAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.FromAddress == nil {
-				m.FromAddress = []byte{}
-			}
+			m.FromAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ToAddress", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -487,25 +660,23 @@ func (m *MsgSend) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ToAddress = append(m.ToAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.ToAddress == nil {
-				m.ToAddress = []byte{}
-			}
+			m.ToAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -541,6 +712,59 @@ func (m *MsgSend) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSendResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSendResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSendResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -662,6 +886,59 @@ func (m *MsgMultiSend) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgMultiSendResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgMultiSendResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgMultiSendResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

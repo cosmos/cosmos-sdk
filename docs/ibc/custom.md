@@ -31,7 +31,7 @@ module correctly.
 ### Implement `IBCModule` Interface and callbacks
 
 The Cosmos SDK expects all IBC modules to implement the [`IBCModule`
-interface](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/05-port/types/module.go). This
+interface](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/05-port/types/module.go). This
 interface contains all of the callbacks IBC expects modules to implement. This section will describe
 the callbacks that are called during channel handshake execution.
 
@@ -45,7 +45,7 @@ func (k Keeper) OnChanOpenInit(ctx sdk.Context,
     portID string,
     channelID string,
     channelCap *capabilitytypes.Capability,
-    counterParty channeltypes.Counterparty,
+    counterparty channeltypes.Counterparty,
     version string,
 ) error {
     // OpenInit must claim the channelCapability that IBC passes into the callback
@@ -286,7 +286,7 @@ keepers. Thus, the `OnRecvPacket` callback only needs to worry about making the 
 changes given the packet data without worrying about whether the packet is valid or not.
 
 Modules must return an acknowledgement as a byte string and return it to the IBC handler.
-The IBC handler will then commit this acknowledgment of the packet so that a relayer may relay the
+The IBC handler will then commit this acknowledgement of the packet so that a relayer may relay the
 acknowledgement back to the sender module.
 
 ```go
@@ -340,7 +340,9 @@ receive acknowledegments with the IBC modules as byte strings.
 
 Thus, modules must agree on how to encode/decode acknowledgements. The process of creating an
 acknowledgement struct along with encoding and decoding it, is very similar to the packet data
-example above.
+example above. [ICS 04](https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#acknowledgement-envelope)
+specifies a recommended format for acknowledgements. This acknowledgement type can be imported from
+[channel types](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/04-channel/types).
 
 #### Acknowledging Packets
 
@@ -352,7 +354,7 @@ with some additional data that could be useful for remediation if the packet pro
 
 Since the modules are responsible for agreeing on an encoding/decoding standard for packet data and
 acknowledgements, IBC will pass in the acknowledgements as `[]byte` to this callback. The callback
-is responsible for decoding the acknowledgment and processing it.
+is responsible for decoding the acknowledgement and processing it.
 
 ```go
 OnAcknowledgementPacket(

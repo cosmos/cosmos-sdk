@@ -19,8 +19,8 @@ const (
 	TimeFormat = "2006-01-02T15:04:05Z"
 
 	FlagUpgradeHeight = "upgrade-height"
-	FlagUpgradeTime   = "time"
-	FlagUpgradeInfo   = "info"
+	FlagUpgradeTime   = "upgrade-time"
+	FlagUpgradeInfo   = "upgrade-info"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -61,7 +61,7 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			deposit, err := sdk.ParseCoins(depositStr)
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
 			if err != nil {
 				return err
 			}
@@ -94,7 +94,7 @@ func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel-software-upgrade [flags]",
 		Args:  cobra.ExactArgs(0),
-		Short: "Submit a software upgrade proposal",
+		Short: "Cancel the current software upgrade proposal",
 		Long:  "Cancel a software upgrade along with an initial deposit.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -110,7 +110,7 @@ func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 				return err
 			}
 
-			deposit, err := sdk.ParseCoins(depositStr)
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
 			if err != nil {
 				return err
 			}

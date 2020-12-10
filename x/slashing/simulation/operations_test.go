@@ -67,7 +67,8 @@ func TestSimulateMsgUnjail(t *testing.T) {
 
 	// setup validator0 by consensus address
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator0)
-	val0ConsAddress := sdk.ConsAddress(validator0.GetConsPubKey().Address())
+	val0ConsAddress, err := validator0.GetConsAddr()
+	require.NoError(t, err)
 	info := types.NewValidatorSigningInfo(val0ConsAddress, int64(4), int64(3),
 		time.Unix(2, 0), false, int64(10))
 	app.SlashingKeeper.SetValidatorSigningInfo(ctx, val0ConsAddress, info)
@@ -78,10 +79,11 @@ func TestSimulateMsgUnjail(t *testing.T) {
 	// setup self delegation
 	delTokens := sdk.TokensFromConsensusPower(2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
-	val0AccAddress := sdk.AccAddress(validator0.OperatorAddress.Bytes())
-	selfDelegation := stakingtypes.NewDelegation(val0AccAddress, validator0.OperatorAddress, issuedShares)
+	val0AccAddress, err := sdk.ValAddressFromBech32(validator0.OperatorAddress)
+	require.NoError(t, err)
+	selfDelegation := stakingtypes.NewDelegation(val0AccAddress.Bytes(), validator0.GetOperator(), issuedShares)
 	app.StakingKeeper.SetDelegation(ctx, selfDelegation)
-	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator0.OperatorAddress, val0AccAddress, distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
+	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), val0AccAddress.Bytes(), distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
 
 	// begin a new block
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
@@ -96,7 +98,7 @@ func TestSimulateMsgUnjail(t *testing.T) {
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, types.TypeMsgUnjail, msg.Type())
-	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.GetValidatorAddr().String())
+	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddr)
 	require.Len(t, futureOperations, 0)
 }
 
@@ -135,10 +137,11 @@ func getTestingValidator0(t *testing.T, app *simapp.SimApp, ctx sdk.Context, acc
 
 func getTestingValidator(t *testing.T, app *simapp.SimApp, ctx sdk.Context, accounts []simtypes.Account, commission stakingtypes.Commission, n int) stakingtypes.Validator {
 	account := accounts[n]
-	valPubKey := account.PubKey
+	valPubKey := account.ConsKey.PubKey()
 	valAddr := sdk.ValAddress(account.PubKey.Address().Bytes())
-	validator := stakingtypes.NewValidator(valAddr, valPubKey, stakingtypes.Description{})
-	validator, err := validator.SetInitialCommission(commission)
+	validator, err := stakingtypes.NewValidator(valAddr, valPubKey, stakingtypes.Description{})
+	require.NoError(t, err)
+	validator, err = validator.SetInitialCommission(commission)
 	require.NoError(t, err)
 
 	validator.DelegatorShares = sdk.NewDec(100)

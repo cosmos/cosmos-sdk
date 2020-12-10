@@ -5,17 +5,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
+// RegisterLegacyAminoCodec registers types with the Amino codec.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	vesting.RegisterLegacyAminoCodec(cdc)
 	sdk.RegisterLegacyAminoCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
 }
 
-// RegisterInterfaces registers Interfaces from sdk/types and vesting
+// RegisterInterfaces registers Interfaces from sdk/types, vesting, crypto, tx.
 func RegisterInterfaces(interfaceRegistry types.InterfaceRegistry) {
 	sdk.RegisterInterfaces(interfaceRegistry)
-	vesting.RegisterInterfaces(interfaceRegistry)
+	txtypes.RegisterInterfaces(interfaceRegistry)
+	cryptocodec.RegisterInterfaces(interfaceRegistry)
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/tendermint/tendermint/libs/cli"
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -97,6 +98,18 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		clientCtx = clientCtx.WithHomeDir(homeDir)
 	}
 
+	if clientCtx.KeyringDir == "" || flagSet.Changed(flags.FlagKeyringDir) {
+		keyringDir, _ := flagSet.GetString(flags.FlagKeyringDir)
+
+		// The keyring directory is optional and falls back to the home directory
+		// if omitted.
+		if keyringDir == "" {
+			keyringDir = clientCtx.HomeDir
+		}
+
+		clientCtx = clientCtx.WithKeyringDir(keyringDir)
+	}
+
 	if clientCtx.ChainID == "" || flagSet.Changed(flags.FlagChainID) {
 		chainID, _ := flagSet.GetString(flags.FlagChainID)
 		clientCtx = clientCtx.WithChainID(chainID)
@@ -119,6 +132,13 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		rpcURI, _ := flagSet.GetString(flags.FlagNode)
 		if rpcURI != "" {
 			clientCtx = clientCtx.WithNodeURI(rpcURI)
+
+			client, err := rpchttp.New(rpcURI, "/websocket")
+			if err != nil {
+				return clientCtx, err
+			}
+
+			clientCtx = clientCtx.WithClient(client)
 		}
 	}
 

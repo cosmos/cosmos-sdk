@@ -34,39 +34,3 @@ func TokensToConsensusPower(tokens Int) int64 {
 func TokensFromConsensusPower(power int64) Int {
 	return NewInt(power).Mul(PowerReduction)
 }
-
-// BondStatus is the status of a validator
-type BondStatus int32
-
-// staking constants
-const (
-	Unbonded  BondStatus = 1
-	Unbonding BondStatus = 2
-	Bonded    BondStatus = 3
-
-	BondStatusUnbonded  = "Unbonded"
-	BondStatusUnbonding = "Unbonding"
-	BondStatusBonded    = "Bonded"
-)
-
-// Equal compares two BondStatus instances
-func (b BondStatus) Equal(b2 BondStatus) bool {
-	return byte(b) == byte(b2)
-}
-
-// String implements the Stringer interface for BondStatus.
-func (b BondStatus) String() string {
-	switch b {
-	case Unbonded:
-		return BondStatusUnbonded
-
-	case Unbonding:
-		return BondStatusUnbonding
-
-	case Bonded:
-		return BondStatusBonded
-
-	default:
-		panic("invalid bond status")
-	}
-}

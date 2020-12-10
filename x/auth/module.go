@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/gogo/protobuf/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
@@ -66,14 +65,14 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 	rest.RegisterRoutes(clientCtx, rtr, types.StoreKey)
 }
 
-// RegisterGRPCRoutes registers the gRPC Gateway routes for the auth module.
-func (AppModuleBasic) RegisterGRPCRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the auth module.
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
 // GetTxCmd returns the root tx command for the auth module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd()
+	return nil
 }
 
 // GetQueryCmd returns the root query command for the auth module.
@@ -93,11 +92,11 @@ type AppModule struct {
 	AppModuleBasic
 
 	accountKeeper     keeper.AccountKeeper
-	randGenAccountsFn simulation.RandomGenesisAccountsFn
+	randGenAccountsFn types.RandomGenesisAccountsFn
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Marshaler, accountKeeper keeper.AccountKeeper, randGenAccountsFn simulation.RandomGenesisAccountsFn) AppModule {
+func NewAppModule(cdc codec.Marshaler, accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn) AppModule {
 	return AppModule{
 		AppModuleBasic:    AppModuleBasic{},
 		accountKeeper:     accountKeeper,
@@ -126,10 +125,10 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 	return keeper.NewQuerier(am.accountKeeper, legacyQuerierCdc)
 }
 
-// RegisterQueryService registers a GRPC query service to respond to the
+// RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
-func (am AppModule) RegisterQueryService(server grpc.Server) {
-	types.RegisterQueryServer(server, am.accountKeeper)
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterQueryServer(cfg.QueryServer(), am.accountKeeper)
 }
 
 // InitGenesis performs genesis initialization for the auth module. It returns

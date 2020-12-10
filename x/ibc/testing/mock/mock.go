@@ -3,7 +3,8 @@ package mock
 import (
 	"encoding/json"
 
-	"github.com/gogo/protobuf/grpc"
+	"github.com/cosmos/cosmos-sdk/types/module"
+
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
@@ -17,8 +18,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 )
 
 const (
@@ -57,8 +58,8 @@ func (AppModuleBasic) ValidateGenesis(codec.JSONMarshaler, client.TxEncodingConf
 // RegisterRESTRoutes implements AppModuleBasic interface.
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {}
 
-// RegisterGRPCRoutes implements AppModuleBasic interface.
-func (a AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {}
+// RegisterGRPCGatewayRoutes implements AppModuleBasic interface.
+func (a AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *runtime.ServeMux) {}
 
 // GetTxCmd implements AppModuleBasic interface.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -101,8 +102,8 @@ func (am AppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier {
 	return nil
 }
 
-// RegisterQueryService implements the AppModule interface.
-func (am AppModule) RegisterQueryService(server grpc.Server) {}
+// RegisterServices implements the AppModule interface.
+func (am AppModule) RegisterServices(module.Configurator) {}
 
 // InitGenesis implements the AppModule interface.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {

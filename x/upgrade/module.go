@@ -4,12 +4,9 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/gogo/protobuf/grpc"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -50,8 +47,8 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, r *mux.Router
 	rest.RegisterRoutes(clientCtx, r)
 }
 
-// RegisterGRPCRoutes registers the gRPC Gateway routes for the upgrade module.
-func (AppModuleBasic) RegisterGRPCRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the upgrade module.
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
@@ -97,10 +94,10 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
 }
 
-// RegisterQueryService registers a GRPC query service to respond to the
+// RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
-func (am AppModule) RegisterQueryService(server grpc.Server) {
-	types.RegisterQueryServer(server, am.keeper)
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
 // InitGenesis is ignored, no sense in serializing future upgrades

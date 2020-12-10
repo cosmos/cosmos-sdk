@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
@@ -25,7 +25,7 @@ type HandlerTestSuite struct {
 	app     *simapp.SimApp
 }
 
-func testMsgSubmitEvidence(r *require.Assertions, e exported.Evidence, s sdk.AccAddress) exported.MsgSubmitEvidence {
+func testMsgSubmitEvidence(r *require.Assertions, e exported.Evidence, s sdk.AccAddress) exported.MsgSubmitEvidenceI {
 	msg, err := types.NewMsgSubmitEvidence(s, e)
 	r.NoError(err)
 	return msg
@@ -69,7 +69,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 
 func (suite *HandlerTestSuite) TestMsgSubmitEvidence() {
 	pk := ed25519.GenPrivKey()
-	s := sdk.AccAddress("test")
+	s := sdk.AccAddress("test________________")
 
 	testCases := []struct {
 		msg       sdk.Msg
@@ -82,7 +82,7 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence() {
 					Height:           11,
 					Time:             time.Now().UTC(),
 					Power:            100,
-					ConsensusAddress: pk.PubKey().Address().Bytes(),
+					ConsensusAddress: pk.PubKey().Address().String(),
 				},
 				s,
 			),
@@ -95,7 +95,7 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence() {
 					Height:           10,
 					Time:             time.Now().UTC(),
 					Power:            100,
-					ConsensusAddress: pk.PubKey().Address().Bytes(),
+					ConsensusAddress: pk.PubKey().Address().String(),
 				},
 				s,
 			),
@@ -113,8 +113,11 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence() {
 			suite.Require().NoError(err, "unexpected error; tc #%d", i)
 			suite.Require().NotNil(res, "expected non-nil result; tc #%d", i)
 
-			msg := tc.msg.(exported.MsgSubmitEvidence)
-			suite.Require().Equal(msg.GetEvidence().Hash().Bytes(), res.Data, "invalid hash; tc #%d", i)
+			msg := tc.msg.(exported.MsgSubmitEvidenceI)
+
+			var resultData types.MsgSubmitEvidenceResponse
+			suite.app.AppCodec().UnmarshalBinaryBare(res.Data, &resultData)
+			suite.Require().Equal(msg.GetEvidence().Hash().Bytes(), resultData.Hash, "invalid hash; tc #%d", i)
 		}
 	}
 }

@@ -32,10 +32,6 @@ func NewLegacyAmino() *LegacyAmino {
 func RegisterEvidences(cdc *LegacyAmino) {
 	cdc.Amino.RegisterInterface((*tmtypes.Evidence)(nil), nil)
 	cdc.Amino.RegisterConcrete(&tmtypes.DuplicateVoteEvidence{}, "tendermint/DuplicateVoteEvidence", nil)
-	cdc.Amino.RegisterConcrete(&tmtypes.ConflictingHeadersEvidence{}, "tendermint/ConflictingHeadersEvidence", nil)
-	cdc.Amino.RegisterConcrete(&tmtypes.LunaticValidatorEvidence{}, "tendermint/LunaticValidatorEvidence", nil)
-	cdc.Amino.RegisterConcrete(&tmtypes.PotentialAmnesiaEvidence{}, "tendermint/PotentialAmnesiaEvidence", nil)
-	cdc.Amino.RegisterConcrete(&tmtypes.AmnesiaEvidence{}, "tendermint/AmnesiaEvidence", nil)
 }
 
 // MarshalJSONIndent provides a utility for indented JSON encoding of an object
@@ -143,6 +139,7 @@ func (cdc *LegacyAmino) MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr interfa
 	}
 }
 
+// MarshalJSON implements codec.Marshaler interface
 func (cdc *LegacyAmino) MarshalJSON(o interface{}) ([]byte, error) {
 	err := cdc.jsonMarshalAnys(o)
 	if err != nil {
@@ -159,6 +156,7 @@ func (cdc *LegacyAmino) MustMarshalJSON(o interface{}) []byte {
 	return bz
 }
 
+// UnmarshalJSON implements codec.Marshaler interface
 func (cdc *LegacyAmino) UnmarshalJSON(bz []byte, ptr interface{}) error {
 	err := cdc.Amino.UnmarshalJSON(bz, ptr)
 	if err != nil {

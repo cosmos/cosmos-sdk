@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	"github.com/cosmos/cosmos-sdk/x/slashing/testslashing"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
@@ -33,7 +33,7 @@ func (suite *SlashingTestSuite) SetupTest() {
 
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	app.BankKeeper.SetParams(ctx, banktypes.DefaultParams())
-	app.SlashingKeeper.SetParams(ctx, keeper.TestParams())
+	app.SlashingKeeper.SetParams(ctx, testslashing.TestParams())
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.TokensFromConsensusPower(200))
 
@@ -60,13 +60,13 @@ func (suite *SlashingTestSuite) TestGRPCQueryParams() {
 	paramsResp, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
 
 	suite.NoError(err)
-	suite.Equal(keeper.TestParams(), paramsResp.Params)
+	suite.Equal(testslashing.TestParams(), paramsResp.Params)
 }
 
 func (suite *SlashingTestSuite) TestGRPCSigningInfo() {
 	queryClient := suite.queryClient
 
-	infoResp, err := queryClient.SigningInfo(gocontext.Background(), &types.QuerySigningInfoRequest{ConsAddress: nil})
+	infoResp, err := queryClient.SigningInfo(gocontext.Background(), &types.QuerySigningInfoRequest{ConsAddress: ""})
 	suite.Error(err)
 	suite.Nil(infoResp)
 
@@ -75,7 +75,7 @@ func (suite *SlashingTestSuite) TestGRPCSigningInfo() {
 	suite.True(found)
 
 	infoResp, err = queryClient.SigningInfo(gocontext.Background(),
-		&types.QuerySigningInfoRequest{ConsAddress: consAddr})
+		&types.QuerySigningInfoRequest{ConsAddress: consAddr.String()})
 	suite.NoError(err)
 	suite.Equal(info, infoResp.ValSigningInfo)
 }

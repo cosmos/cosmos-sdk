@@ -5,23 +5,23 @@
 *.swl
 *.swm
 *.swn
-.vscode
-.idea
 *.pyc
+
+# private files
+private[.-]*
+private
 
 # Build
 vendor
 build
-tools/bin/*
-examples/build/*
 docs/_build
 docs/tutorial
 docs/node_modules
 docs/modules
 dist
 tools-stamp
-proto-tools-stamp
 buf-stamp
+artifacts
 
 # Data - ideally these don't exist
 baseapp/data/*
@@ -40,8 +40,10 @@ sim_log_file
 vagrant
 
 # IDE
-.idea/
+.idea
 *.iml
+.dir-locals.el
+.vscode
 
 # Graphviz
 dependency-graph.png

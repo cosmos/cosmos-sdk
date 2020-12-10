@@ -39,7 +39,7 @@ func ShowNodeIDCmd() *cobra.Command {
 	}
 }
 
-// ShowValidator - ported from Tendermint, show this node's validator info
+// ShowValidatorCmd - ported from Tendermint, show this node's validator info
 func ShowValidatorCmd() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "show-validator",
@@ -59,12 +59,16 @@ func ShowValidatorCmd() *cobra.Command {
 				return printlnJSON(valPubKey)
 			}
 
-			pubkey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey)
+			pubkey, err := cryptocodec.FromTmPubKeyInterface(valPubKey)
+			if err != nil {
+				return err
+			}
+			pubkeyBech32, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pubkey)
 			if err != nil {
 				return err
 			}
 
-			fmt.Println(pubkey)
+			fmt.Println(pubkeyBech32)
 			return nil
 		},
 	}
@@ -114,7 +118,7 @@ against which this app has been compiled.
 				BlockProtocol uint64
 				P2PProtocol   uint64
 			}{
-				Tendermint:    tversion.Version,
+				Tendermint:    tversion.TMCoreSemVer,
 				ABCI:          tversion.ABCIVersion,
 				BlockProtocol: tversion.BlockProtocol,
 				P2PProtocol:   tversion.P2PProtocol,
@@ -146,7 +150,7 @@ func printlnJSON(v interface{}) error {
 func UnsafeResetAllCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "unsafe-reset-all",
-		Short: "Resets the blockchain database, removes address book files, and resets priv_validator.json to the genesis state",
+		Short: "Resets the blockchain database, removes address book files, and resets data/priv_validator_state.json to the genesis state",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config

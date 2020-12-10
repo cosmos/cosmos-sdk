@@ -2,6 +2,7 @@ package network
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,7 +16,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	tmcfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/crypto"
 	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
 	"github.com/tendermint/tendermint/libs/log"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
@@ -31,11 +31,13 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/simapp/params"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -51,13 +53,17 @@ var lock = new(sync.Mutex)
 // creates an ABCI Application to provide to Tendermint.
 type AppConstructor = func(val Validator) servertypes.Application
 
-func NewSimApp(val Validator) servertypes.Application {
-	return simapp.NewSimApp(
-		val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
-		simapp.MakeEncodingConfig(),
-		baseapp.SetPruning(storetypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
-		baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
-	)
+// NewAppConstructor returns a new simapp AppConstructor
+func NewAppConstructor(encodingCfg params.EncodingConfig) AppConstructor {
+	return func(val Validator) servertypes.Application {
+		return simapp.NewSimApp(
+			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
+			encodingCfg,
+			simapp.EmptyAppOptions{},
+			baseapp.SetPruning(storetypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
+			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+		)
+	}
 }
 
 // Config defines the necessary configuration used to bootstrap and start an
@@ -89,7 +95,7 @@ type Config struct {
 // DefaultConfig returns a sane default configuration suitable for nearly all
 // testing requirements.
 func DefaultConfig() Config {
-	encCfg := simapp.MakeEncodingConfig()
+	encCfg := simapp.MakeTestEncodingConfig()
 
 	return Config{
 		Codec:             encCfg.Marshaler,
@@ -97,7 +103,7 @@ func DefaultConfig() Config {
 		LegacyAmino:       encCfg.Amino,
 		InterfaceRegistry: encCfg.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
-		AppConstructor:    NewSimApp,
+		AppConstructor:    NewAppConstructor(encCfg),
 		GenesisState:      simapp.ModuleBasics.DefaultGenesis(encCfg.Marshaler),
 		TimeoutCommit:     2 * time.Second,
 		ChainID:           "chain-" + tmrand.NewRand().Str(6),
@@ -142,7 +148,7 @@ type (
 		Ctx        *server.Context
 		Dir        string
 		NodeID     string
-		PubKey     crypto.PubKey
+		PubKey     cryptotypes.PubKey
 		Moniker    string
 		APIAddress string
 		RPCAddress string
@@ -157,12 +163,13 @@ type (
 	}
 )
 
+// New creates a new Network for integration tests.
 func New(t *testing.T, cfg Config) *Network {
 	// only one caller/test can create and use a network at a time
 	t.Log("acquiring test network lock")
 	lock.Lock()
 
-	baseDir, err := ioutil.TempDir(os.TempDir(), cfg.ChainID)
+	baseDir, err := ioutil.TempDir(t.TempDir(), cfg.ChainID)
 	require.NoError(t, err)
 	t.Logf("created temporary directory: %s", baseDir)
 
@@ -177,7 +184,7 @@ func New(t *testing.T, cfg Config) *Network {
 
 	monikers := make([]string, cfg.NumValidators)
 	nodeIDs := make([]string, cfg.NumValidators)
-	valPubKeys := make([]crypto.PubKey, cfg.NumValidators)
+	valPubKeys := make([]cryptotypes.PubKey, cfg.NumValidators)
 
 	var (
 		genAccounts []authtypes.GenesisAccount
@@ -282,13 +289,13 @@ func New(t *testing.T, cfg Config) *Network {
 		)
 
 		genFiles = append(genFiles, tmCfg.GenesisFile())
-		genBalances = append(genBalances, banktypes.Balance{Address: addr, Coins: balances.Sort()})
+		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: balances.Sort()})
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
 		commission, err := sdk.NewDecFromStr("0.5")
 		require.NoError(t, err)
 
-		createValMsg := stakingtypes.NewMsgCreateValidator(
+		createValMsg, err := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKeys[i],
 			sdk.NewCoin(sdk.DefaultBondDenom, cfg.BondedTokens),
@@ -296,6 +303,7 @@ func New(t *testing.T, cfg Config) *Network {
 			stakingtypes.NewCommissionRates(commission, sdk.OneDec(), sdk.OneDec()),
 			sdk.OneInt(),
 		)
+		require.NoError(t, err)
 
 		p2pURL, err := url.Parse(p2pAddr)
 		require.NoError(t, err)
@@ -374,7 +382,7 @@ func (n *Network) LatestHeight() (int64, error) {
 		return 0, errors.New("no validators available")
 	}
 
-	status, err := n.Validators[0].RPCClient.Status()
+	status, err := n.Validators[0].RPCClient.Status(context.Background())
 	if err != nil {
 		return 0, err
 	}
@@ -408,7 +416,7 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 			ticker.Stop()
 			return latestHeight, errors.New("timeout exceeded waiting for block")
 		case <-ticker.C:
-			status, err := val.RPCClient.Status()
+			status, err := val.RPCClient.Status(context.Background())
 			if err == nil && status != nil {
 				latestHeight = status.SyncInfo.LatestBlockHeight
 				if latestHeight >= h {

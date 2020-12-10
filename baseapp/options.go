@@ -6,6 +6,7 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,6 +38,13 @@ func SetHaltHeight(blockHeight uint64) func(*BaseApp) {
 // SetHaltTime returns a BaseApp option function that sets the halt block time.
 func SetHaltTime(haltTime uint64) func(*BaseApp) {
 	return func(bap *BaseApp) { bap.setHaltTime(haltTime) }
+}
+
+// SetMinRetainBlocks returns a BaseApp option function that sets the minimum
+// block retention height value when determining which heights to prune during
+// ABCI Commit.
+func SetMinRetainBlocks(minRetainBlocks uint64) func(*BaseApp) {
+	return func(bapp *BaseApp) { bapp.setMinRetainBlocks(minRetainBlocks) }
 }
 
 // SetTrace will turn on or off trace flag
@@ -196,6 +204,10 @@ func (app *BaseApp) SetSnapshotStore(snapshotStore *snapshots.Store) {
 	if app.sealed {
 		panic("SetSnapshotStore() on sealed BaseApp")
 	}
+	if snapshotStore == nil {
+		app.snapshotManager = nil
+		return
+	}
 	app.snapshotManager = snapshots.NewManager(snapshotStore, app.cms)
 }
 
@@ -213,4 +225,11 @@ func (app *BaseApp) SetSnapshotKeepRecent(snapshotKeepRecent uint32) {
 		panic("SetSnapshotKeepRecent() on sealed BaseApp")
 	}
 	app.snapshotKeepRecent = snapshotKeepRecent
+}
+
+// SetInterfaceRegistry sets the InterfaceRegistry.
+func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
+	app.interfaceRegistry = registry
+	app.grpcQueryRouter.SetInterfaceRegistry(registry)
+	app.msgServiceRouter.SetInterfaceRegistry(registry)
 }

@@ -19,9 +19,9 @@ consensus layer. Operations are as following:
   validators retrieved from the ValidatorsByPower index
 - the previous validator set is compared with the new validator set:
   - missing validators begin unbonding and their `Tokens` are transferred from the
-  `BondedPool` to the `NotBondedPool` `ModuleAccount`
+    `BondedPool` to the `NotBondedPool` `ModuleAccount`
   - new validators are instantly bonded and their `Tokens` are transferred from the
-  `NotBondedPool` to the `BondedPool` `ModuleAccount`
+    `NotBondedPool` to the `BondedPool` `ModuleAccount`
 
 In all cases, any validators leaving or entering the bonded validator set or
 changing balances and staying within the bonded validator set incur an update
@@ -48,8 +48,8 @@ Each block the validator queue is to be checked for mature unbonding validators
 (namely with a completion time <= current time). At this point any mature
 validators which do not have any delegations remaining are deleted from state.
 For all other mature unbonding validators that still have remaining
-delegations, the `validator.Status` is switched from `sdk.Unbonding` to
-`sdk.Unbonded`.
+delegations, the `validator.Status` is switched from `types.Unbonding` to
+`types.Unbonded`.
 
 ### Unbonding Delegations
 

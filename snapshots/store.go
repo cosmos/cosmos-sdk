@@ -1,6 +1,7 @@
 package snapshots
 
 import (
+	"crypto/sha256"
 	"encoding/binary"
 	"io"
 	"math"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	db "github.com/tendermint/tm-db"
-	"github.com/zeebo/blake3"
 
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -256,8 +256,8 @@ func (s *Store) Save(
 		Format: format,
 	}
 	index := uint32(0)
-	snapshotHasher := blake3.New()
-	chunkHasher := blake3.New()
+	snapshotHasher := sha256.New()
+	chunkHasher := sha256.New()
 	for chunkBody := range chunks {
 		defer chunkBody.Close() // nolint: staticcheck
 		dir := s.pathSnapshot(height, format)

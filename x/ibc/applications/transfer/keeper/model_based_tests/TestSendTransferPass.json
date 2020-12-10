@@ -1,0 +1,3847 @@
+{
+  "module": "counterexample",
+  "declarations": [
+    {
+      "operator": "State1",
+      "body": {
+        "and": [
+          
+        ]
+      },
+      "params": [
+        
+      ]
+    },
+    {
+      "operator": "State2",
+      "body": {
+        "and": [
+          {
+            "eq": "count",
+            "arg": 0
+          },
+          {
+            "eq": "history",
+            "arg": {
+              "atat": [
+                {
+                  "colonGreater": 0,
+                  "arg": {
+                    "record": [
+                      {
+                        "key": {
+                          "str": "bankAfter"
+                        },
+                        "value": {
+                          "atat": [
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix0"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix1"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 0
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "bankBefore"
+                        },
+                        "value": {
+                          "atat": [
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix0"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix1"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 0
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "error"
+                        },
+                        "value": false
+                      },
+                      {
+                        "key": {
+                          "str": "handler"
+                        },
+                        "value": {
+                          "str": ""
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "packet"
+                        },
+                        "value": {
+                          "record": [
+                            {
+                              "key": {
+                                "str": "data"
+                              },
+                              "value": {
+                                "record": [
+                                  {
+                                    "key": {
+                                      "str": "amount"
+                                    },
+                                    "value": 1
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "denomTrace"
+                                    },
+                                    "value": {
+                                      "record": [
+                                        {
+                                          "key": {
+                                            "str": "denom"
+                                          },
+                                          "value": {
+                                            "str": "eth"
+                                          }
+                                        },
+                                        {
+                                          "key": {
+                                            "str": "prefix0"
+                                          },
+                                          "value": {
+                                            "record": [
+                                              {
+                                                "key": {
+                                                  "str": "channel"
+                                                },
+                                                "value": {
+                                                  "str": "cosmos-hub"
+                                                }
+                                              },
+                                              {
+                                                "key": {
+                                                  "str": "port"
+                                                },
+                                                "value": {
+                                                  "str": "cosmos-hub"
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        },
+                                        {
+                                          "key": {
+                                            "str": "prefix1"
+                                          },
+                                          "value": {
+                                            "record": [
+                                              {
+                                                "key": {
+                                                  "str": "channel"
+                                                },
+                                                "value": {
+                                                  "str": ""
+                                                }
+                                              },
+                                              {
+                                                "key": {
+                                                  "str": "port"
+                                                },
+                                                "value": {
+                                                  "str": ""
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "receiver"
+                                    },
+                                    "value": {
+                                      "str": "a2"
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "sender"
+                                    },
+                                    "value": {
+                                      "str": "a3"
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "destChannel"
+                              },
+                              "value": {
+                                "str": "channel-0"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "destPort"
+                              },
+                              "value": {
+                                "str": "transfer"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "sourceChannel"
+                              },
+                              "value": {
+                                "str": "channel-0"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "sourcePort"
+                              },
+                              "value": {
+                                "str": "transfer"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "eq": "bank",
+            "arg": {
+              "atat": [
+                {
+                  "colonGreater": {
+                    "tuple": [
+                      {
+                        "record": [
+                          {
+                            "key": {
+                              "str": "channel"
+                            },
+                            "value": {
+                              "str": ""
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "id"
+                            },
+                            "value": {
+                              "str": ""
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "port"
+                            },
+                            "value": {
+                              "str": ""
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "record": [
+                          {
+                            "key": {
+                              "str": "denom"
+                            },
+                            "value": {
+                              "str": ""
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "prefix0"
+                            },
+                            "value": {
+                              "record": [
+                                {
+                                  "key": {
+                                    "str": "channel"
+                                  },
+                                  "value": {
+                                    "str": ""
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "str": "port"
+                                  },
+                                  "value": {
+                                    "str": ""
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "prefix1"
+                            },
+                            "value": {
+                              "record": [
+                                {
+                                  "key": {
+                                    "str": "channel"
+                                  },
+                                  "value": {
+                                    "str": ""
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "str": "port"
+                                  },
+                                  "value": {
+                                    "str": ""
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "arg": 0
+                }
+              ]
+            }
+          },
+          {
+            "eq": "error",
+            "arg": false
+          },
+          {
+            "eq": "p",
+            "arg": {
+              "record": [
+                {
+                  "key": {
+                    "str": "data"
+                  },
+                  "value": {
+                    "record": [
+                      {
+                        "key": {
+                          "str": "amount"
+                        },
+                        "value": 1
+                      },
+                      {
+                        "key": {
+                          "str": "denomTrace"
+                        },
+                        "value": {
+                          "record": [
+                            {
+                              "key": {
+                                "str": "denom"
+                              },
+                              "value": {
+                                "str": "eth"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "prefix0"
+                              },
+                              "value": {
+                                "record": [
+                                  {
+                                    "key": {
+                                      "str": "channel"
+                                    },
+                                    "value": {
+                                      "str": "cosmos-hub"
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "port"
+                                    },
+                                    "value": {
+                                      "str": "cosmos-hub"
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "prefix1"
+                              },
+                              "value": {
+                                "record": [
+                                  {
+                                    "key": {
+                                      "str": "channel"
+                                    },
+                                    "value": {
+                                      "str": ""
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "port"
+                                    },
+                                    "value": {
+                                      "str": ""
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "receiver"
+                        },
+                        "value": {
+                          "str": "a2"
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "sender"
+                        },
+                        "value": {
+                          "str": "a3"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "key": {
+                    "str": "destChannel"
+                  },
+                  "value": {
+                    "str": "channel-0"
+                  }
+                },
+                {
+                  "key": {
+                    "str": "destPort"
+                  },
+                  "value": {
+                    "str": "transfer"
+                  }
+                },
+                {
+                  "key": {
+                    "str": "sourceChannel"
+                  },
+                  "value": {
+                    "str": "channel-0"
+                  }
+                },
+                {
+                  "key": {
+                    "str": "sourcePort"
+                  },
+                  "value": {
+                    "str": "transfer"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "eq": "handler",
+            "arg": {
+              "str": ""
+            }
+          }
+        ]
+      },
+      "params": [
+        
+      ]
+    },
+    {
+      "operator": "State3",
+      "body": {
+        "and": [
+          {
+            "eq": "count",
+            "arg": 1
+          },
+          {
+            "eq": "history",
+            "arg": {
+              "atat": [
+                {
+                  "colonGreater": 0,
+                  "arg": {
+                    "record": [
+                      {
+                        "key": {
+                          "str": "bankAfter"
+                        },
+                        "value": {
+                          "atat": [
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix0"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix1"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 0
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "bankBefore"
+                        },
+                        "value": {
+                          "atat": [
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix0"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix1"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 0
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "error"
+                        },
+                        "value": false
+                      },
+                      {
+                        "key": {
+                          "str": "handler"
+                        },
+                        "value": {
+                          "str": ""
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "packet"
+                        },
+                        "value": {
+                          "record": [
+                            {
+                              "key": {
+                                "str": "data"
+                              },
+                              "value": {
+                                "record": [
+                                  {
+                                    "key": {
+                                      "str": "amount"
+                                    },
+                                    "value": 1
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "denomTrace"
+                                    },
+                                    "value": {
+                                      "record": [
+                                        {
+                                          "key": {
+                                            "str": "denom"
+                                          },
+                                          "value": {
+                                            "str": "eth"
+                                          }
+                                        },
+                                        {
+                                          "key": {
+                                            "str": "prefix0"
+                                          },
+                                          "value": {
+                                            "record": [
+                                              {
+                                                "key": {
+                                                  "str": "channel"
+                                                },
+                                                "value": {
+                                                  "str": "cosmos-hub"
+                                                }
+                                              },
+                                              {
+                                                "key": {
+                                                  "str": "port"
+                                                },
+                                                "value": {
+                                                  "str": "cosmos-hub"
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        },
+                                        {
+                                          "key": {
+                                            "str": "prefix1"
+                                          },
+                                          "value": {
+                                            "record": [
+                                              {
+                                                "key": {
+                                                  "str": "channel"
+                                                },
+                                                "value": {
+                                                  "str": ""
+                                                }
+                                              },
+                                              {
+                                                "key": {
+                                                  "str": "port"
+                                                },
+                                                "value": {
+                                                  "str": ""
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "receiver"
+                                    },
+                                    "value": {
+                                      "str": "a2"
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "sender"
+                                    },
+                                    "value": {
+                                      "str": "a3"
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "destChannel"
+                              },
+                              "value": {
+                                "str": "channel-0"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "destPort"
+                              },
+                              "value": {
+                                "str": "transfer"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "sourceChannel"
+                              },
+                              "value": {
+                                "str": "channel-0"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "sourcePort"
+                              },
+                              "value": {
+                                "str": "transfer"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "colonGreater": 1,
+                  "arg": {
+                    "record": [
+                      {
+                        "key": {
+                          "str": "bankAfter"
+                        },
+                        "value": {
+                          "atat": [
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix0"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix1"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 0
+                            },
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": "a2"
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": "eth"
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix0"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": "cosmos-hub"
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": "cosmos-hub"
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix1"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": "channel-0"
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": "transfer"
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 1
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "bankBefore"
+                        },
+                        "value": {
+                          "atat": [
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix0"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix1"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 0
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "error"
+                        },
+                        "value": false
+                      },
+                      {
+                        "key": {
+                          "str": "handler"
+                        },
+                        "value": {
+                          "str": "OnRecvPacket"
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "packet"
+                        },
+                        "value": {
+                          "record": [
+                            {
+                              "key": {
+                                "str": "data"
+                              },
+                              "value": {
+                                "record": [
+                                  {
+                                    "key": {
+                                      "str": "amount"
+                                    },
+                                    "value": 1
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "denomTrace"
+                                    },
+                                    "value": {
+                                      "record": [
+                                        {
+                                          "key": {
+                                            "str": "denom"
+                                          },
+                                          "value": {
+                                            "str": "eth"
+                                          }
+                                        },
+                                        {
+                                          "key": {
+                                            "str": "prefix0"
+                                          },
+                                          "value": {
+                                            "record": [
+                                              {
+                                                "key": {
+                                                  "str": "channel"
+                                                },
+                                                "value": {
+                                                  "str": "cosmos-hub"
+                                                }
+                                              },
+                                              {
+                                                "key": {
+                                                  "str": "port"
+                                                },
+                                                "value": {
+                                                  "str": "cosmos-hub"
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        },
+                                        {
+                                          "key": {
+                                            "str": "prefix1"
+                                          },
+                                          "value": {
+                                            "record": [
+                                              {
+                                                "key": {
+                                                  "str": "channel"
+                                                },
+                                                "value": {
+                                                  "str": ""
+                                                }
+                                              },
+                                              {
+                                                "key": {
+                                                  "str": "port"
+                                                },
+                                                "value": {
+                                                  "str": ""
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "receiver"
+                                    },
+                                    "value": {
+                                      "str": "a2"
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "sender"
+                                    },
+                                    "value": {
+                                      "str": "a3"
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "destChannel"
+                              },
+                              "value": {
+                                "str": "channel-0"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "destPort"
+                              },
+                              "value": {
+                                "str": "transfer"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "sourceChannel"
+                              },
+                              "value": {
+                                "str": "channel-0"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "sourcePort"
+                              },
+                              "value": {
+                                "str": "transfer"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "eq": "bank",
+            "arg": {
+              "atat": [
+                {
+                  "colonGreater": {
+                    "tuple": [
+                      {
+                        "record": [
+                          {
+                            "key": {
+                              "str": "channel"
+                            },
+                            "value": {
+                              "str": ""
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "id"
+                            },
+                            "value": {
+                              "str": ""
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "port"
+                            },
+                            "value": {
+                              "str": ""
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "record": [
+                          {
+                            "key": {
+                              "str": "denom"
+                            },
+                            "value": {
+                              "str": ""
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "prefix0"
+                            },
+                            "value": {
+                              "record": [
+                                {
+                                  "key": {
+                                    "str": "channel"
+                                  },
+                                  "value": {
+                                    "str": ""
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "str": "port"
+                                  },
+                                  "value": {
+                                    "str": ""
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "prefix1"
+                            },
+                            "value": {
+                              "record": [
+                                {
+                                  "key": {
+                                    "str": "channel"
+                                  },
+                                  "value": {
+                                    "str": ""
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "str": "port"
+                                  },
+                                  "value": {
+                                    "str": ""
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "arg": 0
+                },
+                {
+                  "colonGreater": {
+                    "tuple": [
+                      {
+                        "record": [
+                          {
+                            "key": {
+                              "str": "channel"
+                            },
+                            "value": {
+                              "str": ""
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "id"
+                            },
+                            "value": {
+                              "str": "a2"
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "port"
+                            },
+                            "value": {
+                              "str": ""
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "record": [
+                          {
+                            "key": {
+                              "str": "denom"
+                            },
+                            "value": {
+                              "str": "eth"
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "prefix0"
+                            },
+                            "value": {
+                              "record": [
+                                {
+                                  "key": {
+                                    "str": "channel"
+                                  },
+                                  "value": {
+                                    "str": "cosmos-hub"
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "str": "port"
+                                  },
+                                  "value": {
+                                    "str": "cosmos-hub"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "prefix1"
+                            },
+                            "value": {
+                              "record": [
+                                {
+                                  "key": {
+                                    "str": "channel"
+                                  },
+                                  "value": {
+                                    "str": "channel-0"
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "str": "port"
+                                  },
+                                  "value": {
+                                    "str": "transfer"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "arg": 1
+                }
+              ]
+            }
+          },
+          {
+            "eq": "error",
+            "arg": false
+          },
+          {
+            "eq": "p",
+            "arg": {
+              "record": [
+                {
+                  "key": {
+                    "str": "data"
+                  },
+                  "value": {
+                    "record": [
+                      {
+                        "key": {
+                          "str": "amount"
+                        },
+                        "value": 1
+                      },
+                      {
+                        "key": {
+                          "str": "denomTrace"
+                        },
+                        "value": {
+                          "record": [
+                            {
+                              "key": {
+                                "str": "denom"
+                              },
+                              "value": {
+                                "str": "eth"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "prefix0"
+                              },
+                              "value": {
+                                "record": [
+                                  {
+                                    "key": {
+                                      "str": "channel"
+                                    },
+                                    "value": {
+                                      "str": "cosmos-hub"
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "port"
+                                    },
+                                    "value": {
+                                      "str": "cosmos-hub"
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "prefix1"
+                              },
+                              "value": {
+                                "record": [
+                                  {
+                                    "key": {
+                                      "str": "channel"
+                                    },
+                                    "value": {
+                                      "str": "channel-0"
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "port"
+                                    },
+                                    "value": {
+                                      "str": "transfer"
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "receiver"
+                        },
+                        "value": {
+                          "str": "a1"
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "sender"
+                        },
+                        "value": {
+                          "str": "a2"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "key": {
+                    "str": "destChannel"
+                  },
+                  "value": {
+                    "str": "channel-0"
+                  }
+                },
+                {
+                  "key": {
+                    "str": "destPort"
+                  },
+                  "value": {
+                    "str": "transfer"
+                  }
+                },
+                {
+                  "key": {
+                    "str": "sourceChannel"
+                  },
+                  "value": {
+                    "str": "channel-1"
+                  }
+                },
+                {
+                  "key": {
+                    "str": "sourcePort"
+                  },
+                  "value": {
+                    "str": "transfer"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "eq": "handler",
+            "arg": {
+              "str": "OnRecvPacket"
+            }
+          }
+        ]
+      },
+      "params": [
+        
+      ]
+    },
+    {
+      "operator": "State4",
+      "body": {
+        "and": [
+          {
+            "eq": "count",
+            "arg": 2
+          },
+          {
+            "eq": "history",
+            "arg": {
+              "atat": [
+                {
+                  "colonGreater": 0,
+                  "arg": {
+                    "record": [
+                      {
+                        "key": {
+                          "str": "bankAfter"
+                        },
+                        "value": {
+                          "atat": [
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix0"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix1"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 0
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "bankBefore"
+                        },
+                        "value": {
+                          "atat": [
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix0"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix1"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 0
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "error"
+                        },
+                        "value": false
+                      },
+                      {
+                        "key": {
+                          "str": "handler"
+                        },
+                        "value": {
+                          "str": ""
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "packet"
+                        },
+                        "value": {
+                          "record": [
+                            {
+                              "key": {
+                                "str": "data"
+                              },
+                              "value": {
+                                "record": [
+                                  {
+                                    "key": {
+                                      "str": "amount"
+                                    },
+                                    "value": 1
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "denomTrace"
+                                    },
+                                    "value": {
+                                      "record": [
+                                        {
+                                          "key": {
+                                            "str": "denom"
+                                          },
+                                          "value": {
+                                            "str": "eth"
+                                          }
+                                        },
+                                        {
+                                          "key": {
+                                            "str": "prefix0"
+                                          },
+                                          "value": {
+                                            "record": [
+                                              {
+                                                "key": {
+                                                  "str": "channel"
+                                                },
+                                                "value": {
+                                                  "str": "cosmos-hub"
+                                                }
+                                              },
+                                              {
+                                                "key": {
+                                                  "str": "port"
+                                                },
+                                                "value": {
+                                                  "str": "cosmos-hub"
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        },
+                                        {
+                                          "key": {
+                                            "str": "prefix1"
+                                          },
+                                          "value": {
+                                            "record": [
+                                              {
+                                                "key": {
+                                                  "str": "channel"
+                                                },
+                                                "value": {
+                                                  "str": ""
+                                                }
+                                              },
+                                              {
+                                                "key": {
+                                                  "str": "port"
+                                                },
+                                                "value": {
+                                                  "str": ""
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "receiver"
+                                    },
+                                    "value": {
+                                      "str": "a2"
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "sender"
+                                    },
+                                    "value": {
+                                      "str": "a3"
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "destChannel"
+                              },
+                              "value": {
+                                "str": "channel-0"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "destPort"
+                              },
+                              "value": {
+                                "str": "transfer"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "sourceChannel"
+                              },
+                              "value": {
+                                "str": "channel-0"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "sourcePort"
+                              },
+                              "value": {
+                                "str": "transfer"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "colonGreater": 1,
+                  "arg": {
+                    "record": [
+                      {
+                        "key": {
+                          "str": "bankAfter"
+                        },
+                        "value": {
+                          "atat": [
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix0"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix1"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 0
+                            },
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": "a2"
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": "eth"
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix0"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": "cosmos-hub"
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": "cosmos-hub"
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix1"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": "channel-0"
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": "transfer"
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 1
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "bankBefore"
+                        },
+                        "value": {
+                          "atat": [
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix0"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix1"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 0
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "error"
+                        },
+                        "value": false
+                      },
+                      {
+                        "key": {
+                          "str": "handler"
+                        },
+                        "value": {
+                          "str": "OnRecvPacket"
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "packet"
+                        },
+                        "value": {
+                          "record": [
+                            {
+                              "key": {
+                                "str": "data"
+                              },
+                              "value": {
+                                "record": [
+                                  {
+                                    "key": {
+                                      "str": "amount"
+                                    },
+                                    "value": 1
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "denomTrace"
+                                    },
+                                    "value": {
+                                      "record": [
+                                        {
+                                          "key": {
+                                            "str": "denom"
+                                          },
+                                          "value": {
+                                            "str": "eth"
+                                          }
+                                        },
+                                        {
+                                          "key": {
+                                            "str": "prefix0"
+                                          },
+                                          "value": {
+                                            "record": [
+                                              {
+                                                "key": {
+                                                  "str": "channel"
+                                                },
+                                                "value": {
+                                                  "str": "cosmos-hub"
+                                                }
+                                              },
+                                              {
+                                                "key": {
+                                                  "str": "port"
+                                                },
+                                                "value": {
+                                                  "str": "cosmos-hub"
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        },
+                                        {
+                                          "key": {
+                                            "str": "prefix1"
+                                          },
+                                          "value": {
+                                            "record": [
+                                              {
+                                                "key": {
+                                                  "str": "channel"
+                                                },
+                                                "value": {
+                                                  "str": ""
+                                                }
+                                              },
+                                              {
+                                                "key": {
+                                                  "str": "port"
+                                                },
+                                                "value": {
+                                                  "str": ""
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "receiver"
+                                    },
+                                    "value": {
+                                      "str": "a2"
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "sender"
+                                    },
+                                    "value": {
+                                      "str": "a3"
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "destChannel"
+                              },
+                              "value": {
+                                "str": "channel-0"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "destPort"
+                              },
+                              "value": {
+                                "str": "transfer"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "sourceChannel"
+                              },
+                              "value": {
+                                "str": "channel-0"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "sourcePort"
+                              },
+                              "value": {
+                                "str": "transfer"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "colonGreater": 2,
+                  "arg": {
+                    "record": [
+                      {
+                        "key": {
+                          "str": "bankAfter"
+                        },
+                        "value": {
+                          "atat": [
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix0"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix1"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 0
+                            },
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": "a2"
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": "eth"
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix0"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": "cosmos-hub"
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": "cosmos-hub"
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix1"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": "channel-0"
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": "transfer"
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 0
+                            },
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": "channel-1"
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": "transfer"
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": "eth"
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix0"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": "cosmos-hub"
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": "cosmos-hub"
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix1"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": "channel-0"
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": "transfer"
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 1
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "bankBefore"
+                        },
+                        "value": {
+                          "atat": [
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix0"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix1"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": ""
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 0
+                            },
+                            {
+                              "colonGreater": {
+                                "tuple": [
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "channel"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "id"
+                                        },
+                                        "value": {
+                                          "str": "a2"
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "port"
+                                        },
+                                        "value": {
+                                          "str": ""
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "record": [
+                                      {
+                                        "key": {
+                                          "str": "denom"
+                                        },
+                                        "value": {
+                                          "str": "eth"
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix0"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": "cosmos-hub"
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": "cosmos-hub"
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      {
+                                        "key": {
+                                          "str": "prefix1"
+                                        },
+                                        "value": {
+                                          "record": [
+                                            {
+                                              "key": {
+                                                "str": "channel"
+                                              },
+                                              "value": {
+                                                "str": "channel-0"
+                                              }
+                                            },
+                                            {
+                                              "key": {
+                                                "str": "port"
+                                              },
+                                              "value": {
+                                                "str": "transfer"
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "arg": 1
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "error"
+                        },
+                        "value": false
+                      },
+                      {
+                        "key": {
+                          "str": "handler"
+                        },
+                        "value": {
+                          "str": "SendTransfer"
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "packet"
+                        },
+                        "value": {
+                          "record": [
+                            {
+                              "key": {
+                                "str": "data"
+                              },
+                              "value": {
+                                "record": [
+                                  {
+                                    "key": {
+                                      "str": "amount"
+                                    },
+                                    "value": 1
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "denomTrace"
+                                    },
+                                    "value": {
+                                      "record": [
+                                        {
+                                          "key": {
+                                            "str": "denom"
+                                          },
+                                          "value": {
+                                            "str": "eth"
+                                          }
+                                        },
+                                        {
+                                          "key": {
+                                            "str": "prefix0"
+                                          },
+                                          "value": {
+                                            "record": [
+                                              {
+                                                "key": {
+                                                  "str": "channel"
+                                                },
+                                                "value": {
+                                                  "str": "cosmos-hub"
+                                                }
+                                              },
+                                              {
+                                                "key": {
+                                                  "str": "port"
+                                                },
+                                                "value": {
+                                                  "str": "cosmos-hub"
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        },
+                                        {
+                                          "key": {
+                                            "str": "prefix1"
+                                          },
+                                          "value": {
+                                            "record": [
+                                              {
+                                                "key": {
+                                                  "str": "channel"
+                                                },
+                                                "value": {
+                                                  "str": "channel-0"
+                                                }
+                                              },
+                                              {
+                                                "key": {
+                                                  "str": "port"
+                                                },
+                                                "value": {
+                                                  "str": "transfer"
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "receiver"
+                                    },
+                                    "value": {
+                                      "str": "a1"
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "sender"
+                                    },
+                                    "value": {
+                                      "str": "a2"
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "destChannel"
+                              },
+                              "value": {
+                                "str": "channel-0"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "destPort"
+                              },
+                              "value": {
+                                "str": "transfer"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "sourceChannel"
+                              },
+                              "value": {
+                                "str": "channel-1"
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "sourcePort"
+                              },
+                              "value": {
+                                "str": "transfer"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "eq": "bank",
+            "arg": {
+              "atat": [
+                {
+                  "colonGreater": {
+                    "tuple": [
+                      {
+                        "record": [
+                          {
+                            "key": {
+                              "str": "channel"
+                            },
+                            "value": {
+                              "str": ""
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "id"
+                            },
+                            "value": {
+                              "str": ""
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "port"
+                            },
+                            "value": {
+                              "str": ""
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "record": [
+                          {
+                            "key": {
+                              "str": "denom"
+                            },
+                            "value": {
+                              "str": ""
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "prefix0"
+                            },
+                            "value": {
+                              "record": [
+                                {
+                                  "key": {
+                                    "str": "channel"
+                                  },
+                                  "value": {
+                                    "str": ""
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "str": "port"
+                                  },
+                                  "value": {
+                                    "str": ""
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "prefix1"
+                            },
+                            "value": {
+                              "record": [
+                                {
+                                  "key": {
+                                    "str": "channel"
+                                  },
+                                  "value": {
+                                    "str": ""
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "str": "port"
+                                  },
+                                  "value": {
+                                    "str": ""
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "arg": 0
+                },
+                {
+                  "colonGreater": {
+                    "tuple": [
+                      {
+                        "record": [
+                          {
+                            "key": {
+                              "str": "channel"
+                            },
+                            "value": {
+                              "str": ""
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "id"
+                            },
+                            "value": {
+                              "str": "a2"
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "port"
+                            },
+                            "value": {
+                              "str": ""
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "record": [
+                          {
+                            "key": {
+                              "str": "denom"
+                            },
+                            "value": {
+                              "str": "eth"
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "prefix0"
+                            },
+                            "value": {
+                              "record": [
+                                {
+                                  "key": {
+                                    "str": "channel"
+                                  },
+                                  "value": {
+                                    "str": "cosmos-hub"
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "str": "port"
+                                  },
+                                  "value": {
+                                    "str": "cosmos-hub"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "prefix1"
+                            },
+                            "value": {
+                              "record": [
+                                {
+                                  "key": {
+                                    "str": "channel"
+                                  },
+                                  "value": {
+                                    "str": "channel-0"
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "str": "port"
+                                  },
+                                  "value": {
+                                    "str": "transfer"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "arg": 0
+                },
+                {
+                  "colonGreater": {
+                    "tuple": [
+                      {
+                        "record": [
+                          {
+                            "key": {
+                              "str": "channel"
+                            },
+                            "value": {
+                              "str": "channel-1"
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "id"
+                            },
+                            "value": {
+                              "str": ""
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "port"
+                            },
+                            "value": {
+                              "str": "transfer"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "record": [
+                          {
+                            "key": {
+                              "str": "denom"
+                            },
+                            "value": {
+                              "str": "eth"
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "prefix0"
+                            },
+                            "value": {
+                              "record": [
+                                {
+                                  "key": {
+                                    "str": "channel"
+                                  },
+                                  "value": {
+                                    "str": "cosmos-hub"
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "str": "port"
+                                  },
+                                  "value": {
+                                    "str": "cosmos-hub"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "key": {
+                              "str": "prefix1"
+                            },
+                            "value": {
+                              "record": [
+                                {
+                                  "key": {
+                                    "str": "channel"
+                                  },
+                                  "value": {
+                                    "str": "channel-0"
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "str": "port"
+                                  },
+                                  "value": {
+                                    "str": "transfer"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "arg": 1
+                }
+              ]
+            }
+          },
+          {
+            "eq": "error",
+            "arg": false
+          },
+          {
+            "eq": "p",
+            "arg": {
+              "record": [
+                {
+                  "key": {
+                    "str": "data"
+                  },
+                  "value": {
+                    "record": [
+                      {
+                        "key": {
+                          "str": "amount"
+                        },
+                        "value": 0
+                      },
+                      {
+                        "key": {
+                          "str": "denomTrace"
+                        },
+                        "value": {
+                          "record": [
+                            {
+                              "key": {
+                                "str": "denom"
+                              },
+                              "value": {
+                                "str": ""
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "prefix0"
+                              },
+                              "value": {
+                                "record": [
+                                  {
+                                    "key": {
+                                      "str": "channel"
+                                    },
+                                    "value": {
+                                      "str": ""
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "port"
+                                    },
+                                    "value": {
+                                      "str": ""
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "key": {
+                                "str": "prefix1"
+                              },
+                              "value": {
+                                "record": [
+                                  {
+                                    "key": {
+                                      "str": "channel"
+                                    },
+                                    "value": {
+                                      "str": ""
+                                    }
+                                  },
+                                  {
+                                    "key": {
+                                      "str": "port"
+                                    },
+                                    "value": {
+                                      "str": ""
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "receiver"
+                        },
+                        "value": {
+                          "str": ""
+                        }
+                      },
+                      {
+                        "key": {
+                          "str": "sender"
+                        },
+                        "value": {
+                          "str": ""
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "key": {
+                    "str": "destChannel"
+                  },
+                  "value": {
+                    "str": ""
+                  }
+                },
+                {
+                  "key": {
+                    "str": "destPort"
+                  },
+                  "value": {
+                    "str": ""
+                  }
+                },
+                {
+                  "key": {
+                    "str": "sourceChannel"
+                  },
+                  "value": {
+                    "str": ""
+                  }
+                },
+                {
+                  "key": {
+                    "str": "sourcePort"
+                  },
+                  "value": {
+                    "str": ""
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "eq": "handler",
+            "arg": {
+              "str": "SendTransfer"
+            }
+          }
+        ]
+      },
+      "params": [
+        
+      ]
+    },
+    {
+      "operator": "InvariantViolation",
+      "body": true,
+      "params": [
+        
+      ]
+    }
+  ]
+}

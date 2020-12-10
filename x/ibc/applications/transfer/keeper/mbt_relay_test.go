@@ -288,46 +288,63 @@ func (suite *KeeperTestSuite) CheckBankBalances(chain *ibctesting.TestChain, ban
 	return nil
 }
 
+
 func (suite *KeeperTestSuite) TestModelBasedRelay() {
-	var tlaTestCases = []TlaOnRecvPacketTestCase{}
-
-	filename := "relay-test.json"
-	jsonBlob, err := ioutil.ReadFile(filename)
+	dirname := "model_based_tests/"
+	files,err := ioutil.ReadDir(dirname)
 	if err != nil {
-		panic(fmt.Errorf("Failed to read JSON test fixture: %w", err))
+		panic(fmt.Errorf("Failed to read model-based test files: %w", err))
 	}
-	err = json.Unmarshal([]byte(jsonBlob), &tlaTestCases)
-	if err != nil {
-		panic(fmt.Errorf("Failed to parse JSON test fixture: %w", err))
-	}
+	for _, file_info := range files {
+		var tlaTestCases = []TlaOnRecvPacketTestCase{}
+		if ! strings.HasSuffix(file_info.Name(), ".json") {
+			continue
+		}
+		jsonBlob, err := ioutil.ReadFile(dirname + file_info.Name())
+		if err != nil {
+			panic(fmt.Errorf("Failed to read JSON test fixture: %w", err))
+		}
+		err = json.Unmarshal([]byte(jsonBlob), &tlaTestCases)
+		if err != nil {
+			panic(fmt.Errorf("Failed to parse JSON test fixture: %w", err))
+		}
 
-	suite.SetupTest()
-	_, _, connAB, connBA := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
-	_, _, connBC, connCB := suite.coordinator.SetupClientConnections(suite.chainB, suite.chainC, exported.Tendermint)
-	suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connAB, connBA, channeltypes.UNORDERED)
-	suite.coordinator.CreateTransferChannels(suite.chainB, suite.chainC, connBC, connCB, channeltypes.UNORDERED)
+		suite.SetupTest()
+		_, _, connAB, connBA := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
+		_, _, connBC, connCB := suite.coordinator.SetupClientConnections(suite.chainB, suite.chainC, exported.Tendermint)
+		suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connAB, connBA, channeltypes.UNORDERED)
+		suite.coordinator.CreateTransferChannels(suite.chainB, suite.chainC, connBC, connCB, channeltypes.UNORDERED)
 
-	for i, tlaTc := range tlaTestCases {
-		tc := OnRecvPacketTestCaseFromTla(tlaTc)
-		description := filename + " # " + strconv.Itoa(i+1)
-		suite.Run(fmt.Sprintf("Case %s", description), func() {
-			seq := uint64(1)
-			packet := channeltypes.NewPacket(tc.packet.Data.GetBytes(), seq, tc.packet.SourcePort, tc.packet.SourceChannel, tc.packet.DestPort, tc.packet.DestChannel, clienttypes.NewHeight(0, 100), 0)
-			bankBefore := BankFromBalances(tc.bankBefore)
-			realBankBefore := BankOfChain(suite.chainB)
-			// First validate the packet itself (mimics what happens when the packet is being sent and/or received)
-			err := packet.ValidateBasic()
-			if err != nil {
-				suite.Require().False(tc.pass, err.Error())
-				return
+		for i, tlaTc := range tlaTestCases {
+			tc := OnRecvPacketTestCaseFromTla(tlaTc)
+			registerDenom := func() {
+				denomTrace := types.ParseDenomTrace(tc.packet.Data.Denom)
+				traceHash := denomTrace.Hash()
+				if !suite.chainB.App.TransferKeeper.HasDenomTrace(suite.chainB.GetContext(), traceHash) {
+					suite.chainB.App.TransferKeeper.SetDenomTrace(suite.chainB.GetContext(), denomTrace)
+				}
 			}
-			switch tc.handler {
+
+			description := file_info.Name() + " # " + strconv.Itoa(i+1)
+			suite.Run(fmt.Sprintf("Case %s", description), func() {
+				seq := uint64(1)
+				packet := channeltypes.NewPacket(tc.packet.Data.GetBytes(), seq, tc.packet.SourcePort, tc.packet.SourceChannel, tc.packet.DestPort, tc.packet.DestChannel, clienttypes.NewHeight(0, 100), 0)
+				bankBefore := BankFromBalances(tc.bankBefore)
+				realBankBefore := BankOfChain(suite.chainB)
+				// First validate the packet itself (mimics what happens when the packet is being sent and/or received)
+				err := packet.ValidateBasic()
+				if err != nil {
+					suite.Require().False(tc.pass, err.Error())
+					return
+				}
+				switch tc.handler {
 				case "SendTransfer":
 					var sender sdk.AccAddress;
 					sender, err = sdk.AccAddressFromBech32(tc.packet.Data.Sender);
 					if err != nil {
 						panic("MBT failed to convert sender address")
 					}
+					registerDenom();
 					denomTrace := types.ParseDenomTrace(tc.packet.Data.Denom)
 					denom := denomTrace.IBCDenom()
 					err = sdk.ValidateDenom(denom);
@@ -342,29 +359,35 @@ func (suite *KeeperTestSuite) TestModelBasedRelay() {
 							clienttypes.NewHeight(0, 110),
 							0)
 					}
-				case "OnRecvPacket": err = suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, tc.packet.Data)
-				case "OnTimeoutPacket": err = suite.chainB.App.TransferKeeper.OnTimeoutPacket(suite.chainB.GetContext(), packet, tc.packet.Data)
+				case "OnRecvPacket":
+					err = suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, tc.packet.Data)
+				case "OnTimeoutPacket":
+					registerDenom();
+					err = suite.chainB.App.TransferKeeper.OnTimeoutPacket(suite.chainB.GetContext(), packet, tc.packet.Data)
 				case "OnRecvAcknowledgementResult":
-			    	err = suite.chainB.App.TransferKeeper.OnAcknowledgementPacket(
-			    		suite.chainB.GetContext(), packet, tc.packet.Data,
-			    		channeltypes.NewResultAcknowledgement(nil))
+					err = suite.chainB.App.TransferKeeper.OnAcknowledgementPacket(
+						suite.chainB.GetContext(), packet, tc.packet.Data,
+						channeltypes.NewResultAcknowledgement(nil))
 				case "OnRecvAcknowledgementError":
+					registerDenom();
 					err = suite.chainB.App.TransferKeeper.OnAcknowledgementPacket(
 						suite.chainB.GetContext(), packet, tc.packet.Data,
 						channeltypes.NewErrorAcknowledgement("MBT Error Acknowledgement"))
- 				default: err = fmt.Errorf("Unknown handler:  %s", tc.handler)
-			}
-			if err != nil {
-				suite.Require().False(tc.pass, err.Error())
-				return
-			}
-			bankAfter := BankFromBalances(tc.bankAfter)
-			expectedBankChange := bankAfter.Sub(&bankBefore)
-			if err := suite.CheckBankBalances(suite.chainB, &realBankBefore, &expectedBankChange); err != nil {
-				suite.Require().False(tc.pass, err.Error())
-				return
-			}
-			suite.Require().True(tc.pass)
-		})
+				default:
+					err = fmt.Errorf("Unknown handler:  %s", tc.handler)
+				}
+				if err != nil {
+					suite.Require().False(tc.pass, err.Error())
+					return
+				}
+				bankAfter := BankFromBalances(tc.bankAfter)
+				expectedBankChange := bankAfter.Sub(&bankBefore)
+				if err := suite.CheckBankBalances(suite.chainB, &realBankBefore, &expectedBankChange); err != nil {
+					suite.Require().False(tc.pass, err.Error())
+					return
+				}
+				suite.Require().True(tc.pass)
+			})
+		}
 	}
 }

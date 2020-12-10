@@ -1,5 +1,3 @@
-// +build norace
-
 package cli_test
 
 import (
@@ -256,7 +254,10 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidators() {
 	}{
 		{
 			"one validator case",
-			[]string{fmt.Sprintf("--%s=json --limit 1", tmcli.OutputFlag)},
+			[]string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=1", flags.FlagLimit),
+			},
 			1,
 		},
 		{

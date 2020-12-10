@@ -55,9 +55,10 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		response := DecodeResp(stdTx)
 
-		err = checkSignModeError(w, clientCtx, response, "/cosmos/tx/v1beta1/txs/decode")
+		err = checkAminoMarshalError(clientCtx, response, "/cosmos/tx/v1beta1/txs/decode")
 		if err != nil {
-			// Error is already returned by checkSignModeError.
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+
 			return
 		}
 

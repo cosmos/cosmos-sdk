@@ -22,16 +22,17 @@ import (
 )
 
 const (
-	connectionID  = "connectionidone"
-	clientID      = "clientidone"
-	connectionID2 = "connectionidtwo"
-	clientID2     = "clientidtwo"
+	connectionID  = "connection-0"
+	clientID      = "07-tendermint-0"
+	connectionID2 = "connection-1"
+	clientID2     = "07-tendermin-1"
+	localhostID   = exported.Localhost + "-1"
 
 	port1 = "firstport"
 	port2 = "secondport"
 
-	channel1 = "firstchannel"
-	channel2 = "secondchannel"
+	channel1 = "channel-0"
+	channel2 = "channel-1"
 )
 
 var clientHeight = clienttypes.NewHeight(0, 10)
@@ -79,7 +80,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 							clientID, ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
 						),
 						clienttypes.NewIdentifiedClientState(
-							exported.Localhost, localhosttypes.NewClientState("chaindID", clientHeight),
+							localhostID, localhosttypes.NewClientState("chaindID", clientHeight),
 						),
 					},
 					[]clienttypes.ClientConsensusStates{
@@ -95,16 +96,27 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 							},
 						),
 					},
+					[]clienttypes.IdentifiedGenesisMetadata{
+						clienttypes.NewIdentifiedGenesisMetadata(
+							clientID,
+							[]clienttypes.GenesisMetadata{
+								clienttypes.NewGenesisMetadata([]byte("key1"), []byte("val1")),
+								clienttypes.NewGenesisMetadata([]byte("key2"), []byte("val2")),
+							},
+						),
+					},
 					clienttypes.NewParams(exported.Tendermint, exported.Localhost),
 					true,
+					2,
 				),
 				ConnectionGenesis: connectiontypes.NewGenesisState(
 					[]connectiontypes.IdentifiedConnection{
-						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []*connectiontypes.Version{ibctesting.ConnectionVersion})),
+						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []*connectiontypes.Version{ibctesting.ConnectionVersion}, 0)),
 					},
 					[]connectiontypes.ConnectionPaths{
 						connectiontypes.NewConnectionPaths(clientID, []string{connectionID}),
 					},
+					0,
 				),
 				ChannelGenesis: channeltypes.NewGenesisState(
 					[]channeltypes.IdentifiedChannel{
@@ -133,6 +145,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 					[]channeltypes.PacketSequence{
 						channeltypes.NewPacketSequence(port2, channel2, 1),
 					},
+					0,
 				),
 			},
 			expPass: true,
@@ -146,12 +159,22 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 							clientID, ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
 						),
 						clienttypes.NewIdentifiedClientState(
-							exported.Localhost, localhosttypes.NewClientState("(chaindID)", clienttypes.ZeroHeight()),
+							localhostID, localhosttypes.NewClientState("(chaindID)", clienttypes.ZeroHeight()),
 						),
 					},
 					nil,
+					[]clienttypes.IdentifiedGenesisMetadata{
+						clienttypes.NewIdentifiedGenesisMetadata(
+							clientID,
+							[]clienttypes.GenesisMetadata{
+								clienttypes.NewGenesisMetadata([]byte(""), []byte("val1")),
+								clienttypes.NewGenesisMetadata([]byte("key2"), []byte("")),
+							},
+						),
+					},
 					clienttypes.NewParams(exported.Tendermint),
 					false,
+					2,
 				),
 				ConnectionGenesis: connectiontypes.DefaultGenesisState(),
 			},
@@ -163,11 +186,12 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis: clienttypes.DefaultGenesisState(),
 				ConnectionGenesis: connectiontypes.NewGenesisState(
 					[]connectiontypes.IdentifiedConnection{
-						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, "(CLIENTIDONE)", connectiontypes.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []*connectiontypes.Version{connectiontypes.NewVersion("1.1", nil)})),
+						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, "(CLIENTIDONE)", connectiontypes.NewCounterparty(clientID, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []*connectiontypes.Version{connectiontypes.NewVersion("1.1", nil)}, 0)),
 					},
 					[]connectiontypes.ConnectionPaths{
 						connectiontypes.NewConnectionPaths(clientID, []string{connectionID}),
 					},
+					0,
 				),
 			},
 			expPass: false,
@@ -234,16 +258,27 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 							},
 						),
 					},
+					[]clienttypes.IdentifiedGenesisMetadata{
+						clienttypes.NewIdentifiedGenesisMetadata(
+							clientID,
+							[]clienttypes.GenesisMetadata{
+								clienttypes.NewGenesisMetadata([]byte("key1"), []byte("val1")),
+								clienttypes.NewGenesisMetadata([]byte("key2"), []byte("val2")),
+							},
+						),
+					},
 					clienttypes.NewParams(exported.Tendermint, exported.Localhost),
 					true,
+					0,
 				),
 				ConnectionGenesis: connectiontypes.NewGenesisState(
 					[]connectiontypes.IdentifiedConnection{
-						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []*connectiontypes.Version{ibctesting.ConnectionVersion})),
+						connectiontypes.NewIdentifiedConnection(connectionID, connectiontypes.NewConnectionEnd(connectiontypes.INIT, clientID, connectiontypes.NewCounterparty(clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))), []*connectiontypes.Version{ibctesting.ConnectionVersion}, 0)),
 					},
 					[]connectiontypes.ConnectionPaths{
 						connectiontypes.NewConnectionPaths(clientID, []string{connectionID}),
 					},
+					0,
 				),
 				ChannelGenesis: channeltypes.NewGenesisState(
 					[]channeltypes.IdentifiedChannel{
@@ -272,6 +307,7 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 					[]channeltypes.PacketSequence{
 						channeltypes.NewPacketSequence(port2, channel2, 1),
 					},
+					0,
 				),
 			},
 		},

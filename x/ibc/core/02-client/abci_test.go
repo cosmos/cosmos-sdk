@@ -28,9 +28,9 @@ func (suite *ClientTestSuite) SetupTest() {
 	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
 
 	// set localhost client
-	version := types.ParseChainID(suite.chainA.GetContext().ChainID())
+	revision := types.ParseChainID(suite.chainA.GetContext().ChainID())
 	localHostClient := localhosttypes.NewClientState(
-		suite.chainA.GetContext().ChainID(), types.NewHeight(version, uint64(suite.chainA.GetContext().BlockHeight())),
+		suite.chainA.GetContext().ChainID(), types.NewHeight(revision, uint64(suite.chainA.GetContext().BlockHeight())),
 	)
 	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), exported.Localhost, localHostClient)
 }

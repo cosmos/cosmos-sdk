@@ -18,8 +18,8 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto"
-	cryptoamino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
@@ -88,6 +88,13 @@ type Keyring interface {
 	Exporter
 }
 
+// UnsafeKeyring exposes unsafe operations such as unsafe unarmored export in
+// addition to those that are made available by the Keyring interface.
+type UnsafeKeyring interface {
+	Keyring
+	UnsafeExporter
+}
+
 // Signer is implemented by key stores that want to provide signing capabilities.
 type Signer interface {
 	// Sign sign byte messages with a user key.
@@ -110,10 +117,18 @@ type Exporter interface {
 	// Export public key
 	ExportPubKeyArmor(uid string) (string, error)
 	ExportPubKeyArmorByAddress(address sdk.Address) (string, error)
+
 	// ExportPrivKey returns a private key in ASCII armored format.
 	// It returns an error if the key does not exist or a wrong encryption passphrase is supplied.
 	ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error)
 	ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassphrase string) (armor string, err error)
+}
+
+// UnsafeExporter is implemented by key stores that support unsafe export
+// of private keys' material.
+type UnsafeExporter interface {
+	// UnsafeExportPrivKeyHex returns a private key in unarmored hex format
+	UnsafeExportPrivKeyHex(uid string) (string, error)
 }
 
 // Option overrides keyring configuration options.
@@ -198,7 +213,7 @@ func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 		return "", fmt.Errorf("no key to export with name: %s", uid)
 	}
 
-	return crypto.ArmorPubKeyBytes(CryptoCdc.MustMarshalBinaryBare(bz.GetPubKey()), string(bz.GetAlgo())), nil
+	return crypto.ArmorPubKeyBytes(legacy.Cdc.MustMarshalBinaryBare(bz.GetPubKey()), string(bz.GetAlgo())), nil
 }
 
 func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, error) {
@@ -240,7 +255,7 @@ func (ks keystore) ExportPrivateKeyObject(uid string) (types.PrivKey, error) {
 			return nil, err
 		}
 
-		priv, err = cryptoamino.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
+		priv, err = legacy.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
 		if err != nil {
 			return nil, err
 		}
@@ -289,7 +304,7 @@ func (ks keystore) ImportPubKey(uid string, armor string) error {
 		return err
 	}
 
-	pubKey, err := cryptoamino.PubKeyFromBytes(pubBytes)
+	pubKey, err := legacy.PubKeyFromBytes(pubBytes)
 	if err != nil {
 		return err
 	}
@@ -316,7 +331,7 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 			return nil, nil, fmt.Errorf("private key not available")
 		}
 
-		priv, err = cryptoamino.PrivKeyFromBytes([]byte(i.PrivKeyArmor))
+		priv, err = legacy.PrivKeyFromBytes([]byte(i.PrivKeyArmor))
 		if err != nil {
 			return nil, nil, err
 		}
@@ -696,7 +711,7 @@ func (ks keystore) writeLocalKey(name string, priv types.PrivKey, algo hd.PubKey
 	// encrypt private key using keyring
 	pub := priv.PubKey()
 
-	info := newLocalInfo(name, pub, string(CryptoCdc.MustMarshalBinaryBare(priv)), algo)
+	info := newLocalInfo(name, pub, string(legacy.Cdc.MustMarshalBinaryBare(priv)), algo)
 	if err := ks.writeInfo(info); err != nil {
 		return nil, err
 	}
@@ -772,6 +787,29 @@ func (ks keystore) writeMultisigKey(name string, pub types.PubKey) (Info, error)
 	}
 
 	return info, nil
+}
+
+type unsafeKeystore struct {
+	keystore
+}
+
+// NewUnsafe returns a new keyring that provides support for unsafe operations.
+func NewUnsafe(kr Keyring) UnsafeKeyring {
+	// The type assertion is against the only keystore
+	// implementation that is currently provided.
+	ks := kr.(keystore)
+
+	return unsafeKeystore{ks}
+}
+
+// UnsafeExportPrivKeyHex exports private keys in unarmored hexadecimal format.
+func (ks unsafeKeystore) UnsafeExportPrivKeyHex(uid string) (privkey string, err error) {
+	priv, err := ks.ExportPrivateKeyObject(uid)
+	if err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(priv.Bytes()), nil
 }
 
 func addrHexKeyAsString(address sdk.Address) string {

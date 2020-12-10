@@ -50,7 +50,7 @@ func GetCmdQueryChannels() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -86,7 +86,7 @@ func GetCmdQueryChannel() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(channelRes)
+			return clientCtx.PrintProto(channelRes)
 		},
 	}
 
@@ -127,7 +127,7 @@ func GetCmdQueryConnectionChannels() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -160,7 +160,7 @@ func GetCmdQueryChannelClientState() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.IdentifiedClientState)
+			return clientCtx.PrintProto(res.IdentifiedClientState)
 		},
 	}
 
@@ -201,7 +201,7 @@ func GetCmdQueryPacketCommitments() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -242,7 +242,7 @@ func GetCmdQueryPacketCommitment() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -283,7 +283,7 @@ func GetCmdQueryPacketReceipt() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -324,7 +324,7 @@ func GetCmdQueryPacketAcknowledgement() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -376,7 +376,7 @@ The return value represents:
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -427,7 +427,7 @@ The return value represents:
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -463,8 +463,8 @@ func GetCmdQueryNextSequenceReceive() *cobra.Command {
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(int64(sequenceRes.ProofHeight.VersionHeight))
-			return clientCtx.PrintOutput(sequenceRes)
+			clientCtx = clientCtx.WithHeight(int64(sequenceRes.ProofHeight.RevisionHeight))
+			return clientCtx.PrintProto(sequenceRes)
 		},
 	}
 

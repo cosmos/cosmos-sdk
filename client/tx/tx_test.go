@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -157,24 +158,26 @@ func TestSign(t *testing.T) {
 	requireT.NoError(err)
 
 	testCases := []struct {
-		name        string
-		txf         tx.Factory
-		from        string
-		overwrite   bool
-		expectedPKs []cryptotypes.PubKey
+		name         string
+		txf          tx.Factory
+		from         string
+		overwrite    bool
+		expectedPKs  []cryptotypes.PubKey
+		matchingSigs []int // if not nil, check matching signature against old ones.
 	}{
 		{"should fail if txf without keyring",
-			txfNoKeybase, from1, true, nil},
+			txfNoKeybase, from1, true, nil, nil},
 		{"should fail for non existing key",
-			txf, "unknown", true, nil},
+			txf, "unknown", true, nil, nil},
 		{"should succeed if txf with keyring",
-			txf, from1, true, []cryptotypes.PubKey{pubKey1}},
+			txf, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
 		/**** test overwrite ****/
 		{"should succeed to append a second signature and not overwrite",
-			txf, from2, false, []cryptotypes.PubKey{pubKey1, pubKey2}},
+			txf, from2, false, []cryptotypes.PubKey{pubKey1, pubKey2}, []int{0, 0}},
 		{"should succeed to overwrite a signature",
-			txf, from2, true, []cryptotypes.PubKey{pubKey2}},
+			txf, from2, true, []cryptotypes.PubKey{pubKey2}, []int{1, 0}},
 	}
+	var prevSigs []signingtypes.SignatureV2
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err = tx.Sign(tc.txf, tc.from, txn, tc.overwrite)
@@ -183,12 +186,16 @@ func TestSign(t *testing.T) {
 			} else {
 				requireT.NoError(err)
 			}
-			testSigners(requireT, txn.GetTx(), tc.expectedPKs...)
+			sigs := testSigners(requireT, txn.GetTx(), tc.expectedPKs...)
+			if tc.matchingSigs != nil {
+				requireT.Equal(prevSigs[tc.matchingSigs[0]], sigs[tc.matchingSigs[1]])
+			}
+			prevSigs = sigs
 		})
 	}
 }
 
-func testSigners(require *require.Assertions, tr signing.Tx, pks ...cryptotypes.PubKey) {
+func testSigners(require *require.Assertions, tr signing.Tx, pks ...cryptotypes.PubKey) []signingtypes.SignatureV2 {
 	signers := tr.GetPubKeys()
 	require.Len(signers, len(pks))
 	sigs, err := tr.GetSignaturesV2()
@@ -198,4 +205,5 @@ func testSigners(require *require.Assertions, tr signing.Tx, pks ...cryptotypes.
 		require.True(signers[i].Equals(pks[i]))
 		require.True(sigs[i].PubKey.Equals(pks[i]), "Signature is signed with a wrong pubkey. Got: %s, expected: %s", sigs[i].PubKey, pks[i])
 	}
+	return sigs
 }

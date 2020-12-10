@@ -223,12 +223,12 @@ func ReadTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 
 	if clientCtx.From == "" || flagSet.Changed(flags.FlagFrom) {
 		from, _ := flagSet.GetString(flags.FlagFrom)
-		fromAddr, keyringInfo, err := GetFromFields(clientCtx.Keyring, from, clientCtx.GenerateOnly)
+		fromAddr, fromName, keyringInfo, err := GetFromFields(clientCtx.Keyring, from, clientCtx.GenerateOnly)
 		if err != nil {
 			return clientCtx, err
 		}
 
-		clientCtx = clientCtx.WithFrom(from).WithFromAddress(fromAddr).WithFromName(keyringInfo.GetName())
+		clientCtx = clientCtx.WithFrom(from).WithFromAddress(fromAddr).WithFromName(fromName)
 
 		// If the `from` signer account is a ledger key, we need to use
 		// SIGN_MODE_AMINO_JSON, because ledger doesn't support proto yet.

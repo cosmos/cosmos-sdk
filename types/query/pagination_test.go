@@ -43,6 +43,25 @@ func TestPaginationTestSuite(t *testing.T) {
 	suite.Run(t, new(paginationTestSuite))
 }
 
+func (s *paginationTestSuite) TestParsePagination() {
+	s.T().Log("verify default values for empty page request")
+	pageReq := &query.PageRequest{}
+	page, limit, err := query.ParsePagination(pageReq)
+	s.Require().NoError(err)
+	s.Require().Equal(limit, query.DefaultLimit)
+	s.Require().Equal(page, 1)
+
+	s.T().Log("verify with custom values")
+	pageReq = &query.PageRequest{
+		Offset: 0,
+		Limit:  10,
+	}
+	page, limit, err = query.ParsePagination(pageReq)
+	s.Require().NoError(err)
+	s.Require().Equal(page, 1)
+	s.Require().Equal(limit, 10)
+}
+
 func (s *paginationTestSuite) TestPagination() {
 	app, ctx, _ := setupTest()
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
@@ -140,7 +159,7 @@ func (s *paginationTestSuite) TestPagination() {
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	s.Require().Error(err)
-	s.Require().Equal(err.Error(), "invalid request, either offset or key is expected, got both")
+	s.Require().Equal("rpc error: code = InvalidArgument desc = paginate: invalid request, either offset or key is expected, got both", err.Error())
 
 	s.T().Log("verify paginate with offset greater than total results")
 	pageReq = &query.PageRequest{Offset: 300, Limit: defaultLimit, CountTotal: false}

@@ -22,7 +22,7 @@ import (
 // - the client or header provided are not parseable to tendermint types
 // - the header is invalid
 // - header height is less than or equal to the trusted header height
-// - header version is not equal to trusted header version
+// - header revision is not equal to trusted header revision
 // - header valset commit verification fails
 // - header timestamp is past the trusting period in relation to the consensus state
 // - header timestamp is less than or equal to the consensus state timestamp
@@ -33,8 +33,8 @@ import (
 // If we are updating to a past height, a consensus state is created for that height to be persisted in client store
 // If we are updating to a future height, the consensus state is created and the client state is updated to reflect
 // the new latest height
-// UpdateClient must only be used to update within a single version, thus header version number and trusted height's version
-// number must be the same. To update to a new version, use a separate upgrade path
+// UpdateClient must only be used to update within a single revision, thus header revision number and trusted height's revision
+// number must be the same. To update to a new revision, use a separate upgrade path
 // Tendermint client validity checking uses the bisection algorithm described
 // in the [Tendermint spec](https://github.com/tendermint/spec/blob/master/spec/consensus/light-client.md).
 func (cs ClientState) CheckHeaderAndUpdateState(
@@ -60,7 +60,7 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 		return nil, nil, err
 	}
 
-	newClientState, consensusState := update(&cs, tmHeader)
+	newClientState, consensusState := update(ctx, clientStore, &cs, tmHeader)
 	return newClientState, consensusState, nil
 }
 
@@ -94,13 +94,13 @@ func checkValidity(
 		return err
 	}
 
-	// UpdateClient only accepts updates with a header at the same version
+	// UpdateClient only accepts updates with a header at the same revision
 	// as the trusted consensus state
-	if header.GetHeight().GetVersionNumber() != header.TrustedHeight.VersionNumber {
+	if header.GetHeight().GetRevisionNumber() != header.TrustedHeight.RevisionNumber {
 		return sdkerrors.Wrapf(
 			ErrInvalidHeaderHeight,
-			"header height version %d does not match trusted header version %d",
-			header.GetHeight().GetVersionNumber(), header.TrustedHeight.VersionNumber,
+			"header height revision %d does not match trusted header revision %d",
+			header.GetHeight().GetRevisionNumber(), header.TrustedHeight.RevisionNumber,
 		)
 	}
 
@@ -128,21 +128,21 @@ func checkValidity(
 	}
 
 	chainID := clientState.GetChainID()
-	// If chainID is in version format, then set version number of chainID with the version number
+	// If chainID is in revision format, then set revision number of chainID with the revision number
 	// of the header we are verifying
-	// This is useful if the update is at a previous version rather than an update to the latest version
+	// This is useful if the update is at a previous revision rather than an update to the latest revision
 	// of the client.
-	// The chainID must be set correctly for the previous version before attempting verification.
-	// Updates for previous versions are not supported if the chainID is not in version format.
-	if clienttypes.IsVersionFormat(chainID) {
-		chainID, _ = clienttypes.SetVersionNumber(chainID, header.GetHeight().GetVersionNumber())
+	// The chainID must be set correctly for the previous revision before attempting verification.
+	// Updates for previous revisions are not supported if the chainID is not in revision format.
+	if clienttypes.IsRevisionFormat(chainID) {
+		chainID, _ = clienttypes.SetRevisionNumber(chainID, header.GetHeight().GetRevisionNumber())
 	}
 
 	// Construct a trusted header using the fields in consensus state
 	// Only Height, Time, and NextValidatorsHash are necessary for verification
 	trustedHeader := tmtypes.Header{
 		ChainID:            chainID,
-		Height:             int64(header.TrustedHeight.VersionHeight),
+		Height:             int64(header.TrustedHeight.RevisionHeight),
 		Time:               consState.Timestamp,
 		NextValidatorsHash: consState.NextValidatorsHash,
 	}
@@ -166,8 +166,8 @@ func checkValidity(
 	return nil
 }
 
-// update the consensus state from a new header
-func update(clientState *ClientState, header *Header) (*ClientState, *ConsensusState) {
+// update the consensus state from a new header and set processed time metadata
+func update(ctx sdk.Context, clientStore sdk.KVStore, clientState *ClientState, header *Header) (*ClientState, *ConsensusState) {
 	height := header.GetHeight().(clienttypes.Height)
 	if height.GT(clientState.LatestHeight) {
 		clientState.LatestHeight = height
@@ -177,6 +177,10 @@ func update(clientState *ClientState, header *Header) (*ClientState, *ConsensusS
 		Root:               commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()),
 		NextValidatorsHash: header.Header.NextValidatorsHash,
 	}
+
+	// set context time as processed time as this is state internal to tendermint client logic.
+	// client state and consensus state will be set by client keeper
+	SetProcessedTime(clientStore, header.GetHeight(), uint64(ctx.BlockTime().UnixNano()))
 
 	return clientState, consensusState
 }

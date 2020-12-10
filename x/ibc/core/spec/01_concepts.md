@@ -10,11 +10,11 @@ this [document](https://github.com/cosmos/ics/blob/master/ibc/1_IBC_TERMINOLOGY.
 ## Client Creation, Updates, and Upgrades
 
 IBC clients are on chain light clients. The light client is responsible for verifying
-counterparty state. A light client can be created by any user submitting a client
-identifier and a valid initial `ClientState` and `ConsensusState`. The client identifier
-must not already be used. Clients are given a client identifier prefixed store to
-store their associated client state and consensus states. Consensus states are 
-stored using their associated height. 
+counterparty state. A light client can be created by any user submitting a valid initial 
+`ClientState` and `ConsensusState`. The client identifier is auto generated using the
+client type and the global client counter appended in the format: `{client-type}-{N}`.
+Clients are given a client identifier prefixed store to store their associated client 
+state and consensus states. Consensus states are stored using their associated height. 
 
 Clients can be updated by any user submitting a valid `Header`. The client state callback
 to `CheckHeaderAndUpdateState` is responsible for verifying the header against previously
@@ -78,38 +78,38 @@ IBC Client Heights are represented by the struct:
 
 ```go
 type Height struct {
-   VersionNumber uint64
-   VersionHeight  uint64
+   RevisionNumber uint64
+   RevisionHeight  uint64
 }
 ```
 
-The `VersionNumber` represents the version of the chain that the height is representing.
-An version typically represents a continuous, monotonically increasing range of block-heights.
-The `VersionHeight` represents the height of the chain within the given version.
+The `RevisionNumber` represents the revision of the chain that the height is representing.
+An revision typically represents a continuous, monotonically increasing range of block-heights.
+The `RevisionHeight` represents the height of the chain within the given revision.
 
-On any reset of the `VersionHeight`, for example, when hard-forking a Tendermint chain,
-the `VersionNumber` will get incremented. This allows IBC clients to distinguish between a
-block-height `n` of a previous version of the chain (at version `p`) and block-height `n` of the current
-version of the chain (at version `e`).
+On any reset of the `RevisionHeight`, for example, when hard-forking a Tendermint chain,
+the `RevisionNumber` will get incremented. This allows IBC clients to distinguish between a
+block-height `n` of a previous revision of the chain (at revision `p`) and block-height `n` of the current
+revision of the chain (at revision `e`).
 
-`Heights` that share the same version number can be compared by simply comparing their respective `VersionHeights`.
-Heights that do not share the same version number will only be compared using their respective `VersionNumbers`.
-Thus a height `h` with version number `e+1` will always be greater than a height `g` with version number `e`,
-**REGARDLESS** of the difference in version heights.
+`Heights` that share the same revision number can be compared by simply comparing their respective `RevisionHeights`.
+Heights that do not share the same revision number will only be compared using their respective `RevisionNumbers`.
+Thus a height `h` with revision number `e+1` will always be greater than a height `g` with revision number `e`,
+**REGARDLESS** of the difference in revision heights.
 
 Ex:
 
 ```go
-Height{VersionNumber: 3, VersionHeight: 0} > Height{VersionNumber: 2, VersionHeight: 100000000000}
+Height{RevisionNumber: 3, RevisionHeight: 0} > Height{RevisionNumber: 2, RevisionHeight: 100000000000}
 ```
 
-When a Tendermint chain is running a particular version, relayers can simply submit headers and proofs with the version number
-given by the chain's chainID, and the version height given by the Tendermint block height. When a chain updates using a hard-fork 
-and resets its block-height, it is responsible for updating its chain-id to increment the version number.
-IBC Tendermint clients then verifies the version number against their `ChainId` and treat the `VersionHeight` as the Tendermint block-height.
+When a Tendermint chain is running a particular revision, relayers can simply submit headers and proofs with the revision number
+given by the chain's chainID, and the revision height given by the Tendermint block height. When a chain updates using a hard-fork 
+and resets its block-height, it is responsible for updating its chain-id to increment the revision number.
+IBC Tendermint clients then verifies the revision number against their `ChainId` and treat the `RevisionHeight` as the Tendermint block-height.
 
-Tendermint chains wishing to use versions to maintain persistent IBC connections even across height-resetting upgrades must format their chain-ids
-in the following manner: `{chainID}-{version_number}`. On any height-resetting upgrade, the chainID **MUST** be updated with a higher version number
+Tendermint chains wishing to use revisions to maintain persistent IBC connections even across height-resetting upgrades must format their chain-ids
+in the following manner: `{chainID}-{revision_number}`. On any height-resetting upgrade, the chainID **MUST** be updated with a higher revision number
 than the previous value.
 
 Ex:
@@ -117,8 +117,8 @@ Ex:
 - Before upgrade ChainID: `gaiamainnet-3`
 - After upgrade ChainID: `gaiamainnet-4`
 
-Clients that do not require versions, such as the solo-machine client, simply hardcode `0` into the version number whenever they
-need to return an IBC height when implementing IBC interfaces and use the `VersionHeight` exclusively.
+Clients that do not require revisions, such as the solo-machine client, simply hardcode `0` into the revision number whenever they
+need to return an IBC height when implementing IBC interfaces and use the `RevisionHeight` exclusively.
 
 Other client-types may implement their own logic to verify the IBC Heights that relayers provide in their `Update`, `Misbehavior`, and
 `Verify` functions respectively.
@@ -131,16 +131,18 @@ The IBC interfaces expect an `ibcexported.Height` interface, however all clients
 The connection handshake occurs in 4 steps as defined in [ICS 03](https://github.com/cosmos/ics/tree/master/spec/ics-003-connection-semantics).
 
 `ConnOpenInit` is the first attempt to initialize a connection on the executing chain. 
-The handshake is expected to succeed if the connection identifier selected is not used and the
-version selected is supported. The connection identifier for the counterparty connection may 
-be left empty indicating that the counterparty may select its own identifier. The connection
-is set and stored in the INIT state upon success.
+The handshake is expected to succeed if the version selected is supported. The connection 
+identifier for the counterparty connection must be left empty indicating that the counterparty
+must select its own identifier. The connection identifier is auto derived in the format: 
+`connection{N}` where N is the next sequence to be used. The counter begins at 0 and increments
+by 1. The connection is set and stored in the INIT state upon success.
 
 `ConnOpenTry` is a response to a chain executing `ConnOpenInit`. The executing chain will validate
-the chain level parameters the counterparty has stored such as its chainID and consensus parameters.
-The executing chain will also verify that if a previous connection exists for the specified
-connection identifier that all the parameters match and its previous state was in INIT. This
-may occur when both chains execute `ConnOpenInit` simultaneously. The executing chain will verify
+the chain level parameters the counterparty has stored such as its chainID. The executing chain 
+will also verify that if a previous connection exists for the specified connection identifier 
+that all the parameters match and its previous state was in INIT. This may occur when both 
+chains execute `ConnOpenInit` simultaneously. If the connection does not exist then a connection
+identifier is generated in the same format done in `ConnOpenInit`.  The executing chain will verify
 that the counterparty created a connection in INIT state. The executing chain will also verify 
 The `ClientState` and `ConsensusState` the counterparty stores for the executing chain. The 
 executing chain will select a version from the intersection of its supported versions and the 
@@ -208,23 +210,25 @@ versions should have a unique version identifier.
 The channel handshake occurs in 4 steps as defined in [ICS 04](https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics).
 
 `ChanOpenInit` is the first attempt to initialize a channel on top of an existing connection. 
-The handshake is expected to succeed if the channel identifier selected is not used and the
-version selected for the existing connection is a supported IBC version. The portID must correspond
-to a port already binded upon `InitChain`. The channel identifier for the counterparty channel 
-may be left empty indicating that the counterparty may select its own identifier. The channel is 
-set and stored in the INIT state upon success. The channel parameters `NextSequenceSend`, 
-`NextSequenceRecv`, and `NextSequenceAck` are all set to 1 and a channel capability is created 
-for the given portID and channelID path. 
+The handshake is expected to succeed if the version selected for the existing connection is a 
+supported IBC version. The portID must correspond to a port already binded upon `InitChain`. 
+The channel identifier for the counterparty channel must be left empty indicating that the 
+counterparty must select its own identifier. The channel identifier is auto derived in the
+format: `channel{N}` where N is the next sequence to be used. The channel is set and stored 
+in the INIT state upon success. The channel parameters `NextSequenceSend`, `NextSequenceRecv`, 
+and `NextSequenceAck` are all set to 1 and a channel capability is created for the given 
+portID and channelID path. 
 
 `ChanOpenTry` is a response to a chain executing `ChanOpenInit`. If the executing chain is calling
 `ChanOpenTry` after previously executing `ChanOpenInit` then the provided channel parameters must
-match the previously selected parameters. The connection the channel is created on top of must be
-an OPEN state and its IBC version must support the desired channel type being created (ORDERED,
-UNORDERED, etc). The executing chain will verify that the channel state of the counterparty is 
-in INIT. The executing chain will set and store the channel state in TRYOPEN. The channel 
-parameters `NextSequenceSend`, `NextSequenceRecv`, and `NextSequenceAck` are all set to 1 and 
-a channel capability is created for the given portID and channelID path only if the channel
-did not previously exist. 
+match the previously selected parameters. If the previous channel does not exist then a channel
+identifier is generated in the same format as done in `ChanOpenInit`. The connection the channel 
+is created on top of must be an OPEN state and its IBC version must support the desired channel 
+type being created (ORDERED, UNORDERED, etc). The executing chain will verify that the channel 
+state of the counterparty is in INIT. The executing chain will set and store the channel state 
+in TRYOPEN. The channel parameters `NextSequenceSend`, `NextSequenceRecv`, and `NextSequenceAck` 
+are all set to 1 and a channel capability is created for the given portID and channelID path only 
+if the channel did not previously exist. 
 
 `ChanOpenAck` may be called on a chain when the counterparty channel has entered TRYOPEN. A
 previous channel on the executing chain must exist be in either INIT or TRYOPEN state. If the 

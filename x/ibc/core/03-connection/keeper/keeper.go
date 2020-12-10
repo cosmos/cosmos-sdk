@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -36,13 +34,23 @@ func NewKeeper(cdc codec.BinaryMarshaler, key sdk.StoreKey, ck types.ClientKeepe
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", host.ModuleName, types.SubModuleName))
+	return ctx.Logger().With("module", "x/"+host.ModuleName+"/"+types.SubModuleName)
 }
 
 // GetCommitmentPrefix returns the IBC connection store prefix as a commitment
 // Prefix
 func (k Keeper) GetCommitmentPrefix() exported.Prefix {
 	return commitmenttypes.NewMerklePrefix([]byte(k.storeKey.Name()))
+}
+
+// GenerateConnectionIdentifier returns the next connection identifier.
+func (k Keeper) GenerateConnectionIdentifier(ctx sdk.Context) string {
+	nextConnSeq := k.GetNextConnectionSequence(ctx)
+	connectionID := types.FormatConnectionIdentifier(nextConnSeq)
+
+	nextConnSeq++
+	k.SetNextConnectionSequence(ctx, nextConnSeq)
+	return connectionID
 }
 
 // GetConnection returns a connection with a particular identifier
@@ -103,6 +111,24 @@ func (k Keeper) SetClientConnectionPaths(ctx sdk.Context, clientID string, paths
 	clientPaths := types.ClientPaths{Paths: paths}
 	bz := k.cdc.MustMarshalBinaryBare(&clientPaths)
 	store.Set(host.ClientConnectionsKey(clientID), bz)
+}
+
+// GetNextConnectionSequence gets the next connection sequence from the store.
+func (k Keeper) GetNextConnectionSequence(ctx sdk.Context) uint64 {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get([]byte(types.KeyNextConnectionSequence))
+	if bz == nil {
+		panic("next connection sequence is nil")
+	}
+
+	return sdk.BigEndianToUint64(bz)
+}
+
+// SetNextConnectionSequence sets the next connection sequence to the store.
+func (k Keeper) SetNextConnectionSequence(ctx sdk.Context, sequence uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := sdk.Uint64ToBigEndian(sequence)
+	store.Set([]byte(types.KeyNextConnectionSequence), bz)
 }
 
 // GetAllClientConnectionPaths returns all stored clients connection id paths. It

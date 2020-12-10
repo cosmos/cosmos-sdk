@@ -46,7 +46,7 @@ func GetCmdQueryConnections() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -79,8 +79,8 @@ func GetCmdQueryConnection() *cobra.Command {
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(int64(connRes.ProofHeight.VersionHeight))
-			return clientCtx.PrintOutput(connRes)
+			clientCtx = clientCtx.WithHeight(int64(connRes.ProofHeight.RevisionHeight))
+			return clientCtx.PrintProto(connRes)
 		},
 	}
 
@@ -113,8 +113,8 @@ func GetCmdQueryClientConnections() *cobra.Command {
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(int64(connPathsRes.ProofHeight.VersionHeight))
-			return clientCtx.PrintOutput(connPathsRes)
+			clientCtx = clientCtx.WithHeight(int64(connPathsRes.ProofHeight.RevisionHeight))
+			return clientCtx.PrintProto(connPathsRes)
 		},
 	}
 

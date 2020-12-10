@@ -657,11 +657,18 @@ func TestSetInitialVersion(t *testing.T) {
 	db := dbm.NewMemDB()
 	multi := newMultiStoreWithMounts(db, types.PruneNothing)
 
+	require.NoError(t, multi.LoadLatestVersion())
+
 	multi.SetInitialVersion(5)
 	require.Equal(t, int64(5), multi.initialVersion)
 
 	multi.Commit()
 	require.Equal(t, int64(5), multi.LastCommitID().Version)
+
+	ckvs := multi.GetCommitKVStore(multi.keysByName["store1"])
+	iavlStore, ok := ckvs.(*iavl.Store)
+	require.True(t, ok)
+	require.True(t, iavlStore.VersionExists(5))
 }
 
 func BenchmarkMultistoreSnapshot100K(b *testing.B) {

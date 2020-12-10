@@ -7,6 +7,8 @@ import (
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/09-localhost/types"
 )
 
@@ -46,6 +48,37 @@ func (suite *LocalhostTestSuite) TestValidate() {
 			suite.Require().NoError(err, tc.name)
 		} else {
 			suite.Require().Error(err, tc.name)
+		}
+	}
+}
+
+func (suite *LocalhostTestSuite) TestInitialize() {
+	testCases := []struct {
+		name      string
+		consState exported.ConsensusState
+		expPass   bool
+	}{
+		{
+			"valid initialization",
+			nil,
+			true,
+		},
+		{
+			"invalid consenus state",
+			&ibctmtypes.ConsensusState{},
+			false,
+		},
+	}
+
+	clientState := types.NewClientState("chainID", clienttypes.NewHeight(3, 10))
+
+	for _, tc := range testCases {
+		err := clientState.Initialize(suite.ctx, suite.cdc, suite.store, tc.consState)
+
+		if tc.expPass {
+			suite.Require().NoError(err, "valid testcase: %s failed", tc.name)
+		} else {
+			suite.Require().Error(err, "invalid testcase: %s passed", tc.name)
 		}
 	}
 }
@@ -123,8 +156,8 @@ func (suite *LocalhostTestSuite) TestCheckHeaderAndUpdateState() {
 	clientState := types.NewClientState("chainID", clientHeight)
 	cs, _, err := clientState.CheckHeaderAndUpdateState(suite.ctx, nil, nil, nil)
 	suite.Require().NoError(err)
-	suite.Require().Equal(uint64(0), cs.GetLatestHeight().GetVersionNumber())
-	suite.Require().Equal(suite.ctx.BlockHeight(), int64(cs.GetLatestHeight().GetVersionHeight()))
+	suite.Require().Equal(uint64(0), cs.GetLatestHeight().GetRevisionNumber())
+	suite.Require().Equal(suite.ctx.BlockHeight(), int64(cs.GetLatestHeight().GetRevisionHeight()))
 	suite.Require().Equal(suite.ctx.BlockHeader().ChainID, clientState.ChainId)
 }
 
@@ -145,8 +178,8 @@ func (suite *LocalhostTestSuite) TestProposedHeaderAndUpdateState() {
 
 func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 	counterparty := connectiontypes.NewCounterparty("clientB", testConnectionID, commitmenttypes.NewMerklePrefix([]byte("ibc")))
-	conn1 := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []*connectiontypes.Version{connectiontypes.NewVersion("1", nil)})
-	conn2 := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []*connectiontypes.Version{connectiontypes.NewVersion("2", nil)})
+	conn1 := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []*connectiontypes.Version{connectiontypes.NewVersion("1", nil)}, 0)
+	conn2 := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []*connectiontypes.Version{connectiontypes.NewVersion("2", nil)}, 0)
 
 	testCases := []struct {
 		name        string
@@ -336,7 +369,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 			tc.malleate()
 
 			err := tc.clientState.VerifyPacketCommitment(
-				suite.store, suite.cdc, clientHeight, nil, []byte{}, testPortID, testChannelID, testSequence, tc.commitment,
+				suite.store, suite.cdc, clientHeight, 0, 0, nil, []byte{}, testPortID, testChannelID, testSequence, tc.commitment,
 			)
 
 			if tc.expPass {
@@ -395,7 +428,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 			tc.malleate()
 
 			err := tc.clientState.VerifyPacketAcknowledgement(
-				suite.store, suite.cdc, clientHeight, nil, []byte{}, testPortID, testChannelID, testSequence, tc.ack,
+				suite.store, suite.cdc, clientHeight, 0, 0, nil, []byte{}, testPortID, testChannelID, testSequence, tc.ack,
 			)
 
 			if tc.expPass {
@@ -411,7 +444,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketReceiptAbsence() {
 	clientState := types.NewClientState("chainID", clientHeight)
 
 	err := clientState.VerifyPacketReceiptAbsence(
-		suite.store, suite.cdc, clientHeight, nil, nil, testPortID, testChannelID, testSequence,
+		suite.store, suite.cdc, clientHeight, 0, 0, nil, nil, testPortID, testChannelID, testSequence,
 	)
 
 	suite.Require().NoError(err, "receipt absence failed")
@@ -419,7 +452,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketReceiptAbsence() {
 	suite.store.Set(host.PacketReceiptKey(testPortID, testChannelID, testSequence), []byte("receipt"))
 
 	err = clientState.VerifyPacketReceiptAbsence(
-		suite.store, suite.cdc, clientHeight, nil, nil, testPortID, testChannelID, testSequence,
+		suite.store, suite.cdc, clientHeight, 0, 0, nil, nil, testPortID, testChannelID, testSequence,
 	)
 	suite.Require().Error(err, "receipt exists in store")
 }
@@ -475,7 +508,7 @@ func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 			tc.malleate()
 
 			err := tc.clientState.VerifyNextSequenceRecv(
-				suite.store, suite.cdc, clientHeight, nil, []byte{}, testPortID, testChannelID, nextSeqRecv,
+				suite.store, suite.cdc, clientHeight, 0, 0, nil, []byte{}, testPortID, testChannelID, nextSeqRecv,
 			)
 
 			if tc.expPass {

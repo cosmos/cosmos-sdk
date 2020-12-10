@@ -26,11 +26,12 @@ func TestValidateGenesis(t *testing.T) {
 			name: "valid genesis",
 			genState: types.NewGenesisState(
 				[]types.IdentifiedConnection{
-					types.NewIdentifiedConnection(connectionID, types.NewConnectionEnd(types.INIT, clientID, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []*types.Version{ibctesting.ConnectionVersion})),
+					types.NewIdentifiedConnection(connectionID, types.NewConnectionEnd(types.INIT, clientID, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []*types.Version{ibctesting.ConnectionVersion}, 500)),
 				},
 				[]types.ConnectionPaths{
 					{clientID, []string{connectionID}},
 				},
+				0,
 			),
 			expPass: true,
 		},
@@ -38,11 +39,12 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid connection",
 			genState: types.NewGenesisState(
 				[]types.IdentifiedConnection{
-					types.NewIdentifiedConnection(connectionID, types.NewConnectionEnd(types.INIT, "(CLIENTIDONE)", types.Counterparty{clientID, connectionID, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []*types.Version{ibctesting.ConnectionVersion})),
+					types.NewIdentifiedConnection(connectionID, types.NewConnectionEnd(types.INIT, "(CLIENTIDONE)", types.Counterparty{clientID, connectionID, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []*types.Version{ibctesting.ConnectionVersion}, 500)),
 				},
 				[]types.ConnectionPaths{
 					{clientID, []string{connectionID}},
 				},
+				0,
 			),
 			expPass: false,
 		},
@@ -50,11 +52,12 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid client id",
 			genState: types.NewGenesisState(
 				[]types.IdentifiedConnection{
-					types.NewIdentifiedConnection(connectionID, types.NewConnectionEnd(types.INIT, clientID, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []*types.Version{ibctesting.ConnectionVersion})),
+					types.NewIdentifiedConnection(connectionID, types.NewConnectionEnd(types.INIT, clientID, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []*types.Version{ibctesting.ConnectionVersion}, 500)),
 				},
 				[]types.ConnectionPaths{
 					{"(CLIENTIDONE)", []string{connectionID}},
 				},
+				0,
 			),
 			expPass: false,
 		},
@@ -62,11 +65,38 @@ func TestValidateGenesis(t *testing.T) {
 			name: "invalid path",
 			genState: types.NewGenesisState(
 				[]types.IdentifiedConnection{
-					types.NewIdentifiedConnection(connectionID, types.NewConnectionEnd(types.INIT, clientID, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []*types.Version{ibctesting.ConnectionVersion})),
+					types.NewIdentifiedConnection(connectionID, types.NewConnectionEnd(types.INIT, clientID, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []*types.Version{ibctesting.ConnectionVersion}, 500)),
 				},
 				[]types.ConnectionPaths{
 					{clientID, []string{invalidConnectionID}},
 				},
+				0,
+			),
+			expPass: false,
+		},
+		{
+			name: "invalid connection identifier",
+			genState: types.NewGenesisState(
+				[]types.IdentifiedConnection{
+					types.NewIdentifiedConnection("conn-0", types.NewConnectionEnd(types.INIT, clientID, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []*types.Version{ibctesting.ConnectionVersion}, 500)),
+				},
+				[]types.ConnectionPaths{
+					{clientID, []string{connectionID}},
+				},
+				0,
+			),
+			expPass: false,
+		},
+		{
+			name: "next connection sequence is not greater than maximum connection identifier sequence provided",
+			genState: types.NewGenesisState(
+				[]types.IdentifiedConnection{
+					types.NewIdentifiedConnection(types.FormatConnectionIdentifier(10), types.NewConnectionEnd(types.INIT, clientID, types.Counterparty{clientID2, connectionID2, commitmenttypes.NewMerklePrefix([]byte("prefix"))}, []*types.Version{ibctesting.ConnectionVersion}, 500)),
+				},
+				[]types.ConnectionPaths{
+					{clientID, []string{connectionID}},
+				},
+				0,
 			),
 			expPass: false,
 		},

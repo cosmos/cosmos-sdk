@@ -18,7 +18,7 @@ import (
 var (
 	ChainIDPrefix   = "testchain"
 	globalStartTime = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
-	timeIncrement   = time.Second * 5
+	TimeIncrement   = time.Second * 5
 )
 
 // Coordinator is a testing struct which contains N TestChain's. It handles keeping all chains
@@ -95,7 +95,7 @@ func (coord *Coordinator) CreateClient(
 ) (clientID string, err error) {
 	coord.CommitBlock(source, counterparty)
 
-	clientID = source.NewClientID(counterparty.ChainID)
+	clientID = source.NewClientID(clientType)
 
 	switch clientType {
 	case exported.Tendermint:
@@ -241,6 +241,10 @@ func (coord *Coordinator) RecvPacket(
 	packetKey := host.PacketCommitmentKey(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 	proof, proofHeight := source.QueryProof(packetKey)
 
+	// Increment time and commit block so that 5 second delay period passes between send and receive
+	coord.IncrementTime()
+	coord.CommitBlock(source, counterparty)
+
 	recvMsg := channeltypes.NewMsgRecvPacket(packet, proof, proofHeight, counterparty.SenderAccount.GetAddress())
 
 	// receive on counterparty and update source client
@@ -280,6 +284,10 @@ func (coord *Coordinator) AcknowledgePacket(
 	packetKey := host.PacketAcknowledgementKey(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 	proof, proofHeight := counterparty.QueryProof(packetKey)
 
+	// Increment time and commit block so that 5 second delay period passes between send and receive
+	coord.IncrementTime()
+	coord.CommitBlock(source, counterparty)
+
 	ackMsg := channeltypes.NewMsgAcknowledgement(packet, ack, proof, proofHeight, source.SenderAccount.GetAddress())
 	return coord.SendMsgs(source, counterparty, counterpartyClient, []sdk.Msg{ackMsg})
 }
@@ -291,9 +299,17 @@ func (coord *Coordinator) RelayPacket(
 	sourceClient, counterpartyClient string,
 	packet channeltypes.Packet, ack []byte,
 ) error {
+	// Increment time and commit block so that 5 second delay period passes between send and receive
+	coord.IncrementTime()
+	coord.CommitBlock(counterparty)
+
 	if err := coord.RecvPacket(source, counterparty, sourceClient, packet); err != nil {
 		return err
 	}
+
+	// Increment time and commit block so that 5 second delay period passes between send and receive
+	coord.IncrementTime()
+	coord.CommitBlock(source)
 
 	return coord.AcknowledgePacket(source, counterparty, counterpartyClient, packet, ack)
 }
@@ -304,7 +320,16 @@ func (coord *Coordinator) RelayPacket(
 // CONTRACT: this function must be called after every commit on any TestChain.
 func (coord *Coordinator) IncrementTime() {
 	for _, chain := range coord.Chains {
-		chain.CurrentHeader.Time = chain.CurrentHeader.Time.Add(timeIncrement)
+		chain.CurrentHeader.Time = chain.CurrentHeader.Time.Add(TimeIncrement)
+		chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})
+	}
+}
+
+// IncrementTimeBy iterates through all the TestChain's and increments their current header time
+// by specified time.
+func (coord *Coordinator) IncrementTimeBy(increment time.Duration) {
+	for _, chain := range coord.Chains {
+		chain.CurrentHeader.Time = chain.CurrentHeader.Time.Add(increment)
 		chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})
 	}
 }
@@ -394,6 +419,46 @@ func (coord *Coordinator) ConnOpenInit(
 	return sourceConnection, counterpartyConnection, nil
 }
 
+// ConnOpenInitOnBothChains initializes a connection on the source chain with the state INIT
+// using the OpenInit handshake call.
+func (coord *Coordinator) ConnOpenInitOnBothChains(
+	source, counterparty *TestChain,
+	clientID, counterpartyClientID string,
+) (*TestConnection, *TestConnection, error) {
+	sourceConnection := source.AddTestConnection(clientID, counterpartyClientID)
+	counterpartyConnection := counterparty.AddTestConnection(counterpartyClientID, clientID)
+
+	// initialize connection on source
+	if err := source.ConnectionOpenInit(counterparty, sourceConnection, counterpartyConnection); err != nil {
+		return sourceConnection, counterpartyConnection, err
+	}
+	coord.IncrementTime()
+
+	// initialize connection on counterparty
+	if err := counterparty.ConnectionOpenInit(source, counterpartyConnection, sourceConnection); err != nil {
+		return sourceConnection, counterpartyConnection, err
+	}
+	coord.IncrementTime()
+
+	// update counterparty client on source connection
+	if err := coord.UpdateClient(
+		source, counterparty,
+		clientID, exported.Tendermint,
+	); err != nil {
+		return sourceConnection, counterpartyConnection, err
+	}
+
+	// update source client on counterparty connection
+	if err := coord.UpdateClient(
+		counterparty, source,
+		counterpartyClientID, exported.Tendermint,
+	); err != nil {
+		return sourceConnection, counterpartyConnection, err
+	}
+
+	return sourceConnection, counterpartyConnection, nil
+}
+
 // ConnOpenTry initializes a connection on the source chain with the state TRYOPEN
 // using the OpenTry handshake call.
 func (coord *Coordinator) ConnOpenTry(
@@ -461,8 +526,8 @@ func (coord *Coordinator) ChanOpenInit(
 	sourcePortID, counterpartyPortID string,
 	order channeltypes.Order,
 ) (TestChannel, TestChannel, error) {
-	sourceChannel := connection.AddTestChannel(sourcePortID)
-	counterpartyChannel := counterpartyConnection.AddTestChannel(counterpartyPortID)
+	sourceChannel := source.AddTestChannel(connection, sourcePortID)
+	counterpartyChannel := counterparty.AddTestChannel(counterpartyConnection, counterpartyPortID)
 
 	// NOTE: only creation of a capability for a transfer or mock port is supported
 	// Other applications must bind to the port in InitGenesis or modify this code.
@@ -494,8 +559,8 @@ func (coord *Coordinator) ChanOpenInitOnBothChains(
 	sourcePortID, counterpartyPortID string,
 	order channeltypes.Order,
 ) (TestChannel, TestChannel, error) {
-	sourceChannel := connection.AddTestChannel(sourcePortID)
-	counterpartyChannel := counterpartyConnection.AddTestChannel(counterpartyPortID)
+	sourceChannel := source.AddTestChannel(connection, sourcePortID)
+	counterpartyChannel := counterparty.AddTestChannel(counterpartyConnection, counterpartyPortID)
 
 	// NOTE: only creation of a capability for a transfer or mock port is supported
 	// Other applications must bind to the port in InitGenesis or modify this code.

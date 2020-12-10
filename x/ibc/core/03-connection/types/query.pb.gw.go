@@ -251,26 +251,26 @@ func request_Query_ConnectionConsensusState_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "connection_id", err)
 	}
 
-	val, ok = pathParams["version_number"]
+	val, ok = pathParams["revision_number"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version_number")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision_number")
 	}
 
-	protoReq.VersionNumber, err = runtime.Uint64(val)
+	protoReq.RevisionNumber, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version_number", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision_number", err)
 	}
 
-	val, ok = pathParams["version_height"]
+	val, ok = pathParams["revision_height"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version_height")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision_height")
 	}
 
-	protoReq.VersionHeight, err = runtime.Uint64(val)
+	protoReq.RevisionHeight, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version_height", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision_height", err)
 	}
 
 	msg, err := client.ConnectionConsensusState(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -300,26 +300,26 @@ func local_request_Query_ConnectionConsensusState_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "connection_id", err)
 	}
 
-	val, ok = pathParams["version_number"]
+	val, ok = pathParams["revision_number"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version_number")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision_number")
 	}
 
-	protoReq.VersionNumber, err = runtime.Uint64(val)
+	protoReq.RevisionNumber, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version_number", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision_number", err)
 	}
 
-	val, ok = pathParams["version_height"]
+	val, ok = pathParams["revision_height"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version_height")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision_height")
 	}
 
-	protoReq.VersionHeight, err = runtime.Uint64(val)
+	protoReq.RevisionHeight, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version_height", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision_height", err)
 	}
 
 	msg, err := server.ConnectionConsensusState(ctx, &protoReq)
@@ -586,7 +586,7 @@ var (
 
 	pattern_Query_ConnectionClientState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"ibc", "core", "connection", "v1beta1", "connections", "connection_id", "client_state"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ConnectionConsensusState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9, 1, 0, 4, 1, 5, 10}, []string{"ibc", "core", "connection", "v1beta1", "connections", "connection_id", "consensus_state", "version", "version_number", "height", "version_height"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ConnectionConsensusState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9, 1, 0, 4, 1, 5, 10}, []string{"ibc", "core", "connection", "v1beta1", "connections", "connection_id", "consensus_state", "revision", "revision_number", "height", "revision_height"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

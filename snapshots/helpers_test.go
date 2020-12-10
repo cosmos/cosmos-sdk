@@ -6,7 +6,6 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
-	"os"
 	"testing"
 	"time"
 
@@ -102,9 +101,8 @@ func (m *mockSnapshotter) Snapshot(height uint64, format uint32) (<-chan io.Read
 
 // setupBusyManager creates a manager with an empty store that is busy creating a snapshot at height 1.
 // The snapshot will complete when the returned closer is called.
-func setupBusyManager(t *testing.T) (*snapshots.Manager, func()) {
-	tempdir, err := ioutil.TempDir("", "")
-	require.NoError(t, err)
+func setupBusyManager(t *testing.T) *snapshots.Manager {
+	tempdir := t.TempDir()
 	store, err := snapshots.NewStore(db.NewMemDB(), tempdir)
 	require.NoError(t, err)
 	hung := newHungSnapshotter()
@@ -115,12 +113,9 @@ func setupBusyManager(t *testing.T) (*snapshots.Manager, func()) {
 		require.NoError(t, err)
 	}()
 	time.Sleep(10 * time.Millisecond)
+	t.Cleanup(hung.Close)
 
-	closer := func() {
-		hung.Close()
-		os.RemoveAll(tempdir)
-	}
-	return mgr, closer
+	return mgr
 }
 
 // hungSnapshotter can be used to test operations in progress. Call close to end the snapshot.

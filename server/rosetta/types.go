@@ -88,6 +88,8 @@ type NodeClient interface {
 	PostTx(txBytes []byte) (res *sdk.TxResponse, err error)
 }
 
+// Msg interface is the interface that Cosmos SDK messages should implement if they want to
+// be supported by the Rosetta service.
 type Msg interface {
 	ToOperations(withStatus bool, hasError bool) []*types.Operation
 }

@@ -268,7 +268,7 @@ func (msg MsgDelegate) ToOperations(withStatus bool, hasError bool) []*rosettaty
 			OperationIdentifier: &rosettatypes.OperationIdentifier{
 				Index: int64(index),
 			},
-			Type:   rosetta.OperationDelegate,
+			Type:   TypeMsgDelegate,
 			Status: status,
 			Account: &rosettatypes.AccountIdentifier{
 				Address: account,

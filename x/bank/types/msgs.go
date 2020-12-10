@@ -15,7 +15,6 @@ const (
 )
 
 var _ sdk.Msg = &MsgSend{}
-var _ rosetta.Msg = &MsgSend{}
 
 // NewMsgSend - construct a msg to send coins from one account to another.
 //nolint:interfacer
@@ -90,7 +89,7 @@ func (msg *MsgSend) ToOperations(withStatus bool, hasError bool) []*types.Operat
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: int64(index),
 			},
-			Type:   rosetta.OperationSend,
+			Type:   TypeMsgSend,
 			Status: status,
 			Account: &types.AccountIdentifier{
 				Address: account,

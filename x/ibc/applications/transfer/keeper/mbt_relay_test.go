@@ -1,5 +1,11 @@
 package keeper_test
 
+
+/// This file is a test driver for model-based tests generated from the TLA+ model of token transfer
+/// Written by Andrey Kuprianov within the scope of IBC Audit performed by Informal Systems.
+/// In case of any questions please don't hesitate to contact andrey@informal.systems.
+
+
 import (
 	"encoding/json"
 	"fmt"

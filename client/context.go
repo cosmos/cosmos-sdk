@@ -39,6 +39,7 @@ type Context struct {
 	Simulate          bool
 	GenerateOnly      bool
 	Offline           bool
+	SignModeStr       string
 	SkipConfirm       bool
 	TxConfig          TxConfig
 	AccountRetriever  AccountRetriever
@@ -172,6 +173,13 @@ func (ctx Context) WithBroadcastMode(mode string) Context {
 	return ctx
 }
 
+// WithSignModeStr returns a copy of the context with an updated SignMode
+// value.
+func (ctx Context) WithSignModeStr(signModeStr string) Context {
+	ctx.SignModeStr = signModeStr
+	return ctx
+}
+
 // WithSkipConfirmation returns a copy of the context with an updated SkipConfirm
 // value.
 func (ctx Context) WithSkipConfirmation(skip bool) Context {
@@ -268,37 +276,37 @@ func (ctx Context) printOutput(out []byte) error {
 	return nil
 }
 
-// GetFromFields returns a from account address and Keybase name given either
+// GetFromFields returns a from account address and keyring info given either
 // an address or key name. If genOnly is true, only a valid Bech32 cosmos
 // address is returned.
-func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddress, string, error) {
+func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddress, keyring.Info, error) {
 	if from == "" {
-		return nil, "", nil
+		return nil, nil, nil
 	}
 
 	if genOnly {
 		addr, err := sdk.AccAddressFromBech32(from)
 		if err != nil {
-			return nil, "", errors.Wrap(err, "must provide a valid Bech32 address in generate-only mode")
+			return nil, nil, errors.Wrap(err, "must provide a valid Bech32 address in generate-only mode")
 		}
 
-		return addr, "", nil
+		return addr, nil, nil
 	}
 
 	var info keyring.Info
 	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
 		info, err = kr.KeyByAddress(addr)
 		if err != nil {
-			return nil, "", err
+			return nil, nil, err
 		}
 	} else {
 		info, err = kr.Key(from)
 		if err != nil {
-			return nil, "", err
+			return nil, nil, err
 		}
 	}
 
-	return info.GetAddress(), info.GetName(), nil
+	return info.GetAddress(), info, nil
 }
 
 func newKeyringFromFlags(ctx Context, backend string) (keyring.Keyring, error) {

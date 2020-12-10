@@ -35,11 +35,11 @@ type Context struct {
 	From              string
 	BroadcastMode     string
 	FromName          string
+	SignModeStr       string
 	UseLedger         bool
 	Simulate          bool
 	GenerateOnly      bool
 	Offline           bool
-	SignModeStr       string
 	SkipConfirm       bool
 	TxConfig          TxConfig
 	AccountRetriever  AccountRetriever

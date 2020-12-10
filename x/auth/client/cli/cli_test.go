@@ -30,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
@@ -192,11 +193,15 @@ func (s *IntegrationTestSuite) TestCLISign() {
 
 	/****  test flagAmino  ****/
 	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
-		sigOnlyFlag, "--amino=true")
+		"--amino=true")
 	require.NoError(err)
-	err = json.Unmarshal(res.Bytes(), &txOut)
+
+	var txAmino authrest.BroadcastReq
+	err = val1.ClientCtx.LegacyAmino.UnmarshalJSON(res.Bytes(), &txAmino)
 	require.NoError(err)
-	require.Len(txOut.Signatures, 1)
+	require.Len(txAmino.Tx.Signatures, 2)
+	require.Equal(txAmino.Tx.Signatures[0].PubKey, valInfo.GetPubKey())
+	require.Equal(txAmino.Tx.Signatures[1].PubKey, valInfo.GetPubKey())
 }
 
 func checkSignatures(require *require.Assertions, txCfg client.TxConfig, output []byte, pks ...cryptotypes.PubKey) {

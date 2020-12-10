@@ -32,7 +32,7 @@ The command processes list of transactions from file (one StdTx each line), gene
 signed transactions or signatures and print their JSON encoding, delimited by '\n'.
 As the signatures are generated, the command updates the account sequence number accordingly.
 
-If the --signature-only flag is set, it will output the signatures part only.
+If the --signature-only flag is set, it will output the signature parts only.
 
 The --offline flag makes sure that the client will not reach out to full node.
 As a result, the account and the sequence number queries will not be performed and
@@ -166,7 +166,7 @@ func GetSignCommand() *cobra.Command {
 		Long: `Sign a transaction created with the --generate-only flag.
 It will read a transaction from [file], sign it, and print its JSON encoding.
 
-If the --signature-only flag is set, it will output the signatures part only.
+If the --signature-only flag is set, it will output the signature parts only.
 
 The --offline flag makes sure that the client will not reach out to full node.
 As a result, the account and sequence number queries will not be performed and

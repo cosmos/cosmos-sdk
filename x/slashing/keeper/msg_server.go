@@ -15,7 +15,10 @@ type msgServer struct {
 // NewMsgServerImpl returns an implementation of the slashing MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(keeper Keeper, stakingKeeper types.StakingKeeper) types.MsgServer {
-	return &msgServer{Keeper: keeper}
+	return &msgServer{
+		Keeper:        keeper,
+		stakingKeeper: stakingKeeper,
+	}
 }
 
 var _ types.MsgServer = msgServer{}

@@ -69,6 +69,7 @@ func TestMigrate(t *testing.T) {
 	// cosmosvalcons10e4c5p6qk0sycy9u6u43t7csmlx9fyadr9yxph
 	// (in alphabetic order, basically).
 	expected := `{
+  "buffered_msgs": [],
   "missed_blocks": [
     {
       "address": "cosmosvalcons104cjmxkrg8y8lmrp25de02e4zf00zle4mzs685",

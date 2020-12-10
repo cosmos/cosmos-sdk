@@ -66,13 +66,15 @@ type NodeClient interface {
 	// Balances fetches the balance of the given address
 	// if height is not nil, then the balance will be displayed
 	// at the provided height, otherwise last block balance will be returned
-	Balances(ctx context.Context, addr string, height *int64) ([]sdk.Coin, error)
+	Balances(ctx context.Context, addr string, height *int64) ([]*types.Amount, error)
 	// BlockByHash gets a block and its transaction at the provided height
 	BlockByHash(ctx context.Context, hash string) (*tmtypes.ResultBlock, []*SdkTxWithHash, error)
+	// BlockByHashAlt gets a block and its transaction at the provided height
+	BlockByHashAlt(ctx context.Context, hash string) (BlockResponse, error)
+	// BlockByHeightAlt gets a block given its height, if height is nil then last block is returned
+	BlockByHeightAlt(ctx context.Context, height *int64) (BlockResponse, error)
 	// BlockByHeight gets a block given its height, if height is nil then last block is returned
 	BlockByHeight(ctx context.Context, height *int64) (*tmtypes.ResultBlock, []*SdkTxWithHash, error)
-	// Coins gets the supply of the coins active in the network
-	Coins(ctx context.Context) (sdk.Coins, error)
 	// GetTx gets a transaction given its hash
 	GetTx(ctx context.Context, hash string) (*SdkTxWithHash, string, error)
 	// GetUnconfirmedTx gets an unconfirmed Tx given its hash
@@ -86,6 +88,13 @@ type NodeClient interface {
 	Status(ctx context.Context) (*tmtypes.ResultStatus, error)
 	GetTxConfig() client.TxConfig
 	PostTx(txBytes []byte) (res *sdk.TxResponse, err error)
+}
+
+type BlockResponse struct {
+	Block                *types.BlockIdentifier
+	ParentBlock          *types.BlockIdentifier
+	MillisecondTimestamp int64
+	TxCount              int64
 }
 
 // Msg interface is the interface that Cosmos SDK messages should implement if they want to

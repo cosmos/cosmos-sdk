@@ -6,6 +6,10 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/conversion"
+
+	"github.com/coinbase/rosetta-sdk-go/types"
+
 	"google.golang.org/grpc/metadata"
 
 	"github.com/tendermint/tendermint/rpc/client/http"
@@ -131,18 +135,25 @@ func (c *Client) AccountInfo(ctx context.Context, addr string, height *int64) (a
 	return account, nil
 }
 
-func (c *Client) Balances(ctx context.Context, addr string, height *int64) ([]sdk.Coin, error) {
+func (c *Client) Balances(ctx context.Context, addr string, height *int64) ([]*types.Amount, error) {
 	if height != nil {
 		strHeight := strconv.FormatInt(*height, 10)
 		ctx = metadata.AppendToOutgoingContext(ctx, grpctypes.GRPCBlockHeightHeader, strHeight)
 	}
+
 	balance, err := c.bank.AllBalances(ctx, &bank.QueryAllBalancesRequest{
 		Address: addr,
 	})
 	if err != nil {
 		return nil, rosetta.FromGRPCToRosettaError(err)
 	}
-	return balance.Balances, nil
+
+	availableCoins, err := c.coins(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return conversion.SdkCoinsToRosettaAmounts(balance.Balances, availableCoins), nil
 }
 
 // BlockByHash returns the block and the transactions contained in it given its height
@@ -177,8 +188,41 @@ func (c *Client) BlockByHeight(ctx context.Context, height *int64) (*tmtypes.Res
 	return block, txs, err
 }
 
+func (c *Client) BlockByHashAlt(ctx context.Context, hash string) (rosetta.BlockResponse, error) {
+	bHash, err := hex.DecodeString(hash)
+	if err != nil {
+		return rosetta.BlockResponse{}, fmt.Errorf("invalid block hash: %s", err)
+	}
+
+	block, err := c.clientCtx.Client.BlockByHash(ctx, bHash)
+	if err != nil {
+		return rosetta.BlockResponse{}, err
+	}
+
+	return rosetta.BlockResponse{
+		Block:                conversion.TMBlockToRosettaBlockIdentifier(block),
+		ParentBlock:          nil,
+		MillisecondTimestamp: 0,
+		TxCount:              0,
+	}, nil
+}
+
+func (c *Client) BlockByHeightAlt(ctx context.Context, height *int64) (rosetta.BlockResponse, error) {
+	block, err := c.clientCtx.Client.Block(ctx, height)
+	if err != nil {
+		return rosetta.BlockResponse{}, err
+	}
+
+	return rosetta.BlockResponse{
+		Block:                conversion.TMBlockToRosettaBlockIdentifier(block),
+		ParentBlock:          nil,
+		MillisecondTimestamp: 0,
+		TxCount:              0,
+	}, nil
+}
+
 // Coins fetches the existing coins in the application
-func (c *Client) Coins(ctx context.Context) (sdk.Coins, error) {
+func (c *Client) coins(ctx context.Context) (sdk.Coins, error) {
 	supply, err := c.bank.TotalSupply(ctx, &bank.QueryTotalSupplyRequest{})
 	if err != nil {
 		return nil, rosetta.FromGRPCToRosettaError(err)

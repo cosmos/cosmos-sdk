@@ -16,8 +16,8 @@ import (
 // genesisBlockFetchTimeout defines a timeout to fetch the genesis block
 const genesisBlockFetchTimeout = 15 * time.Second
 
-// NewSingleNetwork builds a single network client
-// the client will attempt to fetch genesis block too
+// NewSingleNetwork builds a single network adapter.
+// It will get the Genesis block on the beginning to avoid calling it everytime.
 func NewSingleNetwork(client rosetta.NodeClient, network *types.NetworkIdentifier) (crg.Adapter, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), genesisBlockFetchTimeout)
 	defer cancel()
@@ -50,45 +50,39 @@ type OnlineNetwork struct {
 // rosetta requires us to fetch the block information too
 func (on OnlineNetwork) AccountBalance(ctx context.Context, request *types.AccountBalanceRequest) (*types.AccountBalanceResponse, *types.Error) {
 	var (
-		height *int64
-		block  *tmtypes.ResultBlock
+		height int64
+		block  rosetta.BlockResponse
 		err    error
 	)
 
 	switch {
 	case request.BlockIdentifier == nil:
-		height = nil
-		block, _, err = on.client.BlockByHeight(ctx, nil)
+		block, err = on.client.BlockByHeightAlt(ctx, nil)
 		if err != nil {
 			return nil, rosetta.ToRosettaError(err)
 		}
 	case request.BlockIdentifier.Hash != nil:
-		block, _, err = on.client.BlockByHash(ctx, *request.BlockIdentifier.Hash)
+		block, err = on.client.BlockByHashAlt(ctx, *request.BlockIdentifier.Hash)
 		if err != nil {
 			return nil, rosetta.ToRosettaError(err)
 		}
-		height = &block.Block.Height
+		height = block.Block.Index
 	case request.BlockIdentifier.Index != nil:
-		height = request.BlockIdentifier.Index
-		block, _, err = on.client.BlockByHeight(ctx, height)
+		height = *request.BlockIdentifier.Index
+		block, err = on.client.BlockByHeightAlt(ctx, &height)
 		if err != nil {
 			return nil, rosetta.ToRosettaError(err)
 		}
 	}
 
-	accountCoins, err := on.client.Balances(ctx, request.AccountIdentifier.Address, height)
-	if err != nil {
-		return nil, rosetta.ToRosettaError(err)
-	}
-
-	availableCoins, err := on.client.Coins(ctx)
+	accountCoins, err := on.client.Balances(ctx, request.AccountIdentifier.Address, &height)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
 
 	return &types.AccountBalanceResponse{
-		BlockIdentifier: conversion.TMBlockToRosettaBlockIdentifier(block),
-		Balances:        conversion.SdkCoinsToRosettaAmounts(accountCoins, availableCoins),
+		BlockIdentifier: block.Block,
+		Balances:        accountCoins,
 		Coins:           nil,
 		Metadata:        nil,
 	}, nil

@@ -1039,7 +1039,18 @@ func (s *IntegrationTestSuite) TestSignWithMultiSigners() {
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))))
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
 	// Set signer_infos for both signers. Note: we use the empty signature hack.
-	// TODO
+	txBuilder.SetSignatures(
+		signing.SignatureV2{
+			PubKey:   val0.PubKey,
+			Data:     &signing.SingleSignatureData{SignMode: signing.SignMode_SIGN_MODE_DIRECT},
+			Sequence: 45, // TODO Replace with real seq, this should fail in antehandler
+		},
+		signing.SignatureV2{
+			PubKey:   val1.PubKey,
+			Data:     &signing.SingleSignatureData{SignMode: signing.SignMode_SIGN_MODE_DIRECT},
+			Sequence: 67, // TODO Replace with real seq, this should fail in antehandler
+		},
+	)
 	s.Require().Equal([]sdk.AccAddress{val0.Address, val1.Address}, txBuilder.GetTx().GetSigners())
 
 	// Write the unsigned tx into a file.
@@ -1047,25 +1058,40 @@ func (s *IntegrationTestSuite) TestSignWithMultiSigners() {
 	s.Require().NoError(err)
 	unsignedTxFile := testutil.WriteToNewTempFile(s.T(), string(txJSON))
 
+	// TODO Remove println
+	fmt.Println("== unsigned ==")
+	fmt.Println(string(txJSON))
+
 	// Let val0 sign first the file with the unsignedTx.
-	signedByVal0, err := authtest.TxSignExec(val0.ClientCtx, val0.Address, unsignedTxFile.Name(), "--overwrite")
+	signedByVal0, err := authtest.TxSignExec(val0.ClientCtx, val0.Address, unsignedTxFile.Name(), "--overwrite", fmt.Sprintf("--%s=direct", flags.FlagSignMode))
 	s.Require().NoError(err)
 	signedByVal0File := testutil.WriteToNewTempFile(s.T(), signedByVal0.String())
+
+	// TODO Remove println
+	fmt.Println("== signed by val0 ==")
+	fmt.Println(signedByVal0.String())
 
 	// Then let val1 sign the file with signedByVal0.
 	val1AccNum, val1Seq, err := val0.ClientCtx.AccountRetriever.GetAccountNumberSequence(val0.ClientCtx, val1.Address)
 	s.Require().NoError(err)
 	signedTx, err := authtest.TxSignExec(
 		val1.ClientCtx, val1.Address, signedByVal0File.Name(),
-		"--offline", fmt.Sprintf("--account-number=%d", val1AccNum), fmt.Sprintf("--sequence=%d", val1Seq))
+		"--offline", fmt.Sprintf("--account-number=%d", val1AccNum), fmt.Sprintf("--sequence=%d", val1Seq), fmt.Sprintf("--%s=direct", flags.FlagSignMode),
+	)
 	s.Require().NoError(err)
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx.String())
+
+	// TODO Remove println
+	fmt.Println("== signed by val0 and va1 ==")
+	fmt.Println(signedTx.String())
 
 	// Now let's try to send this tx.
 	res, err := authtest.TxBroadcastExec(val0.ClientCtx, signedTxFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock))
 	s.Require().NoError(err)
 	var txRes sdk.TxResponse
 	s.Require().NoError(val0.ClientCtx.JSONMarshaler.UnmarshalJSON(res.Bytes(), &txRes))
+	// TODO Remove println
+	fmt.Println(txRes)
 	s.Require().Equal(uint32(0), txRes.Code)
 
 	// Make sure the addr1's balance got funded.

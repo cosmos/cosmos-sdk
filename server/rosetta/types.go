@@ -90,6 +90,8 @@ type NodeClient interface {
 	Status(ctx context.Context) (*tmtypes.ResultStatus, error)
 	GetTxConfig() client.TxConfig
 	PostTx(txBytes []byte) (res *sdk.TxResponse, err error)
+
+	SignedTx(ctx context.Context, txBytes []byte, sigs []*types.Signature) (signedTxBytes []byte, err error)
 }
 
 type BlockTransactionsResponse struct {

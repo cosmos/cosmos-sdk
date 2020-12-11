@@ -6,6 +6,11 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/btcsuite/btcd/btcec"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+
 	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/conversion"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -304,4 +309,56 @@ func (c *Client) GetTxConfig() client.TxConfig {
 
 func (c *Client) PostTx(txBytes []byte) (res *sdk.TxResponse, err error) {
 	return c.clientCtx.BroadcastTx(txBytes)
+}
+
+func (c *Client) SignedTx(ctx context.Context, txBytes []byte, signatures []*types.Signature) (signedTxBytes []byte, err error) {
+	TxConfig := c.GetTxConfig()
+	rawTx, err := TxConfig.TxDecoder()(txBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	txBldr, _ := TxConfig.WrapTxBuilder(rawTx)
+
+	var sigs = make([]signing.SignatureV2, len(signatures))
+	for i, signature := range signatures {
+		if signature.PublicKey.CurveType != "secp256k1" {
+			return nil, rosetta.ErrUnsupportedCurve
+		}
+
+		cmp, err := btcec.ParsePubKey(signature.PublicKey.Bytes, btcec.S256())
+		if err != nil {
+			return nil, err
+		}
+
+		compressedPublicKey := make([]byte, secp256k1.PubKeySize)
+		copy(compressedPublicKey, cmp.SerializeCompressed())
+		pubKey := &secp256k1.PubKey{Key: compressedPublicKey}
+
+		accountInfo, err := c.AccountInfo(ctx, sdk.AccAddress(pubKey.Address()).String(), nil)
+		if err != nil {
+			return nil, err
+		}
+
+		sig := signing.SignatureV2{
+			PubKey: pubKey,
+			Data: &signing.SingleSignatureData{
+				SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+				Signature: signature.Bytes,
+			},
+			Sequence: accountInfo.GetSequence(),
+		}
+		sigs[i] = sig
+	}
+
+	if err = txBldr.SetSignatures(sigs...); err != nil {
+		return nil, err
+	}
+
+	txBytes, err = c.GetTxConfig().TxEncoder()(txBldr.GetTx())
+	if err != nil {
+		return nil, err
+	}
+
+	return txBytes, nil
 }

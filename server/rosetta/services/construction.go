@@ -26,53 +26,18 @@ import (
 var _ crg.ConstructionAPI = OnlineNetwork{}
 
 func (on OnlineNetwork) ConstructionCombine(ctx context.Context, request *types.ConstructionCombineRequest) (*types.ConstructionCombineResponse, *types.Error) {
-	txBldr, err := on.getTxBuilderFromBytesTx(request.UnsignedTransaction)
+	txBytes, err := hex.DecodeString(request.UnsignedTransaction)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
 
-	var sigs = make([]signing.SignatureV2, len(request.Signatures))
-	for i, signature := range request.Signatures {
-		if signature.PublicKey.CurveType != "secp256k1" {
-			return nil, rosetta.ErrUnsupportedCurve.RosettaError()
-		}
-
-		cmp, err := btcec.ParsePubKey(signature.PublicKey.Bytes, btcec.S256())
-		if err != nil {
-			return nil, rosetta.ToRosettaError(err)
-		}
-
-		compressedPublicKey := make([]byte, secp256k1.PubKeySize)
-		copy(compressedPublicKey, cmp.SerializeCompressed())
-		pubKey := &secp256k1.PubKey{Key: compressedPublicKey}
-
-		accountInfo, err := on.client.AccountInfo(ctx, sdk.AccAddress(pubKey.Address()).String(), nil)
-		if err != nil {
-			return nil, rosetta.ToRosettaError(err)
-		}
-
-		sig := signing.SignatureV2{
-			PubKey: pubKey,
-			Data: &signing.SingleSignatureData{
-				SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-				Signature: signature.Bytes,
-			},
-			Sequence: accountInfo.GetSequence(),
-		}
-		sigs[i] = sig
-	}
-
-	if err = txBldr.SetSignatures(sigs...); err != nil {
-		return nil, rosetta.ToRosettaError(err)
-	}
-
-	txBytes, err := on.client.GetTxConfig().TxEncoder()(txBldr.GetTx())
+	signedTx, err := on.client.SignedTx(ctx, txBytes, request.Signatures)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
 
 	return &types.ConstructionCombineResponse{
-		SignedTransaction: hex.EncodeToString(txBytes),
+		SignedTransaction: hex.EncodeToString(signedTx),
 	}, nil
 }
 

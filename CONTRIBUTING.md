@@ -218,7 +218,7 @@ only pull requests targeted directly against master.
 ### Development Procedure
 
 - the latest state of development is on `master`
-- `master` must never fail `make test`
+- `master` must never fail `make lint test test-race`
 - `master` should not fail `make lint`
 - no `--force` onto `master` (except when reverting a broken commit, which should seldom happen)
 - create a development branch either on github.com/cosmos/cosmos-sdk, or your fork (using `git remote add origin`)

@@ -272,12 +272,13 @@ func (c *Client) GetUnconfirmedTx(_ context.Context, _ string) (*types.Transacti
 }
 
 // Mempool returns the unconfirmed transactions in the mempool
-func (c *Client) Mempool(ctx context.Context) (*tmtypes.ResultUnconfirmedTxs, error) {
+func (c *Client) Mempool(ctx context.Context) ([]*types.TransactionIdentifier, error) {
 	txs, err := c.clientCtx.Client.UnconfirmedTxs(ctx, nil)
 	if err != nil {
-		return nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
+		return nil, err
 	}
-	return txs, nil
+
+	return conversion.TMTxsToRosettaTxsIdentifiers(txs.Txs), nil
 }
 
 // Peers gets the number of peers

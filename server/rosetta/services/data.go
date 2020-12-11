@@ -142,7 +142,7 @@ func (on OnlineNetwork) Mempool(ctx context.Context, _ *types.NetworkRequest) (*
 	}
 
 	return &types.MempoolResponse{
-		TransactionIdentifiers: conversion.TMTxsToRosettaTxsIdentifiers(txs.Txs),
+		TransactionIdentifiers: txs,
 	}, nil
 }
 

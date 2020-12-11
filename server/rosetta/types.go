@@ -83,7 +83,7 @@ type NodeClient interface {
 	// NOTE(fdymylja): NOT IMPLEMENTED YET!
 	GetUnconfirmedTx(ctx context.Context, hash string) (*types.Transaction, error)
 	// Mempool returns the list of the current non confirmed transactions
-	Mempool(ctx context.Context) (*tmtypes.ResultUnconfirmedTxs, error)
+	Mempool(ctx context.Context) ([]*types.TransactionIdentifier, error)
 	// Peers gets the peers currently connected to the node
 	Peers(ctx context.Context) ([]*types.Peer, error)
 	// Status returns the node status, such as sync data, version etc

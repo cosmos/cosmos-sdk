@@ -237,6 +237,23 @@ func (c *Client) BlockTransactionsByHash(ctx context.Context, hash string) (rose
 	}, nil
 }
 
+func (c *Client) BlockTransactionsByHeight(ctx context.Context, height *int64) (rosetta.BlockTransactionsResponse, error) {
+	blockResp, err := c.BlockByHeightAlt(ctx, height)
+	if err != nil {
+		return rosetta.BlockTransactionsResponse{}, err
+	}
+
+	txs, err := c.ListTransactionsInBlock(ctx, blockResp.Block.Index)
+	if err != nil {
+		return rosetta.BlockTransactionsResponse{}, err
+	}
+
+	return rosetta.BlockTransactionsResponse{
+		BlockResponse: blockResp,
+		Transactions:  conversion.SdkTxsWithHashToRosettaTxs(txs),
+	}, nil
+}
+
 // Coins fetches the existing coins in the application
 func (c *Client) coins(ctx context.Context) (sdk.Coins, error) {
 	supply, err := c.bank.TotalSupply(ctx, &bank.QueryTotalSupplyRequest{})

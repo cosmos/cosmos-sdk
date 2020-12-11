@@ -89,19 +89,19 @@ func (on OnlineNetwork) AccountBalance(ctx context.Context, request *types.Accou
 // Block gets the transactions in the given block
 func (on OnlineNetwork) Block(ctx context.Context, request *types.BlockRequest) (*types.BlockResponse, *types.Error) {
 	var (
-		blockResponse rosetta.BlockResponse
+		blockResponse rosetta.BlockTransactionsResponse
 		err           error
 	)
 	// block identifier is assumed not to be nil as rosetta will do this check for us
 	// check if we have to query via hash or block number
 	switch {
 	case request.BlockIdentifier.Hash != nil:
-		blockResponse, err = on.client.BlockByHashAlt(ctx, *request.BlockIdentifier.Hash)
+		blockResponse, err = on.client.BlockTransactionsByHash(ctx, *request.BlockIdentifier.Hash)
 		if err != nil {
 			return nil, rosetta.ToRosettaError(err)
 		}
 	case request.BlockIdentifier.Index != nil:
-		blockResponse, err = on.client.BlockByHeightAlt(ctx, request.BlockIdentifier.Index)
+		blockResponse, err = on.client.BlockTransactionsByHeight(ctx, request.BlockIdentifier.Index)
 		if err != nil {
 			return nil, rosetta.ToRosettaError(err)
 		}
@@ -109,17 +109,12 @@ func (on OnlineNetwork) Block(ctx context.Context, request *types.BlockRequest) 
 		return nil, rosetta.WrapError(rosetta.ErrBadArgument, "at least one of hash or index needs to be specified").RosettaError()
 	}
 
-	blockWithTxs, err := on.client.BlockTransactionsByHash(ctx, blockResponse.Block.Hash)
-	if err != nil {
-		return nil, rosetta.ToRosettaError(err)
-	}
-
 	return &types.BlockResponse{
 		Block: &types.Block{
 			BlockIdentifier:       blockResponse.Block,
 			ParentBlockIdentifier: blockResponse.ParentBlock,
 			Timestamp:             blockResponse.MillisecondTimestamp,
-			Transactions:          blockWithTxs.Transactions,
+			Transactions:          blockResponse.Transactions,
 			Metadata:              nil,
 		},
 		OtherTransactions: nil,

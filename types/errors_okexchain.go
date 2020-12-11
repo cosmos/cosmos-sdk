@@ -12,6 +12,55 @@ type EnvelopedErr struct {
 	Err Error
 }
 
+type coder interface {
+	ABCICode() uint32
+}
+
+type causer interface {
+	Cause() error
+}
+
+type codespacer interface {
+	Codespace() string
+}
+
+func (e EnvelopedErr) ABCICode() uint32 {
+	err := e.Err
+	if err == nil {
+		return errors.SuccessABCICode
+	}
+	for {
+		if c, ok := err.(coder); ok {
+			return c.ABCICode()
+		}
+
+		if c, ok := err.(causer); ok {
+			err = c.Cause()
+		} else {
+			return 1
+		}
+	}
+}
+
+func (e EnvelopedErr) Codespace() string {
+	err := e.Err
+	if err == nil {
+		return ""
+	}
+
+	for {
+		if c, ok := err.(codespacer); ok {
+			return c.Codespace()
+		}
+
+		if c, ok := err.(causer); ok {
+			err = c.Cause()
+		} else {
+			return errors.UndefinedCodespace
+		}
+	}
+}
+
 const (
 	CodeOK          uint32 = 0
 	CodeInternal    uint32 = 23

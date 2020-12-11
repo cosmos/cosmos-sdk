@@ -1024,24 +1024,17 @@ func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.
 	return res
 }
 
-func (s *IntegrationTestSuite) TestSignWithMultiSigners() {
+func (s *IntegrationTestSuite) TestSignWithMultiSigners_AminoJSON() {
 	val0, val1 := s.network.Validators[0], s.network.Validators[1]
 
 	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val0.Moniker), sdk.NewInt(10))
-	val0Info, err := val0.ClientCtx.Keyring.Key(val0.Moniker)
-	s.Require().NoError(err)
-	_, val0Seq, err := val0.ClientCtx.AccountRetriever.GetAccountNumberSequence(val0.ClientCtx, val0.Address)
-	s.Require().NoError(err)
-
 	val1Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val1.Moniker), sdk.NewInt(10))
-	val1Info, err := val1.ClientCtx.Keyring.Key(val1.Moniker)
-	s.Require().NoError(err)
-	val1AccNum, val1Seq, err := val0.ClientCtx.AccountRetriever.GetAccountNumberSequence(val0.ClientCtx, val1.Address)
-	s.Require().NoError(err)
 
 	_, _, addr1 := testdata.KeyTestPubAddr()
 
 	// Creating a tx with 2 msgs from 2 signers: val0 and val1.
+	// The validators sign with SIGN_MODE_LEGACY_AMINO_JSON by default.
+	// Since we we amino, we don't need to pre-populate signer_infos.
 	txBuilder := val0.ClientCtx.TxConfig.NewTxBuilder()
 	txBuilder.SetMsgs(
 		banktypes.NewMsgSend(val0.Address, addr1, sdk.NewCoins(val0Coin)),
@@ -1049,19 +1042,6 @@ func (s *IntegrationTestSuite) TestSignWithMultiSigners() {
 	)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))))
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
-	// Set signer_infos for both signers. Note: we use the empty signature hack.
-	txBuilder.SetSignatures(
-		signing.SignatureV2{
-			PubKey:   val0Info.GetPubKey(),
-			Data:     &signing.SingleSignatureData{SignMode: signing.SignMode_SIGN_MODE_DIRECT},
-			Sequence: val0Seq,
-		},
-		signing.SignatureV2{
-			PubKey:   val1Info.GetPubKey(),
-			Data:     &signing.SingleSignatureData{SignMode: signing.SignMode_SIGN_MODE_DIRECT},
-			Sequence: val1Seq,
-		},
-	)
 	s.Require().Equal([]sdk.AccAddress{val0.Address, val1.Address}, txBuilder.GetTx().GetSigners())
 
 	// Write the unsigned tx into a file.
@@ -1069,38 +1049,26 @@ func (s *IntegrationTestSuite) TestSignWithMultiSigners() {
 	s.Require().NoError(err)
 	unsignedTxFile := testutil.WriteToNewTempFile(s.T(), string(txJSON))
 
-	// TODO Remove println
-	fmt.Println("== unsigned ==")
-	fmt.Println(string(txJSON))
-
 	// Let val0 sign first the file with the unsignedTx.
-	signedByVal0, err := authtest.TxSignExec(val0.ClientCtx, val0.Address, unsignedTxFile.Name(), "--overwrite", fmt.Sprintf("--%s=direct", flags.FlagSignMode))
+	signedByVal0, err := authtest.TxSignExec(val0.ClientCtx, val0.Address, unsignedTxFile.Name(), "--overwrite")
 	s.Require().NoError(err)
 	signedByVal0File := testutil.WriteToNewTempFile(s.T(), signedByVal0.String())
 
-	// TODO Remove println
-	fmt.Println("== signed by val0 ==")
-	fmt.Println(signedByVal0.String())
-
 	// Then let val1 sign the file with signedByVal0.
+	val1AccNum, val1Seq, err := val0.ClientCtx.AccountRetriever.GetAccountNumberSequence(val0.ClientCtx, val1.Address)
+	s.Require().NoError(err)
 	signedTx, err := authtest.TxSignExec(
 		val1.ClientCtx, val1.Address, signedByVal0File.Name(),
-		"--offline", fmt.Sprintf("--account-number=%d", val1AccNum), fmt.Sprintf("--sequence=%d", val1Seq), fmt.Sprintf("--%s=direct", flags.FlagSignMode),
+		"--offline", fmt.Sprintf("--account-number=%d", val1AccNum), fmt.Sprintf("--sequence=%d", val1Seq),
 	)
 	s.Require().NoError(err)
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx.String())
-
-	// TODO Remove println
-	fmt.Println("== signed by val0 and va1 ==")
-	fmt.Println(signedTx.String())
 
 	// Now let's try to send this tx.
 	res, err := authtest.TxBroadcastExec(val0.ClientCtx, signedTxFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock))
 	s.Require().NoError(err)
 	var txRes sdk.TxResponse
 	s.Require().NoError(val0.ClientCtx.JSONMarshaler.UnmarshalJSON(res.Bytes(), &txRes))
-	// TODO Remove println
-	fmt.Println(txRes)
 	s.Require().Equal(uint32(0), txRes.Code)
 
 	// Make sure the addr1's balance got funded.

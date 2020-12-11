@@ -375,9 +375,19 @@ func SignWithPrivKey(
 	return sigV2, nil
 }
 
+func checkMultipleSigners(mode signing.SignMode, tx authsigning.Tx) error {
+	if mode == signing.SignMode_SIGN_MODE_DIRECT &&
+		len(tx.GetSigners()) > 1 {
+		return sdkerrors.Wrap(sdkerrors.ErrNotSupported, "Signing in DIRECT mode is only supported for transactions with one signer only")
+	}
+	return nil
+}
+
 // Sign signs a given tx with a named key. The bytes signed over are canconical.
 // The resulting signature will be added to the transaction builder overwriting the previous
 // ones if overwrite=true (otherwise, the signature will be appended).
+// Signing a transaction with mutltiple signers in the DIRECT mode is not supprted and will
+// return an error.
 // An error is returned upon failure.
 func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig bool) error {
 	if txf.keybase == nil {
@@ -389,12 +399,14 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 		// use the SignModeHandler's default mode if unspecified
 		signMode = txf.txConfig.SignModeHandler().DefaultMode()
 	}
+	if err := checkMultipleSigners(signMode, txBuilder.GetTx()); err != nil {
+		return err
+	}
 
 	key, err := txf.keybase.Key(name)
 	if err != nil {
 		return err
 	}
-
 	pubKey := key.GetPubKey()
 	signerData := authsigning.SignerData{
 		ChainID:       txf.chainID,

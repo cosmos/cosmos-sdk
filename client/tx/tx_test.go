@@ -151,12 +151,14 @@ func TestSign(t *testing.T) {
 		WithSequence(23).
 		WithFees("50stake").
 		WithMemo("memo").
-		WithChainID("test-chain").
+		WithChainID("test-chain")
+	txfDirect := txfNoKeybase.
+		WithKeybase(kr).
 		WithSignMode(signingtypes.SignMode_SIGN_MODE_DIRECT)
-	txf := txfNoKeybase.WithKeybase(kr)
-	txfAmino := txf.WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	txfAmino := txfDirect.
+		WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	msg := banktypes.NewMsgSend(info1.GetAddress(), sdk.AccAddress("to"), nil)
-	txn, err := tx.BuildUnsignedTx(txfNoKeybase, msg)
+	txb, err := tx.BuildUnsignedTx(txfNoKeybase, msg)
 	requireT.NoError(err)
 
 	testCases := []struct {
@@ -170,27 +172,27 @@ func TestSign(t *testing.T) {
 		{"should fail if txf without keyring",
 			txfNoKeybase, from1, true, nil, nil},
 		{"should fail for non existing key",
-			txf, "unknown", true, nil, nil},
-		{"should succeed if txf with keyring",
-			txf, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
-		/**** test overwrite ****/
-		{"should append a second signature and not overwrite",
-			txf, from2, false, []cryptotypes.PubKey{pubKey1, pubKey2}, []int{0, 0}},
-		{"should overwrite a signature",
-			txf, from2, true, []cryptotypes.PubKey{pubKey2}, []int{1, 0}},
-		{"should append a signature with different mode",
-			txfAmino, from1, false, []cryptotypes.PubKey{pubKey2, pubKey1}, []int{0, 0}},
+			txfAmino, "unknown", true, nil, nil},
+		{"should succeed with keyring Amino",
+			txfAmino, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
+		/**** test overwrite AMINO ****/
+		{"should append a second signature and not overwrite Amino",
+			txfAmino, from2, false, []cryptotypes.PubKey{pubKey1, pubKey2}, []int{0, 0}},
+		{"should overwrite a signature Amino",
+			txfAmino, from2, true, []cryptotypes.PubKey{pubKey2}, []int{1, 0}},
+		{"should append a signature with different mode Amino",
+			txfDirect, from1, false, []cryptotypes.PubKey{pubKey2, pubKey1}, []int{0, 0}},
 	}
 	var prevSigs []signingtypes.SignatureV2
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err = tx.Sign(tc.txf, tc.from, txn, tc.overwrite)
+			err = tx.Sign(tc.txf, tc.from, txb, tc.overwrite)
 			if len(tc.expectedPKs) == 0 {
 				requireT.Error(err)
 			} else {
 				requireT.NoError(err)
 			}
-			sigs := testSigners(requireT, txn.GetTx(), tc.expectedPKs...)
+			sigs := testSigners(requireT, txb.GetTx(), tc.expectedPKs...)
 			if tc.matchingSigs != nil {
 				requireT.Equal(prevSigs[tc.matchingSigs[0]], sigs[tc.matchingSigs[1]])
 			}

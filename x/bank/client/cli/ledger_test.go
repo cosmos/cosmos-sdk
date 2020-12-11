@@ -104,7 +104,7 @@ func (s *LedgerIntegrationTestSuite) Test_runAddCmdLedgerWithCustomCoinType() {
 	res, err := clitestutil.ExecTestCLICmd(
 		clientCtx, sendCmd,
 		[]string{
-			key1.GetName(), key1.GetAddress().String(), sdk.NewCoins(sdk.NewCoin("mytoken", sdk.NewInt(10))).String(),
+			key1.GetName(), key1.GetAddress().String(), sdk.NewCoin(fmt.Sprintf("%stoken", val0.Moniker), sdk.NewInt(1)).String(),
 		},
 	)
 	s.Require().NoError(err)

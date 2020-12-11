@@ -96,7 +96,7 @@ func (s *LedgerIntegrationTestSuite) Test_runAddCmdLedgerWithCustomCoinType() {
 	s.Require().NoError(err)
 
 	// Send some funds to keyname1.
-	_, err = banktestutil.MsgSendExec("")
+	_, err = banktestutil.MsgSendExec(val0.ClientCtx, val0.Address, key1.GetAddress(), sdk.NewCoin(fmt.Sprintf("%stoken", val0.Moniker), sdk.NewInt(10)))
 	s.Require().NoError(err)
 
 	sendCmd := bankcli.NewSendTxCmd()

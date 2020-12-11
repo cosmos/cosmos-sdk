@@ -29,6 +29,6 @@ name = "alessio"
 
 [version]
 documentation = "https://raw.githubusercontent.com/cosmos/cosmos-sdk/master/x/bank/atlas/atlas-v0.39.1.md"
-repo = "https://github.com/cosmos/cosmos-sdk/releases/tag/v0.39.1"
+repo = "https://github.com/cosmos/cosmos-sdk/releases/tag/v0.39.2"
 sdk_compat = "v0.39.x"
-version = "v0.39.1"
+version = "v0.39.2"

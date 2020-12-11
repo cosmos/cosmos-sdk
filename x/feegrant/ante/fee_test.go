@@ -107,6 +107,12 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	priv3, _, addr3 := testdata.KeyTestPubAddr()
 	priv4, _, addr4 := testdata.KeyTestPubAddr()
 
+	nonExistedAccNums := make(map[string]uint64)
+	nonExistedAccNums[addr1.String()] = 0
+	nonExistedAccNums[addr2.String()] = 1
+	nonExistedAccNums[addr3.String()] = 2
+	nonExistedAccNums[addr4.String()] = 3
+
 	// Set addr1 with insufficient funds
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
@@ -137,12 +143,13 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	// })
 
 	cases := map[string]struct {
-		signerKey  cryptotypes.PrivKey
-		signer     sdk.AccAddress
-		feeAccount sdk.AccAddress
-		handler    sdk.AnteHandler
-		fee        int64
-		valid      bool
+		signerKey     cryptotypes.PrivKey
+		signer        sdk.AccAddress
+		feeAccount    sdk.AccAddress
+		feeAccountKey cryptotypes.PrivKey
+		handler       sdk.AnteHandler
+		fee           int64
+		valid         bool
 	}{
 		"paying with low funds (only ours)": {
 			signerKey: priv1,
@@ -211,7 +218,6 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 			handler:    ourAnteHandler,
 			valid:      false,
 		},
-
 		"paying with low funds (whole stack)": {
 			signerKey: priv1,
 			signer:    addr1,
@@ -247,14 +253,15 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 			handler:   anteHandlerStack,
 			valid:     false,
 		},
-		// "valid fee grant without account (whole stack)": {
-		// 	signerKey:  priv3,
-		// 	signer:     addr3,
-		// 	feeAccount: addr2,
-		// 	fee:        50,
-		// 	handler:    anteHandlerStack,
-		// 	valid:      true,
-		// },
+		"valid fee grant without account (whole stack)": {
+			signerKey:     priv3,
+			signer:        addr3,
+			feeAccountKey: priv2,
+			feeAccount:    addr2,
+			fee:           50,
+			handler:       anteHandlerStack,
+			valid:         true,
+		},
 		"no fee grant (whole stack)": {
 			signerKey:  priv3,
 			signer:     addr3,
@@ -284,19 +291,28 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	for name, stc := range cases {
 		tc := stc // to make scopelint happy
 		suite.T().Run(name, func(t *testing.T) {
-			// msg and signatures
-			// fee := types.NewGrantedFee(100000, sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee)), tc.feeAccount)
 			fee := sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee))
 			msgs := []sdk.Msg{testdata.NewTestMsg(tc.signer)}
-			_, accNums, seqs := []cryptotypes.PrivKey{tc.signerKey}, []uint64{0}, []uint64{0}
 
-			// tx := types.NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
+			acc := app.AccountKeeper.GetAccount(ctx, tc.signer)
+			privs, accNums, seqs := []cryptotypes.PrivKey{tc.signerKey}, []uint64{nonExistedAccNums[tc.signer.String()]}, []uint64{0}
+			if acc != nil {
+				privs, accNums, seqs = []cryptotypes.PrivKey{tc.signerKey}, []uint64{acc.GetAccountNumber()}, []uint64{acc.GetSequence()}
+			}
 
-			tx, err := helpers.GenTxWithFeePayer(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, tc.signer, stc.signerKey)
+			if tc.feeAccountKey != nil {
+				feeAcc := app.AccountKeeper.GetAccount(ctx, tc.feeAccount)
+				if feeAcc != nil {
+					privs, accNums, seqs = append(privs, tc.feeAccountKey), append(accNums, feeAcc.GetAccountNumber()), append(seqs, feeAcc.GetSequence())
+				} else {
+					privs, accNums, seqs = append(privs, tc.feeAccountKey), append(accNums, nonExistedAccNums[tc.feeAccount.String()]), append(seqs, 0)
+				}
+			}
 
+			tx, err := helpers.GenTxWithFeePayer(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, tc.signer, privs...)
 			suite.Require().NoError(err)
-
 			_, err = tc.handler(ctx, tx, false)
+
 			if tc.valid {
 				suite.Require().NoError(err)
 			} else {

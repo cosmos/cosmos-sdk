@@ -27,8 +27,8 @@ $ <appd> tx broadcast ./mytxn.json
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
-			if err == nil {
-				return nil
+			if err != nil {
+				return err
 			}
 
 			if offline, _ := cmd.Flags().GetBool(flags.FlagOffline); offline {

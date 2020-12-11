@@ -1026,8 +1026,15 @@ func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.
 
 func (s *IntegrationTestSuite) TestSignWithMultiSigners() {
 	val0, val1 := s.network.Validators[0], s.network.Validators[1]
+
 	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val0.Moniker), sdk.NewInt(10))
+	val0Info, err := val0.ClientCtx.Keyring.Key(val0.Moniker)
+	s.Require().NoError(err)
+
 	val1Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val1.Moniker), sdk.NewInt(10))
+	val1Info, err := val1.ClientCtx.Keyring.Key(val1.Moniker)
+	s.Require().NoError(err)
+
 	_, _, addr1 := testdata.KeyTestPubAddr()
 
 	// Creating a tx with 2 msgs from 2 signers: val0 and val1.
@@ -1041,14 +1048,14 @@ func (s *IntegrationTestSuite) TestSignWithMultiSigners() {
 	// Set signer_infos for both signers. Note: we use the empty signature hack.
 	txBuilder.SetSignatures(
 		signing.SignatureV2{
-			PubKey:   val0.PubKey,
+			PubKey:   val0Info.GetPubKey(),
 			Data:     &signing.SingleSignatureData{SignMode: signing.SignMode_SIGN_MODE_DIRECT},
-			Sequence: 45, // TODO Replace with real seq, this should fail in antehandler
+			Sequence: 45, // TODO Replace with real seq, now this should fail in antehandler
 		},
 		signing.SignatureV2{
-			PubKey:   val1.PubKey,
+			PubKey:   val1Info.GetPubKey(),
 			Data:     &signing.SingleSignatureData{SignMode: signing.SignMode_SIGN_MODE_DIRECT},
-			Sequence: 67, // TODO Replace with real seq, this should fail in antehandler
+			Sequence: 67, // TODO Replace with real seq, now this should fail in antehandler
 		},
 	)
 	s.Require().Equal([]sdk.AccAddress{val0.Address, val1.Address}, txBuilder.GetTx().GetSigners())

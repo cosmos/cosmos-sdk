@@ -1,11 +1,17 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
+	"reflect"
 	"sort"
 	"strings"
 
+	"github.com/gogo/protobuf/jsonpb"
+	proto "github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // ----------------------------------------------------------------------------
@@ -25,11 +31,13 @@ func NewEventManager() *EventManager {
 func (em *EventManager) Events() Events { return em.events }
 
 // EmitEvent stores a single Event object.
+// Deprecated: Use EmitTypedEvent
 func (em *EventManager) EmitEvent(event Event) {
 	em.events = em.events.AppendEvent(event)
 }
 
 // EmitEvents stores a series of Event objects.
+// Deprecated: Use EmitTypedEvents
 func (em *EventManager) EmitEvents(events Events) {
 	em.events = em.events.AppendEvents(events)
 }
@@ -37,6 +45,97 @@ func (em *EventManager) EmitEvents(events Events) {
 // ABCIEvents returns all stored Event objects as abci.Event objects.
 func (em EventManager) ABCIEvents() []abci.Event {
 	return em.events.ToABCIEvents()
+}
+
+// EmitTypedEvent takes typed event and emits converting it into Event
+func (em *EventManager) EmitTypedEvent(tev proto.Message) error {
+	event, err := TypedEventToEvent(tev)
+	if err != nil {
+		return err
+	}
+
+	em.EmitEvent(event)
+	return nil
+}
+
+// EmitTypedEvents takes series of typed events and emit
+func (em *EventManager) EmitTypedEvents(tevs ...proto.Message) error {
+	events := make(Events, len(tevs))
+	for i, tev := range tevs {
+		res, err := TypedEventToEvent(tev)
+		if err != nil {
+			return err
+		}
+		events[i] = res
+	}
+
+	em.EmitEvents(events)
+	return nil
+}
+
+// TypedEventToEvent takes typed event and converts to Event object
+func TypedEventToEvent(tev proto.Message) (Event, error) {
+	evtType := proto.MessageName(tev)
+	evtJSON, err := codec.ProtoMarshalJSON(tev, nil)
+	if err != nil {
+		return Event{}, err
+	}
+
+	var attrMap map[string]json.RawMessage
+	err = json.Unmarshal(evtJSON, &attrMap)
+	if err != nil {
+		return Event{}, err
+	}
+
+	attrs := make([]abci.EventAttribute, 0, len(attrMap))
+	for k, v := range attrMap {
+		attrs = append(attrs, abci.EventAttribute{
+			Key:   []byte(k),
+			Value: v,
+		})
+	}
+
+	return Event{
+		Type:       evtType,
+		Attributes: attrs,
+	}, nil
+}
+
+// ParseTypedEvent converts abci.Event back to typed event
+func ParseTypedEvent(event abci.Event) (proto.Message, error) {
+	concreteGoType := proto.MessageType(event.Type)
+	if concreteGoType == nil {
+		return nil, fmt.Errorf("failed to retrieve the message of type %q", event.Type)
+	}
+
+	var value reflect.Value
+	if concreteGoType.Kind() == reflect.Ptr {
+		value = reflect.New(concreteGoType.Elem())
+	} else {
+		value = reflect.Zero(concreteGoType)
+	}
+
+	protoMsg, ok := value.Interface().(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("%q does not implement proto.Message", event.Type)
+	}
+
+	attrMap := make(map[string]json.RawMessage)
+	for _, attr := range event.Attributes {
+		attrMap[string(attr.Key)] = attr.Value
+	}
+
+	attrBytes, err := json.Marshal(attrMap)
+	if err != nil {
+		return nil, err
+	}
+
+	err = jsonpb.Unmarshal(strings.NewReader(string(attrBytes)), protoMsg)
+	if err != nil {
+		return nil, err
+	}
+
+	return protoMsg, nil
 }
 
 // ----------------------------------------------------------------------------

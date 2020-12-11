@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -63,7 +61,7 @@ func NewKeeper(
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s-%s", host.ModuleName, types.ModuleName))
+	return ctx.Logger().With("module", "x/"+host.ModuleName+"-"+types.ModuleName)
 }
 
 // GetTransferAccount returns the ICS20 - transfers ModuleAccount
@@ -157,6 +155,11 @@ func (k Keeper) IterateDenomTraces(ctx sdk.Context, cb func(denomTrace types.Den
 			break
 		}
 	}
+}
+
+// AuthenticateCapability wraps the scopedKeeper's AuthenticateCapability function
+func (k Keeper) AuthenticateCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) bool {
+	return k.scopedKeeper.AuthenticateCapability(ctx, cap, name)
 }
 
 // ClaimCapability allows the transfer module that can claim a capability that IBC module

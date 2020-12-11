@@ -9,8 +9,7 @@ const SubModuleName = "host"
 
 // IBC client sentinel errors
 var (
-	ErrInvalidID      = sdkerrors.Register(SubModuleName, 2, "invalid identifier")
-	ErrInvalidPath    = sdkerrors.Register(SubModuleName, 3, "invalid path")
-	ErrInvalidPacket  = sdkerrors.Register(SubModuleName, 4, "invalid packet")
-	ErrInvalidVersion = sdkerrors.Register(SubModuleName, 5, "invalid version")
+	ErrInvalidID     = sdkerrors.Register(SubModuleName, 2, "invalid identifier")
+	ErrInvalidPath   = sdkerrors.Register(SubModuleName, 3, "invalid path")
+	ErrInvalidPacket = sdkerrors.Register(SubModuleName, 4, "invalid packet")
 )

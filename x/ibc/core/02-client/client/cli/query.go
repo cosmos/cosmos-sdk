@@ -51,7 +51,7 @@ func GetCmdQueryClientStates() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
@@ -84,7 +84,7 @@ func GetCmdQueryClientState() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(clientStateRes)
+			return clientCtx.PrintProto(clientStateRes)
 		},
 	}
 
@@ -129,7 +129,7 @@ func GetCmdQueryConsensusStates() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
@@ -179,7 +179,7 @@ If the '--latest' flag is included, the query returns the latest consensus state
 				return err
 			}
 
-			return clientCtx.PrintOutput(csRes)
+			return clientCtx.PrintProto(csRes)
 		},
 	}
 
@@ -211,7 +211,7 @@ func GetCmdQueryHeader() *cobra.Command {
 			}
 
 			clientCtx = clientCtx.WithHeight(height)
-			return clientCtx.PrintOutput(&header)
+			return clientCtx.PrintProto(&header)
 		},
 	}
 
@@ -242,7 +242,34 @@ func GetCmdNodeConsensusState() *cobra.Command {
 			}
 
 			clientCtx = clientCtx.WithHeight(height)
-			return clientCtx.PrintOutput(state)
+			return clientCtx.PrintProto(state)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdParams returns the command handler for ibc client parameter querying.
+func GetCmdParams() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "params",
+		Short:   "Query the current ibc client parameters",
+		Long:    "Query the current ibc client parameters",
+		Args:    cobra.NoArgs,
+		Example: fmt.Sprintf("%s query %s %s params", version.AppName, host.ModuleName, types.SubModuleName),
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, _ := queryClient.ClientParams(context.Background(), &types.QueryClientParamsRequest{})
+			return clientCtx.PrintProto(res.Params)
 		},
 	}
 

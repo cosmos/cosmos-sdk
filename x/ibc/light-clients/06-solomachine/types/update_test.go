@@ -143,6 +143,16 @@ func (suite *SoloMachineTestSuite) TestCheckHeaderAndUpdateState() {
 				},
 				false,
 			},
+			{
+				"consensus state public key is nil",
+				func() {
+					cs := solomachine.ClientState()
+					cs.ConsensusState.PublicKey = nil
+					clientState = cs
+					header = solomachine.CreateHeader()
+				},
+				false,
+			},
 		}
 
 		for _, tc := range testCases {

@@ -1,9 +1,8 @@
 package types
 
 import (
-	"github.com/tendermint/tendermint/crypto"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -16,32 +15,34 @@ import (
 
 // VerifySignature verifies if the the provided public key generated the signature
 // over the given data. Single and Multi signature public keys are supported.
-// The type of the signature data determines how the public key is used to
-// verify the signature. An error is returned if signature verification fails
-// or an invalid SignatureData type is provided.
-func VerifySignature(pubKey crypto.PubKey, signBytes []byte, sigData signing.SignatureData) error {
-	switch data := sigData.(type) {
-	case *signing.SingleSignatureData:
-		if !pubKey.VerifySignature(signBytes, data.Signature) {
-			return ErrSignatureVerificationFailed
-		}
-
-	case *signing.MultiSignatureData:
-		multiPK, ok := pubKey.(multisig.PubKey)
+// The signature data type must correspond to the public key type. An error is
+// returned if signature verification fails or an invalid SignatureData type is
+// provided.
+func VerifySignature(pubKey cryptotypes.PubKey, signBytes []byte, sigData signing.SignatureData) error {
+	switch pubKey := pubKey.(type) {
+	case multisig.PubKey:
+		data, ok := sigData.(*signing.MultiSignatureData)
 		if !ok {
-			return sdkerrors.Wrapf(ErrSignatureVerificationFailed, "invalid pubkey type: expected %T, got %T", (multisig.PubKey)(nil), pubKey)
+			return sdkerrors.Wrapf(ErrSignatureVerificationFailed, "invalid signature data type, expected %T, got %T", (*signing.MultiSignatureData)(nil), data)
 		}
 
 		// The function supplied fulfills the VerifyMultisignature interface. No special
 		// adjustments need to be made to the sign bytes based on the sign mode.
-		if err := multiPK.VerifyMultisignature(func(signing.SignMode) ([]byte, error) {
+		if err := pubKey.VerifyMultisignature(func(signing.SignMode) ([]byte, error) {
 			return signBytes, nil
 		}, data); err != nil {
 			return err
 		}
 
 	default:
-		return sdkerrors.Wrapf(ErrSignatureVerificationFailed, "unsupported signature data type %T", data)
+		data, ok := sigData.(*signing.SingleSignatureData)
+		if !ok {
+			return sdkerrors.Wrapf(ErrSignatureVerificationFailed, "invalid signature data type, expected %T, got %T", (*signing.SingleSignatureData)(nil), data)
+		}
+
+		if !pubKey.VerifySignature(signBytes, data.Signature) {
+			return ErrSignatureVerificationFailed
+		}
 	}
 
 	return nil

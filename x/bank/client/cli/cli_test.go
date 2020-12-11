@@ -5,16 +5,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/spf13/cobra"
-
-	"github.com/cosmos/cosmos-sdk/client/tx"
-
 	"github.com/gogo/protobuf/proto"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -384,10 +382,7 @@ func (s *IntegrationTestSuite) TestBankMsgService() {
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 
-			args := []string{tc.from.String(), tc.to.String(), tc.amount.String()}
-			args = append(args, tc.args...)
-
-			bz, err := clitestutil.ExecTestCLICmd(clientCtx, newSendTxMsgServiceCmd(), args)
+			bz, err := banktestutil.ServiceMsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {

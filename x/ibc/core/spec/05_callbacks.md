@@ -4,7 +4,8 @@ order: 5
 
 # Callbacks
 
-Application modules implementing the IBC module must implement the following callbacks as found in [05-port](../core/05-port/types/module.go).
+Application modules implementing the IBC module must implement the following callbacks as found in [05-port](../05-port/types/module.go).
+More information on how to implement these callbacks can be found in the [implementation guide](../../../../docs/ibc/custom.md).
 
 ```go
 // IBCModule defines an interface that implements all the callbacks
@@ -17,7 +18,7 @@ type IBCModule interface {
 		portId string,
 		channelId string,
 		channelCap *capability.Capability,
-		counterParty channeltypes.Counterparty,
+		counterparty channeltypes.Counterparty,
 		version string,
 	) error
 
@@ -59,6 +60,7 @@ type IBCModule interface {
 	) error
 
 	// OnRecvPacket must return the acknowledgement bytes
+	// In the case of an asynchronous acknowledgement, nil should be returned.
 	OnRecvPacket(
 		ctx sdk.Context,
 		packet channeltypes.Packet,

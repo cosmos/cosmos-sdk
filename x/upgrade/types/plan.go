@@ -23,7 +23,7 @@ func (p Plan) String() string {
 	if err != nil {
 		upgradedClientStr = "no upgraded client provided"
 	} else {
-		upgradedClientStr = fmt.Sprintf("%s", upgradedClient)
+		upgradedClientStr = upgradedClient.String()
 	}
 	return fmt.Sprintf(`Upgrade Plan
   Name: %s
@@ -70,6 +70,11 @@ func (p Plan) DueAt() string {
 		return fmt.Sprintf("time: %s", p.Time.UTC().Format(time.RFC3339))
 	}
 	return fmt.Sprintf("height: %d", p.Height)
+}
+
+// IsIBCPlan will return true if plan includes IBC client information
+func (p Plan) IsIBCPlan() bool {
+	return p.UpgradedClientState != nil
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces

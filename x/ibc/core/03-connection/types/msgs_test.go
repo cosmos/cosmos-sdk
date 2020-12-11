@@ -62,9 +62,10 @@ func (suite *MsgTestSuite) SetupTest() {
 		Prove: true,
 	})
 
-	merkleProof := commitmenttypes.MerkleProof{Proof: res.ProofOps}
+	merkleProof, err := commitmenttypes.ConvertProofs(res.ProofOps)
+	suite.Require().NoError(err)
 	proof, err := app.AppCodec().MarshalBinaryBare(&merkleProof)
-	suite.NoError(err)
+	suite.Require().NoError(err)
 
 	suite.proof = proof
 
@@ -79,21 +80,20 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenInit() {
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 	// empty versions are considered valid, the default compatible versions
 	// will be used in protocol.
-	version := ""
+	var version *types.Version
 
 	var testCases = []struct {
 		name    string
 		msg     *types.MsgConnectionOpenInit
 		expPass bool
 	}{
-		{"invalid connection ID", types.NewMsgConnectionOpenInit("test/conn1", "clienttotesta", "connectiontotest", "clienttotest", prefix, version, signer), false},
-		{"invalid client ID", types.NewMsgConnectionOpenInit("ibcconntest", "test/iris", "connectiontotest", "clienttotest", prefix, version, signer), false},
-		{"invalid counterparty client ID", types.NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "test/conn1", "clienttotest", prefix, version, signer), false},
-		{"invalid counterparty connection ID", types.NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "test/conn1", prefix, version, signer), false},
-		{"empty counterparty prefix", types.NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "clienttotest", emptyPrefix, version, signer), false},
-		{"supplied version fails basic validation", types.NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "clienttotest", prefix, "bad version", signer), false},
-		{"empty singer", types.NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "clienttotest", prefix, version, nil), false},
-		{"success", types.NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "clienttotest", prefix, version, signer), true},
+		{"invalid client ID", types.NewMsgConnectionOpenInit("test/iris", "clienttotest", prefix, version, 500, signer), false},
+		{"invalid counterparty client ID", types.NewMsgConnectionOpenInit("clienttotest", "(clienttotest)", prefix, version, 500, signer), false},
+		{"invalid counterparty connection ID", &types.MsgConnectionOpenInit{connectionID, types.NewCounterparty("clienttotest", "connectiontotest", prefix), version, 500, signer.String()}, false},
+		{"empty counterparty prefix", types.NewMsgConnectionOpenInit("clienttotest", "clienttotest", emptyPrefix, version, 500, signer), false},
+		{"supplied version fails basic validation", types.NewMsgConnectionOpenInit("clienttotest", "clienttotest", prefix, &types.Version{}, 500, signer), false},
+		{"empty singer", types.NewMsgConnectionOpenInit("clienttotest", "clienttotest", prefix, version, 500, nil), false},
+		{"success", types.NewMsgConnectionOpenInit("clienttotest", "clienttotest", prefix, version, 500, signer), true},
 	}
 
 	for _, tc := range testCases {
@@ -111,7 +111,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
 	clientState := ibctmtypes.NewClientState(
-		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false,
+		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false,
 	)
 
 	// Pack consensus state into any to test unpacking error
@@ -123,33 +123,32 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 
 	// invalidClientState fails validateBasic
 	invalidClient := ibctmtypes.NewClientState(
-		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clienttypes.ZeroHeight(), ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false,
+		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clienttypes.ZeroHeight(), commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false,
 	)
-	provedID := ""
 
 	var testCases = []struct {
 		name    string
 		msg     *types.MsgConnectionOpenTry
 		expPass bool
 	}{
-		{"invalid connection ID", types.NewMsgConnectionOpenTry("test/conn1", provedID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
-		{"invalid connection ID", types.NewMsgConnectionOpenTry("ibcconntest", "test/conn1", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
-		{"invalid client ID", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "test/iris", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
-		{"invalid counterparty connection ID", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "clienttotesta", "ibc/test", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
-		{"invalid counterparty client ID", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "clienttotesta", "connectiontotest", "test/conn1", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
-		{"invalid nil counterparty client", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "clienttotesta", "connectiontotest", "clienttotest", nil, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
-		{"invalid client unpacking", &types.MsgConnectionOpenTry{"ibcconntest", provedID, "clienttotesta", invalidAny, counterparty, []string{ibctesting.ConnectionVersion}, clientHeight, suite.proof, suite.proof, suite.proof, clientHeight, signer.String()}, false},
-		{"counterparty failed Validate", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "clienttotesta", "connectiontotest", "clienttotest", invalidClient, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
-		{"empty counterparty prefix", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "clienttotesta", "connectiontotest", "clienttotest", clientState, emptyPrefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
-		{"empty counterpartyVersions", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
-		{"empty proofInit", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, emptyProof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
-		{"empty proofClient", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, emptyProof, suite.proof, clientHeight, clientHeight, signer), false},
-		{"empty proofConsensus", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, emptyProof, clientHeight, clientHeight, signer), false},
-		{"invalid proofHeight", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clienttypes.ZeroHeight(), clientHeight, signer), false},
-		{"invalid consensusHeight", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clienttypes.ZeroHeight(), signer), false},
-		{"empty singer", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, nil), false},
-		{"success", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), true},
-		{"invalid version", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{"(invalid version)"}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
+		{"invalid connection ID", types.NewMsgConnectionOpenTry("test/conn1", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []*types.Version{ibctesting.ConnectionVersion}, 500, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
+		{"invalid connection ID", types.NewMsgConnectionOpenTry("(invalidconnection)", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []*types.Version{ibctesting.ConnectionVersion}, 500, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
+		{"invalid client ID", types.NewMsgConnectionOpenTry(connectionID, "test/iris", "connectiontotest", "clienttotest", clientState, prefix, []*types.Version{ibctesting.ConnectionVersion}, 500, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
+		{"invalid counterparty connection ID", types.NewMsgConnectionOpenTry(connectionID, "clienttotesta", "ibc/test", "clienttotest", clientState, prefix, []*types.Version{ibctesting.ConnectionVersion}, 500, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
+		{"invalid counterparty client ID", types.NewMsgConnectionOpenTry(connectionID, "clienttotesta", "connectiontotest", "test/conn1", clientState, prefix, []*types.Version{ibctesting.ConnectionVersion}, 500, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
+		{"invalid nil counterparty client", types.NewMsgConnectionOpenTry(connectionID, "clienttotesta", "connectiontotest", "clienttotest", nil, prefix, []*types.Version{ibctesting.ConnectionVersion}, 500, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
+		{"invalid client unpacking", &types.MsgConnectionOpenTry{connectionID, "clienttotesta", invalidAny, counterparty, 500, []*types.Version{ibctesting.ConnectionVersion}, clientHeight, suite.proof, suite.proof, suite.proof, clientHeight, signer.String()}, false},
+		{"counterparty failed Validate", types.NewMsgConnectionOpenTry(connectionID, "clienttotesta", "connectiontotest", "clienttotest", invalidClient, prefix, []*types.Version{ibctesting.ConnectionVersion}, 500, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
+		{"empty counterparty prefix", types.NewMsgConnectionOpenTry(connectionID, "clienttotesta", "connectiontotest", "clienttotest", clientState, emptyPrefix, []*types.Version{ibctesting.ConnectionVersion}, 500, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
+		{"empty counterpartyVersions", types.NewMsgConnectionOpenTry(connectionID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []*types.Version{}, 500, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
+		{"empty proofInit", types.NewMsgConnectionOpenTry(connectionID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []*types.Version{ibctesting.ConnectionVersion}, 500, emptyProof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
+		{"empty proofClient", types.NewMsgConnectionOpenTry(connectionID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []*types.Version{ibctesting.ConnectionVersion}, 500, suite.proof, emptyProof, suite.proof, clientHeight, clientHeight, signer), false},
+		{"empty proofConsensus", types.NewMsgConnectionOpenTry(connectionID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []*types.Version{ibctesting.ConnectionVersion}, 500, suite.proof, suite.proof, emptyProof, clientHeight, clientHeight, signer), false},
+		{"invalid proofHeight", types.NewMsgConnectionOpenTry(connectionID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []*types.Version{ibctesting.ConnectionVersion}, 500, suite.proof, suite.proof, suite.proof, clienttypes.ZeroHeight(), clientHeight, signer), false},
+		{"invalid consensusHeight", types.NewMsgConnectionOpenTry(connectionID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []*types.Version{ibctesting.ConnectionVersion}, 500, suite.proof, suite.proof, suite.proof, clientHeight, clienttypes.ZeroHeight(), signer), false},
+		{"empty singer", types.NewMsgConnectionOpenTry(connectionID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []*types.Version{ibctesting.ConnectionVersion}, 500, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, nil), false},
+		{"success", types.NewMsgConnectionOpenTry(connectionID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []*types.Version{ibctesting.ConnectionVersion}, 500, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), true},
+		{"invalid version", types.NewMsgConnectionOpenTry(connectionID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []*types.Version{{}}, 500, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
 	}
 
 	for _, tc := range testCases {
@@ -165,7 +164,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 func (suite *MsgTestSuite) TestNewMsgConnectionOpenAck() {
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 	clientState := ibctmtypes.NewClientState(
-		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false,
+		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false,
 	)
 
 	// Pack consensus state into any to test unpacking error
@@ -176,9 +175,9 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenAck() {
 
 	// invalidClientState fails validateBasic
 	invalidClient := ibctmtypes.NewClientState(
-		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clienttypes.ZeroHeight(), ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false,
+		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clienttypes.ZeroHeight(), commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false,
 	)
-	connectionID := "ibcconntest"
+	connectionID := "connection-0"
 
 	var testCases = []struct {
 		name    string
@@ -195,7 +194,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenAck() {
 		{"empty proofConsensus", types.NewMsgConnectionOpenAck(connectionID, connectionID, clientState, suite.proof, suite.proof, emptyProof, clientHeight, clientHeight, ibctesting.ConnectionVersion, signer), false},
 		{"invalid proofHeight", types.NewMsgConnectionOpenAck(connectionID, connectionID, clientState, suite.proof, suite.proof, suite.proof, clienttypes.ZeroHeight(), clientHeight, ibctesting.ConnectionVersion, signer), false},
 		{"invalid consensusHeight", types.NewMsgConnectionOpenAck(connectionID, connectionID, clientState, suite.proof, suite.proof, suite.proof, clientHeight, clienttypes.ZeroHeight(), ibctesting.ConnectionVersion, signer), false},
-		{"invalid version", types.NewMsgConnectionOpenAck(connectionID, connectionID, clientState, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, "", signer), false},
+		{"invalid version", types.NewMsgConnectionOpenAck(connectionID, connectionID, clientState, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, &types.Version{}, signer), false},
 		{"empty signer", types.NewMsgConnectionOpenAck(connectionID, connectionID, clientState, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, ibctesting.ConnectionVersion, nil), false},
 		{"success", types.NewMsgConnectionOpenAck(connectionID, connectionID, clientState, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, ibctesting.ConnectionVersion, signer), true},
 	}
@@ -215,10 +214,10 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenConfirm() {
 
 	testMsgs := []*types.MsgConnectionOpenConfirm{
 		types.NewMsgConnectionOpenConfirm("test/conn1", suite.proof, clientHeight, signer),
-		types.NewMsgConnectionOpenConfirm("ibcconntest", emptyProof, clientHeight, signer),
-		types.NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, clienttypes.ZeroHeight(), signer),
-		types.NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, clientHeight, nil),
-		types.NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, clientHeight, signer),
+		types.NewMsgConnectionOpenConfirm(connectionID, emptyProof, clientHeight, signer),
+		types.NewMsgConnectionOpenConfirm(connectionID, suite.proof, clienttypes.ZeroHeight(), signer),
+		types.NewMsgConnectionOpenConfirm(connectionID, suite.proof, clientHeight, nil),
+		types.NewMsgConnectionOpenConfirm(connectionID, suite.proof, clientHeight, signer),
 	}
 
 	var testCases = []struct {

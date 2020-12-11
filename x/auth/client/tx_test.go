@@ -55,7 +55,7 @@ func TestDefaultTxEncoder(t *testing.T) {
 
 func TestReadTxFromFile(t *testing.T) {
 	t.Parallel()
-	encodingConfig := simapp.MakeEncodingConfig()
+	encodingConfig := simapp.MakeTestEncodingConfig()
 
 	txCfg := encodingConfig.TxConfig
 	clientCtx := client.Context{}
@@ -74,9 +74,8 @@ func TestReadTxFromFile(t *testing.T) {
 	// Write it to the file
 	encodedTx, err := txCfg.TxJSONEncoder()(txBuilder.GetTx())
 	require.NoError(t, err)
-	jsonTxFile, cleanup := testutil.WriteToNewTempFile(t, string(encodedTx))
-	t.Cleanup(cleanup)
 
+	jsonTxFile := testutil.WriteToNewTempFile(t, string(encodedTx))
 	// Read it back
 	decodedTx, err := authclient.ReadTxFromFile(clientCtx, jsonTxFile.Name())
 	require.NoError(t, err)
@@ -90,7 +89,7 @@ func TestReadTxFromFile(t *testing.T) {
 
 func TestBatchScanner_Scan(t *testing.T) {
 	t.Parallel()
-	encodingConfig := simapp.MakeEncodingConfig()
+	encodingConfig := simapp.MakeTestEncodingConfig()
 
 	txGen := encodingConfig.TxConfig
 	clientCtx := client.Context{}

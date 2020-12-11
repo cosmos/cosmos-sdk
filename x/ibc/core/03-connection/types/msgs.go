@@ -12,19 +12,21 @@ import (
 
 var _ sdk.Msg = &MsgConnectionOpenInit{}
 
-// NewMsgConnectionOpenInit creates a new MsgConnectionOpenInit instance
+// NewMsgConnectionOpenInit creates a new MsgConnectionOpenInit instance. It sets the
+// counterparty connection identifier to be empty.
 //nolint:interfacer
 func NewMsgConnectionOpenInit(
-	connectionID, clientID, counterpartyConnectionID,
-	counterpartyClientID string, counterpartyPrefix commitmenttypes.MerklePrefix,
-	version string, signer sdk.AccAddress,
+	clientID, counterpartyClientID string,
+	counterpartyPrefix commitmenttypes.MerklePrefix,
+	version *Version, delayPeriod uint64, signer sdk.AccAddress,
 ) *MsgConnectionOpenInit {
-	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
+	// counterparty must have the same delay period
+	counterparty := NewCounterparty(counterpartyClientID, "", counterpartyPrefix)
 	return &MsgConnectionOpenInit{
-		ConnectionId: connectionID,
 		ClientId:     clientID,
 		Counterparty: counterparty,
 		Version:      version,
+		DelayPeriod:  delayPeriod,
 		Signer:       signer.String(),
 	}
 }
@@ -41,19 +43,22 @@ func (msg MsgConnectionOpenInit) Type() string {
 
 // ValidateBasic implements sdk.Msg.
 func (msg MsgConnectionOpenInit) ValidateBasic() error {
-	if err := host.ConnectionIdentifierValidator(msg.ConnectionId); err != nil {
-		return sdkerrors.Wrap(err, "invalid connection ID")
-	}
 	if err := host.ClientIdentifierValidator(msg.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "invalid client ID")
 	}
-	if msg.Version != "" {
+	if msg.Counterparty.ConnectionId != "" {
+		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty connection identifier must be empty")
+	}
+
+	// NOTE: Version can be nil on MsgConnectionOpenInit
+	if msg.Version != nil {
 		if err := ValidateVersion(msg.Version); err != nil {
 			return sdkerrors.Wrap(err, "basic validation of the provided version failed")
 		}
 	}
-	if msg.Signer == "" {
-		return sdkerrors.ErrInvalidAddress
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
 	}
 	return msg.Counterparty.ValidateBasic()
 }
@@ -78,27 +83,28 @@ var _ sdk.Msg = &MsgConnectionOpenTry{}
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
 //nolint:interfacer
 func NewMsgConnectionOpenTry(
-	desiredConnectionID, counterpartyChosenConnectionID, clientID, counterpartyConnectionID,
+	previousConnectionID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyClient exported.ClientState,
-	counterpartyPrefix commitmenttypes.MerklePrefix, counterpartyVersions []string,
+	counterpartyPrefix commitmenttypes.MerklePrefix,
+	counterpartyVersions []*Version, delayPeriod uint64,
 	proofInit, proofClient, proofConsensus []byte,
 	proofHeight, consensusHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgConnectionOpenTry {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
 	csAny, _ := clienttypes.PackClientState(counterpartyClient)
 	return &MsgConnectionOpenTry{
-		DesiredConnectionId:            desiredConnectionID,
-		CounterpartyChosenConnectionId: counterpartyChosenConnectionID,
-		ClientId:                       clientID,
-		ClientState:                    csAny,
-		Counterparty:                   counterparty,
-		CounterpartyVersions:           counterpartyVersions,
-		ProofInit:                      proofInit,
-		ProofClient:                    proofClient,
-		ProofConsensus:                 proofConsensus,
-		ProofHeight:                    proofHeight,
-		ConsensusHeight:                consensusHeight,
-		Signer:                         signer.String(),
+		PreviousConnectionId: previousConnectionID,
+		ClientId:             clientID,
+		ClientState:          csAny,
+		Counterparty:         counterparty,
+		CounterpartyVersions: counterpartyVersions,
+		DelayPeriod:          delayPeriod,
+		ProofInit:            proofInit,
+		ProofClient:          proofClient,
+		ProofConsensus:       proofConsensus,
+		ProofHeight:          proofHeight,
+		ConsensusHeight:      consensusHeight,
+		Signer:               signer.String(),
 	}
 }
 
@@ -114,14 +120,18 @@ func (msg MsgConnectionOpenTry) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenTry) ValidateBasic() error {
-	if err := host.ConnectionIdentifierValidator(msg.DesiredConnectionId); err != nil {
-		return sdkerrors.Wrap(err, "invalid desired connection ID")
-	}
-	if msg.CounterpartyChosenConnectionId != "" && msg.CounterpartyChosenConnectionId != msg.DesiredConnectionId {
-		return sdkerrors.Wrap(ErrInvalidConnectionIdentifier, "counterparty chosen connection identifier must be empty or equal to desired connection identifier")
+	// an empty connection identifier indicates that a connection identifier should be generated
+	if msg.PreviousConnectionId != "" {
+		if !IsValidConnectionID(msg.PreviousConnectionId) {
+			return sdkerrors.Wrap(ErrInvalidConnectionIdentifier, "invalid previous connection ID")
+		}
 	}
 	if err := host.ClientIdentifierValidator(msg.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "invalid client ID")
+	}
+	// counterparty validate basic allows empty counterparty connection identifiers
+	if err := host.ConnectionIdentifierValidator(msg.Counterparty.ConnectionId); err != nil {
+		return sdkerrors.Wrap(err, "invalid counterparty connection ID")
 	}
 	if msg.ClientState == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidClient, "counterparty client is nil")
@@ -156,8 +166,9 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	if msg.ConsensusHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "consensus height must be non-zero")
 	}
-	if msg.Signer == "" {
-		return sdkerrors.ErrInvalidAddress
+	_, err = sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
 	}
 	return msg.Counterparty.ValidateBasic()
 }
@@ -195,7 +206,8 @@ var _ sdk.Msg = &MsgConnectionOpenAck{}
 func NewMsgConnectionOpenAck(
 	connectionID, counterpartyConnectionID string, counterpartyClient exported.ClientState,
 	proofTry, proofClient, proofConsensus []byte,
-	proofHeight, consensusHeight clienttypes.Height, version string,
+	proofHeight, consensusHeight clienttypes.Height,
+	version *Version,
 	signer sdk.AccAddress,
 ) *MsgConnectionOpenAck {
 	csAny, _ := clienttypes.PackClientState(counterpartyClient)
@@ -230,8 +242,8 @@ func (msg MsgConnectionOpenAck) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenAck) ValidateBasic() error {
-	if err := host.ConnectionIdentifierValidator(msg.ConnectionId); err != nil {
-		return sdkerrors.Wrap(err, "invalid connection ID")
+	if !IsValidConnectionID(msg.ConnectionId) {
+		return ErrInvalidConnectionIdentifier
 	}
 	if err := host.ConnectionIdentifierValidator(msg.CounterpartyConnectionId); err != nil {
 		return sdkerrors.Wrap(err, "invalid counterparty connection ID")
@@ -264,8 +276,9 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 	if msg.ConsensusHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "consensus height must be non-zero")
 	}
-	if msg.Signer == "" {
-		return sdkerrors.ErrInvalidAddress
+	_, err = sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
 	}
 	return nil
 }
@@ -313,8 +326,8 @@ func (msg MsgConnectionOpenConfirm) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
-	if err := host.ConnectionIdentifierValidator(msg.ConnectionId); err != nil {
-		return sdkerrors.Wrap(err, "invalid connection ID")
+	if !IsValidConnectionID(msg.ConnectionId) {
+		return ErrInvalidConnectionIdentifier
 	}
 	if len(msg.ProofAck) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof ack")
@@ -322,8 +335,9 @@ func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	if msg.Signer == "" {
-		return sdkerrors.ErrInvalidAddress
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
 	}
 	return nil
 }

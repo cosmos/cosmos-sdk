@@ -7,18 +7,18 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/grpc/simulate"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func NewTestTxConfig() client.TxConfig {
-	cfg := simapp.MakeEncodingConfig()
+	cfg := simapp.MakeTestEncodingConfig()
 	return cfg.TxConfig
 }
 
@@ -28,7 +28,7 @@ func TestCalculateGas(t *testing.T) {
 			if wantErr {
 				return nil, 0, errors.New("query failed")
 			}
-			simRes := &simulate.SimulateResponse{
+			simRes := &txtypes.SimulateResponse{
 				GasInfo: &sdk.GasInfo{GasUsed: gasUsed, GasWanted: gasUsed},
 				Result:  &sdk.Result{Data: []byte("tx data"), Log: "log"},
 			}

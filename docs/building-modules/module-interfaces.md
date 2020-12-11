@@ -56,7 +56,7 @@ This query returns the account at a given address. The getter function does the 
   - The function should first initialize a new client [`Context`](../interfaces/query-lifecycle.md#context) as described in the [previous section](#transaction-commands)
   - If applicable, the `Context` is used to retrieve any parameters (e.g. the query originator's address to be used in the query) and marshal them with the query parameter type, in preparation to be relayed to a node. There are no `Context` parameters in this case because the query does not involve any information about the user.
   - A new `queryClient` should be initialized using `NewQueryClient(clientCtx)`, this method being generated from `query.proto`. Then it can be used to call the appropriate [query](./messages-and-queries.md#grpc-queries).
-  - The `clientCtx.PrintOutput` method is used to print the output back to the user.
+  - The `clientCtx.PrintProto` method is used to format a `proto.Message` object and print it back to the user.
 - **Flags.** Add any [flags](#flags) to the command.
 
 Finally, the module also needs a `GetQueryCmd`, which aggregates all of the query commands of the module. Application developers wishing to include the module's queries will call this function to add them as subcommands in their CLI. Its structure is identical to the `GetTxCmd` command shown above.
@@ -97,7 +97,7 @@ Similarly, there is a `AddQueryFlagsToCmd(cmd *cobra.Command)` to add common fla
 
 In addition to providing an ABCI query pathway, modules [custom queries](./messages-and-queries.md#grpc-queries) can provide a GRPC proxy server that routes requests in the GRPC protocol to ABCI query requests under the hood.
 
-In order to do that, module should implement `RegisterGRPCRoutes(clientCtx client.Context, mux *runtime.ServeMux)` on `AppModuleBasic` to wire the client gRPC requests to the correct handler inside the module.
+In order to do that, module should implement `RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux)` on `AppModuleBasic` to wire the client gRPC requests to the correct handler inside the module.
 
 Here's an example from the `auth` module:
 

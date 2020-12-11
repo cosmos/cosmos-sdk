@@ -58,8 +58,8 @@ func (cs ClientState) Validate() error {
 	if strings.TrimSpace(cs.ChainId) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidChainID, "chain id cannot be blank")
 	}
-	if cs.Height.VersionHeight == 0 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "local version height cannot be zero")
+	if cs.Height.RevisionHeight == 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "local revision height cannot be zero")
 	}
 	return nil
 }
@@ -74,14 +74,27 @@ func (cs ClientState) ZeroCustomFields() exported.ClientState {
 	return &cs
 }
 
+// Initialize ensures that initial consensus state for localhost is nil
+func (cs ClientState) Initialize(_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, consState exported.ConsensusState) error {
+	if consState != nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "initial consensus state for localhost must be nil.")
+	}
+	return nil
+}
+
+// ExportMetadata is a no-op for localhost client
+func (cs ClientState) ExportMetadata(_ sdk.KVStore) []exported.GenesisMetadata {
+	return nil
+}
+
 // CheckHeaderAndUpdateState updates the localhost client. It only needs access to the context
 func (cs *ClientState) CheckHeaderAndUpdateState(
 	ctx sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ exported.Header,
 ) (exported.ClientState, exported.ConsensusState, error) {
 	// use the chain ID from context since the localhost client is from the running chain (i.e self).
 	cs.ChainId = ctx.ChainID()
-	version := clienttypes.ParseChainID(cs.ChainId)
-	cs.Height = clienttypes.NewHeight(version, uint64(ctx.BlockHeight()))
+	revision := clienttypes.ParseChainID(cs.ChainId)
+	cs.Height = clienttypes.NewHeight(revision, uint64(ctx.BlockHeight()))
 	return cs, nil, nil
 }
 
@@ -102,21 +115,21 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 	return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "cannot update localhost client with a proposal")
 }
 
-// VerifyUpgrade returns an error since localhost cannot be upgraded
-func (cs ClientState) VerifyUpgrade(
+// VerifyUpgradeAndUpdateState returns an error since localhost cannot be upgraded
+func (cs ClientState) VerifyUpgradeAndUpdateState(
 	_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore,
-	_ exported.ClientState, _ exported.Height, _ []byte,
-) error {
-	return sdkerrors.Wrap(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade localhost client")
+	_ exported.ClientState, _ exported.ConsensusState, _, _ []byte,
+) (exported.ClientState, exported.ConsensusState, error) {
+	return nil, nil, sdkerrors.Wrap(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade localhost client")
 }
 
 // VerifyClientState verifies that the localhost client state is stored locally
 func (cs ClientState) VerifyClientState(
-	store sdk.KVStore, cdc codec.BinaryMarshaler, _ exported.Root,
+	store sdk.KVStore, cdc codec.BinaryMarshaler,
 	_ exported.Height, _ exported.Prefix, _ string, _ []byte, clientState exported.ClientState,
 ) error {
-	path := host.KeyClientState()
-	bz := store.Get(path)
+	path := host.KeyClientState
+	bz := store.Get([]byte(path))
 	if bz == nil {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedClientStateVerification,
 			"not found for path: %s", path)
@@ -136,7 +149,7 @@ func (cs ClientState) VerifyClientState(
 // VerifyClientConsensusState returns nil since a local host client does not store consensus
 // states.
 func (cs ClientState) VerifyClientConsensusState(
-	sdk.KVStore, codec.BinaryMarshaler, exported.Root,
+	sdk.KVStore, codec.BinaryMarshaler,
 	exported.Height, string, exported.Height, exported.Prefix,
 	[]byte, exported.ConsensusState,
 ) error {
@@ -154,7 +167,7 @@ func (cs ClientState) VerifyConnectionState(
 	connectionID string,
 	connectionEnd exported.ConnectionI,
 ) error {
-	path := host.KeyConnection(connectionID)
+	path := host.ConnectionKey(connectionID)
 	bz := store.Get(path)
 	if bz == nil {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedConnectionStateVerification, "not found for path %s", path)
@@ -188,7 +201,7 @@ func (cs ClientState) VerifyChannelState(
 	channelID string,
 	channel exported.ChannelI,
 ) error {
-	path := host.KeyChannel(portID, channelID)
+	path := host.ChannelKey(portID, channelID)
 	bz := store.Get(path)
 	if bz == nil {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedChannelStateVerification, "not found for path %s", path)
@@ -216,6 +229,8 @@ func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
 	_ exported.Height,
+	_ uint64,
+	_ uint64,
 	_ exported.Prefix,
 	_ []byte,
 	portID,
@@ -223,7 +238,7 @@ func (cs ClientState) VerifyPacketCommitment(
 	sequence uint64,
 	commitmentBytes []byte,
 ) error {
-	path := host.KeyPacketCommitment(portID, channelID, sequence)
+	path := host.PacketCommitmentKey(portID, channelID, sequence)
 
 	data := store.Get(path)
 	if len(data) == 0 {
@@ -246,6 +261,8 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
 	_ exported.Height,
+	_ uint64,
+	_ uint64,
 	_ exported.Prefix,
 	_ []byte,
 	portID,
@@ -253,7 +270,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	sequence uint64,
 	acknowledgement []byte,
 ) error {
-	path := host.KeyPacketAcknowledgement(portID, channelID, sequence)
+	path := host.PacketAcknowledgementKey(portID, channelID, sequence)
 
 	data := store.Get(path)
 	if len(data) == 0 {
@@ -277,13 +294,15 @@ func (cs ClientState) VerifyPacketReceiptAbsence(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
 	_ exported.Height,
+	_ uint64,
+	_ uint64,
 	_ exported.Prefix,
 	_ []byte,
 	portID,
 	channelID string,
 	sequence uint64,
 ) error {
-	path := host.KeyPacketReceipt(portID, channelID, sequence)
+	path := host.PacketReceiptKey(portID, channelID, sequence)
 
 	data := store.Get(path)
 	if data != nil {
@@ -299,13 +318,15 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
 	_ exported.Height,
+	_ uint64,
+	_ uint64,
 	_ exported.Prefix,
 	_ []byte,
 	portID,
 	channelID string,
 	nextSequenceRecv uint64,
 ) error {
-	path := host.KeyNextSequenceRecv(portID, channelID)
+	path := host.NextSequenceRecvKey(portID, channelID)
 
 	data := store.Get(path)
 	if len(data) == 0 {

@@ -37,7 +37,7 @@ func GetCmdQueryDenomTrace() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -77,7 +77,7 @@ func GetCmdQueryDenomTraces() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
@@ -86,8 +86,8 @@ func GetCmdQueryDenomTraces() *cobra.Command {
 	return cmd
 }
 
-// QueryParamsCmd returns the command handler for ibc-transfer parameter querying.
-func QueryParamsCmd() *cobra.Command {
+// GetCmdParams returns the command handler for ibc-transfer parameter querying.
+func GetCmdParams() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "params",
 		Short:   "Query the current ibc-transfer parameters",
@@ -104,7 +104,7 @@ func QueryParamsCmd() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, _ := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
-			return clientCtx.PrintOutput(res.Params)
+			return clientCtx.PrintProto(res.Params)
 		},
 	}
 

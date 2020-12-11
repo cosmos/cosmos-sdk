@@ -3,18 +3,17 @@ package types
 import (
 	"strings"
 
-	tmcrypto "github.com/tendermint/tendermint/crypto"
-
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
-var _ exported.ConsensusState = ConsensusState{}
+var _ exported.ConsensusState = &ConsensusState{}
 
 // ClientType returns Solo Machine type.
 func (ConsensusState) ClientType() string {
-	return SoloMachine
+	return exported.Solomachine
 }
 
 // GetTimestamp returns zero.
@@ -27,14 +26,20 @@ func (cs ConsensusState) GetRoot() exported.Root {
 	return nil
 }
 
-// GetPubKey unmarshals the public key into a tmcrypto.PubKey type.
-func (cs ConsensusState) GetPubKey() tmcrypto.PubKey {
-	publicKey, ok := cs.PublicKey.GetCachedValue().(tmcrypto.PubKey)
-	if !ok {
-		panic("ConsensusState PublicKey is not crypto.PubKey")
+// GetPubKey unmarshals the public key into a cryptotypes.PubKey type.
+// An error is returned if the public key is nil or the cached value
+// is not a PubKey.
+func (cs ConsensusState) GetPubKey() (cryptotypes.PubKey, error) {
+	if cs.PublicKey == nil {
+		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state PublicKey cannot be nil")
 	}
 
-	return publicKey
+	publicKey, ok := cs.PublicKey.GetCachedValue().(cryptotypes.PubKey)
+	if !ok {
+		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state PublicKey is not cryptotypes.PubKey")
+	}
+
+	return publicKey, nil
 }
 
 // ValidateBasic defines basic validation for the solo machine consensus state.
@@ -45,7 +50,9 @@ func (cs ConsensusState) ValidateBasic() error {
 	if cs.Diversifier != "" && strings.TrimSpace(cs.Diversifier) == "" {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "diversifier cannot contain only spaces")
 	}
-	if cs.PublicKey == nil || cs.GetPubKey() == nil || len(cs.GetPubKey().Bytes()) == 0 {
+
+	publicKey, err := cs.GetPubKey()
+	if err != nil || publicKey == nil || len(publicKey.Bytes()) == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "public key cannot be empty")
 	}
 

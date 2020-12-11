@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/armon/go-metrics"
@@ -137,7 +138,7 @@ func (k Keeper) SendTransfer(
 			// NOTE: should not happen as the module account was
 			// retrieved on the step above and it has enough balace
 			// to burn.
-			return err
+			panic(fmt.Sprintf("cannot burn coins after a successful send to a module account: %v", err))
 		}
 	}
 
@@ -217,12 +218,26 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		// remove prefix added by sender chain
 		voucherPrefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
 		unprefixedDenom := data.Denom[len(voucherPrefix):]
-		token := sdk.NewCoin(unprefixedDenom, sdk.NewIntFromUint64(data.Amount))
+
+		// coin denomination used in sending from the escrow address
+		denom := unprefixedDenom
+
+		// The denomination used to send the coins is either the native denom or the hash of the path
+		// if the denomination is not native.
+		denomTrace := types.ParseDenomTrace(unprefixedDenom)
+		if denomTrace.Path != "" {
+			denom = denomTrace.IBCDenom()
+		}
+		token := sdk.NewCoin(denom, sdk.NewIntFromUint64(data.Amount))
 
 		// unescrow tokens
 		escrowAddress := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
 		if err := k.bankKeeper.SendCoins(ctx, escrowAddress, receiver, sdk.NewCoins(token)); err != nil {
-			return err
+			// NOTE: this error is only expected to occur given an unexpected bug or a malicious
+			// counterparty module. The bug may occur in bank or any part of the code that allows
+			// the escrow address to be drained. A malicious counterparty module could drain the
+			// escrow address by allowing more tokens to be sent back then were escrowed.
+			return sdkerrors.Wrap(err, "unable to unescrow tokens, this may be caused by a malicious counterparty module or a bug: please open an issue on counterparty module")
 		}
 
 		defer func() {
@@ -281,7 +296,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	if err := k.bankKeeper.SendCoinsFromModuleToAccount(
 		ctx, types.ModuleName, receiver, sdk.NewCoins(voucher),
 	); err != nil {
-		return err
+		panic(fmt.Sprintf("unable to send coins from module to account despite previously minting coins to module account: %v", err))
 	}
 
 	defer func() {
@@ -345,7 +360,15 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 	if types.SenderChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) {
 		// unescrow tokens back to sender
 		escrowAddress := types.GetEscrowAddress(packet.GetSourcePort(), packet.GetSourceChannel())
-		return k.bankKeeper.SendCoins(ctx, escrowAddress, sender, sdk.NewCoins(token))
+		if err := k.bankKeeper.SendCoins(ctx, escrowAddress, sender, sdk.NewCoins(token)); err != nil {
+			// NOTE: this error is only expected to occur given an unexpected bug or a malicious
+			// counterparty module. The bug may occur in bank or any part of the code that allows
+			// the escrow address to be drained. A malicious counterparty module could drain the
+			// escrow address by allowing more tokens to be sent back then were escrowed.
+			return sdkerrors.Wrap(err, "unable to unescrow tokens, this may be caused by a malicious counterparty module or a bug: please open an issue on counterparty module")
+		}
+
+		return nil
 	}
 
 	// mint vouchers back to sender
@@ -355,13 +378,19 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		return err
 	}
 
-	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, sdk.NewCoins(token))
+	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, sdk.NewCoins(token)); err != nil {
+		panic(fmt.Sprintf("unable to send coins from module to account despite previously minting coins to module account: %v", err))
+	}
+
+	return nil
 }
 
 // DenomPathFromHash returns the full denomination path prefix from an ibc denom with a hash
 // component.
 func (k Keeper) DenomPathFromHash(ctx sdk.Context, denom string) (string, error) {
-	hexHash := denom[4:]
+	// trim the denomination prefix, by default "ibc/"
+	hexHash := denom[len(types.DenomPrefix+"/"):]
+
 	hash, err := types.ParseHexHash(hexHash)
 	if err != nil {
 		return "", sdkerrors.Wrap(types.ErrInvalidDenomForTransfer, err.Error())

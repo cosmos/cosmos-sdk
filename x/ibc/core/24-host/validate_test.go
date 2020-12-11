@@ -73,7 +73,12 @@ func TestPathValidator(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		err := PathValidator(tc.id)
+		f := NewPathValidator(func(path string) error {
+			return nil
+		})
+
+		err := f(tc.id)
+
 		if tc.expPass {
 			seps := strings.Count(tc.id, "/")
 			require.Equal(t, 1, seps)

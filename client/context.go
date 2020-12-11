@@ -10,7 +10,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -95,12 +94,6 @@ func (ctx Context) WithOutputFormat(format string) Context {
 // WithNodeURI returns a copy of the context with an updated node URI.
 func (ctx Context) WithNodeURI(nodeURI string) Context {
 	ctx.NodeURI = nodeURI
-	client, err := rpchttp.New(nodeURI, "/websocket")
-	if err != nil {
-		panic(err)
-	}
-
-	ctx.Client = client
 	return ctx
 }
 
@@ -215,10 +208,10 @@ func (ctx Context) PrintString(str string) error {
 	return err
 }
 
-// PrintOutput outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
+// PrintProto outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
 // either text or json. If text, toPrint will be YAML encoded. Otherwise, toPrint
 // will be JSON encoded using ctx.JSONMarshaler. An error is returned upon failure.
-func (ctx Context) PrintOutput(toPrint proto.Message) error {
+func (ctx Context) PrintProto(toPrint proto.Message) error {
 	// always serialize JSON initially because proto json can't be directly YAML encoded
 	out, err := ctx.JSONMarshaler.MarshalJSON(toPrint)
 	if err != nil {
@@ -227,9 +220,10 @@ func (ctx Context) PrintOutput(toPrint proto.Message) error {
 	return ctx.printOutput(out)
 }
 
-// PrintOutputLegacy is a variant of PrintOutput that doesn't require a proto type
-// and uses amino JSON encoding. It will be removed in the near future!
-func (ctx Context) PrintOutputLegacy(toPrint interface{}) error {
+// PrintObjectLegacy is a variant of PrintProto that doesn't require a proto.Message type
+// and uses amino JSON encoding.
+// Deprecated: It will be removed in the near future!
+func (ctx Context) PrintObjectLegacy(toPrint interface{}) error {
 	out, err := ctx.LegacyAmino.MarshalJSON(toPrint)
 	if err != nil {
 		return err

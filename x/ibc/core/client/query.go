@@ -50,8 +50,9 @@ func QueryTendermintProof(clientCtx client.Context, key []byte) ([]byte, []byte,
 		return nil, nil, clienttypes.Height{}, err
 	}
 
-	merkleProof := commitmenttypes.MerkleProof{
-		Proof: res.ProofOps,
+	merkleProof, err := commitmenttypes.ConvertProofs(res.ProofOps)
+	if err != nil {
+		return nil, nil, clienttypes.Height{}, err
 	}
 
 	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
@@ -61,6 +62,6 @@ func QueryTendermintProof(clientCtx client.Context, key []byte) ([]byte, []byte,
 		return nil, nil, clienttypes.Height{}, err
 	}
 
-	version := clienttypes.ParseChainID(clientCtx.ChainID)
-	return res.Value, proofBz, clienttypes.NewHeight(version, uint64(res.Height)+1), nil
+	revision := clienttypes.ParseChainID(clientCtx.ChainID)
+	return res.Value, proofBz, clienttypes.NewHeight(revision, uint64(res.Height)+1), nil
 }

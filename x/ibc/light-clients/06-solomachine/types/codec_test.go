@@ -68,7 +68,7 @@ func (suite SoloMachineTestSuite) TestUnmarshalDataByType() {
 			{
 				"connection", types.CONNECTION, func() {
 					counterparty := connectiontypes.NewCounterparty("clientB", testConnectionID, prefix)
-					conn := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []string{"1.0.0"})
+					conn := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, connectiontypes.ExportedVersionsToProto(connectiontypes.GetCompatibleVersions()), 0)
 					path := solomachine.GetConnectionStatePath("connectionID")
 
 					data, err = types.ConnectionStateDataBytes(cdc, path, conn)
@@ -99,7 +99,7 @@ func (suite SoloMachineTestSuite) TestUnmarshalDataByType() {
 			{
 				"bad channel (uses connection data)", types.CHANNEL, func() {
 					counterparty := connectiontypes.NewCounterparty("clientB", testConnectionID, prefix)
-					conn := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []string{"1.0.0"})
+					conn := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, connectiontypes.ExportedVersionsToProto(connectiontypes.GetCompatibleVersions()), 0)
 					path := solomachine.GetConnectionStatePath("connectionID")
 
 					data, err = types.ConnectionStateDataBytes(cdc, path, conn)

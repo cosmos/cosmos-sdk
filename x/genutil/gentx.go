@@ -113,6 +113,7 @@ func DeliverGenTxs(
 			panic(res.Log)
 		}
 	}
+	stakingKeeper.ExecuteEpoch(ctx)
 
 	return stakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 }

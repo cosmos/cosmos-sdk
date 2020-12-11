@@ -136,13 +136,14 @@ func TestSign(t *testing.T) {
 	requireT.NoError(err)
 	requireT.NoError(kr.Delete(from1))
 	info1, _, err := kr.NewMnemonic(from1, keyring.English, path, hd.Secp256k1)
+	requireT.NoError(err)
 
 	info2, err := kr.NewAccount(from2, seed, "", path, hd.Secp256k1)
 	requireT.NoError(err)
-	requireT.NotEqual(info1.GetPubKey().Bytes(), info2.GetPubKey().Bytes())
 
 	pubKey1 := info1.GetPubKey()
 	pubKey2 := info2.GetPubKey()
+	requireT.NotEqual(pubKey1.Bytes(), pubKey2.Bytes())
 	t.Log("Pub keys:", pubKey1, pubKey2)
 
 	txfNoKeybase := tx.Factory{}.
@@ -157,58 +158,74 @@ func TestSign(t *testing.T) {
 		WithSignMode(signingtypes.SignMode_SIGN_MODE_DIRECT)
 	txfAmino := txfDirect.
 		WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
-	msg := banktypes.NewMsgSend(info1.GetAddress(), sdk.AccAddress("to"), nil)
-	txb, err := tx.BuildUnsignedTx(txfNoKeybase, msg)
+	msg1 := banktypes.NewMsgSend(info1.GetAddress(), sdk.AccAddress("to"), nil)
+	msg2 := banktypes.NewMsgSend(info2.GetAddress(), sdk.AccAddress("to"), nil)
+	txb, err := tx.BuildUnsignedTx(txfNoKeybase, msg1, msg2)
+	requireT.NoError(err)
+	txbSimple, err := tx.BuildUnsignedTx(txfNoKeybase, msg2)
 	requireT.NoError(err)
 
 	testCases := []struct {
 		name         string
 		txf          tx.Factory
+		txb          client.TxBuilder
 		from         string
 		overwrite    bool
 		expectedPKs  []cryptotypes.PubKey
 		matchingSigs []int // if not nil, check matching signature against old ones.
 	}{
 		{"should fail if txf without keyring",
-			txfNoKeybase, from1, true, nil, nil},
+			txfNoKeybase, txb, from1, true, nil, nil},
 		{"should fail for non existing key",
-			txfAmino, "unknown", true, nil, nil},
+			txfAmino, txb, "unknown", true, nil, nil},
 		{"should succeed with keyring Amino",
-			txfAmino, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
-		/**** test overwrite AMINO ****/
+			txfAmino, txbSimple, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
+
+		/**** test double sign AMINO ****/
+		{"should sign tx2 Amino",
+			txfAmino, txb, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
 		{"should append a second signature and not overwrite Amino",
-			txfAmino, from2, false, []cryptotypes.PubKey{pubKey1, pubKey2}, []int{0, 0}},
+			txfAmino, txb, from2, false, []cryptotypes.PubKey{pubKey1, pubKey2}, []int{0, 0}},
 		{"should overwrite a signature Amino",
-			txfAmino, from2, true, []cryptotypes.PubKey{pubKey2}, []int{1, 0}},
-		{"should append a signature with different mode Amino",
-			txfDirect, from1, false, []cryptotypes.PubKey{pubKey2, pubKey1}, []int{0, 0}},
+			txfAmino, txb, from2, true, []cryptotypes.PubKey{pubKey2}, []int{1, 0}},
+		{"should fail to append a signature with different mode Direct",
+			txfDirect, txb, from1, false, []cryptotypes.PubKey{}, nil},
+
+		/**** test double sign DIRECT
+		  signing transaction with more than 2 signers should fail in DIRECT mode ****/
+		{"should fail to sign tx2 DIRECT",
+			txfDirect, txb, from1, false, []cryptotypes.PubKey{}, nil},
+		{"should fail to overwrite tx2 DIRECT",
+			txfDirect, txb, from1, true, []cryptotypes.PubKey{}, nil},
+
+		/**** test simple DIRECT ****/
+		{"should succeed with keyring DIRECT",
+			txfAmino, txbSimple, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
 	}
 	var prevSigs []signingtypes.SignatureV2
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err = tx.Sign(tc.txf, tc.from, txb, tc.overwrite)
+			err = tx.Sign(tc.txf, tc.from, tc.txb, tc.overwrite)
 			if len(tc.expectedPKs) == 0 {
 				requireT.Error(err)
 			} else {
 				requireT.NoError(err)
+				sigs := testSigners(requireT, tc.txb.GetTx(), tc.expectedPKs...)
+				if tc.matchingSigs != nil {
+					requireT.Equal(prevSigs[tc.matchingSigs[0]], sigs[tc.matchingSigs[1]])
+				}
+				prevSigs = sigs
 			}
-			sigs := testSigners(requireT, txb.GetTx(), tc.expectedPKs...)
-			if tc.matchingSigs != nil {
-				requireT.Equal(prevSigs[tc.matchingSigs[0]], sigs[tc.matchingSigs[1]])
-			}
-			prevSigs = sigs
 		})
 	}
 }
 
 func testSigners(require *require.Assertions, tr signing.Tx, pks ...cryptotypes.PubKey) []signingtypes.SignatureV2 {
-	signers := tr.GetPubKeys()
-	require.Len(signers, len(pks))
 	sigs, err := tr.GetSignaturesV2()
+	require.Len(sigs, len(pks))
 	require.NoError(err)
 	require.Len(sigs, len(pks))
 	for i := range pks {
-		require.True(signers[i].Equals(pks[i]))
 		require.True(sigs[i].PubKey.Equals(pks[i]), "Signature is signed with a wrong pubkey. Got: %s, expected: %s", sigs[i].PubKey, pks[i])
 	}
 	return sigs

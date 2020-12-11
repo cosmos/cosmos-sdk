@@ -21,7 +21,7 @@ func NewSingleNetwork(client rosetta.NodeClient, network *types.NetworkIdentifie
 	defer cancel()
 
 	var genesisHeight int64 = 1
-	block, _, err := client.BlockByHeight(ctx, &genesisHeight)
+	block, err := client.BlockByHeight(ctx, &genesisHeight)
 	if err != nil {
 		return OnlineNetwork{}, err
 	}
@@ -30,7 +30,7 @@ func NewSingleNetwork(client rosetta.NodeClient, network *types.NetworkIdentifie
 		client:                 client,
 		network:                network,
 		networkOptions:         &types.NetworkOptionsResponse{Version: rosetta.Version(), Allow: rosetta.Allow()},
-		genesisBlockIdentifier: conversion.TMBlockToRosettaBlockIdentifier(block),
+		genesisBlockIdentifier: block.Block,
 	}, nil
 }
 
@@ -55,19 +55,19 @@ func (on OnlineNetwork) AccountBalance(ctx context.Context, request *types.Accou
 
 	switch {
 	case request.BlockIdentifier == nil:
-		block, err = on.client.BlockByHeightAlt(ctx, nil)
+		block, err = on.client.BlockByHeight(ctx, nil)
 		if err != nil {
 			return nil, rosetta.ToRosettaError(err)
 		}
 	case request.BlockIdentifier.Hash != nil:
-		block, err = on.client.BlockByHashAlt(ctx, *request.BlockIdentifier.Hash)
+		block, err = on.client.BlockByHash(ctx, *request.BlockIdentifier.Hash)
 		if err != nil {
 			return nil, rosetta.ToRosettaError(err)
 		}
 		height = block.Block.Index
 	case request.BlockIdentifier.Index != nil:
 		height = *request.BlockIdentifier.Index
-		block, err = on.client.BlockByHeightAlt(ctx, &height)
+		block, err = on.client.BlockByHeight(ctx, &height)
 		if err != nil {
 			return nil, rosetta.ToRosettaError(err)
 		}
@@ -172,7 +172,7 @@ func (on OnlineNetwork) NetworkOptions(_ context.Context, _ *types.NetworkReques
 }
 
 func (on OnlineNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkRequest) (*types.NetworkStatusResponse, *types.Error) {
-	block, _, err := on.client.BlockByHeight(ctx, nil)
+	block, err := on.client.BlockByHeight(ctx, nil)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
@@ -188,8 +188,8 @@ func (on OnlineNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkReque
 	}
 
 	return &types.NetworkStatusResponse{
-		CurrentBlockIdentifier: conversion.TMBlockToRosettaBlockIdentifier(block),
-		CurrentBlockTimestamp:  conversion.TimeToMilliseconds(block.Block.Time),
+		CurrentBlockIdentifier: block.Block,
+		CurrentBlockTimestamp:  block.MillisecondTimestamp,
 		GenesisBlockIdentifier: on.genesisBlockIdentifier,
 		OldestBlockIdentifier:  nil,
 		SyncStatus:             conversion.TMStatusToRosettaSyncStatus(status),

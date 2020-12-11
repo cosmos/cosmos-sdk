@@ -156,39 +156,7 @@ func (c *Client) Balances(ctx context.Context, addr string, height *int64) ([]*t
 	return conversion.SdkCoinsToRosettaAmounts(balance.Balances, availableCoins), nil
 }
 
-// BlockByHash returns the block and the transactions contained in it given its height
-func (c *Client) BlockByHash(ctx context.Context, hash string) (*tmtypes.ResultBlock, []*rosetta.SdkTxWithHash, error) {
-	bHash, err := hex.DecodeString(hash)
-	if err != nil {
-		return nil, nil, rosetta.WrapError(rosetta.ErrBadArgument, fmt.Sprintf("invalid block hash: %s", err))
-	}
-
-	block, err := c.clientCtx.Client.BlockByHash(ctx, bHash)
-	if err != nil {
-		return nil, nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error()) // can be either a connection error or bad argument?
-	}
-
-	txs, err := c.ListTransactionsInBlock(ctx, block.Block.Height)
-	if err != nil {
-		return nil, nil, err
-	}
-	return block, txs, nil
-}
-
-// BlockByHeight returns the block and the transactions contained inside it given its height
-func (c *Client) BlockByHeight(ctx context.Context, height *int64) (*tmtypes.ResultBlock, []*rosetta.SdkTxWithHash, error) {
-	block, err := c.clientCtx.Client.Block(ctx, height)
-	if err != nil {
-		return nil, nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
-	}
-	txs, err := c.ListTransactionsInBlock(ctx, block.Block.Height)
-	if err != nil {
-		return nil, nil, err
-	}
-	return block, txs, err
-}
-
-func (c *Client) BlockByHashAlt(ctx context.Context, hash string) (rosetta.BlockResponse, error) {
+func (c *Client) BlockByHash(ctx context.Context, hash string) (rosetta.BlockResponse, error) {
 	bHash, err := hex.DecodeString(hash)
 	if err != nil {
 		return rosetta.BlockResponse{}, fmt.Errorf("invalid block hash: %s", err)
@@ -202,7 +170,7 @@ func (c *Client) BlockByHashAlt(ctx context.Context, hash string) (rosetta.Block
 	return buildBlockResponse(block), nil
 }
 
-func (c *Client) BlockByHeightAlt(ctx context.Context, height *int64) (rosetta.BlockResponse, error) {
+func (c *Client) BlockByHeight(ctx context.Context, height *int64) (rosetta.BlockResponse, error) {
 	block, err := c.clientCtx.Client.Block(ctx, height)
 	if err != nil {
 		return rosetta.BlockResponse{}, err
@@ -221,7 +189,7 @@ func buildBlockResponse(block *tmtypes.ResultBlock) rosetta.BlockResponse {
 }
 
 func (c *Client) BlockTransactionsByHash(ctx context.Context, hash string) (rosetta.BlockTransactionsResponse, error) {
-	blockResp, err := c.BlockByHashAlt(ctx, hash)
+	blockResp, err := c.BlockByHash(ctx, hash)
 	if err != nil {
 		return rosetta.BlockTransactionsResponse{}, err
 	}
@@ -238,7 +206,7 @@ func (c *Client) BlockTransactionsByHash(ctx context.Context, hash string) (rose
 }
 
 func (c *Client) BlockTransactionsByHeight(ctx context.Context, height *int64) (rosetta.BlockTransactionsResponse, error) {
-	blockResp, err := c.BlockByHeightAlt(ctx, height)
+	blockResp, err := c.BlockByHeight(ctx, height)
 	if err != nil {
 		return rosetta.BlockTransactionsResponse{}, err
 	}

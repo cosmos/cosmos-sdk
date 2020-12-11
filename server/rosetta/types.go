@@ -67,14 +67,10 @@ type NodeClient interface {
 	// if height is not nil, then the balance will be displayed
 	// at the provided height, otherwise last block balance will be returned
 	Balances(ctx context.Context, addr string, height *int64) ([]*types.Amount, error)
-	// BlockByHash gets a block and its transaction at the provided height
-	BlockByHash(ctx context.Context, hash string) (*tmtypes.ResultBlock, []*SdkTxWithHash, error)
-	// BlockByHeight gets a block given its height, if height is nil then last block is returned
-	BlockByHeight(ctx context.Context, height *int64) (*tmtypes.ResultBlock, []*SdkTxWithHash, error)
 	// BlockByHashAlt gets a block and its transaction at the provided height
-	BlockByHashAlt(ctx context.Context, hash string) (BlockResponse, error)
+	BlockByHash(ctx context.Context, hash string) (BlockResponse, error)
 	// BlockByHeightAlt gets a block given its height, if height is nil then last block is returned
-	BlockByHeightAlt(ctx context.Context, height *int64) (BlockResponse, error)
+	BlockByHeight(ctx context.Context, height *int64) (BlockResponse, error)
 	// BlockTransactionsByHash gets the block, parent block and transactions
 	// given the block hash.
 	BlockTransactionsByHash(ctx context.Context, hash string) (BlockTransactionsResponse, error)

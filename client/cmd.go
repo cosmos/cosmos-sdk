@@ -146,7 +146,7 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 	return clientCtx, nil
 }
 
-// ReadQueryCommandFlags returns an updated Context with fields set based on flags
+// readQueryCommandFlags returns an updated Context with fields set based on flags
 // defined in AddQueryFlagsToCmd. An error is returned if any flag query fails.
 //
 // Note, the provided clientCtx may have field pre-populated. The following order
@@ -156,7 +156,7 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 // - client.Context field not pre-populated & flag set: uses set flag value
 // - client.Context field pre-populated & flag not set: uses pre-populated value
 // - client.Context field pre-populated & flag set: uses set flag value
-func ReadQueryCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
+func readQueryCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
 	if clientCtx.Height == 0 || flagSet.Changed(flags.FlagHeight) {
 		height, _ := flagSet.GetInt64(flags.FlagHeight)
 		clientCtx = clientCtx.WithHeight(height)
@@ -170,7 +170,7 @@ func ReadQueryCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, 
 	return ReadPersistentCommandFlags(clientCtx, flagSet)
 }
 
-// ReadTxCommandFlags returns an updated Context with fields set based on flags
+// readTxCommandFlags returns an updated Context with fields set based on flags
 // defined in AddTxFlagsToCmd. An error is returned if any flag query fails.
 //
 // Note, the provided clientCtx may have field pre-populated. The following order
@@ -180,7 +180,7 @@ func ReadQueryCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, 
 // - client.Context field not pre-populated & flag set: uses set flag value
 // - client.Context field pre-populated & flag not set: uses pre-populated value
 // - client.Context field pre-populated & flag set: uses set flag value
-func ReadTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
+func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
 	clientCtx, err := ReadPersistentCommandFlags(clientCtx, flagSet)
 	if err != nil {
 		return clientCtx, err
@@ -251,7 +251,7 @@ func ReadTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 // - client.Context field pre-populated & flag set: uses set flag value
 func GetClientQueryContext(cmd *cobra.Command) (Context, error) {
 	ctx := GetClientContextFromCmd(cmd)
-	return ReadQueryCommandFlags(ctx, cmd.Flags())
+	return readQueryCommandFlags(ctx, cmd.Flags())
 }
 
 // GetClientTxContext returns a Context from a command with fields set based on flags
@@ -263,7 +263,7 @@ func GetClientQueryContext(cmd *cobra.Command) (Context, error) {
 // - client.Context field pre-populated & flag set: uses set flag value
 func GetClientTxContext(cmd *cobra.Command) (Context, error) {
 	ctx := GetClientContextFromCmd(cmd)
-	return ReadTxCommandFlags(ctx, cmd.Flags())
+	return readTxCommandFlags(ctx, cmd.Flags())
 }
 
 // GetClientContextFromCmd returns a Context from a command or an empty Context

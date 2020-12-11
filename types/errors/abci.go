@@ -157,7 +157,7 @@ func errIsNil(err error) bool {
 // originates.
 func Redact(err error) error {
 	if ErrPanic.Is(err) {
-		return ErrPanic
+		return err
 	}
 	if abciCode(err) == internalABCICode {
 		return errInternal

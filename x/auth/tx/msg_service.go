@@ -11,7 +11,8 @@ import (
 )
 
 // Invoke implements the grpc ClientConn.Invoke method. This is so that we can
-// use ADR-031 service `Msg`s with wrapper.
+// use ADR-031 service `Msg`s with wrapper. Invoking this method will
+// **append** the service Msg into the TxBuilder's Msgs array.
 func (w *wrapper) Invoke(_ gocontext.Context, method string, args, reply interface{}, _ ...grpc.CallOption) error {
 	req, ok := args.(sdk.MsgRequest)
 	if !ok {

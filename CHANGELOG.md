@@ -50,6 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * Updated iavl dependency to v0.15-rc2
 * (version) [\#7848](https://github.com/cosmos/cosmos-sdk/pull/7848) [\#7941](https://github.com/cosmos/cosmos-sdk/pull/7941) `version --long` output now shows the list of build dependencies and replaced build dependencies.
 * (x/genutil) [\#8099](https://github.com/cosmos/cosmos-sdk/pull/8099) `init` now supports a `--recover` flag to recover the private validator key from a given mnemonic
+* (tx) [\#7630](https://github.com/cosmos/cosmos-sdk/pull/7630) TxBuilder now extends gogogrpc.ClientConn to support ADR-031 service Msgs.
 
 ### State Machine Breaking Changes
 

@@ -11,7 +11,8 @@ import (
 )
 
 // Invoke implements the grpc ClientConn.Invoke method. This is so that we can
-// use ADR-031 service `Msg`s with StdTxBuilder.
+// use ADR-031 service `Msg`s with StdTxBuilder. Invoking this method will
+// **append** the service Msg into the TxBuilder's Msgs array.
 // TODO Full amino support still needs to be added as part of https://github.com/cosmos/cosmos-sdk/issues/7541.
 func (s *StdTxBuilder) Invoke(_ gocontext.Context, method string, args, reply interface{}, _ ...grpc.CallOption) error {
 	req, ok := args.(sdk.MsgRequest)

@@ -1,6 +1,7 @@
 package client
 
 import (
+	"encoding/base64"
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -47,6 +48,7 @@ func Paginate(numObjs, page, limit, defLimit int) (start, end int) {
 // ReadPageRequest reads and builds the necessary page request flags for pagination.
 func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
 	pageKey, _ := flagSet.GetString(flags.FlagPageKey)
+	key,_ := base64.StdEncoding.DecodeString(pageKey)
 	offset, _ := flagSet.GetUint64(flags.FlagOffset)
 	limit, _ := flagSet.GetUint64(flags.FlagLimit)
 	countTotal, _ := flagSet.GetBool(flags.FlagCountTotal)
@@ -61,7 +63,7 @@ func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
 	}
 
 	return &query.PageRequest{
-		Key:        []byte(pageKey),
+		Key:        key,
 		Offset:     offset,
 		Limit:      limit,
 		CountTotal: countTotal,

@@ -90,7 +90,7 @@ func (suite *GenTxTestSuite) TestSetGenTxsInAppGenesisState() {
 		{
 			"one genesis transaction",
 			func() {
-				err := txBuilder.AppendMsgs(suite.msg1)
+				err := txBuilder.SetMsgs(suite.msg1)
 				suite.Require().NoError(err)
 				tx := txBuilder.GetTx()
 				genTxs = []sdk.Tx{tx}
@@ -100,7 +100,7 @@ func (suite *GenTxTestSuite) TestSetGenTxsInAppGenesisState() {
 		{
 			"two genesis transactions",
 			func() {
-				err := txBuilder.AppendMsgs(suite.msg1, suite.msg2)
+				err := txBuilder.SetMsgs(suite.msg1, suite.msg2)
 				suite.Require().NoError(err)
 				tx := txBuilder.GetTx()
 				genTxs = []sdk.Tx{tx}
@@ -218,7 +218,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 		{
 			"no signature supplied",
 			func() {
-				err := txBuilder.AppendMsgs(suite.msg1)
+				err := txBuilder.SetMsgs(suite.msg1)
 				suite.Require().NoError(err)
 
 				genTxs = make([]json.RawMessage, 1)

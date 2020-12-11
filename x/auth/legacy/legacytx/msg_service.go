@@ -19,7 +19,7 @@ func (s *StdTxBuilder) Invoke(_ gocontext.Context, method string, args, reply in
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "%T should implement %T", args, (*sdk.MsgRequest)(nil))
 	}
 
-	s.AppendMsgs(sdk.ServiceMsg{
+	s.SetMsgs(sdk.ServiceMsg{
 		MethodName: method,
 		Request:    req,
 	})

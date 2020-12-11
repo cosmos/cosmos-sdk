@@ -42,7 +42,7 @@ func GenTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, ch
 	}
 
 	tx := gen.NewTxBuilder()
-	err := tx.AppendMsgs(msgs...)
+	err := tx.SetMsgs(msgs...)
 	if err != nil {
 		return nil, err
 	}

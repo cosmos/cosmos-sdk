@@ -55,7 +55,7 @@ func TestDirectModeHandler(t *testing.T) {
 
 	fee := txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
 
-	err = txBuilder.AppendMsgs(msgs...)
+	err = txBuilder.SetMsgs(msgs...)
 	require.NoError(t, err)
 	txBuilder.SetMemo(memo)
 	txBuilder.SetFeeAmount(fee.Amount)

@@ -848,7 +848,7 @@ func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 	require.NoError(t, err)
 	to, err := sdk.AccAddressFromBech32("cosmos1cxlt8kznps92fwu3j6npahx4mjfutydyene2qw")
 	require.NoError(t, err)
-	err = builder.AppendMsgs(banktypes.NewMsgSend(from, to, sdk.Coins{sdk.NewInt64Coin("stake", 10000)}))
+	err = builder.SetMsgs(banktypes.NewMsgSend(from, to, sdk.Coins{sdk.NewInt64Coin("stake", 10000)}))
 	require.NoError(t, err)
 	txContents, err := txCfg.TxJSONEncoder()(builder.GetTx())
 	txFileName := filepath.Join(testDir, "tx.json")
@@ -911,7 +911,7 @@ func (s *IntegrationTestSuite) TestTxWithoutPublicKey() {
 	msg := banktypes.NewMsgSend(val1.Address, val1.Address, sdk.NewCoins(
 		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
 	))
-	err := txBuilder.AppendMsgs(msg)
+	err := txBuilder.SetMsgs(msg)
 	s.Require().NoError(err)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150))))
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit())

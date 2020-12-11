@@ -103,7 +103,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 				privs, accNums, accSeqs = []cryptotypes.PrivKey{}, []uint64{}, []uint64{}
 
 				// Create tx manually to test the tx's signers
-				suite.Require().NoError(suite.txBuilder.AppendMsgs(msgs...))
+				suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
 				tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 				suite.Require().NoError(err)
 				// tx.GetSigners returns addresses in correct order: addr1, addr2, addr3
@@ -837,7 +837,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 
 				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[1].priv}, []uint64{1}, []uint64{0}
 				msgs = []sdk.Msg{testdata.NewTestMsg(accounts[1].acc.GetAddress())}
-				suite.txBuilder.AppendMsgs(msgs...)
+				suite.txBuilder.SetMsgs(msgs...)
 				suite.txBuilder.SetFeeAmount(feeAmount)
 				suite.txBuilder.SetGasLimit(gasLimit)
 
@@ -1062,7 +1062,7 @@ func (suite *AnteTestSuite) TestAnteHandlerReCheck() {
 
 	msg := testdata.NewTestMsg(accounts[0].acc.GetAddress())
 	msgs := []sdk.Msg{msg}
-	suite.Require().NoError(suite.txBuilder.AppendMsgs(msgs...))
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
 
 	suite.txBuilder.SetMemo("thisisatestmemo")
 

@@ -29,7 +29,7 @@ func buildTx(t *testing.T, bldr *wrapper) {
 	bldr.SetGasLimit(gas)
 	bldr.SetMemo(memo)
 	bldr.SetTimeoutHeight(timeout)
-	require.NoError(t, bldr.AppendMsgs(msg))
+	require.NoError(t, bldr.SetMsgs(msg))
 }
 
 func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {

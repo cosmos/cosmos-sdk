@@ -217,7 +217,7 @@ func InitTestnet(
 		}
 
 		txBuilder := clientCtx.TxConfig.NewTxBuilder()
-		if err := txBuilder.AppendMsgs(createValMsg); err != nil {
+		if err := txBuilder.SetMsgs(createValMsg); err != nil {
 			return err
 		}
 

@@ -37,7 +37,7 @@ func ConvertTxToStdTx(codec *codec.LegacyAmino, tx signing.Tx) (legacytx.StdTx, 
 // different transaction formats. If ignoreSignatureError is true, copying will continue
 // tx even if the signature cannot be set in the target builder resulting in an unsigned tx.
 func CopyTx(tx signing.Tx, builder client.TxBuilder, ignoreSignatureError bool) error {
-	err := builder.AppendMsgs(tx.GetMsgs()...)
+	err := builder.SetMsgs(tx.GetMsgs()...)
 	if err != nil {
 		return err
 	}

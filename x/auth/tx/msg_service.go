@@ -18,7 +18,7 @@ func (w *wrapper) Invoke(_ gocontext.Context, method string, args, reply interfa
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "%T should implement %T", args, (*sdk.MsgRequest)(nil))
 	}
 
-	w.AppendMsgs(sdk.ServiceMsg{
+	w.SetMsgs(sdk.ServiceMsg{
 		MethodName: method,
 		Request:    req,
 	})

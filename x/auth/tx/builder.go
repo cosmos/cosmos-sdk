@@ -197,8 +197,8 @@ func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 	return res, nil
 }
 
-// AppendMsgs implemented the TxBuilder.AppendMsgs method.
-func (w *wrapper) AppendMsgs(msgs ...sdk.Msg) error {
+// SetMsgs implemented the TxBuilder.SetMsgs method.
+func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
 	anys := make([]*codectypes.Any, len(msgs))
 
 	for i, msg := range msgs {

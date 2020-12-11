@@ -39,7 +39,7 @@ func (suite *AnteTestSuite) TestSetPubKey() {
 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 		msgs[i] = testdata.NewTestMsg(addr)
 	}
-	suite.Require().NoError(suite.txBuilder.AppendMsgs(msgs...))
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
 
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
@@ -166,7 +166,7 @@ func (suite *AnteTestSuite) TestSigVerification() {
 		suite.ctx = suite.ctx.WithIsReCheckTx(tc.recheck)
 		suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder() // Create new txBuilder for each test
 
-		suite.Require().NoError(suite.txBuilder.AppendMsgs(msgs...))
+		suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
 		suite.txBuilder.SetFeeAmount(feeAmount)
 		suite.txBuilder.SetGasLimit(gasLimit)
 
@@ -251,7 +251,7 @@ func (suite *AnteTestSuite) TestSigVerification_ExplicitAmino() {
 		suite.ctx = suite.ctx.WithIsReCheckTx(tc.recheck)
 		suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder() // Create new txBuilder for each test
 
-		suite.Require().NoError(suite.txBuilder.AppendMsgs(msgs...))
+		suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
 		suite.txBuilder.SetFeeAmount(feeAmount)
 		suite.txBuilder.SetGasLimit(gasLimit)
 
@@ -308,7 +308,7 @@ func (suite *AnteTestSuite) runSigDecorators(params types.Params, _ bool, privs 
 		accNums[i] = uint64(i)
 		accSeqs[i] = uint64(0)
 	}
-	suite.Require().NoError(suite.txBuilder.AppendMsgs(msgs...))
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
 
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()

@@ -20,6 +20,11 @@ func (s *StdTxBuilder) Invoke(_ gocontext.Context, method string, args, reply in
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "%T should implement %T", args, (*sdk.MsgRequest)(nil))
 	}
 
+	err := req.ValidateBasic()
+	if err != nil {
+		return err
+	}
+
 	msgs := append(s.Msgs, sdk.ServiceMsg{
 		MethodName: method,
 		Request:    req,

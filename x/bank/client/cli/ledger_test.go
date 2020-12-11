@@ -101,16 +101,13 @@ func (s *LedgerIntegrationTestSuite) Test_runAddCmdLedgerWithCustomCoinType() {
 
 	sendCmd := bankcli.NewSendTxCmd()
 	mockIn = testutil.ApplyMockIODiscardOutErr(sendCmd)
-	res, err := clitestutil.ExecTestCLICmd(
+	_, err = clitestutil.ExecTestCLICmd(
 		clientCtx, sendCmd,
 		[]string{
 			key1.GetName(), key1.GetAddress().String(), sdk.NewCoin(fmt.Sprintf("%stoken", val0.Moniker), sdk.NewInt(1)).String(),
 		},
 	)
 	s.Require().NoError(err)
-
-	fmt.Println(res.String())
-	s.Require().False(true)
 }
 
 func TestLedgerIntegrationTestSuite(t *testing.T) {

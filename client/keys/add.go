@@ -90,10 +90,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var (
-		kr  keyring.Keyring
-		err error
-	)
+	var kr keyring.Keyring
 
 	dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun)
 	if dryRun {

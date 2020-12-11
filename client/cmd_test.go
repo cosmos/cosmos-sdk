@@ -64,7 +64,7 @@ func TestSetCmdClientContextHandler(t *testing.T) {
 				return client.SetCmdClientContextHandler(initClientCtx, cmd)
 			},
 			RunE: func(cmd *cobra.Command, _ []string) error {
-				clientCtx, err := client.GetClientTxContext(cmd)
+				_, err := client.GetClientTxContext(cmd)
 				return err
 			},
 		}

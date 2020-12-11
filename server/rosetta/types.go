@@ -78,6 +78,9 @@ type NodeClient interface {
 	// BlockTransactionsByHash gets the block, parent block and transactions
 	// given the block hash.
 	BlockTransactionsByHash(ctx context.Context, hash string) (BlockTransactionsResponse, error)
+	// BlockTransactionsByHash gets the block, parent block and transactions
+	// given the block hash.
+	BlockTransactionsByHeight(ctx context.Context, height *int64) (BlockTransactionsResponse, error)
 	// GetTx gets a transaction given its hash
 	GetTx(ctx context.Context, hash string) (*SdkTxWithHash, string, error)
 	// GetUnconfirmedTx gets an unconfirmed Tx given its hash

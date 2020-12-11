@@ -61,8 +61,7 @@ account key. It implies --signature-only.
 
 func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		clientCtx := client.GetClientContextFromCmd(cmd)
-		clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+		clientCtx, err := client.GetClientTxContext(cmd)
 		if err != nil {
 			return err
 		}
@@ -210,8 +209,7 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 
 func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		clientCtx := client.GetClientContextFromCmd(cmd)
-		clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+		clientCtx, err := client.GetClientTxContext(cmd)
 		if err != nil {
 			return err
 		}

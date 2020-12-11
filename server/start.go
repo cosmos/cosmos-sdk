@@ -103,7 +103,10 @@ which accepts a path for the resulting pprof file.
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
-			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
 
 			withTM, _ := cmd.Flags().GetBool(flagWithTendermint)
 			if !withTM {

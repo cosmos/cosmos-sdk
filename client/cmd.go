@@ -242,6 +242,30 @@ func ReadTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 	return clientCtx, nil
 }
 
+// GetClientQueryContext returns a Context from a command with fields set based on flags
+// defined in AddQueryFlagsToCmd. An error is returned if any flag query fails.
+//
+// - client.Context field not pre-populated & flag not set: uses default flag value
+// - client.Context field not pre-populated & flag set: uses set flag value
+// - client.Context field pre-populated & flag not set: uses pre-populated value
+// - client.Context field pre-populated & flag set: uses set flag value
+func GetClientQueryContext(cmd *cobra.Command) (Context, error) {
+	ctx := GetClientContextFromCmd(cmd)
+	return ReadQueryCommandFlags(ctx, cmd.Flags())
+}
+
+// GetClientTxContext returns a Context from a command with fields set based on flags
+// defined in AddTxFlagsToCmd. An error is returned if any flag query fails.
+//
+// - client.Context field not pre-populated & flag not set: uses default flag value
+// - client.Context field not pre-populated & flag set: uses set flag value
+// - client.Context field pre-populated & flag not set: uses pre-populated value
+// - client.Context field pre-populated & flag set: uses set flag value
+func GetClientTxContext(cmd *cobra.Command) (Context, error) {
+	ctx := GetClientContextFromCmd(cmd)
+	return ReadTxCommandFlags(ctx, cmd.Flags())
+}
+
 // GetClientContextFromCmd returns a Context from a command or an empty Context
 // if it has not been set.
 func GetClientContextFromCmd(cmd *cobra.Command) Context {

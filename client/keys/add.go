@@ -85,7 +85,10 @@ the flag --nosort is set.
 
 func runAddCmd(cmd *cobra.Command, args []string) error {
 	buf := bufio.NewReader(cmd.InOrStdin())
-	clientCtx := client.GetClientContextFromCmd(cmd)
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
 
 	var (
 		kr  keyring.Keyring

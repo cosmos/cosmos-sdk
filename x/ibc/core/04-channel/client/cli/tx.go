@@ -28,12 +28,10 @@ func NewChannelOpenInitCmd() *cobra.Command {
 		Short: "Creates and sends a ChannelOpenInit message",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			portID := args[0]
 			counterpartyPortID := args[1]
 			hops := strings.Split(args[2], "/")
@@ -66,12 +64,10 @@ func NewChannelOpenTryCmd() *cobra.Command {
 		Short: "Creates and sends a ChannelOpenTry message",
 		Args:  cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			portID := args[0]
 			channelID := args[1]
 			counterpartyPortID := args[2]
@@ -119,12 +115,10 @@ func NewChannelOpenAckCmd() *cobra.Command {
 		Short: "Creates and sends a ChannelOpenAck message",
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			portID := args[0]
 			channelID := args[1]
 			counterpartyChannelID := args[2]
@@ -165,12 +159,10 @@ func NewChannelOpenConfirmCmd() *cobra.Command {
 		Short: "Creates and sends a ChannelOpenConfirm message",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			portID := args[0]
 			channelID := args[1]
 
@@ -207,12 +199,10 @@ func NewChannelCloseInitCmd() *cobra.Command {
 		Short: "Creates and sends a ChannelCloseInit message",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			portID := args[0]
 			channelID := args[1]
 
@@ -237,12 +227,10 @@ func NewChannelCloseConfirmCmd() *cobra.Command {
 		Short: "Creates and sends a ChannelCloseConfirm message",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			portID := args[0]
 			channelID := args[1]
 

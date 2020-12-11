@@ -69,12 +69,15 @@ type NodeClient interface {
 	Balances(ctx context.Context, addr string, height *int64) ([]*types.Amount, error)
 	// BlockByHash gets a block and its transaction at the provided height
 	BlockByHash(ctx context.Context, hash string) (*tmtypes.ResultBlock, []*SdkTxWithHash, error)
+	// BlockByHeight gets a block given its height, if height is nil then last block is returned
+	BlockByHeight(ctx context.Context, height *int64) (*tmtypes.ResultBlock, []*SdkTxWithHash, error)
 	// BlockByHashAlt gets a block and its transaction at the provided height
 	BlockByHashAlt(ctx context.Context, hash string) (BlockResponse, error)
 	// BlockByHeightAlt gets a block given its height, if height is nil then last block is returned
 	BlockByHeightAlt(ctx context.Context, height *int64) (BlockResponse, error)
-	// BlockByHeight gets a block given its height, if height is nil then last block is returned
-	BlockByHeight(ctx context.Context, height *int64) (*tmtypes.ResultBlock, []*SdkTxWithHash, error)
+	// BlockTransactionsByHash gets the block, parent block and transactions
+	// given the block hash.
+	BlockTransactionsByHash(ctx context.Context, hash string) (BlockTransactionsResponse, error)
 	// GetTx gets a transaction given its hash
 	GetTx(ctx context.Context, hash string) (*SdkTxWithHash, string, error)
 	// GetUnconfirmedTx gets an unconfirmed Tx given its hash
@@ -88,6 +91,11 @@ type NodeClient interface {
 	Status(ctx context.Context) (*tmtypes.ResultStatus, error)
 	GetTxConfig() client.TxConfig
 	PostTx(txBytes []byte) (res *sdk.TxResponse, err error)
+}
+
+type BlockTransactionsResponse struct {
+	BlockResponse
+	Transactions []*types.Transaction
 }
 
 type BlockResponse struct {

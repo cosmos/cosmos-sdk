@@ -5,9 +5,8 @@ import (
 	"time"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
-	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
-
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
+	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/conversion"

@@ -199,12 +199,7 @@ func (c *Client) BlockByHashAlt(ctx context.Context, hash string) (rosetta.Block
 		return rosetta.BlockResponse{}, err
 	}
 
-	return rosetta.BlockResponse{
-		Block:                conversion.TMBlockToRosettaBlockIdentifier(block),
-		ParentBlock:          nil,
-		MillisecondTimestamp: 0,
-		TxCount:              0,
-	}, nil
+	return buildBlockResponse(block), nil
 }
 
 func (c *Client) BlockByHeightAlt(ctx context.Context, height *int64) (rosetta.BlockResponse, error) {
@@ -213,11 +208,35 @@ func (c *Client) BlockByHeightAlt(ctx context.Context, height *int64) (rosetta.B
 		return rosetta.BlockResponse{}, err
 	}
 
+	return buildBlockResponse(block), nil
+}
+
+func buildBlockResponse(block *tmtypes.ResultBlock) rosetta.BlockResponse {
 	return rosetta.BlockResponse{
-		Block:                conversion.TMBlockToRosettaBlockIdentifier(block),
-		ParentBlock:          nil,
-		MillisecondTimestamp: 0,
-		TxCount:              0,
+		Block: conversion.TMBlockToRosettaBlockIdentifier(block),
+		ParentBlock: &types.BlockIdentifier{
+			Index: block.Block.Height - 1,
+			Hash:  block.Block.LastBlockID.Hash.String(),
+		},
+		MillisecondTimestamp: conversion.TimeToMilliseconds(block.Block.Time),
+		TxCount:              int64(len(block.Block.Txs)),
+	}
+}
+
+func (c *Client) BlockTransactionsByHash(ctx context.Context, hash string) (rosetta.BlockTransactionsResponse, error) {
+	blockResp, err := c.BlockByHashAlt(ctx, hash)
+	if err != nil {
+		return rosetta.BlockTransactionsResponse{}, err
+	}
+
+	txs, err := c.ListTransactionsInBlock(ctx, blockResp.Block.Index)
+	if err != nil {
+		return rosetta.BlockTransactionsResponse{}, err
+	}
+
+	return rosetta.BlockTransactionsResponse{
+		BlockResponse: blockResp,
+		Transactions:  conversion.SdkTxsWithHashToRosettaTxs(txs),
 	}, nil
 }
 

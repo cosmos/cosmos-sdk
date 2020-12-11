@@ -48,7 +48,7 @@ func Paginate(numObjs, page, limit, defLimit int) (start, end int) {
 // ReadPageRequest reads and builds the necessary page request flags for pagination.
 func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
 	pageKey, _ := flagSet.GetString(flags.FlagPageKey)
-	key,_ := base64.StdEncoding.DecodeString(pageKey)
+	key, _ := base64.StdEncoding.DecodeString(pageKey)
 	offset, _ := flagSet.GetUint64(flags.FlagOffset)
 	limit, _ := flagSet.GetUint64(flags.FlagLimit)
 	countTotal, _ := flagSet.GetBool(flags.FlagCountTotal)

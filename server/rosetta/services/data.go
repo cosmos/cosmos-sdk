@@ -124,13 +124,13 @@ func (on OnlineNetwork) Block(ctx context.Context, request *types.BlockRequest) 
 // BlockTransaction gets the given transaction in the specified block, we do not need to check the block itself too
 // due to the fact that tendermint achieves instant finality
 func (on OnlineNetwork) BlockTransaction(ctx context.Context, request *types.BlockTransactionRequest) (*types.BlockTransactionResponse, *types.Error) {
-	tx, _, err := on.client.GetTx(ctx, request.TransactionIdentifier.Hash)
+	tx, err := on.client.GetTx(ctx, request.TransactionIdentifier.Hash)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
 
 	return &types.BlockTransactionResponse{
-		Transaction: conversion.SdkTxWithHashToRosettaTx(tx),
+		Transaction: tx,
 	}, nil
 }
 
@@ -155,11 +155,7 @@ func (on OnlineNetwork) MempoolTransaction(ctx context.Context, request *types.M
 	}
 
 	return &types.MempoolTransactionResponse{
-		Transaction: &types.Transaction{
-			TransactionIdentifier: &types.TransactionIdentifier{Hash: request.TransactionIdentifier.Hash},
-			Operations:            conversion.SdkTxToOperations(tx, false, false),
-			Metadata:              nil,
-		},
+		Transaction: tx,
 	}, nil
 }
 
@@ -193,6 +189,6 @@ func (on OnlineNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkReque
 		GenesisBlockIdentifier: on.genesisBlockIdentifier,
 		OldestBlockIdentifier:  nil,
 		SyncStatus:             conversion.TMStatusToRosettaSyncStatus(status),
-		Peers:                  conversion.TmPeersToRosettaPeers(peers),
+		Peers:                  peers,
 	}, nil
 }

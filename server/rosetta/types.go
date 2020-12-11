@@ -78,14 +78,14 @@ type NodeClient interface {
 	// given the block hash.
 	BlockTransactionsByHeight(ctx context.Context, height *int64) (BlockTransactionsResponse, error)
 	// GetTx gets a transaction given its hash
-	GetTx(ctx context.Context, hash string) (*SdkTxWithHash, string, error)
+	GetTx(ctx context.Context, hash string) (*types.Transaction, error)
 	// GetUnconfirmedTx gets an unconfirmed Tx given its hash
 	// NOTE(fdymylja): NOT IMPLEMENTED YET!
-	GetUnconfirmedTx(ctx context.Context, hash string) (sdk.Tx, error)
+	GetUnconfirmedTx(ctx context.Context, hash string) (*types.Transaction, error)
 	// Mempool returns the list of the current non confirmed transactions
 	Mempool(ctx context.Context) (*tmtypes.ResultUnconfirmedTxs, error)
 	// Peers gets the peers currently connected to the node
-	Peers(ctx context.Context) ([]tmtypes.Peer, error)
+	Peers(ctx context.Context) ([]*types.Peer, error)
 	// Status returns the node status, such as sync data, version etc
 	Status(ctx context.Context) (*tmtypes.ResultStatus, error)
 	GetTxConfig() client.TxConfig

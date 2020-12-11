@@ -247,27 +247,27 @@ func (c *Client) ListTransactionsInBlock(ctx context.Context, height int64) ([]*
 }
 
 // GetTx returns a transaction given its hash
-func (c *Client) GetTx(_ context.Context, hash string) (*rosetta.SdkTxWithHash, string, error) {
+func (c *Client) GetTx(_ context.Context, hash string) (*types.Transaction, error) {
 	txResp, err := authclient.QueryTx(c.clientCtx, hash)
 	if err != nil {
-		return nil, "", rosetta.WrapError(rosetta.ErrUnknown, err.Error())
+		return nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
 	}
 	var sdkTx sdk.Tx
 	err = c.ir.UnpackAny(txResp.Tx, &sdkTx)
 	if err != nil {
-		return nil, "", rosetta.WrapError(rosetta.ErrCodec, err.Error())
+		return nil, rosetta.WrapError(rosetta.ErrCodec, err.Error())
 	}
-	return &rosetta.SdkTxWithHash{
+	return conversion.SdkTxWithHashToRosettaTx(&rosetta.SdkTxWithHash{
 		HexHash: txResp.TxHash,
 		Code:    txResp.Code,
 		Log:     txResp.RawLog,
 		Tx:      sdkTx,
-	}, txResp.Logs.String(), nil
+	}), nil
 }
 
 // GetUnconfirmedTx gets an unconfirmed transaction given its hash
 // NOTE(fdymylja): not implemented yet
-func (c *Client) GetUnconfirmedTx(_ context.Context, _ string) (sdk.Tx, error) {
+func (c *Client) GetUnconfirmedTx(_ context.Context, _ string) (*types.Transaction, error) {
 	return nil, rosetta.WrapError(rosetta.ErrNotImplemented, "get unconfirmed transaction method is not supported")
 }
 
@@ -281,12 +281,12 @@ func (c *Client) Mempool(ctx context.Context) (*tmtypes.ResultUnconfirmedTxs, er
 }
 
 // Peers gets the number of peers
-func (c *Client) Peers(ctx context.Context) ([]tmtypes.Peer, error) {
+func (c *Client) Peers(ctx context.Context) ([]*types.Peer, error) {
 	netInfo, err := c.clientCtx.Client.NetInfo(ctx)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
 	}
-	return netInfo.Peers, nil
+	return conversion.TmPeersToRosettaPeers(netInfo.Peers), nil
 }
 
 func (c *Client) Status(ctx context.Context) (*tmtypes.ResultStatus, error) {

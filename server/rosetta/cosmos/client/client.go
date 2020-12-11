@@ -213,11 +213,8 @@ func (c *Client) BlockByHeightAlt(ctx context.Context, height *int64) (rosetta.B
 
 func buildBlockResponse(block *tmtypes.ResultBlock) rosetta.BlockResponse {
 	return rosetta.BlockResponse{
-		Block: conversion.TMBlockToRosettaBlockIdentifier(block),
-		ParentBlock: &types.BlockIdentifier{
-			Index: block.Block.Height - 1,
-			Hash:  block.Block.LastBlockID.Hash.String(),
-		},
+		Block:                conversion.TMBlockToRosettaBlockIdentifier(block),
+		ParentBlock:          conversion.TMBlockToRosettaParentBlockIdentifier(block),
 		MillisecondTimestamp: conversion.TimeToMilliseconds(block.Block.Time),
 		TxCount:              int64(len(block.Block.Txs)),
 	}

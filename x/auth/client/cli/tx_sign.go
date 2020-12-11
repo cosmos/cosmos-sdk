@@ -110,7 +110,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			}
 			if multisigAddr.Empty() {
 				from, _ := cmd.Flags().GetString(flags.FlagFrom)
-				_, fromName, err := client.GetFromFields(txFactory.Keybase(), from, clientCtx.GenerateOnly)
+				_, fromName, _, err := client.GetFromFields(txFactory.Keybase(), from, clientCtx.GenerateOnly)
 				if err != nil {
 					return fmt.Errorf("error getting account from keybase: %w", err)
 				}
@@ -235,7 +235,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		multisigAddrStr, _ := cmd.Flags().GetString(flagMultisig)
 
 		from, _ := cmd.Flags().GetString(flags.FlagFrom)
-		_, fromName, err := client.GetFromFields(txFactory.Keybase(), from, clientCtx.GenerateOnly)
+		_, fromName, _, err := client.GetFromFields(txFactory.Keybase(), from, clientCtx.GenerateOnly)
 		if err != nil {
 			return fmt.Errorf("error getting account from keybase: %w", err)
 		}

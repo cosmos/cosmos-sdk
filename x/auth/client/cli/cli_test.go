@@ -474,7 +474,6 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 
 func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 	val1 := s.network.Validators[0]
-
 	codec := codec2.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(codec)
 	banktypes.RegisterLegacyAminoCodec(codec)
@@ -555,17 +554,14 @@ func (s *IntegrationTestSuite) TestCLIEncode() {
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly), "--memo", "deadbeef",
 	)
 	s.Require().NoError(err)
-
-	// Save tx to file
 	savedTxFile := testutil.WriteToNewTempFile(s.T(), normalGeneratedTx.String())
 
 	// Encode
 	encodeExec, err := authtest.TxEncodeExec(val1.ClientCtx, savedTxFile.Name())
 	s.Require().NoError(err)
-
 	trimmedBase64 := strings.Trim(encodeExec.String(), "\"\n")
-	// Check that the transaction decodes as expected
 
+	// Check that the transaction decodes as expected
 	decodedTx, err := authtest.TxDecodeExec(val1.ClientCtx, trimmedBase64)
 	s.Require().NoError(err)
 
@@ -1005,10 +1001,70 @@ func (s *IntegrationTestSuite) TestTxWithoutPublicKey() {
 	// Broadcast tx, test that it shouldn't panic.
 	val1.ClientCtx.BroadcastMode = flags.BroadcastSync
 	out, err := authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
+	s.Require().NoError(err)
 	var res sdk.TxResponse
 	s.Require().NoError(val1.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &res))
 	s.Require().NotEqual(0, res.Code)
-	s.Require().NoError(err)
+}
+
+func (s *IntegrationTestSuite) TestSignWithMultiSigners_AminoJSON() {
+	// test case:
+	// Create a transaction with 2 messages which has to be signed with 2 different keys
+	// Sign and append the signatures using the CLI with Amino signing mode.
+	// Finally send the transaction to the blockchain. It should work.
+
+	require := s.Require()
+	val0, val1 := s.network.Validators[0], s.network.Validators[1]
+	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val0.Moniker), sdk.NewInt(10))
+	val1Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val1.Moniker), sdk.NewInt(10))
+	_, _, addr1 := testdata.KeyTestPubAddr()
+
+	// Creating a tx with 2 msgs from 2 signers: val0 and val1.
+	// The validators sign with SIGN_MODE_LEGACY_AMINO_JSON by default.
+	// Since we we amino, we don't need to pre-populate signer_infos.
+	txBuilder := val0.ClientCtx.TxConfig.NewTxBuilder()
+	txBuilder.SetMsgs(
+		banktypes.NewMsgSend(val0.Address, addr1, sdk.NewCoins(val0Coin)),
+		banktypes.NewMsgSend(val1.Address, addr1, sdk.NewCoins(val1Coin)),
+	)
+	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))))
+	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
+	require.Equal([]sdk.AccAddress{val0.Address, val1.Address}, txBuilder.GetTx().GetSigners())
+
+	// Write the unsigned tx into a file.
+	txJSON, err := val0.ClientCtx.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
+	require.NoError(err)
+	unsignedTxFile := testutil.WriteToNewTempFile(s.T(), string(txJSON))
+
+	// Let val0 sign first the file with the unsignedTx.
+	signedByVal0, err := authtest.TxSignExec(val0.ClientCtx, val0.Address, unsignedTxFile.Name(), "--overwrite")
+	require.NoError(err)
+	signedByVal0File := testutil.WriteToNewTempFile(s.T(), signedByVal0.String())
+
+	// Then let val1 sign the file with signedByVal0.
+	val1AccNum, val1Seq, err := val0.ClientCtx.AccountRetriever.GetAccountNumberSequence(val0.ClientCtx, val1.Address)
+	require.NoError(err)
+	signedTx, err := authtest.TxSignExec(
+		val1.ClientCtx, val1.Address, signedByVal0File.Name(),
+		"--offline", fmt.Sprintf("--account-number=%d", val1AccNum), fmt.Sprintf("--sequence=%d", val1Seq),
+	)
+	require.NoError(err)
+	signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx.String())
+
+	// Now let's try to send this tx.
+	res, err := authtest.TxBroadcastExec(val0.ClientCtx, signedTxFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock))
+	require.NoError(err)
+	var txRes sdk.TxResponse
+	require.NoError(val0.ClientCtx.JSONMarshaler.UnmarshalJSON(res.Bytes(), &txRes))
+	require.Equal(uint32(0), txRes.Code)
+
+	// Make sure the addr1's balance got funded.
+	queryResJSON, err := bankcli.QueryBalancesExec(val0.ClientCtx, addr1)
+	require.NoError(err)
+	var queryRes banktypes.QueryAllBalancesResponse
+	err = val0.ClientCtx.JSONMarshaler.UnmarshalJSON(queryResJSON.Bytes(), &queryRes)
+	require.NoError(err)
+	require.Equal(sdk.NewCoins(val0Coin, val1Coin), queryRes.Balances)
 }
 
 func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.AccAddress) testutil.BufferWriter {
@@ -1027,62 +1083,6 @@ func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.
 	)
 	s.Require().NoError(err)
 	return res
-}
-
-func (s *IntegrationTestSuite) TestSignWithMultiSigners_AminoJSON() {
-	val0, val1 := s.network.Validators[0], s.network.Validators[1]
-
-	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val0.Moniker), sdk.NewInt(10))
-	val1Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val1.Moniker), sdk.NewInt(10))
-
-	_, _, addr1 := testdata.KeyTestPubAddr()
-
-	// Creating a tx with 2 msgs from 2 signers: val0 and val1.
-	// The validators sign with SIGN_MODE_LEGACY_AMINO_JSON by default.
-	// Since we we amino, we don't need to pre-populate signer_infos.
-	txBuilder := val0.ClientCtx.TxConfig.NewTxBuilder()
-	txBuilder.SetMsgs(
-		banktypes.NewMsgSend(val0.Address, addr1, sdk.NewCoins(val0Coin)),
-		banktypes.NewMsgSend(val1.Address, addr1, sdk.NewCoins(val1Coin)),
-	)
-	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))))
-	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
-	s.Require().Equal([]sdk.AccAddress{val0.Address, val1.Address}, txBuilder.GetTx().GetSigners())
-
-	// Write the unsigned tx into a file.
-	txJSON, err := val0.ClientCtx.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
-	s.Require().NoError(err)
-	unsignedTxFile := testutil.WriteToNewTempFile(s.T(), string(txJSON))
-
-	// Let val0 sign first the file with the unsignedTx.
-	signedByVal0, err := authtest.TxSignExec(val0.ClientCtx, val0.Address, unsignedTxFile.Name(), "--overwrite")
-	s.Require().NoError(err)
-	signedByVal0File := testutil.WriteToNewTempFile(s.T(), signedByVal0.String())
-
-	// Then let val1 sign the file with signedByVal0.
-	val1AccNum, val1Seq, err := val0.ClientCtx.AccountRetriever.GetAccountNumberSequence(val0.ClientCtx, val1.Address)
-	s.Require().NoError(err)
-	signedTx, err := authtest.TxSignExec(
-		val1.ClientCtx, val1.Address, signedByVal0File.Name(),
-		"--offline", fmt.Sprintf("--account-number=%d", val1AccNum), fmt.Sprintf("--sequence=%d", val1Seq),
-	)
-	s.Require().NoError(err)
-	signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx.String())
-
-	// Now let's try to send this tx.
-	res, err := authtest.TxBroadcastExec(val0.ClientCtx, signedTxFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock))
-	s.Require().NoError(err)
-	var txRes sdk.TxResponse
-	s.Require().NoError(val0.ClientCtx.JSONMarshaler.UnmarshalJSON(res.Bytes(), &txRes))
-	s.Require().Equal(uint32(0), txRes.Code)
-
-	// Make sure the addr1's balance got funded.
-	queryResJSON, err := bankcli.QueryBalancesExec(val0.ClientCtx, addr1)
-	s.Require().NoError(err)
-	var queryRes banktypes.QueryAllBalancesResponse
-	err = val0.ClientCtx.JSONMarshaler.UnmarshalJSON(queryResJSON.Bytes(), &queryRes)
-	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewCoins(val0Coin, val1Coin), queryRes.Balances)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

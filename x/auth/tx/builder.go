@@ -222,7 +222,7 @@ func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
 
 	}
 
-	w.tx.Body.Messages = append(w.tx.Body.Messages, anys...)
+	w.tx.Body.Messages = anys
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
 	w.bodyBz = nil

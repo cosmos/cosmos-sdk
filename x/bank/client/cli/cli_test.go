@@ -6,13 +6,11 @@ import (
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -295,50 +293,6 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 			}
 		})
 	}
-}
-
-// newSendTxMsgServiceCmd is just for the purpose of testing ServiceMsg's in an end-to-end case. It is effectively
-// NewSendTxCmd but using MsgClient.
-func newSendTxMsgServiceCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use: "send [from_key_or_address] [to_address] [amount]",
-		Short: `Send funds from one account to another. Note, the'--from' flag is
-ignored as it is implied from [from_key_or_address].`,
-		Args: cobra.ExactArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.Flags().Set(flags.FlagFrom, args[0])
-
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			toAddr, err := sdk.AccAddressFromBech32(args[1])
-			if err != nil {
-				return err
-			}
-
-			coins, err := sdk.ParseCoins(args[2])
-			if err != nil {
-				return err
-			}
-
-			txBuilder := clientCtx.TxConfig.NewTxBuilder()
-			msg := types.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
-			bankMsgClient := types.NewMsgClient(txBuilder)
-			_, err = bankMsgClient.Send(context.Background(), msg)
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), txBuilder.GetTx().GetMsgs()...)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd
 }
 
 // TestBankMsgService does a basic test of whether or not service Msg's as defined

@@ -39,7 +39,7 @@ type (
 		gogogrpc.ClientConn
 		GetTx() signing.Tx
 
-		SetMsgs(msg ...sdk.Msg) error
+		SetMsgs(msgs ...sdk.Msg) error
 		SetSignatures(signatures ...signingtypes.SignatureV2) error
 		SetMemo(memo string)
 		SetFeeAmount(amount sdk.Coins)

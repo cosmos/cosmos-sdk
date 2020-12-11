@@ -1030,9 +1030,13 @@ func (s *IntegrationTestSuite) TestSignWithMultiSigners() {
 	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val0.Moniker), sdk.NewInt(10))
 	val0Info, err := val0.ClientCtx.Keyring.Key(val0.Moniker)
 	s.Require().NoError(err)
+	_, val0Seq, err := val0.ClientCtx.AccountRetriever.GetAccountNumberSequence(val0.ClientCtx, val0.Address)
+	s.Require().NoError(err)
 
 	val1Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val1.Moniker), sdk.NewInt(10))
 	val1Info, err := val1.ClientCtx.Keyring.Key(val1.Moniker)
+	s.Require().NoError(err)
+	val1AccNum, val1Seq, err := val0.ClientCtx.AccountRetriever.GetAccountNumberSequence(val0.ClientCtx, val1.Address)
 	s.Require().NoError(err)
 
 	_, _, addr1 := testdata.KeyTestPubAddr()
@@ -1050,12 +1054,12 @@ func (s *IntegrationTestSuite) TestSignWithMultiSigners() {
 		signing.SignatureV2{
 			PubKey:   val0Info.GetPubKey(),
 			Data:     &signing.SingleSignatureData{SignMode: signing.SignMode_SIGN_MODE_DIRECT},
-			Sequence: 45, // TODO Replace with real seq, now this should fail in antehandler
+			Sequence: val0Seq,
 		},
 		signing.SignatureV2{
 			PubKey:   val1Info.GetPubKey(),
 			Data:     &signing.SingleSignatureData{SignMode: signing.SignMode_SIGN_MODE_DIRECT},
-			Sequence: 67, // TODO Replace with real seq, now this should fail in antehandler
+			Sequence: val1Seq,
 		},
 	)
 	s.Require().Equal([]sdk.AccAddress{val0.Address, val1.Address}, txBuilder.GetTx().GetSigners())
@@ -1079,8 +1083,6 @@ func (s *IntegrationTestSuite) TestSignWithMultiSigners() {
 	fmt.Println(signedByVal0.String())
 
 	// Then let val1 sign the file with signedByVal0.
-	val1AccNum, val1Seq, err := val0.ClientCtx.AccountRetriever.GetAccountNumberSequence(val0.ClientCtx, val1.Address)
-	s.Require().NoError(err)
 	signedTx, err := authtest.TxSignExec(
 		val1.ClientCtx, val1.Address, signedByVal0File.Name(),
 		"--offline", fmt.Sprintf("--account-number=%d", val1AccNum), fmt.Sprintf("--sequence=%d", val1Seq), fmt.Sprintf("--%s=direct", flags.FlagSignMode),

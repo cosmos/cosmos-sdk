@@ -10,7 +10,7 @@ require (
 	github.com/btcsuite/btcd v0.21.0-beta
 	github.com/btcsuite/btcutil v1.0.2
 	github.com/confio/ics23/go v0.6.3
-	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
+	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.15.0-rc5
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/dgraph-io/ristretto v0.0.3 // indirect

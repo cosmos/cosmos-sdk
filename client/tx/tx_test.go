@@ -200,7 +200,7 @@ func TestSign(t *testing.T) {
 
 		/**** test simple DIRECT ****/
 		{"should succeed with keyring DIRECT",
-			txfAmino, txbSimple, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
+			txfDirect, txbSimple, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
 	}
 	var prevSigs []signingtypes.SignatureV2
 	for _, tc := range testCases {

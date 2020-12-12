@@ -889,7 +889,6 @@ func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 
 	cmd := authcli.GetBroadcastCommand()
 	_, out := testutil.ApplyMockIO(cmd)
-	testDir := t.TempDir()
 
 	// Create new file with tx
 	builder := txCfg.NewTxBuilder()
@@ -901,13 +900,14 @@ func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 	err = builder.SetMsgs(banktypes.NewMsgSend(from, to, sdk.Coins{sdk.NewInt64Coin("stake", 10000)}))
 	require.NoError(t, err)
 	txContents, err := txCfg.TxJSONEncoder()(builder.GetTx())
-	txFileName := filepath.Join(testDir, "tx.json")
-	err = ioutil.WriteFile(txFileName, txContents, 0644)
 	require.NoError(t, err)
+	txFile := testutil.WriteToNewTempFile(t, string(txContents))
 
-	cmd.SetArgs([]string{txFileName})
-	require.Error(t, cmd.ExecuteContext(ctx))
-	require.Contains(t, out.String(), "unsupported return type ; supported types: sync, async, block")
+	cmd.SetArgs([]string{txFile.Name()})
+	err = cmd.ExecuteContext(ctx)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "connect: connection refused")
+	require.Contains(t, out.String(), "connect: connection refused")
 }
 
 func (s *IntegrationTestSuite) TestQueryParamsCmd() {

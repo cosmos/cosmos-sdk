@@ -300,7 +300,7 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 				privs, accNums, seqs = []cryptotypes.PrivKey{tc.signerKey}, []uint64{acc.GetAccountNumber()}, []uint64{acc.GetSequence()}
 			}
 
-			tx, err := helpers.GenTxWithFeePayer(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, nil, tc.feeAccount, privs...)
+			tx, err := helpers.GenTxWithFeeGranter(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
 			suite.Require().NoError(err)
 			_, err = tc.handler(ctx, tx, false)
 

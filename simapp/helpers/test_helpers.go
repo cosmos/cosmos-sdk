@@ -85,9 +85,9 @@ func GenTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, ch
 	return tx.GetTx(), nil
 }
 
-// GenTxFee generates a signed mock transaction with fee payer and fee granter.
-func GenTxWithFeePayer(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums,
-	accSeqs []uint64, feePayer sdk.AccAddress, feeGranter sdk.AccAddress, priv ...cryptotypes.PrivKey) (sdk.Tx, error) {
+// GenTxWithFeeGranter generates a signed mock transaction with fee granter field set with a given address.
+func GenTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums,
+	accSeqs []uint64, feeGranter sdk.AccAddress, priv ...cryptotypes.PrivKey) (sdk.Tx, error) {
 	sigs := make([]signing.SignatureV2, len(priv))
 
 	// create a random length memo

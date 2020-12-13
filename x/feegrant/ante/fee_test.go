@@ -15,40 +15,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/ante"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
-
-// newAnteHandler is just like auth.NewAnteHandler, except we use the DeductGrantedFeeDecorator
-// in order to allow payment of fees via a grant.
-//
-// This is used for our full-stack tests
-func newAnteHandler(
-	ak authkeeper.AccountKeeper, bankKeeper authtypes.BankKeeper,
-	dk keeper.Keeper, sigGasConsumer authante.SignatureVerificationGasConsumer,
-	signModeHandler signing.SignModeHandler,
-) sdk.AnteHandler {
-	return sdk.ChainAnteDecorators(
-		authante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
-		authante.NewMempoolFeeDecorator(),
-		authante.NewValidateBasicDecorator(),
-		authante.NewValidateMemoDecorator(ak),
-		authante.NewConsumeGasForTxSizeDecorator(ak),
-		// DeductGrantedFeeDecorator will create an empty account if we sign with no tokens but valid validation
-		// This must be before SetPubKey, ValidateSigCount, SigVerification, which error if account doesn't exist yet
-		ante.NewDeductGrantedFeeDecorator(ak, bankKeeper, dk),
-		authante.NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
-		authante.NewValidateSigCountDecorator(ak),
-		authante.NewSigGasConsumeDecorator(ak, sigGasConsumer),
-		authante.NewSigVerificationDecorator(ak, signModeHandler),
-		authante.NewIncrementSequenceDecorator(ak), // innermost AnteDecorator
-	)
-}
 
 // AnteTestSuite is a test suite to be used with ante handler tests.
 type AnteTestSuite struct {
@@ -60,15 +31,6 @@ type AnteTestSuite struct {
 	clientCtx   client.Context
 	txBuilder   client.TxBuilder
 }
-
-// returns context and app with params set on account keeper
-// func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
-// 	app := simapp.Setup(isCheckTx)
-// 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
-// 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-
-// 	return app, ctx
-// }
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
 func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
@@ -297,7 +259,7 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 			acc := app.AccountKeeper.GetAccount(ctx, tc.signer)
 			privs, accNums, seqs := []cryptotypes.PrivKey{tc.signerKey}, []uint64{nonExistedAccNums[tc.signer.String()]}, []uint64{0}
 			if acc != nil {
-				privs, accNums, seqs = []cryptotypes.PrivKey{tc.signerKey}, []uint64{acc.GetAccountNumber()}, []uint64{acc.GetSequence()}
+				accNums, seqs = []uint64{acc.GetAccountNumber()}, []uint64{acc.GetSequence()}
 			}
 
 			tx, err := helpers.GenTxWithFeeGranter(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)

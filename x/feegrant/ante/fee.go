@@ -61,27 +61,31 @@ func (d DeductGrantedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 
 	fee := feeTx.GetFee()
 	feePayer := feeTx.FeePayer()
-	txSigner := feeTx.FeeGranter()
+	feeGranter := feeTx.FeeGranter()
+
+	deductFeesFrom := feePayer
 
 	// ensure the grant is allowed, if we request a different fee payer
-	if txSigner != nil && !txSigner.Equals(feePayer) {
-		err := d.k.UseGrantedFees(ctx, feePayer, txSigner, fee)
+	if feeGranter != nil && !feeGranter.Equals(feePayer) {
+		err := d.k.UseGrantedFees(ctx, feeGranter, feePayer, fee)
 		if err != nil {
-			return ctx, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", txSigner, feePayer)
+			return ctx, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
 		}
 
-		// if there was a valid grant, ensure that the txSigner account exists (we create it if needed)
-		signerAcc := d.ak.GetAccount(ctx, txSigner)
+		// if there was a valid grant, ensure that the feeGranter account exists (we create it if needed)
+		signerAcc := d.ak.GetAccount(ctx, feePayer)
 		if signerAcc == nil {
-			signerAcc = d.ak.NewAccountWithAddress(ctx, txSigner)
+			signerAcc = d.ak.NewAccountWithAddress(ctx, feePayer)
 			d.ak.SetAccount(ctx, signerAcc)
 		}
+
+		deductFeesFrom = feeGranter
 	}
 
-	// now, either way, we know that we are authorized to deduct the fees from the feePayer account
-	feePayerAcc := d.ak.GetAccount(ctx, feePayer)
-	if feePayerAcc == nil {
-		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", feePayer)
+	// now, either way, we know that we are authorized to deduct the fees from the deductFeesFrom account
+	deductFeesFromAcc := d.ak.GetAccount(ctx, deductFeesFrom)
+	if deductFeesFromAcc == nil {
+		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
 	}
 
 	// move on if there is no fee to deduct
@@ -90,7 +94,7 @@ func (d DeductGrantedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	}
 
 	// deduct fee if non-zero
-	err = authante.DeductFees(d.bk, ctx, feePayerAcc, fee)
+	err = authante.DeductFees(d.bk, ctx, deductFeesFromAcc, fee)
 	if err != nil {
 		return ctx, err
 	}

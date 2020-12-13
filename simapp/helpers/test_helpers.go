@@ -18,6 +18,12 @@ const (
 	SimAppChainID   = "simulation-app"
 )
 
+type txBuilder interface {
+	client.TxBuilder
+
+	SetFeeGranter(feeGranter sdk.AccAddress)
+}
+
 // GenTx generates a signed mock transaction.
 func GenTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey) (sdk.Tx, error) {
 	sigs := make([]signing.SignatureV2, len(priv))
@@ -103,7 +109,7 @@ func GenTxWithFeePayer(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, ga
 		}
 	}
 
-	tx := gen.NewTxBuilder()
+	tx := gen.NewTxBuilder().(txBuilder)
 	err := tx.SetMsgs(msgs...)
 	if err != nil {
 		return nil, err
@@ -115,7 +121,6 @@ func GenTxWithFeePayer(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, ga
 	tx.SetMemo(memo)
 	tx.SetFeeAmount(feeAmt)
 	tx.SetGasLimit(gas)
-	tx.SetFeePayer(feePayer)
 	tx.SetFeeGranter(feeGranter)
 
 	// 2nd round: once all signer infos are set, every signer can sign.

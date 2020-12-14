@@ -143,7 +143,7 @@ specified by `ModuleCdc`.
     func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {}
   ```
 
-* `RegisterServices` is added newly and it registers module's `MsgServer` and gRPC's `QueryServer`.
+* `RegisterServices` is newly added and registers module's `MsgServer` and gRPC's `QueryServer`.
   ```go
   func (am AppModule) RegisterServices(cfg module.Configurator) {
       types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))

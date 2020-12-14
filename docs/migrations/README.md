@@ -103,7 +103,7 @@ type ServiceMsg struct {
 }
 
 #### Keeper
-The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Amino codec. This exact type provided is 
+The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Amino codec. The exact type provided is 
 specified by `ModuleCdc`.
 
 #### module.go

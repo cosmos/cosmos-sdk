@@ -1,3 +1,7 @@
+<!--
+order: 1
+-->
+
 # Update to Cosmos-SDK v0.40
 
 The following document describes the changes, and an approach to update the chain to use Cosmos-SDK v0.40
@@ -140,6 +144,7 @@ specified by `ModuleCdc`.
   types.RegisterInterfaces(registry) //module's types/codec.go
   }
   ``
+  ```
 - `DefaultGenesis()` takes codec input now
   ```go
   func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {}

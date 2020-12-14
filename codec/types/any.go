@@ -57,6 +57,10 @@ type Any struct {
 // the packed value so that it can be retrieved from GetCachedValue without
 // unmarshaling
 func NewAnyWithValue(v proto.Message) (*Any, error) {
+	// TODO:
+	// if v == nil {
+	// 	sdkerrors.Wrap(sdkerrors.ErrPackAny, "Expecting non nil value to create a new Any")
+	// }
 	bz, err := proto.Marshal(v)
 	return &Any{
 		TypeUrl:     "/" + proto.MessageName(v),

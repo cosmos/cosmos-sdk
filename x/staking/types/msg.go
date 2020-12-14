@@ -31,8 +31,8 @@ var (
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
 // Delegator address and validator address are the same.
 func NewMsgCreateValidator(
-	valAddr sdk.ValAddress, pubKey cryptotypes.PubKey, selfDelegation sdk.Coin,
-	description Description, commission CommissionRates, minSelfDelegation sdk.Int,
+	valAddr sdk.ValAddress, pubKey cryptotypes.PubKey, //nolint:interfacer
+	selfDelegation sdk.Coin, description Description, commission CommissionRates, minSelfDelegation sdk.Int,
 ) (*MsgCreateValidator, error) {
 	pkAny, err := codectypes.NewAnyWithValue(pubKey)
 	if err != nil {

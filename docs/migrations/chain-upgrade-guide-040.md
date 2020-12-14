@@ -1,6 +1,7 @@
 # Upgrading a live chain from 039 to 040
 
 ### Risks
+
 As a validator, performing the upgrade procedure on your consensus nodes carries a heightened risk of double-signing and
 being slashed. The most important piece of this procedure is verifying your software version and genesis file hash before
 starting your validator and signing.
@@ -11,10 +12,11 @@ before correcting it. If the network is halted and you have started with a diffe
 seek advice from the validator community.
 
 ### Recovery
-* Prior to exporting the state, the validators are encouraged to take a full data snapshot at exported height. Exported
-height will be determined by a governance proposal. Data backup is usually done by copying daemon home directory,
-ex: `~/.simd`
-  
+
+- Prior to exporting the state, the validators are encouraged to take a full data snapshot at exported height. Exported
+  height will be determined by a governance proposal. Data backup is usually done by copying daemon home directory,
+  ex: `~/.simd`
+
 **Note:** we use "simd" as our app throughout this doc, be sure to replace with the name of your own binary
 
 It is critically important to back-up the validator state file, ex: `~/.simd/data/priv_validator_state.json` file
@@ -26,34 +28,33 @@ In the event that the upgrade does not succeed, validators and operators must do
 software and restore to their latest snapshot before restarting their nodes.
 
 ### Upgrade procedure
+
 - Use old binary to export the state. Make sure to verify your binary version before exporting the state
 - Export the state from existing chain using old-binary (which uses `sdk@0.39.x`).
-Example:
-    ```sh
-    simd export --for-zero-height --height <height> > 039_exported_state.json
-    ```
+  Example:
+  `sh simd export --for-zero-height --height <height> > 039_exported_state.json`
 - Verify the SHA256 of the (sorted) exported genesis file:
-    ```shell
-    $ jq -S -c -M '' 039_exported_state.json | shasum -a 256
-    [PLACEHOLDER]  039_exported_state.json
-    ```
+  ```shell
+  $ jq -S -c -M '' 039_exported_state.json | shasum -a 256
+  [PLACEHOLDER]  039_exported_state.json
+  ```
 - Cross check the hash with other peers (other validators) in the chat rooms
 - Install the latest binary (which uses `0.40`)
 - Migrate the exported state to `0.40` compatible genesis state
-    ```shell
-    simd migrate v40 039_exported_state.json --chain-id <new_chain_id> --genesis-time <new_genesis_time_in_utc> > new_v40_genesis.json
-    ```
+  ```shell
+  simd migrate v40 039_exported_state.json --chain-id <new_chain_id> --genesis-time <new_genesis_time_in_utc> > new_v40_genesis.json
+  ```
   NOTE: The migrate command takes an input genesis state and migrates it to a targeted version. New `genesis-time` will
   be as mentioned in the governance proposal.
 - Verify the SHA256 of the migrated genesis file with other valdiators to make sure there are no manual errors in the process.
-    ```shell
-    $ jq -S -c -M '' new_v40_genesis.json | shasum -a 256
-    [PLACEHOLDER]  new_v40_genesis.json
-    ```
+  ```shell
+  $ jq -S -c -M '' new_v40_genesis.json | shasum -a 256
+  [PLACEHOLDER]  new_v40_genesis.json
+  ```
 - Make sure to update the genesis parameters in the new genesis if any. All these details will be generally present in
-the governance proposal
+  the governance proposal
 - All the necessary state changes are handled in `040` migration command, including tendermint params. So, manual updates to
-the genesis are not required
+  the genesis are not required
 - If your chain is using IBC, make sure to add IBC initial genesis state to the genesis file. You can use the following
   command to add IBC initial genesis state to the genesis file.
   ```shell
@@ -61,18 +62,21 @@ the genesis are not required
   ```
   Note: This would add ibc state with ibc's `send_enabled: false` and `receive_enabled: false`. Make sure to update them to `true` in the above command if are planning to enable IBC transactions with chain upgrade. Otherwise you can do it via a governance proposal.
 - Reset the old state
-NOTE: Be sure you have a complete backed up state of your node before proceeding with this step.
-See Recovery for details on how to proceed.
+  NOTE: Be sure you have a complete backed up state of your node before proceeding with this step.
+  See Recovery for details on how to proceed.
+
 ```shell
 simd unsafe-reset-all
 ```
+
 - Move the new genesis.json to your daemon config directory. Ex
+
 ```shell script
 cp new_v40_genesis.json ~/.simd/config/genesis.json
 ```
 
 - Update `~/.simd/config/app.toml` to include latest app configurations. Below is an example `app.toml`. Make sure to
-update your custom configurations as per your validator design ex: `gas_price`.
+  update your custom configurations as per your validator design ex: `gas_price`.
 
 ```yaml
 # This is a TOML config file.
@@ -194,8 +198,10 @@ snapshot-keep-recent = 2
 ```
 
 The updates to `app.toml` are:
+
 - API is now configured to run in-process with daemon, previously it was a separate process, invoked by running rest-server
-command i.e., `gaiacli rest-server`. Now it is in-process with daemon and can be enabled/disabled by API configuration:
+  command i.e., `gaiacli rest-server`. Now it is in-process with daemon and can be enabled/disabled by API configuration:
+
 ```yaml
 [api]
 # Enable defines if the API server should be enabled.
@@ -203,9 +209,11 @@ enable = false
 # Swagger defines if swagger documentation should automatically be registered.
 swagger = false
 ```
+
 `swagger` setting refers to enabling/disabling swagger docs API, i.e, `/swagger/` API endpoint.
 
 - gRPC Configuration
+
 ```yaml
 [grpc]
 # Enable defines if the gRPC server should be enabled.
@@ -215,6 +223,7 @@ address = "0.0.0.0:9090"
 ```
 
 - State Sync Configuration
+
 ```yaml
 # State sync snapshots allow other nodes to rapidly join the network without replaying historical
 # blocks, instead downloading and applying a snapshot of the application state at a given height.
@@ -229,7 +238,7 @@ snapshot-keep-recent = 2
 - Kill if any external `rest-server` process is running
 
 - All set now! You can (re)start your daemon to validate on the upgraded network. Make sure to check your binary version
-before starting the daemon. Ex:
+  before starting the daemon. Ex:
 
 ```
 simd version --long

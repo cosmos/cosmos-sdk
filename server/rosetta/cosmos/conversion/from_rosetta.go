@@ -63,32 +63,29 @@ func RosettaAmountsToCoins(amounts []*types.Amount) sdk.Coins {
 func ConvertOpsToMsgs(ops []*types.Operation) ([]sdk.Msg, string, error) {
 	var msgs []sdk.Msg
 	var signAddr string
-	var sendOps []*types.Operation
-	var delOps []*types.Operation
+	var operationsByType = make(map[string][]*types.Operation)
 	for _, op := range ops {
-		switch op.Type {
-		case "cosmos.bank.v1beta1.MsgSend": // TODO temporary proto Message Name.
-			sendOps = append(sendOps, op)
-		case "cosmos.staking.v1beta1.MsgDelegate":
-			delOps = append(delOps, op)
-		}
-	}
-	if len(sendOps) == 2 {
-		sendMsg, err := RosettaOperationsToSdkBankMsgSend(sendOps)
-		if err != nil {
-			return nil, "", err
-		}
-		msgs = append(msgs, sendMsg)
-		signAddr = sendMsg.FromAddress
+		operationsByType[op.Type] = append(operationsByType[op.Type], op)
 	}
 
-	if len(delOps) == 2 {
-		delMsg, err := RosettaOperationsToSdkStakingMsgDelegate(delOps)
-		if err != nil {
-			return nil, "", err
+	for opName, operations := range operationsByType {
+		if len(operations) == 2 {
+			if opName == "cosmos.bank.v1beta1.MsgSend" {
+				sendMsg, err := RosettaOperationsToSdkBankMsgSend(operations)
+				if err != nil {
+					return nil, "", err
+				}
+				msgs = append(msgs, sendMsg)
+				signAddr = sendMsg.FromAddress
+			} else if opName == "cosmos.staking.v1beta1.MsgDelegate" {
+				delMsg, err := RosettaOperationsToSdkStakingMsgDelegate(operations)
+				if err != nil {
+					return nil, "", err
+				}
+				msgs = append(msgs, delMsg)
+				signAddr = delMsg.DelegatorAddress
+			}
 		}
-		msgs = append(msgs, delMsg)
-		signAddr = delMsg.DelegatorAddress
 	}
 
 	return msgs, signAddr, nil

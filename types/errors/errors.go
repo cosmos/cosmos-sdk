@@ -131,6 +131,10 @@ var (
 	// the same resource and one of them fails.
 	ErrConflict = Register(RootCodespace, 36, "conflict")
 
+	// ErrNotSupported is returned when we call a branch of a code which is currently not
+	// supported.
+	ErrNotSupported = Register(RootCodespace, 37, "feature not supported")
+
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")

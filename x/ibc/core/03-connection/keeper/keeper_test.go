@@ -62,8 +62,8 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 	counterpartyB0 := types.NewCounterparty(clientB, connB0.ID, suite.chainB.GetPrefix()) // connection B0
 	counterpartyB1 := types.NewCounterparty(clientB, connB1.ID, suite.chainB.GetPrefix()) // connection B1
 
-	conn1 := types.NewConnectionEnd(types.OPEN, clientA, counterpartyB0, types.ExportedVersionsToProto(types.GetCompatibleVersions())) // A0 - B0
-	conn2 := types.NewConnectionEnd(types.OPEN, clientA, counterpartyB1, types.ExportedVersionsToProto(types.GetCompatibleVersions())) // A1 - B1
+	conn1 := types.NewConnectionEnd(types.OPEN, clientA, counterpartyB0, types.ExportedVersionsToProto(types.GetCompatibleVersions()), 0) // A0 - B0
+	conn2 := types.NewConnectionEnd(types.OPEN, clientA, counterpartyB1, types.ExportedVersionsToProto(types.GetCompatibleVersions()), 0) // A1 - B1
 
 	iconn1 := types.NewIdentifiedConnection(connA0.ID, conn1)
 	iconn2 := types.NewIdentifiedConnection(connA1.ID, conn2)

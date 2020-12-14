@@ -115,7 +115,13 @@ which accepts a path for the resulting pprof file.
 
 			// amino is needed here for backwards compatibility of REST routes
 			err := startInProcess(serverCtx, clientCtx, appCreator)
-			return err
+			errCode, ok := err.(ErrorCode)
+			if !ok {
+				return err
+			}
+
+			serverCtx.Logger.Debug(fmt.Sprintf("received quit signal: %d", errCode.Code))
+			return nil
 		},
 	}
 

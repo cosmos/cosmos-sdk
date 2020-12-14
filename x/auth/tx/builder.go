@@ -200,16 +200,7 @@ func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
 		var err error
 		switch msg := msg.(type) {
 		case sdk.ServiceMsg:
-			// anys[i], err = codectypes.NewAnyFromServiceMsgNewAnyWithValue(msg)
-			bz, err := proto.Marshal(msg.Request)
-			if err != nil {
-				return err
-			}
-			anys[i] = &codectypes.Any{
-				TypeUrl: msg.MethodName,
-				Value:   bz,
-			}
-			anys[i].UnsafeSetCachedValue(msg)
+			anys[i], err = codectypes.NewAnyWithCustomTypeURL(msg.Request, msg.MethodName)
 		default:
 			anys[i], err = codectypes.NewAnyWithValue(msg)
 			if err != nil {

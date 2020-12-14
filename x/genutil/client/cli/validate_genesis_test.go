@@ -25,9 +25,8 @@ var v037Exported = `{
 	"validators": []
 }`
 
-// An example exported genesis file that's 0.40 compatible, except the fact
-// that max_bytes is 0.
-var v040MaxBytesNil = `{
+// An example exported genesis file that's 0.40 compatible.
+var v040Valid = `{
 	"app_hash": "",
 	"app_state": {},
 	"chain_id": "test",
@@ -63,7 +62,7 @@ func (s *IntegrationTestSuite) TestValidateGenesis() {
 		},
 		{
 			"with max_bytes=0",
-			v040MaxBytesNil,
+			v040Valid,
 			true,
 		},
 	}

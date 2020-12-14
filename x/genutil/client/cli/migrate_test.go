@@ -40,7 +40,7 @@ func (s *IntegrationTestSuite) TestMigrateGenesis() {
 		},
 		{
 			"with max_bytes=0",
-			v040MaxBytesNil,
+			v040Valid,
 			"v0.40",
 			false, "",
 		},

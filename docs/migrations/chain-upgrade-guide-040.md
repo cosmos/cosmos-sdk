@@ -1,7 +1,7 @@
 # Upgrading a live chain from 039 to 040
 
 ### Risks
-As a validator performing the upgrade procedure on your consensus nodes carries a heightened risk of double-signing and
+As a validator, performing the upgrade procedure on your consensus nodes carries a heightened risk of double-signing and
 being slashed. The most important piece of this procedure is verifying your software version and genesis file hash before
 starting your validator and signing.
 

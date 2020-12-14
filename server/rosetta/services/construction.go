@@ -98,45 +98,13 @@ func (on OnlineNetwork) ConstructionHash(ctx context.Context, request *types.Con
 }
 
 func (on OnlineNetwork) ConstructionMetadata(ctx context.Context, request *types.ConstructionMetadataRequest) (*types.ConstructionMetadataResponse, *types.Error) {
-	if len(request.Options) == 0 {
-		return nil, rosetta.ErrInterpreting.RosettaError()
-	}
-
-	addr, ok := request.Options[rosetta.OptionAddress]
-	if !ok {
-		return nil, rosetta.ErrInvalidAddress.RosettaError()
-	}
-
-	addrString := addr.(string)
-
-	accountInfo, err := on.client.AccountInfo(ctx, addrString, nil)
-	if err != nil {
-		return nil, rosetta.ToRosettaError(err)
-	}
-
-	gas, ok := request.Options[rosetta.OptionGas]
-	if !ok {
-		return nil, rosetta.WrapError(rosetta.ErrInvalidAddress, "gas not set").RosettaError()
-	}
-
-	memo, ok := request.Options[rosetta.OptionMemo]
-	if !ok {
-		return nil, rosetta.WrapError(rosetta.ErrInvalidMemo, "memo not set").RosettaError()
-	}
-
-	status, err := on.client.Status(ctx)
+	metadata, err := on.client.ConstructionMetadataFromOptions(ctx, request.Options)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
 
 	return &types.ConstructionMetadataResponse{
-		Metadata: map[string]interface{}{
-			rosetta.AccountNumber: accountInfo.GetAccountNumber(),
-			rosetta.Sequence:      accountInfo.GetSequence(),
-			rosetta.ChainID:       status.NodeInfo.Network,
-			rosetta.OptionGas:     gas,
-			rosetta.OptionMemo:    memo,
-		},
+		Metadata: metadata,
 	}, nil
 }
 
@@ -255,17 +223,13 @@ func (on OnlineNetwork) ConstructionSubmit(ctx context.Context, request *types.C
 		return nil, rosetta.ToRosettaError(err)
 	}
 
-	res, err := on.client.PostTx(txBytes)
+	res, meta, err := on.client.PostTx(txBytes)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
 
 	return &types.TransactionIdentifierResponse{
-		TransactionIdentifier: &types.TransactionIdentifier{
-			Hash: res.TxHash,
-		},
-		Metadata: map[string]interface{}{
-			rosetta.Log: res.RawLog,
-		},
+		TransactionIdentifier: res,
+		Metadata:              meta,
 	}, nil
 }

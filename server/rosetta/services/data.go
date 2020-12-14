@@ -8,7 +8,6 @@ import (
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
-	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/conversion"
 )
 
 // genesisBlockFetchTimeout defines a timeout to fetch the genesis block
@@ -178,7 +177,7 @@ func (on OnlineNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkReque
 		return nil, rosetta.ToRosettaError(err)
 	}
 
-	status, err := on.client.Status(ctx)
+	syncStatus, err := on.client.Status(ctx)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
@@ -188,7 +187,7 @@ func (on OnlineNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkReque
 		CurrentBlockTimestamp:  block.MillisecondTimestamp,
 		GenesisBlockIdentifier: on.genesisBlockIdentifier,
 		OldestBlockIdentifier:  nil,
-		SyncStatus:             conversion.TMStatusToRosettaSyncStatus(status),
+		SyncStatus:             syncStatus,
 		Peers:                  peers,
 	}, nil
 }

@@ -75,6 +75,47 @@ type Client struct {
 	clientCtx client.Context
 }
 
+func (c *Client) ConstructionMetadataFromOptions(ctx context.Context, options map[string]interface{}) (meta map[string]interface{}, err error) {
+	if len(options) == 0 {
+		return nil, rosetta.ErrInterpreting
+	}
+
+	addr, ok := options[rosetta.OptionAddress]
+	if !ok {
+		return nil, rosetta.ErrInvalidAddress
+	}
+
+	addrString := addr.(string)
+
+	accountInfo, err := c.accountInfo(ctx, addrString, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	gas, ok := options[rosetta.OptionGas]
+	if !ok {
+		return nil, rosetta.WrapError(rosetta.ErrInvalidAddress, "gas not set")
+	}
+
+	memo, ok := options[rosetta.OptionMemo]
+	if !ok {
+		return nil, rosetta.WrapError(rosetta.ErrInvalidMemo, "memo not set")
+	}
+
+	status, err := c.clientCtx.Client.Status(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]interface{}{
+		rosetta.AccountNumber: accountInfo.GetAccountNumber(),
+		rosetta.Sequence:      accountInfo.GetSequence(),
+		rosetta.ChainID:       status.NodeInfo.Network,
+		rosetta.OptionGas:     gas,
+		rosetta.OptionMemo:    memo,
+	}, nil
+}
+
 // NewSingle instantiates a single network client
 func NewSingle(grpcEndpoint, tendermintEndpoint string, optsFunc ...OptionFunc) (rosetta.NodeClient, error) {
 	opts := newDefaultOptions()
@@ -118,7 +159,7 @@ func NewSingle(grpcEndpoint, tendermintEndpoint string, optsFunc ...OptionFunc) 
 	}, nil
 }
 
-func (c *Client) AccountInfo(ctx context.Context, addr string, height *int64) (auth.AccountI, error) {
+func (c *Client) accountInfo(ctx context.Context, addr string, height *int64) (auth.AccountI, error) {
 	if height != nil {
 		strHeight := strconv.FormatInt(*height, 10)
 		ctx = metadata.AppendToOutgoingContext(ctx, grpctypes.GRPCBlockHeightHeader, strHeight)
@@ -317,20 +358,30 @@ func (c *Client) Peers(ctx context.Context) ([]*types.Peer, error) {
 	return conversion.TmPeersToRosettaPeers(netInfo.Peers), nil
 }
 
-func (c *Client) Status(ctx context.Context) (*tmtypes.ResultStatus, error) {
+func (c *Client) Status(ctx context.Context) (*types.SyncStatus, error) {
 	status, err := c.clientCtx.Client.Status(ctx)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrUnknown, err.Error())
 	}
-	return status, err
+	return conversion.TMStatusToRosettaSyncStatus(status), err
 }
 
 func (c *Client) GetTxConfig() client.TxConfig {
 	return c.clientCtx.TxConfig
 }
 
-func (c *Client) PostTx(txBytes []byte) (res *sdk.TxResponse, err error) {
-	return c.clientCtx.BroadcastTx(txBytes)
+func (c *Client) PostTx(txBytes []byte) (*types.TransactionIdentifier, map[string]interface{}, error) {
+	res, err := c.clientCtx.BroadcastTx(txBytes)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return &types.TransactionIdentifier{
+			Hash: res.TxHash,
+		},
+		map[string]interface{}{
+			rosetta.Log: res.RawLog,
+		}, nil
 }
 
 func (c *Client) SignedTx(ctx context.Context, txBytes []byte, signatures []*types.Signature) (signedTxBytes []byte, err error) {
@@ -357,7 +408,7 @@ func (c *Client) SignedTx(ctx context.Context, txBytes []byte, signatures []*typ
 		copy(compressedPublicKey, cmp.SerializeCompressed())
 		pubKey := &secp256k1.PubKey{Key: compressedPublicKey}
 
-		accountInfo, err := c.AccountInfo(ctx, sdk.AccAddress(pubKey.Address()).String(), nil)
+		accountInfo, err := c.accountInfo(ctx, sdk.AccAddress(pubKey.Address()).String(), nil)
 		if err != nil {
 			return nil, err
 		}

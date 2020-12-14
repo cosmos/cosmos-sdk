@@ -6,11 +6,9 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 	"github.com/tendermint/cosmos-rosetta-gateway/service"
-	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // list of supported operations
@@ -62,7 +60,6 @@ type SdkTxWithHash struct {
 // a client has to implement in order to
 // interact with cosmos-sdk chains
 type NodeClient interface {
-	AccountInfo(ctx context.Context, addr string, height *int64) (auth.AccountI, error)
 	// Balances fetches the balance of the given address
 	// if height is not nil, then the balance will be displayed
 	// at the provided height, otherwise last block balance will be returned
@@ -87,12 +84,13 @@ type NodeClient interface {
 	// Peers gets the peers currently connected to the node
 	Peers(ctx context.Context) ([]*types.Peer, error)
 	// Status returns the node status, such as sync data, version etc
-	Status(ctx context.Context) (*tmtypes.ResultStatus, error)
+	Status(ctx context.Context) (*types.SyncStatus, error)
 	GetTxConfig() client.TxConfig
-	PostTx(txBytes []byte) (res *sdk.TxResponse, err error)
+	PostTx(txBytes []byte) (res *types.TransactionIdentifier, meta map[string]interface{}, err error)
 
 	SignedTx(ctx context.Context, txBytes []byte, sigs []*types.Signature) (signedTxBytes []byte, err error)
 	TxOperationsAndSignersAccountIdentifiers(signed bool, hexBytes []byte) (ops []*types.Operation, signers []*types.AccountIdentifier, err error)
+	ConstructionMetadataFromOptions(ctx context.Context, options map[string]interface{}) (meta map[string]interface{}, err error)
 }
 
 type BlockTransactionsResponse struct {

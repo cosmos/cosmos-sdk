@@ -2,6 +2,8 @@ package types
 
 import (
 	"github.com/gogo/protobuf/proto"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type Any struct {
@@ -57,10 +59,11 @@ type Any struct {
 // the packed value so that it can be retrieved from GetCachedValue without
 // unmarshaling
 func NewAnyWithValue(v proto.Message) (*Any, error) {
-	// TODO:
-	// if v == nil {
-	// 	sdkerrors.Wrap(sdkerrors.ErrPackAny, "Expecting non nil value to create a new Any")
-	// }
+	if v == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrPackAny, "Expecting non nil value to create a new Any")
+		// TODO, second option
+		// return nil, nil
+	}
 	bz, err := proto.Marshal(v)
 	return &Any{
 		TypeUrl:     "/" + proto.MessageName(v),

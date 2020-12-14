@@ -84,6 +84,7 @@ func (acc BaseAccount) GetPubKey() (pk cryptotypes.PubKey) {
 
 // SetPubKey - Implements sdk.AccountI.
 func (acc *BaseAccount) SetPubKey(pubKey cryptotypes.PubKey) error {
+	// TODO: decied if we handle "valid nil" case here or in NewAnyWithValue
 	if pubKey == nil {
 		acc.PubKey = nil
 		return nil

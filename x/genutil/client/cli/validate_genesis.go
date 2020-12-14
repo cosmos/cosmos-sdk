@@ -12,6 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
+const chainUpgradeGuide = "https://docs.cosmos.network/master/migrations/chain-upgrade-guide-040.html"
+
 // ValidateGenesisCmd takes a genesis file, and makes sure that it is valid.
 func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 	return &cobra.Command{
@@ -61,7 +63,7 @@ func validateGenDoc(importGenesisFile string) (*tmtypes.GenesisDoc, error) {
 		return nil, fmt.Errorf("%s. Make sure that"+
 			" you have correctly migrated all Tendermint consensus params, please see the"+
 			" chain migration guide at %s for more info",
-			err.Error(), "https://docs.cosmos.network/master/migrations/chain-upgrade-guide-040.html",
+			err.Error(), chainUpgradeGuide,
 		)
 	}
 

@@ -327,10 +327,9 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 		if grpcSrv != nil {
 			grpcSrv.Stop()
-		}
-
-		if proxySrv != nil {
-			_ = proxySrv.Close()
+			if proxySrv != nil {
+				_ = proxySrv.Close()
+			}
 		}
 
 		ctx.Logger.Info("exiting...")

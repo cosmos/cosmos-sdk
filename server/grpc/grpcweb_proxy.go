@@ -49,7 +49,7 @@ func StartGRPCProxyServer(grpcConfig config.GRPCConfig) (*http.Server, error) {
 	}
 
 	proxyServer := buildServer(wrappedGrpc)
-	listener, err := buildListenerOrFail("http", proxyFlags.HTTPPort)
+	listener, err := buildListenerOrFail("http", proxyFlags.BindAddress, proxyFlags.HTTPPort)
 
 	if err != nil {
 		return nil, err
@@ -84,11 +84,11 @@ func buildServer(wrappedGrpc *grpcweb.WrappedGrpcServer) *http.Server {
 }
 
 func buildGrpcProxyServer(host string) (*grpc.Server, error) {
-
 	backendConn, err := dialBackendOrFail(host)
 	if err != nil {
 		return nil, err
 	}
+
 	director := func(ctx context.Context, fullMethodName string) (context.Context, *grpc.ClientConn, error) {
 		md, _ := metadata.FromIncomingContext(ctx)
 		outCtx, _ := context.WithCancel(ctx) //nolint
@@ -101,7 +101,8 @@ func buildGrpcProxyServer(host string) (*grpc.Server, error) {
 		outCtx = metadata.NewOutgoingContext(outCtx, mdCopy)
 		return outCtx, backendConn, nil
 	}
-	// Server with logging and monitoring enabled.
+	// TODO: handle grpc.CustomCodec is deprecated.
+	// nolint:staticcheck
 	return grpc.NewServer(
 		grpc.CustomCodec(proxy.Codec()), // needed for proxy to function.
 		grpc.UnknownServiceHandler(proxy.TransparentHandler(director)),
@@ -110,13 +111,13 @@ func buildGrpcProxyServer(host string) (*grpc.Server, error) {
 	), nil
 }
 
-func buildListenerOrFail(name string, port int) (net.Listener, error) {
-
-	addr := fmt.Sprintf("%s:%d", "0.0.0.0", port)
+func buildListenerOrFail(name string, host string, port int) (net.Listener, error) {
+	addr := fmt.Sprintf("%s:%d", host, port)
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		return nil, fmt.Errorf("failed listening for '%v' on %v: %v", name, port, err)
 	}
+
 	return conntrack.NewListener(listener,
 		conntrack.TrackWithName(name),
 		conntrack.TrackWithTcpKeepAlive(20*time.Second),
@@ -130,6 +131,7 @@ func makeHTTPOriginFunc(allowedOrigins *allowedOrigins, allowAllOrigins bool) fu
 			return true
 		}
 	}
+
 	return allowedOrigins.IsAllowed
 }
 
@@ -138,6 +140,7 @@ func makeAllowedOrigins(origins []string) *allowedOrigins {
 	for _, allowedOrigin := range origins {
 		o[allowedOrigin] = struct{}{}
 	}
+
 	return &allowedOrigins{
 		origins: o,
 	}
@@ -156,6 +159,8 @@ func dialBackendOrFail(host string) (*grpc.ClientConn, error) {
 	opt := []grpc.DialOption{
 		grpc.WithInsecure(),
 	}
+	// TODO: handle grpc.WithCodec is deprecated.
+	// nolint:staticcheck
 	opt = append(opt, grpc.WithCodec(proxy.Codec()))
 
 	cc, err := grpc.Dial(host, opt...)

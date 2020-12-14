@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -17,7 +16,7 @@ func TestGetMigrationCallback(t *testing.T) {
 	}
 }
 
-func (s *IntegrationTestSuite) TestMigrateGenesi() {
+func (s *IntegrationTestSuite) TestMigrateGenesis() {
 	val0 := s.network.Validators[0]
 
 	testCases := []struct {
@@ -58,8 +57,4 @@ func (s *IntegrationTestSuite) TestMigrateGenesi() {
 			}
 		})
 	}
-}
-
-func TestIntegrationTestSuite2(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }

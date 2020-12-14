@@ -1,9 +1,11 @@
 package types
 
 import (
-	"github.com/coinbase/rosetta-sdk-go/types"
+	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
+	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/gogo/protobuf/proto"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -80,16 +82,16 @@ func (msg *MsgSend) ToOperations(withStatus bool, hasError bool) []*types.Operat
 	sendOp := func(account, amount string, index int) *types.Operation {
 		var status string
 		if withStatus {
-			status = rosetta.StatusSuccess
+			status = "Success" // TODO: Does not look correct to use same string as the rosetta constants of status.
 			if hasError {
-				status = rosetta.StatusReverted
+				status = "Reverted"
 			}
 		}
 		return &types.Operation{
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: int64(index),
 			},
-			Type:   TypeMsgSend,
+			Type:   fmt.Sprintf("%s", proto.MessageName(msg)),
 			Status: status,
 			Account: &types.AccountIdentifier{
 				Address: account,

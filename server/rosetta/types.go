@@ -3,6 +3,10 @@ package rosetta
 import (
 	"context"
 
+	"github.com/gogo/protobuf/proto"
+
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 	"github.com/tendermint/cosmos-rosetta-gateway/service"
@@ -32,7 +36,7 @@ const (
 	StageSyncing = "syncing"
 )
 
-var SupportedOperations = []string{OperationSend, OperationFee, OperationDelegate}
+var SupportedOperations = []string{proto.MessageName(&bank.MsgSend{}), OperationFee, OperationDelegate}
 
 // NewNetwork builds a rosetta gateway network
 func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter) service.Network {

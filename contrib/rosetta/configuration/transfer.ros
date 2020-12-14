@@ -88,7 +88,7 @@ transfer(3){
       },
       {
         "operation_identifier":{"index":1},
-        "type":"send",
+        "type":"cosmos.bank.v1beta1.MsgSend",
         "account":{{sender.account_identifier}},
         "amount":{
           "value":{{sender_amount}},
@@ -97,7 +97,7 @@ transfer(3){
       },
       {
         "operation_identifier":{"index":2},
-        "type":"send",
+        "type":"cosmos.bank.v1beta1.MsgSend",
         "account":{{recipient.account_identifier}},
         "amount":{
           "value":{{recipient_amount}},

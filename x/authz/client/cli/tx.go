@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -86,10 +87,15 @@ Examples:
 			if err != nil {
 				return err
 			}
-			if err := msg.ValidateBasic(); err != nil {
+
+			svcMsgClientConn := &serviceMsgClientConn{}
+			authzMsgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = authzMsgClient.GrantAuthorization(context.Background(), msg)
+			if err != nil {
 				return err
 			}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.msgs...)
 
 		},
 	}
@@ -126,10 +132,15 @@ Example:
 			msgAuthorized := args[1]
 
 			msg := types.NewMsgRevokeAuthorization(granter, grantee, msgAuthorized)
-			if err := msg.ValidateBasic(); err != nil {
+
+			svcMsgClientConn := &serviceMsgClientConn{}
+			authzMsgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = authzMsgClient.RevokeAuthorization(context.Background(), &msg)
+			if err != nil {
 				return err
 			}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.msgs...)
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
@@ -161,21 +172,25 @@ Example:
 				return errors.New("cannot broadcast tx during offline mode")
 			}
 
-			stdTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
+			theTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
 			if err != nil {
 				return err
 			}
-			msgs := stdTx.GetMsgs()
+			msgs := theTx.GetMsgs()
 			serviceMsgs := make([]sdk.ServiceMsg, len(msgs))
 			for i, msg := range msgs {
 				serviceMsgs[i] = msg.(sdk.ServiceMsg)
 			}
 
 			msg := types.NewMsgExecAuthorized(grantee, serviceMsgs)
-			if err := msg.ValidateBasic(); err != nil {
+			svcMsgClientConn := &serviceMsgClientConn{}
+			authzMsgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = authzMsgClient.ExecAuthorized(context.Background(), &msg)
+			if err != nil {
 				return err
 			}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.msgs...)
 		},
 	}
 

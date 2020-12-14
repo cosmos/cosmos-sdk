@@ -19,9 +19,9 @@ const (
 )
 
 var (
-	_ sdk.Msg = &MsgGrantAuthorization{}
-	_ sdk.Msg = &MsgRevokeAuthorization{}
-	_ sdk.Msg = &MsgExecAuthorized{}
+	_ sdk.MsgRequest = &MsgGrantAuthorization{}
+	_ sdk.MsgRequest = &MsgRevokeAuthorization{}
+	_ sdk.MsgRequest = &MsgExecAuthorized{}
 
 	_ types.UnpackInterfacesMessage = &MsgGrantAuthorization{}
 	_ types.UnpackInterfacesMessage = &MsgExecAuthorized{}
@@ -42,12 +42,6 @@ func NewMsgGrantAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, au
 	return m, nil
 }
 
-// Route implements Msg
-func (msg MsgGrantAuthorization) Route() string { return RouterKey }
-
-// Type implements Msg
-func (msg MsgGrantAuthorization) Type() string { return TypeMsgGrantAuthorization }
-
 // GetSigners implements Msg
 func (msg MsgGrantAuthorization) GetSigners() []sdk.AccAddress {
 	granter, err := sdk.AccAddressFromBech32(msg.Granter)
@@ -55,12 +49,6 @@ func (msg MsgGrantAuthorization) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{granter}
-}
-
-// GetSignBytes implements Msg
-func (msg MsgGrantAuthorization) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // ValidateBasic implements Msg
@@ -127,12 +115,6 @@ func NewMsgRevokeAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, a
 	}
 }
 
-// Route implements Msg
-func (msg MsgRevokeAuthorization) Route() string { return RouterKey }
-
-// Type implements Msg
-func (msg MsgRevokeAuthorization) Type() string { return TypeMsgRevokeAuthorization }
-
 // GetSigners implements Msg
 func (msg MsgRevokeAuthorization) GetSigners() []sdk.AccAddress {
 	granter, err := sdk.AccAddressFromBech32(msg.Granter)
@@ -140,12 +122,6 @@ func (msg MsgRevokeAuthorization) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{granter}
-}
-
-// GetSignBytes implements Msg
-func (msg MsgRevokeAuthorization) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // ValidateBasic implements Msg
@@ -198,12 +174,6 @@ func (msg MsgExecAuthorized) GetServiceMsgs() ([]sdk.ServiceMsg, error) {
 	return msgs, nil
 }
 
-// Route implements Msg
-func (msg MsgExecAuthorized) Route() string { return RouterKey }
-
-// Type implements Msg
-func (msg MsgExecAuthorized) Type() string { return TypeMsgExecDelegated }
-
 // GetSigners implements Msg
 func (msg MsgExecAuthorized) GetSigners() []sdk.AccAddress {
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
@@ -211,12 +181,6 @@ func (msg MsgExecAuthorized) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{grantee}
-}
-
-// GetSignBytes implements Msg
-func (msg MsgExecAuthorized) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
 }
 
 // ValidateBasic implements Msg

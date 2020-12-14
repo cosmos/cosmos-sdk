@@ -1,27 +1,14 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
-// RegisterLegacyAminoCodec registers concrete types and interfaces on the given codec.
-func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterInterface((*Authorization)(nil), nil)
-	cdc.RegisterInterface((*sdk.MsgRequest)(nil), nil)
-	cdc.RegisterConcrete(&MsgGrantAuthorization{}, "cosmos-sdk/MsgGrantAuthorization", nil)
-	cdc.RegisterConcrete(&MsgRevokeAuthorization{}, "cosmos-sdk/MsgRevokeAuthorization", nil)
-	cdc.RegisterConcrete(&MsgExecAuthorized{}, "cosmos-sdk/MsgExecAuthorized", nil)
-	cdc.RegisterConcrete(SendAuthorization{}, "cosmos-sdk/SendAuthorization", nil)
-	cdc.RegisterConcrete(GenericAuthorization{}, "cosmos-sdk/GenericAuthorization", nil)
-}
-
 // RegisterInterfaces registers the interfaces types with the interface registry
 func RegisterInterfaces(registry types.InterfaceRegistry) {
-	registry.RegisterImplementations((*sdk.Msg)(nil),
+	registry.RegisterImplementations((*sdk.MsgRequest)(nil),
 		&MsgGrantAuthorization{},
 		&MsgRevokeAuthorization{},
 		&MsgExecAuthorized{},
@@ -35,22 +22,4 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
-
-}
-
-var (
-	amino = codec.NewLegacyAmino()
-
-	// ModuleCdc references the global x/authz module codec. Note, the codec should
-	// ONLY be used in certain instances of tests and for JSON encoding as Amino is
-	// still used for that purpose.
-	//
-	// The actual codec used for serialization should be provided to x/authz and
-	// defined at the application level.
-	ModuleCdc = codec.NewAminoCodec(amino)
-)
-
-func init() {
-	RegisterLegacyAminoCodec(amino)
-	cryptocodec.RegisterCrypto(amino)
 }

@@ -25,12 +25,59 @@ var v037Exported = `{
 	"validators": []
 }`
 
-func (s *IntegrationTestSuite) TestValidateGenesis_FromV037() {
+// An example exported genesis file that's 0.40 compatible, except the fact
+// that max_bytes is 0.
+var v040MaxBytesNil = `{
+	"app_hash": "",
+	"app_state": {},
+	"chain_id": "test",
+	"consensus_params": {
+		"block": {
+		"max_bytes": "22020096",
+		"max_gas": "-1",
+		"time_iota_ms": "1000"
+		},
+		"evidence": {
+			"max_age_num_blocks": "100000",
+			"max_age_duration": "172800000000000",
+			"max_bytes": "0"
+		},
+		"validator": { "pub_key_types": ["ed25519"] }
+	},
+	"genesis_time": "2020-09-29T20:16:29.172362037Z",
+	"validators": []
+}`
+
+func (s *IntegrationTestSuite) TestValidateGenesis() {
 	val0 := s.network.Validators[0]
 
-	genesisFile := testutil.WriteToNewTempFile(s.T(), v037Exported)
-	// We expect an error decoding an older `consensus_params` with the latest
-	// TM validation.
-	_, err := clitestutil.ExecTestCLICmd(val0.ClientCtx, cli.ValidateGenesisCmd(nil), []string{genesisFile.Name()})
-	s.Require().Contains(err.Error(), "Make sure that you have correctly migrated all Tendermint consensus params")
+	testCases := []struct {
+		name    string
+		genesis string
+		expErr  bool
+	}{
+		{
+			"exported 0.37 genesis file",
+			v037Exported,
+			true,
+		},
+		{
+			"with max_bytes=0",
+			v040MaxBytesNil,
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			genesisFile := testutil.WriteToNewTempFile(s.T(), tc.genesis)
+			_, err := clitestutil.ExecTestCLICmd(val0.ClientCtx, cli.ValidateGenesisCmd(nil), []string{genesisFile.Name()})
+			if tc.expErr {
+				s.Require().Contains(err.Error(), "Make sure that you have correctly migrated all Tendermint consensus params")
+
+			} else {
+				s.Require().NoError(err)
+			}
+		})
+	}
 }

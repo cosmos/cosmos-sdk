@@ -25,7 +25,7 @@ func GetQueryCmd() *cobra.Command {
 
 	feegrantQueryCmd.AddCommand(
 		GetCmdQueryFeeGrant(),
-		GetCmdQueryGranteeFeeGrant(),
+		GetCmdQueryFeeGrants(),
 	)
 
 	return feegrantQueryCmd
@@ -84,8 +84,8 @@ $ %s query feegrant grant [granter] [grantee]
 	return cmd
 }
 
-// GetCmdQueryGranteeFeeGrant returns cmd to query for all grants for a grantee.
-func GetCmdQueryGranteeFeeGrant() *cobra.Command {
+// GetCmdQueryFeeGrants returns cmd to query for all grants for a grantee.
+func GetCmdQueryFeeGrants() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grants [grantee]",
 		Args:  cobra.ExactArgs(1),
@@ -105,7 +105,7 @@ $ %s query feegrant grants [grantee]
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			granteeAddr, err := sdk.AccAddressFromBech32(args[1])
+			granteeAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
@@ -127,10 +127,7 @@ $ %s query feegrant grants [grantee]
 				return err
 			}
 
-			// TODO
-			fmt.Println(res.FeeAllowances)
-			// return clientCtx.PrintOutput(res.FeeAllowances)
-			return nil
+			return clientCtx.PrintProto(res)
 		},
 	}
 

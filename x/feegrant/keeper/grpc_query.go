@@ -88,13 +88,13 @@ func (q Keeper) FeeAllowances(c context.Context, req *types.QueryFeeAllowancesRe
 	grantsStore := prefix.NewStore(store, types.FeeAllowancePrefixByGrantee(granteeAddr))
 
 	pageRes, err := query.Paginate(grantsStore, req.Pagination, func(key []byte, value []byte) error {
-		var grant *types.FeeAllowanceGrant
+		var grant types.FeeAllowanceGrant
 
-		if err := q.cdc.UnmarshalBinaryBare(value, grant); err != nil {
+		if err := q.cdc.UnmarshalBinaryBare(value, &grant); err != nil {
 			return err
 		}
 
-		grants = append(grants, grant)
+		grants = append(grants, &grant)
 		return nil
 	})
 

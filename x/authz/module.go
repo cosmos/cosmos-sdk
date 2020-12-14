@@ -176,7 +176,7 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 // GenerateGenesisState creates a randomized GenState of the authz module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {}
 
-// ProposalContents returns all the evidence content functions used to
+// ProposalContents returns all the authz content functions used to
 // simulate governance proposals.
 func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
 	return nil

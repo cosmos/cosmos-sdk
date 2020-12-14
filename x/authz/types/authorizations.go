@@ -51,7 +51,7 @@ func (auth AuthorizationGrant) UnpackInterfaces(unpacker types.AnyUnpacker) erro
 	return unpacker.UnpackAny(auth.Authorization, &authorization)
 }
 
-func (auth AuthorizationGrant) GetAuthorization() Authorization {
+func (auth AuthorizationGrant) GetAuthorizationGrant() Authorization {
 	authorization, ok := auth.Authorization.GetCachedValue().(Authorization)
 	if !ok {
 		return nil

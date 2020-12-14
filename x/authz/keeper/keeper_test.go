@@ -161,7 +161,7 @@ func (s *TestSuite) TestKeeperFees() {
 	s.Require().NoError(msgs.UnpackInterfaces(app.AppCodec()))
 
 	s.T().Log("verify dispatch fails with invalid authorization")
-	executeMsgs, err := msgs.GetMsgs()
+	executeMsgs, err := msgs.GetServiceMsgs()
 	s.Require().NoError(err)
 	result, err := app.MsgAuthKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)
 
@@ -177,7 +177,7 @@ func (s *TestSuite) TestKeeperFees() {
 	s.Require().NotZero(expiration)
 	s.Require().Equal(authorization.MethodName(), types.SendAuthorization{}.MethodName())
 
-	executeMsgs, err = msgs.GetMsgs()
+	executeMsgs, err = msgs.GetServiceMsgs()
 	s.Require().NoError(err)
 
 	result, err = app.MsgAuthKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)
@@ -202,7 +202,7 @@ func (s *TestSuite) TestKeeperFees() {
 	})
 
 	s.Require().NoError(msgs.UnpackInterfaces(app.AppCodec()))
-	executeMsgs, err = msgs.GetMsgs()
+	executeMsgs, err = msgs.GetServiceMsgs()
 	s.Require().NoError(err)
 
 	result, err = app.MsgAuthKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)

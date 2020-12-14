@@ -20,7 +20,7 @@ func (k Keeper) GrantAuthorization(goCtx context.Context, msg *types.MsgGrantAut
 	if err != nil {
 		return nil, err
 	}
-	authorization := msg.GetAuthorization()
+	authorization := msg.GetGrantAuthorization()
 	err = k.Grant(ctx, grantee, granter, authorization, msg.Expiration)
 	if err != nil {
 		return nil, err
@@ -75,7 +75,7 @@ func (k Keeper) ExecAuthorized(goCtx context.Context, msg *types.MsgExecAuthoriz
 	if err != nil {
 		return nil, err
 	}
-	msgs, err := msg.GetMsgs()
+	msgs, err := msg.GetServiceMsgs()
 	if err != nil {
 		return nil, err
 	}

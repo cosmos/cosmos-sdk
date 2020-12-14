@@ -151,7 +151,7 @@ func SimulateMsgRevokeAuthorization(ak types.AccountKeeper, bk types.BankKeeper,
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgRevokeAuthorization, "fee error"), nil, err
 		}
-		auth := targetGrant.GetAuthorization()
+		auth := targetGrant.GetAuthorizationGrant()
 		msg := types.NewMsgRevokeAuthorization(granterAddr, granteeAddr, auth.MethodName())
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -257,7 +257,7 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgExecDelegated, err.Error()), nil, err
 		}
 		msg.UnpackInterfaces(cdc)
-		_, err = msg.GetMsgs()
+		_, err = msg.GetServiceMsgs()
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgExecDelegated, "unmarshal error"), nil, err
 		}

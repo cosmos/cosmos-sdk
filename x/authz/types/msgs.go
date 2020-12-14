@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
-	"gopkg.in/yaml.v2"
 
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -79,7 +78,7 @@ func (msg MsgGrantAuthorization) ValidateBasic() error {
 	return nil
 }
 
-func (msg *MsgGrantAuthorization) GetAuthorization() Authorization {
+func (msg *MsgGrantAuthorization) GetGrantAuthorization() Authorization {
 	authorization, ok := msg.Authorization.GetCachedValue().(Authorization)
 	if !ok {
 		return nil
@@ -116,12 +115,6 @@ func (msg MsgExecAuthorized) UnpackInterfaces(unpacker types.AnyUnpacker) error 
 func (msg MsgGrantAuthorization) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var authorization Authorization
 	return unpacker.UnpackAny(msg.Authorization, &authorization)
-}
-
-// String implements the Stringer interface
-func (msg MsgGrantAuthorization) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
 }
 
 // NewMsgRevokeAuthorization creates a new MsgRevokeAuthorization
@@ -166,12 +159,6 @@ func (msg MsgRevokeAuthorization) ValidateBasic() error {
 	return nil
 }
 
-// String implements the Stringer interface
-func (msg MsgRevokeAuthorization) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
 // NewMsgExecAuthorized creates a new MsgExecAuthorized
 //nolint:interfacer
 func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.ServiceMsg) MsgExecAuthorized {
@@ -197,7 +184,7 @@ func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.ServiceMsg) MsgExec
 }
 
 // GetMsgs Unpacks any messages
-func (msg MsgExecAuthorized) GetMsgs() ([]sdk.ServiceMsg, error) {
+func (msg MsgExecAuthorized) GetServiceMsgs() ([]sdk.ServiceMsg, error) {
 	msgs := make([]sdk.ServiceMsg, len(msg.Msgs))
 	for i, msgAny := range msg.Msgs {
 		msg1 := sdk.ServiceMsg{
@@ -238,10 +225,4 @@ func (msg MsgExecAuthorized) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidGranter, "missing grantee address")
 	}
 	return nil
-}
-
-// String implements the Stringer interface
-func (msg MsgExecAuthorized) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
 }

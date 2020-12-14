@@ -17,7 +17,7 @@ service Query {
   rpc Authorization(QueryAuthorizationRequest) returns (QueryAuthorizationResponse) {
     option (google.api.http).get = "/cosmos/authz/v1beta1/granters/{granter}/grantees/{grantee}/grant";
   }
-  
+
   // Returns list of `Authorization`, granted to the grantee by the granter.
   rpc Authorizations(QueryAuthorizationsRequest) returns (QueryAuthorizationsResponse) {
     option (google.api.http).get = "/cosmos/authz/v1beta1/granters/{granter}/grantees/{grantee}/grants";
@@ -26,9 +26,6 @@ service Query {
 
 // QueryAuthorizationRequest is the request type for the Query/Authorization RPC method.
 message QueryAuthorizationRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
   string granter  = 1;
   string grantee  = 2;
   string msg_type = 3;
@@ -42,9 +39,6 @@ message QueryAuthorizationResponse {
 
 // QueryAuthorizationsRequest is the request type for the Query/Authorizations RPC method.
 message QueryAuthorizationsRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
   string granter = 1;
   string grantee = 2;
   // pagination defines an pagination for the request.

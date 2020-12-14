@@ -53,7 +53,7 @@ func (k Keeper) Authorizations(c context.Context, req *types.QueryAuthorizations
 		if err != nil {
 			return false, err
 		}
-		auth1 := auth.GetAuthorization()
+		auth1 := auth.GetAuthorizationGrant()
 		if accumulate {
 			msg, ok := auth1.(proto.Message)
 			if !ok {

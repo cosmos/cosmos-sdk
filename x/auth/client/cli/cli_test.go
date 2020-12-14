@@ -15,7 +15,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	codec2 "github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -472,11 +471,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 }
 
 func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
-	val1 := s.network.Validators[0]
-	codec := codec2.NewLegacyAmino()
-	sdk.RegisterLegacyAminoCodec(codec)
-	banktypes.RegisterLegacyAminoCodec(codec)
-	val1.ClientCtx.LegacyAmino = codec
+	val1 := s.validatorWithCustomCodec(0)
 
 	// Generate 2 accounts and a multisig.
 	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
@@ -573,12 +568,7 @@ func (s *IntegrationTestSuite) TestCLIEncode() {
 }
 
 func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
-	val1 := s.network.Validators[0]
-
-	codec := codec2.NewLegacyAmino()
-	sdk.RegisterLegacyAminoCodec(codec)
-	banktypes.RegisterLegacyAminoCodec(codec)
-	val1.ClientCtx.LegacyAmino = codec
+	val1 := s.validatorWithCustomCodec(0)
 
 	// Generate 2 accounts and a multisig.
 	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
@@ -670,12 +660,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 }
 
 func (s *IntegrationTestSuite) TestCLIMultisign() {
-	val1 := s.network.Validators[0]
-
-	codec := codec2.NewLegacyAmino()
-	sdk.RegisterLegacyAminoCodec(codec)
-	banktypes.RegisterLegacyAminoCodec(codec)
-	val1.ClientCtx.LegacyAmino = codec
+	val1 := s.validatorWithCustomCodec(0)
 
 	// Generate 2 accounts and a multisig.
 	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
@@ -1082,6 +1067,15 @@ func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.
 	)
 	s.Require().NoError(err)
 	return res
+}
+
+func (s *IntegrationTestSuite) validatorWithCustomCodec(idx int) network.Validator {
+	val := *s.network.Validators[0]
+	// codec := codec2.NewLegacyAmino()
+	// sdk.RegisterLegacyAminoCodec(codec)
+	// banktypes.RegisterLegacyAminoCodec(codec)
+	// val.ClientCtx.LegacyAmino = codec
+	return val
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

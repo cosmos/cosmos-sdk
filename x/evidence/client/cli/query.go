@@ -47,12 +47,10 @@ $ %s query %s --page=2 --limit=50
 // can be queried for by hash or paginated evidence can be returned.
 func QueryEvidenceCmd() func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		clientCtx := client.GetClientContextFromCmd(cmd)
-		clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+		clientCtx, err := client.GetClientQueryContext(cmd)
 		if err != nil {
 			return err
 		}
-
 		if len(args) > 0 {
 			return queryEvidence(clientCtx, args[0])
 		}

@@ -32,7 +32,10 @@ and export your keys in ASCII-armored encrypted format.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			buf := bufio.NewReader(cmd.InOrStdin())
-			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
 			unarmored, _ := cmd.Flags().GetBool(flagUnarmoredHex)
 			unsafe, _ := cmd.Flags().GetBool(flagUnsafe)
 

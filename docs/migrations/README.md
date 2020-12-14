@@ -304,7 +304,7 @@ removing prefix 'Grpc-Metadata-'. We can use this CustomGRPCHeaderMatcher if hea
 
 
 
-- API is made `in-process` with the node now. The configuration to enable/disable API, Swagger are now available in `app.toml`
+- API is made `in-process` with the node now. Enabling/disabling the API server and Swagger can now be configured from `app.toml`
 Both legacy REST API and gRPC gateway API are using the same server. Swagger can be accessed via `{baseurl}/swagger/`
 ```yaml
 ...

@@ -53,11 +53,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Machine Breaking Changes
 
-* (x/upgrade) [\#7632](https://github.com/cosmos/cosmos-sdk/issues/7632) keeper pubkey storage serialization migration from bech32 to protobuf.
+* (x/upgrade) [\#7979](https://github.com/cosmos/cosmos-sdk/pull/7979) keeper pubkey storage serialization migration from bech32 to protobuf.
 
 
 ### Features
-* (codec/types) []() Adding `NewAnyWithCustomTypeURL` to correctly marshal Messages in TxBuilder.
+* (codec/types) [\#8106](https://github.com/cosmos/cosmos-sdk/pull/8106) Adding `NewAnyWithCustomTypeURL` to correctly marshal Messages in TxBuilder.
 
 ### Bug Fixes
 

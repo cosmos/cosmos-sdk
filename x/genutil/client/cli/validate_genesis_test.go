@@ -61,9 +61,9 @@ func (s *IntegrationTestSuite) TestValidateGenesis() {
 			true,
 		},
 		{
-			"with max_bytes=0",
+			"valid 0.40 genesis file",
 			v040Valid,
-			true,
+			false,
 		},
 	}
 

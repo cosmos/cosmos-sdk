@@ -137,7 +137,6 @@ func (s *IntegrationTestSuite) TestCLISign() {
 	val1 := s.network.Validators[0]
 	txCfg := val1.ClientCtx.TxConfig
 	txBz := s.createBankMsg(val1, val1.Address)
-	// val.ClientCtx.HomeDir = strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
 	fileUnsigned := testutil.WriteToNewTempFile(s.T(), txBz.String())
 	chainFlag := fmt.Sprintf("--%s=%s", flags.FlagChainID, val1.ClientCtx.ChainID)
 	sigOnlyFlag := "--signature-only"

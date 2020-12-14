@@ -203,9 +203,9 @@ func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
 			anys[i], err = codectypes.NewAnyWithCustomTypeURL(msg.Request, msg.MethodName)
 		default:
 			anys[i], err = codectypes.NewAnyWithValue(msg)
-			if err != nil {
-				return err
-			}
+		}
+		if err != nil {
+			return err
 		}
 	}
 

@@ -178,26 +178,26 @@ func TestSign(t *testing.T) {
 			txfNoKeybase, txb, from1, true, nil, nil},
 		{"should fail for non existing key",
 			txfAmino, txb, "unknown", true, nil, nil},
-		{"should succeed with keyring Amino",
+		{"amino: should succeed with keyring",
 			txfAmino, txbSimple, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
-		{"should succeed with keyring DIRECT",
+		{"direct: should succeed with keyring",
 			txfDirect, txbSimple, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
 
-		/**** test double sign AMINO ****/
-		{"should sign tx2 Amino",
+		/**** test double sign Amino mode ****/
+		{"amino: should sign multi-signers tx",
 			txfAmino, txb, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
-		{"should append a second signature and not overwrite Amino",
+		{"amino: should append a second signature and not overwrite",
 			txfAmino, txb, from2, false, []cryptotypes.PubKey{pubKey1, pubKey2}, []int{0, 0}},
-		{"should overwrite a signature Amino",
+		{"amino: should overwrite a signature",
 			txfAmino, txb, from2, true, []cryptotypes.PubKey{pubKey2}, []int{1, 0}},
-		{"should fail to append a signature with different mode Direct",
-			txfDirect, txb, from1, false, []cryptotypes.PubKey{}, nil},
 
-		/**** test double sign DIRECT
+		/**** test double sign Direct mode
 		  signing transaction with more than 2 signers should fail in DIRECT mode ****/
-		{"should fail to sign tx2 DIRECT",
+		{"direct: should fail to append a signature with different mode",
 			txfDirect, txb, from1, false, []cryptotypes.PubKey{}, nil},
-		{"should fail to overwrite tx2 DIRECT",
+		{"direct: should fail to sign multi-signers tx",
+			txfDirect, txb, from1, false, []cryptotypes.PubKey{}, nil},
+		{"direct: should fail to overwrite multi-signers tx",
 			txfDirect, txb, from1, true, []cryptotypes.PubKey{}, nil},
 	}
 	var prevSigs []signingtypes.SignatureV2

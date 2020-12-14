@@ -54,7 +54,7 @@ Example:
 the governance proposal
 - All the necessary state chanegs are handled in `040` migration command, including tendermint params. So, manual updates to
 the genesis are not required
-- If your chain is using IBC, make sure to add IBC initiaal genesis state to the genesis file. You can use the following
+- If your chain is using IBC, make sure to add IBC initial genesis state to the genesis file. You can use the following
   command to add IBC initial genesis state to the genesis file.
   ```shell
   cat new_040_genesis.json | jq '.app_state |= . + {"ibc":{"client_genesis":{"clients":[],"clients_consensus":[],"create_localhost":false},"connection_genesis":{"connections":[],"client_connection_paths":[]},"channel_genesis":{"channels":[],"acknowledgements":[],"commitments":[],"receipts":[],"send_sequences":[],"recv_sequences":[],"ack_sequences":[]}},"transfer":{"port_id":"transfer","denom_traces":[],"params":{"send_enabled":false,"receive_enabled":false}},"capability":{"index":"1","owners":[]}}' > new_040_genesis.json

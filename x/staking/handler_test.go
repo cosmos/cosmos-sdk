@@ -732,6 +732,7 @@ func TestUnbondingFromUnbondingValidator(t *testing.T) {
 	// unbond the validators bond portion
 	unbondAmt := sdk.NewInt(10)
 	res := tstaking.Undelegate(sdk.AccAddress(validatorAddr), validatorAddr, unbondAmt, true)
+	app.ExecuteEpoch(ctx)
 
 	// change the ctx to Block Time one second before the validator would have unbonded
 	var resData types.MsgUndelegateResponse
@@ -744,8 +745,8 @@ func TestUnbondingFromUnbondingValidator(t *testing.T) {
 	res = tstaking.Undelegate(delegatorAddr, validatorAddr, unbondAmt, true)
 	app.ExecuteEpoch(ctx)
 
-	ctx = tstaking.TurnBlockTimeDiff(app.StakingKeeper.UnbondingTime(ctx))
 	tstaking.Ctx = ctx
+	ctx = tstaking.TurnBlockTimeDiff(app.StakingKeeper.UnbondingTime(ctx))
 
 	// Check to make sure that the unbonding delegation is no longer in state
 	// (meaning it was deleted in the above EndBlocker)

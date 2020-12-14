@@ -122,7 +122,13 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 	epochNumber := k.GetEpochNumber(ctx)
 	k.SaveEpochAction(ctx, epochNumber, msg)
 
-	// TODO should do validation by running with cachedCtx like gov proposal creation
+	cacheCtx, _ := ctx.CacheContext()
+	cacheCtx = cacheCtx.WithBlockHeight(k.GetNextEpochHeight(ctx))
+	cacheCtx = cacheCtx.WithBlockTime(k.GetNextEpochTime(ctx))
+	err := k.EpochEditValidator(cacheCtx, msg)
+	if err != nil {
+		return nil, err
+	}
 	return &types.MsgEditValidatorResponse{}, nil
 }
 

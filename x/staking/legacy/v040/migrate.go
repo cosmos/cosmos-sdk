@@ -42,7 +42,7 @@ func Migrate(stakingState v038staking.GenesisState) *v040staking.GenesisState {
 
 	newValidators := make([]v040staking.Validator, len(stakingState.Validators))
 	for i, oldValidator := range stakingState.Validators {
-		pkAny, err := codectypes.PackAny(oldValidator.ConsPubKey)
+		pkAny, err := codectypes.NewAnyWithValue(oldValidator.ConsPubKey)
 		if err != nil {
 			panic(fmt.Sprintf("Can't pack validator consensus PK as Any: %s", err))
 		}

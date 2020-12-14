@@ -34,7 +34,7 @@ func NewMsgCreateValidator(
 	valAddr sdk.ValAddress, pubKey cryptotypes.PubKey, selfDelegation sdk.Coin,
 	description Description, commission CommissionRates, minSelfDelegation sdk.Int,
 ) (*MsgCreateValidator, error) {
-	pkAny, err := codectypes.PackAny(pubKey)
+	pkAny, err := codectypes.NewAnyWithValue(pubKey)
 	if err != nil {
 		return nil, err
 	}

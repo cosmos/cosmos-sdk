@@ -45,10 +45,10 @@ func TestInitGenesis(t *testing.T) {
 	validators := make([]types.Validator, 2)
 	var delegations []types.Delegation
 
-	pk0, err := codectypes.PackAny(PKs[0])
+	pk0, err := codectypes.NewAnyWithValue(PKs[0])
 	require.NoError(t, err)
 
-	pk1, err := codectypes.PackAny(PKs[1])
+	pk1, err := codectypes.NewAnyWithValue(PKs[1])
 	require.NoError(t, err)
 
 	// initialize the validators

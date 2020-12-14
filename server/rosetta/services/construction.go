@@ -6,8 +6,6 @@ import (
 	"encoding/hex"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/client"
-
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
@@ -39,23 +37,6 @@ func (on OnlineNetwork) ConstructionCombine(ctx context.Context, request *types.
 	return &types.ConstructionCombineResponse{
 		SignedTransaction: hex.EncodeToString(signedTx),
 	}, nil
-}
-
-func (on OnlineNetwork) getTxBuilderFromBytesTx(tx string) (client.TxBuilder, error) {
-	txBytes, err := hex.DecodeString(tx)
-	if err != nil {
-		return nil, err
-	}
-
-	TxConfig := on.client.GetTxConfig()
-	rawTx, err := TxConfig.TxDecoder()(txBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	txBldr, _ := TxConfig.WrapTxBuilder(rawTx)
-
-	return txBldr, nil
 }
 
 func (on OnlineNetwork) ConstructionDerive(ctx context.Context, request *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {

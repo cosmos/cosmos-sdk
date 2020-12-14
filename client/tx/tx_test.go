@@ -180,6 +180,8 @@ func TestSign(t *testing.T) {
 			txfAmino, txb, "unknown", true, nil, nil},
 		{"should succeed with keyring Amino",
 			txfAmino, txbSimple, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
+		{"should succeed with keyring DIRECT",
+			txfDirect, txbSimple, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
 
 		/**** test double sign AMINO ****/
 		{"should sign tx2 Amino",
@@ -197,10 +199,6 @@ func TestSign(t *testing.T) {
 			txfDirect, txb, from1, false, []cryptotypes.PubKey{}, nil},
 		{"should fail to overwrite tx2 DIRECT",
 			txfDirect, txb, from1, true, []cryptotypes.PubKey{}, nil},
-
-		/**** test simple DIRECT ****/
-		{"should succeed with keyring DIRECT",
-			txfDirect, txbSimple, from1, true, []cryptotypes.PubKey{pubKey1}, nil},
 	}
 	var prevSigs []signingtypes.SignatureV2
 	for _, tc := range testCases {

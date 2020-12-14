@@ -208,6 +208,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+		f := cmd.Flags()
 		txFactory := tx.NewFactoryCLI(clientCtx, f)
 
 		clientCtx, txF, newTx, err := readTxAndInitContexts(clientCtx, cmd, args[0])
@@ -292,7 +293,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		}()
 
 		_, err = fp.Write(append(json, '\n'))
-		return
+		return err
 	}
 }
 

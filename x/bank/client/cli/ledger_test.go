@@ -48,7 +48,7 @@ func (s *LedgerIntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s *LedgerIntegrationTestSuite) Test_runAddCmdLedgerWithCustomCoinType() {
+func (s *LedgerIntegrationTestSuite) TestSendWithLedger() {
 	val0 := s.network.Validators[0]
 
 	cmd := keys.AddKeyCommand()
@@ -105,6 +105,7 @@ func (s *LedgerIntegrationTestSuite) Test_runAddCmdLedgerWithCustomCoinType() {
 		clientCtx, sendCmd,
 		[]string{
 			key1.GetName(), key1.GetAddress().String(), sdk.NewCoin(fmt.Sprintf("%stoken", val0.Moniker), sdk.NewInt(1)).String(),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		},
 	)
 	s.Require().NoError(err)

@@ -60,8 +60,7 @@ account key. It implies --signature-only.
 
 func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		clientCtx := client.GetClientContextFromCmd(cmd)
-		clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+		clientCtx, err := client.GetClientTxContext(cmd)
 		if err != nil {
 			return err
 		}
@@ -204,13 +203,12 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 }
 
 func makeSignCmd() func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) (err error) {
-		clientCtx := client.GetClientContextFromCmd(cmd)
-		f := cmd.Flags()
-		clientCtx, err = client.ReadTxCommandFlags(clientCtx, f)
+	return func(cmd *cobra.Command, args []string) error {
+		clientCtx, err := client.GetClientTxContext(cmd)
 		if err != nil {
 			return err
 		}
+		f := cmd.Flags()
 		txFactory := tx.NewFactoryCLI(clientCtx, f)
 
 		clientCtx, txF, newTx, err := readTxAndInitContexts(clientCtx, cmd, args[0])
@@ -295,7 +293,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		}()
 
 		_, err = fp.Write(append(json, '\n'))
-		return
+		return err
 	}
 }
 

@@ -56,7 +56,10 @@ Example:
 	simd testnet --v 4 --output-dir ./output --starting-ip-address 192.168.10.2
 	`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config

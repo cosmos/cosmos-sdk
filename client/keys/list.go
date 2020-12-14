@@ -24,7 +24,10 @@ along with their associated name and address.`,
 }
 
 func runListCmd(cmd *cobra.Command, _ []string) error {
-	clientCtx := client.GetClientContextFromCmd(cmd)
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
 
 	infos, err := clientCtx.Keyring.List()
 	if err != nil {

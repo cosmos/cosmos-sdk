@@ -62,12 +62,10 @@ recommended to set such parameters manually.
 
 func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 	return func(cmd *cobra.Command, args []string) (err error) {
-		clientCtx := client.GetClientContextFromCmd(cmd)
-		clientCtx, err = client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+		clientCtx, err := client.GetClientTxContext(cmd)
 		if err != nil {
 			return err
 		}
-
 		parsedTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
 		if err != nil {
 			return

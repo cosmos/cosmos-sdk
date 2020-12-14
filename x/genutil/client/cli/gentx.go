@@ -58,7 +58,10 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := server.GetServerContextFromCmd(cmd)
-			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
 			cdc := clientCtx.JSONMarshaler
 
 			config := serverCtx.Config

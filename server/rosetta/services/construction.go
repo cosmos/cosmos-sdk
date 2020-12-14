@@ -9,15 +9,11 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
-	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/conversion"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // interface implementation assertion
@@ -107,63 +103,11 @@ func (on OnlineNetwork) ConstructionParse(ctx context.Context, request *types.Co
 }
 
 func (on OnlineNetwork) ConstructionPayloads(ctx context.Context, request *types.ConstructionPayloadsRequest) (*types.ConstructionPayloadsResponse, *types.Error) {
-	if len(request.Operations) > 3 {
-		return nil, rosetta.ErrInvalidOperation.RosettaError()
-	}
-
-	msgs, signAddr, fee, err := conversion.RosettaOperationsToSdkMsg(request.Operations)
-	if err != nil {
-		return nil, rosetta.WrapError(rosetta.ErrInvalidOperation, err.Error()).RosettaError()
-	}
-
-	metadata, err := GetMetadataFromPayloadReq(request)
-	if err != nil {
-		return nil, rosetta.WrapError(rosetta.ErrInvalidRequest, err.Error()).RosettaError()
-	}
-
-	txFactory := tx.Factory{}.WithAccountNumber(metadata.AccountNumber).WithChainID(metadata.ChainID).
-		WithGas(metadata.Gas).WithSequence(metadata.Sequence).WithMemo(metadata.Memo).WithFees(fee.String())
-
-	TxConfig := on.client.GetTxConfig()
-	txFactory = txFactory.WithTxConfig(TxConfig)
-
-	txBldr, err := tx.BuildUnsignedTx(txFactory, msgs...)
+	payload, err := on.client.ConstructionPayload(ctx, request)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
-
-	if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
-		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
-	}
-
-	signerData := authsigning.SignerData{
-		ChainID:       txFactory.ChainID(),
-		AccountNumber: txFactory.AccountNumber(),
-		Sequence:      txFactory.Sequence(),
-	}
-
-	signBytes, err := TxConfig.SignModeHandler().GetSignBytes(txFactory.SignMode(), signerData, txBldr.GetTx())
-	if err != nil {
-		return nil, rosetta.ToRosettaError(err)
-	}
-
-	txBytes, err := TxConfig.TxEncoder()(txBldr.GetTx())
-	if err != nil {
-		return nil, rosetta.ToRosettaError(err)
-	}
-
-	return &types.ConstructionPayloadsResponse{
-		UnsignedTransaction: hex.EncodeToString(txBytes),
-		Payloads: []*types.SigningPayload{
-			{
-				AccountIdentifier: &types.AccountIdentifier{
-					Address: signAddr,
-				},
-				Bytes:         crypto.Sha256(signBytes),
-				SignatureType: "ecdsa",
-			},
-		},
-	}, nil
+	return payload, nil
 }
 
 func (on OnlineNetwork) ConstructionPreprocess(ctx context.Context, request *types.ConstructionPreprocessRequest) (*types.ConstructionPreprocessResponse, *types.Error) {

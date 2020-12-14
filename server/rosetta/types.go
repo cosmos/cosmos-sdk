@@ -7,7 +7,6 @@ import (
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 	"github.com/tendermint/cosmos-rosetta-gateway/service"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -85,12 +84,12 @@ type NodeClient interface {
 	Peers(ctx context.Context) ([]*types.Peer, error)
 	// Status returns the node status, such as sync data, version etc
 	Status(ctx context.Context) (*types.SyncStatus, error)
-	GetTxConfig() client.TxConfig
 
 	PostTx(txBytes []byte) (res *types.TransactionIdentifier, meta map[string]interface{}, err error)
 	SignedTx(ctx context.Context, txBytes []byte, sigs []*types.Signature) (signedTxBytes []byte, err error)
 	TxOperationsAndSignersAccountIdentifiers(signed bool, hexBytes []byte) (ops []*types.Operation, signers []*types.AccountIdentifier, err error)
 	ConstructionMetadataFromOptions(ctx context.Context, options map[string]interface{}) (meta map[string]interface{}, err error)
+	ConstructionPayload(ctx context.Context, req *types.ConstructionPayloadsRequest) (resp *types.ConstructionPayloadsResponse, err error)
 }
 
 type BlockTransactionsResponse struct {

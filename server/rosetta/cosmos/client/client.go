@@ -7,29 +7,29 @@ import (
 	"strconv"
 
 	"github.com/btcsuite/btcd/btcec"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
-	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/conversion"
-
 	"github.com/coinbase/rosetta-sdk-go/types"
-
 	"google.golang.org/grpc/metadata"
 
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/rpc/client/http"
 	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
 	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
+	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/conversion"
+	"github.com/cosmos/cosmos-sdk/server/rosetta/services"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -73,6 +73,66 @@ type Client struct {
 	ir codectypes.InterfaceRegistry
 
 	clientCtx client.Context
+}
+
+func (c *Client) ConstructionPayload(ctx context.Context, request *types.ConstructionPayloadsRequest) (resp *types.ConstructionPayloadsResponse, err error) {
+	if len(request.Operations) > 3 {
+		return nil, rosetta.ErrInvalidOperation
+	}
+
+	msgs, signAddr, fee, err := conversion.RosettaOperationsToSdkMsg(request.Operations)
+	if err != nil {
+		return nil, rosetta.WrapError(rosetta.ErrInvalidOperation, err.Error())
+	}
+
+	metadata, err := services.GetMetadataFromPayloadReq(request)
+	if err != nil {
+		return nil, rosetta.WrapError(rosetta.ErrInvalidRequest, err.Error())
+	}
+
+	txFactory := tx.Factory{}.WithAccountNumber(metadata.AccountNumber).WithChainID(metadata.ChainID).
+		WithGas(metadata.Gas).WithSequence(metadata.Sequence).WithMemo(metadata.Memo).WithFees(fee.String())
+
+	TxConfig := c.GetTxConfig()
+	txFactory = txFactory.WithTxConfig(TxConfig)
+
+	txBldr, err := tx.BuildUnsignedTx(txFactory, msgs...)
+	if err != nil {
+		return nil, err
+	}
+
+	if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
+		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	}
+
+	signerData := authsigning.SignerData{
+		ChainID:       txFactory.ChainID(),
+		AccountNumber: txFactory.AccountNumber(),
+		Sequence:      txFactory.Sequence(),
+	}
+
+	signBytes, err := TxConfig.SignModeHandler().GetSignBytes(txFactory.SignMode(), signerData, txBldr.GetTx())
+	if err != nil {
+		return nil, err
+	}
+
+	txBytes, err := TxConfig.TxEncoder()(txBldr.GetTx())
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.ConstructionPayloadsResponse{
+		UnsignedTransaction: hex.EncodeToString(txBytes),
+		Payloads: []*types.SigningPayload{
+			{
+				AccountIdentifier: &types.AccountIdentifier{
+					Address: signAddr,
+				},
+				Bytes:         crypto.Sha256(signBytes),
+				SignatureType: "ecdsa",
+			},
+		},
+	}, nil
 }
 
 func (c *Client) ConstructionMetadataFromOptions(ctx context.Context, options map[string]interface{}) (meta map[string]interface{}, err error) {
@@ -147,7 +207,7 @@ func NewSingle(grpcEndpoint, tendermintEndpoint string, optsFunc ...OptionFunc) 
 	clientCtx = clientCtx.
 		WithJSONMarshaler(opts.cdc).
 		WithInterfaceRegistry(opts.interfaceRegistry).
-		WithTxConfig(tx.NewTxConfig(opts.cdc, tx.DefaultSignModes)).
+		WithTxConfig(authtx.NewTxConfig(opts.cdc, authtx.DefaultSignModes)).
 		WithAccountRetriever(auth.AccountRetriever{}).
 		WithBroadcastMode(flags.BroadcastBlock)
 

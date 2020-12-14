@@ -140,12 +140,6 @@ func (any *Any) ClearCachedValue() {
 	any.cachedValue = nil
 }
 
-// UnsafeSetCachedValue sets cached value to a given interface.
-// This method is for internal use only!
-func (any *Any) UnsafeSetCachedValue(x interface{}) {
-	any.cachedValue = x
-}
-
 // IntoAny represents a type that can be wrapped into an Any.
 type IntoAny interface {
 	AsAny() *Any

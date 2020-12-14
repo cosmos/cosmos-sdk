@@ -52,7 +52,7 @@ Example:
     ```
 - Make sure to update the genesis parameters in the new genesis if any. All these details will be generally present in
 the governance proposal
-- All the necessary state chanegs are handled in `040` migration command, including tendermint params. So, manual updates to
+- All the necessary state changes are handled in `040` migration command, including tendermint params. So, manual updates to
 the genesis are not required
 - If your chain is using IBC, make sure to add IBC initial genesis state to the genesis file. You can use the following
   command to add IBC initial genesis state to the genesis file.

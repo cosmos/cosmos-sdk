@@ -251,6 +251,28 @@ func (c *Client) ListTransactionsInBlock(ctx context.Context, height int64) ([]*
 	return sdkTxs, nil
 }
 
+func (c *Client) TxOperationsAndSignersAccountIdentifiers(signed bool, txBytes []byte) (ops []*types.Operation, signers []*types.AccountIdentifier, err error) {
+	TxConfig := c.GetTxConfig()
+	rawTx, err := TxConfig.TxDecoder()(txBytes)
+	if err != nil {
+		return nil, nil, err
+	}
+	txBldr, _ := TxConfig.WrapTxBuilder(rawTx)
+
+	var accountIdentifierSigners []*types.AccountIdentifier
+	if signed {
+		addrs := txBldr.GetTx().GetSigners()
+		for _, addr := range addrs {
+			signer := &types.AccountIdentifier{
+				Address: addr.String(),
+			}
+			accountIdentifierSigners = append(accountIdentifierSigners, signer)
+		}
+	}
+
+	return conversion.SdkTxToOperations(txBldr.GetTx(), false, false), accountIdentifierSigners, nil
+}
+
 // GetTx returns a transaction given its hash
 func (c *Client) GetTx(_ context.Context, hash string) (*types.Transaction, error) {
 	txResp, err := authclient.QueryTx(c.clientCtx, hash)

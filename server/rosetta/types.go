@@ -92,6 +92,7 @@ type NodeClient interface {
 	PostTx(txBytes []byte) (res *sdk.TxResponse, err error)
 
 	SignedTx(ctx context.Context, txBytes []byte, sigs []*types.Signature) (signedTxBytes []byte, err error)
+	TxOperationsAndSignersAccountIdentifiers(signed bool, hexBytes []byte) (ops []*types.Operation, signers []*types.AccountIdentifier, err error)
 }
 
 type BlockTransactionsResponse struct {

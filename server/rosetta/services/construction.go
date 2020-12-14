@@ -141,26 +141,20 @@ func (on OnlineNetwork) ConstructionMetadata(ctx context.Context, request *types
 }
 
 func (on OnlineNetwork) ConstructionParse(ctx context.Context, request *types.ConstructionParseRequest) (*types.ConstructionParseResponse, *types.Error) {
-	txBldr, err := on.getTxBuilderFromBytesTx(request.Transaction)
+	txBytes, err := hex.DecodeString(request.Transaction)
+	if err != nil {
+		return nil, rosetta.ErrInvalidTransaction.RosettaError()
+	}
+	ops, signers, err := on.client.TxOperationsAndSignersAccountIdentifiers(request.Signed, txBytes)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
-
-	var accountIdentifierSigners []*types.AccountIdentifier
-	if request.Signed {
-		addrs := txBldr.GetTx().GetSigners()
-		for _, addr := range addrs {
-			signer := &types.AccountIdentifier{
-				Address: addr.String(),
-			}
-			accountIdentifierSigners = append(accountIdentifierSigners, signer)
-		}
-	}
-
 	return &types.ConstructionParseResponse{
-		Operations:               conversion.SdkTxToOperations(txBldr.GetTx(), false, false),
-		AccountIdentifierSigners: accountIdentifierSigners,
+		Operations:               ops,
+		AccountIdentifierSigners: signers,
+		Metadata:                 nil,
 	}, nil
+
 }
 
 func (on OnlineNetwork) ConstructionPayloads(ctx context.Context, request *types.ConstructionPayloadsRequest) (*types.ConstructionPayloadsResponse, *types.Error) {

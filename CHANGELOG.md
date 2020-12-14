@@ -62,7 +62,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * (crypto) [\#7966](https://github.com/cosmos/cosmos-sdk/issues/7966) `Bip44Params` `String()` function now correctly returns the absolute HD path by adding the `m/` prefix.
-* (x/auth/client/cli) [\#7632](https://github.com/cosmos/cosmos-sdk/issues/7632) fixing regression bugs in transaction signing.
+* (x/auth/client/cli) [\#8106](https://github.com/cosmos/cosmos-sdk/pull/8106) fixing regression bugs in transaction signing.
 
 
 ### API Breaking

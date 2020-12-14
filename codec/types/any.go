@@ -69,6 +69,19 @@ func NewAnyWithValue(value proto.Message) (*Any, error) {
 	return any, nil
 }
 
+// TODO: this creates an import cycle
+// func NewAnyFromServiceMsg(msg sdk.ServiceMsg) (*Any, error) {
+// 	bz, err := proto.Marshal(msg.Request)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return &Any{
+// 		TypeUrl:     msg.MethodName,
+// 		Value:       bz,
+// 		cachedValue: msg,
+// 	}
+// }
+
 // Pack packs the value x in the Any or returns an error. This also caches
 // the packed value so that it can be retrieved from GetCachedValue without
 // unmarshaling
@@ -125,6 +138,12 @@ func (any *Any) GetCachedValue() interface{} {
 // ClearCachedValue clears the cached value from the Any
 func (any *Any) ClearCachedValue() {
 	any.cachedValue = nil
+}
+
+// UnsafeSetCachedValue sets cached value to a given interface.
+// This method is for internal use only!
+func (any *Any) UnsafeSetCachedValue(x interface{}) {
+	any.cachedValue = x
 }
 
 // IntoAny represents a type that can be wrapped into an Any.

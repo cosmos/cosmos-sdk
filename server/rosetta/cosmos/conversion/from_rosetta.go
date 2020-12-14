@@ -5,7 +5,10 @@ import (
 	"strconv"
 	"strings"
 
+	types2 "github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
+
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -13,7 +16,7 @@ import (
 )
 
 // RosettaOperationsToSdkMsg converts rosetta operations to sdk.Msg and coins
-func RosettaOperationsToSdkMsg(ops []*types.Operation) ([]sdk.Msg, string, sdk.Coins, error) {
+func RosettaOperationsToSdkMsg(ir types2.InterfaceRegistry, ops []*types.Operation) ([]sdk.Msg, string, sdk.Coins, error) {
 	var feeAmnt []*types.Amount
 	var newOps []*types.Operation
 	if len(ops)%2 == 0 {

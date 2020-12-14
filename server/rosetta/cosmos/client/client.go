@@ -80,7 +80,7 @@ func (c *Client) ConstructionPayload(ctx context.Context, request *types.Constru
 		return nil, rosetta.ErrInvalidOperation
 	}
 
-	msgs, signAddr, fee, err := conversion.RosettaOperationsToSdkMsg(request.Operations)
+	msgs, signAddr, fee, err := conversion.RosettaOperationsToSdkMsg(c.ir, request.Operations)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrInvalidOperation, err.Error())
 	}

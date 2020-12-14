@@ -1,10 +1,10 @@
 <!--
 order: false
 parent:
-  order: 6
+  order: 7
 -->
 
-# Interfaces
+# Interfaces (Deprecated)
 
 This repository contains documentation on interfaces for Cosmos SDK applications.
 

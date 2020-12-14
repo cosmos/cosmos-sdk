@@ -93,7 +93,7 @@ func (c *Client) ConstructionPayload(ctx context.Context, request *types.Constru
 	txFactory := tx.Factory{}.WithAccountNumber(metadata.AccountNumber).WithChainID(metadata.ChainID).
 		WithGas(metadata.Gas).WithSequence(metadata.Sequence).WithMemo(metadata.Memo).WithFees(fee.String())
 
-	TxConfig := c.GetTxConfig()
+	TxConfig := c.getTxConfig()
 	txFactory = txFactory.WithTxConfig(TxConfig)
 
 	txBldr, err := tx.BuildUnsignedTx(txFactory, msgs...)
@@ -353,12 +353,12 @@ func (c *Client) ListTransactionsInBlock(ctx context.Context, height int64) ([]*
 }
 
 func (c *Client) TxOperationsAndSignersAccountIdentifiers(signed bool, txBytes []byte) (ops []*types.Operation, signers []*types.AccountIdentifier, err error) {
-	TxConfig := c.GetTxConfig()
-	rawTx, err := TxConfig.TxDecoder()(txBytes)
+	txConfig := c.getTxConfig()
+	rawTx, err := txConfig.TxDecoder()(txBytes)
 	if err != nil {
 		return nil, nil, err
 	}
-	txBldr, _ := TxConfig.WrapTxBuilder(rawTx)
+	txBldr, _ := txConfig.WrapTxBuilder(rawTx)
 
 	var accountIdentifierSigners []*types.AccountIdentifier
 	if signed {
@@ -426,7 +426,7 @@ func (c *Client) Status(ctx context.Context) (*types.SyncStatus, error) {
 	return conversion.TMStatusToRosettaSyncStatus(status), err
 }
 
-func (c *Client) GetTxConfig() client.TxConfig {
+func (c *Client) getTxConfig() client.TxConfig {
 	return c.clientCtx.TxConfig
 }
 
@@ -445,7 +445,7 @@ func (c *Client) PostTx(txBytes []byte) (*types.TransactionIdentifier, map[strin
 }
 
 func (c *Client) SignedTx(ctx context.Context, txBytes []byte, signatures []*types.Signature) (signedTxBytes []byte, err error) {
-	TxConfig := c.GetTxConfig()
+	TxConfig := c.getTxConfig()
 	rawTx, err := TxConfig.TxDecoder()(txBytes)
 	if err != nil {
 		return nil, err
@@ -488,7 +488,7 @@ func (c *Client) SignedTx(ctx context.Context, txBytes []byte, signatures []*typ
 		return nil, err
 	}
 
-	txBytes, err = c.GetTxConfig().TxEncoder()(txBldr.GetTx())
+	txBytes, err = c.getTxConfig().TxEncoder()(txBldr.GetTx())
 	if err != nil {
 		return nil, err
 	}

@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
@@ -44,4 +45,14 @@ func TestMigrateGenesis(t *testing.T) {
 
 	cmd.SetArgs([]string{target, genesisPath})
 	require.NoError(t, cmd.ExecuteContext(ctx))
+}
+
+func (s *IntegrationTestSuite) TestMigrate_FromV037() {
+	val0 := s.network.Validators[0]
+
+	genesisFile := testutil.WriteToNewTempFile(s.T(), v037Exported)
+	// We expect an error decoding an older `consensus_params` with the latest
+	// TM validation.
+	_, err := clitestutil.ExecTestCLICmd(val0.ClientCtx, cli.MigrateGenesisCmd(), []string{"v.40", genesisFile.Name()})
+	s.Require().Contains(err.Error(), "Make sure that you have correctly migrated all Tendermint consensus params")
 }

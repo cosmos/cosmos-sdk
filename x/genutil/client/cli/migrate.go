@@ -9,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	tmjson "github.com/tendermint/tendermint/libs/json"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -74,9 +73,9 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 			target := args[0]
 			importGenesis := args[1]
 
-			genDoc, err := tmtypes.GenesisDocFromFile(importGenesis)
+			genDoc, err := validateGenDoc(importGenesis)
 			if err != nil {
-				return errors.Wrapf(err, "failed to read genesis document from file %s", importGenesis)
+				return err
 			}
 
 			var initialState types.AppMap

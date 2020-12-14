@@ -73,7 +73,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			clientID, err = suite.keeper.CreateClient(suite.ctx, clientState, suite.consensusState)
 
 			// store intermediate consensus state to check that trustedHeight does not need to be highest consensus state before header height
-			incrementedClientHeight := testClientHeight.Increment()
+			incrementedClientHeight := testClientHeight.Increment().(types.Height)
 			intermediateConsState := &ibctmtypes.ConsensusState{
 				Timestamp:          suite.now.Add(time.Minute),
 				NextValidatorsHash: suite.valSetHash,

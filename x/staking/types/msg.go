@@ -3,11 +3,12 @@ package types
 import (
 	"bytes"
 
+	"github.com/gogo/protobuf/proto"
+
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -29,7 +30,6 @@ var (
 	_ sdk.Msg                            = &MsgDelegate{}
 	_ sdk.Msg                            = &MsgUndelegate{}
 	_ sdk.Msg                            = &MsgBeginRedelegate{}
-	_ rosetta.Msg                        = &MsgDelegate{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -251,7 +251,7 @@ func (msg MsgDelegate) ValidateBasic() error {
 }
 
 // Rosetta Msg interface.
-func (msg MsgDelegate) ToOperations(withStatus bool, hasError bool) []*rosettatypes.Operation {
+func (msg *MsgDelegate) ToOperations(withStatus bool, hasError bool) []*rosettatypes.Operation {
 	var operations []*rosettatypes.Operation
 	delAddr := msg.DelegatorAddress
 	valAddr := msg.ValidatorAddress
@@ -259,16 +259,16 @@ func (msg MsgDelegate) ToOperations(withStatus bool, hasError bool) []*rosettaty
 	delOp := func(account, amount string, index int) *rosettatypes.Operation {
 		var status string
 		if withStatus {
-			status = rosetta.StatusSuccess
+			status = "Success"
 			if hasError {
-				status = rosetta.StatusReverted
+				status = "Reverted"
 			}
 		}
 		return &rosettatypes.Operation{
 			OperationIdentifier: &rosettatypes.OperationIdentifier{
 				Index: int64(index),
 			},
-			Type:   TypeMsgDelegate,
+			Type:   proto.MessageName(msg),
 			Status: status,
 			Account: &rosettatypes.AccountIdentifier{
 				Address: account,

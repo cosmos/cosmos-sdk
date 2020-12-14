@@ -69,7 +69,7 @@ func ConvertOpsToMsgs(ops []*types.Operation) ([]sdk.Msg, string, error) {
 		switch op.Type {
 		case "cosmos.bank.v1beta1.MsgSend": // TODO temporary proto Message Name.
 			sendOps = append(sendOps, op)
-		case rosetta.OperationDelegate:
+		case "cosmos.staking.v1beta1.MsgDelegate":
 			delOps = append(delOps, op)
 		}
 	}

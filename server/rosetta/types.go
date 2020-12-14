@@ -3,6 +3,8 @@ package rosetta
 import (
 	"context"
 
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/gogo/protobuf/proto"
 
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -36,7 +38,7 @@ const (
 	StageSyncing = "syncing"
 )
 
-var SupportedOperations = []string{proto.MessageName(&bank.MsgSend{}), OperationFee, OperationDelegate}
+var SupportedOperations = []string{proto.MessageName(&bank.MsgSend{}), proto.MessageName(&stakingtypes.MsgDelegate{}), OperationFee}
 
 // NewNetwork builds a rosetta gateway network
 func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter) service.Network {

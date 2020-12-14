@@ -81,7 +81,7 @@ staking(3){
       },
       {
         "operation_identifier":{"index":1},
-        "type":"delegate",
+        "type":"cosmos.staking.v1beta1.MsgDelegate",
         "account":{{sender.account_identifier}},
         "amount":{
           "value":{{sender_amount}},
@@ -90,7 +90,7 @@ staking(3){
       },
       {
         "operation_identifier":{"index":2},
-        "type":"delegate",
+        "type":"cosmos.staking.v1beta1.MsgDelegate",
         "account": {{recipient}},
         "amount":{
           "value":{{recipient_amount}},

@@ -58,15 +58,13 @@ type Any struct {
 // returns an error if that value couldn't be packed. This also caches
 // the packed value so that it can be retrieved from GetCachedValue without
 // unmarshaling
-func NewAnyWithValue(value proto.Message) (*Any, error) {
-	any := &Any{}
-
-	err := any.Pack(value)
-	if err != nil {
-		return nil, err
-	}
-
-	return any, nil
+func NewAnyWithValue(v proto.Message) (*Any, error) {
+	bz, err := proto.Marshal(v)
+	return &Any{
+		TypeUrl:     "/" + proto.MessageName(v),
+		Value:       bz,
+		cachedValue: v,
+	}, err
 }
 
 // NewAnyWithCustomTypeURL same as NewAnyWithValue, but sets a custom type url, instead
@@ -80,22 +78,6 @@ func NewAnyWithCustomTypeURL(v proto.Message, typeURL string) (*Any, error) {
 		Value:       bz,
 		cachedValue: v,
 	}, err
-}
-
-// Pack packs the value x in the Any or returns an error. This also caches
-// the packed value so that it can be retrieved from GetCachedValue without
-// unmarshaling
-func (any *Any) Pack(x proto.Message) error {
-	any.TypeUrl = "/" + proto.MessageName(x)
-	bz, err := proto.Marshal(x)
-	if err != nil {
-		return err
-	}
-
-	any.Value = bz
-	any.cachedValue = x
-
-	return nil
 }
 
 // UnsafePackAny packs the value x in the Any and instead of returning the error
@@ -125,9 +107,25 @@ func PackAny(x interface{}) (*Any, error) {
 	}
 	protoMsg, ok := x.(proto.Message)
 	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "Expecting %T to implement proto.Message", x)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "Expecting %T to implement proto.Message or IntoAny", x)
 	}
 	return NewAnyWithValue(protoMsg)
+}
+
+// pack packs the value x in the Any or returns an error. This also caches
+// the packed value so that it can be retrieved from GetCachedValue without
+// unmarshaling
+func (any *Any) pack(x proto.Message) error {
+	any.TypeUrl = "/" + proto.MessageName(x)
+	bz, err := proto.Marshal(x)
+	if err != nil {
+		return err
+	}
+
+	any.Value = bz
+	any.cachedValue = x
+
+	return nil
 }
 
 // GetCachedValue returns the cached value from the Any if present

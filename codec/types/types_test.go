@@ -22,24 +22,19 @@ func TestPackUnpack(t *testing.T) {
 	registry := testdata.NewTestInterfaceRegistry()
 
 	spot := &testdata.Dog{Name: "Spot"}
-	any := types.Any{}
-	err := any.Pack(spot)
-	require.NoError(t, err)
-
-	require.Equal(t, spot, any.GetCachedValue())
-
-	// without cache
-	any.ClearCachedValue()
 	var animal testdata.Animal
-	err = registry.UnpackAny(&any, &animal)
+
+	// with cache
+	any, err := types.NewAnyWithValue(spot)
+	require.NoError(t, err)
+	require.Equal(t, spot, any.GetCachedValue())
+	err = registry.UnpackAny(any, &animal)
 	require.NoError(t, err)
 	require.Equal(t, spot, animal)
 
-	// with cache
-	err = any.Pack(spot)
-	require.Equal(t, spot, any.GetCachedValue())
-	require.NoError(t, err)
-	err = registry.UnpackAny(&any, &animal)
+	// without cache
+	any.ClearCachedValue()
+	err = registry.UnpackAny(any, &animal)
 	require.NoError(t, err)
 	require.Equal(t, spot, animal)
 }

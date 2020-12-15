@@ -4,19 +4,20 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gogo/protobuf/jsonpb"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // RosettaOperationsToSdkMsg converts rosetta operations to sdk.Msg and coins
-func RosettaOperationsToSdkMsg(ir cdctypes.InterfaceRegistry, ops []*types.Operation) ([]sdk.Msg, sdk.Coins, error) {
+func RosettaOperationsToSdkMsg(interfaceRegistry jsonpb.AnyResolver, ops []*types.Operation) ([]sdk.Msg, sdk.Coins, error) {
 	var feeAmnt []*types.Amount
 	var newOps []*types.Operation
 	if len(ops)%2 == 0 {
-		msgs, err := ConvertOpsToMsgs(ir, ops)
+		msgs, err := ConvertOpsToMsgs(interfaceRegistry, ops)
 		return msgs, nil, err
 	}
 
@@ -31,7 +32,7 @@ func RosettaOperationsToSdkMsg(ir cdctypes.InterfaceRegistry, ops []*types.Opera
 			}
 		}
 	}
-	msgs, err := ConvertOpsToMsgs(ir, newOps)
+	msgs, err := ConvertOpsToMsgs(interfaceRegistry, newOps)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -56,7 +57,7 @@ func RosettaAmountsToCoins(amounts []*types.Amount) sdk.Coins {
 	return feeCoins
 }
 
-func ConvertOpsToMsgs(ir cdctypes.InterfaceRegistry, ops []*types.Operation) ([]sdk.Msg, error) {
+func ConvertOpsToMsgs(interfaceRegistry jsonpb.AnyResolver, ops []*types.Operation) ([]sdk.Msg, error) {
 	var msgs []sdk.Msg
 	var operationsByType = make(map[string][]*types.Operation)
 	for _, op := range ops {
@@ -68,7 +69,7 @@ func ConvertOpsToMsgs(ir cdctypes.InterfaceRegistry, ops []*types.Operation) ([]
 			continue
 		}
 
-		msgType, err := ir.Resolve("/" + opName) // Types are registered as /proto-name in the interface registry.
+		msgType, err := interfaceRegistry.Resolve("/" + opName) // Types are registered as /proto-name in the interface registry.
 		if err != nil {
 			return nil, err
 		}

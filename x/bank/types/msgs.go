@@ -93,7 +93,7 @@ func (msg *MsgSend) ToOperations(withStatus bool, hasError bool) []*types.Operat
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: int64(index),
 			},
-			Type:   fmt.Sprintf("%s", proto.MessageName(msg)),
+			Type:   proto.MessageName(msg),
 			Status: status,
 			Account: &types.AccountIdentifier{
 				Address: account,

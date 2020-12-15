@@ -153,13 +153,13 @@ func (c *Client) ConstructionPayload(ctx context.Context, request *types.Constru
 
 	accIdentifiers := getAccountIdentifiersByMsgs(msgs)
 
-	var payloads []*types.SigningPayload
-	for _, accID := range accIdentifiers {
-		payloads = append(payloads, &types.SigningPayload{
+	payloads := make([]*types.SigningPayload, len(accIdentifiers))
+	for i, accID := range accIdentifiers {
+		payloads[i] = &types.SigningPayload{
 			AccountIdentifier: accID,
 			Bytes:             crypto.Sha256(signBytes),
 			SignatureType:     "ecdsa",
-		})
+		}
 	}
 
 	return &types.ConstructionPayloadsResponse{

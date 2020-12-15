@@ -28,7 +28,7 @@ light client, it need to fork Cosmos SDK and modify codebase to add support for 
 that fork against mainstream Cosmos SDK release.
 
 We are proposing simplifying this workflow by integrating a WASM light client module which makes adding support for 
-new light client a simple transaction. The light client bytecode, written in Wasm-compilable Rust runs inside a Wasmer 
+a new light client a simple transaction. The light client bytecode, written in Wasm-compilable Rust, runs inside a Wasmer 
 VM. The Wasm light client submodule exposes a proxy light client interface that routes incoming messages to the 
 appropriate handler function, inside the Wasm VM for execution.
 

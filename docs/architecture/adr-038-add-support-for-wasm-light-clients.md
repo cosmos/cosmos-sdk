@@ -1,4 +1,4 @@
-# ADR 38: Add support for Wasm based light client
+# ADR 39: Add support for Wasm based light client
 
 ## Changelog
 

@@ -18,5 +18,6 @@ type AccountKeeper interface {
 
 // BankKeeper defines the expected supply Keeper (noalias)
 type BankKeeper interface {
+	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 }

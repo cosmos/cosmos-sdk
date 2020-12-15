@@ -150,7 +150,7 @@ func txToAny(txConfig client.TxConfig, txBytes []byte) (*codectypes.Any, error) 
 	}
 	p, ok := txb.(tx.ProtoTxProvider)
 	if !ok {
-		return nil, fmt.Errorf("Expecting a proto transaction builder, got %T", txb)
+		return nil, fmt.Errorf("expecting a proto transaction builder, got %T", txb)
 	}
 	return codectypes.NewAnyWithValue(p.GetProtoTx())
 }

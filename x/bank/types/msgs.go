@@ -2,6 +2,8 @@ package types
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/gogo/protobuf/proto"
@@ -110,6 +112,39 @@ func (msg *MsgSend) ToOperations(withStatus bool, hasError bool) []*types.Operat
 	)
 
 	return operations
+}
+
+func (msg MsgSend) FromOperations(ops []*types.Operation) (sdk.Msg, string, error) {
+	var (
+		from, to sdk.AccAddress
+		sendAmt  sdk.Coin
+		err      error
+	)
+
+	for _, op := range ops {
+		if strings.HasPrefix(op.Amount.Value, "-") {
+			from, err = sdk.AccAddressFromBech32(op.Account.Address)
+			if err != nil {
+				return nil, "", err
+			}
+			continue
+		}
+
+		to, err = sdk.AccAddressFromBech32(op.Account.Address)
+		if err != nil {
+			return nil, "", err
+		}
+
+		amount, err := strconv.ParseInt(op.Amount.Value, 10, 64)
+		if err != nil {
+			return nil, "", fmt.Errorf("invalid amount")
+		}
+
+		sendAmt = sdk.NewCoin(op.Amount.Currency.Symbol, sdk.NewInt(amount))
+
+	}
+
+	return NewMsgSend(from, to, sdk.NewCoins(sendAmt)), from.String(), nil
 }
 
 var _ sdk.Msg = &MsgMultiSend{}

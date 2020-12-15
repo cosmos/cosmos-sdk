@@ -73,25 +73,18 @@ func ConvertOpsToMsgs(ir types2.InterfaceRegistry, ops []*types.Operation) ([]sd
 			continue
 		}
 
-		_, err := ir.Resolve("/" + opName)
+		msgType, err := ir.Resolve("/" + opName)
 		if err != nil {
 			return nil, "", err
 		}
 
 		if len(operations) == 2 {
-			if opName == "cosmos.bank.v1beta1.MsgSend" {
-				sendMsg, fromAddr, err := RosettaOperationsToSdkBankMsgSend(operations)
+			if rosettaMsg, ok := msgType.(rosetta.Msg); ok {
+				m, fromAddr, err := rosettaMsg.FromOperations(operations)
 				if err != nil {
 					return nil, "", err
 				}
-				msgs = append(msgs, sendMsg)
-				signAddr = fromAddr
-			} else if opName == "cosmos.staking.v1beta1.MsgDelegate" {
-				delMsg, fromAddr, err := RosettaOperationsToSdkStakingMsgDelegate(operations)
-				if err != nil {
-					return nil, "", err
-				}
-				msgs = append(msgs, delMsg)
+				msgs = append(msgs, m)
 				signAddr = fromAddr
 			}
 		}

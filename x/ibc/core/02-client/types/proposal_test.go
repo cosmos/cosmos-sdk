@@ -88,7 +88,6 @@ func (suite *TypesTestSuite) TestMarshalClientUpdateProposalProposal() {
 	// create codec
 	ir := codectypes.NewInterfaceRegistry()
 	types.RegisterInterfaces(ir)
-	types.RegisterInterfaces(ir)
 	govtypes.RegisterInterfaces(ir)
 	ibctmtypes.RegisterInterfaces(ir)
 	cdc := codec.NewProtoCodec(ir)

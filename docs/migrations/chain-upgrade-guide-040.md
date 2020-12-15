@@ -61,7 +61,7 @@ software and restore to their latest snapshot before restarting their nodes.
    simd migrate v0.40 v039_exported_state.json --chain-id <new_chain_id> --genesis-time <new_genesis_time_in_utc> > new_v040_genesis.json
    ```
 
-   NOTE: The migrate command takes an input genesis state and migrates it to a targeted version. New `genesis-time` will
+   **Note:** The migrate command takes an input genesis state and migrates it to a targeted version. New `genesis-time` will
    be as mentioned in the governance proposal.
 
 1. Verify the SHA256 of the migrated genesis file with other valdiators to make sure there are no manual errors in the process.
@@ -83,10 +83,10 @@ software and restore to their latest snapshot before restarting their nodes.
    cat new_040_genesis.json | jq '.app_state |= . + {"ibc":{"client_genesis":{"clients":[],"clients_consensus":[],"create_localhost":false},"connection_genesis":{"connections":[],"client_connection_paths":[]},"channel_genesis":{"channels":[],"acknowledgements":[],"commitments":[],"receipts":[],"send_sequences":[],"recv_sequences":[],"ack_sequences":[]}},"transfer":{"port_id":"transfer","denom_traces":[],"params":{"send_enabled":false,"receive_enabled":false}},"capability":{"index":"1","owners":[]}}' > new_040_genesis.json
    ```
 
-   Note: This would add IBC state with IBC's `send_enabled: false` and `receive_enabled: false`. Make sure to update them to `true` in the above command if are planning to enable IBC transactions with chain upgrade. Otherwise you can do it via a governance proposal.
+   **Note:** This would add IBC state with IBC's `send_enabled: false` and `receive_enabled: false`. Make sure to update them to `true` in the above command if are planning to enable IBC transactions with chain upgrade. Otherwise you can do it via a governance proposal.
 
 1. Reset the old state
-   NOTE: Be sure you have a complete backed up state of your node before proceeding with this step.
+   **Note:** Be sure you have a complete backed up state of your node before proceeding with this step.
    See Recovery for details on how to proceed.
 
    ```shell

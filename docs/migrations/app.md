@@ -2,7 +2,7 @@
 order: 1
 -->
 
-# Update to Cosmos-SDK v0.40
+# Modules Migration
 
 The following document describes the changes, and an approach to update the chain to use Cosmos-SDK v0.40
 aka stargate release.

@@ -35,7 +35,7 @@ func RosettaOperationsToSdkMsg(ir types2.InterfaceRegistry, ops []*types.Operati
 			}
 		}
 	}
-	msgs, signAddr, err := ConvertOpsToMsgs(nil, newOps)
+	msgs, signAddr, err := ConvertOpsToMsgs(ir, newOps)
 	if err != nil {
 		return nil, "", nil, err
 	}
@@ -69,6 +69,15 @@ func ConvertOpsToMsgs(ir types2.InterfaceRegistry, ops []*types.Operation) ([]sd
 	}
 
 	for opName, operations := range operationsByType {
+		if opName == rosetta.OperationFee {
+			continue
+		}
+
+		_, err := ir.Resolve("/" + opName)
+		if err != nil {
+			return nil, "", err
+		}
+
 		if len(operations) == 2 {
 			if opName == "cosmos.bank.v1beta1.MsgSend" {
 				sendMsg, fromAddr, err := RosettaOperationsToSdkBankMsgSend(operations)

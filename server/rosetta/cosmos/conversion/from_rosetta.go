@@ -71,19 +71,19 @@ func ConvertOpsToMsgs(ops []*types.Operation) ([]sdk.Msg, string, error) {
 	for opName, operations := range operationsByType {
 		if len(operations) == 2 {
 			if opName == "cosmos.bank.v1beta1.MsgSend" {
-				sendMsg, err := RosettaOperationsToSdkBankMsgSend(operations)
+				sendMsg, fromAddr, err := RosettaOperationsToSdkBankMsgSend(operations)
 				if err != nil {
 					return nil, "", err
 				}
 				msgs = append(msgs, sendMsg)
-				signAddr = sendMsg.FromAddress
+				signAddr = fromAddr
 			} else if opName == "cosmos.staking.v1beta1.MsgDelegate" {
-				delMsg, err := RosettaOperationsToSdkStakingMsgDelegate(operations)
+				delMsg, fromAddr, err := RosettaOperationsToSdkStakingMsgDelegate(operations)
 				if err != nil {
 					return nil, "", err
 				}
 				msgs = append(msgs, delMsg)
-				signAddr = delMsg.DelegatorAddress
+				signAddr = fromAddr
 			}
 		}
 	}
@@ -91,7 +91,7 @@ func ConvertOpsToMsgs(ops []*types.Operation) ([]sdk.Msg, string, error) {
 	return msgs, signAddr, nil
 }
 
-func RosettaOperationsToSdkStakingMsgDelegate(ops []*types.Operation) (*stakingtypes.MsgDelegate, error) {
+func RosettaOperationsToSdkStakingMsgDelegate(ops []*types.Operation) (sdk.Msg, string, error) {
 	var (
 		delAddr sdk.AccAddress
 		valAddr sdk.ValAddress
@@ -103,32 +103,32 @@ func RosettaOperationsToSdkStakingMsgDelegate(ops []*types.Operation) (*stakingt
 		if strings.HasPrefix(op.Amount.Value, "-") {
 			delAddr, err = sdk.AccAddressFromBech32(op.Account.Address)
 			if err != nil {
-				return nil, err
+				return nil, "", err
 			}
 			continue
 		}
 
 		valAddr, err = sdk.ValAddressFromBech32(op.Account.Address)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 
 		amount, err := strconv.ParseInt(op.Amount.Value, 10, 64)
 		if err != nil {
-			return nil, fmt.Errorf("invalid amount")
+			return nil, "", fmt.Errorf("invalid amount")
 		}
 
 		sendAmt = sdk.NewCoin(op.Amount.Currency.Symbol, sdk.NewInt(amount))
 
 	}
 
-	return stakingtypes.NewMsgDelegate(delAddr, valAddr, sendAmt), nil
+	return stakingtypes.NewMsgDelegate(delAddr, valAddr, sendAmt), delAddr.String(), nil
 }
 
 // RosettaOperationsToSdkBankMsgSend extracts the from and to addresses from a list of operations.
 // We assume that it comes formated in the correct way. And that the balance of the sender is the same
 // as the receiver operations.
-func RosettaOperationsToSdkBankMsgSend(ops []*types.Operation) (*banktypes.MsgSend, error) {
+func RosettaOperationsToSdkBankMsgSend(ops []*types.Operation) (sdk.Msg, string, error) {
 	var (
 		from, to sdk.AccAddress
 		sendAmt  sdk.Coin
@@ -139,24 +139,24 @@ func RosettaOperationsToSdkBankMsgSend(ops []*types.Operation) (*banktypes.MsgSe
 		if strings.HasPrefix(op.Amount.Value, "-") {
 			from, err = sdk.AccAddressFromBech32(op.Account.Address)
 			if err != nil {
-				return nil, err
+				return nil, "", err
 			}
 			continue
 		}
 
 		to, err = sdk.AccAddressFromBech32(op.Account.Address)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 
 		amount, err := strconv.ParseInt(op.Amount.Value, 10, 64)
 		if err != nil {
-			return nil, fmt.Errorf("invalid amount")
+			return nil, "", fmt.Errorf("invalid amount")
 		}
 
 		sendAmt = sdk.NewCoin(op.Amount.Currency.Symbol, sdk.NewInt(amount))
 
 	}
 
-	return banktypes.NewMsgSend(from, to, sdk.NewCoins(sendAmt)), nil
+	return banktypes.NewMsgSend(from, to, sdk.NewCoins(sendAmt)), from.String(), nil
 }

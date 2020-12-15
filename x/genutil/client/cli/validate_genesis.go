@@ -3,7 +3,6 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -13,8 +12,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-// Validate genesis command takes
-func ValidateGenesisCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfig) *cobra.Command {
+const chainUpgradeGuide = "https://docs.cosmos.network/master/migrations/chain-upgrade-guide-040.html"
+
+// ValidateGenesisCmd takes a genesis file, and makes sure that it is valid.
+func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 	return &cobra.Command{
 		Use:   "validate-genesis [file]",
 		Args:  cobra.RangeArgs(0, 1),
@@ -33,11 +34,9 @@ func ValidateGenesisCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfi
 				genesis = args[0]
 			}
 
-			fmt.Fprintf(os.Stderr, "validating genesis file at %s\n", genesis)
-
-			var genDoc *tmtypes.GenesisDoc
-			if genDoc, err = tmtypes.GenesisDocFromFile(genesis); err != nil {
-				return fmt.Errorf("error loading genesis doc from %s: %s", genesis, err.Error())
+			genDoc, err := validateGenDoc(genesis)
+			if err != nil {
+				return err
 			}
 
 			var genState map[string]json.RawMessage
@@ -45,7 +44,7 @@ func ValidateGenesisCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfi
 				return fmt.Errorf("error unmarshalling genesis doc %s: %s", genesis, err.Error())
 			}
 
-			if err = mbm.ValidateGenesis(cdc, txEncCfg, genState); err != nil {
+			if err = mbm.ValidateGenesis(cdc, clientCtx.TxConfig, genState); err != nil {
 				return fmt.Errorf("error validating genesis file %s: %s", genesis, err.Error())
 			}
 
@@ -53,4 +52,20 @@ func ValidateGenesisCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfi
 			return nil
 		},
 	}
+}
+
+// validateGenDoc reads a genesis file and validates that it is a correct
+// Tendermint GenesisDoc. This function does not do any cosmos-related
+// validation.
+func validateGenDoc(importGenesisFile string) (*tmtypes.GenesisDoc, error) {
+	genDoc, err := tmtypes.GenesisDocFromFile(importGenesisFile)
+	if err != nil {
+		return nil, fmt.Errorf("%s. Make sure that"+
+			" you have correctly migrated all Tendermint consensus params, please see the"+
+			" chain migration guide at %s for more info",
+			err.Error(), chainUpgradeGuide,
+		)
+	}
+
+	return genDoc, nil
 }

@@ -18,18 +18,16 @@ import (
 
 // list of supported operations
 const (
-	StatusReverted    = "Reverted"
-	StatusSuccess     = "Success"
-	OptionAddress     = "address"
-	OptionGas         = "gas"
-	OptionMemo        = "memo"
-	Sequence          = "sequence"
-	AccountNumber     = "account_number"
-	ChainID           = "chain_id"
-	OperationSend     = "send"
-	OperationFee      = "fee"
-	Log               = "log"
-	OperationDelegate = "delegate"
+	StatusReverted = "Reverted"
+	StatusSuccess  = "Success"
+	OptionAddress  = "address"
+	OptionGas      = "gas"
+	OptionMemo     = "memo"
+	Sequence       = "sequence"
+	AccountNumber  = "account_number"
+	ChainID        = "chain_id"
+	OperationFee   = "fee"
+	Log            = "log"
 )
 
 // Synchronization stage constants used to determine if a node is synced or catching up

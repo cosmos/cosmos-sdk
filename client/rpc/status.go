@@ -40,7 +40,10 @@ func StatusCommand() *cobra.Command {
 		Use:   "status",
 		Short: "Query remote node for status",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
 
 			status, err := getNodeStatus(clientCtx)
 			if err != nil {

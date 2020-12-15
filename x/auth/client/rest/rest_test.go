@@ -379,7 +379,7 @@ func (s *IntegrationTestSuite) createTestStdTx(val *network.Validator, accNum, s
 		WithSequence(sequence)
 
 	// sign Tx (offline mode so we can manually set sequence number)
-	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, true)
+	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, true, true)
 	s.Require().NoError(err)
 
 	stdTx := txBuilder.GetTx().(legacytx.StdTx)

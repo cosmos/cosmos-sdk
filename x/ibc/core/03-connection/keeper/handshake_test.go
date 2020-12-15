@@ -210,7 +210,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			// modify counterparty client without setting in store so it still passes validate but fails proof verification
 			tmClient, ok := counterpartyClient.(*ibctmtypes.ClientState)
 			suite.Require().True(ok)
-			tmClient.LatestHeight = tmClient.LatestHeight.Increment()
+			tmClient.LatestHeight = tmClient.LatestHeight.Increment().(clienttypes.Height)
 		}, false},
 		{"consensus state verification failed", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
@@ -562,7 +562,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			// modify counterparty client without setting in store so it still passes validate but fails proof verification
 			tmClient, ok := counterpartyClient.(*ibctmtypes.ClientState)
 			suite.Require().True(ok)
-			tmClient.LatestHeight = tmClient.LatestHeight.Increment()
+			tmClient.LatestHeight = tmClient.LatestHeight.Increment().(clienttypes.Height)
 
 			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
 			suite.Require().NoError(err)

@@ -53,7 +53,10 @@ consisting of all the keys provided by name and multisig threshold.`,
 
 func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	var info keyring.Info
-	clientCtx := client.GetClientContextFromCmd(cmd)
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
 
 	if len(args) == 1 {
 		info, err = fetchKey(clientCtx.Keyring, args[0])

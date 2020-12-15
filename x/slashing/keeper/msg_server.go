@@ -32,5 +32,13 @@ func (k msgServer) Unjail(goCtx context.Context, msg *types.MsgUnjail) (*types.M
 
 	epochNumber := k.stakingKeeper.GetEpochNumber(ctx)
 	k.SaveEpochAction(ctx, epochNumber, msg)
+
+	cacheCtx, _ := ctx.CacheContext()
+	cacheCtx = cacheCtx.WithBlockHeight(k.stakingKeeper.GetNextEpochHeight(ctx))
+	cacheCtx = cacheCtx.WithBlockTime(k.stakingKeeper.GetNextEpochTime(ctx))
+	err := k.EpochUnjail(cacheCtx, msg)
+	if err != nil {
+		return nil, err
+	}
 	return &types.MsgUnjailResponse{}, nil
 }

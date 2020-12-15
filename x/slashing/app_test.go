@@ -40,6 +40,16 @@ func checkValidatorSigningInfo(t *testing.T, app *simapp.SimApp, addr sdk.ConsAd
 	return signingInfo
 }
 
+func ExecuteNextEpoch(t *testing.T, app *simapp.SimApp) {
+	lastBlockHeight := app.LastBlockHeight()
+	for height := lastBlockHeight + 1; height <= lastBlockHeight+stakingtypes.DefaultEpochInterval; height++ {
+		header := tmproto.Header{Height: height}
+		app.BeginBlock(abci.RequestBeginBlock{Header: header})
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+	}
+}
+
 func TestSlashingMsgs(t *testing.T) {
 	genTokens := sdk.TokensFromConsensusPower(42)
 	bondTokens := sdk.TokensFromConsensusPower(10)
@@ -72,6 +82,8 @@ func TestSlashingMsgs(t *testing.T) {
 	txGen := simapp.MakeTestEncodingConfig().TxConfig
 	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
 	require.NoError(t, err)
+	ExecuteNextEpoch(t, app)
+
 	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin.Sub(bondCoin)})
 
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}

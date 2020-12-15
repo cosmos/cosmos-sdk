@@ -3,6 +3,8 @@
 package types
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -55,7 +57,12 @@ type StakingKeeper interface {
 	MaxValidators(sdk.Context) uint32
 
 	// GetEpochNumber fetches epoch number
-	GetEpochNumber(ctx sdk.Context) int64
+	GetEpochNumber(sdk.Context) int64
+
+	// GetNextEpochHeight returns next epoch height
+	GetNextEpochHeight(sdk.Context) int64
+	// GetNextEpochTime returns estimated next epoch time
+	GetNextEpochTime(sdk.Context) time.Time
 }
 
 // StakingHooks event hooks for staking validator object (noalias)

@@ -46,7 +46,7 @@ $ %s query %s authorizations cosmos1skj.. cosmos1skjwj..
 `, version.AppName, types.ModuleName),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -100,7 +100,7 @@ $ %s query %s authorization cosmos1skjw.. cosmos1skjwj.. %s
 `, version.AppName, types.ModuleName, types.SendAuthorization{}.MethodName()),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}

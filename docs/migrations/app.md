@@ -2,10 +2,18 @@
 order: 1
 -->
 
-# Modules Migration
+# App Migration
 
-The following document describes the changes, and an approach to update the chain to use Cosmos-SDK v0.40
-aka stargate release.
+The following document describes the changes to update your app and modules to use Cosmos SDK v0.40,
+a.k.a. Stargate release. {synopsis}
+
+## Updating Modules
+
+### Protocol Buffers
+
+As outlined in our [encoding guide](../core/encoding.md), one of the most sig
+
+## Updating the App
 
 ## Dependencies
 

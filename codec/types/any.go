@@ -69,25 +69,24 @@ func NewAnyWithValue(value proto.Message) (*Any, error) {
 	return any, nil
 }
 
-// NewAnyWithTypeURL constructs a new Any packed with the value provided
-// and a custom TypeURL. It returns an error if that value couldn't be packed.
-// This also cachesthe packed value so that it can be retrieved from
-// GetCachedValue without unmarshaling.
-//
-// Ex:
-// This will allow us to pack service methods in Any's using the full method name
-// as the type URL and the request body as the value.
-func NewAnyWithTypeURL(typeURL string, value proto.Message) (*Any, error) {
-	any := &Any{}
-
-	return any, any.packWithCustomTypeURL(typeURL, value)
+// NewAnyWithCustomTypeURL same as NewAnyWithValue, but sets a custom type url, instead
+// using the one from proto.Message.
+// NOTE: This functions should be only used for types with additional logic bundled
+// into the protobuf Any serialization. For simple marshaling you should use NewAnyWithValue.
+func NewAnyWithCustomTypeURL(v proto.Message, typeURL string) (*Any, error) {
+	bz, err := proto.Marshal(v)
+	return &Any{
+		TypeUrl:     typeURL,
+		Value:       bz,
+		cachedValue: v,
+	}, err
 }
 
-// PackWithCustomTypeURL packs the value x in the Any or returns an error,
-// allowing for a custom TypeUrl. This also caches the packed value so that it
-// can be retrieved fromGetCachedValue without unmarshaling.
-func (any *Any) packWithCustomTypeURL(typeURL string, x proto.Message) error {
-	any.TypeUrl = typeURL
+// Pack packs the value x in the Any or returns an error. This also caches
+// the packed value so that it can be retrieved from GetCachedValue without
+// unmarshaling
+func (any *Any) Pack(x proto.Message) error {
+	any.TypeUrl = "/" + proto.MessageName(x)
 	bz, err := proto.Marshal(x)
 	if err != nil {
 		return err
@@ -97,13 +96,6 @@ func (any *Any) packWithCustomTypeURL(typeURL string, x proto.Message) error {
 	any.cachedValue = x
 
 	return nil
-}
-
-// Pack packs the value x in the Any or returns an error. This also caches
-// the packed value so that it can be retrieved from GetCachedValue without
-// unmarshaling
-func (any *Any) Pack(x proto.Message) error {
-	return any.packWithCustomTypeURL("/"+proto.MessageName(x), x)
 }
 
 // UnsafePackAny packs the value x in the Any and instead of returning the error

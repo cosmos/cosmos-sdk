@@ -157,10 +157,6 @@ func (w *wrapper) GetMemo() string {
 	return w.tx.Body.Memo
 }
 
-func (w *wrapper) GetSignatures() [][]byte {
-	return w.tx.Signatures
-}
-
 // GetTimeoutHeight returns the transaction's timeout height (if set).
 func (w *wrapper) GetTimeoutHeight() uint64 {
 	return w.tx.Body.TimeoutHeight
@@ -205,21 +201,13 @@ func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
 		var err error
 		switch msg := msg.(type) {
 		case sdk.ServiceMsg:
-			{
-				anys[i], err = codectypes.NewAnyWithTypeURL(msg.MethodName, msg.Request)
-				if err != nil {
-					return err
-				}
-			}
+			anys[i], err = codectypes.NewAnyWithCustomTypeURL(msg.Request, msg.MethodName)
 		default:
-			{
-				anys[i], err = codectypes.NewAnyWithValue(msg)
-				if err != nil {
-					return err
-				}
-			}
+			anys[i], err = codectypes.NewAnyWithValue(msg)
 		}
-
+		if err != nil {
+			return err
+		}
 	}
 
 	w.tx.Body.Messages = anys

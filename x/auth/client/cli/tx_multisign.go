@@ -60,14 +60,12 @@ recommended to set such parameters manually.
 	return cmd
 }
 
-func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
+func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 	return func(cmd *cobra.Command, args []string) (err error) {
-		clientCtx := client.GetClientContextFromCmd(cmd)
-		clientCtx, err = client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+		clientCtx, err := client.GetClientTxContext(cmd)
 		if err != nil {
 			return err
 		}
-
 		parsedTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
 		if err != nil {
 			return
@@ -183,9 +181,17 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		defer fp.Close()
 
-		return clientCtx.PrintString(fmt.Sprintf("%s\n", json))
+		defer func() {
+			err2 := fp.Close()
+			if err == nil {
+				err = err2
+			}
+		}()
+
+		err = clientCtx.PrintBytes(json)
+
+		return
 	}
 }
 

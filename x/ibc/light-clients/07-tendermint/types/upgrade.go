@@ -35,8 +35,8 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	// last height of current counterparty chain must be client's latest height
 	lastHeight := cs.GetLatestHeight()
 
-	if upgradedClient.GetLatestHeight().GetRevisionNumber() <= lastHeight.GetRevisionNumber() {
-		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "upgraded client height %s must be at greater revision than current client height %s",
+	if !upgradedClient.GetLatestHeight().GT(lastHeight) {
+		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "upgraded client height %s must be at greater than current client height %s",
 			upgradedClient.GetLatestHeight(), lastHeight)
 	}
 

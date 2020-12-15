@@ -34,13 +34,10 @@ func NewMsgVerifyInvariantTxCmd() *cobra.Command {
 		Short: "Submit proof that an invariant broken to halt the chain",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			moduleName, route := args[0], args[1]
 			if moduleName == "" {
 				return errors.New("invalid module name")

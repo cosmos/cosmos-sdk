@@ -36,7 +36,7 @@ func NewCreateClientCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift]",
 		Short: "create new tendermint client",
-		Long: `Create a new tendermint IBC client. 
+		Long: `Create a new tendermint IBC client.
   - 'trust-level' flag can be a fraction (eg: '1/3') or 'default'
   - 'proof-specs' flag can be JSON input, a path to a .json file or 'default'
   - 'upgrade-path' flag is a string specifying the upgrade path for this chain where a future upgraded client will be stored. The path is a comma-separated list representing the keys in order of the keyPath to the committed upgraded client.
@@ -44,12 +44,10 @@ func NewCreateClientCmd() *cobra.Command {
 		Example: fmt.Sprintf("%s tx ibc %s create [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift] --trust-level default --consensus-params [path/to/consensus-params.json] --proof-specs [path/to/proof-specs.json] --upgrade-path upgrade/upgradedClient --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
 		Args:    cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 			legacyAmino := codec.NewLegacyAmino()
 
@@ -171,12 +169,10 @@ func NewUpdateClientCmd() *cobra.Command {
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			clientID := args[0]
 
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
@@ -225,12 +221,10 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 			var m *types.Misbehaviour

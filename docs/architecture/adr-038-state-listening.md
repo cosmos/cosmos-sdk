@@ -20,7 +20,7 @@ In addition to these request/response queries, it would be beneficial to have a 
 ## Decision
 
 We will modify the `MultiStore` interface and its concrete (`rootmulti` and `cachemulti`) implementations and introduce a new `listenkv.Store` to allow listening to state changes in underlying KVStores.
-We will also introduce two approaches for exposing the data to external consumers: writing to files and writing to a gRPC stream.
+We will also introduce the tooling for writing these state changes out to a file.
 
 ### Listening interface
 
@@ -117,7 +117,7 @@ func (l *NewlineWriteListener) OnWrite(key []byte, value []byte) {
 
 The former makes no assumptions about the presence of newline characters in keys or values, but values
 must be no longer than 1<<32 - 1. The latter assumes newlines are not present in keys or values but can support any length
-of value. Both assume keys are no longer than 1<<16 - 1. Newline delineation improves durability by enabling a consumer to orient
+of value. Both assume keys are no longer than 1<<16 - 1. Newline delineation improves readability by enabling a consumer to orient
 themselves at the start of a key-value pair at any point in the stream (e.g. tail a file), without character delineation a consumer must start
 at the beginning of the stream and not lose track of their position in the stream.
 
@@ -178,6 +178,7 @@ type MultiStore interface {
 	ListeningEnabled(key StoreKey) bool
 
 	// SetListeners sets the WriteListeners for the KVStore belonging to the provided StoreKey
+	// It appends the listeners to a current set, if one already exists
 	SetListeners(key StoreKey, listeners []WriteListener)
 }
 ```
@@ -233,63 +234,228 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 
 ### Exposing the data
 
-We will introduce and document mechanisms for exposing data from the above listeners to external consumers.
+We will introduce a new `StreamingService` interface for exposing `WriteListener` data streams to external consumers.
 
-#### Writing to file
+```go
+// StreamingService interface for registering WriteListeners with the BaseApp and updating the service with the ABCI context
+type StreamingService interface {
+	Listeners() map[sdk.StoreKey][]storeTypes.WriteListener // returns the streaming service's listeners for the BaseApp to register
+	BeginBlockReq(req abci.RequestBeginBlock) // update the streaming service with the latest RequestBeginBlock message
+	BeginBlockResres abci.ResponseBeginBlock) // update the steaming service with the latest ResponseBeginBlock message
+	EndBlockReq(req abci.RequestEndBlock) // update the steaming service with the latest RequestEndBlock message
+	EndBlockRes(res abci.ResponseEndBlock) // update the steaming service with the latest ResponseEndBlock message
+	DeliverTxReq(req abci.RequestDeliverTx) // update the steaming service with the latest RequestDeliverTx message
+    DeliverTxRes(res abci.ResponseDeliverTx) // update the steaming service with the latest ResponseDeliverTx message
+}
+```
 
-We will document and provide examples of how to configure a listener to write out to a file.
-No new type implementation will be needed, an `os.File` can be used as the underlying `io.Writer` for a `GobWriteListener`.
+#### Writing state changes to files
+
+We will introduce an implementation of `StreamingService` which writes state changes out to a file.
+
+```go
+// FileStreamingService is a concrete implementation of StreamingService that writes state changes out to a file
+type FileStreamingService struct {
+	listeners map[sdk.StoreKey][]storeTypes.WriteListener // the listeners that will be initialized with BaseApp
+	writeDir string
+	filePrefix string
+	fileSuffix string
+	dst *os.File // the current write output file
+}
+
+```
 
 Writing to a file is the simplest approach for streaming the data out to consumers.
 This approach also provide the advantages of being persistent and durable, and the files can be read directly,
 or an auxiliary streaming services can tail the files and serve the data remotely.
 
+#### File pruning
+
 Without pruning the file size can grow indefinitely, this will need to be managed by
 the developer in an application or even module-specific manner (e.g. log rotation).
 
-#### Writing to gRPC stream
-
-We will implement and document an `io.Writer` type for exposing our listeners over a gRPC server stream.
-
-Writing to a gRPC stream gRPC will allow us to expose the data over the standard gRPC interface.
-This interface can be exposed directly to consumers, or we can implement a message queue or secondary streaming service on top.
-Using gRPC will provide us with all the regular advantages of gRPC and protobuf: versioning guarantees,
-client side code generation, and interoperability with the many gRPC plugins and auxiliary services.
-
-Proceeding through a gRPC intermediate will provide additional overhead, in most cases this is not expected to be rate limiting but in
-instances where it is the developer can implement a more performant streaming mechanism for state listening.
-
 ### Configuration
 
-We will provide detailed documentation on how to configure the state listeners and their external streaming services from within an app's `AppCreator`,
-using the provided `AppOptions`. We will add a new method to the `BaseApp` to enable this configuration:
+We will provide detailed documentation on how to configure the state listeners and the file streaming service from within an app's `AppCreator`,
+using the provided `AppOptions`.
+
+#### BaseApp registration
+
+We will add a new method to the `BaseApp` to enable the registration of `StreamingService`s:
 
 ```go
-// SetCommitMultiStoreListeners sets the KVStore listeners for the provided StoreKey
-func (app *BaseApp) SetCommitMultiStoreListeners(key sdk.StoreKey, listeners []storeTypes.WriteListener) {
-	app.cms.SetListeners(key, listeners)
+// RegisterStreamingService is used to register a streaming service with the BaseApp
+func (app *BaseApp) RegisterStreamingService(s StreamingService) {
+	// set the listeners for each StoreKey
+	for key, lis := range s.Listeners() {
+		app.cms.SetListeners(key, lis)
+    }
+    // register the streaming service within the BaseApp
+    // BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context
+	app.streamingServices = append(app.streamingServices, serv)
 }
 ```
 
-### TOML Configuration
+We will also modify the `BeginBlock`, `EndBlock`, and `DeliverTx` methods to pass messages and responses to any `StreamingServices` registered
+with the `BaseApp`.
 
-We will provide standard TOML configuration options for configuring the state listeners and their external streaming services.
+
+```go
+func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
+	defer telemetry.MeasureSince(time.Now(), "abci", "begin_block")
+
+	if app.cms.TracingEnabled() {
+		app.cms.SetTracingContext(sdk.TraceContext(
+			map[string]interface{}{"blockHeight": req.Header.Height},
+		))
+	}
+
+	if err := app.validateHeight(req); err != nil {
+		panic(err)
+	}
+	
+	// Update any registered streaming services with the new RequestBeginBlock message
+	for _, streamingService := range app.streamingServices {
+		streamingSerice.BeginBlockReq(req)
+	}
+
+	// Initialize the DeliverTx state. If this is the first block, it should
+	// already be initialized in InitChain. Otherwise app.deliverState will be
+	// nil, since it is reset on Commit.
+	if app.deliverState == nil {
+		app.setDeliverState(req.Header)
+	} else {
+		// In the first block, app.deliverState.ctx will already be initialized
+		// by InitChain. Context is now updated with Header information.
+		app.deliverState.ctx = app.deliverState.ctx.
+			WithBlockHeader(req.Header).
+			WithBlockHeight(req.Header.Height)
+	}
+
+	// add block gas meter
+	var gasMeter sdk.GasMeter
+	if maxGas := app.getMaximumBlockGas(app.deliverState.ctx); maxGas > 0 {
+		gasMeter = sdk.NewGasMeter(maxGas)
+	} else {
+		gasMeter = sdk.NewInfiniteGasMeter()
+	}
+
+	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(gasMeter)
+
+	if app.beginBlocker != nil {
+		res = app.beginBlocker(app.deliverState.ctx, req)
+		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
+	}
+	// set the signed validators for addition to context in deliverTx
+	app.voteInfos = req.LastCommitInfo.GetVotes() 
+	
+	// Update any registered streaming services with the new ResponseBeginBlock message
+	for _ streamingService := range app.streamingServices {
+		streamingService.BeginBlockRes(res)
+	}
+	
+	return res
+}
+```
+
+```go
+func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
+	defer telemetry.MeasureSince(time.Now(), "abci", "end_block")
+
+	if app.deliverState.ms.TracingEnabled() {
+		app.deliverState.ms = app.deliverState.ms.SetTracingContext(nil).(sdk.CacheMultiStore)
+	}
+
+    // Update any registered streaming services with the new RequestEndBlock message
+	for _, streamingService := range app.streamingServices {
+		streamingService.EndBlockReq(req)
+	}
+
+	if app.endBlocker != nil {
+		res = app.endBlocker(app.deliverState.ctx, req)
+		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
+	}
+
+	if cp := app.GetConsensusParams(app.deliverState.ctx); cp != nil {
+		res.ConsensusParamUpdates = cp
+	}
+	
+	// Update any registered streaming services with the new RequestEndBlock message 
+	for _, streamingService := range app.streamingServices {
+		streamingService.EndBlockRes(res)
+	}
+	
+	return res
+}
+```
+
+```go
+func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
+	defer telemetry.MeasureSince(time.Now(), "abci", "deliver_tx")
+
+	gInfo := sdk.GasInfo{}
+	resultStr := "successful"
+
+	defer func() {
+		telemetry.IncrCounter(1, "tx", "count")
+		telemetry.IncrCounter(1, "tx", resultStr)
+		telemetry.SetGauge(float32(gInfo.GasUsed), "tx", "gas", "used")
+		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
+	}() 
+	
+	// Update any registered streaming services with the new RequestEndBlock message 
+	for _, streamingService := range app.streamingServices {
+		streamingService.DeliverTxReq(req)
+	}
+
+	gInfo, result, err := app.runTx(runTxModeDeliver, req.Tx)
+	if err != nil {
+		resultStr = "failed"
+		return sdkerrors.ResponseDeliverTx(err, gInfo.GasWanted, gInfo.GasUsed, app.trace)
+	}
+
+	res := abci.ResponseDeliverTx{
+		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
+		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
+		Log:       result.Log,
+		Data:      result.Data,
+		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
+	}
+	
+	// Update any registered streaming services with the new RequestEndBlock message 
+	for _, streamingService := range app.streamingServices {
+		streamingService.DeliverTxRes(res)
+	}
+	
+	return res
+}
+```
+
+#### TOML Configuration
+
+We will provide a standard TOML configuration options for configuring a `FileStreamingService` for specific `Store`s.
 Note: the actual namespace is TBD.
 
 ```toml
 [store]
-    listeners = [ # if len(listeners) > 0 we are listening
+    streamers = [ # if len(streamers) > 0 we are streamers
         "file",
-        "grpc"
     ]
+
+[streamers]
+    [streamers.file]
+        keys = ["list", "of", "store", "keys", "we", "want", "to", "expose", "for", "this", "streamer"]
+        writeDir = "path to the write directory"
+        filePrefix = "optional string to prefix the file names with"
+        fileSuffix = "optional string to suffix the file names with"
 ```
 
-We will also provide a mapping of these TOML configuration options to helper functions for setting up the specified
+We will also provide a mapping of the TOML `store.streamer` configuration options to helper functions for constructing the specified
 streaming service.
 
 ```go
-// StreamingServiceConstructor is used to construct and load a WriteListener onto the provided BaseApp and expose it over a streaming service
-type StreamingServiceConstructor func(bApp *BaseApp, opts servertypes.AppOptions, keys []sdk.StoreKey) error
+// StreamingServiceConstructor is used to construct a streaming service
+type StreamingServiceConstructor func(opts servertypes.AppOptions, keys []sdk.StoreKey) (StreamingService, error)
 
 // StreamingServiceType enum for specifying the type of StreamingService
 type StreamingServiceType int
@@ -297,7 +463,7 @@ type StreamingServiceType int
 const (
 	Unknown StreamingServiceType = iota
 	File
-	GRPC
+	// add more in the future
 )
 
 // NewStreamingServiceType returns the StreamingServiceType corresponding to the provided name
@@ -305,8 +471,6 @@ func NewStreamingServiceType(name string) StreamingServiceType {
 	switch strings.ToLower(name) {
 	case "file", "f":
 		return File
-	case "grpc":
-		return GRPC
 	default:
 		return Unknown
 	}
@@ -317,8 +481,6 @@ func (sst StreamingServiceType) String() string {
 	switch sst {
 	case File:
 		return "file"
-	case GRPC:
-		return "grpc"
 	default:
 		return ""
 	}
@@ -327,7 +489,6 @@ func (sst StreamingServiceType) String() string {
 // StreamingServiceConstructorLookupTable is a mapping of StreamingServiceTypes to StreamingServiceConstructors
 var StreamingServiceConstructorLookupTable = map[StreamingServiceType]StreamingServiceConstructor{
 	File: FileStreamingConstructor,
-	GRPC: GRPCStreamingConstructor,
 }
 
 // NewStreamingServiceConstructor returns the StreamingServiceConstructor corresponding to the provided name
@@ -342,18 +503,13 @@ func NewStreamingServiceConstructor(name string) (StreamingServiceConstructor, e
 	return nil, fmt.Errorf("streaming service constructor of type %s not found", ssType.String())
 }
 
-// FileStreamingConstructor is the StreamingServiceConstructor function for writing out to a file
-func FileStreamingConstructor(bApp *BaseApp, opts servertypes.AppOptions, keys []sdk.StoreKey) error {
-	...
-}
-
-// GRPCStreamingConstructor is the StreamingServiceConstructor function for writing out to a gRPC stream
-func GRPCStreamingConstructor(bApp *BaseApp, opts servertypes.AppOptions, keys []sdk.StoreKey) error {
+// FileStreamingConstructor is the StreamingServiceConstructor function for creating a FileStreamingService
+func FileStreamingConstructor(opts servertypes.AppOptions, keys []sdk.StoreKey) (StreamingService, error) {
 	...
 }
 ```
 
-### Example configuration
+#### Example configuration
 
 As a demonstration, we will implement the state watching features as part of SimApp.
 For example, the below is a very rudimentary integration of the state listening features into the SimApp `AppCreator` function:
@@ -374,24 +530,30 @@ func NewSimApp(
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 	)
-	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
-	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 	
-	// collect the keys for the stores we wish to expose 
-	storeKeys := make([]storeTypes.StoreKey, 0, len(keys))
-	for _, key := range keys {
-		storeKeys = append(storeKeys, key)
-	}
 	// configure state listening capabilities using AppOptions
-	listeners := cast.ToStringSlice(appOpts.Get("store.listeners"))
+	listeners := cast.ToStringSlice(appOpts.Get("store.streamers"))
 	for _, listenerName := range listeners {
+		// get the store keys allowed to be exposed for this listener
+		exposeKeyStrs := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("streamers.%s.keys", listenerName))
+		exposeStoreKeys = make([]storeTypes.StoreKey, 0, len(exposeKeyStrs))
+		for _, keyStr := range exposeKeyStrs {
+			if storeKey, ok := keys[keyStr]; ok {
+				exposeStoreKeys = append(exposeStoreKeys, storeKey)
+			}
+		}
+		// get the constructor for this listener name
 		constructor, err := baseapp.NewStreamingServiceConstructor(listenerName)
 		if err != nil {
 			tmos.Exit(err.Error()) // or continue?
 		}
-		if err := constructor(bApp, appOpts, storeKeys); err != nil {
+		// generate the streaming service using the constructor, appOptions, and the StoreKeys we want to expose
+		streamingService, err := constructor(appOpts, exposeStoreKeys)
+		if err != nil {
 			tmos.Exit(err.Error())
 		}
+		// register the streaming service with the BaseApp
+		bApp.RegisterStreamingService(streamingService)
 	}
 	
 	...

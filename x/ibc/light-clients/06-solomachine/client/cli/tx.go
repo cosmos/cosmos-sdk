@@ -31,12 +31,10 @@ func NewCreateClientCmd() *cobra.Command {
 		Example: fmt.Sprintf("%s tx ibc %s create [sequence] [path/to/consensus_state] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			sequence, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
 				return err
@@ -90,12 +88,10 @@ func NewUpdateClientCmd() *cobra.Command {
 		Example: fmt.Sprintf("%s tx ibc %s update [client-id] [path/to/header.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			clientID := args[0]
 
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
@@ -138,12 +134,10 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 		Example: fmt.Sprintf("%s tx ibc %s misbehaviour [path/to/misbehaviour.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 			m := &types.Misbehaviour{}

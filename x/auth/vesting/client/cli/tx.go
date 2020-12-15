@@ -47,12 +47,10 @@ set by the committed block's time. The end_time must be provided as a UNIX epoch
 timestamp.`,
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			toAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err

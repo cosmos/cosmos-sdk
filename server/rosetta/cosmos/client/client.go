@@ -81,7 +81,7 @@ func (c *Client) PreprocessOperationsToOptions(ctx context.Context, req *types.C
 		return nil, rosetta.ErrInvalidRequest
 	}
 
-	msgs, _, err := conversion.ConvertOpsToMsgs(c.ir, operations)
+	msgs, err := conversion.ConvertOpsToMsgs(c.ir, operations)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrInvalidAddress, err.Error())
 	}

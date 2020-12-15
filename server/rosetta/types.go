@@ -113,7 +113,7 @@ type BlockResponse struct {
 // be supported by the Rosetta service.
 type Msg interface {
 	ToOperations(withStatus bool, hasError bool) []*types.Operation
-	FromOperations(ops []*types.Operation) (sdk.Msg, string, error)
+	FromOperations(ops []*types.Operation) (sdk.Msg, error)
 }
 
 // Version returns the version for rosetta

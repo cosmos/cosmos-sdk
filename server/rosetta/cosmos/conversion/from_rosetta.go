@@ -16,7 +16,7 @@ func RosettaOperationsToSdkMsg(ir cdctypes.InterfaceRegistry, ops []*types.Opera
 	var feeAmnt []*types.Amount
 	var newOps []*types.Operation
 	if len(ops)%2 == 0 {
-		msgs, _, err := ConvertOpsToMsgs(ir, ops)
+		msgs, err := ConvertOpsToMsgs(ir, ops)
 		return msgs, nil, err
 	}
 
@@ -31,7 +31,7 @@ func RosettaOperationsToSdkMsg(ir cdctypes.InterfaceRegistry, ops []*types.Opera
 			}
 		}
 	}
-	msgs, _, err := ConvertOpsToMsgs(ir, newOps)
+	msgs, err := ConvertOpsToMsgs(ir, newOps)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -56,9 +56,8 @@ func RosettaAmountsToCoins(amounts []*types.Amount) sdk.Coins {
 	return feeCoins
 }
 
-func ConvertOpsToMsgs(ir cdctypes.InterfaceRegistry, ops []*types.Operation) ([]sdk.Msg, string, error) {
+func ConvertOpsToMsgs(ir cdctypes.InterfaceRegistry, ops []*types.Operation) ([]sdk.Msg, error) {
 	var msgs []sdk.Msg
-	var signAddr string
 	var operationsByType = make(map[string][]*types.Operation)
 	for _, op := range ops {
 		operationsByType[op.Type] = append(operationsByType[op.Type], op)
@@ -71,18 +70,17 @@ func ConvertOpsToMsgs(ir cdctypes.InterfaceRegistry, ops []*types.Operation) ([]
 
 		msgType, err := ir.Resolve("/" + opName) // Types are registered as /proto-name in the interface registry.
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 
 		if rosettaMsg, ok := msgType.(rosetta.Msg); ok {
-			m, fromAddr, err := rosettaMsg.FromOperations(operations)
+			m, err := rosettaMsg.FromOperations(operations)
 			if err != nil {
-				return nil, "", err
+				return nil, err
 			}
 			msgs = append(msgs, m)
-			signAddr = fromAddr
 		}
 	}
 
-	return msgs, signAddr, nil
+	return msgs, nil
 }

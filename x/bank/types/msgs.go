@@ -114,7 +114,7 @@ func (msg *MsgSend) ToOperations(withStatus bool, hasError bool) []*types.Operat
 	return operations
 }
 
-func (msg MsgSend) FromOperations(ops []*types.Operation) (sdk.Msg, string, error) {
+func (msg MsgSend) FromOperations(ops []*types.Operation) (sdk.Msg, error) {
 	var (
 		from, to sdk.AccAddress
 		sendAmt  sdk.Coin
@@ -125,26 +125,25 @@ func (msg MsgSend) FromOperations(ops []*types.Operation) (sdk.Msg, string, erro
 		if strings.HasPrefix(op.Amount.Value, "-") {
 			from, err = sdk.AccAddressFromBech32(op.Account.Address)
 			if err != nil {
-				return nil, "", err
+				return nil, err
 			}
 			continue
 		}
 
 		to, err = sdk.AccAddressFromBech32(op.Account.Address)
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 
 		amount, err := strconv.ParseInt(op.Amount.Value, 10, 64)
 		if err != nil {
-			return nil, "", fmt.Errorf("invalid amount")
+			return nil, fmt.Errorf("invalid amount")
 		}
 
 		sendAmt = sdk.NewCoin(op.Amount.Currency.Symbol, sdk.NewInt(amount))
-
 	}
 
-	return NewMsgSend(from, to, sdk.NewCoins(sendAmt)), from.String(), nil
+	return NewMsgSend(from, to, sdk.NewCoins(sendAmt)), nil
 }
 
 var _ sdk.Msg = &MsgMultiSend{}

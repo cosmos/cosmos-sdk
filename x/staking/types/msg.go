@@ -291,7 +291,7 @@ func (msg *MsgDelegate) ToOperations(withStatus bool, hasError bool) []*rosettat
 	return operations
 }
 
-func (msg MsgDelegate) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg, string, error) {
+func (msg MsgDelegate) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg, error) {
 	var (
 		delAddr sdk.AccAddress
 		valAddr sdk.ValAddress
@@ -303,25 +303,25 @@ func (msg MsgDelegate) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg, s
 		if strings.HasPrefix(op.Amount.Value, "-") {
 			delAddr, err = sdk.AccAddressFromBech32(op.Account.Address)
 			if err != nil {
-				return nil, "", err
+				return nil, err
 			}
 			continue
 		}
 
 		valAddr, err = sdk.ValAddressFromBech32(op.Account.Address)
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 
 		amount, err := strconv.ParseInt(op.Amount.Value, 10, 64)
 		if err != nil {
-			return nil, "", fmt.Errorf("invalid amount")
+			return nil, fmt.Errorf("invalid amount")
 		}
 
 		sendAmt = sdk.NewCoin(op.Amount.Currency.Symbol, sdk.NewInt(amount))
 	}
 
-	return NewMsgDelegate(delAddr, valAddr, sendAmt), delAddr.String(), nil
+	return NewMsgDelegate(delAddr, valAddr, sendAmt), nil
 }
 
 // NewMsgBeginRedelegate creates a new MsgBeginRedelegate instance.

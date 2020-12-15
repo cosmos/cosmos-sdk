@@ -20,8 +20,8 @@ const (
 	// DefaultGRPCAddress is the address to bind the server to.
 	DefaultBindAddress = "0.0.0.0"
 
-	// TCP port to listen on for HTTP1.1 debug calls.
-	DefaultGRPCProxyPort = 7890
+	// TCP port to listen on for HTTP1.1 calls.
+	DefaultGRPCProxyPort = 9091
 )
 
 // BaseConfig defines the server's basic configuration

@@ -81,7 +81,7 @@ func (c *Client) PreprocessOperationsToOptions(ctx context.Context, req *types.C
 		return nil, rosetta.ErrInvalidRequest
 	}
 
-	_, fromAddr, err := conversion.ConvertOpsToMsgs(c.ir, operations)
+	msgs, _, err := conversion.ConvertOpsToMsgs(c.ir, operations)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrInvalidAddress, err.Error())
 	}
@@ -98,9 +98,10 @@ func (c *Client) PreprocessOperationsToOptions(ctx context.Context, req *types.C
 		gas = &defaultGas
 	}
 
-	return map[string]interface{}{rosetta.OptionAddress: fromAddr,
-		rosetta.OptionMemo: memo,
-		rosetta.OptionGas:  gas,
+	return map[string]interface{}{
+		rosetta.OptionAddress: msgs[0].GetSigners()[0],
+		rosetta.OptionMemo:    memo,
+		rosetta.OptionGas:     gas,
 	}, nil
 }
 
@@ -109,7 +110,7 @@ func (c *Client) ConstructionPayload(ctx context.Context, request *types.Constru
 		return nil, rosetta.ErrInvalidOperation
 	}
 
-	msgs, _, fee, err := conversion.RosettaOperationsToSdkMsg(c.ir, request.Operations)
+	msgs, fee, err := conversion.RosettaOperationsToSdkMsg(c.ir, request.Operations)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrInvalidOperation, err.Error())
 	}

@@ -12,12 +12,12 @@ import (
 )
 
 // RosettaOperationsToSdkMsg converts rosetta operations to sdk.Msg and coins
-func RosettaOperationsToSdkMsg(ir cdctypes.InterfaceRegistry, ops []*types.Operation) ([]sdk.Msg, string, sdk.Coins, error) {
+func RosettaOperationsToSdkMsg(ir cdctypes.InterfaceRegistry, ops []*types.Operation) ([]sdk.Msg, sdk.Coins, error) {
 	var feeAmnt []*types.Amount
 	var newOps []*types.Operation
 	if len(ops)%2 == 0 {
-		msgs, signAddr, err := ConvertOpsToMsgs(ir, ops)
-		return msgs, signAddr, nil, err
+		msgs, _, err := ConvertOpsToMsgs(ir, ops)
+		return msgs, nil, err
 	}
 
 	if len(ops)%2 == 1 {
@@ -31,12 +31,12 @@ func RosettaOperationsToSdkMsg(ir cdctypes.InterfaceRegistry, ops []*types.Opera
 			}
 		}
 	}
-	msgs, signAddr, err := ConvertOpsToMsgs(ir, newOps)
+	msgs, _, err := ConvertOpsToMsgs(ir, newOps)
 	if err != nil {
-		return nil, "", nil, err
+		return nil, nil, err
 	}
 
-	return msgs, signAddr, RosettaAmountsToCoins(feeAmnt), nil
+	return msgs, RosettaAmountsToCoins(feeAmnt), nil
 }
 
 // RosettaAmountsToCoins converts rosetta amounts to sdk coins

@@ -34,9 +34,13 @@ func NewMsgCreateValidator(
 	valAddr sdk.ValAddress, pubKey cryptotypes.PubKey, //nolint:interfacer
 	selfDelegation sdk.Coin, description Description, commission CommissionRates, minSelfDelegation sdk.Int,
 ) (*MsgCreateValidator, error) {
-	pkAny, err := codectypes.NewAnyWithValue(pubKey)
-	if err != nil {
-		return nil, err
+	// TODO: update if we decide to allow nil in NewAnyWithValue
+	var pkAny *codectypes.Any
+	if pubKey != nil {
+		var err error
+		if pkAny, err = codectypes.NewAnyWithValue(pubKey); err != nil {
+			return nil, err
+		}
 	}
 	return &MsgCreateValidator{
 		Description:       description,

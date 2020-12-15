@@ -127,6 +127,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 
 	// self-delegate to validator
 	tstaking.Delegate(valAcc, valAddr, amt.Int64())
+	app.ExecuteEpoch(ctx)
 
 	// verify the validator can now unjail itself
 	res, err = slashing.NewHandler(app.SlashingKeeper, app.StakingKeeper)(ctx, types.NewMsgUnjail(valAddr))
@@ -243,17 +244,17 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, amt.Int64()-slashAmt, validator.GetTokens().Int64())
 
 	// unrevocation should fail prior to jail expiration
-	res, err := slh(ctx, types.NewMsgUnjail(addr))
+	err := app.SlashingKeeper.EpochUnjail(ctx, types.NewMsgUnjail(addr))
 	require.Error(t, err)
-	require.Nil(t, res)
 
 	// unrevocation should succeed after jail expiration
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(1, 0).Add(app.SlashingKeeper.DowntimeJailDuration(ctx))})
-	res, err = slh(ctx, types.NewMsgUnjail(addr))
+	res, err := slh(ctx, types.NewMsgUnjail(addr))
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
 	// end block
+	app.ExecuteEpoch(ctx)
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
 	// validator should be rebonded now

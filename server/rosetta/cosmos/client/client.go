@@ -109,7 +109,7 @@ func (c *Client) ConstructionPayload(ctx context.Context, request *types.Constru
 		return nil, rosetta.ErrInvalidOperation
 	}
 
-	msgs, signAddr, fee, err := conversion.RosettaOperationsToSdkMsg(c.ir, request.Operations)
+	msgs, _, fee, err := conversion.RosettaOperationsToSdkMsg(c.ir, request.Operations)
 	if err != nil {
 		return nil, rosetta.WrapError(rosetta.ErrInvalidOperation, err.Error())
 	}
@@ -150,18 +150,32 @@ func (c *Client) ConstructionPayload(ctx context.Context, request *types.Constru
 		return nil, err
 	}
 
+	accIdentifiers := getAccountIdentifiersByMsgs(msgs)
+
+	var payloads []*types.SigningPayload
+	for _, accID := range accIdentifiers {
+		payloads = append(payloads, &types.SigningPayload{
+			AccountIdentifier: accID,
+			Bytes:             crypto.Sha256(signBytes),
+			SignatureType:     "ecdsa",
+		})
+	}
+
 	return &types.ConstructionPayloadsResponse{
 		UnsignedTransaction: hex.EncodeToString(txBytes),
-		Payloads: []*types.SigningPayload{
-			{
-				AccountIdentifier: &types.AccountIdentifier{
-					Address: signAddr,
-				},
-				Bytes:         crypto.Sha256(signBytes),
-				SignatureType: "ecdsa",
-			},
-		},
+		Payloads:            payloads,
 	}, nil
+}
+
+func getAccountIdentifiersByMsgs(msgs []sdk.Msg) []*types.AccountIdentifier {
+	var accIdentifiers []*types.AccountIdentifier
+	for _, msg := range msgs {
+		for _, signer := range msg.GetSigners() {
+			accIdentifiers = append(accIdentifiers, &types.AccountIdentifier{Address: signer.String()})
+		}
+	}
+
+	return accIdentifiers
 }
 
 func (c *Client) ConstructionMetadataFromOptions(ctx context.Context, options map[string]interface{}) (meta map[string]interface{}, err error) {

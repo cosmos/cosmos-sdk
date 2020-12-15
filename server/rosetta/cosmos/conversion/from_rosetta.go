@@ -4,16 +4,15 @@ import (
 	"strconv"
 	"strings"
 
-	types2 "github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // RosettaOperationsToSdkMsg converts rosetta operations to sdk.Msg and coins
-func RosettaOperationsToSdkMsg(ir types2.InterfaceRegistry, ops []*types.Operation) ([]sdk.Msg, string, sdk.Coins, error) {
+func RosettaOperationsToSdkMsg(ir cdctypes.InterfaceRegistry, ops []*types.Operation) ([]sdk.Msg, string, sdk.Coins, error) {
 	var feeAmnt []*types.Amount
 	var newOps []*types.Operation
 	if len(ops)%2 == 0 {
@@ -57,7 +56,7 @@ func RosettaAmountsToCoins(amounts []*types.Amount) sdk.Coins {
 	return feeCoins
 }
 
-func ConvertOpsToMsgs(ir types2.InterfaceRegistry, ops []*types.Operation) ([]sdk.Msg, string, error) {
+func ConvertOpsToMsgs(ir cdctypes.InterfaceRegistry, ops []*types.Operation) ([]sdk.Msg, string, error) {
 	var msgs []sdk.Msg
 	var signAddr string
 	var operationsByType = make(map[string][]*types.Operation)

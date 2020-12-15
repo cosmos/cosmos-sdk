@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // QueryTxsByEvents performs a search for transactions for a given set of events
@@ -134,26 +135,22 @@ func getBlocksForTxResults(clientCtx client.Context, resTxs []*ctypes.ResultTx) 
 }
 
 func formatTxResult(txConfig client.TxConfig, resTx *ctypes.ResultTx, resBlock *ctypes.ResultBlock) (*sdk.TxResponse, error) {
-	anyTx, err := parseTx(txConfig, resTx.Tx)
+	anyTx, err := txToAny(txConfig, resTx.Tx)
 	if err != nil {
 		return nil, err
 	}
 
-	return sdk.NewResponseResultTx(resTx, anyTx.AsAny(), resBlock.Block.Time.Format(time.RFC3339)), nil
+	return sdk.NewResponseResultTx(resTx, anyTx, resBlock.Block.Time.Format(time.RFC3339)), nil
 }
 
-func parseTx(txConfig client.TxConfig, txBytes []byte) (codectypes.IntoAny, error) {
-	var tx sdk.Tx
-
-	tx, err := txConfig.TxDecoder()(txBytes)
+func txToAny(txConfig client.TxConfig, txBytes []byte) (*codectypes.Any, error) {
+	txb, err := txConfig.TxDecoder()(txBytes)
 	if err != nil {
 		return nil, err
 	}
-
-	anyTx, ok := tx.(codectypes.IntoAny)
+	p, ok := txb.(tx.ProtoTxProvider)
 	if !ok {
-		return nil, fmt.Errorf("tx cannot be packed into Any")
+		return nil, fmt.Errorf("Expecting a proto transaction builder, got %T", txb)
 	}
-
-	return anyTx, nil
+	return codectypes.NewAnyWithValue(p.GetProtoTx())
 }

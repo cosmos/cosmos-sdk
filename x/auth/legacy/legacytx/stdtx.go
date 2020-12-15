@@ -16,10 +16,9 @@ import (
 
 // Interface implementation checks
 var (
-	_ sdk.Tx             = (*StdTx)(nil)
-	_ codectypes.IntoAny = (*StdTx)(nil)
-	_ sdk.TxWithMemo     = (*StdTx)(nil)
-	_ sdk.FeeTx          = (*StdTx)(nil)
+	_ sdk.Tx         = (*StdTx)(nil)
+	_ sdk.TxWithMemo = (*StdTx)(nil)
+	_ sdk.FeeTx      = (*StdTx)(nil)
 )
 
 // StdFee includes the amount of coins paid in fees and the maximum
@@ -170,11 +169,6 @@ func (tx StdTx) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// AsAny implements IntoAny.AsAny.
-func (tx *StdTx) AsAny() *codectypes.Any {
-	return codectypes.UnsafePackAny(tx)
 }
 
 // GetSigners returns the addresses that must sign the transaction.

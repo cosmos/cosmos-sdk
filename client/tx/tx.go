@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -263,22 +262,15 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 		},
 		Sequence: txf.Sequence(),
 	}
-
 	if err := txb.SetSignatures(sig); err != nil {
 		return nil, err
 	}
 
-	any, ok := txb.(codectypes.IntoAny)
-	if !ok {
-		return nil, fmt.Errorf("cannot simulate tx that cannot be wrapped into any")
-	}
-	cached := any.AsAny().GetCachedValue()
-	protoTx, ok := cached.(*tx.Tx)
+	protoProvider, ok := txb.(tx.ProtoTxProvider)
 	if !ok {
 		return nil, fmt.Errorf("cannot simulate amino tx")
 	}
-
-	simReq := tx.SimulateRequest{Tx: protoTx}
+	simReq := tx.SimulateRequest{Tx: protoProvider.GetProtoTx()}
 
 	return simReq.Marshal()
 }

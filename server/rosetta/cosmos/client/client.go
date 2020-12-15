@@ -75,6 +75,35 @@ type Client struct {
 	clientCtx client.Context
 }
 
+func (c *Client) PreprocessOperationsToOptions(ctx context.Context, req *types.ConstructionPreprocessRequest) (options map[string]interface{}, err error) {
+	operations := req.Operations
+	if len(operations) > 3 {
+		return nil, rosetta.ErrInvalidRequest
+	}
+
+	_, fromAddr, err := conversion.ConvertOpsToMsgs(nil, operations)
+	if err != nil {
+		return nil, rosetta.WrapError(rosetta.ErrInvalidAddress, err.Error())
+	}
+
+	memo, ok := req.Metadata["memo"]
+	if !ok {
+		memo = ""
+	}
+
+	defaultGas := float64(200000)
+
+	gas := req.SuggestedFeeMultiplier
+	if gas == nil {
+		gas = &defaultGas
+	}
+
+	return map[string]interface{}{rosetta.OptionAddress: fromAddr,
+		rosetta.OptionMemo: memo,
+		rosetta.OptionGas:  gas,
+	}, nil
+}
+
 func (c *Client) ConstructionPayload(ctx context.Context, request *types.ConstructionPayloadsRequest) (resp *types.ConstructionPayloadsResponse, err error) {
 	if len(request.Operations) > 3 {
 		return nil, rosetta.ErrInvalidOperation

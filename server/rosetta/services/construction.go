@@ -12,7 +12,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
-	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/conversion"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -111,34 +110,13 @@ func (on OnlineNetwork) ConstructionPayloads(ctx context.Context, request *types
 }
 
 func (on OnlineNetwork) ConstructionPreprocess(ctx context.Context, request *types.ConstructionPreprocessRequest) (*types.ConstructionPreprocessResponse, *types.Error) {
-	operations := request.Operations
-	if len(operations) > 3 {
-		return nil, rosetta.ErrInvalidRequest.RosettaError()
-	}
-
-	_, fromAddr, err := conversion.ConvertOpsToMsgs(operations)
+	options, err := on.client.PreprocessOperationsToOptions(ctx, request)
 	if err != nil {
-		return nil, rosetta.WrapError(rosetta.ErrInvalidAddress, err.Error()).RosettaError()
-	}
-
-	memo, ok := request.Metadata["memo"]
-	if !ok {
-		memo = ""
-	}
-
-	defaultGas := float64(200000)
-
-	gas := request.SuggestedFeeMultiplier
-	if gas == nil {
-		gas = &defaultGas
+		return nil, rosetta.ToRosettaError(err)
 	}
 
 	return &types.ConstructionPreprocessResponse{
-		Options: map[string]interface{}{
-			rosetta.OptionAddress: fromAddr,
-			rosetta.OptionMemo:    memo,
-			rosetta.OptionGas:     gas,
-		},
+		Options: options,
 	}, nil
 }
 

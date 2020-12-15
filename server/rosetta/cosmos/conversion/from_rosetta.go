@@ -20,7 +20,7 @@ func RosettaOperationsToSdkMsg(ir types2.InterfaceRegistry, ops []*types.Operati
 	var feeAmnt []*types.Amount
 	var newOps []*types.Operation
 	if len(ops)%2 == 0 {
-		msgs, signAddr, err := ConvertOpsToMsgs(ops)
+		msgs, signAddr, err := ConvertOpsToMsgs(ir, ops)
 		return msgs, signAddr, nil, err
 	}
 
@@ -35,7 +35,7 @@ func RosettaOperationsToSdkMsg(ir types2.InterfaceRegistry, ops []*types.Operati
 			}
 		}
 	}
-	msgs, signAddr, err := ConvertOpsToMsgs(newOps)
+	msgs, signAddr, err := ConvertOpsToMsgs(nil, newOps)
 	if err != nil {
 		return nil, "", nil, err
 	}
@@ -60,7 +60,7 @@ func RosettaAmountsToCoins(amounts []*types.Amount) sdk.Coins {
 	return feeCoins
 }
 
-func ConvertOpsToMsgs(ops []*types.Operation) ([]sdk.Msg, string, error) {
+func ConvertOpsToMsgs(ir types2.InterfaceRegistry, ops []*types.Operation) ([]sdk.Msg, string, error) {
 	var msgs []sdk.Msg
 	var signAddr string
 	var operationsByType = make(map[string][]*types.Operation)

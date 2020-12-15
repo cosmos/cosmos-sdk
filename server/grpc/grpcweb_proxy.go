@@ -91,7 +91,7 @@ func buildGrpcProxyServer(host string) (*grpc.Server, error) {
 
 	director := func(ctx context.Context, fullMethodName string) (context.Context, *grpc.ClientConn, error) {
 		md, _ := metadata.FromIncomingContext(ctx)
-		outCtx, _ := context.WithCancel(ctx) //nolint
+		outCtx, _ := context.WithCancel(ctx) //nolint:govet
 		mdCopy := md.Copy()
 		delete(mdCopy, "user-agent")
 		// If this header is present in the request from the web client,
@@ -101,7 +101,7 @@ func buildGrpcProxyServer(host string) (*grpc.Server, error) {
 		outCtx = metadata.NewOutgoingContext(outCtx, mdCopy)
 		return outCtx, backendConn, nil
 	}
-	// TODO: handle grpc.CustomCodec is deprecated.
+	// TODO: handle grpc.CustomCodec is deprecated. Waiting on https://github.com/mwitkow/grpc-proxy/pull/36.
 	// nolint:staticcheck
 	return grpc.NewServer(
 		grpc.CustomCodec(proxy.Codec()), // needed for proxy to function.
@@ -159,7 +159,7 @@ func dialBackendOrFail(host string) (*grpc.ClientConn, error) {
 	opt := []grpc.DialOption{
 		grpc.WithInsecure(),
 	}
-	// TODO: handle grpc.WithCodec is deprecated.
+	// TODO: handle grpc.WithCodec is deprecated. Waiting on https://github.com/mwitkow/grpc-proxy/pull/36
 	// nolint:staticcheck
 	opt = append(opt, grpc.WithCodec(proxy.Codec()))
 

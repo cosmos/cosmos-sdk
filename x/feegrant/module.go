@@ -165,11 +165,10 @@ func (AppModule) QuerierRoute() string {
 // InitGenesis performs genesis initialization for the feegrant module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, bz json.RawMessage) []abci.ValidatorUpdate {
-	// TODO
-	// var gs types.GenesisState
-	// cdc.MustUnmarshalJSON(bz, &gs)
+	var gs types.GenesisState
+	cdc.MustUnmarshalJSON(bz, &gs)
 
-	// InitGenesis(ctx, am.keeper, &gs)
+	InitGenesis(ctx, am.keeper, &gs)
 	return []abci.ValidatorUpdate{}
 }
 

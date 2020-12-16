@@ -7,6 +7,7 @@ import "ibc/core/connection/v1/connection.proto";
 import "ibc/core/channel/v1/channel.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
 
 // ClientState defines a solo machine client that tracks the current consensus
 // state and if the client is frozen.
@@ -27,7 +28,10 @@ message ClientState {
 message ConsensusState {
   option (gogoproto.goproto_getters) = false;
   // public key of the solo machine
-  google.protobuf.Any public_key = 1 [(gogoproto.moretags) = "yaml:\"public_key\""];
+  google.protobuf.Any public_key = 1 [
+    (cosmos_proto.accepts_interface) = "cosmos.crypto.v1beta1.PubKey",
+    (gogoproto.moretags) = "yaml:\"public_key\""
+  ];
   // diversifier allows the same public key to be re-used across different solo machine clients
   // (potentially on different chains) without being considered misbehaviour.
   string diversifier = 2;
@@ -41,7 +45,10 @@ message Header {
   uint64              sequence        = 1;
   uint64              timestamp       = 2;
   bytes               signature       = 3;
-  google.protobuf.Any new_public_key  = 4 [(gogoproto.moretags) = "yaml:\"new_public_key\""];
+  google.protobuf.Any new_public_key  = 4 [
+    (cosmos_proto.accepts_interface) = "cosmos.crypto.v1beta1.PubKey",
+    (gogoproto.moretags) = "yaml:\"new_public_key\""
+  ];
   string              new_diversifier = 5 [(gogoproto.moretags) = "yaml:\"new_diversifier\""];
 }
 
@@ -118,7 +125,10 @@ message HeaderData {
   option (gogoproto.goproto_getters) = false;
 
   // header public key
-  google.protobuf.Any new_pub_key = 1 [(gogoproto.moretags) = "yaml:\"new_pub_key\""];
+  google.protobuf.Any new_pub_key = 1 [
+    (cosmos_proto.accepts_interface) = "cosmos.crypto.v1beta1.PubKey",
+    (gogoproto.moretags) = "yaml:\"new_pub_key\""
+  ];
   // header diversifier
   string new_diversifier = 2 [(gogoproto.moretags) = "yaml:\"new_diversifier\""];
 }

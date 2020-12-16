@@ -125,7 +125,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationGRPC() {
 				err := val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &authorization)
 				s.Require().NoError(err)
 				authorization.Authorization.UnpackInterfaces(val.ClientCtx.InterfaceRegistry)
-				auth := authorization.Authorization.GetAuthorization()
+				auth := authorization.Authorization.GetAuthorizationGrant()
 				s.Require().Equal(auth.MethodName(), types.SendAuthorization{}.MethodName())
 			}
 		})

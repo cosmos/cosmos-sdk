@@ -7,27 +7,68 @@ order: 1
 The following document describes the changes to update your app and modules to use Cosmos SDK v0.40,
 a.k.a. Stargate release. {synopsis}
 
+## Tooling
+
+Make sure to have the following dependencies when updating your app to v0.40:
+
+- Go 1.15+
+- Docker
+- Node.js v12.0+ (Optional, for generating docs)
+
+A list of handy `make` commands are configured [here](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/Makefile#L355-L443), they will be useful for your own app.
+
+- `proto-update-deps` - To download/update the required thirdparty `proto` definitions.
+- `proto-gen` - To auto generate proto code.
+- `proto-check-breaking` - To check proto breaking changes.
+- `proto-gen-any` - To generate the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed.
+- `proto-format` - To format proto files.
+
 ## Updating Modules
+
+This section outlines how to upgrade your module to v0.40. There is also a whole section of [building modules](../building-modules/README.md), please refer to it for more details.
 
 ### Protocol Buffers
 
-As outlined in our [encoding guide](../core/encoding.md), one of the most sig
+As outlined in our [encoding guide](../core/encoding.md), one of the most significant improvements introduced in Cosmos SDK v0.40 is Protobuf. This means that instead of defining your serializable types using Go structs, you should define them as Protobuf messages.
+
+The rule of thumb is that if you need to serialize a type (into binary or JSON), then it should be defined as a Protobuf message. This means that pure domain types can be kept as Go structs and interfaces. In practice, the two following categories of types must be converted to Protobuf message:
+
+- client-facing types: `Msg`s, query requests and responses. This is because client will send these types over the wire to the node.
+- types that are stored in state. This is because we store the binary representation of these types in state.
+- genesis types. These are used when importing and exporting states during chain upgrades.
+
+An example of type that is stored in state is [x/auth's](../../x/auth/spec/README.md) `BaseAccount` type. Its migration looks like:
+
+```diff
+// We were definining `MsgSend` as a Go struct in v0.39.
+- // https://github.com/cosmos/cosmos-sdk/blob/v0.39.2/x/bank/internal/types/msgs.go#L12-L16
+- type BaseAccount struct {
+- 	Address       sdk.AccAddress `json:"address" yaml:"address"`
+-	  Coins         sdk.Coins      `json:"coins" yaml:"coins"`
+- 	PubKey        crypto.PubKey  `json:"public_key" yaml:"public_key"`
+- 	AccountNumber uint64         `json:"account_number" yaml:"account_number"`
+- 	Sequence      uint64         `json:"sequence" yaml:"sequence"`
+- }
+
+// And it should be converted to a Protobuf message in v0.40.
++ // https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/proto/cosmos/auth/v1beta1/auth.proto#L13-L25
++ message BaseAccount {
++  string              address = 1;
++   google.protobuf.Any pub_key = 2
++       [(gogoproto.jsontag) = "public_key,omitempty", (gogoproto.moretags) = "yaml:\"public_key\""];
++   uint64 account_number = 3 [(gogoproto.moretags) = "yaml:\"account_number\""];
++   uint64 sequence       = 4;
++ }
+}
+```
+
+In general, we recommend to put all the Protobuf definitions in a single directory `proto/`, as stated in [ADR-023](../architecture/adr-023-protobuf-naming.md). This ADR contains other useful information on naming conventions.
+
+For migrating interfaces, we leverage Protobuf's `Any` message. Please refer to the [encoding FAQ](../core/encoding.md#faq) to learn how to achieve that.
+
+### Create `Msg` and `Query` Services
 
 ## Updating the App
-
-## Dependencies
-
-- Go 1.15+
-- Protoc 3.13.0
-- Node.js v12.0+ (Optional, for generating docs)
-
-A list of handy `make` commands are configured here: https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/Makefile#L355-L443
-
-- `proto-update-deps` - To download/update the required thirdparty `proto` definitions
-- `proto-gen` - To auto generate proto code
-- `proto-check-breaking` - To check proto breaking changes
-- `proto-gen-any` - To generate the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
-- `proto-format` - To format proto files
 
 ## Contents
 
@@ -64,7 +105,7 @@ This section covers the changes in modules from `v0.39.x` to `v0.40`.
   }
   ```
 
-- `init()` changed from:
+* `init()` changed from:
   ```go
   func init() {
   )
@@ -384,3 +425,7 @@ References:
 - [ADR 021 - Protobuf Query Encoding](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-021-protobuf-query-encoding.md)
 - [ADR 023 - Protobuf Naming](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-023-protobuf-naming.md)
 - [ADR 031 - Protobuf Msg Services](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-031-msg-service.md)
+
+```
+
+```

@@ -2,7 +2,7 @@
 order: 1
 -->
 
-# App Migration
+# App and Modules Migration
 
 The following document describes the changes to update your app and modules to use Cosmos SDK v0.40,
 a.k.a. Stargate release. {synopsis}

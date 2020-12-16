@@ -2,6 +2,13 @@ package types
 
 import (
 	"bytes"
+	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/gogo/protobuf/proto"
+
+	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -244,6 +251,77 @@ func (msg MsgDelegate) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+// Rosetta Msg interface.
+func (msg *MsgDelegate) ToOperations(withStatus bool, hasError bool) []*rosettatypes.Operation {
+	var operations []*rosettatypes.Operation
+	delAddr := msg.DelegatorAddress
+	valAddr := msg.ValidatorAddress
+	coin := msg.Amount
+	delOp := func(account, amount string, index int) *rosettatypes.Operation {
+		var status string
+		if withStatus {
+			status = "Success"
+			if hasError {
+				status = "Reverted"
+			}
+		}
+		return &rosettatypes.Operation{
+			OperationIdentifier: &rosettatypes.OperationIdentifier{
+				Index: int64(index),
+			},
+			Type:   proto.MessageName(msg),
+			Status: status,
+			Account: &rosettatypes.AccountIdentifier{
+				Address: account,
+			},
+			Amount: &rosettatypes.Amount{
+				Value: amount,
+				Currency: &rosettatypes.Currency{
+					Symbol: coin.Denom,
+				},
+			},
+		}
+	}
+	operations = append(operations,
+		delOp(delAddr, "-"+coin.Amount.String(), 0),
+		delOp(valAddr, coin.Amount.String(), 1),
+	)
+	return operations
+}
+
+func (msg MsgDelegate) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg, error) {
+	var (
+		delAddr sdk.AccAddress
+		valAddr sdk.ValAddress
+		sendAmt sdk.Coin
+		err     error
+	)
+
+	for _, op := range ops {
+		if strings.HasPrefix(op.Amount.Value, "-") {
+			delAddr, err = sdk.AccAddressFromBech32(op.Account.Address)
+			if err != nil {
+				return nil, err
+			}
+			continue
+		}
+
+		valAddr, err = sdk.ValAddressFromBech32(op.Account.Address)
+		if err != nil {
+			return nil, err
+		}
+
+		amount, err := strconv.ParseInt(op.Amount.Value, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid amount")
+		}
+
+		sendAmt = sdk.NewCoin(op.Amount.Currency.Symbol, sdk.NewInt(amount))
+	}
+
+	return NewMsgDelegate(delAddr, valAddr, sendAmt), nil
 }
 
 // NewMsgBeginRedelegate creates a new MsgBeginRedelegate instance.

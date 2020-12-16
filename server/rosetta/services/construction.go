@@ -6,91 +6,32 @@ import (
 	"encoding/hex"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/client"
-
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
-	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
-	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/conversion"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // interface implementation assertion
 var _ crg.ConstructionAPI = OnlineNetwork{}
 
 func (on OnlineNetwork) ConstructionCombine(ctx context.Context, request *types.ConstructionCombineRequest) (*types.ConstructionCombineResponse, *types.Error) {
-	txBldr, err := on.getTxBuilderFromBytesTx(request.UnsignedTransaction)
+	txBytes, err := hex.DecodeString(request.UnsignedTransaction)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
 
-	var sigs = make([]signing.SignatureV2, len(request.Signatures))
-	for i, signature := range request.Signatures {
-		if signature.PublicKey.CurveType != "secp256k1" {
-			return nil, rosetta.ErrUnsupportedCurve.RosettaError()
-		}
-
-		cmp, err := btcec.ParsePubKey(signature.PublicKey.Bytes, btcec.S256())
-		if err != nil {
-			return nil, rosetta.ToRosettaError(err)
-		}
-
-		compressedPublicKey := make([]byte, secp256k1.PubKeySize)
-		copy(compressedPublicKey, cmp.SerializeCompressed())
-		pubKey := &secp256k1.PubKey{Key: compressedPublicKey}
-
-		accountInfo, err := on.client.AccountInfo(ctx, sdk.AccAddress(pubKey.Address()).String(), nil)
-		if err != nil {
-			return nil, rosetta.ToRosettaError(err)
-		}
-
-		sig := signing.SignatureV2{
-			PubKey: pubKey,
-			Data: &signing.SingleSignatureData{
-				SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-				Signature: signature.Bytes,
-			},
-			Sequence: accountInfo.GetSequence(),
-		}
-		sigs[i] = sig
-	}
-
-	if err = txBldr.SetSignatures(sigs...); err != nil {
-		return nil, rosetta.ToRosettaError(err)
-	}
-
-	txBytes, err := on.client.GetTxConfig().TxEncoder()(txBldr.GetTx())
+	signedTx, err := on.client.SignedTx(ctx, txBytes, request.Signatures)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
 
 	return &types.ConstructionCombineResponse{
-		SignedTransaction: hex.EncodeToString(txBytes),
+		SignedTransaction: hex.EncodeToString(signedTx),
 	}, nil
-}
-
-func (on OnlineNetwork) getTxBuilderFromBytesTx(tx string) (client.TxBuilder, error) {
-	txBytes, err := hex.DecodeString(tx)
-	if err != nil {
-		return nil, err
-	}
-
-	TxConfig := on.client.GetTxConfig()
-	rawTx, err := TxConfig.TxDecoder()(txBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	txBldr, _ := TxConfig.WrapTxBuilder(rawTx)
-
-	return txBldr, nil
 }
 
 func (on OnlineNetwork) ConstructionDerive(ctx context.Context, request *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
@@ -133,160 +74,49 @@ func (on OnlineNetwork) ConstructionHash(ctx context.Context, request *types.Con
 }
 
 func (on OnlineNetwork) ConstructionMetadata(ctx context.Context, request *types.ConstructionMetadataRequest) (*types.ConstructionMetadataResponse, *types.Error) {
-	if len(request.Options) == 0 {
-		return nil, rosetta.ErrInterpreting.RosettaError()
-	}
-
-	addr, ok := request.Options[rosetta.OptionAddress]
-	if !ok {
-		return nil, rosetta.ErrInvalidAddress.RosettaError()
-	}
-
-	addrString := addr.(string)
-
-	accountInfo, err := on.client.AccountInfo(ctx, addrString, nil)
-	if err != nil {
-		return nil, rosetta.ToRosettaError(err)
-	}
-
-	gas, ok := request.Options[rosetta.OptionGas]
-	if !ok {
-		return nil, rosetta.WrapError(rosetta.ErrInvalidAddress, "gas not set").RosettaError()
-	}
-
-	memo, ok := request.Options[rosetta.OptionMemo]
-	if !ok {
-		return nil, rosetta.WrapError(rosetta.ErrInvalidMemo, "memo not set").RosettaError()
-	}
-
-	status, err := on.client.Status(ctx)
+	metadata, err := on.client.ConstructionMetadataFromOptions(ctx, request.Options)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
 
 	return &types.ConstructionMetadataResponse{
-		Metadata: map[string]interface{}{
-			rosetta.AccountNumber: accountInfo.GetAccountNumber(),
-			rosetta.Sequence:      accountInfo.GetSequence(),
-			rosetta.ChainID:       status.NodeInfo.Network,
-			rosetta.OptionGas:     gas,
-			rosetta.OptionMemo:    memo,
-		},
+		Metadata: metadata,
 	}, nil
 }
 
 func (on OnlineNetwork) ConstructionParse(ctx context.Context, request *types.ConstructionParseRequest) (*types.ConstructionParseResponse, *types.Error) {
-	txBldr, err := on.getTxBuilderFromBytesTx(request.Transaction)
+	txBytes, err := hex.DecodeString(request.Transaction)
+	if err != nil {
+		return nil, rosetta.ErrInvalidTransaction.RosettaError()
+	}
+	ops, signers, err := on.client.TxOperationsAndSignersAccountIdentifiers(request.Signed, txBytes)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
-
-	var accountIdentifierSigners []*types.AccountIdentifier
-	if request.Signed {
-		addrs := txBldr.GetTx().GetSigners()
-		for _, addr := range addrs {
-			signer := &types.AccountIdentifier{
-				Address: addr.String(),
-			}
-			accountIdentifierSigners = append(accountIdentifierSigners, signer)
-		}
-	}
-
 	return &types.ConstructionParseResponse{
-		Operations:               conversion.SdkTxToOperations(txBldr.GetTx(), false, false),
-		AccountIdentifierSigners: accountIdentifierSigners,
+		Operations:               ops,
+		AccountIdentifierSigners: signers,
+		Metadata:                 nil,
 	}, nil
+
 }
 
 func (on OnlineNetwork) ConstructionPayloads(ctx context.Context, request *types.ConstructionPayloadsRequest) (*types.ConstructionPayloadsResponse, *types.Error) {
-	if len(request.Operations) > 3 {
-		return nil, rosetta.ErrInvalidOperation.RosettaError()
-	}
-
-	msgs, signAddr, fee, err := conversion.RosettaOperationsToSdkMsg(request.Operations)
-	if err != nil {
-		return nil, rosetta.WrapError(rosetta.ErrInvalidOperation, err.Error()).RosettaError()
-	}
-
-	metadata, err := GetMetadataFromPayloadReq(request)
-	if err != nil {
-		return nil, rosetta.WrapError(rosetta.ErrInvalidRequest, err.Error()).RosettaError()
-	}
-
-	txFactory := tx.Factory{}.WithAccountNumber(metadata.AccountNumber).WithChainID(metadata.ChainID).
-		WithGas(metadata.Gas).WithSequence(metadata.Sequence).WithMemo(metadata.Memo).WithFees(fee.String())
-
-	TxConfig := on.client.GetTxConfig()
-	txFactory = txFactory.WithTxConfig(TxConfig)
-
-	txBldr, err := tx.BuildUnsignedTx(txFactory, msgs...)
+	payload, err := on.client.ConstructionPayload(ctx, request)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
-
-	if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
-		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
-	}
-
-	signerData := authsigning.SignerData{
-		ChainID:       txFactory.ChainID(),
-		AccountNumber: txFactory.AccountNumber(),
-		Sequence:      txFactory.Sequence(),
-	}
-
-	signBytes, err := TxConfig.SignModeHandler().GetSignBytes(txFactory.SignMode(), signerData, txBldr.GetTx())
-	if err != nil {
-		return nil, rosetta.ToRosettaError(err)
-	}
-
-	txBytes, err := TxConfig.TxEncoder()(txBldr.GetTx())
-	if err != nil {
-		return nil, rosetta.ToRosettaError(err)
-	}
-
-	return &types.ConstructionPayloadsResponse{
-		UnsignedTransaction: hex.EncodeToString(txBytes),
-		Payloads: []*types.SigningPayload{
-			{
-				AccountIdentifier: &types.AccountIdentifier{
-					Address: signAddr,
-				},
-				Bytes:         crypto.Sha256(signBytes),
-				SignatureType: "ecdsa",
-			},
-		},
-	}, nil
+	return payload, nil
 }
 
 func (on OnlineNetwork) ConstructionPreprocess(ctx context.Context, request *types.ConstructionPreprocessRequest) (*types.ConstructionPreprocessResponse, *types.Error) {
-	operations := request.Operations
-	if len(operations) > 3 {
-		return nil, rosetta.ErrInvalidRequest.RosettaError()
-	}
-
-	_, fromAddr, err := conversion.ConvertOpsToMsgs(operations)
+	options, err := on.client.PreprocessOperationsToOptions(ctx, request)
 	if err != nil {
-		return nil, rosetta.WrapError(rosetta.ErrInvalidAddress, err.Error()).RosettaError()
-	}
-
-	memo, ok := request.Metadata["memo"]
-	if !ok {
-		memo = ""
-	}
-
-	defaultGas := float64(200000)
-
-	gas := request.SuggestedFeeMultiplier
-	if gas == nil {
-		gas = &defaultGas
+		return nil, rosetta.ToRosettaError(err)
 	}
 
 	return &types.ConstructionPreprocessResponse{
-		Options: map[string]interface{}{
-			rosetta.OptionAddress: fromAddr,
-			rosetta.OptionMemo:    memo,
-			rosetta.OptionGas:     gas,
-		},
+		Options: options,
 	}, nil
 }
 
@@ -296,17 +126,13 @@ func (on OnlineNetwork) ConstructionSubmit(ctx context.Context, request *types.C
 		return nil, rosetta.ToRosettaError(err)
 	}
 
-	res, err := on.client.PostTx(txBytes)
+	res, meta, err := on.client.PostTx(txBytes)
 	if err != nil {
 		return nil, rosetta.ToRosettaError(err)
 	}
 
 	return &types.TransactionIdentifierResponse{
-		TransactionIdentifier: &types.TransactionIdentifier{
-			Hash: res.TxHash,
-		},
-		Metadata: map[string]interface{}{
-			rosetta.Log: res.RawLog,
-		},
+		TransactionIdentifier: res,
+		Metadata:              meta,
 	}, nil
 }

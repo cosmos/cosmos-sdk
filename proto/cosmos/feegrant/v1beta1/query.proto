@@ -23,9 +23,6 @@ service Query {
 
 // QueryFeeAllowanceRequest is the request type for the Query/FeeAllowance RPC method.
 message QueryFeeAllowanceRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
   string granter = 1;
   string grantee = 2;
 }
@@ -38,9 +35,6 @@ message QueryFeeAllowanceResponse {
 
 // QueryFeeAllowancesRequest is the request type for the Query/FeeAllowances RPC method.
 message QueryFeeAllowancesRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
   string grantee = 1;
 
   // pagination defines an pagination for the request.

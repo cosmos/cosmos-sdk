@@ -100,7 +100,7 @@ Every SDK version uses a different format to connect (rpc, gRpc, etc), we have a
 Adapter. This is an interface that defines the methods an adapter implementation must provide in order to be used 
 in the `Network` interface.
 
-Each Cosmos SDK release series will have their own Adapter implementations.
+Each Cosmos SDK release series will have their own Adapter and NodeClient implementations.
 Developers can implement their own custom adapters as required.
 
 ```golang
@@ -122,6 +122,8 @@ type ConstructionAPI interface {
 }
 ```
 
+For further information about the `Servicer` interfaces, please refer to the [Coinbase's rosetta-sdk-go's documentation](https://pkg.go.dev/github.com/coinbase/rosetta-sdk-go@v0.5.9/server).
+
 Example in pseudo-code of an Adapter interface:
 
 ```golang
@@ -130,19 +132,19 @@ type SomeAdapter struct {
 	tendermintClient client
 }
 
-func NewSomeAdapter(cosmosClient client, tendermintClient client) rosetta.Adapter {
-	return &SomeAdapter{cosmosClient: cosmosClient, tendermintClient: tendermintClient}
+func NewSomeAdapter(nodeClient NodeClient) rosetta.Adapter {
+	return &SomeAdapter{client: nodeClient}
 }
 
 func (s SomeAdapter) NetworkStatus(ctx context.Context, request *types.NetworkRequest) (*types.NetworkStatusResponse, *types.Error) {
-	resp := s.tendermintClient.CallStatus()
+	resp := s.client.CallStatus()
 	// ... Parse status Response
 	// build NetworkStatusResponse
 	return networkStatusResp, nil
 }
 
 func (s SomeAdapter) AccountBalance(ctx context.Context, request *types.AccountBalanceRequest) (*types.AccountBalanceResponse, *types.Error) {
-	resp := s.cosmosClient.Account()
+	resp := s.client.Account()
 	// ... Parse cosmos specific account response
 	// build AccountBalanceResponse
 	return AccountBalanceResponse, nil
@@ -151,7 +153,20 @@ func (s SomeAdapter) AccountBalance(ctx context.Context, request *types.AccountB
 // And we repeat for all the methods defined in the interface.
 ```
 
-For further information about the `Servicer` interfaces, please refer to the [Coinbase's rosetta-sdk-go's documentation](https://pkg.go.dev/github.com/coinbase/rosetta-sdk-go@v0.5.9/server).
+A developer that wants to support their custom messages in order to be parsed and constructed by the Rosetta API must implement
+the following interface.
+
+```golang
+// Msg interface is the interface that Cosmos SDK messages should implement if they want to
+// be supported by the Rosetta service.
+type Msg interface {
+   ToOperations(withStatus bool, hasError bool) []*types.Operation
+   FromOperations(ops []*types.Operation) (sdk.Msg, error)
+}
+```
+
+To get an idea how a message implementing this interface looks you can take a look at MsgSend from bank module.
+
 
 ### 2. Cosmos SDK Implementation
 
@@ -162,29 +177,25 @@ Due to separation of interface and implementation, application developers have t
 using this code as reference.
 
 ```golang
-// NewNetwork returns the default application configuration.
-func NewNetwork(options Options) service.Network {
-	cosmosClient := cosmos.NewClient(fmt.Sprintf("http://%s", options.CosmosEndpoint))
-	tendermintClient := tendermint.NewClient(fmt.Sprintf("http://%s", options.TendermintEndpoint))
-
-	return service.Network{
-		Properties: rosetta.NetworkProperties{
-			Blockchain:          options.Blockchain,
-			Network:             options.Network,
-			SupportedOperations: []string{OperationTransfer},
-		},
-		Adapter: newAdapter(
-			cosmosClient,
-			tendermintClient,
-			properties{
-				Blockchain:   options.Blockchain,
-				Network:      options.Network,
-				OfflineMode:  options.OfflineMode,
-			},
-		),
-	}
+// NewNetwork builds a rosetta gateway network
+func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter, client NodeClient) service.Network {
+   return service.Network{
+      Properties: crg.NetworkProperties{
+         Blockchain:          networkIdentifier.Blockchain,
+         Network:             networkIdentifier.Network,
+         AddrPrefix:          sdk.GetConfig().GetBech32AccountAddrPrefix(), // since we're inside cosmos sdk the config is supposed to be sealed
+         SupportedOperations: client.SupportedOperations(),
+      },
+      Adapter: adapter,
+   }
 }
 ```
+
+#### Extending Custom Messages
+We assumed that every sdk.Msg will have a 1 to many relation with Rosetta operations, meaning that every sdk.Message that implements
+the rosetta.Msg will be parsed and be able to be used via Rosetta API.
+
+Once this message is registered in the Interface registry it will be automatically part of the Rosetta API engine.
 
 ### 3. API service invocation
 

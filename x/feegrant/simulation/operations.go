@@ -131,6 +131,9 @@ func SimulateMsgRevokeFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, 
 		account := ak.GetAccount(ctx, granter.Address)
 		spendableCoins := bk.SpendableCoins(ctx, account.GetAddress())
 		fees, err := simtypes.RandomFees(r, ctx, spendableCoins)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgRevokeFeeAllowance, err.Error()), nil, err
+		}
 
 		msg := types.NewMsgRevokeFeeAllowance(granterAddr, granteeAddr)
 

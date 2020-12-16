@@ -326,14 +326,14 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			return err
 		}
 
-		adapter, err := rosettacfg.RetryRosettaFromConfig(conf)
+		adapter, rosClient, err := rosettacfg.RetryRosettaFromConfig(conf)
 		if err != nil {
 			return err
 		}
 
 		rosettaSrv, err = service.New(
 			service.Options{ListenAddress: conf.Addr},
-			rosetta.NewNetwork(conf.NetworkIdentifier(), adapter),
+			rosetta.NewNetwork(conf.NetworkIdentifier(), adapter, rosClient),
 		)
 		if err != nil {
 			return err

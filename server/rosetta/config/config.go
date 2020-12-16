@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/spf13/pflag"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
@@ -45,9 +47,9 @@ const (
 )
 
 // RosettaFromConfig builds the rosetta servicer full implementation from configurations
-func RosettaFromConfig(conf *Config) (crg.Adapter, error) {
+func RosettaFromConfig(conf *Config) (crg.Adapter, rosetta.NodeClient, error) {
 	if conf.Offline {
-		return services.NewOffline(conf.NetworkIdentifier()), nil
+		return services.NewOffline(conf.NetworkIdentifier()), nil, nil
 	}
 	var dataAPIOpts []client.OptionFunc
 	if conf.codec != nil && conf.ir != nil {
@@ -55,22 +57,22 @@ func RosettaFromConfig(conf *Config) (crg.Adapter, error) {
 	}
 	dataAPIClient, err := client.NewSingle(conf.GRPCEndpoint, conf.TendermintRPC, dataAPIOpts...)
 	if err != nil {
-		return nil, fmt.Errorf("data api client init failure: %w", err)
+		return nil, nil, fmt.Errorf("data api client init failure: %w", err)
 	}
 	sn, err := services.NewSingleNetwork(dataAPIClient, &types.NetworkIdentifier{
 		Blockchain: conf.Blockchain,
 		Network:    conf.Network,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("rosetta network initialization failure: %w", err)
+		return nil, nil, fmt.Errorf("rosetta network initialization failure: %w", err)
 	}
-	return sn, nil
+	return sn, dataAPIClient, nil
 }
 
 // RetryRosettaFromConfig tries to initialize rosetta retrying
-func RetryRosettaFromConfig(conf *Config) (rosetta crg.Adapter, err error) {
+func RetryRosettaFromConfig(conf *Config) (rosetta crg.Adapter, client rosetta.NodeClient, err error) {
 	for i := 0; i < conf.Retries; i++ {
-		rosetta, err = RosettaFromConfig(conf)
+		rosetta, client, err = RosettaFromConfig(conf)
 		if err == nil {
 			return
 		}

@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -73,6 +74,22 @@ type Client struct {
 	ir codectypes.InterfaceRegistry
 
 	clientCtx client.Context
+}
+
+func (c *Client) SupportedOperations() []string {
+	var supportedOperations []string
+	for _, ii := range c.ir.ListImplementations("cosmos.base.v1beta1.Msg") {
+		resolve, err := c.ir.Resolve(ii)
+		if err == nil {
+			if _, ok := resolve.(rosetta.Msg); ok {
+				supportedOperations = append(supportedOperations, strings.TrimLeft(ii, "/"))
+			}
+		}
+	}
+
+	supportedOperations = append(supportedOperations, rosetta.OperationFee)
+
+	return supportedOperations
 }
 
 func (c *Client) PreprocessOperationsToOptions(ctx context.Context, req *types.ConstructionPreprocessRequest) (options map[string]interface{}, err error) {

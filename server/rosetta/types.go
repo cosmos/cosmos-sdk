@@ -3,12 +3,6 @@ package rosetta
 import (
 	"context"
 
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	"github.com/gogo/protobuf/proto"
-
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	"github.com/coinbase/rosetta-sdk-go/types"
 	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
 	"github.com/tendermint/cosmos-rosetta-gateway/service"
@@ -36,18 +30,16 @@ const (
 	StageSyncing = "syncing"
 )
 
-var SupportedOperations = []string{proto.MessageName(&bank.MsgSend{}), proto.MessageName(&stakingtypes.MsgDelegate{}), OperationFee}
-
 // NewNetwork builds a rosetta gateway network
-func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter) service.Network {
+func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter, client NodeClient) service.Network {
 	return service.Network{
 		Properties: crg.NetworkProperties{
 			Blockchain:          networkIdentifier.Blockchain,
 			Network:             networkIdentifier.Network,
 			AddrPrefix:          sdk.GetConfig().GetBech32AccountAddrPrefix(), // since we're inside cosmos sdk the config is supposed to be sealed
-			SupportedOperations: SupportedOperations,
+			SupportedOperations: client.SupportedOperations(),
 		},
-		Adapter: adapter,
+		Adapter: adapter, // TODO new release of interface of adapter to return SupportedOperations.
 	}
 }
 
@@ -95,6 +87,7 @@ type NodeClient interface {
 	ConstructionMetadataFromOptions(ctx context.Context, options map[string]interface{}) (meta map[string]interface{}, err error)
 	ConstructionPayload(ctx context.Context, req *types.ConstructionPayloadsRequest) (resp *types.ConstructionPayloadsResponse, err error)
 	PreprocessOperationsToOptions(ctx context.Context, req *types.ConstructionPreprocessRequest) (options map[string]interface{}, err error)
+	SupportedOperations() []string
 }
 
 type BlockTransactionsResponse struct {
@@ -132,7 +125,7 @@ func Version() *types.Version {
 // Allow returns the allow operations
 // and error information, since this is
 // a static information we can club it here
-func Allow() *types.Allow {
+func Allow(c NodeClient) *types.Allow {
 	return &types.Allow{
 		OperationStatuses: []*types.OperationStatus{
 			{
@@ -144,7 +137,7 @@ func Allow() *types.Allow {
 				Successful: false,
 			},
 		},
-		OperationTypes:          SupportedOperations,
+		OperationTypes:          c.SupportedOperations(),
 		Errors:                  AllowedErrors.RosettaErrors(),
 		HistoricalBalanceLookup: true,
 		TimestampStartIndex:     nil,

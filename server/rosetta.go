@@ -29,14 +29,14 @@ func RosettaCommand(ir codectypes.InterfaceRegistry, cdc codec.Marshaler) *cobra
 				return err
 			}
 
-			adapter, err := config.RetryRosettaFromConfig(conf)
+			adapter, client, err := config.RetryRosettaFromConfig(conf)
 			if err != nil {
 				return err
 			}
 
 			svc, err := service.New(
 				service.Options{ListenAddress: conf.Addr},
-				rosetta.NewNetwork(conf.NetworkIdentifier(), adapter),
+				rosetta.NewNetwork(conf.NetworkIdentifier(), adapter, client),
 			)
 			if err != nil {
 				return err

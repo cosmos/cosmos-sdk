@@ -28,7 +28,7 @@ func NewSingleNetwork(client rosetta.NodeClient, network *types.NetworkIdentifie
 	return OnlineNetwork{
 		client:                 client,
 		network:                network,
-		networkOptions:         &types.NetworkOptionsResponse{Version: rosetta.Version(), Allow: rosetta.Allow()},
+		networkOptions:         &types.NetworkOptionsResponse{Version: rosetta.Version(), Allow: rosetta.Allow(client)},
 		genesisBlockIdentifier: block.Block,
 	}, nil
 }

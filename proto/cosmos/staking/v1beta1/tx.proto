@@ -46,7 +46,7 @@ message MsgCreateValidator {
   ];
   string                   delegator_address = 4 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
   string                   validator_address = 5 [(gogoproto.moretags) = "yaml:\"validator_address\""];
-  google.protobuf.Any      pubkey            = 6 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
+  google.protobuf.Any      pubkey            = 6 [(cosmos_proto.accepts_interface) = "cosmos.crypto.v1beta1.PubKey"];
   cosmos.base.v1beta1.Coin value             = 7 [(gogoproto.nullable) = false];
 }
 

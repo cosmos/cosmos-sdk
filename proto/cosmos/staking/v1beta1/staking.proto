@@ -76,8 +76,10 @@ message Validator {
   option (gogoproto.goproto_getters)  = false;
 
   string              operator_address = 1 [(gogoproto.moretags) = "yaml:\"operator_address\""];
-  google.protobuf.Any consensus_pubkey = 2
-      [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey", (gogoproto.moretags) = "yaml:\"consensus_pubkey\""];
+  google.protobuf.Any consensus_pubkey = 2 [
+    (cosmos_proto.accepts_interface) = "cosmos.crypto.v1beta1.PubKey",
+    (gogoproto.moretags)             = "yaml:\"consensus_pubkey\""
+  ];
   bool       jailed = 3;
   BondStatus status = 4;
   string tokens = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];

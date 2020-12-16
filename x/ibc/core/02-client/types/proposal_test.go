@@ -1,6 +1,8 @@
 package types_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
@@ -70,4 +72,36 @@ func (suite *TypesTestSuite) TestValidateBasic() {
 			suite.Require().Error(err, tc.name)
 		}
 	}
+}
+
+// tests a client update proposal can be marshaled and unmarshaled, and the
+// client state can be unpacked
+func (suite *TypesTestSuite) TestMarshalClientUpdateProposalProposal() {
+	_, err := types.PackHeader(&ibctmtypes.Header{})
+	suite.Require().NoError(err)
+
+	// create proposal
+	header := suite.chainA.CurrentTMClientHeader()
+	proposal, err := types.NewClientUpdateProposal("update IBC client", "description", "client-id", header)
+	suite.Require().NoError(err)
+
+	// create codec
+	ir := codectypes.NewInterfaceRegistry()
+	types.RegisterInterfaces(ir)
+	govtypes.RegisterInterfaces(ir)
+	ibctmtypes.RegisterInterfaces(ir)
+	cdc := codec.NewProtoCodec(ir)
+
+	// marshal message
+	bz, err := cdc.MarshalJSON(proposal)
+	suite.Require().NoError(err)
+
+	// unmarshal proposal
+	newProposal := &types.ClientUpdateProposal{}
+	err = cdc.UnmarshalJSON(bz, newProposal)
+	suite.Require().NoError(err)
+
+	// unpack client state
+	_, err = types.UnpackHeader(newProposal.Header)
+	suite.Require().NoError(err)
 }

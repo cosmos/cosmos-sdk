@@ -20,7 +20,6 @@ A list of handy `make` commands are configured [here](https://github.com/cosmos/
 - `proto-update-deps` - To download/update the required thirdparty `proto` definitions.
 - `proto-gen` - To auto generate proto code.
 - `proto-check-breaking` - To check proto breaking changes.
-- `proto-gen-any` - To generate the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed.
 - `proto-format` - To format proto files.
 
 ## Updating Modules
@@ -128,6 +127,40 @@ The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Ami
 
 This is useful is you wish to update to SDK v0.40 without doing a chain upgrade with a genesis export/import.
 
+As such, each module's AppModuleBasic now also takes a `codec.Marshaler` field:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/x/bank/module.go#L35-L38
+
+### CLI
+
+Each modules may optionally expose CLI commands, and some changes are needed in these commands.
+
+First, `context.CLIContext` is renamed to `client.Context` and moved to `github.com/cosmos/cosmos-sdk/client`. The global `viper` usage is removed from client and is replaced with Cobra' `cmd.Flags()`. There are two helpers to read common flags for CLI txs and queries:
+
+```go
+clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+```
+
+Some other flags helper functions are transformed:
+
+- `flags.PostCommands(cmds ...*cobra.Command) []*cobra.Command` and `flags.GetCommands(...)` usage
+  is now replaced by `flags.AddTxFlagsToCmd(cmd *cobra.Command)` and `flags.AddQueryFlagsToCmd(cmd *cobra.Command)`
+  respectively.
+- new CLI tx commands doesn't take `codec` as an input now, the `clientCtx` can be retrieved from the `cmd` itself.
+
+```diff
+// v0.39
+- func SendTxCmd(cdc *codec.Codec) *cobra.Command {...}
+
+// v0.40
++ func NewSendTxCmd() *cobra.Command {...}
+```
+
+Finally, once your [`Query` services](#query-service) are wired up, the CLI commands should prefer to communicate with the node via gRPC. The gist is to create a `Query` or `Msg` client using the command's `clientCtx`, and perform the request using Protobuf's generated code. An example for querying x/bank balances is given here:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/x/bank/client/cli/query.go#L66-L94
+
 ### Miscelleanous
 
 A number of other smaller breaking changes are also noteworthy.
@@ -142,93 +175,44 @@ A number of other smaller breaking changes are also noteworthy.
 | `InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate`   | InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate   | `InitGenesis` now takes a codec input.                                                                                                                                                                                |
 | `ExportGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate` | ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate | `ExportGenesis` now takes a codec input.                                                                                                                                                                              |
 
----
+## Updating Your App
 
-### Client
+### `app.go` Changes
 
-- `context.CLIContext` is renamed to `client.Context` and moved to `github.com/cosmos/cosmos-sdk/client`
-- The global `viper` usage is removed from client and is replaced with Cobra' `cmd.Flags()`. There are two helpers
-  to read common flags for CLI txs and queries.
+With the introduction of Protobuf, each app needs to define the encoding library (Amino or Protobuf) to be used throughout the app. There is a central struct, [`EncodingConfig`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/simapp/params/encoding.go#L9-L11), which defines all information necessary for codec. In your app, an example `EncodingConfig` with Protobuf as default codec looks like:
 
 ```go
-clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
-clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
-```
+// MakeEncodingConfig creates an EncodingConfig
+func MakeEncodingConfig() params.EncodingConfig {
+	amino := codec.NewLegacyAmino()
+	interfaceRegistry := types.NewInterfaceRegistry()
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	txCfg := tx.NewTxConfig(marshaler, tx.DefaultSignModes)
 
-- Flags helper functions `flags.PostCommands(cmds ...*cobra.Command) []*cobra.Command`, `flags.GetCommands(...)` usage
-  is now replaced by `flags.AddTxFlagsToCmd(cmd *cobra.Command)` and `flags.AddQueryFlagsToCmd(cmd *cobra.Command)`
-  respectively.
-- New CLI tx commands doesn't take `codec` as an input now.
-
-```go
-// v0.39.x
-func SendTxCmd(cdc *codec.Codec) *cobra.Command {
-	...
-}
-
-// v0.40
-func NewSendTxCmd() *cobra.Command {
-	...
-}
-```
-
-_Sample code for new tx command:_
-
-```go
-// NewSendTxCmd returns a CLI command handler for creating a MsgSend transaction.
-func NewSendTxCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use: "send [from_key_or_address] [to_address] [amount]",
-		Short: `Send funds from one account to another. Note, the'--from' flag is
-ignored as it is implied from [from_key_or_address].`,
-		Args: cobra.ExactArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.Flags().Set(flags.FlagFrom, args[0])
-
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			toAddr, err := sdk.AccAddressFromBech32(args[1])
-			if err != nil {
-				return err
-			}
-
-			coins, err := sdk.ParseCoins(args[2])
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
+	encodingConfig := params.EncodingConfig{
+		InterfaceRegistry: interfaceRegistry,
+		Marshaler:         marshaler,
+		TxConfig:          txCfg,
+		Amino:             amino,
 	}
+	std.RegisterLegacyAminoCodec(encodingConfig.Amino)
+	std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
+	ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)
+  ModuleBasics.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd
+	return encodingConfig
 }
 ```
 
-## Updating a cosmos-sdk chain to use SDK 0.40
+These codecs are used to populate the following fields on your app (we are using SimApp for demo purposes):
 
-This section covers the changes to `BaseApp` and related changes in `app.go`, `config`
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/simapp/app.go#L146-L153
 
-##### gRPC Router (baseapp/grpcrouter.go)
+As explained in the [modules migration section](#updating-modules), some functions and structs require an additional `codec.Marshaler` argument. You should pass `app.appCodec` in these cases, and this will be the default codec used throughout the app (e.g. when encoding to state).
 
-It has `GRPCQueryRouter` and `GRPCQueryHandler`. `GRPCQueryRouter` routes ABCI Query requests to respective GRPC
-handlers and is used in abci `Route`. `GRPCQueryHandler` defines a function type which handles ABCI Query requests
-using gRPC.
+### Server
 
-##### Server
-
-`GRPCRouter` and `Telemetry` are added newly to `Server`.
+`GRPCRouter` and `Telemetry` are added to `Server`.
 
 ```go
 // Server defines the server's API interface.
@@ -242,6 +226,8 @@ type Server struct {
 	listener net.Listener
 }
 ```
+
+### API S
 
 - API is made `in-process` with the node now. Enabling/disabling the API server and Swagger can now be configured from `app.toml`
   Both legacy REST API and gRPC gateway API are using the same server. Swagger can be accessed via `{baseurl}/swagger/`

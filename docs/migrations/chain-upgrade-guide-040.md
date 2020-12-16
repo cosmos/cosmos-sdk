@@ -61,8 +61,16 @@ software and restore to their latest snapshot before restarting their nodes.
    simd migrate v0.40 v039_exported_state.json --chain-id <new_chain_id> --genesis-time <new_genesis_time_in_utc> > new_v040_genesis.json
    ```
 
-   **Note:** The migrate command takes an input genesis state and migrates it to a targeted version. New `genesis-time` will
-   be as mentioned in the governance proposal.
+   **Note:** The migrate command takes an input genesis state and migrates it to a targeted version. New `genesis-time` will be as mentioned in the governance proposal.
+
+1. All the necessary state changes are handled in the `simd migrate v0.40` migration command. However, Tendermint parameters are **not** handled in this command. You might need to update these parameters manually.
+
+   In the recent versions of Tendermint, the following changes have been made:
+
+   - `consensus_params.evidence.max_num` has been renamed to `consensus_params.evidence.max_bytes`.
+   - `consensus_params.evidence.max_age` has been removed, and replaced by `consensus_params.evidence.max_age_duration` and `consensus_params.evidence.max_age_num_blocks`.
+
+   Make sure that your genesis JSON files contains the correct values specific to your chain. If the `simd migrate` errors with a message saying that the genesis file cannot be parsed, these are the fields to check first.
 
 1. Verify the SHA256 of the migrated genesis file with other valdiators to make sure there are no manual errors in the process.
 
@@ -74,17 +82,7 @@ software and restore to their latest snapshot before restarting their nodes.
 1. Make sure to update the genesis parameters in the new genesis if any. All these details will be generally present in
    the governance proposal.
 
-1. All the necessary state changes are handled in the `simd migrate v0.40` migration command. However, Tendermint parameters are **not** handled in this command. You need to update these parameters.
-
-   In the recent versions of Tendermint, the following changes have been made:
-
-   - `consensus_params.evidence.max_num` has been renamed to `consensus_params.evidence.max_bytes`.
-   - `consensus_params.evidence.max_age` has been removed, and replaced by `consensus_params.evidence.max_age_duration` and `consensus_params.evidence.max_age_num_blocks`.
-
-   Make sure that your genesis JSON files contains the correct values specific to your chain. If the `simd migrate` errors with a message saying that the genesis file cannot be parsed, these are the fields to check first.
-
-1. If your chain is using IBC, make sure to add IBC initial genesis state to the genesis file. You can use the following
-   command to add IBC initial genesis state to the genesis file.
+1) If your chain is using IBC, make sure to add IBC initial genesis state to the genesis file. You can use the following command to add IBC initial genesis state to the genesis file.
 
    ```shell
    cat new_040_genesis.json | jq '.app_state |= . + {"ibc":{"client_genesis":{"clients":[],"clients_consensus":[],"create_localhost":false},"connection_genesis":{"connections":[],"client_connection_paths":[]},"channel_genesis":{"channels":[],"acknowledgements":[],"commitments":[],"receipts":[],"send_sequences":[],"recv_sequences":[],"ack_sequences":[]}},"transfer":{"port_id":"transfer","denom_traces":[],"params":{"send_enabled":false,"receive_enabled":false}},"capability":{"index":"1","owners":[]}}' > new_040_genesis.json
@@ -92,7 +90,8 @@ software and restore to their latest snapshot before restarting their nodes.
 
    **Note:** This would add IBC state with IBC's `send_enabled: false` and `receive_enabled: false`. Make sure to update them to `true` in the above command if are planning to enable IBC transactions with chain upgrade. Otherwise you can do it via a governance proposal.
 
-1. Reset the old state
+1) Reset the old state.
+
    **Note:** Be sure you have a complete backed up state of your node before proceeding with this step.
    See Recovery for details on how to proceed.
 
@@ -100,13 +99,13 @@ software and restore to their latest snapshot before restarting their nodes.
    simd unsafe-reset-all
    ```
 
-1. Move the new genesis.json to your daemon config directory. Ex
+1) Move the new genesis.json to your daemon config directory. Ex
 
    ```shell
    cp new_v040_genesis.json ~/.simd/config/genesis.json
    ```
 
-1. Update `~/.simd/config/app.toml` to include latest app configurations. [Here is the link](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc4/server/config/toml.go#L11-L164) to the default template for v0.40's `app.toml`. Make sure to
+1) Update `~/.simd/config/app.toml` to include latest app configurations. [Here is the link](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc4/server/config/toml.go#L11-L164) to the default template for v0.40's `app.toml`. Make sure to
    update your custom configurations as per your validator design, e.g. `gas_price`.
 
    Compared to v0.39, some notable updates to `app.toml` are:
@@ -147,9 +146,9 @@ software and restore to their latest snapshot before restarting their nodes.
      snapshot-keep-recent = 2
      ```
 
-1. Kill if any external `rest-server` process is running.
+1) Kill if any external `rest-server` process is running.
 
-1. All set now! You can (re)start your daemon to validate on the upgraded network. Make sure to check your binary version
+1) All set now! You can (re)start your daemon to validate on the upgraded network. Make sure to check your binary version
    before starting the daemon:
 
    ```

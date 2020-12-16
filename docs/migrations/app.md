@@ -31,7 +31,7 @@ This section outlines how to upgrade your module to v0.40. There is also a whole
 
 As outlined in our [encoding guide](../core/encoding.md), one of the most significant improvements introduced in Cosmos SDK v0.40 is Protobuf. This means that instead of defining your serializable types using Go structs, you should define them as Protobuf messages.
 
-The rule of thumb is that if you need to serialize a type (into binary or JSON), then it should be defined as a Protobuf message. This means that pure domain types can be kept as Go structs and interfaces. In practice, the two following categories of types must be converted to Protobuf message:
+The rule of thumb is that if you need to serialize a type (into binary or JSON), then it should be defined as a Protobuf message. This means that pure domain types can be kept as Go structs and interfaces. In practice, the three following categories of types must be converted to Protobuf message:
 
 - client-facing types: `Msg`s, query requests and responses. This is because client will send these types over the wire to the node.
 - types that are stored in state. This is because we store the binary representation of these types in state.
@@ -64,23 +64,59 @@ An example of type that is stored in state is [x/auth's](../../x/auth/spec/READM
 
 In general, we recommend to put all the Protobuf definitions in a single directory `proto/`, as stated in [ADR-023](../architecture/adr-023-protobuf-naming.md). This ADR contains other useful information on naming conventions.
 
-For migrating interfaces, we leverage Protobuf's `Any` message. Please refer to the [encoding FAQ](../core/encoding.md#faq) to learn how to achieve that.
+You might have noticed that the `PubKey` interface in v0.39's `BaseAccount` has been transformed into an `Any`. For migrating interfaces, we use Protobuf's `Any` message, which is a struct that can hold arbitrary content. Please refer to the [encoding FAQ](../core/encoding.md#faq) to learn how to achieve that.
+
+Once all your Protobuf messages are defined, use the `make proto-gen` command defined in the [tooling section](#tooling) to generate Go structs. These structs will be generated in `*.pb.go` files. As a quick example, here's the generated Go struct for the Protobuf BaseAccount we defined above:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/x/auth/types/auth.pb.go#L28-L36
+
+There might be back and forth removing old Go structs/interfaces and defining new Protobuf messages before your Go app compiles and before your tests pass.
 
 ### Create `Msg` and `Query` Services
 
+Cosmos SDK v0.40 uses Protobuf services to define state transitions (`Msg`s) and state queries, please read [the building modules guide on those services](../building-modules/messages-and-queries.md) for an overview.
+
+#### `Msg` Service
+
+For migrating `Msg`s, the handler pattern (inside the `handler.go` file) is deprecated. You may still keep it if you wish to support `Msg`s defined in older versions of the SDK. However, it is strongly recommended to add a `Msg` service to your Protobuf files, and each old `Msg` should be converted to a service method. Taking [x/bank's](../../x/bank/spec/README.md) `MsgSend` as an example, we have a corresponding `cosmos.bank.v1beta1.Msg/Send` service method:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/proto/cosmos/bank/v1beta1/tx.proto#L10-L31
+
+A state transition is therefore modelized as a Protobuf service method, with a method request, and an (optionally empty) method response.
+
+After defining your `Msg` service, run the `make proto-gen` script again to generate `Msg` server interfaces. The naming of this interface follows a simple convention, for x/bank's `Msg` service we just defined, it will be called `MsgServer`. The implementation of this interface should follow exactly the implementation of the old `Msg` handlers, which, in most cases, defer the actual state transition logic to the [keeper](../building-modules/keeper.md). You may implement this `MsgServer` directly on the keeper, of you can also do it on a new struct (e.g. called `msgServer`) that references the module's keeper.
+
+For more information, please check our [`Msg` service guide](../building-modules/msg-services.md).
+
+#### `Query` Service
+
+For migrating state queries, the querier pattern (inside the `querier.go` file) is deprecated. You may still keep this file to support legacy queries, but it is strongly recommended to use a Protobuf `Query` service to handle state queries.
+
+Each query endpoint is now defined as a separate service method in the `Query` service. Still taking `x/bank` as an example, here are the queries to fetch an account's balances:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40-rc5/proto/cosmos/bank/v1beta1/query.proto#L12-L23
+
+Each query has its own `Request` and `Response` types.
+
+After defining the `Query` Protobuf service, run the `make proto-gen` command to generate correspond interfaces. The interface that needs to be implemented is `QueryServer`. This interface can be implemented on the [keeper](../building-modules/keeper.md) directly, or on a struct (e.g. called `queryServer`) that references the module's keeper. The logic of the implementation (i.e. actually fetching from the module's store) can be deferred to the keeper.
+
+For more information, please check our [`Query` service guide](../building-modules/query-services.md).
+
+#### Wiring up `Msg` and `Query` Services
+
+The `RegisterServices` method is newly added and registers module's `MsgServer` and gRPC's `QueryServer`. It should be implemented of all your modules.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/7c1da3d9988c361d6165d26d33bed47352072366/x/bank/module.go#L99-L103
+
+---
+
 ## Updating the App
-
-## Contents
-
-- [Updating a module to use Cosmos-SDK v0.40](#updating-a-module-to-use-cosmos-sdk-v040)
-- [Updating a cosmos-sdk chain to use SDK v0.40](#updating-a-cosmos-sdk-chain-to-use-sdk-v040)
-- [Upgrading a live chain to v0.40](#upgrading-a-live-chain-to-v040)
 
 ## Updating a module to use Cosmos-SDK v0.40
 
 This section covers the changes in modules from `v0.39.x` to `v0.40`.
 
-### State
+### Miscelleanous
 
 - `internal` package is removed and `types`, `keeper` are moved to module level
 - `alias` usage is removed [#6311](https://github.com/cosmos/cosmos-sdk/issues/6311)
@@ -215,21 +251,14 @@ specified by `ModuleCdc`.
     func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {}
   ```
 
-- `RegisterServices` is newly added and registers module's `MsgServer` and gRPC's `QueryServer`.
-  ```go
-  func (am AppModule) RegisterServices(cfg module.Configurator) {
-      types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-      types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
-  }
-  ```
-- `RegisterGRPCGatewayRoutes` is newly added for registering module's gRPC gateway routes with API Server.`RegisterQueryHandlerClient` is auto generated by proto code generator.
+* `RegisterGRPCGatewayRoutes` is newly added for registering module's gRPC gateway routes with API Server.`RegisterQueryHandlerClient` is auto generated by proto code generator.
   ```go
   // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the bank module.
   func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
       types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
   }
   ```
-- `InitGenesis` and `ExportGenesis` require explicit codec input.
+* `InitGenesis` and `ExportGenesis` require explicit codec input.
   ```go
   func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {}
   func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {}

@@ -94,6 +94,7 @@ func (msg MsgGrantFeeAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) err
 	return unpacker.UnpackAny(msg.Allowance, &allowance)
 }
 
+//nolint:interfacer
 func NewMsgRevokeFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) MsgRevokeFeeAllowance {
 	return MsgRevokeFeeAllowance{Granter: granter.String(), Grantee: grantee.String()}
 }

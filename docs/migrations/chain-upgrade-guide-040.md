@@ -1,5 +1,5 @@
 <!--
-order: 3
+order: 2
 -->
 
 # Chain Upgrade Guide to v0.40
@@ -53,9 +53,9 @@ software and restore to their latest snapshot before restarting their nodes.
 
 1. Cross check the hash with other peers (other validators) in the chat rooms.
 
-1. Install the latest binary (which uses `0.40`).
+1. Install the latest binary (which uses `v0.40`).
 
-1. Migrate the exported state to `0.40` compatible genesis state.
+1. Migrate the exported state to `v0.40` compatible genesis state.
 
    ```shell
    simd migrate v0.40 v039_exported_state.json --chain-id <new_chain_id> --genesis-time <new_genesis_time_in_utc> > new_v040_genesis.json
@@ -75,6 +75,13 @@ software and restore to their latest snapshot before restarting their nodes.
    the governance proposal.
 
 1. All the necessary state changes are handled in the `simd migrate v0.40` migration command. However, Tendermint parameters are **not** handled in this command. You need to update these parameters.
+
+   In the recent versions of Tendermint, the following changes have been made:
+
+   - `consensus_params.evidence.max_num` has been renamed to `consensus_params.evidence.max_bytes`.
+   - `consensus_params.evidence.max_age` has been removed, and replaced by `consensus_params.evidence.max_age_duration` and `consensus_params.evidence.max_age_num_blocks`.
+
+   Make sure that your genesis JSON files contains the correct values specific to your chain. If the `simd migrate` errors with a message saying that the genesis file cannot be parsed, these are the fields to check first.
 
 1. If your chain is using IBC, make sure to add IBC initial genesis state to the genesis file. You can use the following
    command to add IBC initial genesis state to the genesis file.
@@ -148,3 +155,7 @@ software and restore to their latest snapshot before restarting their nodes.
    ```
    simd version --long
    ```
+
+## Next {hide}
+
+Once your chain is upgraded, make sure to [update your clients' REST endpoints](./rest.md).

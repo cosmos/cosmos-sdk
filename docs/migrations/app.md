@@ -7,7 +7,7 @@ order: 1
 The following document describes the changes to update your app and modules to use Cosmos SDK v0.40,
 a.k.a. Stargate release. {synopsis}
 
-## Updating Tooling
+## Update Tooling
 
 Make sure to have the following dependencies before updating your app to v0.40:
 
@@ -15,7 +15,7 @@ Make sure to have the following dependencies before updating your app to v0.40:
 - Docker
 - Node.js v12.0+ (optional, for generating Swagger docs)
 
-A list of handy `make` commands are configured [here](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/Makefile#L355-L443), they will be useful for your own app.
+A list of handy `make` commands are configured [here](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/Makefile#L355-L443). In general, your own app can use a similar Makefile to the Cosmos SDK's one. Specifically, these are some Makefile commands that might be useful for your own app:
 
 - `proto-update-deps` - To download/update the required thirdparty `proto` definitions.
 - `proto-gen` - To auto generate proto code.
@@ -177,9 +177,11 @@ A number of other smaller breaking changes are also noteworthy.
 
 ## Updating Your App
 
-### `app.go` Changes
+For a reference implementation used for demo purposes, you can refer to the SDK's [SimApp]() for your app's migration. The most notable changes are described in this section.
 
-With the introduction of Protobuf, each app needs to define the encoding library (Amino or Protobuf) to be used throughout the app. There is a central struct, [`EncodingConfig`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/simapp/params/encoding.go#L9-L11), which defines all information necessary for codec. In your app, an example `EncodingConfig` with Protobuf as default codec looks like:
+### Creating Codecs
+
+With the introduction of Protobuf, each app needs to define the encoding library (Amino or Protobuf) to be used throughout the app. There is a central struct, [`EncodingConfig`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/simapp/params/encoding.go#L9-L11), which defines all information necessary for codecs. In your app, an example `EncodingConfig` with Protobuf as default codec might look like:
 
 ```go
 // MakeEncodingConfig creates an EncodingConfig
@@ -208,41 +210,25 @@ These codecs are used to populate the following fields on your app (we are using
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/simapp/app.go#L146-L153
 
-As explained in the [modules migration section](#updating-modules), some functions and structs require an additional `codec.Marshaler` argument. You should pass `app.appCodec` in these cases, and this will be the default codec used throughout the app (e.g. when encoding to state).
+As explained in the [modules migration section](#updating-modules), some functions and structs in modules require an additional `codec.Marshaler` argument. You should pass `app.appCodec` in these cases, and this will be the default codec used throughout the app.
 
-### Server
+### Registering Not-Module-Related Protobuf Services
 
-`GRPCRouter` and `Telemetry` are added to `Server`.
+We described in the [modules migration section](#updating-modules) `Query` and `Msg` services defined in each module. The SDK also exposes two more module-agnostic services:
 
-```go
-// Server defines the server's API interface.
-type Server struct {
-	Router     *mux.Router
-	GRPCRouter *runtime.ServeMux
-	ClientCtx  client.Context
+- the [Tx Service](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/proto/cosmos/tx/v1beta1/service.proto), to perform operations on transactions,
+- the [Tendermint service](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/proto/cosmos/base/tendermint/v1beta1/query.proto), to have a more idiomatic interface to the [Tendermint RPC](https://docs.tendermint.com/master/rpc/).
 
-	logger   log.Logger
-	metrics  *telemetry.Metrics
-	listener net.Listener
-}
-```
+These services are optional, if you wish to use these two Protobuf services, or if you wish to add more module-agnostic Protobuf services, then they need to be added inside `app.go`:
 
-### API S
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/simapp/app.go#L577-L585
 
-- API is made `in-process` with the node now. Enabling/disabling the API server and Swagger can now be configured from `app.toml`
-  Both legacy REST API and gRPC gateway API are using the same server. Swagger can be accessed via `{baseurl}/swagger/`
+### Registering `grpc-gateway` Routes
 
-```yaml
-...
-[api]
+The exising `RegisterAPIRoutes` method on the `app` only registers [Legacy API routes](../core/grpc_rest.md#legacy-rest-api-routes). If you are using `grpc-gateway` REST endpoints as described [above](#query-service), then these endpoints need to be wired up to a HTTP server:
 
-# Enable defines if the API server should be enabled.
-enable = true
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/simapp/app.go#L555-L575
 
-# Swagger defines if swagger documentation should automatically be registered.
-swagger = true
+## Next {hide}
 
-# Address defines the API server to listen on.
-address = "tcp://0.0.0.0:1317"
-...
-```
+Learn how to perform a [chain upgrade](./chain-upgrade-guide-040.md) to 0.40.

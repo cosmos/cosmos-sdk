@@ -21,8 +21,7 @@ func GetCmdQueryDenomTrace() *cobra.Command {
 		Example: fmt.Sprintf("%s query ibc-transfer denom-trace [hash]", version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -37,7 +36,7 @@ func GetCmdQueryDenomTrace() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -55,12 +54,10 @@ func GetCmdQueryDenomTraces() *cobra.Command {
 		Example: fmt.Sprintf("%s query ibc-transfer denom-traces", version.AppName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			queryClient := types.NewQueryClient(clientCtx)
 
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
@@ -77,7 +74,7 @@ func GetCmdQueryDenomTraces() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
@@ -95,16 +92,14 @@ func GetCmdParams() *cobra.Command {
 		Args:    cobra.NoArgs,
 		Example: fmt.Sprintf("%s query ibc-transfer params", version.AppName),
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, _ := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
-			return clientCtx.PrintOutput(res.Params)
+			return clientCtx.PrintProto(res.Params)
 		},
 	}
 

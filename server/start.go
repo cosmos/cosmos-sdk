@@ -103,7 +103,10 @@ which accepts a path for the resulting pprof file.
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
-			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
 
 			withTM, _ := cmd.Flags().GetBool(flagWithTendermint)
 			if !withTM {
@@ -114,8 +117,14 @@ which accepts a path for the resulting pprof file.
 			serverCtx.Logger.Info("starting ABCI with Tendermint")
 
 			// amino is needed here for backwards compatibility of REST routes
-			err := startInProcess(serverCtx, clientCtx, appCreator)
-			return err
+			err = startInProcess(serverCtx, clientCtx, appCreator)
+			errCode, ok := err.(ErrorCode)
+			if !ok {
+				return err
+			}
+
+			serverCtx.Logger.Debug(fmt.Sprintf("received quit signal: %d", errCode.Code))
+			return nil
 		},
 	}
 

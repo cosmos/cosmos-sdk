@@ -38,12 +38,10 @@ func GetCmdQueryParams() *cobra.Command {
 		Short: "Query the current minting parameters",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			queryClient := types.NewQueryClient(clientCtx)
 
 			params := &types.QueryParamsRequest{}
@@ -53,7 +51,7 @@ func GetCmdQueryParams() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res.Params)
+			return clientCtx.PrintProto(&res.Params)
 		},
 	}
 
@@ -70,12 +68,10 @@ func GetCmdQueryInflation() *cobra.Command {
 		Short: "Query the current minting inflation value",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			queryClient := types.NewQueryClient(clientCtx)
 
 			params := &types.QueryInflationRequest{}
@@ -102,12 +98,10 @@ func GetCmdQueryAnnualProvisions() *cobra.Command {
 		Short: "Query the current minting annual provisions value",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			queryClient := types.NewQueryClient(clientCtx)
 
 			params := &types.QueryAnnualProvisionsRequest{}

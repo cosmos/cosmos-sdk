@@ -379,7 +379,7 @@ func (s *IntegrationTestSuite) createTestStdTx(val *network.Validator, accNum, s
 		WithSequence(sequence)
 
 	// sign Tx (offline mode so we can manually set sequence number)
-	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, true)
+	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, true, true)
 	s.Require().NoError(err)
 
 	stdTx := txBuilder.GetTx().(legacytx.StdTx)
@@ -453,9 +453,8 @@ func (s *IntegrationTestSuite) testQueryIBCTx(txRes sdk.TxResponse, cmd *cobra.C
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 	s.Require().NoError(err)
 
-	txFile, cleanup := testutil.WriteToNewTempFile(s.T(), string(out.Bytes()))
+	txFile := testutil.WriteToNewTempFile(s.T(), string(out.Bytes()))
 	txFileName := txFile.Name()
-	s.T().Cleanup(cleanup)
 
 	// encode the generated txn.
 	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.GetEncodeCommand(), []string{txFileName})
@@ -482,11 +481,10 @@ func (s *IntegrationTestSuite) TestLegacyRestErrMessages() {
 	val := s.network.Validators[0]
 
 	// Write consensus json to temp file, used for an IBC message.
-	consensusJSON, cleanup := testutil.WriteToNewTempFile(
+	consensusJSON := testutil.WriteToNewTempFile(
 		s.T(),
 		`{"public_key":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A/3SXL2ONYaOkxpdR5P8tHTlSlPv1AwQwSFxKRee5JQW"},"diversifier":"diversifier","timestamp":"10"}`,
 	)
-	defer cleanup()
 
 	testCases := []struct {
 		desc string

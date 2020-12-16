@@ -52,8 +52,7 @@ func QueryParamsCmd() *cobra.Command {
 $ <appd> query auth params
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -64,7 +63,7 @@ $ <appd> query auth params
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res.Params)
+			return clientCtx.PrintProto(&res.Params)
 		},
 	}
 
@@ -81,12 +80,10 @@ func GetAccountCmd() *cobra.Command {
 		Short: "Query for account by address",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			key, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
@@ -98,7 +95,7 @@ func GetAccountCmd() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Account)
+			return clientCtx.PrintProto(res.Account)
 		},
 	}
 
@@ -124,12 +121,10 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 `, eventFormat, version.AppName, flagEvents),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			eventsRaw, _ := cmd.Flags().GetString(flagEvents)
 			eventsStr := strings.Trim(eventsRaw, "'")
 
@@ -167,7 +162,7 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 				return err
 			}
 
-			return clientCtx.PrintOutput(txs)
+			return clientCtx.PrintProto(txs)
 		},
 	}
 
@@ -188,12 +183,10 @@ func QueryTxCmd() *cobra.Command {
 		Short: "Query for a transaction by hash in a committed block",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			output, err := authclient.QueryTx(clientCtx, args[0])
 			if err != nil {
 				return err
@@ -203,7 +196,7 @@ func QueryTxCmd() *cobra.Command {
 				return fmt.Errorf("no transaction found with hash %s", args[0])
 			}
 
-			return clientCtx.PrintOutput(output)
+			return clientCtx.PrintProto(output)
 		},
 	}
 

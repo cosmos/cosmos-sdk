@@ -118,7 +118,7 @@ func SimulateMsgRevokeFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, 
 			if err != nil {
 				panic(err)
 			}
-			grantee, err := sdk.AccAddressFromBech32(grant.Granter)
+			grantee, err := sdk.AccAddressFromBech32(grant.Grantee)
 			if err != nil {
 				panic(err)
 			}

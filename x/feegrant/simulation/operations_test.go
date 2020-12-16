@@ -158,8 +158,8 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeFeeAllowance() {
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)
-	require.Equal(granter.Address, msg.Granter)
-	require.Equal(grantee.Address, msg.Grantee)
+	require.Equal(granter.Address.String(), msg.Granter)
+	require.Equal(grantee.Address.String(), msg.Grantee)
 	require.Equal(types.TypeMsgRevokeFeeAllowance, msg.Type())
 	require.Equal(types.ModuleName, msg.Route())
 	require.Len(futureOperations, 0)

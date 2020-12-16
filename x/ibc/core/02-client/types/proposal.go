@@ -1,6 +1,7 @@
 package types
 
 import (
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
@@ -11,7 +12,10 @@ const (
 	ProposalTypeClientUpdate = "ClientUpdate"
 )
 
-var _ govtypes.Content = &ClientUpdateProposal{}
+var (
+	_ govtypes.Content                   = &ClientUpdateProposal{}
+	_ codectypes.UnpackInterfacesMessage = ClientUpdateProposal{}
+)
 
 // NewClientUpdateProposal creates a new client update proposal.
 func NewClientUpdateProposal(title, description, clientID string, header exported.Header) (*ClientUpdateProposal, error) {
@@ -57,4 +61,10 @@ func (cup *ClientUpdateProposal) ValidateBasic() error {
 	}
 
 	return header.ValidateBasic()
+}
+
+// UnpackInterfaces implements the UnpackInterfacesMessage interface.
+func (cup ClientUpdateProposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var header exported.Header
+	return unpacker.UnpackAny(cup.Header, &header)
 }

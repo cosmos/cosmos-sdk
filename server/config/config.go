@@ -14,14 +14,11 @@ import (
 const (
 	defaultMinGasPrices = ""
 
-	// DefaultGRPCAddress is the default address the gRPC server binds to.
+	// DefaultGRPCAddress defines the default address to bind the gRPC server to.
 	DefaultGRPCAddress = "0.0.0.0:9090"
 
-	// DefaultGRPCAddress is the address to bind the server to.
-	DefaultBindAddress = "0.0.0.0"
-
-	// TCP port to listen on for HTTP1.1 calls.
-	DefaultGRPCProxyPort = 9091
+	// DefaultGRPCWebAddress defines the default address to bind the gRPC-web server to.
+	DefaultGRPCWebAddress = "0.0.0.0:9091"
 )
 
 // BaseConfig defines the server's basic configuration
@@ -111,33 +108,15 @@ type GRPCConfig struct {
 
 	// Address defines the API server to listen on
 	Address string `mapstructure:"address"`
-
-	// GRPCWebProxy defines the list of flags for grpc-proxy.
-	GRPCWebProxy GRPCProxy `mapstructure:"grpc-proxy"`
 }
 
-// GRPProxy defines configuration for the gRPC server.
-type GRPCProxy struct {
-	// Enable defines if the proxy should be enabled.
+// GRPCWeb defines configuration for the gRPC-web server.
+type GRPCWeb struct {
+	// Enable defines if the gRPC-web should be enabled.
 	Enable bool `mapstructure:"enable"`
 
-	// EnableHTTPServer defines if the HTTP should be enabled.
-	EnableHTTPServer bool `mapstructure:"enable-http-server"`
-
-	// AllowAllOrigins defines allow requests from any origin.
-	AllowAllOrigins bool `mapstructure:"allow-all-origins"`
-
-	// HTTPPort defines TCP port to listen on for HTTP1.1 debug calls.
-	HTTPPort int `mapstructure:"http-port"`
-
-	// BindAddress defines address to bind the server to.
-	BindAddress string `mapstructure:"bind-address"`
-
-	// AllowedOrigins defines list of origin URLs which are allowed to make cross-origin requests.
-	AllowedOrigins []string `mapstructure:"allowed-origins"`
-
-	// AllowedHeaders defines list of headers which are allowed to propagate to the gRPC backend.
-	AllowedHeaders []string `mapstructure:"allowed-headers"`
+	// Address defines the gRPC-web server to listen on
+	Address string `mapstructure:"address"`
 }
 
 // StateSyncConfig defines the state sync snapshot configuration.
@@ -159,6 +138,7 @@ type Config struct {
 	Telemetry telemetry.Config `mapstructure:"telemetry"`
 	API       APIConfig        `mapstructure:"api"`
 	GRPC      GRPCConfig       `mapstructure:"grpc"`
+	GRPCWeb   GRPCWeb          `mapstructure:"grpc-web"`
 	StateSync StateSyncConfig  `mapstructure:"state-sync"`
 }
 
@@ -217,15 +197,10 @@ func DefaultConfig() *Config {
 		GRPC: GRPCConfig{
 			Enable:  true,
 			Address: DefaultGRPCAddress,
-			GRPCWebProxy: GRPCProxy{
-				Enable:           true,
-				AllowAllOrigins:  true,
-				EnableHTTPServer: true,
-				AllowedOrigins:   []string{DefaultGRPCAddress},
-				AllowedHeaders:   make([]string, 0),
-				BindAddress:      DefaultBindAddress,
-				HTTPPort:         DefaultGRPCProxyPort,
-			},
+		},
+		GRPCWeb: GRPCWeb{
+			Enable:  true,
+			Address: DefaultGRPCWebAddress,
 		},
 		StateSync: StateSyncConfig{
 			SnapshotInterval:   0,
@@ -280,15 +255,10 @@ func GetConfig(v *viper.Viper) Config {
 		GRPC: GRPCConfig{
 			Enable:  v.GetBool("grpc.enable"),
 			Address: v.GetString("grpc.address"),
-			GRPCWebProxy: GRPCProxy{
-				Enable:           v.GetBool("grpc.grpc-proxy.enable"),
-				AllowAllOrigins:  v.GetBool("grpc.grpc-proxy.allow-all-origins"),
-				AllowedHeaders:   v.GetStringSlice("grpc.grpc-proxy.allowed-headers"),
-				AllowedOrigins:   v.GetStringSlice("grpc.grpc-proxy.allowed-origins"),
-				EnableHTTPServer: v.GetBool("grpc.grpc-proxy.enable-http-server"),
-				BindAddress:      v.GetString("grpc.grpc-proxy.bind-address"),
-				HTTPPort:         v.GetInt("grpc.grpc-proxy.http-port"),
-			},
+		},
+		GRPCWeb: GRPCWeb{
+			Enable:  v.GetBool("grpc-web.enable"),
+			Address: v.GetString("grpc-web.address"),
 		},
 		StateSync: StateSyncConfig{
 			SnapshotInterval:   v.GetUint64("state-sync.snapshot-interval"),

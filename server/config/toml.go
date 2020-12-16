@@ -147,27 +147,17 @@ enable = {{ .GRPC.Enable }}
 # Address defines the gRPC server address to bind to.
 address = "{{ .GRPC.Address }}"
 
-[grpc.grpc-proxy]
-	# GRPCWebProxyEnable defines if the gRPC-web-proxy should be enabled.
-	enable = {{ .GRPC.GRPCWebProxy.Enable }}
+###############################################################################
+###                        gRPC Web Configuration                     ###
+###############################################################################
 
-	# BindAddress defines address to bind the server to.
-	bind-address = "{{ .GRPC.GRPCWebProxy.BindAddress }}"
+[grpc-web]
 
-	# HTTPPort defines TCP port to listen on for HTTP1.1 debug calls.
-	http-port = {{ .GRPC.GRPCWebProxy.HTTPPort }}
+# GRPCWebEnable defines if the gRPC-web should be enabled.
+enable = {{ .GRPCWeb.Enable }}
 
-	# AllowAllOrigins defines allow requests from any origin.
-	allow-all-origins = {{ .GRPC.GRPCWebProxy.AllowAllOrigins }}
-
-	# AllowedOrigins defines list of origin URLs which are allowed to make cross-origin requests.
-	allowed-origins = [{{ range $k, $v := .GRPC.GRPCWebProxy.AllowedOrigins }} "{{ $v }}", {{ end }}]
-
-	# AllowedHeaders defines list of headers which are allowed to propagate to the gRPC backend.
-	allowed-headers = [{{ range $k, $v := .GRPC.GRPCWebProxy.AllowedHeaders }} "{{ $v }}", {{ end }}]
-
-	# EnableHTTPServer defines if the HTTP should be enabled.
-	enable-http-server = {{ .GRPC.GRPCWebProxy.EnableHTTPServer }}
+# Address defines the gRPC-web server address to bind to.
+address = "{{ .GRPCWeb.Address }}"
 
 ###############################################################################
 ###                        State Sync Configuration                         ###

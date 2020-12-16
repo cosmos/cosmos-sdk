@@ -9,6 +9,7 @@ import (
 	"runtime/pprof"
 	"time"
 
+	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
@@ -305,17 +306,26 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		}
 	}
 
-	var grpcSrv *grpc.Server
-	var proxySrv *http.Server
+	var (
+		grpcSrv    *grpc.Server
+		grpcWebSrv *http.Server
+	)
 	if config.GRPC.Enable {
 		grpcSrv, err = servergrpc.StartGRPCServer(app, config.GRPC.Address)
 		if err != nil {
 			return err
 		}
-		if config.GRPC.GRPCWebProxy.Enable {
-			proxySrv, err = servergrpc.StartGRPCProxyServer(config.GRPC)
-			proxySrv.ListenAndServe()
-			if err != nil {
+		if config.GRPCWeb.Enable {
+			wrappedServer := grpcweb.WrapServer(grpcSrv)
+			handler := func(resp http.ResponseWriter, req *http.Request) {
+				wrappedServer.ServeHTTP(resp, req)
+			}
+			grpcWebSrv = &http.Server{
+				Addr:    config.GRPCWeb.Address,
+				Handler: http.HandlerFunc(handler),
+			}
+			if err := grpcWebSrv.ListenAndServe(); err != nil {
+				ctx.Logger.Error("failed starting http server: ", err)
 				return err
 			}
 		}
@@ -336,8 +346,8 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 		if grpcSrv != nil {
 			grpcSrv.Stop()
-			if proxySrv != nil {
-				_ = proxySrv.Close()
+			if grpcWebSrv != nil {
+				grpcWebSrv.Close()
 			}
 		}
 

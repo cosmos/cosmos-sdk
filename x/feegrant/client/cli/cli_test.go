@@ -57,6 +57,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	args := append(
 		[]string{
+			granter.String(),
 			grantee.String(),
 			fee.String(),
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
@@ -192,9 +193,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrants() {
 				"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			false,
-			&types.QueryFeeAllowancesResponse{},
-			0,
+			false, &types.QueryFeeAllowancesResponse{}, 0,
 		},
 		{
 			"valid req",
@@ -202,9 +201,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrants() {
 				grantee.String(),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			false,
-			&types.QueryFeeAllowancesResponse{},
-			1,
+			false, &types.QueryFeeAllowancesResponse{}, 1,
 		},
 	}
 
@@ -246,32 +243,43 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 		expectedCode uint32
 	}{
 		{
-			"wromg grantee address",
+			"wromg granter address",
 			append(
 				[]string{
-					"wrong_grantee",
-					"100steak",
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-				},
-				commonFlags...,
-			),
-			true,
-			nil,
-			0,
-		},
-		{
-			"Valid fee grant",
-			append(
-				[]string{
+					"wrong_granter",
 					grantee.String(),
 					"100steak",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
 				commonFlags...,
 			),
-			false,
-			&sdk.TxResponse{},
-			0,
+			true, nil, 0,
+		},
+		{
+			"wromg grantee address",
+			append(
+				[]string{
+					granter.String(),
+					"wrong_grantee",
+					"100steak",
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				},
+				commonFlags...,
+			),
+			true, nil, 0,
+		},
+		{
+			"Valid fee grant",
+			append(
+				[]string{
+					granter.String(),
+					grantee.String(),
+					"100steak",
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				},
+				commonFlags...,
+			),
+			false, &sdk.TxResponse{}, 0,
 		},
 	}
 
@@ -318,6 +326,21 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 			"invalid grantee",
 			append(
 				[]string{
+					"wrong_granter",
+					grantee.String(),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				},
+				commonFlags...,
+			),
+			true,
+			nil,
+			0,
+		},
+		{
+			"invalid grantee",
+			append(
+				[]string{
+					granter.String(),
 					"wrong_grantee",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
@@ -331,6 +354,7 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 			"Non existed grant",
 			append(
 				[]string{
+					granter.String(),
 					"cosmos1aeuqja06474dfrj7uqsvukm6rael982kk89mqr",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
@@ -344,6 +368,7 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 			"Valid revoke",
 			append(
 				[]string{
+					granter.String(),
 					grantee.String(),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},

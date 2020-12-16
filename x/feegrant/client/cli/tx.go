@@ -39,34 +39,37 @@ func GetTxCmd() *cobra.Command {
 	return feegrantTxCmd
 }
 
+// NewCmdFeeGrant returns a CLI command handler for creating a MsgGrantFeeAllowance transaction.
 func NewCmdFeeGrant() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant [grantee] [limit] --from [granter]",
+		Use:   "grant [granter] [grantee] [limit] ",
 		Short: "Grant Fee allowance to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(
-				`Grant authorization to use fee from your address.
+				`Grant authorization to use fee from your address. Note, the'--from' flag is
+				ignored as it is implied from [granter].
 
 Examples:
-%s tx %s grant cosmos1skjw... 1000stake --from=cosmos1skjw...
+%s tx %s grant cosmos1skjw... cosmos1skjw... 100stake 
 				`, version.AppName, types.ModuleName,
 			),
 		),
-		Args: cobra.ExactArgs(2),
+		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Flags().Set(flags.FlagFrom, args[0])
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			grantee, err := sdk.AccAddressFromBech32(args[0])
+			grantee, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}
 
 			granter := clientCtx.GetFromAddress()
 
-			limit, err := sdk.ParseCoinsNormalized(args[1])
+			limit, err := sdk.ParseCoinsNormalized(args[2])
 			if err != nil {
 				return err
 			}
@@ -101,25 +104,28 @@ Examples:
 	return cmd
 }
 
+// NewCmdRevokeFeegrant returns a CLI command handler for creating a MsgRevokeFeeAllowance transaction.
 func NewCmdRevokeFeegrant() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "revoke [grantee_address] --from=[granter_address]",
+		Use:   "revoke [granter_address] [grantee_address]",
 		Short: "revoke fee-grant",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`revoke fee grant from a granter to a grantee:
+			fmt.Sprintf(`revoke fee grant from a granter to a grantee. Note, the'--from' flag is
+			ignored as it is implied from [granter_address].
 
 Example:
- $ %s tx %s revoke cosmos1skj.. --from=cosmos1skj..
+ $ %s tx %s revoke cosmos1skj.. cosmos1skj..
 			`, version.AppName, types.ModuleName),
 		),
-		Args: cobra.ExactArgs(1),
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Flags().Set(flags.FlagFrom, args[0])
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			grantee, err := sdk.AccAddressFromBech32(args[0])
+			grantee, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}

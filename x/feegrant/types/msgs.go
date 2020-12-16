@@ -33,8 +33,8 @@ func NewMsgGrantFeeAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.Ac
 	}
 
 	return &MsgGrantFeeAllowance{
-		Granter:   granter,
-		Grantee:   grantee,
+		Granter:   granter.String(),
+		Grantee:   grantee.String(),
 		Allowance: any,
 	}, nil
 }
@@ -55,10 +55,10 @@ func (msg MsgGrantFeeAllowance) Type() string {
 
 // ValidateBasic implements the sdk.Msg interface.
 func (msg MsgGrantFeeAllowance) ValidateBasic() error {
-	if msg.Granter.Empty() {
+	if msg.Granter == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
 	}
-	if msg.Grantee.Empty() {
+	if msg.Grantee == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
 	}
 
@@ -71,7 +71,11 @@ func (msg MsgGrantFeeAllowance) GetSignBytes() []byte {
 }
 
 func (msg MsgGrantFeeAllowance) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Granter}
+	granter, err := sdk.AccAddressFromBech32(msg.Granter)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{granter}
 }
 
 // GetFeeAllowanceI returns unpacked FeeAllowance
@@ -90,8 +94,9 @@ func (msg MsgGrantFeeAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) err
 	return unpacker.UnpackAny(msg.Allowance, &allowance)
 }
 
+//nolint:interfacer
 func NewMsgRevokeFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) MsgRevokeFeeAllowance {
-	return MsgRevokeFeeAllowance{Granter: granter, Grantee: grantee}
+	return MsgRevokeFeeAllowance{Granter: granter.String(), Grantee: grantee.String()}
 }
 
 func (msg MsgRevokeFeeAllowance) Route() string {
@@ -103,10 +108,10 @@ func (msg MsgRevokeFeeAllowance) Type() string {
 }
 
 func (msg MsgRevokeFeeAllowance) ValidateBasic() error {
-	if msg.Granter.Empty() {
+	if msg.Granter == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
 	}
-	if msg.Grantee.Empty() {
+	if msg.Grantee == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
 	}
 
@@ -118,5 +123,9 @@ func (msg MsgRevokeFeeAllowance) GetSignBytes() []byte {
 }
 
 func (msg MsgRevokeFeeAllowance) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Granter}
+	granter, err := sdk.AccAddressFromBech32(msg.Granter)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{granter}
 }

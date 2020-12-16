@@ -25,12 +25,12 @@ var _ types.MsgServer = msgServer{}
 func (k msgServer) GrantFeeAllowance(goCtx context.Context, msg *types.MsgGrantFeeAllowance) (*types.MsgGrantFeeAllowanceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	grantee, err := sdk.AccAddressFromBech32(msg.Grantee.String())
+	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
 		return nil, err
 	}
 
-	granter, err := sdk.AccAddressFromBech32(msg.Granter.String())
+	granter, err := sdk.AccAddressFromBech32(msg.Granter)
 	if err != nil {
 		return nil, err
 	}
@@ -43,12 +43,12 @@ func (k msgServer) GrantFeeAllowance(goCtx context.Context, msg *types.MsgGrantF
 func (k msgServer) RevokeFeeAllowance(goCtx context.Context, msg *types.MsgRevokeFeeAllowance) (*types.MsgRevokeFeeAllowanceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	grantee, err := sdk.AccAddressFromBech32(msg.Grantee.String())
+	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
 		return nil, err
 	}
 
-	granter, err := sdk.AccAddressFromBech32(msg.Granter.String())
+	granter, err := sdk.AccAddressFromBech32(msg.Granter)
 	if err != nil {
 		return nil, err
 	}

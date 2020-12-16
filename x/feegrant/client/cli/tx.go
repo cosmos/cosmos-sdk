@@ -130,12 +130,7 @@ Example:
 				return err
 			}
 
-			granter := clientCtx.GetFromAddress()
-
-			msg := types.MsgRevokeFeeAllowance{
-				Granter: granter,
-				Grantee: grantee,
-			}
+			msg := types.NewMsgRevokeFeeAllowance(clientCtx.GetFromAddress(), grantee)
 
 			if err := msg.ValidateBasic(); err != nil {
 				return err

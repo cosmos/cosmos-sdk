@@ -22,10 +22,9 @@ service Msg {
 // MsgGrantFeeAllowance adds permission for Grantee to spend up to Allowance
 // of fees from the account of Granter.
 message MsgGrantFeeAllowance {
-  option (gogoproto.goproto_getters) = false;
 
-  bytes               granter   = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-  bytes               grantee   = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string              granter   = 1;
+  string              grantee   = 2;
   google.protobuf.Any allowance = 3 [(cosmos_proto.accepts_interface) = "FeeAllowanceI"];
 }
 
@@ -34,8 +33,8 @@ message MsgGrantFeeAllowanceResponse {}
 
 // MsgRevokeFeeAllowance removes any existing FeeAllowance from Granter to Grantee.
 message MsgRevokeFeeAllowance {
-  bytes granter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-  bytes grantee = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string granter = 1;
+  string grantee = 2;
 }
 
 // MsgRevokeFeeAllowanceResponse defines the Msg/RevokeFeeAllowanceResponse response type.

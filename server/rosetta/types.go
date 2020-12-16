@@ -39,7 +39,7 @@ func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter,
 			AddrPrefix:          sdk.GetConfig().GetBech32AccountAddrPrefix(), // since we're inside cosmos sdk the config is supposed to be sealed
 			SupportedOperations: client.SupportedOperations(),
 		},
-		Adapter: adapter, // TODO new release of interface of adapter to return SupportedOperations.
+		Adapter: adapter,
 	}
 }
 

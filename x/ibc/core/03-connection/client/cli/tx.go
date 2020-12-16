@@ -40,12 +40,10 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 		),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			clientID := args[0]
 			counterpartyClientID := args[1]
 
@@ -113,12 +111,10 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 		),
 		Args: cobra.ExactArgs(12),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			connectionID := args[0]
 			clientID := args[1]
 			counterpartyConnectionID := args[2]
@@ -211,23 +207,21 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 // connection open attempt from chain B to chain A
 func NewConnectionOpenAckCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: `open-ack [connection-id] [counterparty-connection-id] [path/to/client_state.json] [consensus-height] [proof-height] 
+		Use: `open-ack [connection-id] [counterparty-connection-id] [path/to/client_state.json] [consensus-height] [proof-height]
 		[path/to/proof_try.json] [path/to/proof_client.json] [path/to/proof_consensus.json] [version]`,
 		Short: "relay the acceptance of a connection open attempt",
 		Long:  "Relay the acceptance of a connection open attempt from chain B to chain A",
 		Example: fmt.Sprintf(
-			`%s tx %s %s open-ack [connection-id] [counterparty-connection-id] [path/to/client_state.json] [consensus-height] [proof-height] 
+			`%s tx %s %s open-ack [connection-id] [counterparty-connection-id] [path/to/client_state.json] [consensus-height] [proof-height]
 			[path/to/proof_try.json] [path/to/proof_client.json] [path/to/proof_consensus.json] [version]`,
 			version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(9),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			connectionID := args[0]
 			counterpartyConnectionID := args[1]
 
@@ -308,14 +302,11 @@ func NewConnectionOpenConfirmCmd() *cobra.Command {
 		),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			connectionID := args[0]
-
 			proofHeight, err := clienttypes.ParseHeight(args[1])
 			if err != nil {
 				return err

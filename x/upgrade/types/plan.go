@@ -8,7 +8,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	ibcexported "github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
@@ -23,7 +22,7 @@ func (p Plan) String() string {
 	if err != nil {
 		upgradedClientStr = "no upgraded client provided"
 	} else {
-		upgradedClientStr = fmt.Sprintf("%s", upgradedClient)
+		upgradedClientStr = upgradedClient.String()
 	}
 	return fmt.Sprintf(`Upgrade Plan
   Name: %s

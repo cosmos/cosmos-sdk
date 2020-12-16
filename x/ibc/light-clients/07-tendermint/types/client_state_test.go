@@ -139,7 +139,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 	testCases := []struct {
 		name           string
 		clientState    *types.ClientState
-		consensusState types.ConsensusState
+		consensusState *types.ConsensusState
 		prefix         commitmenttypes.MerklePrefix
 		proof          []byte
 		expPass        bool
@@ -157,7 +157,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		{
 			name:        "ApplyPrefix failed",
 			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
-			consensusState: types.ConsensusState{
+			consensusState: &types.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 			},
 			prefix:  commitmenttypes.MerklePrefix{},
@@ -166,7 +166,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		{
 			name:        "latest client height < height",
 			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
-			consensusState: types.ConsensusState{
+			consensusState: &types.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
@@ -175,7 +175,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		{
 			name:        "client is frozen",
 			clientState: &types.ClientState{LatestHeight: height, FrozenHeight: clienttypes.NewHeight(height.RevisionNumber, height.RevisionHeight-1)},
-			consensusState: types.ConsensusState{
+			consensusState: &types.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
@@ -184,7 +184,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		{
 			name:        "proof verification failed",
 			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
-			consensusState: types.ConsensusState{
+			consensusState: &types.ConsensusState{
 				Root:               commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 				NextValidatorsHash: suite.valsHash,
 			},

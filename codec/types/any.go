@@ -69,6 +69,19 @@ func NewAnyWithValue(value proto.Message) (*Any, error) {
 	return any, nil
 }
 
+// NewAnyWithCustomTypeURL same as NewAnyWithValue, but sets a custom type url, instead
+// using the one from proto.Message.
+// NOTE: This functions should be only used for types with additional logic bundled
+// into the protobuf Any serialization. For simple marshaling you should use NewAnyWithValue.
+func NewAnyWithCustomTypeURL(v proto.Message, typeURL string) (*Any, error) {
+	bz, err := proto.Marshal(v)
+	return &Any{
+		TypeUrl:     typeURL,
+		Value:       bz,
+		cachedValue: v,
+	}, err
+}
+
 // Pack packs the value x in the Any or returns an error. This also caches
 // the packed value so that it can be retrieved from GetCachedValue without
 // unmarshaling

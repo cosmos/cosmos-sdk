@@ -56,7 +56,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			glDec := sdk.NewDec(int64(gas))
 			for i, gp := range minGasPrices {
 				fee := gp.Amount.Mul(glDec)
-				requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
+				requiredFees[i] = sdk.NewDecCoinFromDec(gp.Denom, fee)
 			}
 
 			if !feeCoins.IsAnyGTE(requiredFees) {

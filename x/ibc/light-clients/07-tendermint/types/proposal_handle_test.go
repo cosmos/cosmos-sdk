@@ -23,7 +23,7 @@ func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateStateBasic() {
 	suite.Require().Nil(cs)
 	suite.Require().Nil(consState)
 
-	clientState.LatestHeight = clientState.LatestHeight.Increment()
+	clientState.LatestHeight = clientState.LatestHeight.Increment().(clienttypes.Height)
 
 	// consensus state for latest height does not exist
 	cs, consState, err = clientState.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), clientStore, suite.chainA.LastHeader)

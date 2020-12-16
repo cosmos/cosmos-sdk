@@ -116,8 +116,8 @@ func (suite *SimTestSuite) TestSimulateMsgGrantFeeAllowance() {
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)
-	require.Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Granter.String())
-	require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.Grantee.String())
+	require.Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Granter)
+	require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.Grantee)
 	require.Equal(types.TypeMsgGrantFeeAllowance, msg.Type())
 	require.Equal(types.ModuleName, msg.Route())
 	require.Len(futureOperations, 0)

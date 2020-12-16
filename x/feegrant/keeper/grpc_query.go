@@ -59,8 +59,8 @@ func (q Keeper) FeeAllowance(c context.Context, req *types.QueryFeeAllowanceRequ
 
 	return &types.QueryFeeAllowanceResponse{
 		FeeAllowance: &types.FeeAllowanceGrant{
-			Granter:   granterAddr,
-			Grantee:   granteeAddr,
+			Granter:   granterAddr.String(),
+			Grantee:   granteeAddr.String(),
 			Allowance: feeAllowanceAny,
 		},
 	}, nil

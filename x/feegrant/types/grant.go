@@ -26,8 +26,8 @@ func NewFeeAllowanceGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllow
 	}
 
 	return FeeAllowanceGrant{
-		Granter:   granter,
-		Grantee:   grantee,
+		Granter:   granter.String(),
+		Grantee:   grantee.String(),
 		Allowance: any,
 	}
 }
@@ -35,13 +35,13 @@ func NewFeeAllowanceGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllow
 // ValidateBasic performs basic validation on
 // FeeAllowanceGrant
 func (a FeeAllowanceGrant) ValidateBasic() error {
-	if a.Granter.Empty() {
+	if a.Granter == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
 	}
-	if a.Grantee.Empty() {
+	if a.Grantee == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
 	}
-	if a.Grantee.Equals(a.Granter) {
+	if a.Grantee == a.Granter {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
 	}
 

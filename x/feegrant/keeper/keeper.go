@@ -39,8 +39,8 @@ func (k Keeper) GrantFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddre
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSetFeeGrant,
-			sdk.NewAttribute(types.AttributeKeyGranter, grant.Granter.String()),
-			sdk.NewAttribute(types.AttributeKeyGrantee, grant.Grantee.String()),
+			sdk.NewAttribute(types.AttributeKeyGranter, grant.Granter),
+			sdk.NewAttribute(types.AttributeKeyGrantee, grant.Grantee),
 		),
 	)
 }

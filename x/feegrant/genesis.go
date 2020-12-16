@@ -23,7 +23,16 @@ func (g GenesisState) ValidateBasic() error {
 // InitGenesis will initialize the keeper from a *previously validated* GenesisState
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, data *types.GenesisState) {
 	for _, f := range data.FeeAllowances {
-		k.GrantFeeAllowance(ctx, f.Granter, f.Grantee, f.GetFeeGrant())
+		granter, err := sdk.AccAddressFromBech32(f.Granter)
+		if err != nil {
+			panic(err)
+		}
+		grantee, err := sdk.AccAddressFromBech32(f.Grantee)
+		if err != nil {
+			panic(err)
+		}
+
+		k.GrantFeeAllowance(ctx, granter, grantee, f.GetFeeGrant())
 	}
 }
 

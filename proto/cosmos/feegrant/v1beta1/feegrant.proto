@@ -53,7 +53,7 @@ message ExpiresAt {
 // FeeAllowanceGrant is stored in the KVStore to record a grant with full context
 message FeeAllowanceGrant {
 
-  bytes               granter   = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-  bytes               grantee   = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string              granter   = 1;
+  string              grantee   = 2;
   google.protobuf.Any allowance = 3 [(cosmos_proto.accepts_interface) = "FeeAllowanceI"];
 }

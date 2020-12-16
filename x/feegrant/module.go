@@ -198,8 +198,7 @@ func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Validato
 
 // GenerateGenesisState creates a randomized GenState of the feegrant module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	// TODO
-	// simulation.RandomizedGenState(simState)
+	simulation.RandomizedGenState(simState)
 }
 
 // ProposalContents returns all the feegrant content functions used to

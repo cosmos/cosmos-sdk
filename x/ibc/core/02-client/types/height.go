@@ -109,7 +109,7 @@ func (h Height) Decrement() (decremented exported.Height, success bool) {
 
 // Increment will return a height with the same revision number but an
 // incremented revision height
-func (h Height) Increment() Height {
+func (h Height) Increment() exported.Height {
 	return NewHeight(h.RevisionNumber, h.RevisionHeight+1)
 }
 

@@ -205,14 +205,20 @@ func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceR
 	return ctx
 }
 
-// PrintString prints the raw string to ctx.Output or os.Stdout
+// PrintString prints the raw string to ctx.Output if it's defined, otherwise to os.Stdout
 func (ctx Context) PrintString(str string) error {
+	return ctx.PrintBytes([]byte(str))
+}
+
+// PrintBytes prints the raw bytes to ctx.Output if it's defined, otherwise to os.Stdout.
+// NOTE: for printing a complex state object, you should use ctx.PrintOutput
+func (ctx Context) PrintBytes(o []byte) error {
 	writer := ctx.Output
 	if writer == nil {
 		writer = os.Stdout
 	}
 
-	_, err := writer.Write([]byte(str))
+	_, err := writer.Write(o)
 	return err
 }
 

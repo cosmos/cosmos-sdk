@@ -7,13 +7,13 @@ order: 1
 The following document describes the changes to update your app and modules to use Cosmos SDK v0.40,
 a.k.a. Stargate release. {synopsis}
 
-## Tooling
+## Updating Tooling
 
-Make sure to have the following dependencies when updating your app to v0.40:
+Make sure to have the following dependencies before updating your app to v0.40:
 
 - Go 1.15+
 - Docker
-- Node.js v12.0+ (Optional, for generating docs)
+- Node.js v12.0+ (optional, for generating Swagger docs)
 
 A list of handy `make` commands are configured [here](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/Makefile#L355-L443), they will be useful for your own app.
 
@@ -94,11 +94,13 @@ For migrating state queries, the querier pattern (inside the `querier.go` file) 
 
 Each query endpoint is now defined as a separate service method in the `Query` service. Still taking `x/bank` as an example, here are the queries to fetch an account's balances:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40-rc5/proto/cosmos/bank/v1beta1/query.proto#L12-L23
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/proto/cosmos/bank/v1beta1/query.proto#L12-L23
 
-Each query has its own `Request` and `Response` types.
+Each query has its own `Request` and `Response` types. Please also note the `google.api.http` option (from [`grpc-gateway`](https://github.com/grpc-ecosystem/grpc-gateway)) on each service method. `grpc-gateway` is a tool that exposes `Query` service methods as REST endpoints.
 
 After defining the `Query` Protobuf service, run the `make proto-gen` command to generate correspond interfaces. The interface that needs to be implemented is `QueryServer`. This interface can be implemented on the [keeper](../building-modules/keeper.md) directly, or on a struct (e.g. called `queryServer`) that references the module's keeper. The logic of the implementation (i.e. actually fetching from the module's store) can be deferred to the keeper.
+
+Cosmos SDK v0.40 also comes with an efficient pagination, it now uses `Prefix` stores to query. There are 2 helpers for pagination, [`Paginate`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/types/query/pagination.go#L40-L42), [`FilteredPaginate`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/types/query/filtered_pagination.go#L9-L17).
 
 For more information, please check our [`Query` service guide](../building-modules/query-services.md).
 
@@ -106,208 +108,41 @@ For more information, please check our [`Query` service guide](../building-modul
 
 The `RegisterServices` method is newly added and registers module's `MsgServer` and gRPC's `QueryServer`. It should be implemented of all your modules.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7c1da3d9988c361d6165d26d33bed47352072366/x/bank/module.go#L99-L103
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/x/bank/module.go#L99-L103
 
----
+If you wish to expose your `Query` endpoints as REST endpoints (see [`Query` Services](#query-services)), make sure to also implement the `RegisterGRPCGatewayRoutes` function:
 
-## Updating the App
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/x/bank/module.go#L69-L72
 
-## Updating a module to use Cosmos-SDK v0.40
+### Codec
 
-This section covers the changes in modules from `v0.39.x` to `v0.40`.
+For registering module-specific types into the Amino codec, the `RegisterCodec(cdc *codec.Codec)` method has been renamed to `RegisterLegacyAminoCodec(cdc *codec.LegacyAmino)`. Similarly, the `codec.New()` has been renamed to `codec.NewLegacyAmino()`.
+
+Moreover, a new `RegisterInterfaces` method has been added to all modules. This method should register all the interfaces that Protobuf messages implement, as well as the service `Msg`s used in the module. An example of implementation for x/bank is given below:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/x/bank/types/codec.go#L21-L34
+
+### Keeper
+
+The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Amino codec. This marshaler is used to encode types as binary and save the bytes into the state. With an interface, you can define the codec to use (Amino or Protobuf) on an app level, and keepers will use the correct encoding library to encode state.
+
+This is useful is you wish to update to SDK v0.40 without doing a chain upgrade with a genesis export/import.
 
 ### Miscelleanous
 
-- `internal` package is removed and `types`, `keeper` are moved to module level
-- `alias` usage is removed [#6311](https://github.com/cosmos/cosmos-sdk/issues/6311)
+A number of other smaller breaking changes are also noteworthy.
 
-#### types/codec.go
+| Before                                                                        | After                                                                                                | Comment                                                                                                                                                                                                               |
+| ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `alias.go` file                                                               | Removed                                                                                              | `alias` usage is removed, please see [#6311](https://github.com/cosmos/cosmos-sdk/issues/6311) for details.                                                                                                           |
+| `DefaultGenesis()`                                                            | `DefaultGenesis(cdc codec.JSONMarshaler)`                                                            | `DefaultGenesis` takes a codec argument now                                                                                                                                                                           |
+| `ValidateGenesis()`                                                           | `ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage)`       | `ValidateGenesis` now requires `Marshaler`, `TxEncodingConfig`, `json.RawMessage` as input.                                                                                                                           |
+| `Route() string`                                                              | `Route() sdk.Route`                                                                                  | For legacy handlers, return type of `Route()` method is changed from `string` to `"github.com/cosmos/cosmos-sdk/types".Route`. It should return a `NewRoute()` which includes `RouterKey` and `NewHandler` as params. |
+| `QuerierHandler`                                                              | `LegacyQuerierHandler`                                                                               | Simple rename.                                                                                                                                                                                                        |
+| `InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate`   | InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate   | `InitGenesis` now takes a codec input.                                                                                                                                                                                |
+| `ExportGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate` | ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate | `ExportGenesis` now takes a codec input.                                                                                                                                                                              |
 
-- `codec.New()` is changed to `codec.NewLegacyAmino()`.
-- Added `RegisterInterfaces` method in which we add `RegisterImplementations` and `RegisterInterfaces` based on msgs and interfaces in module.
-
-  ```go
-  func RegisterInterfaces(registry types.InterfaceRegistry) {
-      registry.RegisterImplementations((*sdk.Msg)(nil),
-          &MsgSend{},
-          &MsgMultiSend{},
-      )
-
-      registry.RegisterInterface(
-          "cosmos.bank.v1beta1.SupplyI",
-          (*exported.SupplyI)(nil),
-          &Supply{},
-      )
-  }
-  ```
-
-* `init()` changed from:
-  ```go
-  func init() {
-  )
-  }
-  ```
-  to:
-  ```go
-  func init() {
-  )
-  )
-  }
-  ```
-
-#### Msgs
-
-SDK now leverages protobuf service definitions for defining Msgs which will give us significant developer UX
-improvements in terms of the code that is generated and the fact that return types will now be well defined.
-`sdk.Msg`'s are now replaced by protobuf services. Now every sdk.Msg is defined as a protobuf service method.
-Example:
-
-```proto
-package cosmos.bank;
-
-service Msg {
-  rpc Send(MsgSend) returns (MsgSendResponse);
-}
-```
-
-```proto
-message MsgSend {
-  string   from_address                    = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
-  string   to_address                      = 2 [(gogoproto.moretags) = "yaml:\"to_address\""];
-  repeated cosmos.base.v1beta1.Coin amount = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-}
-
-message MsgSendResponse { }
-```
-
-We use protobuf service definitions for defining Msgs as well as the code generated by them as a replacement for Msg handlers.
-
-_Encoding:_
-Currently, we are encoding Msgs as Any in Txs which involves packing the binary-encoded Msg with its type URL.
-
-The type URL for MsgSend based on the proto3 spec is /cosmos.bank.MsgSubmitProposal.
-
-The fully-qualified name for the SubmitProposal service method above (also based on the proto3 and gRPC specs) is
-/cosmos.bank.Msg/Send which varies by a single / character. The generated .pb.go files for protobuf services
-include names of this form and any compliant protobuf/gRPC code generator will generate the same name.
-In order to encode service methods in transactions, we encode them as Anys in the same TxBody.messages field as
-other Msgs. We simply set Any.type_url to the full-qualified method name (ex. /cosmos.bank.Msg/Send) and
-set Any.value to the protobuf encoding of the request message (MsgSend in this case).
-
-_Decoding:_
-When decoding, TxBody.UnpackInterfaces will need a special case to detect if Any type URLs match the service method format (ex. /cosmos.gov.Msg/SubmitProposal) by checking for two / characters. Messages that are method names plus request parameters instead of a normal Any messages will get unpacked into the ServiceMsg struct:
-
-type ServiceMsg struct {
-// MethodName is the fully-qualified service name
-MethodName string
-// Request is the request payload
-Request MsgRequest
-}
-
-#### Keeper
-
-The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Amino codec. The exact type provided is
-specified by `ModuleCdc`.
-
-#### module.go
-
-- `type AppModuleBasic struct{}` is updated to:
-
-  ```go
-  type AppModuleBasic struct {
-      cdc codec.Marshaler
-  }
-  ```
-
-- `RegisterCodec(cdc *codec.Codec)` method is changed to `RegisterLegacyAminoCodec(cdc *codec.LegacyAmino)`
-- Added `RegisterInterfaces` method which implements `AppModuleBasic` which takes one parameter of type
-  `"github.com/cosmos/cosmos-sdk/codec/types".InterfaceRegistry`. This method is used for registering interface types of module.
-  ```go
-  func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-  // register all interfaces in module.
-  types.RegisterInterfaces(registry) //module's types/codec.go
-  }
-  ``
-  ```
-- `DefaultGenesis()` takes codec input now
-  ```go
-  func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {}
-  ```
-- `ValidateGenesis` now requires `Marshaler`, `TxEncodingConfig`, `json.RawMessage` as input.
-  ```go
-  func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage) error {}
-  ```
-- `GetQueryCmd(cdc *codec.Codec)`,`GetTxCmd(cdc *codec.Codec)` is changed to `GetQueryCmd()`,`GetTxCmd()` respectively.
-- Return type of `Route()` method which implements `AppModule` is changed from `string` to `"github.com/cosmos/cosmos-sdk/types".Route`. We will return a NewRoute which includes `RouterKey` and `NewHandler` as params.
-  ```go
-  func (am AppModule) Route() sdk.Route {
-      return sdk.NewRoute(types.RouterKey, handler.NewHandler(am.keeper))
-  }
-  ```
-- `QuerierHandler` is renamed to `LegacyQuerierHandler`.
-
-  ```go
-    func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {}
-  ```
-
-* `RegisterGRPCGatewayRoutes` is newly added for registering module's gRPC gateway routes with API Server.`RegisterQueryHandlerClient` is auto generated by proto code generator.
-  ```go
-  // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the bank module.
-  func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-      types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
-  }
-  ```
-* `InitGenesis` and `ExportGenesis` require explicit codec input.
-  ```go
-  func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {}
-  func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {}
-  ```
-
-### Querier
-
-Stargate comes with new API service, gRPC. Module keeper implements the gRPC's `QueryServer` interface.
-Every module now has a `keeper/grpc_query.go` which contains the querier implementations. All the module query services
-are defined in module's `query.proto` file. Here's an example for defining the query service:
-
-/_cosmos/bank/v1beta1/query.proto_/
-
-```go
-// Query defines the gRPC querier service.
-service Query {
-    // AllBalances queries the balance of all coins for a single account.
-    rpc AllBalances(QueryAllBalancesRequest) returns (QueryAllBalancesResponse) {
-        option (google.api.http).get = "/cosmos/bank/v1beta1/balances/{address}";
-    }
-  ...
-}
-
-// QueryAllBalancesRequest is the request type for the Query/AllBalances RPC method.
-message QueryAllBalancesRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
-  // address is the address to query balances for.
-  string address = 1;
-
-  // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
-}
-
-// QueryAllBalancesResponse is the response type for the Query/AllBalances RPC
-// method.
-message QueryAllBalancesResponse {
-  // balances is the balances of all the coins.
-  repeated cosmos.base.v1beta1.Coin balances = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-
-  // pagination defines the pagination in the response.
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-```
-
-`0.40` comes with an efficient querier pagination, it now uses `Prefix` stores to query.
-There are 2 helpers for `pagination`, 1) `Paginate` 2) `FilteredPaginate`.
+---
 
 ### Client
 
@@ -385,13 +220,6 @@ ignored as it is implied from [from_key_or_address].`,
 
 This section covers the changes to `BaseApp` and related changes in `app.go`, `config`
 
-#### BaseApp
-
-`BaseApp` now has two new fields, `GRPCQueryRouter` and `MsgServiceRouter`
-
-- `GRPCQueryRouter` routes ABCI Query requests to GRPC handlers.
-- `GRPCQueryHandler` defines a function type which handles ABCI Query requests using gRPC
-
 ##### gRPC Router (baseapp/grpcrouter.go)
 
 It has `GRPCQueryRouter` and `GRPCQueryHandler`. `GRPCQueryRouter` routes ABCI Query requests to respective GRPC
@@ -415,10 +243,6 @@ type Server struct {
 }
 ```
 
-`CustomGRPCHeaderMatcher` is an interceptor for gRPC gateway requests. It is useful for mapping request headers to
-GRPC metadata. HTTP headers that start with 'Grpc-Metadata-' are automatically mapped to gRPC metadata after
-removing prefix 'Grpc-Metadata-'. We can use this CustomGRPCHeaderMatcher if headers don't start with `Grpc-Metadata-`.
-
 - API is made `in-process` with the node now. Enabling/disabling the API server and Swagger can now be configured from `app.toml`
   Both legacy REST API and gRPC gateway API are using the same server. Swagger can be accessed via `{baseurl}/swagger/`
 
@@ -435,26 +259,4 @@ swagger = true
 # Address defines the API server to listen on.
 address = "tcp://0.0.0.0:1317"
 ...
-```
-
-#### REST Queries and Swagger Generation
-
-[grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway) is a project that translates REST calls into GRPC calls
-using special annotations on service methods. Modules that want to expose REST queries should add
-`google.api.http` annotations to their `rpc` methods
-
-## Upgrading a live chain to v0.40
-
-[How to upgrade a chain from `0.39` to `0.40`](./chain-upgrade-guide-040.md)
-
-References:
-
-- [ADR 019 - Protobuf State Encoding](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-019-protobuf-state-encoding.md)
-- [ADR 020 - Protobuf Transaction Encoding](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-020-protobuf-transaction-encoding.md)
-- [ADR 021 - Protobuf Query Encoding](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-021-protobuf-query-encoding.md)
-- [ADR 023 - Protobuf Naming](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-023-protobuf-naming.md)
-- [ADR 031 - Protobuf Msg Services](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-031-msg-service.md)
-
-```
-
 ```

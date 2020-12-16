@@ -68,8 +68,8 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 
 // DefaultGenesis returns default genesis state as raw bytes for the feegrant
 // module.
-func (AppModuleBasic) DefaultGenesis(_ codec.JSONMarshaler) json.RawMessage {
-	return []byte("[]")
+func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
+	return cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the feegrant module.

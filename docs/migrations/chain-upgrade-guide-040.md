@@ -35,13 +35,16 @@ software and restore to their latest snapshot before restarting their nodes.
 
 ## Upgrade procedure
 
-1. Use old binary to export the state. Make sure to verify your binary version before exporting the state.
-
-1. Export the state from existing chain using old-binary (which uses `sdk@0.39.x`).
-   Example:
+1. The procedure is to export the state from the old binary, and import it with the new binary. First, verify your old binary version (which should use `github.com/cosmos/cosmos-sdk@0.39.*`) before exporting the state.
 
    ```shell
-   sh simd export --for-zero-height --height <height> > v039_exported_state.json
+   simd version --long
+   ```
+
+1. Export the state from existing chain using the old binary.
+
+   ```shell
+   simd export --for-zero-height --height <height> > v039_exported_state.json
    ```
 
 1. Verify the SHA256 of the (sorted) exported genesis file:
@@ -53,9 +56,9 @@ software and restore to their latest snapshot before restarting their nodes.
 
 1. Cross check the hash with other peers (other validators) in the chat rooms.
 
-1. Install the latest binary (which uses `v0.40`).
+1. Install the latest binary (which uses `github.com/cosmos/cosmos-sdk@0.40.*`).
 
-1. Migrate the exported state to `v0.40` compatible genesis state.
+1. Migrate the exported state to `github.com/cosmos/cosmos-sdk@0.40.*` compatible genesis state.
 
    ```shell
    simd migrate v0.40 v039_exported_state.json --chain-id <new_chain_id> --genesis-time <new_genesis_time_in_utc> > new_v040_genesis.json

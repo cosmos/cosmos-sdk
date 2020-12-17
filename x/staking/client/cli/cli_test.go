@@ -858,9 +858,9 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 			"with text output",
 			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
 			`bond_denom: stake
-historical_entries: 100
+historical_entries: 10000
 max_entries: 7
-max_validators: 10000
+max_validators: 100
 unbonding_time: 1814400s`,
 		},
 		{

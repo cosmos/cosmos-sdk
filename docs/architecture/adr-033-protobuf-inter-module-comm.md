@@ -48,7 +48,7 @@ just a simple string. So the `x/upgrade` module could mint tokens for the `x/sta
 
 Starting from the work in [ADR 021](./adr-021-protobuf-query-encoding.md) and [ADR 31](./adr-031-msg-service.md), we introduce
 the following inter-module communication system as an new paradigm for secure module based authorization and OCAPS
-framework. When implemented, this could also serve alternative the existing paradigm of passing keepers between
+framework. When implemented, this could also serve as an alternative the existing paradigm of passing keepers between
 modules. The approach outlined here-in is intended to form the basis of a Cosmos SDK v1.0 that provides the necessary
 stability and encapsulation guarantees that allow a thriving module ecosystem to emerge.
 

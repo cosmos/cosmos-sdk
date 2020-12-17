@@ -31,7 +31,7 @@ func (k msgServer) Unjail(goCtx context.Context, msg *types.MsgUnjail) (*types.M
 	// Queue epoch action and move all the execution logic to Epoch execution
 
 	epochNumber := k.stakingKeeper.GetEpochNumber(ctx)
-	k.SaveEpochAction(ctx, epochNumber, msg)
+	k.QueueMsgForEpoch(ctx, epochNumber, msg)
 
 	cacheCtx, _ := ctx.CacheContext()
 	cacheCtx = cacheCtx.WithBlockHeight(k.stakingKeeper.GetNextEpochHeight(ctx))

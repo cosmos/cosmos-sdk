@@ -98,7 +98,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	}
 
 	epochNumber := k.GetEpochNumber(ctx)
-	k.SaveEpochAction(ctx, epochNumber, msg)
+	k.QueueMsgForEpoch(ctx, epochNumber, msg)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -120,7 +120,7 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Queue epoch action and move all the execution logic to Epoch execution
 	epochNumber := k.GetEpochNumber(ctx)
-	k.SaveEpochAction(ctx, epochNumber, msg)
+	k.QueueMsgForEpoch(ctx, epochNumber, msg)
 
 	cacheCtx, _ := ctx.CacheContext()
 	cacheCtx = cacheCtx.WithBlockHeight(k.GetNextEpochHeight(ctx))
@@ -152,7 +152,7 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 
 	// Queue epoch action and move all the execution logic to Epoch execution
 	epochNumber := k.GetEpochNumber(ctx)
-	k.SaveEpochAction(ctx, epochNumber, msg)
+	k.QueueMsgForEpoch(ctx, epochNumber, msg)
 
 	// TODO should do validation by running with cachedCtx like gov proposal creation
 	// To consider: cachedCtx could have status which contains all the other epoch actions
@@ -164,7 +164,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Queue epoch action and move all the execution logic to Epoch execution
 	epochNumber := k.GetEpochNumber(ctx)
-	k.SaveEpochAction(ctx, epochNumber, msg)
+	k.QueueMsgForEpoch(ctx, epochNumber, msg)
 
 	cacheCtx, _ := ctx.CacheContext()
 	cacheCtx = cacheCtx.WithBlockHeight(k.GetNextEpochHeight(ctx))
@@ -181,7 +181,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (*types.MsgUndelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Queue epoch action and move all the execution logic to Epoch execution
-	k.SaveEpochAction(ctx, 0, msg)
+	k.QueueMsgForEpoch(ctx, 0, msg)
 
 	cacheCtx, _ := ctx.CacheContext()
 	cacheCtx = cacheCtx.WithBlockHeight(k.GetNextEpochHeight(ctx))

@@ -42,8 +42,8 @@ func ActionStoreKey(epochNumber int64, actionID uint64) []byte {
 	return []byte(fmt.Sprintf("%s_%d_%d", EpochActionQueuePrefix, epochNumber, actionID))
 }
 
-// SaveEpochAction save the actions that need to be executed on next epoch
-func (k Keeper) SaveEpochAction(ctx sdk.Context, epochNumber int64, action sdk.Msg) {
+// QueueMsgForEpoch save the actions that need to be executed on next epoch
+func (k Keeper) QueueMsgForEpoch(ctx sdk.Context, epochNumber int64, action sdk.Msg) {
 	store := ctx.KVStore(k.storeKey)
 
 	// reference from TestMarshalAny(t *testing.T)

@@ -52,7 +52,7 @@ func (k Keeper) QueueMsgForEpoch(ctx sdk.Context, epochNumber int64, action sdk.
 	if err != nil {
 		panic(err)
 	}
-	actionID := k.GetNextEpochActionID(ctx)
+	actionID := k.GetNewActionID(ctx)
 	store.Set(ActionStoreKey(epochNumber, actionID), bz)
 	k.SetNextEpochActionID(ctx, actionID+1)
 }

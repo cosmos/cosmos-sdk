@@ -8,7 +8,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -77,9 +76,8 @@ func NewOperationMsgBasic(route, name, comment string, ok bool, msg []byte) Oper
 }
 
 // NewOperationMsg - create a new operation message from sdk.Msg
-func NewOperationMsg(msg sdk.Msg, ok bool, comment string, registry *types.InterfaceRegistry) OperationMsg {
+func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec) OperationMsg {
 	if reflect.TypeOf(msg) == reflect.TypeOf(sdk.ServiceMsg{}) {
-		cdc := codec.NewProtoCodec(*registry)
 		srvMsg, ok := msg.(sdk.ServiceMsg)
 		if !ok {
 			panic("failed: type assert")

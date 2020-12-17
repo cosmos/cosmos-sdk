@@ -128,7 +128,7 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, svcMsgClientConn.Msgs[0].Type(), "unable to deliver tx"), nil, err
 		}
-		return simtypes.NewOperationMsg(svcMsgClientConn.Msgs[0], true, "", &types.Registry), nil, err
+		return simtypes.NewOperationMsg(svcMsgClientConn.Msgs[0], true, "", types.ProtoCodec), nil, err
 	}
 }
 
@@ -192,7 +192,7 @@ func SimulateMsgRevokeAuthorization(ak types.AccountKeeper, bk types.BankKeeper,
 		}
 
 		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
-		return simtypes.NewOperationMsg(svcMsgClientConn.Msgs[0], true, "", &types.Registry), nil, err
+		return simtypes.NewOperationMsg(svcMsgClientConn.Msgs[0], true, "", types.ProtoCodec), nil, err
 	}
 }
 
@@ -287,6 +287,6 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecDelegated, "unmarshal error"), nil, err
 		}
-		return simtypes.NewOperationMsg(svcMsgClientConn.Msgs[0], true, "success", &types.Registry), nil, nil
+		return simtypes.NewOperationMsg(svcMsgClientConn.Msgs[0], true, "success", types.ProtoCodec), nil, nil
 	}
 }

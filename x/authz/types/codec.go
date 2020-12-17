@@ -1,17 +1,17 @@
 package types
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
-// Registry is interface
-var Registry types.InterfaceRegistry
+var ProtoCodec *codec.ProtoCodec
 
 // RegisterInterfaces registers the interfaces types with the interface registry
 func RegisterInterfaces(registry types.InterfaceRegistry) {
-	Registry = registry
+	ProtoCodec = codec.NewProtoCodec(registry)
 	registry.RegisterImplementations((*sdk.MsgRequest)(nil),
 		&MsgGrantAuthorization{},
 		&MsgRevokeAuthorization{},

@@ -1,7 +1,6 @@
 package simulation_test
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -181,7 +180,6 @@ func (suite *SimTestSuite) TestSimulateExecAuthorization() {
 	var msg types.MsgExecAuthorized
 
 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
-	fmt.Println(msg)
 
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(grantee.Address.String(), msg.Grantee)

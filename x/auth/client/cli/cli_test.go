@@ -819,7 +819,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	multisigInfo, err := val.ClientCtx.Keyring.Key("multi")
 
 	// Send coins from validator to multisig.
-	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
+	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 1000)
 	_, err = bankcli.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
@@ -868,6 +868,16 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	res, err = authtest.TxMultiSignBatchExec(val.ClientCtx, filename.Name(), multisigInfo.GetName(), file1.Name(), file2.Name())
 	s.T().Log(res)
 	s.Require().NoError(err)
+	signedTxs := strings.Split(strings.Trim(res.String(), "\n"), "\n")
+	// Broadcast transactions.
+	for _, signedTx := range signedTxs {
+		signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx)
+		val.ClientCtx.BroadcastMode = flags.BroadcastBlock
+		res, err = authtest.TxBroadcastExec(val.ClientCtx, signedTxFile.Name())
+		s.T().Log(res)
+		s.Require().NoError(err)
+		s.Require().NoError(s.network.WaitForNextBlock())
+	}
 }
 
 func (s *IntegrationTestSuite) TestGetAccountCmd() {

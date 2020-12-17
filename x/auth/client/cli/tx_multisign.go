@@ -223,8 +223,7 @@ func GetMultiSignBatchCmd() *cobra.Command {
 
 func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		clientCtx := client.GetClientContextFromCmd(cmd)
-		clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+		clientCtx, err := client.GetClientTxContext(cmd)
 		if err != nil {
 			return err
 		}
@@ -239,7 +238,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 		if args[0] != "-" {
 			infile, err = os.Open(args[0])
 			if err != nil {
-				return err
+				return fmt.Errorf("couldn't open %s: %w", args[0], err)
 			}
 		}
 		scanner := authclient.NewBatchScanner(txCfg, infile)
@@ -343,7 +342,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 				continue
 			}
 
-			sequence++
+			txFactory.WithSequence(sequence + 1)
 		}
 
 		return nil

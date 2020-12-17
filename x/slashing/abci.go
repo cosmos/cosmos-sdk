@@ -31,5 +31,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper, stakingKeeper stakingkeeper.Ke
 	if ctx.BlockHeight()%EpochInterval == 0 {
 		k.ExecuteEpoch(ctx)
 	}
+	// ValidatorSet update is done on staking module endblocker
+	// Therefore endblocker of slashing module should be configured to run before staking module endblocker.
 	return []abci.ValidatorUpdate{}
 }

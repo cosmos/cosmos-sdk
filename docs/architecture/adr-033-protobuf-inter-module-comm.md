@@ -230,7 +230,7 @@ type Configurator interface {
 ```
 
 The `ModuleKey` is passed to modules in the `RegisterService` method itself so that `RegisterServices` serves as a single
-entry point for configuring module services. This is intended to also have the side-effect of reducing boilerplate in
+entry point for configuring module services. This is intended to also have the side-effect of greatly reducing boilerplate in
 `app.go`. For now, `ModuleKey`s will be created based on `AppModuleBasic.Name()`, but a more flexible system may be
 introduced in the future. The `ModuleManager` will handle creation of module accounts behind the scenes.
 
@@ -344,6 +344,9 @@ replacing `Keeper` interfaces altogether.
 
 - an alternative to keepers which can more easily lead to stable inter-module interfaces
 - proper inter-module Ocaps
+- improved module developer DevX, as commented on by several particpants on
+    [Architecture Review Call, Dec 3](https://hackmd.io/E0wxxOvRQ5qVmTf6N_k84Q)
+- lays the groundwork for what can be a greatly simplified `app.go`
 
 ### Negative
 

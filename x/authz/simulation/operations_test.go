@@ -10,6 +10,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,8 +22,9 @@ import (
 type SimTestSuite struct {
 	suite.Suite
 
-	ctx sdk.Context
-	app *simapp.SimApp
+	ctx      sdk.Context
+	app      *simapp.SimApp
+	protoCdc *codec.ProtoCodec
 }
 
 func (suite *SimTestSuite) SetupTest() {
@@ -30,6 +32,7 @@ func (suite *SimTestSuite) SetupTest() {
 	app := simapp.Setup(checkTx)
 	suite.app = app
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{})
+	suite.protoCdc = codec.NewProtoCodec(suite.app.InterfaceRegistry())
 }
 
 func (suite *SimTestSuite) TestWeightedOperations() {
@@ -37,7 +40,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	appParams := make(simtypes.AppParams)
 
 	weightesOps := simulation.WeightedOperations(appParams, cdc, suite.app.AccountKeeper,
-		suite.app.BankKeeper, suite.app.MsgAuthKeeper, cdc,
+		suite.app.BankKeeper, suite.app.MsgAuthKeeper, cdc, suite.protoCdc,
 	)
 
 	// setup 3 accounts
@@ -101,7 +104,7 @@ func (suite *SimTestSuite) TestSimulateGrantAuthorization() {
 	grantee := accounts[1]
 
 	// execute operation
-	op := simulation.SimulateMsgGrantAuthorization(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.MsgAuthKeeper, time.Now().Add(30*time.Hour))
+	op := simulation.SimulateMsgGrantAuthorization(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.MsgAuthKeeper, time.Now().Add(30*time.Hour), suite.protoCdc)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
@@ -138,7 +141,7 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 	suite.Require().NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgRevokeAuthorization(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.MsgAuthKeeper)
+	op := simulation.SimulateMsgRevokeAuthorization(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.MsgAuthKeeper, suite.protoCdc)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
@@ -173,7 +176,7 @@ func (suite *SimTestSuite) TestSimulateExecAuthorization() {
 	suite.Require().NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgExecuteAuthorized(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.MsgAuthKeeper, suite.app.AppCodec())
+	op := simulation.SimulateMsgExecuteAuthorized(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.MsgAuthKeeper, suite.app.AppCodec(), suite.protoCdc)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 

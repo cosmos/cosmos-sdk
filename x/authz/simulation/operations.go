@@ -36,7 +36,7 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONMarshaler, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, appCdc cdctypes.AnyUnpacker) simulation.WeightedOperations {
+	appParams simtypes.AppParams, cdc codec.JSONMarshaler, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, appCdc cdctypes.AnyUnpacker, protoCdc *codec.ProtoCodec) simulation.WeightedOperations {
 
 	var (
 		weightMsgGrantAuthorization int
@@ -65,22 +65,23 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgGrantAuthorization,
-			SimulateMsgGrantAuthorization(ak, bk, k, time.Now().Add(100*time.Hour)),
+			SimulateMsgGrantAuthorization(ak, bk, k, time.Now().Add(100*time.Hour), protoCdc),
 		),
 		simulation.NewWeightedOperation(
 			weightRevokeAuthorization,
-			SimulateMsgRevokeAuthorization(ak, bk, k),
+			SimulateMsgRevokeAuthorization(ak, bk, k, protoCdc),
 		),
 		simulation.NewWeightedOperation(
 			weightExecAuthorized,
-			SimulateMsgExecuteAuthorized(ak, bk, k, appCdc),
+			SimulateMsgExecuteAuthorized(ak, bk, k, appCdc, protoCdc),
 		),
 	}
 }
 
 // SimulateMsgGrantAuthorization generates a MsgGrantAuthorization with random values.
 // nolint: funlen
-func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, t time.Time) simtypes.Operation {
+func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper,
+	t time.Time, protoCdc *codec.ProtoCodec) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -128,13 +129,13 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, svcMsgClientConn.Msgs[0].Type(), "unable to deliver tx"), nil, err
 		}
-		return simtypes.NewOperationMsg(svcMsgClientConn.Msgs[0], true, "", types.ProtoCodec), nil, err
+		return simtypes.NewOperationMsg(svcMsgClientConn.Msgs[0], true, "", protoCdc), nil, err
 	}
 }
 
 // SimulateMsgRevokeAuthorization generates a MsgRevokeAuthorization with random values.
 // nolint: funlen
-func SimulateMsgRevokeAuthorization(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgRevokeAuthorization(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, protoCdc *codec.ProtoCodec) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -192,13 +193,13 @@ func SimulateMsgRevokeAuthorization(ak types.AccountKeeper, bk types.BankKeeper,
 		}
 
 		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
-		return simtypes.NewOperationMsg(svcMsgClientConn.Msgs[0], true, "", types.ProtoCodec), nil, err
+		return simtypes.NewOperationMsg(svcMsgClientConn.Msgs[0], true, "", protoCdc), nil, err
 	}
 }
 
 // SimulateMsgExecuteAuthorized generates a MsgExecuteAuthorized with random values.
 // nolint: funlen
-func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, cdc cdctypes.AnyUnpacker) simtypes.Operation {
+func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, cdc cdctypes.AnyUnpacker, protoCdc *codec.ProtoCodec) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -287,6 +288,6 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecDelegated, "unmarshal error"), nil, err
 		}
-		return simtypes.NewOperationMsg(svcMsgClientConn.Msgs[0], true, "success", types.ProtoCodec), nil, nil
+		return simtypes.NewOperationMsg(svcMsgClientConn.Msgs[0], true, "success", protoCdc), nil, nil
 	}
 }

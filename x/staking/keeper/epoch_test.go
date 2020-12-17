@@ -17,7 +17,7 @@ func (suite *KeeperTestSuite) TestEpochSaveLoad() {
 
 	epochNumber := int64(0)
 	app.StakingKeeper.QueueMsgForEpoch(ctx, epochNumber, originMsg)
-	nextActionID := app.StakingKeeper.GetNextEpochActionID(ctx)
+	nextActionID := app.StakingKeeper.GetNewActionID(ctx)
 	suite.Require().Greater(nextActionID, uint64(1), "nextActionID should be greater than 1")
 
 	actionID := nextActionID - 1

@@ -24,8 +24,8 @@ func (k Keeper) SetNextEpochActionID(ctx sdk.Context, actionID uint64) {
 	store.Set(NextEpochActionID, sdk.Uint64ToBigEndian(actionID))
 }
 
-// GetNextEpochActionID returns ID to be used for next epoch
-func (k Keeper) GetNextEpochActionID(ctx sdk.Context) uint64 {
+// GetNewActionID returns ID to be used for next epoch
+func (k Keeper) GetNewActionID(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 
 	bz := store.Get(NextEpochActionID)
@@ -51,7 +51,7 @@ func (k Keeper) QueueMsgForEpoch(ctx sdk.Context, epochNumber int64, action sdk.
 	if err != nil {
 		panic(err)
 	}
-	actionID := k.GetNextEpochActionID(ctx)
+	actionID := k.GetNewActionID(ctx)
 	store.Set(ActionStoreKey(epochNumber, actionID), bz)
 	k.SetNextEpochActionID(ctx, actionID+1)
 }
@@ -65,7 +65,7 @@ func (k Keeper) RestoreEpochAction(ctx sdk.Context, epochNumber int64, action *c
 	if err != nil {
 		panic(err)
 	}
-	actionID := k.GetNextEpochActionID(ctx)
+	actionID := k.GetNewActionID(ctx)
 	store.Set(ActionStoreKey(epochNumber, actionID), bz)
 	k.SetNextEpochActionID(ctx, actionID+1)
 }

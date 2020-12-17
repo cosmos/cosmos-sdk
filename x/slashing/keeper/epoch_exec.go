@@ -32,14 +32,19 @@ func (k Keeper) EpochUnjail(ctx sdk.Context, msg *types.MsgUnjail) error {
 // ExecuteEpoch execute epoch actions
 func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 	// execute all epoch actions
-	iterator := k.GetEpochActionsIterator(ctx)
-
-	for ; iterator.Valid(); iterator.Next() {
+	for iterator := k.GetEpochActionsIterator(ctx); iterator.Valid(); iterator.Next() {
 		msg := k.GetEpochActionByIterator(iterator)
 
 		switch msg := msg.(type) {
 		case *types.MsgUnjail:
-			k.EpochUnjail(ctx, msg)
+			cacheCtx, writeCache := ctx.CacheContext()
+			err := k.EpochUnjail(cacheCtx, msg)
+			if err == nil {
+				writeCache()
+			} else {
+				// TODO: report somewhere for logging edit not success or panic
+				// panic(fmt.Sprintf("not be able to execute, %T", msg))
+			}
 		default:
 			panic(fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg))
 		}

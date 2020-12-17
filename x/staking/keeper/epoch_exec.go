@@ -47,6 +47,29 @@ func (k Keeper) EpochCreateValidatorSelfDelegation(ctx sdk.Context, msg *types.M
 	return nil
 }
 
+// EpochCancelCreateValidatorSelfDelegation does cancel self-delegation
+func (k Keeper) EpochCancelCreateValidatorSelfDelegation(ctx sdk.Context, msg *types.MsgCreateValidator) error {
+
+	bondDenom := k.BondDenom(ctx)
+	if msg.Value.Denom != bondDenom {
+		return sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Value.Denom, bondDenom)
+	}
+
+	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return err
+	}
+
+	coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), msg.Value.Amount))
+	if err := k.bankKeeper.UndelegateCoinsFromModuleToAccount(ctx, types.EpochTempPoolName, delegatorAddress, coins); err != nil {
+		return err
+	}
+
+	// TODO: we might need to delete validator if validator's delegation amount is zero
+	// TODO: report somewhere for logging cancel event
+	return nil
+}
+
 // EpochEditValidator logic is moved from msgServer.EditValidator
 func (k Keeper) EpochEditValidator(ctx sdk.Context, msg *types.MsgEditValidator) error {
 	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
@@ -159,6 +182,27 @@ func (k Keeper) EpochDelegate(ctx sdk.Context, msg *types.MsgDelegate) error {
 		),
 	})
 
+	return nil
+}
+
+// EpochCancelDelegation does cancel delegation
+func (k Keeper) EpochCancelDelegation(ctx sdk.Context, msg *types.MsgDelegate) error {
+	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return err
+	}
+
+	bondDenom := k.BondDenom(ctx)
+	if msg.Amount.Denom != bondDenom {
+		return sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
+	}
+
+	coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), msg.Amount.Amount))
+	if err := k.bankKeeper.UndelegateCoinsFromModuleToAccount(ctx, types.EpochTempPoolName, delegatorAddress, coins); err != nil {
+		return err
+	}
+
+	// TODO: report somewhere for logging cancel event
 	return nil
 }
 
@@ -279,23 +323,54 @@ func (k Keeper) EpochUndelegate(ctx sdk.Context, msg *types.MsgUndelegate) (time
 // ExecuteEpoch execute epoch actions
 func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 	// execute all epoch actions
-	iterator := k.GetEpochActionsIterator(ctx)
 
-	for ; iterator.Valid(); iterator.Next() {
+	for iterator := k.GetEpochActionsIterator(ctx); iterator.Valid(); iterator.Next() {
 		msg := k.GetEpochActionByIterator(iterator)
 
 		switch msg := msg.(type) {
 		case *types.MsgCreateValidator:
-			k.EpochCreateValidatorSelfDelegation(ctx, msg)
+			cacheCtx, writeCache := ctx.CacheContext()
+			err := k.EpochCreateValidatorSelfDelegation(cacheCtx, msg)
+			if err == nil {
+				writeCache()
+			} else if err = k.EpochCancelCreateValidatorSelfDelegation(ctx, msg); err != nil {
+				panic(fmt.Sprintf("not be able to execute nor revert, %T", msg))
+			}
 		case *types.MsgEditValidator:
-			// TODO what should we do if error happen for queued action?
-			k.EpochEditValidator(ctx, msg)
+			cacheCtx, writeCache := ctx.CacheContext()
+			err := k.EpochEditValidator(cacheCtx, msg)
+			if err == nil {
+				writeCache()
+			} else {
+				// TODO: report somewhere for logging edit not success or panic
+				// panic(fmt.Sprintf("not be able to execute, %T", msg))
+			}
 		case *types.MsgDelegate:
-			k.EpochDelegate(ctx, msg)
+			cacheCtx, writeCache := ctx.CacheContext()
+			err := k.EpochDelegate(cacheCtx, msg)
+			if err == nil {
+				writeCache()
+			} else if err = k.EpochCancelDelegation(ctx, msg); err != nil {
+				panic(fmt.Sprintf("not be able to execute nor revert, %T", msg))
+			}
 		case *types.MsgBeginRedelegate:
-			k.EpochBeginRedelegate(ctx, msg)
+			cacheCtx, writeCache := ctx.CacheContext()
+			_, err := k.EpochBeginRedelegate(cacheCtx, msg)
+			if err == nil {
+				writeCache()
+			} else {
+				// TODO: report somewhere for logging edit not success or panic
+				// panic(fmt.Sprintf("not be able to execute, %T", msg))
+			}
 		case *types.MsgUndelegate:
-			k.EpochUndelegate(ctx, msg)
+			cacheCtx, writeCache := ctx.CacheContext()
+			_, err := k.EpochUndelegate(cacheCtx, msg)
+			if err == nil {
+				writeCache()
+			} else {
+				// TODO: report somewhere for logging edit not success or panic
+				// panic(fmt.Sprintf("not be able to execute, %T", msg))
+			}
 		default:
 			panic(fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg))
 		}

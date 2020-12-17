@@ -11,13 +11,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// authz message types
-const (
-	TypeMsgGrantAuthorization  = "grant_authorization"
-	TypeMsgRevokeAuthorization = "revoke_authorization"
-	TypeMsgExecDelegated       = "exec_delegated"
-)
-
 var (
 	_ sdk.MsgRequest = &MsgGrantAuthorization{}
 	_ sdk.MsgRequest = &MsgRevokeAuthorization{}

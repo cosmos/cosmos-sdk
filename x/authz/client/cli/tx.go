@@ -87,14 +87,14 @@ Examples:
 				return err
 			}
 
-			svcMsgClientConn := &serviceMsgClientConn{}
+			svcMsgClientConn := &ServiceMsgClientConn{}
 			authzMsgClient := types.NewMsgClient(svcMsgClientConn)
 			_, err = authzMsgClient.GrantAuthorization(context.Background(), msg)
 			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.msgs...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.Msgs...)
 
 		},
 	}
@@ -131,14 +131,14 @@ Example:
 
 			msg := types.NewMsgRevokeAuthorization(granter, grantee, msgAuthorized)
 
-			svcMsgClientConn := &serviceMsgClientConn{}
+			svcMsgClientConn := &ServiceMsgClientConn{}
 			authzMsgClient := types.NewMsgClient(svcMsgClientConn)
 			_, err = authzMsgClient.RevokeAuthorization(context.Background(), &msg)
 			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.msgs...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.Msgs...)
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
@@ -180,14 +180,14 @@ Example:
 			}
 
 			msg := types.NewMsgExecAuthorized(grantee, serviceMsgs)
-			svcMsgClientConn := &serviceMsgClientConn{}
+			svcMsgClientConn := &ServiceMsgClientConn{}
 			authzMsgClient := types.NewMsgClient(svcMsgClientConn)
 			_, err = authzMsgClient.ExecAuthorized(context.Background(), &msg)
 			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.msgs...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.Msgs...)
 		},
 	}
 

@@ -6,8 +6,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
+// Registry is interface
+var Registry types.InterfaceRegistry
+
 // RegisterInterfaces registers the interfaces types with the interface registry
 func RegisterInterfaces(registry types.InterfaceRegistry) {
+	Registry = registry
 	registry.RegisterImplementations((*sdk.MsgRequest)(nil),
 		&MsgGrantAuthorization{},
 		&MsgRevokeAuthorization{},

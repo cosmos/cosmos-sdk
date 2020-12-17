@@ -53,7 +53,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 // RegisterLegacyAminoCodec registers the feegrant module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterLegacyAminoCodec(cdc)
 }
 
 // RegisterInterfaces registers the feegrant module's interface types
@@ -63,7 +62,7 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 
 // LegacyQuerierHandler returns the feegrant module sdk.Querier.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
+	return nil
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the feegrant
@@ -144,17 +143,17 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
 // Route returns the message routing key for the feegrant module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
+	return sdk.NewRoute(types.RouterKey, nil)
 }
 
 // NewHandler returns an sdk.Handler for the feegrant module.
 func (am AppModule) NewHandler() sdk.Handler {
-	return NewHandler(am.keeper)
+	return nil
 }
 
 // QuerierRoute returns the feegrant module's querier route name.
 func (AppModule) QuerierRoute() string {
-	return types.QuerierRoute
+	return ""
 }
 
 // // NewQuerierHandler returns the feegrant module sdk.Querier.
@@ -219,7 +218,8 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 
 // WeightedOperations returns the all the staking module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper,
-	)
+	// return simulation.WeightedOperations(
+	// 	simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper,
+	// )
+	return nil
 }

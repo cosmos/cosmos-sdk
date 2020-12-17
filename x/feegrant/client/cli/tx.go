@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -91,11 +92,14 @@ Examples:
 				return err
 			}
 
-			if err := msg.ValidateBasic(); err != nil {
+			svcMsgClientConn := &serviceMsgClientConn{}
+			feeGrantMsgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = feeGrantMsgClient.GrantFeeAllowance(context.Background(), msg)
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.msgs...)
 		},
 	}
 
@@ -131,12 +135,14 @@ Example:
 			}
 
 			msg := types.NewMsgRevokeFeeAllowance(clientCtx.GetFromAddress(), grantee)
-
-			if err := msg.ValidateBasic(); err != nil {
+			svcMsgClientConn := &serviceMsgClientConn{}
+			feeGrantMsgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = feeGrantMsgClient.RevokeFeeAllowance(context.Background(), &msg)
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.msgs...)
 		},
 	}
 

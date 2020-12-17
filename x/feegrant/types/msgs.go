@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	_, _ sdk.Msg                       = &MsgGrantFeeAllowance{}, &MsgRevokeFeeAllowance{}
+	_, _ sdk.MsgRequest                = &MsgGrantFeeAllowance{}, &MsgRevokeFeeAllowance{}
 	_    types.UnpackInterfacesMessage = &MsgGrantFeeAllowance{}
 )
 
@@ -39,20 +39,6 @@ func NewMsgGrantFeeAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.Ac
 	}, nil
 }
 
-// func (msg MsgGrantFeeAllowance) GetFeeGrant() FeeAllowanceI {
-// 	return msg.GetFeeAllowanceI()
-// }
-
-// Route implements the sdk.Msg interface.
-func (msg MsgGrantFeeAllowance) Route() string {
-	return RouterKey
-}
-
-// Type implements the sdk.Msg interface.
-func (msg MsgGrantFeeAllowance) Type() string {
-	return TypeMsgGrantFeeAllowance
-}
-
 // ValidateBasic implements the sdk.Msg interface.
 func (msg MsgGrantFeeAllowance) ValidateBasic() error {
 	if msg.Granter == "" {
@@ -63,11 +49,6 @@ func (msg MsgGrantFeeAllowance) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// GetSignBytes returns the message bytes to sign over.
-func (msg MsgGrantFeeAllowance) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgGrantFeeAllowance) GetSigners() []sdk.AccAddress {
@@ -99,14 +80,6 @@ func NewMsgRevokeFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) Ms
 	return MsgRevokeFeeAllowance{Granter: granter.String(), Grantee: grantee.String()}
 }
 
-func (msg MsgRevokeFeeAllowance) Route() string {
-	return RouterKey
-}
-
-func (msg MsgRevokeFeeAllowance) Type() string {
-	return TypeMsgRevokeFeeAllowance
-}
-
 func (msg MsgRevokeFeeAllowance) ValidateBasic() error {
 	if msg.Granter == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
@@ -116,10 +89,6 @@ func (msg MsgRevokeFeeAllowance) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (msg MsgRevokeFeeAllowance) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgRevokeFeeAllowance) GetSigners() []sdk.AccAddress {

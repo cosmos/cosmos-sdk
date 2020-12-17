@@ -75,7 +75,7 @@ software and restore to their latest snapshot before restarting their nodes.
 
    Make sure that your genesis JSON files contains the correct values specific to your chain. If the `simd migrate` errors with a message saying that the genesis file cannot be parsed, these are the fields to check first.
 
-1. Verify the SHA256 of the migrated genesis file with other valdiators to make sure there are no manual errors in the process.
+1. Verify the SHA256 of the migrated genesis file with other validators to make sure there are no manual errors in the process.
 
    ```shell
    $ jq -S -c -M '' new_v040_genesis.json | shasum -a 256

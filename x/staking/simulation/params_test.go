@@ -21,7 +21,7 @@ func TestParamChanges(t *testing.T) {
 	}{
 		{"staking/MaxValidators", "MaxValidators", "82", "staking"},
 		{"staking/UnbondingTime", "UnbondingTime", "\"275307000000000\"", "staking"},
-		{"staking/HistoricalEntries", "HistoricalEntries", "29", "staking"},
+		{"staking/HistoricalEntries", "HistoricalEntries", "9149", "staking"},
 	}
 
 	paramChanges := simulation.ParamChanges(r)

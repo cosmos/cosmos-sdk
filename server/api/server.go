@@ -7,11 +7,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogo/gateway"
+	//"github.com/gogo/gateway"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	//"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/tendermint/tendermint/libs/log"
+	"google.golang.org/protobuf/encoding/protojson"
 	tmrpcserver "github.com/tendermint/tendermint/rpc/jsonrpc/server"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -52,17 +54,39 @@ func CustomGRPCHeaderMatcher(key string) (string, bool) {
 func New(clientCtx client.Context, logger log.Logger) *Server {
 	// The default JSON marshaller used by the gRPC-Gateway is unable to marshal non-nullable non-scalar fields.
 	// Using the gogo/gateway package with the gRPC-Gateway WithMarshaler option fixes the scalar field marshalling issue.
-	marshalerOption := &gateway.JSONPb{
-		EmitDefaults: true,
-		Indent:       "  ",
-		OrigName:     true,
-		AnyResolver:  clientCtx.InterfaceRegistry,
-	}
+	//marshalerOption := &gateway.JSONPb{
+	//	EmitDefaults: true,
+	//	Indent:       "  ",
+	//	OrigName:     true,
+	//	AnyResolver:  clientCtx.InterfaceRegistry,
+	//}
 
 	return &Server{
 		Router:    mux.NewRouter(),
 		ClientCtx: clientCtx,
 		logger:    logger,
+		GRPCGatewayRouter: runtime.NewServeMux(
+			// Custom marshaler option is required for gogo proto
+			runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.HTTPBodyMarshaler{
+				Marshaler: &runtime.JSONPb{
+					MarshalOptions: protojson.MarshalOptions{
+						EmitUnpopulated: true,
+					},
+					UnmarshalOptions: protojson.UnmarshalOptions{
+						DiscardUnknown: false,
+					},
+				},
+			}),
+
+			// This is necessary to get error details properly
+			// marshalled in unary requests.
+			//runtime.WithProtoErrorHandler(runtime.DefaultHTTPProtoErrorHandler),
+
+			// Custom header matcher for mapping request headers to
+			// GRPC metadata
+			runtime.WithIncomingHeaderMatcher(CustomGRPCHeaderMatcher),
+		),
+		/*
 		GRPCGatewayRouter: runtime.NewServeMux(
 			// Custom marshaler option is required for gogo proto
 			runtime.WithMarshalerOption(runtime.MIMEWildcard, marshalerOption),
@@ -75,6 +99,7 @@ func New(clientCtx client.Context, logger log.Logger) *Server {
 			// GRPC metadata
 			runtime.WithIncomingHeaderMatcher(CustomGRPCHeaderMatcher),
 		),
+		*/
 	}
 }
 

@@ -79,7 +79,9 @@ type MsgServer interface {
 and `MsgServer` interfaces as replacements for the legacy queriers and `Msg` handlers respectively.
 
 In this ADR we explain how modules can make queries and send `Msg`s to other modules using the generated `QueryClient`
-and `MsgClient` interfaces and propose this mechanism as a replacement for the existing `Keeper` paradigm.
+and `MsgClient` interfaces and propose this mechanism as a replacement for the existing `Keeper` paradigm. To be clear,
+this ADR does not necessitate the creation of new protobuf definitions or services. Rather, it leverages the same proto
+based service interfaces already used by clients for inter-module communication.
 
 Using this `QueryClient`/`MsgClient` approach has the following key benefits over keepers:
 1. Protobuf types are checked for breaking changes using [buf](https://buf.build/docs/breaking-overview) and because of
@@ -88,6 +90,9 @@ evolution.
 2. The separation between the client and server interfaces will allow us to insert permission checking code in between
 the two which checks if one module is authorized to send the specified `Msg` to the other module providing a proper
 object capability system.
+3. The router for inter-module communication gives us a convenient place to handle rollback of transactions,
+enabling atomicy of operations ([currently a problem](https://github.com/cosmos/cosmos-sdk/issues/8030)). Any failure within a module-to-module call would result in a failure of the entire
+transaction
 
 This mechanism has the added benefits of:
 - reducing boilerplate through code generation, and
@@ -347,6 +352,7 @@ replacing `Keeper` interfaces altogether.
 - improved module developer DevX, as commented on by several particpants on
     [Architecture Review Call, Dec 3](https://hackmd.io/E0wxxOvRQ5qVmTf6N_k84Q)
 - lays the groundwork for what can be a greatly simplified `app.go`
+- router can be setup to enforce atomic transactions for moule-to-module calls
 
 ### Negative
 

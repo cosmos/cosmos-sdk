@@ -3,7 +3,6 @@ package keeper
 import (
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -78,7 +77,6 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 	// clear any old IBC state stored by previous plan
 	oldPlan, exists := k.GetUpgradePlan(ctx)
 	if exists && oldPlan.IsIBCPlan() {
-		fmt.Println("CLEARED OLD IBC STATE IN SCHEDULE UPGRADE")
 		k.ClearIBCState(ctx, oldPlan.Height-1)
 	}
 
@@ -226,7 +224,6 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.
 	// This will prevent resubmission of upgrade msg after upgrade is already completed.
 	if plan.IsIBCPlan() {
-		fmt.Println("CLEARED IBC STATE ON APPLY UPGRADE!!!!!")
 		k.ClearIBCState(ctx, plan.Height-1)
 	}
 	k.ClearUpgradePlan(ctx)

@@ -58,23 +58,21 @@ type Operation func(r *rand.Rand, app *baseapp.BaseApp,
 
 // OperationMsg - structure for operation output
 type OperationMsg struct {
-	Route         string          `json:"route" yaml:"route"`                   // msg route (i.e module name)
-	Name          string          `json:"name" yaml:"name"`                     // operation name (msg Type or "no-operation")
-	Comment       string          `json:"comment" yaml:"comment"`               // additional comment
-	OK            bool            `json:"ok" yaml:"ok"`                         // success
-	Msg           json.RawMessage `json:"msg" yaml:"msg"`                       // JSON encoded msg
-	ServiceMethod string          `json:"service-method" yaml:"service-method"` // service method
+	Route   string          `json:"route" yaml:"route"`     // msg route (i.e module name)
+	Name    string          `json:"name" yaml:"name"`       // operation name (msg Type or "no-operation")
+	Comment string          `json:"comment" yaml:"comment"` // additional comment
+	OK      bool            `json:"ok" yaml:"ok"`           // success
+	Msg     json.RawMessage `json:"msg" yaml:"msg"`         // JSON encoded msg
 }
 
 // NewOperationMsgBasic creates a new operation message from raw input.
 func NewOperationMsgBasic(route, name, comment string, ok bool, msg []byte) OperationMsg {
 	return OperationMsg{
-		Route:         route,
-		Name:          name,
-		Comment:       comment,
-		OK:            ok,
-		Msg:           msg,
-		ServiceMethod: route,
+		Route:   route,
+		Name:    name,
+		Comment: comment,
+		OK:      ok,
+		Msg:     msg,
 	}
 }
 

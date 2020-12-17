@@ -10,11 +10,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	tmtypes "github.com/tendermint/tendermint/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -27,6 +22,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // GenTxCmd builds the application's gentx command.
@@ -45,8 +44,7 @@ file. The following default parameters are included:
     %s
 
 Example:
-$ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=test-chain-1 \
-    --amount=1000000stake \
+$ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=os --chain-id=test-chain-1 \
     --moniker="myvalidator" \
     --commission-max-change-rate=0.01 \
     --commission-max-rate=1.0 \
@@ -118,7 +116,7 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 				return errors.Wrap(err, "error creating configuration to create validator msg")
 			}
 
-			amount, _ := cmd.Flags().GetString(cli.FlagAmount)
+			amount := args[1]
 			coins, err := sdk.ParseCoinsNormalized(amount)
 			if err != nil {
 				return errors.Wrap(err, "failed to parse coins")

@@ -22,7 +22,8 @@ message GenesisState {
   repeated ValidatorMissedBlocks missed_blocks = 3
       [(gogoproto.moretags) = "yaml:\"missed_blocks\"", (gogoproto.nullable) = false];
 
-  // buffered actions
+  // buffered_msgs represents messages that are queued for execution at the end
+  // of a staking epoch
   repeated google.protobuf.Any buffered_msgs = 4;
 }
 

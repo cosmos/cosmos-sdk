@@ -103,6 +103,10 @@ func (c *Client) PreprocessOperationsToOptions(ctx context.Context, req *types.C
 		return nil, rosetta.WrapError(rosetta.ErrInvalidAddress, err.Error())
 	}
 
+	if len(msgs) < 1 || len(msgs[0].GetSigners()) < 1 {
+		return nil, rosetta.WrapError(rosetta.ErrInterpreting, "invalid msgs from operations")
+	}
+
 	memo, ok := req.Metadata["memo"]
 	if !ok {
 		memo = ""

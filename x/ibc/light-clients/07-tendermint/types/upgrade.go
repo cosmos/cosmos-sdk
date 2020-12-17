@@ -83,7 +83,7 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	// construct clientState Merkle path
 	upgradeClientPath := constructUpgradeClientMerklePath(cs.UpgradePath, lastHeight)
 	if err := merkleProofClient.VerifyMembership(cs.ProofSpecs, consState.GetRoot(), upgradeClientPath, bz); err != nil {
-		return nil, nil, err
+		return nil, nil, sdkerrors.Wrapf(err, "client state proof failed. Path: %s", upgradeClientPath.Pretty())
 	}
 
 	// Verify consensus state proof
@@ -94,7 +94,7 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	// construct consensus state Merkle path
 	upgradeConsStatePath := constructUpgradeConsStateMerklePath(cs.UpgradePath, lastHeight)
 	if err := merkleProofConsState.VerifyMembership(cs.ProofSpecs, consState.GetRoot(), upgradeConsStatePath, bz); err != nil {
-		return nil, nil, err
+		return nil, nil, sdkerrors.Wrapf(err, "consensus state proof failed. Path: %s", upgradeConsStatePath.Pretty())
 	}
 
 	// Construct new client state and consensus state

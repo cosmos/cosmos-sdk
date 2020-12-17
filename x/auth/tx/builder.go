@@ -284,7 +284,7 @@ func (w *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
 	for i, sig := range signatures {
 		var modeInfo *tx.ModeInfo
 		modeInfo, rawSigs[i] = SignatureDataToModeInfoAndSig(sig.Data)
-		any, err := PubKeyToAny(sig.PubKey)
+		any, err := codectypes.NewAnyWithValue(sig.PubKey)
 		if err != nil {
 			return err
 		}
@@ -348,9 +348,4 @@ func (w *wrapper) SetExtensionOptions(extOpts ...*codectypes.Any) {
 func (w *wrapper) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 	w.tx.Body.NonCriticalExtensionOptions = extOpts
 	w.bodyBz = nil
-}
-
-// PubKeyToAny converts a cryptotypes.PubKey to a proto Any.
-func PubKeyToAny(key cryptotypes.PubKey) (*codectypes.Any, error) {
-	return codectypes.NewAnyWithValue(key)
 }

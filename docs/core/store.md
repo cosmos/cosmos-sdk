@@ -94,7 +94,7 @@ If tracing is enabled, then cache-wrapping the multistore will wrap all the unde
 
 The main type of `Multistore` used in the Cosmos SDK is `CommitMultiStore`, which is an extension of the `Multistore` interface:
 
-+++https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/store/types/store.go#L141-L184
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/store/types/store.go#L141-L184
 
 As for concrete implementation, the [`rootMulti.Store`] is the go-to implementation of the `CommitMultiStore` interface.
 

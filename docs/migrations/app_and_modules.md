@@ -24,7 +24,7 @@ Your own app can use a similar Makefile to the [Cosmos SDK's one](https://github
 
 ## Updating Modules
 
-This section outlines how to upgrade your module to v0.40. There is also a whole section of [building modules](../building-modules/README.md) on how to create modules from scratch, it might serve as a useful reference when updating your own modules.
+This section outlines how to upgrade your module to v0.40. There is also a whole section about [building modules](../building-modules/README.md) from scratch, it might serve as a useful reference when updating your own modules.
 
 ### Protocol Buffers
 
@@ -61,7 +61,7 @@ An example of type that is stored in state is [x/auth's](../../x/auth/spec/READM
 }
 ```
 
-In general, we recommend to put all the Protobuf definitions in your module's subdirectory unders a root `proto/` folder, as described in [ADR-023](../architecture/adr-023-protobuf-naming.md). This ADR also contains other useful information on naming conventions.
+In general, we recommend to put all the Protobuf definitions in your module's subdirectory under a root `proto/` folder, as described in [ADR-023](../architecture/adr-023-protobuf-naming.md). This ADR also contains other useful information on naming conventions.
 
 You might have noticed that the `PubKey` interface in v0.39's `BaseAccount` has been transformed into an `Any`. For migrating interfaces, we use Protobuf's `Any` message, which is a struct that can hold arbitrary content. Please refer to the [encoding FAQ](../core/encoding.md#faq) to learn how to handle interfaces and `Any`s.
 

@@ -158,7 +158,7 @@ an implementation for it.
 
 ```golang
 // NodeClient defines the interface
-// a client has to implement in order to
+// a client must implement in order to
 // interact with cosmos-sdk chains
 type NodeClient interface {
    // Balances fetches the balance of the given address

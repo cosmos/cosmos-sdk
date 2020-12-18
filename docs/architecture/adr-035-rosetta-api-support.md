@@ -220,7 +220,7 @@ Due to separation of interface and implementation, application developers have t
 using this code as reference.
 
 ```golang
-// NewNetwork builds a rosetta gateway network
+// NewNetwork returns a rosetta gateway network type instance.
 func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter, client NodeClient) service.Network {
    return service.Network{
       Properties: crg.NetworkProperties{

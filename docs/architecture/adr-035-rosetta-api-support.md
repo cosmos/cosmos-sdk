@@ -197,7 +197,7 @@ type NodeClient interface {
 }
 ```
 
-A developer that wants to support their custom messages in order to be parsed and constructed by the Rosetta API must implement
+Developers that want their application-specific messages to be supported and dealt with by the Rosetta API must implement
 the following interface:
 
 ```golang

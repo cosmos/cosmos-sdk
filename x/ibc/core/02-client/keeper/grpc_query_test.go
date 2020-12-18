@@ -321,7 +321,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusStates() {
 				// order is swapped because the res is sorted by client id
 				expConsensusStates = []types.ConsensusStateWithHeight{
 					types.NewConsensusStateWithHeight(testClientHeight, cs),
-					types.NewConsensusStateWithHeight(testClientHeight.Increment(), cs2),
+					types.NewConsensusStateWithHeight(testClientHeight.Increment().(types.Height), cs2),
 				}
 				req = &types.QueryConsensusStatesRequest{
 					ClientId: testClientID,

@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	msgauthtestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
+	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
 	types "github.com/cosmos/cosmos-sdk/x/authz/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 )
@@ -55,7 +55,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	// grant authorization
-	_, err = msgauthtestutil.MsgGrantAuthorizationExec(val.ClientCtx, val.Address.String(), newAddr.String(), typeMsgSend, "100stake")
+	_, err = authztestutil.MsgGrantAuthorizationExec(val.ClientCtx, val.Address.String(), newAddr.String(), typeMsgSend, "100stake")
 	s.Require().NoError(err)
 
 	s.grantee = newAddr
@@ -184,7 +184,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			false,
 			"",
 			func() {
-				_, err := msgauthtestutil.MsgGrantAuthorizationExec(val.ClientCtx, val.Address.String(), s.grantee.String(), "/cosmos.gov.v1beta1.Msg/Vote", "")
+				_, err := authztestutil.MsgGrantAuthorizationExec(val.ClientCtx, val.Address.String(), s.grantee.String(), "/cosmos.gov.v1beta1.Msg/Vote", "")
 				s.Require().NoError(err)
 			},
 			func(authorizations *types.QueryAuthorizationsResponse) {

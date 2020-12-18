@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	msgauthcli "github.com/cosmos/cosmos-sdk/x/authz/client/cli"
+	authzcli "github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 )
 
 var commonArgs = []string{
@@ -28,7 +28,7 @@ func MsgGrantAuthorizationExec(clientCtx client.Context, granter, grantee, msgNa
 	}
 
 	args = append(args, fmt.Sprintf("--%s=%s", flags.FlagFrom, granter))
-	args = append(args, fmt.Sprintf("--%s=%d", msgauthcli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix()))
+	args = append(args, fmt.Sprintf("--%s=%d", authzcli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix()))
 	args = append(args, commonArgs...)
-	return clitestutil.ExecTestCLICmd(clientCtx, msgauthcli.NewCmdGrantAuthorization(), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, authzcli.NewCmdGrantAuthorization(), args)
 }

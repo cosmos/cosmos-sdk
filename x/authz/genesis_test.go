@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	msgauth "github.com/cosmos/cosmos-sdk/x/authz"
+	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
 )
@@ -44,13 +44,13 @@ func (suite *GenesisTestSuite) TestImportExportGenesis() {
 	grant := &types.SendAuthorization{SpendLimit: coins}
 	err := suite.keeper.Grant(suite.ctx, granteeAddr, granterAddr, grant, now.Add(time.Hour))
 	suite.Require().NoError(err)
-	genesis := msgauth.ExportGenesis(suite.ctx, suite.keeper)
+	genesis := authz.ExportGenesis(suite.ctx, suite.keeper)
 
 	// Clear keeper
 	suite.keeper.Revoke(suite.ctx, granteeAddr, granterAddr, grant.MethodName())
 
-	msgauth.InitGenesis(suite.ctx, suite.keeper, genesis)
-	newGenesis := msgauth.ExportGenesis(suite.ctx, suite.keeper)
+	authz.InitGenesis(suite.ctx, suite.keeper, genesis)
+	newGenesis := authz.ExportGenesis(suite.ctx, suite.keeper)
 	suite.Require().Equal(genesis, newGenesis)
 }
 

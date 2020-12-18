@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 // GenerateOrBroadcastTxCLI will either generate and print and unsigned transaction
@@ -266,7 +267,7 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 		return nil, err
 	}
 
-	protoProvider, ok := txb.(tx.ProtoTxProvider)
+	protoProvider, ok := txb.(authtx.ProtoTxProvider)
 	if !ok {
 		return nil, fmt.Errorf("cannot simulate amino tx")
 	}

@@ -34,7 +34,7 @@ var (
 	_ client.TxBuilder           = &wrapper{}
 	_ ante.HasExtensionOptionsTx = &wrapper{}
 	_ ExtensionOptionsTxBuilder  = &wrapper{}
-	_ tx.ProtoTxProvider         = &wrapper{}
+	_ ProtoTxProvider            = &wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
@@ -348,4 +348,9 @@ func (w *wrapper) SetExtensionOptions(extOpts ...*codectypes.Any) {
 func (w *wrapper) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 	w.tx.Body.NonCriticalExtensionOptions = extOpts
 	w.bodyBz = nil
+}
+
+// ProtoTxProvider is a type which can provide a proto transaction.
+type ProtoTxProvider interface {
+	GetProtoTx() *tx.Tx
 }

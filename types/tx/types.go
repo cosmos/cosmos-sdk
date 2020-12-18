@@ -197,8 +197,3 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 func isServiceMsg(typeURL string) bool {
 	return strings.Count(typeURL, "/") >= 2
 }
-
-// ProtoTxProvider is a type which can provide a proto transaction.
-type ProtoTxProvider interface {
-	GetProtoTx() *Tx
-}

@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -455,7 +456,7 @@ func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
 
 // txBuilderToProtoTx converts a txBuilder into a proto tx.Tx.
 func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) { // nolint
-	protoProvider, ok := txBuilder.(tx.ProtoTxProvider)
+	protoProvider, ok := txBuilder.(authtx.ProtoTxProvider)
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected proto tx builder, got %T", txBuilder)
 	}

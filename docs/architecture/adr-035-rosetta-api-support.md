@@ -202,7 +202,6 @@ the following interface:
 
 ```golang
 // Msg defines the methods that must be implemented by client application-specific messages to be supported by the Rosetta API service.
-// be supported by the Rosetta service.
 type Msg interface {
    ToOperations(withStatus bool, hasError bool) []*types.Operation
    FromOperations(ops []*types.Operation) (sdk.Msg, error)

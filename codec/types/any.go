@@ -62,12 +62,7 @@ func NewAnyWithValue(v proto.Message) (*Any, error) {
 	if v == nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrPackAny, "Expecting non nil value to create a new Any")
 	}
-	bz, err := proto.Marshal(v)
-	return &Any{
-		TypeUrl:     "/" + proto.MessageName(v),
-		Value:       bz,
-		cachedValue: v,
-	}, err
+	return NewAnyWithCustomTypeURL(v, "/"+proto.MessageName(v))
 }
 
 // NewAnyWithCustomTypeURL same as NewAnyWithValue, but sets a custom type url, instead

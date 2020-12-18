@@ -10,23 +10,23 @@ Messages are queued to run at the end of epochs.
 Queued messages have epoch number to be run and at the end of epochs, it run messages queued for the epoch and execute the message.
 
 ### Staking messages
-- MsgCreateValidator
-- MsgEditValidator
-- MsgDelegate
-- MsgBeginRedelegate
-- MsgUndelegate
+- **MsgCreateValidator**: Move user's funds to `EpochTempPool` inside handler and move funds in `EpochTempPool` to `UnbondedPool` on Epoch while doing self delegation. If Epoch execution fail, return back funds from `EpochTempPool` to user's account.
+- **MsgEditValidator**: Validate message and if valid queue the message for execution at the end of the Epoch.
+- **MsgDelegate**: Move user's funds to `EpochTempPool` inside handler and move funds in `EpochTempPool` to `UnbondedPool` on Epoch while doing delegation to a selected validator. If Epoch execution fail, return back funds from `EpochTempPool` to user's account.
+- **MsgBeginRedelegate**: Validate message and if valid queue the message for execution at the end of the Epoch.
+- **MsgUndelegate**: Validate message and if valid queue the message for execution at the end of the Epoch.
 
 ### Slashing messages
-- MsgUnjail
+- **MsgUnjail**: Validate message and if valid queue the message for execution at the end of the Epoch.
 
 ### Evidence messages
-- MsgSubmitEvidence
+- **MsgSubmitEvidence**: No changes
 
 ### Distribution messages
-- MsgSetWithdrawAddress
-- MsgWithdrawDelegatorReward
-- MsgWithdrawValidatorCommission
-- MsgFundCommunityPool
+- **MsgSetWithdrawAddress**: No changes
+- **MsgWithdrawDelegatorReward**: No changes
+- **MsgWithdrawValidatorCommission**: No changes
+- **MsgFundCommunityPool**: No changes
 
 ## Slash and Jail
 

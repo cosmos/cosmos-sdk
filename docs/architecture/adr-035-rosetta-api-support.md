@@ -201,7 +201,7 @@ Developers that want their application-specific messages to be supported and dea
 the following interface:
 
 ```golang
-// Msg interface is the interface that Cosmos SDK messages should implement if they want to
+// Msg defines the methods that must be implemented by client application-specific messages to be supported by the Rosetta API service.
 // be supported by the Rosetta service.
 type Msg interface {
    ToOperations(withStatus bool, hasError bool) []*types.Operation

@@ -321,8 +321,8 @@ func (w *wrapper) GetProtoTx() *tx.Tx {
 
 // Deprecated: AsAny extracts proto Tx and wraps it into Any.
 // NOTE: You should probably use `GetProtoTx` if you want to serialize the transaction.
-func (w *wrapper) AsAny() (*codectypes.Any, error) {
-	return codectypes.NewAnyWithValue(w.tx)
+func (w *wrapper) AsAny() *codectypes.Any {
+	return codectypes.UnsafePackAny(w.tx)
 }
 
 // WrapTx creates a TxBuilder wrapper around a tx.Tx proto message.

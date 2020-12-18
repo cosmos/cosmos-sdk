@@ -146,7 +146,8 @@ func mkTxResult(txConfig client.TxConfig, resTx *ctypes.ResultTx, resBlock *ctyp
 	return sdk.NewResponseResultTx(resTx, any, resBlock.Block.Time.Format(time.RFC3339)), nil
 }
 
-// Deprecated:
+// Deprecated: this interface is used only internally for scenario we are
+// deprecating (StdTxConfig support)
 type intoAny interface {
 	AsAny() *codectypes.Any
 }

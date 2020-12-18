@@ -92,21 +92,6 @@ type Validator struct {
     MinSelfDelegation       sdk.Int         // validator's self declared minimum self delegation
 }
 
-//// Epoching change fields
-// MinSelfDelegation, Commission
-
-//// Endblocker change fields
-// Jailed, 
-
-//// Instant change fields
-// DelegatorShares
-
-//// Both epoching and Endblocker change fields
-// Status
-
-//// Could be changed both instantly and on epoching
-// UnbondingHeight, UnbondingCompletionTime, Tokens
-
 type Commission struct {
     CommissionRates
     UpdateTime time.Time // the last time the commission rate was changed

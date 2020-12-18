@@ -208,7 +208,7 @@ type Msg interface {
 }
 ```
 
-To get an idea how a message implementing this interface looks you can take a look at MsgSend from bank module.
+The `MsgSend` provided by the `bank` module could serve as an example.
 
 
 ### 2. Cosmos SDK Implementation

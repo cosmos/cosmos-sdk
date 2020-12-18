@@ -198,7 +198,7 @@ type NodeClient interface {
 ```
 
 A developer that wants to support their custom messages in order to be parsed and constructed by the Rosetta API must implement
-the following interface.
+the following interface:
 
 ```golang
 // Msg interface is the interface that Cosmos SDK messages should implement if they want to

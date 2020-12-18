@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
 )
 
@@ -20,7 +21,13 @@ func (k Keeper) GrantAuthorization(goCtx context.Context, msg *types.MsgGrantAut
 	if err != nil {
 		return nil, err
 	}
+
 	authorization := msg.GetGrantAuthorization()
+	// If the granted service Msg doesn't exist, we throw an error.
+	if k.router.Handler(authorization.MethodName()) == nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "%s doesn't exist.", authorization.MethodName())
+	}
+
 	err = k.Grant(ctx, grantee, granter, authorization, msg.Expiration)
 	if err != nil {
 		return nil, err

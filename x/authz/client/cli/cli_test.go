@@ -305,6 +305,20 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			true,
 		},
 		{
+			"fail with error invalid msg-type",
+			[]string{
+				grantee.String(),
+				"invalid-msg-type",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			&sdk.TxResponse{}, 29,
+			false,
+		},
+		{
 			"Valid tx send authorization",
 			[]string{
 				grantee.String(),

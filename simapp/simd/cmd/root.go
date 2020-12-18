@@ -209,6 +209,7 @@ func createSimappAndExport(
 	if !ok || homePath == "" {
 		return servertypes.ExportedApp{}, errors.New("application home not set")
 	}
+
 	if height != -1 {
 
 		simApp = simapp.NewSimApp(logger, db, traceStore, false, map[int64]bool{}, homePath, uint(1), encCfg, appOpts)

@@ -95,7 +95,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	for _, val := range valSet.Validators {
 		pk, err := cryptocodec.FromTmPubKeyInterface(val.PubKey)
 		require.NoError(t, err)
-		pkAny, err := codectypes.PackAny(pk)
+		pkAny, err := codectypes.NewAnyWithValue(pk)
 		require.NoError(t, err)
 		validator := stakingtypes.Validator{
 			OperatorAddress:   sdk.ValAddress(val.Address).String(),

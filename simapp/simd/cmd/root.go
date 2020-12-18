@@ -211,7 +211,6 @@ func createSimappAndExport(
 	}
 
 	if height != -1 {
-
 		simApp = simapp.NewSimApp(logger, db, traceStore, false, map[int64]bool{}, homePath, uint(1), encCfg, appOpts)
 
 		if err := simApp.LoadHeight(height); err != nil {

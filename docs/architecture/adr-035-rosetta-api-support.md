@@ -239,7 +239,7 @@ func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter,
 Each `sdk.Msg` has a 1:1 relation with a Rosetta API operation. As a consequence of that, messages that implement
 the `rosetta.Msg` interface will be handled automatically by the Rosetta API service.
 
-Once this message is registered in the Interface registry it will be automatically part of the Rosetta API engine.
+Once all application messages are registered in the Interface registry, they will be automatically handled by the Cosmos SDK Rosetta API compatibility layer.
 
 ### 3. API service invocation
 

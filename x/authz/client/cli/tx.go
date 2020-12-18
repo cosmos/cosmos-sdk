@@ -81,9 +81,9 @@ Examples:
 			if err != nil {
 				return err
 			}
-			period := time.Duration(exp) * time.Second
+			// period := time.Duration(exp) * time.Second
 
-			msg, err := types.NewMsgGrantAuthorization(clientCtx.GetFromAddress(), grantee, authorization, time.Now().Add(period))
+			msg, err := types.NewMsgGrantAuthorization(clientCtx.GetFromAddress(), grantee, authorization, time.Unix(exp, 0))
 			if err != nil {
 				return err
 			}
@@ -100,7 +100,7 @@ Examples:
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
-	cmd.Flags().Int64(FlagExpiration, int64(3600*24*365), "The second unit of time duration which the authorization is active for the user; Default is a year")
+	cmd.Flags().Int64(FlagExpiration, time.Now().AddDate(1, 0, 0).Unix(), "The Unix timestamp. Default is one year.")
 	return cmd
 }
 

@@ -87,7 +87,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 	val := s.network.Validators[0]
 
 	grantee := s.grantee
-	twoHours := 3600 * 2 // In seconds
+	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	_, err := execGrantAuthorization(
 		val,
@@ -165,7 +165,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorization() {
 	val := s.network.Validators[0]
 
 	grantee := s.grantee
-	twoHours := 3600 * 2 // In seconds
+	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	_, err := execGrantAuthorization(
 		val,
@@ -254,8 +254,8 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	val := s.network.Validators[0]
 	grantee := s.grantee
 
-	twoHours := 3600 * 2  // In seconds
-	pastHour := 3600 * -1 // In seconds
+	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
+	pastHour := time.Now().Add(time.Minute * time.Duration(-60)).Unix()
 
 	testCases := []struct {
 		name         string
@@ -379,7 +379,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 	val := s.network.Validators[0]
 
 	grantee := s.grantee
-	twoHours := 3600 * 2 // In seconds
+	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	// send-authorization
 	_, err := execGrantAuthorization(
@@ -490,11 +490,50 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
+	val := s.network.Validators[0]
+	grantee := s.grantee
+	tenSeconds := time.Now().Add(time.Second * time.Duration(10)).Unix()
+
+	_, err := execGrantAuthorization(
+		val,
+		[]string{
+			grantee.String(),
+			typeMsgVote,
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%d", cli.FlagExpiration, tenSeconds),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		},
+	)
+	s.Require().NoError(err)
+	// msg vote
+	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1beta1.Msg/Vote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
+	execMsg := testutil.WriteToNewTempFile(s.T(), voteTx)
+
+	// waiting for authorization to expires
+	time.Sleep(15 * time.Second)
+
+	cmd := cli.NewCmdExecAuthorization()
+	clientCtx := val.ClientCtx
+
+	res, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{
+		execMsg.Name(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+	})
+	s.Require().NoError(err)
+	s.Require().Contains(res.String(), "authorization not found")
+
+}
+
 func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 	val := s.network.Validators[0]
 	grantee := s.grantee
-	now := time.Now()
-	twoHours := now.Add(time.Minute * time.Duration(120)).Unix()
+	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	_, err := execGrantAuthorization(
 		val,
@@ -584,8 +623,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 
 	grantee := s.grantee
 
-	now := time.Now()
-	twoHours := now.Add(time.Minute * time.Duration(120)).Unix()
+	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	_, err := execGrantAuthorization(
 		val,

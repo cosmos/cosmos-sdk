@@ -238,7 +238,6 @@ func NewNetwork(networkIdentifier *types.NetworkIdentifier, adapter crg.Adapter,
 
 Each `sdk.Msg` has a 1:1 relation with a Rosetta API operation. As a consequence of that, messages that implement
 the `rosetta.Msg` interface will be handled automatically by the Rosetta API service.
-the rosetta.Msg will be parsed and be able to be used via Rosetta API.
 
 Once this message is registered in the Interface registry it will be automatically part of the Rosetta API engine.
 

@@ -59,6 +59,7 @@ func (msg MsgGrantAuthorization) ValidateBasic() error {
 	return nil
 }
 
+// GetGrantAuthorization returns the cache value from the MsgGrantAuthorization.Authorization if present.
 func (msg *MsgGrantAuthorization) GetGrantAuthorization() Authorization {
 	authorization, ok := msg.Authorization.GetCachedValue().(Authorization)
 	if !ok {
@@ -67,6 +68,7 @@ func (msg *MsgGrantAuthorization) GetGrantAuthorization() Authorization {
 	return authorization
 }
 
+// SetAuthorization converts Authorization to any and adds it to MsgGrantAuthorization.Authorization.
 func (msg *MsgGrantAuthorization) SetAuthorization(authorization Authorization) error {
 	m, ok := authorization.(proto.Message)
 	if !ok {
@@ -80,6 +82,7 @@ func (msg *MsgGrantAuthorization) SetAuthorization(authorization Authorization) 
 	return nil
 }
 
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgExecAuthorized) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, x := range msg.Msgs {
 		var msgExecAuthorized sdk.MsgRequest
@@ -117,7 +120,7 @@ func (msg MsgRevokeAuthorization) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{granter}
 }
 
-// ValidateBasic implements Msg
+// ValidateBasic implements MsgRequest.ValidateBasic
 func (msg MsgRevokeAuthorization) ValidateBasic() error {
 	if msg.Granter == "" {
 		return sdkerrors.Wrap(ErrInvalidGranter, "missing granter address")
@@ -152,7 +155,7 @@ func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.ServiceMsg) MsgExec
 	}
 }
 
-// GetMsgs Unpacks any messages
+// GetServiceMsgs returns the cache values from the MsgExecAuthorized.Msgs if present.
 func (msg MsgExecAuthorized) GetServiceMsgs() ([]sdk.ServiceMsg, error) {
 	msgs := make([]sdk.ServiceMsg, len(msg.Msgs))
 	for i, msgAny := range msg.Msgs {

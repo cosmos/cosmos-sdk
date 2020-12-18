@@ -111,7 +111,7 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 		}
 		tx, err := helpers.GenTx(
 			txGen,
-			svcMsgClientConn.Msgs,
+			svcMsgClientConn.GetMsgs(),
 			fees,
 			helpers.DefaultGenTxGas,
 			chainID,
@@ -126,9 +126,9 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 
 		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, svcMsgClientConn.Msgs[0].Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, svcMsgClientConn.GetMsgs()[0].Type(), "unable to deliver tx"), nil, err
 		}
-		return simtypes.NewOperationMsg(svcMsgClientConn.Msgs[0], true, "", protoCdc), nil, err
+		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, err
 	}
 }
 
@@ -178,7 +178,7 @@ func SimulateMsgRevokeAuthorization(ak types.AccountKeeper, bk types.BankKeeper,
 		}
 		tx, err := helpers.GenTx(
 			txGen,
-			svcMsgClientConn.Msgs,
+			svcMsgClientConn.GetMsgs(),
 			fees,
 			helpers.DefaultGenTxGas,
 			chainID,
@@ -192,7 +192,7 @@ func SimulateMsgRevokeAuthorization(ak types.AccountKeeper, bk types.BankKeeper,
 		}
 
 		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
-		return simtypes.NewOperationMsg(svcMsgClientConn.Msgs[0], true, "", protoCdc), nil, err
+		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, err
 	}
 }
 
@@ -264,7 +264,7 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 		}
 		tx, err := helpers.GenTx(
 			txGen,
-			svcMsgClientConn.Msgs,
+			svcMsgClientConn.GetMsgs(),
 			fees,
 			helpers.DefaultGenTxGas,
 			chainID,
@@ -287,6 +287,6 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecDelegated, "unmarshal error"), nil, err
 		}
-		return simtypes.NewOperationMsg(svcMsgClientConn.Msgs[0], true, "success", protoCdc), nil, nil
+		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "success", protoCdc), nil, nil
 	}
 }

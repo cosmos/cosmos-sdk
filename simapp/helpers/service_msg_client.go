@@ -16,9 +16,10 @@ var _ gogogrpc.ClientConn = &ServiceMsgClientConn{}
 // transactions with MsgClient's. It is intended to be replaced by the work in
 // https://github.com/cosmos/cosmos-sdk/issues/7541 when that is ready.
 type ServiceMsgClientConn struct {
-	Msgs []sdk.Msg
+	msgs []sdk.Msg
 }
 
+// Invoke implements the grpc ClientConn.Invoke method
 func (t *ServiceMsgClientConn) Invoke(_ context.Context, method string, args, _ interface{}, _ ...grpc.CallOption) error {
 	req, ok := args.(sdk.MsgRequest)
 	if !ok {
@@ -30,7 +31,7 @@ func (t *ServiceMsgClientConn) Invoke(_ context.Context, method string, args, _ 
 		return err
 	}
 
-	t.Msgs = append(t.Msgs, sdk.ServiceMsg{
+	t.msgs = append(t.msgs, sdk.ServiceMsg{
 		MethodName: method,
 		Request:    req,
 	})
@@ -38,6 +39,12 @@ func (t *ServiceMsgClientConn) Invoke(_ context.Context, method string, args, _ 
 	return nil
 }
 
+// NewStream implements the grpc ClientConn.NewStream method
 func (t *ServiceMsgClientConn) NewStream(context.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
 	return nil, fmt.Errorf("not supported")
+}
+
+// GetMsgs returns ServiceMsgClientConn.msgs
+func (t *ServiceMsgClientConn) GetMsgs() []sdk.Msg {
+	return t.msgs
 }

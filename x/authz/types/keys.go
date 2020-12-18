@@ -34,7 +34,7 @@ func GetActorAuthorizationKey(grantee sdk.AccAddress, granter sdk.AccAddress, ms
 
 }
 
-// extractAddressesFromGrantKey - split granter & grantee address from the authorization key
+// ExtractAddressesFromGrantKey - split granter & grantee address from the authorization key
 func ExtractAddressesFromGrantKey(key []byte) (granterAddr, granteeAddr sdk.AccAddress) {
 	granterAddr = sdk.AccAddress(key[1 : sdk.AddrLen+1])
 	granteeAddr = sdk.AccAddress(key[sdk.AddrLen+1 : sdk.AddrLen*2+1])

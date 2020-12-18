@@ -46,11 +46,13 @@ var (
 	_ types.UnpackInterfacesMessage = &AuthorizationGrant{}
 )
 
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (auth AuthorizationGrant) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var authorization Authorization
 	return unpacker.UnpackAny(auth.Authorization, &authorization)
 }
 
+// GetAuthorizationGrant returns the cached value from the AuthorizationGrant.Authorization if present.
 func (auth AuthorizationGrant) GetAuthorizationGrant() Authorization {
 	authorization, ok := auth.Authorization.GetCachedValue().(Authorization)
 	if !ok {

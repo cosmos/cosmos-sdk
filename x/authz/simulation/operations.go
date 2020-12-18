@@ -13,7 +13,6 @@ import (
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
 	banktype "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -104,7 +103,7 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantAuthorization, err.Error()), nil, err
 		}
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		svcMsgClientConn := &cli.ServiceMsgClientConn{}
+		svcMsgClientConn := &helpers.ServiceMsgClientConn{}
 		authzMsgClient := types.NewMsgClient(svcMsgClientConn)
 		_, err = authzMsgClient.GrantAuthorization(context.Background(), msg)
 		if err != nil {
@@ -171,7 +170,7 @@ func SimulateMsgRevokeAuthorization(ak types.AccountKeeper, bk types.BankKeeper,
 		msg := types.NewMsgRevokeAuthorization(granterAddr, granteeAddr, auth.MethodName())
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		svcMsgClientConn := &cli.ServiceMsgClientConn{}
+		svcMsgClientConn := &helpers.ServiceMsgClientConn{}
 		authzMsgClient := types.NewMsgClient(svcMsgClientConn)
 		_, err = authzMsgClient.RevokeAuthorization(context.Background(), &msg)
 		if err != nil {
@@ -257,7 +256,7 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		svcMsgClientConn := &cli.ServiceMsgClientConn{}
+		svcMsgClientConn := &helpers.ServiceMsgClientConn{}
 		authzMsgClient := types.NewMsgClient(svcMsgClientConn)
 		_, err = authzMsgClient.ExecAuthorized(context.Background(), &msg)
 		if err != nil {

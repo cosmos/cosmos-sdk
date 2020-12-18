@@ -84,7 +84,7 @@ func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec
 		}
 		bz := cdc.MustMarshalJSON(srvMsg.Request)
 
-		return NewOperationMsgBasic(msg.Route(), msg.Type(), comment, ok, bz)
+		return NewOperationMsgBasic(srvMsg.MethodName, srvMsg.MethodName, comment, ok, bz)
 	}
 	return NewOperationMsgBasic(msg.Route(), msg.Type(), comment, ok, msg.GetSignBytes())
 }

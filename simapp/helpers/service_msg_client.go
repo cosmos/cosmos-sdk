@@ -1,4 +1,4 @@
-package cli
+package helpers
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 
 var _ gogogrpc.ClientConn = &ServiceMsgClientConn{}
 
-// serviceMsgClientConn is an instance of grpc.ClientConn that is used to test building
+// ServiceMsgClientConn is an instance of grpc.ClientConn that is used to test building
 // transactions with MsgClient's. It is intended to be replaced by the work in
 // https://github.com/cosmos/cosmos-sdk/issues/7541 when that is ready.
 type ServiceMsgClientConn struct {

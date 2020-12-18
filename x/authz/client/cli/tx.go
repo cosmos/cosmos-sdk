@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -87,7 +88,7 @@ Examples:
 				return err
 			}
 
-			svcMsgClientConn := &ServiceMsgClientConn{}
+			svcMsgClientConn := &helpers.ServiceMsgClientConn{}
 			authzMsgClient := types.NewMsgClient(svcMsgClientConn)
 			_, err = authzMsgClient.GrantAuthorization(context.Background(), msg)
 			if err != nil {
@@ -131,7 +132,7 @@ Example:
 
 			msg := types.NewMsgRevokeAuthorization(granter, grantee, msgAuthorized)
 
-			svcMsgClientConn := &ServiceMsgClientConn{}
+			svcMsgClientConn := &helpers.ServiceMsgClientConn{}
 			authzMsgClient := types.NewMsgClient(svcMsgClientConn)
 			_, err = authzMsgClient.RevokeAuthorization(context.Background(), &msg)
 			if err != nil {
@@ -180,7 +181,7 @@ Example:
 			}
 
 			msg := types.NewMsgExecAuthorized(grantee, serviceMsgs)
-			svcMsgClientConn := &ServiceMsgClientConn{}
+			svcMsgClientConn := &helpers.ServiceMsgClientConn{}
 			authzMsgClient := types.NewMsgClient(svcMsgClientConn)
 			_, err = authzMsgClient.ExecAuthorized(context.Background(), &msg)
 			if err != nil {

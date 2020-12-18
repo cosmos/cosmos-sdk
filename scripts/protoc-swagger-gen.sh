@@ -13,8 +13,8 @@ for dir in $proto_dirs; do
     -I "proto" \
     -I "third_party/proto" \
     "$query_file" \
-    --swagger_out ./tmp-swagger-gen \
-    --swagger_opt logtostderr=true --swagger_opt fqn_for_swagger_name=true --swagger_opt simple_operation_ids=true
+    --swagger_out=./tmp-swagger-gen \
+    --swagger_opt=logtostderr=true --swagger_opt=fqn_for_swagger_name=true --swagger_opt=simple_operation_ids=true
   fi
 done
 

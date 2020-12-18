@@ -1,160 +1,195 @@
 package simulation_test
 
-// import (
-// 	"math/rand"
-// 	"testing"
-// 	"time"
+import (
+	"math/rand"
+	"testing"
+	"time"
 
-// 	"github.com/stretchr/testify/suite"
+	"github.com/stretchr/testify/suite"
 
-// 	abci "github.com/tendermint/tendermint/abci/types"
-// 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-// 	"github.com/cosmos/cosmos-sdk/simapp"
-// 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-// 	sdk "github.com/cosmos/cosmos-sdk/types"
-// 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-// 	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
-// 	"github.com/cosmos/cosmos-sdk/x/authz/types"
-// )
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
+	"github.com/cosmos/cosmos-sdk/x/authz/types"
+)
 
-// type SimTestSuite struct {
-// 	suite.Suite
+type SimTestSuite struct {
+	suite.Suite
 
-// 	ctx sdk.Context
-// 	app *simapp.SimApp
-// }
+	ctx      sdk.Context
+	app      *simapp.SimApp
+	protoCdc *codec.ProtoCodec
+}
 
-// func (suite *SimTestSuite) SetupTest() {
-// 	checkTx := false
-// 	app := simapp.Setup(checkTx)
-// 	suite.app = app
-// 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{})
-// }
+func (suite *SimTestSuite) SetupTest() {
+	checkTx := false
+	app := simapp.Setup(checkTx)
+	suite.app = app
+	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{})
+	suite.protoCdc = codec.NewProtoCodec(suite.app.InterfaceRegistry())
+}
 
-// func (suite *SimTestSuite) TestWeightedOperations() {
-// 	cdc := suite.app.AppCodec()
-// 	appParams := make(simtypes.AppParams)
+func (suite *SimTestSuite) TestWeightedOperations() {
+	cdc := suite.app.AppCodec()
+	appParams := make(simtypes.AppParams)
 
-// 	weightesOps := simulation.WeightedOperations(appParams, cdc, suite.app.AccountKeeper,
-// 		suite.app.BankKeeper, suite.app.MsgAuthKeeper, cdc,
-// 	)
+	weightesOps := simulation.WeightedOperations(appParams, cdc, suite.app.AccountKeeper,
+		suite.app.BankKeeper, suite.app.MsgAuthKeeper, cdc, suite.protoCdc,
+	)
 
-// 	// setup 3 accounts
-// 	s := rand.NewSource(1)
-// 	r := rand.New(s)
-// 	accs := suite.getTestingAccounts(r, 3)
+	// setup 3 accounts
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accs := suite.getTestingAccounts(r, 3)
 
-// 	expected := []struct {
-// 		weight     int
-// 		opMsgRoute string
-// 		opMsgName  string
-// 	}{
-// 		{simappparams.DefaultWeightMsgDelegate, types.ModuleName, types.TypeMsgGrantAuthorization},
-// 		{simappparams.DefaultWeightMsgUndelegate, types.ModuleName, types.TypeMsgRevokeAuthorization},
-// 		{simappparams.DefaultWeightMsgSend, types.ModuleName, types.TypeMsgExecDelegated},
-// 	}
+	expected := []struct {
+		weight     int
+		opMsgRoute string
+		opMsgName  string
+	}{
+		{simappparams.DefaultWeightMsgDelegate, types.ModuleName, simulation.TypeMsgGrantAuthorization},
+		{simappparams.DefaultWeightMsgUndelegate, types.ModuleName, simulation.TypeMsgRevokeAuthorization},
+		{simappparams.DefaultWeightMsgSend, types.ModuleName, simulation.TypeMsgExecDelegated},
+	}
 
-// 	for i, w := range weightesOps {
-// 		operationMsg, _, _ := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
-// 		// the following checks are very much dependent from the ordering of the output given
-// 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
-// 		// will fail
-// 		suite.Require().Equal(expected[i].weight, w.Weight(), "weight should be the same")
-// 		suite.Require().Equal(expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
-// 		suite.Require().Equal(expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
-// 	}
-// }
+	for i, w := range weightesOps {
+		operationMsg, _, _ := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
+		// the following checks are very much dependent from the ordering of the output given
+		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
+		// will fail
+		suite.Require().Equal(expected[i].weight, w.Weight(), "weight should be the same")
+		suite.Require().Equal(expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
+		suite.Require().Equal(expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
+	}
+}
 
-// func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
-// 	accounts := simtypes.RandomAccounts(r, n)
+func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
+	accounts := simtypes.RandomAccounts(r, n)
 
-// 	initAmt := sdk.TokensFromConsensusPower(200000)
-// 	initCoins := sdk.NewCoins(sdk.NewCoin("foo", initAmt))
+	initAmt := sdk.TokensFromConsensusPower(200000)
+	initCoins := sdk.NewCoins(sdk.NewCoin("foo", initAmt))
 
-// 	// add coins to the accounts
-// 	for _, account := range accounts {
-// 		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
-// 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-// 		err := suite.app.BankKeeper.SetBalances(suite.ctx, account.Address, initCoins)
-// 		suite.Require().NoError(err)
-// 	}
+	// add coins to the accounts
+	for _, account := range accounts {
+		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
+		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+		err := suite.app.BankKeeper.SetBalances(suite.ctx, account.Address, initCoins)
+		suite.Require().NoError(err)
+	}
 
-// 	return accounts
-// }
+	return accounts
+}
 
-// func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
-// 	// setup 3 accounts
-// 	s := rand.NewSource(1)
-// 	r := rand.New(s)
-// 	accounts := suite.getTestingAccounts(r, 3)
+func (suite *SimTestSuite) TestSimulateGrantAuthorization() {
+	// setup 3 accounts
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := suite.getTestingAccounts(r, 2)
 
-// 	// begin a new block
-// 	suite.app.BeginBlock(abci.RequestBeginBlock{
-// 		Header: tmproto.Header{
-// 			Height:  suite.app.LastBlockHeight() + 1,
-// 			AppHash: suite.app.LastCommitID().Hash,
-// 		}})
+	// begin a new block
+	suite.app.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{
+			Height:  suite.app.LastBlockHeight() + 1,
+			AppHash: suite.app.LastCommitID().Hash,
+		},
+	})
 
-// 	initAmt := sdk.TokensFromConsensusPower(200000)
-// 	initCoins := sdk.NewCoins(sdk.NewCoin("foo", initAmt))
+	granter := accounts[0]
+	grantee := accounts[1]
 
-// 	granter := accounts[0]
-// 	grantee := accounts[1]
-// 	authorization := types.NewSendAuthorization(initCoins)
+	// execute operation
+	op := simulation.SimulateMsgGrantAuthorization(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.MsgAuthKeeper, time.Now().Add(30*time.Hour), suite.protoCdc)
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	suite.Require().NoError(err)
 
-// 	err := suite.app.MsgAuthKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
-// 	suite.Require().NoError(err)
+	var msg types.MsgGrantAuthorization
+	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.Require().True(operationMsg.OK)
+	suite.Require().Equal(granter.Address.String(), msg.Granter)
+	suite.Require().Equal(grantee.Address.String(), msg.Grantee)
+	suite.Require().Len(futureOperations, 0)
 
-// 	// execute operation
-// 	op := simulation.SimulateMsgRevokeAuthorization(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.MsgAuthKeeper)
-// 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
-// 	suite.Require().NoError(err)
+}
 
-// 	var msg types.MsgRevokeAuthorization
-// 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
+	// setup 3 accounts
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := suite.getTestingAccounts(r, 3)
 
-// 	suite.Require().True(operationMsg.OK)
-// 	suite.Require().Equal(granter.Address.String(), msg.Granter)
-// 	suite.Require().Equal(grantee.Address.String(), msg.Grantee)
-// 	suite.Require().Equal(types.SendAuthorization{}.MethodName(), msg.AuthorizationMsgType)
-// 	suite.Require().Len(futureOperations, 0)
+	// begin a new block
+	suite.app.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{
+			Height:  suite.app.LastBlockHeight() + 1,
+			AppHash: suite.app.LastCommitID().Hash,
+		}})
 
-// }
+	initAmt := sdk.TokensFromConsensusPower(200000)
+	initCoins := sdk.NewCoins(sdk.NewCoin("foo", initAmt))
 
-// func (suite *SimTestSuite) TestSimulateExecAuthorization() {
-// 	// setup 3 accounts
-// 	s := rand.NewSource(1)
-// 	r := rand.New(s)
-// 	accounts := suite.getTestingAccounts(r, 3)
+	granter := accounts[0]
+	grantee := accounts[1]
+	authorization := types.NewSendAuthorization(initCoins)
 
-// 	// begin a new block
-// 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+	err := suite.app.MsgAuthKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
+	suite.Require().NoError(err)
 
-// 	initAmt := sdk.TokensFromConsensusPower(200000)
-// 	initCoins := sdk.NewCoins(sdk.NewCoin("foo", initAmt))
+	// execute operation
+	op := simulation.SimulateMsgRevokeAuthorization(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.MsgAuthKeeper, suite.protoCdc)
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	suite.Require().NoError(err)
 
-// 	granter := accounts[0]
-// 	grantee := accounts[1]
-// 	authorization := types.NewSendAuthorization(initCoins)
+	var msg types.MsgRevokeAuthorization
+	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 
-// 	err := suite.app.MsgAuthKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
-// 	suite.Require().NoError(err)
+	suite.Require().True(operationMsg.OK)
+	suite.Require().Equal(granter.Address.String(), msg.Granter)
+	suite.Require().Equal(grantee.Address.String(), msg.Grantee)
+	suite.Require().Equal(types.SendAuthorization{}.MethodName(), msg.AuthorizationMsgType)
+	suite.Require().Len(futureOperations, 0)
 
-// 	// execute operation
-// 	op := simulation.SimulateMsgExecuteAuthorized(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.MsgAuthKeeper, suite.app.AppCodec())
-// 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
-// 	suite.Require().NoError(err)
+}
 
-// 	var msg types.MsgExecAuthorized
-// 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+func (suite *SimTestSuite) TestSimulateExecAuthorization() {
+	// setup 3 accounts
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := suite.getTestingAccounts(r, 3)
 
-// 	suite.Require().True(operationMsg.OK)
-// 	suite.Require().Equal(grantee.Address.String(), msg.Grantee)
-// 	suite.Require().Len(futureOperations, 0)
+	// begin a new block
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
-// }
+	initAmt := sdk.TokensFromConsensusPower(200000)
+	initCoins := sdk.NewCoins(sdk.NewCoin("foo", initAmt))
 
-// func TestSimTestSuite(t *testing.T) {
-// 	suite.Run(t, new(SimTestSuite))
-// }
+	granter := accounts[0]
+	grantee := accounts[1]
+	authorization := types.NewSendAuthorization(initCoins)
+
+	err := suite.app.MsgAuthKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
+	suite.Require().NoError(err)
+
+	// execute operation
+	op := simulation.SimulateMsgExecuteAuthorized(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.MsgAuthKeeper, suite.app.AppCodec(), suite.protoCdc)
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	suite.Require().NoError(err)
+
+	var msg types.MsgExecAuthorized
+
+	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
+
+	suite.Require().True(operationMsg.OK)
+	suite.Require().Equal(grantee.Address.String(), msg.Grantee)
+	suite.Require().Len(futureOperations, 0)
+
+}
+
+func TestSimTestSuite(t *testing.T) {
+	suite.Run(t, new(SimTestSuite))
+}

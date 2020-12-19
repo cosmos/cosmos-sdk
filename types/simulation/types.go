@@ -3,6 +3,7 @@ package simulation
 import (
 	"encoding/json"
 	"math/rand"
+	"reflect"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -75,7 +76,15 @@ func NewOperationMsgBasic(route, name, comment string, ok bool, msg []byte) Oper
 }
 
 // NewOperationMsg - create a new operation message from sdk.Msg
-func NewOperationMsg(msg sdk.Msg, ok bool, comment string) OperationMsg {
+func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec) OperationMsg {
+	if reflect.TypeOf(msg) == reflect.TypeOf(sdk.ServiceMsg{}) {
+		srvMsg, ok := msg.(sdk.ServiceMsg)
+		if !ok {
+			panic("failed: type assert")
+		}
+		bz := cdc.MustMarshalJSON(srvMsg.Request)
+		return NewOperationMsgBasic(srvMsg.MethodName, srvMsg.MethodName, comment, ok, bz)
+	}
 	return NewOperationMsgBasic(msg.Route(), msg.Type(), comment, ok, msg.GetSignBytes())
 }
 

@@ -357,7 +357,7 @@ func NewSimApp(
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
-		authz.NewAppModule(appCodec, app.MsgAuthKeeper, app.AccountKeeper, app.BankKeeper),
+		authz.NewAppModule(appCodec, app.MsgAuthKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		transferModule,
 	)
 
@@ -404,7 +404,7 @@ func NewSimApp(
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
-		authz.NewAppModule(appCodec, app.MsgAuthKeeper, app.AccountKeeper, app.BankKeeper),
+		authz.NewAppModule(appCodec, app.MsgAuthKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
 		transferModule,
 	)

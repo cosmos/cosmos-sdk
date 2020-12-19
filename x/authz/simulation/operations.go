@@ -4,7 +4,6 @@ import (
 	"context"
 	"math/rand"
 	"strings"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -96,8 +95,9 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantAuthorization, err.Error()), nil, err
 		}
 
+		blockTime := ctx.BlockTime()
 		msg, err := types.NewMsgGrantAuthorization(granter.Address, grantee.Address,
-			types.NewSendAuthorization(spendableCoins.Sub(fees)), time.Now().Add(300*time.Hour))
+			types.NewSendAuthorization(spendableCoins.Sub(fees)), blockTime.AddDate(1, 0, 0))
 
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantAuthorization, err.Error()), nil, err

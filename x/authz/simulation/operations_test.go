@@ -91,6 +91,8 @@ func (suite *SimTestSuite) TestSimulateGrantAuthorization() {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 2)
+	blockTime := time.Now().UTC()
+	ctx := suite.ctx.WithBlockTime(blockTime)
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{
@@ -105,7 +107,7 @@ func (suite *SimTestSuite) TestSimulateGrantAuthorization() {
 
 	// execute operation
 	op := simulation.SimulateMsgGrantAuthorization(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.MsgAuthKeeper, suite.protoCdc)
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, ctx, accounts, "")
 	suite.Require().NoError(err)
 
 	var msg types.MsgGrantAuthorization

@@ -64,7 +64,7 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgGrantAuthorization,
-			SimulateMsgGrantAuthorization(ak, bk, k, time.Now().Add(100*time.Hour), protoCdc),
+			SimulateMsgGrantAuthorization(ak, bk, k, protoCdc),
 		),
 		simulation.NewWeightedOperation(
 			weightRevokeAuthorization,
@@ -80,7 +80,7 @@ func WeightedOperations(
 // SimulateMsgGrantAuthorization generates a MsgGrantAuthorization with random values.
 // nolint: funlen
 func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper,
-	t time.Time, protoCdc *codec.ProtoCodec) simtypes.Operation {
+	protoCdc *codec.ProtoCodec) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -97,7 +97,7 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 		}
 
 		msg, err := types.NewMsgGrantAuthorization(granter.Address, grantee.Address,
-			types.NewSendAuthorization(spendableCoins.Sub(fees)), t)
+			types.NewSendAuthorization(spendableCoins.Sub(fees)), time.Now().Add(300*time.Hour))
 
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantAuthorization, err.Error()), nil, err

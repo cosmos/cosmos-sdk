@@ -89,7 +89,9 @@ func SimulateMsgGrantFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, k
 		svcMsgClientConn := &helpers.ServiceMsgClientConn{}
 		feegrantMsgClient := types.NewMsgClient(svcMsgClientConn)
 		_, err = feegrantMsgClient.GrantFeeAllowance(context.Background(), msg)
-
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantFeeAllowance, err.Error()), nil, err
+		}
 		tx, err := helpers.GenTx(
 			txGen,
 			svcMsgClientConn.GetMsgs(),
@@ -161,6 +163,10 @@ func SimulateMsgRevokeFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, 
 		svcMsgClientConn := &helpers.ServiceMsgClientConn{}
 		feegrantMsgClient := types.NewMsgClient(svcMsgClientConn)
 		_, err = feegrantMsgClient.RevokeFeeAllowance(context.Background(), &msg)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantFeeAllowance, err.Error()), nil, err
+		}
+
 		tx, err := helpers.GenTx(
 			txGen,
 			svcMsgClientConn.GetMsgs(),

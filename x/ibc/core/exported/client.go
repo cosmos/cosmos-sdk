@@ -2,10 +2,10 @@ package exported
 
 import (
 	ics23 "github.com/confio/ics23/go"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	proto "github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -25,6 +25,8 @@ const (
 
 // ClientState defines the required common functions for light clients.
 type ClientState interface {
+	proto.Message
+
 	ClientType() string
 	GetLatestHeight() Height
 	IsFrozen() bool
@@ -160,6 +162,8 @@ type ClientState interface {
 
 // ConsensusState is the state of the consensus process
 type ConsensusState interface {
+	proto.Message
+
 	ClientType() string // Consensus kind
 
 	// GetRoot returns the commitment root of the consensus state,
@@ -200,6 +204,7 @@ type Height interface {
 	GTE(Height) bool
 	GetRevisionNumber() uint64
 	GetRevisionHeight() uint64
+	Increment() Height
 	Decrement() (Height, bool)
 	String() string
 }

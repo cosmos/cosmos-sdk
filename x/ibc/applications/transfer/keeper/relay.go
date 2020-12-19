@@ -218,7 +218,17 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		// remove prefix added by sender chain
 		voucherPrefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
 		unprefixedDenom := data.Denom[len(voucherPrefix):]
-		token := sdk.NewCoin(unprefixedDenom, sdk.NewIntFromUint64(data.Amount))
+
+		// coin denomination used in sending from the escrow address
+		denom := unprefixedDenom
+
+		// The denomination used to send the coins is either the native denom or the hash of the path
+		// if the denomination is not native.
+		denomTrace := types.ParseDenomTrace(unprefixedDenom)
+		if denomTrace.Path != "" {
+			denom = denomTrace.IBCDenom()
+		}
+		token := sdk.NewCoin(denom, sdk.NewIntFromUint64(data.Amount))
 
 		// unescrow tokens
 		escrowAddress := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())

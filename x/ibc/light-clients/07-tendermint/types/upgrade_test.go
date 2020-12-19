@@ -53,6 +53,37 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 			expPass: true,
 		},
 		{
+			name: "successful upgrade to same revision",
+			setup: func() {
+				upgradedHeight := clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+2))
+				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, upgradedHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
+				upgradedConsState = &types.ConsensusState{
+					NextValidatorsHash: []byte("nextValsHash"),
+				}
+
+				// upgrade Height is at next block
+				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
+
+				// zero custom fields and store in upgrade store
+				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(lastHeight.GetRevisionHeight()), upgradedClient)
+				suite.chainB.App.UpgradeKeeper.SetUpgradedConsensusState(suite.chainB.GetContext(), int64(lastHeight.GetRevisionHeight()), upgradedConsState)
+
+				// commit upgrade store changes and update clients
+
+				suite.coordinator.CommitBlock(suite.chainB)
+				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
+				suite.Require().NoError(err)
+
+				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
+				suite.Require().True(found)
+
+				proofUpgradedClient, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(lastHeight.GetRevisionHeight())), cs.GetLatestHeight().GetRevisionHeight())
+				proofUpgradedConsState, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedConsStateKey(int64(lastHeight.GetRevisionHeight())), cs.GetLatestHeight().GetRevisionHeight())
+			},
+			expPass: true,
+		},
+
+		{
 			name: "unsuccessful upgrade: upgrade height revision height is more than the current client revision height",
 			setup: func() {
 
@@ -62,7 +93,7 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 				}
 
 				// upgrade Height is 10 blocks from now
-				lastHeight = clienttypes.NewHeight(10, uint64(suite.chainB.GetContext().BlockHeight()+10))
+				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+10))
 
 				// zero custom fields and store in upgrade store
 				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(lastHeight.GetRevisionHeight()), upgradedClient)

@@ -5,10 +5,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	clientrest "github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-
-	"github.com/cosmos/cosmos-sdk/client"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
@@ -17,6 +17,13 @@ import (
 type BroadcastReq struct {
 	Tx   legacytx.StdTx `json:"tx" yaml:"tx"`
 	Mode string         `json:"mode" yaml:"mode"`
+}
+
+var _ codectypes.UnpackInterfacesMessage = BroadcastReq{}
+
+// UnpackInterfaces implements the UnpackInterfacesMessage interface.
+func (m BroadcastReq) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return m.Tx.UnpackInterfaces(unpacker)
 }
 
 // BroadcastTxRequest implements a tx broadcasting handler that is responsible

@@ -69,7 +69,7 @@ Upon starting, the node will bootstrap its RPC and P2P server and start dialing 
 
 ## Other commands
 
-To discover how to concretely run a node and interact with it, please refer to our [Running a Node](../run-node/README.md) guide.
+To discover how to concretely run a node and interact with it, please refer to our [Running a Node, API and CLI](../run-node/README.md) guide.
 
 ## Next {hide}
 

@@ -1,3 +1,7 @@
+<!--
+order: 1
+-->
+
 # REST Endpoints Migration
 
 Migrate your REST endpoints to the Stargate ones. {synopsis}

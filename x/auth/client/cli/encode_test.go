@@ -33,9 +33,8 @@ func TestGetCommandEncode(t *testing.T) {
 	jsonEncoded, err := txCfg.TxJSONEncoder()(builder.GetTx())
 	require.NoError(t, err)
 
-	txFile, cleanup := testutil.WriteToNewTempFile(t, string(jsonEncoded))
+	txFile := testutil.WriteToNewTempFile(t, string(jsonEncoded))
 	txFileName := txFile.Name()
-	t.Cleanup(cleanup)
 
 	ctx := context.Background()
 	clientCtx := client.Context{}.

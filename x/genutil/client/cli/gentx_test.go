@@ -65,6 +65,7 @@ func (s *IntegrationTestSuite) TestGenTxCmd() {
 		fmt.Sprintf("--%s=%s", flags.FlagChainID, s.network.Config.ChainID),
 		fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, genTxFile),
 		val.Moniker,
+		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(),
 	})
 
 	err := cmd.ExecuteContext(ctx)

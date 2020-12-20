@@ -14,7 +14,7 @@ import (
 //----------------------------------------
 // Store
 
-// Store holds many cache-wrapped stores.
+// Store holds many branched stores.
 // Implements MultiStore.
 // NOTE: a Store (and MultiStores in general) should never expose the
 // keys for the substores.
@@ -31,7 +31,7 @@ var _ types.CacheMultiStore = Store{}
 
 // NewFromKVStore creates a new Store object from a mapping of store keys to
 // CacheWrapper objects and a KVStore as the database. Each CacheWrapper store
-// is cache-wrapped.
+// is a branched store.
 func NewFromKVStore(
 	store types.KVStore, stores map[types.StoreKey]types.CacheWrapper,
 	keys map[string]types.StoreKey, traceWriter io.Writer, traceContext types.TraceContext,
@@ -56,7 +56,7 @@ func NewFromKVStore(
 }
 
 // NewStore creates a new Store object from a mapping of store keys to
-// CacheWrapper objects. Each CacheWrapper store is cache-wrapped.
+// CacheWrapper objects. Each CacheWrapper store is a branched store.
 func NewStore(
 	db dbm.DB, stores map[types.StoreKey]types.CacheWrapper, keys map[string]types.StoreKey,
 	traceWriter io.Writer, traceContext types.TraceContext,
@@ -136,7 +136,7 @@ func (cms Store) CacheMultiStore() types.CacheMultiStore {
 // TODO: The store implementation can possibly be modified to support this as it
 // seems safe to load previous versions (heights).
 func (cms Store) CacheMultiStoreWithVersion(_ int64) (types.CacheMultiStore, error) {
-	panic("cannot cache-wrap cached multi-store with a version")
+	panic("cannot branch cached multi-store with a version")
 }
 
 // GetStore returns an underlying Store by key.

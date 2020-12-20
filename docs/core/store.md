@@ -60,11 +60,11 @@ At its very core, a Cosmos SDK `store` is an object that holds a `CacheWrapper` 
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/store/types/store.go#L15-L18
 
-The `GetStoreType` is a simple method that returns the type of store, whereas a `CacheWrapper` is a simple interface that specifies cache-wrapping and `Write` methods:
+The `GetStoreType` is a simple method that returns the type of store, whereas a `CacheWrapper` is a simple interface that implements store read caching and write branching  through `Write` method:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/store/types/store.go#L240-L264
 
-Cache-wrapping is used ubiquitously in the Cosmos SDK and required to be implemented on every store type. A cache-wrapper creates an isolated, ephemeral branch of a store that can be passed around and updated without affecting the main underlying store. This is used to trigger temporary state-transitions that may be reverted later should an error occur. Read more about it in [context](./context.md#Virtual-Store-and-cache-wrapping)
+Branching and cache is used ubiquitously in the Cosmos SDK and required to be implemented on every store type. A storage branch creates an isolated, ephemeral branch of a store that can be passed around and updated without affecting the main underlying store. This is used to trigger temporary state-transitions that may be reverted later should an error occur. Read more about it in [context](./context.md#Store-branching)
 
 ### Commit Store
 
@@ -88,7 +88,7 @@ Each Cosmos SDK application holds a multistore at its root to persist its state.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/store/types/store.go#L104-L133
 
-If tracing is enabled, then cache-wrapping the multistore will firstly wrap all the underlying `KVStore` in [`TraceKv.Store`](#tracekv-store).
+If tracing is enabled, then branching the multistore will firstly wrap all the underlying `KVStore` in [`TraceKv.Store`](#tracekv-store).
 
 ### CommitMultiStore
 
@@ -104,11 +104,11 @@ The `rootMulti.Store` is a base-layer multistore built around a `db` on top of w
 
 ### CacheMultiStore
 
-Whenever the `rootMulti.Store` needs to be cached-wrapped, a [`cachemulti.Store`](https://github.com/cosmos/cosmos-sdk/blob/master/store/cachemulti/store.go) is used.
+Whenever the `rootMulti.Store` needs to be branched, a [`cachemulti.Store`](https://github.com/cosmos/cosmos-sdk/blob/master/store/cachemulti/store.go) is used. 
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/store/cachemulti/store.go#L17-L28
 
-`cachemulti.Store` cache-wraps all substores (creates a virtual store for each substore) in its constructor and hold them in `Store.stores`. `Store.GetKVStore()` returns the store from `Store.stores`, and `Store.Write()` recursively calls `CacheWrap.Write()` on all the substores.
+`cachemulti.Store` branches all substores (creates a virtual store for each substore) in its constructor and hold them in `Store.stores`. Moreover cachese all read queries. `Store.GetKVStore()` returns the store from `Store.stores`, and `Store.Write()` recursively calls `CacheWrap.Write()` on all the substores.
 
 ## Base-layer KVStores
 
@@ -172,7 +172,7 @@ Transient stores are typically accessed via the [`context`](./context.md) via th
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/store/cachekv/store.go#L27-L34
 
-This is the type used whenever an IAVL Store needs to be cache-wrapped to create a virtual store (typically when we need to mutate a state that might be reverted later).
+This is the type used whenever an IAVL Store needs to be branched to create an isolated store (typically when we need to mutate a state that might be reverted later).
 
 #### `Get`
 

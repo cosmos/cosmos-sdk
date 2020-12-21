@@ -21,7 +21,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	"github.com/cosmos/cosmos-sdk/server/types"
@@ -283,11 +282,11 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		WithHomeDir(home).
 		WithChainID(genDoc.ChainID)
 
-	srv := api.New(clientCtx, ctx.Logger.With("module", "server"))
+	srv := app.NewServer(clientCtx, ctx.Logger, config)
 
 	if sdkCfg.API.Enable {
 		// register routes and start server
-		app.RegisterAPIRoutes(srv.Base(), sdkCfg.API)
+		app.RegisterAPIRoutes(srv.BaseServer(), sdkCfg.API)
 		errCh := make(chan error)
 
 		go func() {

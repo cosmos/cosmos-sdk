@@ -158,7 +158,7 @@ type (
 		RPCClient  tmclient.Client
 
 		tmNode *node.Node
-		api    *api.Server
+		api    api.Server
 		grpc   *grpc.Server
 	}
 )
@@ -196,7 +196,7 @@ func New(t *testing.T, cfg Config) *Network {
 
 	// generate private keys, node IDs, and initial transactions
 	for i := 0; i < cfg.NumValidators; i++ {
-		appCfg := srvconfig.DefaultConfig()
+		appCfg := srvconfig.DefaultConfig().GetSDKConfig()
 		appCfg.Pruning = cfg.PruningStrategy
 		appCfg.MinGasPrices = cfg.MinGasPrices
 		appCfg.API.Enable = true

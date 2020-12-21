@@ -552,6 +552,11 @@ func (app *SimApp) SimulationManager() *module.SimulationManager {
 	return app.sm
 }
 
+// NewServer creates the default SDK base server.
+func (app *SimApp) NewServer(clientCtx client.Context, logger log.Logger, _ config.ServerConfig) api.Server {
+	return api.New(clientCtx, logger)
+}
+
 // ConfigGenerator uses the default SDK config generator.
 func (app *SimApp) ConfigGenerator() config.Generator {
 	return config.DefaultGenerator
@@ -559,7 +564,7 @@ func (app *SimApp) ConfigGenerator() config.Generator {
 
 // RegisterAPIRoutes registers all application module routes with the provided
 // API server.
-func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
+func (app *SimApp) RegisterAPIRoutes(apiSvr *api.BaseServer, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
 	rpc.RegisterRoutes(clientCtx, apiSvr.Router)
 	// Register legacy tx routes.
@@ -582,7 +587,7 @@ func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICon
 // RegisterExternalServices implements the Application.RegisterExternalServices method.
 // It performs a no-operation as SimApp doesn't expose extra services other than the
 // default ones provided by the SDK.
-func (app *SimApp) RegisterExternalServices(_ api.SDKServer, _ config.ServerConfig) {}
+func (app *SimApp) RegisterExternalServices(_ api.Server, _ config.ServerConfig) {}
 
 // RegisterTxService implements the Application.RegisterTxService method.
 func (app *SimApp) RegisterTxService(clientCtx client.Context) {

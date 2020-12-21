@@ -25,7 +25,7 @@ import (
 )
 
 type Server interface {
-	Base() *BaseServer
+	BaseServer() *BaseServer
 
 	Start(config.ServerConfig) error
 	Close() error
@@ -59,7 +59,7 @@ func CustomGRPCHeaderMatcher(key string) (string, bool) {
 }
 
 // New creates the default SDK server instance.
-func New(clientCtx client.Context, logger log.Logger) Server {
+func New(clientCtx client.Context, logger log.Logger) *BaseServer {
 	// The default JSON marshaller used by the gRPC-Gateway is unable to marshal non-nullable non-scalar fields.
 	// Using the gogo/gateway package with the gRPC-Gateway WithMarshaler option fixes the scalar field marshalling issue.
 	marshalerOption := &gateway.JSONPb{
@@ -72,7 +72,7 @@ func New(clientCtx client.Context, logger log.Logger) Server {
 	return &BaseServer{
 		Router:    mux.NewRouter(),
 		ClientCtx: clientCtx,
-		logger:    logger,
+		logger:    logger.With("module", "api-server"),
 		GRPCGatewayRouter: runtime.NewServeMux(
 			// Custom marshaler option is required for gogo proto
 			runtime.WithMarshalerOption(runtime.MIMEWildcard, marshalerOption),
@@ -88,8 +88,8 @@ func New(clientCtx client.Context, logger log.Logger) Server {
 	}
 }
 
-// Base implements the Server interface.
-func (s *BaseServer) Base() *BaseServer { return s }
+// BaseServer implements the Server interface.
+func (s *BaseServer) BaseServer() *BaseServer { return s }
 
 // Start starts the API server. Internally, the API server leverages Tendermint's
 // JSON RPC server. Configuration options are provided via config.APIConfig

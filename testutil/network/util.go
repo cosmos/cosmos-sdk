@@ -78,7 +78,7 @@ func startInProcess(cfg Config, val *Validator) error {
 		errCh := make(chan error)
 
 		go func() {
-			if err := apiSrv.Start(*val.AppConfig); err != nil {
+			if err := apiSrv.Start(val.AppConfig); err != nil {
 				errCh <- err
 			}
 		}()

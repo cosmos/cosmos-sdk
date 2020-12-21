@@ -38,6 +38,9 @@ type (
 		// used to retrieve the config.toml during the start of the server.
 		ConfigGenerator() config.Generator
 
+		// NewServer creates a custom server for the application.
+		NewServer(clientCtx client.Context, logger log.Logger, cfg config.ServerConfig) api.Server
+
 		RegisterAPIRoutes(*api.BaseServer, config.APIConfig)
 
 		// RegisterExternalServices is optional function to retegister custom services

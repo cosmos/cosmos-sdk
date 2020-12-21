@@ -186,8 +186,8 @@ func (k Keeper) executeQueuedDelegationMsg(ctx sdk.Context, msg *types.MsgDelega
 	return nil
 }
 
-// CancelQueuedDelegation does cancel delegation
-func (k Keeper) CancelQueuedDelegation(ctx sdk.Context, msg *types.MsgDelegate) error {
+// revertDelegationMsg does cancel delegation
+func (k Keeper) revertDelegationMsg(ctx sdk.Context, msg *types.MsgDelegate) error {
 	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
 		return err
@@ -349,7 +349,7 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 			err := k.executeQueuedDelegationMsg(cacheCtx, msg)
 			if err == nil {
 				writeCache()
-			} else if err = k.CancelQueuedDelegation(ctx, msg); err != nil {
+			} else if err = k.revertDelegationMsg(ctx, msg); err != nil {
 				panic(fmt.Sprintf("not be able to execute nor revert, %T", msg))
 			}
 		case *types.MsgBeginRedelegate:

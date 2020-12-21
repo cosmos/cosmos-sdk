@@ -8,7 +8,9 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 )
 
-const defaultConfigTemplate = `# This is a TOML config file.
+// DefaultConfigTemplate defines the standard config template for the application.
+// It can be extended to allow for custom configurations.
+var DefaultConfigTemplate = `# This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 
 ###############################################################################
@@ -163,21 +165,22 @@ snapshot-interval = {{ .StateSync.SnapshotInterval }}
 snapshot-keep-recent = {{ .StateSync.SnapshotKeepRecent }}
 `
 
-var configTemplate *template.Template
+// ConfigTemplate is the template variable for the configuration toml file.
+var ConfigTemplate *template.Template
 
 func init() {
 	var err error
 
 	tmpl := template.New("appConfigFileTemplate")
 
-	if configTemplate, err = tmpl.Parse(defaultConfigTemplate); err != nil {
+	if ConfigTemplate, err = tmpl.Parse(DefaultConfigTemplate); err != nil {
 		panic(err)
 	}
 }
 
 // ParseConfig retrieves the default environment configuration for the
 // application.
-func ParseConfig(v *viper.Viper) (*Config, error) {
+func ParseConfig(v *viper.Viper) (ServerConfig, error) {
 	conf := DefaultConfig()
 	err := v.Unmarshal(conf)
 
@@ -186,10 +189,10 @@ func ParseConfig(v *viper.Viper) (*Config, error) {
 
 // WriteConfigFile renders config using the template and writes it to
 // configFilePath.
-func WriteConfigFile(configFilePath string, config *Config) {
+func WriteConfigFile(configFilePath string, config ServerConfig) {
 	var buffer bytes.Buffer
 
-	if err := configTemplate.Execute(&buffer, config); err != nil {
+	if err := ConfigTemplate.Execute(&buffer, config); err != nil {
 		panic(err)
 	}
 

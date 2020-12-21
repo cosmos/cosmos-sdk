@@ -261,7 +261,8 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	}
 	ctx.Logger.Debug("initialization: tmNode started")
 
-	config := config.GetConfig(ctx.Viper)
+	// TODO: pass in custom generator
+	config := config.GetConfig(ctx.Viper, config.DefaultGenerator)
 
 	// Add the tx service to the gRPC router. We only need to register this
 	// service if API or gRPC is enabled, and avoid doing so in the general
@@ -273,7 +274,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		app.RegisterTendermintService(clientCtx)
 	}
 
-	var apiSrv *api.Server
+	var apiSrv api.SDKServer
 
 	if config.API.Enable {
 		genDoc, err := genDocProvider()

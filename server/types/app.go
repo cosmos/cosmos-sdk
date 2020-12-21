@@ -36,6 +36,10 @@ type (
 
 		RegisterAPIRoutes(*api.Server, config.APIConfig)
 
+		// RegisterExternalServices is optional function to retegister custom services
+		// to the server that are not defined by the default SDK configuration.
+		RegisterExternalServices(api.SDKServer, config.ServerConfig)
+
 		// RegisterGRPCServer registers gRPC services directly with the gRPC
 		// server.
 		RegisterGRPCServer(grpc.Server)

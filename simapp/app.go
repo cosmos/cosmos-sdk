@@ -570,9 +570,14 @@ func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICon
 
 	// register swagger API from root so that other applications can override easily
 	if apiConfig.Swagger {
-		RegisterSwaggerAPI(clientCtx, apiSvr.Router)
+		RegisterSwaggerAPI(apiSvr.Router)
 	}
 }
+
+// RegisterExternalServices implements the Application.RegisterExternalServices method.
+// It performs a no-operation as SimApp doesn't expose extra services other than the
+// default ones provided by the SDK.
+func (app *SimApp) RegisterExternalServices(_ api.SDKServer, _ config.ServerConfig) {}
 
 // RegisterTxService implements the Application.RegisterTxService method.
 func (app *SimApp) RegisterTxService(clientCtx client.Context) {
@@ -585,7 +590,7 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server
-func RegisterSwaggerAPI(ctx client.Context, rtr *mux.Router) {
+func RegisterSwaggerAPI(rtr *mux.Router) {
 	statikFS, err := fs.New()
 	if err != nil {
 		panic(err)

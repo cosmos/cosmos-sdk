@@ -30,8 +30,10 @@ type SDKServer interface {
 	GetGRPCGatewayRouter() *runtime.ServeMux
 
 	Start(config.ServerConfig) error
-	Stop() error
+	Close() error
 }
+
+var _ SDKServer = &Server{}
 
 // Server defines the server's API interface.
 type Server struct {
@@ -58,7 +60,8 @@ func CustomGRPCHeaderMatcher(key string) (string, bool) {
 	}
 }
 
-func New(clientCtx client.Context, logger log.Logger) *Server {
+// New creates the default SDK server instance.
+func New(clientCtx client.Context, logger log.Logger) SDKServer {
 	// The default JSON marshaller used by the gRPC-Gateway is unable to marshal non-nullable non-scalar fields.
 	// Using the gogo/gateway package with the gRPC-Gateway WithMarshaler option fixes the scalar field marshalling issue.
 	marshalerOption := &gateway.JSONPb{
@@ -87,13 +90,24 @@ func New(clientCtx client.Context, logger log.Logger) *Server {
 	}
 }
 
+// Ctx implements the SDKServer interface.
+func (s Server) Ctx() client.Context { return s.ClientCtx }
+
+// GetRouter implements the SDKServer interface.
+func (s Server) GetRouter() *mux.Router { return s.Router }
+
+// GetGRPCGatewayRouter implements the SDKServer interface.
+func (s Server) GetGRPCGatewayRouter() *runtime.ServeMux { return s.GRPCGatewayRouter }
+
 // Start starts the API server. Internally, the API server leverages Tendermint's
 // JSON RPC server. Configuration options are provided via config.APIConfig
 // and are delegated to the Tendermint JSON RPC server. The process is
 // non-blocking, so an external signal handler must be used.
-func (s *Server) Start(cfg config.Config) error {
-	if cfg.Telemetry.Enabled {
-		m, err := telemetry.New(cfg.Telemetry)
+func (s *Server) Start(cfg config.ServerConfig) error {
+	sdkCfg := cfg.GetSDKConfig()
+
+	if sdkCfg.Telemetry.Enabled {
+		m, err := telemetry.New(sdkCfg.Telemetry)
 		if err != nil {
 			return err
 		}
@@ -103,12 +117,12 @@ func (s *Server) Start(cfg config.Config) error {
 	}
 
 	tmCfg := tmrpcserver.DefaultConfig()
-	tmCfg.MaxOpenConnections = int(cfg.API.MaxOpenConnections)
-	tmCfg.ReadTimeout = time.Duration(cfg.API.RPCReadTimeout) * time.Second
-	tmCfg.WriteTimeout = time.Duration(cfg.API.RPCWriteTimeout) * time.Second
-	tmCfg.MaxBodyBytes = int64(cfg.API.RPCMaxBodyBytes)
+	tmCfg.MaxOpenConnections = int(sdkCfg.API.MaxOpenConnections)
+	tmCfg.ReadTimeout = time.Duration(sdkCfg.API.RPCReadTimeout) * time.Second
+	tmCfg.WriteTimeout = time.Duration(sdkCfg.API.RPCWriteTimeout) * time.Second
+	tmCfg.MaxBodyBytes = int64(sdkCfg.API.RPCMaxBodyBytes)
 
-	listener, err := tmrpcserver.Listen(cfg.API.Address, tmCfg)
+	listener, err := tmrpcserver.Listen(sdkCfg.API.Address, tmCfg)
 	if err != nil {
 		return err
 	}
@@ -118,7 +132,7 @@ func (s *Server) Start(cfg config.Config) error {
 	s.listener = listener
 	var h http.Handler = s.Router
 
-	if cfg.API.EnableUnsafeCORS {
+	if sdkCfg.API.EnableUnsafeCORS {
 		allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
 		return tmrpcserver.Serve(s.listener, allowAllCORS(h), s.logger, tmCfg)
 	}

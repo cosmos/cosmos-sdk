@@ -19,11 +19,7 @@ const (
 )
 
 type ServerConfig interface {
-	GetBaseConfig() BaseConfig
-	GetAPIConfig() APIConfig
-	GetGRPCConfig() GRPCConfig
-	GetTelemetryConfig() telemetry.Config
-	GetStateSyncConfig() StateSyncConfig
+	GetSDKConfig() *Config
 }
 
 // BaseConfig defines the server's basic configuration
@@ -139,9 +135,9 @@ type Config struct {
 	StateSync StateSyncConfig  `mapstructure:"state-sync"`
 }
 
-// SetMinGasPrices sets the validator's minimum gas prices.
-func (c *Config) GetBaseConfig() {
-
+// GetSDKConfig implements the ServerConfig interface.
+func (c *Config) GetSDKConfig() *Config {
+	return c
 }
 
 // SetMinGasPrices sets the validator's minimum gas prices.
@@ -172,7 +168,7 @@ func (c *Config) GetMinGasPrices() sdk.DecCoins {
 }
 
 // DefaultConfig returns server's default configuration.
-func DefaultConfig() *Config {
+func DefaultConfig() ServerConfig {
 	return &Config{
 		BaseConfig: BaseConfig{
 			MinGasPrices:      defaultMinGasPrices,
@@ -207,8 +203,17 @@ func DefaultConfig() *Config {
 	}
 }
 
-// GetConfig returns a fully parsed Config object.
-func GetConfig(v *viper.Viper) Config {
+// Generator creates a general purpose server configuration
+type Generator func(cfg *Config) ServerConfig
+
+// DefaultGenerator is the default generator for a configuration file that
+// is passed to the served during its start.
+func DefaultGenerator(cfg *Config) ServerConfig {
+	return cfg
+}
+
+// GetConfig returns a fully parsed ServerConfig object.
+func GetConfig(v *viper.Viper, cfgGen Generator) ServerConfig {
 	globalLabelsRaw := v.Get("telemetry.global-labels").([]interface{})
 	globalLabels := make([][]string, 0, len(globalLabelsRaw))
 	for _, glr := range globalLabelsRaw {
@@ -218,7 +223,7 @@ func GetConfig(v *viper.Viper) Config {
 		}
 	}
 
-	return Config{
+	cfg := &Config{
 		BaseConfig: BaseConfig{
 			MinGasPrices:      v.GetString("minimum-gas-prices"),
 			InterBlockCache:   v.GetBool("inter-block-cache"),
@@ -259,4 +264,6 @@ func GetConfig(v *viper.Viper) Config {
 			SnapshotKeepRecent: v.GetUint32("state-sync.snapshot-keep-recent"),
 		},
 	}
+
+	return cfgGen(cfg)
 }

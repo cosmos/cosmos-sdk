@@ -2,18 +2,14 @@ package config
 
 import (
 	"fmt"
-	"strings"
-	"time"
-
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/spf13/pflag"
-	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
-	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/client"
-	"github.com/cosmos/cosmos-sdk/server/rosetta/services"
+	"github.com/spf13/pflag"
+	crgserver "github.com/tendermint/cosmos-rosetta-gateway/server"
+	"strings"
+	"time"
 )
 
 // configuration defaults constants
@@ -44,41 +40,6 @@ const (
 	FlagRetries            = "retries"
 	FlagOffline            = "offline"
 )
-
-// RosettaFromConfig builds the rosetta servicer full implementation from configurations
-func RosettaFromConfig(conf *Config) (crg.Adapter, rosetta.NodeClient, error) {
-	if conf.Offline {
-		return services.NewOffline(conf.NetworkIdentifier()), nil, nil
-	}
-	var dataAPIOpts []client.OptionFunc
-	if conf.codec != nil && conf.ir != nil {
-		dataAPIOpts = append(dataAPIOpts, client.WithCodec(conf.ir, conf.codec))
-	}
-	dataAPIClient, err := client.NewSingle(conf.GRPCEndpoint, conf.TendermintRPC, dataAPIOpts...)
-	if err != nil {
-		return nil, nil, fmt.Errorf("data api client init failure: %w", err)
-	}
-	sn, err := services.NewSingleNetwork(dataAPIClient, &types.NetworkIdentifier{
-		Blockchain: conf.Blockchain,
-		Network:    conf.Network,
-	})
-	if err != nil {
-		return nil, nil, fmt.Errorf("rosetta network initialization failure: %w", err)
-	}
-	return sn, dataAPIClient, nil
-}
-
-// RetryRosettaFromConfig tries to initialize rosetta retrying
-func RetryRosettaFromConfig(conf *Config) (rosetta crg.Adapter, client rosetta.NodeClient, err error) {
-	for i := 0; i < conf.Retries; i++ {
-		rosetta, client, err = RosettaFromConfig(conf)
-		if err == nil {
-			return
-		}
-		time.Sleep(5 * time.Second)
-	}
-	return
-}
 
 // Config defines the configuration of the rosetta server
 type Config struct {
@@ -116,9 +77,9 @@ func (c *Config) NetworkIdentifier() *types.NetworkIdentifier {
 	}
 }
 
-// Validate validates a configuration and sets
+// validate validates a configuration and sets
 // its defaults in case they were not provided
-func (c *Config) Validate() error {
+func (c *Config) validate() error {
 	if (c.codec == nil) != (c.ir == nil) {
 		return fmt.Errorf("codec and interface registry must be both different from nil or nil")
 	}
@@ -137,7 +98,7 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("network not provided")
 	}
 	if c.Offline {
-		return nil
+		return fmt.Errorf("offline mode is not supported for stargate implementation due to how sigv2 works")
 	}
 
 	// these are optional but it must be online
@@ -199,11 +160,35 @@ func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 		Retries:       retries,
 		Offline:       offline,
 	}
-	err = conf.Validate()
+	err = conf.validate()
 	if err != nil {
 		return nil, err
 	}
 	return conf, nil
+}
+
+func HandlerFromConfig(conf *Config) (crgserver.Handler, error) {
+	err := conf.validate()
+	if err != nil {
+		return crgserver.Handler{}, err
+	}
+	client, err := rosetta.NewOnlineServicer(conf.codec, conf.ir, conf.GRPCEndpoint, conf.TendermintRPC)
+	if err != nil {
+		return crgserver.Handler{}, err
+	}
+	return crgserver.NewHandler(
+		crgserver.Settings{
+			Network: &types.NetworkIdentifier{
+				Blockchain: conf.Blockchain,
+				Network:    conf.Network,
+			},
+			OnlineServicer:  client,
+			OfflineServicer: client,
+			Listen:          conf.Addr,
+			Offline:         conf.Offline,
+			Retries:         conf.Retries,
+			RetryWait:       15 * time.Second,
+		})
 }
 
 // SetFlags sets the configuration flags to the given flagset

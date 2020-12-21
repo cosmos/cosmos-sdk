@@ -71,7 +71,7 @@ func (s *IntegrationTestSuite) TestGenTxCmd() {
 	err := cmd.ExecuteContext(ctx)
 	s.Require().NoError(err)
 
-	// Validate generated transaction.
+	// validate generated transaction.
 	open, err := os.Open(genTxFile)
 	s.Require().NoError(err)
 

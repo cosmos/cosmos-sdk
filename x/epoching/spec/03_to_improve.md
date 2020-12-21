@@ -29,7 +29,7 @@ order: 3
 // — — Should test to see what would happen if max_validators is changed though, in the middle of an epoch
 // — we should define some new invariants that help check that everything is working smoothly with these new changes for 3 modules e.g. https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/keeper/invariants.go
 // — — Within Epoch, ValidationPower = ValidationPower - SlashAmount
-// — — When epoch actions queue is empty, EpochTempPool balance should be zero
+// — — When epoch actions queue is empty, EpochDelegationPool balance should be zero
 // — we should count all the delegation changes that happen during the epoch, and then make sure that the resulting change at the end of the epoch is actually correct
 // — If the validator that I delegated to double signs at block 16, I should still get slashed instantly because even though I asked to unbond at 14, they still used my power at block 16, I should only be not liable for slashes once my power is stopped being used
 // — On the converse of this, I should still be getting rewards while my power is being used.  I shouldn’t stop receiving rewards until block 20

@@ -51,8 +51,8 @@ func NewKeeper(
 		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
 	}
 
-	if addr := ak.GetModuleAddress(types.EpochTempPoolName); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.EpochTempPoolName))
+	if addr := ak.GetModuleAddress(types.EpochDelegationPoolName); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.EpochDelegationPoolName))
 	}
 
 	return Keeper{

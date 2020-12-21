@@ -593,7 +593,7 @@ func (k Keeper) Delegate(
 		}
 
 		coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), bondAmt))
-		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.EpochTempPoolName, sendName, coins); err != nil {
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.EpochDelegationPoolName, sendName, coins); err != nil {
 			return sdk.Dec{}, err
 		}
 	} else {

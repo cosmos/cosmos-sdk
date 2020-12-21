@@ -59,7 +59,7 @@ func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers 
 func delegateCoinsFromAccount(ctx sdk.Context, app *simapp.SimApp, addr sdk.AccAddress, amount sdk.Int, val stakingtypes.Validator) error {
 	bondDenom := app.StakingKeeper.BondDenom(ctx)
 	coins := sdk.Coins{sdk.NewCoin(bondDenom, amount)}
-	app.BankKeeper.DelegateCoinsFromAccountToModule(ctx, addr, stakingtypes.EpochTempPoolName, coins)
+	app.BankKeeper.DelegateCoinsFromAccountToModule(ctx, addr, stakingtypes.EpochDelegationPoolName, coins)
 	_, err := app.StakingKeeper.Delegate(ctx, addr, amount, stakingtypes.Unbonded, val, true)
 	return err
 }

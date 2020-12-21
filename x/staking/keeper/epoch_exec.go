@@ -61,7 +61,7 @@ func (k Keeper) CancelCreateValidatorSelfDelegation(ctx sdk.Context, msg *types.
 	}
 
 	coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), msg.Value.Amount))
-	if err := k.bankKeeper.UndelegateCoinsFromModuleToAccount(ctx, types.EpochTempPoolName, delegatorAddress, coins); err != nil {
+	if err := k.bankKeeper.UndelegateCoinsFromModuleToAccount(ctx, types.EpochDelegationPoolName, delegatorAddress, coins); err != nil {
 		return err
 	}
 
@@ -198,7 +198,7 @@ func (k Keeper) CancelQueuedDelegation(ctx sdk.Context, msg *types.MsgDelegate) 
 	}
 
 	coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), msg.Amount.Amount))
-	if err := k.bankKeeper.UndelegateCoinsFromModuleToAccount(ctx, types.EpochTempPoolName, delegatorAddress, coins); err != nil {
+	if err := k.bankKeeper.UndelegateCoinsFromModuleToAccount(ctx, types.EpochDelegationPoolName, delegatorAddress, coins); err != nil {
 		return err
 	}
 

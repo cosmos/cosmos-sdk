@@ -10,9 +10,9 @@ Messages are queued to run at the end of epochs.
 Queued messages have epoch number to be run and at the end of epochs, it run messages queued for the epoch and execute the message.
 
 ### Staking messages
-- **MsgCreateValidator**: Move user's funds to `EpochTempPool` inside handler and move funds in `EpochTempPool` to `UnbondedPool` on Epoch while doing self delegation. If Epoch execution fail, return back funds from `EpochTempPool` to user's account.
+- **MsgCreateValidator**: Move user's funds to `EpochDelegationPool` inside handler and move funds in `EpochDelegationPool` to `UnbondedPool` on Epoch while doing self delegation. If Epoch execution fail, return back funds from `EpochDelegationPool` to user's account.
 - **MsgEditValidator**: Validate message and if valid queue the message for execution at the end of the Epoch.
-- **MsgDelegate**: Move user's funds to `EpochTempPool` inside handler and move funds in `EpochTempPool` to `UnbondedPool` on Epoch while doing delegation to a selected validator. If Epoch execution fail, return back funds from `EpochTempPool` to user's account.
+- **MsgDelegate**: Move user's funds to `EpochDelegationPool` inside handler and move funds in `EpochDelegationPool` to `UnbondedPool` on Epoch while doing delegation to a selected validator. If Epoch execution fail, return back funds from `EpochDelegationPool` to user's account.
 - **MsgBeginRedelegate**: Validate message and if valid queue the message for execution at the end of the Epoch.
 - **MsgUndelegate**: Validate message and if valid queue the message for execution at the end of the Epoch.
 
@@ -37,7 +37,7 @@ For now, Slash and Jail take effect instantly at the end of block.
 ## Execution on epochs
 - Try executing the message for the epoch
 - If success, make changes as it is
-- If failure, try making revert extra actions done on handlers (e.g. EpochTempPool deposit)
+- If failure, try making revert extra actions done on handlers (e.g. EpochDelegationPool deposit)
 - If revert fail, panic
 
 ## Endblocker ValidatorSetUpdates

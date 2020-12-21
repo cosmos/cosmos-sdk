@@ -68,9 +68,20 @@ func (a FeeAllowanceGrant) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 // PrepareForExport will m	ake all needed changes to the allowance to prepare to be
 // re-imported at height 0, and return a copy of this grant.
 func (a FeeAllowanceGrant) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceGrant {
-	err := a.GetFeeGrant().PrepareForExport(dumpTime, dumpHeight)
+	feegrant := a.GetFeeGrant().PrepareForExport(dumpTime, dumpHeight)
+	if feegrant == nil {
+		return FeeAllowanceGrant{}
+	}
+
+	granter, err := sdk.AccAddressFromBech32(a.Granter)
 	if err != nil {
 		return FeeAllowanceGrant{}
 	}
-	return a
+
+	grantee, err := sdk.AccAddressFromBech32(a.Grantee)
+	if err != nil {
+		return FeeAllowanceGrant{}
+	}
+
+	return NewFeeAllowanceGrant(granter, grantee, feegrant)
 }

@@ -43,7 +43,7 @@ require (
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.6.1
 	github.com/tendermint/btcd v0.1.1
-	github.com/tendermint/cosmos-rosetta-gateway v0.2.1-0.20201221162452-1ab243bb4520
+	github.com/tendermint/cosmos-rosetta-gateway v0.2.1-0.20201221165605-b38b9ea665d7
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.16.0
 	github.com/tendermint/tendermint v0.34.0

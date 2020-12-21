@@ -1,10 +1,11 @@
 package server
 
 import (
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	rosettacfg "github.com/cosmos/cosmos-sdk/server/rosetta/config"
-	"github.com/spf13/cobra"
 )
 
 // RosettaCommand builds the rosetta root command given
@@ -22,7 +23,7 @@ func RosettaCommand(ir codectypes.InterfaceRegistry, cdc codec.Marshaler) *cobra
 			if protoCodec, ok := cdc.(*codec.ProtoCodec); ok {
 				conf.WithCodec(ir, protoCodec)
 			}
-			rosettaSrv, err := rosettacfg.HandlerFromConfig(conf)
+			rosettaSrv, err := rosettacfg.ServerFromConfig(conf)
 			if err != nil {
 				return err
 			}

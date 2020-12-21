@@ -2,14 +2,16 @@ package config
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/spf13/pflag"
+	crg "github.com/tendermint/cosmos-rosetta-gateway/server"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
-	"github.com/spf13/pflag"
-	crgserver "github.com/tendermint/cosmos-rosetta-gateway/server"
-	"strings"
-	"time"
 )
 
 // configuration defaults constants
@@ -167,17 +169,17 @@ func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 	return conf, nil
 }
 
-func HandlerFromConfig(conf *Config) (crgserver.Handler, error) {
+func ServerFromConfig(conf *Config) (crg.Server, error) {
 	err := conf.validate()
 	if err != nil {
-		return crgserver.Handler{}, err
+		return crg.Server{}, err
 	}
 	client, err := rosetta.NewOnlineServicer(conf.codec, conf.ir, conf.GRPCEndpoint, conf.TendermintRPC)
 	if err != nil {
-		return crgserver.Handler{}, err
+		return crg.Server{}, err
 	}
-	return crgserver.NewHandler(
-		crgserver.Settings{
+	return crg.NewServer(
+		crg.Settings{
 			Network: &types.NetworkIdentifier{
 				Blockchain: conf.Blockchain,
 				Network:    conf.Network,

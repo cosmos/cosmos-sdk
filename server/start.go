@@ -4,10 +4,11 @@ package server
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"os"
 	"runtime/pprof"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -331,7 +332,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		}
 		conf.WithCodec(clientCtx.InterfaceRegistry, clientCtx.JSONMarshaler.(*codec.ProtoCodec))
 
-		rosettaSrv, err = rosettacfg.HandlerFromConfig(conf)
+		rosettaSrv, err = rosettacfg.ServerFromConfig(conf)
 		if err != nil {
 			return err
 		}

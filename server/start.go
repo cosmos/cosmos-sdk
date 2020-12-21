@@ -55,9 +55,10 @@ const (
 
 // GRPC-related flags.
 const (
-	flagGRPCEnable      = "grpc.enable"
-	flagGRPCAddress     = "grpc.address"
-	flagGRPCProxyEnable = "grpc.grpc-proxy.enable"
+	flagGRPCEnable     = "grpc.enable"
+	flagGRPCAddress    = "grpc.address"
+	flagGRPCWebEnable  = "grpc.grpc-web.enable"
+	flagGRPCWebAddress = "grpc.grpc-web.address"
 )
 
 // State sync-related flags.
@@ -152,7 +153,8 @@ which accepts a path for the resulting pprof file.
 
 	cmd.Flags().Bool(flagGRPCEnable, true, "Define if the gRPC server should be enabled")
 	cmd.Flags().String(flagGRPCAddress, config.DefaultGRPCAddress, "the gRPC server address to listen on")
-	cmd.Flags().Bool(flagGRPCProxyEnable, true, "Define if the gRPC-Proxy server should be enabled")
+	cmd.Flags().Bool(flagGRPCWebEnable, true, "Define if the gRPC-Web server should be enabled")
+	cmd.Flags().String(flagGRPCWebAddress, config.DefaultGRPCAddress, "the gRPC-Web server address to listen on")
 
 	cmd.Flags().Uint64(FlagStateSyncSnapshotInterval, 0, "State sync snapshot interval")
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
@@ -325,7 +327,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 				Handler: http.HandlerFunc(handler),
 			}
 			if err := grpcWebSrv.ListenAndServe(); err != nil {
-				ctx.Logger.Error("failed starting http server: ", err)
+				ctx.Logger.Error("failed starting grpc-web http server: ", err)
 				return err
 			}
 		}

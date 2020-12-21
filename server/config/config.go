@@ -18,6 +18,14 @@ const (
 	DefaultGRPCAddress = "0.0.0.0:9090"
 )
 
+type ServerConfig interface {
+	GetBaseConfig() BaseConfig
+	GetAPIConfig() APIConfig
+	GetGRPCConfig() GRPCConfig
+	GetTelemetryConfig() telemetry.Config
+	GetStateSyncConfig() StateSyncConfig
+}
+
 // BaseConfig defines the server's basic configuration
 type BaseConfig struct {
 	// The minimum gas prices a validator is willing to accept for processing a

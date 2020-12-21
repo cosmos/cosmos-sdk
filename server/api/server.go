@@ -24,6 +24,15 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 )
 
+type CosmosServer interface {
+	Ctx() client.Context
+	GetRouter() *mux.Router
+	GetGRPCGatewayRouter() *runtime.ServeMux
+
+	Start(config.ServerConfig) error
+	Stop() error
+}
+
 // Server defines the server's API interface.
 type Server struct {
 	Router            *mux.Router

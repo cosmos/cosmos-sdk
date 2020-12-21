@@ -2,8 +2,11 @@
 package types
 
 import (
+	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/gogo/protobuf/proto"
+	"strings"
 )
 
 // distribution message types
@@ -88,6 +91,62 @@ func (msg MsgWithdrawDelegatorReward) ValidateBasic() error {
 		return ErrEmptyValidatorAddr
 	}
 	return nil
+}
+
+// Rosetta Msg interface.
+func (msg *MsgWithdrawDelegatorReward) ToOperations(withStatus bool, hasError bool) []*rosettatypes.Operation {
+	var operations []*rosettatypes.Operation
+	delAddr := msg.DelegatorAddress
+	valAddr := msg.ValidatorAddress
+	delOp := func(account string, index int) *rosettatypes.Operation {
+		var status string
+		if withStatus {
+			status = "Success"
+			if hasError {
+				status = "Reverted"
+			}
+		}
+		return &rosettatypes.Operation{
+			OperationIdentifier: &rosettatypes.OperationIdentifier{
+				Index: int64(index),
+			},
+			Type:   proto.MessageName(msg),
+			Status: status,
+			Account: &rosettatypes.AccountIdentifier{
+				Address: account,
+			},
+		}
+	}
+	operations = append(operations,
+		delOp(delAddr, 0),
+		delOp(valAddr, 1),
+	)
+	return operations
+}
+
+func (msg MsgWithdrawDelegatorReward) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg, error) {
+	var (
+		delAddr sdk.AccAddress
+		valAddr sdk.ValAddress
+		err     error
+	)
+
+	for _, op := range ops {
+		if strings.HasPrefix(op.Amount.Value, sdk.GetConfig().GetBech32ValidatorAddrPrefix()) {
+			valAddr, err = sdk.ValAddressFromBech32(op.Account.Address)
+			if err != nil {
+				return nil, err
+			}
+			continue
+		}
+
+		delAddr, err = sdk.AccAddressFromBech32(op.Account.Address)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return NewMsgWithdrawDelegatorReward(delAddr, valAddr), nil
 }
 
 func NewMsgWithdrawValidatorCommission(valAddr sdk.ValAddress) *MsgWithdrawValidatorCommission {

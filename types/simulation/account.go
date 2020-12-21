@@ -70,8 +70,14 @@ func RandomFees(r *rand.Rand, ctx sdk.Context, spendableCoins sdk.Coins) (sdk.Co
 		return nil, nil
 	}
 
-	denomIndex := r.Intn(len(spendableCoins))
-	randCoin := spendableCoins[denomIndex]
+	perm := rand.Perm(len(spendableCoins))
+	var randCoin sdk.Coin
+	for _, index := range perm {
+		randCoin = spendableCoins[index]
+		if !randCoin.Amount.IsZero() {
+			break
+		}
+	}
 
 	if randCoin.Amount.IsZero() {
 		return nil, nil

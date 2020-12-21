@@ -125,7 +125,7 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 	cacheCtx, _ := ctx.CacheContext()
 	cacheCtx = cacheCtx.WithBlockHeight(k.GetNextEpochHeight(ctx))
 	cacheCtx = cacheCtx.WithBlockTime(k.GetNextEpochTime(ctx))
-	err := k.ExecuteQueuedEditValidator(cacheCtx, msg)
+	err := k.executeQueuedEditValidatorMsg(cacheCtx, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +169,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 	cacheCtx, _ := ctx.CacheContext()
 	cacheCtx = cacheCtx.WithBlockHeight(k.GetNextEpochHeight(ctx))
 	cacheCtx = cacheCtx.WithBlockTime(k.GetNextEpochTime(ctx))
-	completionTime, err := k.ExecuteQueuedBeginRedelegate(cacheCtx, msg)
+	completionTime, err := k.executeQueuedBeginRedelegateMsg(cacheCtx, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +186,7 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	cacheCtx, _ := ctx.CacheContext()
 	cacheCtx = cacheCtx.WithBlockHeight(k.GetNextEpochHeight(ctx))
 	cacheCtx = cacheCtx.WithBlockTime(k.GetNextEpochTime(ctx))
-	completionTime, err := k.ExecuteQueuedUndelegate(cacheCtx, msg)
+	completionTime, err := k.executeQueuedUndelegateMsg(cacheCtx, msg)
 	if err != nil {
 		return nil, err
 	}

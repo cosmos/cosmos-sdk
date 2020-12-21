@@ -46,7 +46,7 @@ type GenesisState struct {
 	Exported      bool           `protobuf:"varint,8,opt,name=exported,proto3" json:"exported,omitempty"`
 	// added newly added queues
 	BufferedMsgs []*types.Any `protobuf:"bytes,9,rep,name=buffered_msgs,json=bufferedMsgs,proto3" json:"buffered_msgs,omitempty"`
-	// epoch number at the time of genesis
+	// current epoch number at the time of genesis
 	EpochNumber int64 `protobuf:"varint,10,opt,name=epoch_number,json=epochNumber,proto3" json:"epoch_number,omitempty"`
 }
 

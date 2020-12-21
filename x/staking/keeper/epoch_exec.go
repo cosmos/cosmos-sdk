@@ -11,8 +11,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// ExecuteCreateValidatorSelfDelegation does do self-delegation
-func (k Keeper) ExecuteCreateValidatorSelfDelegation(ctx sdk.Context, msg *types.MsgCreateValidator) error {
+// ExecuteQueuedCreateValidatorMsg handles the execution of a queued MsgCreateValidator.
+// The validator has already been created at this point, so all that remains is the self delegation
+func (k Keeper) executeQueuedCreateValidatorMsg(ctx sdk.Context, msg *types.MsgCreateValidator) error {
 	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		return err
@@ -47,8 +48,8 @@ func (k Keeper) ExecuteCreateValidatorSelfDelegation(ctx sdk.Context, msg *types
 	return nil
 }
 
-// CancelCreateValidatorSelfDelegation does cancel self-delegation
-func (k Keeper) CancelCreateValidatorSelfDelegation(ctx sdk.Context, msg *types.MsgCreateValidator) error {
+// revertCreateValidatorMsg does cancel self-delegation
+func (k Keeper) revertCreateValidatorMsg(ctx sdk.Context, msg *types.MsgCreateValidator) error {
 
 	bondDenom := k.BondDenom(ctx)
 	if msg.Value.Denom != bondDenom {
@@ -70,8 +71,8 @@ func (k Keeper) CancelCreateValidatorSelfDelegation(ctx sdk.Context, msg *types.
 	return nil
 }
 
-// ExecuteQueuedEditValidator logic is moved from msgServer.EditValidator
-func (k Keeper) ExecuteQueuedEditValidator(ctx sdk.Context, msg *types.MsgEditValidator) error {
+// executeQueuedEditValidatorMsg logic is moved from msgServer.EditValidator
+func (k Keeper) executeQueuedEditValidatorMsg(ctx sdk.Context, msg *types.MsgEditValidator) error {
 	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		return err
@@ -132,8 +133,8 @@ func (k Keeper) ExecuteQueuedEditValidator(ctx sdk.Context, msg *types.MsgEditVa
 	return nil
 }
 
-// ExecuteQueuedDelegation logic is moved from msgServer.Delegate
-func (k Keeper) ExecuteQueuedDelegation(ctx sdk.Context, msg *types.MsgDelegate) error {
+// executeQueuedDelegationMsg logic is moved from msgServer.Delegate
+func (k Keeper) executeQueuedDelegationMsg(ctx sdk.Context, msg *types.MsgDelegate) error {
 	valAddr, valErr := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if valErr != nil {
 		return valErr
@@ -206,8 +207,8 @@ func (k Keeper) CancelQueuedDelegation(ctx sdk.Context, msg *types.MsgDelegate) 
 	return nil
 }
 
-// ExecuteQueuedBeginRedelegate logic is moved from msgServer.BeginRedelegate
-func (k Keeper) ExecuteQueuedBeginRedelegate(ctx sdk.Context, msg *types.MsgBeginRedelegate) (time.Time, error) {
+// executeQueuedBeginRedelegateMsg logic is moved from msgServer.BeginRedelegate
+func (k Keeper) executeQueuedBeginRedelegateMsg(ctx sdk.Context, msg *types.MsgBeginRedelegate) (time.Time, error) {
 	valSrcAddr, err := sdk.ValAddressFromBech32(msg.ValidatorSrcAddress)
 	if err != nil {
 		return time.Time{}, err
@@ -267,8 +268,8 @@ func (k Keeper) ExecuteQueuedBeginRedelegate(ctx sdk.Context, msg *types.MsgBegi
 	return completionTime, nil
 }
 
-// ExecuteQueuedUndelegate logic is moved from msgServer.Undelegate
-func (k Keeper) ExecuteQueuedUndelegate(ctx sdk.Context, msg *types.MsgUndelegate) (time.Time, error) {
+// executeQueuedUndelegateMsg logic is moved from msgServer.Undelegate
+func (k Keeper) executeQueuedUndelegateMsg(ctx sdk.Context, msg *types.MsgUndelegate) (time.Time, error) {
 	addr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		return time.Time{}, err
@@ -330,14 +331,14 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 
 		switch msg := msg.(type) {
 		case *types.MsgCreateValidator:
-			err := k.ExecuteCreateValidatorSelfDelegation(cacheCtx, msg)
+			err := k.executeQueuedCreateValidatorMsg(cacheCtx, msg)
 			if err == nil {
 				writeCache()
-			} else if err = k.CancelCreateValidatorSelfDelegation(ctx, msg); err != nil {
+			} else if err = k.revertCreateValidatorMsg(ctx, msg); err != nil {
 				panic(fmt.Sprintf("not be able to execute nor revert, %T", msg))
 			}
 		case *types.MsgEditValidator:
-			err := k.ExecuteQueuedEditValidator(cacheCtx, msg)
+			err := k.executeQueuedEditValidatorMsg(cacheCtx, msg)
 			if err == nil {
 				writeCache()
 			} else {
@@ -345,14 +346,14 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 				// panic(fmt.Sprintf("not be able to execute, %T", msg))
 			}
 		case *types.MsgDelegate:
-			err := k.ExecuteQueuedDelegation(cacheCtx, msg)
+			err := k.executeQueuedDelegationMsg(cacheCtx, msg)
 			if err == nil {
 				writeCache()
 			} else if err = k.CancelQueuedDelegation(ctx, msg); err != nil {
 				panic(fmt.Sprintf("not be able to execute nor revert, %T", msg))
 			}
 		case *types.MsgBeginRedelegate:
-			_, err := k.ExecuteQueuedBeginRedelegate(cacheCtx, msg)
+			_, err := k.executeQueuedBeginRedelegateMsg(cacheCtx, msg)
 			if err == nil {
 				writeCache()
 			} else {
@@ -360,7 +361,7 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 				// panic(fmt.Sprintf("not be able to execute, %T", msg))
 			}
 		case *types.MsgUndelegate:
-			_, err := k.ExecuteQueuedUndelegate(cacheCtx, msg)
+			_, err := k.executeQueuedUndelegateMsg(cacheCtx, msg)
 			if err == nil {
 				writeCache()
 			} else {

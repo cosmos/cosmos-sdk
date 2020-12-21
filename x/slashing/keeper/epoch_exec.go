@@ -7,8 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-// ExecuteQueuedUnjail logic is moved from msgServer.Unjail
-func (k Keeper) ExecuteQueuedUnjail(ctx sdk.Context, msg *types.MsgUnjail) error {
+// executeQueuedUnjailMsg logic is moved from msgServer.Unjail
+func (k Keeper) executeQueuedUnjailMsg(ctx sdk.Context, msg *types.MsgUnjail) error {
 	valAddr, valErr := sdk.ValAddressFromBech32(msg.ValidatorAddr)
 	if valErr != nil {
 		return valErr
@@ -38,7 +38,7 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 
 		switch msg := msg.(type) {
 		case *types.MsgUnjail:
-			err := k.ExecuteQueuedUnjail(cacheCtx, msg)
+			err := k.executeQueuedUnjailMsg(cacheCtx, msg)
 			if err == nil {
 				writeCache()
 			} else {

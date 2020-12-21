@@ -43,7 +43,7 @@ message GenesisState {
   // added newly added queues
   repeated google.protobuf.Any buffered_msgs = 9;
 
-  // epoch number at the time of genesis
+  // current epoch number at the time of genesis
   int64 epoch_number = 10;
 
 }

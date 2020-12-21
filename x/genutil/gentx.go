@@ -113,7 +113,8 @@ func DeliverGenTxs(
 			panic(res.Log)
 		}
 	}
-	// We execute epoch here because we want to do delegations instantly before running node.
+	// We execute an epoch here, as we need to execute the validator set updates during genesis.
+	// (Set updates include creating validators, and delegations)
 	stakingKeeper.ExecuteEpoch(ctx)
 
 	return stakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)

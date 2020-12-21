@@ -244,8 +244,8 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, amt.Int64()-slashAmt, validator.GetTokens().Int64())
 
 	// unrevocation should fail prior to jail expiration
-	err := app.SlashingKeeper.ExecuteQueuedUnjail(ctx, types.NewMsgUnjail(addr))
-	require.Error(t, err)
+	app.SlashingKeeper.QueueMsgForEpoch(ctx, app.StakingKeeper.GetEpochNumber(ctx), types.NewMsgUnjail(addr))
+	app.SlashingKeeper.ExecuteEpoch(ctx)
 
 	// unrevocation should succeed after jail expiration
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(1, 0).Add(app.SlashingKeeper.DowntimeJailDuration(ctx))})

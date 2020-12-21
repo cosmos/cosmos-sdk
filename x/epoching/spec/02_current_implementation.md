@@ -16,11 +16,20 @@ Queued messages have epoch number to be run and at the end of epochs, it run mes
 - **MsgBeginRedelegate**: Validate message and if valid queue the message for execution at the end of the Epoch.
 - **MsgUndelegate**: Validate message and if valid queue the message for execution at the end of the Epoch.
 
+All `staking` module messages are queued.
+### Message queues
+
+Each module has 1 message queue. Currently, there are two queues, one for `staking` and the other for `slashing`.
+Each `module` message queue, saves the queued messages for the module.
+
 ### Slashing messages
 - **MsgUnjail**: Validate message and if valid queue the message for execution at the end of the Epoch.
 
+All `slashing` module messages are queued. (Only one message btw :) )
 ### Evidence messages
 - **MsgSubmitEvidence**: No changes
+
+No messages are queued on `evidence` module for now.
 
 ### Distribution messages
 - **MsgSetWithdrawAddress**: No changes
@@ -28,12 +37,15 @@ Queued messages have epoch number to be run and at the end of epochs, it run mes
 - **MsgWithdrawValidatorCommission**: No changes
 - **MsgFundCommunityPool**: No changes
 
+No messages are queued on `distribution` module for now.
+
 ## Slash and Jail
 
 Slash and Jail is automatically done on BeginBlocker / Endblocker.
 Currently validator set update is only done on staking module's endblocker and other modules'(which affect Slash / Jail) Endblockers are being executed before staking module.
 
 For now, Slash and Jail take effect instantly at the end of block.
+
 ## Execution on epochs
 - Try executing the message for the epoch
 - If success, make changes as it is

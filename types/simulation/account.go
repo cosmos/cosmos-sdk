@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -80,7 +81,7 @@ func RandomFees(r *rand.Rand, ctx sdk.Context, spendableCoins sdk.Coins) (sdk.Co
 	}
 
 	if randCoin.Amount.IsZero() {
-		return nil, nil
+		return nil, fmt.Errorf("no coins found for random fees")
 	}
 
 	amt, err := RandPositiveInt(r, randCoin.Amount)

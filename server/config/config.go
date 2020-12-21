@@ -126,6 +126,8 @@ type StateSyncConfig struct {
 	SnapshotKeepRecent uint32 `mapstructure:"snapshot-keep-recent"`
 }
 
+var _ ServerConfig = &Config{}
+
 // Config defines the server's top level configuration
 type Config struct {
 	BaseConfig `mapstructure:",squash"`
@@ -135,6 +137,11 @@ type Config struct {
 	API       APIConfig        `mapstructure:"api"`
 	GRPC      GRPCConfig       `mapstructure:"grpc"`
 	StateSync StateSyncConfig  `mapstructure:"state-sync"`
+}
+
+// SetMinGasPrices sets the validator's minimum gas prices.
+func (c *Config) GetBaseConfig() {
+
 }
 
 // SetMinGasPrices sets the validator's minimum gas prices.

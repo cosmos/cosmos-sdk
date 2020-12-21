@@ -22752,12 +22752,23 @@ paths:
 
                             given connection.
                         prefix:
-                          title: commitment merkle prefix of the counterparty chain
+                          description: commitment merkle prefix of the counterparty chain.
                           type: object
                           properties:
                             key_prefix:
                               type: string
                               format: byte
+                          title: >-
+                            MerklePrefix is merkle path prefixed to the key.
+
+                            The constructed key from the Path and the key will
+                            be append(Path.KeyPath,
+
+                            append(Path.KeyPrefix, key...))
+                    delay_period:
+                      type: string
+                      format: uint64
+                      description: delay period associated with this connection.
                   description: >-
                     IdentifiedConnection defines a connection with additional
                     connection
@@ -23099,11 +23110,11 @@ paths:
                         the IBC verison in
 
                         the connection handshake.
-                    title: >-
+                    description: >-
                       IBC version which can be utilised to determine encodings
                       or protocols for
 
-                      channels or packets utilising this connection
+                      channels or packets utilising this connection.
                   state:
                     description: current state of the connection end.
                     type: string
@@ -23132,18 +23143,35 @@ paths:
 
                           given connection.
                       prefix:
-                        title: commitment merkle prefix of the counterparty chain
+                        description: commitment merkle prefix of the counterparty chain.
                         type: object
                         properties:
                           key_prefix:
                             type: string
                             format: byte
+                        title: >-
+                          MerklePrefix is merkle path prefixed to the key.
+
+                          The constructed key from the Path and the key will be
+                          append(Path.KeyPath,
+
+                          append(Path.KeyPrefix, key...))
+                  delay_period:
+                    type: string
+                    format: uint64
+                    description: >-
+                      delay period that must pass before a consensus state can
+                      be used for packet-verification
+
+                      NOTE: delay period logic is only implemented by some
+                      clients.
                 description: >-
                   ConnectionEnd defines a stateful object on a chain connected
                   to another
 
-                  separate one. NOTE: there must only be 2 defined
-                  ConnectionEnds to establish
+                  separate one.
+
+                  NOTE: there must only be 2 defined ConnectionEnds to establish
 
                   a connection between two chains.
               proof:
@@ -34685,11 +34713,11 @@ definitions:
             verison in
 
             the connection handshake.
-        title: >-
+        description: >-
           IBC version which can be utilised to determine encodings or protocols
           for
 
-          channels or packets utilising this connection
+          channels or packets utilising this connection.
       state:
         description: current state of the connection end.
         type: string
@@ -34718,18 +34746,31 @@ definitions:
 
               given connection.
           prefix:
-            title: commitment merkle prefix of the counterparty chain
+            description: commitment merkle prefix of the counterparty chain.
             type: object
             properties:
               key_prefix:
                 type: string
                 format: byte
-    description: >-
+            title: >-
+              MerklePrefix is merkle path prefixed to the key.
+
+              The constructed key from the Path and the key will be
+              append(Path.KeyPath,
+
+              append(Path.KeyPrefix, key...))
+      delay_period:
+        type: string
+        format: uint64
+        description: >-
+          delay period that must pass before a consensus state can be used for
+          packet-verification
+
+          NOTE: delay period logic is only implemented by some clients.
+    description: |-
       ConnectionEnd defines a stateful object on a chain connected to another
-
-      separate one. NOTE: there must only be 2 defined ConnectionEnds to
-      establish
-
+      separate one.
+      NOTE: there must only be 2 defined ConnectionEnds to establish
       a connection between two chains.
   ibc.core.connection.v1.Counterparty:
     type: object
@@ -34749,12 +34790,19 @@ definitions:
 
           given connection.
       prefix:
-        title: commitment merkle prefix of the counterparty chain
+        description: commitment merkle prefix of the counterparty chain.
         type: object
         properties:
           key_prefix:
             type: string
             format: byte
+        title: >-
+          MerklePrefix is merkle path prefixed to the key.
+
+          The constructed key from the Path and the key will be
+          append(Path.KeyPath,
+
+          append(Path.KeyPrefix, key...))
     description: >-
       Counterparty defines the counterparty chain associated with a connection
       end.
@@ -34818,12 +34866,23 @@ definitions:
 
               given connection.
           prefix:
-            title: commitment merkle prefix of the counterparty chain
+            description: commitment merkle prefix of the counterparty chain.
             type: object
             properties:
               key_prefix:
                 type: string
                 format: byte
+            title: >-
+              MerklePrefix is merkle path prefixed to the key.
+
+              The constructed key from the Path and the key will be
+              append(Path.KeyPath,
+
+              append(Path.KeyPrefix, key...))
+      delay_period:
+        type: string
+        format: uint64
+        description: delay period associated with this connection.
     description: |-
       IdentifiedConnection defines a connection with additional connection
       identifier field.
@@ -35304,11 +35363,11 @@ definitions:
                 verison in
 
                 the connection handshake.
-            title: >-
+            description: >-
               IBC version which can be utilised to determine encodings or
               protocols for
 
-              channels or packets utilising this connection
+              channels or packets utilising this connection.
           state:
             description: current state of the connection end.
             type: string
@@ -35337,18 +35396,34 @@ definitions:
 
                   given connection.
               prefix:
-                title: commitment merkle prefix of the counterparty chain
+                description: commitment merkle prefix of the counterparty chain.
                 type: object
                 properties:
                   key_prefix:
                     type: string
                     format: byte
+                title: >-
+                  MerklePrefix is merkle path prefixed to the key.
+
+                  The constructed key from the Path and the key will be
+                  append(Path.KeyPath,
+
+                  append(Path.KeyPrefix, key...))
+          delay_period:
+            type: string
+            format: uint64
+            description: >-
+              delay period that must pass before a consensus state can be used
+              for packet-verification
+
+              NOTE: delay period logic is only implemented by some clients.
         description: >-
           ConnectionEnd defines a stateful object on a chain connected to
           another
 
-          separate one. NOTE: there must only be 2 defined ConnectionEnds to
-          establish
+          separate one.
+
+          NOTE: there must only be 2 defined ConnectionEnds to establish
 
           a connection between two chains.
       proof:
@@ -35452,12 +35527,23 @@ definitions:
 
                     given connection.
                 prefix:
-                  title: commitment merkle prefix of the counterparty chain
+                  description: commitment merkle prefix of the counterparty chain.
                   type: object
                   properties:
                     key_prefix:
                       type: string
                       format: byte
+                  title: >-
+                    MerklePrefix is merkle path prefixed to the key.
+
+                    The constructed key from the Path and the key will be
+                    append(Path.KeyPath,
+
+                    append(Path.KeyPrefix, key...))
+            delay_period:
+              type: string
+              format: uint64
+              description: delay period associated with this connection.
           description: |-
             IdentifiedConnection defines a connection with additional connection
             identifier field.

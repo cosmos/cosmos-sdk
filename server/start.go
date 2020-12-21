@@ -8,6 +8,8 @@ import (
 	"runtime/pprof"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/spf13/cobra"
@@ -28,7 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
-	rosettacfg "github.com/cosmos/cosmos-sdk/server/rosetta/config"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -314,14 +315,14 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		}
 	}
 
-	var rosettaSrv crgserver.Handler
+	var rosettaSrv crgserver.Server
 	if config.Rosetta.Enable {
 		offlineMode := config.Rosetta.Offline
 		if !config.GRPC.Enable { // If GRPC is not enabled rosetta cannot work in online mode, so it works in offline mode.
 			offlineMode = true
 		}
 
-		conf := &rosettacfg.Config{
+		conf := &rosetta.Config{
 			Blockchain:    config.Rosetta.Blockchain,
 			Network:       config.Rosetta.Network,
 			TendermintRPC: ctx.Config.RPC.ListenAddress,
@@ -332,7 +333,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		}
 		conf.WithCodec(clientCtx.InterfaceRegistry, clientCtx.JSONMarshaler.(*codec.ProtoCodec))
 
-		rosettaSrv, err = rosettacfg.ServerFromConfig(conf)
+		rosettaSrv, err = rosetta.ServerFromConfig(conf)
 		if err != nil {
 			return err
 		}

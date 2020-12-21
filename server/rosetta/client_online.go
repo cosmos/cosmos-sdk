@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/tendermint/btcd/btcec"
 	"strconv"
 	"time"
+
+	"github.com/tendermint/btcd/btcec"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"google.golang.org/grpc/metadata"
@@ -16,9 +18,11 @@ import (
 	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
 	"google.golang.org/grpc"
 
+	crgerrs "github.com/tendermint/cosmos-rosetta-gateway/errors"
+	crgtypes "github.com/tendermint/cosmos-rosetta-gateway/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
@@ -26,18 +30,18 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	crgerrs "github.com/tendermint/cosmos-rosetta-gateway/errors"
-	crgtypes "github.com/tendermint/cosmos-rosetta-gateway/types"
 )
 
 // interface assertion
-var _ crgtypes.OnlineServicer = (*Client)(nil)
+var _ crgtypes.Client = (*Client)(nil)
 
 const tmWebsocketPath = "/websocket"
 const defaultNodeTimeout = 15 * time.Second
 
 // Client implements a single network client to interact with cosmos based chains
 type Client struct {
+	config *Config
+
 	auth auth.QueryClient
 	bank bank.QueryClient
 
@@ -66,42 +70,11 @@ func (c *Client) AccountIdentifierFromPublicKey(pubKey *types.PublicKey) (*types
 	}, nil
 }
 
-// NewOnlineServicer instantiates a new online servicer
-func NewOnlineServicer(cdc *codec.ProtoCodec, ir codectypes.InterfaceRegistry, grpcEndpoint, tendermintEndpoint string) (*Client, error) {
-
-	grpcConn, err := grpc.Dial(grpcEndpoint, grpc.WithInsecure())
-	if err != nil {
-		return nil, err
-	}
-
-	tmRPC, err := http.New(tendermintEndpoint, tmWebsocketPath)
-	if err != nil {
-		return nil, err
-	}
-
-	authClient := auth.NewQueryClient(grpcConn)
-	bankClient := bank.NewQueryClient(grpcConn)
-
-	// NodeURI and Client are set from here otherwise
-	// WitNodeURI will require to create a new client
-	// it's done here because WithNodeURI panics if
-	// connection to tendermint node fails
-	clientCtx := client.Context{
-		Client:  tmRPC,
-		NodeURI: tendermintEndpoint,
-	}
-	clientCtx = clientCtx.
-		WithJSONMarshaler(cdc).
-		WithInterfaceRegistry(ir).
-		WithTxConfig(authtx.NewTxConfig(cdc, authtx.DefaultSignModes)).
-		WithAccountRetriever(auth.AccountRetriever{}).
-		WithBroadcastMode(flags.BroadcastBlock)
-
+// NewClient instantiates a new online servicer
+func NewClient(cfg *Config) (*Client, error) {
 	return &Client{
-		auth:      authClient,
-		bank:      bankClient,
-		clientCtx: clientCtx,
-		ir:        ir,
+		config: cfg,
+		ir:     cfg.InterfaceRegistry,
 	}, nil
 }
 
@@ -382,5 +355,42 @@ func (c *Client) Ready() error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (c *Client) Bootstrap() error {
+	grpcConn, err := grpc.Dial(c.config.GRPCEndpoint, grpc.WithInsecure())
+	if err != nil {
+		return err
+	}
+
+	tmRPC, err := http.New(c.config.TendermintRPC, tmWebsocketPath)
+	if err != nil {
+		return err
+	}
+
+	authClient := auth.NewQueryClient(grpcConn)
+	bankClient := bank.NewQueryClient(grpcConn)
+
+	// NodeURI and Client are set from here otherwise
+	// WitNodeURI will require to create a new client
+	// it's done here because WithNodeURI panics if
+	// connection to tendermint node fails
+	clientCtx := client.Context{
+		Client:  tmRPC,
+		NodeURI: c.config.TendermintRPC,
+	}
+	clientCtx = clientCtx.
+		WithJSONMarshaler(c.config.Codec).
+		WithInterfaceRegistry(c.config.InterfaceRegistry).
+		WithTxConfig(authtx.NewTxConfig(c.config.Codec, authtx.DefaultSignModes)).
+		WithAccountRetriever(auth.AccountRetriever{}).
+		WithBroadcastMode(flags.BroadcastBlock)
+
+	c.auth = authClient
+	c.bank = bankClient
+	c.clientCtx = clientCtx
+	c.ir = c.config.InterfaceRegistry
+
 	return nil
 }

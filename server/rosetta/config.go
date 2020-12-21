@@ -1,4 +1,4 @@
-package config
+package rosetta
 
 import (
 	"fmt"
@@ -11,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
 )
 
 // configuration defaults constants
@@ -65,10 +64,10 @@ type Config struct {
 	Retries int
 	// Offline defines if the server must be run in offline mode
 	Offline bool
-	// codec overrides the default data and construction api client codecs
-	codec *codec.ProtoCodec
-	// ir overrides the default data and construction api interface registry
-	ir codectypes.InterfaceRegistry
+	// Codec overrides the default data and construction api client codecs
+	Codec *codec.ProtoCodec
+	// InterfaceRegistry overrides the default data and construction api interface registry
+	InterfaceRegistry codectypes.InterfaceRegistry
 }
 
 // NetworkIdentifier returns the network identifier given the configuration
@@ -82,8 +81,8 @@ func (c *Config) NetworkIdentifier() *types.NetworkIdentifier {
 // validate validates a configuration and sets
 // its defaults in case they were not provided
 func (c *Config) validate() error {
-	if (c.codec == nil) != (c.ir == nil) {
-		return fmt.Errorf("codec and interface registry must be both different from nil or nil")
+	if (c.Codec == nil) != (c.InterfaceRegistry == nil) {
+		return fmt.Errorf("Codec and interface registry must be both different from nil or nil")
 	}
 
 	if c.Addr == "" {
@@ -117,10 +116,10 @@ func (c *Config) validate() error {
 	return nil
 }
 
-// WithCodec extends the configuration with a predefined codec
+// WithCodec extends the configuration with a predefined Codec
 func (c *Config) WithCodec(ir codectypes.InterfaceRegistry, cdc *codec.ProtoCodec) {
-	c.codec = cdc
-	c.ir = ir
+	c.Codec = cdc
+	c.InterfaceRegistry = ir
 }
 
 // FromFlags gets the configuration from flags
@@ -174,7 +173,7 @@ func ServerFromConfig(conf *Config) (crg.Server, error) {
 	if err != nil {
 		return crg.Server{}, err
 	}
-	client, err := rosetta.NewOnlineServicer(conf.codec, conf.ir, conf.GRPCEndpoint, conf.TendermintRPC)
+	client, err := NewClient(conf)
 	if err != nil {
 		return crg.Server{}, err
 	}
@@ -184,12 +183,11 @@ func ServerFromConfig(conf *Config) (crg.Server, error) {
 				Blockchain: conf.Blockchain,
 				Network:    conf.Network,
 			},
-			OnlineServicer:  client,
-			OfflineServicer: client,
-			Listen:          conf.Addr,
-			Offline:         conf.Offline,
-			Retries:         conf.Retries,
-			RetryWait:       15 * time.Second,
+			Client:    client,
+			Listen:    conf.Addr,
+			Offline:   conf.Offline,
+			Retries:   conf.Retries,
+			RetryWait: 15 * time.Second,
 		})
 }
 

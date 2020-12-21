@@ -3,20 +3,19 @@ package rosetta
 import (
 	"context"
 	"encoding/hex"
+	"strings"
+
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/coinbase/rosetta-sdk-go/types"
+	crgerrs "github.com/tendermint/cosmos-rosetta-gateway/errors"
+	"github.com/tendermint/tendermint/crypto"
+
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	crgerrs "github.com/tendermint/cosmos-rosetta-gateway/errors"
-	crgtypes "github.com/tendermint/cosmos-rosetta-gateway/types"
-	"github.com/tendermint/tendermint/crypto"
-	"strings"
 )
-
-var _ crgtypes.OfflineServicer = (*Client)(nil)
 
 func (c *Client) OperationStatuses() []*types.OperationStatus {
 	return []*types.OperationStatus{

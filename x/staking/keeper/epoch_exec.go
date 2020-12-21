@@ -326,10 +326,10 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 
 	for iterator := k.GetEpochActionsIterator(ctx); iterator.Valid(); iterator.Next() {
 		msg := k.GetEpochActionByIterator(iterator)
+		cacheCtx, writeCache := ctx.CacheContext()
 
 		switch msg := msg.(type) {
 		case *types.MsgCreateValidator:
-			cacheCtx, writeCache := ctx.CacheContext()
 			err := k.ExecuteCreateValidatorSelfDelegation(cacheCtx, msg)
 			if err == nil {
 				writeCache()
@@ -337,7 +337,6 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 				panic(fmt.Sprintf("not be able to execute nor revert, %T", msg))
 			}
 		case *types.MsgEditValidator:
-			cacheCtx, writeCache := ctx.CacheContext()
 			err := k.ExecuteQueuedEditValidator(cacheCtx, msg)
 			if err == nil {
 				writeCache()
@@ -346,7 +345,6 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 				// panic(fmt.Sprintf("not be able to execute, %T", msg))
 			}
 		case *types.MsgDelegate:
-			cacheCtx, writeCache := ctx.CacheContext()
 			err := k.ExecuteQueuedDelegation(cacheCtx, msg)
 			if err == nil {
 				writeCache()
@@ -354,7 +352,6 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 				panic(fmt.Sprintf("not be able to execute nor revert, %T", msg))
 			}
 		case *types.MsgBeginRedelegate:
-			cacheCtx, writeCache := ctx.CacheContext()
 			_, err := k.ExecuteQueuedBeginRedelegate(cacheCtx, msg)
 			if err == nil {
 				writeCache()
@@ -363,7 +360,6 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 				// panic(fmt.Sprintf("not be able to execute, %T", msg))
 			}
 		case *types.MsgUndelegate:
-			cacheCtx, writeCache := ctx.CacheContext()
 			_, err := k.ExecuteQueuedUndelegate(cacheCtx, msg)
 			if err == nil {
 				writeCache()

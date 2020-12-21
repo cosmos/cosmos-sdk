@@ -34,10 +34,10 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 	// execute all epoch actions
 	for iterator := k.GetEpochActionsIterator(ctx); iterator.Valid(); iterator.Next() {
 		msg := k.GetEpochActionByIterator(iterator)
+		cacheCtx, writeCache := ctx.CacheContext()
 
 		switch msg := msg.(type) {
 		case *types.MsgUnjail:
-			cacheCtx, writeCache := ctx.CacheContext()
 			err := k.ExecuteQueuedUnjail(cacheCtx, msg)
 			if err == nil {
 				writeCache()

@@ -161,19 +161,19 @@ func ValidatePrefixedDenom(denom string) error {
 
 // ValidateIBCDenom validates that the given denomination is either:
 //
-//  - A valid base denomination (eg: 'uatom')
+//  - A valid non-IBC denomination (not 'ibc', nor beginning with 'ibc/', eg: 'uatom')
 //  - A valid fungible token representation (i.e 'ibc/{hash}') per ADR 001 https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-001-coin-source-tracing.md
 func ValidateIBCDenom(denom string) error {
 	denomSplit := strings.SplitN(denom, "/", 2)
 
 	switch {
+	case len(denomSplit) > 0 && denomSplit[0] != "ibc":
+		return sdk.ValidateDenom(denom)
+
 	case strings.TrimSpace(denom) == "",
 		len(denomSplit) == 1 && denomSplit[0] == "ibc",
 		len(denomSplit) == 2 && (denomSplit[0] != "ibc" || strings.TrimSpace(denomSplit[1]) == ""):
 		return sdkerrors.Wrapf(ErrInvalidDenomForTransfer, "denomination should be prefixed with the format 'ibc/{hash(trace + \"/\" + %s)}'", denom)
-
-	case denomSplit[0] == denom && strings.TrimSpace(denom) != "":
-		return sdk.ValidateDenom(denom)
 	}
 
 	if _, err := ParseHexHash(denomSplit[1]); err != nil {

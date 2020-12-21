@@ -30,7 +30,8 @@ var (
 
 	coin             = sdk.NewCoin("atom", sdk.NewInt(100))
 	ibcCoin          = sdk.NewCoin("ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.NewInt(100))
-	invalidIBCCoin   = sdk.NewCoin("notibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.NewInt(100))
+	invalidIBCCoin   = sdk.NewCoin("ibc/07F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.NewInt(100))
+	validNonIBCCoin  = sdk.NewCoin("notibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.NewInt(100))
 	invalidDenomCoin = sdk.Coin{Denom: "0atom", Amount: sdk.NewInt(100)}
 	zeroCoin         = sdk.Coin{Denom: "atoms", Amount: sdk.NewInt(0)}
 
@@ -61,6 +62,7 @@ func TestMsgTransferValidation(t *testing.T) {
 		{"valid msg with base denom", NewMsgTransfer(validPort, validChannel, coin, addr1, addr2, timeoutHeight, 0), true},
 		{"valid msg with trace hash", NewMsgTransfer(validPort, validChannel, ibcCoin, addr1, addr2, timeoutHeight, 0), true},
 		{"invalid ibc denom", NewMsgTransfer(validPort, validChannel, invalidIBCCoin, addr1, addr2, timeoutHeight, 0), false},
+		{"valid non-ibc denom", NewMsgTransfer(validPort, validChannel, validNonIBCCoin, addr1, addr2, timeoutHeight, 0), true},
 		{"too short port id", NewMsgTransfer(invalidShortPort, validChannel, coin, addr1, addr2, timeoutHeight, 0), false},
 		{"too long port id", NewMsgTransfer(invalidLongPort, validChannel, coin, addr1, addr2, timeoutHeight, 0), false},
 		{"port id contains non-alpha", NewMsgTransfer(invalidPort, validChannel, coin, addr1, addr2, timeoutHeight, 0), false},

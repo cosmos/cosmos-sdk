@@ -6,9 +6,6 @@ order: 3
 
 - For now, Slash and Jail take effect instantly at the end of block, but we will need to do slashing at the end of epoch and Jail instantly as it is.
 
-- Didn't update `evidence` module so far which is related to Jail and we will need to check / modify.
-
-
 # Pending development
 ```go
 // Changes to make

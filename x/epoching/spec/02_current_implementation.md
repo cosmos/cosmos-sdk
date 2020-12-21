@@ -39,12 +39,14 @@ No messages are queued on `evidence` module for now.
 
 No messages are queued on `distribution` module for now.
 
-## Slash and Jail
+## Slash and Jail on slashing/evidence module
 
 Slash and Jail is automatically done on BeginBlocker / Endblocker.
 Currently validator set update is only done on staking module's endblocker and other modules'(which affect Slash / Jail) Endblockers are being executed before staking module.
 
 For now, Slash and Jail take effect instantly at the end of block.
+
+No changes were made on `evidence` module since it's related to `Jail` which requires instant action.
 
 ## Execution on epochs
 - Try executing the message for the epoch
@@ -68,46 +70,6 @@ We execute epoch after execution of genesis transactions to see the changes inst
 ## Discussions / Review / Research for epoching
 
 ```go
-  // Current logic flow summary:
-  // Current queues: "unbonding validator", "unbonding delegator", “redelegation"
-  // Current Queue management
-  // EndBlocker -> BlockValidatorUpdates -> DequeueAllMatureUBDQueue
-  // EndBlocker -> BlockValidatorUpdates -> DequeueAllMatureRedelegationQueue
-  // EndBlocker -> BlockValidatorUpdates -> UnbondAllMatureValidators 
-  // EndBlocker -> BlockValidatorUpdates -> CompleteUnbonding -> RemoveUnbondingDelegation
-  // EndBlocker -> BlockValidatorUpdates -> CompleteRedelegation -> RemoveRedelegation
-  // BeginBlocker -> HandleValidatorSignature -> Jail
-  // BeginBlocker -> HandleValidatorSignature -> Slash
-
-  // Target logic flow summary:
-  // Epoch -> BlockValidatorUpdates -> DequeueAllMatureUBDQueue
-  // Epoch -> BlockValidatorUpdates -> DequeueAllMatureRedelegationQueue
-  // Epoch -> BlockValidatorUpdates -> UnbondAllMatureValidators 
-  // Epoch -> BlockValidatorUpdates -> CompleteUnbonding -> RemoveUnbondingDelegation
-  // Epoch -> BlockValidatorUpdates -> CompleteRedelegation -> RemoveRedelegation
-  // BeginBlocker -> HandleValidatorSignature -> Jail
-  // BeginBlocker -> HandleValidatorSignature -> Slash
-
-  // Current Msgs management
-  // MsgUnjail -> instant validator update on condition met
-  // MsgCreateValidator -> instant validator creation
-  // MsgEditValidator -> instant validator update
-  // MsgBeginRedelegate -> instant validator update and queue redelegation
-  // MsgUndelegate -> instant pool balance update and queue undelegate
-  // MsgDelegate -> instant delegation update
-  // MsgWithdrawValidatorCommission -> instant
-  // MsgWithdrawDelegatorReward -> instant
-
-  // Target Msgs management
-  // MsgUnjail -> queue validator update on condition met (BufferedMsgUnjailQueue)
-  // MsgCreateValidator -> queue validator creation on condition met (BufferedMsgCreateValidatorQueue)
-  // MsgEditValidator -> queue validator edit on condition met (BufferedMsgEditValidatorQueue)
-  // MsgDelegate -> queue delegate (BufferedMsgDelegateQueue)
-  // MsgBeginRedelegate -> queue redelegation (BufferedMsgRedelegationQueue) => move tokens between validators on epoch => After 3 weeks time, it should automatically remove redelegation entry for completion even though it's nott the end of epoch
-  // MsgUndelegate -> queue undelegation (BufferedMsgUndelegateQueue) => move tokens to NotBondedPool and start unbonding period on epoch => After 3 weeks time, it should automatically unbond even though it’s not the end of epoch
-  // MsgWithdrawValidatorCommission -> instant
-  // MsgWithdrawDelegatorReward -> instant
-
   // The flow for an unbonding process would be:
 
   // 1. Submit MsgUnbond which adds it to DelegationChangeQueue
@@ -135,17 +97,4 @@ We execute epoch after execution of genesis transactions to see the changes inst
 	// 	evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName,
 	// )
 	// app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName)
-
-  // Changes to make for logic flow
-  // BlockValidatorUpdates should be modified to ValidatorUpdates and should be called on Epoch
-  // BeginBlocker -> HandleValidatorSignature run as it is and run ValidatorUpdates when it's updated on EndBlocker
-  // to trigger tendermint validator set update instantly when Jail/Slash case.
-
-  // Changes to make for Msgs flow
-  // BufferMsgUnjail should be added to execute on next epoch: Add when condition met
-  // BufferMsgCreateValidator should be added: send from user account to NotBondedPool and queue action
-  // BufferMsgEditValidator should be added: queue action
-  // BufferMsgDelegate should be added: queue action
-  // BufferMsgBeginRedelegate should be added: queue action
-  // BufferMsgUnDelegate should be added: queue action
 ```

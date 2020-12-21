@@ -261,37 +261,37 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	}
 	ctx.Logger.Debug("initialization: tmNode started")
 
-	// TODO: pass in custom generator
-	config := config.GetConfig(ctx.Viper, config.DefaultGenerator)
+	config := config.GetConfig(ctx.Viper, app.ConfigGenerator())
+	sdkCfg := config.GetSDKConfig()
 
 	// Add the tx service to the gRPC router. We only need to register this
 	// service if API or gRPC is enabled, and avoid doing so in the general
 	// case, because it spawns a new local tendermint RPC client.
-	if config.API.Enable || config.GRPC.Enable {
+	if sdkCfg.API.Enable || sdkCfg.GRPC.Enable {
 		clientCtx = clientCtx.WithClient(local.New(tmNode))
 
 		app.RegisterTxService(clientCtx)
 		app.RegisterTendermintService(clientCtx)
 	}
 
-	var apiSrv api.SDKServer
+	genDoc, err := genDocProvider()
+	if err != nil {
+		return err
+	}
 
-	if config.API.Enable {
-		genDoc, err := genDocProvider()
-		if err != nil {
-			return err
-		}
+	clientCtx = clientCtx.
+		WithHomeDir(home).
+		WithChainID(genDoc.ChainID)
 
-		clientCtx := clientCtx.
-			WithHomeDir(home).
-			WithChainID(genDoc.ChainID)
+	srv := api.New(clientCtx, ctx.Logger.With("module", "server"))
 
-		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
-		app.RegisterAPIRoutes(apiSrv, config.API)
+	if sdkCfg.API.Enable {
+		// register routes and start server
+		app.RegisterAPIRoutes(srv.Base(), sdkCfg.API)
 		errCh := make(chan error)
 
 		go func() {
-			if err := apiSrv.Start(config); err != nil {
+			if err := srv.Start(sdkCfg); err != nil {
 				errCh <- err
 			}
 		}()
@@ -304,12 +304,16 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	}
 
 	var grpcSrv *grpc.Server
-	if config.GRPC.Enable {
-		grpcSrv, err = servergrpc.StartGRPCServer(app, config.GRPC.Address)
+	if sdkCfg.GRPC.Enable {
+		// initialize, register and start gRPC server
+		grpcSrv, err = servergrpc.StartGRPCServer(app, sdkCfg.GRPC.Address)
 		if err != nil {
 			return err
 		}
 	}
+
+	// register services that are external to the default services provided by the SDK
+	app.RegisterExternalServices(srv, config)
 
 	defer func() {
 		if tmNode.IsRunning() {
@@ -320,8 +324,8 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			cpuProfileCleanup()
 		}
 
-		if apiSrv != nil {
-			_ = apiSrv.Close()
+		if srv != nil {
+			_ = srv.Close()
 		}
 
 		if grpcSrv != nil {

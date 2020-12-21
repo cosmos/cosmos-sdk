@@ -34,11 +34,15 @@ type (
 	Application interface {
 		abci.Application
 
-		RegisterAPIRoutes(*api.Server, config.APIConfig)
+		// ConfigGenerator retrieves the chain's config.toml generator function that is
+		// used to retrieve the config.toml during the start of the server.
+		ConfigGenerator() config.Generator
+
+		RegisterAPIRoutes(*api.BaseServer, config.APIConfig)
 
 		// RegisterExternalServices is optional function to retegister custom services
 		// to the server that are not defined by the default SDK configuration.
-		RegisterExternalServices(api.SDKServer, config.ServerConfig)
+		RegisterExternalServices(api.Server, config.ServerConfig)
 
 		// RegisterGRPCServer registers gRPC services directly with the gRPC
 		// server.

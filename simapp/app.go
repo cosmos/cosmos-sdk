@@ -552,6 +552,11 @@ func (app *SimApp) SimulationManager() *module.SimulationManager {
 	return app.sm
 }
 
+// ConfigGenerator uses the default SDK config generator.
+func (app *SimApp) ConfigGenerator() config.Generator {
+	return config.DefaultGenerator
+}
+
 // RegisterAPIRoutes registers all application module routes with the provided
 // API server.
 func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {

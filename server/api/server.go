@@ -24,19 +24,17 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 )
 
-type SDKServer interface {
-	Ctx() client.Context
-	GetRouter() *mux.Router
-	GetGRPCGatewayRouter() *runtime.ServeMux
+type Server interface {
+	Base() *BaseServer
 
 	Start(config.ServerConfig) error
 	Close() error
 }
 
-var _ SDKServer = &Server{}
+var _ Server = &BaseServer{}
 
-// Server defines the server's API interface.
-type Server struct {
+// BaseServer defines the SDK server's API interface.
+type BaseServer struct {
 	Router            *mux.Router
 	GRPCGatewayRouter *runtime.ServeMux
 	ClientCtx         client.Context
@@ -61,7 +59,7 @@ func CustomGRPCHeaderMatcher(key string) (string, bool) {
 }
 
 // New creates the default SDK server instance.
-func New(clientCtx client.Context, logger log.Logger) SDKServer {
+func New(clientCtx client.Context, logger log.Logger) Server {
 	// The default JSON marshaller used by the gRPC-Gateway is unable to marshal non-nullable non-scalar fields.
 	// Using the gogo/gateway package with the gRPC-Gateway WithMarshaler option fixes the scalar field marshalling issue.
 	marshalerOption := &gateway.JSONPb{
@@ -71,7 +69,7 @@ func New(clientCtx client.Context, logger log.Logger) SDKServer {
 		AnyResolver:  clientCtx.InterfaceRegistry,
 	}
 
-	return &Server{
+	return &BaseServer{
 		Router:    mux.NewRouter(),
 		ClientCtx: clientCtx,
 		logger:    logger,
@@ -90,20 +88,14 @@ func New(clientCtx client.Context, logger log.Logger) SDKServer {
 	}
 }
 
-// Ctx implements the SDKServer interface.
-func (s Server) Ctx() client.Context { return s.ClientCtx }
-
-// GetRouter implements the SDKServer interface.
-func (s Server) GetRouter() *mux.Router { return s.Router }
-
-// GetGRPCGatewayRouter implements the SDKServer interface.
-func (s Server) GetGRPCGatewayRouter() *runtime.ServeMux { return s.GRPCGatewayRouter }
+// Base implements the Server interface.
+func (s *BaseServer) Base() *BaseServer { return s }
 
 // Start starts the API server. Internally, the API server leverages Tendermint's
 // JSON RPC server. Configuration options are provided via config.APIConfig
 // and are delegated to the Tendermint JSON RPC server. The process is
 // non-blocking, so an external signal handler must be used.
-func (s *Server) Start(cfg config.ServerConfig) error {
+func (s *BaseServer) Start(cfg config.ServerConfig) error {
 	sdkCfg := cfg.GetSDKConfig()
 
 	if sdkCfg.Telemetry.Enabled {
@@ -142,15 +134,15 @@ func (s *Server) Start(cfg config.ServerConfig) error {
 }
 
 // Close closes the API server.
-func (s *Server) Close() error {
+func (s *BaseServer) Close() error {
 	return s.listener.Close()
 }
 
-func (s *Server) registerGRPCGatewayRoutes() {
+func (s *BaseServer) registerGRPCGatewayRoutes() {
 	s.Router.PathPrefix("/").Handler(s.GRPCGatewayRouter)
 }
 
-func (s *Server) registerMetrics() {
+func (s *BaseServer) registerMetrics() {
 	metricsHandler := func(w http.ResponseWriter, r *http.Request) {
 		format := strings.TrimSpace(r.FormValue("format"))
 

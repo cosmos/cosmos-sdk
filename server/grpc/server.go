@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 )
 
-// StartGRPCServer starts a gRPC server on the given address.
+// StartGRPCServer creates, registers starts a gRPC server on the given address.
 func StartGRPCServer(app types.Application, address string) (*grpc.Server, error) {
 	grpcSrv := grpc.NewServer()
 	app.RegisterGRPCServer(grpcSrv)

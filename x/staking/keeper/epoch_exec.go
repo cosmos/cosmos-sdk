@@ -325,7 +325,7 @@ func (k Keeper) executeQueuedUndelegateMsg(ctx sdk.Context, msg *types.MsgUndele
 func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 	// execute all epoch actions
 
-	for iterator := k.GetEpochActionsIterator(ctx); iterator.Valid(); iterator.Next() {
+	for iterator := k.epochKeeper.GetEpochActionsIterator(ctx); iterator.Valid(); iterator.Next() {
 		msg := k.GetEpochActionByIterator(iterator)
 		cacheCtx, writeCache := ctx.CacheContext()
 
@@ -372,10 +372,10 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 			panic(fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg))
 		}
 		// dequeue processed item
-		k.DeleteByKey(ctx, iterator.Key())
+		k.epochKeeper.DeleteByKey(ctx, iterator.Key())
 	}
 
 	// Update epochNumber after epoch finish
 	// This won't affect slashing module since slashing Endblocker run before staking module
-	k.IncreaseEpochNumber(ctx)
+	k.epochKeeper.IncreaseEpochNumber(ctx)
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	epochingkeeper "github.com/cosmos/cosmos-sdk/x/epoching/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
@@ -18,6 +19,7 @@ type Keeper struct {
 	storeKey   sdk.StoreKey
 	cdc        codec.BinaryMarshaler
 	sk         types.StakingKeeper
+	ek         epochingkeeper.Keeper
 	paramspace types.ParamSubspace
 }
 
@@ -32,6 +34,7 @@ func NewKeeper(cdc codec.BinaryMarshaler, key sdk.StoreKey, sk types.StakingKeep
 		storeKey:   key,
 		cdc:        cdc,
 		sk:         sk,
+		ek:         epochingkeeper.NewKeeper(cdc, key),
 		paramspace: paramspace,
 	}
 }
@@ -82,8 +85,15 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdk.De
 			sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueDoubleSign),
 		),
 	)
-	// delegate action to staking keeper's Slash function
-	k.sk.Slash(ctx, consAddr, distributionHeight, power, fraction)
+	// epoch slashing action for next epoch
+	validator := k.sk.ValidatorByConsAddr(ctx, consAddr)
+	if validator != nil {
+		k.ek.QueueMsgForEpoch(ctx, k.sk.GetEpochNumber(ctx), types.SlashEvent{
+			Address:                validator.GetOperator(),
+			ValidatorVotingPercent: sdk.NewDec(power),
+			SlashedSoFar:           fraction,
+		})
+	}
 }
 
 // Jail attempts to jail a validator. The slash is delegated to the staking module

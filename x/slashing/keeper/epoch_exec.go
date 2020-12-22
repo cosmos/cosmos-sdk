@@ -29,11 +29,25 @@ func (k Keeper) executeQueuedUnjailMsg(ctx sdk.Context, msg *types.MsgUnjail) er
 	return nil
 }
 
+func (k Keeper) executeQueuedSlashEvent(ctx sdk.Context, msg *types.SlashEvent) error {
+	validator := k.sk.Validator(ctx, msg.Address)
+	if validator != nil {
+		return types.ErrBadValidatorAddr
+	}
+	consAddr, err := validator.GetConsAddr()
+	if err != nil {
+		return err
+	}
+	distributionHeight := ctx.BlockHeight() - sdk.ValidatorUpdateDelay - 1
+	k.sk.Slash(ctx, consAddr, distributionHeight, msg.SlashedSoFar.RoundInt64(), msg.SlashedSoFar)
+	return nil
+}
+
 // ExecuteEpoch execute epoch actions
 func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 	// execute all epoch actions
-	for iterator := k.GetEpochActionsIterator(ctx); iterator.Valid(); iterator.Next() {
-		msg := k.GetEpochActionByIterator(iterator)
+	for iterator := k.ek.GetEpochActionsIterator(ctx); iterator.Valid(); iterator.Next() {
+		msg := k.ek.GetEpochActionByIterator(iterator)
 		cacheCtx, writeCache := ctx.CacheContext()
 
 		switch msg := msg.(type) {
@@ -45,10 +59,18 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 				// TODO: report somewhere for logging edit not success or panic
 				// panic(fmt.Sprintf("not be able to execute, %T", msg))
 			}
+		case *types.SlashEvent:
+			err := k.executeQueuedSlashEvent(ctx, msg)
+			if err == nil {
+				writeCache()
+			} else {
+				// TODO: report somewhere for logging edit not success or panic
+				// panic(fmt.Sprintf("not be able to execute, %T", msg))
+			}
 		default:
 			panic(fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg))
 		}
 		// dequeue processed item
-		k.DeleteByKey(ctx, iterator.Key())
+		k.ek.DeleteByKey(ctx, iterator.Key())
 	}
 }

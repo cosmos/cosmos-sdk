@@ -78,27 +78,3 @@ func TestRandomFees(t *testing.T) {
 	}
 }
 
-func TestRandomFeesTriesAsManyCoins(t *testing.T) {
-	t.Parallel()
-	r := rand.New(rand.NewSource(time.Now().Unix()))
-	blankCoin := sdk.NewInt64Coin("clr", 0)
-
-	tests := []struct {
-		name      string
-		coins     sdk.Coins
-		wantEmpty bool
-	}{
-		{"coin at end", sdk.NewCoins(blankCoin, blankCoin, blankCoin, blankCoin, sdk.NewInt64Coin("aaa", 10)), false},
-		{"all empty", sdk.NewCoins(blankCoin, blankCoin, blankCoin, blankCoin, blankCoin), true},
-		{"coin at front", sdk.NewCoins(sdk.NewInt64Coin("aaa", 10), blankCoin, blankCoin, blankCoin), false},
-		{"coin in middle", sdk.NewCoins(blankCoin, sdk.NewInt64Coin("aaa", 10), blankCoin, blankCoin, blankCoin), false},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := simulation.RandomFees(r, sdk.Context{}, tt.coins)
-			require.Nil(t, err)
-			require.Equal(t, got.Empty(), tt.wantEmpty)
-		})
-	}
-}

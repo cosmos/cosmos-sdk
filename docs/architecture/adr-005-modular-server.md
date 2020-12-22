@@ -38,8 +38,8 @@ application server:
     2. Registration of the services directly with the server
     3. Start/Stop the service process
   
-In the current implementation, some services wrap these steps together in a single function, while
-others implement them as separate functions as the ones above. The lack of a standard approach for
+In the current implementation, [some services](https://github.com/cosmos/cosmos-sdk/blob/f9dc082059d63423f96315ff913a8745c3178a7d/server/grpc/server.go#L14-L42) wrap these steps together in a single function, while
+[others](https://github.com/cosmos/cosmos-sdk/blob/f9dc082059d63423f96315ff913a8745c3178a7d/server/api/server.go#L81-L119) implement them as separate functions as the ones above. The lack of a standard approach for
 these steps results in difficulty for extensibility as each of these functions are individually
 called by the `start` command after checking if the service is enabled or not by the configuration.
 
@@ -64,7 +64,7 @@ type Service interface {
 
 type Server interface {
     GetServices() []Service
-    RegisterRoutes() bool
+    RegisterServices() error
     Start(config.ServerConfig) error
     Stop() error
 }
@@ -79,7 +79,7 @@ applicable for the SDK and extensible concrete configurations:
 ```go
 // ServerConfig extends the SDK default configuration TOML
 type ServerConfig interface {
-    // Returns the 5 configurations for the SDK: Base, Telemetry, API, gRPC and State Sync. 
+    // The SDK config defines the 5 configurations used by default: Base, Telemetry, API, gRPC and State Sync. 
     GetSDKConfig() *Config
 }
 ```
@@ -93,12 +93,16 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
   cfg := app.GetConfig(ctx.Viper)
   // ...
 
+  // 1. Create application-specific server
   server := app.NewServer(clientCtx, ctx.Logger, cfg)
 
+  // 2. Register routes from each service 
   // NOTE: routes are registered regardless if the service is enabled or not
-  server.RegisterRoutes()
+  if err := server.RegisterServices(); err != nil {
+    return err
+  }
 
-  // start each of the services.
+  // 3. Start each of the services.
   // NOTE: each service must check if it's enabled via the configuration
   if err := server.Start(cfg); err != nil {
     return err
@@ -122,12 +126,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 > This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.
 
-
-### Backwards Compatibility
-
-> All ADRs that introduce backwards incompatibilities must include a section describing these incompatibilities and their severity. The ADR must explain how the author proposes to deal with these incompatibilities. ADR submissions without a sufficient backwards compatibility treatise may be rejected outright.
-
-
 ### Positive
 
 - Standardize all the services provided by the SDK
@@ -139,20 +137,28 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 ### Neutral
 
-{neutral consequences}
+- Refactor of existing and work-in-progress services (gRPC, Rosetta, etc).
 
+### Backwards Compatibility
+
+> All ADRs that introduce backwards incompatibilities must include a section describing these incompatibilities and their severity. The ADR must explain how the author proposes to deal with these incompatibilities. ADR submissions without a sufficient backwards compatibility treatise may be rejected outright.
+
+This ADR introduces significant changes to the `Server`, and `Config` concrete types due to the
+refactor. It also updates as well as to the `servertypes.Application` interface. In particular it
+removes all the registration functions which will be handled directly by each service during the app
+`start`. Each application `Register...` function will be migrated to the `RegisterRoutes()` function
+of an independent `Service`.
+
+```go
+type Application interface {
+    abci.Application
+
+    NewServer(client.Context,log.Logger, config.ServerConfig)
+}
+```
 
 ## Further Discussions
 
-While an ADR is in the DRAFT or PROPOSED stage, this section should contain a summary of issues to be solved in future iterations (usually referencing comments from a pull-request discussion).
-Later, this section can optionally list ideas or improvements the author or reviewers found during the analysis of this ADR.
-
-
-## Test Cases [optional]
-
-Test cases for an implementation are mandatory for ADRs that are affecting consensus changes. Other ADRs can choose to include links to test cases if applicable.
-
+## Test Cases
 
 ## References
-
-- {reference link}

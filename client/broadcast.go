@@ -95,21 +95,12 @@ func (ctx Context) BroadcastTxCommit(txBytes []byte) (*sdk.TxResponse, error) {
 	}
 
 	res, err := node.BroadcastTxCommit(context.Background(), txBytes)
-	if err != nil {
-		if errRes := CheckTendermintError(err, txBytes); errRes != nil {	
-			return errRes, nil	
-		}	
-
-		return sdk.NewResponseFormatBroadcastTxCommit(res), err
-	}
-
-	if !res.CheckTx.IsOK() {	
-		return sdk.NewResponseFormatBroadcastTxCommit(res), nil			return sdk.NewResponseFormatBroadcastTxCommit(res), nil
-	}		}
-
-
-	if !res.DeliverTx.IsOK() {		if errRes := CheckTendermintError(err, txBytes); errRes != nil {
-		return sdk.NewResponseFormatBroadcastTxCommit(res), nil			return errRes, nil
+	if err == nil {
+		return sdk.NewResponseFormatBroadcastTxCommit(res), nil
+	}	
+	
+	if errRes := CheckTendermintError(err, txBytes); errRes != nil {
+		return errRes, nil
 	}
 	return sdk.NewResponseFormatBroadcastTxCommit(res), err
 }

@@ -41,7 +41,7 @@ func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 			Timestamp:          ctx.BlockTime(),
 			NextValidatorsHash: ctx.BlockHeader().NextValidatorsHash,
 		}
-		k.SetUpgradedConsensusState(ctx, ctx.BlockHeight(), upgradedConsState)
+		k.SetUpgradedConsensusState(ctx, plan.Height, upgradedConsState)
 	}
 	// To make sure clear upgrade is executed at the same block
 	if plan.ShouldExecute(ctx) {

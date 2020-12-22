@@ -103,7 +103,7 @@ rm -rf $HOME/.simapp
 ./build/simd keys --keyring-backend=test add validator
 ./build/simd init testing --chain-id test
 ./build/simd add-genesis-account --keyring-backend=test $(./build/simd keys --keyring-backend=test show validator -a) 1000000000stake,1000000000validatortoken
-./build/simd gentx --keyring-backend test --chain-id test validator
+./build/simd gentx --keyring-backend test --chain-id test validator 100000stake
 ./build/simd collect-gentxs
 ```
 

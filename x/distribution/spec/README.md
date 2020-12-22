@@ -66,7 +66,7 @@ you are incentivized to not withdraw until after this event, increasing the
 worth of your existing _accum_. See [#2764](https://github.com/cosmos/cosmos-sdk/issues/2764)
 for further details.
 
-## Affect on Staking
+## Effect on Staking
 
 Charging commission on Atom provisions while also allowing for Atom-provisions
 to be auto-bonded (distributed directly to the validators bonded stake) is

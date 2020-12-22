@@ -161,7 +161,6 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 			},
 			expPass: true,
 		},
-
 		{
 			name: "unsuccessful schedule: invalid plan",
 			plan: types.Plan{
@@ -235,12 +234,12 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 			if tc.expPass {
 				s.Require().NoError(err, "valid test case failed")
 				if tc.plan.UpgradedClientState != nil {
-					got, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx, tc.plan.Height-1)
+					got, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx, tc.plan.Height)
 					s.Require().NoError(err)
 					s.Require().Equal(clientState, got, "upgradedClient not equal to expected value")
 				} else {
 					// check that upgraded client is empty if latest plan does not specify an upgraded client
-					got, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx, tc.plan.Height-1)
+					got, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx, tc.plan.Height)
 					s.Require().Error(err)
 					s.Require().Nil(got)
 				}

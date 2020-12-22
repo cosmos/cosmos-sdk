@@ -34,6 +34,8 @@ func (lw *StandardLogWriter) AddEntry(opEntry OperationEntry) {
 // PrintLogs - print the logs to a simulation file
 func (lw *StandardLogWriter) PrintLogs() {
 	f := createLogFile()
+	defer f.Close()
+
 	for i := 0; i < len(lw.OpEntries); i++ {
 		writeEntry := fmt.Sprintf("%s\n", (lw.OpEntries[i]).MustMarshal())
 		_, err := f.WriteString(writeEntry)
@@ -45,17 +47,22 @@ func (lw *StandardLogWriter) PrintLogs() {
 
 func createLogFile() *os.File {
 	var f *os.File
-	fileName := fmt.Sprintf("%s.log", time.Now().Format("2006-01-02_15:04:05"))
 
-	folderPath := os.ExpandEnv("$HOME/.simapp/simulations")
+	fileName := fmt.Sprintf("%s.log", time.Now().Format("2006-01-02_15:04:05"))
+	folderPath := path.Join(os.ExpandEnv("$HOME"), ".simapp", "simulations")
 	filePath := path.Join(folderPath, fileName)
 
 	err := os.MkdirAll(folderPath, os.ModePerm)
 	if err != nil {
 		panic(err)
 	}
-	f, _ = os.Create(filePath)
+
+	f, err = os.Create(filePath)
+	if err != nil {
+		panic(err)
+	}
 	fmt.Printf("Logs to writing to %s\n", filePath)
+
 	return f
 }
 

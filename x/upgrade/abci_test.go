@@ -131,7 +131,8 @@ func VerifyDoIBCLastBlock(t *testing.T) {
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	s.module.BeginBlock(newCtx, req)
 
-	consState, err := s.keeper.GetUpgradedConsensusState(newCtx, s.ctx.BlockHeight())
+	// plan Height is at ctx.BlockHeight+1
+	consState, err := s.keeper.GetUpgradedConsensusState(newCtx, s.ctx.BlockHeight()+1)
 	require.NoError(t, err)
 	require.Equal(t, &ibctmtypes.ConsensusState{Timestamp: newCtx.BlockTime(), NextValidatorsHash: nextValsHash}, consState)
 }

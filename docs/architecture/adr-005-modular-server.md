@@ -27,11 +27,11 @@ without forking the application `start` command (eg: `<app>d start`).
 This modularity and extensibility relies on the following limitations:
 
     - Consistent services
-    - Configuration extensibility
+    - App configuration extensibility
 
 ### Consistent services
 
-The `start` command executes 3 steps for each of the services provided by an SDK
+The `start` command executes 3 steps for each of the in-process services provided by an SDK
 application server:
 
     1. Creation of the service
@@ -43,9 +43,9 @@ In the current implementation, [some services](https://github.com/cosmos/cosmos-
 these steps results in difficulty for extensibility as each of these functions are individually
 called by the `start` command after checking if the service is enabled or not by the configuration.
 
-### Configuration extensibility
+### App configuration extensibility
 
-Each service relies on the configuration options defined on `config.tml`. Thus, in order to extend
+Each service relies on the configuration options defined on `app.toml`. Thus, in order to extend
 the services provided by the server, the SDK must handle custom TOML files provided by each
 application.
 
@@ -90,6 +90,8 @@ type ServerConfig interface {
 func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
   // ...
   app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper)
+
+  // handle application-specific configuration
   cfg := app.GetConfig(ctx.Viper)
   // ...
 
@@ -119,8 +121,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
   // ...
 }
 ```
-
-
 
 ## Consequences
 
@@ -152,8 +152,11 @@ of an independent `Service`.
 ```go
 type Application interface {
     abci.Application
-
-    NewServer(client.Context,log.Logger, config.ServerConfig)
+    
+    // NewServer creates an application-specific server
+    NewServer(client.Context, log.Logger, config.ServerConfig)
+    // GetConfig returns a server config parsed from a custom app.toml template.
+    GetConfig(*viper.Viper) config.ServerConfig
 }
 ```
 
@@ -162,3 +165,5 @@ type Application interface {
 ## Test Cases
 
 ## References
+
+- [#5540 - Allow override the app.toml template](https://github.com/cosmos/cosmos-sdk/issues/5540)

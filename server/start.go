@@ -9,7 +9,6 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
@@ -318,15 +317,8 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			return err
 		}
 		if config.GRPCWeb.Enable {
-			wrappedServer := grpcweb.WrapServer(grpcSrv)
-			handler := func(resp http.ResponseWriter, req *http.Request) {
-				wrappedServer.ServeHTTP(resp, req)
-			}
-			grpcWebSrv = &http.Server{
-				Addr:    config.GRPCWeb.Address,
-				Handler: http.HandlerFunc(handler),
-			}
-			if err := grpcWebSrv.ListenAndServe(); err != nil {
+			grpcWebSrv, err = servergrpc.StartGRPCWeb(grpcSrv, config)
+			if err != nil {
 				ctx.Logger.Error("failed starting grpc-web http server: ", err)
 				return err
 			}

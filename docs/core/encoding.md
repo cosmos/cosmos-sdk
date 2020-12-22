@@ -78,10 +78,11 @@ Modules are encouraged to utilize Protobuf encoding for their respective types.
 **Defining module types**
 
 Protobuf types can be defined to encode:
-  - state
-  - [`Msg`s](../building-modules/messages-and-queries.md#messages)
-  - [Query services](../building-modules/query-services.md)
-  - [genesis](../building-modules/genesis.md)
+
+- state
+- [`Msg`s](../building-modules/messages-and-queries.md#messages)
+- [Query services](../building-modules/query-services.md)
+- [genesis](../building-modules/genesis.md)
 
 **Naming and conventions**
 
@@ -112,7 +113,7 @@ The SDK `codec.Marshaler` interface provides support methods `MarshalInterface` 
 
 Module should register interfaces using `InterfaceRegistry` which provides a mechanism for registering interfaces: `RegisterInterface(protoName string, iface interface{})` and implementations: `RegisterImplementations(iface interface{}, impls ...proto.Message)` that can be safely unpacked from Any, similarly to type registration with Amino:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/3d969a1ffdf9a80f9ee16db9c16b8a8aa1004af6/codec/types/interface_registry.go#L23-L52
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc4/codec/types/interface_registry.go#L25-L66
 
 In addition, an `UnpackInterfaces` phase should be introduced to deserialization to unpack interfaces before they're needed. Protobuf types that contain a protobuf `Any` either directly or via one of their members should implement the `UnpackInterfacesMessage` interface:
 
@@ -125,10 +126,11 @@ type UnpackInterfacesMessage interface {
 #### Guidelines for protobuf message definitions
 
 In addition to [following official guidelines](https://developers.google.com/protocol-buffers/docs/proto3#simple), we recommend to use these annotations in .proto files when dealing with interfaces:
-* fields which accept interfaces should be annotated with `cosmos_proto.accepts_interface`
-using the same full-qualified name passed as `protoName` to `InterfaceRegistry.RegisterInterface`
-* interface implementations should be annotated with `cosmos_proto.implements_interface`
-using the same full-qualified name passed as `protoName` to `InterfaceRegistry.RegisterInterface`
+
+- fields which accept interfaces should be annotated with `cosmos_proto.accepts_interface`
+  using the same full-qualified name passed as `protoName` to `InterfaceRegistry.RegisterInterface`
+- interface implementations should be annotated with `cosmos_proto.implements_interface`
+  using the same full-qualified name passed as `protoName` to `InterfaceRegistry.RegisterInterface`
 
 #### Transaction Encoding
 
@@ -139,14 +141,14 @@ other peers. Since the underlying consensus engine is agnostic to the applicatio
 it only accepts transactions in the form of raw bytes. The encoding is done by an
 object called `TxEncoder` and the decoding by an object called `TxDecoder`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/9ae17669d6715a84c20d52e10e2232be9f467360/types/tx_msg.go#L82-L86
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc4/types/tx_msg.go#L83-L87
 
 A standard implementation of both these objects can be found in the [`auth` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth):
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/9ae17669d6715a84c20d52e10e2232be9f467360/x/auth/tx/decoder.go
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc4/x/auth/tx/decoder.go
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/9ae17669d6715a84c20d52e10e2232be9f467360/x/auth/tx/encoder.go
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc4/x/auth/tx/encoder.go
 
 ## Next {hide}
 
-Learn about [events](./events.md) {hide}
+Learn about [gRPC, REST and other endpoints](./grpc_rest.md) {hide}

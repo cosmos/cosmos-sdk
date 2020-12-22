@@ -28,6 +28,10 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 	for i, any := range anys {
 		var msg sdk.Msg
 		if isServiceMsg(any.TypeUrl) {
+			req := any.GetCachedValue()
+			if req == nil {
+				panic("Any cached value is nil. Transaction messages must be correctly packed Any values.")
+			}
 			msg = sdk.ServiceMsg{
 				MethodName: any.TypeUrl,
 				Request:    any.GetCachedValue().(sdk.MsgRequest),

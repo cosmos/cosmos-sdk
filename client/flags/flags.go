@@ -30,6 +30,11 @@ const (
 	// BroadcastAsync defines a tx broadcasting mode where the client returns
 	// immediately.
 	BroadcastAsync = "async"
+
+	// SignModeDirect is the value of the --sign-mode flag for SIGN_MODE_DIRECT
+	SignModeDirect = "direct"
+	// SignModeLegacyAminoJSON is the value of the --sign-mode flag for SIGN_MODE_LEGACY_AMINO_JSON
+	SignModeLegacyAminoJSON = "amino-json"
 )
 
 // List of CLI flags

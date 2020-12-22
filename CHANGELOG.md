@@ -36,41 +36,81 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.40.0-rc5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc5) - 2020-12-14
+
 ### Improvements
 
+* (auth/tx) Add new auth/tx gRPC & gRPC-Gateway endpoints for basic querying & broadcasting support
+  * [\#7842](https://github.com/cosmos/cosmos-sdk/pull/7842) Add TxsByEvent gRPC endpoint
+  * [\#7852](https://github.com/cosmos/cosmos-sdk/pull/7852) Add tx broadcast gRPC endpoint
+* (client/keys) [\#8043](https://github.com/cosmos/cosmos-sdk/pull/8043) Add support for export of unarmored private key
+* (client/tx) [\#7801](https://github.com/cosmos/cosmos-sdk/pull/7801) Update sign-batch multisig to work online
+* (crypto) [\#7987](https://github.com/cosmos/cosmos-sdk/pull/7987) Fix the inconsistency of CryptoCdc, only use
+    `codec/legacy.Cdc`.
 * (logging) [\#8072](https://github.com/cosmos/cosmos-sdk/pull/8072) Refactor logging:
   * Use [zerolog](https://github.com/rs/zerolog) over Tendermint's go-kit logging wrapper.
   * Introduce Tendermint's `--log_format=plain|json` flag. Using format `json` allows for emitting structured JSON
   logs which can be consumed by an external logging facility (e.g. Loggly). Both formats log to STDERR.
   * The existing `--log_level` flag and it's default value now solely relates to the global logging
   level (e.g. `info`, `debug`, etc...) instead of `<module>:<level>`.
-* (crypto) [\#7987](https://github.com/cosmos/cosmos-sdk/pull/7987) Fix the inconsistency of CryptoCdc, only use `codec/legacy.Cdc`.
-* (SDK) [\#7925](https://github.com/cosmos/cosmos-sdk/pull/7925) Updated dependencies to use gRPC v1.33.2
+* (SDK) [\#7925](https://github.com/cosmos/cosmos-sdk/pull/7925) Updated dependencies
   * Updated gRPC dependency to v1.33.2
-  * Updated iavl dependency to v0.15-rc2
-* (version) [\#7848](https://github.com/cosmos/cosmos-sdk/pull/7848) [\#7941](https://github.com/cosmos/cosmos-sdk/pull/7941) `version --long` output now shows the list of build dependencies and replaced build dependencies.
+  * Updated iavl dependency to v0.15-rc5
+  * Updated tendermint dependency to v0.34.0
+* (version) [\#7848](https://github.com/cosmos/cosmos-sdk/pull/7848) [\#7941](https://github.com/cosmos/cosmos-sdk/pull/7941)
+    `version --long` output now shows the list of build dependencies and replaced build dependencies.
+* (x/genutil) [\#8099](https://github.com/cosmos/cosmos-sdk/pull/8099) `init` now supports a `--recover` flag to recover
+    the private validator key from a given mnemonic
+
+### Client Breaking
+
+* (crypto) [\#7419](https://github.com/cosmos/cosmos-sdk/pull/7419) The SDK doesn't use Tendermint's `crypto.PubKey`
+    interface anymore, and uses instead it's own `PubKey` interface, defined in `crypto/types`. Replace all instances of
+    `crypto.PubKey` by `cryptotypes.Pubkey`.
+* (x/staking) [\#7419](https://github.com/cosmos/cosmos-sdk/pull/7419) The `TmConsPubKey` method on ValidatorI has been
+    removed and replaced instead by `ConsPubKey` (which returns a SDK `cryptotypes.PubKey`) and `TmConsPublicKey` (which
+    returns a Tendermint proto PublicKey).
 
 ### State Machine Breaking Changes
-* (x/upgrade) [\#7979](https://github.com/cosmos/cosmos-sdk/pull/7979) keeper pubkey storage serialization migration from bech32 to protobuf.
 
-### Bug Fixes
+* (x/staking) [\#7979](https://github.com/cosmos/cosmos-sdk/pull/7979) keeper pubkey storage serialization migration
+    from bech32 to protobuf.
 
-* (crypto) [\#7966](https://github.com/cosmos/cosmos-sdk/issues/7966) `Bip44Params` `String()` function now correctly returns the absolute HD path by adding the `m/` prefix.
-
+### Features
+* (codec/types) [\#8106](https://github.com/cosmos/cosmos-sdk/pull/8106) Adding `NewAnyWithCustomTypeURL` to correctly
+    marshal Messages in TxBuilder.
 
 ### API Breaking
 
 * [\#8080](https://github.com/cosmos/cosmos-sdk/pull/8080) Updated the `codec.Marshaler` interface
-  * Moved `MarshalAny` and `UnmarshalAny` helper functions to `codec.Marshaler` and renamed to `MarshalInterface` and `UnmarshalInterface` respectively. These functions must take interface as a parameter (not a concrete type nor `Any` object). Underneath they use `Any` wrapping for correct protobuf serialization.
+  * Moved `MarshalAny` and `UnmarshalAny` helper functions to `codec.Marshaler` and renamed to `MarshalInterface` and
+    `UnmarshalInterface` respectively. These functions must take interface as a parameter (not a concrete type nor `Any`
+    object). Underneath they use `Any` wrapping for correct protobuf serialization.
+* (client) [\#8107](https://github.com/cosmos/cosmos-sdk/pull/8107) Renamed `PrintOutput` and `PrintOutputLegacy`
+    methods of the `context.Client` object to `PrintProto` and `PrintObjectLegacy`.
+* (grpc/tmservice) [\#8060](https://github.com/cosmos/cosmos-sdk/pull/8060) TmService gRPC service's validator pubkey
+    type changed from bech32 format to `Any`
+* (x/auth/tx) [\#8106](https://github.com/cosmos/cosmos-sdk/pull/8106) change related to missing append functionality in
+    client transaction signing
+  + added `overwriteSig` argument to `x/auth/client.SignTx` and `client/tx.Sign` functions.
+  + removed `x/auth/tx.go:wrapper.GetSignatures`. The `wrapper` provides `TxBuilder` functionality, and it's a private
+    structure. That function was not used at all and it's not exposed through the `TxBuilder` interface.
 
+### Bug Fixes
 
+* (crypto) [\#7966](https://github.com/cosmos/cosmos-sdk/issues/7966) `Bip44Params` `String()` function now correctly
+    returns the absolute HD path by adding the `m/` prefix.
+* (crypto/keys) [\#7838](https://github.com/cosmos/cosmos-sdk/pull/7838) Add support for TM secp256k1 keys back to the
+    SDK for consensus pubkeys
+* (x/auth/client/cli) [\#8106](https://github.com/cosmos/cosmos-sdk/pull/8106) fixing regression bugs in transaction signing.
+
+## [v0.40.0-rc4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc4) - 2020-11-30
+
+### Bug Fixes
+
+* (store) [#8048](https://github.com/cosmos/cosmos-sdk/pull/8048) Fix issue where `SetInitialVersion` was never getting called, causing all queries to return empty on chains with non-zero initial height
 
 ## [v0.40.0-rc3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc3) - 2020-11-06
-
-### Client Breaking
-
-* (crypto) [\#7419](https://github.com/cosmos/cosmos-sdk/pull/7419) The SDK doesn't use Tendermint's `crypto.PubKey` interface anymore, and uses instead it's own `PubKey` interface, defined in `crypto/types`. Replace all instances of `crypto.PubKey` by `cryptotypes.Pubkey`.
-* (x/staking) [\#7419](https://github.com/cosmos/cosmos-sdk/pull/7419) The `TmConsPubKey` method on ValidatorI has been removed and replaced instead by `ConsPubKey` (which returns a SDK `cryptotypes.PubKey`) and `TmConsPublicKey` (which returns a Tendermint proto PublicKey).
 
 ### Improvements
 

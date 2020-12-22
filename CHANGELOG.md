@@ -35,6 +35,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [v0.39.3]
+
+### Improvements
+
+* (deps) Bump IAVL to v0.14.3.
+
 ## [v0.39.2]
 
 ### Features

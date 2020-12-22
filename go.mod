@@ -28,9 +28,9 @@ require (
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.15.1
-	github.com/tendermint/iavl v0.14.1
+	github.com/tendermint/iavl v0.14.3
 	github.com/tendermint/tendermint v0.33.9
-	github.com/tendermint/tm-db v0.5.1
+	github.com/tendermint/tm-db v0.5.2
 	golang.org/x/net v0.0.0-20201010224723-4f7140c49acb // indirect
 	golang.org/x/sys v0.0.0-20201013132646-2da7054afaeb // indirect
 	google.golang.org/protobuf v1.25.0 // indirect

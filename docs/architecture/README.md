@@ -44,6 +44,7 @@ Read about the [PROCESS](./PROCESS.md).
 - [ADR 001: Coin Source Tracing](./adr-001-coin-source-tracing.md)
 - [ADR 002: SDK Documentation Structure](./adr-002-docs-structure.md)
 - [ADR 004: Split Denomination Keys](./adr-004-split-denomination-keys.md)
+- [ADR 005: Modular Server](./adr-005-modular-server.md)
 - [ADR 006: Secret Store Replacement](./adr-006-secret-store-replacement.md)
 - [ADR 009: Evidence Module](./adr-009-evidence-module.md)
 - [ADR 010: Modular AnteHandler](./adr-010-modular-antehandler.md)

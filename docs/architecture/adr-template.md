@@ -1,8 +1,12 @@
 # ADR {ADR-NUMBER}: {TITLE}
 
+## Author
+
+- {Name} ({github-username})
+
 ## Changelog
 
-- {date}: {changelog}
+- {yyyy/mm/dd}: {changelog}
 
 ## Status
 

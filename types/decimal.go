@@ -394,12 +394,10 @@ func (d Dec) Power(power uint64) Dec {
 	tmp := OneDec()
 
 	for i := power; i > 1; {
-		if i%2 == 0 {
-			i /= 2
-		} else {
+		if i%2 != 0 {
 			tmp = tmp.Mul(d)
-			i = (i - 1) / 2
 		}
+		i /= 2
 		d = d.Mul(d)
 	}
 

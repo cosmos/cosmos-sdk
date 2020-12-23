@@ -204,6 +204,7 @@ type Height interface {
 	GTE(Height) bool
 	GetRevisionNumber() uint64
 	GetRevisionHeight() uint64
+	Increment() Height
 	Decrement() (Height, bool)
 	String() string
 }

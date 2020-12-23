@@ -103,8 +103,6 @@ Examples:
 					return err
 				}
 
-				periodClock = periodClock * 24 * 60 * 60
-
 				periodic := types.PeriodicFeeAllowance{
 					Basic:            basic,
 					Period:           types.ClockDuration(time.Duration(periodClock) * time.Second), //days

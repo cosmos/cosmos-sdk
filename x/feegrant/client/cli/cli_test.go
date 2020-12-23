@@ -297,13 +297,13 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 			true, nil, 0,
 		},
 		{
-			"invalid period(periodic fee grant)",
+			"period cannot be greater than the actual expiration(periodic fee grant)",
 			append(
 				[]string{
 					granter.String(),
 					grantee.String(),
 					"100steak",
-					fmt.Sprintf("%d", 10*60*60),
+					fmt.Sprintf("%d", 10*60*60), //period
 					"10steak",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 60*60),

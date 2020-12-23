@@ -39,7 +39,7 @@ func (k Keeper) executeQueuedSlashEvent(ctx sdk.Context, msg *types.SlashEvent) 
 		return err
 	}
 	distributionHeight := ctx.BlockHeight() - sdk.ValidatorUpdateDelay - 1
-	k.sk.Slash(ctx, consAddr, distributionHeight, msg.SlashedSoFar.RoundInt64(), msg.SlashedSoFar)
+	k.sk.Slash(ctx, consAddr, distributionHeight, msg.ValidatorVotingPercent.RoundInt64(), msg.SlashPercent)
 	return nil
 }
 

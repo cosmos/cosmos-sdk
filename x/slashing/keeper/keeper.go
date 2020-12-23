@@ -90,8 +90,8 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdk.De
 	if validator != nil {
 		k.ek.QueueMsgForEpoch(ctx, k.sk.GetEpochNumber(ctx), types.SlashEvent{
 			Address:                validator.GetOperator(),
-			ValidatorVotingPercent: sdk.NewDec(power),
-			SlashedSoFar:           fraction,
+			ValidatorVotingPercent: sdk.NewDec(power), // TODO: it's not percent but power, should make a fix
+			SlashPercent:           fraction,
 		})
 	}
 }

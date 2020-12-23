@@ -64,8 +64,8 @@ message SlashEvent {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  bytes slashed_so_far = 3 [
-    (gogoproto.moretags)   = "yaml:\"slashed_so_far\"",
+  bytes slash_percent = 3 [
+    (gogoproto.moretags)   = "yaml:\"slash_percent\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];

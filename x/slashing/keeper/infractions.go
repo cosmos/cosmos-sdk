@@ -94,8 +94,8 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 			// queue slashing action for next epoch
 			k.ek.QueueMsgForEpoch(ctx, k.sk.GetEpochNumber(ctx), types.SlashEvent{
 				Address:                validator.GetOperator(),
-				ValidatorVotingPercent: sdk.NewDec(power),
-				SlashedSoFar:           k.SlashFractionDowntime(ctx),
+				ValidatorVotingPercent: sdk.NewDec(power), // TODO: it's not percent but power, should make a fix
+				SlashPercent:           k.SlashFractionDowntime(ctx),
 			})
 			// This initiates jail based on down time
 			k.sk.Jail(ctx, consAddr)

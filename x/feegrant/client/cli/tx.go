@@ -106,7 +106,7 @@ Examples:
 					}
 
 					if periodClock > exp {
-						return fmt.Errorf("Period(%d) cannot be greater than the expiration(%d)", periodClock, exp)
+						return fmt.Errorf("period(%d) cannot be greater than the expiration(%d)", periodClock, exp)
 					}
 
 					periodic := types.PeriodicFeeAllowance{
@@ -120,7 +120,7 @@ Examples:
 					grant = &periodic
 
 				} else {
-					return fmt.Errorf("Invalid number of args %d", len(args))
+					return fmt.Errorf("invalid number of args %d", len(args))
 				}
 			}
 

@@ -269,13 +269,60 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 			true, nil, 0,
 		},
 		{
-			"Valid fee grant",
+			"Valid basic fee grant",
 			append(
 				[]string{
 					granter.String(),
 					grantee.String(),
 					"100steak",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				},
+				commonFlags...,
+			),
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"invalid number of args(periodic fee grant)",
+			append(
+				[]string{
+					granter.String(),
+					grantee.String(),
+					"100steak",
+					"10steak",
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 10*60*60),
+				},
+				commonFlags...,
+			),
+			true, nil, 0,
+		},
+		{
+			"invalid period(periodic fee grant)",
+			append(
+				[]string{
+					granter.String(),
+					grantee.String(),
+					"100steak",
+					fmt.Sprintf("%d", 10*60*60),
+					"10steak",
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 60*60),
+				},
+				commonFlags...,
+			),
+			true, nil, 0,
+		},
+		{
+			"Valid periodic fee grant",
+			append(
+				[]string{
+					granter.String(),
+					grantee.String(),
+					"100steak",
+					fmt.Sprintf("%d", 60*60),
+					"10steak",
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 10*60*60),
 				},
 				commonFlags...,
 			),

@@ -52,8 +52,8 @@ func NewCmdFeeGrant() *cobra.Command {
 				ignored as it is implied from [granter].
 
 Examples:
-%s tx %s grant cosmos1skjw... cosmos1skjw... 100stake or
-%s tx %s grant cosmos1skjw... cosmos1skjw... 100stake 10 10stake
+%s tx %s grant cosmos1skjw... cosmos1skjw... 100stake --expiration 36000 or
+%s tx %s grant cosmos1skjw... cosmos1skjw... 100stake 3600 10stake --expiration 36000
 				`, version.AppName, types.ModuleName, version.AppName, types.ModuleName,
 			),
 		),

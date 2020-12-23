@@ -57,7 +57,7 @@ func ValidateGenesis(data GenesisState) error {
 		accsSupply = append(accsSupply, balance.Coins...)
 	}
 
-	if !accsSupply.IsEqual(data.Supply) {
+	if !accsSupply.IsEqual(totalSupply.Total) {
 		return fmt.Errorf("total supply does not match with accounts balance")
 	}
 	return nil

@@ -66,6 +66,9 @@ func SimulateMsgGrantFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, k
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		granter, _ := simtypes.RandomAcc(r, accs)
 		grantee, _ := simtypes.RandomAcc(r, accs)
+		if grantee.Address.String() == granter.Address.String() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantFeeAllowance, "grantee and granter cannot be same"), nil, nil
+		}
 
 		account := ak.GetAccount(ctx, granter.Address)
 
@@ -76,6 +79,9 @@ func SimulateMsgGrantFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, k
 		}
 
 		spendableCoins = spendableCoins.Sub(fees)
+		if spendableCoins.Empty() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantFeeAllowance, "unable to grant empty coins as SpendLimit"), nil, nil
+		}
 
 		msg, err := types.NewMsgGrantFeeAllowance(&types.BasicFeeAllowance{
 			SpendLimit: spendableCoins,

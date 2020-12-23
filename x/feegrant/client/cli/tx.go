@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -43,7 +44,7 @@ func GetTxCmd() *cobra.Command {
 // NewCmdFeeGrant returns a CLI command handler for creating a MsgGrantFeeAllowance transaction.
 func NewCmdFeeGrant() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant [granter] [grantee] [limit] ",
+		Use:   "grant [granter] [grantee] [limit]",
 		Short: "Grant Fee allowance to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(
@@ -87,7 +88,34 @@ Examples:
 				Expiration: types.ExpiresAtTime(time.Now().Add(period)),
 			}
 
-			msg, err := types.NewMsgGrantFeeAllowance(&basic, granter, grantee)
+			var grant types.FeeAllowanceI
+			grant = &basic
+
+			if args[3] != "" {
+				periodClock, err := strconv.ParseInt(args[3], 10, 64)
+				if err != nil {
+					return err
+				}
+
+				periodLimit, err := sdk.ParseCoinsNormalized(args[4])
+				if err != nil {
+					return err
+				}
+
+				periodClock = periodClock * 24 * 60 * 60
+
+				periodic := types.PeriodicFeeAllowance{
+					Basic:            basic,
+					Period:           types.ClockDuration(time.Duration(periodClock)), //days
+					PeriodReset:      types.ExpiresAtTime(time.Now().Add(time.Duration(periodClock))),
+					PeriodSpendLimit: periodLimit,
+					PeriodCanSpend:   periodLimit,
+				}
+
+				grant = &periodic
+			}
+
+			msg, err := types.NewMsgGrantFeeAllowance(grant, granter, grantee)
 			if err != nil {
 				return err
 			}

@@ -44,7 +44,7 @@ func GetTxCmd() *cobra.Command {
 // NewCmdFeeGrant returns a CLI command handler for creating a MsgGrantFeeAllowance transaction.
 func NewCmdFeeGrant() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant [granter] [grantee] [limit]",
+		Use:   "grant [granter] [grantee] [limit] or grant [granter] [grantee] [limit] [period] [periodLimit]",
 		Short: "Grant Fee allowance to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(
@@ -52,11 +52,12 @@ func NewCmdFeeGrant() *cobra.Command {
 				ignored as it is implied from [granter].
 
 Examples:
-%s tx %s grant cosmos1skjw... cosmos1skjw... 100stake 
-				`, version.AppName, types.ModuleName,
+%s tx %s grant cosmos1skjw... cosmos1skjw... 100stake or
+%s tx %s grant cosmos1skjw... cosmos1skjw... 100stake 10 10stake
+				`, version.AppName, types.ModuleName, version.AppName, types.ModuleName,
 			),
 		),
-		Args: cobra.ExactArgs(3),
+		Args: cobra.RangeArgs(3, 5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Flags().Set(flags.FlagFrom, args[0])
 			clientCtx, err := client.GetClientTxContext(cmd)

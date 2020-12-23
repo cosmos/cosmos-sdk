@@ -47,11 +47,8 @@ func (msg MsgGrantFeeAllowance) ValidateBasic() error {
 	if msg.Grantee == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
 	}
-	if msg.Grantee == msg.Granter {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
-	}
 
-	return msg.GetFeeAllowanceI().ValidateBasic()
+	return nil
 }
 
 func (msg MsgGrantFeeAllowance) GetSigners() []sdk.AccAddress {

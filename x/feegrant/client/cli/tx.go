@@ -129,10 +129,6 @@ Examples:
 				return err
 			}
 
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
-
 			svcMsgClientConn := &serviceMsgClientConn{}
 			feeGrantMsgClient := types.NewMsgClient(svcMsgClientConn)
 			_, err = feeGrantMsgClient.GrantFeeAllowance(context.Background(), msg)

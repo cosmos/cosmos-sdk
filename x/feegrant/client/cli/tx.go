@@ -107,8 +107,8 @@ Examples:
 
 				periodic := types.PeriodicFeeAllowance{
 					Basic:            basic,
-					Period:           types.ClockDuration(time.Duration(periodClock)), //days
-					PeriodReset:      types.ExpiresAtTime(time.Now().Add(time.Duration(periodClock))),
+					Period:           types.ClockDuration(time.Duration(periodClock) * time.Second), //days
+					PeriodReset:      types.ExpiresAtTime(time.Now().Add(time.Duration(periodClock) * time.Second)),
 					PeriodSpendLimit: periodLimit,
 					PeriodCanSpend:   periodLimit,
 				}

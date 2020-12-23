@@ -5,8 +5,24 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 )
+
+func TestCommitPacket(t *testing.T) {
+	packet := types.NewPacket(validPacketData, 1, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp)
+
+	registry := codectypes.NewInterfaceRegistry()
+	clienttypes.RegisterInterfaces(registry)
+	types.RegisterInterfaces(registry)
+
+	cdc := codec.NewProtoCodec(registry)
+
+	commitment := types.CommitPacket(cdc, &packet)
+	require.NotNil(t, commitment)
+}
 
 func TestPacketValidateBasic(t *testing.T) {
 	testCases := []struct {

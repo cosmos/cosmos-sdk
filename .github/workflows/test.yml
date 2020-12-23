@@ -144,6 +144,7 @@ jobs:
         run: |
           excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER')"
           excludelist+=" $(find ./ -type f -name '*.pb.go')"
+          excludelist+=" $(find ./ -type f -name '*.pb.gw.go')"
           excludelist+=" $(find ./ -type f -path './tests/mocks/*.go')"
           for filename in ${excludelist}; do
             filename=$(echo $filename | sed 's/^./github.com\/cosmos\/cosmos-sdk/g')
@@ -151,7 +152,7 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: env.GIT_DIFF
-      - uses: codecov/codecov-action@v1.0.15
+      - uses: codecov/codecov-action@v1.1.1
         with:
           file: ./coverage.txt
         if: env.GIT_DIFF
@@ -230,6 +231,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2.1.3
+        with:
+          go-version: 1.15
       - uses: technote-space/get-diff-action@v4
         id: git_diff
         with:

@@ -1,6 +1,7 @@
 package keyring
 
 import (
+	"encoding/hex"
 	"fmt"
 	"strings"
 	"testing"
@@ -1090,6 +1091,29 @@ func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
 	// Should fail importing private key on existing key.
 	err = keyring.ImportPubKey(newUID, armor)
 	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", newUID))
+}
+
+func TestAltKeyring_UnsafeExportPrivKeyHex(t *testing.T) {
+	keyring, err := New(t.Name(), BackendTest, t.TempDir(), nil)
+	require.NoError(t, err)
+
+	uid := theID
+
+	_, _, err = keyring.NewMnemonic(uid, English, sdk.FullFundraiserPath, hd.Secp256k1)
+	require.NoError(t, err)
+
+	unsafeKeyring := NewUnsafe(keyring)
+	privKey, err := unsafeKeyring.UnsafeExportPrivKeyHex(uid)
+
+	require.NoError(t, err)
+	require.Equal(t, 64, len(privKey))
+
+	_, err = hex.DecodeString(privKey)
+	require.NoError(t, err)
+
+	// test error on non existing key
+	_, err = unsafeKeyring.UnsafeExportPrivKeyHex("non-existing")
+	require.Error(t, err)
 }
 
 func TestAltKeyring_ConstructorSupportedAlgos(t *testing.T) {

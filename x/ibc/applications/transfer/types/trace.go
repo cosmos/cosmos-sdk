@@ -1,12 +1,12 @@
 package types
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"sort"
 	"strings"
 
-	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -42,7 +42,8 @@ func ParseDenomTrace(rawDenom string) DenomTrace {
 //
 // hash = sha256(tracePath + "/" + baseDenom)
 func (dt DenomTrace) Hash() tmbytes.HexBytes {
-	return tmhash.Sum([]byte(dt.GetFullDenomPath()))
+	hash := sha256.Sum256([]byte(dt.GetFullDenomPath()))
+	return hash[:]
 }
 
 // GetPrefix returns the receiving denomination prefix composed by the trace info and a separator.

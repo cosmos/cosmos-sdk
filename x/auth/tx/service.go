@@ -49,32 +49,21 @@ const (
 
 // TxsByEvents implements the ServiceServer.TxsByEvents RPC method.
 func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventRequest) (*txtypes.GetTxsEventResponse, error) {
-	offset := int(req.Pagination.Offset)
-	limit := int(req.Pagination.Limit)
-	if offset < 0 {
-		return nil, status.Error(codes.InvalidArgument, "offset must greater than 0")
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
 	}
-	if len(req.Event) == 0 {
+
+	page, limit, err := pagination.ParsePagination(req.Pagination)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(req.Events) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "must declare at least one event to search")
 	}
 
-	if limit < 0 {
-		return nil, status.Error(codes.InvalidArgument, "limit must greater than 0")
-	} else if limit == 0 {
-		limit = pagination.DefaultLimit
-	}
-
-	page := offset/limit + 1
-
-	var events []string
-
-	if strings.Contains(req.Event, "&") {
-		events = strings.Split(req.Event, "&")
-	} else {
-		events = append(events, req.Event)
-	}
-	tmEvents := make([]string, len(events))
-	for i, event := range events {
+	tmEvents := make([]string, len(req.Events))
+	for i, event := range req.Events {
 		if !strings.Contains(event, "=") {
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid event; event %s should be of the format: %s", event, eventFormat))
 		} else if strings.Count(event, "=") > 1 {
@@ -128,7 +117,7 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 
 // Simulate implements the ServiceServer.Simulate RPC method.
 func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*txtypes.SimulateResponse, error) {
-	if req.Tx == nil {
+	if req == nil || req.Tx == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
 	}
 
@@ -154,6 +143,10 @@ func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*
 
 // GetTx implements the ServiceServer.GetTx RPC method.
 func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtypes.GetTxResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
+	}
+
 	// We get hash as a hex string in the request, convert it to bytes.
 	hash, err := hex.DecodeString(req.Hash)
 	if err != nil {
@@ -183,6 +176,10 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 		Tx:         &protoTx,
 		TxResponse: txResp,
 	}, nil
+}
+
+func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxRequest) (*txtypes.BroadcastTxResponse, error) {
+	return client.TxServiceBroadcast(ctx, s.clientCtx, req)
 }
 
 // RegisterTxService registers the tx service on the gRPC router.

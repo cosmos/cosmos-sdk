@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
-var _ exported.ConsensusState = ConsensusState{}
+var _ exported.ConsensusState = &ConsensusState{}
 
 // ClientType returns Solo Machine type.
 func (ConsensusState) ClientType() string {

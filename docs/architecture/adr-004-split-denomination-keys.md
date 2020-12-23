@@ -96,7 +96,7 @@ the balances and check that they match the expected total supply.
 
 ## Status
 
-Proposed.
+Accepted.
 
 ## Consequences
 

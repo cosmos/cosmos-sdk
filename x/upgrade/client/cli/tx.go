@@ -43,12 +43,10 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 			"Please specify a unique name and height OR time for the upgrade to take effect.\n" +
 			"You may include info to reference a binary download link, in a format compatible with: https://github.com/regen-network/cosmosd",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			name := args[0]
 			content, err := parseArgsToContent(cmd, name)
 			if err != nil {
@@ -97,12 +95,10 @@ func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 		Short: "Cancel the current software upgrade proposal",
 		Long:  "Cancel a software upgrade along with an initial deposit.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			from := clientCtx.GetFromAddress()
 
 			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)

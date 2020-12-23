@@ -14,7 +14,6 @@ A light client is created using the `MsgCreateClient`.
 
 ```go
 type MsgCreateClient struct {
-  ClientId        string
   ClientState     *types.Any // proto-packed client state
   ConsensusState  *types.Any // proto-packed consensus state
   Signer          sdk.AccAddress
@@ -23,13 +22,11 @@ type MsgCreateClient struct {
 
 This message is expected to fail if:
 
-- `ClientId` is invalid (see naming requirements)
 - `ClientState` is empty or invalid
 - `ConsensusState` is empty or invalid
 - `Signer` is empty
-- A light client with the provided id and type already exist
 
-The message creates and stores a light client with an initial consensus state for the given client
+The message creates and stores a light client with an initial consensus state using a generated client
 identifier.
 
 ### MsgUpdateClient
@@ -112,7 +109,6 @@ A connection is initialized on a light client using the `MsgConnectionOpenInit`.
 ```go
 type MsgConnectionOpenInit struct {
 	ClientId     string                                       
-	ConnectionId string                                        
 	Counterparty Counterparty                                  
 	Version      string
 	Signer       sdk.AccAddress
@@ -121,7 +117,6 @@ type MsgConnectionOpenInit struct {
 
 This message is expected to fail if:
 - `ClientId` is invalid (see naming requirements)
-- `ConnectionId` is invalid (see naming requirements)
 - `Counterparty` is empty
 - 'Version' is not empty and invalid
 - `Signer` is empty
@@ -138,8 +133,7 @@ using the `MsgConnectionOpenTry`.
 ```go
 type MsgConnectionOpenTry struct {
 	ClientId                       string
-	DesiredConnectionId            string
-	CounterpartyChosenConnectionId string
+	PreviousConnectionId           string
 	ClientState                    *types.Any // proto-packed counterparty client
 	Counterparty                   Counterparty
 	CounterpartyVersions           []string
@@ -155,8 +149,7 @@ type MsgConnectionOpenTry struct {
 This message is expected to fail if:
 
 - `ClientId` is invalid (see naming requirements)
-- `DesiredConnectionId` is invalid (see naming requirements)
-- `CounterpartyChosenConnectionId` is not empty and doesn't match `DesiredConnectionId`
+- `PreviousConnectionId` is not empty and invalid (see naming requirements)
 - `ClientState` is not a valid client of the executing chain
 - `Counterparty` is empty
 - `CounterpartyVersions` is empty
@@ -167,15 +160,13 @@ This message is expected to fail if:
 - `ConsensusHeight` is zero
 - `Signer` is empty
 - A Client hasn't been created for the given ID
-- A Connection for the given ID already exists
+- If a previous connection exists but does not match the supplied parameters.
 - `ProofInit` does not prove that the counterparty connection is in state INIT
 - `ProofClient` does not prove that the counterparty has stored the `ClientState` provided in message
 - `ProofConsensus` does not prove that the counterparty has the correct consensus state for this chain
 
-The message creates a connection for the given ID with an TRYOPEN State. The `CounterpartyChosenConnectionID` 
-represents the connection ID the counterparty set under `connection.Counterparty.ConnectionId`
-to represent the connection ID this chain should use. An empty string indicates the connection
-identifier is flexible and gives this chain an opportunity to choose its own identifier.
+The message creates a connection for a generated connection ID with an TRYOPEN State. If a previous
+connection already exists, it updates the connection state from INIT to TRYOPEN.
 
 ### MsgConnectionOpenAck
 
@@ -251,7 +242,6 @@ message.
 ```go
 type MsgChannelOpenInit struct {
   PortId    string
-  ChannelId string
   Channel   Channel
   Signer    sdk.AccAddress
 }
@@ -260,12 +250,11 @@ type MsgChannelOpenInit struct {
 This message is expected to fail if:
 
 - `PortId` is invalid (see naming requirements)
-- `ChannelId` is invalid (see naming requirements)
 - `Channel` is empty
 - `Signer` is empty
 - A Channel End exists for the given Channel ID and Port ID
 
-The message creates a channel on chain A with an INIT state for the given Channel ID
+The message creates a channel on chain A with an INIT state for a generated Channel ID
 and Port ID.
 
 ### MsgChannelOpenTry
@@ -276,8 +265,7 @@ the `MsgChannelOpenTry` message.
 ```go
 type MsgChannelOpenTry struct {
 	PortId                      string    
-	DesiredChannelId            string   
-	CounterpartyChosenChannelId string 
+	PreviousChannelId            string   
 	Channel                     Channel 
 	CounterpartyVersion         string 
 	ProofInit                   []byte
@@ -289,21 +277,18 @@ type MsgChannelOpenTry struct {
 This message is expected to fail if:
 
 - `PortId` is invalid (see naming requirements)
-- `DesiredChannelId` is invalid (see naming requirements)
-- `CounterpartyChosenChannelId` is not empty and not equal to `ChannelId`
+- `PreviousChannelId` is not empty and invalid (see naming requirements)
 - `Channel` is empty
 - `CounterpartyVersion` is empty
 - `ProofInit` is empty
 - `ProofHeight` is zero
 - `Signer` is empty
-- A Channel End exists for the given Channel and Port ID
+- A previous channel exists and does not match the provided parameters.
 - `ProofInit` does not prove that the counterparty's Channel state is in INIT
 
-The message creates a channel on chain B with an TRYOPEN state for the given Channel ID 
-and Port ID. The `CounterpartyChosenChannelId` represents the channel ID the counterparty set under
-`connection.Counterparty.ChannelId` to represent the channel ID this chain should use.
-An empty string indicates the channel identifier is flexible and gives this chain an
-opportunity to choose its own identifier.
+The message creates a channel on chain B with an TRYOPEN state for using a generated Channel ID 
+and given Port ID if the previous channel does not already exist. Otherwise it udates the 
+previous channel state from INIT to TRYOPEN.
 
 
 ### MsgChannelOpenAck

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/rand"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -182,6 +183,42 @@ func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weig
 
 //____________________________________________________________________________
 
+// ValidateTransferChannelParams does validation of a newly created transfer channel. A transfer
+// channel must be UNORDERED, use the correct port (by default 'transfer'), and use the current
+// supported version. Only 2^32 channels are allowed to be created.
+func ValidateTransferChannelParams(
+	ctx sdk.Context,
+	keeper keeper.Keeper,
+	order channeltypes.Order,
+	portID string,
+	channelID string,
+	version string,
+) error {
+	// NOTE: for escrow address security only 2^32 channels are allowed to be created
+	// Issue: https://github.com/cosmos/cosmos-sdk/issues/7737
+	channelSequence, err := channeltypes.ParseChannelSequence(channelID)
+	if err != nil {
+		return err
+	}
+	if channelSequence > math.MaxUint32 {
+		return sdkerrors.Wrapf(types.ErrMaxTransferChannels, "channel sequence %d is greater than max allowed transfer channels %d", channelSequence, math.MaxUint32)
+	}
+	if order != channeltypes.UNORDERED {
+		return sdkerrors.Wrapf(channeltypes.ErrInvalidChannelOrdering, "expected %s channel, got %s ", channeltypes.UNORDERED, order)
+	}
+
+	// Require portID is the portID transfer module is bound to
+	boundPort := keeper.GetPort(ctx)
+	if boundPort != portID {
+		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid port: %s, expected %s", portID, boundPort)
+	}
+
+	if version != types.Version {
+		return sdkerrors.Wrapf(types.ErrInvalidVersion, "got %s, expected %s", version, types.Version)
+	}
+	return nil
+}
+
 // OnChanOpenInit implements the IBCModule interface
 func (am AppModule) OnChanOpenInit(
 	ctx sdk.Context,
@@ -193,18 +230,8 @@ func (am AppModule) OnChanOpenInit(
 	counterparty channeltypes.Counterparty,
 	version string,
 ) error {
-	if order != channeltypes.UNORDERED {
-		return sdkerrors.Wrapf(channeltypes.ErrInvalidChannelOrdering, "expected %s channel, got %s ", channeltypes.UNORDERED, order)
-	}
-
-	// Require portID is the portID transfer module is bound to
-	boundPort := am.keeper.GetPort(ctx)
-	if boundPort != portID {
-		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid port: %s, expected %s", portID, boundPort)
-	}
-
-	if version != types.Version {
-		return sdkerrors.Wrapf(types.ErrInvalidVersion, "got %s, expected %s", version, types.Version)
+	if err := ValidateTransferChannelParams(ctx, am.keeper, order, portID, channelID, version); err != nil {
+		return err
 	}
 
 	// Claim channel capability passed back by IBC module
@@ -227,18 +254,8 @@ func (am AppModule) OnChanOpenTry(
 	version,
 	counterpartyVersion string,
 ) error {
-	if order != channeltypes.UNORDERED {
-		return sdkerrors.Wrapf(channeltypes.ErrInvalidChannelOrdering, "expected %s channel, got %s ", channeltypes.UNORDERED, order)
-	}
-
-	// Require portID is the portID transfer module is bound to
-	boundPort := am.keeper.GetPort(ctx)
-	if boundPort != portID {
-		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid port: %s, expected %s", portID, boundPort)
-	}
-
-	if version != types.Version {
-		return sdkerrors.Wrapf(types.ErrInvalidVersion, "got: %s, expected %s", version, types.Version)
+	if err := ValidateTransferChannelParams(ctx, am.keeper, order, portID, channelID, version); err != nil {
+		return err
 	}
 
 	if counterpartyVersion != types.Version {

@@ -92,7 +92,7 @@ Examples:
 			var grant types.FeeAllowanceI
 			grant = &basic
 
-			if args[3] != "" {
+			if args[3] != "" { // if period mentioned it can be treated as periodic fee allowance
 				periodClock, err := strconv.ParseInt(args[3], 10, 64)
 				if err != nil {
 					return err
@@ -103,9 +103,13 @@ Examples:
 					return err
 				}
 
+				if periodClock > exp {
+					return fmt.Errorf("Period(%d) cannot be greater than the expiration(%d)", periodClock, exp)
+				}
+
 				periodic := types.PeriodicFeeAllowance{
 					Basic:            basic,
-					Period:           types.ClockDuration(time.Duration(periodClock) * time.Second), //days
+					Period:           types.ClockDuration(time.Duration(periodClock) * time.Second),
 					PeriodReset:      types.ExpiresAtTime(time.Now().Add(time.Duration(periodClock) * time.Second)),
 					PeriodSpendLimit: periodLimit,
 					PeriodCanSpend:   periodLimit,
@@ -116,6 +120,10 @@ Examples:
 
 			msg, err := types.NewMsgGrantFeeAllowance(grant, granter, grantee)
 			if err != nil {
+				return err
+			}
+
+			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 

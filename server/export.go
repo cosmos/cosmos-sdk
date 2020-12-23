@@ -105,7 +105,7 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				return err
 			}
 
-			cmd.Println(string(sdk.MustSortJSON(encoded)))
+			fmt.Println(string(sdk.MustSortJSON(encoded)))
 			return nil
 		},
 	}

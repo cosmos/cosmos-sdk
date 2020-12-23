@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -45,7 +46,21 @@ func ValidateGenesis(data GenesisState) error {
 		return err
 	}
 
-	return NewSupply(data.Supply).ValidateBasic()
+	totalSupply := NewSupply(data.Supply)
+	err := totalSupply.ValidateBasic()
+	if err != nil {
+		return err
+	}
+
+	var accsSupply sdk.Coins
+	for _, balance := range data.Balances {
+		accsSupply = append(accsSupply, balance.Coins...)
+	}
+
+	if !accsSupply.IsEqual(data.Supply) {
+		return fmt.Errorf("total supply does not match with accounts balance")
+	}
+	return nil
 }
 
 // NewGenesisState creates a new genesis state.

@@ -319,7 +319,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		if config.GRPCWeb.Enable {
 			grpcWebSrv, err = servergrpc.StartGRPCWeb(grpcSrv, config)
 			if err != nil {
-				ctx.Logger.Error("failed starting grpc-web http server: ", err)
+				ctx.Logger.Error("failed to start grpc-web http server: ", err)
 				return err
 			}
 		}

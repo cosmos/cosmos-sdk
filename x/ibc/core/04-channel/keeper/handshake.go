@@ -22,15 +22,15 @@ func (k Keeper) CounterpartyHops(ctx sdk.Context, ch types.Channel) ([]string, b
 	if len(ch.ConnectionHops) != 1 {
 		return []string{}, false
 	}
-	counterPartyHops := make([]string, 1)
+	counterpartyHops := make([]string, 1)
 	hop := ch.ConnectionHops[0]
 	conn, found := k.connectionKeeper.GetConnection(ctx, hop)
 	if !found {
 		return []string{}, false
 	}
 
-	counterPartyHops[0] = conn.GetCounterparty().GetConnectionID()
-	return counterPartyHops, true
+	counterpartyHops[0] = conn.GetCounterparty().GetConnectionID()
+	return counterpartyHops, true
 }
 
 // ChanOpenInit is called by a module to initiate a channel opening handshake with
@@ -51,19 +51,20 @@ func (k Keeper) ChanOpenInit(
 		return "", nil, sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, connectionHops[0])
 	}
 
-	if len(connectionEnd.GetVersions()) != 1 {
+	getVersions := connectionEnd.GetVersions()
+	if len(getVersions) != 1 {
 		return "", nil, sdkerrors.Wrapf(
 			connectiontypes.ErrInvalidVersion,
 			"single version must be negotiated on connection before opening channel, got: %v",
-			connectionEnd.GetVersions(),
+			getVersions,
 		)
 	}
 
-	if !connectiontypes.VerifySupportedFeature(connectionEnd.GetVersions()[0], order.String()) {
+	if !connectiontypes.VerifySupportedFeature(getVersions[0], order.String()) {
 		return "", nil, sdkerrors.Wrapf(
 			connectiontypes.ErrInvalidVersion,
 			"connection version %s does not support channel ordering: %s",
-			connectionEnd.GetVersions()[0], order.String(),
+			getVersions[0], order.String(),
 		)
 	}
 
@@ -157,19 +158,20 @@ func (k Keeper) ChanOpenTry(
 		)
 	}
 
-	if len(connectionEnd.GetVersions()) != 1 {
+	getVersions := connectionEnd.GetVersions()
+	if len(getVersions) != 1 {
 		return "", nil, sdkerrors.Wrapf(
 			connectiontypes.ErrInvalidVersion,
 			"single version must be negotiated on connection before opening channel, got: %v",
-			connectionEnd.GetVersions(),
+			getVersions,
 		)
 	}
 
-	if !connectiontypes.VerifySupportedFeature(connectionEnd.GetVersions()[0], order.String()) {
+	if !connectiontypes.VerifySupportedFeature(getVersions[0], order.String()) {
 		return "", nil, sdkerrors.Wrapf(
 			connectiontypes.ErrInvalidVersion,
 			"connection version %s does not support channel ordering: %s",
-			connectionEnd.GetVersions()[0], order.String(),
+			getVersions[0], order.String(),
 		)
 	}
 

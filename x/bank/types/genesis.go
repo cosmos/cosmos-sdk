@@ -47,17 +47,18 @@ func ValidateGenesis(data GenesisState) error {
 	}
 
 	totalSupply := NewSupply(data.Supply)
+	expectedSupply := sdk.Coins{}
+
 	err := totalSupply.ValidateBasic()
 	if err != nil {
 		return err
 	}
 
-	var accsSupply sdk.Coins
 	for _, balance := range data.Balances {
-		accsSupply = append(accsSupply, balance.Coins...)
+		expectedSupply = expectedSupply.Add(balance.Coins...)
 	}
 
-	if !accsSupply.IsEqual(totalSupply.Total) {
+	if !expectedSupply.IsEqual(totalSupply.GetTotal()) {
 		return fmt.Errorf("total supply does not match with accounts balance")
 	}
 	return nil

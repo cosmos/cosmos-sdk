@@ -25,7 +25,9 @@ Each `module` message queue, saves the queued messages for the module.
 ### Slashing messages
 - **MsgUnjail**: Validate message and if valid queue the message for execution at the end of the Epoch.
 
-All `slashing` module messages are queued. (Only one message btw :) )
+All `slashing` module messages are queued.
+
+Note: `SlashEvent` execution is also put on slashing message queue and executed at the end of the current epoch.
 ### Evidence messages
 - **MsgSubmitEvidence**: No changes
 
@@ -41,10 +43,10 @@ No messages are queued on `distribution` module for now.
 
 ## Slash and Jail on slashing/evidence module
 
-Slash and Jail is automatically done on BeginBlocker / Endblocker.
-Currently validator set update is only done on staking module's endblocker and other modules'(which affect Slash / Jail) Endblockers are being executed before staking module.
+Jail action is automatically executed at the end of current block.
+Slash action is queued and executed at the end of current epoch.
 
-For now, Slash and Jail take effect instantly at the end of block.
+Currently validator set update is only done on staking module's endblocker and slashing/evidence module Endblockers are being executed before staking module.
 
 No changes were made on `evidence` module since it's related to `Jail` which requires instant action.
 

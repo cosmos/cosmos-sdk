@@ -2,9 +2,7 @@
 order: 3
 -->
 
-# To Improve
-
-- For now, Slash and Jail take effect instantly at the end of block, but we will need to do slashing at the end of epoch and Jail instantly as it is.
+# Changes to make
 
 # Pending development
 ```go

@@ -154,6 +154,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 		app.SlashingKeeper.HandleValidatorSignature(ctx, val.Address(), power, false)
 	}
 
+	app.ExecuteEpoch(ctx)
 	// end block
 	staking.EndBlocker(ctx, app.StakingKeeper)
 

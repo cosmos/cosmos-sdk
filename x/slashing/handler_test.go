@@ -214,6 +214,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, int64(0), info.StartHeight)
 	// counter now reset to zero
 	require.Equal(t, int64(0), info.MissedBlocksCounter)
+	app.ExecuteEpoch(ctx)
 
 	// end block
 	staking.EndBlocker(ctx, app.StakingKeeper)

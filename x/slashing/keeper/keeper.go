@@ -19,6 +19,7 @@ type Keeper struct {
 	storeKey   sdk.StoreKey
 	cdc        codec.BinaryMarshaler
 	sk         types.StakingKeeper
+	SK         types.StakingKeeper
 	ek         epochingkeeper.Keeper
 	paramspace types.ParamSubspace
 }
@@ -34,6 +35,7 @@ func NewKeeper(cdc codec.BinaryMarshaler, key sdk.StoreKey, sk types.StakingKeep
 		storeKey:   key,
 		cdc:        cdc,
 		sk:         sk,
+		SK:         sk,
 		ek:         epochingkeeper.NewKeeper(cdc, key),
 		paramspace: paramspace,
 	}
@@ -88,11 +90,8 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdk.De
 	// epoch slashing action for next epoch
 	validator := k.sk.ValidatorByConsAddr(ctx, consAddr)
 	if validator != nil {
-		k.ek.QueueMsgForEpoch(ctx, k.sk.GetEpochNumber(ctx), types.SlashEvent{
-			Address:                validator.GetOperator(),
-			ValidatorVotingPercent: sdk.NewDec(power), // TODO: it's not percent but power, should make a fix
-			SlashPercent:           fraction,
-		})
+		// TODO: it's not percent but power, should make a fix
+		k.ek.QueueMsgForEpoch(ctx, k.sk.GetEpochNumber(ctx), types.NewSlashEvent(validator.GetOperator(), sdk.NewDec(power), fraction, distributionHeight, power))
 	}
 }
 

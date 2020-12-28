@@ -79,7 +79,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 			// Note that this *can* result in a negative "distributionHeight" up to -ValidatorUpdateDelay-1,
 			// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
 			// That's fine since this is just used to filter unbonding delegations & redelegations.
-			// distributionHeight := height - sdk.ValidatorUpdateDelay - 1
+			distributionHeight := height - sdk.ValidatorUpdateDelay - 1
 
 			// TODO: we might need to trigger event on epoch execution
 			ctx.EventManager().EmitEvent(
@@ -92,11 +92,8 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 				),
 			)
 			// queue slashing action for next epoch
-			k.ek.QueueMsgForEpoch(ctx, k.sk.GetEpochNumber(ctx), types.SlashEvent{
-				Address:                validator.GetOperator(),
-				ValidatorVotingPercent: sdk.NewDec(power), // TODO: it's not percent but power, should make a fix
-				SlashPercent:           k.SlashFractionDowntime(ctx),
-			})
+			// TODO: it's not percent but power, should make a fix
+			k.ek.QueueMsgForEpoch(ctx, k.sk.GetEpochNumber(ctx), types.NewSlashEvent(validator.GetOperator(), sdk.NewDec(power), k.SlashFractionDowntime(ctx), distributionHeight, power))
 			// This initiates jail based on down time
 			k.sk.Jail(ctx, consAddr)
 

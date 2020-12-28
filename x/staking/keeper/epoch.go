@@ -25,7 +25,7 @@ func (k Keeper) RestoreEpochAction(ctx sdk.Context, epochNumber int64, action *c
 }
 
 // GetEpochAction get action by ID
-func (k Keeper) GetEpochAction(ctx sdk.Context, epochNumber int64, actionID uint64) interface{} {
+func (k Keeper) GetEpochAction(ctx sdk.Context, epochNumber int64, actionID uint64) sdk.Msg {
 	return k.epochKeeper.GetEpochAction(ctx, epochNumber, actionID)
 }
 

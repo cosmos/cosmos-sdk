@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
@@ -31,15 +32,14 @@ func (k Keeper) executeQueuedUnjailMsg(ctx sdk.Context, msg *types.MsgUnjail) er
 
 func (k Keeper) executeQueuedSlashEvent(ctx sdk.Context, msg *types.SlashEvent) error {
 	validator := k.sk.Validator(ctx, msg.Address)
-	if validator != nil {
-		return types.ErrBadValidatorAddr
+	if validator == nil {
+		return sdkerrors.Wrap(types.ErrBadValidatorAddr, msg.Address.String())
 	}
 	consAddr, err := validator.GetConsAddr()
 	if err != nil {
 		return err
 	}
-	distributionHeight := ctx.BlockHeight() - sdk.ValidatorUpdateDelay - 1
-	k.sk.Slash(ctx, consAddr, distributionHeight, msg.ValidatorVotingPercent.RoundInt64(), msg.SlashPercent)
+	k.sk.Slash(ctx, consAddr, msg.DistributionHeight, msg.ValidatorPower, msg.SlashPercent)
 	return nil
 }
 
@@ -65,7 +65,7 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 				writeCache()
 			} else {
 				// TODO: report somewhere for logging edit not success or panic
-				// panic(fmt.Sprintf("not be able to execute, %T", msg))
+				panic(fmt.Sprintf("not be able to execute, %T, %s", msg, err.Error()))
 			}
 		default:
 			panic(fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg))

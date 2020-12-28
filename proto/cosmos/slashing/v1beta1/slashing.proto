@@ -69,4 +69,6 @@ message SlashEvent {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
+  int64 distribution_height = 4 [(gogoproto.moretags) = "yaml:\"distribution_height\""];
+  int64 validator_power = 5 [(gogoproto.moretags) = "yaml:\"validator_power\""];
 }

@@ -19,7 +19,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 	tstaking := teststaking.NewHelper(suite.T(), ctx, suite.app.StakingKeeper)
 
 	selfDelegation := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, true)
-
+	suite.app.ExecuteEpoch(ctx)
 	// execute end-blocker and verify validator attributes
 	staking.EndBlocker(ctx, suite.app.StakingKeeper)
 	suite.Equal(
@@ -40,6 +40,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 		ConsensusAddress: sdk.ConsAddress(val.Address()).String(),
 	}
 	suite.app.EvidenceKeeper.HandleEquivocationEvidence(ctx, evidence)
+	suite.app.ExecuteEpoch(ctx)
 
 	// should be jailed and tombstoned
 	suite.True(suite.app.StakingKeeper.Validator(ctx, operatorAddr).IsJailed())
@@ -81,7 +82,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
 	tstaking := teststaking.NewHelper(suite.T(), ctx, suite.app.StakingKeeper)
 
 	amt := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, true)
-
+	suite.app.ExecuteEpoch(ctx)
 	// execute end-blocker and verify validator attributes
 	staking.EndBlocker(ctx, suite.app.StakingKeeper)
 	suite.Equal(

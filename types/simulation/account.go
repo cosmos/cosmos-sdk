@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	//"errors"
 	"fmt"
 	"math/rand"
 
@@ -82,7 +81,6 @@ func RandomFees(r *rand.Rand, ctx sdk.Context, spendableCoins sdk.Coins) (sdk.Co
 	}
 
 	if randCoin.Amount.IsZero() {
-		//return nil, errors.New("no coins found for random fees")
 		return nil, fmt.Errorf("no coins found for random fees")
 	}
 

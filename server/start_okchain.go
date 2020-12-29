@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strconv"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
 
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/spf13/cobra"
@@ -21,6 +22,7 @@ const (
 	FlagExternalListenAddr = "rest.external_laddr"
 	FlagUlockKey           = "rest.unlock_key"
 	FlagUlockKeyHome       = "rest.unlock_key_home"
+	FlagRestPathPrefix     = "rest.path_prefix"
 	FlagCORS               = "cors"
 	FlagMaxOpenConnections = "max-open"
 	FlagHookstartInProcess = "startInProcess"
@@ -183,6 +185,7 @@ func registerRestServerFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().String(FlagListenAddr, "tcp://0.0.0.0:26659", "The address for the rest-server to listen on. (0.0.0.0:0 means any interface, any port)")
 	cmd.Flags().String(FlagUlockKey, "", "Select the keys to unlock on the RPC server")
 	cmd.Flags().String(FlagUlockKeyHome, "", "The keybase home path")
+	cmd.Flags().String(FlagRestPathPrefix, "okexchain", "Path prefix for registering rest api route.")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	cmd.Flags().String(FlagCORS, "", "Set the rest-server domains that can make CORS requests (* for all)")
 	cmd.Flags().Int(FlagMaxOpenConnections, 1000, "The number of maximum open connections of rest-server")

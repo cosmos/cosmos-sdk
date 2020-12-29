@@ -69,34 +69,14 @@ For now, it's implemented to export all buffered messages without epoch number. 
 
 We execute epoch after execution of genesis transactions to see the changes instantly before node start.
 
-## Discussions / Review / Research for epoching
+## Flow for unbonding process
 
-```go
-  // The flow for an unbonding process would be:
+1. Submit MsgUnbond which adds it to EpochingMsgQueue (staking module)
+2. Wait for end of Epoch
+3. Execute "BeginUnbonding", this adds it to UnbondingQueue
+4. Wait till end of Unbonding Period (3 weeks)
+5. Remove from UnbondingQueue
 
-  // 1. Submit MsgUnbond which adds it to DelegationChangeQueue
-  // 2. Wait for end of Epoch
-  // 3. Execute "BeginUnbonding", this adds it to UnbondingQueue
-  // 4. Wait till end of Unbonding Period (3 weeks)
-  // 5. Remove from UnbondingQueue
+## Order of epoch execution
 
-  // When a validator begins the unbonding process, it turns the validator into unbonding state instantly.
-  // This is different than a specific delegator beginning to unbond. A validator beginning to unbond means that it's not in the set any more.
-  // A delegator unbonding from a validator removes their delegation from the validator.
-
-  // Cases that trigger unbonding process
-  // - Validator undelegate can unbond more tokens than his minimum_self_delegation and it will automatically turn the validator into unbonding
-  //   In this case, unbonding should start instantly.
-  // - Validator miss blocks and get slashed
-  // - Validator get slashed for double sign
-  
-  // The order of running buffered msgs on epoching could affect something?
-  // e.g. MsgUnjail could happen later time than MsgDelegate and next Jail/Slash event.
-  // e.g. MsgUnjail and MsgUndelegate could happen in different order. MsgUndelegate after MsgUnjail.
-  // I think it won't affect anything, btw, here's current ordering of implementation in simapp.
-  // 	app.mm.SetOrderBeginBlockers(
-	// 	upgradetypes.ModuleName, minttypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
-	// 	evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName,
-	// )
-	// app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName)
-```
+Staking module's endblocker come at the end as `Validator Set` update is done at the endblocker of staking module.

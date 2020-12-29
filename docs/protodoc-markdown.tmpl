@@ -87,10 +87,10 @@
 ### {{.Name}}
 {{.Description}}
 
-| Method Name | Request Type | Response Type | Description |
-| ----------- | ------------ | ------------- | ------------|
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
 {{range .Methods -}}
-  | {{.Name}} | [{{.RequestLongType}}](#{{.RequestFullType}}){{if .RequestStreaming}} stream{{end}} | [{{.ResponseLongType}}](#{{.ResponseFullType}}){{if .ResponseStreaming}} stream{{end}} | {{nobr .Description}} |
+  | {{.Name}} | [{{.RequestLongType}}](#{{.RequestFullType}}){{if .RequestStreaming}} stream{{end}} | [{{.ResponseLongType}}](#{{.ResponseFullType}}){{if .ResponseStreaming}} stream{{end}} | {{nobr .Description}} | {{with (index .Options "google.api.http")}}{{range .Rules}}{{.Method}}|{{.Pattern}}{{end}}{{end}}|
 {{end}}
 {{end}} <!-- end services -->
 

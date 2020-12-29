@@ -43,7 +43,7 @@ func (suite *KeeperTestSuite) TestQueryClientState() {
 		{
 			"success",
 			func() {
-				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.ZeroHeight(), ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
+				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.ZeroHeight(), commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
 				suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 
 				var err error
@@ -183,10 +183,10 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 			"invalid height",
 			func() {
 				req = &types.QueryConsensusStateRequest{
-					ClientId:      testClientID,
-					VersionNumber: 0,
-					VersionHeight: 0,
-					LatestHeight:  false,
+					ClientId:       testClientID,
+					RevisionNumber: 0,
+					RevisionHeight: 0,
+					LatestHeight:   false,
 				}
 			},
 			false,
@@ -204,7 +204,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 		{
 			"success latest height",
 			func() {
-				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
+				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
 				cs := ibctmtypes.NewConsensusState(
 					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash1")), nil,
 				)
@@ -235,9 +235,9 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 				suite.Require().NoError(err)
 
 				req = &types.QueryConsensusStateRequest{
-					ClientId:      testClientID,
-					VersionNumber: 0,
-					VersionHeight: height,
+					ClientId:       testClientID,
+					RevisionNumber: 0,
+					RevisionHeight: height,
 				}
 			},
 			true,
@@ -321,7 +321,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusStates() {
 				// order is swapped because the res is sorted by client id
 				expConsensusStates = []types.ConsensusStateWithHeight{
 					types.NewConsensusStateWithHeight(testClientHeight, cs),
-					types.NewConsensusStateWithHeight(testClientHeight.Increment(), cs2),
+					types.NewConsensusStateWithHeight(testClientHeight.Increment().(types.Height), cs2),
 				}
 				req = &types.QueryConsensusStatesRequest{
 					ClientId: testClientID,

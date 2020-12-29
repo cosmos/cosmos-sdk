@@ -27,9 +27,6 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface(
 		"ibc.core.client.v1.Height",
 		(*exported.Height)(nil),
-	)
-	registry.RegisterImplementations(
-		(*exported.Height)(nil),
 		&Height{},
 	)
 	registry.RegisterInterface(
@@ -40,6 +37,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgCreateClient{},
 		&MsgUpdateClient{},
+		&MsgUpgradeClient{},
 		&MsgSubmitMisbehaviour{},
 	)
 

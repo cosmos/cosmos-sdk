@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/armon/go-metrics"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -66,11 +67,13 @@ func (k msgServer) WithdrawDelegatorReward(goCtx context.Context, msg *types.Msg
 
 	defer func() {
 		for _, a := range amount {
-			telemetry.SetGaugeWithLabels(
-				[]string{"tx", "msg", "withdraw_reward"},
-				float32(a.Amount.Int64()),
-				[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
-			)
+			if a.Amount.IsInt64() {
+				telemetry.SetGaugeWithLabels(
+					[]string{"tx", "msg", "withdraw_reward"},
+					float32(a.Amount.Int64()),
+					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
+				)
+			}
 		}
 	}()
 
@@ -98,11 +101,13 @@ func (k msgServer) WithdrawValidatorCommission(goCtx context.Context, msg *types
 
 	defer func() {
 		for _, a := range amount {
-			telemetry.SetGaugeWithLabels(
-				[]string{"tx", "msg", "withdraw_commission"},
-				float32(a.Amount.Int64()),
-				[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
-			)
+			if a.Amount.IsInt64() {
+				telemetry.SetGaugeWithLabels(
+					[]string{"tx", "msg", "withdraw_commission"},
+					float32(a.Amount.Int64()),
+					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
+				)
+			}
 		}
 	}()
 

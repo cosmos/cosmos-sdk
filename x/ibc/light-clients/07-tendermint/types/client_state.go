@@ -5,10 +5,8 @@ import (
 	"time"
 
 	ics23 "github.com/confio/ics23/go"
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/light"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -26,8 +24,8 @@ var _ exported.ClientState = (*ClientState)(nil)
 func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	latestHeight clienttypes.Height, consensusParams *abci.ConsensusParams, specs []*ics23.ProofSpec,
-	upgradePath string, allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour bool,
+	latestHeight clienttypes.Height, specs []*ics23.ProofSpec,
+	upgradePath []string, allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour bool,
 ) *ClientState {
 	return &ClientState{
 		ChainId:                      chainID,
@@ -37,7 +35,6 @@ func NewClientState(
 		MaxClockDrift:                maxClockDrift,
 		LatestHeight:                 latestHeight,
 		FrozenHeight:                 clienttypes.ZeroHeight(),
-		ConsensusParams:              consensusParams,
 		ProofSpecs:                   specs,
 		UpgradePath:                  upgradePath,
 		AllowUpdateAfterExpiry:       allowUpdateAfterExpiry,
@@ -95,8 +92,8 @@ func (cs ClientState) Validate() error {
 	if cs.MaxClockDrift == 0 {
 		return sdkerrors.Wrap(ErrInvalidMaxClockDrift, "max clock drift cannot be zero")
 	}
-	if cs.LatestHeight.VersionHeight == 0 {
-		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "tendermint version height cannot be zero")
+	if cs.LatestHeight.RevisionHeight == 0 {
+		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "tendermint revision height cannot be zero")
 	}
 	if cs.TrustingPeriod >= cs.UnbondingPeriod {
 		return sdkerrors.Wrapf(
@@ -105,35 +102,18 @@ func (cs ClientState) Validate() error {
 		)
 	}
 
-	// validate consensus params
-	if cs.ConsensusParams == nil || cs.ConsensusParams.Evidence == nil ||
-		cs.ConsensusParams.Block == nil || cs.ConsensusParams.Validator == nil {
-		return sdkerrors.Wrap(ErrInvalidConsensusParams, "consensus params including block, evidence, and validator params cannot be empty")
-	}
-	if err := baseapp.ValidateBlockParams(*cs.ConsensusParams.Block); err != nil {
-		return sdkerrors.Wrap(err, "invalid block params")
-	}
-	if err := baseapp.ValidateEvidenceParams(*cs.ConsensusParams.Evidence); err != nil {
-		return sdkerrors.Wrap(err, "invalid evidence params")
-	}
-	if err := baseapp.ValidateValidatorParams(*cs.ConsensusParams.Validator); err != nil {
-		return sdkerrors.Wrap(err, "invalid validator params")
-	}
-
 	if cs.ProofSpecs == nil {
 		return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof specs cannot be nil for tm client")
 	}
-	for _, spec := range cs.ProofSpecs {
+	for i, spec := range cs.ProofSpecs {
 		if spec == nil {
-			return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof spec cannot be nil")
+			return sdkerrors.Wrapf(ErrInvalidProofSpecs, "proof spec cannot be nil at index: %d", i)
 		}
 	}
-	if cs.UpgradePath != "" {
-		keys := strings.Split(cs.UpgradePath, "/")
-		for _, k := range keys {
-			if strings.TrimSpace(k) == "" {
-				return sdkerrors.Wrapf(clienttypes.ErrInvalidUpgradeClient, "upgrade path contains an empty string when splitting by '/': %s", cs.UpgradePath)
-			}
+	// UpgradePath may be empty, but if it isn't, each key must be non-empty
+	for i, k := range cs.UpgradePath {
+		if strings.TrimSpace(k) == "" {
+			return sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "key in upgrade path at index %d cannot be empty", i)
 		}
 	}
 
@@ -155,10 +135,21 @@ func (cs ClientState) ZeroCustomFields() exported.ClientState {
 		ChainId:         cs.ChainId,
 		UnbondingPeriod: cs.UnbondingPeriod,
 		LatestHeight:    cs.LatestHeight,
-		ConsensusParams: cs.ConsensusParams,
 		ProofSpecs:      cs.ProofSpecs,
 		UpgradePath:     cs.UpgradePath,
 	}
+}
+
+// Initialize will check that initial consensus state is a Tendermint consensus state
+// and will store ProcessedTime for initial consensus state as ctx.BlockTime()
+func (cs ClientState) Initialize(ctx sdk.Context, _ codec.BinaryMarshaler, clientStore sdk.KVStore, consState exported.ConsensusState) error {
+	if _, ok := consState.(*ConsensusState); !ok {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid initial consensus state. expected type: %T, got: %T",
+			&ConsensusState{}, consState)
+	}
+	// set processed time with initial consensus state height equal to initial client state's latest height
+	SetProcessedTime(clientStore, cs.GetLatestHeight(), uint64(ctx.BlockTime().UnixNano()))
+	return nil
 }
 
 // VerifyClientState verifies a proof of the client state of the running chain
@@ -192,7 +183,7 @@ func (cs ClientState) VerifyClientState(
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "invalid client type %T, expected %T", clientState, &ClientState{})
 	}
 
-	bz, err := codec.MarshalAny(cdc, clientState)
+	bz, err := cdc.MarshalInterface(clientState)
 	if err != nil {
 		return err
 	}
@@ -232,7 +223,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid consensus type %T, expected %T", consensusState, &ConsensusState{})
 	}
 
-	bz, err := codec.MarshalAny(cdc, consensusState)
+	bz, err := cdc.MarshalInterface(consensusState)
 	if err != nil {
 		return err
 	}
@@ -329,6 +320,8 @@ func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	height exported.Height,
+	currentTimestamp uint64,
+	delayPeriod uint64,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
@@ -338,6 +331,11 @@ func (cs ClientState) VerifyPacketCommitment(
 ) error {
 	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
+		return err
+	}
+
+	// check delay period has passed
+	if err := verifyDelayPeriodPassed(store, height, currentTimestamp, delayPeriod); err != nil {
 		return err
 	}
 
@@ -360,6 +358,8 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	height exported.Height,
+	currentTimestamp uint64,
+	delayPeriod uint64,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
@@ -369,6 +369,11 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 ) error {
 	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
+		return err
+	}
+
+	// check delay period has passed
+	if err := verifyDelayPeriodPassed(store, height, currentTimestamp, delayPeriod); err != nil {
 		return err
 	}
 
@@ -392,6 +397,8 @@ func (cs ClientState) VerifyPacketReceiptAbsence(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	height exported.Height,
+	currentTimestamp uint64,
+	delayPeriod uint64,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
@@ -400,6 +407,11 @@ func (cs ClientState) VerifyPacketReceiptAbsence(
 ) error {
 	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
+		return err
+	}
+
+	// check delay period has passed
+	if err := verifyDelayPeriodPassed(store, height, currentTimestamp, delayPeriod); err != nil {
 		return err
 	}
 
@@ -422,6 +434,8 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	height exported.Height,
+	currentTimestamp uint64,
+	delayPeriod uint64,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
@@ -430,6 +444,11 @@ func (cs ClientState) VerifyNextSequenceRecv(
 ) error {
 	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
+		return err
+	}
+
+	// check delay period has passed
+	if err := verifyDelayPeriodPassed(store, height, currentTimestamp, delayPeriod); err != nil {
 		return err
 	}
 
@@ -445,6 +464,23 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		return err
 	}
 
+	return nil
+}
+
+// verifyDelayPeriodPassed will ensure that at least delayPeriod amount of time has passed since consensus state was submitted
+// before allowing verification to continue.
+func verifyDelayPeriodPassed(store sdk.KVStore, proofHeight exported.Height, currentTimestamp, delayPeriod uint64) error {
+	// check that executing chain's timestamp has passed consensusState's processed time + delay period
+	processedTime, ok := GetProcessedTime(store, proofHeight)
+	if !ok {
+		return sdkerrors.Wrapf(ErrProcessedTimeNotFound, "processed time not found for height: %s", proofHeight)
+	}
+	validTime := processedTime + delayPeriod
+	// NOTE: delay period is inclusive, so if currentTimestamp is validTime, then we return no error
+	if validTime > currentTimestamp {
+		return sdkerrors.Wrapf(ErrDelayPeriodNotPassed, "cannot verify packet until time: %d, current time: %d",
+			validTime, currentTimestamp)
+	}
 	return nil
 }
 

@@ -89,7 +89,7 @@ func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, erro
 		return nil, err
 	}
 
-	out, err := formatTxResult(clientCtx.TxConfig, resTx, resBlocks[resTx.Height])
+	out, err := mkTxResult(clientCtx.TxConfig, resTx, resBlocks[resTx.Height])
 	if err != nil {
 		return out, err
 	}
@@ -102,7 +102,7 @@ func formatTxResults(txConfig client.TxConfig, resTxs []*ctypes.ResultTx, resBlo
 	var err error
 	out := make([]*sdk.TxResponse, len(resTxs))
 	for i := range resTxs {
-		out[i], err = formatTxResult(txConfig, resTxs[i], resBlocks[resTxs[i].Height])
+		out[i], err = mkTxResult(txConfig, resTxs[i], resBlocks[resTxs[i].Height])
 		if err != nil {
 			return nil, err
 		}
@@ -133,27 +133,21 @@ func getBlocksForTxResults(clientCtx client.Context, resTxs []*ctypes.ResultTx) 
 	return resBlocks, nil
 }
 
-func formatTxResult(txConfig client.TxConfig, resTx *ctypes.ResultTx, resBlock *ctypes.ResultBlock) (*sdk.TxResponse, error) {
-	anyTx, err := parseTx(txConfig, resTx.Tx)
+func mkTxResult(txConfig client.TxConfig, resTx *ctypes.ResultTx, resBlock *ctypes.ResultBlock) (*sdk.TxResponse, error) {
+	txb, err := txConfig.TxDecoder()(resTx.Tx)
 	if err != nil {
 		return nil, err
 	}
-
-	return sdk.NewResponseResultTx(resTx, anyTx.AsAny(), resBlock.Block.Time.Format(time.RFC3339)), nil
+	p, ok := txb.(intoAny)
+	if !ok {
+		return nil, fmt.Errorf("expecting a type implementing intoAny, got: %T", txb)
+	}
+	any := p.AsAny()
+	return sdk.NewResponseResultTx(resTx, any, resBlock.Block.Time.Format(time.RFC3339)), nil
 }
 
-func parseTx(txConfig client.TxConfig, txBytes []byte) (codectypes.IntoAny, error) {
-	var tx sdk.Tx
-
-	tx, err := txConfig.TxDecoder()(txBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	anyTx, ok := tx.(codectypes.IntoAny)
-	if !ok {
-		return nil, fmt.Errorf("tx cannot be packed into Any")
-	}
-
-	return anyTx, nil
+// Deprecated: this interface is used only internally for scenario we are
+// deprecating (StdTxConfig support)
+type intoAny interface {
+	AsAny() *codectypes.Any
 }

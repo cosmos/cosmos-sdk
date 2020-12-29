@@ -62,7 +62,7 @@ func (k Keeper) QueueMsgForEpoch(ctx sdk.Context, epochNumber int64, action sdk.
 	store := ctx.KVStore(k.storeKey)
 
 	// reference from TestMarshalAny(t *testing.T)
-	bz, err := codec.MarshalAny(k.cdc, action)
+	bz, err := k.cdc.MarshalInterface(action)
 	if err != nil {
 		panic(err)
 	}
@@ -76,7 +76,7 @@ func (k Keeper) RestoreEpochAction(ctx sdk.Context, epochNumber int64, action *c
 	store := ctx.KVStore(k.storeKey)
 
 	// reference from TestMarshalAny(t *testing.T)
-	bz, err := codec.MarshalAny(k.cdc, action)
+	bz, err := k.cdc.MarshalInterface(action)
 	if err != nil {
 		panic(err)
 	}
@@ -96,7 +96,7 @@ func (k Keeper) GetEpochAction(ctx sdk.Context, epochNumber int64, actionID uint
 
 	var action sdk.Msg
 	// reference from TestMarshalAny(t *testing.T)
-	codec.UnmarshalAny(k.cdc, &action, bz)
+	k.cdc.UnmarshalInterface(bz, &action)
 
 	return action
 }
@@ -110,7 +110,7 @@ func (k Keeper) GetEpochActions(ctx sdk.Context) []*codectypes.Any {
 		var action codectypes.Any
 		bz := iterator.Value()
 		// reference from TestMarshalAny(t *testing.T)
-		codec.UnmarshalAny(k.cdc, &action, bz)
+		k.cdc.UnmarshalInterface(bz, &action)
 		actions = append(actions, &action)
 	}
 
@@ -146,7 +146,7 @@ func (k Keeper) GetEpochActionByIterator(iterator db.Iterator) sdk.Msg {
 
 	var action sdk.Msg
 	// reference from TestMarshalAny(t *testing.T)
-	codec.UnmarshalAny(k.cdc, &action, bz)
+	k.cdc.UnmarshalInterface(bz, &action)
 
 	return action
 }

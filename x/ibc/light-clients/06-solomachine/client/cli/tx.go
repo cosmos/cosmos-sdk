@@ -24,22 +24,18 @@ const (
 // NewCreateClientCmd defines the command to create a new solo machine client.
 func NewCreateClientCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create [client-id] [sequence] [path/to/consensus_state.json]",
+		Use:   "create [sequence] [path/to/consensus_state.json]",
 		Short: "create new solo machine client",
 		Long: `create a new solo machine client with the specified identifier and public key
 	- ConsensusState json example: {"public_key":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A/3SXL2ONYaOkxpdR5P8tHTlSlPv1AwQwSFxKRee5JQW"},"diversifier":"diversifier","timestamp":"10"}`,
-		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [sequence] [path/to/consensus_state] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
-		Args:    cobra.ExactArgs(3),
+		Example: fmt.Sprintf("%s tx ibc %s create [sequence] [path/to/consensus_state] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
-			clientID := args[0]
-
-			sequence, err := strconv.ParseUint(args[1], 10, 64)
+			sequence, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
 				return err
 			}
@@ -48,10 +44,10 @@ func NewCreateClientCmd() *cobra.Command {
 
 			// attempt to unmarshal consensus state argument
 			consensusState := &types.ConsensusState{}
-			if err := cdc.UnmarshalJSON([]byte(args[2]), consensusState); err != nil {
+			if err := cdc.UnmarshalJSON([]byte(args[1]), consensusState); err != nil {
 
 				// check for file path if JSON input is not provided
-				contents, err := ioutil.ReadFile(args[2])
+				contents, err := ioutil.ReadFile(args[1])
 				if err != nil {
 					return errors.Wrap(err, "neither JSON input nor path to .json file for consensus state were provided")
 				}
@@ -64,7 +60,7 @@ func NewCreateClientCmd() *cobra.Command {
 			allowUpdateAfterProposal, _ := cmd.Flags().GetBool(flagAllowUpdateAfterProposal)
 
 			clientState := types.NewClientState(sequence, consensusState, allowUpdateAfterProposal)
-			msg, err := clienttypes.NewMsgCreateClient(clientID, clientState, consensusState, clientCtx.GetFromAddress())
+			msg, err := clienttypes.NewMsgCreateClient(clientState, consensusState, clientCtx.GetFromAddress())
 			if err != nil {
 				return err
 			}
@@ -92,12 +88,10 @@ func NewUpdateClientCmd() *cobra.Command {
 		Example: fmt.Sprintf("%s tx ibc %s update [client-id] [path/to/header.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			clientID := args[0]
 
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
@@ -140,12 +134,10 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 		Example: fmt.Sprintf("%s tx ibc %s misbehaviour [path/to/misbehaviour.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 			m := &types.Misbehaviour{}

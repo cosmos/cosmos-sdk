@@ -52,19 +52,19 @@ message ClientUpdateProposal {
 // that can be compared against another Height for the purposes of updating and
 // freezing clients
 //
-// Normally the VersionHeight is incremented at each height while keeping version
-// number the same However some consensus algorithms may choose to reset the
+// Normally the RevisionHeight is incremented at each height while keeping RevisionNumber
+// the same. However some consensus algorithms may choose to reset the
 // height in certain conditions e.g. hard forks, state-machine breaking changes
-// In these cases, the version number is incremented so that height continues to
-// be monitonically increasing even as the VersionHeight gets reset
+// In these cases, the RevisionNumber is incremented so that height continues to
+// be monitonically increasing even as the RevisionHeight gets reset
 message Height {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
-  // the version that the client is currently on
-  uint64 version_number = 1 [(gogoproto.moretags) = "yaml:\"version_number\""];
-  // the height within the given version
-  uint64 version_height = 2 [(gogoproto.moretags) = "yaml:\"version_height\""];
+  // the revision that the client is currently on
+  uint64 revision_number = 1 [(gogoproto.moretags) = "yaml:\"revision_number\""];
+  // the height within the given revision
+  uint64 revision_height = 2 [(gogoproto.moretags) = "yaml:\"revision_height\""];
 }
 
 // Params defines the set of IBC light client parameters.

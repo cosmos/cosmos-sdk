@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -611,10 +610,11 @@ func (suite *KeeperTestSuite) TestHandleTimeoutOnClosePacket() {
 
 func (suite *KeeperTestSuite) TestUpgradeClient() {
 	var (
-		clientA        string
-		upgradedClient exported.ClientState
-		upgradeHeight  exported.Height
-		msg            *clienttypes.MsgUpgradeClient
+		clientA           string
+		upgradedClient    exported.ClientState
+		upgradedConsState exported.ConsensusState
+		lastHeight        exported.Height
+		msg               *clienttypes.MsgUpgradeClient
 	)
 
 	newClientHeight := clienttypes.NewHeight(1, 1)
@@ -628,13 +628,20 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 			name: "successful upgrade",
 			setup: func() {
 
-				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod+ibctesting.TrustingPeriod, ibctesting.MaxClockDrift, newClientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
+				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod+ibctesting.TrustingPeriod, ibctesting.MaxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
+				// Call ZeroCustomFields on upgraded clients to clear any client-chosen parameters in test-case upgradedClient
+				upgradedClient = upgradedClient.ZeroCustomFields()
 
-				// upgrade Height is at next block
-				upgradeHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
+				upgradedConsState = &ibctmtypes.ConsensusState{
+					NextValidatorsHash: []byte("nextValsHash"),
+				}
+
+				// last Height is at next block
+				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
 
 				// zero custom fields and store in upgrade store
-				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(upgradeHeight.GetVersionHeight()), upgradedClient)
+				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(lastHeight.GetRevisionHeight()), upgradedClient)
+				suite.chainB.App.UpgradeKeeper.SetUpgradedConsensusState(suite.chainB.GetContext(), int64(lastHeight.GetRevisionHeight()), upgradedConsState)
 
 				// commit upgrade store changes and update clients
 
@@ -645,46 +652,33 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
 				suite.Require().True(found)
 
-				proofUpgrade, _ := suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(upgradeHeight.GetVersionHeight())), cs.GetLatestHeight().GetVersionHeight())
+				proofUpgradeClient, _ := suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(lastHeight.GetRevisionHeight())), cs.GetLatestHeight().GetRevisionHeight())
+				proofUpgradedConsState, _ := suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedConsStateKey(int64(lastHeight.GetRevisionHeight())), cs.GetLatestHeight().GetRevisionHeight())
 
-				msg, err = clienttypes.NewMsgUpgradeClient(clientA, upgradedClient, upgradeHeight, proofUpgrade, suite.chainA.SenderAccount.GetAddress())
+				msg, err = clienttypes.NewMsgUpgradeClient(clientA, upgradedClient, upgradedConsState,
+					proofUpgradeClient, proofUpgradedConsState, suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 			expPass: true,
 		},
 		{
-			name: "invalid upgrade: msg.ClientState does not contain valid clientstate",
-			setup: func() {
-
-				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
-				suite.Require().True(found)
-
-				// upgrade Height is at next block
-				upgradeHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
-
-				proofUpgrade, _ := suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(upgradeHeight.GetVersionHeight())), cs.GetLatestHeight().GetVersionHeight())
-
-				consState := ibctmtypes.NewConsensusState(time.Now(), commitmenttypes.NewMerkleRoot([]byte("app_hash")), []byte("next_vals_hash"))
-				consAny, err := clienttypes.PackConsensusState(consState)
-				suite.Require().NoError(err)
-
-				height, _ := upgradeHeight.(clienttypes.Height)
-
-				msg = &clienttypes.MsgUpgradeClient{ClientId: clientA, ClientState: consAny, UpgradeHeight: &height, ProofUpgrade: proofUpgrade, Signer: suite.chainA.SenderAccount.GetAddress().String()}
-			},
-			expPass: false,
-		},
-		{
 			name: "VerifyUpgrade fails",
 			setup: func() {
 
-				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod+ibctesting.TrustingPeriod, ibctesting.MaxClockDrift, newClientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
+				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod+ibctesting.TrustingPeriod, ibctesting.MaxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
+				// Call ZeroCustomFields on upgraded clients to clear any client-chosen parameters in test-case upgradedClient
+				upgradedClient = upgradedClient.ZeroCustomFields()
 
-				// upgrade Height is at next block
-				upgradeHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
+				upgradedConsState = &ibctmtypes.ConsensusState{
+					NextValidatorsHash: []byte("nextValsHash"),
+				}
+
+				// last Height is at next block
+				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
 
 				// zero custom fields and store in upgrade store
-				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(upgradeHeight.GetVersionHeight()), upgradedClient)
+				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(lastHeight.GetRevisionHeight()), upgradedClient)
+				suite.chainB.App.UpgradeKeeper.SetUpgradedConsensusState(suite.chainB.GetContext(), int64(lastHeight.GetRevisionHeight()), upgradedConsState)
 
 				// commit upgrade store changes and update clients
 
@@ -692,7 +686,7 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 				suite.Require().NoError(err)
 
-				msg, err = clienttypes.NewMsgUpgradeClient(clientA, upgradedClient, upgradeHeight, nil, suite.chainA.SenderAccount.GetAddress())
+				msg, err = clienttypes.NewMsgUpgradeClient(clientA, upgradedClient, upgradedConsState, nil, nil, suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 			expPass: false,
@@ -711,7 +705,8 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 			suite.Require().NoError(err, "upgrade handler failed on valid case: %s", tc.name)
 			newClient, ok := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
 			suite.Require().True(ok)
-			suite.Require().Equal(upgradedClient, newClient)
+			newChainSpecifiedClient := newClient.ZeroCustomFields()
+			suite.Require().Equal(upgradedClient, newChainSpecifiedClient)
 		} else {
 			suite.Require().Error(err, "upgrade handler passed on invalid case: %s", tc.name)
 		}

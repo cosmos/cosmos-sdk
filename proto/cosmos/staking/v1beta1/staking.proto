@@ -18,7 +18,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 // (`n` is set by the staking module's `historical_entries` parameter).
 message HistoricalInfo {
   tendermint.types.Header header = 1 [(gogoproto.nullable) = false];
-  repeated Validator valset      = 2 [(gogoproto.nullable) = false];
+  repeated Validator      valset = 2 [(gogoproto.nullable) = false];
 }
 
 // CommissionRates defines the initial commission rates to be used for creating
@@ -75,13 +75,12 @@ message Validator {
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.goproto_getters)  = false;
 
-  string operator_address = 1 [(gogoproto.moretags) = "yaml:\"operator_address\""];
-  google.protobuf.Any consensus_pubkey = 2 [
-    (cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey",
-    (gogoproto.moretags) = "yaml:\"consensus_pubkey\""];
-  bool   jailed       = 3;
-  BondStatus status   = 4;
-  string tokens       = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string              operator_address = 1 [(gogoproto.moretags) = "yaml:\"operator_address\""];
+  google.protobuf.Any consensus_pubkey = 2
+      [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey", (gogoproto.moretags) = "yaml:\"consensus_pubkey\""];
+  bool       jailed = 3;
+  BondStatus status = 4;
+  string tokens = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   string delegator_shares = 6 [
     (gogoproto.moretags)   = "yaml:\"delegator_shares\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
@@ -177,8 +176,8 @@ message UnbondingDelegation {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
-  string   delegator_address                = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
-  string   validator_address                = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  string                            delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string                            validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
   repeated UnbondingDelegationEntry entries = 3 [(gogoproto.nullable) = false]; // unbonding delegation entries
 }
 
@@ -222,10 +221,10 @@ message Redelegation {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
-  string   delegator_address         = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
-  string   validator_src_address     = 2 [(gogoproto.moretags) = "yaml:\"validator_src_address\""];
-  string   validator_dst_address     = 3 [(gogoproto.moretags) = "yaml:\"validator_dst_address\""];
-  repeated RedelegationEntry entries = 4 [(gogoproto.nullable) = false]; // redelegation entries
+  string                     delegator_address     = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string                     validator_src_address = 2 [(gogoproto.moretags) = "yaml:\"validator_src_address\""];
+  string                     validator_dst_address = 3 [(gogoproto.moretags) = "yaml:\"validator_dst_address\""];
+  repeated RedelegationEntry entries               = 4 [(gogoproto.nullable) = false]; // redelegation entries
 }
 
 // Params defines the parameters for the staking module.
@@ -269,8 +268,8 @@ message RedelegationEntryResponse {
 message RedelegationResponse {
   option (gogoproto.equal) = false;
 
-  Redelegation redelegation                  = 1 [(gogoproto.nullable) = false];
-  repeated RedelegationEntryResponse entries = 2 [(gogoproto.nullable) = false];
+  Redelegation                       redelegation = 1 [(gogoproto.nullable) = false];
+  repeated RedelegationEntryResponse entries      = 2 [(gogoproto.nullable) = false];
 }
 
 // Pool is used for tracking bonded and not-bonded token supply of the bond

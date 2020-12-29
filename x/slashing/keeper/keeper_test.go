@@ -40,7 +40,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	// create a 6th validator with less power than the cliff validator (won't be bonded)
 	addr, val := valAddrs[5], pks[5]
 	amt := sdk.TokensFromConsensusPower(50)
-	msg := tstaking.CreateValidatorMsg(addr, val, amt.Int64())
+	msg := tstaking.CreateValidatorMsg(addr, val, amt)
 	msg.MinSelfDelegation = amt
 	tstaking.Handle(msg, true)
 	app.ExecuteEpoch(ctx)
@@ -120,7 +120,7 @@ func TestHandleNewValidator(t *testing.T) {
 	require.Equal(t, stakingtypes.Bonded, validator.GetStatus())
 	bondPool := app.StakingKeeper.GetBondedPool(ctx)
 	expTokens := sdk.TokensFromConsensusPower(100)
-	require.Equal(t, expTokens.Int64(), app.BankKeeper.GetBalance(ctx, bondPool.GetAddress(), app.StakingKeeper.BondDenom(ctx)).Amount.Int64())
+	require.True(t, expTokens.Equal(app.BankKeeper.GetBalance(ctx, bondPool.GetAddress(), app.StakingKeeper.BondDenom(ctx)).Amount))
 }
 
 // Test a jailed validator being "down" twice

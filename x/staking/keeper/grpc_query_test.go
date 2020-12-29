@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -727,7 +729,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
 }
 
 func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
-	addrs := simapp.AddTestAddrsIncremental(app, ctx, 5, sdk.NewInt(300000000))
+	addrs := simapp.AddTestAddrsIncremental(app, ctx, 5, sdk.TokensFromConsensusPower(300))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
 	pks := simapp.CreateTestPubKeys(5)
 
@@ -751,9 +753,12 @@ func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers 
 	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val1)
 	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val2)
 
-	_ = delegateCoinsFromAccount(ctx, app, addrs[0], sdk.TokensFromConsensusPower(powers[0]), val1)
-	_ = delegateCoinsFromAccount(ctx, app, addrs[1], sdk.TokensFromConsensusPower(powers[1]), val2)
-	_ = delegateCoinsFromAccount(ctx, app, addrs[0], sdk.TokensFromConsensusPower(powers[2]), val2)
+	err := delegateCoinsFromAccount(ctx, app, addrs[0], sdk.TokensFromConsensusPower(powers[0]), val1)
+	require.NoError(t, err)
+	err = delegateCoinsFromAccount(ctx, app, addrs[1], sdk.TokensFromConsensusPower(powers[1]), val2)
+	require.NoError(t, err)
+	err = delegateCoinsFromAccount(ctx, app, addrs[0], sdk.TokensFromConsensusPower(powers[2]), val2)
+	require.NoError(t, err)
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
 
 	return addrs, valAddrs, vals

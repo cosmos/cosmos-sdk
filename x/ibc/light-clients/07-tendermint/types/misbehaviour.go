@@ -1,10 +1,8 @@
 package types
 
 import (
-	"math"
+	"bytes"
 	"time"
-
-	yaml "gopkg.in/yaml.v2"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -20,10 +18,9 @@ var (
 )
 
 // NewMisbehaviour creates a new Misbehaviour instance.
-func NewMisbehaviour(clientID, chainID string, header1, header2 *Header) *Misbehaviour {
+func NewMisbehaviour(clientID string, header1, header2 *Header) *Misbehaviour {
 	return &Misbehaviour{
 		ClientId: clientID,
-		ChainId:  chainID,
 		Header1:  header1,
 		Header2:  header2,
 	}
@@ -39,16 +36,6 @@ func (misbehaviour Misbehaviour) GetClientID() string {
 	return misbehaviour.ClientId
 }
 
-// String implements Misbehaviour interface
-func (misbehaviour Misbehaviour) String() string {
-	// FIXME: implement custom marshaller
-	bz, err := yaml.Marshal(misbehaviour)
-	if err != nil {
-		panic(err)
-	}
-	return string(bz)
-}
-
 // GetHeight returns the height at which misbehaviour occurred
 //
 // NOTE: assumes that misbehaviour headers have the same height
@@ -60,8 +47,11 @@ func (misbehaviour Misbehaviour) GetHeight() exported.Height {
 // maximum value from both headers to prevent producing an invalid header outside
 // of the misbehaviour age range.
 func (misbehaviour Misbehaviour) GetTime() time.Time {
-	minTime := int64(math.Max(float64(misbehaviour.Header1.GetTime().UnixNano()), float64(misbehaviour.Header2.GetTime().UnixNano())))
-	return time.Unix(0, minTime)
+	t1, t2 := misbehaviour.Header1.GetTime(), misbehaviour.Header2.GetTime()
+	if t1.After(t2) {
+		return t1
+	}
+	return t2
 }
 
 // ValidateBasic implements Misbehaviour interface
@@ -72,17 +62,20 @@ func (misbehaviour Misbehaviour) ValidateBasic() error {
 	if misbehaviour.Header2 == nil {
 		return sdkerrors.Wrap(ErrInvalidHeader, "misbehaviour Header2 cannot be nil")
 	}
-	if misbehaviour.Header1.TrustedHeight.VersionHeight == 0 {
-		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "misbehaviour Header1 cannot have zero version height")
+	if misbehaviour.Header1.TrustedHeight.RevisionHeight == 0 {
+		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "misbehaviour Header1 cannot have zero revision height")
 	}
-	if misbehaviour.Header2.TrustedHeight.VersionHeight == 0 {
-		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "misbehaviour Header2 cannot have zero version height")
+	if misbehaviour.Header2.TrustedHeight.RevisionHeight == 0 {
+		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "misbehaviour Header2 cannot have zero revision height")
 	}
 	if misbehaviour.Header1.TrustedValidators == nil {
 		return sdkerrors.Wrap(ErrInvalidValidatorSet, "trusted validator set in Header1 cannot be empty")
 	}
 	if misbehaviour.Header2.TrustedValidators == nil {
 		return sdkerrors.Wrap(ErrInvalidValidatorSet, "trusted validator set in Header2 cannot be empty")
+	}
+	if misbehaviour.Header1.Header.ChainID != misbehaviour.Header2.Header.ChainID {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "headers must have identical chainIDs")
 	}
 
 	if err := host.ClientIdentifierValidator(misbehaviour.ClientId); err != nil {
@@ -117,30 +110,22 @@ func (misbehaviour Misbehaviour) ValidateBasic() error {
 	}
 
 	// Ensure that Commit Hashes are different
-	if blockID1.Equals(*blockID2) {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "headers blockIDs are equal")
+	if bytes.Equal(blockID1.Hash, blockID2.Hash) {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "headers block hashes are equal")
 	}
-	if err := ValidCommit(misbehaviour.ChainId, misbehaviour.Header1.Commit, misbehaviour.Header1.ValidatorSet); err != nil {
+	if err := validCommit(misbehaviour.Header1.Header.ChainID, *blockID1,
+		misbehaviour.Header1.Commit, misbehaviour.Header1.ValidatorSet); err != nil {
 		return err
 	}
-	if err := ValidCommit(misbehaviour.ChainId, misbehaviour.Header2.Commit, misbehaviour.Header2.ValidatorSet); err != nil {
+	if err := validCommit(misbehaviour.Header2.Header.ChainID, *blockID2,
+		misbehaviour.Header2.Commit, misbehaviour.Header2.ValidatorSet); err != nil {
 		return err
 	}
 	return nil
 }
 
-// ValidCommit checks if the given commit is a valid commit from the passed-in validatorset
-//
-// CommitToVoteSet will panic if the commit cannot be converted to a valid voteset given the validatorset
-// This implies that someone tried to submit misbehaviour that wasn't actually committed by the validatorset
-// thus we should return an error here and reject the misbehaviour rather than panicing.
-func ValidCommit(chainID string, commit *tmproto.Commit, valSet *tmproto.ValidatorSet) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour, "invalid commit: %v", r)
-		}
-	}()
-
+// validCommit checks if the given commit is a valid commit from the passed-in validatorset
+func validCommit(chainID string, blockID tmtypes.BlockID, commit *tmproto.Commit, valSet *tmproto.ValidatorSet) (err error) {
 	tmCommit, err := tmtypes.CommitFromProto(commit)
 	if err != nil {
 		return sdkerrors.Wrap(err, "commit is not tendermint commit type")
@@ -150,13 +135,7 @@ func ValidCommit(chainID string, commit *tmproto.Commit, valSet *tmproto.Validat
 		return sdkerrors.Wrap(err, "validator set is not tendermint validator set type")
 	}
 
-	// Convert commits to vote-sets given the validator set so we can check if they both have 2/3 power
-	voteSet := tmtypes.CommitToVoteSet(chainID, tmCommit, tmValset)
-
-	blockID, ok := voteSet.TwoThirdsMajority()
-
-	// Check that ValidatorSet did indeed commit to blockID in Commit
-	if !ok || !blockID.Equals(tmCommit.BlockID) {
+	if err := tmValset.VerifyCommitLight(chainID, blockID, tmCommit.Height, tmCommit); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "validator set did not commit to header")
 	}
 

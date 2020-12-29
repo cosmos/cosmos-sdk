@@ -37,8 +37,9 @@ service Query {
   // ChannelConsensusState queries for the consensus state for the channel
   // associated with the provided channel identifiers.
   rpc ChannelConsensusState(QueryChannelConsensusStateRequest) returns (QueryChannelConsensusStateResponse) {
-    option (google.api.http).get = "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/consensus_state/version/"
-                                   "{version_number}/height/{version_height}";
+    option (google.api.http).get =
+        "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/consensus_state/revision/"
+        "{revision_number}/height/{revision_height}";
   }
 
   // PacketCommitment queries a stored packet commitment hash.
@@ -55,20 +56,22 @@ service Query {
 
   // PacketReceipt queries if a given packet sequence has been received on the queried chain
   rpc PacketReceipt(QueryPacketReceiptRequest) returns (QueryPacketReceiptResponse) {
-    option (google.api.http).get = "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_receipts/{sequence}";
+    option (google.api.http).get =
+        "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_receipts/{sequence}";
   }
 
   // PacketAcknowledgement queries a stored packet acknowledgement hash.
   rpc PacketAcknowledgement(QueryPacketAcknowledgementRequest) returns (QueryPacketAcknowledgementResponse) {
-    option (google.api.http).get = "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acks/{sequence}";
+    option (google.api.http).get =
+        "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acks/{sequence}";
   }
 
   // PacketAcknowledgements returns all the packet acknowledgements associated
   // with a channel.
   rpc PacketAcknowledgements(QueryPacketAcknowledgementsRequest) returns (QueryPacketAcknowledgementsResponse) {
-    option (google.api.http).get = "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acknowledgements";
+    option (google.api.http).get =
+        "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acknowledgements";
   }
-
 
   // UnreceivedPackets returns all the unreceived IBC packets associated with a
   // channel and sequences.
@@ -173,10 +176,10 @@ message QueryChannelConsensusStateRequest {
   string port_id = 1;
   // channel unique identifier
   string channel_id = 2;
-  // version number of the consensus state
-  uint64 version_number = 3;
-  // version height of the consensus state
-  uint64 version_height = 4;
+  // revision number of the consensus state
+  uint64 revision_number = 3;
+  // revision height of the consensus state
+  uint64 revision_height = 4;
 }
 
 // QueryChannelClientStateResponse is the Response type for the

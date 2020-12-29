@@ -4,7 +4,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v039"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	v040vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
@@ -16,7 +15,7 @@ func convertBaseAccount(old *v039auth.BaseAccount) *v040auth.BaseAccount {
 	// just leave it nil.
 	if old.PubKey != nil {
 		var err error
-		any, err = tx.PubKeyToAny(old.PubKey)
+		any, err = codectypes.NewAnyWithValue(old.PubKey)
 		if err != nil {
 			panic(err)
 		}

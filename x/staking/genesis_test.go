@@ -21,7 +21,7 @@ import (
 func bootstrapGenesisTest(t *testing.T, power int64, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
 	_, app, ctx := getBaseSimappWithCustomKeeper()
 
-	addrDels, _ := generateAddresses(app, ctx, numAddrs, 10000)
+	addrDels, _ := generateAddresses(app, ctx, numAddrs, sdk.NewInt(10000))
 
 	amt := sdk.TokensFromConsensusPower(power)
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), amt.MulRaw(int64(len(addrDels)))))
@@ -45,10 +45,10 @@ func TestInitGenesis(t *testing.T) {
 	validators := make([]types.Validator, 2)
 	var delegations []types.Delegation
 
-	pk0, err := codectypes.PackAny(PKs[0])
+	pk0, err := codectypes.NewAnyWithValue(PKs[0])
 	require.NoError(t, err)
 
-	pk1, err := codectypes.PackAny(PKs[1])
+	pk1, err := codectypes.NewAnyWithValue(PKs[1])
 	require.NoError(t, err)
 
 	// initialize the validators

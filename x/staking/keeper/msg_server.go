@@ -175,6 +175,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 	if err != nil {
 		return nil, err
 	}
+
 	return &types.MsgBeginRedelegateResponse{
 		CompletionTime: completionTime,
 	}, nil
@@ -193,6 +194,7 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	if err != nil {
 		return nil, err
 	}
+
 	return &types.MsgUndelegateResponse{
 		CompletionTime: completionTime,
 	}, nil

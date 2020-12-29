@@ -30,20 +30,16 @@ func (h Header) ClientType() string {
 
 // GetHeight returns the current height. It returns 0 if the tendermint
 // header is nil.
+// NOTE: the header.Header is checked to be non nil in ValidateBasic.
 func (h Header) GetHeight() exported.Height {
-	if h.Header == nil {
-		return clienttypes.ZeroHeight()
-	}
-	version := clienttypes.ParseChainID(h.Header.ChainID)
-	return clienttypes.NewHeight(version, uint64(h.Header.Height))
+	revision := clienttypes.ParseChainID(h.Header.ChainID)
+	return clienttypes.NewHeight(revision, uint64(h.Header.Height))
 }
 
 // GetTime returns the current block timestamp. It returns a zero time if
 // the tendermint header is nil.
+// NOTE: the header.Header is checked to be non nil in ValidateBasic.
 func (h Header) GetTime() time.Time {
-	if h.Header == nil {
-		return time.Time{}
-	}
 	return h.Header.Time
 }
 

@@ -79,7 +79,7 @@ func ClientStateKey() []byte {
 // FullConsensusStatePath takes a client identifier and returns a Path under which to
 // store the consensus state of a client.
 func FullConsensusStatePath(clientID string, height exported.Height) string {
-	return FullClientPath(clientID, fmt.Sprintf("%s/%s", KeyConsensusStatePrefix, height))
+	return FullClientPath(clientID, ConsensusStatePath(height))
 }
 
 // FullConsensusStateKey returns the store key for the consensus state of a particular
@@ -177,7 +177,7 @@ func NextSequenceAckKey(portID, channelID string) []byte {
 
 // PacketCommitmentPath defines the commitments to packet data fields store path
 func PacketCommitmentPath(portID, channelID string, sequence uint64) string {
-	return fmt.Sprintf("%s/%s/%s", KeyPacketCommitmentPrefix, channelPath(portID, channelID), sequencePath(sequence))
+	return fmt.Sprintf("%s/%d", PacketCommitmentPrefixPath(portID, channelID), sequence)
 }
 
 // PacketCommitmentKey returns the store key of under which a packet commitment
@@ -193,7 +193,7 @@ func PacketCommitmentPrefixPath(portID, channelID string) string {
 
 // PacketAcknowledgementPath defines the packet acknowledgement store path
 func PacketAcknowledgementPath(portID, channelID string, sequence uint64) string {
-	return fmt.Sprintf("%s/%s/%s", KeyPacketAckPrefix, channelPath(portID, channelID), sequencePath(sequence))
+	return fmt.Sprintf("%s/%d", PacketAcknowledgementPrefixPath(portID, channelID), sequence)
 }
 
 // PacketAcknowledgementKey returns the store key of under which a packet

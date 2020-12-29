@@ -12,19 +12,19 @@ import (
 
 var _ sdk.Msg = &MsgChannelOpenInit{}
 
-// NewMsgChannelOpenInit creates a new MsgChannelOpenInit
+// NewMsgChannelOpenInit creates a new MsgChannelOpenInit. It sets the counterparty channel
+// identifier to be empty.
 // nolint:interfacer
 func NewMsgChannelOpenInit(
-	portID, channelID string, version string, channelOrder Order, connectionHops []string,
-	counterpartyPortID, counterpartyChannelID string, signer sdk.AccAddress,
+	portID, version string, channelOrder Order, connectionHops []string,
+	counterpartyPortID string, signer sdk.AccAddress,
 ) *MsgChannelOpenInit {
-	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
+	counterparty := NewCounterparty(counterpartyPortID, "")
 	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
 	return &MsgChannelOpenInit{
-		PortId:    portID,
-		ChannelId: channelID,
-		Channel:   channel,
-		Signer:    signer.String(),
+		PortId:  portID,
+		Channel: channel,
+		Signer:  signer.String(),
 	}
 }
 
@@ -43,14 +43,14 @@ func (msg MsgChannelOpenInit) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.PortId); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
-		return sdkerrors.Wrap(err, "invalid channel ID")
-	}
 	if msg.Channel.State != INIT {
 		return sdkerrors.Wrapf(ErrInvalidChannelState,
 			"channel state must be INIT in MsgChannelOpenInit. expected: %s, got: %s",
 			INIT, msg.Channel.State,
 		)
+	}
+	if msg.Channel.Counterparty.ChannelId != "" {
+		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty channel identifier must be empty")
 	}
 	_, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
@@ -79,21 +79,20 @@ var _ sdk.Msg = &MsgChannelOpenTry{}
 // NewMsgChannelOpenTry creates a new MsgChannelOpenTry instance
 // nolint:interfacer
 func NewMsgChannelOpenTry(
-	portID, desiredChannelID, counterpartyChosenChannelID, version string, channelOrder Order, connectionHops []string,
+	portID, previousChannelID, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID, counterpartyVersion string,
 	proofInit []byte, proofHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgChannelOpenTry {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := NewChannel(TRYOPEN, channelOrder, counterparty, connectionHops, version)
 	return &MsgChannelOpenTry{
-		PortId:                      portID,
-		DesiredChannelId:            desiredChannelID,
-		CounterpartyChosenChannelId: counterpartyChosenChannelID,
-		Channel:                     channel,
-		CounterpartyVersion:         counterpartyVersion,
-		ProofInit:                   proofInit,
-		ProofHeight:                 proofHeight,
-		Signer:                      signer.String(),
+		PortId:              portID,
+		PreviousChannelId:   previousChannelID,
+		Channel:             channel,
+		CounterpartyVersion: counterpartyVersion,
+		ProofInit:           proofInit,
+		ProofHeight:         proofHeight,
+		Signer:              signer.String(),
 	}
 }
 
@@ -112,11 +111,10 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.PortId); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.ChannelIdentifierValidator(msg.DesiredChannelId); err != nil {
-		return sdkerrors.Wrap(err, "invalid desired channel ID")
-	}
-	if msg.CounterpartyChosenChannelId != "" && msg.CounterpartyChosenChannelId != msg.DesiredChannelId {
-		return sdkerrors.Wrap(ErrInvalidChannelIdentifier, "counterparty chosen channel ID must be empty or equal to desired channel ID")
+	if msg.PreviousChannelId != "" {
+		if !IsValidChannelID(msg.PreviousChannelId) {
+			return sdkerrors.Wrap(ErrInvalidChannelIdentifier, "invalid previous channel ID")
+		}
 	}
 	if len(msg.ProofInit) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof init")
@@ -130,6 +128,11 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 			TRYOPEN, msg.Channel.State,
 		)
 	}
+	// counterparty validate basic allows empty counterparty channel identifiers
+	if err := host.ChannelIdentifierValidator(msg.Channel.Counterparty.ChannelId); err != nil {
+		return sdkerrors.Wrap(err, "invalid counterparty channel ID")
+	}
+
 	_, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
@@ -186,8 +189,8 @@ func (msg MsgChannelOpenAck) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.PortId); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
-		return sdkerrors.Wrap(err, "invalid channel ID")
+	if !IsValidChannelID(msg.ChannelId) {
+		return ErrInvalidChannelIdentifier
 	}
 	if err := host.ChannelIdentifierValidator(msg.CounterpartyChannelId); err != nil {
 		return sdkerrors.Wrap(err, "invalid counterparty channel ID")
@@ -252,8 +255,8 @@ func (msg MsgChannelOpenConfirm) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.PortId); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
-		return sdkerrors.Wrap(err, "invalid channel ID")
+	if !IsValidChannelID(msg.ChannelId) {
+		return ErrInvalidChannelIdentifier
 	}
 	if len(msg.ProofAck) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof ack")
@@ -312,8 +315,8 @@ func (msg MsgChannelCloseInit) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.PortId); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
-		return sdkerrors.Wrap(err, "invalid channel ID")
+	if !IsValidChannelID(msg.ChannelId) {
+		return ErrInvalidChannelIdentifier
 	}
 	_, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
@@ -369,8 +372,8 @@ func (msg MsgChannelCloseConfirm) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.PortId); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
-		return sdkerrors.Wrap(err, "invalid channel ID")
+	if !IsValidChannelID(msg.ChannelId) {
+		return ErrInvalidChannelIdentifier
 	}
 	if len(msg.ProofInit) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof init")
@@ -405,14 +408,14 @@ var _ sdk.Msg = &MsgRecvPacket{}
 // NewMsgRecvPacket constructs new MsgRecvPacket
 // nolint:interfacer
 func NewMsgRecvPacket(
-	packet Packet, proof []byte, proofHeight clienttypes.Height,
+	packet Packet, proofCommitment []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
 ) *MsgRecvPacket {
 	return &MsgRecvPacket{
-		Packet:      packet,
-		Proof:       proof,
-		ProofHeight: proofHeight,
-		Signer:      signer.String(),
+		Packet:          packet,
+		ProofCommitment: proofCommitment,
+		ProofHeight:     proofHeight,
+		Signer:          signer.String(),
 	}
 }
 
@@ -423,7 +426,7 @@ func (msg MsgRecvPacket) Route() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgRecvPacket) ValidateBasic() error {
-	if len(msg.Proof) == 0 {
+	if len(msg.ProofCommitment) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if msg.ProofHeight.IsZero() {
@@ -468,13 +471,13 @@ var _ sdk.Msg = &MsgTimeout{}
 // NewMsgTimeout constructs new MsgTimeout
 // nolint:interfacer
 func NewMsgTimeout(
-	packet Packet, nextSequenceRecv uint64, proof []byte,
+	packet Packet, nextSequenceRecv uint64, proofUnreceived []byte,
 	proofHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgTimeout {
 	return &MsgTimeout{
 		Packet:           packet,
 		NextSequenceRecv: nextSequenceRecv,
-		Proof:            proof,
+		ProofUnreceived:  proofUnreceived,
 		ProofHeight:      proofHeight,
 		Signer:           signer.String(),
 	}
@@ -487,11 +490,14 @@ func (msg MsgTimeout) Route() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgTimeout) ValidateBasic() error {
-	if len(msg.Proof) == 0 {
-		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
+	if len(msg.ProofUnreceived) == 0 {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty unreceived proof")
 	}
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
+	}
+	if msg.NextSequenceRecv == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, "next sequence receive cannot be 0")
 	}
 	_, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
@@ -524,13 +530,13 @@ func (msg MsgTimeout) Type() string {
 // nolint:interfacer
 func NewMsgTimeoutOnClose(
 	packet Packet, nextSequenceRecv uint64,
-	proof, proofClose []byte,
+	proofUnreceived, proofClose []byte,
 	proofHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgTimeoutOnClose {
 	return &MsgTimeoutOnClose{
 		Packet:           packet,
 		NextSequenceRecv: nextSequenceRecv,
-		Proof:            proof,
+		ProofUnreceived:  proofUnreceived,
 		ProofClose:       proofClose,
 		ProofHeight:      proofHeight,
 		Signer:           signer.String(),
@@ -544,7 +550,10 @@ func (msg MsgTimeoutOnClose) Route() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgTimeoutOnClose) ValidateBasic() error {
-	if len(msg.Proof) == 0 {
+	if msg.NextSequenceRecv == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, "next sequence receive cannot be 0")
+	}
+	if len(msg.ProofUnreceived) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if len(msg.ProofClose) == 0 {
@@ -585,11 +594,15 @@ var _ sdk.Msg = &MsgAcknowledgement{}
 // NewMsgAcknowledgement constructs a new MsgAcknowledgement
 // nolint:interfacer
 func NewMsgAcknowledgement(
-	packet Packet, ack []byte, proof []byte, proofHeight clienttypes.Height, signer sdk.AccAddress) *MsgAcknowledgement {
+	packet Packet,
+	ack, proofAcked []byte,
+	proofHeight clienttypes.Height,
+	signer sdk.AccAddress,
+) *MsgAcknowledgement {
 	return &MsgAcknowledgement{
 		Packet:          packet,
 		Acknowledgement: ack,
-		Proof:           proof,
+		ProofAcked:      proofAcked,
 		ProofHeight:     proofHeight,
 		Signer:          signer.String(),
 	}
@@ -602,11 +615,14 @@ func (msg MsgAcknowledgement) Route() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgAcknowledgement) ValidateBasic() error {
-	if len(msg.Proof) == 0 {
+	if len(msg.ProofAcked) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
+	}
+	if len(msg.Acknowledgement) == 0 {
+		return sdkerrors.Wrap(ErrInvalidAcknowledgement, "ack bytes cannot be empty")
 	}
 	_, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {

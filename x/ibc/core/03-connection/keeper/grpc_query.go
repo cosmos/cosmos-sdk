@@ -160,7 +160,7 @@ func (q Keeper) ConnectionConsensusState(c context.Context, req *types.QueryConn
 		)
 	}
 
-	height := clienttypes.NewHeight(req.VersionNumber, req.VersionHeight)
+	height := clienttypes.NewHeight(req.RevisionNumber, req.RevisionHeight)
 	consensusState, found := q.clientKeeper.GetClientConsensusState(ctx, connection.ClientId, height)
 	if !found {
 		return nil, status.Error(

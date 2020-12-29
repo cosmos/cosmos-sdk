@@ -30,6 +30,14 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				true,
 			},
 			{
+				"old misbehaviour is successful (timestamp is less than current consensus state)",
+				func() {
+					clientState = solomachine.ClientState()
+					solomachine.Time = solomachine.Time - 5
+					misbehaviour = solomachine.CreateMisbehaviour()
+				}, true,
+			},
+			{
 				"client is frozen",
 				func() {
 					cs := solomachine.ClientState()
@@ -93,14 +101,6 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 
 					m.SignatureTwo.Timestamp = 1000000000000
 					misbehaviour = m
-				}, false,
-			},
-			{
-				"timestamp is less than consensus state timestamp",
-				func() {
-					clientState = solomachine.ClientState()
-					solomachine.Time = solomachine.Time - 5
-					misbehaviour = solomachine.CreateMisbehaviour()
 				}, false,
 			},
 			{

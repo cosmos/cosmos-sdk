@@ -26,10 +26,10 @@ const (
 	// Default maximum entries in a UBD/RED pair
 	DefaultMaxEntries uint32 = 7
 
-	// DefaultHistorical entries is 100. Apps that don't use IBC can ignore this
+	// DefaultHistorical entries is 10000. Apps that don't use IBC can ignore this
 	// value by not adding the staking module to the application module manager's
 	// SetOrderBeginBlockers.
-	DefaultHistoricalEntries uint32 = 100
+	DefaultHistoricalEntries uint32 = 10000
 
 	// Default Epoch interval is 10 blocks time
 	DefaultEpochInterval int64 = 10

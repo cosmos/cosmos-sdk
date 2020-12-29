@@ -3,7 +3,6 @@ package keeper
 import (
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
@@ -36,13 +35,7 @@ func (k Keeper) GetEpochActions(ctx sdk.Context) []*codectypes.Any {
 
 // GetEpochActionByIterator get action by iterator
 func (k Keeper) GetEpochActionByIterator(iterator db.Iterator) sdk.Msg {
-	bz := iterator.Value()
-
-	var action sdk.Msg
-	// reference from TestMarshalAny(t *testing.T)
-	codec.UnmarshalAny(k.cdc, &action, bz)
-
-	return action
+	return k.epochKeeper.GetEpochActionByIterator(iterator)
 }
 
 // SetEpochNumber set epoch number

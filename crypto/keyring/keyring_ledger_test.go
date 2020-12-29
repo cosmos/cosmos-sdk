@@ -45,7 +45,7 @@ func TestInMemoryCreateLedger(t *testing.T) {
 
 	path, err := restoredKey.GetPath()
 	require.NoError(t, err)
-	require.Equal(t, "44'/118'/3'/0/1", path.String())
+	require.Equal(t, "m/44'/118'/3'/0/1", path.String())
 }
 
 // TestSignVerify does some detailed checks on how we sign and validate
@@ -123,5 +123,5 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 
 	path, err := restoredKey.GetPath()
 	require.NoError(t, err)
-	require.Equal(t, "44'/118'/3'/0/1", path.String())
+	require.Equal(t, "m/44'/118'/3'/0/1", path.String())
 }

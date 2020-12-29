@@ -11,6 +11,9 @@ import (
 // CheckMisbehaviourAndUpdateState determines whether or not the currently registered
 // public key signed over two different messages with the same sequence. If this is true
 // the client state is updated to a frozen status.
+// NOTE: Misbehaviour is not tracked for previous public keys, a solo machine may update to
+// a new public key before the misbehaviour is processed. Therefore, misbehaviour is data
+// order processing dependent.
 func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	ctx sdk.Context,
 	cdc codec.BinaryMarshaler,
@@ -44,19 +47,15 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	}
 
 	cs.FrozenSequence = soloMisbehaviour.Sequence
-	return cs, nil
+	return &cs, nil
 }
 
 // verifySignatureAndData verifies that the currently registered public key has signed
 // over the provided data and that the data is valid. The data is valid if it can be
-// unmarshaled into the specified data type or the timestamp of the signature is less
-// than the consensus state timestamp.
+// unmarshaled into the specified data type.
 func verifySignatureAndData(cdc codec.BinaryMarshaler, clientState ClientState, misbehaviour *Misbehaviour, sigAndData *SignatureAndData) error {
-	// timestamp less than consensus state would always fail and not succeed in fooling the
-	// light client
-	if sigAndData.Timestamp < clientState.ConsensusState.Timestamp {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour, "timestamp is less than consensus state timestamp (%d < %d)", sigAndData.Timestamp, clientState.ConsensusState.Timestamp)
-	}
+
+	// do not check misbehaviour timestamp since we want to allow processing of past misbehaviour
 
 	// ensure data can be unmarshaled to the specified data type
 	if _, err := UnmarshalDataByType(cdc, sigAndData.DataType, sigAndData.Data); err != nil {

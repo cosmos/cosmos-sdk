@@ -437,10 +437,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 			"invalid port ID",
 			func() {
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:        "",
-					ChannelId:     "test-channel-id",
-					VersionNumber: 0,
-					VersionHeight: 1,
+					PortId:         "",
+					ChannelId:      "test-channel-id",
+					RevisionNumber: 0,
+					RevisionHeight: 1,
 				}
 			},
 			false,
@@ -449,10 +449,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 			"invalid channel ID",
 			func() {
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:        "test-port-id",
-					ChannelId:     "",
-					VersionNumber: 0,
-					VersionHeight: 1,
+					PortId:         "test-port-id",
+					ChannelId:      "",
+					RevisionNumber: 0,
+					RevisionHeight: 1,
 				}
 			},
 			false,
@@ -461,10 +461,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 			"channel not found",
 			func() {
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:        "test-port-id",
-					ChannelId:     "test-channel-id",
-					VersionNumber: 0,
-					VersionHeight: 1,
+					PortId:         "test-port-id",
+					ChannelId:      "test-channel-id",
+					RevisionNumber: 0,
+					RevisionHeight: 1,
 				}
 			},
 			false,
@@ -482,10 +482,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID, channel)
 
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:        channelA.PortID,
-					ChannelId:     channelA.ID,
-					VersionNumber: 0,
-					VersionHeight: 1,
+					PortId:         channelA.PortID,
+					ChannelId:      channelA.ID,
+					RevisionNumber: 0,
+					RevisionHeight: 1,
 				}
 			}, false,
 		},
@@ -495,10 +495,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:        channelA.PortID,
-					ChannelId:     channelA.ID,
-					VersionNumber: 0,
-					VersionHeight: uint64(suite.chainA.GetContext().BlockHeight()), // use current height
+					PortId:         channelA.PortID,
+					ChannelId:      channelA.ID,
+					RevisionNumber: 0,
+					RevisionHeight: uint64(suite.chainA.GetContext().BlockHeight()), // use current height
 				}
 			}, false,
 		},
@@ -516,10 +516,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 				expClientID = clientA
 
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:        channelA.PortID,
-					ChannelId:     channelA.ID,
-					VersionNumber: clientState.GetLatestHeight().GetVersionNumber(),
-					VersionHeight: clientState.GetLatestHeight().GetVersionHeight(),
+					PortId:         channelA.PortID,
+					ChannelId:      channelA.ID,
+					RevisionNumber: clientState.GetLatestHeight().GetRevisionNumber(),
+					RevisionHeight: clientState.GetLatestHeight().GetRevisionHeight(),
 				}
 			},
 			true,

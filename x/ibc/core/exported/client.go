@@ -2,10 +2,10 @@ package exported
 
 import (
 	ics23 "github.com/confio/ics23/go"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	proto "github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -25,12 +25,22 @@ const (
 
 // ClientState defines the required common functions for light clients.
 type ClientState interface {
+	proto.Message
+
 	ClientType() string
 	GetLatestHeight() Height
 	IsFrozen() bool
 	GetFrozenHeight() Height
 	Validate() error
 	GetProofSpecs() []*ics23.ProofSpec
+
+	// Initialization function
+	// Clients must validate the initial consensus state, and may store any client-specific metadata
+	// necessary for correct light client operation
+	Initialize(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, ConsensusState) error
+
+	// Genesis function
+	ExportMetadata(sdk.KVStore) []GenesisMetadata
 
 	// Update and Misbehaviour functions
 
@@ -39,14 +49,20 @@ type ClientState interface {
 	CheckProposedHeaderAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Header) (ClientState, ConsensusState, error)
 
 	// Upgrade functions
-	VerifyUpgrade(
+	// NOTE: proof heights are not included as upgrade to a new revision is expected to pass only on the last
+	// height committed by the current revision. Clients are responsible for ensuring that the planned last
+	// height of the current revision is somehow encoded in the proof verification process.
+	// This is to ensure that no premature upgrades occur, since upgrade plans committed to by the counterparty
+	// may be cancelled or modified before the last planned height.
+	VerifyUpgradeAndUpdateState(
 		ctx sdk.Context,
 		cdc codec.BinaryMarshaler,
 		store sdk.KVStore,
 		newClient ClientState,
-		upgradeHeight Height,
-		proofUpgrade []byte,
-	) error
+		newConsState ConsensusState,
+		proofUpgradeClient,
+		proofUpgradeConsState []byte,
+	) (ClientState, ConsensusState, error)
 	// Utility function that zeroes out any client customizable fields in client state
 	// Ledger enforced fields are maintained while all custom fields are zero values
 	// Used to verify upgrades
@@ -96,6 +112,8 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height Height,
+		currentTimestamp uint64,
+		delayPeriod uint64,
 		prefix Prefix,
 		proof []byte,
 		portID,
@@ -107,6 +125,8 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height Height,
+		currentTimestamp uint64,
+		delayPeriod uint64,
 		prefix Prefix,
 		proof []byte,
 		portID,
@@ -118,6 +138,8 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height Height,
+		currentTimestamp uint64,
+		delayPeriod uint64,
 		prefix Prefix,
 		proof []byte,
 		portID,
@@ -128,6 +150,8 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height Height,
+		currentTimestamp uint64,
+		delayPeriod uint64,
 		prefix Prefix,
 		proof []byte,
 		portID,
@@ -138,6 +162,8 @@ type ClientState interface {
 
 // ConsensusState is the state of the consensus process
 type ConsensusState interface {
+	proto.Message
+
 	ClientType() string // Consensus kind
 
 	// GetRoot returns the commitment root of the consensus state,
@@ -154,7 +180,6 @@ type ConsensusState interface {
 type Misbehaviour interface {
 	ClientType() string
 	GetClientID() string
-	String() string
 	ValidateBasic() error
 
 	// Height at which the infraction occurred
@@ -177,8 +202,18 @@ type Height interface {
 	EQ(Height) bool
 	GT(Height) bool
 	GTE(Height) bool
-	GetVersionNumber() uint64
-	GetVersionHeight() uint64
+	GetRevisionNumber() uint64
+	GetRevisionHeight() uint64
+	Increment() Height
 	Decrement() (Height, bool)
 	String() string
+}
+
+// GenesisMetadata is a wrapper interface over clienttypes.GenesisMetadata
+// all clients must use the concrete implementation in types
+type GenesisMetadata interface {
+	// return store key that contains metadata without clientID-prefix
+	GetKey() []byte
+	// returns metadata value
+	GetValue() []byte
 }

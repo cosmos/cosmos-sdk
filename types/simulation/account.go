@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	//"errors"
 	"fmt"
 	"math/rand"
 
@@ -71,7 +72,7 @@ func RandomFees(r *rand.Rand, ctx sdk.Context, spendableCoins sdk.Coins) (sdk.Co
 		return nil, nil
 	}
 
-	perm := rand.Perm(len(spendableCoins))
+	perm := r.Perm(len(spendableCoins))
 	var randCoin sdk.Coin
 	for _, index := range perm {
 		randCoin = spendableCoins[index]
@@ -81,6 +82,7 @@ func RandomFees(r *rand.Rand, ctx sdk.Context, spendableCoins sdk.Coins) (sdk.Co
 	}
 
 	if randCoin.Amount.IsZero() {
+		//return nil, errors.New("no coins found for random fees")
 		return nil, fmt.Errorf("no coins found for random fees")
 	}
 

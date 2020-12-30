@@ -76,6 +76,13 @@ func (m *MsgChangePubKey) GetAddress() github_com_cosmos_cosmos_sdk_types.AccAdd
 	return nil
 }
 
+func (m *MsgChangePubKey) GetPubKey() []byte {
+	if m != nil {
+		return m.PubKey
+	}
+	return nil
+}
+
 // MsgChangePubKeyResponse defines the Msg/ChangePubKey response type.
 type MsgChangePubKeyResponse struct {
 }

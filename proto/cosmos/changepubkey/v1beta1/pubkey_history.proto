@@ -1,0 +1,37 @@
+syntax = "proto3";
+package cosmos.changepubkey.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/auth/changepubkey/types";
+
+// Query defines the gRPC querier service for gov module
+service Query {
+    // Proposal queries proposal details based on ProposalID.
+    rpc Proposal(QueryPubKeyHistoryRequest) returns (QueryPubKeyHistoryResponse) {
+      option (google.api.http).get = "/cosmos/gov/v1beta1/proposals/{proposal_id}";
+    }
+}
+
+message PubKeyHistory {
+    bytes pub_key = 1
+        [(gogoproto.jsontag) = "public_key,omitempty", (gogoproto.moretags) = "yaml:\"public_key\""];
+    google.protobuf.Timestamp start_time = 2
+        [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"start_time\""];
+    google.protobuf.Timestamp end_time = 3
+        [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"end_time\""];
+}
+
+// QueryPubKeyHistoryRequest is the request type for the Query/Proposal RPC method.
+message QueryPubKeyHistoryRequest {
+    // proposal_id defines the unique id of the proposal.
+    uint64 proposal_id = 1;
+}
+  
+// QueryPubKeyHistoryResponse is the response type for the Query/Proposal RPC method.
+message QueryPubKeyHistoryResponse {
+    PubKeyHistory proposal = 1 [(gogoproto.nullable) = false];
+}
+  

@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -98,7 +99,7 @@ func TestBuildSimTx(t *testing.T) {
 		WithSignMode(txCfg.SignModeHandler().DefaultMode())
 
 	msg := banktypes.NewMsgSend(sdk.AccAddress("from"), sdk.AccAddress("to"), nil)
-	bz, err := tx.BuildSimTx(txf, msg)
+	bz, err := tx.BuildSimTx(txf, &secp256k1.PubKey{}, msg)
 	require.NoError(t, err)
 	require.NotNil(t, bz)
 }

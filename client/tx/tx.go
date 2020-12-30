@@ -6,12 +6,15 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"reflect"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -248,7 +251,7 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (client.TxBuilder, error) {
 // BuildSimTx creates an unsigned tx with an empty single signature and returns
 // the encoded transaction or an error if the unsigned transaction cannot be
 // built.
-func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
+func BuildSimTx(txf Factory, pubkey proto.Message, msgs ...sdk.Msg) ([]byte, error) {
 	txb, err := BuildUnsignedTx(txf, msgs...)
 	if err != nil {
 		return nil, err
@@ -257,11 +260,16 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 	// Create an empty signature literal as the ante handler will populate with a
 	// sentinel pubkey.
 	sig := signing.SignatureV2{
-		PubKey: &secp256k1.PubKey{},
 		Data: &signing.SingleSignatureData{
 			SignMode: txf.signMode,
 		},
 		Sequence: txf.Sequence(),
+	}
+
+	if reflect.TypeOf(pubkey) == reflect.TypeOf(&ed25519.PubKey{}) {
+		sig.PubKey = &ed25519.PubKey{}
+	} else {
+		sig.PubKey = &secp256k1.PubKey{} // keeping secp256k1 as default
 	}
 	if err := txb.SetSignatures(sig); err != nil {
 		return nil, err
@@ -281,7 +289,7 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 func CalculateGas(
 	queryFunc func(string, []byte) ([]byte, int64, error), txf Factory, msgs ...sdk.Msg,
 ) (tx.SimulateResponse, uint64, error) {
-	txBytes, err := BuildSimTx(txf, msgs...)
+	txBytes, err := BuildSimTx(txf, &secp256k1.PubKey{}, msgs...)
 	if err != nil {
 		return tx.SimulateResponse{}, 0, err
 	}

@@ -14,29 +14,29 @@ Draft, Not Implemented
 
 ## Abstract
 
-This document outlines a modular and standard approach for using servers on the SDK, so that
+This document outlines a modular and standard approach for using servers built using the Cosmos SDK, so that
 applications can also run custom services besides the default ones provided by the SDK.
 
 ## Context
 
 The current `Server` implementation allows for applications to register routes, API and gRPC
-services to the SDK. The problem with the current approach is that the SDK uses a concrete type,
+services via the SDK. The problem with the current approach is that the SDK uses a concrete type,
 which prevents other SDK-based blockchains to extend the services provided by the application
 without forking the application `start` command (eg: `<app>d start`).
 
 This modularity and extensibility relies on the following limitations:
 
-    - Consistent services
-    - App configuration extensibility
+- Consistent services
+- App configuration extensibility
 
 ### Consistent services
 
 The `start` command executes 3 steps for each of the in-process services provided by an SDK
 application server:
 
-    1. Creation of the service
-    2. Registration of the services directly with the server
-    3. Start/Stop the service process
+1. Creation of the service
+2. Registration of the services directly with the server
+3. Start/Stop the service process
   
 In the current implementation, [some services](https://github.com/cosmos/cosmos-sdk/blob/f9dc082059d63423f96315ff913a8745c3178a7d/server/grpc/server.go#L14-L42) wrap these steps together in a single function, while
 [others](https://github.com/cosmos/cosmos-sdk/blob/f9dc082059d63423f96315ff913a8745c3178a7d/server/api/server.go#L81-L119) implement them as separate functions as the ones above. The lack of a standard approach for
@@ -51,9 +51,8 @@ application.
 
 ## Decision
 
-The proposed approach standardizes the server and its services, so that the app start clearly states
-the 3 steps outlined above. To accomplish this a new `Service` and `Server` interface will be
-introduced:
+The proposed approach standardizes the server and service setup process. 
+To accomplish this a new `Service` and `Server` interface will be introduced based on the 3 steps outlined above:
 
 ```go
 type Service interface {
@@ -124,7 +123,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 ## Consequences
 
-> This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.
 
 ### Positive
 
@@ -141,7 +139,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 ### Backwards Compatibility
 
-> All ADRs that introduce backwards incompatibilities must include a section describing these incompatibilities and their severity. The ADR must explain how the author proposes to deal with these incompatibilities. ADR submissions without a sufficient backwards compatibility treatise may be rejected outright.
 
 This ADR introduces significant changes to the `Server`, and `Config` concrete types due to the
 refactor. It also updates as well as to the `servertypes.Application` interface. In particular it

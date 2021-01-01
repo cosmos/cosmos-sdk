@@ -12,15 +12,15 @@ type EnvelopedErr struct {
 	Err Error
 }
 
-type coder interface {
+type Coder interface {
 	ABCICode() uint32
 }
 
-type causer interface {
+type Causer interface {
 	Cause() error
 }
 
-type codespacer interface {
+type Codespacer interface {
 	Codespace() string
 }
 
@@ -30,11 +30,11 @@ func (e EnvelopedErr) ABCICode() uint32 {
 		return errors.SuccessABCICode
 	}
 	for {
-		if c, ok := err.(coder); ok {
+		if c, ok := err.(Coder); ok {
 			return c.ABCICode()
 		}
 
-		if c, ok := err.(causer); ok {
+		if c, ok := err.(Causer); ok {
 			err = c.Cause()
 		} else {
 			return 1
@@ -49,11 +49,11 @@ func (e EnvelopedErr) Codespace() string {
 	}
 
 	for {
-		if c, ok := err.(codespacer); ok {
+		if c, ok := err.(Codespacer); ok {
 			return c.Codespace()
 		}
 
-		if c, ok := err.(causer); ok {
+		if c, ok := err.(Causer); ok {
 			err = c.Cause()
 		} else {
 			return errors.UndefinedCodespace

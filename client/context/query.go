@@ -1,6 +1,7 @@
 package context
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -95,7 +96,11 @@ func (ctx CLIContext) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, erro
 	}
 
 	if !result.Response.IsOK() {
-		return abci.ResponseQuery{}, errors.New(result.Response.Log)
+		resBytes, marshalErr := json.Marshal(result.Response)
+		if marshalErr != nil {
+			return abci.ResponseQuery{}, errors.New("query response marshal failed" + marshalErr.Error())
+		}
+		return abci.ResponseQuery{}, errors.New(string(resBytes))
 	}
 
 	// data from trusted node or subspace query doesn't need verification

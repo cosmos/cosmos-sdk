@@ -24,7 +24,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 	checkTx := false
 	app := simapp.Setup(checkTx)
 
-	suite.handler = changepubkey.NewHandler(app.AccountKeeper)
+	suite.handler = changepubkey.NewHandler(app.AccountKeeper, app.AccountHistoryKeeper)
 	suite.app = app
 }
 

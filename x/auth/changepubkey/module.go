@@ -14,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/changepubkey/client/cli"
+	changepubkeykeeper "github.com/cosmos/cosmos-sdk/x/auth/changepubkey/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/changepubkey/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
@@ -77,13 +78,15 @@ type AppModule struct {
 	AppModuleBasic
 
 	accountKeeper keeper.AccountKeeper
+	historyKeeper changepubkeykeeper.Keeper
 }
 
 // NewAppModule returns an instance of AppModule
-func NewAppModule(ak keeper.AccountKeeper) AppModule {
+func NewAppModule(ak keeper.AccountKeeper, hk changepubkeykeeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		accountKeeper:  ak,
+		historyKeeper:  hk,
 	}
 }
 
@@ -92,7 +95,7 @@ func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // Route returns the module's message router and handler.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.accountKeeper))
+	return sdk.NewRoute(types.RouterKey, NewHandler(am.accountKeeper, am.historyKeeper))
 }
 
 // QuerierRoute returns querier route for changepubkey
@@ -102,7 +105,7 @@ func (AppModule) QuerierRoute() string {
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), NewMsgServerImpl(am.accountKeeper))
+	types.RegisterMsgServer(cfg.MsgServer(), NewMsgServerImpl(am.accountKeeper, am.historyKeeper))
 }
 
 // LegacyQuerierHandler performs a no-op.

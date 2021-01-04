@@ -3,13 +3,14 @@ package changepubkey
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	changepubkeykeeper "github.com/cosmos/cosmos-sdk/x/auth/changepubkey/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/changepubkey/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 // NewHandler returns a handler for x/auth message types.
-func NewHandler(ak keeper.AccountKeeper) sdk.Handler {
-	msgServer := NewMsgServerImpl(ak)
+func NewHandler(ak keeper.AccountKeeper, hk changepubkeykeeper.Keeper) sdk.Handler {
+	msgServer := NewMsgServerImpl(ak, hk)
 
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())

@@ -49,7 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - (x/ibc) [\#8170](https://github.com/cosmos/cosmos-sdk/pull/8170) fix ClientUpdateProposal unpacker
 - (x/ibc) [\#8187](https://github.com/cosmos/cosmos-sdk/pull/8187) fix IBC upgrade, issue with commit & halting logic
 - (x/ibc) [\#8200](https://github.com/cosmos/cosmos-sdk/pull/8200) fix IBC timeout verification bug
-- (x/gentx) [\#8183](https://github.com/cosmos/cosmos-sdk/pull/8183) change gentx cmd amoun to arg from flag
+- (x/gentx) [\#8183](https://github.com/cosmos/cosmos-sdk/pull/8183) change gentx cmd amount to arg from flag
 
 
 ## [v0.40.0-rc5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc5) - 2020-12-14

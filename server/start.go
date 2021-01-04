@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"runtime/pprof"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/abci/server"
@@ -17,12 +16,10 @@ import (
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/rpc/client/local"
-	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/config"
-	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -284,39 +281,22 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 	srv := app.NewServer(clientCtx, ctx.Logger, config)
 
-	if sdkCfg.API.Enable {
-		// register routes and start server
-		app.RegisterAPIRoutes(srv.BaseServer(), sdkCfg.API)
-		errCh := make(chan error)
-
-		go func() {
-			if err := srv.Start(sdkCfg); err != nil {
-				errCh <- err
-			}
-		}()
-
-		select {
-		case err := <-errCh:
-			return err
-		case <-time.After(5 * time.Second): // assume server started successfully
-		}
+	// register all the server services
+	if err := srv.RegisterServices(); err != nil {
+		return err
 	}
 
-	var grpcSrv *grpc.Server
-	if sdkCfg.GRPC.Enable {
-		// initialize, register and start gRPC server
-		grpcSrv, err = servergrpc.StartGRPCServer(app, sdkCfg.GRPC.Address)
-		if err != nil {
-			return err
-		}
+	// start all services
+	// NOTE: each service needs to be handled in it's own goroutine
+	if err := srv.Start(); err != nil {
+		return err
 	}
-
-	// register services that are external to the default services provided by the SDK
-	app.RegisterExternalServices(srv, config)
 
 	defer func() {
 		if tmNode.IsRunning() {
-			_ = tmNode.Stop()
+			if err := tmNode.Stop(); err != nil {
+				ctx.Logger.Error("failed to stop tendermint node", "error", err)
+			}
 		}
 
 		if cpuProfileCleanup != nil {
@@ -324,11 +304,9 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		}
 
 		if srv != nil {
-			_ = srv.Close()
-		}
-
-		if grpcSrv != nil {
-			grpcSrv.Stop()
+			if err := srv.Stop(); err != nil {
+				ctx.Logger.Error("failed to stop server", "error", err)
+			}
 		}
 
 		ctx.Logger.Info("exiting...")

@@ -553,8 +553,8 @@ func (app *SimApp) SimulationManager() *module.SimulationManager {
 }
 
 // NewServer creates the default SDK base server.
-func (app *SimApp) NewServer(clientCtx client.Context, logger log.Logger, _ config.ServerConfig) api.Server {
-	return api.New(clientCtx, logger)
+func (app *SimApp) NewServer(clientCtx client.Context, logger log.Logger, cfg config.ServerConfig) servertypes.Server {
+	return api.New(clientCtx, logger, cfg)
 }
 
 // ConfigGenerator uses the default SDK config generator.
@@ -583,11 +583,6 @@ func (app *SimApp) RegisterAPIRoutes(apiSvr *api.BaseServer, apiConfig config.AP
 		RegisterSwaggerAPI(apiSvr.Router)
 	}
 }
-
-// RegisterExternalServices implements the Application.RegisterExternalServices method.
-// It performs a no-operation as SimApp doesn't expose extra services other than the
-// default ones provided by the SDK.
-func (app *SimApp) RegisterExternalServices(_ api.Server, _ config.ServerConfig) {}
 
 // RegisterTxService implements the Application.RegisterTxService method.
 func (app *SimApp) RegisterTxService(clientCtx client.Context) {

@@ -5,17 +5,17 @@ import (
 	"net"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/gogo/gateway"
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/tendermint/tendermint/libs/log"
-	tmrpcserver "github.com/tendermint/tendermint/rpc/jsonrpc/server"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	grpcservice "github.com/cosmos/cosmos-sdk/server/services/grpc"
+	tmservice "github.com/cosmos/cosmos-sdk/server/services/tendermint"
+	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -24,17 +24,13 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 )
 
-type Server interface {
-	BaseServer() *BaseServer
+var _ types.Server = &BaseServer{}
 
-	Start(config.ServerConfig) error
-	Close() error
-}
-
-var _ Server = &BaseServer{}
-
-// BaseServer defines the SDK server's API interface.
+// BaseServer defines the SDK server's.
 type BaseServer struct {
+	services map[string]types.Service
+	config   config.ServerConfig
+
 	Router            *mux.Router
 	GRPCGatewayRouter *runtime.ServeMux
 	ClientCtx         client.Context
@@ -59,7 +55,7 @@ func CustomGRPCHeaderMatcher(key string) (string, bool) {
 }
 
 // New creates the default SDK server instance.
-func New(clientCtx client.Context, logger log.Logger) *BaseServer {
+func New(clientCtx client.Context, logger log.Logger, cfg config.ServerConfig) *BaseServer {
 	// The default JSON marshaller used by the gRPC-Gateway is unable to marshal non-nullable non-scalar fields.
 	// Using the gogo/gateway package with the gRPC-Gateway WithMarshaler option fixes the scalar field marshalling issue.
 	marshalerOption := &gateway.JSONPb{
@@ -69,8 +65,18 @@ func New(clientCtx client.Context, logger log.Logger) *BaseServer {
 		AnyResolver:  clientCtx.InterfaceRegistry,
 	}
 
+	router := mux.NewRouter()
+	tmsrv := tmservice.NewService(logger, router)
+	grpcsrv := grpcservice.NewService("")
+
+	services := make(map[string]types.Service)
+	services[tmsrv.Name()] = tmsrv
+	services[grpcsrv.Name()] = grpcsrv
+
 	return &BaseServer{
-		Router:    mux.NewRouter(),
+		services:  services,
+		config:    cfg,
+		Router:    router,
 		ClientCtx: clientCtx,
 		logger:    logger.With("module", "api-server"),
 		GRPCGatewayRouter: runtime.NewServeMux(
@@ -88,16 +94,21 @@ func New(clientCtx client.Context, logger log.Logger) *BaseServer {
 	}
 }
 
-// BaseServer implements the Server interface.
-func (s *BaseServer) BaseServer() *BaseServer { return s }
+// GetService implements the Server interface.
+func (s *BaseServer) GetService(name string) types.Service {
+	service, _ := s.services[name]
+	return service
+}
 
-// Start starts the API server. Internally, the API server leverages Tendermint's
-// JSON RPC server. Configuration options are provided via config.APIConfig
-// and are delegated to the Tendermint JSON RPC server. The process is
-// non-blocking, so an external signal handler must be used.
-func (s *BaseServer) Start(cfg config.ServerConfig) error {
-	sdkCfg := cfg.GetSDKConfig()
+// RegisterServices implements the Server interface.
+func (s *BaseServer) RegisterServices() error {
+	for name, service := range s.services {
+		if !service.RegisterRoutes() {
+			return fmt.Errorf("failed to register routes for service %s", name)
+		}
+	}
 
+	sdkCfg := s.config.GetSDKConfig()
 	if sdkCfg.Telemetry.Enabled {
 		m, err := telemetry.New(sdkCfg.Telemetry)
 		if err != nil {
@@ -108,34 +119,34 @@ func (s *BaseServer) Start(cfg config.ServerConfig) error {
 		s.registerMetrics()
 	}
 
-	tmCfg := tmrpcserver.DefaultConfig()
-	tmCfg.MaxOpenConnections = int(sdkCfg.API.MaxOpenConnections)
-	tmCfg.ReadTimeout = time.Duration(sdkCfg.API.RPCReadTimeout) * time.Second
-	tmCfg.WriteTimeout = time.Duration(sdkCfg.API.RPCWriteTimeout) * time.Second
-	tmCfg.MaxBodyBytes = int64(sdkCfg.API.RPCMaxBodyBytes)
-
-	listener, err := tmrpcserver.Listen(sdkCfg.API.Address, tmCfg)
-	if err != nil {
-		return err
-	}
-
 	s.registerGRPCGatewayRoutes()
 
-	s.listener = listener
-	var h http.Handler = s.Router
+	return nil
+}
 
-	if sdkCfg.API.EnableUnsafeCORS {
-		allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
-		return tmrpcserver.Serve(s.listener, allowAllCORS(h), s.logger, tmCfg)
+// Start starts the API server. Internally, the API server leverages Tendermint's
+// JSON RPC server. Configuration options are provided via config.APIConfig
+// and are delegated to the Tendermint JSON RPC server. The process is
+// non-blocking, so an external signal handler must be used.
+func (s *BaseServer) Start() error {
+	for name, service := range s.services {
+		if err := service.Start(); err != nil {
+			return fmt.Errorf("service %s start failed: %w", name, err)
+		}
 	}
 
-	s.logger.Info("starting API server...")
-	return tmrpcserver.Serve(s.listener, s.Router, s.logger, tmCfg)
+	return nil
 }
 
 // Close closes the API server.
 func (s *BaseServer) Close() error {
-	return s.listener.Close()
+	for name, service := range s.services {
+		if err := service.Stop(); err != nil {
+			return fmt.Errorf("service %s stop failed: %w", name, err)
+		}
+	}
+
+	return nil
 }
 
 func (s *BaseServer) registerGRPCGatewayRoutes() {

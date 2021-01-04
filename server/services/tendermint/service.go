@@ -19,14 +19,15 @@ var _ types.Service = &Service{}
 
 type Service struct {
 	listener net.Listener
-	router   *mux.Router
 	logger   log.Logger
+	router   *mux.Router
 }
 
 // NewService returns a new Tendermint RPC service instance
-func NewService(logger log.Logger) *Service {
+func NewService(logger log.Logger, router *mux.Router) *Service {
 	return &Service{
 		logger: logger.With("service", "tendermint-rpc"),
+		router: router,
 	}
 }
 

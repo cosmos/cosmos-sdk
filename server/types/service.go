@@ -6,7 +6,7 @@ type Server interface {
 	GetService(name string) Service
 	RegisterServices() error
 
-	Start(config.ServerConfig) error
+	Start() error
 	Stop() error
 }
 

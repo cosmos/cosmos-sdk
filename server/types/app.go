@@ -39,13 +39,9 @@ type (
 		ConfigGenerator() config.Generator
 
 		// NewServer creates a custom server for the application.
-		NewServer(clientCtx client.Context, logger log.Logger, cfg config.ServerConfig) api.Server
+		NewServer(clientCtx client.Context, logger log.Logger, cfg config.ServerConfig) Server
 
 		RegisterAPIRoutes(*api.BaseServer, config.APIConfig)
-
-		// RegisterExternalServices is optional function to retegister custom services
-		// to the server that are not defined by the default SDK configuration.
-		RegisterExternalServices(api.Server, config.ServerConfig)
 
 		// RegisterGRPCServer registers gRPC services directly with the gRPC
 		// server.

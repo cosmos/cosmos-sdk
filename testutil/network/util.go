@@ -15,7 +15,6 @@ import (
 	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/server/api"
-	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -60,7 +59,7 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 
 	// We'll need a RPC client if the validator exposes a gRPC or REST endpoint.
-	if val.APIAddress != "" || val.AppConfig.GRPC.Enable {
+	if val.APIAddress != "" || val.AppConfig.GetSDKConfig().GRPC.Enable {
 		val.ClientCtx = val.ClientCtx.
 			WithClient(val.RPCClient)
 
@@ -72,13 +71,16 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 
 	if val.APIAddress != "" {
-		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"))
-		app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
+		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"), val.AppConfig)
+
+		if err := apiSrv.RegisterServices(); err != nil {
+			return err
+		}
 
 		errCh := make(chan error)
 
 		go func() {
-			if err := apiSrv.Start(val.AppConfig); err != nil {
+			if err := apiSrv.Start(); err != nil {
 				errCh <- err
 			}
 		}()
@@ -89,16 +91,7 @@ func startInProcess(cfg Config, val *Validator) error {
 		case <-time.After(5 * time.Second): // assume server started successfully
 		}
 
-		val.api = apiSrv
-	}
-
-	if val.AppConfig.GRPC.Enable {
-		grpcSrv, err := servergrpc.StartGRPCServer(app, val.AppConfig.GRPC.Address)
-		if err != nil {
-			return err
-		}
-
-		val.grpc = grpcSrv
+		val.server = apiSrv
 	}
 
 	return nil

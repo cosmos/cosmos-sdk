@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"net"
 	"net/http"
 	"strings"
 
@@ -30,14 +29,11 @@ var _ types.Server = &BaseServer{}
 type BaseServer struct {
 	services map[string]types.Service
 	config   config.ServerConfig
+	metrics  *telemetry.Metrics
 
 	Router            *mux.Router
 	GRPCGatewayRouter *runtime.ServeMux
 	ClientCtx         client.Context
-
-	logger   log.Logger
-	metrics  *telemetry.Metrics
-	listener net.Listener
 }
 
 // CustomGRPCHeaderMatcher for mapping request headers to
@@ -78,7 +74,6 @@ func New(clientCtx client.Context, logger log.Logger, cfg config.ServerConfig) *
 		config:    cfg,
 		Router:    router,
 		ClientCtx: clientCtx,
-		logger:    logger.With("module", "api-server"),
 		GRPCGatewayRouter: runtime.NewServeMux(
 			// Custom marshaler option is required for gogo proto
 			runtime.WithMarshalerOption(runtime.MIMEWildcard, marshalerOption),
@@ -130,7 +125,7 @@ func (s *BaseServer) RegisterServices() error {
 // non-blocking, so an external signal handler must be used.
 func (s *BaseServer) Start() error {
 	for name, service := range s.services {
-		if err := service.Start(); err != nil {
+		if err := service.Start(s.config); err != nil {
 			return fmt.Errorf("service %s start failed: %w", name, err)
 		}
 	}
@@ -138,8 +133,8 @@ func (s *BaseServer) Start() error {
 	return nil
 }
 
-// Close closes the API server.
-func (s *BaseServer) Close() error {
+// Stop implements the Server interface.
+func (s *BaseServer) Stop() error {
 	for name, service := range s.services {
 		if err := service.Stop(); err != nil {
 			return fmt.Errorf("service %s stop failed: %w", name, err)

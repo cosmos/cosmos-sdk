@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/gogo/protobuf/grpc"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -12,7 +11,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 )
 
@@ -40,12 +38,6 @@ type (
 
 		// NewServer creates a custom server for the application.
 		NewServer(clientCtx client.Context, logger log.Logger, cfg config.ServerConfig) Server
-
-		RegisterAPIRoutes(*api.BaseServer, config.APIConfig)
-
-		// RegisterGRPCServer registers gRPC services directly with the gRPC
-		// server.
-		RegisterGRPCServer(grpc.Server)
 
 		// RegisterTxService registers the gRPC Query service for tx (such as tx
 		// simulation, fetching txs by hash...).

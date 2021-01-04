@@ -33,7 +33,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/server/api"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -60,8 +59,8 @@ func NewAppConstructor(encodingCfg params.EncodingConfig) AppConstructor {
 			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 			encodingCfg,
 			simapp.EmptyAppOptions{},
-			baseapp.SetPruning(storetypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
-			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+			baseapp.SetPruning(storetypes.NewPruningOptionsFromString(val.AppConfig.GetSDKConfig().Pruning)),
+			baseapp.SetMinGasPrices(val.AppConfig.GetSDKConfig().MinGasPrices),
 		)
 	}
 }
@@ -143,7 +142,7 @@ type (
 	// a client can make RPC and API calls and interact with any client command
 	// or handler.
 	Validator struct {
-		AppConfig  *srvconfig.Config
+		AppConfig  srvconfig.ServerConfig
 		ClientCtx  client.Context
 		Ctx        *server.Context
 		Dir        string
@@ -158,7 +157,7 @@ type (
 		RPCClient  tmclient.Client
 
 		tmNode *node.Node
-		api    api.Server
+		server servertypes.Server
 		grpc   *grpc.Server
 	}
 )
@@ -460,8 +459,8 @@ func (n *Network) Cleanup() {
 			_ = v.tmNode.Stop()
 		}
 
-		if v.api != nil {
-			_ = v.api.Close()
+		if v.server != nil {
+			_ = v.server.Stop()
 		}
 
 		if v.grpc != nil {

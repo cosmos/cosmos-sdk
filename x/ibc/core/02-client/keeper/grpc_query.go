@@ -158,7 +158,7 @@ func (q Keeper) ConsensusStates(c context.Context, req *types.QueryConsensusStat
 	store := prefix.NewStore(ctx.KVStore(q.storeKey), host.FullClientKey(req.ClientId, []byte(fmt.Sprintf("%s/", host.KeyConsensusStatePrefix))))
 
 	pageRes, err := query.FilteredPaginate(store, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
-		// skip any metadata stored unded consensus state key
+		// filter any metadata stored under consensus state key
 		if strings.Contains(string(key), "/") {
 			return false, nil
 		}

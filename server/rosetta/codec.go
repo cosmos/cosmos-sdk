@@ -1,4 +1,4 @@
-package client
+package rosetta
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"

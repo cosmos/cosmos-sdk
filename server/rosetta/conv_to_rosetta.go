@@ -1,4 +1,4 @@
-package conversion
+package rosetta
 
 import (
 	"strconv"
@@ -8,12 +8,11 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// RosettaOperationsToSdkMsg converts rosetta operations to sdk.Msg and coins
-func RosettaOperationsToSdkMsg(interfaceRegistry jsonpb.AnyResolver, ops []*types.Operation) ([]sdk.Msg, sdk.Coins, error) {
+// operationsToSdkMsgs converts rosetta operations to sdk.Msg and coins
+func operationsToSdkMsgs(interfaceRegistry jsonpb.AnyResolver, ops []*types.Operation) ([]sdk.Msg, sdk.Coins, error) {
 	var feeAmnt []*types.Amount
 	var newOps []*types.Operation
 	if len(ops)%2 == 0 {
@@ -24,7 +23,7 @@ func RosettaOperationsToSdkMsg(interfaceRegistry jsonpb.AnyResolver, ops []*type
 	if len(ops)%2 == 1 {
 		for _, op := range ops {
 			switch op.Type {
-			case rosetta.OperationFee:
+			case OperationFee:
 				amount := op.Amount
 				feeAmnt = append(feeAmnt, amount)
 			default:
@@ -37,11 +36,11 @@ func RosettaOperationsToSdkMsg(interfaceRegistry jsonpb.AnyResolver, ops []*type
 		return nil, nil, err
 	}
 
-	return msgs, RosettaAmountsToCoins(feeAmnt), nil
+	return msgs, amountsToCoins(feeAmnt), nil
 }
 
-// RosettaAmountsToCoins converts rosetta amounts to sdk coins
-func RosettaAmountsToCoins(amounts []*types.Amount) sdk.Coins {
+// amountsToCoins converts rosetta amounts to sdk coins
+func amountsToCoins(amounts []*types.Amount) sdk.Coins {
 	var feeCoins sdk.Coins
 
 	for _, amount := range amounts {
@@ -65,7 +64,7 @@ func ConvertOpsToMsgs(interfaceRegistry jsonpb.AnyResolver, ops []*types.Operati
 	}
 
 	for opName, operations := range operationsByType {
-		if opName == rosetta.OperationFee {
+		if opName == OperationFee {
 			continue
 		}
 
@@ -74,7 +73,7 @@ func ConvertOpsToMsgs(interfaceRegistry jsonpb.AnyResolver, ops []*types.Operati
 			return nil, err
 		}
 
-		if rosettaMsg, ok := msgType.(rosetta.Msg); ok {
+		if rosettaMsg, ok := msgType.(Msg); ok {
 			m, err := rosettaMsg.FromOperations(operations)
 			if err != nil {
 				return nil, err

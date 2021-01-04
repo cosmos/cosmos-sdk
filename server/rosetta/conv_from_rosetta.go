@@ -1,4 +1,4 @@
-package conversion
+package rosetta
 
 import (
 	"fmt"
@@ -8,20 +8,19 @@ import (
 	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TimeToMilliseconds converts time to milliseconds timestamp
-func TimeToMilliseconds(t time.Time) int64 {
+// timeToMilliseconds converts time to milliseconds timestamp
+func timeToMilliseconds(t time.Time) int64 {
 	return t.UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
 }
 
-// SdkCoinsToRosettaAmounts converts []sdk.Coin to rosetta amounts
+// sdkCoinsToRosettaAmounts converts []sdk.Coin to rosetta amounts
 // availableCoins keeps track of current available coins vs the coins
 // owned by an address. This is required to support historical balances
 // as rosetta expects them to be set to 0, if an address does not own them
-func SdkCoinsToRosettaAmounts(ownedCoins []sdk.Coin, availableCoins sdk.Coins) []*types.Amount {
+func sdkCoinsToRosettaAmounts(ownedCoins []sdk.Coin, availableCoins sdk.Coins) []*types.Amount {
 	amounts := make([]*types.Amount, len(availableCoins))
 	ownedCoinsMap := make(map[string]sdk.Int, len(availableCoins))
 
@@ -51,29 +50,29 @@ func SdkCoinsToRosettaAmounts(ownedCoins []sdk.Coin, availableCoins sdk.Coins) [
 	return amounts
 }
 
-// SdkTxsWithHashToRosettaTxs converts sdk transactions wrapped with their hash to rosetta transactions
-func SdkTxsWithHashToRosettaTxs(txs []*rosetta.SdkTxWithHash) []*types.Transaction {
+// sdkTxsWithHashToRosettaTxs converts sdk transactions wrapped with their hash to rosetta transactions
+func sdkTxsWithHashToRosettaTxs(txs []*sdkTxWithHash) []*types.Transaction {
 	converted := make([]*types.Transaction, len(txs))
 	for i, tx := range txs {
-		converted[i] = SdkTxWithHashToRosettaTx(tx)
+		converted[i] = sdkTxWithHashToOperations(tx)
 	}
 
 	return converted
 }
 
-func SdkTxWithHashToRosettaTx(tx *rosetta.SdkTxWithHash) *types.Transaction {
+func sdkTxWithHashToOperations(tx *sdkTxWithHash) *types.Transaction {
 	hasError := tx.Code != 0
 	return &types.Transaction{
 		TransactionIdentifier: &types.TransactionIdentifier{Hash: tx.HexHash},
-		Operations:            SdkTxToOperations(tx.Tx, true, hasError),
+		Operations:            sdkTxToOperations(tx.Tx, true, hasError),
 		Metadata: map[string]interface{}{
-			rosetta.Log: tx.Log,
+			Log: tx.Log,
 		},
 	}
 }
 
-// SdkTxToOperations converts an sdk.Tx to rosetta operations
-func SdkTxToOperations(tx sdk.Tx, withStatus, hasError bool) []*types.Operation {
+// sdkTxToOperations converts an sdk.Tx to rosetta operations
+func sdkTxToOperations(tx sdk.Tx, withStatus, hasError bool) []*types.Operation {
 	var operations []*types.Operation
 
 	msgOps := sdkMsgsToRosettaOperations(tx.GetMsgs(), withStatus, hasError)
@@ -103,7 +102,7 @@ func rosettaFeeOperationsFromCoins(coins sdk.Coins, account string, withStatus b
 	feeOps := make([]*types.Operation, 0)
 	var status string
 	if withStatus {
-		status = rosetta.StatusSuccess
+		status = StatusSuccess
 	}
 
 	for i, coin := range coins {
@@ -111,7 +110,7 @@ func rosettaFeeOperationsFromCoins(coins sdk.Coins, account string, withStatus b
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: int64(previousOps + i),
 			},
-			Type:   rosetta.OperationFee,
+			Type:   OperationFee,
 			Status: status,
 			Account: &types.AccountIdentifier{
 				Address: account,
@@ -134,7 +133,7 @@ func rosettaFeeOperationsFromCoins(coins sdk.Coins, account string, withStatus b
 func sdkMsgsToRosettaOperations(msgs []sdk.Msg, withStatus bool, hasError bool) []*types.Operation {
 	var operations []*types.Operation
 	for _, msg := range msgs {
-		if rosettaMsg, ok := msg.(rosetta.Msg); ok {
+		if rosettaMsg, ok := msg.(Msg); ok {
 			operations = append(operations, rosettaMsg.ToOperations(withStatus, hasError)...)
 		}
 	}
@@ -179,9 +178,9 @@ func TmPeersToRosettaPeers(peers []tmcoretypes.Peer) []*types.Peer {
 // TMStatusToRosettaSyncStatus converts a tendermint status to rosetta sync status
 func TMStatusToRosettaSyncStatus(status *tmcoretypes.ResultStatus) *types.SyncStatus {
 	// determine sync status
-	var stage = rosetta.StageSynced
+	var stage = StageSynced
 	if status.SyncInfo.CatchingUp {
-		stage = rosetta.StageSyncing
+		stage = StageSyncing
 	}
 
 	return &types.SyncStatus{

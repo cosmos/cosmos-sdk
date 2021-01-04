@@ -103,6 +103,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (crypto/keys) [\#7838](https://github.com/cosmos/cosmos-sdk/pull/7838) Add support for TM secp256k1 keys back to the
     SDK for consensus pubkeys
 * (x/auth/client/cli) [\#8106](https://github.com/cosmos/cosmos-sdk/pull/8106) fixing regression bugs in transaction signing.
+* (x/params) [\#8244](https://github.com/cosmos/cosmos-sdk/pull/8244) fix panic on parameter update with unregistered key
 
 ## [v0.40.0-rc4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc4) - 2020-11-30
 

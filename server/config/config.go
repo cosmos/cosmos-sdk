@@ -110,8 +110,8 @@ type GRPCConfig struct {
 	Address string `mapstructure:"address"`
 }
 
-// GRPCWeb defines configuration for the gRPC-web server.
-type GRPCWeb struct {
+// GRPCWebConfig defines configuration for the gRPC-web server.
+type GRPCWebConfig struct {
 	// Enable defines if the gRPC-web should be enabled.
 	Enable bool `mapstructure:"enable"`
 
@@ -138,7 +138,7 @@ type Config struct {
 	Telemetry telemetry.Config `mapstructure:"telemetry"`
 	API       APIConfig        `mapstructure:"api"`
 	GRPC      GRPCConfig       `mapstructure:"grpc"`
-	GRPCWeb   GRPCWeb          `mapstructure:"grpc-web"`
+	GRPCWeb   GRPCWebConfig    `mapstructure:"grpc-web"`
 	StateSync StateSyncConfig  `mapstructure:"state-sync"`
 }
 
@@ -198,7 +198,7 @@ func DefaultConfig() *Config {
 			Enable:  true,
 			Address: DefaultGRPCAddress,
 		},
-		GRPCWeb: GRPCWeb{
+		GRPCWeb: GRPCWebConfig{
 			Enable:  true,
 			Address: DefaultGRPCWebAddress,
 		},
@@ -256,7 +256,7 @@ func GetConfig(v *viper.Viper) Config {
 			Enable:  v.GetBool("grpc.enable"),
 			Address: v.GetString("grpc.address"),
 		},
-		GRPCWeb: GRPCWeb{
+		GRPCWeb: GRPCWebConfig{
 			Enable:  v.GetBool("grpc-web.enable"),
 			Address: v.GetString("grpc-web.address"),
 		},

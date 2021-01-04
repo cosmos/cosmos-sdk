@@ -159,7 +159,7 @@ func (q Keeper) ConsensusStates(c context.Context, req *types.QueryConsensusStat
 
 	pageRes, err := query.FilteredPaginate(store, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
 		// skip any metadata stored unded consensus state key
-		if len(strings.Split(string(key), "/")) != 1 {
+		if strings.Contains(string(key), "/") {
 			return false, nil
 		}
 

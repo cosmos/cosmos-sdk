@@ -57,7 +57,7 @@ const (
 	flagGRPCEnable     = "grpc.enable"
 	flagGRPCAddress    = "grpc.address"
 	flagGRPCWebEnable  = "grpc-web.enable"
-	flagGRPCWebAddress = "grpc.grpc-web.address"
+	flagGRPCWebAddress = "grpc-web.address"
 )
 
 // State sync-related flags.

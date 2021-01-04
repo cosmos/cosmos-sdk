@@ -166,12 +166,13 @@ func (suite KeeperTestSuite) TestGetAllPacketState() {
 	ack3 := types.NewPacketState(channelA1.PortID, channelA1.ID, 1, []byte("ack"))
 
 	// create channel 0 receipts
-	rec1 := types.NewPacketState(channelA0.PortID, channelA0.ID, 1, []byte(""))
-	rec2 := types.NewPacketState(channelA0.PortID, channelA0.ID, 2, []byte(""))
+	receipt := string([]byte{byte(1)})
+	rec1 := types.NewPacketState(channelA0.PortID, channelA0.ID, 1, []byte(receipt))
+	rec2 := types.NewPacketState(channelA0.PortID, channelA0.ID, 2, []byte(receipt))
 
 	// channel 1 receipts
-	rec3 := types.NewPacketState(channelA1.PortID, channelA1.ID, 1, []byte(""))
-	rec4 := types.NewPacketState(channelA1.PortID, channelA1.ID, 2, []byte(""))
+	rec3 := types.NewPacketState(channelA1.PortID, channelA1.ID, 1, []byte(receipt))
+	rec4 := types.NewPacketState(channelA1.PortID, channelA1.ID, 2, []byte(receipt))
 
 	// channel 0 packet commitments
 	comm1 := types.NewPacketState(channelA0.PortID, channelA0.ID, 1, []byte("hash"))

@@ -157,19 +157,24 @@ func (q Keeper) ConsensusStates(c context.Context, req *types.QueryConsensusStat
 	consensusStates := []types.ConsensusStateWithHeight{}
 	store := prefix.NewStore(ctx.KVStore(q.storeKey), host.FullClientKey(req.ClientId, []byte(fmt.Sprintf("%s/", host.KeyConsensusStatePrefix))))
 
-	pageRes, err := query.Paginate(store, req.Pagination, func(key, value []byte) error {
+	pageRes, err := query.FilteredPaginate(store, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
+		// skip any metadata stored unded consensus state key
+		if len(strings.Split(string(key), "/")) != 1 {
+			return false, nil
+		}
+
 		height, err := types.ParseHeight(string(key))
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		consensusState, err := q.UnmarshalConsensusState(value)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		consensusStates = append(consensusStates, types.NewConsensusStateWithHeight(height, consensusState))
-		return nil
+		return true, nil
 	})
 
 	if err != nil {

@@ -2,10 +2,12 @@ package rosetta
 
 import (
 	"fmt"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // tmResultTxsToSdkTxsWithHash converts tendermint result txs to cosmos sdk.Tx

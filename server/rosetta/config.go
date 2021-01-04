@@ -82,7 +82,7 @@ func (c *Config) NetworkIdentifier() *types.NetworkIdentifier {
 // its defaults in case they were not provided
 func (c *Config) validate() error {
 	if (c.Codec == nil) != (c.InterfaceRegistry == nil) {
-		return fmt.Errorf("Codec and interface registry must be both different from nil or nil")
+		return fmt.Errorf("codec and interface registry must be both different from nil or nil")
 	}
 
 	if c.Addr == "" {

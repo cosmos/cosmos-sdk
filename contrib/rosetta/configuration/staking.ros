@@ -66,7 +66,7 @@ staking(3){
     recipient_amount = random_number({"minimum": "1", "maximum": {{available_amount}}});
     print_message({"recipient_amount":{{recipient_amount}}});
     // Find recipient and construct operations
-    recipient = sender
+    recipient = sender;
     recipient.account_identifier.sub_account = {"address":"bonded_balance",
     "metadata": {
         "validator" : "cosmosvaloper1hdmjfmqmf8ck4pv4evu0s3up0ucm0yjj9atjj2"
@@ -96,7 +96,7 @@ staking(3){
       {
         "operation_identifier":{"index":2},
         "type":"cosmos.staking.v1beta1.MsgDelegate",
-        "account": {{recipient}},
+        "account": {{recipient.account_identifier}},
         "amount":{
           "value":{{recipient_amount}},
           "currency":{{currency}}

@@ -111,7 +111,7 @@ func (c *Client) ConstructionPayload(ctx context.Context, request *types.Constru
 
 	metadata, err := getMetadataFromPayloadReq(request)
 	if err != nil {
-		return nil, crgerrs.WrapError(crgerrs.ErrInvalidRequest, err.Error())
+		return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, err.Error())
 	}
 
 	txFactory := tx.Factory{}.WithAccountNumber(metadata.AccountNumber).WithChainID(metadata.ChainID).
@@ -173,19 +173,19 @@ func getAccountIdentifiersByMsgs(msgs []sdk.Msg) []*types.AccountIdentifier {
 	return accIdentifiers
 }
 
-func (c *Client) PreprocessOperationsToOptions(ctx context.Context, req *types.ConstructionPreprocessRequest) (options map[string]interface{}, err error) {
+func (c *Client) PreprocessOperationsToOptions(_ context.Context, req *types.ConstructionPreprocessRequest) (options map[string]interface{}, err error) {
 	operations := req.Operations
 	if len(operations) > 3 {
-		return nil, crgerrs.ErrInvalidRequest
+		return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, "invalid number of operations")
 	}
 
 	msgs, err := ConvertOpsToMsgs(c.ir, operations)
 	if err != nil {
-		return nil, crgerrs.WrapError(crgerrs.ErrInvalidAddress, err.Error())
+		return nil, crgerrs.WrapError(crgerrs.ErrInvalidOperation, err.Error())
 	}
 
 	if len(msgs) < 1 || len(msgs[0].GetSigners()) < 1 {
-		return nil, crgerrs.WrapError(crgerrs.ErrInterpreting, "invalid msgs from operations")
+		return nil, crgerrs.WrapError(crgerrs.ErrInvalidOperation, "invalid msgs from operations")
 	}
 
 	memo, ok := req.Metadata["memo"]

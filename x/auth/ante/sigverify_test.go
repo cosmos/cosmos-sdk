@@ -67,7 +67,7 @@ func (suite *AnteTestSuite) TestSetPubKey() {
 func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 	params := types.DefaultParams()
 	msg := []byte{1, 2, 3, 4}
-	_, cdc := simapp.MakeTestCodecs()
+	cdc := simapp.MakeTestEncodingConfig().Amino
 
 	pkSet1, sigSet1 := generatePubKeysAndSignatures(5, msg, false)
 	multisigKey1 := kmultisig.NewLegacyAminoPubKey(2, pkSet1)

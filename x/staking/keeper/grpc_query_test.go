@@ -732,10 +732,9 @@ func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers 
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 5, sdk.TokensFromConsensusPower(300))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
 	pks := simapp.CreateTestPubKeys(5)
-
-	appCodec, _ := simapp.MakeTestCodecs()
+	cdc := simapp.MakeTestEncodingConfig().Marshaler
 	app.StakingKeeper = keeper.NewKeeper(
-		appCodec,
+		cdc,
 		app.GetKey(types.StoreKey),
 		app.AccountKeeper,
 		app.BankKeeper,

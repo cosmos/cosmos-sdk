@@ -22,11 +22,10 @@ var (
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc, _ := simapp.MakeTestCodecs()
+	cdc := simapp.MakeTestEncodingConfig().Marshaler
 	dec := simulation.NewDecodeStore(cdc)
 
 	endTime := time.Now().UTC()
-
 	content := types.ContentFromProposalType("test", "test", types.ProposalTypeText)
 	proposal, err := types.NewProposal(content, 1, endTime, endTime.Add(24*time.Hour))
 	require.NoError(t, err)

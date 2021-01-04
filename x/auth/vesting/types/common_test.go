@@ -5,6 +5,6 @@ import (
 )
 
 var (
-	app         = simapp.Setup(false)
-	appCodec, _ = simapp.MakeTestCodecs()
+	app      = simapp.Setup(false)
+	appCodec = simapp.MakeTestEncodingConfig().Marshaler
 )

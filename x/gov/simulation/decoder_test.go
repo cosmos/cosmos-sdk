@@ -22,7 +22,7 @@ var (
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc, _ := simapp.MakeCodecs()
+	cdc, _ := simapp.MakeTestCodecs()
 	dec := simulation.NewDecodeStore(cdc)
 
 	endTime := time.Now().UTC()

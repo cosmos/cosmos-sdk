@@ -25,7 +25,7 @@ var (
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc, _ := simapp.MakeCodecs()
+	cdc, _ := simapp.MakeTestCodecs()
 	dec := simulation.NewDecodeStore(cdc)
 
 	info := types.NewValidatorSigningInfo(consAddr1, 0, 1, time.Now().UTC(), false, 0)

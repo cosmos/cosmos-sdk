@@ -180,7 +180,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
-		simapp.MakeTestEncodingConfig(), // Ideally, we would reuse the one created by NewRootCmd.
+		simapp.MakeTestEncodingConfig(), // TODO: reuse the one created by NewRootCmd.
 		appOpts,
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),

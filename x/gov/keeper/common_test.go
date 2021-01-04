@@ -22,7 +22,7 @@ func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers 
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
 	pks := simapp.CreateTestPubKeys(5)
 
-	appCodec, _ := simapp.MakeCodecs()
+	appCodec, _ := simapp.MakeTestCodecs()
 	app.StakingKeeper = stakingkeeper.NewKeeper(
 		appCodec,
 		app.GetKey(stakingtypes.StoreKey),

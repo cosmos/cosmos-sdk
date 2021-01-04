@@ -14,7 +14,7 @@ import (
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc, _ := simapp.MakeCodecs()
+	cdc, _ := simapp.MakeTestCodecs()
 	dec := simulation.NewDecodeStore(cdc)
 
 	minter := types.NewMinter(sdk.OneDec(), sdk.NewDec(15))

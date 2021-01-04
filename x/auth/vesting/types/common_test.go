@@ -6,5 +6,5 @@ import (
 
 var (
 	app         = simapp.Setup(false)
-	appCodec, _ = simapp.MakeCodecs()
+	appCodec, _ = simapp.MakeTestCodecs()
 )

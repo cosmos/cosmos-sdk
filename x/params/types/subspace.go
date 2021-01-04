@@ -184,15 +184,15 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, value interface{}) {
 }
 
 // Update stores an updated raw value for a given parameter key assuming the
-// parameter type has been registered. It will panic if the parameter type has
-// not been registered or if the value cannot be encoded. An error is returned
+// parameter type has been registered. It will panic if the value cannot be
+// encoded. An error is returned if the parameter type has not been registered or
 // if the raw value is not compatible with the registered type for the parameter
 // key or if the new value is invalid as determined by the registered type's
 // validation function.
 func (s Subspace) Update(ctx sdk.Context, key, value []byte) error {
 	attr, ok := s.table.m[string(key)]
 	if !ok {
-		panic(fmt.Sprintf("parameter %s not registered", string(key)))
+		return fmt.Errorf("parameter %s not registered", string(key))
 	}
 
 	ty := attr.ty

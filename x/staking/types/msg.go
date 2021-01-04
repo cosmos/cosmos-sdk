@@ -259,7 +259,7 @@ func (msg *MsgDelegate) ToOperations(withStatus bool, hasError bool) []*rosettat
 	delAddr := msg.DelegatorAddress
 	valAddr := msg.ValidatorAddress
 	coin := msg.Amount
-	delOp := func(account, amount string, index int) *rosettatypes.Operation {
+	delOp := func(account *rosettatypes.AccountIdentifier, amount string, index int) *rosettatypes.Operation {
 		var status string
 		if withStatus {
 			status = "Success"
@@ -271,11 +271,9 @@ func (msg *MsgDelegate) ToOperations(withStatus bool, hasError bool) []*rosettat
 			OperationIdentifier: &rosettatypes.OperationIdentifier{
 				Index: int64(index),
 			},
-			Type:   proto.MessageName(msg),
-			Status: status,
-			Account: &rosettatypes.AccountIdentifier{
-				Address: account,
-			},
+			Type:    proto.MessageName(msg),
+			Status:  status,
+			Account: account,
 			Amount: &rosettatypes.Amount{
 				Value: amount,
 				Currency: &rosettatypes.Currency{
@@ -284,9 +282,21 @@ func (msg *MsgDelegate) ToOperations(withStatus bool, hasError bool) []*rosettat
 			},
 		}
 	}
+	delAcc := &rosettatypes.AccountIdentifier{
+		Address: delAddr,
+	}
+	valAcc := &rosettatypes.AccountIdentifier{
+		Address: delAddr,
+		SubAccount: &rosettatypes.SubAccountIdentifier{
+			Address: "bonded_account",
+			Metadata: map[string]interface{}{
+				"validator": valAddr,
+			},
+		},
+	}
 	operations = append(operations,
-		delOp(delAddr, "-"+coin.Amount.String(), 0),
-		delOp(valAddr, coin.Amount.String(), 1),
+		delOp(delAcc, "-"+coin.Amount.String(), 0),
+		delOp(valAcc, coin.Amount.String(), 1),
 	)
 	return operations
 }
@@ -308,7 +318,11 @@ func (msg MsgDelegate) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg, e
 			continue
 		}
 
-		valAddr, err = sdk.ValAddressFromBech32(op.Account.Address)
+		valAddrStr, ok := op.Account.SubAccount.Metadata["validator"].(string)
+		if !ok {
+			return nil, fmt.Errorf("invalid validator address in subaccount")
+		}
+		valAddr, err = sdk.ValAddressFromBech32(valAddrStr)
 		if err != nil {
 			return nil, err
 		}

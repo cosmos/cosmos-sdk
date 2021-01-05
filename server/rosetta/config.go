@@ -1,4 +1,4 @@
-package config
+package rosetta
 
 import (
 	"fmt"
@@ -7,13 +7,10 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/spf13/pflag"
-	crg "github.com/tendermint/cosmos-rosetta-gateway/rosetta"
+	crg "github.com/tendermint/cosmos-rosetta-gateway/server"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
-	"github.com/cosmos/cosmos-sdk/server/rosetta/cosmos/client"
-	"github.com/cosmos/cosmos-sdk/server/rosetta/services"
 )
 
 // configuration defaults constants
@@ -45,41 +42,6 @@ const (
 	FlagOffline            = "offline"
 )
 
-// RosettaFromConfig builds the rosetta servicer full implementation from configurations
-func RosettaFromConfig(conf *Config) (crg.Adapter, rosetta.NodeClient, error) {
-	if conf.Offline {
-		return services.NewOffline(conf.NetworkIdentifier()), nil, nil
-	}
-	var dataAPIOpts []client.OptionFunc
-	if conf.codec != nil && conf.ir != nil {
-		dataAPIOpts = append(dataAPIOpts, client.WithCodec(conf.ir, conf.codec))
-	}
-	dataAPIClient, err := client.NewSingle(conf.GRPCEndpoint, conf.TendermintRPC, dataAPIOpts...)
-	if err != nil {
-		return nil, nil, fmt.Errorf("data api client init failure: %w", err)
-	}
-	sn, err := services.NewSingleNetwork(dataAPIClient, &types.NetworkIdentifier{
-		Blockchain: conf.Blockchain,
-		Network:    conf.Network,
-	})
-	if err != nil {
-		return nil, nil, fmt.Errorf("rosetta network initialization failure: %w", err)
-	}
-	return sn, dataAPIClient, nil
-}
-
-// RetryRosettaFromConfig tries to initialize rosetta retrying
-func RetryRosettaFromConfig(conf *Config) (rosetta crg.Adapter, client rosetta.NodeClient, err error) {
-	for i := 0; i < conf.Retries; i++ {
-		rosetta, client, err = RosettaFromConfig(conf)
-		if err == nil {
-			return
-		}
-		time.Sleep(5 * time.Second)
-	}
-	return
-}
-
 // Config defines the configuration of the rosetta server
 type Config struct {
 	// Blockchain defines the blockchain name
@@ -102,10 +64,10 @@ type Config struct {
 	Retries int
 	// Offline defines if the server must be run in offline mode
 	Offline bool
-	// codec overrides the default data and construction api client codecs
-	codec *codec.ProtoCodec
-	// ir overrides the default data and construction api interface registry
-	ir codectypes.InterfaceRegistry
+	// Codec overrides the default data and construction api client codecs
+	Codec *codec.ProtoCodec
+	// InterfaceRegistry overrides the default data and construction api interface registry
+	InterfaceRegistry codectypes.InterfaceRegistry
 }
 
 // NetworkIdentifier returns the network identifier given the configuration
@@ -116,10 +78,10 @@ func (c *Config) NetworkIdentifier() *types.NetworkIdentifier {
 	}
 }
 
-// Validate validates a configuration and sets
+// validate validates a configuration and sets
 // its defaults in case they were not provided
-func (c *Config) Validate() error {
-	if (c.codec == nil) != (c.ir == nil) {
+func (c *Config) validate() error {
+	if (c.Codec == nil) != (c.InterfaceRegistry == nil) {
 		return fmt.Errorf("codec and interface registry must be both different from nil or nil")
 	}
 
@@ -137,7 +99,7 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("network not provided")
 	}
 	if c.Offline {
-		return nil
+		return fmt.Errorf("offline mode is not supported for stargate implementation due to how sigv2 works")
 	}
 
 	// these are optional but it must be online
@@ -154,10 +116,10 @@ func (c *Config) Validate() error {
 	return nil
 }
 
-// WithCodec extends the configuration with a predefined codec
+// WithCodec extends the configuration with a predefined Codec
 func (c *Config) WithCodec(ir codectypes.InterfaceRegistry, cdc *codec.ProtoCodec) {
-	c.codec = cdc
-	c.ir = ir
+	c.Codec = cdc
+	c.InterfaceRegistry = ir
 }
 
 // FromFlags gets the configuration from flags
@@ -199,11 +161,34 @@ func FromFlags(flags *pflag.FlagSet) (*Config, error) {
 		Retries:       retries,
 		Offline:       offline,
 	}
-	err = conf.Validate()
+	err = conf.validate()
 	if err != nil {
 		return nil, err
 	}
 	return conf, nil
+}
+
+func ServerFromConfig(conf *Config) (crg.Server, error) {
+	err := conf.validate()
+	if err != nil {
+		return crg.Server{}, err
+	}
+	client, err := NewClient(conf)
+	if err != nil {
+		return crg.Server{}, err
+	}
+	return crg.NewServer(
+		crg.Settings{
+			Network: &types.NetworkIdentifier{
+				Blockchain: conf.Blockchain,
+				Network:    conf.Network,
+			},
+			Client:    client,
+			Listen:    conf.Addr,
+			Offline:   conf.Offline,
+			Retries:   conf.Retries,
+			RetryWait: 15 * time.Second,
+		})
 }
 
 // SetFlags sets the configuration flags to the given flagset

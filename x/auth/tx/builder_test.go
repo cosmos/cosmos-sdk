@@ -24,8 +24,7 @@ func TestTxBuilder(t *testing.T) {
 	memo := "sometestmemo"
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	accSeq := uint64(2) // Arbitrary account sequence
-
-	any, err := PubKeyToAny(pubkey)
+	any, err := codectypes.NewAnyWithValue(pubkey)
 	require.NoError(t, err)
 
 	var signerInfo []*txtypes.SignerInfo

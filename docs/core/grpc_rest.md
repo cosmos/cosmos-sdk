@@ -37,7 +37,7 @@ The `grpc.Server` is a concrete gRPC server, which spawns and serves any gRPC re
 
 Once the gRPC server is started, you can send requests to it using a gRPC client. Some examples are given in our [Interact with the Node](../run-node/interact-node.md#using-grpc) tutorial.
 
-An overview of all available gRPC endpoints shipped with the Cosmos SDK is [coming soon](https://github.com/cosmos/cosmos-sdk/issues/7786).
+An overview of all available gRPC endpoints shipped with the Cosmos SDK is [Protobuf documention](./proto-docs.md).
 
 ## REST Server
 

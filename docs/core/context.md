@@ -4,7 +4,7 @@ order: 3
 
 # Context
 
-The `context` is a data structure intended to be passed from function to function that carries information about the current state of the application. It holds a cached copy of the entire state as well as useful objects and information like `gasMeter`, `block height`, `consensus parameters` and more. {synopsis}
+The `context` is a data structure intended to be passed from function to function that carries information about the current state of the application. It provides an access to a branched storage (a safe branch of the entire state) as well as useful objects and information like `gasMeter`, `block height`, `consensus parameters` and more. {synopsis}
 
 ## Pre-requisites Readings
 
@@ -54,21 +54,23 @@ childCtx = parentCtx.WithBlockHeader(header)
 The [Golang Context Package](https://golang.org/pkg/context) documentation instructs developers to
 explicitly pass a context `ctx` as the first argument of a process.
 
-## Cache Wrapping
+## Store branching
 
-The `Context` contains a `MultiStore`, which allows for cache-wrapping functionality: a `CacheMultiStore`
-where each `KVStore` is is wrapped with an ephemeral cache. Processes are free to write changes to
-the `CacheMultiStore`, then write the changes back to the original state or disregard them if something
+The `Context` contains a `MultiStore`, which allows for branchinig and caching functionality using `CacheMultiStore` 
+(queries in `CacheMultiStore` are cached to avoid future round trips). 
+Each `KVStore` is branched in a safe and isolated ephemeral storage. Processes are free to write changes to
+the `CacheMultiStore`. If a state-transition sequence is performed without issue, the store branch can 
+be committed to the underlying store at the end of the sequence or disregard them if something
 goes wrong. The pattern of usage for a Context is as follows:
 
 1. A process receives a Context `ctx` from its parent process, which provides information needed to
    perform the process.
-2. The `ctx.ms` is **cache wrapped**, i.e. a cached copy of the [multistore](./store.md#multistore) is made so that the process can make changes to the state as it executes, without changing the original`ctx.ms`. This is useful to protect the underlying multistore in case the changes need to be reverted at some point in the execution.
+2. The `ctx.ms` is a **branched store**, i.e. a branch of the [multistore](./store.md#multistore) is made so that the process can make changes to the state as it executes, without changing the original`ctx.ms`. This is useful to protect the underlying multistore in case the changes need to be reverted at some point in the execution.
 3. The process may read and write from `ctx` as it is executing. It may call a subprocess and pass
    `ctx` to it as needed.
 4. When a subprocess returns, it checks if the result is a success or failure. If a failure, nothing
-   needs to be done - the cache wrapped `ctx` is simply discarded. If successful, the changes made to
-   the cache-wrapped `MultiStore` can be committed to the original `ctx.ms` via `Write()`.
+   needs to be done - the branch `ctx` is simply discarded. If successful, the changes made to
+   the `CacheMultiStore` can be committed to the original `ctx.ms` via `Write()`.
 
 For example, here is a snippet from the [`runTx`](./baseapp.md#runtx-and-runmsgs) function in
 [`baseapp`](./baseapp.md):
@@ -90,12 +92,12 @@ if result.IsOK() {
 Here is the process:
 
 1. Prior to calling `runMsgs` on the message(s) in the transaction, it uses `app.cacheTxContext()`
-   to cache-wrap the context and multistore.
-2. The cache-wrapped context, `runMsgCtx`, is used in `runMsgs` to return a result.
+   to branch and cache the context and multistore.
+2. `runMsgCtx` - the context with branched store, is used in `runMsgs` to return a result.
 3. If the process is running in [`checkTxMode`](./baseapp.md#checktx), there is no need to write the
    changes - the result is returned immediately.
 4. If the process is running in [`deliverTxMode`](./baseapp.md#delivertx) and the result indicates
-   a successful run over all the messages, the cached multistore is written back to the original.
+   a successful run over all the messages, the branched multistore is written back to the original.
 
 ## Next {hide}
 

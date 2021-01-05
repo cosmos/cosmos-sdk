@@ -150,7 +150,7 @@ specify a timeout height or timeout timestamp after which a packet can no longer
 If the timeout does get reached, then a proof of packet timeout can be submitted to the original chain which can then perform 
 application-specific logic to timeout the packet, perhaps by rolling back the packet send changes (refunding senders any locked funds, etc).
 
-In ORDERED channels, a timeout of a single packet in the channel will cause the channel to close. This is because if packet sequence `n` times out, 
+In ORDERED channels, a timeout of a single packet in the channel will cause the channel to close. If packet sequence `n` times out, 
 then no packet at sequence `k > n` can be successfully received without violating the contract of ORDERED channels that packets are processed in the order that they are sent. Since ORDERED channels enforce this invariant, a proof that sequence `n` hasn't been received on the destination chain by packet `n`'s specified timeout is sufficient to timeout packet `n` and close the channel.
 
 In the UNORDERED case, packets may be received in any order. Thus, IBC will write a packet receipt for each sequence it has received in the UNORDERED channel. This receipt contains no information, it is simply a marker intended to signify that the UNORDERED channel has received a packet at the specified sequence. To timeout a packet on an UNORDERED channel, one must provide a proof that a packet receipt does not exist for the packet's sequence by the specified timeout. Of course, timing out a packet on an UNORDERED channel will simply trigger the application specific timeout logic for that packet, and will not close the channel.

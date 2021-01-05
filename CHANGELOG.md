@@ -45,7 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 - (x/distribution) [\#8240](https://github.com/cosmos/cosmos-sdk/pull/8240) fix setting withdraw address in x/distribution
-- (x/gentx) [\#8183](https://github.com/cosmos/cosmos-sdk/pull/8183) change gentx cmd amoun to arg from flag
+- (x/gentx) [\#8183](https://github.com/cosmos/cosmos-sdk/pull/8183) change gentx cmd amount to arg from flag
 - (x/ibc) [\#8165](https://github.com/cosmos/cosmos-sdk/pull/8165) Support IBC upgrade on same revision
 - (x/ibc) [\#8169](https://github.com/cosmos/cosmos-sdk/pull/8169) fix IBC software upgrade proposals from automatically failing, add unpackinterfaces function
 - (x/ibc) [\#8170](https://github.com/cosmos/cosmos-sdk/pull/8170) fix ClientUpdateProposal unpacker

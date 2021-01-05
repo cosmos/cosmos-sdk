@@ -135,6 +135,19 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 
 			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(key.GetAddress())
 
+			// The following line comes from a discrepancy between the `gentx`
+			// and `create-validator` commands:
+			// - `gentx` expects amount as an arg,
+			// - `create-validator` expects amount as a required flag.
+			// ref: https://github.com/cosmos/cosmos-sdk/issues/8251
+			// Since gentx doesn't set the amount flag (which `create-validator`
+			// reads from), we copy the amount arg into the valCfg directly.
+			//
+			// Ideally, the `create-validator` command should take a validator
+			// config file instead of so many flags.
+			// ref: https://github.com/cosmos/cosmos-sdk/issues/8177
+			createValCfg.Amount = amount
+
 			// create a 'create-validator' message
 			txBldr, msg, err := cli.BuildCreateValidatorMsg(clientCtx, createValCfg, txFactory, true)
 			if err != nil {

@@ -108,7 +108,7 @@ software and restore to their latest snapshot before restarting their nodes.
    cp new_v040_genesis.json ~/.simd/config/genesis.json
    ```
 
-1) Update `~/.simd/config/app.toml` to include latest app configurations. [Here is the link](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc4/server/config/toml.go#L11-L164) to the default template for v0.40's `app.toml`. Make sure to
+1) Update `~/.simd/config/app.toml` to include latest app configurations. [Here is the link](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/server/config/toml.go#L11-L164) to the default template for v0.40's `app.toml`. Make sure to
    update your custom configurations as per your validator design, e.g. `gas_price`.
 
    Compared to v0.39, some notable updates to `app.toml` are:

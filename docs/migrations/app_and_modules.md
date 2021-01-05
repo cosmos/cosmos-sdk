@@ -15,7 +15,7 @@ Make sure to have the following dependencies before updating your app to v0.40:
 - Docker
 - Node.js v12.0+ (optional, for generating Swagger docs)
 
-Your own app can use a similar Makefile to the [Cosmos SDK's one](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/Makefile). More specifically, below are some Makefile commands that might be useful for your own app, related to the introduction of Protocol Buffers:
+Your own app can use a similar Makefile to the [Cosmos SDK's one](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/Makefile). More specifically, below are some Makefile commands that might be useful for your own app, related to the introduction of Protocol Buffers:
 
 - `proto-update-deps` - To download/update the required thirdparty `proto` definitions.
 - `proto-gen` - To auto generate proto code.
@@ -50,7 +50,7 @@ An example of type that is stored in state is [x/auth's](../../x/auth/spec/READM
 - }
 
 // And it should be converted to a Protobuf message in v0.40.
-+ // https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/proto/cosmos/auth/v1beta1/auth.proto#L13-L25
++ // https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/proto/cosmos/auth/v1beta1/auth.proto#L13-L25
 + message BaseAccount {
 +  string              address = 1;
 +   google.protobuf.Any pub_key = 2
@@ -67,7 +67,7 @@ You might have noticed that the `PubKey` interface in v0.39's `BaseAccount` has 
 
 Once all your Protobuf messages are defined, use the `make proto-gen` command defined in the [tooling section](#tooling) to generate Go structs. These structs will be generated into `*.pb.go` files. As a quick example, here is the generated Go struct for the Protobuf BaseAccount we defined above:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/x/auth/types/auth.pb.go#L28-L36
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/x/auth/types/auth.pb.go#L28-L36
 
 There might be some back and forth removing old Go structs/interfaces and defining new Protobuf messages before your Go app compiles and your tests pass.
 
@@ -79,7 +79,7 @@ Cosmos SDK v0.40 uses Protobuf services to define state transitions (`Msg`s) and
 
 For migrating `Msg`s, the handler pattern (inside the `handler.go` file) is deprecated. You may still keep it if you wish to support `Msg`s defined in older versions of the SDK. However, it is strongly recommended to add a `Msg` service to your Protobuf files, and each old `Msg` should be converted into a service method. Taking [x/bank's](../../x/bank/spec/README.md) `MsgSend` as an example, we have a corresponding `cosmos.bank.v1beta1.Msg/Send` service method:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/proto/cosmos/bank/v1beta1/tx.proto#L10-L31
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/proto/cosmos/bank/v1beta1/tx.proto#L10-L31
 
 A state transition is therefore modelized as a Protobuf service method, with a method request, and an (optionally empty) method response.
 
@@ -93,13 +93,13 @@ For migrating state queries, the querier pattern (inside the `querier.go` file) 
 
 Each query endpoint is now defined as a separate service method in the `Query` service. Still taking `x/bank` as an example, here are the queries to fetch an account's balances:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/proto/cosmos/bank/v1beta1/query.proto#L12-L23
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/proto/cosmos/bank/v1beta1/query.proto#L12-L23
 
 Each query has its own `Request` and `Response` types. Please also note the `google.api.http` option (coming from [`grpc-gateway`](https://github.com/grpc-ecosystem/grpc-gateway)) on each service method. `grpc-gateway` is a tool that exposes `Query` service methods as REST endpoints. Adding this annotation will expose these endpoints not only as gRPC endpoints, but also as REST endpoints. An overview of gRPC versus REST can be found [here](../core/grpc_rest.md).
 
 After defining the `Query` Protobuf service, run the `make proto-gen` command to generate corresponding interfaces. The interface that needs to be implemented by your module is `QueryServer`. This interface can be implemented on the [keeper](../building-modules/keeper.md) directly, or on a struct (e.g. called `queryServer`) that references the module's keeper. The logic of the implementation, namely the logic that fetches data from the module's store and performs unmarshalling, can be deferred to the keeper.
 
-Cosmos SDK v0.40 also comes with an efficient pagination, it now uses `Prefix` stores to make queries. There are 2 helpers for pagination, [`Paginate`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/types/query/pagination.go#L40-L42), [`FilteredPaginate`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/types/query/filtered_pagination.go#L9-L17).
+Cosmos SDK v0.40 also comes with an efficient pagination, it now uses `Prefix` stores to make queries. There are 2 helpers for pagination, [`Paginate`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/types/query/pagination.go#L40-L42), [`FilteredPaginate`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/types/query/filtered_pagination.go#L9-L17).
 
 For more information, please check our [`Query` service guide](../building-modules/query-services.md).
 
@@ -107,11 +107,11 @@ For more information, please check our [`Query` service guide](../building-modul
 
 The `RegisterServices` method is newly added and registers a module's `Msg` service and `Query` service. It should be implemented on all modules, using a `Configurator` object:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/x/bank/module.go#L99-L103
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/x/bank/module.go#L99-L103
 
 If you wish to expose your `Query` endpoints as REST endpoints (as proposed in the [`Query` Services paragraph](#query-services)), make sure to also implement the `RegisterGRPCGatewayRoutes` method:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/x/bank/module.go#L69-L72
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/x/bank/module.go#L69-L72
 
 ### Codec
 
@@ -119,7 +119,7 @@ For registering module-specific types into the Amino codec, the `RegisterCodec(c
 
 Moreover, a new `RegisterInterfaces` method has been added to the `AppModule` interface that all modules implement. This method should register the interfaces that Protobuf messages implement, as well as the service `Msg`s used in the module. An example of implementation for x/bank is given below:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/x/bank/types/codec.go#L21-L34
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/x/bank/types/codec.go#L21-L34
 
 ### Keeper
 
@@ -129,7 +129,7 @@ This can be useful if you wish to update to SDK v0.40 without doing a chain upgr
 
 Related to the keepers, each module's `AppModuleBasic` now also includes this `codec.Marshaler`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/x/bank/module.go#L35-L38
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/x/bank/module.go#L35-L38
 
 ### CLI
 
@@ -163,7 +163,7 @@ Moreover, new CLI commands don't take any codec as input anymore. Instead, the `
 
 Finally, once your [`Query` services](#query-service) are wired up, the CLI commands should preferably use gRPC to communicate with the node. The gist is to create a `Query` or `Msg` client using the command's `clientCtx`, and perform the request using Protobuf's generated code. An example for querying x/bank balances is given here:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/x/bank/client/cli/query.go#L66-L94
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/x/bank/client/cli/query.go#L66-L94
 
 ### Miscelleanous
 
@@ -186,7 +186,7 @@ For a reference implementation used for demo purposes, you can refer to the SDK'
 
 ### Creating Codecs
 
-With the introduction of Protobuf, each app needs to define the encoding library (Amino or Protobuf) to be used throughout the app. There is a central struct, [`EncodingConfig`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/simapp/params/encoding.go#L9-L11), which defines all information necessary for codecs. In your app, an example `EncodingConfig` with Protobuf as default codec might look like:
+With the introduction of Protobuf, each app needs to define the encoding library (Amino or Protobuf) to be used throughout the app. There is a central struct, [`EncodingConfig`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/simapp/params/encoding.go#L9-L11), which defines all information necessary for codecs. In your app, an example `EncodingConfig` with Protobuf as default codec might look like:
 
 ```go
 // MakeEncodingConfig creates an EncodingConfig
@@ -213,7 +213,7 @@ func MakeEncodingConfig() params.EncodingConfig {
 
 These codecs are used to populate the following fields on your app (again, we are using SimApp for demo purposes):
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/simapp/app.go#L146-L153
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/simapp/app.go#L146-L153
 
 As explained in the [modules migration section](#updating-modules), some functions and structs in modules require an additional `codec.Marshaler` argument. You should pass `app.appCodec` in these cases, and this will be the default codec used throughout the app.
 
@@ -221,18 +221,18 @@ As explained in the [modules migration section](#updating-modules), some functio
 
 We described in the [modules migration section](#updating-modules) `Query` and `Msg` services defined in each module. The SDK also exposes two more module-agnostic services:
 
-- the [Tx Service](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/proto/cosmos/tx/v1beta1/service.proto), to perform operations on transactions,
-- the [Tendermint service](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/proto/cosmos/base/tendermint/v1beta1/query.proto), to have a more idiomatic interface to the [Tendermint RPC](https://docs.tendermint.com/master/rpc/).
+- the [Tx Service](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/proto/cosmos/tx/v1beta1/service.proto), to perform operations on transactions,
+- the [Tendermint service](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/proto/cosmos/base/tendermint/v1beta1/query.proto), to have a more idiomatic interface to the [Tendermint RPC](https://docs.tendermint.com/master/rpc/).
 
 These services are optional, if you wish to use them, or if you wish to add more module-agnostic Protobuf services into your app, then they need to be added inside `app.go`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/simapp/app.go#L577-L585
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/simapp/app.go#L577-L585
 
 ### Registering `grpc-gateway` Routes
 
 The exising `RegisterAPIRoutes` method on the `app` only registers [Legacy API routes](../core/grpc_rest.md#legacy-rest-api-routes). If you are using `grpc-gateway` REST endpoints as described [above](#query-service), then these endpoints need to be wired up to a HTTP server:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc5/simapp/app.go#L555-L575
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/simapp/app.go#L555-L575
 
 ## Next {hide}
 

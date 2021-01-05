@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
@@ -33,8 +34,8 @@ func NewCreateClientCmd() *cobra.Command {
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 			// attempt to unmarshal client state argument
-			var clientState exported.ClientState
-			if err := cdc.UnmarshalJSON([]byte(args[0]), clientState); err != nil {
+			clientStateAny := &codectypes.Any{}
+			if err := cdc.UnmarshalJSON([]byte(args[0]), clientStateAny); err != nil {
 
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[0])
@@ -42,14 +43,14 @@ func NewCreateClientCmd() *cobra.Command {
 					return errors.Wrap(err, "neither JSON input nor path to .json file for client state were provided")
 				}
 
-				if err := cdc.UnmarshalJSON(contents, clientState); err != nil {
+				if err := cdc.UnmarshalJSON(contents, clientStateAny); err != nil {
 					return errors.Wrap(err, "error unmarshalling client state file")
 				}
 			}
 
 			// attempt to unmarshal consensus state argument
-			var consensusState exported.ConsensusState
-			if err := cdc.UnmarshalJSON([]byte(args[1]), consensusState); err != nil {
+			consStateAny := &codectypes.Any{}
+			if err := cdc.UnmarshalJSON([]byte(args[1]), consStateAny); err != nil {
 
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
@@ -57,14 +58,15 @@ func NewCreateClientCmd() *cobra.Command {
 					return errors.Wrap(err, "neither JSON input nor path to .json file for consensus state were provided")
 				}
 
-				if err := cdc.UnmarshalJSON(contents, consensusState); err != nil {
+				if err := cdc.UnmarshalJSON(contents, consStateAny); err != nil {
 					return errors.Wrap(err, "error unmarshalling consensus state file")
 				}
 			}
 
-			msg, err := types.NewMsgCreateClient(clientState, consensusState, clientCtx.GetFromAddress())
-			if err != nil {
-				return err
+			msg := &types.MsgCreateClient{
+				ClientState:    clientStateAny,
+				ConsensusState: consStateAny,
+				Signer:         clientCtx.GetFromAddress().String(),
 			}
 
 			if err := msg.ValidateBasic(); err != nil {

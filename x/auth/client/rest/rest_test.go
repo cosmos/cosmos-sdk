@@ -25,8 +25,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	ibcclientcli "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/client/cli"
 	ibccli "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/client/cli"
-	ibcsolomachinecli "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/client/cli"
 )
 
 type IntegrationTestSuite struct {
@@ -480,10 +480,16 @@ func (s *IntegrationTestSuite) testQueryIBCTx(txRes sdk.TxResponse, cmd *cobra.C
 func (s *IntegrationTestSuite) TestLegacyRestErrMessages() {
 	val := s.network.Validators[0]
 
+	// Write client state json to temp file, used for an IBC message.
+	clientStateJSON := testutil.WriteToNewTempFile(
+		s.T(),
+		`{"@type":"/ibc.lightclients.solomachine.v1.ClientState","sequence":"1","frozen_sequence":"0","consensus_state":{"public_key":{"@type":"/cosmos.crypto.multisig.LegacyAminoPubKey","threshold":4,"public_keys":[{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"Am4hKHBjQoINwOacpAuzzIfwYSahbO/v8p/xdRvhp7tn"},{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A8CAJ6BA0tr9wyF9gJ/wZPI0ywp3OjUskRu5mfRkSlPk"},{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AwhSxI5hzh7gnix4RTwlwQoxs49GAHiErdqdp5auNa78"},{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AtDeIFEnoR1IcA1Y41un1cdE/o/hmjR8zXoXKpUUDNae"}]},"diversifier":"testing","timestamp":"10"},"allow_update_after_proposal":false}`,
+	)
+
 	// Write consensus json to temp file, used for an IBC message.
 	consensusJSON := testutil.WriteToNewTempFile(
 		s.T(),
-		`{"public_key":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A/3SXL2ONYaOkxpdR5P8tHTlSlPv1AwQwSFxKRee5JQW"},"diversifier":"diversifier","timestamp":"10"}`,
+		`{"@type":"/ibc.lightclients.solomachine.v1.ConsensusState","public_key":{"@type":"/cosmos.crypto.multisig.LegacyAminoPubKey","threshold":4,"public_keys":[{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"Am4hKHBjQoINwOacpAuzzIfwYSahbO/v8p/xdRvhp7tn"},{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A8CAJ6BA0tr9wyF9gJ/wZPI0ywp3OjUskRu5mfRkSlPk"},{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AwhSxI5hzh7gnix4RTwlwQoxs49GAHiErdqdp5auNa78"},{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AtDeIFEnoR1IcA1Y41un1cdE/o/hmjR8zXoXKpUUDNae"}]},"diversifier":"testing","timestamp":"10"}`,
 	)
 
 	testCases := []struct {
@@ -509,10 +515,10 @@ func (s *IntegrationTestSuite) TestLegacyRestErrMessages() {
 		},
 		{
 			"Successful IBC message",
-			ibcsolomachinecli.NewCreateClientCmd(),
+			ibcclientcli.NewCreateClientCmd(),
 			[]string{
-				"1",                  // dummy sequence
-				consensusJSON.Name(), // path to consensus json,
+				clientStateJSON.Name(), // path to client state json
+				consensusJSON.Name(),   // path to consensus json,
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),

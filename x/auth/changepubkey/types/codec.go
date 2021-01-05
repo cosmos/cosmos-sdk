@@ -12,6 +12,7 @@ import (
 // provided LegacyAmino codec. These types are used for Amino JSON serialization
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgChangePubKey{}, "cosmos-sdk/MsgChangePubKey", nil)
+	cdc.RegisterConcrete(&PubKeyHistory{}, "cosmos-sdk/PubKeyHistory", nil)
 }
 
 // RegisterInterfaces register interfaces for changepubkey module

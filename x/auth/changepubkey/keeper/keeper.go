@@ -45,11 +45,13 @@ func (pk Keeper) GetPubKeyHistory(ctx sdk.Context, addr sdk.AccAddress) []types.
 	iterator := pk.PubKeyHistoryIterator(ctx, addr)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		entry := pk.decodeHistoricalEntry(iterator.Value())
+		entry := types.DecodeHistoricalEntry(iterator.Value())
 		entries = append(entries, entry)
+		fmt.Println("iterator---entry")
 	}
 	currentEntry := pk.GetCurrentPubKeyEntry(ctx, addr)
 	entries = append(entries, currentEntry)
+	fmt.Println("iterator---currentEntry")
 	return entries
 }
 
@@ -58,7 +60,7 @@ func (pk Keeper) GetPubKeyHistoricalEntry(ctx sdk.Context, addr sdk.AccAddress, 
 	iterator := pk.PubKeyHistoryIteratorAfter(ctx, addr, time)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		entry := pk.decodeHistoricalEntry(iterator.Value())
+		entry := types.DecodeHistoricalEntry(iterator.Value())
 		if entry.EndTime.After(time) || entry.EndTime.Equal(time) { // TODO: is this inclusive?
 			return entry
 		}
@@ -72,20 +74,28 @@ func (pk Keeper) GetLastPubKeyHistoricalEntry(ctx sdk.Context, addr sdk.AccAddre
 	iterator := pk.PubKeyHistoryReverseIterator(ctx, addr)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		entry := pk.decodeHistoricalEntry(iterator.Value())
+		entry := types.DecodeHistoricalEntry(iterator.Value())
 		return entry
 	}
-	return types.PubKeyHistory{}
+	return types.PubKeyHistory{
+		StartTime: time.Time{},
+		EndTime:   time.Time{},
+	}
 }
 
 // GetCurrentPubKeyEntry Returns the PubKey entry of current time
 func (pk Keeper) GetCurrentPubKeyEntry(ctx sdk.Context, addr sdk.AccAddress) types.PubKeyHistory {
+	time := ctx.BlockTime() // TODO: ctx.BlockTime() is correct for endTime?
 	acc := pk.ak.GetAccount(ctx, addr)
 	lastEntry := pk.GetLastPubKeyHistoricalEntry(ctx, addr)
+	st := lastEntry.EndTime
+	if st.Equal(time) {
+		st = lastEntry.GetStartTime()
+	}
 	return types.PubKeyHistory{
-		PubKey:    pk.encodePubKey(acc.GetPubKey()),
-		StartTime: lastEntry.EndTime,
-		EndTime:   ctx.BlockTime(), // TODO: ctx.BlockTime() is correct for endTime?
+		PubKey:    types.EncodePubKey(pk.cdc, acc.GetPubKey()),
+		StartTime: st,
+		EndTime:   time,
 	}
 }
 
@@ -95,10 +105,14 @@ func (pk Keeper) StoreLastPubKey(ctx sdk.Context, addr sdk.AccAddress, time time
 	prefixStore := prefix.NewStore(store, addr) // prefix store for specific account
 	key := types.GetPubKeyHistoryKey(time)
 	lastEntry := pk.GetLastPubKeyHistoricalEntry(ctx, addr)
-	prefixStore.Set(key, pk.encodeHistoricalEntry(types.PubKeyHistory{
-		PubKey:    pk.encodePubKey(pubkey),
-		StartTime: lastEntry.EndTime,
-		EndTime:   ctx.BlockTime(), // TODO: ctx.BlockTime() is correct for endTime?
+	st := lastEntry.EndTime
+	if st.Equal(time) {
+		st = lastEntry.GetStartTime()
+	}
+	prefixStore.Set(key, types.EncodeHistoricalEntry(types.PubKeyHistory{
+		PubKey:    types.EncodePubKey(pk.cdc, pubkey),
+		StartTime: st,
+		EndTime:   time,
 	}))
 	return nil
 }
@@ -118,9 +132,7 @@ func (pk Keeper) PubKeyHistoryIteratorAfter(ctx sdk.Context, addr sdk.AccAddress
 func (pk Keeper) PubKeyHistoryIterator(ctx sdk.Context, addr sdk.AccAddress) sdk.Iterator {
 	store := ctx.KVStore(pk.key)
 	prefixStore := prefix.NewStore(store, addr) // prefix store for specific account
-	// TODO: is this correct to get current block time for endKey?
-	endKey := types.GetPubKeyHistoryKey(ctx.BlockTime()) // current block time
-	return prefixStore.Iterator(types.KeyPrefixPubKeyHistory, endKey)
+	return sdk.KVStorePrefixIterator(prefixStore, types.KeyPrefixPubKeyHistory)
 }
 
 // PubKeyHistoryReverseIterator returns the iterator used for getting a full history in reverse order
@@ -130,38 +142,4 @@ func (pk Keeper) PubKeyHistoryReverseIterator(ctx sdk.Context, addr sdk.AccAddre
 	// TODO: is this correct to get current block time for endKey?
 	endKey := types.GetPubKeyHistoryKey(ctx.BlockTime()) // current block time
 	return prefixStore.ReverseIterator(types.KeyPrefixPubKeyHistory, endKey)
-}
-
-func (pk Keeper) encodePubKey(pubkey crypto.PubKey) []byte {
-	bz, err := codec.MarshalAny(pk.cdc, pubkey)
-	if err != nil {
-		panic(err)
-	}
-	return bz
-}
-
-func (pk Keeper) decodePubKey(bz []byte) crypto.PubKey {
-	var pubkey crypto.PubKey
-	err := codec.UnmarshalAny(pk.cdc, &pubkey, bz)
-	if err != nil {
-		panic(err)
-	}
-	return pubkey
-}
-
-func (pk Keeper) encodeHistoricalEntry(entry types.PubKeyHistory) []byte {
-	bz, err := codec.MarshalAny(pk.cdc, entry)
-	if err != nil {
-		panic(err)
-	}
-	return bz
-}
-
-func (pk Keeper) decodeHistoricalEntry(bz []byte) types.PubKeyHistory {
-	var entry types.PubKeyHistory
-	err := codec.UnmarshalAny(pk.cdc, &entry, bz)
-	if err != nil {
-		panic(err)
-	}
-	return entry
 }

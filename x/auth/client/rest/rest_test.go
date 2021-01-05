@@ -483,13 +483,13 @@ func (s *IntegrationTestSuite) TestLegacyRestErrMessages() {
 	// Write client state json to temp file, used for an IBC message.
 	clientStateJSON := testutil.WriteToNewTempFile(
 		s.T(),
-		`{"@type":"/ibc.lightclients.solomachine.v1.ClientState","sequence":"1","frozen_sequence":"0","consensus_state":{"public_key":{"@type":"/cosmos.crypto.multisig.LegacyAminoPubKey","threshold":4,"public_keys":[{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"Am4hKHBjQoINwOacpAuzzIfwYSahbO/v8p/xdRvhp7tn"},{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A8CAJ6BA0tr9wyF9gJ/wZPI0ywp3OjUskRu5mfRkSlPk"},{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AwhSxI5hzh7gnix4RTwlwQoxs49GAHiErdqdp5auNa78"},{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AtDeIFEnoR1IcA1Y41un1cdE/o/hmjR8zXoXKpUUDNae"}]},"diversifier":"testing","timestamp":"10"},"allow_update_after_proposal":false}`,
+		`{"@type":"/ibc.lightclients.solomachine.v1.ClientState","sequence":"1","frozen_sequence":"0","consensus_state":{"public_key":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A2iosSZNE0oZORmpBLeAOjvsYqX2WjsYv9c1jHHQjPdj"},"diversifier":"testing","timestamp":"10"},"allow_update_after_proposal":false}`,
 	)
 
 	// Write consensus json to temp file, used for an IBC message.
 	consensusJSON := testutil.WriteToNewTempFile(
 		s.T(),
-		`{"@type":"/ibc.lightclients.solomachine.v1.ConsensusState","public_key":{"@type":"/cosmos.crypto.multisig.LegacyAminoPubKey","threshold":4,"public_keys":[{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"Am4hKHBjQoINwOacpAuzzIfwYSahbO/v8p/xdRvhp7tn"},{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A8CAJ6BA0tr9wyF9gJ/wZPI0ywp3OjUskRu5mfRkSlPk"},{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AwhSxI5hzh7gnix4RTwlwQoxs49GAHiErdqdp5auNa78"},{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AtDeIFEnoR1IcA1Y41un1cdE/o/hmjR8zXoXKpUUDNae"}]},"diversifier":"testing","timestamp":"10"}`,
+		`{"@type":"/ibc.lightclients.solomachine.v1.ConsensusState","public_key":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A2iosSZNE0oZORmpBLeAOjvsYqX2WjsYv9c1jHHQjPdj"},"diversifier":"testing","timestamp":"10"}`,
 	)
 
 	testCases := []struct {

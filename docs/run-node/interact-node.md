@@ -117,7 +117,7 @@ Assuming the state at that block has not yet been pruned by the node, this query
 
 ### CosmJS
 
-CosmJS documentation can be found at https://cosmos.github.io/cosmjs/. As of December 2020, CosmJS documentation is still work in progress.
+CosmJS documentation can be found at [https://cosmos.github.io/cosmjs](https://cosmos.github.io/cosmjs). As of December 2020, CosmJS documentation is still work in progress.
 
 ## Using the REST Endpoints
 

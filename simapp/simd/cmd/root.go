@@ -22,7 +22,6 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -150,7 +149,7 @@ func txCommand() *cobra.Command {
 }
 
 type appCreator struct {
-	encCfg simappparams.EncodingConfig
+	encCfg params.EncodingConfig
 }
 
 // newApp is an AppCreator

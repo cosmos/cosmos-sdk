@@ -288,10 +288,7 @@ func (msg *MsgDelegate) ToOperations(withStatus bool, hasError bool) []*rosettat
 	valAcc := &rosettatypes.AccountIdentifier{
 		Address: delAddr,
 		SubAccount: &rosettatypes.SubAccountIdentifier{
-			Address: "bonded_account",
-			Metadata: map[string]interface{}{
-				"validator": valAddr,
-			},
+			Address: valAddr,
 		},
 	}
 	operations = append(operations,
@@ -318,11 +315,7 @@ func (msg MsgDelegate) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg, e
 			continue
 		}
 
-		valAddrStr, ok := op.Account.SubAccount.Metadata["validator"].(string)
-		if !ok {
-			return nil, fmt.Errorf("invalid validator address in subaccount")
-		}
-		valAddr, err = sdk.ValAddressFromBech32(valAddrStr)
+		valAddr, err = sdk.ValAddressFromBech32(op.Account.SubAccount.Address)
 		if err != nil {
 			return nil, err
 		}

@@ -318,7 +318,7 @@ func (msg MsgDelegate) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg, e
 
 		amount, err := strconv.ParseInt(op.Amount.Value, 10, 64)
 		if err != nil {
-			return nil, fmt.Errorf("invalid amount")
+			return nil, fmt.Errorf("invalid amount: %w", err)
 		}
 
 		sendAmt = sdk.NewCoin(op.Amount.Currency.Symbol, sdk.NewInt(amount))

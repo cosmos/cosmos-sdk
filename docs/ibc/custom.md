@@ -75,15 +75,15 @@ OnChanOpenTry(
     counterpartyVersion string,
 ) error {
     // Module may have already claimed capability in OnChanOpenInit in the case of crossing hellos
-	// (ie chainA and chainB both call ChanOpenInit before one of them calls ChanOpenTry)
-	// If the module can already authenticate the capability then the module already owns it so we don't need to claim
-	// Otherwise, module does not have channel capability and we must claim it from IBC
-	if !k.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) {
-		// Only claim channel capability passed back by IBC module if we do not already own it
-		if err := k.scopedKeeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
-			return err
-		}
-	}
+    // (ie chainA and chainB both call ChanOpenInit before one of them calls ChanOpenTry)
+    // If the module can already authenticate the capability then the module already owns it so we don't need to claim
+    // Otherwise, module does not have channel capability and we must claim it from IBC
+    if !k.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) {
+        // Only claim channel capability passed back by IBC module if we do not already own it
+        if err := k.scopedKeeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
+            return err
+        }
+    }
     
     // ... do custom initialization logic
 

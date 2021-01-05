@@ -167,6 +167,8 @@ The acknowledgement may encode whether the packet processing succeeded or failed
 
 Once the acknowledgement has been written by the receiving chain, a relayer will relay the acknowledgement back to the original sender module which will then execute application-specific acknowledgment logic using the contents of the acknowledgement. This may involve rolling back packet-send changes in the case of a failed acknowledgement (refunding senders).
 
+Once an acknowledgement is received successfully on the original sender the chain, the IBC module deletes the corresponding packet commitment as it is no longer needed.
+
 ## Further Readings and Specs
 
 If you want to learn more about IBC, check the following specifications:

@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 	"io/ioutil"
-	"strconv"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -13,37 +12,43 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
-const (
-	flagAllowUpdateAfterProposal = "allow_update_after_proposal"
-)
-
-// NewCreateClientCmd defines the command to create a new solo machine client.
+// NewCreateClientCmd defines the command to create a new IBC light client.
 func NewCreateClientCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create [sequence] [path/to/consensus_state.json]",
-		Short: "create new solo machine client",
-		Long: `create a new solo machine client with the specified identifier and public key
+		Use:   "create [path/to/client_state.json] [path/to/consensus_state.json]",
+		Short: "create new IBC client",
+		Long: `create a new IBC client with the specified client state and consensus state
 	- ConsensusState json example: {"public_key":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A/3SXL2ONYaOkxpdR5P8tHTlSlPv1AwQwSFxKRee5JQW"},"diversifier":"diversifier","timestamp":"10"}`,
-		Example: fmt.Sprintf("%s tx ibc %s create [sequence] [path/to/consensus_state] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
+		Example: fmt.Sprintf("%s tx ibc %s create [path/to/client_state.json] [path/to/consensus_state] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-			sequence, err := strconv.ParseUint(args[0], 10, 64)
-			if err != nil {
-				return err
-			}
-
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
+			// attempt to unmarshal client state argument
+			var clientState exported.ClientState
+			if err := cdc.UnmarshalJSON([]byte(args[0]), clientState); err != nil {
+
+				// check for file path if JSON input is not provided
+				contents, err := ioutil.ReadFile(args[0])
+				if err != nil {
+					return errors.Wrap(err, "neither JSON input nor path to .json file for client state were provided")
+				}
+
+				if err := cdc.UnmarshalJSON(contents, clientState); err != nil {
+					return errors.Wrap(err, "error unmarshalling client state file")
+				}
+			}
+
 			// attempt to unmarshal consensus state argument
-			consensusState := &types.ConsensusState{}
+			var consensusState exported.ConsensusState
 			if err := cdc.UnmarshalJSON([]byte(args[1]), consensusState); err != nil {
 
 				// check for file path if JSON input is not provided
@@ -57,10 +62,7 @@ func NewCreateClientCmd() *cobra.Command {
 				}
 			}
 
-			allowUpdateAfterProposal, _ := cmd.Flags().GetBool(flagAllowUpdateAfterProposal)
-
-			clientState := types.NewClientState(sequence, consensusState, allowUpdateAfterProposal)
-			msg, err := clienttypes.NewMsgCreateClient(clientState, consensusState, clientCtx.GetFromAddress())
+			msg, err := types.NewMsgCreateClient(clientState, consensusState, clientCtx.GetFromAddress())
 			if err != nil {
 				return err
 			}
@@ -69,22 +71,22 @@ func NewCreateClientCmd() *cobra.Command {
 				return err
 			}
 
+			// TODO: determine info to print out for client identifier created
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
-	cmd.Flags().Bool(flagAllowUpdateAfterProposal, false, "allow governance proposal to update client")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
-// NewUpdateClientCmd defines the command to update a solo machine client.
+// NewUpdateClientCmd defines the command to update an IBC client.
 func NewUpdateClientCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:     "update [client-id] [path/to/header.json]",
 		Short:   "update existing client with a header",
-		Long:    "update existing client with a solo machine header",
+		Long:    "update existing client with a header",
 		Example: fmt.Sprintf("%s tx ibc %s update [client-id] [path/to/header.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -96,7 +98,7 @@ func NewUpdateClientCmd() *cobra.Command {
 
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
-			header := &types.Header{}
+			var header exported.Header
 			if err := cdc.UnmarshalJSON([]byte(args[1]), header); err != nil {
 
 				// check for file path if JSON input is not provided
@@ -110,7 +112,7 @@ func NewUpdateClientCmd() *cobra.Command {
 				}
 			}
 
-			msg, err := clienttypes.NewMsgUpdateClient(clientID, header, clientCtx.GetFromAddress())
+			msg, err := types.NewMsgUpdateClient(clientID, header, clientCtx.GetFromAddress())
 			if err != nil {
 				return err
 			}
@@ -140,8 +142,8 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 			}
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
-			m := &types.Misbehaviour{}
-			if err := cdc.UnmarshalJSON([]byte(args[0]), m); err != nil {
+			var misbehaviour exported.Misbehaviour
+			if err := cdc.UnmarshalJSON([]byte(args[0]), misbehaviour); err != nil {
 
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[0])
@@ -149,12 +151,12 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 					return errors.Wrap(err, "neither JSON input nor path to .json file for misbehaviour were provided")
 				}
 
-				if err := cdc.UnmarshalJSON(contents, m); err != nil {
+				if err := cdc.UnmarshalJSON(contents, misbehaviour); err != nil {
 					return errors.Wrap(err, "error unmarshalling misbehaviour file")
 				}
 			}
 
-			msg, err := clienttypes.NewMsgSubmitMisbehaviour(m.ClientId, m, clientCtx.GetFromAddress())
+			msg, err := types.NewMsgSubmitMisbehaviour(misbehaviour.GetClientID(), misbehaviour, clientCtx.GetFromAddress())
 			if err != nil {
 				return err
 			}

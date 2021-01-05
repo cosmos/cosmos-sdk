@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"fmt"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
@@ -69,6 +70,9 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 
 			suite.Run(tc.name, func() {
 
+				cdc := suite.chainA.App.AppCodec()
+
+				fmt.Printf("%s\n", cdc.MustMarshalJSON(tc.clientState))
 				err := tc.clientState.Validate()
 
 				if tc.expPass {

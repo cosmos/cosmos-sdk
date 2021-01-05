@@ -1,6 +1,6 @@
 // +build rosetta_integration_tests
 
-package client
+package rosetta
 
 import (
 	"fmt"
@@ -23,7 +23,7 @@ func TestMain(m *testing.M) {
 
 func makeTestPreconditions() error {
 	var err error
-	integrationClient, err = NewSingle("localhost:9090", "tcp://localhost:26657")
+	integrationClient, err = NewClient("localhost:9090", "tcp://localhost:26657")
 	if err != nil {
 		return fmt.Errorf("client init failure: %w", err)
 	}

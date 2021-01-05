@@ -426,7 +426,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	// Write the output to disk
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx.String())
 
-	// Validate Signature
+	// validate Signature
 	res, err = authtest.TxValidateSignaturesExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 	s.Require().True(strings.Contains(res.String(), "[OK]"))

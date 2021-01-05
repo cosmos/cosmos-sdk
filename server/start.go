@@ -8,10 +8,14 @@ import (
 	"runtime/pprof"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
-	"github.com/tendermint/cosmos-rosetta-gateway/service"
+	crgserver "github.com/tendermint/cosmos-rosetta-gateway/server"
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -26,8 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
-	rosettacfg "github.com/cosmos/cosmos-sdk/server/rosetta/config"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -313,14 +315,14 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		}
 	}
 
-	var rosettaSrv *service.Service
+	var rosettaSrv crgserver.Server
 	if config.Rosetta.Enable {
 		offlineMode := config.Rosetta.Offline
 		if !config.GRPC.Enable { // If GRPC is not enabled rosetta cannot work in online mode, so it works in offline mode.
 			offlineMode = true
 		}
 
-		conf := &rosettacfg.Config{
+		conf := &rosetta.Config{
 			Blockchain:    config.Rosetta.Blockchain,
 			Network:       config.Rosetta.Network,
 			TendermintRPC: ctx.Config.RPC.ListenAddress,
@@ -329,25 +331,12 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			Retries:       config.Rosetta.Retries,
 			Offline:       offlineMode,
 		}
+		conf.WithCodec(clientCtx.InterfaceRegistry, clientCtx.JSONMarshaler.(*codec.ProtoCodec))
 
-		err = conf.Validate()
+		rosettaSrv, err = rosetta.ServerFromConfig(conf)
 		if err != nil {
 			return err
 		}
-
-		adapter, rosClient, err := rosettacfg.RetryRosettaFromConfig(conf)
-		if err != nil {
-			return err
-		}
-
-		rosettaSrv, err = service.New(
-			service.Options{ListenAddress: conf.Addr},
-			rosetta.NewNetwork(conf.NetworkIdentifier(), adapter, rosClient),
-		)
-		if err != nil {
-			return err
-		}
-
 		errCh := make(chan error)
 		go func() {
 			if err := rosettaSrv.Start(); err != nil {

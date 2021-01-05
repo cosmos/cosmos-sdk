@@ -4,23 +4,29 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
-
-	rest2 "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
+	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	ibccli "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/client/cli"
+	ibcsolomachinecli "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/client/cli"
 )
 
 type IntegrationTestSuite struct {
@@ -66,7 +72,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func mkTx() legacytx.StdTx {
+func mkStdTx() legacytx.StdTx {
 	// NOTE: this uses StdTx explicitly, don't migrate it!
 	return legacytx.StdTx{
 		Msgs: []sdk.Msg{&types.MsgSend{}},
@@ -78,10 +84,49 @@ func mkTx() legacytx.StdTx {
 	}
 }
 
+// Create an IBC tx that's encoded as amino-JSON. Since we can't amino-marshal
+// a tx with "cosmos-sdk/MsgTransfer" using the SDK, we just hardcode the tx
+// here. But external clients might, see https://github.com/cosmos/cosmos-sdk/issues/8022.
+func mkIBCStdTx() []byte {
+	ibcTx := `{
+		"account_number": "68",
+		"chain_id": "stargate-4",
+		"fee": {
+		  "amount": [
+			{
+			  "amount": "3500",
+			  "denom": "umuon"
+			}
+		  ],
+		  "gas": "350000"
+		},
+		"memo": "",
+		"msg": [
+		  {
+			"type": "cosmos-sdk/MsgTransfer",
+			"value": {
+			  "receiver": "cosmos1q9wtnlwdjrhwtcjmt2uq77jrgx7z3usrq2yz7z",
+			  "sender": "cosmos1q9wtnlwdjrhwtcjmt2uq77jrgx7z3usrq2yz7z",
+			  "source_channel": "THEslipperCHANNEL",
+			  "source_port": "transfer",
+			  "token": {
+				"amount": "1000000",
+				"denom": "umuon"
+			  }
+			}
+		  }
+		],
+		"sequence": "24"
+	  }`
+	req := fmt.Sprintf(`{"tx":%s,"mode":"async"}`, ibcTx)
+
+	return []byte(req)
+}
+
 func (s *IntegrationTestSuite) TestEncodeDecode() {
 	var require = s.Require()
 	val := s.network.Validators[0]
-	stdTx := mkTx()
+	stdTx := mkStdTx()
 
 	// NOTE: this uses amino explicitly, don't migrate it!
 	cdc := val.ClientCtx.LegacyAmino
@@ -92,11 +137,11 @@ func (s *IntegrationTestSuite) TestEncodeDecode() {
 	res, err := rest.PostRequest(fmt.Sprintf("%s/txs/encode", val.APIAddress), "application/json", bz)
 	require.NoError(err)
 
-	var encodeResp rest2.EncodeResp
+	var encodeResp authrest.EncodeResp
 	err = cdc.UnmarshalJSON(res, &encodeResp)
 	require.NoError(err)
 
-	bz, err = cdc.MarshalJSON(rest2.DecodeReq{Tx: encodeResp.Tx})
+	bz, err = cdc.MarshalJSON(authrest.DecodeReq{Tx: encodeResp.Tx})
 	require.NoError(err)
 
 	res, err = rest.PostRequest(fmt.Sprintf("%s/txs/decode", val.APIAddress), "application/json", bz)
@@ -105,14 +150,24 @@ func (s *IntegrationTestSuite) TestEncodeDecode() {
 	var respWithHeight rest.ResponseWithHeight
 	err = cdc.UnmarshalJSON(res, &respWithHeight)
 	require.NoError(err)
-	var decodeResp rest2.DecodeResp
+	var decodeResp authrest.DecodeResp
 	err = cdc.UnmarshalJSON(respWithHeight.Result, &decodeResp)
 	require.NoError(err)
 	require.Equal(stdTx, legacytx.StdTx(decodeResp))
 }
 
+func (s *IntegrationTestSuite) TestEncodeIBCTx() {
+	val := s.network.Validators[0]
+
+	req := mkIBCStdTx()
+	res, err := rest.PostRequest(fmt.Sprintf("%s/txs/encode", val.APIAddress), "application/json", []byte(req))
+	s.Require().NoError(err)
+
+	s.Require().Contains(string(res), authrest.ErrEncodeDecode.Error())
+}
+
 func (s *IntegrationTestSuite) TestBroadcastTxRequest() {
-	stdTx := mkTx()
+	stdTx := mkStdTx()
 
 	// we just test with async mode because this tx will fail - all we care about is that it got encoded and broadcast correctly
 	res, err := s.broadcastReq(stdTx, "async")
@@ -124,51 +179,110 @@ func (s *IntegrationTestSuite) TestBroadcastTxRequest() {
 	s.Require().NotEmpty(txRes.TxHash)
 }
 
-func (s *IntegrationTestSuite) TestQueryTxByHash() {
+func (s *IntegrationTestSuite) TestBroadcastIBCTxRequest() {
+	val := s.network.Validators[0]
+
+	req := mkIBCStdTx()
+	res, err := rest.PostRequest(fmt.Sprintf("%s/txs", val.APIAddress), "application/json", []byte(req))
+	s.Require().NoError(err)
+
+	// Make sure the error message is correct.
+	s.Require().Contains(string(res), "this transaction cannot be broadcasted via legacy REST endpoints")
+}
+
+// Helper function to test querying txs. We will use it to query StdTx and service `Msg`s.
+func (s *IntegrationTestSuite) testQueryTx(txHeight int64, txHash, txRecipient string) {
+	val0 := s.network.Validators[0]
+
+	testCases := []struct {
+		desc     string
+		malleate func() *sdk.TxResponse
+	}{
+		{
+			"Query by hash",
+			func() *sdk.TxResponse {
+				txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs/%s", val0.APIAddress, txHash))
+				s.Require().NoError(err)
+
+				var txResAmino sdk.TxResponse
+				s.Require().NoError(val0.ClientCtx.LegacyAmino.UnmarshalJSON(txJSON, &txResAmino))
+				return &txResAmino
+			},
+		},
+		{
+			"Query by height",
+			func() *sdk.TxResponse {
+				txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs?limit=10&page=1&tx.height=%d", val0.APIAddress, txHeight))
+				s.Require().NoError(err)
+
+				var searchtxResult sdk.SearchTxsResult
+				s.Require().NoError(val0.ClientCtx.LegacyAmino.UnmarshalJSON(txJSON, &searchtxResult))
+				s.Require().Len(searchtxResult.Txs, 1)
+				return searchtxResult.Txs[0]
+			},
+		},
+		{
+			"Query by event (transfer.recipient)",
+			func() *sdk.TxResponse {
+				txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs?transfer.recipient=%s", val0.APIAddress, txRecipient))
+				s.Require().NoError(err)
+
+				var searchtxResult sdk.SearchTxsResult
+				s.Require().NoError(val0.ClientCtx.LegacyAmino.UnmarshalJSON(txJSON, &searchtxResult))
+				s.Require().Len(searchtxResult.Txs, 1)
+				return searchtxResult.Txs[0]
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			txResponse := tc.malleate()
+
+			// Check that the height is correct.
+			s.Require().Equal(txHeight, txResponse.Height)
+
+			// Check that the events are correct.
+			s.Require().Contains(
+				txResponse.RawLog,
+				fmt.Sprintf("{\"key\":\"recipient\",\"value\":\"%s\"}", txRecipient),
+			)
+
+			// Check that the Msg is correct.
+			stdTx, ok := txResponse.Tx.GetCachedValue().(legacytx.StdTx)
+			s.Require().True(ok)
+			msgs := stdTx.GetMsgs()
+			s.Require().Equal(len(msgs), 1)
+			msg, ok := msgs[0].(*types.MsgSend)
+			s.Require().True(ok)
+			s.Require().Equal(txRecipient, msg.ToAddress)
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestQueryTxWithStdTx() {
 	val0 := s.network.Validators[0]
 
 	// We broadcasted a StdTx in SetupSuite.
-	// we just check for a non-empty TxHash here, the actual hash will depend on the underlying tx configuration
+	// We just check for a non-empty TxHash here, the actual hash will depend on the underlying tx configuration
 	s.Require().NotEmpty(s.stdTxRes.TxHash)
 
-	// We now fetch the tx by hash on the `/tx/{hash}` route.
-	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs/%s", val0.APIAddress, s.stdTxRes.TxHash))
-	s.Require().NoError(err)
-
-	// txJSON should contain the whole tx, we just make sure that our custom
-	// memo is there.
-	s.Require().Contains(string(txJSON), s.stdTx.Memo)
+	s.testQueryTx(s.stdTxRes.Height, s.stdTxRes.TxHash, val0.Address.String())
 }
 
-func (s *IntegrationTestSuite) TestQueryTxByHeight() {
-	val0 := s.network.Validators[0]
-
-	// We broadcasted a StdTx in SetupSuite.
-	// we just check for a non-empty height here, as we'll need to for querying.
-	s.Require().NotEmpty(s.stdTxRes.Height)
-
-	// We now fetch the tx on `/txs` route, filtering by `tx.height`
-	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs?limit=10&page=1&tx.height=%d", val0.APIAddress, s.stdTxRes.Height))
-	s.Require().NoError(err)
-
-	// txJSON should contain the whole tx, we just make sure that our custom
-	// memo is there.
-	s.Require().Contains(string(txJSON), s.stdTx.Memo)
-}
-
-func (s *IntegrationTestSuite) TestQueryTxByHashWithServiceMessage() {
+func (s *IntegrationTestSuite) TestQueryTxWithServiceMessage() {
 	val := s.network.Validators[0]
 
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
+	_, _, addr := testdata.KeyTestPubAddr()
 
-	// Right after this line, we're sending a tx. Might need to wait a block
-	// to refresh sequences.
+	// Might need to wait a block to refresh sequences from previous setups.
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	out, err := bankcli.ServiceMsgSendExec(
 		val.ClientCtx,
 		val.Address,
-		val.Address,
+		addr,
 		sdk.NewCoins(sendTokens),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -183,17 +297,7 @@ func (s *IntegrationTestSuite) TestQueryTxByHashWithServiceMessage() {
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	txJSON, err := rest.GetRequest(fmt.Sprintf("%s/txs/%s", val.APIAddress, txRes.TxHash))
-	s.Require().NoError(err)
-
-	var txResAmino sdk.TxResponse
-	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(txJSON, &txResAmino))
-	stdTx, ok := txResAmino.Tx.GetCachedValue().(legacytx.StdTx)
-	s.Require().True(ok)
-	msgs := stdTx.GetMsgs()
-	s.Require().Equal(len(msgs), 1)
-	_, ok = msgs[0].(*types.MsgSend)
-	s.Require().True(ok)
+	s.testQueryTx(txRes.Height, txRes.TxHash, addr.String())
 }
 
 func (s *IntegrationTestSuite) TestMultipleSyncBroadcastTxRequests() {
@@ -275,7 +379,7 @@ func (s *IntegrationTestSuite) createTestStdTx(val *network.Validator, accNum, s
 		WithSequence(sequence)
 
 	// sign Tx (offline mode so we can manually set sequence number)
-	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, true)
+	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, true, true)
 	s.Require().NoError(err)
 
 	stdTx := txBuilder.GetTx().(legacytx.StdTx)
@@ -288,7 +392,7 @@ func (s *IntegrationTestSuite) broadcastReq(stdTx legacytx.StdTx, mode string) (
 
 	// NOTE: this uses amino explicitly, don't migrate it!
 	cdc := val.ClientCtx.LegacyAmino
-	req := rest2.BroadcastReq{
+	req := authrest.BroadcastReq{
 		Tx:   stdTx,
 		Mode: mode,
 	}
@@ -296,6 +400,143 @@ func (s *IntegrationTestSuite) broadcastReq(stdTx legacytx.StdTx, mode string) (
 	s.Require().NoError(err)
 
 	return rest.PostRequest(fmt.Sprintf("%s/txs", val.APIAddress), "application/json", bz)
+}
+
+// testQueryIBCTx is a helper function to test querying txs which:
+// - show an error message on legacy REST endpoints
+// - succeed using gRPC
+// In practice, we call this function on IBC txs.
+func (s *IntegrationTestSuite) testQueryIBCTx(txRes sdk.TxResponse, cmd *cobra.Command, args []string) {
+	val := s.network.Validators[0]
+
+	errMsg := "this transaction cannot be displayed via legacy REST endpoints, because it does not support" +
+		" Amino serialization. Please either use CLI, gRPC, gRPC-gateway, or directly query the Tendermint RPC" +
+		" endpoint to query this transaction. The new REST endpoint (via gRPC-gateway) is "
+
+	// Test that legacy endpoint return the above error message on IBC txs.
+	testCases := []struct {
+		desc string
+		url  string
+	}{
+		{
+			"Query by hash",
+			fmt.Sprintf("%s/txs/%s", val.APIAddress, txRes.TxHash),
+		},
+		{
+			"Query by height",
+			fmt.Sprintf("%s/txs?tx.height=%d", val.APIAddress, txRes.Height),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			txJSON, err := rest.GetRequest(tc.url)
+			s.Require().NoError(err)
+
+			var errResp rest.ErrorResponse
+			s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(txJSON, &errResp))
+
+			s.Require().Contains(errResp.Error, errMsg)
+		})
+	}
+
+	// try fetching the txn using gRPC req, it will fetch info since it has proto codec.
+	grpcJSON, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/%s", val.APIAddress, txRes.TxHash))
+	s.Require().NoError(err)
+
+	var getTxRes txtypes.GetTxResponse
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(grpcJSON, &getTxRes))
+	s.Require().Equal(getTxRes.Tx.Body.Memo, "foobar")
+
+	// generate broadcast only txn.
+	args = append(args, fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))
+	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
+	s.Require().NoError(err)
+
+	txFile := testutil.WriteToNewTempFile(s.T(), string(out.Bytes()))
+	txFileName := txFile.Name()
+
+	// encode the generated txn.
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.GetEncodeCommand(), []string{txFileName})
+	s.Require().NoError(err)
+
+	bz, err := val.ClientCtx.LegacyAmino.MarshalJSON(authrest.DecodeReq{Tx: string(out.Bytes())})
+	s.Require().NoError(err)
+
+	// try to decode the txn using legacy rest, it fails.
+	res, err := rest.PostRequest(fmt.Sprintf("%s/txs/decode", val.APIAddress), "application/json", bz)
+	s.Require().NoError(err)
+
+	var errResp rest.ErrorResponse
+	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(res, &errResp))
+	s.Require().Contains(errResp.Error, errMsg)
+}
+
+// TestLegacyRestErrMessages creates two IBC txs, one that fails, one that
+// succeeds, and make sure we cannot query any of them (with pretty error msg).
+// Our intension is to test the error message of querying a message which is
+// signed with proto, since IBC won't support legacy amino at all we are
+// considering a message from IBC module.
+func (s *IntegrationTestSuite) TestLegacyRestErrMessages() {
+	val := s.network.Validators[0]
+
+	// Write consensus json to temp file, used for an IBC message.
+	consensusJSON := testutil.WriteToNewTempFile(
+		s.T(),
+		`{"public_key":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A/3SXL2ONYaOkxpdR5P8tHTlSlPv1AwQwSFxKRee5JQW"},"diversifier":"diversifier","timestamp":"10"}`,
+	)
+
+	testCases := []struct {
+		desc string
+		cmd  *cobra.Command
+		args []string
+		code uint32
+	}{
+		{
+			"Failing IBC message",
+			ibccli.NewChannelCloseInitCmd(),
+			[]string{
+				"121",       // dummy port-id
+				"channel-0", // dummy channel-id
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=foobar", flags.FlagMemo),
+			},
+			uint32(7),
+		},
+		{
+			"Successful IBC message",
+			ibcsolomachinecli.NewCreateClientCmd(),
+			[]string{
+				"1",                  // dummy sequence
+				consensusJSON.Name(), // path to consensus json,
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=foobar", flags.FlagMemo),
+			},
+			uint32(0),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, tc.cmd, tc.args)
+			s.Require().NoError(err)
+			var txRes sdk.TxResponse
+			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txRes))
+			s.Require().Equal(tc.code, txRes.Code)
+
+			s.Require().NoError(s.network.WaitForNextBlock())
+
+			s.testQueryIBCTx(txRes, tc.cmd, tc.args)
+		})
+	}
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

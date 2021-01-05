@@ -51,7 +51,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
-	unbond, err := sdk.ParseCoin("10stake")
+	unbond, err := sdk.ParseCoinNormalized("10stake")
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
@@ -256,7 +256,10 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidators() {
 	}{
 		{
 			"one validator case",
-			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=1", flags.FlagLimit),
+			},
 			1,
 		},
 		{
@@ -278,7 +281,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidators() {
 
 			var result types.QueryValidatorsResponse
 			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
-			s.Require().Equal(len(s.network.Validators), len(result.Validators))
+			s.Require().Equal(tc.minValidatorCount, len(result.Validators))
 		})
 	}
 }
@@ -381,7 +384,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegations() {
 			&types.QueryDelegatorDelegationsResponse{},
 			&types.QueryDelegatorDelegationsResponse{
 				DelegationResponses: types.DelegationResponses{
-					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDec(100000000), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000))),
+					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDecFromInt(cli.DefaultTokens), sdk.NewCoin(sdk.DefaultBondDenom, cli.DefaultTokens)),
 				},
 				Pagination: &query.PageResponse{},
 			},
@@ -437,7 +440,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegationsTo() {
 			&types.QueryValidatorDelegationsResponse{},
 			&types.QueryValidatorDelegationsResponse{
 				DelegationResponses: types.DelegationResponses{
-					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDec(100000000), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000))),
+					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDecFromInt(cli.DefaultTokens), sdk.NewCoin(sdk.DefaultBondDenom, cli.DefaultTokens)),
 				},
 				Pagination: &query.PageResponse{},
 			},
@@ -855,7 +858,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 			"with text output",
 			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
 			`bond_denom: stake
-historical_entries: 100
+historical_entries: 10000
 max_entries: 7
 max_validators: 100
 unbonding_time: 1814400s`,
@@ -863,7 +866,7 @@ unbonding_time: 1814400s`,
 		{
 			"with json output",
 			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":100,"bond_denom":"stake"}`,
+			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake"}`,
 		},
 	}
 	for _, tc := range testCases {
@@ -891,8 +894,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryPool() {
 				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
-			`bonded_tokens: "200000000"
-not_bonded_tokens: "0"`,
+			fmt.Sprintf(`bonded_tokens: "%s"
+not_bonded_tokens: "0"`, cli.DefaultTokens.Mul(sdk.NewInt(2)).String()),
 		},
 		{
 			"with json",
@@ -900,7 +903,7 @@ not_bonded_tokens: "0"`,
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
-			`{"not_bonded_tokens":"0","bonded_tokens":"200000000"}`,
+			fmt.Sprintf(`{"not_bonded_tokens":"0","bonded_tokens":"%s"}`, cli.DefaultTokens.Mul(sdk.NewInt(2)).String()),
 		},
 	}
 	for _, tc := range testCases {

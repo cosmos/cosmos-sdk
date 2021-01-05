@@ -549,9 +549,12 @@ func (rs *Store) SetInitialVersion(version int64) error {
 
 	// Loop through all the stores, if it's an IAVL store, then set initial
 	// version on it.
-	for _, commitKVStore := range rs.stores {
-		if storeWithVersion, ok := commitKVStore.(types.StoreWithInitialVersion); ok {
-			storeWithVersion.SetInitialVersion(version)
+	for key, store := range rs.stores {
+		if store.GetStoreType() == types.StoreTypeIAVL {
+			// If the store is wrapped with an inter-block cache, we must first unwrap
+			// it to get the underlying IAVL store.
+			store = rs.GetCommitKVStore(key)
+			store.(*iavl.Store).SetInitialVersion(version)
 		}
 	}
 

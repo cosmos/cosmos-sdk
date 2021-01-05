@@ -36,19 +36,101 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Improvements
-- (SDK) [\#7925](https://github.com/cosmos/cosmos-sdk/pull/7925) Updated dependencies to use gRPC v1.33.2
-  * Updated gRPC dependency to v1.33.2
-  * Updated iavl dependency to v0.15-rc2
-* (version) [\#7848](https://github.com/cosmos/cosmos-sdk/pull/7848) [\#7941](https://github.com/cosmos/cosmos-sdk/pull/7941) `version --long` output now shows the list of build dependencies and replaced build dependencies.
+## [v0.40.0-rc6](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc6) - 2020-01-04
 
-## [v0.40.0-rc3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc3) - 2020-11-06
+### Improvements
+
+- (x/staking) [\#8178](https://github.com/cosmos/cosmos-sdk/pull/8178) Update default historical header number for stargate
+
+### Bug Fixes
+
+- (x/distribution) [\#8240](https://github.com/cosmos/cosmos-sdk/pull/8240) fix setting withdraw address in x/distribution
+- (x/gentx) [\#8183](https://github.com/cosmos/cosmos-sdk/pull/8183) change gentx cmd amount to arg from flag
+- (x/ibc) [\#8165](https://github.com/cosmos/cosmos-sdk/pull/8165) Support IBC upgrade on same revision
+- (x/ibc) [\#8169](https://github.com/cosmos/cosmos-sdk/pull/8169) fix IBC software upgrade proposals from automatically failing, add unpackinterfaces function
+- (x/ibc) [\#8170](https://github.com/cosmos/cosmos-sdk/pull/8170) fix ClientUpdateProposal unpacker
+- (x/ibc) [\#8187](https://github.com/cosmos/cosmos-sdk/pull/8187) fix IBC upgrade, issue with commit & halting logic
+- (x/ibc) [\#8200](https://github.com/cosmos/cosmos-sdk/pull/8200) fix IBC timeout verification bug
+- (rest) [\#8221](https://github.com/cosmos/cosmos-sdk/pull/8221) fix unregistered interface failure when calling GET /blocks/latest via REST API
+
+## [v0.40.0-rc5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc5) - 2020-12-14
+
+### Improvements
+
+* (auth/tx) Add new auth/tx gRPC & gRPC-Gateway endpoints for basic querying & broadcasting support
+  * [\#7842](https://github.com/cosmos/cosmos-sdk/pull/7842) Add TxsByEvent gRPC endpoint
+  * [\#7852](https://github.com/cosmos/cosmos-sdk/pull/7852) Add tx broadcast gRPC endpoint
+* (client/keys) [\#8043](https://github.com/cosmos/cosmos-sdk/pull/8043) Add support for export of unarmored private key
+* (client/tx) [\#7801](https://github.com/cosmos/cosmos-sdk/pull/7801) Update sign-batch multisig to work online
+* (crypto) [\#7987](https://github.com/cosmos/cosmos-sdk/pull/7987) Fix the inconsistency of CryptoCdc, only use
+    `codec/legacy.Cdc`.
+* (logging) [\#8072](https://github.com/cosmos/cosmos-sdk/pull/8072) Refactor logging:
+  * Use [zerolog](https://github.com/rs/zerolog) over Tendermint's go-kit logging wrapper.
+  * Introduce Tendermint's `--log_format=plain|json` flag. Using format `json` allows for emitting structured JSON
+  logs which can be consumed by an external logging facility (e.g. Loggly). Both formats log to STDERR.
+  * The existing `--log_level` flag and it's default value now solely relates to the global logging
+  level (e.g. `info`, `debug`, etc...) instead of `<module>:<level>`.
+* (SDK) [\#7925](https://github.com/cosmos/cosmos-sdk/pull/7925) Updated dependencies
+  * Updated gRPC dependency to v1.33.2
+  * Updated iavl dependency to v0.15-rc5
+  * Updated tendermint dependency to v0.34.0
+* (version) [\#7848](https://github.com/cosmos/cosmos-sdk/pull/7848) [\#7941](https://github.com/cosmos/cosmos-sdk/pull/7941)
+    `version --long` output now shows the list of build dependencies and replaced build dependencies.
+* (x/genutil) [\#8099](https://github.com/cosmos/cosmos-sdk/pull/8099) `init` now supports a `--recover` flag to recover
+    the private validator key from a given mnemonic
 
 ### Client Breaking
 
-* (x/staking) [\#7419](https://github.com/cosmos/cosmos-sdk/pull/7419) The `TmConsPubKey` method on ValidatorI has been removed and replaced instead by `ConsPubKey` (which returns a SDK `cryptotypes.PubKey`) and `TmConsPublicKey` (which returns a Tendermint proto PublicKey).
+* (crypto) [\#7419](https://github.com/cosmos/cosmos-sdk/pull/7419) The SDK doesn't use Tendermint's `crypto.PubKey`
+    interface anymore, and uses instead it's own `PubKey` interface, defined in `crypto/types`. Replace all instances of
+    `crypto.PubKey` by `cryptotypes.Pubkey`.
+* (x/staking) [\#7419](https://github.com/cosmos/cosmos-sdk/pull/7419) The `TmConsPubKey` method on ValidatorI has been
+    removed and replaced instead by `ConsPubKey` (which returns a SDK `cryptotypes.PubKey`) and `TmConsPublicKey` (which
+    returns a Tendermint proto PublicKey).
+
+### State Machine Breaking Changes
+
+* (x/staking) [\#7979](https://github.com/cosmos/cosmos-sdk/pull/7979) keeper pubkey storage serialization migration
+    from bech32 to protobuf.
+
+### Features
+* (codec/types) [\#8106](https://github.com/cosmos/cosmos-sdk/pull/8106) Adding `NewAnyWithCustomTypeURL` to correctly
+    marshal Messages in TxBuilder.
+
+### API Breaking
+
+* [\#8080](https://github.com/cosmos/cosmos-sdk/pull/8080) Updated the `codec.Marshaler` interface
+  * Moved `MarshalAny` and `UnmarshalAny` helper functions to `codec.Marshaler` and renamed to `MarshalInterface` and
+    `UnmarshalInterface` respectively. These functions must take interface as a parameter (not a concrete type nor `Any`
+    object). Underneath they use `Any` wrapping for correct protobuf serialization.
+* (client) [\#8107](https://github.com/cosmos/cosmos-sdk/pull/8107) Renamed `PrintOutput` and `PrintOutputLegacy`
+    methods of the `context.Client` object to `PrintProto` and `PrintObjectLegacy`.
+* (grpc/tmservice) [\#8060](https://github.com/cosmos/cosmos-sdk/pull/8060) TmService gRPC service's validator pubkey
+    type changed from bech32 format to `Any`
+* (x/auth/tx) [\#8106](https://github.com/cosmos/cosmos-sdk/pull/8106) change related to missing append functionality in
+    client transaction signing
+  + added `overwriteSig` argument to `x/auth/client.SignTx` and `client/tx.Sign` functions.
+  + removed `x/auth/tx.go:wrapper.GetSignatures`. The `wrapper` provides `TxBuilder` functionality, and it's a private
+    structure. That function was not used at all and it's not exposed through the `TxBuilder` interface.
+
+### Bug Fixes
+
+* (crypto) [\#7966](https://github.com/cosmos/cosmos-sdk/issues/7966) `Bip44Params` `String()` function now correctly
+    returns the absolute HD path by adding the `m/` prefix.
+* (crypto/keys) [\#7838](https://github.com/cosmos/cosmos-sdk/pull/7838) Add support for TM secp256k1 keys back to the
+    SDK for consensus pubkeys
+* (x/auth/client/cli) [\#8106](https://github.com/cosmos/cosmos-sdk/pull/8106) fixing regression bugs in transaction signing.
+
+## [v0.40.0-rc4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc4) - 2020-11-30
+
+### Bug Fixes
+
+* (store) [#8048](https://github.com/cosmos/cosmos-sdk/pull/8048) Fix issue where `SetInitialVersion` was never getting called, causing all queries to return empty on chains with non-zero initial height
+
+## [v0.40.0-rc3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc3) - 2020-11-06
 
 ### Improvements
+
 * (tendermint) [\#7828](https://github.com/cosmos/cosmos-sdk/pull/7828) Update tendermint dependency to v0.34.0-rc6
 
 ## [v0.40.0-rc2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc2) - 2020-11-02
@@ -56,7 +138,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Client Breaking
 
 * (x/upgrade) [#7697](https://github.com/cosmos/cosmos-sdk/pull/7697) Rename flag name "--time" to "--upgrade-time", "--info" to "--upgrade-info", to keep it consistent with help message.
-* (x/auth) [#7788](https://github.com/cosmos/cosmos-sdk/pull/7788) Remove `tx auth` subcommands, all auth subcommands exist as `tx <subcommand>` 
+* (x/auth) [#7788](https://github.com/cosmos/cosmos-sdk/pull/7788) Remove `tx auth` subcommands, all auth subcommands exist as `tx <subcommand>`
 
 ### API Breaking
 
@@ -75,23 +157,22 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * All outward facing APIs will now check that capability is not nil and name is not empty before performing any state-machine changes
   * `SetIndex` has been renamed to `InitializeIndex`
 
+
 ### Features
 
 * (tx) [\#7688](https://github.com/cosmos/cosmos-sdk/pull/7688) Add a new Tx gRPC service with methods `Simulate` and `GetTx` (by hash).
 * __Modules__
   * `x/crisis` has a new function: `AddModuleInitFlags`, which will register optional crisis module flags for the start command.
 
-
 ### Bug Fixes
 
 * (client) [\#7699](https://github.com/cosmos/cosmos-sdk/pull/7699) Fix panic in context when setting invalid nodeURI. `WithNodeURI` does not set the `Client` in the context.
 * (x/gov) [#7641](https://github.com/cosmos/cosmos-sdk/pull/7641) Fix tally calculation precision error.
 
-### Improvements 
+### Improvements
 
 * (rest) [#7649](https://github.com/cosmos/cosmos-sdk/pull/7649) Return an unsigned tx in legacy GET /tx endpoint when signature conversion fails
 * (cli) [#7764](https://github.com/cosmos/cosmos-sdk/pull/7764) Update x/banking and x/crisis InitChain to improve node startup time
-
 
 ## [v0.40.0-rc1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc1) - 2020-10-19
 
@@ -118,7 +199,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * (modules) [\#7540](https://github.com/cosmos/cosmos-sdk/issues/7540) Protobuf service definitions can now be used for
-packing `Msg`s in transactions as defined in [ADR 031](./docs/architecture/adr-031-msg-service.md). All modules now 
+packing `Msg`s in transactions as defined in [ADR 031](./docs/architecture/adr-031-msg-service.md). All modules now
 define a `Msg` protobuf service.
 * (codec) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) `InterfaceRegistry` now inherits `jsonpb.AnyResolver`, and has a `RegisterCustomTypeURL` method to support ADR 031 packing of `Any`s. `AnyResolver` is now a required parameter to `RejectUnknownFields`.
 * (baseapp) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) Add `ServiceMsgRouter` to BaseApp to handle routing of protobuf service `Msg`s. The two new types defined in ADR 031, `sdk.ServiceMsg` and `sdk.MsgRequest` are introduced with this router.
@@ -722,7 +803,7 @@ generalized genesis accounts through the `GenesisAccount` interface.
 * (sdk) [\#4758](https://github.com/cosmos/cosmos-sdk/issues/4758) update `x/genaccounts` to match module spec
 * (simulation) [\#4824](https://github.com/cosmos/cosmos-sdk/issues/4824) `PrintAllInvariants` flag will print all failed invariants
 * (simulation) [\#4490](https://github.com/cosmos/cosmos-sdk/issues/4490) add `InitialBlockHeight` flag to resume a simulation from a given block
-  
+
   * Support exporting the simulation stats to a given JSON file
 * (simulation) [\#4847](https://github.com/cosmos/cosmos-sdk/issues/4847), [\#4838](https://github.com/cosmos/cosmos-sdk/pull/4838) and [\#4869](https://github.com/cosmos/cosmos-sdk/pull/4869) `SimApp` and simulation refactors:
   * Implement `SimulationManager` for executing modules' simulation functionalities in a modularized way
@@ -1036,7 +1117,7 @@ that error is that the account doesn't exist.
 * (simulation) PrintAllInvariants flag will print all failed invariants
 * (simulation) Add `InitialBlockHeight` flag to resume a simulation from a given block
 * (simulation) [\#4670](https://github.com/cosmos/cosmos-sdk/issues/4670) Update simulation statistics to JSON format
-  
+
   - Support exporting the simulation stats to a given JSON file
 * [\#4775](https://github.com/cosmos/cosmos-sdk/issues/4775) Refactor CI config
 * Upgrade IAVL to v0.12.4
@@ -1642,9 +1723,9 @@ BREAKING CHANGES
 FEATURES
 
 * Gaia REST API
-  
+
 * [\#2358](https://github.com/cosmos/cosmos-sdk/issues/2358) Add distribution module REST interface
-  
+
 * Gaia CLI  (`gaiacli`)
   * [\#3429](https://github.com/cosmos/cosmos-sdk/issues/3429) Support querying
   for all delegator distribution rewards.

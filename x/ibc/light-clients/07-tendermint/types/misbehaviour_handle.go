@@ -92,20 +92,20 @@ func checkMisbehaviourHeader(
 		return err
 	}
 
-	// assert that the timestamp is not from more than an unbonding period ago
-	if currentTimestamp.Sub(consState.Timestamp) >= clientState.UnbondingPeriod {
+	// assert that the age of the trusted consensus state is not older than the trusting period
+	if currentTimestamp.Sub(consState.Timestamp) >= clientState.TrustingPeriod {
 		return sdkerrors.Wrapf(
-			ErrUnbondingPeriodExpired,
-			"current timestamp minus the latest consensus state timestamp is greater than or equal to the unbonding period (%d >= %d)",
-			currentTimestamp.Sub(consState.Timestamp), clientState.UnbondingPeriod,
+			ErrTrustingPeriodExpired,
+			"current timestamp minus the latest consensus state timestamp is greater than or equal to the trusting period (%d >= %d)",
+			currentTimestamp.Sub(consState.Timestamp), clientState.TrustingPeriod,
 		)
 	}
 
 	chainID := clientState.GetChainID()
-	// If chainID is in version format, then set version number of chainID with the version number
+	// If chainID is in revision format, then set revision number of chainID with the revision number
 	// of the misbehaviour header
-	if clienttypes.IsVersionFormat(chainID) {
-		chainID, _ = clienttypes.SetVersionNumber(chainID, header.GetHeight().GetVersionNumber())
+	if clienttypes.IsRevisionFormat(chainID) {
+		chainID, _ = clienttypes.SetRevisionNumber(chainID, header.GetHeight().GetRevisionNumber())
 	}
 
 	// - ValidatorSet must have TrustLevel similarity with trusted FromValidatorSet

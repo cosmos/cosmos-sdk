@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -53,9 +52,9 @@ func (suite *SoloMachineTestSuite) GetSequenceFromStore() uint64 {
 	suite.Require().NotNil(bz)
 
 	var clientState exported.ClientState
-	err := codec.UnmarshalAny(suite.chainA.Codec, &clientState, bz)
+	err := suite.chainA.Codec.UnmarshalInterface(bz, &clientState)
 	suite.Require().NoError(err)
-	return clientState.GetLatestHeight().GetVersionHeight()
+	return clientState.GetLatestHeight().GetRevisionHeight()
 }
 
 func (suite *SoloMachineTestSuite) GetInvalidProof() []byte {

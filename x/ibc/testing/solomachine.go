@@ -6,12 +6,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
@@ -92,7 +92,7 @@ func (solo *Solomachine) ClientState() *solomachinetypes.ClientState {
 
 // ConsensusState returns a new solo machine ConsensusState instance
 func (solo *Solomachine) ConsensusState() *solomachinetypes.ConsensusState {
-	publicKey, err := tx.PubKeyToAny(solo.PublicKey)
+	publicKey, err := codectypes.NewAnyWithValue(solo.PublicKey)
 	require.NoError(solo.t, err)
 
 	return &solomachinetypes.ConsensusState{
@@ -102,7 +102,7 @@ func (solo *Solomachine) ConsensusState() *solomachinetypes.ConsensusState {
 	}
 }
 
-// GetHeight returns an exported.Height with Sequence as VersionHeight
+// GetHeight returns an exported.Height with Sequence as RevisionHeight
 func (solo *Solomachine) GetHeight() exported.Height {
 	return clienttypes.NewHeight(0, solo.Sequence)
 }
@@ -113,7 +113,7 @@ func (solo *Solomachine) CreateHeader() *solomachinetypes.Header {
 	// generate new private keys and signature for header
 	newPrivKeys, newPubKeys, newPubKey := GenerateKeys(solo.t, uint64(len(solo.PrivateKeys)))
 
-	publicKey, err := tx.PubKeyToAny(newPubKey)
+	publicKey, err := codectypes.NewAnyWithValue(newPubKey)
 	require.NoError(solo.t, err)
 
 	data := &solomachinetypes.HeaderData{

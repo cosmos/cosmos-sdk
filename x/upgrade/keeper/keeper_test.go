@@ -161,7 +161,6 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 			},
 			expPass: true,
 		},
-
 		{
 			name: "unsuccessful schedule: invalid plan",
 			plan: types.Plan{
@@ -235,13 +234,12 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 			if tc.expPass {
 				s.Require().NoError(err, "valid test case failed")
 				if tc.plan.UpgradedClientState != nil {
-					got, height, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx)
+					got, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx, tc.plan.Height)
 					s.Require().NoError(err)
-					s.Require().Equal(tc.plan.Height, height, "upgradedClient not stored at correct upgrade height")
 					s.Require().Equal(clientState, got, "upgradedClient not equal to expected value")
 				} else {
 					// check that upgraded client is empty if latest plan does not specify an upgraded client
-					got, _, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx)
+					got, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx, tc.plan.Height)
 					s.Require().Error(err)
 					s.Require().Nil(got)
 				}
@@ -255,36 +253,24 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 func (s *KeeperTestSuite) TestSetUpgradedClient() {
 	var (
 		clientState ibcexported.ClientState
-		height      int64
 	)
 	cases := []struct {
 		name   string
+		height int64
 		setup  func()
 		exists bool
 	}{
 		{
 			name:   "no upgraded client exists",
+			height: 10,
 			setup:  func() {},
 			exists: false,
 		},
 		{
-			name: "success",
+			name:   "success",
+			height: 10,
 			setup: func() {
 				clientState = &ibctmtypes.ClientState{ChainId: "gaiachain"}
-				height = 10
-
-				s.app.UpgradeKeeper.SetUpgradedClient(s.ctx, 10, clientState)
-			},
-			exists: true,
-		},
-		{
-			name: "successful overwrite",
-			setup: func() {
-				clientState = &ibctmtypes.ClientState{ChainId: "gaiachain"}
-				altCs := &ibctmtypes.ClientState{ChainId: "ethermint"}
-				height = 10
-
-				s.app.UpgradeKeeper.SetUpgradedClient(s.ctx, 50, altCs)
 				s.app.UpgradeKeeper.SetUpgradedClient(s.ctx, 10, clientState)
 			},
 			exists: true,
@@ -298,14 +284,12 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 		// setup test case
 		tc.setup()
 
-		gotCs, gotHeight, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx)
+		gotCs, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx, tc.height)
 		if tc.exists {
 			s.Require().Equal(clientState, gotCs, "valid case: %s did not retrieve correct client state", tc.name)
-			s.Require().Equal(height, gotHeight, "valid case: %s did not retrieve correct upgrade height", tc.name)
 			s.Require().NoError(err, "valid case: %s returned error")
 		} else {
 			s.Require().Nil(gotCs, "invalid case: %s retrieved valid client state", tc.name)
-			s.Require().Equal(int64(0), gotHeight, "invalid case: %s retrieved valid upgrade height", tc.name)
 			s.Require().Error(err, "invalid case: %s did not return error", tc.name)
 		}
 	}

@@ -30,6 +30,11 @@ const (
 	// BroadcastAsync defines a tx broadcasting mode where the client returns
 	// immediately.
 	BroadcastAsync = "async"
+
+	// SignModeDirect is the value of the --sign-mode flag for SIGN_MODE_DIRECT
+	SignModeDirect = "direct"
+	// SignModeLegacyAminoJSON is the value of the --sign-mode flag for SIGN_MODE_LEGACY_AMINO_JSON
+	SignModeLegacyAminoJSON = "amino-json"
 )
 
 // List of CLI flags
@@ -65,6 +70,10 @@ const (
 	FlagCountTotal       = "count-total"
 	FlagTimeoutHeight    = "timeout-height"
 	FlagKeyAlgorithm     = "algo"
+
+	// Tendermint logging flags
+	FlagLogLevel  = "log_level"
+	FlagLogFormat = "log_format"
 )
 
 // LineBreak can be included in a command list to provide a blank line

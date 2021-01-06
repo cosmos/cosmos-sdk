@@ -14,8 +14,6 @@ Blockchain invariants can be checked using the `MsgVerifyInvariant` message.
 ```go
 type MsgVerifyInvariant struct {
 	Sender         sdk.AccAddress 
-	InvariantModuleName string `protobuf:"bytes,2,opt,name=invariant_module_name,json=invariantModuleName,proto3" json:"invariant_module_name,omitempty" yaml:"invariant_module_name"`
-	
 	InvariantRoute string
 }
 ```

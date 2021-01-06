@@ -47,11 +47,9 @@ func (pk Keeper) GetPubKeyHistory(ctx sdk.Context, addr sdk.AccAddress) []types.
 	for ; iterator.Valid(); iterator.Next() {
 		entry := types.DecodeHistoricalEntry(iterator.Value())
 		entries = append(entries, entry)
-		fmt.Println("iterator---entry")
 	}
 	currentEntry := pk.GetCurrentPubKeyEntry(ctx, addr)
 	entries = append(entries, currentEntry)
-	fmt.Println("iterator---currentEntry")
 	return entries
 }
 

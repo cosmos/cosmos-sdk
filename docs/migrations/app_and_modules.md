@@ -15,7 +15,7 @@ Make sure to have the following dependencies before updating your app to v0.40:
 - Docker
 - Node.js v12.0+ (optional, for generating Swagger docs)
 
-Your own app can use a similar Makefile to the [Cosmos SDK's one](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/Makefile). More specifically, below are some Makefile commands that might be useful for your own app, related to the introduction of Protocol Buffers:
+In Cosmos-SDK we manage the project using Makefile. Your own app can use a similar Makefile to the [Cosmos SDK's one](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/Makefile). More specifically, below are some _make_ commands that might be useful for your own app, related to the introduction of Protocol Buffers:
 
 - `proto-update-deps` - To download/update the required thirdparty `proto` definitions.
 - `proto-gen` - To auto generate proto code.

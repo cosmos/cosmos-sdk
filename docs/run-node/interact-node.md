@@ -152,4 +152,4 @@ Assuming the state at that block has not yet been pruned by the node, this query
 
 ## Next {hide}
 
-Sending transactions using gRPC and REST requires some additional steps: generating the transaction, signing it, and finally broadcasting it. Read about [generating and signing transactions](TODO https://github.com/cosmos/cosmos-sdk/issues/7657). {hide}
+Sending transactions using gRPC and REST requires some additional steps: generating the transaction, signing it, and finally broadcasting it. Read about [generating and signing transactions](./txs.md). {hide}

@@ -141,7 +141,172 @@ txBuilder.SetFeeAmount(...)
 txBuilder.SetMemo(...)
 ```
 
-At this point, the `TxBuilder` is correctly populated, and the underlying transaction is ready to be signed.
+At this point, the `TxBuilder` is ready to be signed.
+
+### Signing a Transaction
+
+As per [ADR-020](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/docs/architecture/adr-020-protobuf-transaction-encoding.md), each signer needs to sign the `SignerInfo`s of all other signers. This means that we need to perform these two steps sequentially:
+
+- for each signer, populate the signer's `SignerInfo` inside `TxBuilder`,
+- once all `SignerInfo` are populated, for each signer, sign the `SignDoc` (the payload to be signed).
+
+In the current `TxBuilder`'s API, both steps are done using the same method: `SetSignatures()`. The current API requires us to first perform a round of `SetSignatures()` _with empty signatures_, only to populate `SignerInfo`s, and a second round of `SetSignatures()` to actually sign the correct payload.
+
+```go
+import (
+    cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+)
+
+privs := []cryptotypes.PrivKey{priv1, priv2}
+accNums:= []uint64{..., ...} // The accounts' account numbers
+accSeqs:= []uint64{..., ...} // The accounts' sequence numbers
+
+// First round: we gather all the signer infos. We use the "set empty
+// signature" hack to do that.
+var sigsV2 []signing.SignatureV2
+
+for i, priv := range privs {
+    sigV2 := signing.SignatureV2{
+        PubKey: priv.PubKey(),
+        Data: &signing.SingleSignatureData{
+            SignMode:  encCfg.TxConfig.SignModeHandler().DefaultMode(),
+            Signature: nil,
+        },
+        Sequence: accSeqs[i],
+    }
+
+    sigsV2 = append(sigsV2, sigV2)
+}
+err := txBuilder.SetSignatures(sigsV2...)
+if err != nil {
+    return err
+}
+
+// Second round: all signer infos are set, so each signer can sign.
+sigsV2 = []signing.SignatureV2{}
+for i, priv := range privs {
+    signerData := xauthsigning.SignerData{
+        ChainID:       chainID,
+        AccountNumber: accNums[i],
+        Sequence:      accSeqs[i],
+    }
+    sigV2, err := tx.SignWithPrivKey(
+        encCfg.TxConfig.SignModeHandler().DefaultMode(), signerData,
+        txBuilder, priv, encCfg.TxConfig, accSeqs[i])
+    if err != nil {
+        return nil, err
+    }
+
+    sigsV2 = append(sigsV2, sigV2)
+}
+err = txBuilder.SetSignatures(sigsV2...)
+if err != nil {
+    return err
+}
+```
+
+The `TxBuilder` is now correctly populated. To print it, you can use the `TxConfig` interface from the initial encoding config `encCfg`:
+
+```go
+// Generated Protobuf-binary bytes.
+txBytes, err := encCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
+if err != nil {
+    return err
+}
+
+// Generate a JSON string.
+txJSONBytes, err := encCfg.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
+if err != nil {
+    return err
+}
+txJSON := string(txJSONBytes)
+```
+
+### Broadcasting a Transaction
+
+The preferred way to broadcast a transaction is to use gRPC, though using REST (via `gRPC-gateway`) or the Tendermint RPC is also posible. An overview of the differences between these methods is exposed [here](../core/grpc_rest.md). For this tutorial, we will only describe the gRPC method.
+
+```go
+import (
+    "context"
+    "fmt"
+
+	"google.golang.org/grpc"
+
+	"github.com/cosmos/cosmos-sdk/types/tx"
+)
+
+grpcConn := grpc.Dial(
+    val0.AppConfig.GRPC.Address,
+    grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism
+)
+
+defer grpcConn.Close()
+
+// Broadcast the tx via gRPC. We create a new client for the Protobuf Tx
+// service.
+txClient := tx.NewServiceClient(s.conn)
+// We then call the BroadcastTx method on this client.
+grpcRes, err := txClient.BroadcastTx(
+    context.Background(),
+    &tx.BroadcastTxRequest{
+        Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
+        TxBytes: txBytes, // Proto-binary of the signed transaction, see previous step.
+    },
+)
+if err != nil {
+    return err
+}
+fmt.Println(grpcRes.TxResponse.Code) // Should be `0` if the tx is successful
+```
+
+#### Simulating a Transaction
+
+Before broadcasting a transaction, we sometimes may want to dry-run the transaction, to estimate some information about the transaction without actually committing it. This is called simulating a transaction, and can be done as follows:
+
+```go
+import (
+	"context"
+	"fmt"
+	"testing"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/types/tx"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+)
+
+// Simulate the tx via gRPC. We create a new client for the Protobuf Tx
+// service.
+txClient := tx.NewServiceClient(s.conn)
+// We then call the BroadcastTx method on this client.
+protoTx := txBuilderToProtoTx(txBuilder)
+if err != nil {
+    return err
+}
+grpcRes, err := txClient.Simulate(
+    context.Background(),
+    &tx.SimulateRequest{
+        Tx: protoTx,
+    },
+)
+if err != nil {
+    return err
+}
+
+fmt.Println(grpcRes.GasInfo) // Prints estimated gas used.
+
+// txBuilderToProtoTx converts a txBuilder into a proto tx.Tx.
+func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) { // nolint
+	protoProvider, ok := txBuilder.(authtx.ProtoTxProvider)
+	if !ok {
+		return nil, fmt.Errorf("expected proto tx builder, got %T", txBuilder)
+	}
+
+	return protoProvider.GetProtoTx(), nil
+}
+```
 
 ## Using CosmJS (JavaScript & TypeScript)
 

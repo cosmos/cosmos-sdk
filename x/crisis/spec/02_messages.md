@@ -11,10 +11,12 @@ corresponding updates to the state.
 
 Blockchain invariants can be checked using the `MsgVerifyInvariant` message. 
 
-```go
-type MsgVerifyInvariant struct {
-	Sender         sdk.AccAddress 
-	InvariantRoute string
+```protobuf
+// MsgVerifyInvariant represents a message to verify a particular invariance.
+message MsgVerifyInvariant {
+  string sender                = 1;
+  string invariant_module_name = 2;
+  string invariant_route       = 3;
 }
 ```
 

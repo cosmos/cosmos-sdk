@@ -115,7 +115,7 @@ If you wish to expose your `Query` endpoints as REST endpoints (as proposed in t
 
 ### Codec
 
-For registering module-specific types into the Amino codec, the `RegisterCodec(cdc *codec.Codec)` method has been renamed to `RegisterLegacyAminoCodec(cdc *codec.LegacyAmino)`.
+If you still use Amino (which is deprecated since Stargate), you must register related types using the `RegisterLegacyAminoCodec(cdc *codec.LegacyAmino)` method (previously it was called  `RegisterCodec(cdc *codec.Codec)`).
 
 Moreover, a new `RegisterInterfaces` method has been added to the `AppModule` interface that all modules implement. This method should register the interfaces that Protobuf messages implement, as well as the service `Msg`s used in the module. An example of implementation for x/bank is given below:
 

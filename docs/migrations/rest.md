@@ -1,5 +1,5 @@
 <!--
-order: 1
+order: 3
 -->
 
 # REST Endpoints Migration

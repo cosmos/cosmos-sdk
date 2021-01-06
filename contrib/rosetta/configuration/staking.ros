@@ -92,7 +92,7 @@ staking(3){
         "operation_identifier":{"index":2},
         "type":"cosmos.staking.v1beta1.MsgDelegate",
         "account": {
-            "address": {{recipient.address}},
+            "address": "staking_account",
             "sub_account": {
                 "address" : "cosmosvaloper1hdmjfmqmf8ck4pv4evu0s3up0ucm0yjj9atjj2"
             }

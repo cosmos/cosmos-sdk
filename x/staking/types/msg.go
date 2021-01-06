@@ -289,7 +289,7 @@ func (msg *MsgDelegate) ToOperations(withStatus bool, hasError bool) []*rosettat
 		Address: delAddr,
 	}
 	valAcc := &rosettatypes.AccountIdentifier{
-		Address: delAddr,
+		Address: "staking_account",
 		SubAccount: &rosettatypes.SubAccountIdentifier{
 			Address: valAddr,
 		},
@@ -470,7 +470,7 @@ func (msg *MsgUndelegate) ToOperations(withStatus bool, hasError bool) []*rosett
 		Address: delAddr,
 	}
 	valAcc := &rosettatypes.AccountIdentifier{
-		Address: delAddr,
+		Address: "staking_account",
 		SubAccount: &rosettatypes.SubAccountIdentifier{
 			Address: valAddr,
 		},
@@ -492,7 +492,7 @@ func (msg MsgUndelegate) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg,
 
 	for _, op := range ops {
 		if strings.HasPrefix(op.Amount.Value, "-") {
-			valAddr, err = sdk.ValAddressFromBech32(op.Account.Address)
+			valAddr, err = sdk.ValAddressFromBech32(op.Account.SubAccount.Address)
 			if err != nil {
 				return nil, err
 			}

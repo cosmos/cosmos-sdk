@@ -8,7 +8,7 @@ order: 2
 
 The minter is a space for holding current inflation information.
 
- - Minter: `0x00 -> ProtocolBuffer(minter)`
+ - Minter: `0x00 -> legacy_amino(minter)`
 
 ```protobuf
 message Minter {
@@ -23,7 +23,7 @@ message Minter {
 
 Minting params are held in the global params store. 
 
- - Params: `mint/params -> ProtocolBuffer(params)`
+ - Params: `mint/params -> legacy_amino(params)`
 
 ```protobuf
 message Params {

@@ -15,7 +15,7 @@ for fractions of coins to be received from operations like inflation.
 When coins are distributed from the pool they are truncated back to
 `sdk.Coins` which are non-decimal.
 
-- FeePool:  `0x00 -> amino(FeePool)`
+- FeePool:  `0x00 -> legacy_amino(FeePool)`
 
 ```go
 // coins with decimal
@@ -26,11 +26,8 @@ type DecCoin struct {
     Denom  string
 }
 
-type FeePool struct {
-    TotalValAccumUpdateHeight  int64    // last height which the total validator accum was updated
-    TotalValAccum              sdk.Dec  // total valdator accum held by validators
-    Pool                       DecCoins // funds for all validators which have yet to be withdrawn
-    CommunityPool              DecCoins // pool for community funds yet to be spent
+message FeePool {
+    repeated cosmos.base.v1beta1.DecCoin community_pool = 1 // pool for community funds yet to be spent
 }
 ```
 
@@ -43,16 +40,13 @@ Validator distribution information for the relevant validator is updated each ti
  3. any delegator withdraws from a validator, or
  4. the validator withdraws it's commission.
 
-- ValidatorDistInfo:  `0x02 | ValOperatorAddr -> amino(validatorDistribution)`
+- ValidatorDistInfo:  `0x02 | ValOperatorAddr -> legacy_amino(validatorDistribution)`
 
 ```go
 type ValidatorDistInfo struct {
-    FeePoolWithdrawalHeight     int64    // last height this validator withdrew from the global fee pool
-    Pool                       DecCoins // rewards owed to delegators, commission has already been charged (includes proposer reward)
-    PoolCommission             DecCoins // commission collected by this validator (pending withdrawal) 
-
-    TotalDelAccumUpdateHeight  int64    // last height which the total delegator accum was updated
-    TotalDelAccum              sdk.Dec  // total proposer pool accumulation factor held by delegators
+    OperatorAddress     sdk.AccAddress
+    SelfBondRewards     sdk.DecCoins
+    ValidatorCommission types.ValidatorAccumulatedCommission
 }
 ```
 
@@ -64,7 +58,7 @@ properties change (aka bonded tokens etc.) its properties will remain constant
 and the delegator's _accumulation_ factor can be calculated passively knowing
 only the height of the last withdrawal and its current properties.
 
-- DelegationDistInfo: `0x02 | DelegatorAddr | ValOperatorAddr -> amino(delegatorDist)`
+- DelegationDistInfo: `0x02 | DelegatorAddr | ValOperatorAddr -> legacy_amino(delegatorDist)`
 
 ```go
 type DelegationDistInfo struct {

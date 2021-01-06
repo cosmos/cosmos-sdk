@@ -17,7 +17,7 @@ message MsgSend {
 
 `handleMsgSend` just runs `inputOutputCoins`.
 
-```
+```go
 handleMsgSend(msg MsgSend)
   inputSum = 0
   for input in inputs

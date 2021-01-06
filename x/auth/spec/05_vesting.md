@@ -91,35 +91,34 @@ type VestingAccount interface {
 
 // BaseVestingAccount implements the VestingAccount interface. It contains all
 // the necessary fields needed for any vesting account implementation.
-type BaseVestingAccount struct {
-  BaseAccount
+message BaseVestingAccount {
+  cosmos.auth.v1beta1.BaseAccount base_account       = 1
 
-  OriginalVesting  Coins // coins in account upon initialization
-  DelegatedFree    Coins // coins that are vested and delegated
-  DelegatedVesting Coins // coins that vesting and delegated
+  repeated cosmos.base.v1beta1.Coin original_vesting  = 2 // coins in account upon initialization
+  repeated cosmos.base.v1beta1.Coin delegated_free    = 3 // coins that are vested and delegated
+  repeated cosmos.base.v1beta1.Coin delegated_vesting = 4 // coins that vesting and delegated
 
-  EndTime  int64 // when the coins become unlocked
+  int64 end_time = 5
 }
 
 // ContinuousVestingAccount implements the VestingAccount interface. It
 // continuously vests by unlocking coins linearly with respect to time.
-type ContinuousVestingAccount struct {
-  BaseVestingAccount
-
-  StartTime  int64 // when the coins start to vest
+message ContinuousVestingAccount {
+  BaseVestingAccount base_vesting_account = 1
+  int64              start_time         	= 2
 }
 
 // DelayedVestingAccount implements the VestingAccount interface. It vests all
 // coins after a specific time, but non prior. In other words, it keeps them
 // locked until a specified time.
-type DelayedVestingAccount struct {
-  BaseVestingAccount
+message DelayedVestingAccount {
+  BaseVestingAccount base_vesting_account = 1
 }
 
 // VestingPeriod defines a length of time and amount of coins that will vest
-type Period struct {
-  Length int64 // length of the period, in seconds
-  Amount Coins // amount of coins vesting during this period
+message Period {
+	int64    length                          = 1 // length of the period, in seconds
+  repeated cosmos.base.v1beta1.Coin amount = 2 // amount of coins vesting during this period
 }
 
 // Stores all vesting periods passed as part of a PeriodicVestingAccount
@@ -127,10 +126,10 @@ type Periods []Period
 
 // PeriodicVestingAccount implements the VestingAccount interface. It
 // periodically vests by unlocking coins during each specified period
-type PeriodicVestingAccount struct {
-  BaseVestingAccount
-  StartTime int64
-  Periods Periods // the vesting schedule
+message PeriodicVestingAccount {
+  BaseVestingAccount base_vesting_account = 1
+	int64              start_time           = 2
+  repeated Period vesting_periods = 3  // the vesting schedule
 }
 ```
 

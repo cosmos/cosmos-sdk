@@ -61,7 +61,7 @@ func setup(withGenesis bool) (*SimApp, GenesisState) {
 
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
 func Setup(isCheckTx bool) *SimApp {
-	app, genesisState := setup(isCheckTx)
+	app, genesisState := setup(!isCheckTx)
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")

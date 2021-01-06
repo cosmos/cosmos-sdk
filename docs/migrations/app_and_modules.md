@@ -33,7 +33,7 @@ As outlined in our [encoding guide](../core/encoding.md), one of the most signif
 The rule of thumb is that any object that needs to be serialized (into binary or JSON) must implement `proto.Message` and must be serializable into Protobuf format. The easiest way to do it is to use Protobuf type definition and `protoc` compiler to generate the structures and functions for you. In practice, the three following categories of types must be converted to Protobuf messages:
 
 - client-facing types: `Msg`s, query requests and responses. This is because client will send these types over the wire to your app.
-- types that are stored in state. This is because the SDK stores the binary representation of these types in state.
+- objects that are stored in state. This is because the SDK stores the binary representation of these types in state.
 - genesis types. These are used when importing and exporting state snapshots during chain upgrades.
 
 An example of type that is stored in state is [x/auth's](../../x/auth/spec/README.md) `BaseAccount` type. Its migration looks like:

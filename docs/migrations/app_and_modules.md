@@ -105,7 +105,7 @@ For more information, please check our [`Query` service guide](../building-modul
 
 #### Wiring up `Msg` and `Query` Services
 
-The `RegisterServices` method is newly added and registers a module's `Msg` service and `Query` service. It should be implemented on all modules, using a `Configurator` object:
+We added a new `RegisterServices` method that registers a module's `Msg` service and a `Query` service. It should be implemented by all modules, using a `Configurator` object:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/x/bank/module.go#L99-L103
 

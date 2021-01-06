@@ -4,7 +4,7 @@ order: 4
 
 # Generating, Signing and Broadcasting Transactions
 
-This document describes how to generate, sign and broadcast a transaction. {synopsis}
+This document describes how to generate an (unsigned) transaction, signing it (with one or multiple keys), and broadcasting it to the network. {synopsis}
 
 ## Using the CLI
 
@@ -22,12 +22,16 @@ will run the following steps:
 - sign the generated transaction with the keyring's account.
 - broadcast the signed transaction to the network. This is possible because the CLI connects to the node's Tendermint RPC endpoint.
 
-The CLI bundles all the necessary steps into a simple-to-use user experience. In the next paragraphs, we will see how to perform these steps separately.
+The CLI bundles all the necessary steps into a simple-to-use user experience. However, it's possible to run all the steps individually too.
 
-## Generating a Transaction
+### Generating a Transaction
 
-## Signing a Transaction
+Generating a transaction can simply be done by appending the `--generate-only` flag on any `tx` command, e.g.:
 
-## Broadcasting a Transaction
+```bash
+simd tx send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000stake --chain-id my-test-chain --generate-only
+```
 
-### Simulation
+This will output the unsigned transaction as JSON in the console.
+
+### Signing a Transaction

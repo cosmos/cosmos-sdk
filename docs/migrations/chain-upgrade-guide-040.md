@@ -9,8 +9,7 @@ This document explains how to perform a chain upgrade from v0.39 to v0.40. {syno
 ## Risks
 
 As a validator, performing the upgrade procedure on your consensus nodes carries a heightened risk of double-signing and
-being slashed. The most important piece of this procedure is verifying your software version and genesis file hash before
-starting your validator and signing.
+being slashed: if your validator node votes for a block, and, in the same block time, restarts the upgraded node, this may lead to double-voting on a block.
 
 The riskiest thing a validator can do is to discover that they made a mistake and repeat the upgrade procedure again during
 the network startup. If you discover a mistake in the process, the best thing to do is wait for the network to start

@@ -36,7 +36,7 @@ The rule of thumb is that any object that needs to be serialized (into binary or
 - objects that are stored in state. This is because the SDK stores the binary representation of these types in state.
 - genesis types. These are used when importing and exporting state snapshots during chain upgrades.
 
-An example of type that is stored in state is [x/auth's](../../x/auth/spec/README.md) `BaseAccount` type. Its migration looks like:
+Let's have a look at [x/auth's](../../x/auth/spec/README.md) `BaseAccount` objects, which are stored in a state. The migration looks like:
 
 ```diff
 // We were definining `MsgSend` as a Go struct in v0.39.

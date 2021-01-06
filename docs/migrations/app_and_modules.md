@@ -83,7 +83,7 @@ For migrating `Msg`s, the handler pattern (inside the `handler.go` file) is depr
 
 A state transition is therefore modelized as a Protobuf service method, with a method request, and an (optionally empty) method response.
 
-After defining your `Msg` service, run the `make proto-gen` script again to generate `Msg` server interfaces. The naming of this interface is simply `MsgServer`. The implementation of this interface should follow exactly the implementation of the old `Msg` handlers, which, in most cases, defers the actual state transition logic to the [keeper](../building-modules/keeper.md). You may implement this `MsgServer` directly on the keeper, of you can also do it on a new struct (e.g. called `msgServer`) that references the module's keeper.
+After defining your `Msg` service, run the `make proto-gen` script again to generate `Msg` server interfaces. The name of this interface is simply `MsgServer`. The implementation of this interface should follow exactly the implementation of the old `Msg` handlers, which, in most cases, defers the actual state transition logic to the [keeper](../building-modules/keeper.md). You may implement a `MsgServer` directly on the keeper, or you can do it using a new struct (e.g. called `msgServer`) that references the module's keeper.
 
 For more information, please check our [`Msg` service guide](../building-modules/msg-services.md).
 

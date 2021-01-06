@@ -309,6 +309,21 @@ func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) { // nolint
 }
 ```
 
+## Using REST
+
+It is not possible to generate or sign a transaction using REST, only to broadcast one.
+
+### Broadcasting a Transaction
+
+Broadcasting a transaction using the REST endpoint (served by `gRPC-gateway`) can be done by sending a POST request as follows, where the `txBytes` are the protobuf-encoded bytes of a signed transaction:
+
+```bash
+curl -X POST \
+    -H "Content-Type: application/json"
+    -d'{"tx_bytes":"{{txBytes}}","mode":"BROADCAST_MODE_SYNC"}'
+    localhost:1317/cosmos/tx/v1beta1/txs
+```
+
 ## Using CosmJS (JavaScript & TypeScript)
 
 CosmJS aims to build client libraries in JavaScript that can be embedded in web applications. Please see [https://cosmos.github.io/cosmjs](https://cosmos.github.io/cosmjs) for more information. As of January 2021, CosmJS documentation is still work in progress.

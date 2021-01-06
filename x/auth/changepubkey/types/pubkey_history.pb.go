@@ -93,10 +93,9 @@ func (m *PubKeyHistory) GetEndTime() time.Time {
 	return time.Time{}
 }
 
-// QueryPubKeyHistoryRequest is the request type for the Query/Proposal RPC method.
+// QueryPubKeyHistoryRequest is the request type for the Query/PubKeyHistory RPC method.
 type QueryPubKeyHistoryRequest struct {
-	// proposal_id defines the unique id of the proposal.
-	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 }
 
 func (m *QueryPubKeyHistoryRequest) Reset()         { *m = QueryPubKeyHistoryRequest{} }
@@ -132,16 +131,16 @@ func (m *QueryPubKeyHistoryRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryPubKeyHistoryRequest proto.InternalMessageInfo
 
-func (m *QueryPubKeyHistoryRequest) GetProposalId() uint64 {
+func (m *QueryPubKeyHistoryRequest) GetAddress() string {
 	if m != nil {
-		return m.ProposalId
+		return m.Address
 	}
-	return 0
+	return ""
 }
 
-// QueryPubKeyHistoryResponse is the response type for the Query/Proposal RPC method.
+// QueryPubKeyHistoryResponse is the response type for the Query/PubKeyHistory RPC method.
 type QueryPubKeyHistoryResponse struct {
-	Proposal PubKeyHistory `protobuf:"bytes,1,opt,name=proposal,proto3" json:"proposal"`
+	History []PubKeyHistory `protobuf:"bytes,1,rep,name=history,proto3" json:"history"`
 }
 
 func (m *QueryPubKeyHistoryResponse) Reset()         { *m = QueryPubKeyHistoryResponse{} }
@@ -177,9 +176,289 @@ func (m *QueryPubKeyHistoryResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryPubKeyHistoryResponse proto.InternalMessageInfo
 
-func (m *QueryPubKeyHistoryResponse) GetProposal() PubKeyHistory {
+func (m *QueryPubKeyHistoryResponse) GetHistory() []PubKeyHistory {
 	if m != nil {
-		return m.Proposal
+		return m.History
+	}
+	return nil
+}
+
+// QueryPubKeyHistoricalEntryRequest is the request type for the Query/PubKeyHistoricalEntry RPC method.
+type QueryPubKeyHistoricalEntryRequest struct {
+	Address string    `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	Time    time.Time `protobuf:"bytes,2,opt,name=time,proto3,stdtime" json:"time" yaml:"time"`
+}
+
+func (m *QueryPubKeyHistoricalEntryRequest) Reset()         { *m = QueryPubKeyHistoricalEntryRequest{} }
+func (m *QueryPubKeyHistoricalEntryRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryPubKeyHistoricalEntryRequest) ProtoMessage()    {}
+func (*QueryPubKeyHistoricalEntryRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_60a6d0a8f3ff57e6, []int{3}
+}
+func (m *QueryPubKeyHistoricalEntryRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryPubKeyHistoricalEntryRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryPubKeyHistoricalEntryRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryPubKeyHistoricalEntryRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryPubKeyHistoricalEntryRequest.Merge(m, src)
+}
+func (m *QueryPubKeyHistoricalEntryRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryPubKeyHistoricalEntryRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryPubKeyHistoricalEntryRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryPubKeyHistoricalEntryRequest proto.InternalMessageInfo
+
+func (m *QueryPubKeyHistoricalEntryRequest) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+func (m *QueryPubKeyHistoricalEntryRequest) GetTime() time.Time {
+	if m != nil {
+		return m.Time
+	}
+	return time.Time{}
+}
+
+// QueryPubKeyHistoricalEntryResponse is the response type for the Query/PubKeyHistoricalEntry RPC method.
+type QueryPubKeyHistoricalEntryResponse struct {
+	Entry PubKeyHistory `protobuf:"bytes,1,opt,name=entry,proto3" json:"entry"`
+}
+
+func (m *QueryPubKeyHistoricalEntryResponse) Reset()         { *m = QueryPubKeyHistoricalEntryResponse{} }
+func (m *QueryPubKeyHistoricalEntryResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryPubKeyHistoricalEntryResponse) ProtoMessage()    {}
+func (*QueryPubKeyHistoricalEntryResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_60a6d0a8f3ff57e6, []int{4}
+}
+func (m *QueryPubKeyHistoricalEntryResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryPubKeyHistoricalEntryResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryPubKeyHistoricalEntryResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryPubKeyHistoricalEntryResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryPubKeyHistoricalEntryResponse.Merge(m, src)
+}
+func (m *QueryPubKeyHistoricalEntryResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryPubKeyHistoricalEntryResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryPubKeyHistoricalEntryResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryPubKeyHistoricalEntryResponse proto.InternalMessageInfo
+
+func (m *QueryPubKeyHistoricalEntryResponse) GetEntry() PubKeyHistory {
+	if m != nil {
+		return m.Entry
+	}
+	return PubKeyHistory{}
+}
+
+// QueryLastPubKeyHistoricalEntryRequest is the request type for the Query/LastPubKeyHistoricalEntry RPC method.
+type QueryLastPubKeyHistoricalEntryRequest struct {
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+}
+
+func (m *QueryLastPubKeyHistoricalEntryRequest) Reset()         { *m = QueryLastPubKeyHistoricalEntryRequest{} }
+func (m *QueryLastPubKeyHistoricalEntryRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryLastPubKeyHistoricalEntryRequest) ProtoMessage()    {}
+func (*QueryLastPubKeyHistoricalEntryRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_60a6d0a8f3ff57e6, []int{5}
+}
+func (m *QueryLastPubKeyHistoricalEntryRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLastPubKeyHistoricalEntryRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLastPubKeyHistoricalEntryRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLastPubKeyHistoricalEntryRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLastPubKeyHistoricalEntryRequest.Merge(m, src)
+}
+func (m *QueryLastPubKeyHistoricalEntryRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLastPubKeyHistoricalEntryRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLastPubKeyHistoricalEntryRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLastPubKeyHistoricalEntryRequest proto.InternalMessageInfo
+
+func (m *QueryLastPubKeyHistoricalEntryRequest) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+// QueryLastPubKeyHistoricalEntryResponse is the response type for the Query/LastPubKeyHistoricalEntry RPC method.
+type QueryLastPubKeyHistoricalEntryResponse struct {
+	Entry PubKeyHistory `protobuf:"bytes,1,opt,name=entry,proto3" json:"entry"`
+}
+
+func (m *QueryLastPubKeyHistoricalEntryResponse) Reset() {
+	*m = QueryLastPubKeyHistoricalEntryResponse{}
+}
+func (m *QueryLastPubKeyHistoricalEntryResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryLastPubKeyHistoricalEntryResponse) ProtoMessage()    {}
+func (*QueryLastPubKeyHistoricalEntryResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_60a6d0a8f3ff57e6, []int{6}
+}
+func (m *QueryLastPubKeyHistoricalEntryResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLastPubKeyHistoricalEntryResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLastPubKeyHistoricalEntryResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLastPubKeyHistoricalEntryResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLastPubKeyHistoricalEntryResponse.Merge(m, src)
+}
+func (m *QueryLastPubKeyHistoricalEntryResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLastPubKeyHistoricalEntryResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLastPubKeyHistoricalEntryResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLastPubKeyHistoricalEntryResponse proto.InternalMessageInfo
+
+func (m *QueryLastPubKeyHistoricalEntryResponse) GetEntry() PubKeyHistory {
+	if m != nil {
+		return m.Entry
+	}
+	return PubKeyHistory{}
+}
+
+// QueryCurrentPubKeyEntryRequest is the request type for the Query/CurrentPubKeyEntry RPC method.
+type QueryCurrentPubKeyEntryRequest struct {
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+}
+
+func (m *QueryCurrentPubKeyEntryRequest) Reset()         { *m = QueryCurrentPubKeyEntryRequest{} }
+func (m *QueryCurrentPubKeyEntryRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryCurrentPubKeyEntryRequest) ProtoMessage()    {}
+func (*QueryCurrentPubKeyEntryRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_60a6d0a8f3ff57e6, []int{7}
+}
+func (m *QueryCurrentPubKeyEntryRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryCurrentPubKeyEntryRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryCurrentPubKeyEntryRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryCurrentPubKeyEntryRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryCurrentPubKeyEntryRequest.Merge(m, src)
+}
+func (m *QueryCurrentPubKeyEntryRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryCurrentPubKeyEntryRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryCurrentPubKeyEntryRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryCurrentPubKeyEntryRequest proto.InternalMessageInfo
+
+func (m *QueryCurrentPubKeyEntryRequest) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+// QueryCurrentPubKeyEntryResponse is the response type for the Query/LastPubKeyHistoricalEntry RPC method.
+type QueryCurrentPubKeyEntryResponse struct {
+	Entry PubKeyHistory `protobuf:"bytes,1,opt,name=entry,proto3" json:"entry"`
+}
+
+func (m *QueryCurrentPubKeyEntryResponse) Reset()         { *m = QueryCurrentPubKeyEntryResponse{} }
+func (m *QueryCurrentPubKeyEntryResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryCurrentPubKeyEntryResponse) ProtoMessage()    {}
+func (*QueryCurrentPubKeyEntryResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_60a6d0a8f3ff57e6, []int{8}
+}
+func (m *QueryCurrentPubKeyEntryResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryCurrentPubKeyEntryResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryCurrentPubKeyEntryResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryCurrentPubKeyEntryResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryCurrentPubKeyEntryResponse.Merge(m, src)
+}
+func (m *QueryCurrentPubKeyEntryResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryCurrentPubKeyEntryResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryCurrentPubKeyEntryResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryCurrentPubKeyEntryResponse proto.InternalMessageInfo
+
+func (m *QueryCurrentPubKeyEntryResponse) GetEntry() PubKeyHistory {
+	if m != nil {
+		return m.Entry
 	}
 	return PubKeyHistory{}
 }
@@ -188,6 +467,12 @@ func init() {
 	proto.RegisterType((*PubKeyHistory)(nil), "cosmos.changepubkey.v1beta1.PubKeyHistory")
 	proto.RegisterType((*QueryPubKeyHistoryRequest)(nil), "cosmos.changepubkey.v1beta1.QueryPubKeyHistoryRequest")
 	proto.RegisterType((*QueryPubKeyHistoryResponse)(nil), "cosmos.changepubkey.v1beta1.QueryPubKeyHistoryResponse")
+	proto.RegisterType((*QueryPubKeyHistoricalEntryRequest)(nil), "cosmos.changepubkey.v1beta1.QueryPubKeyHistoricalEntryRequest")
+	proto.RegisterType((*QueryPubKeyHistoricalEntryResponse)(nil), "cosmos.changepubkey.v1beta1.QueryPubKeyHistoricalEntryResponse")
+	proto.RegisterType((*QueryLastPubKeyHistoricalEntryRequest)(nil), "cosmos.changepubkey.v1beta1.QueryLastPubKeyHistoricalEntryRequest")
+	proto.RegisterType((*QueryLastPubKeyHistoricalEntryResponse)(nil), "cosmos.changepubkey.v1beta1.QueryLastPubKeyHistoricalEntryResponse")
+	proto.RegisterType((*QueryCurrentPubKeyEntryRequest)(nil), "cosmos.changepubkey.v1beta1.QueryCurrentPubKeyEntryRequest")
+	proto.RegisterType((*QueryCurrentPubKeyEntryResponse)(nil), "cosmos.changepubkey.v1beta1.QueryCurrentPubKeyEntryResponse")
 }
 
 func init() {
@@ -195,38 +480,50 @@ func init() {
 }
 
 var fileDescriptor_60a6d0a8f3ff57e6 = []byte{
-	// 486 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x93, 0x31, 0x6f, 0xd3, 0x40,
-	0x14, 0xc7, 0x73, 0xa1, 0xb4, 0xe1, 0x02, 0x42, 0x9c, 0x3a, 0x94, 0x14, 0xec, 0xca, 0x53, 0x05,
-	0xe4, 0x8e, 0xa6, 0x52, 0x91, 0x10, 0x53, 0x06, 0x04, 0x82, 0x21, 0x58, 0x0c, 0x88, 0x25, 0x3a,
-	0xc7, 0x87, 0x63, 0x12, 0xfb, 0x1d, 0xbe, 0xbb, 0x0a, 0x0b, 0xb1, 0x20, 0xb1, 0x57, 0xe2, 0x8b,
-	0x30, 0xf3, 0x09, 0x3a, 0x56, 0x62, 0x61, 0x0a, 0x28, 0x61, 0x62, 0xe4, 0x13, 0x20, 0xfb, 0x6c,
-	0xd2, 0x48, 0x50, 0xc4, 0x64, 0xdf, 0xbb, 0xff, 0xff, 0xe7, 0xff, 0xbd, 0x7b, 0xc6, 0xb7, 0x47,
-	0xa0, 0x12, 0x50, 0x6c, 0x34, 0xe6, 0x69, 0x24, 0xa4, 0x09, 0x26, 0x22, 0x67, 0x87, 0x7b, 0x81,
-	0xd0, 0x7c, 0x8f, 0xd9, 0xe5, 0x70, 0x1c, 0x2b, 0x0d, 0x59, 0x4e, 0x65, 0x06, 0x1a, 0xc8, 0xb6,
-	0x75, 0xd0, 0xd3, 0x0e, 0x5a, 0x39, 0x3a, 0x9b, 0x11, 0x44, 0x50, 0xea, 0x58, 0xf1, 0x66, 0x2d,
-	0x1d, 0x37, 0x02, 0x88, 0xa6, 0x82, 0x95, 0xab, 0xc0, 0xbc, 0x60, 0x3a, 0x4e, 0x84, 0xd2, 0x3c,
-	0x91, 0x95, 0xe0, 0x5a, 0x25, 0xe0, 0x32, 0x66, 0x3c, 0x4d, 0x41, 0x73, 0x1d, 0x43, 0xaa, 0xec,
-	0xae, 0xf7, 0xbe, 0x89, 0x2f, 0x0d, 0x4c, 0xf0, 0x48, 0xe4, 0x0f, 0x6c, 0x12, 0x72, 0x1f, 0x6f,
-	0x48, 0x13, 0x0c, 0x27, 0x22, 0xdf, 0x42, 0x3b, 0x68, 0xf7, 0x62, 0xbf, 0xfb, 0x63, 0xe6, 0x6e,
-	0x4a, 0x13, 0x4c, 0xe3, 0x51, 0x51, 0xbd, 0x05, 0x49, 0xac, 0x45, 0x22, 0x75, 0xfe, 0x73, 0xe6,
-	0x5e, 0xc9, 0x79, 0x32, 0xbd, 0xeb, 0x2d, 0x77, 0x3d, 0x7f, 0x5d, 0x96, 0x38, 0xf2, 0x0c, 0x63,
-	0xa5, 0x79, 0xa6, 0x87, 0x45, 0xa0, 0xad, 0xe6, 0x0e, 0xda, 0x6d, 0xf7, 0x3a, 0xd4, 0x86, 0xa1,
-	0x75, 0x5a, 0xfa, 0xb4, 0x4e, 0xdb, 0xbf, 0x7e, 0x3c, 0x73, 0x1b, 0x4b, 0xe4, 0xd2, 0xeb, 0x1d,
-	0x7d, 0x75, 0x91, 0x7f, 0xa1, 0x2c, 0x14, 0x72, 0xe2, 0xe3, 0x96, 0x48, 0x43, 0xcb, 0x3d, 0xf7,
-	0x4f, 0xee, 0x76, 0xc5, 0xbd, 0x6c, 0xb9, 0xb5, 0xd3, 0x52, 0x37, 0x44, 0x1a, 0x16, 0x52, 0xef,
-	0x1e, 0xbe, 0xfa, 0xc4, 0x88, 0x2c, 0x5f, 0xe9, 0x85, 0x2f, 0x5e, 0x19, 0xa1, 0x34, 0x71, 0x71,
-	0x5b, 0x66, 0x20, 0x41, 0xf1, 0xe9, 0x30, 0x0e, 0xcb, 0xb6, 0xac, 0xf9, 0xb8, 0x2e, 0x3d, 0x0c,
-	0xbd, 0x97, 0xb8, 0xf3, 0x27, 0xb7, 0x92, 0x90, 0x2a, 0x41, 0x1e, 0xe3, 0x56, 0xad, 0x2d, 0xbd,
-	0xed, 0xde, 0x0d, 0x7a, 0xc6, 0x45, 0xd3, 0x15, 0x4a, 0x7f, 0xad, 0xc8, 0xef, 0xff, 0x26, 0xf4,
-	0x3e, 0x21, 0x7c, 0xbe, 0xfc, 0x18, 0xf9, 0x88, 0x70, 0x6b, 0x50, 0x95, 0xc9, 0xc1, 0x99, 0xc8,
-	0xbf, 0x9e, 0xad, 0x73, 0xe7, 0xbf, 0x7d, 0xf6, 0x54, 0xde, 0xfe, 0xbb, 0xcf, 0xdf, 0x3f, 0x34,
-	0xbb, 0xe4, 0x26, 0xab, 0xc6, 0x3c, 0x82, 0xc3, 0xe5, 0x74, 0x57, 0xb1, 0x14, 0x7b, 0x73, 0xaa,
-	0x73, 0x6f, 0xfb, 0x83, 0xe3, 0xb9, 0x83, 0x4e, 0xe6, 0x0e, 0xfa, 0x36, 0x77, 0xd0, 0xd1, 0xc2,
-	0x69, 0x9c, 0x2c, 0x9c, 0xc6, 0x97, 0x85, 0xd3, 0x78, 0x7e, 0x10, 0xc5, 0x7a, 0x6c, 0x02, 0x3a,
-	0x82, 0xa4, 0x06, 0xda, 0x47, 0x57, 0x85, 0x13, 0xf6, 0x9a, 0x71, 0xa3, 0xc7, 0xab, 0x7f, 0x92,
-	0xce, 0xa5, 0x50, 0xc1, 0x7a, 0x79, 0xe5, 0xfb, 0xbf, 0x02, 0x00, 0x00, 0xff, 0xff, 0x0e, 0xd1,
-	0x47, 0xfc, 0x6d, 0x03, 0x00, 0x00,
+	// 678 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xcf, 0x6b, 0x13, 0x41,
+	0x14, 0xce, 0xf4, 0x57, 0xec, 0x54, 0x11, 0x87, 0x8a, 0xe9, 0x56, 0x37, 0x75, 0x41, 0x29, 0x62,
+	0x77, 0x6c, 0xa5, 0x2d, 0xb4, 0x56, 0x31, 0xa1, 0xad, 0x58, 0x85, 0x1a, 0x3c, 0x88, 0x97, 0x30,
+	0x9b, 0x8c, 0xc9, 0xd2, 0xec, 0xce, 0xba, 0x33, 0x2b, 0x2e, 0xa5, 0x17, 0x41, 0xcf, 0x05, 0xff,
+	0x20, 0xaf, 0x3d, 0x16, 0xf4, 0xe0, 0xa9, 0x4a, 0x2b, 0x08, 0xde, 0xf4, 0x0f, 0x10, 0xd9, 0x99,
+	0x89, 0xb1, 0x69, 0xf3, 0xa3, 0xb1, 0xa7, 0xdd, 0x99, 0x79, 0xdf, 0xf7, 0xbe, 0xef, 0xbd, 0x79,
+	0x03, 0x6f, 0x95, 0x18, 0xf7, 0x18, 0xc7, 0xa5, 0x2a, 0xf1, 0x2b, 0x34, 0x88, 0x9c, 0x0d, 0x1a,
+	0xe3, 0x57, 0xd3, 0x0e, 0x15, 0x64, 0x1a, 0xab, 0x65, 0xb1, 0xea, 0x72, 0xc1, 0xc2, 0xd8, 0x0e,
+	0x42, 0x26, 0x18, 0x1a, 0x57, 0x08, 0xfb, 0x5f, 0x84, 0xad, 0x11, 0xc6, 0x68, 0x85, 0x55, 0x98,
+	0x8c, 0xc3, 0xc9, 0x9f, 0x82, 0x18, 0xd9, 0x0a, 0x63, 0x95, 0x1a, 0xc5, 0x72, 0xe5, 0x44, 0x2f,
+	0xb0, 0x70, 0x3d, 0xca, 0x05, 0xf1, 0x02, 0x1d, 0x70, 0x59, 0x07, 0x90, 0xc0, 0xc5, 0xc4, 0xf7,
+	0x99, 0x20, 0xc2, 0x65, 0x3e, 0x57, 0xa7, 0xd6, 0xdb, 0x3e, 0x78, 0x6e, 0x3d, 0x72, 0xd6, 0x68,
+	0xfc, 0x40, 0x29, 0x41, 0x2b, 0x30, 0x1d, 0x44, 0x4e, 0x71, 0x83, 0xc6, 0x19, 0x30, 0x01, 0x26,
+	0xcf, 0xe6, 0xa6, 0x7e, 0xec, 0x65, 0x47, 0x83, 0xc8, 0xa9, 0xb9, 0xa5, 0x64, 0xf7, 0x26, 0xf3,
+	0x5c, 0x41, 0xbd, 0x40, 0xc4, 0xbf, 0xf6, 0xb2, 0x17, 0x62, 0xe2, 0xd5, 0x16, 0xac, 0xc6, 0xa9,
+	0x55, 0x18, 0x0a, 0x24, 0x1d, 0x7a, 0x06, 0x21, 0x17, 0x24, 0x14, 0xc5, 0x44, 0x50, 0xa6, 0x6f,
+	0x02, 0x4c, 0x8e, 0xcc, 0x18, 0xb6, 0x12, 0x63, 0xd7, 0xd5, 0xda, 0x4f, 0xeb, 0x6a, 0x73, 0x57,
+	0x76, 0xf6, 0xb2, 0xa9, 0x06, 0x65, 0x03, 0x6b, 0x6d, 0x7f, 0xc9, 0x82, 0xc2, 0xb0, 0xdc, 0x48,
+	0xc2, 0x51, 0x01, 0x9e, 0xa1, 0x7e, 0x59, 0xf1, 0xf6, 0x77, 0xe4, 0x1d, 0xd7, 0xbc, 0xe7, 0x15,
+	0x6f, 0x1d, 0xa9, 0x58, 0xd3, 0xd4, 0x2f, 0x27, 0xa1, 0xd6, 0x2c, 0x1c, 0x7b, 0x12, 0xd1, 0x30,
+	0x3e, 0x54, 0x8b, 0x02, 0x7d, 0x19, 0x51, 0x2e, 0x50, 0x06, 0xa6, 0x49, 0xb9, 0x1c, 0x52, 0xce,
+	0x65, 0x49, 0x86, 0x0b, 0xf5, 0xa5, 0x55, 0x85, 0xc6, 0x71, 0x30, 0x1e, 0x30, 0x9f, 0x53, 0xf4,
+	0x10, 0xa6, 0x75, 0x7f, 0x33, 0x60, 0xa2, 0x7f, 0x72, 0x64, 0xe6, 0x86, 0xdd, 0xa6, 0xc1, 0xf6,
+	0x21, 0x92, 0xdc, 0x40, 0xa2, 0xbb, 0x50, 0x27, 0xb0, 0xde, 0x01, 0x78, 0xf5, 0x48, 0x2a, 0xb7,
+	0x44, 0x6a, 0xcb, 0xbe, 0xe8, 0x42, 0x29, 0x5a, 0x85, 0x03, 0x5d, 0x36, 0xe2, 0x92, 0x2e, 0xd8,
+	0x88, 0x2a, 0x58, 0xa3, 0x58, 0x92, 0xc0, 0xaa, 0x41, 0xab, 0x9d, 0x0e, 0x6d, 0x7d, 0x05, 0x0e,
+	0xd2, 0x64, 0x43, 0xca, 0xe8, 0xc5, 0xb8, 0x82, 0x5b, 0xf7, 0xe1, 0x35, 0x99, 0xed, 0x11, 0xe1,
+	0xa2, 0x37, 0xe7, 0x56, 0x00, 0xaf, 0x77, 0xa2, 0x38, 0x65, 0xd1, 0x0b, 0xd0, 0x94, 0x19, 0xf3,
+	0x51, 0x18, 0x52, 0x5f, 0x27, 0xed, 0x52, 0xad, 0x0b, 0xb3, 0x2d, 0xb1, 0xa7, 0x2b, 0x73, 0xe6,
+	0xf7, 0x10, 0x1c, 0x94, 0xb9, 0xd0, 0x07, 0xd0, 0xfc, 0x0a, 0xcc, 0xb5, 0x25, 0x6d, 0x39, 0x2a,
+	0xc6, 0xfc, 0x89, 0x71, 0xca, 0x94, 0xb5, 0xf4, 0xe6, 0xe3, 0xb7, 0xf7, 0x7d, 0xf3, 0x68, 0x16,
+	0x77, 0xff, 0x6a, 0xe2, 0x4d, 0x5d, 0xb5, 0x2d, 0xf4, 0x1d, 0xc0, 0x8b, 0xc7, 0x36, 0x17, 0xdd,
+	0x3d, 0x99, 0xa2, 0xe6, 0x8b, 0x65, 0xdc, 0xeb, 0x19, 0xaf, 0x9d, 0x3d, 0x96, 0xce, 0x56, 0xd1,
+	0x72, 0xf7, 0xce, 0x12, 0x92, 0xa2, 0x6c, 0x52, 0xc3, 0x22, 0xde, 0x4c, 0xc6, 0x6f, 0x0b, 0xfd,
+	0x04, 0x70, 0xac, 0xe5, 0x55, 0x46, 0xb9, 0xce, 0x6a, 0x3b, 0x8d, 0x92, 0x91, 0xff, 0x2f, 0x0e,
+	0xed, 0x7a, 0x4d, 0xba, 0x5e, 0x46, 0xf9, 0xb6, 0xae, 0x6b, 0x84, 0x8b, 0x62, 0x47, 0xeb, 0xe8,
+	0x13, 0x80, 0xe8, 0xe8, 0x40, 0xa0, 0xc5, 0xce, 0x42, 0x5b, 0x8e, 0xa0, 0x71, 0xa7, 0x37, 0xb0,
+	0xb6, 0x97, 0x97, 0xf6, 0x96, 0xd0, 0x62, 0x5b, 0x7b, 0x25, 0x45, 0x50, 0x77, 0xd8, 0x64, 0x2b,
+	0xb7, 0xbe, 0xb3, 0x6f, 0x82, 0xdd, 0x7d, 0x13, 0x7c, 0xdd, 0x37, 0xc1, 0xf6, 0x81, 0x99, 0xda,
+	0x3d, 0x30, 0x53, 0x9f, 0x0f, 0xcc, 0xd4, 0xf3, 0xb9, 0x8a, 0x2b, 0xaa, 0x91, 0x63, 0x97, 0x98,
+	0xf7, 0x37, 0x81, 0xfc, 0x4c, 0xf1, 0xf2, 0x06, 0x7e, 0x8d, 0x49, 0x24, 0xaa, 0x87, 0x53, 0x8a,
+	0x38, 0xa0, 0xdc, 0x19, 0x92, 0xef, 0xf9, 0xed, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x8d, 0x55,
+	0x53, 0x36, 0x7b, 0x08, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -241,8 +538,14 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Proposal queries proposal details based on ProposalID.
-	Proposal(ctx context.Context, in *QueryPubKeyHistoryRequest, opts ...grpc.CallOption) (*QueryPubKeyHistoryResponse, error)
+	// PubKeyHistory queries account pubkey history details based on address.
+	PubKeyHistory(ctx context.Context, in *QueryPubKeyHistoryRequest, opts ...grpc.CallOption) (*QueryPubKeyHistoryResponse, error)
+	// PubKeyHistoricalEntry queries account pubkey historical entry based on address and time.
+	PubKeyHistoricalEntry(ctx context.Context, in *QueryPubKeyHistoricalEntryRequest, opts ...grpc.CallOption) (*QueryPubKeyHistoricalEntryResponse, error)
+	// LastPubKeyHistoricalEntry queries account's last pubkey historical entry based on address.
+	LastPubKeyHistoricalEntry(ctx context.Context, in *QueryLastPubKeyHistoricalEntryRequest, opts ...grpc.CallOption) (*QueryLastPubKeyHistoricalEntryResponse, error)
+	// CurrentPubKeyEntry queries account's current pubkey entry based on address.
+	CurrentPubKeyEntry(ctx context.Context, in *QueryCurrentPubKeyEntryRequest, opts ...grpc.CallOption) (*QueryCurrentPubKeyEntryResponse, error)
 }
 
 type queryClient struct {
@@ -253,9 +556,36 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
-func (c *queryClient) Proposal(ctx context.Context, in *QueryPubKeyHistoryRequest, opts ...grpc.CallOption) (*QueryPubKeyHistoryResponse, error) {
+func (c *queryClient) PubKeyHistory(ctx context.Context, in *QueryPubKeyHistoryRequest, opts ...grpc.CallOption) (*QueryPubKeyHistoryResponse, error) {
 	out := new(QueryPubKeyHistoryResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.changepubkey.v1beta1.Query/Proposal", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.changepubkey.v1beta1.Query/PubKeyHistory", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) PubKeyHistoricalEntry(ctx context.Context, in *QueryPubKeyHistoricalEntryRequest, opts ...grpc.CallOption) (*QueryPubKeyHistoricalEntryResponse, error) {
+	out := new(QueryPubKeyHistoricalEntryResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.changepubkey.v1beta1.Query/PubKeyHistoricalEntry", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) LastPubKeyHistoricalEntry(ctx context.Context, in *QueryLastPubKeyHistoricalEntryRequest, opts ...grpc.CallOption) (*QueryLastPubKeyHistoricalEntryResponse, error) {
+	out := new(QueryLastPubKeyHistoricalEntryResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.changepubkey.v1beta1.Query/LastPubKeyHistoricalEntry", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) CurrentPubKeyEntry(ctx context.Context, in *QueryCurrentPubKeyEntryRequest, opts ...grpc.CallOption) (*QueryCurrentPubKeyEntryResponse, error) {
+	out := new(QueryCurrentPubKeyEntryResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.changepubkey.v1beta1.Query/CurrentPubKeyEntry", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -264,36 +594,105 @@ func (c *queryClient) Proposal(ctx context.Context, in *QueryPubKeyHistoryReques
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Proposal queries proposal details based on ProposalID.
-	Proposal(context.Context, *QueryPubKeyHistoryRequest) (*QueryPubKeyHistoryResponse, error)
+	// PubKeyHistory queries account pubkey history details based on address.
+	PubKeyHistory(context.Context, *QueryPubKeyHistoryRequest) (*QueryPubKeyHistoryResponse, error)
+	// PubKeyHistoricalEntry queries account pubkey historical entry based on address and time.
+	PubKeyHistoricalEntry(context.Context, *QueryPubKeyHistoricalEntryRequest) (*QueryPubKeyHistoricalEntryResponse, error)
+	// LastPubKeyHistoricalEntry queries account's last pubkey historical entry based on address.
+	LastPubKeyHistoricalEntry(context.Context, *QueryLastPubKeyHistoricalEntryRequest) (*QueryLastPubKeyHistoricalEntryResponse, error)
+	// CurrentPubKeyEntry queries account's current pubkey entry based on address.
+	CurrentPubKeyEntry(context.Context, *QueryCurrentPubKeyEntryRequest) (*QueryCurrentPubKeyEntryResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
 type UnimplementedQueryServer struct {
 }
 
-func (*UnimplementedQueryServer) Proposal(ctx context.Context, req *QueryPubKeyHistoryRequest) (*QueryPubKeyHistoryResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Proposal not implemented")
+func (*UnimplementedQueryServer) PubKeyHistory(ctx context.Context, req *QueryPubKeyHistoryRequest) (*QueryPubKeyHistoryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PubKeyHistory not implemented")
+}
+func (*UnimplementedQueryServer) PubKeyHistoricalEntry(ctx context.Context, req *QueryPubKeyHistoricalEntryRequest) (*QueryPubKeyHistoricalEntryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PubKeyHistoricalEntry not implemented")
+}
+func (*UnimplementedQueryServer) LastPubKeyHistoricalEntry(ctx context.Context, req *QueryLastPubKeyHistoricalEntryRequest) (*QueryLastPubKeyHistoricalEntryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LastPubKeyHistoricalEntry not implemented")
+}
+func (*UnimplementedQueryServer) CurrentPubKeyEntry(ctx context.Context, req *QueryCurrentPubKeyEntryRequest) (*QueryCurrentPubKeyEntryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CurrentPubKeyEntry not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_Proposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_PubKeyHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryPubKeyHistoryRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).Proposal(ctx, in)
+		return srv.(QueryServer).PubKeyHistory(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.changepubkey.v1beta1.Query/Proposal",
+		FullMethod: "/cosmos.changepubkey.v1beta1.Query/PubKeyHistory",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Proposal(ctx, req.(*QueryPubKeyHistoryRequest))
+		return srv.(QueryServer).PubKeyHistory(ctx, req.(*QueryPubKeyHistoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_PubKeyHistoricalEntry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryPubKeyHistoricalEntryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).PubKeyHistoricalEntry(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.changepubkey.v1beta1.Query/PubKeyHistoricalEntry",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).PubKeyHistoricalEntry(ctx, req.(*QueryPubKeyHistoricalEntryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_LastPubKeyHistoricalEntry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryLastPubKeyHistoricalEntryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).LastPubKeyHistoricalEntry(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.changepubkey.v1beta1.Query/LastPubKeyHistoricalEntry",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).LastPubKeyHistoricalEntry(ctx, req.(*QueryLastPubKeyHistoricalEntryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_CurrentPubKeyEntry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryCurrentPubKeyEntryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).CurrentPubKeyEntry(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.changepubkey.v1beta1.Query/CurrentPubKeyEntry",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).CurrentPubKeyEntry(ctx, req.(*QueryCurrentPubKeyEntryRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -303,8 +702,20 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Proposal",
-			Handler:    _Query_Proposal_Handler,
+			MethodName: "PubKeyHistory",
+			Handler:    _Query_PubKeyHistory_Handler,
+		},
+		{
+			MethodName: "PubKeyHistoricalEntry",
+			Handler:    _Query_PubKeyHistoricalEntry_Handler,
+		},
+		{
+			MethodName: "LastPubKeyHistoricalEntry",
+			Handler:    _Query_LastPubKeyHistoricalEntry_Handler,
+		},
+		{
+			MethodName: "CurrentPubKeyEntry",
+			Handler:    _Query_CurrentPubKeyEntry_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -377,10 +788,12 @@ func (m *QueryPubKeyHistoryRequest) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	_ = i
 	var l int
 	_ = l
-	if m.ProposalId != 0 {
-		i = encodeVarintPubkeyHistory(dAtA, i, uint64(m.ProposalId))
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintPubkeyHistory(dAtA, i, uint64(len(m.Address)))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -405,8 +818,209 @@ func (m *QueryPubKeyHistoryResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 	_ = i
 	var l int
 	_ = l
+	if len(m.History) > 0 {
+		for iNdEx := len(m.History) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.History[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintPubkeyHistory(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryPubKeyHistoricalEntryRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryPubKeyHistoricalEntryRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryPubKeyHistoricalEntryRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	n3, err3 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.Time, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.Time):])
+	if err3 != nil {
+		return 0, err3
+	}
+	i -= n3
+	i = encodeVarintPubkeyHistory(dAtA, i, uint64(n3))
+	i--
+	dAtA[i] = 0x12
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintPubkeyHistory(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryPubKeyHistoricalEntryResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryPubKeyHistoricalEntryResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryPubKeyHistoricalEntryResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
 	{
-		size, err := m.Proposal.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.Entry.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintPubkeyHistory(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryLastPubKeyHistoricalEntryRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLastPubKeyHistoricalEntryRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLastPubKeyHistoricalEntryRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintPubkeyHistory(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryLastPubKeyHistoricalEntryResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLastPubKeyHistoricalEntryResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLastPubKeyHistoricalEntryResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Entry.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintPubkeyHistory(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryCurrentPubKeyEntryRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryCurrentPubKeyEntryRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryCurrentPubKeyEntryRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintPubkeyHistory(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryCurrentPubKeyEntryResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryCurrentPubKeyEntryResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryCurrentPubKeyEntryResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Entry.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -452,8 +1066,9 @@ func (m *QueryPubKeyHistoryRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.ProposalId != 0 {
-		n += 1 + sovPubkeyHistory(uint64(m.ProposalId))
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovPubkeyHistory(uint64(l))
 	}
 	return n
 }
@@ -464,7 +1079,85 @@ func (m *QueryPubKeyHistoryResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.Proposal.Size()
+	if len(m.History) > 0 {
+		for _, e := range m.History {
+			l = e.Size()
+			n += 1 + l + sovPubkeyHistory(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QueryPubKeyHistoricalEntryRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovPubkeyHistory(uint64(l))
+	}
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.Time)
+	n += 1 + l + sovPubkeyHistory(uint64(l))
+	return n
+}
+
+func (m *QueryPubKeyHistoricalEntryResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Entry.Size()
+	n += 1 + l + sovPubkeyHistory(uint64(l))
+	return n
+}
+
+func (m *QueryLastPubKeyHistoricalEntryRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovPubkeyHistory(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryLastPubKeyHistoricalEntryResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Entry.Size()
+	n += 1 + l + sovPubkeyHistory(uint64(l))
+	return n
+}
+
+func (m *QueryCurrentPubKeyEntryRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovPubkeyHistory(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryCurrentPubKeyEntryResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Entry.Size()
 	n += 1 + l + sovPubkeyHistory(uint64(l))
 	return n
 }
@@ -658,10 +1351,10 @@ func (m *QueryPubKeyHistoryRequest) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ProposalId", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
 			}
-			m.ProposalId = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowPubkeyHistory
@@ -671,11 +1364,24 @@ func (m *QueryPubKeyHistoryRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ProposalId |= uint64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipPubkeyHistory(dAtA[iNdEx:])
@@ -731,7 +1437,7 @@ func (m *QueryPubKeyHistoryResponse) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Proposal", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field History", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -758,7 +1464,554 @@ func (m *QueryPubKeyHistoryResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Proposal.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.History = append(m.History, PubKeyHistory{})
+			if err := m.History[len(m.History)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipPubkeyHistory(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryPubKeyHistoricalEntryRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowPubkeyHistory
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryPubKeyHistoricalEntryRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryPubKeyHistoricalEntryRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowPubkeyHistory
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Time", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowPubkeyHistory
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.Time, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipPubkeyHistory(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryPubKeyHistoricalEntryResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowPubkeyHistory
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryPubKeyHistoricalEntryResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryPubKeyHistoricalEntryResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Entry", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowPubkeyHistory
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Entry.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipPubkeyHistory(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryLastPubKeyHistoricalEntryRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowPubkeyHistory
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLastPubKeyHistoricalEntryRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLastPubKeyHistoricalEntryRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowPubkeyHistory
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipPubkeyHistory(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryLastPubKeyHistoricalEntryResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowPubkeyHistory
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLastPubKeyHistoricalEntryResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLastPubKeyHistoricalEntryResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Entry", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowPubkeyHistory
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Entry.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipPubkeyHistory(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryCurrentPubKeyEntryRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowPubkeyHistory
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryCurrentPubKeyEntryRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryCurrentPubKeyEntryRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowPubkeyHistory
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipPubkeyHistory(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryCurrentPubKeyEntryResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowPubkeyHistory
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryCurrentPubKeyEntryResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryCurrentPubKeyEntryResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Entry", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowPubkeyHistory
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthPubkeyHistory
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Entry.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

@@ -8,12 +8,14 @@ order: 2
 
 The minter is a space for holding current inflation information.
 
- - Minter: `0x00 -> amino(minter)`
+ - Minter: `0x00 -> ProtocolBuffer(minter)`
 
-```go
-type Minter struct {
-	Inflation        sdk.Dec   // current annual inflation rate
-	AnnualProvisions sdk.Dec   // current annual exptected provisions
+```protobuf
+message Minter {
+  // current annual inflation rate
+  string inflation = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  // current annual expected provisions
+  string annual_provisions = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 }
 ```
 
@@ -21,15 +23,21 @@ type Minter struct {
 
 Minting params are held in the global params store. 
 
- - Params: `mint/params -> amino(params)`
+ - Params: `mint/params -> ProtocolBuffer(params)`
 
-```go
-type Params struct {
-	MintDenom           string  // type of coin to mint
-	InflationRateChange sdk.Dec // maximum annual change in inflation rate
-	InflationMax        sdk.Dec // maximum inflation rate
-	InflationMin        sdk.Dec // minimum inflation rate
-	GoalBonded          sdk.Dec // goal of percent bonded atoms
-	BlocksPerYear       uint64   // expected blocks per year
+```protobuf
+message Params {
+	// type of coin to mint
+	string mint_denom = 1;
+	// maximum annual change in inflation rate
+  string inflation_rate_change = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  // maximum inflation rate
+  string inflation_max = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  // minimum inflation rate
+  string inflation_min = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  // goal of percent bonded atoms
+  string goal_bonded = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  // expected blocks per year
+  uint64 blocks_per_year = 6;
 }
 ```

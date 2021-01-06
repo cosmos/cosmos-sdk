@@ -117,7 +117,7 @@ If you wish to expose your `Query` endpoints as REST endpoints (as proposed in t
 
 If you still use Amino (which is deprecated since Stargate), you must register related types using the `RegisterLegacyAminoCodec(cdc *codec.LegacyAmino)` method (previously it was called  `RegisterCodec(cdc *codec.Codec)`).
 
-Moreover, a new `RegisterInterfaces` method has been added to the `AppModule` interface that all modules implement. This method should register the interfaces that Protobuf messages implement, as well as the service `Msg`s used in the module. An example of implementation for x/bank is given below:
+Moreover, a new `RegisterInterfaces` method has been added to the `AppModule` interface that all modules must implement. This method must register the interfaces that Protobuf messages implement, as well as the service `Msg`s used in the module. An example from x/bank is given below:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/x/bank/types/codec.go#L21-L34
 

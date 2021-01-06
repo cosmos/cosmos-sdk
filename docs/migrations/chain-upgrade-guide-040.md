@@ -113,7 +113,7 @@ software and restore to their latest snapshot before restarting their nodes.
 
    Compared to v0.39, some notable updates to `app.toml` are:
 
-   - API is now configured to run in-process with daemon, previously it was a separate process, invoked by running rest-server
+   - API server is now configured to run in-process with daemon, previously it was a separate process, invoked by running rest-server
      command i.e., `gaiacli rest-server`. Now it is in-process with daemon and can be enabled/disabled by API configuration:
 
      ```yaml

@@ -15,7 +15,7 @@ Make sure to have the following dependencies before updating your app to v0.40:
 - Docker
 - Node.js v12.0+ (optional, for generating Swagger docs)
 
-Your own app can use a similar Makefile to the [Cosmos SDK's one](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/Makefile). More specifically, below are some Makefile commands that might be useful for your own app, related to the introduction of Protocol Buffers:
+In Cosmos-SDK we manage the project using Makefile. Your own app can use a similar Makefile to the [Cosmos SDK's one](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/Makefile). More specifically, below are some _make_ commands that might be useful for your own app, related to the introduction of Protocol Buffers:
 
 - `proto-update-deps` - To download/update the required thirdparty `proto` definitions.
 - `proto-gen` - To auto generate proto code.
@@ -24,19 +24,19 @@ Your own app can use a similar Makefile to the [Cosmos SDK's one](https://github
 
 ## Updating Modules
 
-This section outlines how to upgrade your module to v0.40. There is also a whole section about [building modules](../building-modules/README.md) from scratch, it might serve as a useful reference when updating your own modules.
+This section outlines how to upgrade your module to v0.40. There is also a whole section about [building modules](../building-modules/README.md) from scratch, it might serve as a useful guide.
 
 ### Protocol Buffers
 
 As outlined in our [encoding guide](../core/encoding.md), one of the most significant improvements introduced in Cosmos SDK v0.40 is Protobuf.
 
-The rule of thumb is that if you need to serialize a type (into binary or JSON), then it should be defined as a Protobuf message. Pure domain types can still be kept as Go structs and interfaces. In practice, the three following categories of types must be converted to Protobuf messages:
+The rule of thumb is that any object that needs to be serialized (into binary or JSON) must implement `proto.Message` and must be serializable into Protobuf format. The easiest way to do it is to use Protobuf type definition and `protoc` compiler to generate the structures and functions for you. In practice, the three following categories of types must be converted to Protobuf messages:
 
 - client-facing types: `Msg`s, query requests and responses. This is because client will send these types over the wire to your app.
-- types that are stored in state. This is because the SDK stores the binary representation of these types in state.
+- objects that are stored in state. This is because the SDK stores the binary representation of these types in state.
 - genesis types. These are used when importing and exporting state snapshots during chain upgrades.
 
-An example of type that is stored in state is [x/auth's](../../x/auth/spec/README.md) `BaseAccount` type. Its migration looks like:
+Let's have a look at [x/auth's](../../x/auth/spec/README.md) `BaseAccount` objects, which are stored in a state. The migration looks like:
 
 ```diff
 // We were definining `MsgSend` as a Go struct in v0.39.
@@ -63,7 +63,7 @@ An example of type that is stored in state is [x/auth's](../../x/auth/spec/READM
 
 In general, we recommend to put all the Protobuf definitions in your module's subdirectory under a root `proto/` folder, as described in [ADR-023](../architecture/adr-023-protobuf-naming.md). This ADR also contains other useful information on naming conventions.
 
-You might have noticed that the `PubKey` interface in v0.39's `BaseAccount` has been transformed into an `Any`. For migrating interfaces, we use Protobuf's `Any` message, which is a struct that can hold arbitrary content. Please refer to the [encoding FAQ](../core/encoding.md#faq) to learn how to handle interfaces and `Any`s.
+You might have noticed that the `PubKey` interface in v0.39's `BaseAccount` has been transformed into an `Any`. For storing interfaces, we use Protobuf's `Any` message, which is a struct that can hold arbitrary content. Please refer to the [encoding FAQ](../core/encoding.md#faq) to learn how to handle interfaces and `Any`s.
 
 Once all your Protobuf messages are defined, use the `make proto-gen` command defined in the [tooling section](#tooling) to generate Go structs. These structs will be generated into `*.pb.go` files. As a quick example, here is the generated Go struct for the Protobuf BaseAccount we defined above:
 
@@ -83,7 +83,7 @@ For migrating `Msg`s, the handler pattern (inside the `handler.go` file) is depr
 
 A state transition is therefore modelized as a Protobuf service method, with a method request, and an (optionally empty) method response.
 
-After defining your `Msg` service, run the `make proto-gen` script again to generate `Msg` server interfaces. The naming of this interface is simply `MsgServer`. The implementation of this interface should follow exactly the implementation of the old `Msg` handlers, which, in most cases, defers the actual state transition logic to the [keeper](../building-modules/keeper.md). You may implement this `MsgServer` directly on the keeper, of you can also do it on a new struct (e.g. called `msgServer`) that references the module's keeper.
+After defining your `Msg` service, run the `make proto-gen` script again to generate `Msg` server interfaces. The name of this interface is simply `MsgServer`. The implementation of this interface should follow exactly the implementation of the old `Msg` handlers, which, in most cases, defers the actual state transition logic to the [keeper](../building-modules/keeper.md). You may implement a `MsgServer` directly on the keeper, or you can do it using a new struct (e.g. called `msgServer`) that references the module's keeper.
 
 For more information, please check our [`Msg` service guide](../building-modules/msg-services.md).
 
@@ -105,7 +105,7 @@ For more information, please check our [`Query` service guide](../building-modul
 
 #### Wiring up `Msg` and `Query` Services
 
-The `RegisterServices` method is newly added and registers a module's `Msg` service and `Query` service. It should be implemented on all modules, using a `Configurator` object:
+We added a new `RegisterServices` method that registers a module's `Msg` service and a `Query` service. It should be implemented by all modules, using a `Configurator` object:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/x/bank/module.go#L99-L103
 
@@ -115,9 +115,9 @@ If you wish to expose your `Query` endpoints as REST endpoints (as proposed in t
 
 ### Codec
 
-For registering module-specific types into the Amino codec, the `RegisterCodec(cdc *codec.Codec)` method has been renamed to `RegisterLegacyAminoCodec(cdc *codec.LegacyAmino)`.
+If you still use Amino (which is deprecated since Stargate), you must register related types using the `RegisterLegacyAminoCodec(cdc *codec.LegacyAmino)` method (previously it was called  `RegisterCodec(cdc *codec.Codec)`).
 
-Moreover, a new `RegisterInterfaces` method has been added to the `AppModule` interface that all modules implement. This method should register the interfaces that Protobuf messages implement, as well as the service `Msg`s used in the module. An example of implementation for x/bank is given below:
+Moreover, a new `RegisterInterfaces` method has been added to the `AppModule` interface that all modules must implement. This method must register the interfaces that Protobuf messages implement, as well as the service `Msg`s used in the module. An example from x/bank is given below:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/x/bank/types/codec.go#L21-L34
 
@@ -224,7 +224,7 @@ We described in the [modules migration section](#updating-modules) `Query` and `
 - the [Tx Service](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/proto/cosmos/tx/v1beta1/service.proto), to perform operations on transactions,
 - the [Tendermint service](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/proto/cosmos/base/tendermint/v1beta1/query.proto), to have a more idiomatic interface to the [Tendermint RPC](https://docs.tendermint.com/master/rpc/).
 
-These services are optional, if you wish to use them, or if you wish to add more module-agnostic Protobuf services into your app, then they need to be added inside `app.go`:
+These services are optional, if you wish to use them, or if you wish to add more module-agnostic Protobuf services into your app, then you need to add them inside `app.go`:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/simapp/app.go#L577-L585
 

@@ -63,7 +63,7 @@ Let's have a look at [x/auth's](../../x/auth/spec/README.md) `BaseAccount` objec
 
 In general, we recommend to put all the Protobuf definitions in your module's subdirectory under a root `proto/` folder, as described in [ADR-023](../architecture/adr-023-protobuf-naming.md). This ADR also contains other useful information on naming conventions.
 
-You might have noticed that the `PubKey` interface in v0.39's `BaseAccount` has been transformed into an `Any`. For migrating interfaces, we use Protobuf's `Any` message, which is a struct that can hold arbitrary content. Please refer to the [encoding FAQ](../core/encoding.md#faq) to learn how to handle interfaces and `Any`s.
+You might have noticed that the `PubKey` interface in v0.39's `BaseAccount` has been transformed into an `Any`. For storing interfaces, we use Protobuf's `Any` message, which is a struct that can hold arbitrary content. Please refer to the [encoding FAQ](../core/encoding.md#faq) to learn how to handle interfaces and `Any`s.
 
 Once all your Protobuf messages are defined, use the `make proto-gen` command defined in the [tooling section](#tooling) to generate Go structs. These structs will be generated into `*.pb.go` files. As a quick example, here is the generated Go struct for the Protobuf BaseAccount we defined above:
 

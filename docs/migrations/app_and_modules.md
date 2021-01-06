@@ -24,7 +24,7 @@ In Cosmos-SDK we manage the project using Makefile. Your own app can use a simil
 
 ## Updating Modules
 
-This section outlines how to upgrade your module to v0.40. There is also a whole section about [building modules](../building-modules/README.md) from scratch, it might serve as a useful reference when updating your own modules.
+This section outlines how to upgrade your module to v0.40. There is also a whole section about [building modules](../building-modules/README.md) from scratch, it might serve as a useful guide.
 
 ### Protocol Buffers
 

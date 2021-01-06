@@ -4,7 +4,7 @@ order: 1
 
 # App and Modules Migration
 
-The following document describes the changes to update your app and modules to use Cosmos SDK v0.40,
+The following document describes the changes to update your app and modules from Cosmos SDK v0.39 to v0.40,
 a.k.a. Stargate release. {synopsis}
 
 ## Update Tooling
@@ -123,9 +123,9 @@ Moreover, a new `RegisterInterfaces` method has been added to the `AppModule` in
 
 ### Keeper
 
-The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Amino codec. This `codec.Marshaler` is used to encode types as binary and save the bytes into the state. With an interface, you can define `codec.Marshaler` to be Amino or Protobuf on an app level, and keepers will use that encoding library to encode state.
+The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Amino codec. This `codec.Marshaler` is used to encode types as binary and save the bytes into the state. With an interface, you can define `codec.Marshaler` to be Amino or Protobuf on an app level, and keepers will use that encoding library to encode state. Please note that Amino is deprecated in v0.40, and we strongly recommend to use Protobuf. Internally, the SDK still uses Amino in a couple of places (legacy REST API, x/params, keyring...), but Amino is planned to be removed in a future release.
 
-This can be useful if you wish to update to SDK v0.40 without doing a chain upgrade with a genesis export/import. Keeping your app's default codec will not require updating the stores, so you can migrate to Cosmos SDK v0.40 with less effort.
+Keeping Amino for now can be useful if you wish to update to SDK v0.40 without doing a chain upgrade with a genesis migration. This will not require updating the stores, so you can migrate to Cosmos SDK v0.40 with less effort. However, as Amino will be removed in a future release, the chain migration with genesis export/import will need to be performed then.
 
 Related to the keepers, each module's `AppModuleBasic` now also includes this `codec.Marshaler`:
 
@@ -182,7 +182,7 @@ A number of other smaller breaking changes are also noteworthy.
 
 ## Updating Your App
 
-For a reference implementation used for demo purposes, you can refer to the SDK's [SimApp]() for your app's migration. The most important changes are described in this section.
+For a reference implementation used for demo purposes, you can refer to the SDK's [SimApp](https://github.com/cosmos/cosmos-sdk/tree/v0.40.0-rc6/simapp) for your app's migration. The most important changes are described in this section.
 
 ### Creating Codecs
 

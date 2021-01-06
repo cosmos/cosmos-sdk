@@ -9,7 +9,7 @@ and `ExportCmd` which creates commands to start the application and export state
 
 The root command of an application typically is constructed with:
 + command to start an application binary
-+ three meta commands: query commands, tx commands, and auxiliary commands such as genesis
++ three meta commands: `query`, `tx`, and a few auxiliary commands such as `genesis`.
 utilities.
 
 It is vital that the root command of an application uses `PersistentPreRun()` cobra command

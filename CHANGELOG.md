@@ -36,6 +36,23 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.40.0-rc6](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc6) - 2020-01-04
+
+### Improvements
+
+- (x/staking) [\#8178](https://github.com/cosmos/cosmos-sdk/pull/8178) Update default historical header number for stargate
+
+### Bug Fixes
+
+- (x/distribution) [\#8240](https://github.com/cosmos/cosmos-sdk/pull/8240) fix setting withdraw address in x/distribution
+- (x/gentx) [\#8183](https://github.com/cosmos/cosmos-sdk/pull/8183) change gentx cmd amount to arg from flag
+- (x/ibc) [\#8165](https://github.com/cosmos/cosmos-sdk/pull/8165) Support IBC upgrade on same revision
+- (x/ibc) [\#8169](https://github.com/cosmos/cosmos-sdk/pull/8169) fix IBC software upgrade proposals from automatically failing, add unpackinterfaces function
+- (x/ibc) [\#8170](https://github.com/cosmos/cosmos-sdk/pull/8170) fix ClientUpdateProposal unpacker
+- (x/ibc) [\#8187](https://github.com/cosmos/cosmos-sdk/pull/8187) fix IBC upgrade, issue with commit & halting logic
+- (x/ibc) [\#8200](https://github.com/cosmos/cosmos-sdk/pull/8200) fix IBC timeout verification bug
+- (rest) [\#8221](https://github.com/cosmos/cosmos-sdk/pull/8221) fix unregistered interface failure when calling GET /blocks/latest via REST API
+
 ## [v0.40.0-rc5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc5) - 2020-12-14
 
 ### Improvements

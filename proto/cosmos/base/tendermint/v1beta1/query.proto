@@ -32,11 +32,11 @@ service Service {
 
   // GetLatestValidatorSet queries latest validator-set.
   rpc GetLatestValidatorSet(GetLatestValidatorSetRequest) returns (GetLatestValidatorSetResponse) {
-    option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/validators/latest";
+    option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/validatorsets/latest";
   }
   // GetValidatorSetByHeight queries validator-set at a given height.
   rpc GetValidatorSetByHeight(GetValidatorSetByHeightRequest) returns (GetValidatorSetByHeightResponse) {
-    option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/validators/{height}";
+    option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/validatorsets/{height}";
   }
 }
 

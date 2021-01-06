@@ -224,7 +224,7 @@ We described in the [modules migration section](#updating-modules) `Query` and `
 - the [Tx Service](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/proto/cosmos/tx/v1beta1/service.proto), to perform operations on transactions,
 - the [Tendermint service](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/proto/cosmos/base/tendermint/v1beta1/query.proto), to have a more idiomatic interface to the [Tendermint RPC](https://docs.tendermint.com/master/rpc/).
 
-These services are optional, if you wish to use them, or if you wish to add more module-agnostic Protobuf services into your app, then they need to be added inside `app.go`:
+These services are optional, if you wish to use them, or if you wish to add more module-agnostic Protobuf services into your app, then you need to add them inside `app.go`:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/simapp/app.go#L577-L585
 

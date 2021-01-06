@@ -31,7 +31,7 @@ RECIPIENT=$(simd keys show recipient -a --keyring-backend test)
 The command above creates a local key-pair that is not yet registered on the chain. An account is created the first time it receives tokens from another account. Now, run the following command to send tokens to the `recipient` account:
 
 ```bash
-simd tx send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000stake --chain-id my-test-chain
+simd tx bank send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000stake --chain-id my-test-chain
 
 # Check that the recipient account did receive the tokens.
 simd query account $RECIPIENT --chain-id my-test-chain

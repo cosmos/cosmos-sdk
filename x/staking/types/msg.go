@@ -512,5 +512,5 @@ func (msg MsgUndelegate) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg,
 		undelAmt = sdk.NewCoin(op.Amount.Currency.Symbol, sdk.NewInt(amount))
 	}
 
-	return NewMsgDelegate(delAddr, valAddr, undelAmt), nil
+	return NewMsgUndelegate(delAddr, valAddr, undelAmt), nil
 }

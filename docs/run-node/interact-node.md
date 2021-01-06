@@ -118,7 +118,7 @@ Assuming the state at that block has not yet been pruned by the node, this query
 
 ### Programmtically via Go
 
-The following snippet shows how to
+The following snippet shows how to query the state using gRPC inside a Go program. The idea is to create a gRPC connection, and use the Protobuf-generated client code to query the gRPC server.
 
 ```go
 import (
@@ -136,13 +136,14 @@ if err != nil {
     return err
 }
 
+// Create a connection to the gRPC server.
 grpcConn := grpc.Dial(
     "127.0.0.1:9090", // Or your gRPC server address.
     grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
 )
 defer grpcConn.Close()
 
-// gRPC query to x/bank service.
+// This creates a gRPC client to query the x/bank service.
 bankClient := banktypes.NewQueryClient(grpcConn)
 bankRes, err := bankClient.Balance(
     context.Background(),
@@ -155,7 +156,7 @@ if err != nil {
 fmt.Println(bankRes.GetBalance()) // Prints the account balance
 ```
 
-You can replace the query client (here, `x/bank`) with the one from any other Protobuf service. The list of all available gRPC query endpoints is [coming soon](https://github.com/cosmos/cosmos-sdk/issues/7786).
+You can replace the query client (here we are using `x/bank`'s) with one generated from any other Protobuf service. The list of all available gRPC query endpoints is [coming soon](https://github.com/cosmos/cosmos-sdk/issues/7786).
 
 #### Query for historical state using Go
 

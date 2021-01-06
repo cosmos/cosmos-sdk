@@ -36,7 +36,7 @@ This will output the unsigned transaction as JSON in the console. We can also sa
 
 ### Signing a Transaction
 
-Signing a transaction using the CLI requires the unsigned transaction to be saved in a file. Let's assume the unsigned transaction is in a file called `unsigned_tx.json` in the current directory (see previous paragraph on how to save a transaction into a file). Then, simply run the following command:
+Signing a transaction using the CLI requires the unsigned transaction to be saved in a file. Let's assume the unsigned transaction is in a file called `unsigned_tx.json` in the current directory (see previous paragraph on how to do that). Then, simply run the following command:
 
 ```bash
 simd tx sign unsigned_tx.json --chain-id my-test-chain --keyring-backend test --from $MY_VALIDATOR_ADDRESS
@@ -44,10 +44,10 @@ simd tx sign unsigned_tx.json --chain-id my-test-chain --keyring-backend test --
 
 This command will decode the unsigned transaction and sign it with `SIGN_MODE_DIRECT` with `$MY_VALIDATOR_ADDRESS`'s key, which we already set up in the keyring. The signed transaction will be output as JSON to the console, and, as above, we can save it to a file by appending `> signed_tx.json`.
 
-Some useful flags to consider in the `sign` command:
+Some useful flags to consider in the `tx sign` command:
 
 - `--sign-mode`: you may use `amino-json` to sign the transaction using `SIGN_MODE_LEGACY_AMINO_JSON`,
-- `--offline`: sign in offline mode. This means that the `sign` command doesn't connect to the node to retrieve the signer's account number and sequence, both needed for signing. In this case, you must manually supply the `--account-number` and `--sequence` flags. This is useful for offline signing, e.g. signing in a secure environment which doesn't have access to the internet.
+- `--offline`: sign in offline mode. This means that the `tx sign` command doesn't connect to the node to retrieve the signer's account number and sequence, both needed for signing. In this case, you must manually supply the `--account-number` and `--sequence` flags. This is useful for offline signing, i.e. signing in a secure environment which doesn't have access to the internet.
 
 #### Signing with Multiple Signers
 
@@ -55,7 +55,7 @@ Some useful flags to consider in the `sign` command:
 Please note that signing a transaction with multiple signers or with a multisig account, where at least one signer uses `SIGN_MODE_DIRECT`, is not possible as of yet. You may follow [this Github issue](https://github.com/cosmos/cosmos-sdk/issues/8141) for more info.
 :::
 
-Signing with multiple signers is done with the `multisign` command. This command assumes that all signers use `SIGN_MODE_LEGACY_AMINO_JSON`. The flow is similar to the `sign` command flow, but instead of signing an unsigned transaction file, each signer signs the file signed by previous signers. The `multisign` command will append signatures to the existing transactions. It is important that signers sign the transaction **in the same order** as given by the transaction, which is retrievable using the `GetSigners()` method.
+Signing with multiple signers is done with the `tx multisign` command. This command assumes that all signers use `SIGN_MODE_LEGACY_AMINO_JSON`. The flow is similar to the `tx sign` command flow, but instead of signing an unsigned transaction file, each signer signs the file signed by previous signer(s). The `tx multisign` command will append signatures to the existing transactions. It is important that signers sign the transaction **in the same order** as given by the transaction, which is retrievable using the `GetSigners()` method.
 
 For example, starting with the `unsigned_tx.json`, and assuming the transaction has 4 signers, we would run:
 
@@ -72,7 +72,7 @@ simd tx multisignsign partial_tx_3.json signer_key_4 --chain-id my-test-chain --
 
 ### Broadcasting a Transaction
 
-Broadcasting a transaction is done simply using the following command:
+Broadcasting a transaction is done using the following command:
 
 ```bash
 simd tx broadcast tx_signed.json
@@ -82,7 +82,7 @@ You may optionally pass the `--broadcast-mode` flag to specify which response to
 
 - `block`: the CLI waits for the tx to be committed in a block.
 - `sync`: the CLI waits for a CheckTx execution response only.
-- `async`: the CLI returns immediately.
+- `async`: the CLI returns immediately (transaction might fail).
 
 ## Programmatically with Go
 
@@ -139,16 +139,17 @@ if err != nil {
 txBuilder.SetGasLimit(...)
 txBuilder.SetFeeAmount(...)
 txBuilder.SetMemo(...)
+txBuilder.SetTimeoutHeight(...)
 ```
 
-At this point, the `TxBuilder` is ready to be signed.
+At this point, `TxBuilder`'s underlying transaction is ready to be signed.
 
 ### Signing a Transaction
 
-As per [ADR-020](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/docs/architecture/adr-020-protobuf-transaction-encoding.md), each signer needs to sign the `SignerInfo`s of all other signers. This means that we need to perform these two steps sequentially:
+We chose our encoding config to use Protobuf, which will use `SIGN_MODE_DIRECT` by default. As per [ADR-020](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/docs/architecture/adr-020-protobuf-transaction-encoding.md), each signer needs to sign the `SignerInfo`s of all other signers. This means that we need to perform two steps sequentially:
 
 - for each signer, populate the signer's `SignerInfo` inside `TxBuilder`,
-- once all `SignerInfo` are populated, for each signer, sign the `SignDoc` (the payload to be signed).
+- once all `SignerInfo`s are populated, for each signer, sign the `SignDoc` (the payload to be signed).
 
 In the current `TxBuilder`'s API, both steps are done using the same method: `SetSignatures()`. The current API requires us to first perform a round of `SetSignatures()` _with empty signatures_, only to populate `SignerInfo`s, and a second round of `SetSignatures()` to actually sign the correct payload.
 
@@ -166,7 +167,6 @@ accSeqs:= []uint64{..., ...} // The accounts' sequence numbers
 // First round: we gather all the signer infos. We use the "set empty
 // signature" hack to do that.
 var sigsV2 []signing.SignatureV2
-
 for i, priv := range privs {
     sigV2 := signing.SignatureV2{
         PubKey: priv.PubKey(),
@@ -210,7 +210,7 @@ if err != nil {
 The `TxBuilder` is now correctly populated. To print it, you can use the `TxConfig` interface from the initial encoding config `encCfg`:
 
 ```go
-// Generated Protobuf-binary bytes.
+// Generated Protobuf-encoded bytes.
 txBytes, err := encCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
 if err != nil {
     return err
@@ -238,6 +238,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
+// Create a connection to the gRPC server.
 grpcConn := grpc.Dial(
     "127.0.0.1:9090", // Or your gRPC server address.
     grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.

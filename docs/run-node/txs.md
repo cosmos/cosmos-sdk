@@ -239,15 +239,14 @@ import (
 )
 
 grpcConn := grpc.Dial(
-    val0.AppConfig.GRPC.Address,
-    grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism
+    "127.0.0.1:9090", // Or your gRPC server address.
+    grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
 )
-
 defer grpcConn.Close()
 
 // Broadcast the tx via gRPC. We create a new client for the Protobuf Tx
 // service.
-txClient := tx.NewServiceClient(s.conn)
+txClient := tx.NewServiceClient(grpcConn)
 // We then call the BroadcastTx method on this client.
 grpcRes, err := txClient.BroadcastTx(
     context.Background(),
@@ -259,6 +258,7 @@ grpcRes, err := txClient.BroadcastTx(
 if err != nil {
     return err
 }
+
 fmt.Println(grpcRes.TxResponse.Code) // Should be `0` if the tx is successful
 ```
 
@@ -279,7 +279,7 @@ import (
 
 // Simulate the tx via gRPC. We create a new client for the Protobuf Tx
 // service.
-txClient := tx.NewServiceClient(s.conn)
+txClient := tx.NewServiceClient(grpcConn)
 // We then call the BroadcastTx method on this client.
 protoTx := txBuilderToProtoTx(txBuilder)
 if err != nil {
@@ -310,4 +310,4 @@ func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) { // nolint
 
 ## Using CosmJS (JavaScript & TypeScript)
 
-CosmJS aims to build client libraries in JavaScript that can be embedded in web applications. Please see [https://cosmos.github.io/cosmjs](https://cosmos.github.io/cosmjs) for more information.
+CosmJS aims to build client libraries in JavaScript that can be embedded in web applications. Please see [https://cosmos.github.io/cosmjs](https://cosmos.github.io/cosmjs) for more information. As of January 2021, CosmJS documentation is still work in progress.

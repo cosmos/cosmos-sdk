@@ -52,12 +52,13 @@ You should see two delegations, the first one made from the `gentx`, and the sec
 
 The Protobuf ecosystem developed tools for different use cases, including code-generation from `*.proto` files into various languages. These tools allow to build clients easily. Often, the client connection (i.e. the transport) can be plugged and replaced very easily. Let's explore one of the most popular transport: [gRPC](../core/grpc_rest.md).
 
-Since the code generation library largely depends on your own tech stack, we will only present two alternatives:
+Since the code generation library largely depends on your own tech stack, we will only present three alternatives:
 
 - `grpcurl` for generic debugging and testing,
+- programmatically via Go,
 - CosmJS for JavaScript/TypeScript developers.
 
-### grpcurl: Reflection, Queries, and Simulation
+### grpcurl
 
 [grpcurl])https://github.com/fullstorydev/grpcurl is like `curl` but for gRPC. It is also available as a Go library, but we will use it only as a CLI command for debugging and testing purposes. Follow the instructions in the previous link to install it.
 
@@ -97,7 +98,7 @@ grpcurl \
 
 The list of all available gRPC query endpoints is [coming soon](https://github.com/cosmos/cosmos-sdk/issues/7786).
 
-### Query for historical state using gRPC
+#### Query for historical state using grpcurl
 
 You may also query for historical data by passing some [gRPC metadata](https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-metadata.md) to the query: the `x-cosmos-block-height` metadata should contain the block to query. Using grpcurl as above, the command looks like:
 
@@ -115,9 +116,80 @@ grpcurl \
 
 Assuming the state at that block has not yet been pruned by the node, this query should return a non-empty response.
 
+### Programmtically via Go
+
+The following snippet shows how to
+
+```go
+import (
+    "context"
+    "fmt"
+
+	"google.golang.org/grpc"
+
+    sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
+)
+
+myAddress, err := sdk.AccAddressFromBech32("cosmos1...")
+if err != nil {
+    return err
+}
+
+grpcConn := grpc.Dial(
+    "127.0.0.1:9090", // Or your gRPC server address.
+    grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
+)
+defer grpcConn.Close()
+
+// gRPC query to x/bank service.
+bankClient := banktypes.NewQueryClient(grpcConn)
+bankRes, err := bankClient.Balance(
+    context.Background(),
+    &banktypes.QueryBalanceRequest{Address: myAddress, Denom: "atom"},
+)
+if err != nil {
+    return err
+}
+
+fmt.Println(bankRes.GetBalance()) // Prints the account balance
+```
+
+You can replace the query client (here, `x/bank`) with the one from any other Protobuf service. The list of all available gRPC query endpoints is [coming soon](https://github.com/cosmos/cosmos-sdk/issues/7786).
+
+#### Query for historical state using Go
+
+Querying for historical blocks is done by adding the block height metadata in the gRPC request.
+
+```go
+import (
+    "context"
+    "fmt"
+
+    "google.golang.org/grpc"
+    "google.golang.org/grpc/metadata"
+
+    grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	"github.com/cosmos/cosmos-sdk/types/tx"
+)
+
+var header metadata.MD
+bankRes, err = bankClient.Balance(
+    metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, "12"), // Add metadata to request
+    &banktypes.QueryBalanceRequest{Address: myAddress, Denom: denom},
+    grpc.Header(&header), // Retrieve header from response
+)
+if err != nil {
+    return err
+}
+blockHeight = header.Get(grpctypes.GRPCBlockHeightHeader)
+
+fmt.Println(blockHeight) // Prints the block height (12)
+```
+
 ### CosmJS
 
-CosmJS documentation can be found at [https://cosmos.github.io/cosmjs](https://cosmos.github.io/cosmjs). As of December 2020, CosmJS documentation is still work in progress.
+CosmJS documentation can be found at [https://cosmos.github.io/cosmjs](https://cosmos.github.io/cosmjs). As of As of January 2021, CosmJS documentation is still work in progress.
 
 ## Using the REST Endpoints
 

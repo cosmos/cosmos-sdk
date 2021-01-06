@@ -30,7 +30,7 @@ This section outlines how to upgrade your module to v0.40. There is also a whole
 
 As outlined in our [encoding guide](../core/encoding.md), one of the most significant improvements introduced in Cosmos SDK v0.40 is Protobuf.
 
-The rule of thumb is that if you need to serialize a type (into binary or JSON), then it should be defined as a Protobuf message. Pure domain types can still be kept as Go structs and interfaces. In practice, the three following categories of types must be converted to Protobuf messages:
+The rule of thumb is that any object that needs to be serialized (into binary or JSON) must implement `proto.Message` and must be serializable into Protobuf format. The easiest way to do it is to use Protobuf type definition and `protoc` compiler to generate the structures and functions for you. In practice, the three following categories of types must be converted to Protobuf messages:
 
 - client-facing types: `Msg`s, query requests and responses. This is because client will send these types over the wire to your app.
 - types that are stored in state. This is because the SDK stores the binary representation of these types in state.

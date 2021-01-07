@@ -58,7 +58,7 @@ func (c *Client) SignedTx(ctx context.Context, txBytes []byte, signatures []*typ
 
 	var sigs = make([]signing.SignatureV2, len(signatures))
 	for i, signature := range signatures {
-		if signature.PublicKey.CurveType != "secp256k1" {
+		if signature.PublicKey.CurveType != types.Secp256k1 {
 			return nil, crgerrs.ErrUnsupportedCurve
 		}
 
@@ -152,7 +152,7 @@ func (c *Client) ConstructionPayload(ctx context.Context, request *types.Constru
 		payloads[i] = &types.SigningPayload{
 			AccountIdentifier: accID,
 			Bytes:             crypto.Sha256(signBytes),
-			SignatureType:     "ecdsa",
+			SignatureType:     types.Ecdsa,
 		}
 	}
 

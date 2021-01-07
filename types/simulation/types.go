@@ -81,7 +81,7 @@ func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec
 	if reflect.TypeOf(msg) == reflect.TypeOf(sdk.ServiceMsg{}) {
 		srvMsg, ok := msg.(sdk.ServiceMsg)
 		if !ok {
-			panic(fmt.Sprintf("Expecting %T to implement sdk.ServiceMsg", srvMsg))
+			panic(fmt.Sprintf("Expecting %T to implement sdk.ServiceMsg", msg))
 		}
 		bz := cdc.MustMarshalJSON(srvMsg.Request)
 

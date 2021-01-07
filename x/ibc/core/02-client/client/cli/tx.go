@@ -72,7 +72,6 @@ func NewCreateClientCmd() *cobra.Command {
 				return err
 			}
 
-			// TODO: determine info to print out for client identifier created
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

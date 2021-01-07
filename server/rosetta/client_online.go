@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	abcitypes "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/tendermint/btcd/btcec"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -290,9 +292,14 @@ func (c *Client) getTxConfig() client.TxConfig {
 }
 
 func (c *Client) PostTx(txBytes []byte) (*types.TransactionIdentifier, map[string]interface{}, error) {
-	res, err := c.clientCtx.BroadcastTx(txBytes)
+	// sync ensures it will go through checkTx
+	res, err := c.clientCtx.BroadcastTxSync(txBytes)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, crgerrs.WrapError(crgerrs.ErrUnknown, err.Error())
+	}
+	// check if tx was broadcast successfully
+	if res.Code != abcitypes.CodeTypeOK {
+		return nil, nil, crgerrs.WrapError(crgerrs.ErrUnknown, fmt.Sprintf("transaction broadcast failure: (%d) %s ", res.Code, res.RawLog))
 	}
 
 	return &types.TransactionIdentifier{

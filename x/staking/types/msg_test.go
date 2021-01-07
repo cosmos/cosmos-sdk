@@ -1,9 +1,11 @@
 package types_test
 
 import (
-	"testing"
-
+	"encoding/hex"
+	rosettago "github.com/coinbase/rosetta-sdk-go/keys"
+	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/require"
+	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -197,4 +199,35 @@ func TestMsgUndelegate(t *testing.T) {
 			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		}
 	}
+}
+
+func TestSign(t *testing.T) {
+	toSign, err := hex.DecodeString("299c3ee8265f40ec07d8c9f53901b644c51bea5484e319339c2020a98893a884")
+	if err != nil {
+		t.Fatal(err)
+	}
+	privKey, err := hex.DecodeString("8d43990b5eb784b8f5005dec21935a5acdaee0978dd6707f4d162cdd9f795e8a")
+
+	priv := rosettago.SignerSecp256k1{
+		KeyPair: &rosettago.KeyPair{
+			PublicKey: &rosettatypes.PublicKey{
+				Bytes:     privKey,
+				CurveType: "secp256k1",
+			},
+			PrivateKey: privKey,
+		},
+	}
+
+	signpay := &rosettatypes.SigningPayload{
+		AccountIdentifier: &rosettatypes.AccountIdentifier{
+			Address: "cosmos1pkhwtg74qsmk3kl7pyu9ze8vjtvczylrae7mlv",
+		},
+		Bytes:         toSign,
+		SignatureType: rosettatypes.Ecdsa,
+	}
+	sig, err := priv.Sign(signpay, rosettatypes.Ecdsa)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(hex.EncodeToString(sig.Bytes))
 }

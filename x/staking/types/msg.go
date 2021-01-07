@@ -301,7 +301,7 @@ func (msg *MsgDelegate) ToOperations(withStatus bool, hasError bool) []*rosettat
 	return operations
 }
 
-func (msg MsgDelegate) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg, error) {
+func (msg *MsgDelegate) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg, error) {
 	var (
 		delAddr sdk.AccAddress
 		valAddr sdk.ValAddress
@@ -311,6 +311,9 @@ func (msg MsgDelegate) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg, e
 
 	for _, op := range ops {
 		if strings.HasPrefix(op.Amount.Value, "-") {
+			if op.Account == nil {
+				return nil, fmt.Errorf("account identifier must be specified")
+			}
 			delAddr, err = sdk.AccAddressFromBech32(op.Account.Address)
 			if err != nil {
 				return nil, err
@@ -318,6 +321,9 @@ func (msg MsgDelegate) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg, e
 			continue
 		}
 
+		if op.Account.SubAccount == nil {
+			return nil, fmt.Errorf("account identifier subaccount must be specified")
+		}
 		valAddr, err = sdk.ValAddressFromBech32(op.Account.SubAccount.Address)
 		if err != nil {
 			return nil, err
@@ -476,13 +482,13 @@ func (msg *MsgUndelegate) ToOperations(withStatus bool, hasError bool) []*rosett
 		},
 	}
 	operations = append(operations,
-		delOp(delAcc, coin.Amount.String(), 0),
-		delOp(valAcc, "-"+coin.Amount.String(), 1),
+		delOp(valAcc, "-"+coin.Amount.String(), 0),
+		delOp(delAcc, coin.Amount.String(), 1),
 	)
 	return operations
 }
 
-func (msg MsgUndelegate) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg, error) {
+func (msg *MsgUndelegate) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg, error) {
 	var (
 		delAddr  sdk.AccAddress
 		valAddr  sdk.ValAddress
@@ -492,11 +498,18 @@ func (msg MsgUndelegate) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg,
 
 	for _, op := range ops {
 		if strings.HasPrefix(op.Amount.Value, "-") {
+			if op.Account.SubAccount == nil {
+				return nil, fmt.Errorf("account identifier subaccount must be specified")
+			}
 			valAddr, err = sdk.ValAddressFromBech32(op.Account.SubAccount.Address)
 			if err != nil {
 				return nil, err
 			}
 			continue
+		}
+
+		if op.Account == nil {
+			return nil, fmt.Errorf("account identifier must be specified")
 		}
 
 		delAddr, err = sdk.AccAddressFromBech32(op.Account.Address)

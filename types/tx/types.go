@@ -132,6 +132,20 @@ func (t *Tx) GetSigners() []sdk.AccAddress {
 	return signers
 }
 
+func (t *Tx) GetGas() uint64 {
+	return t.AuthInfo.Fee.GasLimit
+}
+func (t *Tx) GetFee() sdk.Coins {
+	return t.AuthInfo.Fee.Amount
+}
+func (t *Tx) FeePayer() sdk.AccAddress {
+	return t.GetSigners()[0]
+}
+
+func (t *Tx) FeeGranter() sdk.AccAddress {
+	return t.GetSigners()[0]
+}
+
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (t *Tx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	if t.Body != nil {

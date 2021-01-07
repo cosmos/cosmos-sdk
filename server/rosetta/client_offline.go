@@ -100,9 +100,6 @@ func (c *Client) SignedTx(ctx context.Context, txBytes []byte, signatures []*typ
 }
 
 func (c *Client) ConstructionPayload(ctx context.Context, request *types.ConstructionPayloadsRequest) (resp *types.ConstructionPayloadsResponse, err error) {
-	if len(request.Operations) > 3 {
-		return nil, crgerrs.ErrInvalidOperation
-	}
 
 	msgs, fee, err := operationsToSdkMsgs(c.ir, request.Operations)
 	if err != nil {

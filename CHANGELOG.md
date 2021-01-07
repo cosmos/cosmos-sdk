@@ -36,6 +36,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+- (tendermint) [\#8281](https://github.com/cosmos/cosmos-sdk/pull/8281) Update tendermint to v0.34.1
+
 ## [v0.40.0-rc6](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc6) - 2020-01-04
 
 ### Improvements

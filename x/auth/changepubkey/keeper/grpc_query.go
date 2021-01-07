@@ -28,8 +28,8 @@ func (k Keeper) PubKeyHistory(goCtx context.Context, req *types.QueryPubKeyHisto
 		return nil, err
 	}
 
-	history := k.GetPubKeyHistory(ctx, addr)
-	return &types.QueryPubKeyHistoryResponse{History: history}, nil
+	history, err := k.GetPubKeyHistory(ctx, addr)
+	return &types.QueryPubKeyHistoryResponse{History: history}, err
 }
 
 // PubKeyHistoricalEntry queries account pubkey historical entry based on address and time.

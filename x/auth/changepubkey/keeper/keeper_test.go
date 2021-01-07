@@ -23,7 +23,7 @@ type KeeperTestSuite struct {
 	app *simapp.SimApp
 	ctx sdk.Context
 
-	queryClient authtypes.QueryClient
+	queryClient types.QueryClient
 }
 
 // returns context and app with params set on account keeper
@@ -39,8 +39,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.app, suite.ctx = createTestApp(true)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
-	authtypes.RegisterQueryServer(queryHelper, suite.app.AccountKeeper)
-	suite.queryClient = authtypes.NewQueryClient(queryHelper)
+	types.RegisterQueryServer(queryHelper, suite.app.AccountHistoryKeeper)
+	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -80,7 +80,8 @@ func TestPubKeyHistory_StoreGet(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, acc)
 
 	// try iteration after changing pubkey 3 times
-	history := app.AccountHistoryKeeper.GetPubKeyHistory(ctx, addr1)
+	history, err := app.AccountHistoryKeeper.GetPubKeyHistory(ctx, addr1)
+	require.NoError(t, err)
 	require.Equal(t, len(history), 3)
 
 	require.Equal(t, history[0].StartTime, time.Time{})

@@ -2,18 +2,14 @@ package cli
 
 import (
 	"context"
-	"fmt"
-	"strings"
+	"strconv"
+	"time"
 
 	"github.com/spf13/cobra"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/version"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/changepubkey/types"
 )
 
@@ -97,7 +93,7 @@ func GetPubKeyHistoricalEntryCmd() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 			res, err := queryClient.PubKeyHistoricalEntry(context.Background(), &types.QueryPubKeyHistoricalEntryRequest{
 				Address: key.String(),
-				Time: time,
+				Time:    time,
 			})
 			if err != nil {
 				return err

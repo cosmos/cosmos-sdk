@@ -15,9 +15,7 @@ service Query {
     }
 
     // PubKeyHistoricalEntry queries account pubkey historical entry based on address and time.
-    rpc PubKeyHistoricalEntry(QueryPubKeyHistoricalEntryRequest) returns (QueryPubKeyHistoricalEntryResponse) {
-        option (google.api.http).get = "/cosmos/changepubkey/v1beta1/pubkey_historical_entry/{address}/{time}";
-    }
+    rpc PubKeyHistoricalEntry(QueryPubKeyHistoricalEntryRequest) returns (QueryPubKeyHistoricalEntryResponse) {}
 
     // LastPubKeyHistoricalEntry queries account's last pubkey historical entry based on address.
     rpc LastPubKeyHistoricalEntry(QueryLastPubKeyHistoricalEntryRequest) returns (QueryLastPubKeyHistoricalEntryResponse) {

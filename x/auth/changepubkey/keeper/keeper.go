@@ -40,8 +40,11 @@ func (pk Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GetPubKeyHistory Returns the PubKey history of the account at address by time: involves current pubkey
-func (pk Keeper) GetPubKeyHistory(ctx sdk.Context, addr sdk.AccAddress) []types.PubKeyHistory {
+func (pk Keeper) GetPubKeyHistory(ctx sdk.Context, addr sdk.AccAddress) ([]types.PubKeyHistory, error) {
 	entries := []types.PubKeyHistory{}
+	if pk.ak.GetAccount(ctx, addr) == nil {
+		return entries, fmt.Errorf("account %s not found", addr.String())
+	}
 	iterator := pk.PubKeyHistoryIterator(ctx, addr)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -50,7 +53,7 @@ func (pk Keeper) GetPubKeyHistory(ctx sdk.Context, addr sdk.AccAddress) []types.
 	}
 	currentEntry := pk.GetCurrentPubKeyEntry(ctx, addr)
 	entries = append(entries, currentEntry)
-	return entries
+	return entries, nil
 }
 
 // GetPubKeyHistoricalEntry Returns the PubKey historical entry at a specific time: involves current pubkey
@@ -90,8 +93,13 @@ func (pk Keeper) GetCurrentPubKeyEntry(ctx sdk.Context, addr sdk.AccAddress) typ
 	if st.Equal(time) {
 		st = lastEntry.GetStartTime()
 	}
+	var pubkey crypto.PubKey
+	if acc != nil {
+		pubkey = acc.GetPubKey()
+	}
+
 	return types.PubKeyHistory{
-		PubKey:    types.EncodePubKey(pk.cdc, acc.GetPubKey()),
+		PubKey:    types.EncodePubKey(pk.cdc, pubkey),
 		StartTime: st,
 		EndTime:   time,
 	}

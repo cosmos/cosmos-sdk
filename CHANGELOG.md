@@ -122,6 +122,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
   + added `overwriteSig` argument to `x/auth/client.SignTx` and `client/tx.Sign` functions.
   + removed `x/auth/tx.go:wrapper.GetSignatures`. The `wrapper` provides `TxBuilder` functionality, and it's a private
     structure. That function was not used at all and it's not exposed through the `TxBuilder` interface.
+* [\#8245](https://github.com/cosmos/cosmos-sdk/pull/8245) Removed `simapp.MakeCodecs` and use `simapp.MakeTestEncodingConfig` instead.
+
 
 ### Bug Fixes
 

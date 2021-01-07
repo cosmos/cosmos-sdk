@@ -104,12 +104,12 @@ func (s *StoreUpgrades) RenamedFrom(key string) string {
 type MultiStore interface {
 	Store
 
-	// Cache wrap MultiStore.
+	// Branches MultiStore into a cached storage object.
 	// NOTE: Caller should probably not call .Write() on each, but
 	// call CacheMultiStore.Write().
 	CacheMultiStore() CacheMultiStore
 
-	// CacheMultiStoreWithVersion cache-wraps the underlying MultiStore where
+	// CacheMultiStoreWithVersion branches the underlying MultiStore where
 	// each stored is loaded at a specific version (height).
 	CacheMultiStoreWithVersion(version int64) (CacheMultiStore, error)
 
@@ -138,7 +138,7 @@ type CacheMultiStore interface {
 	Write() // Writes operations to underlying KVStore
 }
 
-// A non-cache MultiStore.
+// CommitMultiStore is an interface for a MultiStore without cache capabilities.
 type CommitMultiStore interface {
 	Committer
 	MultiStore
@@ -218,12 +218,12 @@ type KVStore interface {
 	ReverseIterator(start, end []byte) Iterator
 }
 
-// Alias iterator to db's Iterator for convenience.
+// Iterator is an alias db's Iterator for convenience.
 type Iterator = dbm.Iterator
 
-// CacheKVStore cache-wraps a KVStore.  After calling .Write() on
-// the CacheKVStore, all previously created CacheKVStores on the
-// object expire.
+// CacheKVStore branches a KVStore and provides read cache functionality.
+// After calling .Write() on the CacheKVStore, all previously created
+// CacheKVStores on the object expire.
 type CacheKVStore interface {
 	KVStore
 
@@ -231,7 +231,7 @@ type CacheKVStore interface {
 	Write()
 }
 
-// Stores of MultiStore must implement CommitStore.
+// CommitKVStore is an interface for MultiStore.
 type CommitKVStore interface {
 	Committer
 	KVStore
@@ -240,9 +240,9 @@ type CommitKVStore interface {
 //----------------------------------------
 // CacheWrap
 
-// CacheWrap makes the most appropriate cache-wrap. For example,
-// IAVLStore.CacheWrap() returns a CacheKVStore. CacheWrap should not return
-// a Committer, since Commit cache-wraps make no sense. It can return KVStore,
+// CacheWrap is the most appropriate interface for store ephemeral branching and cache.
+// For example, IAVLStore.CacheWrap() returns a CacheKVStore. CacheWrap should not return
+// a Committer, since Commit ephemeral store make no sense. It can return KVStore,
 // HeapStore, SpaceStore, etc.
 type CacheWrap interface {
 	// Write syncs with the underlying store.
@@ -256,10 +256,10 @@ type CacheWrap interface {
 }
 
 type CacheWrapper interface {
-	// CacheWrap cache wraps.
+	// CacheWrap branches a store.
 	CacheWrap() CacheWrap
 
-	// CacheWrapWithTrace cache wraps with tracing enabled.
+	// CacheWrapWithTrace branches a store with tracing enabled.
 	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap
 }
 

@@ -100,7 +100,12 @@ func (c *Client) SignedTx(ctx context.Context, txBytes []byte, signatures []*typ
 }
 
 func (c *Client) ConstructionPayload(ctx context.Context, request *types.ConstructionPayloadsRequest) (resp *types.ConstructionPayloadsResponse, err error) {
+	// check if there is at least one operation
+	if len(request.Operations) < 1 {
+		return nil, crgerrs.WrapError(crgerrs.ErrInvalidOperation, "expected at least one operation")
+	}
 
+	// convert rosetta operations to sdk msgs and fees (if present)
 	msgs, fee, err := operationsToSdkMsgs(c.ir, request.Operations)
 	if err != nil {
 		return nil, crgerrs.WrapError(crgerrs.ErrInvalidOperation, err.Error())

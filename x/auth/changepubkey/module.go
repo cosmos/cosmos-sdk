@@ -105,7 +105,7 @@ func (AppModule) QuerierRoute() string {
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), NewMsgServerImpl(am.accountKeeper, am.historyKeeper))
+	types.RegisterMsgServer(cfg.MsgServer(), changepubkeykeeper.NewMsgServerImpl(am.accountKeeper, am.historyKeeper))
 }
 
 // LegacyQuerierHandler performs a no-op.

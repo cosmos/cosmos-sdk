@@ -1,23 +1,22 @@
-package changepubkey
+package keeper
 
 import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	changepubkeykeeper "github.com/cosmos/cosmos-sdk/x/auth/changepubkey/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/changepubkey/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 type msgServer struct {
-	keeper.AccountKeeper
-	historyKeeper changepubkeykeeper.Keeper
+	authkeeper.AccountKeeper
+	historyKeeper Keeper
 }
 
 // NewMsgServerImpl returns an implementation of the changepubkey MsgServer interface,
 // wrapping the corresponding AccountKeeper.
-func NewMsgServerImpl(k keeper.AccountKeeper, historyKeeper changepubkeykeeper.Keeper) types.MsgServer {
+func NewMsgServerImpl(k authkeeper.AccountKeeper, historyKeeper Keeper) types.MsgServer {
 	return &msgServer{k, historyKeeper}
 }
 

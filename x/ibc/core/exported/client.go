@@ -178,7 +178,7 @@ type ConsensusState interface {
 
 // Misbehaviour defines counterparty misbehaviour for a specific consensus type
 type Misbehaviour interface {
-    proto.Message
+	proto.Message
 
 	ClientType() string
 	GetClientID() string
@@ -190,8 +190,8 @@ type Misbehaviour interface {
 
 // Header is the consensus state update information
 type Header interface {
-    proto.Message
-    
+	proto.Message
+
 	ClientType() string
 	GetHeight() Height
 	ValidateBasic() error

@@ -139,11 +139,28 @@ func (t *Tx) GetFee() sdk.Coins {
 	return t.AuthInfo.Fee.Amount
 }
 func (t *Tx) FeePayer() sdk.AccAddress {
+	feePayer := t.AuthInfo.Fee.Payer
+	if feePayer != "" {
+		payerAddr, err := sdk.AccAddressFromBech32(feePayer)
+		if err != nil {
+			panic(err)
+		}
+		return payerAddr
+	}
+	// use first signer as default if no payer specified
 	return t.GetSigners()[0]
 }
 
 func (t *Tx) FeeGranter() sdk.AccAddress {
-	return t.GetSigners()[0]
+	feePayer := t.AuthInfo.Fee.Granter
+	if feePayer != "" {
+		granterAddr, err := sdk.AccAddressFromBech32(feePayer)
+		if err != nil {
+			panic(err)
+		}
+		return granterAddr
+	}
+	return nil
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method

@@ -178,18 +178,24 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-var header metadata.MD
-bankRes, err = bankClient.Balance(
-    metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, "12"), // Add metadata to request
-    &banktypes.QueryBalanceRequest{Address: myAddress, Denom: denom},
-    grpc.Header(&header), // Retrieve header from response
-)
-if err != nil {
-    return err
-}
-blockHeight = header.Get(grpctypes.GRPCBlockHeightHeader)
+func queryState() error {
+    // --snip--
 
-fmt.Println(blockHeight) // Prints the block height (12)
+    var header metadata.MD
+    bankRes, err = bankClient.Balance(
+        metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, "12"), // Add metadata to request
+        &banktypes.QueryBalanceRequest{Address: myAddress, Denom: denom},
+        grpc.Header(&header), // Retrieve header from response
+    )
+    if err != nil {
+        return err
+    }
+    blockHeight = header.Get(grpctypes.GRPCBlockHeightHeader)
+
+    fmt.Println(blockHeight) // Prints the block height (12)
+
+    return nil
+}
 ```
 
 ### CosmJS

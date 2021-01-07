@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
@@ -23,7 +22,8 @@ func NewCreateClientCmd() *cobra.Command {
 		Use:   "create [path/to/client_state.json] [path/to/consensus_state.json]",
 		Short: "create new IBC client",
 		Long: `create a new IBC client with the specified client state and consensus state
-	- ConsensusState json example: {"public_key":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A/3SXL2ONYaOkxpdR5P8tHTlSlPv1AwQwSFxKRee5JQW"},"diversifier":"diversifier","timestamp":"10"}`,
+	- ClientState JSON example: {"@type":"/ibc.lightclients.solomachine.v1.ClientState","sequence":"1","frozen_sequence":"0","consensus_state":{"public_key":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AtK50+5pJOoaa04qqAqrnyAqsYrwrR/INnA6UPIaYZlp"},"diversifier":"testing","timestamp":"10"},"allow_update_after_proposal":false}
+	- ConsensusState JSON example: {"@type":"/ibc.lightclients.solomachine.v1.ConsensusState","public_key":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AtK50+5pJOoaa04qqAqrnyAqsYrwrR/INnA6UPIaYZlp"},"diversifier":"testing","timestamp":"10"}`,
 		Example: fmt.Sprintf("%s tx ibc %s create [path/to/client_state.json] [path/to/consensus_state] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -34,8 +34,8 @@ func NewCreateClientCmd() *cobra.Command {
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 			// attempt to unmarshal client state argument
-			clientStateAny := &codectypes.Any{}
-			if err := cdc.UnmarshalJSON([]byte(args[0]), clientStateAny); err != nil {
+			var clientState exported.ClientState
+			if err := cdc.UnmarshalInterfaceJSON([]byte(args[0]), &clientState); err != nil {
 
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[0])
@@ -43,14 +43,14 @@ func NewCreateClientCmd() *cobra.Command {
 					return errors.Wrap(err, "neither JSON input nor path to .json file for client state were provided")
 				}
 
-				if err := cdc.UnmarshalJSON(contents, clientStateAny); err != nil {
+				if err := cdc.UnmarshalInterfaceJSON(contents, &clientState); err != nil {
 					return errors.Wrap(err, "error unmarshalling client state file")
 				}
 			}
 
 			// attempt to unmarshal consensus state argument
-			consStateAny := &codectypes.Any{}
-			if err := cdc.UnmarshalJSON([]byte(args[1]), consStateAny); err != nil {
+			var consensusState exported.ConsensusState
+			if err := cdc.UnmarshalInterfaceJSON([]byte(args[1]), &consensusState); err != nil {
 
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
@@ -58,15 +58,14 @@ func NewCreateClientCmd() *cobra.Command {
 					return errors.Wrap(err, "neither JSON input nor path to .json file for consensus state were provided")
 				}
 
-				if err := cdc.UnmarshalJSON(contents, consStateAny); err != nil {
+				if err := cdc.UnmarshalInterfaceJSON(contents, &consensusState); err != nil {
 					return errors.Wrap(err, "error unmarshalling consensus state file")
 				}
 			}
 
-			msg := &types.MsgCreateClient{
-				ClientState:    clientStateAny,
-				ConsensusState: consStateAny,
-				Signer:         clientCtx.GetFromAddress().String(),
+			msg, err := types.NewMsgCreateClient(clientState, consensusState, clientCtx.GetFromAddress())
+			if err != nil {
+				return err
 			}
 
 			if err := msg.ValidateBasic(); err != nil {
@@ -101,7 +100,7 @@ func NewUpdateClientCmd() *cobra.Command {
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 			var header exported.Header
-			if err := cdc.UnmarshalJSON([]byte(args[1]), header); err != nil {
+			if err := cdc.UnmarshalInterfaceJSON([]byte(args[1]), &header); err != nil {
 
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
@@ -109,7 +108,7 @@ func NewUpdateClientCmd() *cobra.Command {
 					return errors.Wrap(err, "neither JSON input nor path to .json file for header were provided")
 				}
 
-				if err := cdc.UnmarshalJSON(contents, header); err != nil {
+				if err := cdc.UnmarshalInterfaceJSON(contents, &header); err != nil {
 					return errors.Wrap(err, "error unmarshalling header file")
 				}
 			}
@@ -145,7 +144,7 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 			var misbehaviour exported.Misbehaviour
-			if err := cdc.UnmarshalJSON([]byte(args[0]), misbehaviour); err != nil {
+			if err := cdc.UnmarshalInterfaceJSON([]byte(args[0]), &misbehaviour); err != nil {
 
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[0])
@@ -153,7 +152,7 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 					return errors.Wrap(err, "neither JSON input nor path to .json file for misbehaviour were provided")
 				}
 
-				if err := cdc.UnmarshalJSON(contents, misbehaviour); err != nil {
+				if err := cdc.UnmarshalInterfaceJSON(contents, misbehaviour); err != nil {
 					return errors.Wrap(err, "error unmarshalling misbehaviour file")
 				}
 			}

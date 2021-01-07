@@ -36,6 +36,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.40.0-rc7](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc7) - 2020-01-07
+
+### Bug Fixes
+
+- (x/gentx) [\#8255](https://github.com/cosmos/cosmos-sdk/pull/8255) Fix gentx command setting wrong amount
+
 ## [v0.40.0-rc6](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc6) - 2020-01-04
 
 ### Improvements

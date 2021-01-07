@@ -1,3 +1,5 @@
+// +build norace
+
 package cli_test
 
 import (
@@ -513,7 +515,7 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 	execMsg := testutil.WriteToNewTempFile(s.T(), voteTx)
 
 	// waiting for authorization to expires
-	time.Sleep(15 * time.Second)
+	time.Sleep(12 * time.Second)
 
 	cmd := cli.NewCmdExecAuthorization()
 	clientCtx := val.ClientCtx

@@ -1,6 +1,7 @@
 package rosetta
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -15,22 +16,21 @@ import (
 func operationsToSdkMsgs(interfaceRegistry jsonpb.AnyResolver, ops []*types.Operation) ([]sdk.Msg, sdk.Coins, error) {
 	var feeAmnt []*types.Amount
 	var newOps []*types.Operation
-	if len(ops)%2 == 0 {
-		msgs, err := ConvertOpsToMsgs(interfaceRegistry, ops)
-		return msgs, nil, err
+	// check if ops are at least two, one for the fee and the other representing the message
+	if len(ops) < 2 {
+		return nil, nil, fmt.Errorf("expected at least two operations, one for fee and the other representing the msg")
 	}
-
-	if len(ops)%2 == 1 {
-		for _, op := range ops {
-			switch op.Type {
-			case OperationFee:
-				amount := op.Amount
-				feeAmnt = append(feeAmnt, amount)
-			default:
-				newOps = append(newOps, op)
-			}
+	// find the fee operation and put it aside
+	for _, op := range ops {
+		switch op.Type {
+		case OperationFee:
+			amount := op.Amount
+			feeAmnt = append(feeAmnt, amount)
+		default:
+			newOps = append(newOps, op)
 		}
 	}
+	// convert all operations, except fee op to sdk.Msgs
 	msgs, err := ConvertOpsToMsgs(interfaceRegistry, newOps)
 	if err != nil {
 		return nil, nil, err

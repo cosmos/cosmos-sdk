@@ -185,7 +185,7 @@ func (c *Client) PreprocessOperationsToOptions(_ context.Context, req *types.Con
 	}
 
 	if len(msgs) < 1 || len(msgs[0].GetSigners()) < 1 {
-		return nil, crgerrs.WrapError(crgerrs.ErrInvalidOperation, "invalid msgs from operations")
+		return nil, crgerrs.WrapError(crgerrs.ErrInvalidOperation, "operation produced no msg or signers")
 	}
 
 	memo, ok := req.Metadata["memo"]

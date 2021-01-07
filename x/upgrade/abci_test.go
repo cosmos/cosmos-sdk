@@ -41,7 +41,7 @@ var s TestSuite
 func setupTest(height int64, skip map[int64]bool) TestSuite {
 	db := dbm.NewMemDB()
 	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, skip, simapp.DefaultNodeHome, 0, simapp.MakeTestEncodingConfig(), simapp.EmptyAppOptions{})
-	genesisState := simapp.NewDefaultGenesisState()
+	genesisState := simapp.NewDefaultGenesisState(app.AppCodec())
 	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
 	if err != nil {
 		panic(err)

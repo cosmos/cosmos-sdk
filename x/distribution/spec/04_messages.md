@@ -15,6 +15,7 @@ message MsgSetWithdrawAddress {
     string withdraw_address  = 2;
 }
 ```
+
 ```go
 
 func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) error 
@@ -34,12 +35,14 @@ func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, w
 under special circumstances a delegator may wish to withdraw rewards from only
 a single validator. 
 
-```go
+```proto
 message MsgWithdrawDelegatorReward {
     string delegator_address = 1;
     string validator_address = 2;
 }
+```
 
+```go
 func WithdrawDelegationReward(delegatorAddr, validatorAddr, withdrawAddr sdk.AccAddress) 
     height = GetHeight()
     

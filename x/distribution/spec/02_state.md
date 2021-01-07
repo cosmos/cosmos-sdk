@@ -25,7 +25,9 @@ type DecCoin struct {
     Amount sdk.Dec
     Denom  string
 }
+```
 
+```proto
 message FeePool {
     repeated cosmos.base.v1beta1.DecCoin community_pool = 1 // pool for community funds yet to be spent
 }

@@ -116,7 +116,7 @@ grpcurl \
 
 Assuming the state at that block has not yet been pruned by the node, this query should return a non-empty response.
 
-### Programmtically via Go
+### Programmatically via Go
 
 The following snippet shows how to query the state using gRPC inside a Go program. The idea is to create a gRPC connection, and use the Protobuf-generated client code to query the gRPC server.
 

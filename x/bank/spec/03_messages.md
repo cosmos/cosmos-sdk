@@ -6,7 +6,7 @@ order: 3
 
 ## MsgSend
 
-```go
+```proto
 // MsgSend represents a message to send coins from one account to another.
 message MsgSend {
   string   from_address                    = 1;

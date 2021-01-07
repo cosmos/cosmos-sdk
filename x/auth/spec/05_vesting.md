@@ -88,7 +88,9 @@ type VestingAccount interface {
   GetStartTime() int64
   GetEndTime()   int64
 }
+```
 
+```proto
 // BaseVestingAccount implements the VestingAccount interface. It contains all
 // the necessary fields needed for any vesting account implementation.
 message BaseVestingAccount {
@@ -100,7 +102,9 @@ message BaseVestingAccount {
 
   int64 end_time = 5
 }
+```
 
+```proto
 // ContinuousVestingAccount implements the VestingAccount interface. It
 // continuously vests by unlocking coins linearly with respect to time.
 message ContinuousVestingAccount {
@@ -108,6 +112,9 @@ message ContinuousVestingAccount {
   int64              start_time         	= 2
 }
 
+```
+
+```proto
 // DelayedVestingAccount implements the VestingAccount interface. It vests all
 // coins after a specific time, but non prior. In other words, it keeps them
 // locked until a specified time.
@@ -115,15 +122,24 @@ message DelayedVestingAccount {
   BaseVestingAccount base_vesting_account = 1
 }
 
+```
+
+```proto
 // VestingPeriod defines a length of time and amount of coins that will vest
 message Period {
 	int64    length                          = 1 // length of the period, in seconds
   repeated cosmos.base.v1beta1.Coin amount = 2 // amount of coins vesting during this period
 }
 
+```
+
+```go
 // Stores all vesting periods passed as part of a PeriodicVestingAccount
 type Periods []Period
 
+```
+
+```proto
 // PeriodicVestingAccount implements the VestingAccount interface. It
 // periodically vests by unlocking coins during each specified period
 message PeriodicVestingAccount {

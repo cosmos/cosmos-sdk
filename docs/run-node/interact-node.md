@@ -190,7 +190,7 @@ fmt.Println(blockHeight) // Prints the block height (12)
 
 ### CosmJS
 
-CosmJS documentation can be found at [https://cosmos.github.io/cosmjs](https://cosmos.github.io/cosmjs). As of As of January 2021, CosmJS documentation is still work in progress.
+CosmJS documentation can be found at [https://cosmos.github.io/cosmjs](https://cosmos.github.io/cosmjs). As of January 2021, CosmJS documentation is still work in progress.
 
 ## Using the REST Endpoints
 

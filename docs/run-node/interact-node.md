@@ -131,29 +131,33 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-myAddress, err := sdk.AccAddressFromBech32("cosmos1...")
-if err != nil {
-    return err
+func queryState() error {
+    myAddress, err := sdk.AccAddressFromBech32("cosmos1...")
+    if err != nil {
+        return err
+    }
+
+    // Create a connection to the gRPC server.
+    grpcConn := grpc.Dial(
+        "127.0.0.1:9090", // Or your gRPC server address.
+        grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
+    )
+    defer grpcConn.Close()
+
+    // This creates a gRPC client to query the x/bank service.
+    bankClient := banktypes.NewQueryClient(grpcConn)
+    bankRes, err := bankClient.Balance(
+        context.Background(),
+        &banktypes.QueryBalanceRequest{Address: myAddress, Denom: "atom"},
+    )
+    if err != nil {
+        return err
+    }
+
+    fmt.Println(bankRes.GetBalance()) // Prints the account balance
+
+    return nil
 }
-
-// Create a connection to the gRPC server.
-grpcConn := grpc.Dial(
-    "127.0.0.1:9090", // Or your gRPC server address.
-    grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
-)
-defer grpcConn.Close()
-
-// This creates a gRPC client to query the x/bank service.
-bankClient := banktypes.NewQueryClient(grpcConn)
-bankRes, err := bankClient.Balance(
-    context.Background(),
-    &banktypes.QueryBalanceRequest{Address: myAddress, Denom: "atom"},
-)
-if err != nil {
-    return err
-}
-
-fmt.Println(bankRes.GetBalance()) // Prints the account balance
 ```
 
 You can replace the query client (here we are using `x/bank`'s) with one generated from any other Protobuf service. The list of all available gRPC query endpoints is [coming soon](https://github.com/cosmos/cosmos-sdk/issues/7786).

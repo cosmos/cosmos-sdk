@@ -97,12 +97,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
-// Choose your codec: Amino or Protobuf. Here, we use Protobuf, given by the
-// following function.
-encCfg := simapp.MakeTestEncodingConfig()
+func sendTx() error {
+    // Choose your codec: Amino or Protobuf. Here, we use Protobuf, given by the
+    // following function.
+    encCfg := simapp.MakeTestEncodingConfig()
 
-// Create a new TxBuilder.
-txBuilder := encCfg.TxConfig.NewTxBuilder()
+    // Create a new TxBuilder.
+    txBuilder := encCfg.TxConfig.NewTxBuilder()
+
+    // --snip--
+}
 ```
 
 We can also set up some keys and addresses that will send and receive the transactions. Here, for the purpose of the tutorial, we will be using some dummy data to create keys.
@@ -124,22 +128,26 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-// Define two x/bank MsgSend messages:
-// - from addr1 to addr3,
-// - from addr2 to addr3.
-// This means that the transactions needs two signers: addr1 and addr2.
-msg1 := banktypes.NewMsgSend(addr1, addr3, types.NewCoins(types.NewInt64Coin("atom", 12)))
-msg2 := banktypes.NewMsgSend(addr2, addr3, types.NewCoins(types.NewInt64Coin("atom", 34)))
+func sendTx() error {
+    // --snip--
 
-err := txBuilder.SetMsgs(msg1, msg2)
-if err != nil {
-    return err
+    // Define two x/bank MsgSend messages:
+    // - from addr1 to addr3,
+    // - from addr2 to addr3.
+    // This means that the transactions needs two signers: addr1 and addr2.
+    msg1 := banktypes.NewMsgSend(addr1, addr3, types.NewCoins(types.NewInt64Coin("atom", 12)))
+    msg2 := banktypes.NewMsgSend(addr2, addr3, types.NewCoins(types.NewInt64Coin("atom", 34)))
+
+    err := txBuilder.SetMsgs(msg1, msg2)
+    if err != nil {
+        return err
+    }
+
+    txBuilder.SetGasLimit(...)
+    txBuilder.SetFeeAmount(...)
+    txBuilder.SetMemo(...)
+    txBuilder.SetTimeoutHeight(...)
 }
-
-txBuilder.SetGasLimit(...)
-txBuilder.SetFeeAmount(...)
-txBuilder.SetMemo(...)
-txBuilder.SetTimeoutHeight(...)
 ```
 
 At this point, `TxBuilder`'s underlying transaction is ready to be signed.
@@ -160,68 +168,76 @@ import (
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-privs := []cryptotypes.PrivKey{priv1, priv2}
-accNums:= []uint64{..., ...} // The accounts' account numbers
-accSeqs:= []uint64{..., ...} // The accounts' sequence numbers
+func sendTx() error {
+    // --snip--
 
-// First round: we gather all the signer infos. We use the "set empty
-// signature" hack to do that.
-var sigsV2 []signing.SignatureV2
-for i, priv := range privs {
-    sigV2 := signing.SignatureV2{
-        PubKey: priv.PubKey(),
-        Data: &signing.SingleSignatureData{
-            SignMode:  encCfg.TxConfig.SignModeHandler().DefaultMode(),
-            Signature: nil,
-        },
-        Sequence: accSeqs[i],
+    privs := []cryptotypes.PrivKey{priv1, priv2}
+    accNums:= []uint64{..., ...} // The accounts' account numbers
+    accSeqs:= []uint64{..., ...} // The accounts' sequence numbers
+
+    // First round: we gather all the signer infos. We use the "set empty
+    // signature" hack to do that.
+    var sigsV2 []signing.SignatureV2
+    for i, priv := range privs {
+        sigV2 := signing.SignatureV2{
+            PubKey: priv.PubKey(),
+            Data: &signing.SingleSignatureData{
+                SignMode:  encCfg.TxConfig.SignModeHandler().DefaultMode(),
+                Signature: nil,
+            },
+            Sequence: accSeqs[i],
+        }
+
+        sigsV2 = append(sigsV2, sigV2)
     }
-
-    sigsV2 = append(sigsV2, sigV2)
-}
-err := txBuilder.SetSignatures(sigsV2...)
-if err != nil {
-    return err
-}
-
-// Second round: all signer infos are set, so each signer can sign.
-sigsV2 = []signing.SignatureV2{}
-for i, priv := range privs {
-    signerData := xauthsigning.SignerData{
-        ChainID:       chainID,
-        AccountNumber: accNums[i],
-        Sequence:      accSeqs[i],
-    }
-    sigV2, err := tx.SignWithPrivKey(
-        encCfg.TxConfig.SignModeHandler().DefaultMode(), signerData,
-        txBuilder, priv, encCfg.TxConfig, accSeqs[i])
+    err := txBuilder.SetSignatures(sigsV2...)
     if err != nil {
-        return nil, err
+        return err
     }
 
-    sigsV2 = append(sigsV2, sigV2)
-}
-err = txBuilder.SetSignatures(sigsV2...)
-if err != nil {
-    return err
+    // Second round: all signer infos are set, so each signer can sign.
+    sigsV2 = []signing.SignatureV2{}
+    for i, priv := range privs {
+        signerData := xauthsigning.SignerData{
+            ChainID:       chainID,
+            AccountNumber: accNums[i],
+            Sequence:      accSeqs[i],
+        }
+        sigV2, err := tx.SignWithPrivKey(
+            encCfg.TxConfig.SignModeHandler().DefaultMode(), signerData,
+            txBuilder, priv, encCfg.TxConfig, accSeqs[i])
+        if err != nil {
+            return nil, err
+        }
+
+        sigsV2 = append(sigsV2, sigV2)
+    }
+    err = txBuilder.SetSignatures(sigsV2...)
+    if err != nil {
+        return err
+    }
 }
 ```
 
 The `TxBuilder` is now correctly populated. To print it, you can use the `TxConfig` interface from the initial encoding config `encCfg`:
 
 ```go
-// Generated Protobuf-encoded bytes.
-txBytes, err := encCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
-if err != nil {
-    return err
-}
+func sendTx() error {
+    // --snip--
 
-// Generate a JSON string.
-txJSONBytes, err := encCfg.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
-if err != nil {
-    return err
+    // Generated Protobuf-encoded bytes.
+    txBytes, err := encCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
+    if err != nil {
+        return err
+    }
+
+    // Generate a JSON string.
+    txJSONBytes, err := encCfg.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
+    if err != nil {
+        return err
+    }
+    txJSON := string(txJSONBytes)
 }
-txJSON := string(txJSONBytes)
 ```
 
 ### Broadcasting a Transaction
@@ -238,29 +254,35 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-// Create a connection to the gRPC server.
-grpcConn := grpc.Dial(
-    "127.0.0.1:9090", // Or your gRPC server address.
-    grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
-)
-defer grpcConn.Close()
+func sendTx() error {
+    // --snip--
 
-// Broadcast the tx via gRPC. We create a new client for the Protobuf Tx
-// service.
-txClient := tx.NewServiceClient(grpcConn)
-// We then call the BroadcastTx method on this client.
-grpcRes, err := txClient.BroadcastTx(
-    context.Background(),
-    &tx.BroadcastTxRequest{
-        Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
-        TxBytes: txBytes, // Proto-binary of the signed transaction, see previous step.
-    },
-)
-if err != nil {
-    return err
+    // Create a connection to the gRPC server.
+    grpcConn := grpc.Dial(
+        "127.0.0.1:9090", // Or your gRPC server address.
+        grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
+    )
+    defer grpcConn.Close()
+
+    // Broadcast the tx via gRPC. We create a new client for the Protobuf Tx
+    // service.
+    txClient := tx.NewServiceClient(grpcConn)
+    // We then call the BroadcastTx method on this client.
+    grpcRes, err := txClient.BroadcastTx(
+        context.Background(),
+        &tx.BroadcastTxRequest{
+            Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
+            TxBytes: txBytes, // Proto-binary of the signed transaction, see previous step.
+        },
+    )
+    if err != nil {
+        return err
+    }
+
+    fmt.Println(grpcRes.TxResponse.Code) // Should be `0` if the tx is successful
+
+    return nil
 }
-
-fmt.Println(grpcRes.TxResponse.Code) // Should be `0` if the tx is successful
 ```
 
 #### Simulating a Transaction
@@ -278,25 +300,31 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
-// Simulate the tx via gRPC. We create a new client for the Protobuf Tx
-// service.
-txClient := tx.NewServiceClient(grpcConn)
-// We then call the BroadcastTx method on this client.
-protoTx := txBuilderToProtoTx(txBuilder)
-if err != nil {
-    return err
-}
-grpcRes, err := txClient.Simulate(
-    context.Background(),
-    &tx.SimulateRequest{
-        Tx: protoTx,
-    },
-)
-if err != nil {
-    return err
-}
+func simulateTx() error {
+    // --snip--
 
-fmt.Println(grpcRes.GasInfo) // Prints estimated gas used.
+    // Simulate the tx via gRPC. We create a new client for the Protobuf Tx
+    // service.
+    txClient := tx.NewServiceClient(grpcConn)
+    // We then call the BroadcastTx method on this client.
+    protoTx := txBuilderToProtoTx(txBuilder)
+    if err != nil {
+        return err
+    }
+    grpcRes, err := txClient.Simulate(
+        context.Background(),
+        &tx.SimulateRequest{
+            Tx: protoTx,
+        },
+    )
+    if err != nil {
+        return err
+    }
+
+    fmt.Println(grpcRes.GasInfo) // Prints estimated gas used.
+
+    return nil
+}
 
 // txBuilderToProtoTx converts a txBuilder into a proto tx.Tx.
 func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) { // nolint

@@ -320,7 +320,10 @@ func (c *Client) ConstructionMetadataFromOptions(ctx context.Context, options ma
 		return nil, crgerrs.WrapError(crgerrs.ErrInvalidAddress, "no address provided")
 	}
 
-	addrString := addr.(string)
+	addrString, ok := addr.(string)
+	if !ok {
+		return nil, crgerrs.WrapError(crgerrs.ErrInvalidAddress, "address is not a string")
+	}
 
 	accountInfo, err := c.accountInfo(ctx, addrString, nil)
 	if err != nil {

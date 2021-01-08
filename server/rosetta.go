@@ -1,6 +1,8 @@
 package server
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/server/rosetta"
@@ -21,9 +23,12 @@ func RosettaCommand(ir codectypes.InterfaceRegistry, cdc codec.Marshaler) *cobra
 				return err
 			}
 
-			if protoCodec, ok := cdc.(*codec.ProtoCodec); ok {
-				conf.WithCodec(ir, protoCodec)
+			protoCodec, ok := cdc.(*codec.ProtoCodec)
+			if !ok {
+				return fmt.Errorf("exoected *codec.ProtoMarshaler, got: %T", cdc)
 			}
+			conf.WithCodec(ir, protoCodec)
+
 			rosettaSrv, err := rosetta.ServerFromConfig(conf)
 			if err != nil {
 				return err

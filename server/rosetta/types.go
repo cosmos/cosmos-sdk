@@ -2,14 +2,16 @@ package rosetta
 
 import (
 	"github.com/coinbase/rosetta-sdk-go/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // statuses
 const (
-	StatusSuccess = "Success"
-	StageSynced   = "synced"
-	StageSyncing  = "syncing"
+	StatusSuccess  = "Success"
+	StatusReverted = "Reverted"
+	StageSynced    = "synced"
+	StageSyncing   = "syncing"
 )
 
 // misc

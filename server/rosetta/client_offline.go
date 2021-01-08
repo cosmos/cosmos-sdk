@@ -23,6 +23,10 @@ func (c *Client) OperationStatuses() []*types.OperationStatus {
 			Status:     StatusSuccess,
 			Successful: true,
 		},
+		{
+			Status:     StatusReverted,
+			Successful: false,
+		},
 	}
 }
 
@@ -99,7 +103,7 @@ func (c *Client) SignedTx(ctx context.Context, txBytes []byte, signatures []*typ
 	return txBytes, nil
 }
 
-func (c *Client) ConstructionPayload(ctx context.Context, request *types.ConstructionPayloadsRequest) (resp *types.ConstructionPayloadsResponse, err error) {
+func (c *Client) ConstructionPayload(_ context.Context, request *types.ConstructionPayloadsRequest) (resp *types.ConstructionPayloadsResponse, err error) {
 	// check if there is at least one operation
 	if len(request.Operations) < 1 {
 		return nil, crgerrs.WrapError(crgerrs.ErrInvalidOperation, "expected at least one operation")

@@ -9,9 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
-var (
-	_ exported.Misbehaviour = (*Misbehaviour)(nil)
-)
+var _ exported.Misbehaviour = &Misbehaviour{}
 
 // ClientType is a Solo Machine light client.
 func (misbehaviour Misbehaviour) ClientType() string {

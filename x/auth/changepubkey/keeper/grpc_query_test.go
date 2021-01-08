@@ -2,9 +2,11 @@ package keeper_test
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/changepubkey/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/changepubkey/types"
 )
 
@@ -54,6 +56,29 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccountPubKeyHistory() {
 			true,
 			func(res *types.QueryPubKeyHistoryResponse) {
 				suite.Require().Equal(len(res.History), 1)
+			},
+		},
+		{
+			"success with more history",
+			func() {
+				suite.app.AccountKeeper.SetAccount(suite.ctx, suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr))
+
+				msgServer := keeper.NewMsgServerImpl(suite.app.AccountKeeper, suite.app.AccountHistoryKeeper)
+				_, pub1, _ := testdata.KeyTestPubAddr()
+				_, err := msgServer.ChangePubKey(sdk.WrapSDKContext(suite.ctx), types.NewMsgChangePubKey(addr, pub1))
+				suite.Require().NoError(err)
+				suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(time.Minute))
+
+				_, pub2, _ := testdata.KeyTestPubAddr()
+				_, err = msgServer.ChangePubKey(sdk.WrapSDKContext(suite.ctx), types.NewMsgChangePubKey(addr, pub2))
+				suite.Require().NoError(err)
+				suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(time.Minute))
+
+				req = &types.QueryPubKeyHistoryRequest{Address: addr.String()}
+			},
+			true,
+			func(res *types.QueryPubKeyHistoryResponse) {
+				suite.Require().Equal(len(res.History), 3)
 			},
 		},
 	}

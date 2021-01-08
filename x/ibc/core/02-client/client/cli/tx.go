@@ -35,10 +35,11 @@ func NewCreateClientCmd() *cobra.Command {
 
 			// attempt to unmarshal client state argument
 			var clientState exported.ClientState
-			if err := cdc.UnmarshalInterfaceJSON([]byte(args[0]), &clientState); err != nil {
+			clientContentOrFileName := args[0]
+			if err := cdc.UnmarshalInterfaceJSON([]byte(clientContentOrFileName), &clientState); err != nil {
 
 				// check for file path if JSON input is not provided
-				contents, err := ioutil.ReadFile(args[0])
+				contents, err := ioutil.ReadFile(clientContentOrFileName)
 				if err != nil {
 					return errors.Wrap(err, "neither JSON input nor path to .json file for client state were provided")
 				}
@@ -50,10 +51,11 @@ func NewCreateClientCmd() *cobra.Command {
 
 			// attempt to unmarshal consensus state argument
 			var consensusState exported.ConsensusState
-			if err := cdc.UnmarshalInterfaceJSON([]byte(args[1]), &consensusState); err != nil {
+			consensusContentOrFileName := args[1]
+			if err := cdc.UnmarshalInterfaceJSON([]byte(consensusContentOrFileName), &consensusState); err != nil {
 
 				// check for file path if JSON input is not provided
-				contents, err := ioutil.ReadFile(args[1])
+				contents, err := ioutil.ReadFile(consensusContentOrFileName)
 				if err != nil {
 					return errors.Wrap(err, "neither JSON input nor path to .json file for consensus state were provided")
 				}
@@ -99,10 +101,11 @@ func NewUpdateClientCmd() *cobra.Command {
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 			var header exported.Header
-			if err := cdc.UnmarshalInterfaceJSON([]byte(args[1]), &header); err != nil {
+			headerContentOrFileName := args[1]
+			if err := cdc.UnmarshalInterfaceJSON([]byte(headerContentOrFileName), &header); err != nil {
 
 				// check for file path if JSON input is not provided
-				contents, err := ioutil.ReadFile(args[1])
+				contents, err := ioutil.ReadFile(headerContentOrFileName)
 				if err != nil {
 					return errors.Wrap(err, "neither JSON input nor path to .json file for header were provided")
 				}
@@ -143,10 +146,11 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 			var misbehaviour exported.Misbehaviour
-			if err := cdc.UnmarshalInterfaceJSON([]byte(args[0]), &misbehaviour); err != nil {
+			misbehaviourContentOrFileName := args[0]
+			if err := cdc.UnmarshalInterfaceJSON([]byte(misbehaviourContentOrFileName), &misbehaviour); err != nil {
 
 				// check for file path if JSON input is not provided
-				contents, err := ioutil.ReadFile(args[0])
+				contents, err := ioutil.ReadFile(misbehaviourContentOrFileName)
 				if err != nil {
 					return errors.Wrap(err, "neither JSON input nor path to .json file for misbehaviour were provided")
 				}
@@ -168,4 +172,75 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+}
+
+// NewUpgradeClientCmd defines the command to upgrade an IBC light client.
+func NewUpgradeClientCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "upgrade [client-identifier] [path/to/client_state.json] [path/to/consensus_state.json] [upgrade-client-proof] [upgrade-consensus-state-proof]",
+		Short: "upgrade an IBC client",
+		Long: `upgrade the IBC client associated with the provided client identifier while providing proof committed by the counterparty chain to the new client and consensus states
+	- ClientState JSON example: {"@type":"/ibc.lightclients.solomachine.v1.ClientState","sequence":"1","frozen_sequence":"0","consensus_state":{"public_key":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AtK50+5pJOoaa04qqAqrnyAqsYrwrR/INnA6UPIaYZlp"},"diversifier":"testing","timestamp":"10"},"allow_update_after_proposal":false}
+	- ConsensusState JSON example: {"@type":"/ibc.lightclients.solomachine.v1.ConsensusState","public_key":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AtK50+5pJOoaa04qqAqrnyAqsYrwrR/INnA6UPIaYZlp"},"diversifier":"testing","timestamp":"10"}`,
+		Example: fmt.Sprintf("%s tx ibc %s upgrade [client-identifier] [path/to/client_state.json] [path/to/consensus_state.json] [client-state-proof] [consensus-state-proof] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
+		Args:    cobra.ExactArgs(5),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+			clientID := args[0]
+
+			// attempt to unmarshal client state argument
+			var clientState exported.ClientState
+			clientContentOrFileName := args[1]
+			if err := cdc.UnmarshalInterfaceJSON([]byte(clientContentOrFileName), &clientState); err != nil {
+
+				// check for file path if JSON input is not provided
+				contents, err := ioutil.ReadFile(clientContentOrFileName)
+				if err != nil {
+					return errors.Wrap(err, "neither JSON input nor path to .json file for client state were provided")
+				}
+
+				if err := cdc.UnmarshalInterfaceJSON(contents, &clientState); err != nil {
+					return errors.Wrap(err, "error unmarshalling client state file")
+				}
+			}
+
+			// attempt to unmarshal consensus state argument
+			var consensusState exported.ConsensusState
+			consensusContentOrFileName := args[2]
+			if err := cdc.UnmarshalInterfaceJSON([]byte(consensusContentOrFileName), &consensusState); err != nil {
+
+				// check for file path if JSON input is not provided
+				contents, err := ioutil.ReadFile(consensusContentOrFileName)
+				if err != nil {
+					return errors.Wrap(err, "neither JSON input nor path to .json file for consensus state were provided")
+				}
+
+				if err := cdc.UnmarshalInterfaceJSON(contents, &consensusState); err != nil {
+					return errors.Wrap(err, "error unmarshalling consensus state file")
+				}
+			}
+
+			proofUpgradeClient := []byte(args[3])
+			proofUpgradeConsensus := []byte(args[4])
+
+			msg, err := types.NewMsgUpgradeClient(clientID, clientState, consensusState, proofUpgradeClient, proofUpgradeConsensus, clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }

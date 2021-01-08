@@ -14,11 +14,8 @@ import (
 // GetQueryCmd returns the parent command for all x/upgrade CLi query commands.
 func GetQueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      "Querying commands for the upgrade module",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
+		Use:   types.ModuleName,
+		Short: "Querying commands for the upgrade module",
 	}
 
 	cmd.AddCommand(

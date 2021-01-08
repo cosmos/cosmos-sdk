@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/changepubkey/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -129,8 +130,7 @@ func (pk Keeper) PubKeyHistoryIteratorAfter(ctx sdk.Context, addr sdk.AccAddress
 	store := ctx.KVStore(pk.key)
 	prefixStore := prefix.NewStore(store, addr) // prefix store for specific account
 	startKey := types.GetPubKeyHistoryKey(time)
-	// TODO: is this correct to get current block time for endKey?
-	endKey := types.GetPubKeyHistoryKey(ctx.BlockTime()) // current block time
+	endKey := storetypes.PrefixEndBytes(types.KeyPrefixPubKeyHistory)
 	return prefixStore.Iterator(startKey, endKey)
 }
 
@@ -145,7 +145,6 @@ func (pk Keeper) PubKeyHistoryIterator(ctx sdk.Context, addr sdk.AccAddress) sdk
 func (pk Keeper) PubKeyHistoryReverseIterator(ctx sdk.Context, addr sdk.AccAddress) sdk.Iterator {
 	store := ctx.KVStore(pk.key)
 	prefixStore := prefix.NewStore(store, addr) // prefix store for specific account
-	// TODO: is this correct to get current block time for endKey?
-	endKey := types.GetPubKeyHistoryKey(ctx.BlockTime()) // current block time
+	endKey := storetypes.PrefixEndBytes(types.KeyPrefixPubKeyHistory)
 	return prefixStore.ReverseIterator(types.KeyPrefixPubKeyHistory, endKey)
 }

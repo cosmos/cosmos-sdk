@@ -11,8 +11,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/crypto"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/changepubkey/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/changepubkey/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -41,6 +43,17 @@ func (suite *KeeperTestSuite) SetupTest() {
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.AccountHistoryKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
+}
+
+func (suite *KeeperTestSuite) ChangeAccountPubKeys(addr sdk.AccAddress, pubkeys ...crypto.PubKey) {
+	suite.app.AccountKeeper.SetAccount(suite.ctx, suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr))
+
+	for _, pub := range pubkeys {
+		msgServer := keeper.NewMsgServerImpl(suite.app.AccountKeeper, suite.app.AccountHistoryKeeper)
+		_, err := msgServer.ChangePubKey(sdk.WrapSDKContext(suite.ctx), types.NewMsgChangePubKey(addr, pub))
+		suite.Require().NoError(err)
+		suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(time.Minute))
+	}
 }
 
 func TestKeeperTestSuite(t *testing.T) {

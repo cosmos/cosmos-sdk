@@ -16,6 +16,8 @@ has also been created to define a contract for evidence against malicious valida
 // Evidence defines the contract which concrete evidence types of misbehavior
 // must implement.
 type Evidence interface {
+	proto.Message
+
 	Route() string
 	Type() string
 	String() string
@@ -71,5 +73,5 @@ capabilities such as slashing and jailing a validator.
 // for executing all corresponding business logic necessary for verifying the
 // evidence as valid. In addition, the Handler may execute any necessary
 // slashing and potential jailing.
-type Handler func(Context, Evidence) error
+type Handler func(sdk.Context, Evidence) error
 ```

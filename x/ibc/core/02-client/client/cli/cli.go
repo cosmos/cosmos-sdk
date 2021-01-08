@@ -44,6 +44,7 @@ func NewTxCmd() *cobra.Command {
 		NewCreateClientCmd(),
 		NewUpdateClientCmd(),
 		NewSubmitMisbehaviourCmd(),
+		NewUpgradeClientCmd(),
 	)
 
 	return txCmd

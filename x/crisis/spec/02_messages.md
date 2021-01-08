@@ -11,14 +11,7 @@ corresponding updates to the state.
 
 Blockchain invariants can be checked using the `MsgVerifyInvariant` message. 
 
-```protobuf
-// MsgVerifyInvariant represents a message to verify a particular invariance.
-message MsgVerifyInvariant {
-  string sender                = 1;
-  string invariant_module_name = 2;
-  string invariant_route       = 3;
-}
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc7/proto/cosmos/crisis/v1beta1/tx.proto#L14-L22
 
 This message is expected to fail if: 
  - the sender does not have enough coins for the constant fee

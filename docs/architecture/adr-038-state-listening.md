@@ -25,19 +25,18 @@ We will also introduce the tooling for writing these state changes out to files 
 
 ### Listening interface
 
-In a new file- `store/types/listening.go`- we will create a `WriteListener` interface for streaming out state changes from a KVStore.
+In a new file, `store/types/listening.go`, we will create a `WriteListener` interface for streaming out state changes from a KVStore.
 
 ```go
 // WriteListener interface for streaming data out from a listenkv.Store
 type WriteListener interface {
 	// if value is nil then it was deleted
-	//storeKey indicates the source KVStore, to facilitate using the the same WriteListener across separate KVStores
+	// storeKey indicates the source KVStore, to facilitate using the the same WriteListener across separate KVStores
 	OnWrite(storeKey types.StoreKey, key []byte, value []byte)
 }
 ```
 
 ### Listener type
-
 
 We will create a concrete implementation of the `WriteListener` interface in `store/types/listening.go`, that writes out protobuf
 encoded KV pairs to an underlying `io.Writer`.
@@ -198,16 +197,18 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 We will introduce a new `StreamingService` interface for exposing `WriteListener` data streams to external consumers.
 
 ```go
-// StreamingService interface for registering WriteListeners with the BaseApp and updating the service with the ABCI context
+// Hook interface used to hook into the ABCI message processing of the BaseApp
+type Hook interface {
+	ListenBeginBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) // update the streaming service with the latest BeginBlock messages
+	ListenEndBlock(ctx sdk.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) // update the steaming service with the latest EndBlock messages
+	ListenDeliverTx(ctx sdk.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) // update the steaming service with the latest DeliverTx messages
+}
+
+// StreamingService interface for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks
 type StreamingService interface {
 	Stream(wg *sync.WaitGroup, quitChan <-chan struct{}) // streaming service loop, awaits kv pairs and writes them to some destination stream or file
 	Listeners() map[sdk.StoreKey][]storeTypes.WriteListener // returns the streaming service's listeners for the BaseApp to register
-	BeginBlockReq(req abci.RequestBeginBlock) // update the streaming service with the latest RequestBeginBlock message
-	BeginBlockRes(res abci.ResponseBeginBlock) // update the steaming service with the latest ResponseBeginBlock message
-	EndBlockReq(req abci.RequestEndBlock) // update the steaming service with the latest RequestEndBlock message
-	EndBlockRes(res abci.ResponseEndBlock) // update the steaming service with the latest ResponseEndBlock message
-	DeliverTxReq(req abci.RequestDeliverTx) // update the steaming service with the latest RequestDeliverTx message
-	DeliverTxRes(res abci.ResponseDeliverTx) // update the steaming service with the latest ResponseDeliverTx message
+	Hook
 }
 ```
 
@@ -215,7 +216,7 @@ type StreamingService interface {
 
 We will introduce an implementation of `StreamingService` which writes state changes out to files as length-prefixed protobuf encoded `StoreKVPair`s.
 This service uses the same `StoreKVPairWriteListener` for every KVStore, writing all the KV pairs from every KVStore
-out to the same files, relying on the `StoreKey` field in the `StoreKVPair` protobuf message to later distinguish the source KVStore for each pair.
+out to the same files, relying on the `StoreKey` field in the `StoreKVPair` protobuf message to later distinguish the source for each pair.
 
 The file naming schema is as such:
 * After every `BeginBlock` request a new file is created with the name `block-{N}-begin`, where N is the block number. All
@@ -238,16 +239,14 @@ type FileStreamingService struct {
 	writeDir string // directory to write files into
 	dstFile *os.File // the current write output file
 	marshaler codec.BinaryMarshaler // marshaler used for re-marshalling the ABCI messages to write them out to the destination files
-	fileLock *sync.Mutex // mutex to sync access to the dst file since
-	// NOTE: I suspect this lock is unnecessary since everything above the FileStreamingService occurs synchronously,
-	// e.g. we dont need to worry about a kv pair being sent to the srcChan at the same time a new file is being generated
+	stateCache [][]byte // cache the protobuf binary encoded StoreKVPairs in the order they are received
 }
 ```
 
-This streaming service uses a single instance of a simple intermediate `io.Writer` as the underlying `io.Writer` for the single `StoreKVPairWriteListener`,
-collecting the KV pairs from every KVStore synchronously off of the same channel, and then writing
-them out to the destination file generated for the current ABCI stage (as outlined above, with optional prefixes to avoid potential naming collisions
-across separate instances).
+This streaming service uses a single instance of a simple intermediate `io.Writer` as the underlying `io.Writer` for its single `StoreKVPairWriteListener`,
+It collects KV pairs from every KVStore synchronously off of the same channel, caching them in the order they are received, and then writing
+them out to a file generated in response to an ABCI message hook. Files are named as outlined above, with optional prefixes to avoid potential naming collisions
+across separate instances.
 
 ```go
 // intermediateWriter is used so that we do not need to update the underlying io.Writer inside the StoreKVPairWriteListener
@@ -290,7 +289,8 @@ func NewFileStreamingService(writeDir, filePrefix string, storeKeys []sdk.StoreK
 		filePrefix: filePrefix,
 		writeDir: writeDir,
 		marshaler: m,
-		fileLock: new(sync.Mutex),
+		stateCache: make([][]byte, 0),
+		cacheLock: new(sync.Mutex),
 	}, nil
 }
 
@@ -299,53 +299,35 @@ func (fss *FileStreamingService) Listeners() map[sdk.StoreKey][]storeTypes.Write
 	return fss.listeners
 }
 
-func (fss *FileStreamingService) BeginBlockReq(req abci.RequestBeginBlock) {
-	// lock
-	// close the file currently at fss.dstFile
-	// update fss.dstFile with a new file generated using the begin block request info, per the naming schema
-	// marshall the request and write it at the head of the file
-	// unlock
-	// now all kv pair writes go to the new file
+func (fss *FileStreamingService) ListenBeginBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) {
+	// create a new file with the req info according to naming schema
+	// write req to file
+	// write all state changes cached for this stage to file
+	// reset cache
+	// write res to file
+	// close file
 }
 
-func (fss *FileStreamingService) BeginBlockRes(res abci.ResponseBeginBlock) {
-	// lock
-	// marshall the response and write it to the tail of the current fss.dstFile
-	// unlock
+func (fss *FileStreamingService) ListenEndBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) {
+	// create a new file with the req info according to naming schema
+	// write req to file
+	// write all state changes cached for this stage to file
+	// reset cache
+	// write res to file
+	// close file
 }
 
-func (fss *FileStreamingService) EndBlockReq(req abci.RequestEndBlock) {
-	// lock
-	// close the file currently at fss.dstFile
-	// update fss.dstFile with a new file generated using the end block request info, per the naming schema
-	// marshall the request and write it at the head of the file
-	// unlock
-	// now all kv pair writes go to the new file
+func (fss *FileStreamingService) ListenDeliverTx(ctx sdk.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) {
+	// create a new file with the req info according to naming schema
+	// NOTE: if the tx failed, handle accordingly
+	// write req to file
+	// write all state changes cached for this stage to file
+	// reset cache
+	// write res to file
+	// close file
 }
 
-func (fss *FileStreamingService) EndBlockRes(res abci.ResponseEndBlock) {
-	// lock
-	// marshall the response and write it at the tail of the current fss.dstFile
-	// unlock
-}
-
-func (fss *FileStreamingService) DeliverTxReq(req abci.RequestDeliverTx) {
-	// lock
-	// close the file currently at fss.dstFile
-	// update fss.dstFile with a new file generated using the deliver tx request info, per the naming schema
-	// marshall the request and then write it at the head of that file
-	// unlock
-	// now all writes go to the new file
-}
-
-func (fss *FileStreamingService) DeliverTxRes(res abci.ResponseDeliverTx) {
-	// lock
-	// marshall the response and write it at the tail of the current fss.dstFile
-	// unlock
-}
-
-// Stream spins up a goroutine select loop which awaits length-prefixed binary encoded KV pairs to write out to the
-// current destination file or a quit signal to shutdown the service
+// Stream spins up a goroutine select loop which awaits length-prefixed binary encoded KV pairs and caches them in the order they were received
 func (fss *FileStreamingService) Stream(wg *sync.WaitGroup, quitChan <-chan struct{}) {
 	wg.Add(1)
 	go func() {
@@ -355,8 +337,7 @@ func (fss *FileStreamingService) Stream(wg *sync.WaitGroup, quitChan <-chan stru
 			case <-quitChan:
 				return
                         case by := <-fss.srcChan:
-                        	fss.fileLock.Wait()
-                        	fss.dstFile.Write(by)
+                        	append(fss.stateCache, by)
 			}
 		}
 	}()
@@ -370,7 +351,7 @@ or an auxiliary streaming services can read from the files and serve the data ov
 #### File pruning
 
 Without pruning the number of files can grow indefinitely, this will need to be managed by
-the developer in an application or even module-specific manner.
+the developer in an application or even module-specific manner (e.g. log rotation).
 The file naming schema facilitates pruning by block number and/or ABCI message.
 
 ### Configuration
@@ -384,75 +365,29 @@ We will add a new method to the `BaseApp` to enable the registration of `Streami
 
 ```go
 // RegisterStreamingService is used to register a streaming service with the BaseApp
-func (app *BaseApp) RegisterStreamingService(s StreamingService) {
+func (app *BaseApp) RegisterHooks(s StreamingService) {
 	// set the listeners for each StoreKey
 	for key, lis := range s.Listeners() {
 		app.cms.SetListeners(key, lis)
-    }
-    // register the streaming service within the BaseApp
-    // BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context
-    app.streamingServices = append(app.streamingServices, serv)
+	}
+	// register the streaming service hooks within the BaseApp
+	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context using these hooks
+	app.hooks = append(app.hooks, s)
 }
 ```
 
-We will also modify the `BeginBlock`, `EndBlock`, and `DeliverTx` methods to pass ABCI requests and responses to any `StreamingServices` registered
+We will also modify the `BeginBlock`, `EndBlock`, and `DeliverTx` methods to pass ABCI requests and responses to any streaming service hooks registered
 with the `BaseApp`.
 
 
 ```go
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
-	defer telemetry.MeasureSince(time.Now(), "abci", "begin_block")
-
-	if app.cms.TracingEnabled() {
-		app.cms.SetTracingContext(sdk.TraceContext(
-			map[string]interface{}{"blockHeight": req.Header.Height},
-		))
-	}
-
-	if err := app.validateHeight(req); err != nil {
-		panic(err)
-	}
 	
-	// NEW CODE HERE
-	// Update any registered streaming services with the new RequestBeginBlock message
-	for _, streamingService := range app.streamingServices {
-		streamingSerice.BeginBlockReq(req)
-	}
-
-	// Initialize the DeliverTx state. If this is the first block, it should
-	// already be initialized in InitChain. Otherwise app.deliverState will be
-	// nil, since it is reset on Commit.
-	if app.deliverState == nil {
-		app.setDeliverState(req.Header)
-	} else {
-		// In the first block, app.deliverState.ctx will already be initialized
-		// by InitChain. Context is now updated with Header information.
-		app.deliverState.ctx = app.deliverState.ctx.
-			WithBlockHeader(req.Header).
-			WithBlockHeight(req.Header.Height)
-	}
-
-	// add block gas meter
-	var gasMeter sdk.GasMeter
-	if maxGas := app.getMaximumBlockGas(app.deliverState.ctx); maxGas > 0 {
-		gasMeter = sdk.NewGasMeter(maxGas)
-	} else {
-		gasMeter = sdk.NewInfiniteGasMeter()
-	}
-
-	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(gasMeter)
-
-	if app.beginBlocker != nil {
-		res = app.beginBlocker(app.deliverState.ctx, req)
-		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
-	}
-	// set the signed validators for addition to context in deliverTx
-	app.voteInfos = req.LastCommitInfo.GetVotes() 
+	...
 	
-	// NEW CODE HERE
-	// Update any registered streaming services with the new ResponseBeginBlock message
-	for _ streamingService := range app.streamingServices {
-		streamingService.BeginBlockRes(res)
+	// Call the streaming service hooks with the BeginBlock messages
+	for _ hook := range app.hooks {
+		hook.ListenBeginBlock(app.deliverState.ctx, req, res)
 	}
 	
 	return res
@@ -461,31 +396,12 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 ```go
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
-	defer telemetry.MeasureSince(time.Now(), "abci", "end_block")
-
-	if app.deliverState.ms.TracingEnabled() {
-		app.deliverState.ms = app.deliverState.ms.SetTracingContext(nil).(sdk.CacheMultiStore)
-	}
-
-	// NEW CODE HERE
-	// Update any registered streaming services with the new RequestEndBlock message
-	for _, streamingService := range app.streamingServices {
-		streamingService.EndBlockReq(req)
-	}
-
-	if app.endBlocker != nil {
-		res = app.endBlocker(app.deliverState.ctx, req)
-		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
-	}
-
-	if cp := app.GetConsensusParams(app.deliverState.ctx); cp != nil {
-		res.ConsensusParamUpdates = cp
-	}
 	
-	// NEW CODE HERE
-	// Update any registered streaming services with the new RequestEndBlock message 
-	for _, streamingService := range app.streamingServices {
-		streamingService.EndBlockRes(res)
+	...
+
+	// Call the streaming service hooks with the EndBlock messages
+	for _, hook := range app.hooks {
+		hook.ListenEndBlock(app.deliverState.ctx, req, res)
 	}
 	
 	return res
@@ -494,28 +410,18 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 
 ```go
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
-	defer telemetry.MeasureSince(time.Now(), "abci", "deliver_tx")
-
-	gInfo := sdk.GasInfo{}
-	resultStr := "successful"
-
-	defer func() {
-		telemetry.IncrCounter(1, "tx", "count")
-		telemetry.IncrCounter(1, "tx", resultStr)
-		telemetry.SetGauge(float32(gInfo.GasUsed), "tx", "gas", "used")
-		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
-	}() 
 	
-	// NEW CODE HERE
-	// Update any registered streaming services with the new RequestEndBlock message 
-	for _, streamingService := range app.streamingServices {
-		streamingService.DeliverTxReq(req)
-	}
+	...
 
 	gInfo, result, err := app.runTx(runTxModeDeliver, req.Tx)
 	if err != nil {
 		resultStr = "failed"
-		return sdkerrors.ResponseDeliverTx(err, gInfo.GasWanted, gInfo.GasUsed, app.trace)
+		res := sdkerrors.ResponseDeliverTx(err, gInfo.GasWanted, gInfo.GasUsed, app.trace)
+		// If we throw and error, be sure to still call the streaming service's hook
+		for _, hook := range app.hooks {
+			hook.ListenDeliverTx(app.deliverState.ctx, req, res)
+		}
+		return res
 	}
 
 	res := abci.ResponseDeliverTx{
@@ -526,10 +432,9 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
 	}
 	
-	// NEW CODE HERE
-	// Update any registered streaming services with the new RequestEndBlock message 
-	for _, streamingService := range app.streamingServices {
-		streamingService.DeliverTxRes(res)
+	// Call the streaming service hooks with the DeliverTx messages
+	for _, hook := range app.hook {
+		hook.ListenDeliverTx(app.deliverState.ctx, req, res)
 	}
 	
 	return res
@@ -549,7 +454,7 @@ Note: the actual namespace is TBD.
 
 [streamers]
     [streamers.file]
-        keys = ["list", "of", "store", "keys", "we", "want", "to", "expose", "for", "this", "streamer"]
+        keys = ["list", "of", "store", "keys", "we", "want", "to", "expose", "for", "this", "streaming", "service"]
         writeDir = "path to the write directory"
         prefix = "optional prefix to prepend to the generated file names"
 ```

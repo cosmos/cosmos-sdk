@@ -60,7 +60,7 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 		return err
 	}
 
-	if !plan.Time.IsZero() {
+	if plan.Time.Unix() > 0 {
 		if !plan.Time.After(ctx.BlockHeader().Time) {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "upgrade cannot be scheduled in the past")
 		}

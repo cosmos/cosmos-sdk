@@ -291,7 +291,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	// MultiStore (app.cms) so when Commit() is called is persists those values.
 	app.deliverState.ms.Write()
 	commitID := app.cms.Commit()
-	app.logger.Debug("Commit synced", "commit", fmt.Sprintf("%X", commitID))
+	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitID))
 
 	// Reset the Check state to the latest committed.
 	//
@@ -358,29 +358,42 @@ func (app *BaseApp) snapshot(height int64) {
 		app.logger.Info("snapshot manager not configured")
 		return
 	}
-	app.logger.Info("Creating state snapshot", "height", height)
+
+	app.logger.Info("creating state snapshot", "height", height)
+
 	snapshot, err := app.snapshotManager.Create(uint64(height))
 	if err != nil {
-		app.logger.Error("Failed to create state snapshot", "height", height, "err", err)
+		app.logger.Error("failed to create state snapshot", "height", height, "err", err)
 		return
 	}
-	app.logger.Info("Completed state snapshot", "height", height, "format", snapshot.Format)
+
+	app.logger.Info("completed state snapshot", "height", height, "format", snapshot.Format)
 
 	if app.snapshotKeepRecent > 0 {
-		app.logger.Debug("Pruning state snapshots")
+		app.logger.Debug("pruning state snapshots")
+
 		pruned, err := app.snapshotManager.Prune(app.snapshotKeepRecent)
 		if err != nil {
 			app.logger.Error("Failed to prune state snapshots", "err", err)
 			return
 		}
-		app.logger.Debug("Pruned state snapshots", "pruned", pruned)
+
+		app.logger.Debug("pruned state snapshots", "pruned", pruned)
 	}
 }
 
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
 // implements Queryable.
-func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
+func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	defer telemetry.MeasureSince(time.Now(), "abci", "query")
+
+	// Add panic recovery for all queries.
+	// ref: https://github.com/cosmos/cosmos-sdk/pull/8039
+	defer func() {
+		if r := recover(); r != nil {
+			res = sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrPanic, "%v", r))
+		}
+	}()
 
 	// when a client did not provide a query height, manually inject the latest
 	if req.Height == 0 {
@@ -425,13 +438,14 @@ func (app *BaseApp) ListSnapshots(req abci.RequestListSnapshots) abci.ResponseLi
 
 	snapshots, err := app.snapshotManager.List()
 	if err != nil {
-		app.logger.Error("Failed to list snapshots", "err", err)
+		app.logger.Error("failed to list snapshots", "err", err)
 		return resp
 	}
+
 	for _, snapshot := range snapshots {
 		abciSnapshot, err := snapshot.ToABCI()
 		if err != nil {
-			app.logger.Error("Failed to list snapshots", "err", err)
+			app.logger.Error("failed to list snapshots", "err", err)
 			return resp
 		}
 		resp.Snapshots = append(resp.Snapshots, &abciSnapshot)
@@ -447,8 +461,13 @@ func (app *BaseApp) LoadSnapshotChunk(req abci.RequestLoadSnapshotChunk) abci.Re
 	}
 	chunk, err := app.snapshotManager.LoadChunk(req.Height, req.Format, req.Chunk)
 	if err != nil {
-		app.logger.Error("Failed to load snapshot chunk", "height", req.Height, "format", req.Format,
-			"chunk", req.Chunk, "err")
+		app.logger.Error(
+			"failed to load snapshot chunk",
+			"height", req.Height,
+			"format", req.Format,
+			"chunk", req.Chunk,
+			"err", err,
+		)
 		return abci.ResponseLoadSnapshotChunk{}
 	}
 	return abci.ResponseLoadSnapshotChunk{Chunk: chunk}
@@ -462,15 +481,16 @@ func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOf
 	}
 
 	if req.Snapshot == nil {
-		app.logger.Error("Received nil snapshot")
+		app.logger.Error("received nil snapshot")
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
 	}
 
 	snapshot, err := snapshottypes.SnapshotFromABCI(req.Snapshot)
 	if err != nil {
-		app.logger.Error("Failed to decode snapshot metadata", "err", err)
+		app.logger.Error("failed to decode snapshot metadata", "err", err)
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
 	}
+
 	err = app.snapshotManager.Restore(snapshot)
 	switch {
 	case err == nil:
@@ -480,13 +500,22 @@ func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOf
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT_FORMAT}
 
 	case errors.Is(err, snapshottypes.ErrInvalidMetadata):
-		app.logger.Error("Rejecting invalid snapshot", "height", req.Snapshot.Height,
-			"format", req.Snapshot.Format, "err", err)
+		app.logger.Error(
+			"rejecting invalid snapshot",
+			"height", req.Snapshot.Height,
+			"format", req.Snapshot.Format,
+			"err", err,
+		)
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
 
 	default:
-		app.logger.Error("Failed to restore snapshot", "height", req.Snapshot.Height,
-			"format", req.Snapshot.Format, "err", err)
+		app.logger.Error(
+			"failed to restore snapshot",
+			"height", req.Snapshot.Height,
+			"format", req.Snapshot.Format,
+			"err", err,
+		)
+
 		// We currently don't support resetting the IAVL stores and retrying a different snapshot,
 		// so we ask Tendermint to abort all snapshot restoration.
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}
@@ -506,8 +535,12 @@ func (app *BaseApp) ApplySnapshotChunk(req abci.RequestApplySnapshotChunk) abci.
 		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ACCEPT}
 
 	case errors.Is(err, snapshottypes.ErrChunkHashMismatch):
-		app.logger.Error("Chunk checksum mismatch, rejecting sender and requesting refetch",
-			"chunk", req.Index, "sender", req.Sender, "err", err)
+		app.logger.Error(
+			"chunk checksum mismatch; rejecting sender and requesting refetch",
+			"chunk", req.Index,
+			"sender", req.Sender,
+			"err", err,
+		)
 		return abci.ResponseApplySnapshotChunk{
 			Result:        abci.ResponseApplySnapshotChunk_RETRY,
 			RefetchChunks: []uint32{req.Index},
@@ -515,7 +548,7 @@ func (app *BaseApp) ApplySnapshotChunk(req abci.RequestApplySnapshotChunk) abci.
 		}
 
 	default:
-		app.logger.Error("Failed to restore snapshot", "err", err)
+		app.logger.Error("failed to restore snapshot", "err", err)
 		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}
 	}
 }

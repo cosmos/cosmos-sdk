@@ -12,22 +12,26 @@ import (
 
 // CreateClient creates a new client state and populates it with a given consensus
 // state as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
-//
-// CONTRACT: ClientState was constructed correctly from given initial consensusState
 func (k Keeper) CreateClient(
-	ctx sdk.Context, clientID string, clientState exported.ClientState, consensusState exported.ConsensusState,
-) error {
+	ctx sdk.Context, clientState exported.ClientState, consensusState exported.ConsensusState,
+) (string, error) {
 	params := k.GetParams(ctx)
 	if !params.IsAllowedClient(clientState.ClientType()) {
-		return sdkerrors.Wrapf(
+		return "", sdkerrors.Wrapf(
 			types.ErrInvalidClientType,
 			"client state type %s is not registered in the allowlist", clientState.ClientType(),
 		)
 	}
 
-	_, found := k.GetClientState(ctx, clientID)
-	if found {
-		return sdkerrors.Wrapf(types.ErrClientExists, "cannot create client with ID %s", clientID)
+	clientID := k.GenerateClientIdentifier(ctx, clientState.ClientType())
+
+	k.SetClientState(ctx, clientID, clientState)
+	k.Logger(ctx).Info("client created at height", "client-id", clientID, "height", clientState.GetLatestHeight().String())
+
+	// verifies initial consensus state against client state and initializes client store with any client-specific metadata
+	// e.g. set ProcessedTime in Tendermint clients
+	if err := clientState.Initialize(ctx, k.cdc, k.ClientStore(ctx, clientID), consensusState); err != nil {
+		return "", err
 	}
 
 	// check if consensus state is nil in case the created client is Localhost
@@ -35,7 +39,6 @@ func (k Keeper) CreateClient(
 		k.SetClientConsensusState(ctx, clientID, clientState.GetLatestHeight(), consensusState)
 	}
 
-	k.SetClientState(ctx, clientID, clientState)
 	k.Logger(ctx).Info("client created at height", "client-id", clientID, "height", clientState.GetLatestHeight().String())
 
 	defer func() {
@@ -46,7 +49,7 @@ func (k Keeper) CreateClient(
 		)
 	}()
 
-	return nil
+	return clientID, nil
 }
 
 // UpdateClient updates the consensus state and the state root from a provided header.

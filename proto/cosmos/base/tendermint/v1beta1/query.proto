@@ -2,13 +2,14 @@ syntax = "proto3";
 package cosmos.base.tendermint.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 import "tendermint/p2p/types.proto";
 import "tendermint/types/block.proto";
 import "tendermint/types/types.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/types/query";
+option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/tmservice";
 
 // Service defines the gRPC querier service for tendermint queries.
 service Service {
@@ -70,10 +71,10 @@ message GetLatestValidatorSetResponse {
 
 // Validator is the type for the validator-set.
 message Validator {
-  bytes  address           = 1;
-  string pub_key           = 2;
-  int64  voting_power      = 3;
-  int64  proposer_priority = 4;
+  string              address           = 1;
+  google.protobuf.Any pub_key           = 2;
+  int64               voting_power      = 3;
+  int64               proposer_priority = 4;
 }
 
 // GetBlockByHeightRequest is the request type for the Query/GetBlockByHeight RPC method.

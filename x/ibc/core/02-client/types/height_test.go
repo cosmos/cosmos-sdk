@@ -104,6 +104,7 @@ func TestParseChainID(t *testing.T) {
 		formatted bool
 	}{
 		{"gaiamainnet-3", 3, true},
+		{"a-1", 1, true},
 		{"gaia-mainnet-40", 40, true},
 		{"gaiamainnet-3-39", 39, true},
 		{"gaiamainnet--", 0, false},
@@ -111,10 +112,13 @@ func TestParseChainID(t *testing.T) {
 		{"gaiamainnet--4", 0, false},
 		{"gaiamainnet-3.4", 0, false},
 		{"gaiamainnet", 0, false},
+		{"a--1", 0, false},
+		{"-1", 0, false},
+		{"--1", 0, false},
 	}
 
 	for i, tc := range cases {
-		require.Equal(t, tc.formatted, types.IsRevisionFormat(tc.chainID), "case %d does not match expected format", i)
+		require.Equal(t, tc.formatted, types.IsRevisionFormat(tc.chainID), "id %s does not match expected format", tc.chainID)
 
 		revision := types.ParseChainID(tc.chainID)
 		require.Equal(t, tc.revision, revision, "case %d returns incorrect revision", i)

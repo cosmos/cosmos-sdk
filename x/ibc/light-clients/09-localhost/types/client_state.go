@@ -74,6 +74,19 @@ func (cs ClientState) ZeroCustomFields() exported.ClientState {
 	return &cs
 }
 
+// Initialize ensures that initial consensus state for localhost is nil
+func (cs ClientState) Initialize(_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, consState exported.ConsensusState) error {
+	if consState != nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "initial consensus state for localhost must be nil.")
+	}
+	return nil
+}
+
+// ExportMetadata is a no-op for localhost client
+func (cs ClientState) ExportMetadata(_ sdk.KVStore) []exported.GenesisMetadata {
+	return nil
+}
+
 // CheckHeaderAndUpdateState updates the localhost client. It only needs access to the context
 func (cs *ClientState) CheckHeaderAndUpdateState(
 	ctx sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ exported.Header,
@@ -216,6 +229,8 @@ func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
 	_ exported.Height,
+	_ uint64,
+	_ uint64,
 	_ exported.Prefix,
 	_ []byte,
 	portID,
@@ -246,6 +261,8 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
 	_ exported.Height,
+	_ uint64,
+	_ uint64,
 	_ exported.Prefix,
 	_ []byte,
 	portID,
@@ -277,6 +294,8 @@ func (cs ClientState) VerifyPacketReceiptAbsence(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
 	_ exported.Height,
+	_ uint64,
+	_ uint64,
 	_ exported.Prefix,
 	_ []byte,
 	portID,
@@ -299,6 +318,8 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
 	_ exported.Height,
+	_ uint64,
+	_ uint64,
 	_ exported.Prefix,
 	_ []byte,
 	portID,

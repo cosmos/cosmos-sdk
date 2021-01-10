@@ -162,7 +162,7 @@ func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
 func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
 	val := s.network.Validators[0]
 
-	voterAddressBase64 := val.Address.String()
+	voterAddressBech32 := val.Address.String()
 
 	testCases := []struct {
 		name           string
@@ -172,13 +172,13 @@ func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
 	}{
 		{
 			"empty proposal",
-			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "", voterAddressBase64),
+			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "", voterAddressBech32),
 			true,
 			types.NewNonSplitVoteOption(types.OptionYes),
 		},
 		{
 			"get non existing proposal",
-			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "10", voterAddressBase64),
+			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "10", voterAddressBech32),
 			true,
 			types.NewNonSplitVoteOption(types.OptionYes),
 		},
@@ -190,7 +190,7 @@ func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
 		},
 		{
 			"get proposal with id",
-			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "1", voterAddressBase64),
+			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "1", voterAddressBech32),
 			false,
 			types.NewNonSplitVoteOption(types.OptionYes),
 		},

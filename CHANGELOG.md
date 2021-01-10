@@ -37,12 +37,21 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 
 ### Improvements
+
+* (logging) [\#8072](https://github.com/cosmos/cosmos-sdk/pull/8072) Refactor logging:
+  * Use [zerolog](https://github.com/rs/zerolog) over Tendermint's go-kit logging wrapper.
+  * Introduce Tendermint's `--log_format=plain|json` flag. Using format `json` allows for emitting structured JSON
+  logs which can be consumed by an external logging facility (e.g. Loggly). Both formats log to STDERR.
+  * The existing `--log_level` flag and it's default value now solely relates to the global logging
+  level (e.g. `info`, `debug`, etc...) instead of `<module>:<level>`.
+* (crypto) [\#7987](https://github.com/cosmos/cosmos-sdk/pull/7987) Fix the inconsistency of CryptoCdc, only use `codec/legacy.Cdc`.
 * (SDK) [\#7925](https://github.com/cosmos/cosmos-sdk/pull/7925) Updated dependencies to use gRPC v1.33.2
   * Updated gRPC dependency to v1.33.2
   * Updated iavl dependency to v0.15-rc2
 * (version) [\#7848](https://github.com/cosmos/cosmos-sdk/pull/7848) [\#7941](https://github.com/cosmos/cosmos-sdk/pull/7941) `version --long` output now shows the list of build dependencies and replaced build dependencies.
 
 ### State Machine Breaking Changes
+
 * (x/upgrade) [\#7979](https://github.com/cosmos/cosmos-sdk/pull/7979) keeper pubkey storage serialization migration from bech32 to protobuf. 
 
 ### Bug Fixes
@@ -53,9 +62,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Client Breaking
 
+* (crypto) [\#7419](https://github.com/cosmos/cosmos-sdk/pull/7419) The SDK doesn't use Tendermint's `crypto.PubKey` interface anymore, and uses instead it's own `PubKey` interface, defined in `crypto/types`. Replace all instances of `crypto.PubKey` by `cryptotypes.Pubkey`.
 * (x/staking) [\#7419](https://github.com/cosmos/cosmos-sdk/pull/7419) The `TmConsPubKey` method on ValidatorI has been removed and replaced instead by `ConsPubKey` (which returns a SDK `cryptotypes.PubKey`) and `TmConsPublicKey` (which returns a Tendermint proto PublicKey).
 
 ### Improvements
+
 * (tendermint) [\#7828](https://github.com/cosmos/cosmos-sdk/pull/7828) Update tendermint dependency to v0.34.0-rc6
 
 ## [v0.40.0-rc2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc2) - 2020-11-02
@@ -88,17 +99,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * __Modules__
   * `x/crisis` has a new function: `AddModuleInitFlags`, which will register optional crisis module flags for the start command.
 
-
 ### Bug Fixes
 
 * (client) [\#7699](https://github.com/cosmos/cosmos-sdk/pull/7699) Fix panic in context when setting invalid nodeURI. `WithNodeURI` does not set the `Client` in the context.
 * (x/gov) [#7641](https://github.com/cosmos/cosmos-sdk/pull/7641) Fix tally calculation precision error.
 
-### Improvements 
+### Improvements
 
 * (rest) [#7649](https://github.com/cosmos/cosmos-sdk/pull/7649) Return an unsigned tx in legacy GET /tx endpoint when signature conversion fails
 * (cli) [#7764](https://github.com/cosmos/cosmos-sdk/pull/7764) Update x/banking and x/crisis InitChain to improve node startup time
-
 
 ## [v0.40.0-rc1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc1) - 2020-10-19
 

@@ -258,12 +258,15 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 		changeClientID              bool
 		changePacketCommitmentState bool
 		heightDiff                  uint64
+		delayPeriod                 uint64
 		expPass                     bool
 	}{
-		{"verification success", false, false, 0, true},
-		{"client state not found- changed client ID", true, false, 0, false},
-		{"consensus state not found - increased proof height", false, false, 5, false},
-		{"verification failed - changed packet commitment state", false, true, 0, false},
+		{"verification success", false, false, 0, 0, true},
+		{"verification success: delay period passed", false, false, 0, uint64(1 * time.Second.Nanoseconds()), true},
+		{"delay period has not passed", false, false, 0, uint64(1 * time.Hour.Nanoseconds()), false},
+		{"client state not found- changed client ID", true, false, 0, 0, false},
+		{"consensus state not found - increased proof height", false, false, 5, 0, false},
+		{"verification failed - changed packet commitment state", false, true, 0, 0, false},
 	}
 
 	for _, tc := range cases {
@@ -273,7 +276,9 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 			suite.SetupTest() // reset
 
 			_, clientB, _, connB, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+
 			connection := suite.chainB.GetConnection(connB)
+			connection.DelayPeriod = tc.delayPeriod
 			if tc.changeClientID {
 				connection.ClientId = ibctesting.InvalidID
 			}
@@ -313,12 +318,15 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 		changeClientID        bool
 		changeAcknowledgement bool
 		heightDiff            uint64
+		delayPeriod           uint64
 		expPass               bool
 	}{
-		{"verification success", false, false, 0, true},
-		{"client state not found- changed client ID", true, false, 0, false},
-		{"consensus state not found - increased proof height", false, false, 5, false},
-		{"verification failed - changed acknowledgement", false, true, 0, false},
+		{"verification success", false, false, 0, 0, true},
+		{"verification success: delay period passed", false, false, 0, uint64(1 * time.Second.Nanoseconds()), true},
+		{"delay period has not passed", false, false, 0, uint64(1 * time.Hour.Nanoseconds()), false},
+		{"client state not found- changed client ID", true, false, 0, 0, false},
+		{"consensus state not found - increased proof height", false, false, 5, 0, false},
+		{"verification failed - changed acknowledgement", false, true, 0, 0, false},
 	}
 
 	for _, tc := range cases {
@@ -328,7 +336,9 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 			suite.SetupTest() // reset
 
 			clientA, clientB, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+
 			connection := suite.chainA.GetConnection(connA)
+			connection.DelayPeriod = tc.delayPeriod
 			if tc.changeClientID {
 				connection.ClientId = ibctesting.InvalidID
 			}
@@ -337,6 +347,10 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, defaultTimeoutHeight, 0)
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
+
+			// increment receiving chain's (chainB) time by 2 hour to always pass receive
+			suite.coordinator.IncrementTimeBy(time.Hour * 2)
+			suite.coordinator.CommitBlock(suite.chainB)
 
 			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 			suite.Require().NoError(err)
@@ -372,12 +386,15 @@ func (suite *KeeperTestSuite) TestVerifyPacketReceiptAbsence() {
 		changeClientID bool
 		recvAck        bool
 		heightDiff     uint64
+		delayPeriod    uint64
 		expPass        bool
 	}{
-		{"verification success", false, false, 0, true},
-		{"client state not found - changed client ID", true, false, 0, false},
-		{"consensus state not found - increased proof height", false, false, 5, false},
-		{"verification failed - acknowledgement was received", false, true, 0, false},
+		{"verification success", false, false, 0, 0, true},
+		{"verification success: delay period passed", false, false, 0, uint64(1 * time.Second.Nanoseconds()), true},
+		{"delay period has not passed", false, false, 0, uint64(1 * time.Hour.Nanoseconds()), false},
+		{"client state not found - changed client ID", true, false, 0, 0, false},
+		{"consensus state not found - increased proof height", false, false, 5, 0, false},
+		{"verification failed - acknowledgement was received", false, true, 0, 0, false},
 	}
 
 	for _, tc := range cases {
@@ -387,7 +404,9 @@ func (suite *KeeperTestSuite) TestVerifyPacketReceiptAbsence() {
 			suite.SetupTest() // reset
 
 			clientA, clientB, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+
 			connection := suite.chainA.GetConnection(connA)
+			connection.DelayPeriod = tc.delayPeriod
 			if tc.changeClientID {
 				connection.ClientId = ibctesting.InvalidID
 			}
@@ -398,6 +417,10 @@ func (suite *KeeperTestSuite) TestVerifyPacketReceiptAbsence() {
 			suite.Require().NoError(err)
 
 			if tc.recvAck {
+				// increment receiving chain's (chainB) time by 2 hour to always pass receive
+				suite.coordinator.IncrementTimeBy(time.Hour * 2)
+				suite.coordinator.CommitBlock(suite.chainB)
+
 				err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 				suite.Require().NoError(err)
 			} else {
@@ -432,12 +455,15 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 		changeClientID bool
 		offsetSeq      uint64
 		heightDiff     uint64
+		delayPeriod    uint64
 		expPass        bool
 	}{
-		{"verification success", false, 0, 0, true},
-		{"client state not found- changed client ID", true, 0, 0, false},
-		{"consensus state not found - increased proof height", false, 0, 5, false},
-		{"verification failed - wrong expected next seq recv", false, 1, 0, false},
+		{"verification success", false, 0, 0, 0, true},
+		{"verification success: delay period passed", false, 0, 0, uint64(1 * time.Second.Nanoseconds()), true},
+		{"delay period has not passed", false, 0, 0, uint64(1 * time.Hour.Nanoseconds()), false},
+		{"client state not found- changed client ID", true, 0, 0, 0, false},
+		{"consensus state not found - increased proof height", false, 0, 5, 0, false},
+		{"verification failed - wrong expected next seq recv", false, 1, 0, 0, false},
 	}
 
 	for _, tc := range cases {
@@ -447,7 +473,9 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 			suite.SetupTest() // reset
 
 			clientA, clientB, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+
 			connection := suite.chainA.GetConnection(connA)
+			connection.DelayPeriod = tc.delayPeriod
 			if tc.changeClientID {
 				connection.ClientId = ibctesting.InvalidID
 			}
@@ -456,6 +484,10 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, defaultTimeoutHeight, 0)
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
+
+			// increment receiving chain's (chainB) time by 2 hour to always pass receive
+			suite.coordinator.IncrementTimeBy(time.Hour * 2)
+			suite.coordinator.CommitBlock(suite.chainB)
 
 			err = suite.coordinator.RecvPacket(suite.chainA, suite.chainB, clientA, packet)
 			suite.Require().NoError(err)

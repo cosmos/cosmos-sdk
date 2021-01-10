@@ -18,13 +18,15 @@ var _ sdk.Msg = &MsgConnectionOpenInit{}
 func NewMsgConnectionOpenInit(
 	clientID, counterpartyClientID string,
 	counterpartyPrefix commitmenttypes.MerklePrefix,
-	version *Version, signer sdk.AccAddress,
+	version *Version, delayPeriod uint64, signer sdk.AccAddress,
 ) *MsgConnectionOpenInit {
+	// counterparty must have the same delay period
 	counterparty := NewCounterparty(counterpartyClientID, "", counterpartyPrefix)
 	return &MsgConnectionOpenInit{
 		ClientId:     clientID,
 		Counterparty: counterparty,
 		Version:      version,
+		DelayPeriod:  delayPeriod,
 		Signer:       signer.String(),
 	}
 }
@@ -83,7 +85,8 @@ var _ sdk.Msg = &MsgConnectionOpenTry{}
 func NewMsgConnectionOpenTry(
 	previousConnectionID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyClient exported.ClientState,
-	counterpartyPrefix commitmenttypes.MerklePrefix, counterpartyVersions []*Version,
+	counterpartyPrefix commitmenttypes.MerklePrefix,
+	counterpartyVersions []*Version, delayPeriod uint64,
 	proofInit, proofClient, proofConsensus []byte,
 	proofHeight, consensusHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgConnectionOpenTry {
@@ -95,6 +98,7 @@ func NewMsgConnectionOpenTry(
 		ClientState:          csAny,
 		Counterparty:         counterparty,
 		CounterpartyVersions: counterpartyVersions,
+		DelayPeriod:          delayPeriod,
 		ProofInit:            proofInit,
 		ProofClient:          proofClient,
 		ProofConsensus:       proofConsensus,

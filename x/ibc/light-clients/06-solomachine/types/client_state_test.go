@@ -7,6 +7,7 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -76,6 +77,55 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 					suite.Require().Error(err)
 				}
 			})
+		}
+	}
+}
+
+func (suite *SoloMachineTestSuite) TestInitialize() {
+	// test singlesig and multisig public keys
+	for _, solomachine := range []*ibctesting.Solomachine{suite.solomachine, suite.solomachineMulti} {
+		malleatedConsensus := solomachine.ClientState().ConsensusState
+		malleatedConsensus.Timestamp = malleatedConsensus.Timestamp + 10
+
+		testCases := []struct {
+			name      string
+			consState exported.ConsensusState
+			expPass   bool
+		}{
+			{
+				"valid consensus state",
+				solomachine.ConsensusState(),
+				true,
+			},
+			{
+				"nil consensus state",
+				nil,
+				false,
+			},
+			{
+				"invalid consensus state: Tendermint consensus state",
+				&ibctmtypes.ConsensusState{},
+				false,
+			},
+			{
+				"invalid consensus state: consensus state does not match consensus state in client",
+				malleatedConsensus,
+				false,
+			},
+		}
+
+		for _, tc := range testCases {
+			err := solomachine.ClientState().Initialize(
+				suite.chainA.GetContext(), suite.chainA.Codec,
+				suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), "solomachine"),
+				tc.consState,
+			)
+
+			if tc.expPass {
+				suite.Require().NoError(err, "valid testcase: %s failed", tc.name)
+			} else {
+				suite.Require().Error(err, "invalid testcase: %s passed", tc.name)
+			}
 		}
 	}
 }
@@ -336,7 +386,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 
 func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 	counterparty := connectiontypes.NewCounterparty("clientB", testConnectionID, prefix)
-	conn := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, connectiontypes.ExportedVersionsToProto(connectiontypes.GetCompatibleVersions()))
+	conn := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, connectiontypes.ExportedVersionsToProto(connectiontypes.GetCompatibleVersions()), 0)
 
 	path := suite.solomachine.GetConnectionStatePath(testConnectionID)
 
@@ -587,7 +637,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 			expSeq := tc.clientState.Sequence + 1
 
 			err := tc.clientState.VerifyPacketCommitment(
-				suite.store, suite.chainA.Codec, solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, solomachine.Sequence, commitmentBytes,
+				suite.store, suite.chainA.Codec, solomachine.GetHeight(), 0, 0, tc.prefix, tc.proof, testPortID, testChannelID, solomachine.Sequence, commitmentBytes,
 			)
 
 			if tc.expPass {
@@ -674,7 +724,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 			expSeq := tc.clientState.Sequence + 1
 
 			err := tc.clientState.VerifyPacketAcknowledgement(
-				suite.store, suite.chainA.Codec, solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, solomachine.Sequence, ack,
+				suite.store, suite.chainA.Codec, solomachine.GetHeight(), 0, 0, tc.prefix, tc.proof, testPortID, testChannelID, solomachine.Sequence, ack,
 			)
 
 			if tc.expPass {
@@ -761,7 +811,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketReceiptAbsence() {
 			expSeq := tc.clientState.Sequence + 1
 
 			err := tc.clientState.VerifyPacketReceiptAbsence(
-				suite.store, suite.chainA.Codec, solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, solomachine.Sequence,
+				suite.store, suite.chainA.Codec, solomachine.GetHeight(), 0, 0, tc.prefix, tc.proof, testPortID, testChannelID, solomachine.Sequence,
 			)
 
 			if tc.expPass {
@@ -848,7 +898,7 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 			expSeq := tc.clientState.Sequence + 1
 
 			err := tc.clientState.VerifyNextSequenceRecv(
-				suite.store, suite.chainA.Codec, solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, nextSeqRecv,
+				suite.store, suite.chainA.Codec, solomachine.GetHeight(), 0, 0, tc.prefix, tc.proof, testPortID, testChannelID, nextSeqRecv,
 			)
 
 			if tc.expPass {

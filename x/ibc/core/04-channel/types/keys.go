@@ -2,10 +2,10 @@ package types
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
+	"regexp"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 )
 
 const (
@@ -30,11 +30,17 @@ const (
 )
 
 // FormatChannelIdentifier returns the channel identifier with the sequence appended.
+// This is a SDK specific format not enforced by IBC protocol.
 func FormatChannelIdentifier(sequence uint64) string {
 	return fmt.Sprintf("%s%d", ChannelPrefix, sequence)
 }
 
-// IsValidChannelID return true if the channel identifier is valid.
+// IsChannelIDFormat checks if a channelID is in the format required on the SDK for
+// parsing channel identifiers. The channel identifier must be in the form: `channel-{N}
+var IsChannelIDFormat = regexp.MustCompile(`^channel-[0-9]{1,20}$`).MatchString
+
+// IsValidChannelID checks if a channelID is valid and can be parsed to the channel
+// identifier format.
 func IsValidChannelID(channelID string) bool {
 	_, err := ParseChannelSequence(channelID)
 	return err == nil
@@ -42,18 +48,14 @@ func IsValidChannelID(channelID string) bool {
 
 // ParseChannelSequence parses the channel sequence from the channel identifier.
 func ParseChannelSequence(channelID string) (uint64, error) {
-	if !strings.HasPrefix(channelID, ChannelPrefix) {
-		return 0, sdkerrors.Wrapf(ErrInvalidChannelIdentifier, "doesn't contain prefix `%s`", ChannelPrefix)
+	if !IsChannelIDFormat(channelID) {
+		return 0, sdkerrors.Wrap(host.ErrInvalidID, "channel identifier is not in the format: `channel-{N}`")
 	}
 
-	splitStr := strings.Split(channelID, ChannelPrefix)
-	if len(splitStr) != 2 {
-		return 0, sdkerrors.Wrap(ErrInvalidChannelIdentifier, "channel identifier must be in format: `channel-{N}`")
-	}
-
-	sequence, err := strconv.ParseUint(splitStr[1], 10, 64)
+	sequence, err := host.ParseIdentifier(channelID, ChannelPrefix)
 	if err != nil {
-		return 0, sdkerrors.Wrap(err, "failed to parse channel identifier sequence")
+		return 0, sdkerrors.Wrap(err, "invalid channel identifier")
 	}
+
 	return sequence, nil
 }

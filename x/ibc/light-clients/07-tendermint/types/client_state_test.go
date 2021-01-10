@@ -1,6 +1,8 @@
 package types_test
 
 import (
+	"time"
+
 	ics23 "github.com/confio/ics23/go"
 
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
@@ -94,6 +96,41 @@ func (suite *TendermintTestSuite) TestValidate() {
 			suite.Require().NoError(err, tc.name)
 		} else {
 			suite.Require().Error(err, tc.name)
+		}
+	}
+}
+
+func (suite *TendermintTestSuite) TestInitialize() {
+
+	testCases := []struct {
+		name           string
+		consensusState exported.ConsensusState
+		expPass        bool
+	}{
+		{
+			name:           "valid consensus",
+			consensusState: &types.ConsensusState{},
+			expPass:        true,
+		},
+		{
+			name:           "invalid consensus: consensus state is solomachine consensus",
+			consensusState: ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 2).ConsensusState(),
+			expPass:        false,
+		},
+	}
+
+	clientA, err := suite.coordinator.CreateClient(suite.chainA, suite.chainB, exported.Tendermint)
+	suite.Require().NoError(err)
+
+	clientState := suite.chainA.GetClientState(clientA)
+	store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
+
+	for _, tc := range testCases {
+		err := clientState.Initialize(suite.chainA.GetContext(), suite.chainA.Codec, store, tc.consensusState)
+		if tc.expPass {
+			suite.Require().NoError(err, "valid case returned an error")
+		} else {
+			suite.Require().Error(err, "invalid case didn't return an error")
 		}
 	}
 }
@@ -335,6 +372,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 	var (
 		clientState *types.ClientState
 		proof       []byte
+		delayPeriod uint64
 		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
@@ -346,6 +384,20 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 	}{
 		{
 			"successful verification", func() {}, true,
+		},
+		{
+			name: "delay period has passed",
+			malleate: func() {
+				delayPeriod = uint64(time.Second.Nanoseconds())
+			},
+			expPass: true,
+		},
+		{
+			name: "delay period has not passed",
+			malleate: func() {
+				delayPeriod = uint64(time.Hour.Nanoseconds())
+			},
+			expPass: false,
 		},
 		{
 			"ApplyPrefix failed", func() {
@@ -396,9 +448,10 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 
 			store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
 
+			currentTime := uint64(suite.chainA.GetContext().BlockTime().UnixNano())
 			commitment := channeltypes.CommitPacket(suite.chainA.App.IBCKeeper.Codec(), packet)
 			err = clientState.VerifyPacketCommitment(
-				store, suite.chainA.Codec, proofHeight, &prefix, proof,
+				store, suite.chainA.Codec, proofHeight, currentTime, delayPeriod, &prefix, proof,
 				packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), commitment,
 			)
 
@@ -418,6 +471,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 	var (
 		clientState *types.ClientState
 		proof       []byte
+		delayPeriod uint64
 		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
@@ -429,6 +483,20 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 	}{
 		{
 			"successful verification", func() {}, true,
+		},
+		{
+			name: "delay period has passed",
+			malleate: func() {
+				delayPeriod = uint64(time.Second.Nanoseconds())
+			},
+			expPass: true,
+		},
+		{
+			name: "delay period has not passed",
+			malleate: func() {
+				delayPeriod = uint64(time.Hour.Nanoseconds())
+			},
+			expPass: false,
 		},
 		{
 			"ApplyPrefix failed", func() {
@@ -485,8 +553,9 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 
 			store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
 
+			currentTime := uint64(suite.chainA.GetContext().BlockTime().UnixNano())
 			err = clientState.VerifyPacketAcknowledgement(
-				store, suite.chainA.Codec, proofHeight, &prefix, proof,
+				store, suite.chainA.Codec, proofHeight, currentTime, delayPeriod, &prefix, proof,
 				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(), ibcmock.MockAcknowledgement,
 			)
 
@@ -506,6 +575,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketReceiptAbsence() {
 	var (
 		clientState *types.ClientState
 		proof       []byte
+		delayPeriod uint64
 		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
@@ -517,6 +587,20 @@ func (suite *TendermintTestSuite) TestVerifyPacketReceiptAbsence() {
 	}{
 		{
 			"successful verification", func() {}, true,
+		},
+		{
+			name: "delay period has passed",
+			malleate: func() {
+				delayPeriod = uint64(time.Second.Nanoseconds())
+			},
+			expPass: true,
+		},
+		{
+			name: "delay period has not passed",
+			malleate: func() {
+				delayPeriod = uint64(time.Hour.Nanoseconds())
+			},
+			expPass: false,
 		},
 		{
 			"ApplyPrefix failed", func() {
@@ -572,8 +656,9 @@ func (suite *TendermintTestSuite) TestVerifyPacketReceiptAbsence() {
 
 			store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
 
+			currentTime := uint64(suite.chainA.GetContext().BlockTime().UnixNano())
 			err = clientState.VerifyPacketReceiptAbsence(
-				store, suite.chainA.Codec, proofHeight, &prefix, proof,
+				store, suite.chainA.Codec, proofHeight, currentTime, delayPeriod, &prefix, proof,
 				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 			)
 
@@ -593,6 +678,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 	var (
 		clientState *types.ClientState
 		proof       []byte
+		delayPeriod uint64
 		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
@@ -604,6 +690,20 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 	}{
 		{
 			"successful verification", func() {}, true,
+		},
+		{
+			name: "delay period has passed",
+			malleate: func() {
+				delayPeriod = uint64(time.Second.Nanoseconds())
+			},
+			expPass: true,
+		},
+		{
+			name: "delay period has not passed",
+			malleate: func() {
+				delayPeriod = uint64(time.Hour.Nanoseconds())
+			},
+			expPass: false,
 		},
 		{
 			"ApplyPrefix failed", func() {
@@ -663,8 +763,9 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 
 			store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
 
+			currentTime := uint64(suite.chainA.GetContext().BlockTime().UnixNano())
 			err = clientState.VerifyNextSequenceRecv(
-				store, suite.chainA.Codec, proofHeight, &prefix, proof,
+				store, suite.chainA.Codec, proofHeight, currentTime, delayPeriod, &prefix, proof,
 				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()+1,
 			)
 

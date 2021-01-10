@@ -2,11 +2,15 @@ package types
 
 import (
 	"fmt"
+	"math"
 	"sort"
+	"strings"
 
 	proto "github.com/gogo/protobuf/proto"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
@@ -79,4 +83,29 @@ func NewConsensusStateWithHeight(height Height, consensusState exported.Consensu
 // UnpackInterfaces implements UnpackInterfacesMesssage.UnpackInterfaces
 func (cswh ConsensusStateWithHeight) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return unpacker.UnpackAny(cswh.ConsensusState, new(exported.ConsensusState))
+}
+
+// ValidateClientType validates the client type. It cannot be blank or empty. It must be a valid
+// client identifier when used with '0' or the maximum uint64 as the sequence.
+func ValidateClientType(clientType string) error {
+	if strings.TrimSpace(clientType) == "" {
+		return sdkerrors.Wrap(ErrInvalidClientType, "client type cannot be blank")
+	}
+
+	smallestPossibleClientID := FormatClientIdentifier(clientType, 0)
+	largestPossibleClientID := FormatClientIdentifier(clientType, math.MaxUint64)
+
+	// IsValidClientID will check client type format and if the sequence is a uint64
+	if !IsValidClientID(smallestPossibleClientID) {
+		return sdkerrors.Wrap(ErrInvalidClientType, "")
+	}
+
+	if err := host.ClientIdentifierValidator(smallestPossibleClientID); err != nil {
+		return sdkerrors.Wrap(err, "client type results in smallest client identifier being invalid")
+	}
+	if err := host.ClientIdentifierValidator(largestPossibleClientID); err != nil {
+		return sdkerrors.Wrap(err, "client type results in largest client identifier being invalid")
+	}
+
+	return nil
 }

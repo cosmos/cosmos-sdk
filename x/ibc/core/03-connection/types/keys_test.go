@@ -1,10 +1,12 @@
 package types_test
 
 import (
+	"math"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
 )
 
 // tests ParseConnectionSequence and IsValidConnectionID
@@ -17,10 +19,13 @@ func TestParseConnectionSequence(t *testing.T) {
 	}{
 		{"valid 0", "connection-0", 0, true},
 		{"valid 1", "connection-1", 1, true},
-		{"valid large sequence", "connection-234568219356718293", 234568219356718293, true},
+		{"valid large sequence", types.FormatConnectionIdentifier(math.MaxUint64), math.MaxUint64, true},
+		// one above uint64 max
+		{"invalid uint64", "connection-18446744073709551616", 0, false},
 		// uint64 == 20 characters
 		{"invalid large sequence", "connection-2345682193567182931243", 0, false},
 		{"capital prefix", "Connection-0", 0, false},
+		{"double prefix", "connection-connection-0", 0, false},
 		{"missing dash", "connection0", 0, false},
 		{"blank id", "               ", 0, false},
 		{"empty id", "", 0, false},

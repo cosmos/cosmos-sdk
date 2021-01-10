@@ -47,7 +47,17 @@ func NewKeeper(cdc codec.BinaryMarshaler, key sdk.StoreKey, paramSpace paramtype
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", host.ModuleName, types.SubModuleName))
+	return ctx.Logger().With("module", "x/"+host.ModuleName+"/"+types.SubModuleName)
+}
+
+// GenerateClientIdentifier returns the next client identifier.
+func (k Keeper) GenerateClientIdentifier(ctx sdk.Context, clientType string) string {
+	nextClientSeq := k.GetNextClientSequence(ctx)
+	clientID := types.FormatClientIdentifier(clientType, nextClientSeq)
+
+	nextClientSeq++
+	k.SetNextClientSequence(ctx, nextClientSeq)
+	return clientID
 }
 
 // GetClientState gets a particular client from the store
@@ -87,6 +97,24 @@ func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height
 	store.Set(host.ConsensusStateKey(height), k.MustMarshalConsensusState(consensusState))
 }
 
+// GetNextClientSequence gets the next client sequence from the store.
+func (k Keeper) GetNextClientSequence(ctx sdk.Context) uint64 {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get([]byte(types.KeyNextClientSequence))
+	if bz == nil {
+		panic("next client sequence is nil")
+	}
+
+	return sdk.BigEndianToUint64(bz)
+}
+
+// SetNextClientSequence sets the next client sequence to the store.
+func (k Keeper) SetNextClientSequence(ctx sdk.Context, sequence uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := sdk.Uint64ToBigEndian(sequence)
+	store.Set([]byte(types.KeyNextClientSequence), bz)
+}
+
 // IterateConsensusStates provides an iterator over all stored consensus states.
 // objects. For each State object, cb will be called. If the cb returns true,
 // the iterator will close and stop.
@@ -122,6 +150,49 @@ func (k Keeper) GetAllGenesisClients(ctx sdk.Context) types.IdentifiedClientStat
 	})
 
 	return genClients.Sort()
+}
+
+// GetAllClientMetadata will take a list of IdentifiedClientState and return a list
+// of IdentifiedGenesisMetadata necessary for exporting and importing client metadata
+// into the client store.
+func (k Keeper) GetAllClientMetadata(ctx sdk.Context, genClients []types.IdentifiedClientState) ([]types.IdentifiedGenesisMetadata, error) {
+	genMetadata := make([]types.IdentifiedGenesisMetadata, 0)
+	for _, ic := range genClients {
+		cs, err := types.UnpackClientState(ic.ClientState)
+		if err != nil {
+			return nil, err
+		}
+		gms := cs.ExportMetadata(k.ClientStore(ctx, ic.ClientId))
+		if len(gms) == 0 {
+			continue
+		}
+		clientMetadata := make([]types.GenesisMetadata, len(gms))
+		for i, metadata := range gms {
+			cmd, ok := metadata.(types.GenesisMetadata)
+			if !ok {
+				return nil, sdkerrors.Wrapf(types.ErrInvalidClientMetadata, "expected metadata type: %T, got: %T",
+					types.GenesisMetadata{}, cmd)
+			}
+			clientMetadata[i] = cmd
+		}
+		genMetadata = append(genMetadata, types.NewIdentifiedGenesisMetadata(
+			ic.ClientId,
+			clientMetadata,
+		))
+	}
+	return genMetadata, nil
+}
+
+// SetAllClientMetadata takes a list of IdentifiedGenesisMetadata and stores all of the metadata in the client store at the appropriate paths.
+func (k Keeper) SetAllClientMetadata(ctx sdk.Context, genMetadata []types.IdentifiedGenesisMetadata) {
+	for _, igm := range genMetadata {
+		// create client store
+		store := k.ClientStore(ctx, igm.ClientId)
+		// set all metadata kv pairs in client store
+		for _, md := range igm.ClientMetadata {
+			store.Set(md.GetKey(), md.GetValue())
+		}
+	}
 }
 
 // GetAllConsensusStates returns all stored client consensus states.

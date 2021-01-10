@@ -41,9 +41,10 @@ import (
 
 const (
 	// Default params constants used to create a TM client
-	TrustingPeriod  time.Duration = time.Hour * 24 * 7 * 2
-	UnbondingPeriod time.Duration = time.Hour * 24 * 7 * 3
-	MaxClockDrift   time.Duration = time.Second * 10
+	TrustingPeriod     time.Duration = time.Hour * 24 * 7 * 2
+	UnbondingPeriod    time.Duration = time.Hour * 24 * 7 * 3
+	MaxClockDrift      time.Duration = time.Second * 10
+	DefaultDelayPeriod uint64        = 0
 
 	DefaultChannelVersion = ibctransfertypes.Version
 	InvalidID             = "IDisInvalid"
@@ -369,8 +370,8 @@ func (chain *TestChain) GetPrefix() commitmenttypes.MerklePrefix {
 
 // NewClientID appends a new clientID string in the format:
 // ClientFor<counterparty-chain-id><index>
-func (chain *TestChain) NewClientID(counterpartyChainID string) string {
-	clientID := "client" + strconv.Itoa(len(chain.ClientIDs)) + "For" + counterpartyChainID
+func (chain *TestChain) NewClientID(clientType string) string {
+	clientID := fmt.Sprintf("%s-%s", clientType, strconv.Itoa(len(chain.ClientIDs)))
 	chain.ClientIDs = append(chain.ClientIDs, clientID)
 	return clientID
 }
@@ -460,7 +461,7 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 	}
 
 	msg, err := clienttypes.NewMsgCreateClient(
-		clientID, clientState, consensusState, chain.SenderAccount.GetAddress(),
+		clientState, consensusState, chain.SenderAccount.GetAddress(),
 	)
 	require.NoError(chain.t, err)
 	return msg
@@ -643,7 +644,7 @@ func (chain *TestChain) ConnectionOpenInit(
 	msg := connectiontypes.NewMsgConnectionOpenInit(
 		connection.ClientID,
 		connection.CounterpartyClientID,
-		counterparty.GetPrefix(), DefaultOpenInitVersion,
+		counterparty.GetPrefix(), DefaultOpenInitVersion, DefaultDelayPeriod,
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.sendMsgs(msg)
@@ -664,7 +665,7 @@ func (chain *TestChain) ConnectionOpenTry(
 	msg := connectiontypes.NewMsgConnectionOpenTry(
 		"", connection.ClientID, // does not support handshake continuation
 		counterpartyConnection.ID, counterpartyConnection.ClientID,
-		counterpartyClient, counterparty.GetPrefix(), []*connectiontypes.Version{ConnectionVersion},
+		counterpartyClient, counterparty.GetPrefix(), []*connectiontypes.Version{ConnectionVersion}, DefaultDelayPeriod,
 		proofInit, proofClient, proofConsensus,
 		proofHeight, consensusHeight,
 		chain.SenderAccount.GetAddress(),

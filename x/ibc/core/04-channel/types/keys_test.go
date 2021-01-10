@@ -3,8 +3,9 @@ package types_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 )
 
 // tests ParseChannelSequence and IsValidChannelID
@@ -18,6 +19,8 @@ func TestParseChannelSequence(t *testing.T) {
 		{"valid 0", "channel-0", 0, true},
 		{"valid 1", "channel-1", 1, true},
 		{"valid large sequence", "channel-234568219356718293", 234568219356718293, true},
+		// one above uint64 max
+		{"invalid uint64", "channel-18446744073709551616", 0, false},
 		// uint64 == 20 characters
 		{"invalid large sequence", "channel-2345682193567182931243", 0, false},
 		{"capital prefix", "Channel-0", 0, false},

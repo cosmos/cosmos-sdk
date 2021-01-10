@@ -36,7 +36,7 @@ func NewKeeper(cdc codec.BinaryMarshaler, key sdk.StoreKey, sk types.StakingKeep
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // AddPubkey sets a address-pubkey relation

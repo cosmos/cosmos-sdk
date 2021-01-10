@@ -9,7 +9,7 @@ The described state transitions assume successful message exection.
 ## Create Client
 
 `MsgCreateClient` will initialize and store a `ClientState` and `ConsensusState` in the sub-store
-created using the given client identifier. 
+created using a generated client identifier. 
 
 ## Update Client
 

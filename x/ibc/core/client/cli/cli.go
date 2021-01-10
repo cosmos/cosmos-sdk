@@ -8,8 +8,6 @@ import (
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
-	solomachine "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -23,8 +21,7 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	ibcTxCmd.AddCommand(
-		solomachine.GetTxCmd(),
-		tendermint.GetTxCmd(),
+		ibcclient.GetTxCmd(),
 		connection.GetTxCmd(),
 		channel.GetTxCmd(),
 	)

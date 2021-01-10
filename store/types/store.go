@@ -283,6 +283,7 @@ const (
 	StoreTypeIAVL
 	StoreTypeTransient
 	StoreTypeMemory
+	StoreTypeSMT
 )
 
 func (st StoreType) String() string {
@@ -301,6 +302,9 @@ func (st StoreType) String() string {
 
 	case StoreTypeMemory:
 		return "StoreTypeMemory"
+
+	case StoreTypeSMT:
+		return "StoreTypeSMT"
 	}
 
 	return "unknown store type"

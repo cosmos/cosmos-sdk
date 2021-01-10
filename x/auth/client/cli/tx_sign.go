@@ -19,7 +19,7 @@ const (
 	flagMultisig  = "multisig"
 	flagOverwrite = "overwrite"
 	flagSigOnly   = "signature-only"
-	flagAmino     = "amino"
+	FlagAmino     = "amino"
 )
 
 // GetSignBatchCommand returns the transaction sign-batch command.
@@ -52,6 +52,7 @@ account key. It implies --signature-only.
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	cmd.Flags().Bool(flagSigOnly, true, "Print only the generated signature, then exit")
 	cmd.Flags().String(flags.FlagChainID, "", "network chain ID")
+	cmd.Flags().Bool(FlagAmino, false, "Generate Amino encoded JSON suitable for submiting to the txs REST endpoint")
 	cmd.MarkFlagRequired(flags.FlagFrom)
 	flags.AddTxFlagsToCmd(cmd)
 
@@ -186,7 +187,7 @@ be generated via the 'multisign' command.
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the signatures")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	cmd.Flags().String(flags.FlagChainID, "", "The network chain ID")
-	cmd.Flags().Bool(flagAmino, false, "Generate Amino encoded JSON suitable for submiting to the txs REST endpoint")
+	cmd.Flags().Bool(FlagAmino, false, "Generate Amino encoded JSON suitable for submiting to the txs REST endpoint")
 	cmd.MarkFlagRequired(flags.FlagFrom)
 	flags.AddTxFlagsToCmd(cmd)
 
@@ -249,7 +250,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		aminoJSON, err := f.GetBool(flagAmino)
+		aminoJSON, err := f.GetBool(FlagAmino)
 		if err != nil {
 			return err
 		}

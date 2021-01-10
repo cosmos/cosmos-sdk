@@ -59,7 +59,7 @@ recommended to set such parameters manually.
 
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
-	cmd.Flags().Bool(flagAmino, false, "Generate Amino encoded JSON suitable for submiting to the txs REST endpoint")
+	cmd.Flags().Bool(FlagAmino, false, "Generate Amino encoded JSON suitable for submiting to the txs REST endpoint")
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(flags.FlagChainID, "", "network chain ID")
 
@@ -153,7 +153,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 
 		sigOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 
-		aminoJSON, _ := cmd.Flags().GetBool(flagAmino)
+		aminoJSON, _ := cmd.Flags().GetBool(FlagAmino)
 
 		var json []byte
 
@@ -262,7 +262,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			signatureBatch = append(signatureBatch, sigs...)
 		}
 
-		var seq uint64
+		var seq = txFactory.Sequence()
 		if !clientCtx.Offline {
 			accnum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
 			if err != nil {
@@ -309,7 +309,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			}
 
 			sigOnly, _ := cmd.Flags().GetBool(flagSigOnly)
-			aminoJSON, _ := cmd.Flags().GetBool(flagAmino)
+			aminoJSON, _ := cmd.Flags().GetBool(FlagAmino)
 
 			var json []byte
 
@@ -342,7 +342,8 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 				continue
 			}
 
-			txFactory.WithSequence(sequence + 1)
+			sequence++
+			txFactory = txFactory.WithSequence(sequence)
 		}
 
 		return nil

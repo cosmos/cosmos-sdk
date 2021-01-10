@@ -189,7 +189,7 @@ func (s *IntegrationTestSuite) TestCLISign() {
 		sigOnlyFlag, "--overwrite")
 	checkSignatures(require, txCfg, res.Bytes(), valInfo.GetPubKey())
 
-	/****  test flagAmino  ****/
+	/****  test FlagAmino  ****/
 	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
 		"--amino=true")
 	require.NoError(err)
@@ -851,16 +851,25 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	filename := testutil.WriteToNewTempFile(s.T(), strings.Repeat(generatedStd.String(), 3))
 	val.ClientCtx.HomeDir = strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
 
-	// sign-batch file
-	res, err := authtest.TxSignBatchExec(val.ClientCtx, account1.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String())
+	queryResJSON, err := authtest.QueryAccountExec(val.ClientCtx, multisigInfo.GetAddress())
 	s.Require().NoError(err)
+	var any types.Any
+	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(queryResJSON.Bytes(), &any)
+	var newAccount1 authtypes.AccountI
+	err = val.ClientCtx.InterfaceRegistry.UnpackAny(&any, &newAccount1)
+
+	// sign-batch file
+	res, err := authtest.TxSignBatchExec(val.ClientCtx, account1.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(newAccount1.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(newAccount1.GetSequence())), fmt.Sprintf("--%s", authcli.FlagAmino))
+	s.Require().NoError(err)
+	s.T().Log(res)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	// write sigs to file
 	file1 := testutil.WriteToNewTempFile(s.T(), res.String())
 
 	// sign-batch file with account2
-	res, err = authtest.TxSignBatchExec(val.ClientCtx, account2.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String())
+	res, err = authtest.TxSignBatchExec(val.ClientCtx, account2.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(newAccount1.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(newAccount1.GetSequence())), fmt.Sprintf("--%s", authcli.FlagAmino))
 	s.Require().NoError(err)
+	s.T().Log(res)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
 	// write sigs to file2

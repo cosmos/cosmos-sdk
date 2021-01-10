@@ -112,4 +112,11 @@ func TxMultiSignBatchExec(clientCtx client.Context, filename string, from string
 	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetMultiSignBatchCmd(), args)
 }
 
+func QueryAccountExec(clientCtx client.Context, address fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
+	args := []string{address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
+	args = append(args, extraArgs...)
+
+	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetAccountCmd(), args)
+}
+
 // DONTCOVER

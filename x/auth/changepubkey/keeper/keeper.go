@@ -49,7 +49,7 @@ func (pk Keeper) GetPubKeyHistory(ctx sdk.Context, addr sdk.AccAddress) ([]types
 	iterator := pk.PubKeyHistoryIterator(ctx, addr)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		entry := types.DecodeHistoricalEntry(iterator.Value())
+		entry := types.DecodeHistoricalEntry(pk.cdc, iterator.Value())
 		entries = append(entries, entry)
 	}
 	currentEntry := pk.GetCurrentPubKeyEntry(ctx, addr)
@@ -62,7 +62,7 @@ func (pk Keeper) GetPubKeyHistoricalEntry(ctx sdk.Context, addr sdk.AccAddress, 
 	iterator := pk.PubKeyHistoryIteratorAfter(ctx, addr, time)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		entry := types.DecodeHistoricalEntry(iterator.Value())
+		entry := types.DecodeHistoricalEntry(pk.cdc, iterator.Value())
 		if entry.EndTime.After(time) || entry.EndTime.Equal(time) { // TODO: is this inclusive?
 			return entry
 		}
@@ -76,7 +76,7 @@ func (pk Keeper) GetLastPubKeyHistoricalEntry(ctx sdk.Context, addr sdk.AccAddre
 	iterator := pk.PubKeyHistoryReverseIterator(ctx, addr)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		entry := types.DecodeHistoricalEntry(iterator.Value())
+		entry := types.DecodeHistoricalEntry(pk.cdc, iterator.Value())
 		return entry
 	}
 	return types.PubKeyHistory{
@@ -116,7 +116,7 @@ func (pk Keeper) StoreLastPubKey(ctx sdk.Context, addr sdk.AccAddress, time time
 	if st.Equal(time) {
 		st = lastEntry.GetStartTime()
 	}
-	prefixStore.Set(key, types.EncodeHistoricalEntry(types.PubKeyHistory{
+	prefixStore.Set(key, types.EncodeHistoricalEntry(pk.cdc, types.PubKeyHistory{
 		PubKey:    types.EncodePubKey(pk.cdc, pubkey),
 		StartTime: st,
 		EndTime:   time,

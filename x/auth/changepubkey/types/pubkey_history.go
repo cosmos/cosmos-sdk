@@ -1,8 +1,6 @@
 package types
 
 import (
-	"encoding/json"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/tendermint/tendermint/crypto"
 )
@@ -30,23 +28,12 @@ func DecodePubKey(cdc codec.BinaryMarshaler, bz []byte) crypto.PubKey {
 	return pubkey
 }
 
-func EncodeHistoricalEntry(entry PubKeyHistory) []byte {
-	// TODO: what steps are required to use MarshalAny for PubKeyHistory
-	// bz, err := codec.MarshalAny(pk.cdc, entry)
-	bz, err := json.Marshal(entry)
-	if err != nil {
-		panic(err)
-	}
-	return bz
+func EncodeHistoricalEntry(cdc codec.BinaryMarshaler, entry PubKeyHistory) []byte {
+	return cdc.MustMarshalBinaryBare(&entry)
 }
 
-func DecodeHistoricalEntry(bz []byte) PubKeyHistory {
+func DecodeHistoricalEntry(cdc codec.BinaryMarshaler, bz []byte) PubKeyHistory {
 	var entry PubKeyHistory
-	// TODO: what steps are required to use UnmarshalAny for PubKeyHistory
-	// err := codec.UnmarshalAny(pk.cdc, &entry, bz)
-	err := json.Unmarshal(bz, &entry)
-	if err != nil {
-		panic(err)
-	}
+	cdc.MustUnmarshalBinaryBare(bz, &entry)
 	return entry
 }

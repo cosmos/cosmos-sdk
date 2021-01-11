@@ -145,6 +145,14 @@ func (s *IntegrationTestSuite) TestCLISign() {
 	valInfo, err := val1.ClientCtx.Keyring.Key(val1.Moniker)
 	require.NoError(err)
 
+	// query account info
+	queryResJSON, err := authtest.QueryAccountExec(val1.ClientCtx, val1.Address)
+	s.Require().NoError(err)
+	var any types.Any
+	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(queryResJSON.Bytes(), &any)
+	var account authtypes.AccountI
+	err = val1.ClientCtx.InterfaceRegistry.UnpackAny(&any, &account)
+
 	/****  test signature-only  ****/
 	res, err := authtest.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag,
 		sigOnlyFlag)
@@ -153,7 +161,7 @@ func (s *IntegrationTestSuite) TestCLISign() {
 	sigs, err := txCfg.UnmarshalSignatureJSON(res.Bytes())
 	require.NoError(err)
 	require.Equal(1, len(sigs))
-	require.Equal(uint64(1), sigs[0].Sequence)
+	require.Equal(account.GetSequence(), sigs[0].Sequence)
 
 	/****  test full output  ****/
 	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag)
@@ -818,19 +826,17 @@ func (s *IntegrationTestSuite) TestGetAccountCmd() {
 
 	testCases := []struct {
 		name      string
-		args      []string
+		address   sdk.AccAddress
 		expectErr bool
 	}{
 		{
 			"invalid address",
-			[]string{addr1.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			addr1,
 			true,
 		},
 		{
 			"valid address",
-			[]string{val.Address.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			val.Address,
 			false,
 		},
 	}
@@ -838,18 +844,17 @@ func (s *IntegrationTestSuite) TestGetAccountCmd() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			cmd := authcli.GetAccountCmd()
 			clientCtx := val.ClientCtx
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := authtest.QueryAccountExec(clientCtx, tc.address)
 			if tc.expectErr {
 				s.Require().Error(err)
 				s.Require().NotEqual("internal", err.Error())
 			} else {
 				var any types.Any
-				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &any))
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &any))
 				var acc authtypes.AccountI
-				s.Require().NoError(val.ClientCtx.InterfaceRegistry.UnpackAny(&any, &acc))
+				s.Require().NoError(clientCtx.InterfaceRegistry.UnpackAny(&any, &acc))
 				s.Require().Equal(val.Address, acc.GetAddress())
 			}
 		})

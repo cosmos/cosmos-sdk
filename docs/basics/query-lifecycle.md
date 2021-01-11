@@ -1,5 +1,5 @@
 <!--
-order: 2
+order: 3
 -->
 
 # Query Lifecycle
@@ -8,7 +8,7 @@ This document describes the lifecycle of a query in a SDK application, from the 
 
 ## Pre-requisite Readings
 
-* [Introduction to Interfaces](./interfaces-intro.md) {prereq}
+- [Introduction to Interfaces](./interfaces-intro.md) {prereq}
 
 ## Query Creation
 
@@ -36,7 +36,7 @@ appcli query [moduleName] [command] <arguments> --flag <flagArg>
 
 To provide values such as `--node` (the full-node the CLI connects to), the user can use the `config` command to set themn or provide them as flags.
 
-The CLI understands a specific set of commands, defined in a hierarchical structure by the application developer: from the [root command](./cli.md#root-command) (`appcli`), the type of command (`query`), the module that contains the command  (`staking`), and command itself (`delegations`). Thus, the CLI knows exactly which module handles this command and directly passes the call there.
+The CLI understands a specific set of commands, defined in a hierarchical structure by the application developer: from the [root command](./cli.md#root-command) (`appcli`), the type of command (`query`), the module that contains the command (`staking`), and command itself (`delegations`). Thus, the CLI knows exactly which module handles this command and directly passes the call there.
 
 ### REST
 
@@ -64,14 +64,14 @@ The interactions from the users' perspective are a bit different, but the underl
 
 The first thing that is created in the execution of a CLI command is a `Context`, while the REST Server directly provides a `Context` for the REST Request handler. A [Context](../core/context.md) is an immutable object that stores all the data needed to process a request on the user side. In particular, a `Context` stores the following:
 
-* **Codec**: The [encoder/decoder](../core/encoding.md) used by the application, used to marshal the parameters and query before making the Tendermint RPC request and unmarshal the returned response into a JSON object.
-* **Account Decoder**: The account decoder from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module, which translates `[]byte`s into accounts.
-* **RPC Client**: The Tendermint RPC Client, or node, to which the request will be relayed to.
-* **Keybase**: A [Key Manager](../basics/accounts.md#keybase) used to sign transactions and handle other operations with keys.
-* **Output Writer**: A [Writer](https://golang.org/pkg/io/#Writer) used to output the response.
-* **Configurations**: The flags configured by the user for this command, including `--height`, specifying the height of the blockchain to query and `--indent`, which indicates to add an indent to the JSON response.
+- **Codec**: The [encoder/decoder](../core/encoding.md) used by the application, used to marshal the parameters and query before making the Tendermint RPC request and unmarshal the returned response into a JSON object.
+- **Account Decoder**: The account decoder from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module, which translates `[]byte`s into accounts.
+- **RPC Client**: The Tendermint RPC Client, or node, to which the request will be relayed to.
+- **Keybase**: A [Key Manager](../basics/accounts.md#keybase) used to sign transactions and handle other operations with keys.
+- **Output Writer**: A [Writer](https://golang.org/pkg/io/#Writer) used to output the response.
+- **Configurations**: The flags configured by the user for this command, including `--height`, specifying the height of the blockchain to query and `--indent`, which indicates to add an indent to the JSON response.
 
-The `Context` also contains various functions such as `Query()` which retrieves the RPC Client and makes an ABCI call to relay a query to a full-node. 
+The `Context` also contains various functions such as `Query()` which retrieves the RPC Client and makes an ABCI call to relay a query to a full-node.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/client/context/context.go#L23-L47
 
@@ -147,13 +147,13 @@ Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci
 
 ### CLI Response
 
-The application [`codec`](../core/encoding.md) is used to unmarshal the response to a JSON and the `Context` prints the output to the command line, applying any configurations such as `--indent`. 
+The application [`codec`](../core/encoding.md) is used to unmarshal the response to a JSON and the `Context` prints the output to the command line, applying any configurations such as `--indent`.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/staking/client/cli/query.go#L252-L293
 
 ### REST Response
 
-The [REST server](./rest.md#rest-server) uses the `Context` to format the response properly, then uses the HTTP package to write the appropriate response or error. 
+The [REST server](./rest.md#rest-server) uses the `Context` to format the response properly, then uses the HTTP package to write the appropriate response or error.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/staking/client/rest/utils.go#L115-L148
 

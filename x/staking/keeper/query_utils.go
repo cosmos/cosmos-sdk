@@ -8,7 +8,7 @@ import (
 // Return all validators that a delegator is bonded to. If maxRetrieve is supplied, the respective amount will be returned.
 func (k Keeper) GetDelegatorValidators(
 	ctx sdk.Context, delegatorAddr sdk.AccAddress, maxRetrieve uint32,
-) []types.Validator {
+) types.Validators {
 	validators := make([]types.Validator, maxRetrieve)
 
 	store := ctx.KVStore(k.storeKey)

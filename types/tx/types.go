@@ -1,11 +1,11 @@
 package tx
 
 import (
-	fmt "fmt"
-
-	"github.com/tendermint/tendermint/crypto"
+	"fmt"
+	"strings"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -26,7 +26,19 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 	anys := t.Body.Messages
 	res := make([]sdk.Msg, len(anys))
 	for i, any := range anys {
-		msg := any.GetCachedValue().(sdk.Msg)
+		var msg sdk.Msg
+		if isServiceMsg(any.TypeUrl) {
+			req := any.GetCachedValue()
+			if req == nil {
+				panic("Any cached value is nil. Transaction messages must be correctly packed Any values.")
+			}
+			msg = sdk.ServiceMsg{
+				MethodName: any.TypeUrl,
+				Request:    any.GetCachedValue().(sdk.MsgRequest),
+			}
+		} else {
+			msg = any.GetCachedValue().(sdk.Msg)
+		}
 		res[i] = msg
 	}
 	return res
@@ -83,7 +95,7 @@ func (t *Tx) ValidateBasic() error {
 	if len(sigs) != len(t.GetSigners()) {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrUnauthorized,
-			"wrong number of signers; expected %d, got %d", t.GetSigners(), len(sigs),
+			"wrong number of signers; expected %d, got %d", len(t.GetSigners()), len(sigs),
 		)
 	}
 
@@ -138,12 +150,23 @@ func (t *Tx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, any := range m.Messages {
-		var msg sdk.Msg
-		err := unpacker.UnpackAny(any, &msg)
-		if err != nil {
-			return err
+		// If the any's typeUrl contains 2 slashes, then we unpack the any into
+		// a ServiceMsg struct as per ADR-031.
+		if isServiceMsg(any.TypeUrl) {
+			var req sdk.MsgRequest
+			err := unpacker.UnpackAny(any, &req)
+			if err != nil {
+				return err
+			}
+		} else {
+			var msg sdk.Msg
+			err := unpacker.UnpackAny(any, &msg)
+			if err != nil {
+				return err
+			}
 		}
 	}
+
 	return nil
 }
 
@@ -160,11 +183,17 @@ func (m *AuthInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (m *SignerInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	return unpacker.UnpackAny(m.PublicKey, new(crypto.PubKey))
+	return unpacker.UnpackAny(m.PublicKey, new(cryptotypes.PubKey))
 }
 
 // RegisterInterfaces registers the sdk.Tx interface.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface("cosmos.tx.v1beta1.Tx", (*sdk.Tx)(nil))
 	registry.RegisterImplementations((*sdk.Tx)(nil), &Tx{})
+}
+
+// isServiceMsg checks if a type URL corresponds to a service method name,
+// i.e. /cosmos.bank.Msg/Send vs /cosmos.bank.MsgSend
+func isServiceMsg(typeURL string) bool {
+	return strings.Count(typeURL, "/") >= 2
 }

@@ -9,8 +9,9 @@
 - 2020 May 14: Describe public key encoding
 - 2020 June 08: Store `TxBody` and `AuthInfo` as bytes in `SignDoc`; Document `TxRaw` as broadcast and storage type.
 - 2020 August 07: Use ADR 027 for serializing `SignDoc`.
-- 2020 August 19: Move sequence field from `SignDoc` to `SignerInfo`.
+- 2020 August 19: Move sequence field from `SignDoc` to `SignerInfo`, as discussed in [#6966](https://github.com/cosmos/cosmos-sdk/issues/6966).
 - 2020 September 25: Remove `PublicKey` type in favor of `secp256k1.PubKey`, `ed25519.PubKey` and `multisig.LegacyAminoPubKey`.
+- 2020 October 15: Add `GetAccount` and `GetAccountWithHeight` methods to the `AccountRetriever` interface.
 
 ## Status
 
@@ -315,6 +316,8 @@ and messages.
 
 ```go
 type AccountRetriever interface {
+  GetAccount(clientCtx Context, addr sdk.AccAddress) (client.Account, error)
+  GetAccountWithHeight(clientCtx Context, addr sdk.AccAddress) (client.Account, int64, error)
   EnsureExists(clientCtx client.Context, addr sdk.AccAddress) error
   GetAccountNumberSequence(clientCtx client.Context, addr sdk.AccAddress) (uint64, uint64, error)
 }

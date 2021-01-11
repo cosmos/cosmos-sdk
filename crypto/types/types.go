@@ -5,26 +5,39 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 )
 
-// PubKey interface extends proto.Message
-// and tendermint crypto.PubKey
+// PubKey defines a public key and extends proto.Message.
 type PubKey interface {
 	proto.Message
-	tmcrypto.PubKey
+
+	Address() Address
+	Bytes() []byte
+	VerifySignature(msg []byte, sig []byte) bool
+	Equals(PubKey) bool
+	Type() string
 }
 
-// PrivKey interface extends proto.Message
-// and tendermint crypto.PrivKey
+// LedgerPrivKey defines a private key that is not a proto message. For now,
+// LedgerSecp256k1 keys are not converted to proto.Message yet, this is why
+// they use LedgerPrivKey instead of PrivKey. All other keys must use PrivKey
+// instead of LedgerPrivKey.
+// TODO https://github.com/cosmos/cosmos-sdk/issues/7357.
+type LedgerPrivKey interface {
+	Bytes() []byte
+	Sign(msg []byte) ([]byte, error)
+	PubKey() PubKey
+	Equals(LedgerPrivKey) bool
+	Type() string
+}
+
+// PrivKey defines a private key and extends proto.Message. For now, it extends
+// LedgerPrivKey (see godoc for LedgerPrivKey). Ultimately, we should remove
+// LedgerPrivKey and add its methods here directly.
+// TODO https://github.com/cosmos/cosmos-sdk/issues/7357.
 type PrivKey interface {
 	proto.Message
-	tmcrypto.PrivKey
+	LedgerPrivKey
 }
 
 type (
 	Address = tmcrypto.Address
 )
-
-// IntoTmPubKey allows our own PubKey types be converted into Tendermint's
-// pubkey types.
-type IntoTmPubKey interface {
-	AsTmPubKey() tmcrypto.PubKey
-}

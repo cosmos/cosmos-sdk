@@ -18,7 +18,7 @@ An `Invariant` is a function that checks for a particular invariant within a mod
 
 where the `string` return value is the invariant message, which can be used when printing logs, and the `bool` return value is the actual result of the invariant check. 
 
-In practice, each module implements `Invariant`s in a `./internal/keeper/invariants.go` file within the module's folder. The standard is to implement one `Invariant` function per logical grouping of invariants with the following model:
+In practice, each module implements `Invariant`s in a `./keeper/invariants.go` file within the module's folder. The standard is to implement one `Invariant` function per logical grouping of invariants with the following model:
 
 ```go
 // Example for an Invariant that checks balance-related invariants
@@ -74,7 +74,7 @@ At its core, the `InvariantRegistry` is defined in the SDK as an interface:
 
 Typically, this interface is implemented in the `keeper` of a specific module. The most used implementation of an `InvariantRegistry` can be found in the `crisis` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/crisis/internal/keeper/keeper.go#L45-L49
++++ https://github.com/cosmos/cosmos-sdk/blob/master/x/crisis/keeper/keeper.go#L50-L54
 
  The `InvariantRegistry` is therefore typically instantiated by instantiating the `keeper` of the `crisis` module in the [application's constructor function](../basics/app-anatomy.md#constructor-function).
 

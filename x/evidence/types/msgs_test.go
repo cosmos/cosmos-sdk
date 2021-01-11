@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
-func testMsgSubmitEvidence(t *testing.T, e exported.Evidence, s sdk.AccAddress) exported.MsgSubmitEvidence {
+func testMsgSubmitEvidence(t *testing.T, e exported.Evidence, s sdk.AccAddress) exported.MsgSubmitEvidenceI {
 	msg, err := types.NewMsgSubmitEvidence(s, e)
 	require.NoError(t, err)
 	return msg

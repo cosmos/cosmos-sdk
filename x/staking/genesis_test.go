@@ -8,18 +8,20 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func bootstrapGenesisTest(t *testing.T, power int64, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
 	_, app, ctx := getBaseSimappWithCustomKeeper()
 
-	addrDels, _ := generateAddresses(app, ctx, numAddrs, 10000)
+	addrDels, _ := generateAddresses(app, ctx, numAddrs, sdk.NewInt(10000))
 
 	amt := sdk.TokensFromConsensusPower(power)
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), amt.MulRaw(int64(len(addrDels)))))
@@ -43,10 +45,10 @@ func TestInitGenesis(t *testing.T) {
 	validators := make([]types.Validator, 2)
 	var delegations []types.Delegation
 
-	pk0, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, PKs[0])
+	pk0, err := codectypes.NewAnyWithValue(PKs[0])
 	require.NoError(t, err)
 
-	pk1, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, PKs[1])
+	pk1, err := codectypes.NewAnyWithValue(PKs[1])
 	require.NoError(t, err)
 
 	// initialize the validators
@@ -72,7 +74,9 @@ func TestInitGenesis(t *testing.T) {
 	require.EqualValues(t, app.StakingKeeper.GetAllValidators(ctx), actualGenesis.Validators)
 
 	// Ensure validators have addresses.
-	for _, val := range staking.WriteValidators(ctx, app.StakingKeeper) {
+	vals2, err := staking.WriteValidators(ctx, app.StakingKeeper)
+	require.NoError(t, err)
+	for _, val := range vals2 {
 		require.NotEmpty(t, val.Address)
 	}
 
@@ -102,11 +106,11 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	params := app.StakingKeeper.GetParams(ctx)
 	delegations := []types.Delegation{}
 	validators := make([]types.Validator, size)
-
+	var err error
 	for i := range validators {
-		validators[i] = types.NewValidator(sdk.ValAddress(addrs[i]),
+		validators[i], err = types.NewValidator(sdk.ValAddress(addrs[i]),
 			PKs[i], types.NewDescription(fmt.Sprintf("#%d", i), "", "", "", ""))
-
+		require.NoError(t, err)
 		validators[i].Status = types.Bonded
 
 		tokens := sdk.TokensFromConsensusPower(1)
@@ -131,7 +135,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 func TestValidateGenesis(t *testing.T) {
 	genValidators1 := make([]types.Validator, 1, 5)
 	pk := ed25519.GenPrivKey().PubKey()
-	genValidators1[0] = types.NewValidator(sdk.ValAddress(pk.Address()), pk, types.NewDescription("", "", "", "", ""))
+	genValidators1[0] = teststaking.NewValidator(t, sdk.ValAddress(pk.Address()), pk)
 	genValidators1[0].Tokens = sdk.OneInt()
 	genValidators1[0].DelegatorShares = sdk.OneDec()
 

@@ -95,14 +95,19 @@ func (k Keeper) mustGetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAdd
 // set the main record holding validator details
 func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
-	bz := types.MustMarshalValidator(k.cdc, validator)
+	bz := types.MustMarshalValidator(k.cdc, &validator)
 	store.Set(types.GetValidatorKey(validator.GetOperator()), bz)
 }
 
 // validator index
-func (k Keeper) SetValidatorByConsAddr(ctx sdk.Context, validator types.Validator) {
+func (k Keeper) SetValidatorByConsAddr(ctx sdk.Context, validator types.Validator) error {
+	consPk, err := validator.GetConsAddr()
+	if err != nil {
+		return err
+	}
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetValidatorByConsAddrKey(validator.GetConsAddr()), validator.GetOperator())
+	store.Set(types.GetValidatorByConsAddrKey(consPk), validator.GetOperator())
+	return nil
 }
 
 // validator index
@@ -180,6 +185,7 @@ func (k Keeper) UpdateValidatorCommission(ctx sdk.Context,
 
 // remove the validator record and associated indexes
 // except for the bonded validator index which is only handled in ApplyAndReturnTendermintUpdates
+// TODO, this function panics, and it's not good.
 func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	// first retrieve the old validator record
 	validator, found := k.GetValidator(ctx, address)
@@ -195,7 +201,10 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 		panic("attempting to remove a validator which still contains tokens")
 	}
 
-	valConsAddr := validator.GetConsAddr()
+	valConsAddr, err := validator.GetConsAddr()
+	if err != nil {
+		panic(err)
+	}
 
 	// delete the old validator record
 	store := ctx.KVStore(k.storeKey)

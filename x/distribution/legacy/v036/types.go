@@ -3,8 +3,14 @@
 package v036
 
 import (
+	"fmt"
+	"strings"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v034distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v034"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v036"
 )
 
 // ----------------------------------------------------------------------------
@@ -13,6 +19,12 @@ import (
 
 const (
 	ModuleName = "distribution"
+
+	// RouterKey is the message route for distribution
+	RouterKey = ModuleName
+
+	// ProposalTypeCommunityPoolSpend defines the type for a CommunityPoolSpendProposal
+	ProposalTypeCommunityPoolSpend = "CommunityPoolSpend"
 )
 
 type (
@@ -40,6 +52,14 @@ type (
 		DelegatorStartingInfos          []v034distr.DelegatorStartingInfoRecord          `json:"delegator_starting_infos"`
 		ValidatorSlashEvents            []ValidatorSlashEventRecord                      `json:"validator_slash_events"`
 	}
+
+	// CommunityPoolSpendProposal spends from the community pool
+	CommunityPoolSpendProposal struct {
+		Title       string         `json:"title" yaml:"title"`
+		Description string         `json:"description" yaml:"description"`
+		Recipient   sdk.AccAddress `json:"recipient" yaml:"recipient"`
+		Amount      sdk.Coins      `json:"amount" yaml:"amount"`
+	}
 )
 
 func NewGenesisState(
@@ -65,4 +85,50 @@ func NewGenesisState(
 		DelegatorStartingInfos:          dels,
 		ValidatorSlashEvents:            slashes,
 	}
+}
+
+var _ v036gov.Content = CommunityPoolSpendProposal{}
+
+// GetTitle returns the title of a community pool spend proposal.
+func (csp CommunityPoolSpendProposal) GetTitle() string { return csp.Title }
+
+// GetDescription returns the description of a community pool spend proposal.
+func (csp CommunityPoolSpendProposal) GetDescription() string { return csp.Description }
+
+// GetDescription returns the routing key of a community pool spend proposal.
+func (csp CommunityPoolSpendProposal) ProposalRoute() string { return RouterKey }
+
+// ProposalType returns the type of a community pool spend proposal.
+func (csp CommunityPoolSpendProposal) ProposalType() string { return ProposalTypeCommunityPoolSpend }
+
+// ValidateBasic runs basic stateless validity checks
+func (csp CommunityPoolSpendProposal) ValidateBasic() error {
+	err := v036gov.ValidateAbstract(csp)
+	if err != nil {
+		return err
+	}
+	if !csp.Amount.IsValid() {
+		return types.ErrInvalidProposalAmount
+	}
+	if csp.Recipient.Empty() {
+		return types.ErrEmptyProposalRecipient
+	}
+
+	return nil
+}
+
+// String implements the Stringer interface.
+func (csp CommunityPoolSpendProposal) String() string {
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf(`Community Pool Spend Proposal:
+  Title:       %s
+  Description: %s
+  Recipient:   %s
+  Amount:      %s
+`, csp.Title, csp.Description, csp.Recipient, csp.Amount))
+	return b.String()
+}
+
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	cdc.RegisterConcrete(CommunityPoolSpendProposal{}, "cosmos-sdk/CommunityPoolSpendProposal", nil)
 }

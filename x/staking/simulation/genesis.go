@@ -84,7 +84,10 @@ func RandomizedGenState(simState *module.SimulationState) {
 			simulation.RandomDecAmount(simState.Rand, maxCommission),
 		)
 
-		validator := types.NewValidator(valAddr, simState.Accounts[i].ConsKey.PubKey(), types.Description{})
+		validator, err := types.NewValidator(valAddr, simState.Accounts[i].ConsKey.PubKey(), types.Description{})
+		if err != nil {
+			panic(err)
+		}
 		validator.Tokens = sdk.NewInt(simState.InitialStake)
 		validator.DelegatorShares = sdk.NewDec(simState.InitialStake)
 		validator.Commission = commission
@@ -97,7 +100,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	stakingGenesis := types.NewGenesisState(params, validators, delegations)
 
-	bz, err := json.MarshalIndent(&stakingGenesis, "", " ")
+	bz, err := json.MarshalIndent(&stakingGenesis.Params, "", " ")
 	if err != nil {
 		panic(err)
 	}

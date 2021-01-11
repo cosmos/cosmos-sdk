@@ -10,7 +10,7 @@ import (
 
 // CheckHeaderAndUpdateState checks if the provided header is valid and updates
 // the consensus state if appropriate. It returns an error if:
-// - the client or header provided are not parseable to solo machine types
+// - the header provided is not parseable to a solo machine header
 // - the header sequence does not match the current sequence
 // - the header timestamp is less than the consensus state timestamp
 // - the currently registered public key did not provide the update signature
@@ -62,7 +62,12 @@ func checkHeader(cdc codec.BinaryMarshaler, clientState *ClientState, header *He
 		return err
 	}
 
-	if err := VerifySignature(clientState.ConsensusState.GetPubKey(), data, sigData); err != nil {
+	publicKey, err := clientState.ConsensusState.GetPubKey()
+	if err != nil {
+		return err
+	}
+
+	if err := VerifySignature(publicKey, data, sigData); err != nil {
 		return sdkerrors.Wrap(ErrInvalidHeader, err.Error())
 	}
 

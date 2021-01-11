@@ -6,8 +6,10 @@
 
 ## Status
 
-> A decision may be "proposed" if the project stakeholders haven't agreed with it yet, or "accepted" once it is agreed. If a later ADR changes or reverses a decision, it may be marked as "deprecated" or "superseded" with a reference to its replacement.
-> {Deprecated|Proposed|Accepted} {Implemented|Not Implemented}
+{DRAFT | PROPOSED} Not Implemented
+
+> Please have a look at the [PROCESS](./PROCESS.md#adr-status) page.
+> Use DRAFT if the ADR is in a draft stage (draft PR) or PROPOSED if it's in review.
 
 
 ## Abstract
@@ -49,6 +51,12 @@
 ### Neutral
 
 {neutral consequences}
+
+
+## Further Discussions
+
+While an ADR is in the DRAFT or PROPOSED stage, this section should contain a summary of issues to be solved in future iterations (usually referencing comments from a pull-request discussion).
+Later, this section can optionally list ideas or improvements the author or reviewers found during the analysis of this ADR.
 
 
 ## Test Cases [optional]

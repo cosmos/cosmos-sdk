@@ -4,14 +4,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
@@ -28,9 +28,9 @@ type Solomachine struct {
 
 	cdc         codec.BinaryMarshaler
 	ClientID    string
-	PrivateKeys []crypto.PrivKey // keys used for signing
-	PublicKeys  []crypto.PubKey  // keys used for generating solo machine pub key
-	PublicKey   crypto.PubKey    // key used for verification
+	PrivateKeys []cryptotypes.PrivKey // keys used for signing
+	PublicKeys  []cryptotypes.PubKey  // keys used for generating solo machine pub key
+	PublicKey   cryptotypes.PubKey    // key used for verification
 	Sequence    uint64
 	Time        uint64
 	Diversifier string
@@ -63,17 +63,17 @@ func NewSolomachine(t *testing.T, cdc codec.BinaryMarshaler, clientID, diversifi
 // The key type can be swapped for any key type supported by the PublicKey
 // interface, if needed. The same is true for the amino based Multisignature
 // public key.
-func GenerateKeys(t *testing.T, n uint64) ([]crypto.PrivKey, []crypto.PubKey, crypto.PubKey) {
+func GenerateKeys(t *testing.T, n uint64) ([]cryptotypes.PrivKey, []cryptotypes.PubKey, cryptotypes.PubKey) {
 	require.NotEqual(t, uint64(0), n, "generation of zero keys is not allowed")
 
-	privKeys := make([]crypto.PrivKey, n)
-	pubKeys := make([]crypto.PubKey, n)
+	privKeys := make([]cryptotypes.PrivKey, n)
+	pubKeys := make([]cryptotypes.PubKey, n)
 	for i := uint64(0); i < n; i++ {
 		privKeys[i] = secp256k1.GenPrivKey()
 		pubKeys[i] = privKeys[i].PubKey()
 	}
 
-	var pk crypto.PubKey
+	var pk cryptotypes.PubKey
 	if len(privKeys) > 1 {
 		// generate multi sig pk
 		pk = kmultisig.NewLegacyAminoPubKey(int(n), pubKeys)
@@ -92,7 +92,7 @@ func (solo *Solomachine) ClientState() *solomachinetypes.ClientState {
 
 // ConsensusState returns a new solo machine ConsensusState instance
 func (solo *Solomachine) ConsensusState() *solomachinetypes.ConsensusState {
-	publicKey, err := tx.PubKeyToAny(solo.PublicKey)
+	publicKey, err := codectypes.NewAnyWithValue(solo.PublicKey)
 	require.NoError(solo.t, err)
 
 	return &solomachinetypes.ConsensusState{
@@ -102,7 +102,7 @@ func (solo *Solomachine) ConsensusState() *solomachinetypes.ConsensusState {
 	}
 }
 
-// GetHeight returns an exported.Height with Sequence as VersionHeight
+// GetHeight returns an exported.Height with Sequence as RevisionHeight
 func (solo *Solomachine) GetHeight() exported.Height {
 	return clienttypes.NewHeight(0, solo.Sequence)
 }
@@ -113,7 +113,7 @@ func (solo *Solomachine) CreateHeader() *solomachinetypes.Header {
 	// generate new private keys and signature for header
 	newPrivKeys, newPubKeys, newPubKey := GenerateKeys(solo.t, uint64(len(solo.PrivateKeys)))
 
-	publicKey, err := tx.PubKeyToAny(newPubKey)
+	publicKey, err := codectypes.NewAnyWithValue(newPubKey)
 	require.NoError(solo.t, err)
 
 	data := &solomachinetypes.HeaderData{
@@ -181,7 +181,11 @@ func (solo *Solomachine) CreateMisbehaviour() *solomachinetypes.Misbehaviour {
 		Signature: sig,
 		DataType:  solomachinetypes.CLIENT,
 		Data:      dataOne,
+		Timestamp: solo.Time,
 	}
+
+	// misbehaviour signaturess can have different timestamps
+	solo.Time++
 
 	signBytes = &solomachinetypes.SignBytes{
 		Sequence:    solo.Sequence,
@@ -199,6 +203,7 @@ func (solo *Solomachine) CreateMisbehaviour() *solomachinetypes.Misbehaviour {
 		Signature: sig,
 		DataType:  solomachinetypes.CONSENSUS,
 		Data:      dataTwo,
+		Timestamp: solo.Time,
 	}
 
 	return &solomachinetypes.Misbehaviour{
@@ -246,8 +251,7 @@ func (solo *Solomachine) GenerateSignature(signBytes []byte) []byte {
 
 // GetClientStatePath returns the commitment path for the client state.
 func (solo *Solomachine) GetClientStatePath(counterpartyClientIdentifier string) commitmenttypes.MerklePath {
-	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ClientStatePath()
-	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
+	path, err := commitmenttypes.ApplyPrefix(prefix, commitmenttypes.NewMerklePath(host.FullClientStatePath(counterpartyClientIdentifier)))
 	require.NoError(solo.t, err)
 
 	return path
@@ -255,8 +259,7 @@ func (solo *Solomachine) GetClientStatePath(counterpartyClientIdentifier string)
 
 // GetConsensusStatePath returns the commitment path for the consensus state.
 func (solo *Solomachine) GetConsensusStatePath(counterpartyClientIdentifier string, consensusHeight exported.Height) commitmenttypes.MerklePath {
-	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ConsensusStatePath(consensusHeight)
-	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
+	path, err := commitmenttypes.ApplyPrefix(prefix, commitmenttypes.NewMerklePath(host.FullConsensusStatePath(counterpartyClientIdentifier, consensusHeight)))
 	require.NoError(solo.t, err)
 
 	return path
@@ -264,7 +267,8 @@ func (solo *Solomachine) GetConsensusStatePath(counterpartyClientIdentifier stri
 
 // GetConnectionStatePath returns the commitment path for the connection state.
 func (solo *Solomachine) GetConnectionStatePath(connID string) commitmenttypes.MerklePath {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(connID))
+	connectionPath := commitmenttypes.NewMerklePath(host.ConnectionPath(connID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, connectionPath)
 	require.NoError(solo.t, err)
 
 	return path
@@ -272,7 +276,8 @@ func (solo *Solomachine) GetConnectionStatePath(connID string) commitmenttypes.M
 
 // GetChannelStatePath returns the commitment path for that channel state.
 func (solo *Solomachine) GetChannelStatePath(portID, channelID string) commitmenttypes.MerklePath {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(portID, channelID))
+	channelPath := commitmenttypes.NewMerklePath(host.ChannelPath(portID, channelID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, channelPath)
 	require.NoError(solo.t, err)
 
 	return path
@@ -280,7 +285,8 @@ func (solo *Solomachine) GetChannelStatePath(portID, channelID string) commitmen
 
 // GetPacketCommitmentPath returns the commitment path for a packet commitment.
 func (solo *Solomachine) GetPacketCommitmentPath(portID, channelID string) commitmenttypes.MerklePath {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(portID, channelID, solo.Sequence))
+	commitmentPath := commitmenttypes.NewMerklePath(host.PacketCommitmentPath(portID, channelID, solo.Sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, commitmentPath)
 	require.NoError(solo.t, err)
 
 	return path
@@ -288,7 +294,8 @@ func (solo *Solomachine) GetPacketCommitmentPath(portID, channelID string) commi
 
 // GetPacketAcknowledgementPath returns the commitment path for a packet acknowledgement.
 func (solo *Solomachine) GetPacketAcknowledgementPath(portID, channelID string) commitmenttypes.MerklePath {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, solo.Sequence))
+	ackPath := commitmenttypes.NewMerklePath(host.PacketAcknowledgementPath(portID, channelID, solo.Sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, ackPath)
 	require.NoError(solo.t, err)
 
 	return path
@@ -297,7 +304,8 @@ func (solo *Solomachine) GetPacketAcknowledgementPath(portID, channelID string) 
 // GetPacketReceiptPath returns the commitment path for a packet receipt
 // and an absent receipts.
 func (solo *Solomachine) GetPacketReceiptPath(portID, channelID string) commitmenttypes.MerklePath {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketReceiptPath(portID, channelID, solo.Sequence))
+	receiptPath := commitmenttypes.NewMerklePath(host.PacketReceiptPath(portID, channelID, solo.Sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, receiptPath)
 	require.NoError(solo.t, err)
 
 	return path
@@ -305,7 +313,8 @@ func (solo *Solomachine) GetPacketReceiptPath(portID, channelID string) commitme
 
 // GetNextSequenceRecvPath returns the commitment path for the next sequence recv counter.
 func (solo *Solomachine) GetNextSequenceRecvPath(portID, channelID string) commitmenttypes.MerklePath {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(portID, channelID))
+	nextSequenceRecvPath := commitmenttypes.NewMerklePath(host.NextSequenceRecvPath(portID, channelID))
+	path, err := commitmenttypes.ApplyPrefix(prefix, nextSequenceRecvPath)
 	require.NoError(solo.t, err)
 
 	return path

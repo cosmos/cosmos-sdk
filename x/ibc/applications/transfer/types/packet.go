@@ -34,7 +34,9 @@ func NewFungibleTokenPacketData(
 	}
 }
 
-// ValidateBasic is used for validating the token transfer
+// ValidateBasic is used for validating the token transfer.
+// NOTE: The addresses formats are not validated as the sender and recipient can have different
+// formats defined by their corresponding chains that are not known to IBC.
 func (ftpd FungibleTokenPacketData) ValidateBasic() error {
 	if ftpd.Amount == 0 {
 		return sdkerrors.Wrap(ErrInvalidAmount, "amount cannot be 0")

@@ -35,7 +35,7 @@ func FilteredPaginate(
 	}
 
 	if limit == 0 {
-		limit = defaultLimit
+		limit = DefaultLimit
 
 		// count total results when the limit is zero/not supplied
 		countTotal = true

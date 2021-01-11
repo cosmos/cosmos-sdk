@@ -8,7 +8,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	ibcexported "github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
@@ -23,12 +22,12 @@ func (p Plan) String() string {
 	if err != nil {
 		upgradedClientStr = "no upgraded client provided"
 	} else {
-		upgradedClientStr = fmt.Sprintf("%s", upgradedClient)
+		upgradedClientStr = upgradedClient.String()
 	}
 	return fmt.Sprintf(`Upgrade Plan
   Name: %s
   %s
-  Info: %s
+  Info: %s.
   Upgraded IBC Client: %s`, p.Name, dueUp, p.Info, upgradedClientStr)
 }
 
@@ -40,13 +39,13 @@ func (p Plan) ValidateBasic() error {
 	if p.Height < 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "height cannot be negative")
 	}
-	if p.Time.IsZero() && p.Height == 0 {
+	if p.Time.Unix() <= 0 && p.Height == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "must set either time or height")
 	}
-	if !p.Time.IsZero() && p.Height != 0 {
+	if p.Time.Unix() > 0 && p.Height != 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "cannot set both time and height")
 	}
-	if !p.Time.IsZero() && p.UpgradedClientState != nil {
+	if p.Time.Unix() > 0 && p.UpgradedClientState != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "IBC chain upgrades must only set height")
 	}
 
@@ -55,7 +54,7 @@ func (p Plan) ValidateBasic() error {
 
 // ShouldExecute returns true if the Plan is ready to execute given the current context
 func (p Plan) ShouldExecute(ctx sdk.Context) bool {
-	if !p.Time.IsZero() {
+	if p.Time.Unix() > 0 {
 		return !ctx.BlockTime().Before(p.Time)
 	}
 	if p.Height > 0 {
@@ -66,10 +65,15 @@ func (p Plan) ShouldExecute(ctx sdk.Context) bool {
 
 // DueAt is a string representation of when this plan is due to be executed
 func (p Plan) DueAt() string {
-	if !p.Time.IsZero() {
+	if p.Time.Unix() > 0 {
 		return fmt.Sprintf("time: %s", p.Time.UTC().Format(time.RFC3339))
 	}
 	return fmt.Sprintf("height: %d", p.Height)
+}
+
+// IsIBCPlan will return true if plan includes IBC client information
+func (p Plan) IsIBCPlan() bool {
+	return p.UpgradedClientState != nil
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces

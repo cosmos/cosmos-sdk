@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -113,6 +114,28 @@ func TestGetBlockRentionHeight(t *testing.T) {
 
 		t.Run(name, func(t *testing.T) {
 			require.Equal(t, tc.expected, tc.bapp.GetBlockRetentionHeight(tc.commitHeight))
+		})
+	}
+}
+
+// Test and ensure that negative heights always cause errors.
+// See issue https://github.com/cosmos/cosmos-sdk/issues/7662.
+func TestBaseAppCreateQueryContextRejectsNegativeHeights(t *testing.T) {
+	t.Parallel()
+
+	logger := defaultLogger()
+	db := dbm.NewMemDB()
+	name := t.Name()
+	app := NewBaseApp(name, logger, db, nil)
+
+	proves := []bool{
+		false, true,
+	}
+	for _, prove := range proves {
+		t.Run(fmt.Sprintf("prove=%t", prove), func(t *testing.T) {
+			sctx, err := app.createQueryContext(-10, true)
+			require.Error(t, err)
+			require.Equal(t, sctx, sdk.Context{})
 		})
 	}
 }

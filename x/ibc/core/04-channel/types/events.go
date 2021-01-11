@@ -16,6 +16,7 @@ const (
 
 	EventTypeSendPacket        = "send_packet"
 	EventTypeRecvPacket        = "recv_packet"
+	EventTypeWriteAck          = "write_acknowledgement"
 	EventTypeAcknowledgePacket = "acknowledge_packet"
 	EventTypeTimeoutPacket     = "timeout_packet"
 

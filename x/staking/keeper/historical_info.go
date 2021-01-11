@@ -15,17 +15,14 @@ func (k Keeper) GetHistoricalInfo(ctx sdk.Context, height int64) (types.Historic
 		return types.HistoricalInfo{}, false
 	}
 
-	hi := types.MustUnmarshalHistoricalInfo(k.cdc, value)
-
-	return hi, true
+	return types.MustUnmarshalHistoricalInfo(k.cdc, value), true
 }
 
 // SetHistoricalInfo sets the historical info at a given height
-func (k Keeper) SetHistoricalInfo(ctx sdk.Context, height int64, hi types.HistoricalInfo) {
+func (k Keeper) SetHistoricalInfo(ctx sdk.Context, height int64, hi *types.HistoricalInfo) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetHistoricalInfoKey(height)
-
-	value := types.MustMarshalHistoricalInfo(k.cdc, hi)
+	value := k.cdc.MustMarshalBinaryBare(hi)
 	store.Set(key, value)
 }
 
@@ -97,5 +94,5 @@ func (k Keeper) TrackHistoricalInfo(ctx sdk.Context) {
 	historicalEntry := types.NewHistoricalInfo(ctx.BlockHeader(), lastVals)
 
 	// Set latest HistoricalInfo at current height
-	k.SetHistoricalInfo(ctx, ctx.BlockHeight(), historicalEntry)
+	k.SetHistoricalInfo(ctx, ctx.BlockHeight(), &historicalEntry)
 }

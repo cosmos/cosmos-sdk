@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -71,7 +71,7 @@ func SortByteArrays(src [][]byte) [][]byte {
 const contextKeyBadProposal = "contextKeyBadProposal"
 
 var (
-	pubkeys = []crypto.PubKey{
+	pubkeys = []cryptotypes.PubKey{
 		ed25519.GenPrivKey().PubKey(),
 		ed25519.GenPrivKey().PubKey(),
 		ed25519.GenPrivKey().PubKey(),
@@ -82,15 +82,18 @@ func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context,
 	require.True(t, len(addrs) <= len(pubkeys), "Not enough pubkeys specified at top of file.")
 
 	for i := 0; i < len(addrs); i++ {
-
 		valTokens := sdk.TokensFromConsensusPower(powerAmt[i])
-		valCreateMsg := stakingtypes.NewMsgCreateValidator(
+		valCreateMsg, err := stakingtypes.NewMsgCreateValidator(
 			addrs[i], pubkeys[i], sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			TestDescription, TestCommissionRates, sdk.OneInt(),
 		)
-
-		res, err := stakingHandler(ctx, valCreateMsg)
 		require.NoError(t, err)
-		require.NotNil(t, res)
+		handleAndCheck(t, stakingHandler, ctx, valCreateMsg)
 	}
+}
+
+func handleAndCheck(t *testing.T, h sdk.Handler, ctx sdk.Context, msg sdk.Msg) {
+	res, err := h(ctx, msg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 }

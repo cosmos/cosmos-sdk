@@ -8,11 +8,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -35,7 +35,7 @@ func (suite *AnteTestSuite) TestSimulateGasCost() {
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 	accSeqs := []uint64{0, 0, 0}
-	privs := []crypto.PrivKey{accounts[0].priv, accounts[1].priv, accounts[2].priv}
+	privs := []cryptotypes.PrivKey{accounts[0].priv, accounts[1].priv, accounts[2].priv}
 	accNums := []uint64{0, 1, 2}
 
 	testCases := []TestCase{
@@ -91,7 +91,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 
 	// Variable data per test case
 	var (
-		privs   []crypto.PrivKey
+		privs   []cryptotypes.PrivKey
 		accNums []uint64
 		accSeqs []uint64
 	)
@@ -100,7 +100,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 		{
 			"check no signatures fails",
 			func() {
-				privs, accNums, accSeqs = []crypto.PrivKey{}, []uint64{}, []uint64{}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{}, []uint64{}, []uint64{}
 
 				// Create tx manually to test the tx's signers
 				suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
@@ -117,7 +117,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 		{
 			"num sigs dont match GetSigners",
 			func() {
-				privs, accNums, accSeqs = []crypto.PrivKey{priv0}, []uint64{0}, []uint64{0}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}
 			},
 			false,
 			false,
@@ -126,7 +126,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 		{
 			"unrecognized account",
 			func() {
-				privs, accNums, accSeqs = []crypto.PrivKey{priv0, priv1, priv2}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{priv0, priv1, priv2}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
 			},
 			false,
 			false,
@@ -169,7 +169,7 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbers() {
 	var (
 		accNums []uint64
 		msgs    []sdk.Msg
-		privs   []crypto.PrivKey
+		privs   []cryptotypes.PrivKey
 		accSeqs []uint64
 	)
 
@@ -180,7 +180,7 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbers() {
 				msg := testdata.NewTestMsg(accounts[0].acc.GetAddress())
 				msgs = []sdk.Msg{msg}
 
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
 			},
 			false,
 			true,
@@ -189,7 +189,7 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbers() {
 		{
 			"new tx from wrong account number",
 			func() {
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv}, []uint64{1}, []uint64{1}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv}, []uint64{1}, []uint64{1}
 			},
 			false,
 			false,
@@ -198,7 +198,7 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbers() {
 		{
 			"new tx from correct account number",
 			func() {
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{1}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{1}
 			},
 			false,
 			true,
@@ -210,7 +210,7 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbers() {
 				msg1 := testdata.NewTestMsg(accounts[0].acc.GetAddress(), accounts[1].acc.GetAddress())
 				msg2 := testdata.NewTestMsg(accounts[1].acc.GetAddress(), accounts[0].acc.GetAddress())
 				msgs = []sdk.Msg{msg1, msg2}
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv, accounts[1].priv}, []uint64{1, 0}, []uint64{2, 0}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv, accounts[1].priv}, []uint64{1, 0}, []uint64{2, 0}
 			},
 			false,
 			false,
@@ -219,7 +219,7 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbers() {
 		{
 			"new tx with correct account numbers",
 			func() {
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv, accounts[1].priv}, []uint64{0, 1}, []uint64{2, 0}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv, accounts[1].priv}, []uint64{0, 1}, []uint64{2, 0}
 			},
 			false,
 			true,
@@ -251,7 +251,7 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbersAtBlockHeightZero() {
 	var (
 		accNums []uint64
 		msgs    []sdk.Msg
-		privs   []crypto.PrivKey
+		privs   []cryptotypes.PrivKey
 		accSeqs []uint64
 	)
 
@@ -262,7 +262,7 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbersAtBlockHeightZero() {
 				msg := testdata.NewTestMsg(accounts[0].acc.GetAddress())
 				msgs = []sdk.Msg{msg}
 
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
 			},
 			false,
 			true,
@@ -271,7 +271,7 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbersAtBlockHeightZero() {
 		{
 			"new tx from wrong account number",
 			func() {
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv}, []uint64{1}, []uint64{1}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv}, []uint64{1}, []uint64{1}
 			},
 			false,
 			false,
@@ -280,7 +280,7 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbersAtBlockHeightZero() {
 		{
 			"new tx from correct account number",
 			func() {
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{1}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{1}
 			},
 			false,
 			true,
@@ -293,7 +293,7 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbersAtBlockHeightZero() {
 				msg2 := testdata.NewTestMsg(accounts[1].acc.GetAddress(), accounts[0].acc.GetAddress())
 				msgs = []sdk.Msg{msg1, msg2}
 
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv, accounts[1].priv}, []uint64{1, 0}, []uint64{2, 0}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv, accounts[1].priv}, []uint64{1, 0}, []uint64{2, 0}
 			},
 			false,
 			false,
@@ -303,7 +303,7 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbersAtBlockHeightZero() {
 			"new tx with another signer and correct account numbers",
 			func() {
 				// Note that accNums is [0,0] at block 0.
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv, accounts[1].priv}, []uint64{0, 0}, []uint64{2, 0}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv, accounts[1].priv}, []uint64{0, 0}, []uint64{2, 0}
 			},
 			false,
 			true,
@@ -334,7 +334,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 	var (
 		accNums []uint64
 		msgs    []sdk.Msg
-		privs   []crypto.PrivKey
+		privs   []cryptotypes.PrivKey
 		accSeqs []uint64
 	)
 
@@ -345,7 +345,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 				msg := testdata.NewTestMsg(accounts[0].acc.GetAddress())
 				msgs = []sdk.Msg{msg}
 
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
 			},
 			false,
 			true,
@@ -354,7 +354,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 		{
 			"test sending it again fails (replay protection)",
 			func() {
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
 			},
 			false,
 			false,
@@ -363,7 +363,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 		{
 			"fix sequence, should pass",
 			func() {
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{1}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{1}
 			},
 			false,
 			true,
@@ -376,7 +376,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 				msg2 := testdata.NewTestMsg(accounts[2].acc.GetAddress(), accounts[0].acc.GetAddress())
 				msgs = []sdk.Msg{msg1, msg2}
 
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv, accounts[1].priv, accounts[2].priv}, []uint64{0, 1, 2}, []uint64{2, 0, 0}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv, accounts[1].priv, accounts[2].priv}, []uint64{0, 1, 2}, []uint64{2, 0, 0}
 			},
 			false,
 			true,
@@ -394,7 +394,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 			func() {
 				msg := testdata.NewTestMsg(accounts[1].acc.GetAddress())
 				msgs = []sdk.Msg{msg}
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[1].priv}, []uint64{1}, []uint64{0}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[1].priv}, []uint64{1}, []uint64{0}
 			},
 			false,
 			false,
@@ -415,7 +415,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 				msg := testdata.NewTestMsg(accounts[0].acc.GetAddress(), accounts[1].acc.GetAddress())
 				msgs = []sdk.Msg{msg}
 
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv, accounts[1].priv}, []uint64{0, 1}, []uint64{3, 2}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv, accounts[1].priv}, []uint64{0, 1}, []uint64{3, 2}
 			},
 			false,
 			true,
@@ -445,7 +445,7 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr0)}
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	privs, accNums, accSeqs := []crypto.PrivKey{priv0}, []uint64{0}, []uint64{0}
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}
 
 	testCases := []struct {
 		desc     string
@@ -517,7 +517,7 @@ func (suite *AnteTestSuite) TestAnteHandlerMemoGas() {
 	// Same data for every test cases
 	accounts := suite.CreateTestAccounts(1)
 	msgs := []sdk.Msg{testdata.NewTestMsg(accounts[0].acc.GetAddress())}
-	privs, accNums, accSeqs := []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
 
 	// Variable data per test case
 	var (
@@ -596,7 +596,7 @@ func (suite *AnteTestSuite) TestAnteHandlerMultiSigner() {
 	var (
 		accNums []uint64
 		msgs    []sdk.Msg
-		privs   []crypto.PrivKey
+		privs   []cryptotypes.PrivKey
 		accSeqs []uint64
 	)
 
@@ -605,7 +605,7 @@ func (suite *AnteTestSuite) TestAnteHandlerMultiSigner() {
 			"signers in order",
 			func() {
 				msgs = []sdk.Msg{msg1, msg2, msg3}
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv, accounts[1].priv, accounts[2].priv}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv, accounts[1].priv, accounts[2].priv}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
 				suite.txBuilder.SetMemo("Check signers are in expected order and different account numbers works")
 			},
 			false,
@@ -616,7 +616,7 @@ func (suite *AnteTestSuite) TestAnteHandlerMultiSigner() {
 			"change sequence numbers (only accounts 0 and 1 sign)",
 			func() {
 				msgs = []sdk.Msg{msg1}
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv, accounts[1].priv}, []uint64{0, 1}, []uint64{1, 1}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv, accounts[1].priv}, []uint64{0, 1}, []uint64{1, 1}
 			},
 			false,
 			true,
@@ -626,7 +626,7 @@ func (suite *AnteTestSuite) TestAnteHandlerMultiSigner() {
 			"change sequence numbers (only accounts 1 and 2 sign)",
 			func() {
 				msgs = []sdk.Msg{msg2}
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[2].priv, accounts[0].priv}, []uint64{2, 0}, []uint64{1, 2}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[2].priv, accounts[0].priv}, []uint64{2, 0}, []uint64{1, 2}
 			},
 			false,
 			true,
@@ -636,7 +636,7 @@ func (suite *AnteTestSuite) TestAnteHandlerMultiSigner() {
 			"everyone signs again",
 			func() {
 				msgs = []sdk.Msg{msg1, msg2, msg3}
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv, accounts[1].priv, accounts[2].priv}, []uint64{0, 1, 2}, []uint64{3, 2, 2}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv, accounts[1].priv, accounts[2].priv}, []uint64{0, 1, 2}, []uint64{3, 2, 2}
 			},
 			false,
 			true,
@@ -668,7 +668,7 @@ func (suite *AnteTestSuite) TestAnteHandlerBadSignBytes() {
 		feeAmount sdk.Coins
 		gasLimit  uint64
 		msgs      []sdk.Msg
-		privs     []crypto.PrivKey
+		privs     []cryptotypes.PrivKey
 		accSeqs   []uint64
 	)
 
@@ -680,7 +680,7 @@ func (suite *AnteTestSuite) TestAnteHandlerBadSignBytes() {
 				feeAmount = testdata.NewTestFeeAmount()
 				gasLimit = testdata.NewTestGasLimit()
 				msgs = []sdk.Msg{msg0}
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
 			},
 			false,
 			true,
@@ -752,7 +752,7 @@ func (suite *AnteTestSuite) TestAnteHandlerBadSignBytes() {
 			func() {
 				feeAmount = testdata.NewTestFeeAmount()
 				gasLimit = testdata.NewTestGasLimit()
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[1].priv}, []uint64{0}, []uint64{1}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[1].priv}, []uint64{0}, []uint64{1}
 			},
 			false,
 			false,
@@ -762,7 +762,7 @@ func (suite *AnteTestSuite) TestAnteHandlerBadSignBytes() {
 			"test wrong signer if public doesn't exist",
 			func() {
 				msgs = []sdk.Msg{testdata.NewTestMsg(accounts[1].acc.GetAddress())}
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv}, []uint64{1}, []uint64{0}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv}, []uint64{1}, []uint64{0}
 			},
 			false,
 			false,
@@ -792,7 +792,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 	var (
 		accNums []uint64
 		msgs    []sdk.Msg
-		privs   []crypto.PrivKey
+		privs   []cryptotypes.PrivKey
 		accSeqs []uint64
 	)
 
@@ -800,7 +800,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 		{
 			"test good tx",
 			func() {
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
 				msgs = []sdk.Msg{testdata.NewTestMsg(accounts[0].acc.GetAddress())}
 			},
 			false,
@@ -835,7 +835,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 				acc1 := suite.app.AccountKeeper.GetAccount(suite.ctx, accounts[1].acc.GetAddress())
 				suite.Require().Nil(acc1.GetPubKey())
 
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[1].priv}, []uint64{1}, []uint64{0}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[1].priv}, []uint64{1}, []uint64{0}
 				msgs = []sdk.Msg{testdata.NewTestMsg(accounts[1].acc.GetAddress())}
 				suite.txBuilder.SetMsgs(msgs...)
 				suite.txBuilder.SetFeeAmount(feeAmount)
@@ -858,7 +858,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 				suite.Require().Nil(acc1.GetPubKey())
 
 				// Set incorrect accSeq, to generate incorrect signature.
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[1].priv}, []uint64{1}, []uint64{1}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[1].priv}, []uint64{1}, []uint64{1}
 			},
 			false,
 			false,
@@ -888,11 +888,11 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 	}
 }
 
-func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []crypto.PubKey, signatures [][]byte) {
-	pubkeys = make([]crypto.PubKey, n)
+func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []cryptotypes.PubKey, signatures [][]byte) {
+	pubkeys = make([]cryptotypes.PubKey, n)
 	signatures = make([][]byte, n)
 	for i := 0; i < n; i++ {
-		var privkey crypto.PrivKey
+		var privkey cryptotypes.PrivKey
 		privkey = secp256k1.GenPrivKey()
 
 		// TODO: also generate ed25519 keys as below when ed25519 keys are
@@ -910,7 +910,7 @@ func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []crypto.P
 	return
 }
 
-func expectedGasCostByKeys(pubkeys []crypto.PubKey) uint64 {
+func expectedGasCostByKeys(pubkeys []cryptotypes.PubKey) uint64 {
 	cost := uint64(0)
 	for _, pubkey := range pubkeys {
 		pubkeyType := strings.ToLower(fmt.Sprintf("%T", pubkey))
@@ -927,8 +927,8 @@ func expectedGasCostByKeys(pubkeys []crypto.PubKey) uint64 {
 }
 
 func TestCountSubkeys(t *testing.T) {
-	genPubKeys := func(n int) []crypto.PubKey {
-		var ret []crypto.PubKey
+	genPubKeys := func(n int) []cryptotypes.PubKey {
+		var ret []cryptotypes.PubKey
 		for i := 0; i < n; i++ {
 			ret = append(ret, secp256k1.GenPrivKey().PubKey())
 		}
@@ -938,10 +938,10 @@ func TestCountSubkeys(t *testing.T) {
 	singleLevelMultiKey := kmultisig.NewLegacyAminoPubKey(4, genPubKeys(5))
 	multiLevelSubKey1 := kmultisig.NewLegacyAminoPubKey(4, genPubKeys(5))
 	multiLevelSubKey2 := kmultisig.NewLegacyAminoPubKey(4, genPubKeys(5))
-	multiLevelMultiKey := kmultisig.NewLegacyAminoPubKey(2, []crypto.PubKey{
+	multiLevelMultiKey := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{
 		multiLevelSubKey1, multiLevelSubKey2, secp256k1.GenPrivKey().PubKey()})
 	type args struct {
-		pub crypto.PubKey
+		pub cryptotypes.PubKey
 	}
 	testCases := []struct {
 		name string
@@ -965,7 +965,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSigLimitExceeded() {
 	// Same data for every test cases
 	accounts := suite.CreateTestAccounts(8)
 	var addrs []sdk.AccAddress
-	var privs []crypto.PrivKey
+	var privs []cryptotypes.PrivKey
 	for i := 0; i < 8; i++ {
 		addrs = append(addrs, accounts[i].acc.GetAddress())
 		privs = append(privs, accounts[i].priv)
@@ -1019,7 +1019,7 @@ func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
 	var (
 		accNums []uint64
 		msgs    []sdk.Msg
-		privs   []crypto.PrivKey
+		privs   []cryptotypes.PrivKey
 		accSeqs []uint64
 	)
 
@@ -1028,7 +1028,7 @@ func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
 			"verify that an secp256k1 account gets rejected",
 			func() {
 				msgs = []sdk.Msg{testdata.NewTestMsg(accounts[0].acc.GetAddress())}
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
 			},
 			false,
 			false,
@@ -1067,7 +1067,7 @@ func (suite *AnteTestSuite) TestAnteHandlerReCheck() {
 	suite.txBuilder.SetMemo("thisisatestmemo")
 
 	// test that operations skipped on recheck do not run
-	privs, accNums, accSeqs := []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 

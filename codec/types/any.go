@@ -2,6 +2,8 @@ package types
 
 import (
 	"github.com/gogo/protobuf/proto"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type Any struct {
@@ -56,31 +58,24 @@ type Any struct {
 // returns an error if that value couldn't be packed. This also caches
 // the packed value so that it can be retrieved from GetCachedValue without
 // unmarshaling
-func NewAnyWithValue(value proto.Message) (*Any, error) {
-	any := &Any{}
-
-	err := any.Pack(value)
-	if err != nil {
-		return nil, err
+func NewAnyWithValue(v proto.Message) (*Any, error) {
+	if v == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrPackAny, "Expecting non nil value to create a new Any")
 	}
-
-	return any, nil
+	return NewAnyWithCustomTypeURL(v, "/"+proto.MessageName(v))
 }
 
-// Pack packs the value x in the Any or returns an error. This also caches
-// the packed value so that it can be retrieved from GetCachedValue without
-// unmarshaling
-func (any *Any) Pack(x proto.Message) error {
-	any.TypeUrl = "/" + proto.MessageName(x)
-	bz, err := proto.Marshal(x)
-	if err != nil {
-		return err
-	}
-
-	any.Value = bz
-	any.cachedValue = x
-
-	return nil
+// NewAnyWithCustomTypeURL same as NewAnyWithValue, but sets a custom type url, instead
+// using the one from proto.Message.
+// NOTE: This functions should be only used for types with additional logic bundled
+// into the protobuf Any serialization. For simple marshaling you should use NewAnyWithValue.
+func NewAnyWithCustomTypeURL(v proto.Message, typeURL string) (*Any, error) {
+	bz, err := proto.Marshal(v)
+	return &Any{
+		TypeUrl:     typeURL,
+		Value:       bz,
+		cachedValue: v,
+	}, err
 }
 
 // UnsafePackAny packs the value x in the Any and instead of returning the error
@@ -98,6 +93,22 @@ func UnsafePackAny(x interface{}) *Any {
 	return &Any{cachedValue: x}
 }
 
+// pack packs the value x in the Any or returns an error. This also caches
+// the packed value so that it can be retrieved from GetCachedValue without
+// unmarshaling
+func (any *Any) pack(x proto.Message) error {
+	any.TypeUrl = "/" + proto.MessageName(x)
+	bz, err := proto.Marshal(x)
+	if err != nil {
+		return err
+	}
+
+	any.Value = bz
+	any.cachedValue = x
+
+	return nil
+}
+
 // GetCachedValue returns the cached value from the Any if present
 func (any *Any) GetCachedValue() interface{} {
 	return any.cachedValue
@@ -106,9 +117,4 @@ func (any *Any) GetCachedValue() interface{} {
 // ClearCachedValue clears the cached value from the Any
 func (any *Any) ClearCachedValue() {
 	any.cachedValue = nil
-}
-
-// IntoAny represents a type that can be wrapped into an Any.
-type IntoAny interface {
-	AsAny() *Any
 }

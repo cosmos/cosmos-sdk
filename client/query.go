@@ -52,19 +52,6 @@ func (ctx Context) QueryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) 
 	return ctx.queryABCI(req)
 }
 
-// QuerySubspace performs a query to a Tendermint node with the provided
-// store name and subspace. It returns key value pair and height of the query
-// upon success or an error if the query fails.
-func (ctx Context) QuerySubspace(subspace []byte, storeName string) (res []sdk.KVPair, height int64, err error) {
-	resRaw, height, err := ctx.queryStore(subspace, storeName, "subspace")
-	if err != nil {
-		return res, height, err
-	}
-
-	ctx.LegacyAmino.MustUnmarshalBinaryBare(resRaw, &res)
-	return
-}
-
 // GetFromAddress returns the from address from the context's name.
 func (ctx Context) GetFromAddress() sdk.AccAddress {
 	return ctx.FromAddress

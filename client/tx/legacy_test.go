@@ -21,8 +21,9 @@ import (
 )
 
 const (
-	memo = "waboom"
-	gas  = uint64(10000)
+	memo          = "waboom"
+	gas           = uint64(10000)
+	timeoutHeight = 5
 )
 
 var (
@@ -47,6 +48,7 @@ func buildTestTx(t *testing.T, builder client.TxBuilder) {
 	require.NoError(t, err)
 	err = builder.SetSignatures(sig)
 	require.NoError(t, err)
+	builder.SetTimeoutHeight(timeoutHeight)
 }
 
 type TestSuite struct {
@@ -57,7 +59,7 @@ type TestSuite struct {
 }
 
 func (s *TestSuite) SetupSuite() {
-	encCfg := simapp.MakeEncodingConfig()
+	encCfg := simapp.MakeTestEncodingConfig()
 	s.encCfg = encCfg
 	s.protoCfg = tx.NewTxConfig(codec.NewProtoCodec(encCfg.InterfaceRegistry), tx.DefaultSignModes)
 	s.aminoCfg = legacytx.StdTxConfig{Cdc: encCfg.Amino}
@@ -68,10 +70,10 @@ func (s *TestSuite) TestCopyTx() {
 	protoBuilder := s.protoCfg.NewTxBuilder()
 	buildTestTx(s.T(), protoBuilder)
 	aminoBuilder := s.aminoCfg.NewTxBuilder()
-	err := tx2.CopyTx(protoBuilder.GetTx(), aminoBuilder)
+	err := tx2.CopyTx(protoBuilder.GetTx(), aminoBuilder, false)
 	s.Require().NoError(err)
 	protoBuilder2 := s.protoCfg.NewTxBuilder()
-	err = tx2.CopyTx(aminoBuilder.GetTx(), protoBuilder2)
+	err = tx2.CopyTx(aminoBuilder.GetTx(), protoBuilder2, false)
 	s.Require().NoError(err)
 	bz, err := s.protoCfg.TxEncoder()(protoBuilder.GetTx())
 	s.Require().NoError(err)
@@ -83,10 +85,10 @@ func (s *TestSuite) TestCopyTx() {
 	aminoBuilder = s.aminoCfg.NewTxBuilder()
 	buildTestTx(s.T(), aminoBuilder)
 	protoBuilder = s.protoCfg.NewTxBuilder()
-	err = tx2.CopyTx(aminoBuilder.GetTx(), protoBuilder)
+	err = tx2.CopyTx(aminoBuilder.GetTx(), protoBuilder, false)
 	s.Require().NoError(err)
 	aminoBuilder2 := s.aminoCfg.NewTxBuilder()
-	err = tx2.CopyTx(protoBuilder.GetTx(), aminoBuilder2)
+	err = tx2.CopyTx(protoBuilder.GetTx(), aminoBuilder2, false)
 	s.Require().NoError(err)
 	bz, err = s.aminoCfg.TxEncoder()(aminoBuilder.GetTx())
 	s.Require().NoError(err)
@@ -105,8 +107,27 @@ func (s *TestSuite) TestConvertTxToStdTx() {
 	s.Require().Equal(gas, stdTx.Fee.Gas)
 	s.Require().Equal(fee, stdTx.Fee.Amount)
 	s.Require().Equal(msg, stdTx.Msgs[0])
+	s.Require().Equal(timeoutHeight, stdTx.TimeoutHeight)
 	s.Require().Equal(sig.PubKey, stdTx.Signatures[0].PubKey)
 	s.Require().Equal(sig.Data.(*signing2.SingleSignatureData).Signature, stdTx.Signatures[0].Signature)
+
+	// SIGN_MODE_DIRECT should fall back to an unsigned tx
+	err = protoBuilder.SetSignatures(signing2.SignatureV2{
+		PubKey: pub1,
+		Data: &signing2.SingleSignatureData{
+			SignMode:  signing2.SignMode_SIGN_MODE_DIRECT,
+			Signature: []byte("dummy"),
+		},
+	})
+	s.Require().NoError(err)
+	stdTx, err = tx2.ConvertTxToStdTx(s.encCfg.Amino, protoBuilder.GetTx())
+	s.Require().NoError(err)
+	s.Require().Equal(memo, stdTx.Memo)
+	s.Require().Equal(gas, stdTx.Fee.Gas)
+	s.Require().Equal(fee, stdTx.Fee.Amount)
+	s.Require().Equal(msg, stdTx.Msgs[0])
+	s.Require().Equal(timeoutHeight, stdTx.TimeoutHeight)
+	s.Require().Empty(stdTx.Signatures)
 
 	// std tx
 	aminoBuilder := s.aminoCfg.NewTxBuilder()
@@ -127,7 +148,7 @@ func (s *TestSuite) TestConvertAndEncodeStdTx() {
 	decodedTx, err := s.protoCfg.TxDecoder()(txBz)
 	s.Require().NoError(err)
 	aminoBuilder2 := s.aminoCfg.NewTxBuilder()
-	s.Require().NoError(tx2.CopyTx(decodedTx.(signing.Tx), aminoBuilder2))
+	s.Require().NoError(tx2.CopyTx(decodedTx.(signing.Tx), aminoBuilder2, false))
 	s.Require().Equal(stdTx, aminoBuilder2.GetTx())
 
 	// just use amino everywhere

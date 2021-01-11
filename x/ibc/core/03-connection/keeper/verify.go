@@ -22,13 +22,8 @@ func (k Keeper) VerifyClientState(
 		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, clientID)
 	}
 
-	targetConsState, found := k.clientKeeper.GetClientConsensusState(ctx, clientID, height)
-	if !found {
-		return sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "clientID: %s with height: %s", clientID, height)
-	}
-
 	if err := targetClient.VerifyClientState(
-		k.clientKeeper.ClientStore(ctx, clientID), k.cdc, targetConsState.GetRoot(), height,
+		k.clientKeeper.ClientStore(ctx, clientID), k.cdc, height,
 		connection.GetCounterparty().GetPrefix(), connection.GetCounterparty().GetClientID(), proof, clientState); err != nil {
 		return sdkerrors.Wrapf(err, "failed client state verification for target client: %s", connection.GetClientID())
 	}
@@ -52,13 +47,8 @@ func (k Keeper) VerifyClientConsensusState(
 		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, clientID)
 	}
 
-	targetConsState, found := k.clientKeeper.GetClientConsensusState(ctx, clientID, height)
-	if !found {
-		return sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "clientID: %s with height: %s", clientID, height)
-	}
-
 	if err := clientState.VerifyClientConsensusState(
-		k.clientKeeper.ClientStore(ctx, clientID), k.cdc, targetConsState.GetRoot(), height,
+		k.clientKeeper.ClientStore(ctx, clientID), k.cdc, height,
 		connection.GetCounterparty().GetClientID(), consensusHeight, connection.GetCounterparty().GetPrefix(), proof, consensusState,
 	); err != nil {
 		return sdkerrors.Wrapf(err, "failed consensus state verification for client (%s)", connection.GetClientID())
@@ -138,6 +128,7 @@ func (k Keeper) VerifyPacketCommitment(
 
 	if err := clientState.VerifyPacketCommitment(
 		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
+		uint64(ctx.BlockTime().UnixNano()), connection.GetDelayPeriod(),
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		sequence, commitmentBytes,
 	); err != nil {
@@ -166,6 +157,7 @@ func (k Keeper) VerifyPacketAcknowledgement(
 
 	if err := clientState.VerifyPacketAcknowledgement(
 		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
+		uint64(ctx.BlockTime().UnixNano()), connection.GetDelayPeriod(),
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		sequence, acknowledgement,
 	); err != nil {
@@ -194,6 +186,7 @@ func (k Keeper) VerifyPacketReceiptAbsence(
 
 	if err := clientState.VerifyPacketReceiptAbsence(
 		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
+		uint64(ctx.BlockTime().UnixNano()), connection.GetDelayPeriod(),
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		sequence,
 	); err != nil {
@@ -221,6 +214,7 @@ func (k Keeper) VerifyNextSequenceRecv(
 
 	if err := clientState.VerifyNextSequenceRecv(
 		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
+		uint64(ctx.BlockTime().UnixNano()), connection.GetDelayPeriod(),
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		nextSequenceRecv,
 	); err != nil {

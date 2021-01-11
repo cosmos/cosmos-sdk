@@ -40,7 +40,7 @@ type Route struct {
 
 // NewRoute returns an instance of Route.
 func NewRoute(p string, h Handler) Route {
-	return Route{path: p, handler: h}
+	return Route{path: strings.TrimSpace(p), handler: h}
 }
 
 // Path returns the path the route has assigned.
@@ -55,7 +55,7 @@ func (r Route) Handler() Handler {
 
 // Empty returns true only if both handler and path are not empty.
 func (r Route) Empty() bool {
-	return r.handler == nil || r.path == strings.TrimSpace("")
+	return r.handler == nil || r.path == ""
 }
 
 // QueryRouter provides queryables for each query path.

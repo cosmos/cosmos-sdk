@@ -3,8 +3,8 @@ package types
 import (
 	"bytes"
 
-	"github.com/tendermint/tendermint/crypto"
-
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -19,33 +19,37 @@ const (
 )
 
 var (
-	_ sdk.Msg = &MsgCreateValidator{}
-	_ sdk.Msg = &MsgEditValidator{}
-	_ sdk.Msg = &MsgDelegate{}
-	_ sdk.Msg = &MsgUndelegate{}
-	_ sdk.Msg = &MsgBeginRedelegate{}
+	_ sdk.Msg                            = &MsgCreateValidator{}
+	_ codectypes.UnpackInterfacesMessage = (*MsgCreateValidator)(nil)
+	_ sdk.Msg                            = &MsgCreateValidator{}
+	_ sdk.Msg                            = &MsgEditValidator{}
+	_ sdk.Msg                            = &MsgDelegate{}
+	_ sdk.Msg                            = &MsgUndelegate{}
+	_ sdk.Msg                            = &MsgBeginRedelegate{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
 // Delegator address and validator address are the same.
 func NewMsgCreateValidator(
-	valAddr sdk.ValAddress, pubKey crypto.PubKey, selfDelegation sdk.Coin,
-	description Description, commission CommissionRates, minSelfDelegation sdk.Int,
-) *MsgCreateValidator {
-	var pkStr string
+	valAddr sdk.ValAddress, pubKey cryptotypes.PubKey, //nolint:interfacer
+	selfDelegation sdk.Coin, description Description, commission CommissionRates, minSelfDelegation sdk.Int,
+) (*MsgCreateValidator, error) {
+	var pkAny *codectypes.Any
 	if pubKey != nil {
-		pkStr = sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pubKey)
+		var err error
+		if pkAny, err = codectypes.NewAnyWithValue(pubKey); err != nil {
+			return nil, err
+		}
 	}
-
 	return &MsgCreateValidator{
 		Description:       description,
 		DelegatorAddress:  sdk.AccAddress(valAddr).String(),
 		ValidatorAddress:  valAddr.String(),
-		Pubkey:            pkStr,
+		Pubkey:            pkAny,
 		Value:             selfDelegation,
 		Commission:        commission,
 		MinSelfDelegation: minSelfDelegation,
-	}
+	}, nil
 }
 
 // Route implements the sdk.Msg interface.
@@ -105,7 +109,7 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 		return ErrBadValidatorAddr
 	}
 
-	if msg.Pubkey == "" {
+	if msg.Pubkey == nil {
 		return ErrEmptyValidatorPubKey
 	}
 
@@ -134,6 +138,12 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var pubKey cryptotypes.PubKey
+	return unpacker.UnpackAny(msg.Pubkey, &pubKey)
 }
 
 // NewMsgEditValidator creates a new MsgEditValidator instance

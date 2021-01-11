@@ -15,7 +15,7 @@ import (
 // Value to the corresponding channel type.
 func NewDecodeStore(cdc codec.BinaryMarshaler, kvA, kvB kv.Pair) (string, bool) {
 	switch {
-	case bytes.HasPrefix(kvA.Key, []byte(host.KeyChannelPrefix)):
+	case bytes.HasPrefix(kvA.Key, []byte(host.KeyChannelEndPrefix)):
 		var channelA, channelB types.Channel
 		cdc.MustUnmarshalBinaryBare(kvA.Value, &channelA)
 		cdc.MustUnmarshalBinaryBare(kvB.Value, &channelB)

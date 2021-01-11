@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
@@ -47,6 +48,8 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&MsgTimeout{},
 		&MsgTimeoutOnClose{},
 	)
+
+	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 // SubModuleCdc references the global x/ibc/core/04-channel module codec. Note, the codec should

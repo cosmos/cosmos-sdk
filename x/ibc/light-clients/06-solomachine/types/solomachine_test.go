@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -41,7 +40,7 @@ func (suite *SoloMachineTestSuite) SetupTest() {
 	suite.solomachine = ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachinesingle", "testing", 1)
 	suite.solomachineMulti = ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachinemulti", "testing", 4)
 
-	suite.store = suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), types.SoloMachine)
+	suite.store = suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), exported.Solomachine)
 }
 
 func TestSoloMachineTestSuite(t *testing.T) {
@@ -49,13 +48,13 @@ func TestSoloMachineTestSuite(t *testing.T) {
 }
 
 func (suite *SoloMachineTestSuite) GetSequenceFromStore() uint64 {
-	bz := suite.store.Get(host.KeyClientState())
+	bz := suite.store.Get(host.ClientStateKey())
 	suite.Require().NotNil(bz)
 
 	var clientState exported.ClientState
-	err := codec.UnmarshalAny(suite.chainA.Codec, &clientState, bz)
+	err := suite.chainA.Codec.UnmarshalInterface(bz, &clientState)
 	suite.Require().NoError(err)
-	return clientState.GetLatestHeight().GetVersionHeight()
+	return clientState.GetLatestHeight().GetRevisionHeight()
 }
 
 func (suite *SoloMachineTestSuite) GetInvalidProof() []byte {

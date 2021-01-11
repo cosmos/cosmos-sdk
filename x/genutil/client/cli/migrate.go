@@ -9,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	tmjson "github.com/tendermint/tendermint/libs/json"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -74,9 +73,17 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 			target := args[0]
 			importGenesis := args[1]
 
-			genDoc, err := tmtypes.GenesisDocFromFile(importGenesis)
+			genDoc, err := validateGenDoc(importGenesis)
 			if err != nil {
-				return errors.Wrapf(err, "failed to read genesis document from file %s", importGenesis)
+				return err
+			}
+
+			// Since some default values are valid values, we just print to
+			// make sure the user didn't forget to update these values.
+			if genDoc.ConsensusParams.Evidence.MaxBytes == 0 {
+				fmt.Printf("Warning: consensus_params.evidence.max_bytes is set to 0. If this is"+
+					" deliberate, feel free to ignore this warning. If not, please have a look at the chain"+
+					" upgrade guide at %s.\n", chainUpgradeGuide)
 			}
 
 			var initialState types.AppMap

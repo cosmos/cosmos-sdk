@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
@@ -19,6 +20,7 @@ import (
 // Abonormal scenarios are not tested here.
 func TestRandomizedGenState(t *testing.T) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	cryptocodec.RegisterInterfaces(interfaceRegistry)
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	s := rand.NewSource(1)
@@ -41,7 +43,7 @@ func TestRandomizedGenState(t *testing.T) {
 
 	require.Equal(t, uint32(207), stakingGenesis.Params.MaxValidators)
 	require.Equal(t, uint32(7), stakingGenesis.Params.MaxEntries)
-	require.Equal(t, uint32(48), stakingGenesis.Params.HistoricalEntries)
+	require.Equal(t, uint32(8687), stakingGenesis.Params.HistoricalEntries)
 	require.Equal(t, "stake", stakingGenesis.Params.BondDenom)
 	require.Equal(t, float64(238280), stakingGenesis.Params.UnbondingTime.Seconds())
 	// check numbers of Delegations and Validators
@@ -53,7 +55,7 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, "1000.000000000000000000", stakingGenesis.Delegations[0].Shares.String())
 	// check validators
 	require.Equal(t, "cosmosvaloper1ghekyjucln7y67ntx7cf27m9dpuxxemnsvnaes", stakingGenesis.Validators[2].GetOperator().String())
-	require.Equal(t, "cosmosvalconspub1zcjduepq280tm686ma80cva9z620dmknd9a858pd2zmq9ackfenfllecjxds0hg9n7", stakingGenesis.Validators[2].ConsensusPubkey)
+	require.Equal(t, []byte{0xa, 0x20, 0x51, 0xde, 0xbd, 0xe8, 0xfa, 0xdf, 0x4e, 0xfc, 0x33, 0xa5, 0x16, 0x94, 0xf6, 0xee, 0xd3, 0x69, 0x7a, 0x7a, 0x1c, 0x2d, 0x50, 0xb6, 0x2, 0xf7, 0x16, 0x4e, 0x66, 0x9f, 0xff, 0x38, 0x91, 0x9b}, stakingGenesis.Validators[2].ConsensusPubkey.Value)
 	require.Equal(t, false, stakingGenesis.Validators[2].Jailed)
 	require.Equal(t, "BOND_STATUS_UNBONDED", stakingGenesis.Validators[2].Status.String())
 	require.Equal(t, "1000", stakingGenesis.Validators[2].Tokens.String())

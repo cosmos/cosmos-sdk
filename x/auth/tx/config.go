@@ -18,18 +18,18 @@ type config struct {
 	encoder     sdk.TxEncoder
 	jsonDecoder sdk.TxDecoder
 	jsonEncoder sdk.TxEncoder
-	protoCodec  *codec.ProtoCodec
+	protoCodec  codec.ProtoCodecMarshaler
 }
 
 // NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and sign modes. The
 // first enabled sign mode will become the default sign mode.
-func NewTxConfig(protoCodec *codec.ProtoCodec, enabledSignModes []signingtypes.SignMode) client.TxConfig {
+func NewTxConfig(protoCodec codec.ProtoCodecMarshaler, enabledSignModes []signingtypes.SignMode) client.TxConfig {
 	return &config{
 		handler:     makeSignModeHandler(enabledSignModes),
 		decoder:     DefaultTxDecoder(protoCodec),
 		encoder:     DefaultTxEncoder(),
 		jsonDecoder: DefaultJSONTxDecoder(protoCodec),
-		jsonEncoder: DefaultJSONTxEncoder(),
+		jsonEncoder: DefaultJSONTxEncoder(protoCodec),
 		protoCodec:  protoCodec,
 	}
 }

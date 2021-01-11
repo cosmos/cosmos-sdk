@@ -33,7 +33,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	require.NoError(b, err)
 
 	benchmarkApp.Commit()
-	txGen := simappparams.MakeEncodingConfig().TxConfig
+	txGen := simappparams.MakeTestEncodingConfig().TxConfig
 
 	// Precompute all txs
 	txs, err := simapp.GenSequenceOfTxs(txGen, []sdk.Msg{sendMsg1}, []uint64{0}, []uint64{uint64(0)}, b.N, priv1)
@@ -46,12 +46,12 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	// Committing, and what time comes from Check/Deliver Tx.
 	for i := 0; i < b.N; i++ {
 		benchmarkApp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height}})
-		_, _, err := benchmarkApp.Check(txs[i])
+		_, _, err := benchmarkApp.Check(txGen.TxEncoder(), txs[i])
 		if err != nil {
 			panic("something is broken in checking transaction")
 		}
 
-		_, _, err = benchmarkApp.Deliver(txs[i])
+		_, _, err = benchmarkApp.Deliver(txGen.TxEncoder(), txs[i])
 		require.NoError(b, err)
 		benchmarkApp.EndBlock(abci.RequestEndBlock{Height: height})
 		benchmarkApp.Commit()
@@ -75,7 +75,7 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	require.NoError(b, err)
 
 	benchmarkApp.Commit()
-	txGen := simappparams.MakeEncodingConfig().TxConfig
+	txGen := simappparams.MakeTestEncodingConfig().TxConfig
 
 	// Precompute all txs
 	txs, err := simapp.GenSequenceOfTxs(txGen, []sdk.Msg{multiSendMsg1}, []uint64{0}, []uint64{uint64(0)}, b.N, priv1)
@@ -88,12 +88,12 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	// Committing, and what time comes from Check/Deliver Tx.
 	for i := 0; i < b.N; i++ {
 		benchmarkApp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height}})
-		_, _, err := benchmarkApp.Check(txs[i])
+		_, _, err := benchmarkApp.Check(txGen.TxEncoder(), txs[i])
 		if err != nil {
 			panic("something is broken in checking transaction")
 		}
 
-		_, _, err = benchmarkApp.Deliver(txs[i])
+		_, _, err = benchmarkApp.Deliver(txGen.TxEncoder(), txs[i])
 		require.NoError(b, err)
 		benchmarkApp.EndBlock(abci.RequestEndBlock{Height: height})
 		benchmarkApp.Commit()

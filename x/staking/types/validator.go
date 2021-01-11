@@ -8,12 +8,12 @@ import (
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/encoding"
-	tmtypes "github.com/tendermint/tendermint/types"
+	tmprotocrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 	"gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -39,15 +39,15 @@ var _ ValidatorI = Validator{}
 
 // NewValidator constructs a new Validator
 //nolint:interfacer
-func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Description) Validator {
-	var pkStr string
-	if pubKey != nil {
-		pkStr = sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pubKey)
+func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, description Description) (Validator, error) {
+	pkAny, err := codectypes.NewAnyWithValue(pubKey)
+	if err != nil {
+		return Validator{}, err
 	}
 
 	return Validator{
 		OperatorAddress:   operator.String(),
-		ConsensusPubkey:   pkStr,
+		ConsensusPubkey:   pkAny,
 		Jailed:            false,
 		Status:            Unbonded,
 		Tokens:            sdk.ZeroInt(),
@@ -57,7 +57,7 @@ func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Des
 		UnbondingTime:     time.Unix(0, 0).UTC(),
 		Commission:        NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 		MinSelfDelegation: sdk.OneInt(),
-	}
+	}, nil
 }
 
 // String implements the Stringer interface for a Validator object.
@@ -77,20 +77,10 @@ func (v Validators) String() (out string) {
 	return strings.TrimSpace(out)
 }
 
-// ToSDKValidators -  convenience function convert []Validators to []sdk.Validators
+// ToSDKValidators -  convenience function convert []Validator to []sdk.ValidatorI
 func (v Validators) ToSDKValidators() (validators []ValidatorI) {
 	for _, val := range v {
 		validators = append(validators, val)
-	}
-
-	return validators
-}
-
-// ToTmValidators casts all validators to the corresponding tendermint type.
-func (v Validators) ToTmValidators() []*tmtypes.Validator {
-	validators := make([]*tmtypes.Validator, len(v))
-	for i, val := range v {
-		validators[i] = val.ToTmValidator()
 	}
 
 	return validators
@@ -118,9 +108,44 @@ func (v Validators) Swap(i, j int) {
 	v[j] = it
 }
 
+// ValidatorsByVotingPower implements sort.Interface for []Validator based on
+// the VotingPower and Address fields.
+// The validators are sorted first by their voting power (descending). Secondary index - Address (ascending).
+// Copied from tendermint/types/validator_set.go
+type ValidatorsByVotingPower []Validator
+
+func (valz ValidatorsByVotingPower) Len() int { return len(valz) }
+
+func (valz ValidatorsByVotingPower) Less(i, j int) bool {
+	if valz[i].ConsensusPower() == valz[j].ConsensusPower() {
+		addrI, errI := valz[i].GetConsAddr()
+		addrJ, errJ := valz[j].GetConsAddr()
+		// If either returns error, then return false
+		if errI != nil || errJ != nil {
+			return false
+		}
+		return bytes.Compare(addrI, addrJ) == -1
+	}
+	return valz[i].ConsensusPower() > valz[j].ConsensusPower()
+}
+
+func (valz ValidatorsByVotingPower) Swap(i, j int) {
+	valz[i], valz[j] = valz[j], valz[i]
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (v Validators) UnpackInterfaces(c codectypes.AnyUnpacker) error {
+	for i := range v {
+		if err := v[i].UnpackInterfaces(c); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // return the redelegation
-func MustMarshalValidator(cdc codec.BinaryMarshaler, validator Validator) []byte {
-	return cdc.MustMarshalBinaryBare(&validator)
+func MustMarshalValidator(cdc codec.BinaryMarshaler, validator *Validator) []byte {
+	return cdc.MustMarshalBinaryBare(validator)
 }
 
 // unmarshal a redelegation from a store value
@@ -233,13 +258,13 @@ func (d Description) EnsureLength() (Description, error) {
 // ABCIValidatorUpdate returns an abci.ValidatorUpdate from a staking validator type
 // with the full validator power
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
-	pk, err := encoding.PubKeyToProto(v.GetConsPubKey())
+	tmProtoPk, err := v.TmConsPublicKey()
 	if err != nil {
 		panic(err)
 	}
 
 	return abci.ValidatorUpdate{
-		PubKey: pk,
+		PubKey: tmProtoPk,
 		Power:  v.ConsensusPower(),
 	}
 }
@@ -247,20 +272,15 @@ func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 // ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staking validator type
 // with zero power used for validator updates.
 func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
-	pk, err := encoding.PubKeyToProto(v.GetConsPubKey())
+	tmProtoPk, err := v.TmConsPublicKey()
 	if err != nil {
 		panic(err)
 	}
 
 	return abci.ValidatorUpdate{
-		PubKey: pk,
+		PubKey: tmProtoPk,
 		Power:  0,
 	}
-}
-
-// ToTmValidator casts an SDK validator to a tendermint type Validator.
-func (v Validator) ToTmValidator() *tmtypes.Validator {
-	return tmtypes.NewValidator(v.GetConsPubKey(), v.ConsensusPower())
 }
 
 // SetInitialCommission attempts to set a validator's initial commission. An
@@ -327,8 +347,8 @@ func (v Validator) BondedTokens() sdk.Int {
 	return sdk.ZeroInt()
 }
 
-// get the consensus-engine power
-// a reduction of 10^6 from validator tokens is applied
+// ConsensusPower gets the consensus-engine power. Aa reduction of 10^6 from
+// validator tokens is applied
 func (v Validator) ConsensusPower() int64 {
 	if v.IsBonded() {
 		return v.PotentialConsensusPower()
@@ -337,7 +357,7 @@ func (v Validator) ConsensusPower() int64 {
 	return 0
 }
 
-// potential consensus-engine power
+// PotentialConsensusPower returns the potential consensus-engine power.
 func (v Validator) PotentialConsensusPower() int64 {
 	return sdk.TokensToConsensusPower(v.Tokens)
 }
@@ -415,14 +435,24 @@ func (v Validator) RemoveDelShares(delShares sdk.Dec) (Validator, sdk.Int) {
 
 // MinEqual defines a more minimum set of equality conditions when comparing two
 // validators.
-func (v Validator) MinEqual(other Validator) bool {
-	return v.ConsensusPubkey == other.ConsensusPubkey &&
-		(v.OperatorAddress == other.OperatorAddress) &&
+func (v *Validator) MinEqual(other *Validator) bool {
+	return v.OperatorAddress == other.OperatorAddress &&
 		v.Status == other.Status &&
 		v.Tokens.Equal(other.Tokens) &&
 		v.DelegatorShares.Equal(other.DelegatorShares) &&
-		v.Description == other.Description &&
-		v.Commission.Equal(other.Commission)
+		v.Description.Equal(other.Description) &&
+		v.Commission.Equal(other.Commission) &&
+		v.Jailed == other.Jailed &&
+		v.MinSelfDelegation.Equal(other.MinSelfDelegation) &&
+		v.ConsensusPubkey.Equal(other.ConsensusPubkey)
+
+}
+
+// Equal checks if the receiver equals the parameter
+func (v *Validator) Equal(v2 *Validator) bool {
+	return v.MinEqual(v2) &&
+		v.UnbondingHeight == v2.UnbondingHeight &&
+		v.UnbondingTime.Equal(v2.UnbondingTime)
 }
 
 func (v Validator) IsJailed() bool        { return v.Jailed }
@@ -438,24 +468,52 @@ func (v Validator) GetOperator() sdk.ValAddress {
 	}
 	return addr
 }
-func (v Validator) GetConsPubKey() crypto.PubKey {
-	// The way things are refactored now, v.ConsensusPubkey is sometimes a TM
-	// ed25519 pubkey, sometimes our own ed25519 pubkey. This is very ugly and
-	// inconsistent.
-	// Luckily, here we coerce it into a TM ed25519 pubkey always, as this
-	// pubkey will be passed into TM (eg calling encoding.PubKeyToProto).
-	pk := sdk.MustGetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, v.ConsensusPubkey)
 
-	if intoTmPk, ok := pk.(cryptotypes.IntoTmPubKey); ok {
-		return intoTmPk.AsTmPubKey()
+// ConsPubKey returns the validator PubKey as a cryptotypes.PubKey.
+func (v Validator) ConsPubKey() (cryptotypes.PubKey, error) {
+	pk, ok := v.ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", pk)
 	}
 
-	return pk
+	return pk, nil
+
 }
-func (v Validator) GetConsAddr() sdk.ConsAddress  { return sdk.ConsAddress(v.GetConsPubKey().Address()) }
+
+// TmConsPublicKey casts Validator.ConsensusPubkey to tmprotocrypto.PubKey.
+func (v Validator) TmConsPublicKey() (tmprotocrypto.PublicKey, error) {
+	pk, err := v.ConsPubKey()
+	if err != nil {
+		return tmprotocrypto.PublicKey{}, err
+	}
+
+	tmPk, err := cryptocodec.ToTmProtoPublicKey(pk)
+	if err != nil {
+		return tmprotocrypto.PublicKey{}, err
+	}
+
+	return tmPk, nil
+}
+
+// GetConsAddr extracts Consensus key address
+func (v Validator) GetConsAddr() (sdk.ConsAddress, error) {
+	pk, ok := v.ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", pk)
+	}
+
+	return sdk.ConsAddress(pk.Address()), nil
+}
+
 func (v Validator) GetTokens() sdk.Int            { return v.Tokens }
 func (v Validator) GetBondedTokens() sdk.Int      { return v.BondedTokens() }
 func (v Validator) GetConsensusPower() int64      { return v.ConsensusPower() }
 func (v Validator) GetCommission() sdk.Dec        { return v.Commission.Rate }
 func (v Validator) GetMinSelfDelegation() sdk.Int { return v.MinSelfDelegation }
 func (v Validator) GetDelegatorShares() sdk.Dec   { return v.DelegatorShares }
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (v Validator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var pk cryptotypes.PubKey
+	return unpacker.UnpackAny(v.ConsensusPubkey, &pk)
+}

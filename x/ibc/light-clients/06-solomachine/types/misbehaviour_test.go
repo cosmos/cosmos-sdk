@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
@@ -8,10 +9,10 @@ import (
 func (suite *SoloMachineTestSuite) TestMisbehaviour() {
 	misbehaviour := suite.solomachine.CreateMisbehaviour()
 
-	suite.Require().Equal(types.SoloMachine, misbehaviour.ClientType())
+	suite.Require().Equal(exported.Solomachine, misbehaviour.ClientType())
 	suite.Require().Equal(suite.solomachine.ClientID, misbehaviour.GetClientID())
-	suite.Require().Equal(uint64(0), misbehaviour.GetHeight().GetVersionNumber())
-	suite.Require().Equal(suite.solomachine.Sequence, misbehaviour.GetHeight().GetVersionHeight())
+	suite.Require().Equal(uint64(0), misbehaviour.GetHeight().GetRevisionNumber())
+	suite.Require().Equal(suite.solomachine.Sequence, misbehaviour.GetHeight().GetRevisionHeight())
 }
 
 func (suite *SoloMachineTestSuite) TestMisbehaviourValidateBasic() {
@@ -94,6 +95,18 @@ func (suite *SoloMachineTestSuite) TestMisbehaviourValidateBasic() {
 				"data type for SignatureTwo is unspecified",
 				func(misbehaviour *types.Misbehaviour) {
 					misbehaviour.SignatureTwo.DataType = types.UNSPECIFIED
+				}, false,
+			},
+			{
+				"timestamp for SignatureOne is zero",
+				func(misbehaviour *types.Misbehaviour) {
+					misbehaviour.SignatureOne.Timestamp = 0
+				}, false,
+			},
+			{
+				"timestamp for SignatureTwo is zero",
+				func(misbehaviour *types.Misbehaviour) {
+					misbehaviour.SignatureTwo.Timestamp = 0
 				}, false,
 			},
 		}

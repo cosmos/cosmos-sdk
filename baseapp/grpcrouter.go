@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc/encoding/proto"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
-	"github.com/cosmos/cosmos-sdk/client/grpc/simulate"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -54,12 +53,30 @@ func (qrt *GRPCQueryRouter) Route(path string) GRPCQueryHandler {
 }
 
 // RegisterService implements the gRPC Server.RegisterService method. sd is a gRPC
-// service description, handler is an object which implements that gRPC service
+// service description, handler is an object which implements that gRPC service/
+//
+// This functions PANICS:
+// - if a protobuf service is registered twice.
 func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
 	// adds a top-level query handler based on the gRPC service name
 	for _, method := range sd.Methods {
 		fqName := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
 		methodHandler := method.Handler
+
+		// Check that each service is only registered once. If a service is
+		// registered more than once, then we should error. Since we can't
+		// return an error (`Server.RegisterService` interface restriction) we
+		// panic (at startup).
+		_, found := qrt.routes[fqName]
+		if found {
+			panic(
+				fmt.Errorf(
+					"gRPC query service %s has already been registered. Please make sure to only register each service once. "+
+						"This usually means that there are conflicting modules registering the same gRPC query service",
+					fqName,
+				),
+			)
+		}
 
 		qrt.routes[fqName] = func(ctx sdk.Context, req abci.RequestQuery) (abci.ResponseQuery, error) {
 			// call the method handler from the service description with the handler object,
@@ -108,16 +125,5 @@ func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry codectypes.In
 	reflection.RegisterReflectionServiceServer(
 		qrt,
 		reflection.NewReflectionServiceServer(interfaceRegistry),
-	)
-}
-
-// RegisterSimulateService registers the simulate service on the gRPC router.
-func (qrt *GRPCQueryRouter) RegisterSimulateService(
-	simulateFn simulate.BaseAppSimulateFn,
-	interfaceRegistry codectypes.InterfaceRegistry,
-) {
-	simulate.RegisterSimulateServiceServer(
-		qrt,
-		simulate.NewSimulateServer(simulateFn, interfaceRegistry),
 	)
 }

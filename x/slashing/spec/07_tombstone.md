@@ -15,18 +15,18 @@ and evidence of the infraction reaching the state machine (this is one of the
 primary reasons for the existence of the unbonding period).
 
 > Note: The tombstone concept, only applies to faults that have a delay between
-the infraction occurring and evidence reaching the state machine. For example,
-evidence of a validator double signing may take a while to reach the state machine
-due to unpredictable evidence gossip layer delays and the ability of validators to
-selectively reveal double-signatures (e.g. to infrequently-online light clients).
-Liveness slashing, on the other hand, is detected immediately as soon as the
-infraction occurs, and therefore no slashing period is needed. A validator is
-immediately put into jail period, and they cannot commit another liveness fault
-until they unjail. In the future, there may be other types of byzantine faults
-that have delays (for example, submitting evidence of an invalid proposal as a transaction).
-When implemented, it will have to be decided whether these future types of
-byzantine faults will result in a tombstoning (and if not, the slash amounts
-will not be capped by a slashing period).
+> the infraction occurring and evidence reaching the state machine. For example,
+> evidence of a validator double signing may take a while to reach the state machine
+> due to unpredictable evidence gossip layer delays and the ability of validators to
+> selectively reveal double-signatures (e.g. to infrequently-online light clients).
+> Liveness slashing, on the other hand, is detected immediately as soon as the
+> infraction occurs, and therefore no slashing period is needed. A validator is
+> immediately put into jail period, and they cannot commit another liveness fault
+> until they unjail. In the future, there may be other types of byzantine faults
+> that have delays (for example, submitting evidence of an invalid proposal as a transaction).
+> When implemented, it will have to be decided whether these future types of
+> byzantine faults will result in a tombstoning (and if not, the slash amounts
+> will not be capped by a slashing period).
 
 In the current system design, once a validator is put in the jail for a consensus
 fault, after the `JailPeriod` they are allowed to send a transaction to `unjail`
@@ -72,10 +72,10 @@ As the number of slashing periods increase, it creates more complexity as we hav
 to keep track of the highest infraction amount for every single slashing period.
 
 > Note: Currently, according to the `slashing` module spec, a new slashing period
-is created every time a validator is unbonded then rebonded. This should probably
-be changed to jailed/unjailed. See issue [#3205](https://github.com/cosmos/cosmos-sdk/issues/3205)
-for further details. For the remainder of this, I will assume that we only start
-a new slashing period when a validator gets unjailed.
+> is created every time a validator is unbonded then rebonded. This should probably
+> be changed to jailed/unjailed. See issue [#3205](https://github.com/cosmos/cosmos-sdk/issues/3205)
+> for further details. For the remainder of this, I will assume that we only start
+> a new slashing period when a validator gets unjailed.
 
 The maximum number of slashing periods is the `len(UnbondingPeriod) / len(JailPeriod)`.
 The current defaults in Gaia for the `UnbondingPeriod` and `JailPeriod` are 3 weeks
@@ -85,7 +85,7 @@ we only have to track 1 slashing period (i.e not have to track slashing periods)
 
 Currently, in the jail period implementation, once a validator unjails, all of
 their delegators who are delegated to them (haven't unbonded / redelegated away),
-stay with them.  Given that consensus safety faults are so egregious
+stay with them. Given that consensus safety faults are so egregious
 (way more so than liveness faults), it is probably prudent to have delegators not
 "auto-rebond" to the validator. Thus, we propose setting the "jail time" for a
 validator who commits a consensus safety fault, to `infinite` (i.e. a tombstone state).
@@ -93,7 +93,7 @@ This essentially kicks the validator out of the validator set and does not allow
 them to re-enter the validator set. All of their delegators (including the operator themselves)
 have to either unbond or redelegate away. The validator operator can create a new
 validator if they would like, with a new operator key and consensus key, but they
-have to "re-earn" their delegations back.  To put the validator in the tombstone
+have to "re-earn" their delegations back. To put the validator in the tombstone
 state, we set `DoubleSignJailEndTime` to `time.Unix(253402300800)`, the maximum
 time supported by Amino.
 
@@ -106,7 +106,7 @@ of the hooks defined in the `slashing` module consumed by the `staking` module
 
 Another optimization that can be made is that if we assume that all ABCI faults
 for Tendermint consensus are slashed at the same level, we don't have to keep
-track of "max slash".  Once an ABCI fault happens, we don't have to worry about
+track of "max slash". Once an ABCI fault happens, we don't have to worry about
 comparing potential future ones to find the max.
 
 Currently the only Tendermint ABCI fault is:
@@ -121,5 +121,5 @@ Given that these faults are both attributable byzantine faults, we will likely
 want to slash them equally, and thus we can enact the above change.
 
 > Note: This change may make sense for current Tendermint consensus, but maybe
-not for a different consensus algorithm or future versions of Tendermint that
-may want to punish at different levels (for example, partial slashing).
+> not for a different consensus algorithm or future versions of Tendermint that
+> may want to punish at different levels (for example, partial slashing).

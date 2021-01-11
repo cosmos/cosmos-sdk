@@ -33,7 +33,17 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 		)
 	}
 
-	if reflect.DeepEqual(cs.ConsensusState.GetPubKey(), smHeader.GetPubKey()) {
+	consensusPublicKey, err := cs.ConsensusState.GetPubKey()
+	if err != nil {
+		return nil, nil, sdkerrors.Wrap(err, "failed to get consensus public key")
+	}
+
+	headerPublicKey, err := smHeader.GetPubKey()
+	if err != nil {
+		return nil, nil, sdkerrors.Wrap(err, "failed to get header public key")
+	}
+
+	if reflect.DeepEqual(consensusPublicKey, headerPublicKey) {
 		return nil, nil, sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader, "new public key in header equals current public key",
 		)

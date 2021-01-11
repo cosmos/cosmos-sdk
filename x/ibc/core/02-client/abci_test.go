@@ -8,6 +8,7 @@ import (
 	client "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
+	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/09-localhost/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -25,6 +26,13 @@ func (suite *ClientTestSuite) SetupTest() {
 
 	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
 	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
+
+	// set localhost client
+	revision := types.ParseChainID(suite.chainA.GetContext().ChainID())
+	localHostClient := localhosttypes.NewClientState(
+		suite.chainA.GetContext().ChainID(), types.NewHeight(revision, uint64(suite.chainA.GetContext().BlockHeight())),
+	)
+	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), exported.Localhost, localHostClient)
 }
 
 func TestClientTestSuite(t *testing.T) {

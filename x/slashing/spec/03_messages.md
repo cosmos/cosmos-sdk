@@ -9,15 +9,21 @@ In this section we describe the processing of messages for the `slashing` module
 ## Unjail
 
 If a validator was automatically unbonded due to downtime and wishes to come back online &
-possibly rejoin the bonded set, it must send `TxUnjail`:
+possibly rejoin the bonded set, it must send `MsgUnjail`:
+
+```protobuf
+// MsgUnjail is an sdk.Msg used for unjailing a jailed validator, thus returning
+// them into the bonded validator set, so they can begin receiving provisions
+// and rewards again.
+message MsgUnjail {
+  string validator_addr = 1;
+}
+```
+
+And below is its corresponding handler:
 
 ```
-type TxUnjail struct {
-    ValidatorAddr sdk.AccAddress
-}
-
-handleMsgUnjail(tx TxUnjail)
-
+handleMsgUnjail(tx MsgUnjail)
     validator = getValidator(tx.ValidatorAddr)
     if validator == nil
       fail with "No validator found"

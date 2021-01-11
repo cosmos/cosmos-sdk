@@ -4,13 +4,12 @@ import (
 	"io"
 	"testing"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/internal/benchmarking"
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 func BenchmarkKeyGeneration(b *testing.B) {
-	benchmarkKeygenWrapper := func(reader io.Reader) crypto.PrivKey {
+	benchmarkKeygenWrapper := func(reader io.Reader) types.PrivKey {
 		priv := genPrivKey(reader)
 		return &PrivKey{Key: priv}
 	}

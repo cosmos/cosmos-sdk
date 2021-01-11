@@ -34,8 +34,7 @@ func GetCurrentPlanCmd() *cobra.Command {
 		Long:  "Gets the currently scheduled upgrade plan, if one exists",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -47,11 +46,11 @@ func GetCurrentPlanCmd() *cobra.Command {
 				return err
 			}
 
-			if len(res.Plan.Name) == 0 {
+			if res.Plan == nil {
 				return fmt.Errorf("no upgrade scheduled")
 			}
 
-			return clientCtx.PrintOutput(res.GetPlan())
+			return clientCtx.PrintProto(res.GetPlan())
 		},
 	}
 
@@ -70,8 +69,7 @@ func GetAppliedPlanCmd() *cobra.Command {
 			"This helps a client determine which binary was valid over a given range of blocks, as well as more context to understand past migrations.",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}

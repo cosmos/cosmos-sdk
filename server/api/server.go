@@ -26,9 +26,9 @@ import (
 
 // Server defines the server's API interface.
 type Server struct {
-	Router     *mux.Router
-	GRPCRouter *runtime.ServeMux
-	ClientCtx  client.Context
+	Router            *mux.Router
+	GRPCGatewayRouter *runtime.ServeMux
+	ClientCtx         client.Context
 
 	logger   log.Logger
 	metrics  *telemetry.Metrics
@@ -56,13 +56,14 @@ func New(clientCtx client.Context, logger log.Logger) *Server {
 		EmitDefaults: true,
 		Indent:       "  ",
 		OrigName:     true,
+		AnyResolver:  clientCtx.InterfaceRegistry,
 	}
 
 	return &Server{
 		Router:    mux.NewRouter(),
 		ClientCtx: clientCtx,
 		logger:    logger,
-		GRPCRouter: runtime.NewServeMux(
+		GRPCGatewayRouter: runtime.NewServeMux(
 			// Custom marshaler option is required for gogo proto
 			runtime.WithMarshalerOption(runtime.MIMEWildcard, marshalerOption),
 
@@ -103,7 +104,7 @@ func (s *Server) Start(cfg config.Config) error {
 		return err
 	}
 
-	s.registerGRPCRoutes()
+	s.registerGRPCGatewayRoutes()
 
 	s.listener = listener
 	var h http.Handler = s.Router
@@ -122,8 +123,8 @@ func (s *Server) Close() error {
 	return s.listener.Close()
 }
 
-func (s *Server) registerGRPCRoutes() {
-	s.Router.PathPrefix("/").Handler(s.GRPCRouter)
+func (s *Server) registerGRPCGatewayRoutes() {
+	s.Router.PathPrefix("/").Handler(s.GRPCGatewayRouter)
 }
 
 func (s *Server) registerMetrics() {

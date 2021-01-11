@@ -56,36 +56,37 @@ func defaultIdentifierValidator(id string, min, max int) error { //nolint:unpara
 }
 
 // ClientIdentifierValidator is the default validator function for Client identifiers.
-// A valid Identifier must be between 9-20 characters and only contain lowercase
-// alphabetic characters,
+// A valid Identifier must be between 9-64 characters and only contain alphanumeric and some allowed
+// special characters (see IsValidID).
 func ClientIdentifierValidator(id string) error {
 	return defaultIdentifierValidator(id, 9, DefaultMaxCharacterLength)
 }
 
 // ConnectionIdentifierValidator is the default validator function for Connection identifiers.
-// A valid Identifier must be between 10-20 characters and only contain lowercase
-// alphabetic characters,
+// A valid Identifier must be between 10-64 characters and only contain alphanumeric and some allowed
+// special characters (see IsValidID).
 func ConnectionIdentifierValidator(id string) error {
 	return defaultIdentifierValidator(id, 10, DefaultMaxCharacterLength)
 }
 
 // ChannelIdentifierValidator is the default validator function for Channel identifiers.
-// A valid Identifier must be between 10-20 characters and only contain lowercase
-// alphabetic characters,
+// A valid Identifier must be between 8-64 characters and only contain alphanumeric and some allowed
+// special characters (see IsValidID).
 func ChannelIdentifierValidator(id string) error {
-	return defaultIdentifierValidator(id, 10, DefaultMaxCharacterLength)
+	return defaultIdentifierValidator(id, 8, DefaultMaxCharacterLength)
 }
 
 // PortIdentifierValidator is the default validator function for Port identifiers.
-// A valid Identifier must be between 2-20 characters and only contain lowercase
-// alphabetic characters,
+// A valid Identifier must be between 2-64 characters and only contain alphanumeric and some allowed
+// special characters (see IsValidID).
 func PortIdentifierValidator(id string) error {
 	return defaultIdentifierValidator(id, 2, DefaultMaxCharacterLength)
 }
 
 // NewPathValidator takes in a Identifier Validator function and returns
-// a Path Validator function which requires path only has valid identifiers
-// alphanumeric character strings, and "/" separators
+// a Path Validator function which requires path to consist of `/`-separated valid identifiers,
+// where a valid identifier is between 1-64 characters, contains only alphanumeric and some allowed
+// special characters (see IsValidID), and satisfies the custom `idValidator` function.
 func NewPathValidator(idValidator ValidateFn) ValidateFn {
 	return func(path string) error {
 		pathArr := strings.Split(path, "/")
@@ -110,27 +111,4 @@ func NewPathValidator(idValidator ValidateFn) ValidateFn {
 
 		return nil
 	}
-}
-
-// PathValidator takes in path string and validates with default identifier rules.
-// This is optimized by simply checking that all path elements are alphanumeric.
-func PathValidator(path string) error {
-	pathArr := strings.Split(path, "/")
-	if len(pathArr) > 0 && pathArr[0] == path {
-		return sdkerrors.Wrapf(ErrInvalidPath, "path %s doesn't contain any separator '/'", path)
-	}
-
-	for _, p := range pathArr {
-		// a path beginning or ending in a separator returns empty string elements.
-		if p == "" {
-			return sdkerrors.Wrapf(ErrInvalidPath, "path %s cannot begin or end with '/'", path)
-		}
-
-		// Each path element must be a valid identifier or constant number
-		if err := defaultIdentifierValidator(p, 1, DefaultMaxCharacterLength); err != nil {
-			return sdkerrors.Wrapf(err, "path %s contains an invalid identifier: '%s'", path, p)
-		}
-	}
-
-	return nil
 }

@@ -19,6 +19,8 @@ func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
 	return rs, nil
 }
 
+// VerifySignature validates the signature.
+// The msg will be hashed prior to signature verification.
 func (pubKey *PrivKey) VerifySignature(msg []byte, sig []byte) bool {
 	return secp256k1.VerifySignature(pubKey.Key, crypto.Sha256(msg), sig)
 }

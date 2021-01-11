@@ -3,15 +3,14 @@ package keeper_test
 import (
 	"encoding/hex"
 	"fmt"
-	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -19,10 +18,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 var (
-	pubkeys = []crypto.PubKey{
+	pubkeys = []cryptotypes.PubKey{
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB50"),
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB51"),
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52"),
@@ -38,7 +38,7 @@ var (
 	initCoins = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 )
 
-func newPubKey(pk string) (res crypto.PubKey) {
+func newPubKey(pk string) (res cryptotypes.PubKey) {
 	pkBytes, err := hex.DecodeString(pk)
 	if err != nil {
 		panic(err)
@@ -49,7 +49,7 @@ func newPubKey(pk string) (res crypto.PubKey) {
 	return pubkey
 }
 
-func testEquivocationHandler(k interface{}) types.Handler {
+func testEquivocationHandler(_ interface{}) types.Handler {
 	return func(ctx sdk.Context, e exported.Evidence) error {
 		if err := e.ValidateBasic(); err != nil {
 			return err
@@ -75,6 +75,7 @@ type KeeperTestSuite struct {
 	app     *simapp.SimApp
 
 	queryClient types.QueryClient
+	stakingHdl  sdk.Handler
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -103,6 +104,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.EvidenceKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
+	suite.stakingHdl = staking.NewHandler(app.StakingKeeper)
 }
 
 func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int) []exported.Evidence {
@@ -207,8 +209,4 @@ func (suite *KeeperTestSuite) TestGetEvidenceHandler() {
 	handler, err = suite.app.EvidenceKeeper.GetEvidenceHandler("invalidHandler")
 	suite.Error(err)
 	suite.Nil(handler)
-}
-
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
 }

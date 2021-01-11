@@ -1,9 +1,8 @@
 package types
 
 import (
-	"github.com/tendermint/tendermint/crypto"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -25,5 +24,5 @@ var (
 	valAddr3     = sdk.ValAddress(valPk3.Address())
 	emptyValAddr sdk.ValAddress
 
-	emptyPubkey crypto.PubKey
+	emptyPubkey cryptotypes.PubKey
 )

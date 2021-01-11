@@ -44,7 +44,7 @@ func NewKeeper(
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // RegisterRoute register the routes for each of the invariants
@@ -58,7 +58,7 @@ func (k Keeper) Routes() []types.InvarRoute {
 	return k.routes
 }
 
-// Invariants returns all the registered Crisis keeper invariants.
+// Invariants returns a copy of all registered Crisis keeper invariants.
 func (k Keeper) Invariants() []sdk.Invariant {
 	invars := make([]sdk.Invariant, len(k.routes))
 	for i, route := range k.routes {
@@ -74,8 +74,9 @@ func (k Keeper) AssertInvariants(ctx sdk.Context) {
 
 	start := time.Now()
 	invarRoutes := k.Routes()
-
-	for _, ir := range invarRoutes {
+	n := len(invarRoutes)
+	for i, ir := range invarRoutes {
+		logger.Info("asserting crisis invariants", "inv", fmt.Sprint(i, "/", n))
 		if res, stop := ir.Invar(ctx); stop {
 			// TODO: Include app name as part of context to allow for this to be
 			// variable.
@@ -85,9 +86,7 @@ func (k Keeper) AssertInvariants(ctx sdk.Context) {
 		}
 	}
 
-	end := time.Now()
-	diff := end.Sub(start)
-
+	diff := time.Since(start)
 	logger.Info("asserted all invariants", "duration", diff, "height", ctx.BlockHeight())
 }
 

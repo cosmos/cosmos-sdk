@@ -29,24 +29,22 @@ func NewTransferTxCmd() *cobra.Command {
 		Short: "Transfer a fungible token through IBC",
 		Long: strings.TrimSpace(`Transfer a fungible token through IBC. Timeouts can be specified
 as absolute or relative using the "absolute-timeouts" flag. Timeout height can be set by passing in the height string
-in the form {version}-{height} using the "packet-timeout-height" flag. Relative timeouts are added to
+in the form {revision}-{height} using the "packet-timeout-height" flag. Relative timeouts are added to
 the block height and block timestamp queried from the latest consensus state corresponding
 to the counterparty channel. Any timeout set to 0 is disabled.`),
 		Example: fmt.Sprintf("%s tx ibc-transfer transfer [src-port] [src-channel] [receiver] [amount]", version.AppName),
 		Args:    cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			sender := clientCtx.GetFromAddress()
 			srcPort := args[0]
 			srcChannel := args[1]
 			receiver := args[2]
 
-			coin, err := sdk.ParseCoin(args[3])
+			coin, err := sdk.ParseCoinNormalized(args[3])
 			if err != nil {
 				return err
 			}
@@ -85,8 +83,8 @@ to the counterparty channel. Any timeout set to 0 is disabled.`),
 
 				if !timeoutHeight.IsZero() {
 					absoluteHeight := height
-					absoluteHeight.VersionNumber += timeoutHeight.VersionNumber
-					absoluteHeight.VersionHeight += timeoutHeight.VersionHeight
+					absoluteHeight.RevisionNumber += timeoutHeight.RevisionNumber
+					absoluteHeight.RevisionHeight += timeoutHeight.RevisionHeight
 					timeoutHeight = absoluteHeight
 				}
 

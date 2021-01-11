@@ -29,10 +29,6 @@ var (
 	addr2 = sdk.AccAddress(pk2.Address())
 	desc  = stakingtypes.NewDescription("testname", "", "", "", "")
 	comm  = stakingtypes.CommissionRates{}
-	msg1  = stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk1.Address()), pk1,
-		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt())
-	msg2 = stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk2.Address()), pk1,
-		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt())
 )
 
 // GenTxTestSuite is a test suite to be used with gentx tests.
@@ -42,6 +38,8 @@ type GenTxTestSuite struct {
 	ctx            sdk.Context
 	app            *simapp.SimApp
 	encodingConfig simappparams.EncodingConfig
+
+	msg1, msg2 *stakingtypes.MsgCreateValidator
 }
 
 func (suite *GenTxTestSuite) SetupTest() {
@@ -49,8 +47,17 @@ func (suite *GenTxTestSuite) SetupTest() {
 	app := simapp.Setup(checkTx)
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{})
 	suite.app = app
+	suite.encodingConfig = simapp.MakeTestEncodingConfig()
 
-	suite.encodingConfig = simapp.MakeEncodingConfig()
+	var err error
+	amount := sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)
+	one := sdk.OneInt()
+	suite.msg1, err = stakingtypes.NewMsgCreateValidator(
+		sdk.ValAddress(pk1.Address()), pk1, amount, desc, comm, one)
+	suite.NoError(err)
+	suite.msg2, err = stakingtypes.NewMsgCreateValidator(
+		sdk.ValAddress(pk2.Address()), pk1, amount, desc, comm, one)
+	suite.NoError(err)
 }
 
 func (suite *GenTxTestSuite) setAccountBalance(addr sdk.AccAddress, amount int64) json.RawMessage {
@@ -83,7 +90,7 @@ func (suite *GenTxTestSuite) TestSetGenTxsInAppGenesisState() {
 		{
 			"one genesis transaction",
 			func() {
-				err := txBuilder.SetMsgs(msg1)
+				err := txBuilder.SetMsgs(suite.msg1)
 				suite.Require().NoError(err)
 				tx := txBuilder.GetTx()
 				genTxs = []sdk.Tx{tx}
@@ -93,7 +100,7 @@ func (suite *GenTxTestSuite) TestSetGenTxsInAppGenesisState() {
 		{
 			"two genesis transactions",
 			func() {
-				err := txBuilder.SetMsgs(msg1, msg2)
+				err := txBuilder.SetMsgs(suite.msg1, suite.msg2)
 				suite.Require().NoError(err)
 				tx := txBuilder.GetTx()
 				genTxs = []sdk.Tx{tx}
@@ -211,7 +218,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 		{
 			"no signature supplied",
 			func() {
-				err := txBuilder.SetMsgs(msg1)
+				err := txBuilder.SetMsgs(suite.msg1)
 				suite.Require().NoError(err)
 
 				genTxs = make([]json.RawMessage, 1)

@@ -89,7 +89,7 @@ func (cmgr *CommitKVStoreCacheManager) Reset() {
 	}
 }
 
-// CacheWrap returns the inter-block cache as a cache-wrapped CommitKVStore.
+// CacheWrap implements the CacheWrapper interface
 func (ckv *CommitKVStoreCache) CacheWrap() types.CacheWrap {
 	return cachekv.NewStore(ckv)
 }

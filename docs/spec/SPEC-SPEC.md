@@ -19,33 +19,28 @@ element as a part of a larger description.
 
 ## Common Layout
 
-The specifications should be contained in a single `README.md` file inside the
-`spec/` folder of a given module.
+The following generalized file structure should be used to breakdown
+specifications for modules. With the exception of README.md, `XX` at the
+beginning of the file name should be replaced with a number to indicate
+document flow (ex. read `01_state.md` before `02_state_transitions.md`). The
+following list is nonbinding and all files are optional.
 
-The following generalized document structure should be used to breakdown
-specifications for modules. Each bullet item corresponds to a new section in
-the document, and should begin with a secondary heading (`## {HEADING}` in
-Markdown). The `XX` at the beginning of the section name should be replaced
-with a number to indicate document flow (ex. read `01. Concepts` before
-`02. State Transitions`). The following list is nonbinding and all sections are
-optional.
-
-- `XX. Abstract` - overview of the module
-- `XX. Concepts` - describe specialized concepts and definitions used throughout the spec
-- `XX. State` - specify and describe structures expected to marshalled into the store, and their keys
-- `XX. State Transitions` - standard state transition operations triggered by hooks, messages, etc.
-- `XX. Messages` - specify message structure(s) and expected state machine behaviour(s)
-- `XX. BeginBlock` - specify any begin-block operations
-- `XX. EndBlock` - specify any end-block operations
-- `XX. Hooks` - describe available hooks to be called by/from this module
-- `XX. Events` - list and describe event tags used
-- `XX. Params` - list all module parameters, their types (in JSON) and examples
-- `XX. Future Improvements` - describe future improvements of this module
-- `XX. Appendix` - supplementary details referenced elsewhere within the spec
+- `README.md` - overview of the module
+- `XX_concepts.md` - describe specialized concepts and definitions used throughout the spec
+- `XX_state.md` - specify and describe structures expected to marshalled into the store, and their keys
+- `XX_state_transitions.md` - standard state transition operations triggered by hooks, messages, etc.
+- `XX_messages.md` - specify message structure(s) and expected state machine behaviour(s)
+- `XX_begin_block.md` - specify any begin-block operations
+- `XX_end_block.md` - specify any end-block operations
+- `XX_hooks.md` - describe available hooks to be called by/from this module
+- `XX_events.md` - list and describe event tags used
+- `XX_params.md` - list all module parameters, their types (in JSON) and examples
+- `XX_future_improvements.md` - describe future improvements of this module
+- `XX_appendix.md` - supplementary details referenced elsewhere within the spec
 
 ### Notation for key-value mapping
 
-Within the `State` section, the following notation `->` should be used to describe key to
+Within `state.md` the following notation `->` should be used to describe key to
 value mapping:
 
 ```

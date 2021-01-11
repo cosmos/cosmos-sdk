@@ -62,7 +62,7 @@ func (suite *KeeperTestSuite) TestQueryChannel() {
 		{
 			"success",
 			func() {
-				_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 				// init channel
 				channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
 				suite.Require().NoError(err)
@@ -377,7 +377,7 @@ func (suite *KeeperTestSuite) TestQueryChannelClientState() {
 		{
 			"success",
 			func() {
-				clientA, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				clientA, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 				// init channel
 				channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
 				suite.Require().NoError(err)
@@ -437,10 +437,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 			"invalid port ID",
 			func() {
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:        "",
-					ChannelId:     "test-channel-id",
-					VersionNumber: 0,
-					VersionHeight: 1,
+					PortId:         "",
+					ChannelId:      "test-channel-id",
+					RevisionNumber: 0,
+					RevisionHeight: 1,
 				}
 			},
 			false,
@@ -449,10 +449,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 			"invalid channel ID",
 			func() {
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:        "test-port-id",
-					ChannelId:     "",
-					VersionNumber: 0,
-					VersionHeight: 1,
+					PortId:         "test-port-id",
+					ChannelId:      "",
+					RevisionNumber: 0,
+					RevisionHeight: 1,
 				}
 			},
 			false,
@@ -461,10 +461,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 			"channel not found",
 			func() {
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:        "test-port-id",
-					ChannelId:     "test-channel-id",
-					VersionNumber: 0,
-					VersionHeight: 1,
+					PortId:         "test-port-id",
+					ChannelId:      "test-channel-id",
+					RevisionNumber: 0,
+					RevisionHeight: 1,
 				}
 			},
 			false,
@@ -482,10 +482,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID, channel)
 
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:        channelA.PortID,
-					ChannelId:     channelA.ID,
-					VersionNumber: 0,
-					VersionHeight: 1,
+					PortId:         channelA.PortID,
+					ChannelId:      channelA.ID,
+					RevisionNumber: 0,
+					RevisionHeight: 1,
 				}
 			}, false,
 		},
@@ -495,17 +495,17 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:        channelA.PortID,
-					ChannelId:     channelA.ID,
-					VersionNumber: 0,
-					VersionHeight: uint64(suite.chainA.GetContext().BlockHeight()), // use current height
+					PortId:         channelA.PortID,
+					ChannelId:      channelA.ID,
+					RevisionNumber: 0,
+					RevisionHeight: uint64(suite.chainA.GetContext().BlockHeight()), // use current height
 				}
 			}, false,
 		},
 		{
 			"success",
 			func() {
-				clientA, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				clientA, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 				// init channel
 				channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
 				suite.Require().NoError(err)
@@ -516,10 +516,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 				expClientID = clientA
 
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:        channelA.PortID,
-					ChannelId:     channelA.ID,
-					VersionNumber: clientState.GetLatestHeight().GetVersionNumber(),
-					VersionHeight: clientState.GetLatestHeight().GetVersionHeight(),
+					PortId:         channelA.PortID,
+					ChannelId:      channelA.ID,
+					RevisionNumber: clientState.GetLatestHeight().GetRevisionNumber(),
+					RevisionHeight: clientState.GetLatestHeight().GetRevisionHeight(),
 				}
 			},
 			true,
@@ -649,7 +649,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitment() {
 func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 	var (
 		req            *types.QueryPacketCommitmentsRequest
-		expCommitments = []*types.PacketAckCommitment{}
+		expCommitments = []*types.PacketState{}
 	)
 
 	testCases := []struct {
@@ -677,7 +677,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 		{
 			"success, empty res",
 			func() {
-				expCommitments = []*types.PacketAckCommitment{}
+				expCommitments = []*types.PacketState{}
 
 				req = &types.QueryPacketCommitmentsRequest{
 					PortId:    "test-port-id",
@@ -696,11 +696,11 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 			func() {
 				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 
-				expCommitments = make([]*types.PacketAckCommitment, 9)
+				expCommitments = make([]*types.PacketState, 9)
 
 				for i := uint64(0); i < 9; i++ {
-					commitment := types.NewPacketAckCommitment(channelA.PortID, channelA.ID, i, []byte(fmt.Sprintf("hash_%d", i)))
-					suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), commitment.PortId, commitment.ChannelId, commitment.Sequence, commitment.Hash)
+					commitment := types.NewPacketState(channelA.PortID, channelA.ID, i, []byte(fmt.Sprintf("hash_%d", i)))
+					suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), commitment.PortId, commitment.ChannelId, commitment.Sequence, commitment.Data)
 					expCommitments[i] = &commitment
 				}
 
@@ -731,6 +731,108 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
 				suite.Require().Equal(expCommitments, res.Commitments)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestQueryPacketReceipt() {
+	var (
+		req         *types.QueryPacketReceiptRequest
+		expReceived bool
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = nil
+			},
+			false,
+		},
+		{
+			"invalid port ID",
+			func() {
+				req = &types.QueryPacketReceiptRequest{
+					PortId:    "",
+					ChannelId: "test-channel-id",
+					Sequence:  1,
+				}
+			},
+			false,
+		},
+		{
+			"invalid channel ID",
+			func() {
+				req = &types.QueryPacketReceiptRequest{
+					PortId:    "test-port-id",
+					ChannelId: "",
+					Sequence:  1,
+				}
+			},
+			false,
+		},
+		{"invalid sequence",
+			func() {
+				req = &types.QueryPacketReceiptRequest{
+					PortId:    "test-port-id",
+					ChannelId: "test-channel-id",
+					Sequence:  0,
+				}
+			},
+			false,
+		},
+		{
+			"success: receipt not found",
+			func() {
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
+				suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketReceipt(suite.chainA.GetContext(), channelA.PortID, channelA.ID, 1)
+
+				req = &types.QueryPacketReceiptRequest{
+					PortId:    channelA.PortID,
+					ChannelId: channelA.ID,
+					Sequence:  3,
+				}
+				expReceived = false
+			},
+			true,
+		},
+		{
+			"success: receipt found",
+			func() {
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
+				suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketReceipt(suite.chainA.GetContext(), channelA.PortID, channelA.ID, 1)
+
+				req = &types.QueryPacketReceiptRequest{
+					PortId:    channelA.PortID,
+					ChannelId: channelA.ID,
+					Sequence:  1,
+				}
+				expReceived = true
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
+
+			res, err := suite.chainA.QueryServer.PacketReceipt(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expReceived, res.Received)
 			} else {
 				suite.Require().Error(err)
 			}
@@ -835,6 +937,98 @@ func (suite *KeeperTestSuite) TestQueryPacketAcknowledgement() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestQueryPacketAcknowledgements() {
+	var (
+		req                 *types.QueryPacketAcknowledgementsRequest
+		expAcknowledgements = []*types.PacketState{}
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = nil
+			},
+			false,
+		},
+		{
+			"invalid ID",
+			func() {
+				req = &types.QueryPacketAcknowledgementsRequest{
+					PortId:    "",
+					ChannelId: "test-channel-id",
+				}
+			},
+			false,
+		},
+		{
+			"success, empty res",
+			func() {
+				expAcknowledgements = []*types.PacketState{}
+
+				req = &types.QueryPacketAcknowledgementsRequest{
+					PortId:    "test-port-id",
+					ChannelId: "test-channel-id",
+					Pagination: &query.PageRequest{
+						Key:        nil,
+						Limit:      2,
+						CountTotal: true,
+					},
+				}
+			},
+			true,
+		},
+		{
+			"success",
+			func() {
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
+
+				expAcknowledgements = make([]*types.PacketState, 9)
+
+				for i := uint64(0); i < 9; i++ {
+					ack := types.NewPacketState(channelA.PortID, channelA.ID, i, []byte(fmt.Sprintf("hash_%d", i)))
+					suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), ack.PortId, ack.ChannelId, ack.Sequence, ack.Data)
+					expAcknowledgements[i] = &ack
+				}
+
+				req = &types.QueryPacketAcknowledgementsRequest{
+					PortId:    channelA.PortID,
+					ChannelId: channelA.ID,
+					Pagination: &query.PageRequest{
+						Key:        nil,
+						Limit:      11,
+						CountTotal: true,
+					},
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
+
+			res, err := suite.chainA.QueryServer.PacketAcknowledgements(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expAcknowledgements, res.Acknowledgements)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestQueryUnreceivedPackets() {
 	var (
 		req    *types.QueryUnreceivedPacketsRequest
@@ -885,7 +1079,7 @@ func (suite *KeeperTestSuite) TestQueryUnreceivedPackets() {
 			false,
 		},
 		{
-			"basic success unrelayed packet commitments",
+			"basic success unreceived packet commitments",
 			func() {
 				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 
@@ -901,13 +1095,11 @@ func (suite *KeeperTestSuite) TestQueryUnreceivedPackets() {
 			true,
 		},
 		{
-			"basic success unrelayed packet commitments, nothing to relay",
+			"basic success unreceived packet commitments, nothing to relay",
 			func() {
 				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 
-				// ack exists
-				ack := types.NewPacketAckCommitment(channelA.PortID, channelA.ID, 1, []byte("hash"))
-				suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), channelA.PortID, channelA.ID, 1, ack.Hash)
+				suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketReceipt(suite.chainA.GetContext(), channelA.PortID, channelA.ID, 1)
 
 				expSeq = []uint64{}
 				req = &types.QueryUnreceivedPacketsRequest{
@@ -919,19 +1111,18 @@ func (suite *KeeperTestSuite) TestQueryUnreceivedPackets() {
 			true,
 		},
 		{
-			"success multiple unrelayed packet commitments",
+			"success multiple unreceived packet commitments",
 			func() {
 				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 				expSeq = []uint64{} // reset
 				packetCommitments := []uint64{}
 
-				// set ack for every other sequence
+				// set packet receipt for every other sequence
 				for seq := uint64(1); seq < 10; seq++ {
 					packetCommitments = append(packetCommitments, seq)
 
 					if seq%2 == 0 {
-						ack := types.NewPacketAckCommitment(channelA.PortID, channelA.ID, seq, []byte("hash"))
-						suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), channelA.PortID, channelA.ID, seq, ack.Hash)
+						suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketReceipt(suite.chainA.GetContext(), channelA.PortID, channelA.ID, seq)
 					} else {
 						expSeq = append(expSeq, seq)
 					}
@@ -967,9 +1158,9 @@ func (suite *KeeperTestSuite) TestQueryUnreceivedPackets() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
+func (suite *KeeperTestSuite) TestQueryUnreceivedAcks() {
 	var (
-		req    *types.QueryUnrelayedAcksRequest
+		req    *types.QueryUnreceivedAcksRequest
 		expSeq = []uint64{}
 	)
 
@@ -988,7 +1179,7 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 		{
 			"invalid port ID",
 			func() {
-				req = &types.QueryUnrelayedAcksRequest{
+				req = &types.QueryUnreceivedAcksRequest{
 					PortId:    "",
 					ChannelId: "test-channel-id",
 				}
@@ -998,7 +1189,7 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 		{
 			"invalid channel ID",
 			func() {
-				req = &types.QueryUnrelayedAcksRequest{
+				req = &types.QueryUnreceivedAcksRequest{
 					PortId:    "test-port-id",
 					ChannelId: "",
 				}
@@ -1008,70 +1199,65 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 		{
 			"invalid seq",
 			func() {
-				req = &types.QueryUnrelayedAcksRequest{
-					PortId:                    "test-port-id",
-					ChannelId:                 "test-channel-id",
-					PacketCommitmentSequences: []uint64{0},
+				req = &types.QueryUnreceivedAcksRequest{
+					PortId:             "test-port-id",
+					ChannelId:          "test-channel-id",
+					PacketAckSequences: []uint64{0},
 				}
 			},
 			false,
 		},
 		{
-			"basic success unrelayed packet acks",
+			"basic success unreceived packet acks",
 			func() {
 				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 
-				// ack exists
-				ack := types.NewPacketAckCommitment(channelA.PortID, channelA.ID, 1, []byte("hash"))
-				suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), channelA.PortID, channelA.ID, 1, ack.Hash)
+				suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), channelA.PortID, channelA.ID, 1, []byte("commitment"))
 
 				expSeq = []uint64{1}
-				req = &types.QueryUnrelayedAcksRequest{
-					PortId:                    channelA.PortID,
-					ChannelId:                 channelA.ID,
-					PacketCommitmentSequences: []uint64{1},
+				req = &types.QueryUnreceivedAcksRequest{
+					PortId:             channelA.PortID,
+					ChannelId:          channelA.ID,
+					PacketAckSequences: []uint64{1},
 				}
 			},
 			true,
 		},
 		{
-			"basic success unrelayed packet acknowledgements, nothing to relay",
+			"basic success unreceived packet acknowledgements, nothing to relay",
 			func() {
 				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 
-				// no ack exists
-
 				expSeq = []uint64{}
-				req = &types.QueryUnrelayedAcksRequest{
-					PortId:                    channelA.PortID,
-					ChannelId:                 channelA.ID,
-					PacketCommitmentSequences: []uint64{1},
+				req = &types.QueryUnreceivedAcksRequest{
+					PortId:             channelA.PortID,
+					ChannelId:          channelA.ID,
+					PacketAckSequences: []uint64{1},
 				}
 			},
 			true,
 		},
 		{
-			"success multiple unrelayed packet acknowledgements",
+			"success multiple unreceived packet acknowledgements",
 			func() {
 				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 				expSeq = []uint64{} // reset
-				packetCommitments := []uint64{}
+				packetAcks := []uint64{}
 
-				// set ack for every other sequence
+				// set packet commitment for every other sequence
 				for seq := uint64(1); seq < 10; seq++ {
-					packetCommitments = append(packetCommitments, seq)
+					packetAcks = append(packetAcks, seq)
 
 					if seq%2 == 0 {
-						ack := types.NewPacketAckCommitment(channelA.PortID, channelA.ID, seq, []byte("hash"))
-						suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), channelA.PortID, channelA.ID, seq, ack.Hash)
+						suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), channelA.PortID, channelA.ID, seq, []byte("commitement"))
 						expSeq = append(expSeq, seq)
 					}
 				}
 
-				req = &types.QueryUnrelayedAcksRequest{
-					PortId:                    channelA.PortID,
-					ChannelId:                 channelA.ID,
-					PacketCommitmentSequences: packetCommitments,
+				req = &types.QueryUnreceivedAcksRequest{
+					PortId:             channelA.PortID,
+					ChannelId:          channelA.ID,
+					PacketAckSequences: packetAcks,
 				}
 			},
 			true,
@@ -1085,7 +1271,7 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 			tc.malleate()
 			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
 
-			res, err := suite.chainA.QueryServer.UnrelayedAcks(ctx, req)
+			res, err := suite.chainA.QueryServer.UnreceivedAcks(ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

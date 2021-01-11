@@ -62,17 +62,20 @@ In the Cosmos SDK, accounts are stored and managed via an object called a [`Keyr
 
 A `Keyring` is an object that stores and manages accounts. In the Cosmos SDK, a `Keyring` implementation follows the `Keyring` interface:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/crypto/keyring/keyring.go#L50-L88
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/crypto/keyring/keyring.go#L50-L88
 
 The default implementation of `Keyring` comes from the third-party [`99designs/keyring`](https://github.com/99designs/keyring) library.
 
 A few notes on the `Keyring` methods:
 
-- `Sign(uid string, msg []byte) ([]byte, tmcrypto.PubKey, error)` strictly deals with the signature of the `message` bytes. Some preliminary work should be done beforehand to prepare and encode the `message` into a canonical `[]byte` form, and this is done in the `GetSignBytes` method. See an example of `message` preparation from the `x/bank` module. Note that signature verification is not implemented in the SDK by default. It is deferred to the [`anteHandler`](#antehandler).
-  +++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/x/bank/types/msgs.go#L51-L54
-- `NewAccount(uid, mnemonic, bip39Passwd, hdPath string, algo SignatureAlgo) (Info, error)` creates a new account based on the [`bip44 path`](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) and persists it on disk (note that the `PrivKey` is [encrypted with a passphrase before being persisted](https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/crypto/keys/mintkey/mintkey.go), it is **never stored unencrypted**). In the context of this method, the `account` and `address` parameters refer to the segment of the BIP44 derivation path (e.g. `0`, `1`, `2`, ...) used to derive the `PrivKey` and `PubKey` from the mnemonic (note that given the same mnemonic and `account`, the same `PrivKey` will be generated, and given the same `account` and `address`, the same `PubKey` and `Address` will be generated). Finally, note that the `NewAccount` method derives keys and addresses using the algorithm specified in the last argument `algo`. Currently, the SDK supports two public key algorithms:
-  - `secp256k1`, as implemented in the [SDK's `crypto/keys/secp256k1` package](https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/crypto/keys/secp256k1/secp256k1.go),
-  - `ed25519`, as implemented in the [SDK's `crypto/keys/ed25519` package](https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/crypto/keys/ed25519/ed25519.go).
+- `Sign(uid string, payload []byte) ([]byte, tmcrypto.PubKey, error)` strictly deals with the signature of the `payload` bytes. Some preliminary work should be done beforehand to prepare and encode the transaction into a canonical `[]byte` form. Protobuf being not deterministic, it has been decided in [ADR-020](../architecture/adr-020-protobuf-transaction-encoding.md) that the canonical `payload` to sign is the `SignDoc` struct, deterministically encoded using [ADR-027](adr-027-deterministic-protobuf-serialization.md). Note that signature verification is not implemented in the SDK by default, it is deferred to the [`anteHandler`](../core/baseapp.md#antehandler).
+  +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/proto/cosmos/tx/v1beta1/tx.proto#L47-L64
+
+- `NewAccount(uid, mnemonic, bip39Passwd, hdPath string, algo SignatureAlgo) (Info, error)` creates a new account based on the [`bip44 path`](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) and persists it on disk (note that the `PrivKey` is [encrypted with a passphrase before being persisted](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/crypto/armor.go), it is **never stored unencrypted**). In the context of this method, the `account` and `address` parameters refer to the segment of the BIP44 derivation path (e.g. `0`, `1`, `2`, ...) used to derive the `PrivKey` and `PubKey` from the mnemonic (note that given the same mnemonic and `account`, the same `PrivKey` will be generated, and given the same `account` and `address`, the same `PubKey` and `Address` will be generated). Finally, note that the `NewAccount` method derives keys and addresses using the algorithm specified in the last argument `algo`. Currently, the SDK supports two public key algorithms:
+
+  - `secp256k1`, as implemented in the [SDK's `crypto/keys/secp256k1` package](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/crypto/keys/secp256k1/secp256k1.go),
+  - `ed25519`, as implemented in the [SDK's `crypto/keys/ed25519` package](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/crypto/keys/ed25519/ed25519.go).
+
 - `ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error)` exports a private key in ASCII-armored encrypted format, using the given passphrase. You can then either import it again into the keyring using the `ImportPrivKey(uid, armor, passphrase string)` function, or decrypt it into a raw private key using the `UnarmorDecryptPrivKey(armorStr string, passphrase string)` function.
 
 Also see the [`Addresses`](#addresses) section for more information.
@@ -93,20 +96,18 @@ Also see the [`Addresses`](#addresses) section for more information.
 
 ### PubKeys
 
-`PubKey`s used in the Cosmos SDK are Protobuf messages and extend the `Pubkey` interface defined in tendermint's `crypto` package:
+`PubKey`s used in the Cosmos SDK are Protobuf messages and have the following methods:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/crypto/types/types.go#L8-L13
++++ https://github.com/cosmos/cosmos-sdk/blob/master/crypto/types/types.go#L8-L17
 
-+++ https://github.com/tendermint/tendermint/blob/01c32c62e8840d812359c9e87e9c575aa67acb09/crypto/crypto.go#L22-L28
-
-- For `secp256k1` keys, the actual implementation can be found [here](https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/crypto/keys/secp256k1/secp256k1.go).
-- For `ed25519` keys, it can be found [here](https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/crypto/keys/ed25519/ed25519.go).
+- For `secp256k1` keys, the actual implementation can be found [here](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/crypto/keys/secp256k1/secp256k1.go).
+- For `ed25519` keys, it can be found [here](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/crypto/keys/ed25519/ed25519.go).
 
 In both case, the actual key (as raw bytes) is the compressed form of the pubkey. The first byte is a `0x02` byte if the `y`-coordinate is the lexicographically largest of the two associated with the `x`-coordinate. Otherwise the first byte is a `0x03`. This prefix is followed with the `x`-coordinate.
 
 Note that in the Cosmos SDK, `Pubkeys` are not manipulated in their raw bytes form. Instead, they are encoded to string using [`Amino`](../core/encoding.md#amino) and [`bech32`](https://en.bitcoin.it/wiki/Bech32). In the SDK, it is done by first calling the `Bytes()` method on the raw `Pubkey` (which applies amino encoding), and then the `ConvertAndEncode` method of `bech32`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/types/address.go#L579-L729
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/address.go#L579-L729
 
 ### Addresses
 
@@ -124,11 +125,11 @@ aa := sdk.AccAddress(pub.Address().Bytes())
 
 These addresses implement the `Address` interface:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/types/address.go#L73-L82
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/address.go#L73-L82
 
 Of note, the `Marshal()` and `Bytes()` method both return the same raw `[]byte` form of the address, the former being needed for Protobuf compatibility. Also, the `String()` method is used to return the `bech32` encoded form of the address, which should be the only address format with which end-user interract. Here is an example:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/types/address.go#L232-L246
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/address.go#L232-L246
 
 ## Next {hide}
 

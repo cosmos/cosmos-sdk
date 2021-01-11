@@ -15,7 +15,7 @@ import (
 )
 
 func TestGetCommandEncode(t *testing.T) {
-	encodingConfig := simappparams.MakeEncodingConfig()
+	encodingConfig := simappparams.MakeTestEncodingConfig()
 
 	cmd := GetEncodeCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
@@ -33,9 +33,8 @@ func TestGetCommandEncode(t *testing.T) {
 	jsonEncoded, err := txCfg.TxJSONEncoder()(builder.GetTx())
 	require.NoError(t, err)
 
-	txFile, cleanup := testutil.WriteToNewTempFile(t, string(jsonEncoded))
+	txFile := testutil.WriteToNewTempFile(t, string(jsonEncoded))
 	txFileName := txFile.Name()
-	t.Cleanup(cleanup)
 
 	ctx := context.Background()
 	clientCtx := client.Context{}.
@@ -49,7 +48,7 @@ func TestGetCommandEncode(t *testing.T) {
 }
 
 func TestGetCommandDecode(t *testing.T) {
-	encodingConfig := simappparams.MakeEncodingConfig()
+	encodingConfig := simappparams.MakeTestEncodingConfig()
 
 	clientCtx := client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig).

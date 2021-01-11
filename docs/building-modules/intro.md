@@ -17,7 +17,7 @@ The Cosmos SDK can be thought as the Ruby-on-Rails of blockchain development. It
 
 On top of this core, the Cosmos SDK enables developers to build modules that implement the business logic of their application. In other words, SDK modules implement the bulk of the logic of applications, while the core does the wiring and enables modules to be composed together. The end goal is to build a robust ecosystem of open-source SDK modules, making it increasingly easier to build complex blockchain applications. 
 
-SDK Modules can be seen as little state-machines within the state-machine. They generally define a subset of the state using one ore multiple `KVStore` in the [main multistore](../core/store.md), as well as a subset of [`message` types](./messages-and-queries.md#messages). These `message`s are routed by one of the main component of SDK core, [`baseapp`](../core/baseapp.md), to the [`handler`](./handler.md) of the module that define them. 
+SDK Modules can be seen as little state-machines within the state-machine. They generally define a subset of the state using one or more `KVStore`s in the [main multistore](../core/store.md), as well as a subset of [message types](./messages-and-queries.md#messages). These messages are routed by one of the main component of SDK core, [`BaseApp`](../core/baseapp.md), to the [`Msg` service](./msg-services.md) of the module that define them. 
 
 ```
                                       +
@@ -76,12 +76,11 @@ While there is no definitive guidelines for writing modules, here are some impor
 
 ## Main Components of SDK Modules
 
-Modules are by convention defined in the `.x/` subfolder (e.g. the `bank` module will be defined in the `./x/bank` folder). They generally share the same core components:
+Modules are by convention defined in the `./x/` subfolder (e.g. the `bank` module will be defined in the `./x/bank` folder). They generally share the same core components:
 
-- Custom [`message` types](./messages-and-queries.md#messages) to trigger state-transitions. 
-- A [`handler`](./handler.md) used to process messages when they are routed to the module by [`baseapp`](../core/baseapp.md#message-routing). 
-- A  [`keeper`](./keeper.md), used to access the module's store(s) and update the state. 
-- A [`querier`](./querier.md), used to process user queries when they are routed to the module by [`baseapp`](../core/baseapp.md#query-routing).
+- A  [`keeper`](./keeper.md), used to access the module's store(s) and update the state.
+- A [`Msg` service](./messages-and-queries.md#messages) used to process messages when they are routed to the module by [`BaseApp`](../core/baseapp.md#message-routing) and trigger state-transitions.
+- A [query service](./query-services.md), used to process user queries when they are routed to the module by [`BaseApp`](../core/baseapp.md#query-routing).
 - Interfaces, for end users to query the subset of the state defined by the module and create `message`s of the custom types defined in the module.
 
 In addition to these components, modules implement the `AppModule` interface in order to be managed by the [`module manager`](./module-manager.md). 
@@ -91,4 +90,3 @@ Please refer to the [structure document](./structure.md) to learn about the reco
 ## Next {hide}
 
 Read more on the [`AppModule` interface and the `module manager`](./module-manager.md) {hide}
-

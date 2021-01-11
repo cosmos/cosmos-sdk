@@ -3,11 +3,11 @@ package legacytx
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto"
 	"gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
@@ -16,10 +16,9 @@ import (
 
 // Interface implementation checks
 var (
-	_ sdk.Tx             = (*StdTx)(nil)
-	_ codectypes.IntoAny = (*StdTx)(nil)
-	_ sdk.TxWithMemo     = (*StdTx)(nil)
-	_ sdk.FeeTx          = (*StdTx)(nil)
+	_ sdk.Tx         = (*StdTx)(nil)
+	_ sdk.TxWithMemo = (*StdTx)(nil)
+	_ sdk.FeeTx      = (*StdTx)(nil)
 )
 
 // StdFee includes the amount of coins paid in fees and the maximum
@@ -73,7 +72,7 @@ func (fee StdFee) GasPrices() sdk.DecCoins {
 }
 
 // Deprecated
-func NewStdSignature(pk crypto.PubKey, sig []byte) StdSignature {
+func NewStdSignature(pk cryptotypes.PubKey, sig []byte) StdSignature {
 	return StdSignature{PubKey: pk, Signature: sig}
 }
 
@@ -82,9 +81,9 @@ func (ss StdSignature) GetSignature() []byte {
 	return ss.Signature
 }
 
-// GetPubKey returns the public key of a signature as a crypto.PubKey using the
+// GetPubKey returns the public key of a signature as a cryptotypes.PubKey using the
 // Amino codec.
-func (ss StdSignature) GetPubKey() crypto.PubKey {
+func (ss StdSignature) GetPubKey() cryptotypes.PubKey {
 	return ss.PubKey
 }
 
@@ -172,7 +171,9 @@ func (tx StdTx) ValidateBasic() error {
 	return nil
 }
 
-// AsAny implements IntoAny.AsAny.
+// Deprecated: AsAny implements intoAny. It doesn't work for protobuf serialization,
+// so it can't be saved into protobuf configured storage. We are using it only for API
+// compatibility.
 func (tx *StdTx) AsAny() *codectypes.Any {
 	return codectypes.UnsafePackAny(tx)
 }
@@ -238,8 +239,8 @@ func (tx StdTx) GetSignaturesV2() ([]signing.SignatureV2, error) {
 
 // GetPubkeys returns the pubkeys of signers if the pubkey is included in the signature
 // If pubkey is not included in the signature, then nil is in the slice instead
-func (tx StdTx) GetPubKeys() []crypto.PubKey {
-	pks := make([]crypto.PubKey, len(tx.Signatures))
+func (tx StdTx) GetPubKeys() []cryptotypes.PubKey {
+	pks := make([]cryptotypes.PubKey, len(tx.Signatures))
 
 	for i, stdSig := range tx.Signatures {
 		pks[i] = stdSig.GetPubKey()

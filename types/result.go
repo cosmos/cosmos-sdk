@@ -7,8 +7,11 @@ import (
 	"math"
 	"strings"
 
+	"github.com/gogo/protobuf/proto"
+
 	yaml "gopkg.in/yaml.v2"
 
+	abci "github.com/tendermint/tendermint/abci/types"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -262,4 +265,31 @@ func (r TxResponse) GetTx() Tx {
 		return tx
 	}
 	return nil
+}
+
+// WrapServiceResult wraps a result from a protobuf RPC service method call in
+// a Result object or error. This method takes care of marshaling the res param to
+// protobuf and attaching any events on the ctx.EventManager() to the Result.
+func WrapServiceResult(ctx Context, res proto.Message, err error) (*Result, error) {
+	if err != nil {
+		return nil, err
+	}
+
+	var data []byte
+	if res != nil {
+		data, err = proto.Marshal(res)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var events []abci.Event
+	if evtMgr := ctx.EventManager(); evtMgr != nil {
+		events = evtMgr.ABCIEvents()
+	}
+
+	return &Result{
+		Data:   data,
+		Events: events,
+	}, nil
 }

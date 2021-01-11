@@ -7,6 +7,8 @@ import (
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/09-localhost/types"
 )
 
@@ -50,6 +52,37 @@ func (suite *LocalhostTestSuite) TestValidate() {
 	}
 }
 
+func (suite *LocalhostTestSuite) TestInitialize() {
+	testCases := []struct {
+		name      string
+		consState exported.ConsensusState
+		expPass   bool
+	}{
+		{
+			"valid initialization",
+			nil,
+			true,
+		},
+		{
+			"invalid consenus state",
+			&ibctmtypes.ConsensusState{},
+			false,
+		},
+	}
+
+	clientState := types.NewClientState("chainID", clienttypes.NewHeight(3, 10))
+
+	for _, tc := range testCases {
+		err := clientState.Initialize(suite.ctx, suite.cdc, suite.store, tc.consState)
+
+		if tc.expPass {
+			suite.Require().NoError(err, "valid testcase: %s failed", tc.name)
+		} else {
+			suite.Require().Error(err, "invalid testcase: %s passed", tc.name)
+		}
+	}
+}
+
 func (suite *LocalhostTestSuite) TestVerifyClientState() {
 	clientState := types.NewClientState("chainID", clientHeight)
 	invalidClient := types.NewClientState("chainID", clienttypes.NewHeight(0, 12))
@@ -66,7 +99,7 @@ func (suite *LocalhostTestSuite) TestVerifyClientState() {
 			clientState: clientState,
 			malleate: func() {
 				bz := clienttypes.MustMarshalClientState(suite.cdc, clientState)
-				suite.store.Set(host.KeyClientState(), bz)
+				suite.store.Set(host.ClientStateKey(), bz)
 			},
 			counterparty: clientState,
 			expPass:      true,
@@ -76,7 +109,7 @@ func (suite *LocalhostTestSuite) TestVerifyClientState() {
 			clientState: clientState,
 			malleate: func() {
 				bz := clienttypes.MustMarshalClientState(suite.cdc, clientState)
-				suite.store.Set(host.KeyClientState(), bz)
+				suite.store.Set(host.ClientStateKey(), bz)
 			},
 			counterparty: invalidClient,
 			expPass:      false,
@@ -98,7 +131,7 @@ func (suite *LocalhostTestSuite) TestVerifyClientState() {
 			tc.malleate()
 
 			err := tc.clientState.VerifyClientState(
-				suite.store, suite.cdc, nil, clienttypes.NewHeight(0, 10), nil, "", []byte{}, tc.counterparty,
+				suite.store, suite.cdc, clienttypes.NewHeight(0, 10), nil, "", []byte{}, tc.counterparty,
 			)
 
 			if tc.expPass {
@@ -114,7 +147,7 @@ func (suite *LocalhostTestSuite) TestVerifyClientState() {
 func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 	clientState := types.NewClientState("chainID", clientHeight)
 	err := clientState.VerifyClientConsensusState(
-		nil, nil, nil, nil, "", nil, nil, nil, nil,
+		nil, nil, nil, "", nil, nil, nil, nil,
 	)
 	suite.Require().NoError(err)
 }
@@ -123,8 +156,8 @@ func (suite *LocalhostTestSuite) TestCheckHeaderAndUpdateState() {
 	clientState := types.NewClientState("chainID", clientHeight)
 	cs, _, err := clientState.CheckHeaderAndUpdateState(suite.ctx, nil, nil, nil)
 	suite.Require().NoError(err)
-	suite.Require().Equal(uint64(0), cs.GetLatestHeight().GetVersionNumber())
-	suite.Require().Equal(suite.ctx.BlockHeight(), int64(cs.GetLatestHeight().GetVersionHeight()))
+	suite.Require().Equal(uint64(0), cs.GetLatestHeight().GetRevisionNumber())
+	suite.Require().Equal(suite.ctx.BlockHeight(), int64(cs.GetLatestHeight().GetRevisionHeight()))
 	suite.Require().Equal(suite.ctx.BlockHeader().ChainID, clientState.ChainId)
 }
 
@@ -145,8 +178,8 @@ func (suite *LocalhostTestSuite) TestProposedHeaderAndUpdateState() {
 
 func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 	counterparty := connectiontypes.NewCounterparty("clientB", testConnectionID, commitmenttypes.NewMerklePrefix([]byte("ibc")))
-	conn1 := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []string{"1.0.0"})
-	conn2 := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []string{"2.0.0"})
+	conn1 := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []*connectiontypes.Version{connectiontypes.NewVersion("1", nil)}, 0)
+	conn2 := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []*connectiontypes.Version{connectiontypes.NewVersion("2", nil)}, 0)
 
 	testCases := []struct {
 		name        string
@@ -161,7 +194,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 			malleate: func() {
 				bz, err := suite.cdc.MarshalBinaryBare(&conn1)
 				suite.Require().NoError(err)
-				suite.store.Set(host.KeyConnection(testConnectionID), bz)
+				suite.store.Set(host.ConnectionKey(testConnectionID), bz)
 			},
 			connection: conn1,
 			expPass:    true,
@@ -177,7 +210,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 			name:        "proof verification failed: unmarshal error",
 			clientState: types.NewClientState("chainID", clientHeight),
 			malleate: func() {
-				suite.store.Set(host.KeyConnection(testConnectionID), []byte("connection"))
+				suite.store.Set(host.ConnectionKey(testConnectionID), []byte("connection"))
 			},
 			connection: conn1,
 			expPass:    false,
@@ -188,7 +221,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 			malleate: func() {
 				bz, err := suite.cdc.MarshalBinaryBare(&conn2)
 				suite.Require().NoError(err)
-				suite.store.Set(host.KeyConnection(testConnectionID), bz)
+				suite.store.Set(host.ConnectionKey(testConnectionID), bz)
 			},
 			connection: conn1,
 			expPass:    false,
@@ -233,7 +266,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 			malleate: func() {
 				bz, err := suite.cdc.MarshalBinaryBare(&ch1)
 				suite.Require().NoError(err)
-				suite.store.Set(host.KeyChannel(testPortID, testChannelID), bz)
+				suite.store.Set(host.ChannelKey(testPortID, testChannelID), bz)
 			},
 			channel: ch1,
 			expPass: true,
@@ -249,7 +282,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 			name:        "proof verification failed: unmarshal failed",
 			clientState: types.NewClientState("chainID", clientHeight),
 			malleate: func() {
-				suite.store.Set(host.KeyChannel(testPortID, testChannelID), []byte("channel"))
+				suite.store.Set(host.ChannelKey(testPortID, testChannelID), []byte("channel"))
 
 			},
 			channel: ch1,
@@ -261,7 +294,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 			malleate: func() {
 				bz, err := suite.cdc.MarshalBinaryBare(&ch2)
 				suite.Require().NoError(err)
-				suite.store.Set(host.KeyChannel(testPortID, testChannelID), bz)
+				suite.store.Set(host.ChannelKey(testPortID, testChannelID), bz)
 
 			},
 			channel: ch1,
@@ -302,7 +335,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 			clientState: types.NewClientState("chainID", clientHeight),
 			malleate: func() {
 				suite.store.Set(
-					host.KeyPacketCommitment(testPortID, testChannelID, testSequence), []byte("commitment"),
+					host.PacketCommitmentKey(testPortID, testChannelID, testSequence), []byte("commitment"),
 				)
 			},
 			commitment: []byte("commitment"),
@@ -313,7 +346,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 			clientState: types.NewClientState("chainID", clientHeight),
 			malleate: func() {
 				suite.store.Set(
-					host.KeyPacketCommitment(testPortID, testChannelID, testSequence), []byte("different"),
+					host.PacketCommitmentKey(testPortID, testChannelID, testSequence), []byte("different"),
 				)
 			},
 			commitment: []byte("commitment"),
@@ -336,7 +369,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 			tc.malleate()
 
 			err := tc.clientState.VerifyPacketCommitment(
-				suite.store, suite.cdc, clientHeight, nil, []byte{}, testPortID, testChannelID, testSequence, tc.commitment,
+				suite.store, suite.cdc, clientHeight, 0, 0, nil, []byte{}, testPortID, testChannelID, testSequence, tc.commitment,
 			)
 
 			if tc.expPass {
@@ -361,7 +394,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 			clientState: types.NewClientState("chainID", clientHeight),
 			malleate: func() {
 				suite.store.Set(
-					host.KeyPacketAcknowledgement(testPortID, testChannelID, testSequence), []byte("acknowledgement"),
+					host.PacketAcknowledgementKey(testPortID, testChannelID, testSequence), []byte("acknowledgement"),
 				)
 			},
 			ack:     []byte("acknowledgement"),
@@ -372,10 +405,10 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 			clientState: types.NewClientState("chainID", clientHeight),
 			malleate: func() {
 				suite.store.Set(
-					host.KeyPacketAcknowledgement(testPortID, testChannelID, testSequence), []byte("different"),
+					host.PacketAcknowledgementKey(testPortID, testChannelID, testSequence), []byte("different"),
 				)
 			},
-			ack:     []byte("acknowledgment"),
+			ack:     []byte("acknowledgement"),
 			expPass: false,
 		},
 		{
@@ -395,7 +428,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 			tc.malleate()
 
 			err := tc.clientState.VerifyPacketAcknowledgement(
-				suite.store, suite.cdc, clientHeight, nil, []byte{}, testPortID, testChannelID, testSequence, tc.ack,
+				suite.store, suite.cdc, clientHeight, 0, 0, nil, []byte{}, testPortID, testChannelID, testSequence, tc.ack,
 			)
 
 			if tc.expPass {
@@ -411,15 +444,15 @@ func (suite *LocalhostTestSuite) TestVerifyPacketReceiptAbsence() {
 	clientState := types.NewClientState("chainID", clientHeight)
 
 	err := clientState.VerifyPacketReceiptAbsence(
-		suite.store, suite.cdc, clientHeight, nil, nil, testPortID, testChannelID, testSequence,
+		suite.store, suite.cdc, clientHeight, 0, 0, nil, nil, testPortID, testChannelID, testSequence,
 	)
 
 	suite.Require().NoError(err, "receipt absence failed")
 
-	suite.store.Set(host.KeyPacketReceipt(testPortID, testChannelID, testSequence), []byte("receipt"))
+	suite.store.Set(host.PacketReceiptKey(testPortID, testChannelID, testSequence), []byte("receipt"))
 
 	err = clientState.VerifyPacketReceiptAbsence(
-		suite.store, suite.cdc, clientHeight, nil, nil, testPortID, testChannelID, testSequence,
+		suite.store, suite.cdc, clientHeight, 0, 0, nil, nil, testPortID, testChannelID, testSequence,
 	)
 	suite.Require().Error(err, "receipt exists in store")
 }
@@ -439,7 +472,7 @@ func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 			clientState: types.NewClientState("chainID", clientHeight),
 			malleate: func() {
 				suite.store.Set(
-					host.KeyNextSequenceRecv(testPortID, testChannelID),
+					host.NextSequenceRecvKey(testPortID, testChannelID),
 					sdk.Uint64ToBigEndian(nextSeqRecv),
 				)
 			},
@@ -451,7 +484,7 @@ func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 			clientState: types.NewClientState("chainID", clientHeight),
 			malleate: func() {
 				suite.store.Set(
-					host.KeyNextSequenceRecv(testPortID, testChannelID),
+					host.NextSequenceRecvKey(testPortID, testChannelID),
 					sdk.Uint64ToBigEndian(3),
 				)
 			},
@@ -475,7 +508,7 @@ func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 			tc.malleate()
 
 			err := tc.clientState.VerifyNextSequenceRecv(
-				suite.store, suite.cdc, clientHeight, nil, []byte{}, testPortID, testChannelID, nextSeqRecv,
+				suite.store, suite.cdc, clientHeight, 0, 0, nil, []byte{}, testPortID, testChannelID, nextSeqRecv,
 			)
 
 			if tc.expPass {

@@ -3,7 +3,7 @@ package v040
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v034"
 	v038staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v038"
 	v040staking "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -42,9 +42,13 @@ func Migrate(stakingState v038staking.GenesisState) *v040staking.GenesisState {
 
 	newValidators := make([]v040staking.Validator, len(stakingState.Validators))
 	for i, oldValidator := range stakingState.Validators {
+		pkAny, err := codectypes.NewAnyWithValue(oldValidator.ConsPubKey)
+		if err != nil {
+			panic(fmt.Sprintf("Can't pack validator consensus PK as Any: %s", err))
+		}
 		newValidators[i] = v040staking.Validator{
 			OperatorAddress: oldValidator.OperatorAddress.String(),
-			ConsensusPubkey: sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, oldValidator.ConsPubKey),
+			ConsensusPubkey: pkAny,
 			Jailed:          oldValidator.Jailed,
 			Status:          migrateBondStatus(oldValidator.Status),
 			Tokens:          oldValidator.Tokens,

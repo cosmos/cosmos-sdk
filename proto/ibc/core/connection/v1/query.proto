@@ -14,31 +14,31 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types
 service Query {
   // Connection queries an IBC connection end.
   rpc Connection(QueryConnectionRequest) returns (QueryConnectionResponse) {
-    option (google.api.http).get = "/ibc/connection/v1beta1/connections/{connection_id}";
+    option (google.api.http).get = "/ibc/core/connection/v1beta1/connections/{connection_id}";
   }
 
   // Connections queries all the IBC connections of a chain.
   rpc Connections(QueryConnectionsRequest) returns (QueryConnectionsResponse) {
-    option (google.api.http).get = "/ibc/connection/v1beta1/connections";
+    option (google.api.http).get = "/ibc/core/connection/v1beta1/connections";
   }
 
   // ClientConnections queries the connection paths associated with a client
   // state.
   rpc ClientConnections(QueryClientConnectionsRequest) returns (QueryClientConnectionsResponse) {
-    option (google.api.http).get = "/ibc/connection/v1beta1/client_connections/{client_id}";
+    option (google.api.http).get = "/ibc/core/connection/v1beta1/client_connections/{client_id}";
   }
 
   // ConnectionClientState queries the client state associated with the
   // connection.
   rpc ConnectionClientState(QueryConnectionClientStateRequest) returns (QueryConnectionClientStateResponse) {
-    option (google.api.http).get = "/ibc/connection/v1beta1/connections/{connection_id}/client_state";
+    option (google.api.http).get = "/ibc/core/connection/v1beta1/connections/{connection_id}/client_state";
   }
 
   // ConnectionConsensusState queries the consensus state associated with the
   // connection.
   rpc ConnectionConsensusState(QueryConnectionConsensusStateRequest) returns (QueryConnectionConsensusStateResponse) {
-    option (google.api.http).get = "/ibc/connection/v1beta1/connections/{connection_id}/consensus_state/"
-                                   "version/{version_number}/height/{version_height}";
+    option (google.api.http).get = "/ibc/core/connection/v1beta1/connections/{connection_id}/consensus_state/"
+                                   "revision/{revision_number}/height/{revision_height}";
   }
 }
 
@@ -57,10 +57,8 @@ message QueryConnectionResponse {
   ibc.core.connection.v1.ConnectionEnd connection = 1;
   // merkle proof of existence
   bytes proof = 2;
-  // merkle proof path
-  string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryConnectionsRequest is the request type for the Query/Connections RPC
@@ -94,10 +92,8 @@ message QueryClientConnectionsResponse {
   repeated string connection_paths = 1;
   // merkle proof of existence
   bytes proof = 2;
-  // merkle proof path
-  string proof_path = 3;
   // height at which the proof was generated
-  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryConnectionClientStateRequest is the request type for the
@@ -114,19 +110,17 @@ message QueryConnectionClientStateResponse {
   ibc.core.client.v1.IdentifiedClientState identified_client_state = 1;
   // merkle proof of existence
   bytes proof = 2;
-  // merkle proof path
-  string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryConnectionConsensusStateRequest is the request type for the
 // Query/ConnectionConsensusState RPC method
 message QueryConnectionConsensusStateRequest {
   // connection identifier
-  string connection_id  = 1 [(gogoproto.moretags) = "yaml:\"connection_id\""];
-  uint64 version_number = 2;
-  uint64 version_height = 3;
+  string connection_id   = 1 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  uint64 revision_number = 2;
+  uint64 revision_height = 3;
 }
 
 // QueryConnectionConsensusStateResponse is the response type for the
@@ -138,8 +132,6 @@ message QueryConnectionConsensusStateResponse {
   string client_id = 2;
   // merkle proof of existence
   bytes proof = 3;
-  // merkle proof path
-  string proof_path = 4;
   // height at which the proof was retrieved
-  ibc.core.client.v1.Height proof_height = 5 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
 }

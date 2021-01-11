@@ -30,6 +30,14 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				true,
 			},
 			{
+				"old misbehaviour is successful (timestamp is less than current consensus state)",
+				func() {
+					clientState = solomachine.ClientState()
+					solomachine.Time = solomachine.Time - 5
+					misbehaviour = solomachine.CreateMisbehaviour()
+				}, true,
+			},
+			{
 				"client is frozen",
 				func() {
 					cs := solomachine.ClientState()
@@ -51,7 +59,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				"invalid misbehaviour type",
 				func() {
 					clientState = solomachine.ClientState()
-					misbehaviour = ibctmtypes.Misbehaviour{}
+					misbehaviour = &ibctmtypes.Misbehaviour{}
 				},
 				false,
 			},
@@ -72,6 +80,26 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 					m := solomachine.CreateMisbehaviour()
 
 					m.SignatureTwo.Signature = suite.GetInvalidProof()
+					misbehaviour = m
+				}, false,
+			},
+			{
+				"invalid SignatureOne timestamp",
+				func() {
+					clientState = solomachine.ClientState()
+					m := solomachine.CreateMisbehaviour()
+
+					m.SignatureOne.Timestamp = 1000000000000
+					misbehaviour = m
+				}, false,
+			},
+			{
+				"invalid SignatureTwo timestamp",
+				func() {
+					clientState = solomachine.ClientState()
+					m := solomachine.CreateMisbehaviour()
+
+					m.SignatureTwo.Timestamp = 1000000000000
 					misbehaviour = m
 				}, false,
 			},
@@ -210,6 +238,16 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 
 					misbehaviour = m
 
+				},
+				false,
+			},
+			{
+				"consensus state pubkey is nil",
+				func() {
+					cs := solomachine.ClientState()
+					cs.ConsensusState.PublicKey = nil
+					clientState = cs
+					misbehaviour = solomachine.CreateMisbehaviour()
 				},
 				false,
 			},

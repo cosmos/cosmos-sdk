@@ -23,7 +23,7 @@ greater than `minHeight` and the validator's `MissedBlocksCounter` is greater th
 for `DowntimeJailDuration`, and have the following values reset:
 `MissedBlocksBitArray`, `MissedBlocksCounter`, and `IndexOffset`.
 
-__Note__: Liveness slashes do **NOT** lead to a tombstombing.
+**Note**: Liveness slashes do **NOT** lead to a tombstombing.
 
 ```go
 height := block.Height

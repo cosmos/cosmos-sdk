@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	"github.com/cosmos/cosmos-sdk/x/slashing/testslashing"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
@@ -18,7 +18,7 @@ func TestExportAndInitGenesis(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	app.SlashingKeeper.SetParams(ctx, keeper.TestParams())
+	app.SlashingKeeper.SetParams(ctx, testslashing.TestParams())
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.TokensFromConsensusPower(200))
 
@@ -31,7 +31,7 @@ func TestExportAndInitGenesis(t *testing.T) {
 	app.SlashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[1]), info2)
 	genesisState := slashing.ExportGenesis(ctx, app.SlashingKeeper)
 
-	require.Equal(t, genesisState.Params, keeper.TestParams())
+	require.Equal(t, genesisState.Params, testslashing.TestParams())
 	require.Len(t, genesisState.SigningInfos, 2)
 	require.Equal(t, genesisState.SigningInfos[0].ValidatorSigningInfo, info1)
 

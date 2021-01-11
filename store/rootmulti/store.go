@@ -41,7 +41,7 @@ const (
 )
 
 // Store is composed of many CommitStores. Name contrasts with
-// cacheMultiStore which is for cache-wrapping other MultiStores. It implements
+// cacheMultiStore which is used for branching other MultiStores. It implements
 // the CommitMultiStore interface.
 type Store struct {
 	db             dbm.DB
@@ -187,7 +187,14 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	var newStores = make(map[types.StoreKey]types.CommitKVStore)
 
 	for key, storeParams := range rs.storesParams {
-		store, err := rs.loadCommitStoreFromParams(key, rs.getCommitID(infos, key.Name()), storeParams)
+		commitID := rs.getCommitID(infos, key.Name())
+
+		// If it has been added, set the initial version
+		if upgrades.IsAdded(key.Name()) {
+			storeParams.initialVersion = uint64(ver) + 1
+		}
+
+		store, err := rs.loadCommitStoreFromParams(key, commitID, storeParams)
 		if err != nil {
 			return errors.Wrap(err, "failed to load store")
 		}
@@ -308,7 +315,9 @@ func (rs *Store) TracingEnabled() bool {
 // LastCommitID implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
 	if rs.lastCommitInfo == nil {
-		return types.CommitID{}
+		return types.CommitID{
+			Version: getLatestVersion(rs.db),
+		}
 	}
 
 	return rs.lastCommitInfo.CommitID()
@@ -395,7 +404,7 @@ func (rs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 	return rs.CacheWrap()
 }
 
-// CacheMultiStore cache-wraps the multi-store and returns a CacheMultiStore.
+// CacheMultiStore creates ephemeral branch of the multi-store and returns a CacheMultiStore.
 // It implements the MultiStore interface.
 func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	stores := make(map[types.StoreKey]types.CacheWrapper)
@@ -540,9 +549,12 @@ func (rs *Store) SetInitialVersion(version int64) error {
 
 	// Loop through all the stores, if it's an IAVL store, then set initial
 	// version on it.
-	for _, commitKVStore := range rs.stores {
-		if storeWithVersion, ok := commitKVStore.(types.StoreWithInitialVersion); ok {
-			storeWithVersion.SetInitialVersion(version)
+	for key, store := range rs.stores {
+		if store.GetStoreType() == types.StoreTypeIAVL {
+			// If the store is wrapped with an inter-block cache, we must first unwrap
+			// it to get the underlying IAVL store.
+			store = rs.GetCommitKVStore(key)
+			store.(*iavl.Store).SetInitialVersion(version)
 		}
 	}
 
@@ -813,7 +825,15 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		panic("recursive MultiStores not yet supported")
 
 	case types.StoreTypeIAVL:
-		store, err := iavl.LoadStore(db, id, rs.lazyLoading)
+		var store types.CommitKVStore
+		var err error
+
+		if params.initialVersion == 0 {
+			store, err = iavl.LoadStore(db, id, rs.lazyLoading)
+		} else {
+			store, err = iavl.LoadStoreWithInitialVersion(db, id, rs.lazyLoading, params.initialVersion)
+		}
+
 		if err != nil {
 			return nil, err
 		}
@@ -821,7 +841,7 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		if rs.interBlockCache != nil {
 			// Wrap and get a CommitKVStore with inter-block caching. Note, this should
 			// only wrap the primary CommitKVStore, not any store that is already
-			// cache-wrapped as that will create unexpected behavior.
+			// branched as that will create unexpected behavior.
 			store = rs.interBlockCache.GetStoreCache(key, store)
 		}
 
@@ -868,9 +888,10 @@ func (rs *Store) buildCommitInfo(version int64) *types.CommitInfo {
 }
 
 type storeParams struct {
-	key types.StoreKey
-	db  dbm.DB
-	typ types.StoreType
+	key            types.StoreKey
+	db             dbm.DB
+	typ            types.StoreType
+	initialVersion uint64
 }
 
 func getLatestVersion(db dbm.DB) int64 {

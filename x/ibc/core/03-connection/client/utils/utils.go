@@ -38,7 +38,7 @@ func QueryConnection(
 }
 
 func queryConnectionABCI(clientCtx client.Context, connectionID string) (*types.QueryConnectionResponse, error) {
-	key := host.KeyConnection(connectionID)
+	key := host.ConnectionKey(connectionID)
 
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
@@ -57,7 +57,7 @@ func queryConnectionABCI(clientCtx client.Context, connectionID string) (*types.
 		return nil, err
 	}
 
-	return types.NewQueryConnectionResponse(connectionID, connection, proofBz, proofHeight), nil
+	return types.NewQueryConnectionResponse(connection, proofBz, proofHeight), nil
 }
 
 // QueryClientConnections queries the connection paths registered for a particular client.
@@ -79,7 +79,7 @@ func QueryClientConnections(
 }
 
 func queryClientConnectionsABCI(clientCtx client.Context, clientID string) (*types.QueryClientConnectionsResponse, error) {
-	key := host.KeyClientConnections(clientID)
+	key := host.ClientConnectionsKey(clientID)
 
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
@@ -96,7 +96,7 @@ func queryClientConnectionsABCI(clientCtx client.Context, clientID string) (*typ
 		return nil, err
 	}
 
-	return types.NewQueryClientConnectionsResponse(clientID, paths, proofBz, proofHeight), nil
+	return types.NewQueryClientConnectionsResponse(paths, proofBz, proofHeight), nil
 }
 
 // QueryConnectionClientState returns the ClientState of a connection end. If
@@ -143,9 +143,9 @@ func QueryConnectionConsensusState(
 
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryConnectionConsensusStateRequest{
-		ConnectionId:  connectionID,
-		VersionNumber: height.VersionNumber,
-		VersionHeight: height.VersionHeight,
+		ConnectionId:   connectionID,
+		RevisionNumber: height.RevisionNumber,
+		RevisionHeight: height.RevisionHeight,
 	}
 
 	res, err := queryClient.ConnectionConsensusState(context.Background(), req)

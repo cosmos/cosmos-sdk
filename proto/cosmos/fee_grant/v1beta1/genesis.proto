@@ -1,8 +1,8 @@
 syntax = "proto3";
-package cosmos.feegrant.v1beta1;
+package cosmos.fee_grant.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "cosmos/feegrant/v1beta1/feegrant.proto";
+import "cosmos/fee_grant/v1beta1/fee_grant.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/fee_grant/types";
 

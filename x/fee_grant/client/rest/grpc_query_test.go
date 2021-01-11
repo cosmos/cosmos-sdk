@@ -73,7 +73,7 @@ func (s *IntegrationTestSuite) TestQueryFeeAllowence() {
 	}{
 		{
 			"fail: invalid granter",
-			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/granters/%s/grantees/%s/grant", baseURL, "invalid_granter", s.grantee.String()),
+			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/fee_allowance/%s/%s", baseURL, "invalid_granter", s.grantee.String()),
 			true,
 			"decoding bech32 failed: invalid index of 1: invalid request",
 			func() {},
@@ -81,7 +81,7 @@ func (s *IntegrationTestSuite) TestQueryFeeAllowence() {
 		},
 		{
 			"fail: invalid grantee",
-			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/granters/%s/grantees/%s/grant", baseURL, val.Address.String(), "invalid_grantee"),
+			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/fee_allowance/%s/%s", baseURL, val.Address.String(), "invalid_grantee"),
 			true,
 			"decoding bech32 failed: invalid index of 1: invalid request",
 			func() {},
@@ -89,7 +89,7 @@ func (s *IntegrationTestSuite) TestQueryFeeAllowence() {
 		},
 		{
 			"fail: no grants",
-			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/granters/%s/grantees/%s/grant", baseURL, val.Address.String(), s.grantee.String()),
+			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/fee_allowance/%s/%s", baseURL, val.Address.String(), s.grantee.String()),
 			true,
 			"no fee allowance found",
 			func() {},
@@ -97,7 +97,7 @@ func (s *IntegrationTestSuite) TestQueryFeeAllowence() {
 		},
 		{
 			"valid query: expect single grant",
-			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/granters/%s/grantees/%s/grant", baseURL, val.Address.String(), s.grantee.String()),
+			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/fee_allowance/%s/%s", baseURL, val.Address.String(), s.grantee.String()),
 			false,
 			"",
 			func() {
@@ -138,7 +138,7 @@ func (s *IntegrationTestSuite) TestQueryGranteeAllowences() {
 	}{
 		{
 			"fail: invalid grantee",
-			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/grants/%s", baseURL, "invalid_grantee"),
+			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/fee_allowances/%s", baseURL, "invalid_grantee"),
 			true,
 			"decoding bech32 failed: invalid index of 1: invalid request",
 			func() {},
@@ -146,7 +146,7 @@ func (s *IntegrationTestSuite) TestQueryGranteeAllowences() {
 		},
 		{
 			"success: no grants",
-			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/grants/%s?pagination.offset=1", baseURL, s.grantee.String()),
+			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/fee_allowances/%s?pagination.offset=1", baseURL, s.grantee.String()),
 			false,
 			"",
 			func() {},
@@ -156,7 +156,7 @@ func (s *IntegrationTestSuite) TestQueryGranteeAllowences() {
 		},
 		{
 			"valid query: expect single grant",
-			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/grants/%s", baseURL, s.grantee.String()),
+			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/fee_allowances/%s", baseURL, s.grantee.String()),
 			false,
 			"",
 			func() {

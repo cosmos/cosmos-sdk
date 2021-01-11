@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.feegrant.v1beta1;
+package cosmos.fee_grant.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";

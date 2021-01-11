@@ -11,20 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/fee_grant/types"
 )
 
-// var (
-// 	_ GrantedFeeTx = (*types.FeeGrantTx)(nil) // assert FeeGrantTx implements GrantedFeeTx
-// )
-
-// // GrantedFeeTx defines the interface to be implemented by Tx to use the GrantedFeeDecorator
-// type GrantedFeeTx interface {
-// 	sdk.Tx
-
-// 	GetGas() uint64
-// 	GetFee() sdk.Coins
-// 	FeePayer() sdk.AccAddress
-// 	MainSigner() sdk.AccAddress
-// }
-
 // DeductGrantedFeeDecorator deducts fees from the first signer of the tx
 // If the first signer does not have the funds to pay for the fees, return with InsufficientFunds error
 // Call next AnteHandler if fees successfully deducted

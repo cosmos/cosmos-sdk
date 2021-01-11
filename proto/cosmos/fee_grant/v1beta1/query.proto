@@ -1,8 +1,8 @@
 syntax = "proto3";
-package cosmos.feegrant.v1beta1;
+package cosmos.fee_grant.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "cosmos/feegrant/v1beta1/feegrant.proto";
+import "cosmos/fee_grant/v1beta1/fee_grant.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/api/annotations.proto";
 
@@ -12,12 +12,12 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/fee_grant/types";
 service Query {
   // FeeAllowance returns fee granted to the grantee by the granter.
   rpc FeeAllowance(QueryFeeAllowanceRequest) returns (QueryFeeAllowanceResponse) {
-    option (google.api.http).get = "/cosmos/feegrant/v1beta1/granters/{granter}/grantees/{grantee}/grant";
+    option (google.api.http).get = "/cosmos/feegrant/v1beta1/fee_allowance/{granter}/{grantee}";
   }
 
   // FeeAllowances returns all the grants for address.
   rpc FeeAllowances(QueryFeeAllowancesRequest) returns (QueryFeeAllowancesResponse) {
-    option (google.api.http).get = "/cosmos/feegrant/v1beta1/grants/{grantee}";
+    option (google.api.http).get = "/cosmos/feegrant/v1beta1/fee_allowances/{grantee}";
   }
 }
 
@@ -30,7 +30,7 @@ message QueryFeeAllowanceRequest {
 // QueryFeeAllowanceResponse is the response type for the Query/FeeAllowance RPC method.
 message QueryFeeAllowanceResponse {
   // fee_allowance is a fee_allowance granted for grantee by granter.
-  cosmos.feegrant.v1beta1.FeeAllowanceGrant fee_allowance = 1;
+  cosmos.fee_grant.v1beta1.FeeAllowanceGrant fee_allowance = 1;
 }
 
 // QueryFeeAllowancesRequest is the request type for the Query/FeeAllowances RPC method.
@@ -44,7 +44,7 @@ message QueryFeeAllowancesRequest {
 // QueryFeeAllowancesResponse is the response type for the Query/FeeAllowances RPC method.
 message QueryFeeAllowancesResponse {
   // fee_allowance is a fee_allowance granted for grantee by granter.
-  repeated cosmos.feegrant.v1beta1.FeeAllowanceGrant fee_allowances = 1;
+  repeated cosmos.fee_grant.v1beta1.FeeAllowanceGrant fee_allowances = 1;
 
   // pagination defines an pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;

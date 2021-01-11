@@ -53,7 +53,8 @@ type Authorization interface {
 	MethodName() string
 
 	// Accept determines whether this grant permits the provided sdk.ServiceMsg to be performed, and if
-	// so provides an upgraded authorization instance.
+	// so provides an upgraded authorization instance. If delete returns true,the Authorization has
+	// been exhausted and can be deleted from state.
 	Accept(msg sdk.ServiceMsg, block abci.Header) (allow bool, updated Authorization, delete bool)
 }
 ```
@@ -133,7 +134,7 @@ message MsgRevokeAuthorization{
 
 ### Router Middleware
 
-The `msg_authorization` `Keeper` will expose a `DispatchActions` method which allows other modules to send `ServiceMsg`s
+The `authz` `Keeper` will expose a `DispatchActions` method which allows other modules to send `ServiceMsg`s
 to the router based on `Authorization` grants:
 
 ```go
@@ -142,8 +143,8 @@ type Keeper interface {
 }
 ```
 
-This allows the functionality provided by `msg_authorization` to be used for future inter-module object capabilities
-permissions as described in https://github.com/cosmos/cosmos-sdk.
+This allows the functionality provided by `authz` to be used for future inter-module object capabilities
+permissions as described in [ADR 033](https://github.com/cosmos/cosmos-sdk/7459)
 
 ### CLI
 

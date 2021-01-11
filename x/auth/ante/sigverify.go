@@ -182,7 +182,7 @@ func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler authsigning.S
 func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	switch v := sigData.(type) {
 	case *signing.SingleSignatureData:
-		return v.SignMode == signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+		return v.SignMode == signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON //nolint:staticcheck
 	case *signing.MultiSignatureData:
 		for _, s := range v.Signatures {
 			if !OnlyLegacyAminoSigners(s) {

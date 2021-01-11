@@ -4,57 +4,35 @@ order: 4
 
 # Messages
 
-## MsgWithdrawDelegationRewardsAll
+## MsgSetWithdrawAddress
 
-When a delegator wishes to withdraw their rewards it must send
-`MsgWithdrawDelegationRewardsAll`. Note that parts of this transaction logic are also
-triggered each with any change in individual delegations, such as an unbond,
-redelegation, or delegation of additional tokens to a specific validator.  
+By default a withdrawal address is delegator address. If a delegator wants to change it's
+withdrawal address it must send `MsgSetWithdrawAddress`.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/distribution/v1beta1/tx.proto#L29-L37
 
 ```go
-type MsgWithdrawDelegationRewardsAll struct {
-    DelegatorAddr sdk.AccAddress
-}
 
-func WithdrawDelegationRewardsAll(delegatorAddr, withdrawAddr sdk.AccAddress) 
-    height = GetHeight()
-    withdraw = GetDelegatorRewardsAll(delegatorAddr, height)
-    SendCoins(distributionModuleAcc, withdrawAddr, withdraw.TruncateDecimal())
+func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) error 
+	if k.blockedAddrs[withdrawAddr.String()] {
+		fail with "`{withdrawAddr}` is not allowed to receive external funds"
+	}
 
-func GetDelegatorRewardsAll(delegatorAddr sdk.AccAddress, height int64) DecCoins
-    
-    // get all distribution scenarios
-    delegations = GetDelegations(delegatorAddr)
-        
-    // collect all entitled rewards
-    withdraw = 0
-    pool = staking.GetPool() 
-    feePool = GetFeePool() 
-    for delegation = range delegations 
-        delInfo = GetDelegationDistInfo(delegation.DelegatorAddr,
-                        delegation.ValidatorAddr)
-        valInfo = GetValidatorDistInfo(delegation.ValidatorAddr)
-        validator = GetValidator(delegation.ValidatorAddr)
+	if !k.GetWithdrawAddrEnabled(ctx) {
+		fail with `ErrSetWithdrawAddrDisabled`
+	}
 
-        feePool, diWithdraw = delInfo.WithdrawRewards(feePool, valInfo, height, pool.BondedTokens, 
-                   validator.Tokens, validator.DelegatorShares, validator.Commission)
-        withdraw += diWithdraw
-
-    SetFeePool(feePool) 
-    return withdraw
+	k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
 ```
 
-## MsgWithdrawDelegationReward
+## MsgWithdrawDelegatorReward
 
 under special circumstances a delegator may wish to withdraw rewards from only
 a single validator. 
 
-```go
-type MsgWithdrawDelegationReward struct {
-    DelegatorAddr sdk.AccAddress
-    ValidatorAddr sdk.ValAddress
-}
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/distribution/v1beta1/tx.proto#L42-L50
 
+```go
 func WithdrawDelegationReward(delegatorAddr, validatorAddr, withdrawAddr sdk.AccAddress) 
     height = GetHeight()
     
@@ -74,19 +52,16 @@ func WithdrawDelegationReward(delegatorAddr, validatorAddr, withdrawAddr sdk.Acc
 ```
 
 
-## MsgWithdrawValidatorRewardsAll
+### Withdraw Validator Rewards All
 
 When a validator wishes to withdraw their rewards it must send
-`MsgWithdrawValidatorRewardsAll`. Note that parts of this transaction logic are also
+array of `MsgWithdrawDelegatorReward`. Note that parts of this transaction logic are also
 triggered each with any change in individual delegations, such as an unbond,
 redelegation, or delegation of additional tokens to a specific validator. This
 transaction withdraws the validators commission fee, as well as any rewards
 earning on their self-delegation.
 
 ```go
-type MsgWithdrawValidatorRewardsAll struct {
-    OperatorAddr sdk.ValAddress // validator address to withdraw from 
-}
 
 func WithdrawValidatorRewardsAll(operatorAddr, withdrawAddr sdk.AccAddress)
 

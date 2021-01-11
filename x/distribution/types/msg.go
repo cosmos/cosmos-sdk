@@ -3,11 +3,11 @@ package types
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
 
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/gogo/protobuf/proto"
 
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

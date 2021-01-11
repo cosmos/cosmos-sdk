@@ -3,7 +3,6 @@ package types
 import (
 	"bytes"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	"strconv"
 	"strings"
 
@@ -13,6 +12,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

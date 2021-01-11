@@ -44,7 +44,7 @@ The base keeper provides full-permission access: the ability to arbitrary modify
 type Keeper interface {
 	SendKeeper
 
-	InitGenesis(sdk.Context, types.GenesisState)
+	InitGenesis(sdk.Context, *types.GenesisState)
 	ExportGenesis(sdk.Context) *types.GenesisState
 
 	GetSupply(ctx sdk.Context) exported.SupplyI

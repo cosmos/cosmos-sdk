@@ -11,25 +11,14 @@ be one active parameter set at any given time. If governance wants to change a
 parameter set, either to modify a value or add/remove a parameter field, a new
 parameter set has to be created and the previous one rendered inactive.
 
-```proto
-message DepositParams {
-  repeated cosmos.base.v1beta1.Coin min_deposit = 1  //  Minimum deposit for a proposal to enter voting period.
-}
-```
+### DepositParams
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc7/proto/cosmos/gov/v1beta1/gov.proto#L127-L145
 
-```proto
-message VotingParams {
-  google.protobuf.Duration voting_period = 1  //  Length of the voting period. Initial value: 2 weeks
-}
-```
+### VotingParams
++++ https://github.com/cosmos/cosmos-sdk/blob/atheesh/gov-basic-cleanup/proto/cosmos/gov/v1beta1/gov.proto#L147-L156
 
-```proto
-message TallyParams {
-  bytes quorum = 1;  //  Minimum percentage of stake that needs to vote for a proposal to be considered valid
-  bytes threshold = 2; //  Minimum proportion of Yes votes for proposal to pass. Initial value: 0.5
-  bytes veto_threshold = 3;  //  Minimum proportion of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
-}
-```
+### TallyParams
++++ https://github.com/cosmos/cosmos-sdk/blob/atheesh/gov-basic-cleanup/proto/cosmos/gov/v1beta1/gov.proto#L158-L183
 
 Parameters are stored in a global `GlobalParams` KVStore.
 
@@ -67,13 +56,7 @@ const (
 
 ## Deposit
 
-```proto
-  message Deposit { 
-    uint64   proposal_id                     = 1;
-    string   depositor                       = 2; //  Address of depositor
-    repeated cosmos.base.v1beta1.Coin amount = 3; //  Amount of coins deposited by depositor
-  }
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/atheesh/gov-basic-cleanup/proto/cosmos/gov/v1beta1/gov.proto#L43-L53
 
 ## ValidatorGovInfo
 
@@ -92,21 +75,7 @@ This type is used in a temp map when tallying
 what this proposal is about, and other fields, which are the mutable state of
 the governance process.
 
-```proto
-message Proposal {
-	uint64              proposal_id        = 1;
-  google.protobuf.Any content            = 2; // Proposal content interface
-  ProposalStatus      status             = 3; // Status of the Proposal {Pending, Active, Passed, Rejected}
-  TallyResult         final_tally_result = 4; // Result of Tallies
-  google.protobuf.Timestamp submit_time = 5; // Time of the block where MsgSubmitProposal was included
-
-	google.protobuf.Timestamp deposit_end_time = 6;  // Time that the Proposal would expire if deposit amount isn't met
-	repeated cosmos.base.v1beta1.Coin total_deposit = 7;  // Current deposit on this proposal. Initial value is set at InitialDeposit
-
-	google.protobuf.Timestamp voting_start_time = 8;  //  Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
-	google.protobuf.Timestamp voting_end_time = 9;  // Time that the VotingPeriod for this proposal will end and votes will be tallied
-}
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/atheesh/gov-basic-cleanup/proto/cosmos/gov/v1beta1/gov.proto#L55-L77
 
 ```go
 type Content interface {

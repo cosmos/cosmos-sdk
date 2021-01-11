@@ -40,7 +40,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	appParams := make(simtypes.AppParams)
 
 	weightesOps := simulation.WeightedOperations(appParams, cdc, suite.app.AccountKeeper,
-		suite.app.BankKeeper, suite.app.MsgAuthKeeper, cdc, suite.protoCdc,
+		suite.app.BankKeeper, suite.app.AuthzKeeper, cdc, suite.protoCdc,
 	)
 
 	// setup 3 accounts
@@ -106,7 +106,7 @@ func (suite *SimTestSuite) TestSimulateGrantAuthorization() {
 	grantee := accounts[1]
 
 	// execute operation
-	op := simulation.SimulateMsgGrantAuthorization(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.MsgAuthKeeper, suite.protoCdc)
+	op := simulation.SimulateMsgGrantAuthorization(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper, suite.protoCdc)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, ctx, accounts, "")
 	suite.Require().NoError(err)
 
@@ -139,11 +139,11 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 	grantee := accounts[1]
 	authorization := types.NewSendAuthorization(initCoins)
 
-	err := suite.app.MsgAuthKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
+	err := suite.app.AuthzKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
 	suite.Require().NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgRevokeAuthorization(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.MsgAuthKeeper, suite.protoCdc)
+	op := simulation.SimulateMsgRevokeAuthorization(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper, suite.protoCdc)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
@@ -174,11 +174,11 @@ func (suite *SimTestSuite) TestSimulateExecAuthorization() {
 	grantee := accounts[1]
 	authorization := types.NewSendAuthorization(initCoins)
 
-	err := suite.app.MsgAuthKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
+	err := suite.app.AuthzKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
 	suite.Require().NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgExecuteAuthorized(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.MsgAuthKeeper, suite.app.AppCodec(), suite.protoCdc)
+	op := simulation.SimulateMsgExecuteAuthorized(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper, suite.app.AppCodec(), suite.protoCdc)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 

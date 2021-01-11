@@ -49,7 +49,7 @@ func (k Keeper) Authorizations(c context.Context, req *types.QueryAuthorizations
 	authStore := prefix.NewStore(store, key)
 	var authorizations []*types.AuthorizationGrant
 	pageRes, err := query.FilteredPaginate(authStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		auth, err := UnmarshalAuthorization(k.cdc, value)
+		auth, err := unmarshalAuthorization(k.cdc, value)
 		if err != nil {
 			return false, err
 		}
@@ -82,7 +82,7 @@ func (k Keeper) Authorizations(c context.Context, req *types.QueryAuthorizations
 }
 
 // unmarshal an authorization from a store value
-func UnmarshalAuthorization(cdc codec.BinaryMarshaler, value []byte) (v types.AuthorizationGrant, err error) {
+func unmarshalAuthorization(cdc codec.BinaryMarshaler, value []byte) (v types.AuthorizationGrant, err error) {
 	err = cdc.UnmarshalBinaryBare(value, &v)
 	return v, err
 }

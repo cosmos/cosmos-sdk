@@ -81,7 +81,6 @@ Examples:
 			if err != nil {
 				return err
 			}
-			// period := time.Duration(exp) * time.Second
 
 			msg, err := types.NewMsgGrantAuthorization(clientCtx.GetFromAddress(), grantee, authorization, time.Unix(exp, 0))
 			if err != nil {

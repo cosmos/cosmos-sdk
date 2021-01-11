@@ -27,7 +27,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 	app := simapp.Setup(checkTx)
 
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1})
-	suite.keeper = app.MsgAuthKeeper
+	suite.keeper = app.AuthzKeeper
 }
 
 var (

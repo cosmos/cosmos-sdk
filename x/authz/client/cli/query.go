@@ -18,7 +18,7 @@ import (
 func GetQueryCmd() *cobra.Command {
 	authorizationQueryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      "Querying commands for the msg authorization module",
+		Short:                      "Querying commands for the authz module",
 		Long:                       "",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,

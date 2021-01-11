@@ -6,7 +6,7 @@ import "cosmos/feegrant/v1beta1/feegrant.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/api/annotations.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/fee_grant/types";
 
 // Query defines the gRPC querier service.
 service Query {

@@ -15,7 +15,6 @@ import (
 	"github.com/tendermint/tendermint/rpc/client/http"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -79,7 +78,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 	val := s.network.Validators[0]
 
 	consPrivKey := ed25519.GenPrivKey()
-	consPubKeyBz, err := codec.MarshalIfcJSON(s.cfg.Codec, consPrivKey.PubKey())
+	consPubKeyBz, err := s.cfg.Codec.MarshalInterfaceJSON(consPrivKey.PubKey())
 	require.NoError(err)
 	require.NotNil(consPubKeyBz)
 

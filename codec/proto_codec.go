@@ -125,7 +125,7 @@ func (pc *ProtoCodec) MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMars
 // MarshalJSON implements JSONMarshaler.MarshalJSON method,
 // it marshals to JSON using proto codec.
 // NOTE: this function must be used with a concert type which
-// implements proto.Message. For interface please use the codec.MarshalIfcJSON
+// implements proto.Message. For interface please use the codec.MarshalInterfaceJSON
 func (pc *ProtoCodec) MarshalJSON(o proto.Message) ([]byte, error) {
 	m, ok := o.(ProtoMarshaler)
 	if !ok {
@@ -138,7 +138,7 @@ func (pc *ProtoCodec) MarshalJSON(o proto.Message) ([]byte, error) {
 // MustMarshalJSON implements JSONMarshaler.MustMarshalJSON method,
 // it executes MarshalJSON except it panics upon failure.
 // NOTE: this function must be used with a concert type which
-// implements proto.Message. For interface please use the codec.MarshalIfcJSON
+// implements proto.Message. For interface please use the codec.MarshalInterfaceJSON
 func (pc *ProtoCodec) MustMarshalJSON(o proto.Message) []byte {
 	bz, err := pc.MarshalJSON(o)
 	if err != nil {

@@ -326,7 +326,7 @@ func TestDisplay(t *testing.T) {
 		func() { require.Empty(msig.String()) },
 	)
 	ccfg := simapp.MakeTestEncodingConfig()
-	bz, err := codec.MarshalIfcJSON(ccfg.Marshaler, msig)
+	bz, err := ccfg.Marshaler.MarshalInterfaceJSON(msig)
 	require.NoError(err)
 	expectedPrefix := `{"@type":"/cosmos.crypto.multisig.LegacyAminoPubKey","threshold":2,"public_keys":[{"@type":"/cosmos.crypto.secp256k1.PubKey"`
 	require.True(strings.HasPrefix(string(bz), expectedPrefix))

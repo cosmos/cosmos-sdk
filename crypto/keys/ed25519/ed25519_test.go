@@ -280,7 +280,7 @@ func TestMarshalProto2(t *testing.T) {
 
 	// **** test JSON serialization ****
 
-	bz, err := codec.MarshalIfcJSON(ccfg.Marshaler, pk)
+	bz, err := ccfg.Marshaler.MarshalInterfaceJSON(pk)
 	require.NoError(err)
 
 	var pk3 cryptotypes.PubKey

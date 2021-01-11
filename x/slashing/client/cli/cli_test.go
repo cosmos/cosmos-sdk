@@ -12,7 +12,6 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,7 +49,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) TestGetCmdQuerySigningInfo() {
 	val := s.network.Validators[0]
-	pubKeyBz, err := codec.MarshalIfcJSON(s.cfg.Codec, val.PubKey)
+	pubKeyBz, err := s.cfg.Codec.MarshalInterfaceJSON(val.PubKey)
 	s.Require().NoError(err)
 	pubKeyStr := string(pubKeyBz)
 

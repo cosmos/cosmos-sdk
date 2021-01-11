@@ -150,6 +150,10 @@ func (s *IntegrationTestSuite) TestCLISign() {
 		sigOnlyFlag)
 	require.NoError(err)
 	checkSignatures(require, txCfg, res.Bytes(), valInfo.GetPubKey())
+	sigs, err := txCfg.UnmarshalSignatureJSON(res.Bytes())
+	require.NoError(err)
+	require.Equal(1, len(sigs))
+	require.Equal(uint64(1), sigs[0].Sequence)
 
 	/****  test full output  ****/
 	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag)

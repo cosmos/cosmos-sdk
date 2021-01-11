@@ -148,11 +148,10 @@ permissions as described in [ADR 033](https://github.com/cosmos/cosmos-sdk/7459)
 
 ### CLI
 
-#### `--send-as` Flag
+#### `tx exec` Method
 
 When a CLI user wants to run a transaction on behalf of another account using `MsgExecAuthorized`, they
-can use the `--send-as` flag to specify the granter's account but signed by the grantee's account as
-specified by the `--from` flag. For instance `gaiacli tx gov vote 1 yes --from mykey --send-as cosmos3thsdgh983egh823`
+can use the `exec` method. For instance `gaiacli tx gov vote 1 yes --from <grantee> --generate-only | gaiacli tx authz exec --send-as <granter> --from <grantee>`
 would send a transaction like this:
 
 ```go

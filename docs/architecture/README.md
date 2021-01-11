@@ -53,7 +53,7 @@ Read about the [PROCESS](./PROCESS.md).
 - [ADR 023: Protocol Buffer Naming and Versioning](./adr-023-protobuf-naming.md)
 - [ADR 026: IBC Client Recovery Mechanisms](./adr-026-ibc-client-recovery-mechanisms.md)
 - [ADR 029: Fee Grant Module](./adr-029-fee-grant-module.md)
-- [ADR 030: Message Authorization Module](./adr-030-msg-auth-module.md)
+- [ADR 030: Message Authorization Module](architecture/adr-030-authz-module.md)
 - [ADR 031: Protobuf Msg Services](./adr-031-msg-service.md)
 
 ### Proposed

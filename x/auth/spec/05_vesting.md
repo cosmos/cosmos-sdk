@@ -90,16 +90,16 @@ type VestingAccount interface {
 }
 ```
 ### BaseVestingAccount
-+++ https://github.com/cosmos/cosmos-sdk/blob/atheesh/gov-basic-cleanup/proto/cosmos/vesting/v1beta1/vesting.proto#L10-L33
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L10-L33
 
 ### ContinuousVestingAccount
-+++ https://github.com/cosmos/cosmos-sdk/blob/atheesh/gov-basic-cleanup/proto/cosmos/vesting/v1beta1/vesting.proto#L35-L43
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L35-L43
 
 ### DelayedVestingAccount
-+++ https://github.com/cosmos/cosmos-sdk/blob/atheesh/gov-basic-cleanup/proto/cosmos/vesting/v1beta1/vesting.proto#L45-L53
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L45-L53
 
 ### Period
-+++ https://github.com/cosmos/cosmos-sdk/blob/atheesh/gov-basic-cleanup/proto/cosmos/vesting/v1beta1/vesting.proto#L56-L62
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L56-L62
 
 ```go
 // Stores all vesting periods passed as part of a PeriodicVestingAccount
@@ -108,7 +108,7 @@ type Periods []Period
 ```
 
 ### PeriodicVestingAccount
-+++ https://github.com/cosmos/cosmos-sdk/blob/atheesh/gov-basic-cleanup/proto/cosmos/vesting/v1beta1/vesting.proto#L64-L73
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L64-L73
 
 In order to facilitate less ad-hoc type checking and assertions and to support
 flexibility in account balance usage, the existing `x/bank` `ViewKeeper` interface

@@ -3,6 +3,7 @@ package types
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
 
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/gogo/protobuf/proto"
@@ -99,9 +100,9 @@ func (msg *MsgWithdrawDelegatorReward) ToOperations(withStatus, hasError bool) [
 
 	var status string
 	if withStatus {
-		status = "Success"
+		status = rosetta.StatusSuccess
 		if hasError {
-			status = "Reverted"
+			status = rosetta.StatusReverted
 		}
 	}
 

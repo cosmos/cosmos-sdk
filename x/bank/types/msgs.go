@@ -84,7 +84,7 @@ func (msg *MsgSend) ToOperations(withStatus bool, hasError bool) []*types.Operat
 	sendOp := func(account, amount string, index int) *types.Operation {
 		var status string
 		if withStatus {
-			status = "Success" // TODO: Does not look correct to use same string as the rosetta constants of status.
+			status = "Success"
 			if hasError {
 				status = "Reverted"
 			}

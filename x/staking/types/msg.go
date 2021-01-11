@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	"strconv"
 	"strings"
 
@@ -265,9 +266,9 @@ func (msg *MsgDelegate) ToOperations(withStatus bool, hasError bool) []*rosettat
 	delOp := func(account *rosettatypes.AccountIdentifier, amount string, index int) *rosettatypes.Operation {
 		var status string
 		if withStatus {
-			status = "Success"
+			status = rosetta.StatusSuccess
 			if hasError {
-				status = "Reverted"
+				status = rosetta.StatusReverted
 			}
 		}
 		return &rosettatypes.Operation{
@@ -405,9 +406,9 @@ func (msg *MsgBeginRedelegate) ToOperations(withStatus bool, hasError bool) []*r
 	delOp := func(account *rosettatypes.AccountIdentifier, amount string, index int) *rosettatypes.Operation {
 		var status string
 		if withStatus {
-			status = "Success"
+			status = rosetta.StatusSuccess
 			if hasError {
-				status = "Reverted"
+				status = rosetta.StatusReverted
 			}
 		}
 		return &rosettatypes.Operation{
@@ -549,9 +550,9 @@ func (msg *MsgUndelegate) ToOperations(withStatus bool, hasError bool) []*rosett
 	delOp := func(account *rosettatypes.AccountIdentifier, amount string, index int) *rosettatypes.Operation {
 		var status string
 		if withStatus {
-			status = "Success"
+			status = rosetta.StatusSuccess
 			if hasError {
-				status = "Reverted"
+				status = rosetta.StatusReverted
 			}
 		}
 		return &rosettatypes.Operation{

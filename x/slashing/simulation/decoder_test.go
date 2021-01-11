@@ -8,7 +8,6 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,7 +30,7 @@ func TestDecodeStore(t *testing.T) {
 
 	info := types.NewValidatorSigningInfo(consAddr1, 0, 1, time.Now().UTC(), false, 0)
 	missed := gogotypes.BoolValue{Value: true}
-	bz, err := codec.MarshalIfc(cdc, delPk1)
+	bz, err := cdc.MarshalInterface(delPk1)
 	require.NoError(t, err)
 
 	kvPairs := kv.Pairs{

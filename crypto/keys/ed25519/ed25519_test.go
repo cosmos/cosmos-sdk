@@ -284,8 +284,7 @@ func TestMarshalProto2(t *testing.T) {
 	require.NoError(err)
 
 	var pk3 cryptotypes.PubKey
-	am := codec.NewJSONAnyMarshaler(ccfg.Marshaler, ccfg.InterfaceRegistry)
-	err = codec.UnmarshalIfcJSON(am, &pk3, bz)
+	err = ccfg.Marshaler.UnmarshalInterfaceJSON(bz, &pk3)
 	require.NoError(err)
 	require.True(pk3.Equals(pk))
 
@@ -301,11 +300,11 @@ func TestMarshalProto2(t *testing.T) {
 
 	// **** test binary serialization ****
 
-	bz, err = codec.MarshalIfc(ccfg.Marshaler, pk)
+	bz, err = ccfg.Marshaler.MarshalInterface(pk)
 	require.NoError(err)
 
 	var pk2 cryptotypes.PubKey
-	err = codec.UnmarshalIfc(ccfg.Marshaler, &pk2, bz)
+	err = ccfg.Marshaler.UnmarshalInterface(bz, &pk2)
 	require.NoError(err)
 	require.True(pk2.Equals(pk))
 }

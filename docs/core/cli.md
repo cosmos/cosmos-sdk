@@ -130,3 +130,7 @@ Here is an example of an `initConfig()` function from the [nameservice tutorial 
 And an example of how to add `initConfig` as a `PersistentPreRunE` to the root command:
 
 +++ https://github.com/cosmos/sdk-tutorials/blob/86a27321cf89cc637581762e953d0c07f8c78ece/nameservice/cmd/nscli/main.go#L42-L44
+
+## Next {hide}
+
+Learn about [events](./events.md) {hide}

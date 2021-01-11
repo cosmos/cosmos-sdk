@@ -98,4 +98,4 @@ Some Tendermint RPC endpoints are directly related to the Cosmos SDK:
 
 ## Next {hide}
 
-Learn about [events](./events.md) {hide}
+Learn about [the CLI](./cli.md) {hide}

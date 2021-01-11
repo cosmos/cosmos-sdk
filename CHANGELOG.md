@@ -36,7 +36,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* __Bug Fixes__
+### Bug Fixes
+
   * (x/auth) [\#8287](https://github.com/cosmos/cosmos-sdk/pull/8287) Fix `tx sign --signature-only` to return correct sequence value in signature.
 
 ## [v0.40.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0) - 2021-01-08

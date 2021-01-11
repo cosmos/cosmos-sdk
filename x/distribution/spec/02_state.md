@@ -27,11 +27,7 @@ type DecCoin struct {
 }
 ```
 
-```proto
-message FeePool {
-    repeated cosmos.base.v1beta1.DecCoin community_pool = 1 // pool for community funds yet to be spent
-}
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/distribution/v1beta1/distribution.proto#L94-L101
 
 ## Validator Distribution
 

@@ -15,7 +15,7 @@ for fractions of coins to be received from operations like inflation.
 When coins are distributed from the pool they are truncated back to
 `sdk.Coins` which are non-decimal.
 
-- FeePool:  `0x00 -> legacy_amino(FeePool)`
+- FeePool:  `0x00 -> ProtocolBuffer(FeePool)`
 
 ```go
 // coins with decimal
@@ -42,7 +42,7 @@ Validator distribution information for the relevant validator is updated each ti
  3. any delegator withdraws from a validator, or
  4. the validator withdraws it's commission.
 
-- ValidatorDistInfo:  `0x02 | ValOperatorAddr -> legacy_amino(validatorDistribution)`
+- ValidatorDistInfo:  `0x02 | ValOperatorAddr -> ProtocolBuffer(validatorDistribution)`
 
 ```go
 type ValidatorDistInfo struct {
@@ -60,7 +60,7 @@ properties change (aka bonded tokens etc.) its properties will remain constant
 and the delegator's _accumulation_ factor can be calculated passively knowing
 only the height of the last withdrawal and its current properties.
 
-- DelegationDistInfo: `0x02 | DelegatorAddr | ValOperatorAddr -> legacy_amino(delegatorDist)`
+- DelegationDistInfo: `0x02 | DelegatorAddr | ValOperatorAddr -> ProtocolBuffer(delegatorDist)`
 
 ```go
 type DelegationDistInfo struct {

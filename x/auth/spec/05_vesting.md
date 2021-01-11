@@ -89,49 +89,17 @@ type VestingAccount interface {
   GetEndTime()   int64
 }
 ```
+### BaseVestingAccount
++++ https://github.com/cosmos/cosmos-sdk/blob/atheesh/gov-basic-cleanup/proto/cosmos/vesting/v1beta1/vesting.proto#L10-L33
 
-```proto
-// BaseVestingAccount implements the VestingAccount interface. It contains all
-// the necessary fields needed for any vesting account implementation.
-message BaseVestingAccount {
-  cosmos.auth.v1beta1.BaseAccount base_account       = 1
+### ContinuousVestingAccount
++++ https://github.com/cosmos/cosmos-sdk/blob/atheesh/gov-basic-cleanup/proto/cosmos/vesting/v1beta1/vesting.proto#L35-L43
 
-  repeated cosmos.base.v1beta1.Coin original_vesting  = 2 // coins in account upon initialization
-  repeated cosmos.base.v1beta1.Coin delegated_free    = 3 // coins that are vested and delegated
-  repeated cosmos.base.v1beta1.Coin delegated_vesting = 4 // coins that vesting and delegated
+### DelayedVestingAccount
++++ https://github.com/cosmos/cosmos-sdk/blob/atheesh/gov-basic-cleanup/proto/cosmos/vesting/v1beta1/vesting.proto#L45-L53
 
-  int64 end_time = 5
-}
-```
-
-```proto
-// ContinuousVestingAccount implements the VestingAccount interface. It
-// continuously vests by unlocking coins linearly with respect to time.
-message ContinuousVestingAccount {
-  BaseVestingAccount base_vesting_account = 1
-  int64              start_time         	= 2
-}
-
-```
-
-```proto
-// DelayedVestingAccount implements the VestingAccount interface. It vests all
-// coins after a specific time, but non prior. In other words, it keeps them
-// locked until a specified time.
-message DelayedVestingAccount {
-  BaseVestingAccount base_vesting_account = 1
-}
-
-```
-
-```proto
-// VestingPeriod defines a length of time and amount of coins that will vest
-message Period {
-	int64    length                          = 1 // length of the period, in seconds
-  repeated cosmos.base.v1beta1.Coin amount = 2 // amount of coins vesting during this period
-}
-
-```
+### Period
++++ https://github.com/cosmos/cosmos-sdk/blob/atheesh/gov-basic-cleanup/proto/cosmos/vesting/v1beta1/vesting.proto#L56-L62
 
 ```go
 // Stores all vesting periods passed as part of a PeriodicVestingAccount
@@ -139,15 +107,8 @@ type Periods []Period
 
 ```
 
-```proto
-// PeriodicVestingAccount implements the VestingAccount interface. It
-// periodically vests by unlocking coins during each specified period
-message PeriodicVestingAccount {
-  BaseVestingAccount base_vesting_account = 1
-	int64              start_time           = 2
-  repeated Period vesting_periods = 3  // the vesting schedule
-}
-```
+### PeriodicVestingAccount
++++ https://github.com/cosmos/cosmos-sdk/blob/atheesh/gov-basic-cleanup/proto/cosmos/vesting/v1beta1/vesting.proto#L64-L73
 
 In order to facilitate less ad-hoc type checking and assertions and to support
 flexibility in account balance usage, the existing `x/bank` `ViewKeeper` interface

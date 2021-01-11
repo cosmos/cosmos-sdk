@@ -29,7 +29,7 @@ its unique `proposalID`.
 
 ### Proposal types
 
-In the initial version of the governance module, there are two types of
+In the initial version of the governance module, there are five types of
 proposal:
 
 - `TextProposal` All the proposals that do not involve a modification of

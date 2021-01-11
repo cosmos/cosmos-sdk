@@ -9,13 +9,7 @@ order: 3
 Proposals can be submitted by any Atom holder via a `MsgSubmitProposal`
 transaction.
 
-```proto
-message MsgSubmitProposal {
-	google.protobuf.Any content                       = 1 ;
-	repeated cosmos.base.v1beta1.Coin initial_deposit = 2;
-	string proposer = 3;
-}
-```
+https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/tx.proto#L24-L39
 
 The `Content` of a `MsgSubmitProposal` message must have an appropriate router
 set in the governance module.
@@ -81,12 +75,7 @@ Once a proposal is submitted, if
 `Proposal.TotalDeposit < ActiveParam.MinDeposit`, Atom holders can send
 `MsgDeposit` transactions to increase the proposal's deposit.
 
-```proto
-message MsgDeposit {
-  uint64   proposal_id = 1; // ID of the proposal
-  string   depositor   = 2; // Number of Atoms to add to the proposal's deposit   
-}
-```
+https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/tx.proto#L61-L72
 
 **State modifications:**
 
@@ -152,13 +141,7 @@ Once `ActiveParam.MinDeposit` is reached, voting period starts. From there,
 bonded Atom holders are able to send `MsgVote` transactions to cast their
 vote on the proposal.
 
-```proto
-  message MsgVote {   
-    uint64     proposal_id = 1; //  proposalID of the proposal
-    string     voter       = 2; //  voter account address        
-    VoteOption option      = 3; //  option from OptionSet chosen by the voter
-  }
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/tx.proto#L46-L56
 
 **State modifications:**
 

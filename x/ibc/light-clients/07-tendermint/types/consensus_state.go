@@ -48,11 +48,8 @@ func (cs ConsensusState) ValidateBasic() error {
 	if err := tmtypes.ValidateHash(cs.NextValidatorsHash); err != nil {
 		return sdkerrors.Wrap(err, "next validators hash is invalid")
 	}
-	if cs.Timestamp.IsZero() {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp cannot be zero Unix time")
-	}
-	if cs.Timestamp.UnixNano() < 0 {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp cannot be negative Unix time")
+	if cs.Timestamp.Unix() <= 0 {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp must be a positive Unix time")
 	}
 	return nil
 }

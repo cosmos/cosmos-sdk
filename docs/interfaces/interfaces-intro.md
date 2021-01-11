@@ -8,8 +8,8 @@ Typically, SDK applications include interfaces to let end-users interact with th
 
 ## Pre-requisite Readings
 
-* [Anatomy of an SDK Application](../basics/app-anatomy.md) {prereq}
-* [Lifecycle of a Transaction](../basics/tx-lifecycle.md) {prereq}
+- [Anatomy of an SDK Application](../basics/app-anatomy.md) {prereq}
+- [Lifecycle of a Transaction](../basics/tx-lifecycle.md) {prereq}
 
 ## Types of Application Interfaces
 
@@ -23,21 +23,20 @@ The process of creating an application interface is distinct from creating a [mo
 
 With regards to interfaces, module developers need to include the following definitions:
 
-* **CLI commands:** Specifically, [Transaction commands](../building-modules/module-interfaces.md#transaction-commands) and [Query commands](../building-modules/module-interfaces.md#query-commands). These are commands that users will invoke when interacting with the application to create transactions and queries. For example, if an application enables sending coins through the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module, users will create `tx auth send` transactions.
-* **Request Handlers:** Also categorized into Transaction and Query requests. Transactions will require HTTP [Request Types](../building-modules/module-interfaces.md#request-types) in addition to [Request Handlers](../building-modules/module-interfaces.md#request-handlers) in order to encapsulate all of the user's options (e.g. gas prices).
-* **REST Routes:** Given a router, the module interface registers paths with the aforementioned [Request Handlers](../building-modules/module-interfaces.md#request-handlers) for each type of request.
+- **CLI commands:** Specifically, [Transaction commands](../building-modules/module-interfaces.md#transaction-commands) and [Query commands](../building-modules/module-interfaces.md#query-commands). These are commands that users will invoke when interacting with the application to create transactions and queries. For example, if an application enables sending coins through the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module, users will create `tx auth send` transactions.
+- **Request Handlers:** Also categorized into Transaction and Query requests. Transactions will require HTTP [Request Types](../building-modules/module-interfaces.md#request-types) in addition to [Request Handlers](../building-modules/module-interfaces.md#request-handlers) in order to encapsulate all of the user's options (e.g. gas prices).
+- **REST Routes:** Given a router, the module interface registers paths with the aforementioned [Request Handlers](../building-modules/module-interfaces.md#request-handlers) for each type of request.
 
-Module interfaces are designed to be generic. Both commands and request types  include required user input (through flags or request body) which are different for each application. This section of documents will only detail application interfaces; to read about how to build module interfaces, click [here](../building-modules/module-interfaces.md).
+Module interfaces are designed to be generic. Both commands and request types include required user input (through flags or request body) which are different for each application. This section of documents will only detail application interfaces; to read about how to build module interfaces, click [here](../building-modules/module-interfaces.md).
 
 ### Application Developer Responsibilities
 
 With regards to interfaces, application developers need to include:
 
-* **CLI Root Command:** The [root command](./cli.md#root-command) adds subcommands to include all of the functionality for the application, mainly module [transaction](./cli.md#transaction-commands) and [query](./cli.md#query-commands) commands from the application's module(s).
-* **App Configurations:** All application-specific values are the responsibility of the application developer, including the [`codec`](../core/encoding.md) used to marshal requests before relaying them to a node.
-* **User Configurations:** Some values are specific to the user, such as the user's address and which node they are connected to. The CLI has a [configurations](./cli.md#configurations) function to set these values.
-* **RegisterRoutes Function:** [Routes](./rest.md#registerroutes) must be registered and passed to an instantiated [REST server](./rest.md#rest-server) so that it knows how to route requests for this particular application.
-
+- **CLI Root Command:** The [root command](./cli.md#root-command) adds subcommands to include all of the functionality for the application, mainly module [transaction](./cli.md#transaction-commands) and [query](./cli.md#query-commands) commands from the application's module(s).
+- **App Configurations:** All application-specific values are the responsibility of the application developer, including the [`codec`](../core/encoding.md) used to marshal requests before relaying them to a node.
+- **User Configurations:** Some values are specific to the user, such as the user's address and which node they are connected to. The CLI has a [configurations](./cli.md#configurations) function to set these values.
+- **RegisterRoutes Function:** [Routes](./rest.md#registerroutes) must be registered and passed to an instantiated [REST server](./rest.md#rest-server) so that it knows how to route requests for this particular application.
 
 ## Next {hide}
 

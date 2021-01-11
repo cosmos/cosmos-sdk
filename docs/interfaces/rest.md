@@ -4,7 +4,7 @@ order: 4
 
 # REST Interface
 
-This document describes how to create a REST interface for an SDK **application**. A separate document for creating a [**module**](../building-modules/intro.md) REST interface can be found [here](#../module-interfaces.md#legacy-rest). {synopsis}
+This document describes how to create a REST interface for an SDK **application**. A separate document for creating a [**module**](../building-modules/intro.md) REST interface can be found [here](../module-interfaces.md#legacy-rest). {synopsis}
 
 ## Pre-requisite Readings
 
@@ -56,15 +56,4 @@ This function is specific to the application and passed in to the `ServeCommand`
 
 ```go
 rootCmd.AddCommand(rest.ServeCommand(cdc, registerRoutes))
-```
-
-## Cross-Origin Resource Sharing (CORS)
-
-[CORS policies](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) are not enabled by default to help with security. If you would like to use the rest-server in a public environment we recommend you provide a reverse proxy, this can be done with [nginx](https://www.nginx.com/). For testing and development purposes there is an `unsafe_cors` flag that can be passed to the cmd to enable accepting cors from everyone.
-
-```sh
-gaiacli rest-server --chain-id=test \
-    --laddr=tcp://localhost:1317 \
-    --node tcp://localhost:26657 \
-    --unsafe-cors
 ```

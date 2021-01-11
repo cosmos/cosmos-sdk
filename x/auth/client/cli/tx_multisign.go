@@ -281,7 +281,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			signingData := signing.SignerData{
 				ChainID:       txFactory.ChainID(),
 				AccountNumber: txFactory.AccountNumber(),
-				Sequence:      txFactory.Sequence(),
+				Sequence:      sequence,
 			}
 
 			multisigPub := multisigInfo.GetPubKey().(*kmultisig.LegacyAminoPubKey)
@@ -300,7 +300,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			sigV2 := signingtypes.SignatureV2{
 				PubKey:   multisigPub,
 				Data:     multisigSig,
-				Sequence: txFactory.Sequence(),
+				Sequence: sequence,
 			}
 
 			err = txBldr.SetSignatures(sigV2)

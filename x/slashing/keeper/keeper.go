@@ -36,12 +36,12 @@ func NewKeeper(cdc codec.BinaryMarshaler, key sdk.StoreKey, sk types.StakingKeep
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // AddPubkey sets a address-pubkey relation
 func (k Keeper) AddPubkey(ctx sdk.Context, pubkey cryptotypes.PubKey) error {
-	bz, err := codec.MarshalIfc(k.cdc, pubkey)
+	bz, err := k.cdc.MarshalInterface(pubkey)
 	if err != nil {
 		return err
 	}
@@ -59,8 +59,7 @@ func (k Keeper) GetPubkey(ctx sdk.Context, a cryptotypes.Address) (cryptotypes.P
 		return nil, fmt.Errorf("address %s not found", sdk.ConsAddress(a))
 	}
 	var pk cryptotypes.PubKey
-	err := codec.UnmarshalIfc(k.cdc, &pk, bz)
-	return pk, err
+	return pk, k.cdc.UnmarshalInterface(bz, &pk)
 }
 
 // Slash attempts to slash a validator. The slash is delegated to the staking

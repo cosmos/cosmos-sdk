@@ -6,6 +6,7 @@
 - 2020 Feb 24: Updates to handle messages with interface fields
 - 2020 Apr 27: Convert usages of `oneof` for interfaces to `Any`
 - 2020 May 15: Describe `cosmos_proto` extensions and amino compatibility
+- 2020 Dec 4: Move and rename `MarshalAny` and `UnmarshalAny` into the `codec.Marshaler` interface.
 
 ## Status
 
@@ -221,23 +222,20 @@ every module that implements it in order to populate the `InterfaceRegistry`.
 
 ### Using `Any` to encode state
 
-The SDK will provide support methods `MarshalAny` and `UnmarshalAny` to allow
-easy encoding of state to `Any` in `Codec` implementations. Ex:
+The SDK will provide support methods `MarshalInterface` and `UnmarshalInterface` to hide a complexity of wrapping interface types into `Any` and allow easy serialization.
 
 ```go
 import "github.com/cosmos/cosmos-sdk/codec"
 
-func (c *Codec) MarshalEvidence(evidenceI eviexported.Evidence) ([]byte, error) {
-	return codec.MarshalAny(evidenceI)
+// note: eviexported.Evidence is an interface type
+func MarshalEvidence(cdc codec.BinaryMarshaler, e eviexported.Evidence) ([]byte, error) {
+	return cdc.MarshalInterface(e)
 }
 
-func (c *Codec) UnmarshalEvidence(bz []byte) (eviexported.Evidence, error) {
+func UnmarshalEvidence(cdc codec.BinaryMarshaler, bz []byte) (eviexported.Evidence, error) {
 	var evi eviexported.Evidence
-	err := codec.UnmarshalAny(c.interfaceContext, &evi, bz)
-	if err != nil {
-		return nil, err
-	}
-	return evi, nil
+	err := cdc.UnmarshalInterface(&evi, bz)
+    return err, nil
 }
 ```
 
@@ -375,4 +373,3 @@ seamless.
 
 1. https://github.com/cosmos/cosmos-sdk/issues/4977
 2. https://github.com/cosmos/cosmos-sdk/issues/5444
-

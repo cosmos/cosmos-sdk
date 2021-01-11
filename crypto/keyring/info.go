@@ -3,6 +3,7 @@ package keyring
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -232,13 +233,12 @@ func (i multiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 // encoding info
 func marshalInfo(i Info) []byte {
-	// Legacy. #7108
-	return CryptoCdc.MustMarshalBinaryLengthPrefixed(i)
+	return legacy.Cdc.MustMarshalBinaryLengthPrefixed(i)
 }
 
 // decoding info
 func unmarshalInfo(bz []byte) (info Info, err error) {
-	err = CryptoCdc.UnmarshalBinaryLengthPrefixed(bz, &info)
+	err = legacy.Cdc.UnmarshalBinaryLengthPrefixed(bz, &info)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +253,7 @@ func unmarshalInfo(bz []byte) (info Info, err error) {
 	_, ok := info.(multiInfo)
 	if ok {
 		var multi multiInfo
-		err = CryptoCdc.UnmarshalBinaryLengthPrefixed(bz, &multi)
+		err = legacy.Cdc.UnmarshalBinaryLengthPrefixed(bz, &multi)
 
 		return multi, err
 	}

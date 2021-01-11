@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/armon/go-metrics"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -28,7 +29,7 @@ func (k msgServer) SetWithdrawAddress(goCtx context.Context, msg *types.MsgSetWi
 	if err != nil {
 		return nil, err
 	}
-	withdrawAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	withdrawAddress, err := sdk.AccAddressFromBech32(msg.WithdrawAddress)
 	if err != nil {
 		return nil, err
 	}

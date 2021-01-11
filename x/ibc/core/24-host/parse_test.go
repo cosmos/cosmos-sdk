@@ -4,9 +4,10 @@ import (
 	"math"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
-	"github.com/stretchr/testify/require"
 )
 
 func TestParseIdentifier(t *testing.T) {
@@ -23,7 +24,7 @@ func TestParseIdentifier(t *testing.T) {
 		// one above uint64 max
 		{"invalid uint64", "connection-18446744073709551616", "connection-", 0, false},
 		// uint64 == 20 characters
-		{"invalid large sequence", "connection-2345682193567182931243", "conenction-", 0, false},
+		{"invalid large sequence", "connection-2345682193567182931243", "connection-", 0, false},
 		{"capital prefix", "Connection-0", "connection-", 0, false},
 		{"double prefix", "connection-connection-0", "connection-", 0, false},
 		{"doesn't have prefix", "connection-0", "prefix", 0, false},

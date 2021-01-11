@@ -30,7 +30,7 @@ and gracefully exit.
 Generally the application binary will restart on exit, but then will execute this BeginBlocker
 again and exit, causing a restart loop. Either the operator can manually install the new software,
 or you can make use of an external watcher daemon to possibly download and then switch binaries,
-also potentially doing a backup. An example of such a daemon is https://github.com/regen-network/cosmosd/
+also potentially doing a backup. An example of such a daemon is https://github.com/cosmos/cosmos-sdk/tree/v0.40.0-rc5/cosmovisor
 described below under "Automation".
 
 When the binary restarts with the upgraded version (here v0.40.0), it will detect we have registered the
@@ -106,10 +106,10 @@ to lose connectivity with the exiting nodes, thus this module prefers to just ha
 
 Automation and Plan.Info
 
-We have deprecated calling out to scripts, instead with propose https://github.com/regen-network/cosmosd
-as a model for a watcher daemon that can launch gaiad as a subprocess and then read the upgrade log message
+We have deprecated calling out to scripts, instead with propose https://github.com/cosmos/cosmos-sdk/tree/v0.40.0-rc5/cosmovisor
+as a model for a watcher daemon that can launch simd as a subprocess and then read the upgrade log message
 to swap binaries as needed. You can pass in information into Plan.Info according to the format
-specified here https://github.com/regen-network/cosmosd/blob/master/README.md#auto-download .
+specified here https://github.com/cosmos/cosmos-sdk/tree/v0.40.0-rc5/cosmovisor/README.md#auto-download .
 This will allow a properly configured cosmsod daemon to auto-download new binaries and auto-upgrade.
 As noted there, this is intended more for full nodes than validators.
 
@@ -127,12 +127,15 @@ period ends after the SoftwareUpgrade proposal.
 
 However, let's assume that we don't realize the upgrade has a bug until shortly before it will occur
 (or while we try it out - hitting some panic in the migration). It would seem the blockchain is stuck,
-but we need to allow an escape for social consensus to overrule the planned upgrade. To do so, we are
-adding a --unsafe-skip-upgrade flag to the start command, which will cause the node to mark the upgrade
-as done upon hiting the planned upgrade height, without halting and without actually performing a migration.
+but we need to allow an escape for social consensus to overrule the planned upgrade. To do so, there's
+a --unsafe-skip-upgrades flag to the start command, which will cause the node to mark the upgrade
+as done upon hitting the planned upgrade height(s), without halting and without actually performing a migration.
 If over two-thirds run their nodes with this flag on the old binary, it will allow the chain to continue through
 the upgrade with a manual override. (This must be well-documented for anyone syncing from genesis later on).
 
-(Skip-upgrade flag is in a WIP PR - will update this text when merged ^^)
+Example:
+	simd start --unsafe-skip-upgrades <height1> <optional_height_2> ... <optional_height_N>
+
+NOTE: Here simd is used as an example binary, replace it with original binary
 */
 package upgrade

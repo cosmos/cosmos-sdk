@@ -5,7 +5,6 @@ package cli_test
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"strings"
 	"testing"
 	"time"
@@ -16,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -685,10 +685,6 @@ func (s *IntegrationTestSuite) TestNewFundCommunityPoolCmd() {
 
 func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 	val := s.network.Validators[0]
-
-	invalidPropFile, err := ioutil.TempFile(s.T().TempDir(), "invalid_community_spend_proposal.*.json")
-	s.Require().NoError(err)
-
 	invalidProp := `{
   "title": "",
   "description": "Pay me some Atoms!",
@@ -696,13 +692,7 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
   "amount": "-343foocoin",
   "deposit": -324foocoin
 }`
-
-	_, err = invalidPropFile.WriteString(invalidProp)
-	s.Require().NoError(err)
-
-	validPropFile, err := ioutil.TempFile(s.T().TempDir(), "valid_community_spend_proposal.*.json")
-	s.Require().NoError(err)
-
+	invalidPropFile := testutil.WriteToNewTempFile(s.T(), invalidProp)
 	validProp := fmt.Sprintf(`{
   "title": "Community Pool Spend",
   "description": "Pay me some Atoms!",
@@ -710,10 +700,7 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
   "amount": "%s",
   "deposit": "%s"
 }`, val.Address.String(), sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)), sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)))
-
-	_, err = validPropFile.WriteString(validProp)
-	s.Require().NoError(err)
-
+	validPropFile := testutil.WriteToNewTempFile(s.T(), validProp)
 	testCases := []struct {
 		name         string
 		args         []string

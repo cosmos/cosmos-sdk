@@ -35,7 +35,7 @@ func (s Store) GetStoreType() types.StoreType {
 	return types.StoreTypeMemory
 }
 
-// CacheWrap cache wraps the underlying store.
+// CacheWrap branches the underlying store.
 func (s Store) CacheWrap() types.CacheWrap {
 	return cachekv.NewStore(s)
 }

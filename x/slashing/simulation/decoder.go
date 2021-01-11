@@ -31,10 +31,10 @@ func NewDecodeStore(cdc codec.BinaryMarshaler) func(kvA, kvB kv.Pair) string {
 
 		case bytes.Equal(kvA.Key[:1], types.AddrPubkeyRelationKeyPrefix):
 			var pubKeyA, pubKeyB cryptotypes.PubKey
-			if err := codec.UnmarshalIfc(cdc, &pubKeyA, kvA.Value); err != nil {
+			if err := cdc.UnmarshalInterface(kvA.Value, &pubKeyA); err != nil {
 				panic(fmt.Sprint("Can't unmarshal kvA; ", err))
 			}
-			if err := codec.UnmarshalIfc(cdc, &pubKeyB, kvB.Value); err != nil {
+			if err := cdc.UnmarshalInterface(kvB.Value, &pubKeyB); err != nil {
 				panic(fmt.Sprint("Can't unmarshal kvB; ", err))
 			}
 			return fmt.Sprintf("PubKeyA: %s\nPubKeyB: %s", pubKeyA, pubKeyB)

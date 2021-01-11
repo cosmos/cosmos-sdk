@@ -8,6 +8,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -98,10 +100,14 @@ func (s IntegrationTestSuite) TestQueryLatestValidatorSet() {
 	val := s.network.Validators[0]
 
 	// nil pagination
-	_, err := s.queryClient.GetLatestValidatorSet(context.Background(), &tmservice.GetLatestValidatorSetRequest{
+	res, err := s.queryClient.GetLatestValidatorSet(context.Background(), &tmservice.GetLatestValidatorSetRequest{
 		Pagination: nil,
 	})
 	s.Require().NoError(err)
+	s.Require().Equal(1, len(res.Validators))
+	content, ok := res.Validators[0].PubKey.GetCachedValue().(cryptotypes.PubKey)
+	s.Require().Equal(true, ok)
+	s.Require().Equal(content, val.PubKey)
 
 	//with pagination
 	_, err = s.queryClient.GetLatestValidatorSet(context.Background(), &tmservice.GetLatestValidatorSetRequest{Pagination: &qtypes.PageRequest{
@@ -111,14 +117,18 @@ func (s IntegrationTestSuite) TestQueryLatestValidatorSet() {
 	s.Require().NoError(err)
 
 	// rest request without pagination
-	_, err = rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validators/latest", val.APIAddress))
+	_, err = rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest", val.APIAddress))
 	s.Require().NoError(err)
 
 	// rest request with pagination
-	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validators/latest?pagination.offset=%d&pagination.limit=%d", val.APIAddress, 0, 1))
+	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest?pagination.offset=%d&pagination.limit=%d", val.APIAddress, 0, 1))
 	s.Require().NoError(err)
 	var validatorSetRes tmservice.GetLatestValidatorSetResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &validatorSetRes))
+	s.Require().Equal(1, len(validatorSetRes.Validators))
+	anyPub, err := codectypes.NewAnyWithValue(val.PubKey)
+	s.Require().NoError(err)
+	s.Require().Equal(validatorSetRes.Validators[0].PubKey, anyPub)
 }
 
 func (s IntegrationTestSuite) TestQueryValidatorSetByHeight() {
@@ -140,11 +150,11 @@ func (s IntegrationTestSuite) TestQueryValidatorSetByHeight() {
 	s.Require().NoError(err)
 
 	// no pagination rest
-	_, err = rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validators/%d", val.APIAddress, 1))
+	_, err = rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d", val.APIAddress, 1))
 	s.Require().NoError(err)
 
 	// rest query with pagination
-	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validators/%d?pagination.offset=%d&pagination.limit=%d", val.APIAddress, 1, 0, 1))
+	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d?pagination.offset=%d&pagination.limit=%d", val.APIAddress, 1, 0, 1))
 	var validatorSetRes tmservice.GetValidatorSetByHeightResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &validatorSetRes))
 }

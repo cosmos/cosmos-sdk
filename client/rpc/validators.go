@@ -28,8 +28,10 @@ func ValidatorCommand() *cobra.Command {
 		Short: "Get the full tendermint validator set at given height",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
 			var height *int64
 
 			// optional height
@@ -52,7 +54,7 @@ func ValidatorCommand() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutputLegacy(result)
+			return clientCtx.PrintObjectLegacy(result)
 		},
 	}
 

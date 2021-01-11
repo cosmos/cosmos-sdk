@@ -22,6 +22,7 @@ import (
 const (
 	flagVersionIdentifier = "version-identifier"
 	flagVersionFeatures   = "version-features"
+	flagDelayPeriod       = "delay-period"
 )
 
 // NewConnectionOpenInitCmd defines the command to initialize a connection on
@@ -34,17 +35,15 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 	- 'version-identifier' flag can be a single pre-selected version identifier to be used in the handshake.
 	- 'version-features' flag can be a list of features separated by commas to accompany the version identifier.`,
 		Example: fmt.Sprintf(
-			"%s tx %s %s open-init [client-id] [counterparty-client-id] [path/to/counterparty_prefix.json] --version-identifier=\"1.0\" --version-features=\"ORDER_UNORDERED\"",
+			"%s tx %s %s open-init [client-id] [counterparty-client-id] [path/to/counterparty_prefix.json] --version-identifier=\"1.0\" --version-features=\"ORDER_UNORDERED\" --delay-period=500",
 			version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			clientID := args[0]
 			counterpartyClientID := args[1]
 
@@ -67,9 +66,14 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 				version = types.NewVersion(versionIdentifier, features)
 			}
 
+			delayPeriod, err := cmd.Flags().GetUint64(flagDelayPeriod)
+			if err != nil {
+				return err
+			}
+
 			msg := types.NewMsgConnectionOpenInit(
 				clientID, counterpartyClientID,
-				counterpartyPrefix, version, clientCtx.GetFromAddress(),
+				counterpartyPrefix, version, delayPeriod, clientCtx.GetFromAddress(),
 			)
 
 			if err := msg.ValidateBasic(); err != nil {
@@ -84,6 +88,7 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 	// at this step in the handshake.
 	cmd.Flags().String(flagVersionIdentifier, "", "version identifier to be used in the connection handshake version negotiation")
 	cmd.Flags().String(flagVersionFeatures, "", "version features list separated by commas without spaces. The features must function with the version identifier.")
+	cmd.Flags().Uint64(flagDelayPeriod, 0, "delay period that must pass before packet verification can pass against a consensus state")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -106,12 +111,10 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 		),
 		Args: cobra.ExactArgs(12),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			connectionID := args[0]
 			clientID := args[1]
 			counterpartyConnectionID := args[2]
@@ -174,9 +177,14 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 				return err
 			}
 
+			delayPeriod, err := cmd.Flags().GetUint64(flagDelayPeriod)
+			if err != nil {
+				return err
+			}
+
 			msg := types.NewMsgConnectionOpenTry(
 				connectionID, clientID, counterpartyConnectionID, counterpartyClientID,
-				counterpartyClient, counterpartyPrefix, counterpartyVersions,
+				counterpartyClient, counterpartyPrefix, counterpartyVersions, delayPeriod,
 				proofInit, proofClient, proofConsensus, proofHeight,
 				consensusHeight, clientCtx.GetFromAddress(),
 			)
@@ -189,6 +197,7 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 		},
 	}
 
+	cmd.Flags().Uint64(flagDelayPeriod, 0, "delay period that must pass before packet verification can pass against a consensus state")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -198,23 +207,21 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 // connection open attempt from chain B to chain A
 func NewConnectionOpenAckCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: `open-ack [connection-id] [counterparty-connection-id] [path/to/client_state.json] [consensus-height] [proof-height] 
+		Use: `open-ack [connection-id] [counterparty-connection-id] [path/to/client_state.json] [consensus-height] [proof-height]
 		[path/to/proof_try.json] [path/to/proof_client.json] [path/to/proof_consensus.json] [version]`,
 		Short: "relay the acceptance of a connection open attempt",
 		Long:  "Relay the acceptance of a connection open attempt from chain B to chain A",
 		Example: fmt.Sprintf(
-			`%s tx %s %s open-ack [connection-id] [counterparty-connection-id] [path/to/client_state.json] [consensus-height] [proof-height] 
+			`%s tx %s %s open-ack [connection-id] [counterparty-connection-id] [path/to/client_state.json] [consensus-height] [proof-height]
 			[path/to/proof_try.json] [path/to/proof_client.json] [path/to/proof_consensus.json] [version]`,
 			version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(9),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			connectionID := args[0]
 			counterpartyConnectionID := args[1]
 
@@ -295,14 +302,11 @@ func NewConnectionOpenConfirmCmd() *cobra.Command {
 		),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			connectionID := args[0]
-
 			proofHeight, err := clienttypes.ParseHeight(args[1])
 			if err != nil {
 				return err

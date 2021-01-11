@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -35,9 +34,7 @@ func Cmd() *cobra.Command {
 // encodings fail, an error is returned.
 func getPubKeyFromString(ctx client.Context, pkstr string) (cryptotypes.PubKey, error) {
 	var pk cryptotypes.PubKey
-	am := codec.NewJSONAnyMarshaler(ctx.JSONMarshaler, ctx.InterfaceRegistry)
-	err := codec.UnmarshalIfcJSON(am, &pk, []byte(pkstr))
-
+	err := ctx.JSONMarshaler.UnmarshalInterfaceJSON([]byte(pkstr), &pk)
 	return pk, err
 }
 

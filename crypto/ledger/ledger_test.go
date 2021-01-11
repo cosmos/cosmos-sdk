@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -227,7 +227,7 @@ func TestRealDeviceSecp256k1(t *testing.T) {
 
 	// now, let's serialize the public key and make sure it still works
 	bs := cdc.Amino.MustMarshalBinaryBare(priv.PubKey())
-	pub2, err := cryptoAmino.PubKeyFromBytes(bs)
+	pub2, err := legacy.PubKeyFromBytes(bs)
 	require.Nil(t, err, "%+v", err)
 
 	// make sure we get the same pubkey when we load from disk
@@ -240,8 +240,8 @@ func TestRealDeviceSecp256k1(t *testing.T) {
 	require.True(t, valid)
 
 	// make sure pubkeys serialize properly as well
-	bs = cdc.Amino.MustMarshalBinaryBare(pub)
-	bpub, err := cryptoAmino.PubKeyFromBytes(bs)
+	bs = legacy.Cdc.MustMarshalBinaryBare(pub)
+	bpub, err := legacy.PubKeyFromBytes(bs)
 	require.NoError(t, err)
 	require.Equal(t, pub, bpub)
 }

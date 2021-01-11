@@ -7,7 +7,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -74,4 +77,42 @@ func TestContentAccessors(t *testing.T) {
 		})
 
 	}
+}
+
+// tests a software update proposal can be marshaled and unmarshaled, and the
+// client state can be unpacked
+func TestMarshalSoftwareUpdateProposal(t *testing.T) {
+	cs, err := clienttypes.PackClientState(&ibctmtypes.ClientState{})
+	require.NoError(t, err)
+
+	// create proposal
+	plan := types.Plan{
+		Name:                "upgrade ibc",
+		Height:              1000,
+		UpgradedClientState: cs,
+	}
+	content := types.NewSoftwareUpgradeProposal("title", "description", plan)
+	sup, ok := content.(*types.SoftwareUpgradeProposal)
+	require.True(t, ok)
+
+	// create codec
+	ir := codectypes.NewInterfaceRegistry()
+	types.RegisterInterfaces(ir)
+	clienttypes.RegisterInterfaces(ir)
+	gov.RegisterInterfaces(ir)
+	ibctmtypes.RegisterInterfaces(ir)
+	cdc := codec.NewProtoCodec(ir)
+
+	// marshal message
+	bz, err := cdc.MarshalJSON(sup)
+	require.NoError(t, err)
+
+	// unmarshal proposal
+	newSup := &types.SoftwareUpgradeProposal{}
+	err = cdc.UnmarshalJSON(bz, newSup)
+	require.NoError(t, err)
+
+	// unpack client state
+	_, err = clienttypes.UnpackClientState(newSup.Plan.UpgradedClientState)
+	require.NoError(t, err)
 }

@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -86,12 +85,12 @@ the flag --nosort is set.
 
 func runAddCmdPrepare(cmd *cobra.Command, args []string) error {
 	buf := bufio.NewReader(cmd.InOrStdin())
-	clientCtx := client.GetClientContextFromCmd(cmd)
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
 
-	var (
-		kr  keyring.Keyring
-		err error
-	)
+	var kr keyring.Keyring
 
 	dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun)
 	if dryRun {
@@ -187,8 +186,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, kb keyring
 	pubKey, _ := cmd.Flags().GetString(FlagPublicKey)
 	if pubKey != "" {
 		var pk cryptotypes.PubKey
-		am := codec.NewJSONAnyMarshaler(ctx.JSONMarshaler, ctx.InterfaceRegistry)
-		err = codec.UnmarshalIfcJSON(am, &pk, []byte(pubKey))
+		err = ctx.JSONMarshaler.UnmarshalInterfaceJSON([]byte(pubKey), &pk)
 		if err != nil {
 			return err
 		}

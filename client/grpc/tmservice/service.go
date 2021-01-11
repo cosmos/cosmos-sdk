@@ -10,8 +10,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -23,6 +23,7 @@ type queryServer struct {
 }
 
 var _ ServiceServer = queryServer{}
+var _ codectypes.UnpackInterfacesMessage = &GetLatestValidatorSetResponse{}
 
 // NewQueryServer creates a new tendermint query server.
 func NewQueryServer(clientCtx client.Context, interfaceRegistry codectypes.InterfaceRegistry) ServiceServer {
@@ -100,6 +101,17 @@ func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *GetLatestVa
 	return r, err
 }
 
+func (m *GetLatestValidatorSetResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var pubKey cryptotypes.PubKey
+	for _, val := range m.Validators {
+		err := unpacker.UnpackAny(val.PubKey, &pubKey)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // GetValidatorSetByHeight implements ServiceServer.GetValidatorSetByHeight
 func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValidatorSetByHeightRequest) (*GetValidatorSetByHeightResponse, error) {
 	page, limit, err := qtypes.ParsePagination(req.Pagination)
@@ -127,14 +139,14 @@ func validatorsOutput(ctx client.Context, height *int64, page, limit int) (int64
 
 	out := make([]*Validator, len(vsRes.Validators))
 	for i, v := range vsRes.Validators {
-		pkBz, err := codec.MarshalIfcJSON(ctx.JSONMarshaler, v.PubKey)
+		anyPub, err := codectypes.NewAnyWithValue(v.PubKey)
 		if err != nil {
 			return 0, nil, err
 		}
 		out[i] = &Validator{
-			Address:          v.Address,
+			Address:          v.Address.String(),
 			ProposerPriority: v.ProposerPriority,
-			PubKey:           string(pkBz),
+			PubKey:           anyPub,
 			VotingPower:      v.VotingPower,
 		}
 	}

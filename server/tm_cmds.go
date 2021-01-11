@@ -15,7 +15,6 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -57,7 +56,7 @@ func ShowValidatorCmd() *cobra.Command {
 				return err
 			}
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			bz, err := codec.MarshalIfcJSON(clientCtx.JSONMarshaler, sdkPK)
+			bz, err := clientCtx.JSONMarshaler.MarshalInterfaceJSON(sdkPK)
 			if err != nil {
 				return err
 			}

@@ -18,8 +18,8 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto"
-	cryptoamino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
@@ -213,7 +213,7 @@ func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 		return "", fmt.Errorf("no key to export with name: %s", uid)
 	}
 
-	return crypto.ArmorPubKeyBytes(CryptoCdc.MustMarshalBinaryBare(bz.GetPubKey()), string(bz.GetAlgo())), nil
+	return crypto.ArmorPubKeyBytes(legacy.Cdc.MustMarshalBinaryBare(bz.GetPubKey()), string(bz.GetAlgo())), nil
 }
 
 func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, error) {
@@ -255,7 +255,7 @@ func (ks keystore) ExportPrivateKeyObject(uid string) (types.PrivKey, error) {
 			return nil, err
 		}
 
-		priv, err = cryptoamino.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
+		priv, err = legacy.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
 		if err != nil {
 			return nil, err
 		}
@@ -304,7 +304,7 @@ func (ks keystore) ImportPubKey(uid string, armor string) error {
 		return err
 	}
 
-	pubKey, err := cryptoamino.PubKeyFromBytes(pubBytes)
+	pubKey, err := legacy.PubKeyFromBytes(pubBytes)
 	if err != nil {
 		return err
 	}
@@ -331,7 +331,7 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 			return nil, nil, fmt.Errorf("private key not available")
 		}
 
-		priv, err = cryptoamino.PrivKeyFromBytes([]byte(i.PrivKeyArmor))
+		priv, err = legacy.PrivKeyFromBytes([]byte(i.PrivKeyArmor))
 		if err != nil {
 			return nil, nil, err
 		}
@@ -711,7 +711,7 @@ func (ks keystore) writeLocalKey(name string, priv types.PrivKey, algo hd.PubKey
 	// encrypt private key using keyring
 	pub := priv.PubKey()
 
-	info := newLocalInfo(name, pub, string(CryptoCdc.MustMarshalBinaryBare(priv)), algo)
+	info := newLocalInfo(name, pub, string(legacy.Cdc.MustMarshalBinaryBare(priv)), algo)
 	if err := ks.writeInfo(info); err != nil {
 		return nil, err
 	}

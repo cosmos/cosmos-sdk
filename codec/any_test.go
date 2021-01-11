@@ -1,7 +1,6 @@
 package codec_test
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -28,38 +27,29 @@ func TestMarshalAny(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 
 	kitty := &testdata.Cat{Moniker: "Kitty"}
-	bz, err := codec.MarshalIfc(cdc, kitty)
+	bz, err := cdc.MarshalInterface(kitty)
 	require.NoError(t, err)
 
 	var animal testdata.Animal
 
 	// empty registry should fail
-	err = codec.UnmarshalIfc(cdc, &animal, bz)
+	err = cdc.UnmarshalInterface(bz, &animal)
 	require.Error(t, err)
 
 	// wrong type registration should fail
 	registry.RegisterImplementations((*testdata.Animal)(nil), &testdata.Dog{})
-	err = codec.UnmarshalIfc(cdc, &animal, bz)
+	err = cdc.UnmarshalInterface(bz, &animal)
 	require.Error(t, err)
 
 	// should pass
 	registry = NewTestInterfaceRegistry()
 	cdc = codec.NewProtoCodec(registry)
-	err = codec.UnmarshalIfc(cdc, &animal, bz)
+	err = cdc.UnmarshalInterface(bz, &animal)
 	require.NoError(t, err)
 	require.Equal(t, kitty, animal)
 
 	// nil should fail
 	registry = NewTestInterfaceRegistry()
-	err = codec.UnmarshalIfc(cdc, nil, bz)
+	err = cdc.UnmarshalInterface(bz, nil)
 	require.Error(t, err)
-}
-
-func TestMarshalAnyNonProtoErrors(t *testing.T) {
-	registry := types.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(registry)
-
-	_, err := codec.MarshalIfc(cdc, 29)
-	require.Error(t, err)
-	require.Equal(t, err, errors.New("can't proto marshal int; expecting proto.Message"))
 }

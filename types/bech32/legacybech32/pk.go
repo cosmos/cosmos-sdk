@@ -4,7 +4,6 @@ package legacybech32
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -65,6 +64,5 @@ func UnmarshalPubKey(pkt Bech32PubKeyType, pubkeyStr string) (cryptotypes.PubKey
 	if err != nil {
 		return nil, err
 	}
-
-	return cryptocodec.PubKeyFromBytes(bz)
+	return legacy.PubKeyFromBytes(bz)
 }

@@ -219,7 +219,11 @@ func (c *Client) TxOperationsAndSignersAccountIdentifiers(signed bool, txBytes [
 	if err != nil {
 		return nil, nil, err
 	}
-	txBldr, _ := txConfig.WrapTxBuilder(rawTx)
+
+	txBldr, err := txConfig.WrapTxBuilder(rawTx)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	var accountIdentifierSigners []*types.AccountIdentifier
 	if signed {

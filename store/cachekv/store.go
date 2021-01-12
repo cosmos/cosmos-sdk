@@ -35,6 +35,7 @@ type Store struct {
 
 var _ types.CacheKVStore = (*Store)(nil)
 
+// NewStore creates a new Store object
 func NewStore(parent types.KVStore) *Store {
 	return &Store{
 		cache:         make(map[string]*cValue),
@@ -44,12 +45,12 @@ func NewStore(parent types.KVStore) *Store {
 	}
 }
 
-// Implements Store.
+// GetStoreType implements Store.
 func (store *Store) GetStoreType() types.StoreType {
 	return store.parent.GetStoreType()
 }
 
-// Implements types.KVStore.
+// Get implements types.KVStore.
 func (store *Store) Get(key []byte) (value []byte) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
@@ -68,7 +69,7 @@ func (store *Store) Get(key []byte) (value []byte) {
 	return value
 }
 
-// Implements types.KVStore.
+// Set implements types.KVStore.
 func (store *Store) Set(key []byte, value []byte) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
@@ -80,13 +81,13 @@ func (store *Store) Set(key []byte, value []byte) {
 	store.setCacheValue(key, value, false, true)
 }
 
-// Implements types.KVStore.
+// Has implements types.KVStore.
 func (store *Store) Has(key []byte) bool {
 	value := store.Get(key)
 	return value != nil
 }
 
-// Implements types.KVStore.
+// Delete implements types.KVStore.
 func (store *Store) Delete(key []byte) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
@@ -135,10 +136,7 @@ func (store *Store) Write() {
 	store.sortedCache = list.New()
 }
 
-//----------------------------------------
-// To cache-wrap this Store further.
-
-// Implements CacheWrapper.
+// CacheWrap implements CacheWrapper.
 func (store *Store) CacheWrap() types.CacheWrap {
 	return NewStore(store)
 }
@@ -151,12 +149,12 @@ func (store *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types
 //----------------------------------------
 // Iteration
 
-// Implements types.KVStore.
+// Iterator implements types.KVStore.
 func (store *Store) Iterator(start, end []byte) types.Iterator {
 	return store.iterator(start, end, true)
 }
 
-// Implements types.KVStore.
+// ReverseIterator implements types.KVStore.
 func (store *Store) ReverseIterator(start, end []byte) types.Iterator {
 	return store.iterator(start, end, false)
 }

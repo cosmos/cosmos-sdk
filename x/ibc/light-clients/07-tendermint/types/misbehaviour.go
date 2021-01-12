@@ -13,9 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
-var (
-	_ exported.Misbehaviour = Misbehaviour{}
-)
+var _ exported.Misbehaviour = &Misbehaviour{}
 
 // NewMisbehaviour creates a new Misbehaviour instance.
 func NewMisbehaviour(clientID string, header1, header2 *Header) *Misbehaviour {

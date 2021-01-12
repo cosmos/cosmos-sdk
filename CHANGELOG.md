@@ -45,8 +45,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### API Breaking
 
 * (x/staking/types) [\#7447](https://github.com/cosmos/cosmos-sdk/issues/7447) Remove bech32 PubKey support:
-  * `ValidatorI` interface update. `GetConsPubKey` renamed to `TmConsPubKey` (consensus public key must be a tendermint key). `TmConsPubKey`, `GetConsAddr` methods return error.
-  * `Validator` update. Methods changed in `ValidatorI` (as described above) and `ToTmValidator` return error.
+  * `ValidatorI` interface update: `GetConsPubKey` renamed to `TmConsPubKey` (this is to clarify the return type: consensus public key must be a tendermint key); `TmConsPubKey`, `GetConsAddr` methods return error.
+  * `Validator` updated according to the `ValidatorI` changes described above.
+  * `ToTmValidator` function: added `error` to return values.
   * `Validator.ConsensusPubkey` type changed from `string` to `codectypes.Any`.
   * `MsgCreateValidator.Pubkey` type changed from `string` to `codectypes.Any`.
 

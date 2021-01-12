@@ -7,6 +7,7 @@ import (
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/gogo/protobuf/proto"
 
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -99,9 +100,9 @@ func (msg *MsgWithdrawDelegatorReward) ToOperations(withStatus, hasError bool) [
 
 	var status string
 	if withStatus {
-		status = "Success"
+		status = rosetta.StatusSuccess
 		if hasError {
-			status = "Reverted"
+			status = rosetta.StatusReverted
 		}
 	}
 

@@ -12,6 +12,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -265,9 +266,9 @@ func (msg *MsgDelegate) ToOperations(withStatus bool, hasError bool) []*rosettat
 	delOp := func(account *rosettatypes.AccountIdentifier, amount string, index int) *rosettatypes.Operation {
 		var status string
 		if withStatus {
-			status = "Success"
+			status = rosetta.StatusSuccess
 			if hasError {
-				status = "Reverted"
+				status = rosetta.StatusReverted
 			}
 		}
 		return &rosettatypes.Operation{
@@ -395,6 +396,103 @@ func (msg MsgBeginRedelegate) ValidateBasic() error {
 	return nil
 }
 
+// Rosetta Msg interface.
+func (msg *MsgBeginRedelegate) ToOperations(withStatus bool, hasError bool) []*rosettatypes.Operation {
+	var operations []*rosettatypes.Operation
+	delAddr := msg.DelegatorAddress
+	srcValAddr := msg.ValidatorSrcAddress
+	destValAddr := msg.ValidatorDstAddress
+	coin := msg.Amount
+	delOp := func(account *rosettatypes.AccountIdentifier, amount string, index int) *rosettatypes.Operation {
+		var status string
+		if withStatus {
+			status = rosetta.StatusSuccess
+			if hasError {
+				status = rosetta.StatusReverted
+			}
+		}
+		return &rosettatypes.Operation{
+			OperationIdentifier: &rosettatypes.OperationIdentifier{
+				Index: int64(index),
+			},
+			Type:    proto.MessageName(msg),
+			Status:  status,
+			Account: account,
+			Amount: &rosettatypes.Amount{
+				Value: amount,
+				Currency: &rosettatypes.Currency{
+					Symbol: coin.Denom,
+				},
+			},
+		}
+	}
+	srcValAcc := &rosettatypes.AccountIdentifier{
+		Address: delAddr,
+		SubAccount: &rosettatypes.SubAccountIdentifier{
+			Address: srcValAddr,
+		},
+	}
+	destValAcc := &rosettatypes.AccountIdentifier{
+		Address: "staking_account",
+		SubAccount: &rosettatypes.SubAccountIdentifier{
+			Address: destValAddr,
+		},
+	}
+	operations = append(operations,
+		delOp(srcValAcc, "-"+coin.Amount.String(), 0),
+		delOp(destValAcc, coin.Amount.String(), 1),
+	)
+	return operations
+}
+
+func (msg *MsgBeginRedelegate) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg, error) {
+	var (
+		delAddr     sdk.AccAddress
+		srcValAddr  sdk.ValAddress
+		destValAddr sdk.ValAddress
+		sendAmt     sdk.Coin
+		err         error
+	)
+
+	for _, op := range ops {
+		if strings.HasPrefix(op.Amount.Value, "-") {
+			if op.Account == nil {
+				return nil, fmt.Errorf("account identifier must be specified")
+			}
+			delAddr, err = sdk.AccAddressFromBech32(op.Account.Address)
+			if err != nil {
+				return nil, err
+			}
+
+			if op.Account.SubAccount == nil {
+				return nil, fmt.Errorf("account identifier subaccount must be specified")
+			}
+			srcValAddr, err = sdk.ValAddressFromBech32(op.Account.SubAccount.Address)
+			if err != nil {
+				return nil, err
+			}
+			continue
+		}
+
+		if op.Account.SubAccount == nil {
+			return nil, fmt.Errorf("account identifier subaccount must be specified")
+		}
+		destValAddr, err = sdk.ValAddressFromBech32(op.Account.SubAccount.Address)
+		if err != nil {
+			return nil, err
+		}
+
+		amount, err := strconv.ParseInt(op.Amount.Value, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid amount: %w", err)
+		}
+
+		sendAmt = sdk.NewCoin(op.Amount.Currency.Symbol, sdk.NewInt(amount))
+	}
+
+	return NewMsgBeginRedelegate(delAddr, srcValAddr, destValAddr, sendAmt), nil
+}
+
 // NewMsgUndelegate creates a new MsgUndelegate instance.
 //nolint:interfacer
 func NewMsgUndelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) *MsgUndelegate {
@@ -452,9 +550,9 @@ func (msg *MsgUndelegate) ToOperations(withStatus bool, hasError bool) []*rosett
 	delOp := func(account *rosettatypes.AccountIdentifier, amount string, index int) *rosettatypes.Operation {
 		var status string
 		if withStatus {
-			status = "Success"
+			status = rosetta.StatusSuccess
 			if hasError {
-				status = "Reverted"
+				status = rosetta.StatusReverted
 			}
 		}
 		return &rosettatypes.Operation{

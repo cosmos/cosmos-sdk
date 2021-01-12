@@ -136,6 +136,9 @@ func (c *Client) ConstructionPayload(_ context.Context, request *types.Construct
 		return nil, err
 	}
 
+	// Sign_mode_legacy_amino is being used as default here, as sign_mode_direct
+	// needs the signer infos to be set before hand but rosetta doesn't have a way
+	// to do this yet. To be revisited in future versions of sdk and rosetta
 	if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
 		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}

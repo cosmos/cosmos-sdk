@@ -18,12 +18,6 @@ const (
 	SimAppChainID   = "simulation-app"
 )
 
-type txBuilder interface {
-	client.TxBuilder
-
-	SetFeeGranter(feeGranter sdk.AccAddress)
-}
-
 // GenTx generates a signed mock transaction.
 func GenTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey) (sdk.Tx, error) {
 	sigs := make([]signing.SignatureV2, len(priv))
@@ -59,69 +53,6 @@ func GenTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, ch
 	tx.SetMemo(memo)
 	tx.SetFeeAmount(feeAmt)
 	tx.SetGasLimit(gas)
-
-	// 2nd round: once all signer infos are set, every signer can sign.
-	for i, p := range priv {
-		signerData := authsign.SignerData{
-			ChainID:       chainID,
-			AccountNumber: accNums[i],
-			Sequence:      accSeqs[i],
-		}
-		signBytes, err := gen.SignModeHandler().GetSignBytes(signMode, signerData, tx.GetTx())
-		if err != nil {
-			panic(err)
-		}
-		sig, err := p.Sign(signBytes)
-		if err != nil {
-			panic(err)
-		}
-		sigs[i].Data.(*signing.SingleSignatureData).Signature = sig
-		err = tx.SetSignatures(sigs...)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	return tx.GetTx(), nil
-}
-
-// GenTxWithFeeGranter generates a signed mock transaction with fee granter field set with a given address.
-func GenTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums,
-	accSeqs []uint64, feeGranter sdk.AccAddress, priv ...cryptotypes.PrivKey) (sdk.Tx, error) {
-	sigs := make([]signing.SignatureV2, len(priv))
-
-	// create a random length memo
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-
-	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
-
-	signMode := gen.SignModeHandler().DefaultMode()
-
-	// 1st round: set SignatureV2 with empty signatures, to set correct
-	// signer infos.
-	for i, p := range priv {
-		sigs[i] = signing.SignatureV2{
-			PubKey: p.PubKey(),
-			Data: &signing.SingleSignatureData{
-				SignMode: signMode,
-			},
-			Sequence: accSeqs[i],
-		}
-	}
-
-	tx := gen.NewTxBuilder().(txBuilder)
-	err := tx.SetMsgs(msgs...)
-	if err != nil {
-		return nil, err
-	}
-	err = tx.SetSignatures(sigs...)
-	if err != nil {
-		return nil, err
-	}
-	tx.SetMemo(memo)
-	tx.SetFeeAmount(feeAmt)
-	tx.SetGasLimit(gas)
-	tx.SetFeeGranter(feeGranter)
 
 	// 2nd round: once all signer infos are set, every signer can sign.
 	for i, p := range priv {

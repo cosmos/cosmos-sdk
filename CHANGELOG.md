@@ -40,7 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [\#7477](https://github.com/cosmos/cosmos-sdk/pull/7477) Changed Bech32 Public Key serialization in the client facing functionality (CLI, MsgServer, QueryServer):
   * updated the keyring display structure (it uses protobuf JSON serialization) - the output is more verbose.
-  * Renamed `MarshalAny` and `UnmarshalAny` to `MarshalIfc` and `UnmarshalIfc` respectively. These functions must take interface as a parameter (not a concrete type nor `Any` object). Underneeth they use `Any` wrapping for correct protobuf serialization.
+  * Renamed `MarshalAny` and `UnmarshalAny` to `MarshalInterface` and `UnmarshalInterface` respectively. These functions must take interface as a parameter (not a concrete type nor `Any` object). Underneeth they use `Any` wrapping for correct protobuf serialization.
 
 ### API Breaking
 

@@ -6,7 +6,7 @@ order: 3
 
 ## Proposal Submission
 
-Proposals can be submitted by any Atom holder via a `MsgSubmitProposal`
+Proposals can be submitted by any account via a `MsgSubmitProposal`
 transaction.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/tx.proto#L24-L39
@@ -149,7 +149,7 @@ vote on the proposal.
 
 _Note: Gas cost for this message has to take into account the future tallying of the vote in EndBlocker_
 
-Next is a pseudocode proposal of the way `MsgVote` transactions are
+Next is a pseudocode outline of the way `MsgVote` transactions are
 handled:
 
 ```go

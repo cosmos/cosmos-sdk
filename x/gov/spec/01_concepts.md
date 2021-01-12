@@ -30,7 +30,7 @@ its unique `proposalID`.
 ### Proposal types
 
 In the initial version of the governance module, there are five types of
-proposal:
+proposals:
 
 - `TextProposal` All the proposals that do not involve a modification of
   the source code go under this type. For example, an opinion poll would use a
@@ -44,7 +44,8 @@ proposal:
 - `CommunityPoolSpendProposal` details a proposal for use of community funds,
   together with how many coins are proposed to be spent, and to which recipient account.
 - `ParameterChangeProposal` defines a proposal to change one or 
-  more parameters. If accepted, the requested parameter change need to be updated.
+  more parameters. If accepted, the requested parameter change is updated 
+  automatically by the proposal handler upon conclusion of the voting period.
 - `CancelSoftwareUpgradeProposal` is a gov Content type for cancelling a software upgrade.
 
 Other modules may expand upon the governance module by implementing their own

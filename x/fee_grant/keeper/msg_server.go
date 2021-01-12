@@ -4,9 +4,8 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/fee_grant/types"
 )
 
@@ -40,7 +39,7 @@ func (k msgServer) GrantFeeAllowance(goCtx context.Context, msg *types.MsgGrantF
 	// Checking for duplicate entry
 	f := k.Keeper.GetFeeAllowance(ctx, granter, grantee)
 	if f != nil {
-		return nil, status.Errorf(codes.AlreadyExists, "grant already exist")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee allowance already exist")
 	}
 
 	k.Keeper.GrantFeeAllowance(ctx, granter, grantee, msg.GetFeeAllowanceI())

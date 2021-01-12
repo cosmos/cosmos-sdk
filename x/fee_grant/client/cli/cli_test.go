@@ -243,7 +243,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 		expectedCode uint32
 	}{
 		{
-			"wromg granter address",
+			"wrong granter address",
 			append(
 				[]string{
 					"wrong_granter",
@@ -256,7 +256,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 			true, nil, 0,
 		},
 		{
-			"wromg grantee address",
+			"wrong grantee address",
 			append(
 				[]string{
 					granter.String(),
@@ -273,7 +273,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 			append(
 				[]string{
 					granter.String(),
-					grantee.String(),
+					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
 					"100steak",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
@@ -317,7 +317,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 			append(
 				[]string{
 					granter.String(),
-					grantee.String(),
+					"cosmos1w55kgcf3ltaqdy4ww49nge3klxmrdavrr6frmp",
 					"100steak",
 					fmt.Sprintf("%d", 60*60),
 					"10steak",

@@ -60,12 +60,13 @@ func (s *IntegrationTestSuite) TestGenTxCmd() {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
+	amount := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))
 	genTxFile := filepath.Join(dir, "myTx")
 	cmd.SetArgs([]string{
 		fmt.Sprintf("--%s=%s", flags.FlagChainID, s.network.Config.ChainID),
 		fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, genTxFile),
 		val.Moniker,
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(),
+		amount.String(),
 	})
 
 	err := cmd.ExecuteContext(ctx)
@@ -86,6 +87,7 @@ func (s *IntegrationTestSuite) TestGenTxCmd() {
 
 	s.Require().Equal(types.TypeMsgCreateValidator, msgs[0].Type())
 	s.Require().Equal([]sdk.AccAddress{val.Address}, msgs[0].GetSigners())
+	s.Require().Equal(amount, msgs[0].(*types.MsgCreateValidator).Value)
 	err = tx.ValidateBasic()
 	s.Require().NoError(err)
 }

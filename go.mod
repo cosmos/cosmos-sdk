@@ -4,7 +4,7 @@ module github.com/cosmos/cosmos-sdk
 
 require (
 	github.com/99designs/keyring v1.1.6
-	github.com/armon/go-metrics v0.3.5
+	github.com/armon/go-metrics v0.3.6
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.21.0-beta
 	github.com/btcsuite/btcutil v1.0.2
@@ -15,7 +15,7 @@ require (
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/enigmampc/btcutil v1.0.3-0.20200723161021-e2fb6adb2a25
 	github.com/gogo/gateway v1.1.0
-	github.com/gogo/protobuf v1.3.1
+	github.com/gogo/protobuf v1.3.2
 	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.4.3
 	github.com/golang/snappy v0.0.2 // indirect
@@ -26,7 +26,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/magiconair/properties v1.8.4
 	github.com/mattn/go-isatty v0.0.12
-	github.com/otiai10/copy v1.4.1
+	github.com/otiai10/copy v1.4.2
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.8.0
@@ -46,7 +46,7 @@ require (
 	github.com/tendermint/cosmos-rosetta-gateway v0.3.0-rc1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.16.0
-	github.com/tendermint/tendermint v0.34.0
+	github.com/tendermint/tendermint v0.34.1
 	github.com/tendermint/tm-db v0.6.3
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	golang.org/x/net v0.0.0-20200930145003-4acb6c075d10 // indirect

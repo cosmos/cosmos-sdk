@@ -1,20 +1,21 @@
 # Server
 
 The `server` package is responsible for providing the mechanisms necessary to
-start an ABCI Tendermint application and providing the CLI framework necessary
-to fully bootstrap an application. The package exposes two core commands, `StartCmd`
-and `ExportCmd`.
+start an ABCI Tendermint application and provides the CLI framework (based on [cobra](github.com/spf13/cobra))
+necessary to fully bootstrap an application. The package exposes two core functions: `StartCmd`
+and `ExportCmd` which creates commands to start the application and export state respectively.
 
 ## Preliminary
 
-The root command of an application typically is constructed with three core
-sub-commands, query commands, tx commands, and auxiliary commands such as genesis
-utilities, and starting an application binary.
+The root command of an application typically is constructed with:
++ command to start an application binary
++ three meta commands: `query`, `tx`, and a few auxiliary commands such as `genesis`.
+utilities.
 
-It is vital that the root command of an application set the appropriate `PersistentPreRun(E)`
-function so all child commands have access to the server and client contexts.
+It is vital that the root command of an application uses `PersistentPreRun()` cobra command
+property for executing the command, so all child commands have access to the server and client contexts.
 These contexts are set as their default values initially and maybe modified,
-scoped to the command, in their respective `PersistentPreRun(E)` functions. Note,
+scoped to the command, in their respective `PersistentPreRun()` functions. Note that
 the `client.Context` is typically pre-populated with "default" values that may be
 useful for all commands to inherit and override if necessary.
 
@@ -22,6 +23,8 @@ Example:
 
 ```go
 var (
+	initClientCtx  = client.Context{...}
+
 	rootCmd = &cobra.Command{
 		Use:   "simd",
 		Short: "simulation app",
@@ -33,16 +36,7 @@ var (
 			return server.InterceptConfigsPreRunHandler(cmd)
 		},
 	}
-
-	encodingConfig = simapp.MakeTestEncodingConfig()
-	initClientCtx  = client.Context{}.
-			WithJSONMarshaler(encodingConfig.Marshaler).
-			WithTxConfig(encodingConfig.TxConfig).
-			WithCodec(encodingConfig.Amino).
-			WithInput(os.Stdin).
-			WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Marshaler)).
-			WithBroadcastMode(flags.BroadcastBlock).
-			WithHomeDir(simapp.DefaultNodeHome)
+    // add root sub-commands ...
 )
 ```
 

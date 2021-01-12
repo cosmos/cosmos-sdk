@@ -59,7 +59,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				"invalid misbehaviour type",
 				func() {
 					clientState = solomachine.ClientState()
-					misbehaviour = ibctmtypes.Misbehaviour{}
+					misbehaviour = &ibctmtypes.Misbehaviour{}
 				},
 				false,
 			},

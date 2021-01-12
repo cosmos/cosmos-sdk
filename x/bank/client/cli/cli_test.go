@@ -32,12 +32,41 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	cfg := network.DefaultConfig()
+	genesisState := cfg.GenesisState
 	cfg.NumValidators = 1
+
+	var bankGenesis types.GenesisState
+	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[types.ModuleName], &bankGenesis))
+
+	bankGenesis.DenomMetadata = []types.Metadata{
+		{
+			Description: "The native staking token of the Cosmos Hub.",
+			DenomUnits: []*types.DenomUnit{
+				{
+					Denom:    "uatom",
+					Exponent: 0,
+					Aliases:  []string{"microatom"},
+				},
+				{
+					Denom:    "atom",
+					Exponent: 6,
+					Aliases:  []string{"ATOM"},
+				},
+			},
+			Base:    "uatom",
+			Display: "atom",
+		},
+	}
+
+	bankGenesisBz, err := cfg.Codec.MarshalJSON(&bankGenesis)
+	s.Require().NoError(err)
+	genesisState[types.ModuleName] = bankGenesisBz
+	cfg.GenesisState = genesisState
 
 	s.cfg = cfg
 	s.network = network.New(s.T(), cfg)
 
-	_, err := s.network.WaitForHeight(1)
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 }
 
@@ -167,6 +196,109 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryTotalSupply()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType))
+				s.Require().Equal(tc.expected, tc.respType)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryDenomsMetadata() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+		respType  proto.Message
+		expected  proto.Message
+	}{
+		{
+			name: "all denoms client metadata",
+			args: []string{
+				fmt.Sprintf("--%s=1", flags.FlagHeight),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			respType: &types.QueryDenomsMetadataResponse{},
+			expected: &types.QueryDenomsMetadataResponse{
+				Metadatas: []types.Metadata{
+					{
+						Description: "The native staking token of the Cosmos Hub.",
+						DenomUnits: []*types.DenomUnit{
+							{
+								Denom:    "uatom",
+								Exponent: 0,
+								Aliases:  []string{"microatom"},
+							},
+							{
+								Denom:    "atom",
+								Exponent: 6,
+								Aliases:  []string{"ATOM"},
+							},
+						},
+						Base:    "uatom",
+						Display: "atom",
+					},
+				},
+				Pagination: &query.PageResponse{Total: 1},
+			},
+		},
+		{
+			name: "client metadata of a specific denomination",
+			args: []string{
+				fmt.Sprintf("--%s=1", flags.FlagHeight),
+				fmt.Sprintf("--%s=%s", cli.FlagDenom, "uatom"),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			respType: &types.QueryDenomMetadataResponse{},
+			expected: &types.QueryDenomMetadataResponse{
+				Metadata: types.Metadata{
+					Description: "The native staking token of the Cosmos Hub.",
+					DenomUnits: []*types.DenomUnit{
+						{
+							Denom:    "uatom",
+							Exponent: 0,
+							Aliases:  []string{"microatom"},
+						},
+						{
+							Denom:    "atom",
+							Exponent: 6,
+							Aliases:  []string{"ATOM"},
+						},
+					},
+					Base:    "uatom",
+					Display: "atom",
+				},
+			},
+		},
+		{
+			name: "client metadata of a bogus denom",
+			args: []string{
+				fmt.Sprintf("--%s=1", flags.FlagHeight),
+				fmt.Sprintf("--%s=foobar", cli.FlagDenom),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			respType: &types.QueryDenomMetadataResponse{},
+			expected: &types.QueryDenomMetadataResponse{
+				Metadata: types.Metadata{
+					DenomUnits: []*types.DenomUnit{},
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdDenomsMetadata()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)

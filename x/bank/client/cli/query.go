@@ -33,6 +33,7 @@ func GetQueryCmd() *cobra.Command {
 	cmd.AddCommand(
 		GetBalancesCmd(),
 		GetCmdQueryTotalSupply(),
+		GetCmdDenomsMetadata(),
 	)
 
 	return cmd
@@ -98,6 +99,58 @@ Example:
 	cmd.Flags().String(FlagDenom, "", "The specific balance denomination to query for")
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "all balances")
+
+	return cmd
+}
+
+func GetCmdDenomsMetadata() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "denom-metadata",
+		Short: "Query the client metadata for coin denominations",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query the client metadata for all the registered coin denominations
+
+Example:
+  $ %s query %s denom-metadata
+
+To query for the client metadata of a specific coin denomination use:
+  $ %s query %s denom-metadata --denom=[denom]
+`,
+				version.AppName, types.ModuleName, version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			denom, err := cmd.Flags().GetString(FlagDenom)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			if denom == "" {
+				res, err := queryClient.DenomsMetadata(context.Background(), &types.QueryDenomsMetadataRequest{})
+				if err != nil {
+					return err
+				}
+
+				return clientCtx.PrintProto(res)
+			}
+
+			res, err := queryClient.DenomMetadata(context.Background(), &types.QueryDenomMetadataRequest{Denom: denom})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	cmd.Flags().String(FlagDenom, "", "The specific denomination to query client metadata for")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }

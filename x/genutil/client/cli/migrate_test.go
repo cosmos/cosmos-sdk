@@ -1,15 +1,12 @@
 package cli_test
 
 import (
-	"context"
-	"io/ioutil"
-	"path"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
@@ -19,29 +16,45 @@ func TestGetMigrationCallback(t *testing.T) {
 	}
 }
 
-func TestMigrateGenesis(t *testing.T) {
-	home := t.TempDir()
+func (s *IntegrationTestSuite) TestMigrateGenesis() {
+	val0 := s.network.Validators[0]
 
-	cdc := makeCodec()
+	testCases := []struct {
+		name      string
+		genesis   string
+		target    string
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			"migrate to 0.36",
+			`{"chain_id":"test","app_state":{}}`,
+			"v0.36",
+			false, "",
+		},
+		{
+			"exported 0.37 genesis file",
+			v037Exported,
+			"v0.40",
+			true, "Make sure that you have correctly migrated all Tendermint consensus params",
+		},
+		{
+			"valid 0.40 genesis file",
+			v040Valid,
+			"v0.40",
+			false, "",
+		},
+	}
 
-	genesisPath := path.Join(home, "genesis.json")
-	target := "v0.36"
-
-	cmd := cli.MigrateGenesisCmd()
-	_ = testutil.ApplyMockIODiscardOutErr(cmd)
-
-	clientCtx := client.Context{}.WithLegacyAmino(cdc)
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-	// Reject if we dont' have the right parameters or genesis does not exists
-	cmd.SetArgs([]string{target, genesisPath})
-	require.Error(t, cmd.ExecuteContext(ctx))
-
-	// Noop migration with minimal genesis
-	emptyGenesis := []byte(`{"chain_id":"test","app_state":{}}`)
-	require.NoError(t, ioutil.WriteFile(genesisPath, emptyGenesis, 0644))
-
-	cmd.SetArgs([]string{target, genesisPath})
-	require.NoError(t, cmd.ExecuteContext(ctx))
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			genesisFile := testutil.WriteToNewTempFile(s.T(), tc.genesis)
+			_, err := clitestutil.ExecTestCLICmd(val0.ClientCtx, cli.MigrateGenesisCmd(), []string{tc.target, genesisFile.Name()})
+			if tc.expErr {
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
+			}
+		})
+	}
 }

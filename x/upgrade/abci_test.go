@@ -41,7 +41,7 @@ var s TestSuite
 func setupTest(height int64, skip map[int64]bool) TestSuite {
 	db := dbm.NewMemDB()
 	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, skip, simapp.DefaultNodeHome, 0, simapp.MakeTestEncodingConfig(), simapp.EmptyAppOptions{})
-	genesisState := simapp.NewDefaultGenesisState()
+	genesisState := simapp.NewDefaultGenesisState(app.AppCodec())
 	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
 	if err != nil {
 		panic(err)
@@ -131,7 +131,8 @@ func VerifyDoIBCLastBlock(t *testing.T) {
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	s.module.BeginBlock(newCtx, req)
 
-	consState, err := s.keeper.GetUpgradedConsensusState(newCtx, s.ctx.BlockHeight())
+	// plan Height is at ctx.BlockHeight+1
+	consState, err := s.keeper.GetUpgradedConsensusState(newCtx, s.ctx.BlockHeight()+1)
 	require.NoError(t, err)
 	require.Equal(t, &ibctmtypes.ConsensusState{Timestamp: newCtx.BlockTime(), NextValidatorsHash: nextValsHash}, consState)
 }

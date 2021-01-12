@@ -141,13 +141,17 @@ simd tx send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000stake
 
 The `Tx` service exposes a handful of utility functions, such as simulating a transaction or querying a transaction, and also one method to broadcast transactions.
 
-An example of broadcasting a transaction is shown in [TODO](https://github.com/cosmos/cosmos-sdk/issues/7657). Please note that the `BroadcastTx` endpoint takes `TxRaw`, not bytes.
+Examples of broadcasting and simulating a transaction are shown [here](../run-node/txs.md#programmatically-with-go).
 
 #### REST
 
-Each gRPC method has its corresponding REST endpoint, generated using [gRPC-gateway](https://github.com/grpc-ecosystem/grpc-gateway). Therefore, instead of using gRPC, you can also use HTTP to broadcast the same transaction, on the `POST /cosmos/tx/v1beta1/broadcast_tx` endpoint.
+Each gRPC method has its corresponding REST endpoint, generated using [gRPC-gateway](https://github.com/grpc-ecosystem/grpc-gateway). Therefore, instead of using gRPC, you can also use HTTP to broadcast the same transaction, on the `POST /cosmos/tx/v1beta1/txs` endpoint.
 
-An example can be seen [here TODO](https://github.com/cosmos/cosmos-sdk/issues/7657)
+An example can be seen [here](../run-node/txs.md#using-rest)
+
+#### Tendermint RPC
+
+The three methods presented above are actually higher abstractions over the Tendermint RPC `/broadcast_tx_{async,sync,commit}` endpoints, documented [here](https://docs.tendermint.com/master/rpc/#/Tx). This means that you can use the Tendermint RPC endpoints directly to broadcast the transaction, if you wish so.
 
 ## Next {hide}
 

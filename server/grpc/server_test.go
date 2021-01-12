@@ -154,7 +154,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_BroadcastTx() {
 		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 
 	// Sign Tx.
-	err := authclient.SignTx(txFactory, val0.ClientCtx, val0.Moniker, txBuilder, false)
+	err := authclient.SignTx(txFactory, val0.ClientCtx, val0.Moniker, txBuilder, false, true)
 	s.Require().NoError(err)
 
 	txBytes, err := val0.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())

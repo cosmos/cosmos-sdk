@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
@@ -21,8 +22,10 @@ func BlockCommand() *cobra.Command {
 		Short: "Get verified data for a the block at given height",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
 			var height *int64
 
 			// optional height
@@ -67,7 +70,7 @@ func getBlock(clientCtx client.Context, height *int64) ([]byte, error) {
 		return nil, err
 	}
 
-	return clientCtx.LegacyAmino.MarshalJSON(res)
+	return legacy.Cdc.MarshalJSON(res)
 }
 
 // get the current blockchain height

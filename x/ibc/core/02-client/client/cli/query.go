@@ -29,12 +29,10 @@ func GetCmdQueryClientStates() *cobra.Command {
 		Example: fmt.Sprintf("%s query %s %s states", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			queryClient := types.NewQueryClient(clientCtx)
 
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
@@ -51,7 +49,7 @@ func GetCmdQueryClientStates() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
@@ -70,12 +68,10 @@ func GetCmdQueryClientState() *cobra.Command {
 		Example: fmt.Sprintf("%s query %s %s state [client-id]", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			clientID := args[0]
 			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
 
@@ -84,7 +80,7 @@ func GetCmdQueryClientState() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(clientStateRes)
+			return clientCtx.PrintProto(clientStateRes)
 		},
 	}
 
@@ -104,12 +100,10 @@ func GetCmdQueryConsensusStates() *cobra.Command {
 		Example: fmt.Sprintf("%s query %s %s consensus-states [client-id]", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			clientID := args[0]
 
 			queryClient := types.NewQueryClient(clientCtx)
@@ -129,7 +123,7 @@ func GetCmdQueryConsensusStates() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
@@ -149,16 +143,12 @@ If the '--latest' flag is included, the query returns the latest consensus state
 		Example: fmt.Sprintf("%s query %s %s  consensus-state [client-id] [height]", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			clientID := args[0]
-
 			queryLatestHeight, _ := cmd.Flags().GetBool(flagLatestHeight)
-
 			var height types.Height
 
 			if !queryLatestHeight {
@@ -179,7 +169,7 @@ If the '--latest' flag is included, the query returns the latest consensus state
 				return err
 			}
 
-			return clientCtx.PrintOutput(csRes)
+			return clientCtx.PrintProto(csRes)
 		},
 	}
 
@@ -199,19 +189,16 @@ func GetCmdQueryHeader() *cobra.Command {
 		Example: fmt.Sprintf("%s query %s %s  header", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			header, _, err := utils.QueryTendermintHeader(clientCtx)
 			if err != nil {
 				return err
 			}
 
-			header, height, err := utils.QueryTendermintHeader(clientCtx)
-			if err != nil {
-				return err
-			}
-
-			clientCtx = clientCtx.WithHeight(height)
-			return clientCtx.PrintOutput(&header)
+			return clientCtx.PrintProto(&header)
 		},
 	}
 
@@ -230,19 +217,16 @@ func GetCmdNodeConsensusState() *cobra.Command {
 		Example: fmt.Sprintf("%s query %s %s node-state", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			state, _, err := utils.QueryNodeConsensusState(clientCtx)
 			if err != nil {
 				return err
 			}
 
-			state, height, err := utils.QueryNodeConsensusState(clientCtx)
-			if err != nil {
-				return err
-			}
-
-			clientCtx = clientCtx.WithHeight(height)
-			return clientCtx.PrintOutput(state)
+			return clientCtx.PrintProto(state)
 		},
 	}
 
@@ -260,16 +244,14 @@ func GetCmdParams() *cobra.Command {
 		Args:    cobra.NoArgs,
 		Example: fmt.Sprintf("%s query %s %s params", version.AppName, host.ModuleName, types.SubModuleName),
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, _ := queryClient.ClientParams(context.Background(), &types.QueryClientParamsRequest{})
-			return clientCtx.PrintOutput(res.Params)
+			return clientCtx.PrintProto(res.Params)
 		},
 	}
 

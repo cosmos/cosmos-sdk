@@ -124,7 +124,6 @@ type MsgEditValidator struct {
 	// We pass a reference to the new commission rate and min self delegation as
 	// it's not mandatory to update. If not updated, the deserialized rate will be
 	// zero with no way to distinguish if an update was intended.
-	//
 	// REF: #2373
 	CommissionRate    *github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=commission_rate,json=commissionRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"commission_rate,omitempty" yaml:"commission_rate"`
 	MinSelfDelegation *github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=min_self_delegation,json=minSelfDelegation,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"min_self_delegation,omitempty" yaml:"min_self_delegation"`

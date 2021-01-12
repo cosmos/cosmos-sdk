@@ -381,7 +381,7 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 				} else {
 					suite.Require().Equal(uint64(1), nextSeqRecv, "sequence incremented for UNORDERED channel")
 					suite.Require().True(receiptStored, "packet receipt not stored after RecvPacket in UNORDERED channel")
-					suite.Require().Equal("", receipt, "packet receipt is not empty string")
+					suite.Require().Equal(string([]byte{byte(1)}), receipt, "packet receipt is not empty string")
 				}
 			} else {
 				suite.Require().Error(err)

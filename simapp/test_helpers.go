@@ -49,13 +49,21 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 	},
 }
 
+func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
+	db := dbm.NewMemDB()
+	encCdc := MakeTestEncodingConfig()
+	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
+	if withGenesis {
+		return app, NewDefaultGenesisState(encCdc.Marshaler)
+	}
+	return app, GenesisState{}
+}
+
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
 func Setup(isCheckTx bool) *SimApp {
-	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, MakeTestEncodingConfig(), EmptyAppOptions{})
+	app, genesisState := setup(!isCheckTx, 5)
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
-		genesisState := NewDefaultGenesisState()
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 		if err != nil {
 			panic(err)
@@ -79,10 +87,7 @@ func Setup(isCheckTx bool) *SimApp {
 // of one consensus engine unit (10^6) in the default token of the simapp from first genesis
 // account. A Nop logger is set in SimApp.
 func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
-	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, MakeTestEncodingConfig(), EmptyAppOptions{})
-	genesisState := NewDefaultGenesisState()
-
+	app, genesisState := setup(true, 5)
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
@@ -95,7 +100,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	for _, val := range valSet.Validators {
 		pk, err := cryptocodec.FromTmPubKeyInterface(val.PubKey)
 		require.NoError(t, err)
-		pkAny, err := codectypes.PackAny(pk)
+		pkAny, err := codectypes.NewAnyWithValue(pk)
 		require.NoError(t, err)
 		validator := stakingtypes.Validator{
 			OperatorAddress:   sdk.ValAddress(val.Address).String(),
@@ -156,12 +161,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 // SetupWithGenesisAccounts initializes a new SimApp with the provided genesis
 // accounts and possible balances.
 func SetupWithGenesisAccounts(genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
-	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeTestEncodingConfig(), EmptyAppOptions{})
-
-	// initialize the chain with the passed in genesis accounts
-	genesisState := NewDefaultGenesisState()
-
+	app, genesisState := setup(true, 0)
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
 

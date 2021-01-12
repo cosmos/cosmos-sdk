@@ -14,5 +14,5 @@ with the standard gas consumption method.
 
 The ConstantFee param is held in the global params store. 
 
- - Params: `mint/params -> amino(sdk.Coin)`
+ - Params: `mint/params -> legacy_amino(sdk.Coin)`
 

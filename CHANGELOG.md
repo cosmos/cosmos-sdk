@@ -34,6 +34,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [Unreleased]
+
+### Improvements
+
+* (tendermint) [\#8316](https://github.com/cosmos/cosmos-sdk/pull/8316) Bump Tendermint version to [v0.34.2](https://github.com/tendermint/tendermint/releases/tag/v0.34.2)
+
 ## [v0.40.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0) - 2021-01-08
 
 v0.40.0, known as the Stargate release of the Cosmos SDK, is one of the largest releases

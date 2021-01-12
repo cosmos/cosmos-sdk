@@ -121,8 +121,8 @@ $ %s query %s authorization cosmos1skjw.. cosmos1skjwj.. %s
 			res, err := queryClient.Authorization(
 				context.Background(),
 				&types.QueryAuthorizationRequest{
-					Granter: granter.String(),
-					Grantee: grantee.String(),
+					Granter:    granter.String(),
+					Grantee:    grantee.String(),
 					MethodName: msgAuthorized,
 				},
 			)

@@ -1,13 +1,10 @@
 package testutil
 
 import (
-	"context"
 	"fmt"
 
-	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/libs/cli"
-	grpc "google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -33,41 +30,10 @@ func QueryBalancesExec(clientCtx client.Context, address fmt.Stringer, extraArgs
 	return clitestutil.ExecTestCLICmd(clientCtx, bankcli.GetBalancesCmd(), args)
 }
 
-// serviceMsgClientConn is an instance of grpc.ClientConn that is used to test building
-// transactions with MsgClient's. It is intended to be replaced by the work in
-// https://github.com/cosmos/cosmos-sdk/issues/7541 when that is ready.
-type serviceMsgClientConn struct {
-	msgs []sdk.Msg
-}
-
-func (t *serviceMsgClientConn) Invoke(_ context.Context, method string, args, _ interface{}, _ ...grpc.CallOption) error {
-	req, ok := args.(sdk.MsgRequest)
-	if !ok {
-		return fmt.Errorf("%T should implement %T", args, (*sdk.MsgRequest)(nil))
-	}
-
-	err := req.ValidateBasic()
-	if err != nil {
-		return err
-	}
-
-	t.msgs = append(t.msgs, sdk.ServiceMsg{
-		MethodName: method,
-		Request:    req,
-	})
-
-	return nil
-}
-
-func (t *serviceMsgClientConn) NewStream(context.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
-	return nil, fmt.Errorf("not supported")
-}
-
-var _ gogogrpc.ClientConn = &serviceMsgClientConn{}
-
-// newSendTxMsgServiceCmd is just for the purpose of testing ServiceMsg's in an end-to-end case. It is effectively
-// NewSendTxCmd but using MsgClient.
-func newSendTxMsgServiceCmd() *cobra.Command {
+// newLegacySendTxMsgServiceCmd is just for the purpose of testing CLI commands
+// that generate a legacy proto Msg tx. After ADR-031, service Msgs are
+// preferred for txs.
+func newLegacySendTxMsgServiceCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "send [from_key_or_address] [to_address] [amount]",
 		Short: `Send funds from one account to another. Note, the'--from' flag is
@@ -90,14 +56,12 @@ ignored as it is implied from [from_key_or_address].`,
 			}
 
 			msg := types.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
-			svcMsgClientConn := &serviceMsgClientConn{}
-			bankMsgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = bankMsgClient.Send(context.Background(), msg)
+			err = msg.ValidateBasic()
 			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.msgs...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -106,13 +70,11 @@ ignored as it is implied from [from_key_or_address].`,
 	return cmd
 }
 
-// ServiceMsgSendExec is a temporary method to test Msg services in CLI using
-// x/bank's Msg/Send service. After https://github.com/cosmos/cosmos-sdk/issues/7541
-// is merged, this method should be removed, and we should prefer MsgSendExec
-// instead.
-func ServiceMsgSendExec(clientCtx client.Context, from, to, amount fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
+// LegacyProtoMsgSendExec is a method to test legacy proto Msgs in CLI. After ADR-031,
+// service Msgs are preferred, and by default generated in CLI.
+func LegacyProtoMsgSendExec(clientCtx client.Context, from, to, amount fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := []string{from.String(), to.String(), amount.String()}
 	args = append(args, extraArgs...)
 
-	return clitestutil.ExecTestCLICmd(clientCtx, newSendTxMsgServiceCmd(), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, newLegacySendTxMsgServiceCmd(), args)
 }

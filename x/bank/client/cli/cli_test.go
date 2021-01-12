@@ -295,9 +295,9 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 	}
 }
 
-// TestBankMsgService does a basic test of whether or not service Msg's as defined
-// in ADR 031 work in the most basic end-to-end case.
-func (s *IntegrationTestSuite) TestBankMsgService() {
+// TestLegacyProtoMsgs does a basic test of whether or not legacy proto Msgs
+// still work.
+func (s *IntegrationTestSuite) TestLegacyProtoMsgs() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -335,7 +335,7 @@ func (s *IntegrationTestSuite) TestBankMsgService() {
 
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
-			bz, err := banktestutil.ServiceMsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
+			bz, err := banktestutil.LegacyProtoMsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {

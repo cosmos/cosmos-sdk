@@ -245,8 +245,8 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 	var legacyMsgTxRes sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(legacyMsgOut.Bytes(), &legacyMsgTxRes))
 
-	// Service Msg.
-	out, err := bankcli.ServiceMsgSendExec(
+	// Legacy Proto Msg.
+	out, err := bankcli.LegacyProtoMsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		account2.GetAddress(),

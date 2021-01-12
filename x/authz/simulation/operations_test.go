@@ -153,7 +153,7 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(granter.Address.String(), msg.Granter)
 	suite.Require().Equal(grantee.Address.String(), msg.Grantee)
-	suite.Require().Equal(types.SendAuthorization{}.MethodName(), msg.AuthorizationMsgType)
+	suite.Require().Equal(types.SendAuthorization{}.MethodName(), msg.MethodName)
 	suite.Require().Len(futureOperations, 0)
 
 }

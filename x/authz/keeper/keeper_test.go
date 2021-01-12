@@ -56,7 +56,7 @@ func (s *TestSuite) TestKeeper() {
 	s.T().Log("verify that no authorization returns nil")
 	authorization, expiration := app.AuthzKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, types.SendAuthorization{}.MethodName())
 	s.Require().Nil(authorization)
-	s.Require().Zero(expiration)
+	s.Require().Equal(expiration, time.Time{})
 	now := s.ctx.BlockHeader().Time
 	s.Require().NotNil(now)
 
@@ -111,7 +111,7 @@ func (s *TestSuite) TestKeeperIter() {
 	s.T().Log("verify that no authorization returns nil")
 	authorization, expiration := app.AuthzKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, "Abcd")
 	s.Require().Nil(authorization)
-	s.Require().Zero(expiration)
+	s.Require().Equal(time.Time{}, expiration)
 	now := s.ctx.BlockHeader().Time
 	s.Require().NotNil(now)
 
@@ -172,9 +172,9 @@ func (s *TestSuite) TestKeeperFees() {
 	// grant authorization
 	err = app.AuthzKeeper.Grant(s.ctx, granteeAddr, granterAddr, &types.SendAuthorization{SpendLimit: smallCoin}, now)
 	s.Require().NoError(err)
-	authorization, expiration := app.AuthzKeeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, types.SendAuthorization{}.MethodName())
+	authorization, _ := app.AuthzKeeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, types.SendAuthorization{}.MethodName())
 	s.Require().NotNil(authorization)
-	s.Require().NotZero(expiration)
+
 	s.Require().Equal(authorization.MethodName(), types.SendAuthorization{}.MethodName())
 
 	executeMsgs, err = msgs.GetServiceMsgs()

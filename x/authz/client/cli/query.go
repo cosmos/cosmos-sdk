@@ -123,7 +123,7 @@ $ %s query %s authorization cosmos1skjw.. cosmos1skjwj.. %s
 				&types.QueryAuthorizationRequest{
 					Granter: granter.String(),
 					Grantee: grantee.String(),
-					MsgType: msgAuthorized,
+					MethodName: msgAuthorized,
 				},
 			)
 			if err != nil {

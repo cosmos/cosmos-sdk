@@ -58,7 +58,7 @@ func (k Keeper) RevokeAuthorization(goCtx context.Context, msg *types.MsgRevokeA
 		return nil, err
 	}
 
-	err = k.Revoke(ctx, grantee, granter, msg.AuthorizationMsgType)
+	err = k.Revoke(ctx, grantee, granter, msg.MethodName)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (k Keeper) RevokeAuthorization(goCtx context.Context, msg *types.MsgRevokeA
 		sdk.NewEvent(
 			types.EventRevokeAuthorization,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(types.AttributeKeyGrantType, msg.AuthorizationMsgType),
+			sdk.NewAttribute(types.AttributeKeyGrantType, msg.MethodName),
 			sdk.NewAttribute(types.AttributeKeyGranterAddress, msg.Granter),
 			sdk.NewAttribute(types.AttributeKeyGranteeAddress, msg.Grantee),
 		),

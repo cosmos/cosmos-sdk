@@ -121,7 +121,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, service
 func (k Keeper) Grant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization types.Authorization, expiration time.Time) error {
 	store := ctx.KVStore(k.storeKey)
 
-	grant, err := types.NewAuthorizationGrant(authorization, expiration.Unix())
+	grant, err := types.NewAuthorizationGrant(authorization, expiration)
 	if err != nil {
 		return err
 	}
@@ -161,14 +161,14 @@ func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, grant
 
 // GetAuthorization Returns any `Authorization` (or `nil`), with the expiration time,
 // granted to the grantee by the granter for the provided msg type.
-func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (cap types.Authorization, expiration int64) {
+func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (cap types.Authorization, expiration time.Time) {
 	grant, found := k.getAuthorizationGrant(ctx, types.GetActorAuthorizationKey(grantee, granter, msgType))
 	if !found {
-		return nil, 0
+		return nil, time.Time{}
 	}
-	if grant.Expiration != 0 && grant.Expiration < (ctx.BlockHeader().Time.Unix()) {
+	if grant.Expiration.Before(ctx.BlockHeader().Time) {
 		k.Revoke(ctx, grantee, granter, msgType)
-		return nil, 0
+		return nil, time.Time{}
 	}
 
 	return grant.GetAuthorizationGrant(), grant.Expiration

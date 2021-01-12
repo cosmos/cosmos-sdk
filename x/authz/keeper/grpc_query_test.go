@@ -59,9 +59,9 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 				err := app.AuthzKeeper.Grant(ctx, addrs[0], addrs[1], expAuthorization, now.Add(time.Hour))
 				suite.Require().NoError(err)
 				req = &types.QueryAuthorizationRequest{
-					Granter: addrs[1].String(),
-					Grantee: addrs[0].String(),
-					MsgType: expAuthorization.MethodName(),
+					Granter:    addrs[1].String(),
+					Grantee:    addrs[0].String(),
+					MethodName: expAuthorization.MethodName(),
 				}
 			},
 			true,

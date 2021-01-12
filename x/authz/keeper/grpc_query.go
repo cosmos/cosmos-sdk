@@ -101,7 +101,7 @@ func (k Keeper) Authorization(c context.Context, req *types.QueryAuthorizationRe
 		return nil, status.Errorf(codes.InvalidArgument, "invalid grantee addr")
 	}
 
-	if req.MsgType == "" {
+	if req.MethodName == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid msg-type")
 	}
 
@@ -117,9 +117,9 @@ func (k Keeper) Authorization(c context.Context, req *types.QueryAuthorizationRe
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	authorization, expiration := k.GetAuthorization(ctx, grantee, granter, req.MsgType)
+	authorization, expiration := k.GetAuthorization(ctx, grantee, granter, req.MethodName)
 	if authorization == nil {
-		return nil, status.Errorf(codes.NotFound, "no authorization found for %s type", req.MsgType)
+		return nil, status.Errorf(codes.NotFound, "no authorization found for %s type", req.MethodName)
 	}
 
 	msg, ok := authorization.(proto.Message)

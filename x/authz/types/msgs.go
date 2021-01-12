@@ -103,11 +103,11 @@ func (msg MsgGrantAuthorization) UnpackInterfaces(unpacker types.AnyUnpacker) er
 
 // NewMsgRevokeAuthorization creates a new MsgRevokeAuthorization
 //nolint:interfacer
-func NewMsgRevokeAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, authorizationMsgType string) MsgRevokeAuthorization {
+func NewMsgRevokeAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, methodName string) MsgRevokeAuthorization {
 	return MsgRevokeAuthorization{
-		Granter:              granter.String(),
-		Grantee:              grantee.String(),
-		AuthorizationMsgType: authorizationMsgType,
+		Granter:    granter.String(),
+		Grantee:    grantee.String(),
+		MethodName: methodName,
 	}
 }
 

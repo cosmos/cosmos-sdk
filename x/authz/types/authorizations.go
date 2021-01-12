@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 
@@ -23,7 +24,7 @@ type Authorization interface {
 }
 
 // NewAuthorizationGrant returns new AuthrizationGrant
-func NewAuthorizationGrant(authorization Authorization, expiration int64) (AuthorizationGrant, error) {
+func NewAuthorizationGrant(authorization Authorization, expiration time.Time) (AuthorizationGrant, error) {
 	auth := AuthorizationGrant{
 		Expiration: expiration,
 	}

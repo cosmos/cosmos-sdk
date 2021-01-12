@@ -1,8 +1,6 @@
 package authz
 
 import (
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
@@ -35,7 +33,7 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState
 func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 	var entries []types.MsgGrantAuthorization
 	keeper.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant types.AuthorizationGrant) bool {
-		exp := time.Unix(grant.Expiration, 0)
+		exp := grant.Expiration
 		entries = append(entries, types.MsgGrantAuthorization{
 			Granter:       granter.String(),
 			Grantee:       grantee.String(),

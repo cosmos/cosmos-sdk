@@ -7,7 +7,6 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
 import "cosmos/base/abci/v1beta1/abci.proto";
 option go_package            = "github.com/cosmos/cosmos-sdk/x/authz/types";
-option (gogoproto.equal_all) = true;
 
 // Msg defines the authz Msg service.
 service Msg {
@@ -37,8 +36,6 @@ message MsgGrantAuthorization {
 
 // MsgExecAuthorizedResponse defines the Msg/MsgExecAuthorizedResponse response type.
 message MsgExecAuthorizedResponse {
-  option (gogoproto.equal) = false;
-
   cosmos.base.abci.v1beta1.Result result = 1;
 }
 
@@ -56,9 +53,9 @@ message MsgGrantAuthorizationResponse {}
 // MsgRevokeAuthorization revokes any authorization with the provided sdk.Msg type on the
 // granter's account with that has been granted to the grantee.
 message MsgRevokeAuthorization {
-  string granter                = 1;
-  string grantee                = 2;
-  string authorization_msg_type = 3;
+  string granter     = 1;
+  string grantee     = 2;
+  string method_name = 3;
 }
 
 // MsgRevokeAuthorizationResponse defines the Msg/MsgRevokeAuthorizationResponse response type.

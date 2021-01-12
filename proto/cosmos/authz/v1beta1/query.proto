@@ -26,9 +26,9 @@ service Query {
 
 // QueryAuthorizationRequest is the request type for the Query/Authorization RPC method.
 message QueryAuthorizationRequest {
-  string granter  = 1;
-  string grantee  = 2;
-  string msg_type = 3;
+  string granter     = 1;
+  string grantee     = 2;
+  string method_name = 3;
 }
 
 // QueryAuthorizationResponse is the response type for the Query/Authorization RPC method.

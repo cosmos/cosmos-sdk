@@ -228,7 +228,7 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecDelegated, "no coins"), nil, nil
 		}
 
-		if targetGrant.Expiration < ctx.BlockHeader().Time.Unix() {
+		if targetGrant.Expiration.Before(ctx.BlockHeader().Time) {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecDelegated, "grant expired"), nil, nil
 		}
 

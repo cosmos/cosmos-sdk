@@ -4,39 +4,39 @@ order: 3
 
 # Query Lifecycle
 
-This document describes the lifecycle of a query in a SDK application, from the user interface to application stores and back. The query will be referred to as `Query`. {synopsis}
+This document describes the lifecycle of a query in a SDK application, from the user interface to application stores and back. {synopsis}
 
 ## Pre-requisite Readings
 
-- [Introduction to Interfaces](./interfaces-intro.md) {prereq}
+- [Transaction Lifecycle](./tx-lifecycle.md) {prereq}
 
 ## Query Creation
 
-A [**query**](../building-modules/messages-and-queries.md#queries) is a request for information made by end-users of applications through an interface and processed by a full-node. Users can query information about the network, the application itself, and application state directly from the application's stores or modules. Note that queries are different from [transactions](../core/transactions.md) (view the lifecycle [here](../basics/tx-lifecycle.md)), particularly in that they do not require consensus to be processed (as they do not trigger state-transitions); they can be fully handled by one full-node.
+A [**query**](../building-modules/messages-and-queries.md#queries) is a request for information made by end-users of applications through an interface and processed by a full-node. Users can query information about the network, the application itself, and application state directly from the application's stores or modules. Note that queries are different from [transactions](../core/transactions.md) (view the lifecycle [here](./tx-lifecycle.md)), particularly in that they do not require consensus to be processed (as they do not trigger state-transitions); they can be fully handled by one full-node.
 
-For the purpose of explaining the query lifecycle, let's say `Query` is requesting a list of delegations made by a certain delegator address in the application called `app`. As to be expected, the [`staking`](https://github.com/cosmos/cosmos-sdk/tree/master/x/staking/spec) module handles this query. But first, there are a few ways `Query` can be created by users.
+For the purpose of explaining the query lifecycle, let's say `Query` is requesting a list of delegations made by a certain delegator address in the application called `simapp`. As to be expected, the [`staking`](../../x/staking/spec/README.md) module handles this query. But first, there are a few ways `Query` can be created by users.
 
 ### CLI
 
 The main interface for an application is the command-line interface. Users connect to a full-node and run the CLI directly from their machines - the CLI interacts directly with the full-node. To create `Query` from their terminal, users type the following command:
 
 ```bash
-appcli query staking delegations <delegatorAddress>
+simd query staking delegations <delegatorAddress>
 ```
 
-This query command was defined by the [`staking`](https://github.com/cosmos/cosmos-sdk/tree/master/x/staking/spec) module developer and added to the list of subcommands by the application developer when creating the CLI. The code for this particular command is the following:
+This query command was defined by the [`staking`](../../x/staking/spec/README.md) module developer and added to the list of subcommands by the application developer when creating the CLI. The code for this particular command is the following:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/staking/client/cli/query.go#L250-L293
 
 Note that the general format is as follows:
 
 ```bash
-appcli query [moduleName] [command] <arguments> --flag <flagArg>
+simd query [moduleName] [command] <arguments> --flag <flagArg>
 ```
 
 To provide values such as `--node` (the full-node the CLI connects to), the user can use the `config` command to set themn or provide them as flags.
 
-The CLI understands a specific set of commands, defined in a hierarchical structure by the application developer: from the [root command](./cli.md#root-command) (`appcli`), the type of command (`query`), the module that contains the command (`staking`), and command itself (`delegations`). Thus, the CLI knows exactly which module handles this command and directly passes the call there.
+The CLI understands a specific set of commands, defined in a hierarchical structure by the application developer: from the [root command](./cli.md#root-command) (`simd`), the type of command (`query`), the module that contains the command (`staking`), and command itself (`delegations`). Thus, the CLI knows exactly which module handles this command and directly passes the call there.
 
 ### REST
 
@@ -133,7 +133,7 @@ Read more about ABCI Clients and Tendermint RPC in the Tendermint documentation 
 
 ## Application Query Handling
 
-When a query is received by the full-node after it has been relayed from the underlying consensus engine, it is now being handled within an environment that understands application-specific types and has a copy of the state. [`baseapp`](../core/baseapp.md) implements the ABCI [`Query()`](../core/baseapp.md#query) function and handles four different types of queries: `app`, `store`, `p2p`, and `custom`. The `queryRoute` is parsed such that the first string must be one of the four options, then the rest of the path is parsed within the subroutines handling each type of query. The first three types (`app`, `store`, `p2p`) are purely application-level and thus directly handled by `baseapp` or the stores, but the `custom` query type requires `baseapp` to route the query to a module's [query service](../building-modules/query-services.md).
+When a query is received by the full-node after it has been relayed from the underlying consensus engine, it is now being handled within an environment that understands application-specific types and has a copy of the state. [`baseapp`](../core/baseapp.md) implements the ABCI [`Query()`](../core/baseapp.md#query) function and handles four different types of queries: `simapp`, `store`, `p2p`, and `custom`. The `queryRoute` is parsed such that the first string must be one of the four options, then the rest of the path is parsed within the subroutines handling each type of query. The first three types (`simapp`, `store`, `p2p`) are purely application-level and thus directly handled by `baseapp` or the stores, but the `custom` query type requires `baseapp` to route the query to a module's [query service](../building-modules/query-services.md).
 
 Since `Query` is a custom query type from the `staking` module, `baseapp` first parses the path, then uses the `QueryRouter` to retrieve the corresponding querier, and routes the query to the module. The querier is responsible for recognizing this query, retrieving the appropriate values from the application's stores, and returning a response. Read more about query services [here](../building-modules/query-services.md).
 

@@ -39,10 +39,12 @@ func (c *Client) SupportedOperations() []string {
 	var supportedOperations []string
 	for _, ii := range c.ir.ListImplementations("cosmos.base.v1beta1.Msg") {
 		resolve, err := c.ir.Resolve(ii)
-		if err == nil {
-			if _, ok := resolve.(Msg); ok {
-				supportedOperations = append(supportedOperations, strings.TrimLeft(ii, "/"))
-			}
+		if err != nil {
+			continue
+		}
+
+		if _, ok := resolve.(Msg); ok {
+			supportedOperations = append(supportedOperations, strings.TrimLeft(ii, "/"))
 		}
 	}
 

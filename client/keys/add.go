@@ -40,7 +40,7 @@ const (
 func AddKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add <name>",
-		Short: "Add an encrypted private key (either newly generated or recovered), encrypt it, and save to disk",
+		Short: "Add an encrypted private key (either newly generated or recovered), encrypt it, and save to <name> file",
 		Long: `Derive a new private key and encrypt to disk.
 Optionally specify a BIP39 mnemonic, a BIP39 passphrase to further secure the mnemonic,
 and a bip32 HD path to derive a specific account. The key will be stored under the given name
@@ -65,7 +65,7 @@ the flag --nosort is set.
 	f.StringSlice(flagMultisig, nil, "Construct and store a multisig public key (implies --pubkey)")
 	f.Int(flagMultiSigThreshold, 1, "K out of N required signatures. For use in conjunction with --multisig")
 	f.Bool(flagNoSort, false, "Keys passed to --multisig are taken in the order they're supplied")
-	f.String(FlagPublicKey, "", "Parse a public key in bech32 format and save it to disk")
+	f.String(FlagPublicKey, "", "Parse a public key in JSON format and saves key info to <name> file.")
 	f.BoolP(flagInteractive, "i", false, "Interactively prompt user for BIP39 passphrase and mnemonic")
 	f.Bool(flags.FlagUseLedger, false, "Store a local reference to a private key on a Ledger device")
 	f.Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")

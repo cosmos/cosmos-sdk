@@ -186,7 +186,7 @@ type multiInfo struct {
 // NewMultiInfo creates a new multiInfo instance
 func NewMultiInfo(name string, pub cryptotypes.PubKey) (Info, error) {
 	if _, ok := pub.(*multisig.LegacyAminoPubKey); !ok {
-		return nil, fmt.Errorf("MultiInfo supports only LegacyAminoPubKey, got  %T", pub)
+		return nil, fmt.Errorf("MultiInfo supports only multisig.LegacyAminoPubKey, got  %T", pub)
 	}
 	return &multiInfo{
 		Name:   name,

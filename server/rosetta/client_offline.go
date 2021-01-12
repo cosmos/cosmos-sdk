@@ -60,7 +60,10 @@ func (c *Client) SignedTx(ctx context.Context, txBytes []byte, signatures []*typ
 		return nil, err
 	}
 
-	txBldr, _ := TxConfig.WrapTxBuilder(rawTx)
+	txBldr, err := TxConfig.WrapTxBuilder(rawTx)
+	if err != nil {
+		return nil, err
+	}
 
 	var sigs = make([]signing.SignatureV2, len(signatures))
 	for i, signature := range signatures {

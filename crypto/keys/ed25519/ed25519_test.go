@@ -3,7 +3,6 @@ package ed25519_test
 import (
 	stded25519 "crypto/ed25519"
 	"encoding/base64"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -260,7 +259,6 @@ func TestMarshalProto(t *testing.T) {
 	// **** test binary serialization ****
 
 	bz, err = ccfg.Marshaler.MarshalBinaryBare(pkAny)
-	fmt.Println(bz)
 	require.NoError(err)
 
 	var pkAny3 codectypes.Any
@@ -272,7 +270,9 @@ func TestMarshalProto(t *testing.T) {
 	require.True(pk3.Equals(pk))
 }
 
-func TestMarshalProto2(t *testing.T) {
+// TestMarshalProtoInterface tests PubKey marshaling using (Un)marshalInterface helper
+// functions
+func TestMarshalProtoInterface(t *testing.T) {
 	require := require.New(t)
 	ccfg := simapp.MakeTestEncodingConfig()
 	privKey := ed25519.GenPrivKey()

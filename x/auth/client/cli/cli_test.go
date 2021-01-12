@@ -15,7 +15,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -147,11 +146,9 @@ func (s *IntegrationTestSuite) TestCLISign() {
 
 	// query account info
 	queryResJSON, err := authtest.QueryAccountExec(val1.ClientCtx, val1.Address)
-	s.Require().NoError(err)
-	var any types.Any
-	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(queryResJSON.Bytes(), &any)
+	require.NoError(err)
 	var account authtypes.AccountI
-	err = val1.ClientCtx.InterfaceRegistry.UnpackAny(&any, &account)
+	require.NoError(val1.ClientCtx.JSONMarshaler.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
 
 	/****  test signature-only  ****/
 	res, err := authtest.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag,
@@ -851,10 +848,8 @@ func (s *IntegrationTestSuite) TestGetAccountCmd() {
 				s.Require().Error(err)
 				s.Require().NotEqual("internal", err.Error())
 			} else {
-				var any types.Any
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &any))
 				var acc authtypes.AccountI
-				s.Require().NoError(clientCtx.InterfaceRegistry.UnpackAny(&any, &acc))
+				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalInterfaceJSON(out.Bytes(), &acc))
 				s.Require().Equal(val.Address, acc.GetAddress())
 			}
 		})

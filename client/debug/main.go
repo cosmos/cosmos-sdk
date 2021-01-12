@@ -29,9 +29,7 @@ func Cmd() *cobra.Command {
 	return cmd
 }
 
-// getPubKeyFromString returns a Tendermint PubKey (PubKeyEd25519) by attempting
-// to decode the pubkey string from hex, base64, and finally bech32. If all
-// encodings fail, an error is returned.
+// getPubKeyFromString decodes SDK PubKey using JSON marshaler.
 func getPubKeyFromString(ctx client.Context, pkstr string) (cryptotypes.PubKey, error) {
 	var pk cryptotypes.PubKey
 	err := ctx.JSONMarshaler.UnmarshalInterfaceJSON([]byte(pkstr), &pk)

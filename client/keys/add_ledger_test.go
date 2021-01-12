@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
 )
 
 func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
@@ -74,8 +73,8 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	require.Equal(t, "keyname1", key1.GetName())
 	require.Equal(t, keyring.TypeLedger, key1.GetType())
 	require.Equal(t,
-		"terrapub1addwnpepqvpg7r26nl2pvqqern00m6s9uaax3hauu2rzg8qpjzq9hy6xve7sw0d84m6",
-		legacybech32.MustMarshalPubKey(legacybech32.AccPK, key1.GetPubKey()))
+		"PubKeySecp256k1{03028F0D5A9FD41600191CDEFDEA05E77A68DFBCE286241C0190805B9346667D07}",
+		key1.GetPubKey().String())
 
 	config.SetCoinType(118)
 	config.SetFullFundraiserPath("44'/118'/0'/0/0")

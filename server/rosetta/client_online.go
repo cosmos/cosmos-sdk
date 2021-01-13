@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/version"
+
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/tendermint/btcd/btcec"
@@ -50,6 +52,8 @@ type Client struct {
 	ir codectypes.InterfaceRegistry
 
 	clientCtx client.Context
+
+	version string
 }
 
 func (c *Client) AccountIdentifierFromPublicKey(pubKey *types.PublicKey) (*types.AccountIdentifier, error) {
@@ -74,9 +78,11 @@ func (c *Client) AccountIdentifierFromPublicKey(pubKey *types.PublicKey) (*types
 
 // NewClient instantiates a new online servicer
 func NewClient(cfg *Config) (*Client, error) {
+	info := version.NewInfo()
 	return &Client{
-		config: cfg,
-		ir:     cfg.InterfaceRegistry,
+		config:  cfg,
+		ir:      cfg.InterfaceRegistry,
+		version: info.Version,
 	}, nil
 }
 

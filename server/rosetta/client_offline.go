@@ -31,8 +31,7 @@ func (c *Client) OperationStatuses() []*types.OperationStatus {
 }
 
 func (c *Client) Version() string {
-	const version = "cosmos-sdk:v0.40.0-rc5/tendermint:0.34.0"
-	return version
+	return c.version
 }
 
 func (c *Client) SupportedOperations() []string {

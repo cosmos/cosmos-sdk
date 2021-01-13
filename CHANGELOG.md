@@ -36,6 +36,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* (tendermint) [\#8316](https://github.com/cosmos/cosmos-sdk/pull/8316) Bump Tendermint version to [v0.34.2](https://github.com/tendermint/tendermint/releases/tag/v0.34.2)
+
 ### Bug Fixes
 
   * (x/auth) [\#8287](https://github.com/cosmos/cosmos-sdk/pull/8287) Fix `tx sign --signature-only` to return correct sequence value in signature.

@@ -53,8 +53,11 @@ type Authorization interface {
 	MethodName() string
 
 	// Accept determines whether this grant permits the provided sdk.ServiceMsg to be performed, and if
-	// so provides an upgraded authorization instance. If delete returns true,the Authorization has
-	// been exhausted and can be deleted from state.
+	// so provides an upgraded authorization instance. 
+	// Returns:
+	// + allow: true if msg is authorized. allow=true ==> delete=false.
+	// + updated: other Authorization which has been overwritten by this one
+	// + delete: true if Authorization has been exhausted and can be deleted from state.
 	Accept(msg sdk.ServiceMsg, block abci.Header) (allow bool, updated Authorization, delete bool)
 }
 ```

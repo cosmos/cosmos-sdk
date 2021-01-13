@@ -215,7 +215,7 @@ func (suite *IntegrationTestSuite) TestSupply_MintCoins() {
 func (suite *IntegrationTestSuite) TestSupply_BurnCoins() {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
-	appCodec, _ := simapp.MakeCodecs()
+	appCodec := simapp.MakeTestEncodingConfig().Marshaler
 
 	// add module accounts to supply keeper
 	maccPerms := simapp.GetMaccPerms()

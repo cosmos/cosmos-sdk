@@ -74,9 +74,8 @@ func TestReadTxFromFile(t *testing.T) {
 	// Write it to the file
 	encodedTx, err := txCfg.TxJSONEncoder()(txBuilder.GetTx())
 	require.NoError(t, err)
-	jsonTxFile, cleanup := testutil.WriteToNewTempFile(t, string(encodedTx))
-	t.Cleanup(cleanup)
 
+	jsonTxFile := testutil.WriteToNewTempFile(t, string(encodedTx))
 	// Read it back
 	decodedTx, err := authclient.ReadTxFromFile(clientCtx, jsonTxFile.Name())
 	require.NoError(t, err)

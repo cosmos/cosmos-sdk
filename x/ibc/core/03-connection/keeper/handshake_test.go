@@ -17,6 +17,7 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 		clientA      string
 		clientB      string
 		version      *types.Version
+		delayPeriod  uint64
 		emptyConnBID bool
 	)
 
@@ -36,6 +37,11 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 			version = types.ExportedVersionsToProto(types.GetCompatibleVersions())[0]
 		}, true},
+		{"success with non zero delayPeriod", func() {
+			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+			delayPeriod = uint64(time.Hour.Nanoseconds())
+		}, true},
+
 		{"invalid version", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 			version = &types.Version{}
@@ -62,7 +68,7 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 			}
 			counterparty := types.NewCounterparty(clientB, connB.ID, suite.chainB.GetPrefix())
 
-			connectionID, err := suite.chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenInit(suite.chainA.GetContext(), clientA, counterparty, version)
+			connectionID, err := suite.chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenInit(suite.chainA.GetContext(), clientA, counterparty, version, delayPeriod)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -81,6 +87,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 	var (
 		clientA              string
 		clientB              string
+		delayPeriod          uint64
 		previousConnectionID string
 		versions             []exported.Version
 		consensusHeight      exported.Height
@@ -109,6 +116,25 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			counterpartyClient = suite.chainA.GetClientState(clientA)
 
 			previousConnectionID = connB.ID
+		}, true},
+		{"success with delay period", func() {
+			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+			connA, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
+			suite.Require().NoError(err)
+
+			delayPeriod = uint64(time.Hour.Nanoseconds())
+
+			// set delay period on counterparty to non-zero value
+			conn := suite.chainA.GetConnection(connA)
+			conn.DelayPeriod = delayPeriod
+			suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, conn)
+
+			// commit in order for proof to return correct value
+			suite.coordinator.CommitBlock(suite.chainA)
+			suite.coordinator.UpdateClient(suite.chainB, suite.chainA, clientB, exported.Tendermint)
+
+			// retrieve client state of chainA to pass as counterpartyClient
+			counterpartyClient = suite.chainA.GetClientState(clientA)
 		}, true},
 		{"invalid counterparty client", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
@@ -184,7 +210,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			// modify counterparty client without setting in store so it still passes validate but fails proof verification
 			tmClient, ok := counterpartyClient.(*ibctmtypes.ClientState)
 			suite.Require().True(ok)
-			tmClient.LatestHeight = tmClient.LatestHeight.Increment()
+			tmClient.LatestHeight = tmClient.LatestHeight.Increment().(clienttypes.Height)
 		}, false},
 		{"consensus state verification failed", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
@@ -283,7 +309,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			proofClient, _ := suite.chainA.QueryProof(clientKey)
 
 			connectionID, err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenTry(
-				suite.chainB.GetContext(), previousConnectionID, counterparty, clientB, counterpartyClient,
+				suite.chainB.GetContext(), previousConnectionID, counterparty, delayPeriod, clientB, counterpartyClient,
 				versions, proofInit, proofClient, proofConsensus,
 				proofHeight, consensusHeight,
 			)
@@ -536,7 +562,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			// modify counterparty client without setting in store so it still passes validate but fails proof verification
 			tmClient, ok := counterpartyClient.(*ibctmtypes.ClientState)
 			suite.Require().True(ok)
-			tmClient.LatestHeight = tmClient.LatestHeight.Increment()
+			tmClient.LatestHeight = tmClient.LatestHeight.Increment().(clienttypes.Height)
 
 			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
 			suite.Require().NoError(err)

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -16,12 +15,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
-func setupStore(t *testing.T) (*snapshots.Store, func()) {
-	tempdir, err := ioutil.TempDir("", "snapshots")
-	require.NoError(t, err)
-
+func setupStore(t *testing.T) *snapshots.Store {
+	tempdir := t.TempDir()
 	store, err := snapshots.NewStore(db.NewMemDB(), tempdir)
 	require.NoError(t, err)
 
@@ -42,21 +40,13 @@ func setupStore(t *testing.T) (*snapshots.Store, func()) {
 	}))
 	require.NoError(t, err)
 
-	teardown := func() {
-		err := os.RemoveAll(tempdir)
-		if err != nil {
-			t.Logf("Failed to remove tempdir %q: %v", tempdir, err)
-		}
-	}
-	return store, teardown
+	return store
 }
 
 func TestNewStore(t *testing.T) {
-	tempdir, err := ioutil.TempDir("", "snapshots")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempdir)
+	tempdir := t.TempDir()
+	_, err := snapshots.NewStore(db.NewMemDB(), tempdir)
 
-	_, err = snapshots.NewStore(db.NewMemDB(), tempdir)
 	require.NoError(t, err)
 }
 
@@ -66,22 +56,14 @@ func TestNewStore_ErrNoDir(t *testing.T) {
 }
 
 func TestNewStore_ErrDirFailure(t *testing.T) {
-	tempfile, err := ioutil.TempFile("", "snapshots")
-	require.NoError(t, err)
-	defer func() {
-		os.RemoveAll(tempfile.Name())
-		tempfile.Close()
-	}()
-	tempdir := filepath.Join(tempfile.Name(), "subdir")
+	notADir := filepath.Join(testutil.TempFile(t).Name(), "subdir")
 
-	_, err = snapshots.NewStore(db.NewMemDB(), tempdir)
+	_, err := snapshots.NewStore(db.NewMemDB(), notADir)
 	require.Error(t, err)
 }
 
 func TestStore_Delete(t *testing.T) {
-	store, teardown := setupStore(t)
-	defer teardown()
-
+	store := setupStore(t)
 	// Deleting a snapshot should remove it
 	err := store.Delete(2, 2)
 	require.NoError(t, err)
@@ -114,8 +96,7 @@ func TestStore_Delete(t *testing.T) {
 }
 
 func TestStore_Get(t *testing.T) {
-	store, teardown := setupStore(t)
-	defer teardown()
+	store := setupStore(t)
 
 	// Loading a missing snapshot should return nil
 	snapshot, err := store.Get(9, 9)
@@ -131,18 +112,14 @@ func TestStore_Get(t *testing.T) {
 		Chunks: 2,
 		Hash:   hash([][]byte{{2, 1, 0}, {2, 1, 1}}),
 		Metadata: types.Metadata{
-			ChunkHashes: [][]byte{
-				checksum([]byte{2, 1, 0}),
-				checksum([]byte{2, 1, 1}),
-			},
+			ChunkHashes: checksums([][]byte{
+				{2, 1, 0}, {2, 1, 1}}),
 		},
 	}, snapshot)
 }
 
 func TestStore_GetLatest(t *testing.T) {
-	store, teardown := setupStore(t)
-	defer teardown()
-
+	store := setupStore(t)
 	// Loading a missing snapshot should return nil
 	snapshot, err := store.GetLatest()
 	require.NoError(t, err)
@@ -166,9 +143,7 @@ func TestStore_GetLatest(t *testing.T) {
 }
 
 func TestStore_List(t *testing.T) {
-	store, teardown := setupStore(t)
-	defer teardown()
-
+	store := setupStore(t)
 	snapshots, err := store.List()
 	require.NoError(t, err)
 
@@ -189,9 +164,7 @@ func TestStore_List(t *testing.T) {
 }
 
 func TestStore_Load(t *testing.T) {
-	store, teardown := setupStore(t)
-	defer teardown()
-
+	store := setupStore(t)
 	// Loading a missing snapshot should return nil
 	snapshot, chunks, err := store.Load(9, 9)
 	require.NoError(t, err)
@@ -207,10 +180,8 @@ func TestStore_Load(t *testing.T) {
 		Chunks: 2,
 		Hash:   hash([][]byte{{2, 1, 0}, {2, 1, 1}}),
 		Metadata: types.Metadata{
-			ChunkHashes: [][]byte{
-				checksum([]byte{2, 1, 0}),
-				checksum([]byte{2, 1, 1}),
-			},
+			ChunkHashes: checksums([][]byte{
+				{2, 1, 0}, {2, 1, 1}}),
 		},
 	}, snapshot)
 
@@ -227,9 +198,7 @@ func TestStore_Load(t *testing.T) {
 }
 
 func TestStore_LoadChunk(t *testing.T) {
-	store, teardown := setupStore(t)
-	defer teardown()
-
+	store := setupStore(t)
 	// Loading a missing snapshot should return nil
 	chunk, err := store.LoadChunk(9, 9, 0)
 	require.NoError(t, err)
@@ -252,9 +221,7 @@ func TestStore_LoadChunk(t *testing.T) {
 }
 
 func TestStore_Prune(t *testing.T) {
-	store, teardown := setupStore(t)
-	defer teardown()
-
+	store := setupStore(t)
 	// Pruning too many snapshots should be fine
 	pruned, err := store.Prune(4)
 	require.NoError(t, err)
@@ -294,9 +261,7 @@ func TestStore_Prune(t *testing.T) {
 }
 
 func TestStore_Save(t *testing.T) {
-	store, teardown := setupStore(t)
-	defer teardown()
-
+	store := setupStore(t)
 	// Saving a snapshot should work
 	snapshot, err := store.Save(4, 1, makeChunks([][]byte{{1}, {2}}))
 	require.NoError(t, err)
@@ -306,10 +271,7 @@ func TestStore_Save(t *testing.T) {
 		Chunks: 2,
 		Hash:   hash([][]byte{{1}, {2}}),
 		Metadata: types.Metadata{
-			ChunkHashes: [][]byte{
-				checksum([]byte{1}),
-				checksum([]byte{2}),
-			},
+			ChunkHashes: checksums([][]byte{{1}, {2}}),
 		},
 	}, snapshot)
 	loaded, err := store.Get(snapshot.Height, snapshot.Format)

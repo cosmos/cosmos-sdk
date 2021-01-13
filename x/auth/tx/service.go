@@ -49,6 +49,10 @@ const (
 
 // TxsByEvents implements the ServiceServer.TxsByEvents RPC method.
 func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventRequest) (*txtypes.GetTxsEventResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
+	}
+
 	page, limit, err := pagination.ParsePagination(req.Pagination)
 	if err != nil {
 		return nil, err
@@ -113,7 +117,7 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 
 // Simulate implements the ServiceServer.Simulate RPC method.
 func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*txtypes.SimulateResponse, error) {
-	if req.Tx == nil {
+	if req == nil || req.Tx == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
 	}
 
@@ -139,6 +143,10 @@ func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*
 
 // GetTx implements the ServiceServer.GetTx RPC method.
 func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtypes.GetTxResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
+	}
+
 	// We get hash as a hex string in the request, convert it to bytes.
 	hash, err := hex.DecodeString(req.Hash)
 	if err != nil {
@@ -168,6 +176,10 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 		Tx:         &protoTx,
 		TxResponse: txResp,
 	}, nil
+}
+
+func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxRequest) (*txtypes.BroadcastTxResponse, error) {
+	return client.TxServiceBroadcast(ctx, s.clientCtx, req)
 }
 
 // RegisterTxService registers the tx service on the gRPC router.

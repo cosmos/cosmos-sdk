@@ -34,12 +34,10 @@ func NewUnjailTxCmd() *cobra.Command {
 $ <appd> tx slashing unjail --from mykey
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			valAddr := clientCtx.GetFromAddress()
 
 			msg := types.NewMsgUnjail(sdk.ValAddress(valAddr))

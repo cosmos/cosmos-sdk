@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -52,7 +51,7 @@ func NewKeeper(
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", host.ModuleName, types.SubModuleName))
+	return ctx.Logger().With("module", "x/"+host.ModuleName+"/"+types.SubModuleName)
 }
 
 // GenerateChannelIdentifier returns the next channel identifier.
@@ -171,7 +170,7 @@ func (k Keeper) GetPacketReceipt(ctx sdk.Context, portID, channelID string, sequ
 // SetPacketReceipt sets an empty packet receipt to the store
 func (k Keeper) SetPacketReceipt(ctx sdk.Context, portID, channelID string, sequence uint64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(host.PacketReceiptKey(portID, channelID, sequence), []byte(""))
+	store.Set(host.PacketReceiptKey(portID, channelID, sequence), []byte{byte(1)})
 }
 
 // GetPacketCommitment gets the packet commitment hash from the store

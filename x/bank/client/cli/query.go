@@ -54,12 +54,10 @@ Example:
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			denom, err := cmd.Flags().GetString(FlagDenom)
 			if err != nil {
 				return err
@@ -84,7 +82,7 @@ Example:
 				if err != nil {
 					return err
 				}
-				return clientCtx.PrintOutput(res)
+				return clientCtx.PrintProto(res)
 			}
 
 			params := types.NewQueryBalanceRequest(addr, denom)
@@ -93,7 +91,7 @@ Example:
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Balance)
+			return clientCtx.PrintProto(res.Balance)
 		},
 	}
 
@@ -121,12 +119,10 @@ To query for the total supply of a specific coin denomination use:
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			denom, err := cmd.Flags().GetString(FlagDenom)
 			if err != nil {
 				return err
@@ -140,7 +136,7 @@ To query for the total supply of a specific coin denomination use:
 					return err
 				}
 
-				return clientCtx.PrintOutput(res)
+				return clientCtx.PrintProto(res)
 			}
 
 			res, err := queryClient.SupplyOf(context.Background(), &types.QuerySupplyOfRequest{Denom: denom})
@@ -148,7 +144,7 @@ To query for the total supply of a specific coin denomination use:
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res.Amount)
+			return clientCtx.PrintProto(&res.Amount)
 		},
 	}
 

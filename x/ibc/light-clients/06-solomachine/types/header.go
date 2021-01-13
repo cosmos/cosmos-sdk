@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
-var _ exported.Header = Header{}
+var _ exported.Header = &Header{}
 
 // ClientType defines that the Header is a Solo Machine.
 func (Header) ClientType() string {

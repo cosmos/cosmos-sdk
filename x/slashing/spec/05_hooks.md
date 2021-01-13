@@ -5,6 +5,18 @@ order: 5
 # Hooks
 
 In this section we describe the "hooks" - slashing module code that runs when other events happen.
+The module provides the following hooks, which can be useful
+
+## Staking hooks
+
+The slashing module implements the x/staking `StakingHooks` used to keep information about validators. During the app initialization, these hooks should be registered in the staking module object.
+
+The following hooks impact the slashing state:
+
++ `AfterValidatorBonded` - creates a `ValidatorSigningInfo` as described in the following section
++ `AfterValidatorCreated` - registers validator's consensus key
++ `AfterValidatorRemoved` - removes validator's consensus key
+
 
 ## Validator Bonded
 

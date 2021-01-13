@@ -29,18 +29,24 @@ its unique `proposalID`.
 
 ### Proposal types
 
-In the initial version of the governance module, there are two types of
-proposal:
+In the initial version of the governance module, there are five types of
+proposals:
 
-- `PlainTextProposal` All the proposals that do not involve a modification of
+- `TextProposal` All the proposals that do not involve a modification of
   the source code go under this type. For example, an opinion poll would use a
-  proposal of type `PlainTextProposal`.
+  proposal of type `TextProposal`.
 - `SoftwareUpgradeProposal`. If accepted, validators are expected to update
   their software in accordance with the proposal. They must do so by following
   a 2-steps process described in the [Software Upgrade](#software-upgrade)
   section below. Software upgrade roadmap may be discussed and agreed on via
-  `PlainTextProposals`, but actual software upgrades must be performed via
+  `TextProposals`, but actual software upgrades must be performed via
   `SoftwareUpgradeProposals`.
+- `CommunityPoolSpendProposal` details a proposal for use of community funds,
+  together with how many coins are proposed to be spent, and to which recipient account.
+- `ParameterChangeProposal` defines a proposal to change one or 
+  more parameters. If accepted, the requested parameter change is updated 
+  automatically by the proposal handler upon conclusion of the voting period.
+- `CancelSoftwareUpgradeProposal` is a gov Content type for cancelling a software upgrade.
 
 Other modules may expand upon the governance module by implementing their own
 proposal types and handlers. These types are registered and processed through the

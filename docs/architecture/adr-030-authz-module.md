@@ -33,8 +33,8 @@ implementation is based on work done by the [Gaian's team at Hackatom Berlin 201
 
 ## Decision
 
-We will create a module named `authz` which provides support for
-granting arbitrary capabilities from one account (the granter) to another account (the grantee). Authorizations
+We will create a module named `authz` which provides functionality for
+granting arbitrary privileges from one account (the _granter_) to another account (the _grantee_). Authorizations
 must be granted for a particular `Msg` service methods one by one using an implementation
 of `Authorization`.
 

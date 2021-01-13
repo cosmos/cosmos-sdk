@@ -193,12 +193,11 @@ func GetCmdQueryHeader() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			header, height, err := utils.QueryTendermintHeader(clientCtx)
+			header, _, err := utils.QueryTendermintHeader(clientCtx)
 			if err != nil {
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(height)
 			return clientCtx.PrintProto(&header)
 		},
 	}
@@ -222,12 +221,11 @@ func GetCmdNodeConsensusState() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			state, height, err := utils.QueryNodeConsensusState(clientCtx)
+			state, _, err := utils.QueryNodeConsensusState(clientCtx)
 			if err != nil {
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(height)
 			return clientCtx.PrintProto(state)
 		},
 	}

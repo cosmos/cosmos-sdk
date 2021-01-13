@@ -118,6 +118,7 @@ func (g config) MarshalSignatureJSON(sigs []signing.SignatureV2) ([]byte, error)
 		descs[i] = &signing.SignatureDescriptor{
 			PublicKey: any,
 			Data:      descData,
+			Sequence:  sig.Sequence,
 		}
 	}
 

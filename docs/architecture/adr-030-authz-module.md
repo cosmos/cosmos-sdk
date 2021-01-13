@@ -19,7 +19,8 @@ on behalf of that account to other accounts.
 The concrete use cases which motivated this module include:
 - the desire to delegate the ability to vote on proposals to other accounts besides the account which one has
 delegated stake
-- "sub-keys" functionality which is a term used to describe the functionality provided by this  module together with
+- "sub-keys" functionality, as originally proposed in [\#4480](https://github.com/cosmos/cosmos-sdk/issues/4480) which
+is a term used to describe the functionality provided by this module together with
 the `fee_grant` module from [ADR 029](./adr-029-fee-grant-module.md) and the [group module](https://github.com/regen-network/cosmos-modules/tree/master/incubator/group).
 
 The "sub-keys" functionality roughly refers to the ability for one account to grant some subset of its capabilities to
@@ -28,7 +29,7 @@ an organization could grant the ability to spend small amounts of the organizati
 Or an individual (or group) with a multisig wallet could grant the ability to vote on proposals to any one of the member
 keys.
 
-The sub-keys functionality was originally proposed in https://github.com/cosmos/cosmos-sdk/issues/4480. The current
+The current
 implementation is based on work done by the [Gaian's team at Hackatom Berlin 2019](https://github.com/cosmos-gaians/cosmos-sdk/tree/hackatom/x/delegation).
 
 ## Decision
@@ -105,6 +106,7 @@ service Msg {
   // ExecAuthorized attempts to execute the provided messages using
   // authorizations granted to the grantee. Each message should have only
   // one signer corresponding to the granter of the authorization.
+  // The grantee signing this message must have an authorization from the granter.
   rpc ExecAuthorized(MsgExecAuthorized) returns (MsgExecAuthorizedResponse)
 
 

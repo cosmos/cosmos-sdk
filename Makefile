@@ -201,6 +201,7 @@ build-docs:
 		cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
 		cp ~/output/$${path_prefix}/index.html ~/output ; \
 	done < versions ;
+.PHONY: build-docs
 
 sync-docs:
 	cd ~/output && \

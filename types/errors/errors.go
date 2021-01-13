@@ -135,6 +135,10 @@ var (
 	// supported.
 	ErrNotSupported = Register(RootCodespace, 37, "feature not supported")
 
+	// ErrIO should be used to wrap internal errors caused by external operation.
+	// Examples: not DB domain error, file writing etc...
+	ErrIO = Register(RootCodespace, 38, "Internal IO error")
+
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")
@@ -356,6 +360,17 @@ func Recover(err *error) {
 // WithType is a helper to augment an error with a corresponding type message
 func WithType(err error, obj interface{}) error {
 	return Wrap(err, fmt.Sprintf("%T", obj))
+}
+
+// AsOf checks if a received error is caused by one of the target errors.
+// It extends the errors.As functionality to a list of errors.
+func AsOf(received error, targets ...error) bool {
+	for _, t := range targets {
+		if errors.As(received, t) {
+			return true
+		}
+	}
+	return false
 }
 
 // causer is an interface implemented by an error that supports wrapping. Use

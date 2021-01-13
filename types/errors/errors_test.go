@@ -149,6 +149,27 @@ func (s *errorsTestSuite) TestErrorIs() {
 	}
 }
 
+func (s *errorsTestSuite) TestIsOf() {
+	require := s.Require()
+
+	var errNil error
+	var err = errors.New("some error")
+	var errW = Wrap(ErrLogic, "more info")
+
+	require.False(AsOf(errNil), "nil error should always have no causer")
+	require.False(AsOf(errNil, err), "nil error should always have no causer")
+	require.False(AsOf(errNil, err), "nil error should always have no causer")
+
+	require.False(AsOf(err))
+	require.False(AsOf(err, nil))
+	require.False(AsOf(err, ErrLogic))
+	require.False(AsOf(err, errW))
+
+	require.True(AsOf(errW, ErrLogic))
+	require.True(AsOf(errW, err, ErrLogic))
+	require.True(AsOf(errW, nil, errW), "error should much itsel")
+}
+
 type customError struct {
 }
 

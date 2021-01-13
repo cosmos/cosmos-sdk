@@ -6,10 +6,6 @@ order: 8
 
 This document describes how commmand-line interface (CLI) works on a high-level, for an [**application**](../basics/app-anatomy.md). A separate document for implementing a CLI for an SDK [**module**](../building-modules/intro.md) can be found [here](../building-modules/module-interfaces.md#cli). {synopsis}
 
-## Pre-requisite Readings
-
-- [Lifecycle of a Query](../basics/query-lifecycle.md) {prereq}
-
 ## Command-Line Interface
 
 ### Example Command

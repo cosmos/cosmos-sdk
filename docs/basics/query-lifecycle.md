@@ -38,27 +38,29 @@ The CLI understands a specific set of commands, defined in a hierarchical struct
 
 ### gRPC
 
-Another interface through which users can make queries is through [gRPC](https://grpc.io) requests to a [gRPC server](../core/grpc_rest.md#grpc-server).
+Another interface through which users can make queries is through [gRPC](https://grpc.io) requests to a [gRPC server](../core/grpc_rest.md#grpc-server). The endpoints are defined as [Protocol Buffers](https://developers.google.com/protocol-buffers) service methods inside `.proto` files, written in Protobuf's own language-agnostic interface definition language (IDL). The Protobuf ecosystem developed tools for code-generation from `*.proto` files into various languages. These tools allow to build gRPC clients easily.
+
+One such tool is [grpcurl](https://github.com/fullstorydev/grpcurl), and a gRPC request using this client looks like:
+
+```bash
+grpcurl \
+    -import-path ./proto \                              # Import these proto files
+    -proto ./proto/cosmos/bank/v1beta1/query.proto \    # That's the proto file with the description of our service
+    localhost:9090 \									# gRPC server endpoint
+    describe cosmos.bank.v1beta1.Query                  # Service we want to inspect
+```
 
 ### REST
 
-Another interface through which users can make queries is through HTTP Requests to a [REST server](./rest.md#rest-server). The REST server contains, among other things, a [`Context`](#context) and [mux](./rest.md#gorilla-mux) router. The request looks like this:
+Another interface through which users can make queries is through HTTP Requests to a [REST server](../core/grpc_rest.md#rest-server). The REST server is fully auto-generated from Protobuf services, using [gRPC-gateway](https://github.com/grpc-ecosystem/grpc-gateway).
+
+An example HTTP request to query all delegations made by an address looks like:
 
 ```bash
-GET http://localhost:{PORT}/staking/delegators/{delegatorAddr}/delegations
+GET http://localhost:{PORT}/cosmos/staking/v1beta1/delegators/{delegatorAddr}/delegations
 ```
 
-To provide values such as `--node` (the full-node the CLI connects to) that are required by [`baseReq`](../building-modules/module-interfaces.md#basereq), the user must configure their local REST server with the values or provide them in the request body.
-
-The router automatically routes the `Query` HTTP request to the staking module `delegatorDelegationsHandlerFn()` function.
-
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/staking/client/rest/query.go#L103-L106
-
-Since this function is defined within the module and thus has no inherent knowledge of the application `Query` belongs to, it takes in the application `codec` and `Context` as parameters.
-
-To summarize, when users interact with the interfaces, they create a CLI command or HTTP request. `Query` now exists in one of these two forms, but needs to be transformed into an object understood by a full-node.
-
-## Query Preparation
+## How Queries are Handled by the Node
 
 The interactions from the users' perspective are a bit different, but the underlying functions are almost identical because they are implementations of the same command defined by the module developer. This step of processing happens within the CLI or REST server and heavily involves a `Context`.
 
@@ -161,4 +163,4 @@ The [REST server](./rest.md#rest-server) uses the `Context` to format the respon
 
 ## Next {hide}
 
-Read about how to build a [Command-Line Interface](./cli.md), or a [REST Interface](./rest.md) {hide}
+Read about [accounts](./accounts.md). {hide}

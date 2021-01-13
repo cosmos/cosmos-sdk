@@ -40,7 +40,7 @@ of `Authorization`.
 
 ### Types
 
-Authorizations determine exactly what capabilities are granted. They are extensible
+Authorizations determine exactly what privileges are granted. They are extensible
 and can be defined for any `Msg` service method even outside of the module where
 the `Msg` method is defined. `Authorization`s use the new `ServiceMsg` type from
 ADR 031.

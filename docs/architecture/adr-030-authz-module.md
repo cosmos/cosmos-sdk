@@ -4,6 +4,7 @@
 
 - 2019-11-06: Initial Draft
 - 2020-10-12: Updated Draft
+- 2021-11-13: Accepted
 
 ## Status
 
@@ -56,9 +57,9 @@ type Authorization interface {
 	// Accept determines whether this grant permits the provided sdk.ServiceMsg to be performed, and if
 	// so provides an upgraded authorization instance. 
 	// Returns:
-	// + allow: true if msg is authorized. allow=true ==> delete=false.
-	// + updated: other Authorization which has been overwritten by this one
-	// + delete: true if Authorization has been exhausted and can be deleted from state.
+	// + allow: true if msg is authorized
+	// + updated: new Authorization instance which should overwrite the current one with new state
+	// + delete: true if Authorization has been exhausted and can be deleted from state
 	Accept(msg sdk.ServiceMsg, block abci.Header) (allow bool, updated Authorization, delete bool)
 }
 ```
@@ -144,7 +145,9 @@ to the router based on `Authorization` grants:
 
 ```go
 type Keeper interface {
-  DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.ServiceMsg) sdk.Result`
+	// DispatchActions routes the provided msgs to their respective handlers if the grantee was granted an authorization
+	// to send those messages by the first (and only) signer of each msg. 
+    DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.ServiceMsg) sdk.Result`
 }
 ```
 

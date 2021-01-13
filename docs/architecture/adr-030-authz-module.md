@@ -11,7 +11,7 @@ Accepted
 
 ## Abstract
 
-This ADR defines the `authz` module which allows accounts to grant authorizations to perform actions
+This ADR defines the `x/authz` module which allows accounts to grant authorizations to perform actions
 on behalf of that account to other accounts.
 
 ## Context
@@ -34,14 +34,14 @@ implementation is based on work done by the [Gaian's team at Hackatom Berlin 201
 
 ## Decision
 
-We will create a module named `authz` which provides support for
-granting arbitrary capabilities from one account (the granter) to another account (the grantee). Authorizations
+We will create a module named `authz` which provides functionality for
+granting arbitrary privileges from one account (the _granter_) to another account (the _grantee_). Authorizations
 must be granted for a particular `Msg` service methods one by one using an implementation
 of `Authorization`.
 
 ### Types
 
-Authorizations determine exactly what capabilities are granted. They are extensible
+Authorizations determine exactly what privileges are granted. They are extensible
 and can be defined for any `Msg` service method even outside of the module where
 the `Msg` method is defined. `Authorization`s use the new `ServiceMsg` type from
 ADR 031.
@@ -54,8 +54,11 @@ type Authorization interface {
 	MethodName() string
 
 	// Accept determines whether this grant permits the provided sdk.ServiceMsg to be performed, and if
-	// so provides an upgraded authorization instance. If delete returns true,the Authorization has
-	// been exhausted and can be deleted from state.
+	// so provides an upgraded authorization instance. 
+	// Returns:
+	// + allow: true if msg is authorized. allow=true ==> delete=false.
+	// + updated: other Authorization which has been overwritten by this one
+	// + delete: true if Authorization has been exhausted and can be deleted from state.
 	Accept(msg sdk.ServiceMsg, block abci.Header) (allow bool, updated Authorization, delete bool)
 }
 ```

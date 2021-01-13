@@ -40,24 +40,26 @@ The CLI understands a specific set of commands, defined in a hierarchical struct
 
 Another interface through which users can make queries, introduced in Cosmos SDK v0.40, is [gRPC](https://grpc.io) requests to a [gRPC server](../core/grpc_rest.md#grpc-server). The endpoints are defined as [Protocol Buffers](https://developers.google.com/protocol-buffers) service methods inside `.proto` files, written in Protobuf's own language-agnostic interface definition language (IDL). The Protobuf ecosystem developed tools for code-generation from `*.proto` files into various languages. These tools allow to build gRPC clients easily.
 
-One such tool is [grpcurl](https://github.com/fullstorydev/grpcurl), and a gRPC request using this client looks like:
+One such tool is [grpcurl](https://github.com/fullstorydev/grpcurl), and a gRPC request for `MyQuery` using this client looks like:
 
 ```bash
 grpcurl \
-    -import-path ./proto \                              # Import these proto files
-    -proto ./proto/cosmos/bank/v1beta1/query.proto \    # That's the proto file with the description of our service
-    localhost:9090 \									# gRPC server endpoint
-    describe cosmos.bank.v1beta1.Query                  # Service we want to inspect
+    -plaintext                                           # We want results in plain test
+    -import-path ./proto \                               # Import these .proto files
+    -proto ./proto/cosmos/staking/v1beta1/query.proto \  # Look into this .proto file for the Query protobuf service
+    -d '{"address":"$MY_DELEGATOR"}' \                   # Query arguments
+    localhost:9090 \                                     # gRPC server endpoint
+    cosmos.staking.v1beta1.Query/Delegations             # Fully-qualified service method name
 ```
 
 ### REST
 
 Another interface through which users can make queries is through HTTP Requests to a [REST server](../core/grpc_rest.md#rest-server). The REST server is fully auto-generated from Protobuf services, using [gRPC-gateway](https://github.com/grpc-ecosystem/grpc-gateway).
 
-An example HTTP request to query all delegations made by an address looks like:
+An example HTTP request for `MyQuery` looks like:
 
 ```bash
-GET http://localhost:{PORT}/cosmos/staking/v1beta1/delegators/{delegatorAddr}/delegations
+GET http://localhost:1317/cosmos/staking/v1beta1/delegators/{delegatorAddr}/delegations
 ```
 
 ## How Queries are Handled by the CLI

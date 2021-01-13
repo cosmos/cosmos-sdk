@@ -11,7 +11,7 @@ Accepted
 
 ## Abstract
 
-This ADR defines the `authz` module which allows accounts to grant authorizations to perform actions
+This ADR defines the `x/authz` module which allows accounts to grant authorizations to perform actions
 on behalf of that account to other accounts.
 
 ## Context

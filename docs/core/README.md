@@ -20,7 +20,8 @@ This repository contains reference documentation on the core concepts of the Cos
 10. [Telemetry](./telemetry.md)
 11. [Object-Capabilities](./ocap.md)
 12. [RunTx recovery middleware](./runtx_middleware.md)
-13. [Protobuf documentation](./proto-docs.md)
+13. [Simulation](./simulation.md)
+14. [Protobuf documentation](./proto-docs.md)
 
 After reading about the core concepts, check the [IBC documentation](../ibc/README.md) to learn more
 about the IBC core concepts and how to integrate it to you application.

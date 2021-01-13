@@ -24,9 +24,7 @@ The main interface for an application is the command-line interface. Users conne
 simd query staking delegations <delegatorAddress>
 ```
 
-This query command was defined by the [`staking`](../../x/staking/spec/README.md) module developer and added to the list of subcommands by the application developer when creating the CLI. The code for this particular command is the following:
-
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/staking/client/cli/query.go#L250-L293
+This query command was defined by the [`staking`](../../x/staking/spec/README.md) module developer and added to the list of subcommands by the application developer when creating the CLI.
 
 Note that the general format is as follows:
 
@@ -34,9 +32,13 @@ Note that the general format is as follows:
 simd query [moduleName] [command] <arguments> --flag <flagArg>
 ```
 
-To provide values such as `--node` (the full-node the CLI connects to), the user can use the `config` command to set themn or provide them as flags.
+To provide values such as `--node` (the full-node the CLI connects to), the user can use the [`app.toml`](../run-node/run-node.md#configuring-the-node-using-apptoml) config file to set them or provide them as flags.
 
-The CLI understands a specific set of commands, defined in a hierarchical structure by the application developer: from the [root command](./cli.md#root-command) (`simd`), the type of command (`query`), the module that contains the command (`staking`), and command itself (`delegations`). Thus, the CLI knows exactly which module handles this command and directly passes the call there.
+The CLI understands a specific set of commands, defined in a hierarchical structure by the application developer: from the [root command](../core/cli.md#root-command) (`simd`), the type of command (`query`), the module that contains the command (`staking`), and command itself (`delegations`). Thus, the CLI knows exactly which module handles this command and directly passes the call there.
+
+### gRPC
+
+Another interface through which users can make queries is through [gRPC](https://grpc.io) requests to a [gRPC server](../core/grpc_rest.md#grpc-server).
 
 ### REST
 
@@ -83,7 +85,7 @@ At this point in the lifecycle, the user has created a CLI command or HTTP Reque
 
 #### Encoding
 
-In this case, `Query` contains an [address](../basics/accounts.md#addresses) `delegatorAddress` as its only argument. However, the request can only contain `[]byte`s, as it will be relayed to a consensus engine (e.g. Tendermint Core) of a full-node that has no inherent knowledge of the application types. Thus, the `codec` of `Context` is used to marshal the address.
+In this case, `Query` contains an [address](./accounts.md#addresses) `delegatorAddress` as its only argument. However, the request can only contain `[]byte`s, as it will be relayed to a consensus engine (e.g. Tendermint Core) of a full-node that has no inherent knowledge of the application types. Thus, the `codec` of `Context` is used to marshal the address.
 
 Here is what the code looks like for the CLI command:
 

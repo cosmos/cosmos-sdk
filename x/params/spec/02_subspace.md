@@ -5,7 +5,7 @@ order: 2
 # Subspace
 
 `Subspace` is a prefixed subspace of the parameter store. Each module which uses the 
-parameter store will take a `Subspace`, not the `Keeper`, to isolate permission to access.
+parameter store will take a `Subspace` to isolate permission to access.
 
 ## Key
 
@@ -22,7 +22,7 @@ All of the parameter keys that will be used should be registered at the compile
 time. `KeyTable` is essentially a `map[string]attribute`, where the `string` is a parameter key.
 
 Currently, `attribute` consists of a `reflect.Type`, which indicates the parameter 
-type and a `ValueValidatorFn`. It is needed even if the state machine has no error, because the parameter can be modified externally, for example via the governance.
+type to check that provided key and value are compatible and registered, as well as a function `ValueValidatorFn` to validate values.
 
 Only primary keys have to be registered on the `KeyTable`. Subkeys inherit the 
 attribute of the primary key.

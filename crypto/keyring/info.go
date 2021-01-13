@@ -177,10 +177,21 @@ func (i offlineInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
 
+// Deprecated: this structure is not used anymore and it's here only to allow
+// decoding old multiInfo records from keyring.
+// The problem with legacy.Cdc.UnmarshalBinaryLengthPrefixed - the legacy codec doesn't
+// tolerate extensibility.
+type multisigPubKeyInfo struct {
+	PubKey cryptotypes.PubKey `json:"pubkey"`
+	Weight uint               `json:"weight"`
+}
+
 // multiInfo is the public information about a multisig key
 type multiInfo struct {
-	Name   string             `json:"name"`
-	PubKey cryptotypes.PubKey `json:"pubkey"`
+	Name      string               `json:"name"`
+	PubKey    cryptotypes.PubKey   `json:"pubkey"`
+	Threshold uint                 `json:"threshold"`
+	PubKeys   []multisigPubKeyInfo `json:"pubkeys"`
 }
 
 // NewMultiInfo creates a new multiInfo instance

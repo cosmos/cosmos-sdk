@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerr "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -145,19 +146,18 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 }
 
 func fetchKey(kb keyring.Keyring, keyref string) (keyring.Info, error) {
+	// firstly check if the keyref is a key name of a key registered in a keyring.
 	info, err := kb.Key(keyref)
-	if err != nil {
-		accAddr, err := sdk.AccAddressFromBech32(keyref)
-		if err != nil {
-			return info, err
-		}
-
-		info, err = kb.KeyByAddress(accAddr)
-		if err != nil {
-			return info, errors.New("key not found")
-		}
+	if err == nil || !sdkerr.AsOf(err, sdkerr.ErrIO, sdkerr.ErrKeyNotFound) {
+		return info, err
 	}
-	return info, nil
+	accAddr, err := sdk.AccAddressFromBech32(keyref)
+	if err != nil {
+		return info, err
+	}
+
+	info, err = kb.KeyByAddress(accAddr)
+	return info, sdkerr.Wrap(err, "Invalid key")
 }
 
 func validateMultisigThreshold(k, nKeys int) error {

@@ -532,11 +532,9 @@ func (ks keystore) Key(uid string) (Info, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	if len(bs.Data) == 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, uid)
 	}
-
 	return unmarshalInfo(bs.Data)
 }
 

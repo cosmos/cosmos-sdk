@@ -22,7 +22,7 @@ jobs:
       - name: Install and Build 🔧
         run: |
           apk add rsync
-          make build-docs
+          make build-docs LEDGER_ENABLED=false
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@3.7.1

@@ -16,8 +16,7 @@ paramstore, where keys are prefixed by preconfigured spacename. Keeper has a
 permission to access all existing spaces.
 
 Subspace can be used by the individual keepers, which need a private parameter store
-that the other keepers cannot modify. Keeper can be used by the Governance keeper,
-which needs to modify any parameter in case a proposal passes.
+that the other keepers cannot modify. The params Keeper can be used to add a route to `x/gov` router in order to modify any parameter in case a proposal passes.
 
 The following contents explains how to use params module for master and user modules.
 

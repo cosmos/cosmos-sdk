@@ -53,16 +53,18 @@ local keystore.
 Use the --pubkey flag to add arbitrary public keys to the keystore for constructing
 multisig transactions.
 
-You can add a multisig key by passing the list of key names you want the public
-key to be composed of to the --multisig flag and the minimum number of signatures
-required through --multisig-threshold. The keys are sorted by address, unless
-the flag --nosort is set.
+You can create and store a multisig key by passing the list of key names stored in a keyring
+and the minimum number of signatures required through --multisig-threshold. The keys are
+sorted by address, unless the flag --nosort is set.
+Example:
+
+    keys add mymultisig --multisig "keyname1,keyname2,keyname3" --multisig-threshold 2
 `,
 		Args: cobra.ExactArgs(1),
 		RunE: runAddCmdPrepare,
 	}
 	f := cmd.Flags()
-	f.StringSlice(flagMultisig, nil, "Construct and store a multisig public key (implies --pubkey)")
+	f.StringSlice(flagMultisig, nil, "List of key names stored in keyring to construct a public legacy multisig key")
 	f.Int(flagMultiSigThreshold, 1, "K out of N required signatures. For use in conjunction with --multisig")
 	f.Bool(flagNoSort, false, "Keys passed to --multisig are taken in the order they're supplied")
 	f.String(FlagPublicKey, "", "Parse a public key in JSON format and saves key info to <name> file.")

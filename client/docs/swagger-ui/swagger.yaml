@@ -4890,7 +4890,7 @@ paths:
           required: true
           type: string
       tags:
-        - Query
+        - Auth
   /cosmos/auth/v1beta1/params:
     get:
       summary: Params queries all parameters.
@@ -5113,7 +5113,7 @@ paths:
                           "value": "1.212s"
                         }
       tags:
-        - Query
+        - Auth
   '/cosmos/bank/v1beta1/balances/{address}':
     get:
       summary: AllBalances queries the balance of all coins for a single account.
@@ -41050,7 +41050,6 @@ definitions:
 
               the list only the first time it occurs.
 
-
               By convention, the first required signer (usually from the first
               message)
 
@@ -41621,7 +41620,6 @@ definitions:
           added to
 
           the list only the first time it occurs.
-
 
           By convention, the first required signer (usually from the first
           message)

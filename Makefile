@@ -394,6 +394,7 @@ proto-check-breaking:
 
 TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.0-rc6/proto/tendermint
 GOGO_PROTO_URL      = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
+GRPC_GATEWAY_URL    = https://raw.githubusercontent.com/grpc-ecosystem/grpc-gateway/v2.1.0/protoc-gen-openapiv2/options
 COSMOS_PROTO_URL    = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
 CONFIO_URL          = https://raw.githubusercontent.com/confio/ics23/v0.6.3
 
@@ -405,12 +406,17 @@ TM_LIBS             = third_party/proto/tendermint/libs/bits
 TM_P2P              = third_party/proto/tendermint/p2p
 
 GOGO_PROTO_TYPES    = third_party/proto/gogoproto
+GRPC_GATEWAY_TYPES  = third_party/proto/protoc-gen-openapiv2/options
 COSMOS_PROTO_TYPES  = third_party/proto/cosmos_proto
 CONFIO_TYPES        = third_party/proto/confio
 
 proto-update-deps:
 	@mkdir -p $(GOGO_PROTO_TYPES)
 	@curl -sSL $(GOGO_PROTO_URL)/gogoproto/gogo.proto > $(GOGO_PROTO_TYPES)/gogo.proto
+
+	@mkdir -p $(GRPC_GATEWAY_TYPES)
+	@curl -sSL $(GRPC_GATEWAY_URL)/annotations.proto > $(GRPC_GATEWAY_TYPES)/annotations.proto
+	@curl -sSL $(GRPC_GATEWAY_URL)/openapiv2.proto > $(GRPC_GATEWAY_TYPES)/openapiv2.proto
 
 	@mkdir -p $(COSMOS_PROTO_TYPES)
 	@curl -sSL $(COSMOS_PROTO_URL)/cosmos.proto > $(COSMOS_PROTO_TYPES)/cosmos.proto

@@ -6,6 +6,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "ibc/core/client/v1/client.proto";
 import "ibc/core/connection/v1/connection.proto";
 import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 import "google/protobuf/any.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types";
@@ -15,23 +16,35 @@ service Query {
   // Connection queries an IBC connection end.
   rpc Connection(QueryConnectionRequest) returns (QueryConnectionResponse) {
     option (google.api.http).get = "/ibc/core/connection/v1beta1/connections/{connection_id}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Connection"
+    };
   }
 
   // Connections queries all the IBC connections of a chain.
   rpc Connections(QueryConnectionsRequest) returns (QueryConnectionsResponse) {
-    option (google.api.http).get = "/ibc/core/connection/v1beta1/connections";
+    option (google.api.http).get                                           = "/ibc/core/connection/v1beta1/connections";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Connection"
+    };
   }
 
   // ClientConnections queries the connection paths associated with a client
   // state.
   rpc ClientConnections(QueryClientConnectionsRequest) returns (QueryClientConnectionsResponse) {
     option (google.api.http).get = "/ibc/core/connection/v1beta1/client_connections/{client_id}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Connection"
+    };
   }
 
   // ConnectionClientState queries the client state associated with the
   // connection.
   rpc ConnectionClientState(QueryConnectionClientStateRequest) returns (QueryConnectionClientStateResponse) {
     option (google.api.http).get = "/ibc/core/connection/v1beta1/connections/{connection_id}/client_state";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Connection"
+    };
   }
 
   // ConnectionConsensusState queries the consensus state associated with the
@@ -39,6 +52,9 @@ service Query {
   rpc ConnectionConsensusState(QueryConnectionConsensusStateRequest) returns (QueryConnectionConsensusStateResponse) {
     option (google.api.http).get = "/ibc/core/connection/v1beta1/connections/{connection_id}/consensus_state/"
                                    "revision/{revision_number}/height/{revision_height}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Connection"
+    };
   }
 }
 

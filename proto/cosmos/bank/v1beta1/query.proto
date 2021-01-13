@@ -4,6 +4,7 @@ package cosmos.bank.v1beta1;
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/bank/v1beta1/bank.proto";
 
@@ -14,26 +15,41 @@ service Query {
   // Balance queries the balance of a single coin for a single account.
   rpc Balance(QueryBalanceRequest) returns (QueryBalanceResponse) {
     option (google.api.http).get = "/cosmos/bank/v1beta1/balances/{address}/{denom}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Bank"
+    };
   }
 
   // AllBalances queries the balance of all coins for a single account.
   rpc AllBalances(QueryAllBalancesRequest) returns (QueryAllBalancesResponse) {
-    option (google.api.http).get = "/cosmos/bank/v1beta1/balances/{address}";
+    option (google.api.http).get                                           = "/cosmos/bank/v1beta1/balances/{address}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Bank"
+    };
   }
 
   // TotalSupply queries the total supply of all coins.
   rpc TotalSupply(QueryTotalSupplyRequest) returns (QueryTotalSupplyResponse) {
-    option (google.api.http).get = "/cosmos/bank/v1beta1/supply";
+    option (google.api.http).get                                           = "/cosmos/bank/v1beta1/supply";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Bank"
+    };
   }
 
   // SupplyOf queries the supply of a single coin.
   rpc SupplyOf(QuerySupplyOfRequest) returns (QuerySupplyOfResponse) {
-    option (google.api.http).get = "/cosmos/bank/v1beta1/supply/{denom}";
+    option (google.api.http).get                                           = "/cosmos/bank/v1beta1/supply/{denom}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Bank"
+    };
   }
 
   // Params queries the parameters of x/bank module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/cosmos/bank/v1beta1/params";
+    option (google.api.http).get                                           = "/cosmos/bank/v1beta1/params";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Bank"
+    };
   }
 }
 

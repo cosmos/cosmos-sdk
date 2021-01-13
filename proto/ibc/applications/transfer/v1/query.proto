@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "ibc/applications/transfer/v1/transfer.proto";
 import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types";
 
@@ -13,16 +14,25 @@ service Query {
   // DenomTrace queries a denomination trace information.
   rpc DenomTrace(QueryDenomTraceRequest) returns (QueryDenomTraceResponse) {
     option (google.api.http).get = "/ibc/applications/transfer/v1beta1/denom_traces/{hash}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Transfer"
+    };
   }
 
   // DenomTraces queries all denomination traces.
   rpc DenomTraces(QueryDenomTracesRequest) returns (QueryDenomTracesResponse) {
     option (google.api.http).get = "/ibc/applications/transfer/v1beta1/denom_traces";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Transfer"
+    };
   }
 
   // Params queries all parameters of the ibc-transfer module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/ibc/applications/transfer/v1beta1/params";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Transfer"
+    };
   }
 }
 

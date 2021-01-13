@@ -5,6 +5,7 @@ import "ibc/core/client/v1/client.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "ibc/core/channel/v1/channel.proto";
 import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 import "google/protobuf/any.proto";
 import "gogoproto/gogo.proto";
 
@@ -15,23 +16,35 @@ service Query {
   // Channel queries an IBC Channel.
   rpc Channel(QueryChannelRequest) returns (QueryChannelResponse) {
     option (google.api.http).get = "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Channel"
+    };
   }
 
   // Channels queries all the IBC channels of a chain.
   rpc Channels(QueryChannelsRequest) returns (QueryChannelsResponse) {
-    option (google.api.http).get = "/ibc/core/channel/v1beta1/channels";
+    option (google.api.http).get                                           = "/ibc/core/channel/v1beta1/channels";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Channel"
+    };
   }
 
   // ConnectionChannels queries all the channels associated with a connection
   // end.
   rpc ConnectionChannels(QueryConnectionChannelsRequest) returns (QueryConnectionChannelsResponse) {
     option (google.api.http).get = "/ibc/core/channel/v1beta1/connections/{connection}/channels";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Channel"
+    };
   }
 
   // ChannelClientState queries for the client state for the channel associated
   // with the provided channel identifiers.
   rpc ChannelClientState(QueryChannelClientStateRequest) returns (QueryChannelClientStateResponse) {
     option (google.api.http).get = "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/client_state";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Channel"
+    };
   }
 
   // ChannelConsensusState queries for the consensus state for the channel
@@ -40,30 +53,45 @@ service Query {
     option (google.api.http).get =
         "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/consensus_state/revision/"
         "{revision_number}/height/{revision_height}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Channel"
+    };
   }
 
   // PacketCommitment queries a stored packet commitment hash.
   rpc PacketCommitment(QueryPacketCommitmentRequest) returns (QueryPacketCommitmentResponse) {
     option (google.api.http).get =
         "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{sequence}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Channel"
+    };
   }
 
   // PacketCommitments returns all the packet commitments hashes associated
   // with a channel.
   rpc PacketCommitments(QueryPacketCommitmentsRequest) returns (QueryPacketCommitmentsResponse) {
     option (google.api.http).get = "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Channel"
+    };
   }
 
   // PacketReceipt queries if a given packet sequence has been received on the queried chain
   rpc PacketReceipt(QueryPacketReceiptRequest) returns (QueryPacketReceiptResponse) {
     option (google.api.http).get =
         "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_receipts/{sequence}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Channel"
+    };
   }
 
   // PacketAcknowledgement queries a stored packet acknowledgement hash.
   rpc PacketAcknowledgement(QueryPacketAcknowledgementRequest) returns (QueryPacketAcknowledgementResponse) {
     option (google.api.http).get =
         "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acks/{sequence}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Channel"
+    };
   }
 
   // PacketAcknowledgements returns all the packet acknowledgements associated
@@ -71,6 +99,9 @@ service Query {
   rpc PacketAcknowledgements(QueryPacketAcknowledgementsRequest) returns (QueryPacketAcknowledgementsResponse) {
     option (google.api.http).get =
         "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acknowledgements";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Channel"
+    };
   }
 
   // UnreceivedPackets returns all the unreceived IBC packets associated with a
@@ -78,6 +109,9 @@ service Query {
   rpc UnreceivedPackets(QueryUnreceivedPacketsRequest) returns (QueryUnreceivedPacketsResponse) {
     option (google.api.http).get = "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/"
                                    "{packet_commitment_sequences}/unreceived_packets";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Channel"
+    };
   }
 
   // UnreceivedAcks returns all the unreceived IBC acknowledgements associated with a
@@ -85,11 +119,17 @@ service Query {
   rpc UnreceivedAcks(QueryUnreceivedAcksRequest) returns (QueryUnreceivedAcksResponse) {
     option (google.api.http).get = "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/"
                                    "{packet_ack_sequences}/unreceived_acks";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Channel"
+    };
   }
 
   // NextSequenceReceive returns the next receive sequence for a given channel.
   rpc NextSequenceReceive(QueryNextSequenceReceiveRequest) returns (QueryNextSequenceReceiveResponse) {
     option (google.api.http).get = "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/next_sequence";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Channel"
+    };
   }
 }
 

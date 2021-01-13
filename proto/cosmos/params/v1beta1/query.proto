@@ -3,6 +3,7 @@ package cosmos.params.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 import "cosmos/params/v1beta1/params.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/params/types/proposal";
@@ -12,7 +13,10 @@ service Query {
   // Params queries a specific parameter of a module, given its subspace and
   // key.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/cosmos/params/v1beta1/params";
+    option (google.api.http).get                                           = "/cosmos/params/v1beta1/params";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Params"
+    };
   }
 }
 

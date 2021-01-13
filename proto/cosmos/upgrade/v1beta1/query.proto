@@ -4,6 +4,7 @@ package cosmos.upgrade.v1beta1;
 import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 import "cosmos/upgrade/v1beta1/upgrade.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
 
@@ -11,12 +12,18 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
 service Query {
   // CurrentPlan queries the current upgrade plan.
   rpc CurrentPlan(QueryCurrentPlanRequest) returns (QueryCurrentPlanResponse) {
-    option (google.api.http).get = "/cosmos/upgrade/v1beta1/current_plan";
+    option (google.api.http).get                                           = "/cosmos/upgrade/v1beta1/current_plan";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Upgrade"
+    };
   }
 
   // AppliedPlan queries a previously applied upgrade plan by its name.
   rpc AppliedPlan(QueryAppliedPlanRequest) returns (QueryAppliedPlanResponse) {
     option (google.api.http).get = "/cosmos/upgrade/v1beta1/applied_plan/{name}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Upgrade"
+    };
   }
 
   // UpgradedConsensusState queries the consensus state that will serve
@@ -25,6 +32,9 @@ service Query {
   // UpgradedConsensusState RPC not supported with legacy querier
   rpc UpgradedConsensusState(QueryUpgradedConsensusStateRequest) returns (QueryUpgradedConsensusStateResponse) {
     option (google.api.http).get = "/cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Upgrade"
+    };
   }
 }
 

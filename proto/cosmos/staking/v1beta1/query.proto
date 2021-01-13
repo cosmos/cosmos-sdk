@@ -4,6 +4,7 @@ package cosmos.staking.v1beta1;
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 import "cosmos/staking/v1beta1/staking.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
@@ -12,17 +13,26 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 service Query {
   // Validators queries all validators that match the given status.
   rpc Validators(QueryValidatorsRequest) returns (QueryValidatorsResponse) {
-    option (google.api.http).get = "/cosmos/staking/v1beta1/validators";
+    option (google.api.http).get                                           = "/cosmos/staking/v1beta1/validators";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Staking"
+    };
   }
 
   // Validator queries validator info for given validator address.
   rpc Validator(QueryValidatorRequest) returns (QueryValidatorResponse) {
     option (google.api.http).get = "/cosmos/staking/v1beta1/validators/{validator_addr}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Staking"
+    };
   }
 
   // ValidatorDelegations queries delegate info for given validator.
   rpc ValidatorDelegations(QueryValidatorDelegationsRequest) returns (QueryValidatorDelegationsResponse) {
     option (google.api.http).get = "/cosmos/staking/v1beta1/validators/{validator_addr}/delegations";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Staking"
+    };
   }
 
   // ValidatorUnbondingDelegations queries unbonding delegations of a validator.
@@ -30,12 +40,18 @@ service Query {
       returns (QueryValidatorUnbondingDelegationsResponse) {
     option (google.api.http).get = "/cosmos/staking/v1beta1/validators/"
                                    "{validator_addr}/unbonding_delegations";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Staking"
+    };
   }
 
   // Delegation queries delegate info for given validator delegator pair.
   rpc Delegation(QueryDelegationRequest) returns (QueryDelegationResponse) {
     option (google.api.http).get = "/cosmos/staking/v1beta1/validators/{validator_addr}/delegations/"
                                    "{delegator_addr}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Staking"
+    };
   }
 
   // UnbondingDelegation queries unbonding info for given validator delegator
@@ -43,11 +59,17 @@ service Query {
   rpc UnbondingDelegation(QueryUnbondingDelegationRequest) returns (QueryUnbondingDelegationResponse) {
     option (google.api.http).get = "/cosmos/staking/v1beta1/validators/{validator_addr}/delegations/"
                                    "{delegator_addr}/unbonding_delegation";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Staking"
+    };
   }
 
   // DelegatorDelegations queries all delegations of a given delegator address.
   rpc DelegatorDelegations(QueryDelegatorDelegationsRequest) returns (QueryDelegatorDelegationsResponse) {
     option (google.api.http).get = "/cosmos/staking/v1beta1/delegations/{delegator_addr}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Staking"
+    };
   }
 
   // DelegatorUnbondingDelegations queries all unbonding delegations of a given
@@ -56,17 +78,26 @@ service Query {
       returns (QueryDelegatorUnbondingDelegationsResponse) {
     option (google.api.http).get = "/cosmos/staking/v1beta1/delegators/"
                                    "{delegator_addr}/unbonding_delegations";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Staking"
+    };
   }
 
   // Redelegations queries redelegations of given address.
   rpc Redelegations(QueryRedelegationsRequest) returns (QueryRedelegationsResponse) {
     option (google.api.http).get = "/cosmos/staking/v1beta1/delegators/{delegator_addr}/redelegations";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Staking"
+    };
   }
 
   // DelegatorValidators queries all validators info for given delegator
   // address.
   rpc DelegatorValidators(QueryDelegatorValidatorsRequest) returns (QueryDelegatorValidatorsResponse) {
     option (google.api.http).get = "/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Staking"
+    };
   }
 
   // DelegatorValidator queries validator info for given delegator validator
@@ -74,21 +105,33 @@ service Query {
   rpc DelegatorValidator(QueryDelegatorValidatorRequest) returns (QueryDelegatorValidatorResponse) {
     option (google.api.http).get = "/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators/"
                                    "{validator_addr}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Staking"
+    };
   }
 
   // HistoricalInfo queries the historical info for given height.
   rpc HistoricalInfo(QueryHistoricalInfoRequest) returns (QueryHistoricalInfoResponse) {
     option (google.api.http).get = "/cosmos/staking/v1beta1/historical_info/{height}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Staking"
+    };
   }
 
   // Pool queries the pool info.
   rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
-    option (google.api.http).get = "/cosmos/staking/v1beta1/pool";
+    option (google.api.http).get                                           = "/cosmos/staking/v1beta1/pool";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Staking"
+    };
   }
 
   // Parameters queries the staking parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/cosmos/staking/v1beta1/params";
+    option (google.api.http).get                                           = "/cosmos/staking/v1beta1/params";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Staking"
+    };
   }
 }
 

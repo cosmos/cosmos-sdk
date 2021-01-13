@@ -4,6 +4,7 @@ package cosmos.distribution.v1beta1;
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/distribution/v1beta1/distribution.proto";
 
@@ -13,7 +14,10 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/distribution/types";
 service Query {
   // Params queries params of the distribution module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/cosmos/distribution/v1beta1/params";
+    option (google.api.http).get                                           = "/cosmos/distribution/v1beta1/params";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Distribution"
+    };
   }
 
   // ValidatorOutstandingRewards queries rewards of a validator address.
@@ -21,46 +25,70 @@ service Query {
       returns (QueryValidatorOutstandingRewardsResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/validators/"
                                    "{validator_address}/outstanding_rewards";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Distribution"
+    };
   }
 
   // ValidatorCommission queries accumulated commission for a validator.
   rpc ValidatorCommission(QueryValidatorCommissionRequest) returns (QueryValidatorCommissionResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/validators/"
                                    "{validator_address}/commission";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Distribution"
+    };
   }
 
   // ValidatorSlashes queries slash events of a validator.
   rpc ValidatorSlashes(QueryValidatorSlashesRequest) returns (QueryValidatorSlashesResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/validators/{validator_address}/slashes";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Distribution"
+    };
   }
 
   // DelegationRewards queries the total rewards accrued by a delegation.
   rpc DelegationRewards(QueryDelegationRewardsRequest) returns (QueryDelegationRewardsResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards/"
                                    "{validator_address}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Distribution"
+    };
   }
 
   // DelegationTotalRewards queries the total rewards accrued by a each
   // validator.
   rpc DelegationTotalRewards(QueryDelegationTotalRewardsRequest) returns (QueryDelegationTotalRewardsResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Distribution"
+    };
   }
 
   // DelegatorValidators queries the validators of a delegator.
   rpc DelegatorValidators(QueryDelegatorValidatorsRequest) returns (QueryDelegatorValidatorsResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/delegators/"
                                    "{delegator_address}/validators";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Distribution"
+    };
   }
 
   // DelegatorWithdrawAddress queries withdraw address of a delegator.
   rpc DelegatorWithdrawAddress(QueryDelegatorWithdrawAddressRequest) returns (QueryDelegatorWithdrawAddressResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/delegators/"
                                    "{delegator_address}/withdraw_address";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Distribution"
+    };
   }
 
   // CommunityPool queries the community pool coins.
   rpc CommunityPool(QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/community_pool";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Distribution"
+    };
   }
 }
 

@@ -2,6 +2,7 @@ syntax = "proto3";
 package cosmos.tx.v1beta1;
 
 import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 import "cosmos/base/abci/v1beta1/abci.proto";
 import "cosmos/tx/v1beta1/tx.proto";
 import "gogoproto/gogo.proto";
@@ -17,10 +18,16 @@ service Service {
       post: "/cosmos/tx/v1beta1/simulate"
       body: "*"
     };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Tx"
+    };
   }
   // GetTx fetches a tx by hash.
   rpc GetTx(GetTxRequest) returns (GetTxResponse) {
-    option (google.api.http).get = "/cosmos/tx/v1beta1/txs/{hash}";
+    option (google.api.http).get                                           = "/cosmos/tx/v1beta1/txs/{hash}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Tx"
+    };
   }
   // BroadcastTx broadcast transaction.
   rpc BroadcastTx(BroadcastTxRequest) returns (BroadcastTxResponse) {
@@ -28,10 +35,16 @@ service Service {
       post: "/cosmos/tx/v1beta1/txs"
       body: "*"
     };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Tx"
+    };
   }
   // GetTxsEvent fetches txs by event.
   rpc GetTxsEvent(GetTxsEventRequest) returns (GetTxsEventResponse) {
-    option (google.api.http).get = "/cosmos/tx/v1beta1/txs";
+    option (google.api.http).get                                           = "/cosmos/tx/v1beta1/txs";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Tx"
+    };
   }
 }
 

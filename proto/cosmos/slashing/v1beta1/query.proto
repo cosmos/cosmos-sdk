@@ -4,6 +4,7 @@ package cosmos.slashing.v1beta1;
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 import "cosmos/slashing/v1beta1/slashing.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/slashing/types";
@@ -12,17 +13,26 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/slashing/types";
 service Query {
   // Params queries the parameters of slashing module
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/cosmos/slashing/v1beta1/params";
+    option (google.api.http).get                                           = "/cosmos/slashing/v1beta1/params";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Slashing"
+    };
   }
 
   // SigningInfo queries the signing info of given cons address
   rpc SigningInfo(QuerySigningInfoRequest) returns (QuerySigningInfoResponse) {
     option (google.api.http).get = "/cosmos/slashing/v1beta1/signing_infos/{cons_address}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Slashing"
+    };
   }
 
   // SigningInfos queries signing info of all validators
   rpc SigningInfos(QuerySigningInfosRequest) returns (QuerySigningInfosResponse) {
-    option (google.api.http).get = "/cosmos/slashing/v1beta1/signing_infos";
+    option (google.api.http).get                                           = "/cosmos/slashing/v1beta1/signing_infos";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Slashing"
+    };
   }
 }
 

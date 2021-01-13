@@ -5,6 +5,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "ibc/core/client/v1/client.proto";
 import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types";
@@ -14,11 +15,17 @@ service Query {
   // ClientState queries an IBC light client.
   rpc ClientState(QueryClientStateRequest) returns (QueryClientStateResponse) {
     option (google.api.http).get = "/ibc/core/client/v1beta1/client_states/{client_id}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Client"
+    };
   }
 
   // ClientStates queries all the IBC light clients of a chain.
   rpc ClientStates(QueryClientStatesRequest) returns (QueryClientStatesResponse) {
-    option (google.api.http).get = "/ibc/core/client/v1beta1/client_states";
+    option (google.api.http).get                                           = "/ibc/core/client/v1beta1/client_states";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Client"
+    };
   }
 
   // ConsensusState queries a consensus state associated with a client state at
@@ -26,17 +33,26 @@ service Query {
   rpc ConsensusState(QueryConsensusStateRequest) returns (QueryConsensusStateResponse) {
     option (google.api.http).get = "/ibc/core/client/v1beta1/consensus_states/{client_id}/revision/{revision_number}/"
                                    "height/{revision_height}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Client"
+    };
   }
 
   // ConsensusStates queries all the consensus state associated with a given
   // client.
   rpc ConsensusStates(QueryConsensusStatesRequest) returns (QueryConsensusStatesResponse) {
     option (google.api.http).get = "/ibc/core/client/v1beta1/consensus_states/{client_id}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Client"
+    };
   }
 
   // ClientParams queries all parameters of the ibc client.
   rpc ClientParams(QueryClientParamsRequest) returns (QueryClientParamsResponse) {
-    option (google.api.http).get = "/ibc/client/v1beta1/params";
+    option (google.api.http).get                                           = "/ibc/client/v1beta1/params";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "IBC-Core-Client"
+    };
   }
 }
 

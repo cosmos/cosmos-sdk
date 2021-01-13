@@ -4,6 +4,7 @@ package cosmos.base.tendermint.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 import "tendermint/p2p/types.proto";
 import "tendermint/types/block.proto";
 import "tendermint/types/types.proto";
@@ -16,27 +17,45 @@ service Service {
   // GetNodeInfo queries the current node info.
   rpc GetNodeInfo(GetNodeInfoRequest) returns (GetNodeInfoResponse) {
     option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/node_info";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Tendermint"
+    };
   }
   // GetSyncing queries node syncing.
   rpc GetSyncing(GetSyncingRequest) returns (GetSyncingResponse) {
-    option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/syncing";
+    option (google.api.http).get                                           = "/cosmos/base/tendermint/v1beta1/syncing";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Tendermint"
+    };
   }
   // GetLatestBlock returns the latest block.
   rpc GetLatestBlock(GetLatestBlockRequest) returns (GetLatestBlockResponse) {
     option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/blocks/latest";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Tendermint"
+    };
   }
   // GetBlockByHeight queries block for given height.
   rpc GetBlockByHeight(GetBlockByHeightRequest) returns (GetBlockByHeightResponse) {
     option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/blocks/{height}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Tendermint"
+    };
   }
 
   // GetLatestValidatorSet queries latest validator-set.
   rpc GetLatestValidatorSet(GetLatestValidatorSetRequest) returns (GetLatestValidatorSetResponse) {
     option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/validatorsets/latest";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Tendermint"
+    };
   }
   // GetValidatorSetByHeight queries validator-set at a given height.
   rpc GetValidatorSetByHeight(GetValidatorSetByHeightRequest) returns (GetValidatorSetByHeightResponse) {
     option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/validatorsets/{height}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Tendermint"
+    };
   }
 }
 

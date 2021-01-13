@@ -4,6 +4,7 @@ package cosmos.gov.v1beta1;
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 import "cosmos/gov/v1beta1/gov.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
@@ -13,41 +14,65 @@ service Query {
   // Proposal queries proposal details based on ProposalID.
   rpc Proposal(QueryProposalRequest) returns (QueryProposalResponse) {
     option (google.api.http).get = "/cosmos/gov/v1beta1/proposals/{proposal_id}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Gov"
+    };
   }
 
   // Proposals queries all proposals based on given status.
   rpc Proposals(QueryProposalsRequest) returns (QueryProposalsResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1beta1/proposals";
+    option (google.api.http).get                                           = "/cosmos/gov/v1beta1/proposals";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Gov"
+    };
   }
 
   // Vote queries voted information based on proposalID, voterAddr.
   rpc Vote(QueryVoteRequest) returns (QueryVoteResponse) {
     option (google.api.http).get = "/cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Gov"
+    };
   }
 
   // Votes queries votes of a given proposal.
   rpc Votes(QueryVotesRequest) returns (QueryVotesResponse) {
     option (google.api.http).get = "/cosmos/gov/v1beta1/proposals/{proposal_id}/votes";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Gov"
+    };
   }
 
   // Params queries all parameters of the gov module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1beta1/params/{params_type}";
+    option (google.api.http).get                                           = "/cosmos/gov/v1beta1/params/{params_type}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Gov"
+    };
   }
 
   // Deposit queries single deposit information based proposalID, depositAddr.
   rpc Deposit(QueryDepositRequest) returns (QueryDepositResponse) {
     option (google.api.http).get = "/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Gov"
+    };
   }
 
   // Deposits queries all deposits of a single proposal.
   rpc Deposits(QueryDepositsRequest) returns (QueryDepositsResponse) {
     option (google.api.http).get = "/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Gov"
+    };
   }
 
   // TallyResult queries the tally of a proposal vote.
   rpc TallyResult(QueryTallyResultRequest) returns (QueryTallyResultResponse) {
     option (google.api.http).get = "/cosmos/gov/v1beta1/proposals/{proposal_id}/tally";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Gov"
+    };
   }
 }
 

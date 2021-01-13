@@ -22,7 +22,7 @@ service Query {
 
   // Params queries all parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/cosmos/auth/v1beta1/params";
+    option (google.api.http).get                                           = "/cosmos/auth/v1beta1/params";
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       tags: "Auth"
     };

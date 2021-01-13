@@ -196,7 +196,7 @@ godocs:
 build-docs:
 	@cd docs && \
 	while read -r branch path_prefix; do \
-		(git checkout $${branch} && npm install && VUEPRESS_BASE="/$${path_prefix}/" npm run build) ; \
+		(git checkout $${branch} && npm install && VUEPRESS_BASE="/cosmos-sdk/$${path_prefix}/" npm run build) ; \
 		mkdir -p ~/output/$${path_prefix} ; \
 		cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
 		cp ~/output/$${path_prefix}/index.html ~/output ; \

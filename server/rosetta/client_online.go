@@ -80,10 +80,16 @@ func (c *Client) AccountIdentifierFromPublicKey(pubKey *types.PublicKey) (*types
 // NewClient instantiates a new online servicer
 func NewClient(cfg *Config) (*Client, error) {
 	info := version.NewInfo()
+
+	v := info.Version
+	if v == "" {
+		v = "unknown"
+	}
+
 	return &Client{
 		config:  cfg,
 		ir:      cfg.InterfaceRegistry,
-		version: fmt.Sprintf("%s/%s", info.AppName, info.Version),
+		version: fmt.Sprintf("%s/%s", info.AppName, v),
 	}, nil
 }
 

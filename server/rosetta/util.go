@@ -6,6 +6,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -27,6 +28,15 @@ func tmResultTxsToSdkTxsWithHash(decode sdk.TxDecoder, txs []*tmcoretypes.Result
 	}
 
 	return converted, nil
+}
+
+func tmTxToSdkTx(decode sdk.TxDecoder, tx tmtypes.Tx) (sdk.Tx, error) {
+	sdkTx, err := decode(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	return sdkTx, err
 }
 
 type sdkTxWithHash struct {

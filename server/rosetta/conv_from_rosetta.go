@@ -141,14 +141,19 @@ func sdkMsgsToRosettaOperations(msgs []sdk.Msg, withStatus bool, hasError bool) 
 	return operations
 }
 
-// TMTxsToRosettaTxsIdentifiers converts a tendermint raw transaction into a rosetta tx identifier
+// TMTxsToRosettaTxsIdentifiers converts a tendermint raw transactions into an array of rosetta tx identifiers
 func TMTxsToRosettaTxsIdentifiers(txs []tmtypes.Tx) []*types.TransactionIdentifier {
 	converted := make([]*types.TransactionIdentifier, len(txs))
 	for i, tx := range txs {
-		converted[i] = &types.TransactionIdentifier{Hash: fmt.Sprintf("%x", tx.Hash())}
+		converted[i] = TmTxToRosettaTxsIdentifier(tx)
 	}
 
 	return converted
+}
+
+// TmTxToRosettaTxsIdentifier converts a tendermint raw transaction into a rosetta tx identifier
+func TmTxToRosettaTxsIdentifier(tx tmtypes.Tx) *types.TransactionIdentifier {
+	return &types.TransactionIdentifier{Hash: fmt.Sprintf("%x", tx.Hash())}
 }
 
 // TMBlockToRosettaBlockIdentifier converts a tendermint result block to a rosetta block identifier

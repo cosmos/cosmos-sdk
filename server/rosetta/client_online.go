@@ -1,6 +1,7 @@
 package rosetta
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"fmt"
@@ -79,10 +80,16 @@ func (c *Client) AccountIdentifierFromPublicKey(pubKey *types.PublicKey) (*types
 // NewClient instantiates a new online servicer
 func NewClient(cfg *Config) (*Client, error) {
 	info := version.NewInfo()
+
+	v := info.Version
+	if v == "" {
+		v = "unknown"
+	}
+
 	return &Client{
 		config:  cfg,
 		ir:      cfg.InterfaceRegistry,
-		version: info.Version,
+		version: fmt.Sprintf("%s/%s", info.AppName, v),
 	}, nil
 }
 
@@ -265,9 +272,33 @@ func (c *Client) GetTx(_ context.Context, hash string) (*types.Transaction, erro
 }
 
 // GetUnconfirmedTx gets an unconfirmed transaction given its hash
-// NOTE(fdymylja): not implemented yet
-func (c *Client) GetUnconfirmedTx(_ context.Context, _ string) (*types.Transaction, error) {
-	return nil, crgerrs.WrapError(crgerrs.ErrNotImplemented, "get unconfirmed transaction method is not supported")
+func (c *Client) GetUnconfirmedTx(ctx context.Context, hash string) (*types.Transaction, error) {
+	res, err := c.clientCtx.Client.UnconfirmedTxs(ctx, nil)
+	if err != nil {
+		return nil, crgerrs.WrapError(crgerrs.ErrNotFound, "unconfirmed tx not found")
+	}
+
+	hashAsBytes, err := hex.DecodeString(hash)
+	if err != nil {
+		return nil, crgerrs.WrapError(crgerrs.ErrInterpreting, "invalid hash")
+	}
+
+	for _, tx := range res.Txs {
+		if bytes.Equal(tx.Hash(), hashAsBytes) {
+			sdkTx, err := tmTxToSdkTx(c.clientCtx.TxConfig.TxDecoder(), tx)
+			if err != nil {
+				return nil, err
+			}
+
+			return &types.Transaction{
+				TransactionIdentifier: TmTxToRosettaTxsIdentifier(tx),
+				Operations:            sdkTxToOperations(sdkTx, false, false),
+				Metadata:              nil,
+			}, nil
+		}
+	}
+
+	return nil, crgerrs.WrapError(crgerrs.ErrNotFound, "transaction not found in mempool")
 }
 
 // Mempool returns the unconfirmed transactions in the mempool

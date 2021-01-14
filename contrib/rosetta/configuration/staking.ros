@@ -48,9 +48,9 @@ create_account(1){
   }
 }
 
-staking(3){
-  transfer{
-    transfer.network = {"network":"network", "blockchain":"app"};
+staking(1){
+  stake{
+    stake.network = {"network":"network", "blockchain":"app"};
     currency = {"symbol":"stake", "decimals":0};
     sender = find_balance({
       "minimum_balance":{
@@ -63,13 +63,13 @@ staking(3){
     fee_amount = "1";
     fee_value = 0 - {{fee_amount}};
     available_amount = {{sender.balance.value}} - {{max_fee}};
-    recipient_amount = random_number({"minimum": "1", "maximum": {{available_amount}}});
+    recipient_amount = "1";
     print_message({"recipient_amount":{{recipient_amount}}});
     // Find recipient and construct operations
     recipient = {{sender.account_identifier}};
     sender_amount = 0 - {{recipient_amount}};
-    transfer.confirmation_depth = "1";
-    transfer.operations = [
+    stake.confirmation_depth = "1";
+    stake.operations = [
       {
         "operation_identifier":{"index":0},
         "type":"fee",
@@ -102,6 +102,46 @@ staking(3){
           "currency":{{currency}}
         }
       }
+    ];
+  },
+  undelegate{
+    print_message({"undelegate":{{sender}}});
+
+    undelegate.network = {"network":"network", "blockchain":"app"};
+    undelegate.confirmation_depth = "1";
+    undelegate.operations = [
+          {
+            "operation_identifier":{"index":0},
+            "type":"fee",
+            "account":{{sender.account_identifier}},
+            "amount":{
+              "value":{{fee_value}},
+              "currency":{{currency}}
+            }
+          },
+          {
+            "operation_identifier":{"index":1},
+            "type":"cosmos.staking.v1beta1.MsgUndelegate",
+            "account":{{sender.account_identifier}},
+            "amount":{
+              "value":{{recipient_amount}},
+              "currency":{{currency}}
+            }
+          },
+          {
+            "operation_identifier":{"index":2},
+            "type":"cosmos.staking.v1beta1.MsgUndelegate",
+            "account": {
+                "address": "staking_account",
+                "sub_account": {
+                    "address" : "cosmosvaloper1hdmjfmqmf8ck4pv4evu0s3up0ucm0yjj9atjj2"
+                }
+            },
+            "amount":{
+              "value":{{sender_amount}},
+              "currency":{{currency}}
+            }
+          }
     ];
   }
 }

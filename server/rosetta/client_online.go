@@ -83,7 +83,7 @@ func NewClient(cfg *Config) (*Client, error) {
 	return &Client{
 		config:  cfg,
 		ir:      cfg.InterfaceRegistry,
-		version: info.Version,
+		version: fmt.Sprintf("%s/%s", info.AppName, info.Version),
 	}, nil
 }
 

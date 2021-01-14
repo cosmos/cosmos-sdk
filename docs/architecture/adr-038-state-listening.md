@@ -348,11 +348,18 @@ Writing to a file is the simplest approach for streaming the data out to consume
 This approach also provide the advantages of being persistent and durable, and the files can be read directly,
 or an auxiliary streaming services can read from the files and serve the data over a remote interface.
 
+#### Auxiliary streaming service
+
+We will create a separate standalone process that reads and internally queues the state as it is written out to these files
+and serves the data over a gRPC API. This API will allow filtering of requested data, e.g. by block number, block/tx hash, ABCI message type,
+whether a DeliverTx message failed or succeeded, etc.
+
 #### File pruning
 
-Without pruning the number of files can grow indefinitely, this will need to be managed by
+Without pruning the number of files can grow indefinitely, this may need to be managed by
 the developer in an application or even module-specific manner (e.g. log rotation).
 The file naming schema facilitates pruning by block number and/or ABCI message.
+The gRPC auxiliary streaming service introduced above will include an option to remove the files as it consumes their data.
 
 ### Configuration
 

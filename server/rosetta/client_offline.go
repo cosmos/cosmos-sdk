@@ -114,7 +114,7 @@ func (c *Client) ConstructionPayload(_ context.Context, request *types.Construct
 	}
 
 	// convert rosetta operations to sdk msgs and fees (if present)
-	msgs, fee, err := operationsToSdkMsgs(c.ir, request.Operations)
+	msgs, fee, err := opsToMsgsAndFees(c.ir, request.Operations)
 	if err != nil {
 		return nil, crgerrs.WrapError(crgerrs.ErrInvalidOperation, err.Error())
 	}
@@ -188,11 +188,11 @@ func getAccountIdentifiersByMsgs(msgs []sdk.Msg) []*types.AccountIdentifier {
 
 func (c *Client) PreprocessOperationsToOptions(_ context.Context, req *types.ConstructionPreprocessRequest) (options map[string]interface{}, err error) {
 	operations := req.Operations
-	if len(operations) > 3 {
+	if len(operations) < 1 {
 		return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, "invalid number of operations")
 	}
 
-	msgs, err := ConvertOpsToMsgs(c.ir, operations)
+	msgs, err := opsToMsgs(c.ir, operations)
 	if err != nil {
 		return nil, crgerrs.WrapError(crgerrs.ErrInvalidOperation, err.Error())
 	}

@@ -1,6 +1,7 @@
 package rosetta
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -11,10 +12,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// operationsToSdkMsgs converts rosetta operations to sdk.Msg and coins
-func operationsToSdkMsgs(interfaceRegistry jsonpb.AnyResolver, ops []*types.Operation) ([]sdk.Msg, sdk.Coins, error) {
+// opsToMsgsAndFees converts rosetta operations to sdk.Msg and fees represented as sdk.Coins
+func opsToMsgsAndFees(interfaceRegistry jsonpb.AnyResolver, ops []*types.Operation) ([]sdk.Msg, sdk.Coins, error) {
 	var feeAmnt []*types.Amount
 	var newOps []*types.Operation
+	var msgType string
 	// find the fee operation and put it aside
 	for _, op := range ops {
 		switch op.Type {
@@ -22,11 +24,23 @@ func operationsToSdkMsgs(interfaceRegistry jsonpb.AnyResolver, ops []*types.Oper
 			amount := op.Amount
 			feeAmnt = append(feeAmnt, amount)
 		default:
+			// check if operation matches the one already used
+			// as, at the moment, we only support operations
+			// that represent a single cosmos-sdk message
+			switch {
+			// if msgType was not set then set it
+			case msgType == "":
+				msgType = op.Type
+			// if msgType does not match op.Type then it means we're trying to send multiple messages in a single tx
+			case msgType != op.Type:
+				return nil, nil, fmt.Errorf("only single message operations are supported: %s - %s", msgType, op.Type)
+			}
+			// append operation to new ops list
 			newOps = append(newOps, op)
 		}
 	}
 	// convert all operations, except fee op to sdk.Msgs
-	msgs, err := ConvertOpsToMsgs(interfaceRegistry, newOps)
+	msgs, err := opsToMsgs(interfaceRegistry, newOps)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -51,7 +65,7 @@ func amountsToCoins(amounts []*types.Amount) sdk.Coins {
 	return feeCoins
 }
 
-func ConvertOpsToMsgs(interfaceRegistry jsonpb.AnyResolver, ops []*types.Operation) ([]sdk.Msg, error) {
+func opsToMsgs(interfaceRegistry jsonpb.AnyResolver, ops []*types.Operation) ([]sdk.Msg, error) {
 	var msgs []sdk.Msg
 	var operationsByType = make(map[string][]*types.Operation)
 	for _, op := range ops {

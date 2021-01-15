@@ -203,7 +203,6 @@ func NewSimApp(
 	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
 
-	// TODO: Remove cdc in favor of appCodec once all modules are migrated.
 	appCodec := encodingConfig.Marshaler
 	legacyAmino := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
@@ -439,14 +438,6 @@ func NewSimApp(
 	app.ScopedIBCMockKeeper = scopedIBCMockKeeper
 
 	return app
-}
-
-// MakeCodecs constructs the *std.Codec and *codec.LegacyAmino instances used by
-// simapp. It is useful for tests and clients who do not want to construct the
-// full simapp
-func MakeCodecs() (codec.Marshaler, *codec.LegacyAmino) {
-	config := MakeTestEncodingConfig()
-	return config.Marshaler, config.Amino
 }
 
 // Name returns the name of the App

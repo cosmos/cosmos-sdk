@@ -34,14 +34,14 @@ func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {
 }
 
 // MarshalBinaryBare implements BinaryMarshaler.MarshalBinaryBare method.
-// NOTE: this function must be used with a concert type which
+// NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.MarshalInterface
 func (pc *ProtoCodec) MarshalBinaryBare(o ProtoMarshaler) ([]byte, error) {
 	return o.Marshal()
 }
 
 // MustMarshalBinaryBare implements BinaryMarshaler.MustMarshalBinaryBare method.
-// NOTE: this function must be used with a concert type which
+// NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.MarshalInterface
 func (pc *ProtoCodec) MustMarshalBinaryBare(o ProtoMarshaler) []byte {
 	bz, err := pc.MarshalBinaryBare(o)
@@ -124,7 +124,7 @@ func (pc *ProtoCodec) MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMars
 
 // MarshalJSON implements JSONMarshaler.MarshalJSON method,
 // it marshals to JSON using proto codec.
-// NOTE: this function must be used with a concert type which
+// NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.MarshalInterfaceJSON
 func (pc *ProtoCodec) MarshalJSON(o proto.Message) ([]byte, error) {
 	m, ok := o.(ProtoMarshaler)
@@ -137,7 +137,7 @@ func (pc *ProtoCodec) MarshalJSON(o proto.Message) ([]byte, error) {
 
 // MustMarshalJSON implements JSONMarshaler.MustMarshalJSON method,
 // it executes MarshalJSON except it panics upon failure.
-// NOTE: this function must be used with a concert type which
+// NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.MarshalInterfaceJSON
 func (pc *ProtoCodec) MustMarshalJSON(o proto.Message) []byte {
 	bz, err := pc.MarshalJSON(o)
@@ -150,7 +150,7 @@ func (pc *ProtoCodec) MustMarshalJSON(o proto.Message) []byte {
 
 // UnmarshalJSON implements JSONMarshaler.UnmarshalJSON method,
 // it unmarshals from JSON using proto codec.
-// NOTE: this function must be used with a concert type which
+// NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.UnmarshalInterfaceJSON
 func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr proto.Message) error {
 	m, ok := ptr.(ProtoMarshaler)
@@ -169,7 +169,7 @@ func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr proto.Message) error {
 
 // MustUnmarshalJSON implements JSONMarshaler.MustUnmarshalJSON method,
 // it executes UnmarshalJSON except it panics upon failure.
-// NOTE: this function must be used with a concert type which
+// NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.UnmarshalInterfaceJSON
 func (pc *ProtoCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 	if err := pc.UnmarshalJSON(bz, ptr); err != nil {

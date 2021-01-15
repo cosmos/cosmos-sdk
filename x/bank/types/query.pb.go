@@ -524,7 +524,7 @@ func (m *QueryDenomsMetadataRequest) GetPagination() *query.PageRequest {
 // QueryDenomsMetadataResponse is the response type for the Query/DenomsMetadata RPC
 // method.
 type QueryDenomsMetadataResponse struct {
-	// metadatas is the client metadata of all the coin denominations.
+	// metadata provides the client information for all the registered tokens.
 	Metadatas []Metadata `protobuf:"bytes,1,rep,name=metadatas,proto3" json:"metadatas"`
 	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -626,7 +626,7 @@ func (m *QueryDenomMetadataRequest) GetDenom() string {
 // QueryDenomMetadataResponse is the response type for the Query/DenomMetadata RPC
 // method.
 type QueryDenomMetadataResponse struct {
-	// metadata is the client metadata for the requested denomination.
+	// metadata describes and provides all the client information for the requested token.
 	Metadata Metadata `protobuf:"bytes,1,opt,name=metadata,proto3" json:"metadata"`
 }
 

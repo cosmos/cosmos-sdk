@@ -1302,7 +1302,7 @@ method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `metadata` | [Metadata](#cosmos.bank.v1beta1.Metadata) |  | metadata is the client metadata for the requested denomination. |
+| `metadata` | [Metadata](#cosmos.bank.v1beta1.Metadata) |  | metadata describes and provides all the client information for the requested token. |
 
 
 
@@ -1333,7 +1333,7 @@ method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `metadatas` | [Metadata](#cosmos.bank.v1beta1.Metadata) | repeated | metadatas is the client metadata of all the coin denominations. |
+| `metadatas` | [Metadata](#cosmos.bank.v1beta1.Metadata) | repeated | metadata provides the client information for all the registered tokens. |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
 
 

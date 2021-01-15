@@ -130,7 +130,7 @@ message QueryDenomsMetadataRequest {
 // QueryDenomsMetadataResponse is the response type for the Query/DenomsMetadata RPC
 // method.
 message QueryDenomsMetadataResponse {
-  // metadatas is the client metadata of all the coin denominations.
+  // metadata provides the client information for all the registered tokens.
   repeated Metadata metadatas = 1 [(gogoproto.nullable) = false];
 
   // pagination defines the pagination in the response.
@@ -146,6 +146,6 @@ message QueryDenomMetadataRequest {
 // QueryDenomMetadataResponse is the response type for the Query/DenomMetadata RPC
 // method.
 message QueryDenomMetadataResponse {
-  // metadata is the client metadata for the requested denomination.
+  // metadata describes and provides all the client information for the requested token.
   Metadata metadata = 1 [(gogoproto.nullable) = false];
 }

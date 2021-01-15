@@ -111,6 +111,7 @@ func GetCmdDenomsMetadata() *cobra.Command {
 			fmt.Sprintf(`Query the client metadata for all the registered coin denominations
 
 Example:
+  To query for the client metadata of all coin denominations use:
   $ %s query %s denom-metadata
 
 To query for the client metadata of a specific coin denomination use:
@@ -132,7 +133,7 @@ To query for the client metadata of a specific coin denomination use:
 			queryClient := types.NewQueryClient(clientCtx)
 
 			if denom == "" {
-				res, err := queryClient.DenomsMetadata(context.Background(), &types.QueryDenomsMetadataRequest{})
+				res, err := queryClient.DenomsMetadata(cmd.Context(), &types.QueryDenomsMetadataRequest{})
 				if err != nil {
 					return err
 				}

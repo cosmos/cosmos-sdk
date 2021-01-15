@@ -36,15 +36,16 @@ service Query {
     option (google.api.http).get = "/cosmos/bank/v1beta1/params";
   }
 
+  // DenomsMetadata queries the client metadata of a given coin denomination.
+  rpc DenomMetadata(QueryDenomMetadataRequest) returns (QueryDenomMetadataResponse) {
+    option (google.api.http).get = "/cosmos/bank/v1beta1/denoms_metadata/{denom}";
+  }
+
   // DenomsMetadata queries the client metadata for all registered coin denominations.
   rpc DenomsMetadata(QueryDenomsMetadataRequest) returns (QueryDenomsMetadataResponse) {
     option (google.api.http).get = "/cosmos/bank/v1beta1/denoms_metadata";
   }
-
-  // DenomsMetadata queries the client metadata a gven coin denominations.
-  rpc DenomMetadata(QueryDenomMetadataRequest) returns (QueryDenomMetadataResponse) {
-    option (google.api.http).get = "/cosmos/bank/v1beta1/denoms_metadata/{denom}";
-  }
+  
 }
 
 // QueryBalanceRequest is the request type for the Query/Balance RPC method.

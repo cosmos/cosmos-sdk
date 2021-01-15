@@ -40,7 +40,7 @@ We elect not to deal with chains which have actually halted, which is necessaril
 1. Require Tendermint light clients (ICS 07) & solo machine clients (ICS 06) to be created with the following additional flags
     1. `allow_governance_override_after_misbehaviour` (boolean, default false)
 1. Require Tendermint light clients (ICS 07) to expose the following additional state mutation functions
-    1. Unfreeze(), which unfreezes a light client after misbehaviour and clears any frozen height previously set
+    1. `Unfreeze()`, which unfreezes a light client after misbehaviour and clears any frozen height previously set
 1. Add a new governance proposal type, `ClientUpdateProposal`, in the `x/ibc` module
     1. Extend the base `Proposal` with two client identifiers (`string`) and an initial height ('exported.Height'). 
     1. The first client identifier is the proposed client to be updated. This client must be either frozen or expired.

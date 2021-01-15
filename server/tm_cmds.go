@@ -31,6 +31,7 @@ func ShowNodeIDCmd() *cobra.Command {
 				return err
 			}
 			fmt.Println(nodeKey.ID())
+			return nil
 		},
 	}
 }

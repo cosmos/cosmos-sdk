@@ -4,8 +4,7 @@ order: 5
 
 # Hooks
 
-In this section we describe the "hooks" - slashing module code that runs when other events happen.
-The module provides the following hooks, which can be useful
+This section contains a description of the module's `hooks`. Hooks are operations that are executed automatically when events are raised.
 
 ## Staking hooks
 

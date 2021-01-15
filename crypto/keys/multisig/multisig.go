@@ -16,18 +16,18 @@ var _ types.UnpackInterfacesMessage = &LegacyAminoPubKey{}
 
 // NewLegacyAminoPubKey returns a new LegacyAminoPubKey.
 // Panics if len(pubKeys) < k or 0 >= k.
-func NewLegacyAminoPubKey(treshold int, pubKeys []cryptotypes.PubKey) *LegacyAminoPubKey {
-	if treshold <= 0 {
+func NewLegacyAminoPubKey(threshold int, pubKeys []cryptotypes.PubKey) *LegacyAminoPubKey {
+	if threshold <= 0 {
 		panic("threshold k of n multisignature: k <= 0")
 	}
-	if len(pubKeys) < treshold {
+	if len(pubKeys) < threshold {
 		panic("threshold k of n multisignature: len(pubKeys) < k")
 	}
 	anyPubKeys, err := packPubKeys(pubKeys)
 	if err != nil {
 		panic(err)
 	}
-	return &LegacyAminoPubKey{Threshold: uint32(treshold), PubKeys: anyPubKeys}
+	return &LegacyAminoPubKey{Threshold: uint32(threshold), PubKeys: anyPubKeys}
 }
 
 // Address implements cryptotypes.PubKey Address method

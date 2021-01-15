@@ -148,6 +148,8 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 func fetchKey(kb keyring.Keyring, keyref string) (keyring.Info, error) {
 	// firstly check if the keyref is a key name of a key registered in a keyring.
 	info, err := kb.Key(keyref)
+	// if the key is not there or if we have a problem with a keyring itself then we move to a
+	// fallback: searching for key by address.
 	if err == nil || !sdkerr.AsOf(err, sdkerr.ErrIO, sdkerr.ErrKeyNotFound) {
 		return info, err
 	}

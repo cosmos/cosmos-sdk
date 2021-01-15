@@ -45,16 +45,17 @@ func TestDecodeStore(t *testing.T) {
 	tests := []struct {
 		name        string
 		expectedLog string
+		panics      bool
 	}{
-		{"ValidatorSigningInfo", fmt.Sprintf("%v\n%v", info, info)},
-		{"ValidatorMissedBlockBitArray", fmt.Sprintf("missedA: %v\nmissedB: %v", missed.Value, missed.Value)},
-		{"AddrPubkeyRelation", fmt.Sprintf("PubKeyA: %s\nPubKeyB: %s", delPk1, delPk1)},
-		{"other", ""},
+		{"ValidatorSigningInfo", fmt.Sprintf("%v\n%v", info, info), false},
+		{"ValidatorMissedBlockBitArray", fmt.Sprintf("missedA: %v\nmissedB: %v", missed.Value, missed.Value), false},
+		{"AddrPubkeyRelation", fmt.Sprintf("PubKeyA: %s\nPubKeyB: %s", delPk1, delPk1), false},
+		{"other", "", true},
 	}
 	for i, tt := range tests {
 		i, tt := i, tt
 		t.Run(tt.name, func(t *testing.T) {
-			if i == len(tests)-1 {
+			if tt.panics {
 				require.Panics(t, func() { dec(kvPairs.Pairs[i], kvPairs.Pairs[i]) }, tt.name)
 			} else {
 				require.Equal(t, tt.expectedLog, dec(kvPairs.Pairs[i], kvPairs.Pairs[i]), tt.name)

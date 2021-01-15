@@ -4,11 +4,9 @@ package server
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
 	tversion "github.com/tendermint/tendermint/version"
@@ -29,10 +27,10 @@ func ShowNodeIDCmd() *cobra.Command {
 			cfg := serverCtx.Config
 
 			nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
-			if err == nil {
-				fmt.Println(nodeKey.ID())
+			if err != nil {
+				return err
 			}
-			return nil
+			fmt.Println(nodeKey.ID())
 		},
 	}
 }
@@ -79,19 +77,11 @@ func ShowAddressCmd() *cobra.Command {
 
 			privValidator := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			valConsAddr := (sdk.ConsAddress)(privValidator.GetAddress())
-
-			output, _ := cmd.Flags().GetString(cli.OutputFlag)
-			if strings.ToLower(output) == "json" {
-				fmt.Printf("{\"address\": %q}\n", valConsAddr.String())
-				return nil
-			}
-
 			fmt.Println(valConsAddr.String())
 			return nil
 		},
 	}
 
-	cmd.Flags().StringP(cli.OutputFlag, "o", "text", "Output format (text|json)")
 	return cmd
 }
 

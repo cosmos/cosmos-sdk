@@ -242,6 +242,15 @@ func (suite *IntegrationTestSuite) QueryDenomMetadataRequest() {
 			false,
 		},
 		{
+			"not found denom",
+			func() {
+				req = &types.QueryDenomMetadataRequest{
+					Denom: "foo",
+				}
+			},
+			false,
+		},
+		{
 			"success",
 			func() {
 				expMetadata := types.Metadata{

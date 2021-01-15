@@ -56,6 +56,22 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			Base:    "uatom",
 			Display: "atom",
 		},
+		{
+			Description: "Ethereum mainnet token",
+			DenomUnits: []*types.DenomUnit{
+				{
+					Denom:    "wei",
+					Exponent: 0,
+				},
+				{
+					Denom:    "eth",
+					Exponent: 6,
+					Aliases:  []string{"ETH"},
+				},
+			},
+			Base:    "wei",
+			Display: "eth",
+		},
 	}
 
 	bankGenesisBz, err := cfg.Codec.MarshalJSON(&bankGenesis)
@@ -246,8 +262,25 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDenomsMetadata() {
 						Base:    "uatom",
 						Display: "atom",
 					},
+					{
+						Description: "Ethereum mainnet token",
+						DenomUnits: []*types.DenomUnit{
+							{
+								Denom:    "wei",
+								Exponent: 0,
+								Aliases:  []string{},
+							},
+							{
+								Denom:    "eth",
+								Exponent: 6,
+								Aliases:  []string{"ETH"},
+							},
+						},
+						Base:    "wei",
+						Display: "eth",
+					},
 				},
-				Pagination: &query.PageResponse{Total: 1},
+				Pagination: &query.PageResponse{Total: 2},
 			},
 		},
 		{
@@ -285,7 +318,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDenomsMetadata() {
 				fmt.Sprintf("--%s=foobar", cli.FlagDenom),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			respType: &types.QueryDenomMetadataResponse{},
+			expectErr: true,
+			respType:  &types.QueryDenomMetadataResponse{},
 			expected: &types.QueryDenomMetadataResponse{
 				Metadata: types.Metadata{
 					DenomUnits: []*types.DenomUnit{},

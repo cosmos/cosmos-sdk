@@ -14,13 +14,13 @@ import (
 const authz = "authz"
 
 // GenAuthorizationGrant returns an empty slice of authorization grants.
-func GenAuthorizationGrant(_ *rand.Rand, _ []simtypes.Account) []types.MsgGrantAuthorization {
-	return []types.MsgGrantAuthorization{}
+func GenAuthorizationGrant(_ *rand.Rand, _ []simtypes.Account) []types.GrantAuthorization {
+	return []types.GrantAuthorization{}
 }
 
 // RandomizedGenState generates a random GenesisState for authz.
 func RandomizedGenState(simState *module.SimulationState) {
-	var grants []types.MsgGrantAuthorization
+	var grants []types.GrantAuthorization
 
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, authz, &grants, simState.Rand,

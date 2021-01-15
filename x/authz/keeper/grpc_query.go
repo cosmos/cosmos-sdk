@@ -24,14 +24,6 @@ func (k Keeper) Authorizations(c context.Context, req *types.QueryAuthorizations
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Granter == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid granter addr")
-	}
-
-	if req.Grantee == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid grantee addr")
-	}
-
 	granter, err := sdk.AccAddressFromBech32(req.Granter)
 
 	if err != nil {
@@ -93,16 +85,8 @@ func (k Keeper) Authorization(c context.Context, req *types.QueryAuthorizationRe
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Granter == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid granter addr")
-	}
-
-	if req.Grantee == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid grantee addr")
-	}
-
 	if req.MethodName == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid msg-type")
+		return nil, status.Errorf(codes.InvalidArgument, "empty method-name")
 	}
 
 	granter, err := sdk.AccAddressFromBech32(req.Granter)

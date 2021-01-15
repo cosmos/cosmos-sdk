@@ -5,7 +5,7 @@ import (
 )
 
 // NewGenesisState creates new GenesisState object
-func NewGenesisState(entries []MsgGrantAuthorization) *GenesisState {
+func NewGenesisState(entries []GrantAuthorization) *GenesisState {
 	return &GenesisState{
 		Authorization: entries,
 	}
@@ -32,4 +32,10 @@ func (data GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 		}
 	}
 	return nil
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg GrantAuthorization) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	var authorization Authorization
+	return unpacker.UnpackAny(msg.Authorization, &authorization)
 }

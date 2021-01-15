@@ -8,7 +8,7 @@ This section contains a description of the module's `hooks`. Hooks are operation
 
 ## Staking hooks
 
-The slashing module implements the x/staking `StakingHooks` used to keep information about validators. During the app initialization, these hooks should be registered in the staking module object.
+The slashing module implements the `StakingHooks` defined in `x/staking` and are used as record-keeping of validators information. During the app initialization, these hooks should be registered in the staking module struct.
 
 The following hooks impact the slashing state:
 

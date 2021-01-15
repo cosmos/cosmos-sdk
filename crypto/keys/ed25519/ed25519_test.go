@@ -290,7 +290,7 @@ func TestMarshalProtoInterface(t *testing.T) {
 
 	// ** Check unmarshal using JSONMarshaler **
 	// Unpacking won't work straightforward s Any type
-	// Any can't implement UnpackInterfacesMessage insterface. So Any is not
+	// Any can't implement UnpackInterfacesMessage interface. So Any is not
 	// automatically unpacked and we won't get a value.
 	var pkAny codectypes.Any
 	err = ccfg.Marshaler.UnmarshalJSON(bz, &pkAny)

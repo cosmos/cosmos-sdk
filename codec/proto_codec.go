@@ -90,7 +90,7 @@ func (pc *ProtoCodec) UnmarshalBinaryBare(bz []byte, ptr ProtoMarshaler) error {
 }
 
 // MustUnmarshalBinaryBare implements BinaryMarshaler.MustUnmarshalBinaryBare method.
-// NOTE: this function must be used with a concert type which
+// NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.UnmarshalInterface
 func (pc *ProtoCodec) MustUnmarshalBinaryBare(bz []byte, ptr ProtoMarshaler) {
 	if err := pc.UnmarshalBinaryBare(bz, ptr); err != nil {

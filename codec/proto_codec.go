@@ -75,7 +75,7 @@ func (pc *ProtoCodec) MustMarshalBinaryLengthPrefixed(o ProtoMarshaler) []byte {
 }
 
 // UnmarshalBinaryBare implements BinaryMarshaler.UnmarshalBinaryBare method.
-// NOTE: this function must be used with a concert type which
+// NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.UnmarshalInterface
 func (pc *ProtoCodec) UnmarshalBinaryBare(bz []byte, ptr ProtoMarshaler) error {
 	err := ptr.Unmarshal(bz)

@@ -91,7 +91,7 @@ func (s *Store) Set(key []byte, value []byte) {
 // Delete deletes the key. Panics on nil key.
 func (s *Store) Delete(key []byte) {
 	s.mtx.Lock()
-	_, _ = s.tree.Update(key, []byte{})
+	_, _ = s.tree.Delete(key)
 	_ = s.db.Delete(indexKey(key))
 	s.mtx.Unlock()
 }

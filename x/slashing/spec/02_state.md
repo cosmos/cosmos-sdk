@@ -48,27 +48,4 @@ bonded validator. The `SignedBlocksWindow` parameter defines the size
 
 The information stored for tracking validator liveness is as follows:
 
-```protobuf
-// ValidatorSigningInfo defines a validator's signing info for monitoring their
-// liveness activity.
-message ValidatorSigningInfo {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
-
-  string address = 1;
-  // Height at which validator was first a candidate OR was unjailed
-  int64 start_height = 2;
-  // Index which is incremented each time the validator was a bonded
-  // in a block and may have signed a precommit or not. This in conjunction with the
-  // `SignedBlocksWindow` param determines the index in the `MissedBlocksBitArray`.
-  int64 index_offset = 3;
-  // Timestamp until which the validator is jailed due to liveness downtime.
-  google.protobuf.Timestamp jailed_until = 4;
-  // Whether or not a validator has been tombstoned (killed out of validator set). It is set
-  // once the validator commits an equivocation or for any other configured misbehiavor.
-  bool tombstoned = 5;
-  // A counter kept to avoid unnecessary array reads.
-  // Note that `Sum(MissedBlocksBitArray)` always equals `MissedBlocksCounter`.
-  int64 missed_blocks_counter = 6 [(gogoproto.moretags);
-}
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/slashing/v1beta1/slashing.proto#L11-L33

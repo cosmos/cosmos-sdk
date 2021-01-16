@@ -2064,10 +2064,7 @@ func (m *ClientState) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSolomachine
 			}
 			if (iNdEx + skippy) > l {
@@ -2204,10 +2201,7 @@ func (m *ConsensusState) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSolomachine
 			}
 			if (iNdEx + skippy) > l {
@@ -2397,10 +2391,7 @@ func (m *Header) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSolomachine
 			}
 			if (iNdEx + skippy) > l {
@@ -2573,10 +2564,7 @@ func (m *Misbehaviour) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSolomachine
 			}
 			if (iNdEx + skippy) > l {
@@ -2732,10 +2720,7 @@ func (m *SignatureAndData) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSolomachine
 			}
 			if (iNdEx + skippy) > l {
@@ -2838,10 +2823,7 @@ func (m *TimestampedSignatureData) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSolomachine
 			}
 			if (iNdEx + skippy) > l {
@@ -3014,10 +2996,7 @@ func (m *SignBytes) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSolomachine
 			}
 			if (iNdEx + skippy) > l {
@@ -3135,10 +3114,7 @@ func (m *HeaderData) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSolomachine
 			}
 			if (iNdEx + skippy) > l {
@@ -3258,10 +3234,7 @@ func (m *ClientStateData) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSolomachine
 			}
 			if (iNdEx + skippy) > l {
@@ -3381,10 +3354,7 @@ func (m *ConsensusStateData) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSolomachine
 			}
 			if (iNdEx + skippy) > l {
@@ -3504,10 +3474,7 @@ func (m *ConnectionStateData) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSolomachine
 			}
 			if (iNdEx + skippy) > l {
@@ -3627,10 +3594,7 @@ func (m *ChannelStateData) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSolomachine
 			}
 			if (iNdEx + skippy) > l {
@@ -3748,10 +3712,7 @@ func (m *PacketCommitmentData) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSolomachine
 			}
 			if (iNdEx + skippy) > l {
@@ -3869,10 +3830,7 @@ func (m *PacketAcknowledgementData) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSolomachine
 			}
 			if (iNdEx + skippy) > l {
@@ -3956,10 +3914,7 @@ func (m *PacketReceiptAbsenceData) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSolomachine
 			}
 			if (iNdEx + skippy) > l {
@@ -4062,10 +4017,7 @@ func (m *NextSequenceRecvData) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSolomachine
 			}
 			if (iNdEx + skippy) > l {

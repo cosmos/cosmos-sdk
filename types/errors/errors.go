@@ -362,11 +362,11 @@ func WithType(err error, obj interface{}) error {
 	return Wrap(err, fmt.Sprintf("%T", obj))
 }
 
-// AsOf checks if a received error is caused by one of the target errors.
-// It extends the errors.As functionality to a list of errors.
-func AsOf(received error, targets ...error) bool {
+// IsOf checks if a received error is caused by one of the target errors.
+// It extends the errors.Is functionality to a list of errors.
+func IsOf(received error, targets ...error) bool {
 	for _, t := range targets {
-		if errors.As(received, t) {
+		if errors.Is(received, t) {
 			return true
 		}
 	}

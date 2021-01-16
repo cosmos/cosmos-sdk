@@ -530,6 +530,9 @@ func (ks keystore) Key(uid string) (Info, error) {
 
 	bs, err := ks.db.Get(string(key))
 	if err != nil {
+		if err == keyring.ErrKeyNotFound {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, uid)
+		}
 		return nil, err
 	}
 	if len(bs.Data) == 0 {

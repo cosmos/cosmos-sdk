@@ -14,8 +14,11 @@ import (
 const (
 	defaultMinGasPrices = ""
 
-	// DefaultGRPCAddress is the default address the gRPC server binds to.
+	// DefaultGRPCAddress defines the default address to bind the gRPC server to.
 	DefaultGRPCAddress = "0.0.0.0:9090"
+
+	// DefaultGRPCWebAddress defines the default address to bind the gRPC-web server to.
+	DefaultGRPCWebAddress = "0.0.0.0:9091"
 )
 
 // BaseConfig defines the server's basic configuration
@@ -107,6 +110,15 @@ type GRPCConfig struct {
 	Address string `mapstructure:"address"`
 }
 
+// GRPCWebConfig defines configuration for the gRPC-web server.
+type GRPCWebConfig struct {
+	// Enable defines if the gRPC-web should be enabled.
+	Enable bool `mapstructure:"enable"`
+
+	// Address defines the gRPC-web server to listen on
+	Address string `mapstructure:"address"`
+}
+
 // StateSyncConfig defines the state sync snapshot configuration.
 type StateSyncConfig struct {
 	// SnapshotInterval sets the interval at which state sync snapshots are taken.
@@ -126,6 +138,7 @@ type Config struct {
 	Telemetry telemetry.Config `mapstructure:"telemetry"`
 	API       APIConfig        `mapstructure:"api"`
 	GRPC      GRPCConfig       `mapstructure:"grpc"`
+	GRPCWeb   GRPCWebConfig    `mapstructure:"grpc-web"`
 	StateSync StateSyncConfig  `mapstructure:"state-sync"`
 }
 
@@ -185,6 +198,10 @@ func DefaultConfig() *Config {
 			Enable:  true,
 			Address: DefaultGRPCAddress,
 		},
+		GRPCWeb: GRPCWebConfig{
+			Enable:  true,
+			Address: DefaultGRPCWebAddress,
+		},
 		StateSync: StateSyncConfig{
 			SnapshotInterval:   0,
 			SnapshotKeepRecent: 2,
@@ -238,6 +255,10 @@ func GetConfig(v *viper.Viper) Config {
 		GRPC: GRPCConfig{
 			Enable:  v.GetBool("grpc.enable"),
 			Address: v.GetString("grpc.address"),
+		},
+		GRPCWeb: GRPCWebConfig{
+			Enable:  v.GetBool("grpc-web.enable"),
+			Address: v.GetString("grpc-web.address"),
 		},
 		StateSync: StateSyncConfig{
 			SnapshotInterval:   v.GetUint64("state-sync.snapshot-interval"),

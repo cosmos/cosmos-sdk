@@ -154,8 +154,8 @@ func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetada
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	metadata, found := k.GetDenomMetaData(ctx, req.Denom)
-	if !found {
+	metadata := k.GetDenomMetaData(ctx, req.Denom)
+	if metadata.Base == "" && metadata.Display == "" && metadata.Description == "" && len(metadata.DenomUnits) == 0 {
 		return nil, status.Errorf(codes.NotFound, "client metadata for denom %s", req.Denom)
 	}
 

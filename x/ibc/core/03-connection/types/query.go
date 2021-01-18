@@ -6,6 +6,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
+var (
+	_ codectypes.UnpackInterfacesMessage = QueryConnectionClientStateResponse{}
+	_ codectypes.UnpackInterfacesMessage = QueryConnectionConsensusStateResponse{}
+)
+
 // NewQueryConnectionResponse creates a new QueryConnectionResponse instance
 func NewQueryConnectionResponse(
 	connection ConnectionEnd, proof []byte, height clienttypes.Height,
@@ -44,6 +49,11 @@ func NewQueryConnectionClientStateResponse(identifiedClientState clienttypes.Ide
 	}
 }
 
+// UnpackInterfaces implements UnpackInterfacesMesssage.UnpackInterfaces
+func (qccsr QueryConnectionClientStateResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return qccsr.IdentifiedClientState.UnpackInterfaces(unpacker)
+}
+
 // NewQueryConnectionConsensusStateResponse creates a newQueryConnectionConsensusStateResponse instance
 func NewQueryConnectionConsensusStateResponse(clientID string, anyConsensusState *codectypes.Any, consensusStateHeight exported.Height, proof []byte, height clienttypes.Height) *QueryConnectionConsensusStateResponse {
 	return &QueryConnectionConsensusStateResponse{
@@ -52,4 +62,9 @@ func NewQueryConnectionConsensusStateResponse(clientID string, anyConsensusState
 		Proof:          proof,
 		ProofHeight:    height,
 	}
+}
+
+// UnpackInterfaces implements UnpackInterfacesMesssage.UnpackInterfaces
+func (qccsr QueryConnectionConsensusStateResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return unpacker.UnpackAny(qccsr.ConsensusState, new(exported.ConsensusState))
 }

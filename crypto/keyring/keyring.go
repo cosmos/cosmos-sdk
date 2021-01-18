@@ -428,19 +428,21 @@ func (ks keystore) Delete(uid string) error {
 func (ks keystore) KeyByAddress(address sdk.Address) (Info, error) {
 	ik, err := ks.db.Get(addrHexKeyAsString(address))
 	if err != nil {
-		return nil, err
+		return nil, checkKeyNotFound(err, fmt.Sprint("key with address", address, "not found"))
 	}
 
 	if len(ik.Data) == 0 {
-		return nil, fmt.Errorf("key with address %s not found", address)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprint("key with address", address, "not found"))
 	}
 
-	bs, err := ks.db.Get(string(ik.Data))
-	if err != nil {
-		return nil, err
-	}
+	return ks.Key(string(ik.Data))
+}
 
-	return unmarshalInfo(bs.Data)
+func checkKeyNotFound(err error, msg string) error {
+	if err == keyring.ErrKeyNotFound {
+		return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, msg)
+	}
+	return err
 }
 
 func (ks keystore) List() ([]Info, error) {
@@ -530,10 +532,7 @@ func (ks keystore) Key(uid string) (Info, error) {
 
 	bs, err := ks.db.Get(string(key))
 	if err != nil {
-		if err == keyring.ErrKeyNotFound {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, uid)
-		}
-		return nil, err
+		return nil, checkKeyNotFound(err, uid)
 	}
 	if len(bs.Data) == 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, uid)
@@ -756,13 +755,13 @@ func (ks keystore) writeInfo(info Info) error {
 func (ks keystore) existsInDb(info Info) (bool, error) {
 	if _, err := ks.db.Get(addrHexKeyAsString(info.GetAddress())); err == nil {
 		return true, nil // address lookup succeeds - info exists
-	} else if err != keyring.ErrKeyNotFound {
+	} else if !sdkerrors.ErrKeyNotFound.Is(err) {
 		return false, err // received unexpected error - returns error
 	}
 
 	if _, err := ks.db.Get(string(infoKey(info.GetName()))); err == nil {
 		return true, nil // uid lookup succeeds - info exists
-	} else if err != keyring.ErrKeyNotFound {
+	} else if !sdkerrors.ErrKeyNotFound.Is(err) {
 		return false, err // received unexpected error - returns
 	}
 

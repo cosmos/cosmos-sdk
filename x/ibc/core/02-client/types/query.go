@@ -38,10 +38,10 @@ func (qcsr QueryClientStateResponse) UnpackInterfaces(unpacker codectypes.AnyUnp
 	return unpacker.UnpackAny(qcsr.ClientState, new(exported.ClientState))
 }
 
-// unpackinterfaces implements unpackinterfacesmesssage.unpackinterfaces
-func (qcsr queryconsensusstatesresponse) unpackinterfaces(unpacker codectypes.anyunpacker) error {
-	for _, cs := range qcsr.consensusstates {
-		if err := cs.unpackinterfaces(unpacker); err != nil {
+// UnpackInterfaces implements UnpackInterfacesMesssage.UnpackInterfaces
+func (qcsr QueryConsensusStatesResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	for _, cs := range qcsr.ConsensusStates {
+		if err := cs.UnpackInterfaces(unpacker); err != nil {
 			return err
 		}
 	}

@@ -22,30 +22,26 @@ func TestExpiresAt(t *testing.T) {
 		"basic": {
 			example: types.ExpiresAtHeight(100),
 			valid:   true,
-			before:  types.ExpiresAt{Height: 50, Time: now},
-			after:   types.ExpiresAt{Height: 122, Time: now},
+			before:  types.ExpiresAtHeight(50),
+			after:   types.ExpiresAtHeight(122),
 		},
 		"zero": {
 			example: types.ExpiresAt{},
 			zero:    true,
 			valid:   true,
-			before:  types.ExpiresAt{Height: 1},
-		},
-		"double": {
-			example: types.ExpiresAt{Height: 100, Time: now},
-			valid:   false,
+			before:  types.ExpiresAtHeight(1),
 		},
 		"match height": {
 			example: types.ExpiresAtHeight(1000),
 			valid:   true,
-			before:  types.ExpiresAt{Height: 999, Time: now},
-			after:   types.ExpiresAt{Height: 1000, Time: now},
+			before:  types.ExpiresAtHeight(999),
+			after:   types.ExpiresAtHeight(1000),
 		},
 		"match time": {
 			example: types.ExpiresAtTime(now),
 			valid:   true,
-			before:  types.ExpiresAt{Height: 43, Time: now.Add(-1 * time.Second)},
-			after:   types.ExpiresAt{Height: 76, Time: now},
+			before:  types.ExpiresAtTime(now.Add(-1 * time.Second)),
+			after:   types.ExpiresAtTime(now),
 		},
 	}
 
@@ -61,10 +57,10 @@ func TestExpiresAt(t *testing.T) {
 			require.NoError(t, err)
 
 			if !tc.before.IsZero() {
-				assert.Equal(t, false, tc.example.IsExpired(tc.before.Time, tc.before.Height))
+				assert.Equal(t, false, tc.example.IsExpired(tc.before.GetTime(), tc.before.GetHeight()))
 			}
 			if !tc.after.IsZero() {
-				assert.Equal(t, true, tc.example.IsExpired(tc.after.Time, tc.after.Height))
+				assert.Equal(t, true, tc.example.IsExpired(tc.after.GetTime(), tc.after.GetHeight()))
 			}
 		})
 	}
@@ -93,10 +89,6 @@ func TestDurationValid(t *testing.T) {
 		},
 		"zero": {
 			period: types.Duration{},
-			valid:  false,
-		},
-		"double": {
-			period: types.Duration{Block: 100, Clock: time.Hour},
 			valid:  false,
 		},
 		"negative clock": {

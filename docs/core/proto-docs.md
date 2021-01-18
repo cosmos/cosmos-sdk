@@ -233,6 +233,32 @@
   
     - [Msg](#cosmos.evidence.v1beta1.Msg)
   
+- [cosmos/fee_grant/v1beta1/fee_grant.proto](#cosmos/fee_grant/v1beta1/fee_grant.proto)
+    - [BasicFeeAllowance](#cosmos.fee_grant.v1beta1.BasicFeeAllowance)
+    - [Duration](#cosmos.fee_grant.v1beta1.Duration)
+    - [ExpiresAt](#cosmos.fee_grant.v1beta1.ExpiresAt)
+    - [FeeAllowanceGrant](#cosmos.fee_grant.v1beta1.FeeAllowanceGrant)
+    - [PeriodicFeeAllowance](#cosmos.fee_grant.v1beta1.PeriodicFeeAllowance)
+  
+- [cosmos/fee_grant/v1beta1/genesis.proto](#cosmos/fee_grant/v1beta1/genesis.proto)
+    - [GenesisState](#cosmos.fee_grant.v1beta1.GenesisState)
+  
+- [cosmos/fee_grant/v1beta1/query.proto](#cosmos/fee_grant/v1beta1/query.proto)
+    - [QueryFeeAllowanceRequest](#cosmos.fee_grant.v1beta1.QueryFeeAllowanceRequest)
+    - [QueryFeeAllowanceResponse](#cosmos.fee_grant.v1beta1.QueryFeeAllowanceResponse)
+    - [QueryFeeAllowancesRequest](#cosmos.fee_grant.v1beta1.QueryFeeAllowancesRequest)
+    - [QueryFeeAllowancesResponse](#cosmos.fee_grant.v1beta1.QueryFeeAllowancesResponse)
+  
+    - [Query](#cosmos.fee_grant.v1beta1.Query)
+  
+- [cosmos/fee_grant/v1beta1/tx.proto](#cosmos/fee_grant/v1beta1/tx.proto)
+    - [MsgGrantFeeAllowance](#cosmos.fee_grant.v1beta1.MsgGrantFeeAllowance)
+    - [MsgGrantFeeAllowanceResponse](#cosmos.fee_grant.v1beta1.MsgGrantFeeAllowanceResponse)
+    - [MsgRevokeFeeAllowance](#cosmos.fee_grant.v1beta1.MsgRevokeFeeAllowance)
+    - [MsgRevokeFeeAllowanceResponse](#cosmos.fee_grant.v1beta1.MsgRevokeFeeAllowanceResponse)
+  
+    - [Msg](#cosmos.fee_grant.v1beta1.Msg)
+  
 - [cosmos/genutil/v1beta1/genesis.proto](#cosmos/genutil/v1beta1/genesis.proto)
     - [GenesisState](#cosmos.genutil.v1beta1.GenesisState)
   
@@ -2222,8 +2248,8 @@ Service defines the gRPC querier service for tendermint queries.
 | `GetSyncing` | [GetSyncingRequest](#cosmos.base.tendermint.v1beta1.GetSyncingRequest) | [GetSyncingResponse](#cosmos.base.tendermint.v1beta1.GetSyncingResponse) | GetSyncing queries node syncing. | GET|/cosmos/base/tendermint/v1beta1/syncing|
 | `GetLatestBlock` | [GetLatestBlockRequest](#cosmos.base.tendermint.v1beta1.GetLatestBlockRequest) | [GetLatestBlockResponse](#cosmos.base.tendermint.v1beta1.GetLatestBlockResponse) | GetLatestBlock returns the latest block. | GET|/cosmos/base/tendermint/v1beta1/blocks/latest|
 | `GetBlockByHeight` | [GetBlockByHeightRequest](#cosmos.base.tendermint.v1beta1.GetBlockByHeightRequest) | [GetBlockByHeightResponse](#cosmos.base.tendermint.v1beta1.GetBlockByHeightResponse) | GetBlockByHeight queries block for given height. | GET|/cosmos/base/tendermint/v1beta1/blocks/{height}|
-| `GetLatestValidatorSet` | [GetLatestValidatorSetRequest](#cosmos.base.tendermint.v1beta1.GetLatestValidatorSetRequest) | [GetLatestValidatorSetResponse](#cosmos.base.tendermint.v1beta1.GetLatestValidatorSetResponse) | GetLatestValidatorSet queries latest validator-set. | GET|/cosmos/base/tendermint/v1beta1/validators/latest|
-| `GetValidatorSetByHeight` | [GetValidatorSetByHeightRequest](#cosmos.base.tendermint.v1beta1.GetValidatorSetByHeightRequest) | [GetValidatorSetByHeightResponse](#cosmos.base.tendermint.v1beta1.GetValidatorSetByHeightResponse) | GetValidatorSetByHeight queries validator-set at a given height. | GET|/cosmos/base/tendermint/v1beta1/validators/{height}|
+| `GetLatestValidatorSet` | [GetLatestValidatorSetRequest](#cosmos.base.tendermint.v1beta1.GetLatestValidatorSetRequest) | [GetLatestValidatorSetResponse](#cosmos.base.tendermint.v1beta1.GetLatestValidatorSetResponse) | GetLatestValidatorSet queries latest validator-set. | GET|/cosmos/base/tendermint/v1beta1/validatorsets/latest|
+| `GetValidatorSetByHeight` | [GetValidatorSetByHeightRequest](#cosmos.base.tendermint.v1beta1.GetValidatorSetByHeightRequest) | [GetValidatorSetByHeightResponse](#cosmos.base.tendermint.v1beta1.GetValidatorSetByHeightResponse) | GetValidatorSetByHeight queries validator-set at a given height. | GET|/cosmos/base/tendermint/v1beta1/validatorsets/{height}|
 
  <!-- end services -->
 
@@ -3672,6 +3698,312 @@ Msg defines the evidence Msg service.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `SubmitEvidence` | [MsgSubmitEvidence](#cosmos.evidence.v1beta1.MsgSubmitEvidence) | [MsgSubmitEvidenceResponse](#cosmos.evidence.v1beta1.MsgSubmitEvidenceResponse) | SubmitEvidence submits an arbitrary Evidence of misbehavior such as equivocation or counterfactual signing. | |
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/fee_grant/v1beta1/fee_grant.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/fee_grant/v1beta1/fee_grant.proto
+
+
+
+<a name="cosmos.fee_grant.v1beta1.BasicFeeAllowance"></a>
+
+### BasicFeeAllowance
+BasicFeeAllowance implements FeeAllowance with a one-time grant of tokens
+that optionally expires. The delegatee can use up to SpendLimit to cover fees.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `spend_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `expiration` | [ExpiresAt](#cosmos.fee_grant.v1beta1.ExpiresAt) |  |  |
+
+
+
+
+
+
+<a name="cosmos.fee_grant.v1beta1.Duration"></a>
+
+### Duration
+Duration is a repeating unit of either clock time or number of blocks.
+This is designed to be added to an ExpiresAt struct.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
+| `block` | [int64](#int64) |  |  |
+
+
+
+
+
+
+<a name="cosmos.fee_grant.v1beta1.ExpiresAt"></a>
+
+### ExpiresAt
+ExpiresAt is a point in time where something expires.
+It may be *either* block time or block height
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `height` | [int64](#int64) |  |  |
+
+
+
+
+
+
+<a name="cosmos.fee_grant.v1beta1.FeeAllowanceGrant"></a>
+
+### FeeAllowanceGrant
+FeeAllowanceGrant is stored in the KVStore to record a grant with full context
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+| `allowance` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+
+
+
+
+
+
+<a name="cosmos.fee_grant.v1beta1.PeriodicFeeAllowance"></a>
+
+### PeriodicFeeAllowance
+PeriodicFeeAllowance extends FeeAllowance to allow for both a maximum cap,
+as well as a limit per time period.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `basic` | [BasicFeeAllowance](#cosmos.fee_grant.v1beta1.BasicFeeAllowance) |  |  |
+| `period` | [Duration](#cosmos.fee_grant.v1beta1.Duration) |  |  |
+| `period_spend_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `period_can_spend` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `period_reset` | [ExpiresAt](#cosmos.fee_grant.v1beta1.ExpiresAt) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/fee_grant/v1beta1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/fee_grant/v1beta1/genesis.proto
+
+
+
+<a name="cosmos.fee_grant.v1beta1.GenesisState"></a>
+
+### GenesisState
+GenesisState contains a set of fee allowances, persisted from the store
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `fee_allowances` | [FeeAllowanceGrant](#cosmos.fee_grant.v1beta1.FeeAllowanceGrant) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/fee_grant/v1beta1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/fee_grant/v1beta1/query.proto
+
+
+
+<a name="cosmos.fee_grant.v1beta1.QueryFeeAllowanceRequest"></a>
+
+### QueryFeeAllowanceRequest
+QueryFeeAllowanceRequest is the request type for the Query/FeeAllowance RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.fee_grant.v1beta1.QueryFeeAllowanceResponse"></a>
+
+### QueryFeeAllowanceResponse
+QueryFeeAllowanceResponse is the response type for the Query/FeeAllowance RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `fee_allowance` | [FeeAllowanceGrant](#cosmos.fee_grant.v1beta1.FeeAllowanceGrant) |  | fee_allowance is a fee_allowance granted for grantee by granter. |
+
+
+
+
+
+
+<a name="cosmos.fee_grant.v1beta1.QueryFeeAllowancesRequest"></a>
+
+### QueryFeeAllowancesRequest
+QueryFeeAllowancesRequest is the request type for the Query/FeeAllowances RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `grantee` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.fee_grant.v1beta1.QueryFeeAllowancesResponse"></a>
+
+### QueryFeeAllowancesResponse
+QueryFeeAllowancesResponse is the response type for the Query/FeeAllowances RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `fee_allowances` | [FeeAllowanceGrant](#cosmos.fee_grant.v1beta1.FeeAllowanceGrant) | repeated | fee_allowance is a fee_allowance granted for grantee by granter. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.fee_grant.v1beta1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `FeeAllowance` | [QueryFeeAllowanceRequest](#cosmos.fee_grant.v1beta1.QueryFeeAllowanceRequest) | [QueryFeeAllowanceResponse](#cosmos.fee_grant.v1beta1.QueryFeeAllowanceResponse) | FeeAllowance returns fee granted to the grantee by the granter. | GET|/cosmos/feegrant/v1beta1/fee_allowance/{granter}/{grantee}|
+| `FeeAllowances` | [QueryFeeAllowancesRequest](#cosmos.fee_grant.v1beta1.QueryFeeAllowancesRequest) | [QueryFeeAllowancesResponse](#cosmos.fee_grant.v1beta1.QueryFeeAllowancesResponse) | FeeAllowances returns all the grants for address. | GET|/cosmos/feegrant/v1beta1/fee_allowances/{grantee}|
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/fee_grant/v1beta1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/fee_grant/v1beta1/tx.proto
+
+
+
+<a name="cosmos.fee_grant.v1beta1.MsgGrantFeeAllowance"></a>
+
+### MsgGrantFeeAllowance
+MsgGrantFeeAllowance adds permission for Grantee to spend up to Allowance
+of fees from the account of Granter.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+| `allowance` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+
+
+
+
+
+
+<a name="cosmos.fee_grant.v1beta1.MsgGrantFeeAllowanceResponse"></a>
+
+### MsgGrantFeeAllowanceResponse
+MsgGrantFeeAllowanceResponse defines the Msg/GrantFeeAllowanceResponse response type.
+
+
+
+
+
+
+<a name="cosmos.fee_grant.v1beta1.MsgRevokeFeeAllowance"></a>
+
+### MsgRevokeFeeAllowance
+MsgRevokeFeeAllowance removes any existing FeeAllowance from Granter to Grantee.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.fee_grant.v1beta1.MsgRevokeFeeAllowanceResponse"></a>
+
+### MsgRevokeFeeAllowanceResponse
+MsgRevokeFeeAllowanceResponse defines the Msg/RevokeFeeAllowanceResponse response type.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.fee_grant.v1beta1.Msg"></a>
+
+### Msg
+Msg defines the feegrant msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `GrantFeeAllowance` | [MsgGrantFeeAllowance](#cosmos.fee_grant.v1beta1.MsgGrantFeeAllowance) | [MsgGrantFeeAllowanceResponse](#cosmos.fee_grant.v1beta1.MsgGrantFeeAllowanceResponse) | GrantFeeAllowance grants fee allowance to the grantee on the granter's account with the provided expiration time. | |
+| `RevokeFeeAllowance` | [MsgRevokeFeeAllowance](#cosmos.fee_grant.v1beta1.MsgRevokeFeeAllowance) | [MsgRevokeFeeAllowanceResponse](#cosmos.fee_grant.v1beta1.MsgRevokeFeeAllowanceResponse) | RevokeFeeAllowance revokes any fee allowance of granter's account that has been granted to the grantee. | |
 
  <!-- end services -->
 

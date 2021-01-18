@@ -36,9 +36,8 @@ var (
 func (suite *GenesisTestSuite) TestImportExportGenesis() {
 	coins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1_000)))
 	now := suite.ctx.BlockHeader().Time
-	allowance := &types.BasicFeeAllowance{SpendLimit: coins, Expiration: types.ExpiresAt{
-		Time: now.AddDate(1, 0, 0),
-	}}
+
+	allowance := &types.BasicFeeAllowance{SpendLimit: coins, Expiration: types.ExpiresAtTime(now.AddDate(1, 0, 0))}
 	suite.keeper.GrantFeeAllowance(suite.ctx, granterAddr, granteeAddr, allowance)
 	genesis, err := feegrant.ExportGenesis(suite.ctx, suite.keeper)
 	suite.Require().NoError(err)

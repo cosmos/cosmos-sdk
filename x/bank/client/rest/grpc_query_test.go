@@ -106,6 +106,7 @@ func (s *IntegrationTestSuite) TestDenomMetadataGRPCHandler() {
 		name     string
 		url      string
 		headers  map[string]string
+		expErr   bool
 		respType proto.Message
 		expected proto.Message
 	}{
@@ -115,6 +116,7 @@ func (s *IntegrationTestSuite) TestDenomMetadataGRPCHandler() {
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
+			false,
 			&types.QueryDenomsMetadataResponse{},
 			&types.QueryDenomsMetadataResponse{
 				Metadatas: []types.Metadata{
@@ -145,6 +147,7 @@ func (s *IntegrationTestSuite) TestDenomMetadataGRPCHandler() {
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
+			false,
 			&types.QueryDenomMetadataResponse{},
 			&types.QueryDenomMetadataResponse{
 				Metadata: types.Metadata{
@@ -172,6 +175,7 @@ func (s *IntegrationTestSuite) TestDenomMetadataGRPCHandler() {
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
+			true,
 			&types.QueryDenomMetadataResponse{},
 			&types.QueryDenomMetadataResponse{
 				Metadata: types.Metadata{
@@ -187,8 +191,12 @@ func (s *IntegrationTestSuite) TestDenomMetadataGRPCHandler() {
 			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 			s.Require().NoError(err)
 
-			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))
-			s.Require().Equal(tc.expected.String(), tc.respType.String())
+			if tc.expErr {
+				s.Require().Error(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))
+			} else {
+				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))
+				s.Require().Equal(tc.expected.String(), tc.respType.String())
+			}
 		})
 	}
 }

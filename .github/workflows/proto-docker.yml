@@ -1,6 +1,5 @@
 name: Build & Push SDK Proto Builder
 on:
-  pull_request:
   push:
     branches:
       - master
@@ -33,8 +32,8 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUBTM_USERNAME }}
+          password: ${{ secrets.DOCKERHUBTM_TOKEN }}
 
       - name: Publish to Docker Hub
         uses: docker/build-push-action@v2

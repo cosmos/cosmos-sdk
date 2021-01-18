@@ -18,7 +18,4 @@ RUN GO111MODULE=on go get \
 
 RUN GO111MODULE=on go get -u github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc
 
-# protoc-gen-cosmos needs to be installed in the root of the cosmos-sdk. 
-# For this reason it is run in the protoc-gen script
-
 COPY --from=BUILDER /usr/local/bin /usr/local/bin

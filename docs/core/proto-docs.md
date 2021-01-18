@@ -48,6 +48,10 @@
     - [QueryAllBalancesResponse](#cosmos.bank.v1beta1.QueryAllBalancesResponse)
     - [QueryBalanceRequest](#cosmos.bank.v1beta1.QueryBalanceRequest)
     - [QueryBalanceResponse](#cosmos.bank.v1beta1.QueryBalanceResponse)
+    - [QueryDenomMetadataRequest](#cosmos.bank.v1beta1.QueryDenomMetadataRequest)
+    - [QueryDenomMetadataResponse](#cosmos.bank.v1beta1.QueryDenomMetadataResponse)
+    - [QueryDenomsMetadataRequest](#cosmos.bank.v1beta1.QueryDenomsMetadataRequest)
+    - [QueryDenomsMetadataResponse](#cosmos.bank.v1beta1.QueryDenomsMetadataResponse)
     - [QueryParamsRequest](#cosmos.bank.v1beta1.QueryParamsRequest)
     - [QueryParamsResponse](#cosmos.bank.v1beta1.QueryParamsResponse)
     - [QuerySupplyOfRequest](#cosmos.bank.v1beta1.QuerySupplyOfRequest)
@@ -1274,6 +1278,69 @@ QueryBalanceResponse is the response type for the Query/Balance RPC method.
 
 
 
+<a name="cosmos.bank.v1beta1.QueryDenomMetadataRequest"></a>
+
+### QueryDenomMetadataRequest
+QueryDenomMetadataRequest is the request type for the Query/DenomMetadata RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | denom is the coin denom to query the metadata for. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryDenomMetadataResponse"></a>
+
+### QueryDenomMetadataResponse
+QueryDenomMetadataResponse is the response type for the Query/DenomMetadata RPC
+method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `metadata` | [Metadata](#cosmos.bank.v1beta1.Metadata) |  | metadata describes and provides all the client information for the requested token. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryDenomsMetadataRequest"></a>
+
+### QueryDenomsMetadataRequest
+QueryDenomsMetadataRequest is the request type for the Query/DenomsMetadata RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryDenomsMetadataResponse"></a>
+
+### QueryDenomsMetadataResponse
+QueryDenomsMetadataResponse is the response type for the Query/DenomsMetadata RPC
+method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `metadatas` | [Metadata](#cosmos.bank.v1beta1.Metadata) | repeated | metadata provides the client information for all the registered tokens. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
 <a name="cosmos.bank.v1beta1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
@@ -1374,6 +1441,8 @@ Query defines the gRPC querier service.
 | `TotalSupply` | [QueryTotalSupplyRequest](#cosmos.bank.v1beta1.QueryTotalSupplyRequest) | [QueryTotalSupplyResponse](#cosmos.bank.v1beta1.QueryTotalSupplyResponse) | TotalSupply queries the total supply of all coins. | GET|/cosmos/bank/v1beta1/supply|
 | `SupplyOf` | [QuerySupplyOfRequest](#cosmos.bank.v1beta1.QuerySupplyOfRequest) | [QuerySupplyOfResponse](#cosmos.bank.v1beta1.QuerySupplyOfResponse) | SupplyOf queries the supply of a single coin. | GET|/cosmos/bank/v1beta1/supply/{denom}|
 | `Params` | [QueryParamsRequest](#cosmos.bank.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.bank.v1beta1.QueryParamsResponse) | Params queries the parameters of x/bank module. | GET|/cosmos/bank/v1beta1/params|
+| `DenomMetadata` | [QueryDenomMetadataRequest](#cosmos.bank.v1beta1.QueryDenomMetadataRequest) | [QueryDenomMetadataResponse](#cosmos.bank.v1beta1.QueryDenomMetadataResponse) | DenomsMetadata queries the client metadata of a given coin denomination. | GET|/cosmos/bank/v1beta1/denoms_metadata/{denom}|
+| `DenomsMetadata` | [QueryDenomsMetadataRequest](#cosmos.bank.v1beta1.QueryDenomsMetadataRequest) | [QueryDenomsMetadataResponse](#cosmos.bank.v1beta1.QueryDenomsMetadataResponse) | DenomsMetadata queries the client metadata for all registered coin denominations. | GET|/cosmos/bank/v1beta1/denoms_metadata|
 
  <!-- end services -->
 

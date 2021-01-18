@@ -85,6 +85,12 @@ The previous command allow you to run a single node. This is enough for the next
 
 The naive way would be to run the same commands again in separate terminal windows. This is possible, however in the SDK, we leverage the power of [Docker Compose](https://docs.docker.com/compose/) to run a localnet. If you need inspiration on how to set up your own localnet with Docker Compose, you can have a look at the SDK's [`docker-compose.yml`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/docker-compose.yml).
 
+## Configuring the Node Using `app.toml`
+
+The Cosmos SDK automatically generates an `app.toml` file inside `~/.simapp/config`. This file is used to configure your app, such as state pruning strategies, telemetry, gRPC and REST servers configuration, state sync... The file itself is heavily commented, please refer to it directly to tweak your node.
+
+Make sure to restart your node after modifying `app.toml`.
+
 ## Next {hide}
 
 Read about the [Interacting with your Node](./interact-node.md) {hide}

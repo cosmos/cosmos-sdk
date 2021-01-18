@@ -318,12 +318,11 @@ func (e *wrappedError) Cause() error {
 
 // Is reports whether any error in e's chain matches a target.
 func (e *wrappedError) Is(target error) bool {
-	if target == nil {
-		return e == target
+	if e == target {
+		return true
 	}
 
 	w := e.Cause()
-
 	for {
 		if w == target {
 			return true

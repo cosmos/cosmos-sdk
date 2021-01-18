@@ -45,7 +45,6 @@ service Query {
   rpc DenomsMetadata(QueryDenomsMetadataRequest) returns (QueryDenomsMetadataResponse) {
     option (google.api.http).get = "/cosmos/bank/v1beta1/denoms_metadata";
   }
-  
 }
 
 // QueryBalanceRequest is the request type for the Query/Balance RPC method.

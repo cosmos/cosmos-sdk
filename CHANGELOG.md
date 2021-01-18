@@ -36,6 +36,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* (tendermint) [\#8316](https://github.com/cosmos/cosmos-sdk/pull/8316) Bump Tendermint version to [v0.34.2](https://github.com/tendermint/tendermint/releases/tag/v0.34.2)
+
+### Bug Fixes
+
+  * (x/auth) [\#8287](https://github.com/cosmos/cosmos-sdk/pull/8287) Fix `tx sign --signature-only` to return correct sequence value in signature.
+
 ## [v0.40.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0) - 2021-01-08
 
 v0.40.0, known as the Stargate release of the Cosmos SDK, is one of the largest releases

@@ -2,7 +2,25 @@ package types
 
 import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
+
+var (
+	_ codectypes.UnpackInterfacesMessage = QueryClientStateResponse{}
+	_ codectypes.UnpackInterfacesMessage = QueryClientStatesResponse{}
+	_ codectypes.UnpackInterfacesMessage = QueryConsensusStateResponse{}
+	_ codectypes.UnpackInterfacesMessage = QueryConsensusStatesResponse{}
+)
+
+// UnpackInterfaces implements UnpackInterfacesMesssage.UnpackInterfaces
+func (qcsr QueryClientStatesResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	for _, cs := range qcsr.ClientStates {
+		if err := cs.UnpackInterfaces(unpacker); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 // NewQueryClientStateResponse creates a new QueryClientStateResponse instance.
 func NewQueryClientStateResponse(
@@ -15,6 +33,21 @@ func NewQueryClientStateResponse(
 	}
 }
 
+// UnpackInterfaces implements UnpackInterfacesMesssage.UnpackInterfaces
+func (qcsr QueryClientStateResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return unpacker.UnpackAny(qcsr.ClientState, new(exported.ClientState))
+}
+
+// UnpackInterfaces implements UnpackInterfacesMesssage.UnpackInterfaces
+func (qcsr QueryConsensusStatesResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	for _, cs := range qcsr.ConsensusStates {
+		if err := cs.UnpackInterfaces(unpacker); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // NewQueryConsensusStateResponse creates a new QueryConsensusStateResponse instance.
 func NewQueryConsensusStateResponse(
 	consensusStateAny *codectypes.Any, proof []byte, height Height,
@@ -24,4 +57,9 @@ func NewQueryConsensusStateResponse(
 		Proof:          proof,
 		ProofHeight:    height,
 	}
+}
+
+// UnpackInterfaces implements UnpackInterfacesMesssage.UnpackInterfaces
+func (qcsr QueryConsensusStateResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return unpacker.UnpackAny(qcsr.ConsensusState, new(exported.ConsensusState))
 }

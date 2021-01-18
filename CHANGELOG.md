@@ -36,12 +36,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+
+## [v0.40.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.1) - 2021-01-19
+
 ### Bug Fixes
 
+* [\#8085](https://github.com/cosmos/cosmos-sdk/pull/8058) fix zero time checks
+* [\#8280](https://github.com/cosmos/cosmos-sdk/pull/8280) fix GET /upgrade/current query
 * (x/auth) [\#8287](https://github.com/cosmos/cosmos-sdk/pull/8287) Fix `tx sign --signature-only` to return correct sequence value in signature.
 * (x/ibc) [\#8341](https://github.com/cosmos/cosmos-sdk/pull/8341) Fix query latest consensus state.
 * (types/errors) [\#8355][https://github.com/cosmos/cosmos-sdk/pull/8355] Fix errorWrap `Is` method.
-
+* (proto) [\#8350][https://github.com/cosmos/cosmos-sdk/pull/8350], [\#8361][https://github.com/cosmos/cosmos-sdk/pull/8361] Update gogo proto deps with v1.3.2 security fixes
 
 
 ## [v0.40.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0) - 2021-01-08

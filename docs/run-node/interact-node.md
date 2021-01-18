@@ -62,7 +62,7 @@ Since the code generation library largely depends on your own tech stack, we wil
 
 [grpcurl])https://github.com/fullstorydev/grpcurl is like `curl` but for gRPC. It is also available as a Go library, but we will use it only as a CLI command for debugging and testing purposes. Follow the instructions in the previous link to install it.
 
-Assuming you have a local node running (either a localnet, or connected a live network), you should be able to run the following command to list the Protobuf services available (you can replace `localhost:9000` by the gRPC server endpoint of another node, which is configured under the `grpc.address` field inside `app.toml`):
+Assuming you have a local node running (either a localnet, or connected a live network), you should be able to run the following command to list the Protobuf services available (you can replace `localhost:9000` by the gRPC server endpoint of another node, which is configured under the `grpc.address` field inside [`app.toml`](../run-node/run-node.md#configuring-the-node-using-apptoml)):
 
 ```bash
 grpcurl -plaintext localhost:9090 list
@@ -139,7 +139,7 @@ func queryState() error {
 
     // Create a connection to the gRPC server.
     grpcConn := grpc.Dial(
-        "127.0.0.1:9090", // Or your gRPC server address.
+        "127.0.0.1:9090", // your gRPC server address.
         grpc.WithInsecure(), // The SDK doesn't support any transport security mechanism.
     )
     defer grpcConn.Close()
@@ -217,7 +217,7 @@ curl \
 
 Make sure to replace `localhost:1317` with the REST endpoint of your node, configured under the `api.address` field.
 
-The list of all available REST endpoints is available as a Swagger specification file, it can be viewed at `localhost:1317/swagger`. Make sure that the `api.swagger` field is set to true in your `app.toml` file.
+The list of all available REST endpoints is available as a Swagger specification file, it can be viewed at `localhost:1317/swagger`. Make sure that the `api.swagger` field is set to true in your [`app.toml`](../run-node/run-node.md#configuring-the-node-using-apptoml) file.
 
 ### Query for historical state using REST
 
@@ -232,6 +232,10 @@ curl \
 ```
 
 Assuming the state at that block has not yet been pruned by the node, this query should return a non-empty response.
+
+### Cross-Origin Resource Sharing (CORS)
+
+[CORS policies](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) are not enabled by default to help with security. If you would like to use the rest-server in a public environment we recommend you provide a reverse proxy, this can be done with [nginx](https://www.nginx.com/). For testing and development purposes there is an `enabled-unsafe-cors` field inside [`app.toml`](../run-node/run-node.md#configuring-the-node-using-apptoml).
 
 ## Next {hide}
 

@@ -26,16 +26,22 @@ in this testnet.
 6. `$ ./simd gentx [key_name] [amount] --chain-id [chain-id]`. This will create the
     genesis transaction for your new chain. 
 7. Now, one person needs to create the genesis file `genesis.json` using the genesis transactions 
-   from every participant. TODO: ask Marko for details on how he sets this up 
-8. Modify your `config/config.toml` (in the simapp working directory) to include the other participants as
+   from every participant, by gathering all the genesis transactions under `config/gentx` and then
+   calling `./simd collect-gentxs`. This will create a new `genesis.json` file that includes data
+   from all the validators (we sometimes call it the "super genesis file" to distinguish it from
+   single-validator genesis files). 
+8. Once you've received the super genesis file, overwrite your original `genesis.json` file with 
+    the new super `genesis.json`. 
+9. Modify your `config/config.toml` (in the simapp working directory) to include the other participants as
     persistent peers:
 
     ```
     # Comma separated list of nodes to keep persistent connections to
-    persistent_peers = "[hash]@[address]:[port],[hash]@[address]:[port]"
+    persistent_peers = "[validator address]@[ip address]:[port],[validator address]@[ip address]:[port]"
     ```
 
-    (`port` is probably 26656.)
-9. Now you can start your nodes: `$ ./simd start`. 
+    You can find `validator address` by running `./simd tendermint show-node-id`. (It will be hex-encoded.)
+    By default, `port` is 26656.
+10. Now you can start your nodes: `$ ./simd start`. 
 
 Now you have a small testnet that you can use to try out changes to the Cosmos SDK or Tendermint! 

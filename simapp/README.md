@@ -45,3 +45,7 @@ in this testnet.
 10. Now you can start your nodes: `$ ./simd start`. 
 
 Now you have a small testnet that you can use to try out changes to the Cosmos SDK or Tendermint! 
+
+NOTE: Sometimes creating the network through the `collect-gentxs` will fail, and validators will start
+in a funny state (and then panic). If this happens, you can try to create and start the network first
+with a single validator and then add additional validators using a `create-validator` transaction.

@@ -76,6 +76,22 @@ func TestIteration(t *testing.T) {
 	assert.False(t, rIter.Valid())
 	assert.NoError(t, rIter.Error())
 	assert.NoError(t, rIter.Close())
+
+	// delete something, and ensure that iteration still works
+	s.Delete([]byte("eta"))
+
+	iter = s.Iterator(nil, nil)
+	for _, p := range pairs {
+		if !bytes.Equal([]byte("eta"), p.key) {
+			require.True(t, iter.Valid())
+			assert.Equal(t, p.key, iter.Key())
+			assert.Equal(t, p.val, iter.Value())
+			iter.Next()
+		}
+	}
+	assert.False(t, iter.Valid())
+	assert.NoError(t, iter.Error())
+	assert.NoError(t, iter.Close())
 }
 
 func TestDomain(t *testing.T) {

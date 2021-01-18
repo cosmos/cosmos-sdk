@@ -97,9 +97,7 @@ func (k BaseViewKeeper) GetAccountsBalances(ctx sdk.Context) []types.Balance {
 // GetBalance returns the balance of a specific denomination for a given account
 // by address.
 func (k BaseViewKeeper) GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin {
-	store := ctx.KVStore(k.storeKey)
-	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
-	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
+	accountStore := k.getAccountStore(ctx, addr)
 
 	bz := accountStore.Get([]byte(denom))
 	if bz == nil {
@@ -116,9 +114,7 @@ func (k BaseViewKeeper) GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom s
 // provides the token balance to a callback. If true is returned from the
 // callback, iteration is halted.
 func (k BaseViewKeeper) IterateAccountBalances(ctx sdk.Context, addr sdk.AccAddress, cb func(sdk.Coin) bool) {
-	store := ctx.KVStore(k.storeKey)
-	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
-	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
+	accountStore := k.getAccountStore(ctx, addr)
 
 	iterator := accountStore.Iterator(nil, nil)
 	defer iterator.Close()
@@ -213,4 +209,15 @@ func (k BaseViewKeeper) ValidateBalance(ctx sdk.Context, addr sdk.AccAddress) er
 	}
 
 	return nil
+}
+
+// getAccountStore gets the account store of the given address.
+func (k BaseViewKeeper) getAccountStore(ctx sdk.Context, addr sdk.AccAddress) prefix.Store {
+	store := ctx.KVStore(k.storeKey)
+	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
+	// Addresses are length-prefixed in the store key, the SDK also has a hard
+	// requirement on addresses being max 255 bytes long.
+	addrLen := byte(len(addr))
+
+	return prefix.NewStore(balancesStore, append([]byte{addrLen}, addr.Bytes()...))
 }

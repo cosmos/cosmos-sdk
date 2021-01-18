@@ -6,7 +6,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -57,9 +56,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	balances := sdk.NewCoins()
-	store := sdkCtx.KVStore(k.storeKey)
-	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
-	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
+	accountStore := k.getAccountStore(sdkCtx, addr)
 
 	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key []byte, value []byte) error {
 		var result sdk.Coin

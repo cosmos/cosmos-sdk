@@ -1,6 +1,6 @@
 # Cosmos SDK v0.40.1 "Stargate" Release Notes
 
-This is a bugfix-only release to the *Cosmos SDK 0.40* "Stargate" release series. No breaking changes are introduced, thus no migration should be needed.
+This is a bug fix release to the *Cosmos SDK 0.40* "Stargate" release series. No breaking changes are introduced, thus no migration should be needed.
 Among the various bugfixes, this release introduces important security patches.
 
 See the [Cosmos SDK v0.40.1 milestone](https://github.com/cosmos/cosmos-sdk/milestone/36?closed=1) on our issue tracker for details.

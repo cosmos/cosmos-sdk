@@ -1,6 +1,12 @@
+<!--
+order: 2
+-->
+
 # IBC Client Developer Guide to Upgrades
 
-As mentioned in the [overview](./overview.md), it is vital that high-value IBC clients can upgrade along with their underlying chains to avoid disruption to the IBC ecosystem. Thus, IBC client developers will want to implement upgrade functionality to enable clients to maintain connections and channels even across chain upgrades.
+Learn how to implement upgrade functionality for your custom IBC client. {synopsis}
+
+As mentioned in the [README](./README.md), it is vital that high-value IBC clients can upgrade along with their underlying chains to avoid disruption to the IBC ecosystem. Thus, IBC client developers will want to implement upgrade functionality to enable clients to maintain connections and channels even across chain upgrades.
 
 The IBC protocol allows client implementations to provide a path to upgrading clients given the upgraded client state, upgraded consensus state and proofs for each.
 

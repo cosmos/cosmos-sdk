@@ -34,7 +34,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased]
+
+## [v0.40.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.1) - 2021-01-19
+
 
 
 ### Improvements
@@ -43,8 +45,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* (x/bank) [\#8317](https://github.com/cosmos/cosmos-sdk/pull/8317) Fix panic when querying for a not found client denomination metadata.
+* [\#8085](https://github.com/cosmos/cosmos-sdk/pull/8058) fix zero time checks
+* [\#8280](https://github.com/cosmos/cosmos-sdk/pull/8280) fix GET /upgrade/current query
 * (x/auth) [\#8287](https://github.com/cosmos/cosmos-sdk/pull/8287) Fix `tx sign --signature-only` to return correct sequence value in signature.
+* (build) [\8300](https://github.com/cosmos/cosmos-sdk/pull/8300), [\8301](https://github.com/cosmos/cosmos-sdk/pull/8301) Fix reproducible builds
+* (types/errors) [\#8355][https://github.com/cosmos/cosmos-sdk/pull/8355] Fix errorWrap `Is` method.
+* (x/ibc) [\#8341](https://github.com/cosmos/cosmos-sdk/pull/8341) Fix query latest consensus state.
+* (proto) [\#8350][https://github.com/cosmos/cosmos-sdk/pull/8350], [\#8361][https://github.com/cosmos/cosmos-sdk/pull/8361] Update gogo proto deps with v1.3.2 security fixes
+* (x/ibc) [\#8359](https://github.com/cosmos/cosmos-sdk/pull/8359) Add missing UnpackInterfaces functions to IBC Query Responses. Fixes 'cannot unpack Any' error for IBC types.
+* (x/bank) [\#8317](https://github.com/cosmos/cosmos-sdk/pull/8317) Fix panic when querying for a not found client denomination metadata.
 
 
 ## [v0.40.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0) - 2021-01-08

@@ -33,9 +33,11 @@ message ClientConsensusStates {
       [(gogoproto.moretags) = "yaml:\"consensus_states\"", (gogoproto.nullable) = false];
 }
 
-// ClientUpdateProposal is a governance proposal. If it passes, the client is
-// updated with the provided header. The update may fail if the header is not
-// valid given certain conditions specified by the client implementation.
+// ClientUpdateProposal is a governance proposal. If it passes, the substitute client's
+// consensus states starting from the 'initial height' are copied over to the subjects
+// client state. The proposal handler may fail if the subject and the substitute do not
+// match in client and chain parameters (with exception to latest and frozen height).
+// The updated client must also be valid (cannot be expired).
 message ClientUpdateProposal {
   option (gogoproto.goproto_getters) = false;
   // the title of the update proposal
@@ -43,9 +45,11 @@ message ClientUpdateProposal {
   // the description of the proposal
   string description = 2;
   // the client identifier for the client to be updated if the proposal passes
-  string client_id = 3 [(gogoproto.moretags) = "yaml:\"client_id\""];
-  // the header used to update the client if the proposal passes
-  google.protobuf.Any header = 4;
+  string subject_client_id = 3 [(gogoproto.moretags) = "yaml:\"subject_client_id\""];
+  // the substitute client identifier for the client standing in for the subject client
+  string substitute_client_id = 4 [(gogoproto.moretags) = "yaml:\"subtitute_client_id\""];
+  // the intital height to copy consensus states from the substitute to the subject
+  Height initial_height = 5 [(gogoproto.moretags) = "yaml:\"initial_height\""];
 }
 
 // Height is a monotonically increasing data type

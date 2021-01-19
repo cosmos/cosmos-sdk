@@ -196,7 +196,7 @@ func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
 		},
 		{
 			"get proposal with id for split vote",
-			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "3", voterAddressBase64),
+			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "3", voterAddressBech32),
 			false,
 			types.WeightedVoteOptions{
 				types.WeightedVoteOption{Option: types.OptionYes, Weight: sdk.NewDecWithPrec(60, 2)},

@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type IntegrationTestSuite struct {
@@ -24,12 +25,41 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	cfg := network.DefaultConfig()
+	genesisState := cfg.GenesisState
 	cfg.NumValidators = 1
+
+	var bankGenesis types.GenesisState
+	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[types.ModuleName], &bankGenesis))
+
+	bankGenesis.DenomMetadata = []types.Metadata{
+		{
+			Description: "The native staking token of the Cosmos Hub.",
+			DenomUnits: []*types.DenomUnit{
+				{
+					Denom:    "uatom",
+					Exponent: 0,
+					Aliases:  []string{"microatom"},
+				},
+				{
+					Denom:    "atom",
+					Exponent: 6,
+					Aliases:  []string{"ATOM"},
+				},
+			},
+			Base:    "uatom",
+			Display: "atom",
+		},
+	}
+
+	bankGenesisBz, err := cfg.Codec.MarshalJSON(&bankGenesis)
+	s.Require().NoError(err)
+	genesisState[types.ModuleName] = bankGenesisBz
+	cfg.GenesisState = genesisState
 
 	s.cfg = cfg
 	s.network = network.New(s.T(), cfg)
 
-	_, err := s.network.WaitForHeight(2)
+	_, err = s.network.WaitForHeight(2)
 	s.Require().NoError(err)
 }
 

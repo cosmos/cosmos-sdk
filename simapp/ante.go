@@ -5,9 +5,9 @@ import (
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	feegrantante "github.com/cosmos/cosmos-sdk/x/fee_grant/ante"
-	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/fee_grant/keeper"
-	feegranttypes "github.com/cosmos/cosmos-sdk/x/fee_grant/types"
+	feegrantante "github.com/cosmos/cosmos-sdk/x/feegrant/ante"
+	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
+	feegranttypes "github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence

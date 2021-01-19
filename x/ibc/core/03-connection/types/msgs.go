@@ -10,7 +10,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
-var _ sdk.Msg = &MsgConnectionOpenInit{}
+var (
+	_ sdk.Msg = &MsgConnectionOpenInit{}
+	_ sdk.Msg = &MsgConnectionOpenConfirm{}
+	_ sdk.Msg = &MsgConnectionOpenAck{}
+	_ sdk.Msg = &MsgConnectionOpenTry{}
+
+	_ codectypes.UnpackInterfacesMessage = MsgConnectionOpenTry{}
+	_ codectypes.UnpackInterfacesMessage = MsgConnectionOpenAck{}
+)
 
 // NewMsgConnectionOpenInit creates a new MsgConnectionOpenInit instance. It sets the
 // counterparty connection identifier to be empty.
@@ -77,8 +85,6 @@ func (msg MsgConnectionOpenInit) GetSigners() []sdk.AccAddress {
 	}
 	return []sdk.AccAddress{accAddr}
 }
-
-var _ sdk.Msg = &MsgConnectionOpenTry{}
 
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
 //nolint:interfacer
@@ -175,13 +181,7 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgConnectionOpenTry) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var clientState exported.ClientState
-	err := unpacker.UnpackAny(msg.ClientState, &clientState)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return unpacker.UnpackAny(msg.ClientState, new(exported.ClientState))
 }
 
 // GetSignBytes implements sdk.Msg. The function will panic since it is used
@@ -198,8 +198,6 @@ func (msg MsgConnectionOpenTry) GetSigners() []sdk.AccAddress {
 	}
 	return []sdk.AccAddress{accAddr}
 }
-
-var _ sdk.Msg = &MsgConnectionOpenAck{}
 
 // NewMsgConnectionOpenAck creates a new MsgConnectionOpenAck instance
 //nolint:interfacer
@@ -297,8 +295,6 @@ func (msg MsgConnectionOpenAck) GetSigners() []sdk.AccAddress {
 	}
 	return []sdk.AccAddress{accAddr}
 }
-
-var _ sdk.Msg = &MsgConnectionOpenConfirm{}
 
 // NewMsgConnectionOpenConfirm creates a new MsgConnectionOpenConfirm instance
 //nolint:interfacer

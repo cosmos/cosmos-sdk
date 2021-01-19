@@ -42,6 +42,11 @@ The problem was with decoding transactions (specifically: interface decoding and
 Tendermint release security patches v0.34.2 and and v0.34.3. We updated Tendermint dependency to the latest version.
 
 
+## Known issues
+
+No known issues.
+
+
 ## Update instructions
 
 * Download or rebuild the app based on the latest SDK version

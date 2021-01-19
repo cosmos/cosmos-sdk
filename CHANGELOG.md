@@ -44,6 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
   * (x/auth) [\#8287](https://github.com/cosmos/cosmos-sdk/pull/8287) Fix `tx sign --signature-only` to return correct sequence value in signature.
   * (x/ibc) [\#8341](https://github.com/cosmos/cosmos-sdk/pull/8341) Fix query latest consensus state.
+  * (x/ibc) [\#8359](https://github.com/cosmos/cosmos-sdk/pull/8359) Add missing UnpackInterfaces functions to IBC Query Responses. Fixes 'cannot unpack Any' error for IBC types. 
 
 ## [v0.40.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0) - 2021-01-08
 

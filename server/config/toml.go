@@ -172,6 +172,19 @@ enable = {{ .GRPC.Enable }}
 address = "{{ .GRPC.Address }}"
 
 ###############################################################################
+###                        gRPC Web Configuration                           ###
+###############################################################################
+
+[grpc-web]
+
+# GRPCWebEnable defines if the gRPC-web should be enabled.
+# NOTE: gRPC must also be enabled, otherwise, this configuration is a no-op.
+enable = {{ .GRPCWeb.Enable }}
+
+# Address defines the gRPC-web server address to bind to.
+address = "{{ .GRPCWeb.Address }}"
+
+###############################################################################
 ###                        State Sync Configuration                         ###
 ###############################################################################
 

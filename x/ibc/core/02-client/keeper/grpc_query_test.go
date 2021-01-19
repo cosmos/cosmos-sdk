@@ -69,9 +69,11 @@ func (suite *KeeperTestSuite) TestQueryClientState() {
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
-
-				expClientState.ClearCachedValue()
 				suite.Require().Equal(expClientState, res.ClientState)
+
+				// ensure UnpackInterfaces is defined
+				cachedValue := res.ClientState.GetCachedValue()
+				suite.Require().NotNil(cachedValue)
 			} else {
 				suite.Require().Error(err)
 			}
@@ -255,9 +257,11 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
-
-				expConsensusState.ClearCachedValue()
 				suite.Require().Equal(expConsensusState, res.ConsensusState)
+
+				// ensure UnpackInterfaces is defined
+				cachedValue := res.ConsensusState.GetCachedValue()
+				suite.Require().NotNil(cachedValue)
 			} else {
 				suite.Require().Error(err)
 			}
@@ -356,8 +360,11 @@ func (suite *KeeperTestSuite) TestQueryConsensusStates() {
 				suite.Require().Equal(len(expConsensusStates), len(res.ConsensusStates))
 				for i := range expConsensusStates {
 					suite.Require().NotNil(res.ConsensusStates[i])
-					expConsensusStates[i].ConsensusState.ClearCachedValue()
 					suite.Require().Equal(expConsensusStates[i], res.ConsensusStates[i])
+
+					// ensure UnpackInterfaces is defined
+					cachedValue := res.ConsensusStates[i].ConsensusState.GetCachedValue()
+					suite.Require().NotNil(cachedValue)
 				}
 			} else {
 				suite.Require().Error(err)

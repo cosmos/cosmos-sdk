@@ -11,7 +11,7 @@ set -ue
 # - DEBUG
 
 # Source builder's functions library
-. /usr/local/share/cosmos-sdk/buildlib.sh
+. /usr/local/share/tendermint/buildlib.sh
 
 # These variables are now available
 # - BASEDIR

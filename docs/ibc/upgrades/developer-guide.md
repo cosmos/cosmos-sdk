@@ -28,7 +28,7 @@ VerifyUpgradeAndUpdateState(
 ) (upgradedClient ClientState, upgradedConsensus ConsensusState, err error)
 ```
 
-Note that the clients should have prior knowledge of the merkle path that the upgraded client and upgraded consensus states will use. The height at which the upgrade has occurred should also be encoded in the proof. In the Tendermint client implementation, the upgrade height is encoded in the proof key.
+Note that the clients should have prior knowledge of the merkle path that the upgraded client and upgraded consensus states will use. The height at which the upgrade has occurred should also be encoded in the proof. The Tendermint client implementation accomplishes this by including an `UpgradePath` in the ClientState itself, which is used along with the upgrade height to construct the merkle path under which the client state and consensus state are committed.
 
 Developers must ensure that the `UpgradeClientMsg` does not pass until the last height of the old chain has been committed, and after the chain upgrades, the `UpgradeClientMsg` should pass once and only once on all counterparty clients.
 

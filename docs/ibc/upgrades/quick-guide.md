@@ -12,6 +12,8 @@ The information in this doc for upgrading chains is relevant to SDK chains. Howe
 
 IBC-connected chains must perform an IBC upgrade if their upgrade will break counterparty IBC clients. The current IBC protocol supports upgrading tendermint chains for a specific subset of IBC-client-breaking upgrades. Here is the exhaustive list of IBC client-breaking upgrades and whether the IBC protocol currently supports such upgrades.
 
+IBC currently does **NOT** support unplanned upgrades. All of the following upgrades must be planned and committed to in advance by the upgrading chain, in order for counterparty clients to maintain their connections securely.
+
 Note: Since upgrades are only implemented for Tendermint clients, this doc only discusses upgrades on Tendermint chains that would break counterparty IBC Tendermint Clients.
 
 1. Changing the Chain-ID: **Supported**

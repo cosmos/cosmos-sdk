@@ -39,7 +39,7 @@ jobs:
       - name: Publish to Docker Hub
         uses: docker/build-push-action@v2
         with:
-          context: ./docker-build-sdk-proto
+          context: ./contrib/devtools
           file: ./docker-build-sdk-proto/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.prep.outputs.tags }}

@@ -35,7 +35,7 @@ message PeriodicFeeAllowance {
   ExpiresAt period_reset = 5 [(gogoproto.nullable) = false];
 }
 
-// Duration is a repeating unit of either clock time or number of blocks.
+// Duration is a span of a clock time or number of blocks.
 // This is designed to be added to an ExpiresAt struct.
 message Duration {
   // sum is the oneof that represents either duration or block

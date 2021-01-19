@@ -81,18 +81,6 @@ func (a AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config sdkclien
 	return types.ValidateGenesis(data)
 }
 
-// func (a AppModuleBasic) getValidatedGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) (GenesisState, error) {
-// 	var data GenesisState
-
-// 	// TODO migrate genesis types to proto
-// 	// err := cdc.UnmarshalJSON(bz, &data)
-// 	// if err != nil {
-// 	// 	return nil, err
-// 	// }
-
-// 	return data, data.ValidateBasic()
-// }
-
 // RegisterRESTRoutes registers the REST routes for the feegrant module.
 func (AppModuleBasic) RegisterRESTRoutes(ctx sdkclient.Context, rtr *mux.Router) {}
 
@@ -157,11 +145,6 @@ func (am AppModule) NewHandler() sdk.Handler {
 func (AppModule) QuerierRoute() string {
 	return ""
 }
-
-// // NewQuerierHandler returns the feegrant module sdk.Querier.
-// func (am AppModule) NewQuerierHandler() sdk.Querier {
-// 	return NewQuerier(am.keeper)
-// }
 
 // InitGenesis performs genesis initialization for the feegrant module. It returns
 // no validator updates.

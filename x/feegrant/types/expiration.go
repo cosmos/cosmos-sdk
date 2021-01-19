@@ -81,16 +81,14 @@ func (e ExpiresAt) IsCompatible(d Duration) bool {
 // Step will increase the expiration point by one Duration
 // It returns an error if the Duration is incompatible
 func (e ExpiresAt) Step(d Duration) (ExpiresAt, error) {
-	var exp ExpiresAt
 	if !e.IsCompatible(d) {
-		return exp, sdkerrors.Wrap(ErrInvalidDuration, "expiration time and provided duration have different units")
+		return ExpiresAt{}, sdkerrors.Wrap(ErrInvalidDuration, "expiration time and provided duration have different units")
 	}
 	if e.HasDefinedTime() {
-		exp = ExpiresAtTime(e.GetTime().Add(*d.GetDuration()))
+		return ExpiresAtTime(e.GetTime().Add(*d.GetDuration())), nil
 	} else {
-		exp = ExpiresAtHeight(e.GetHeight() + d.GetBlock())
+		return ExpiresAtHeight(e.GetHeight() + d.GetBlock()), nil
 	}
-	return exp, nil
 }
 
 // MustStep is like Step, but panics on error
@@ -105,11 +103,10 @@ func (e ExpiresAt) MustStep(d Duration) ExpiresAt {
 // PrepareForExport will deduct the dumpHeight from the expiration, so when this is
 // reloaded after a hard fork, the actual number of allowed blocks is constant
 func (e ExpiresAt) PrepareForExport(dumpTime time.Time, dumpHeight int64) ExpiresAt {
-	var exp ExpiresAt
 	if e.GetHeight() != 0 {
-		exp = ExpiresAtHeight(e.GetHeight() - dumpHeight)
+		return ExpiresAtHeight(e.GetHeight() - dumpHeight)
 	}
-	return exp
+	return ExpiresAt{}
 }
 
 // ClockDuration creates an Duration by clock time

@@ -1,4 +1,4 @@
-# Cosmos SDK v0.40.0 "Stargate" Release Notes
+# Cosmos SDK v0.40.1 "Stargate" Release Notes
 
 This is a bug fix release to the *Cosmos SDK 0.40* "Stargate" release series.
 None of the changes is a breaking change, so no migration is needed.
@@ -34,18 +34,16 @@ The problem was with decoding transactions (specifically: interface decoding and
 
 ### Security patches for gogo proto
 
-[Gogoprotobuf](https://github.com/gogo/protobuf) released new versions with security patches v1.3.2. We updated and regenerated protobuf generated files. [\#8350][https://github.com/cosmos/cosmos-sdk/pull/8350] abd [\#8361][https://github.com/cosmos/cosmos-sdk/pull/8361].
+[Gogoprotobuf](https://github.com/gogo/protobuf) released new versions with security patches v1.3.2. We updated and regenerated protobuf generated files. [\#8350](https://github.com/cosmos/cosmos-sdk/pull/8350) and [\#8361](https://github.com/cosmos/cosmos-sdk/pull/8361).
 
 
 ### Tendermint security patches
 
 Tendermint release security patches v0.34.2 and and v0.34.3. We updated Tendermint dependency to the latest version.
 
-
 ## Known issues
 
 No known issues.
-
 
 ## Update instructions
 

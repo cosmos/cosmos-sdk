@@ -86,9 +86,8 @@ func (e ExpiresAt) Step(d Duration) (ExpiresAt, error) {
 	}
 	if e.HasDefinedTime() {
 		return ExpiresAtTime(e.GetTime().Add(*d.GetDuration())), nil
-	} else {
-		return ExpiresAtHeight(e.GetHeight() + d.GetBlock()), nil
 	}
+	return ExpiresAtHeight(e.GetHeight() + d.GetBlock()), nil
 }
 
 // MustStep is like Step, but panics on error

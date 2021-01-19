@@ -982,7 +982,6 @@ func (suite *IntegrationTestSuite) TestSetDenomMetaData() {
 	}
 
 	actualMetadata := app.BankKeeper.GetDenomMetaData(ctx, metadata[1].Base)
-
 	suite.Require().Equal(metadata[1].GetBase(), actualMetadata.GetBase())
 	suite.Require().Equal(metadata[1].GetDisplay(), actualMetadata.GetDisplay())
 	suite.Require().Equal(metadata[1].GetDescription(), actualMetadata.GetDescription())

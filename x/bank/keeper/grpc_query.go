@@ -61,7 +61,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
 
-	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(accountStore, req.Pagination, func(_, value []byte) error {
 		var result sdk.Coin
 		err := k.cdc.UnmarshalBinaryBare(value, &result)
 		if err != nil {
@@ -112,4 +112,54 @@ func (k BaseKeeper) Params(ctx context.Context, req *types.QueryParamsRequest) (
 	params := k.GetParams(sdkCtx)
 
 	return &types.QueryParamsResponse{Params: params}, nil
+}
+
+// DenomsMetadata implements Query/DenomsMetadata gRPC method.
+func (k BaseKeeper) DenomsMetadata(c context.Context, req *types.QueryDenomsMetadataRequest) (*types.QueryDenomsMetadataResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.DenomMetadataPrefix)
+
+	metadatas := []types.Metadata{}
+	pageRes, err := query.Paginate(store, req.Pagination, func(_, value []byte) error {
+		var metadata types.Metadata
+		k.cdc.MustUnmarshalBinaryBare(value, &metadata)
+
+		metadatas = append(metadatas, metadata)
+		return nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryDenomsMetadataResponse{
+		Metadatas:  metadatas,
+		Pagination: pageRes,
+	}, nil
+}
+
+// DenomMetadata implements Query/DenomMetadata gRPC method.
+func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetadataRequest) (*types.QueryDenomMetadataResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if req.Denom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	metadata := k.GetDenomMetaData(ctx, req.Denom)
+	if metadata.Base == "" && metadata.Display == "" && metadata.Description == "" && len(metadata.DenomUnits) == 0 {
+		return nil, status.Errorf(codes.NotFound, "client metadata for denom %s", req.Denom)
+	}
+
+	return &types.QueryDenomMetadataResponse{
+		Metadata: metadata,
+	}, nil
 }

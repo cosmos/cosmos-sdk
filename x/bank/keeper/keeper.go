@@ -185,6 +185,10 @@ func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) types.Metada
 	store = prefix.NewStore(store, types.DenomMetadataKey(denom))
 
 	bz := store.Get([]byte(denom))
+	if bz == nil {
+		return types.Metadata{}
+	}
+
 	var metadata types.Metadata
 	k.cdc.MustUnmarshalBinaryBare(bz, &metadata)
 

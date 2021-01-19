@@ -36,9 +36,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+
+### Improvements
+
+* (x/bank) [\#8302](https://github.com/cosmos/cosmos-sdk/issues/8302) Add gRPC and CLI queries for client denomination metadata.
+
 ### Bug Fixes
 
-  * (x/auth) [\#8287](https://github.com/cosmos/cosmos-sdk/pull/8287) Fix `tx sign --signature-only` to return correct sequence value in signature.
+* (x/bank) [\#8317](https://github.com/cosmos/cosmos-sdk/pull/8317) Fix panic when querying for a not found client denomination metadata.
+* (x/auth) [\#8287](https://github.com/cosmos/cosmos-sdk/pull/8287) Fix `tx sign --signature-only` to return correct sequence value in signature.
 
 
 ## [v0.40.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0) - 2021-01-08

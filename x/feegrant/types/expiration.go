@@ -27,7 +27,7 @@ func ExpiresAtHeight(h int64) ExpiresAt {
 // ValidateBasic performs basic sanity checks.
 // Note that empty expiration is allowed
 func (e ExpiresAt) ValidateBasic() error {
-	if e.GetTime() != nil && !e.GetTime().IsZero() && e.GetHeight() != 0 {
+	if e.HasDefinedTime() && e.GetHeight() != 0 {
 		return sdkerrors.Wrap(ErrInvalidDuration, "both time and height are set")
 	}
 	if e.GetHeight() < 0 {
@@ -41,10 +41,16 @@ func (e ExpiresAt) IsZero() bool {
 	return e.GetTime() == nil && e.GetHeight() == 0
 }
 
+// HasDefinedTime returns true if `ExpiresAt` has valid time
+func (e ExpiresAt) HasDefinedTime() bool {
+	t := e.GetTime()
+	return t != nil && t.Unix() > 0
+}
+
 // FastForward produces a new Expiration with the time or height set to the
 // new value, depending on what was set on the original expiration
 func (e ExpiresAt) FastForward(t time.Time, h int64) ExpiresAt {
-	if e.GetTime() != nil && !e.GetTime().IsZero() {
+	if e.HasDefinedTime() {
 		return ExpiresAtTime(t)
 	}
 	return ExpiresAtHeight(h)
@@ -56,7 +62,7 @@ func (e ExpiresAt) FastForward(t time.Time, h int64) ExpiresAt {
 //
 // Note a "zero" ExpiresAt is never expired
 func (e ExpiresAt) IsExpired(t *time.Time, h int64) bool {
-	if e.GetTime() != nil && !e.GetTime().IsZero() && !t.Before(*e.GetTime()) {
+	if e.HasDefinedTime() && !t.Before(*e.GetTime()) {
 		return true
 	}
 
@@ -66,7 +72,7 @@ func (e ExpiresAt) IsExpired(t *time.Time, h int64) bool {
 // IsCompatible returns true iff the two use the same units.
 // If false, they cannot be added.
 func (e ExpiresAt) IsCompatible(d Duration) bool {
-	if e.GetTime() != nil && !e.GetTime().IsZero() {
+	if e.HasDefinedTime() {
 		return d.GetDuration() != nil && d.GetDuration().Seconds() > float64(0)
 	}
 	return d.GetBlock() > 0
@@ -79,7 +85,7 @@ func (e ExpiresAt) Step(d Duration) (ExpiresAt, error) {
 	if !e.IsCompatible(d) {
 		return exp, sdkerrors.Wrap(ErrInvalidDuration, "expiration time and provided duration have different units")
 	}
-	if e.GetTime() != nil && !e.GetTime().IsZero() {
+	if e.HasDefinedTime() {
 		exp = ExpiresAtTime(e.GetTime().Add(*d.GetDuration()))
 	} else {
 		exp = ExpiresAtHeight(e.GetHeight() + d.GetBlock())

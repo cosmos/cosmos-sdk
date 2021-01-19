@@ -60,7 +60,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestQueryFeeAllowence() {
+func (s *IntegrationTestSuite) TestQueryFeeAllowance() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 	testCases := []struct {
@@ -101,11 +101,11 @@ func (s *IntegrationTestSuite) TestQueryFeeAllowence() {
 			false,
 			"",
 			func() {
-				execFeeAllowence(val, s)
+				execFeeAllowance(val, s)
 			},
-			func(allowence types.QueryFeeAllowanceResponse) {
-				s.Require().Equal(allowence.FeeAllowance.Granter, val.Address.String())
-				s.Require().Equal(allowence.FeeAllowance.Grantee, s.grantee.String())
+			func(allowance types.QueryFeeAllowanceResponse) {
+				s.Require().Equal(allowance.FeeAllowance.Granter, val.Address.String())
+				s.Require().Equal(allowance.FeeAllowance.Grantee, s.grantee.String())
 			},
 		},
 	}
@@ -116,16 +116,16 @@ func (s *IntegrationTestSuite) TestQueryFeeAllowence() {
 			if tc.expectErr {
 				s.Require().Contains(string(resp), tc.errorMsg)
 			} else {
-				var allowence types.QueryFeeAllowanceResponse
-				err := val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &allowence)
+				var allowance types.QueryFeeAllowanceResponse
+				err := val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &allowance)
 				s.Require().NoError(err)
-				tc.postRun(allowence)
+				tc.postRun(allowance)
 			}
 		})
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryGranteeAllowences() {
+func (s *IntegrationTestSuite) TestQueryGranteeAllowances() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 	testCases := []struct {
@@ -150,8 +150,8 @@ func (s *IntegrationTestSuite) TestQueryGranteeAllowences() {
 			false,
 			"",
 			func() {},
-			func(allowences types.QueryFeeAllowancesResponse) {
-				s.Require().Equal(len(allowences.FeeAllowances), 0)
+			func(allowances types.QueryFeeAllowancesResponse) {
+				s.Require().Equal(len(allowances.FeeAllowances), 0)
 			},
 		},
 		{
@@ -160,12 +160,12 @@ func (s *IntegrationTestSuite) TestQueryGranteeAllowences() {
 			false,
 			"",
 			func() {
-				execFeeAllowence(val, s)
+				execFeeAllowance(val, s)
 			},
-			func(allowences types.QueryFeeAllowancesResponse) {
-				s.Require().Equal(len(allowences.FeeAllowances), 1)
-				s.Require().Equal(allowences.FeeAllowances[0].Granter, val.Address.String())
-				s.Require().Equal(allowences.FeeAllowances[0].Grantee, s.grantee.String())
+			func(allowances types.QueryFeeAllowancesResponse) {
+				s.Require().Equal(len(allowances.FeeAllowances), 1)
+				s.Require().Equal(allowances.FeeAllowances[0].Granter, val.Address.String())
+				s.Require().Equal(allowances.FeeAllowances[0].Grantee, s.grantee.String())
 			},
 		},
 	}
@@ -176,16 +176,16 @@ func (s *IntegrationTestSuite) TestQueryGranteeAllowences() {
 			if tc.expectErr {
 				s.Require().Contains(string(resp), tc.errorMsg)
 			} else {
-				var allowence types.QueryFeeAllowancesResponse
-				err := val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &allowence)
+				var allowance types.QueryFeeAllowancesResponse
+				err := val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &allowance)
 				s.Require().NoError(err)
-				tc.postRun(allowence)
+				tc.postRun(allowance)
 			}
 		})
 	}
 }
 
-func execFeeAllowence(val *network.Validator, s *IntegrationTestSuite) {
+func execFeeAllowance(val *network.Validator, s *IntegrationTestSuite) {
 	fee := sdk.NewCoin("steak", sdk.NewInt(100))
 	duration := 365 * 24 * 60 * 60
 	args := []string{

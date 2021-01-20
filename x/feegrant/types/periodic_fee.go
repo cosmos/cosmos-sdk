@@ -47,7 +47,7 @@ func (a *PeriodicFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockH
 // last PeriodReset (eg. if you always do one tx per day, it will always reset the same time)
 // If we are more then one period out (eg. no activity in a week), reset is one Period from the execution of this method
 func (a *PeriodicFeeAllowance) TryResetPeriod(blockTime time.Time, blockHeight int64) {
-	if !a.PeriodReset.IsZero() && !a.PeriodReset.IsExpired(&blockTime, blockHeight) {
+	if !a.PeriodReset.Undefined() && !a.PeriodReset.IsExpired(&blockTime, blockHeight) {
 		return
 	}
 	// set CanSpend to the lesser of PeriodSpendLimit and the TotalLimit

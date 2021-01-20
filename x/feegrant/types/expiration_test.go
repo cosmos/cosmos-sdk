@@ -49,17 +49,17 @@ func TestExpiresAt(t *testing.T) {
 		tc := stc // to make scopelint happy
 		t.Run(name, func(t *testing.T) {
 			err := tc.example.ValidateBasic()
-			assert.Equal(t, tc.zero, tc.example.IsZero())
+			assert.Equal(t, tc.zero, tc.example.Undefined())
 			if !tc.valid {
 				require.Error(t, err)
 				return
 			}
 			require.NoError(t, err)
 
-			if !tc.before.IsZero() {
+			if !tc.before.Undefined() {
 				assert.Equal(t, false, tc.example.IsExpired(tc.before.GetTime(), tc.before.GetHeight()))
 			}
-			if !tc.after.IsZero() {
+			if !tc.after.Undefined() {
 				assert.Equal(t, true, tc.example.IsExpired(tc.after.GetTime(), tc.after.GetHeight()))
 			}
 		})

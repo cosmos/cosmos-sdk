@@ -63,7 +63,7 @@ In the issue we discussed various modifications:
 
 ### Requirements
 
-+ Support currently used tools - we don't want to break an ecosystem, or add a long adaptation period.
++ Support currently used tools - we don't want to break an ecosystem, or add a long adaptation period. Ref: https://github.com/cosmos/cosmos-sdk/issues/8041
 + Try to keep the address length small - addresses are widely used in state, both as part of a key and object value.
 
 

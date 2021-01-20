@@ -51,7 +51,7 @@ jobs:
             go.mod
             go.sum
       - name: Build
-        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false $(MAKE) build
+        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make build
 
   test-cosmovisor:
     runs-on: ubuntu-latest

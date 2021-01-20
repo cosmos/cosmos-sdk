@@ -74,7 +74,8 @@ Let us go through the methods of `AppModule`:
 - `LegacyQuerierHandler(*codec.LegacyAmino)` (deprecated): Returns a [`querier`](./query-services.md#legacy-queriers) given the query `path`, in order to process the `query`.
 - `RegisterServices(Configurator)`: Allows a module to register services.
 - `BeginBlock(sdk.Context, abci.RequestBeginBlock)`: This method gives module developers the option to implement logic that is automatically triggered at the beginning of each block. Implement empty if no logic needs to be triggered at the beginning of each block for this module.
-- `EndBlock(sdk.Context, abci.RequestEndBlock)`: This method gives module developers the option to implement logic that is automatically triggered at the beginning of each block. This is also where the module can inform the underlying consensus engine of validator set changes (e.g. the `staking` module). Implement empty if no logic needs to be triggered at the beginning of each block for this module.
+- `EndBlock(sdk.Context, abci.RequestEndBlock)`: This method gives module developers the option to implement logic that is automatically triggered at the end of each block. This is also where the module can inform the underlying consensus engine of validator set changes (e.g. the `staking` module). Implement empty if no logic needs to be triggered at the end of each block for this module.
+
 
 ### Implementing the Application Module Interfaces
 

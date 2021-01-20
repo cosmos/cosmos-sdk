@@ -22,8 +22,9 @@ Note: Since upgrades are only implemented for Tendermint clients, this doc only 
 4. Changing the ProofSpecs: **Supported**, this should be changed if the proof structure needed to verify IBC proofs is changed across the upgrade. Ex: Switching from an IAVL store, to a SimpleTree Store
 5. Changing the UpgradePath: **Supported**, this might involve changing the key under which upgraded clients and consensus states are stored in the upgrade store, or even migrating the upgrade store itself.
 6. Migrating the IBC store: **Unsupported**, as the IBC store location is negotiated by the connection.
-7. Upgrading to a IBC path-breaking version of IBC: **Unsupported**, as IBC version is negotiated on connection handshake.
-8. Changing the Tendermint LightClient algorithm: **Partially Supported**. Changes to the light client algorithm that do not change the ClientState or ConsensusState struct may be supported, provided that the counterparty is also upgraded to support the new light client algorithm. Changes that require updating the ClientState and ConsensusState structs themselves are theoretically possible by providing a path to translate an older ClientState struct into the new ClientState struct; however this is not currently implemented.
+7. Upgrading to a backwards compatible version of IBC: Supported
+8. Upgrading to a non-backwards compatible version of IBC: **Unsupported**, as IBC version is negotiated on connection handshake.
+9. Changing the Tendermint LightClient algorithm: **Partially Supported**. Changes to the light client algorithm that do not change the ClientState or ConsensusState struct may be supported, provided that the counterparty is also upgraded to support the new light client algorithm. Changes that require updating the ClientState and ConsensusState structs themselves are theoretically possible by providing a path to translate an older ClientState struct into the new ClientState struct; however this is not currently implemented.
 
 ### Step-by-Step Upgrade Process for SDK chains
 

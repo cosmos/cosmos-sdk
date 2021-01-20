@@ -184,9 +184,9 @@ func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
 
 // SetStoreLoader allows us to customize the rootMultiStore initialization.
 func (app *BaseApp) SetStoreLoader(loader StoreLoader) {
-	if app.sealed {
-		panic("SetStoreLoader() on sealed BaseApp")
-	}
+	//if app.sealed {
+	//	panic("SetStoreLoader() on sealed BaseApp")
+	//}
 
 	app.storeLoader = loader
 }

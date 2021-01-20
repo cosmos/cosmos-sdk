@@ -189,7 +189,15 @@ way to get this name for every protobuf type, we can use this message name as th
 key type `prefix` when creating addresses. For all basic public keys, `contents`
 should just be the raw unencoded public key bytes.
 
+### Named Accounts
 
+Some accounts can have a fixed name. We were discussing an idea of an account with a predefined name (eg: `me.regen`), this could be used by institutions or modules.
+Without going into details, this kind of addresses are compatible with the hash based addresses discussed here as long as they don't conflict with the same length.
+More specifically, any special account, with custom naming, must not have length equal 20 byte nor 32 bytes.
+
+### Module Addresses
+
+TODO
 
 ## Consequences
 
@@ -198,7 +206,8 @@ should just be the raw unencoded public key bytes.
 - a simple algorithm for generating addresses for new public keys, complex accounts and module accounts
 - the algorithm generalizes for _native composed keys_
 - increase security and collision resistance of addresses
-- the approach is extensible for future use-cases - one can use shorter addresses (>20 and < 32) for other use-cases.
+- the approach is extensible for future use-cases - one can use other address types, as long as they don't conflict with the address length specified here (20 or 32 bytes).
+- support multiple types accounts.
 
 ### Negative
 

@@ -5024,8 +5024,8 @@ Commission defines commission parameters for a given validator.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `commission_rates` | [CommissionRates](#cosmos.staking.v1beta1.CommissionRates) |  |  |
-| `update_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `commission_rates` | [CommissionRates](#cosmos.staking.v1beta1.CommissionRates) |  | commission_rates defines the initial commission rates to be used for creating a validator. |
+| `update_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | update_time is the last time the commission rate was changed. |
 
 
 
@@ -5041,9 +5041,9 @@ a validator.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `rate` | [string](#string) |  |  |
-| `max_rate` | [string](#string) |  |  |
-| `max_change_rate` | [string](#string) |  |  |
+| `rate` | [string](#string) |  | rate is the commission rate charged to delegators, as a fraction. |
+| `max_rate` | [string](#string) |  | max_rate defines the maximum commission rate which validator can ever charge, as a fraction. |
+| `max_change_rate` | [string](#string) |  | max_change_rate defines the maximum daily increase of the validator commission, as a fraction. |
 
 
 
@@ -5128,9 +5128,9 @@ validator.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `delegator_address` | [string](#string) |  |  |
-| `validator_address` | [string](#string) |  |  |
-| `shares` | [string](#string) |  |  |
+| `delegator_address` | [string](#string) |  | delegator_address is the bech32-encoded address of the delegator. |
+| `validator_address` | [string](#string) |  | validator_address is the bech32-encoded address of the validator. |
+| `shares` | [string](#string) |  | shared define the delegation shares received. |
 
 
 
@@ -5162,11 +5162,11 @@ Description defines a validator description.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `moniker` | [string](#string) |  |  |
-| `identity` | [string](#string) |  |  |
-| `website` | [string](#string) |  |  |
-| `security_contact` | [string](#string) |  |  |
-| `details` | [string](#string) |  |  |
+| `moniker` | [string](#string) |  | moniker defines a human-readable name for the validator. |
+| `identity` | [string](#string) |  | identity defines an optional identity signature (ex. UPort or Keybase). |
+| `website` | [string](#string) |  | website defines an optional website link. |
+| `security_contact` | [string](#string) |  | security_contact defines an optional email for security contact. |
+| `details` | [string](#string) |  | details define other optional details. |
 
 
 
@@ -5200,11 +5200,11 @@ Params defines the parameters for the staking module.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `unbonding_time` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
-| `max_validators` | [uint32](#uint32) |  |  |
-| `max_entries` | [uint32](#uint32) |  |  |
-| `historical_entries` | [uint32](#uint32) |  |  |
-| `bond_denom` | [string](#string) |  |  |
+| `unbonding_time` | [google.protobuf.Duration](#google.protobuf.Duration) |  | unbonding_time is the time duration of unbonding. |
+| `max_validators` | [uint32](#uint32) |  | max_validators is the maximum number of validators. |
+| `max_entries` | [uint32](#uint32) |  | max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio). |
+| `historical_entries` | [uint32](#uint32) |  | historical_entries is the number of historical entries to persist. |
+| `bond_denom` | [string](#string) |  | bond_denom defines the bondable coin denomination. |
 
 
 
@@ -5237,10 +5237,12 @@ from a particular source validator to a particular destination validator.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `delegator_address` | [string](#string) |  |  |
-| `validator_src_address` | [string](#string) |  |  |
-| `validator_dst_address` | [string](#string) |  |  |
-| `entries` | [RedelegationEntry](#cosmos.staking.v1beta1.RedelegationEntry) | repeated | redelegation entries |
+| `delegator_address` | [string](#string) |  | delegator_address is the bech32-encoded address of the delegator. |
+| `validator_src_address` | [string](#string) |  | validator_src_address is the validator redelegation source operator address. |
+| `validator_dst_address` | [string](#string) |  | validator_dst_address is the validator redelegation destination operator address. |
+| `entries` | [RedelegationEntry](#cosmos.staking.v1beta1.RedelegationEntry) | repeated | entries are the redelegation entries.
+
+redelegation entries |
 
 
 
@@ -5255,10 +5257,10 @@ RedelegationEntry defines a redelegation object with relevant metadata.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `creation_height` | [int64](#int64) |  |  |
-| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `initial_balance` | [string](#string) |  |  |
-| `shares_dst` | [string](#string) |  |  |
+| `creation_height` | [int64](#int64) |  | creation_height defines the height which the redelegation took place. |
+| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | completion_time defines the unix time for redelegation completion. |
+| `initial_balance` | [string](#string) |  | initial_balance defines the initial balance when redelegation started. |
+| `shares_dst` | [string](#string) |  | shares_dst is the amount of destination-validator shares created by redelegation. |
 
 
 
@@ -5310,9 +5312,11 @@ for a single validator in an time-ordered list.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `delegator_address` | [string](#string) |  |  |
-| `validator_address` | [string](#string) |  |  |
-| `entries` | [UnbondingDelegationEntry](#cosmos.staking.v1beta1.UnbondingDelegationEntry) | repeated | unbonding delegation entries |
+| `delegator_address` | [string](#string) |  | delegator_address is the bech32-encoded address of the delegator. |
+| `validator_address` | [string](#string) |  | validator_address is the bech32-encoded address of the validator. |
+| `entries` | [UnbondingDelegationEntry](#cosmos.staking.v1beta1.UnbondingDelegationEntry) | repeated | entries are the unbonding delegation entries.
+
+unbonding delegation entries |
 
 
 
@@ -5327,10 +5331,10 @@ UnbondingDelegationEntry defines an unbonding object with relevant metadata.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `creation_height` | [int64](#int64) |  |  |
-| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `initial_balance` | [string](#string) |  |  |
-| `balance` | [string](#string) |  |  |
+| `creation_height` | [int64](#int64) |  | creation_height is the height which the unbonding took place. |
+| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | completion_time is the unix time for unbonding completion. |
+| `initial_balance` | [string](#string) |  | initial_balance defines the tokens initially scheduled to receive at completion. |
+| `balance` | [string](#string) |  | balance defines the tokens to receive at completion. |
 
 
 
@@ -5367,17 +5371,17 @@ multiplied by exchange rate.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `operator_address` | [string](#string) |  |  |
-| `consensus_pubkey` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `jailed` | [bool](#bool) |  |  |
-| `status` | [BondStatus](#cosmos.staking.v1beta1.BondStatus) |  |  |
-| `tokens` | [string](#string) |  |  |
-| `delegator_shares` | [string](#string) |  |  |
-| `description` | [Description](#cosmos.staking.v1beta1.Description) |  |  |
-| `unbonding_height` | [int64](#int64) |  |  |
-| `unbonding_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `commission` | [Commission](#cosmos.staking.v1beta1.Commission) |  |  |
-| `min_self_delegation` | [string](#string) |  |  |
+| `operator_address` | [string](#string) |  | operator_address defines the address of the validator's operator; bech encoded in JSON. |
+| `consensus_pubkey` | [google.protobuf.Any](#google.protobuf.Any) |  | consensus_pubkey is the consensus public key of the validator, as a Protobuf Any. |
+| `jailed` | [bool](#bool) |  | jailed defined whether the validator has been jailed from bonded status or not. |
+| `status` | [BondStatus](#cosmos.staking.v1beta1.BondStatus) |  | status is the validator status (bonded/unbonding/unbonded). |
+| `tokens` | [string](#string) |  | tokens define the delegated tokens (incl. self-delegation). |
+| `delegator_shares` | [string](#string) |  | delegator_shares defines total shares issued to a validator's delegators. |
+| `description` | [Description](#cosmos.staking.v1beta1.Description) |  | description defines the description terms for the validator. |
+| `unbonding_height` | [int64](#int64) |  | unbonding_height defines, if unbonding, the height at which this validator has begun unbonding. |
+| `unbonding_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | unbonding_time defines, if unbonding, the min time for the validator to complete unbonding. |
+| `commission` | [Commission](#cosmos.staking.v1beta1.Commission) |  | commission defines the commission parameters. |
+| `min_self_delegation` | [string](#string) |  | min_self_delegation is the validator's self declared minimum self delegation. |
 
 
 

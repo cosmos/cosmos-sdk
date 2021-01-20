@@ -145,7 +145,7 @@ func Address(acc Acc) []byte {
     if acc is BaseAccount {
         return BaseAddress(typ, acc.PubKey())
     }
-    subacconts := acc.SubAcconts()
+    subaccounts := acc.SubAccounts()
     addresses := map(subaccount, Address)
     addresses = sort(addresses)
     n := len(addresses) - 1

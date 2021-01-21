@@ -12,10 +12,9 @@ import (
 
 // ClientUpdateProposal will retrieve the subject and substitute client.
 // The initial height must be greater than the latest height of the subject
-// client. The client types of the subject and subtitute must be identitical.
-// A callback will occur to the subject client state with the client prefixed
-// store being provided for both the subject and the substitute client. The
-// localhost client is not allowed to be modified with a proposal. The IBC
+// client. A callback will occur to the subject client state with the client
+// prefixed store being provided for both the subject and the substitute client.
+// The localhost client is not allowed to be modified with a proposal. The IBC
 // client implementations are responsible for validating the parameters of the
 // subtitute (enusring they match the subject's parameters) as well as copying
 // the necessary consensus states from the subtitute to the subject client
@@ -45,21 +44,16 @@ func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdatePropo
 		return sdkerrors.Wrapf(types.ErrClientNotFound, "substitute client with ID %s", p.SubstituteClientId)
 	}
 
-	// ensure the client types are identitical, this prevents a different client implementation from maliciously
-	// modifying the client prefixed store of the substitute
-	if subjectClientState.ClientType() != substituteClientState.ClientType() {
-		return sdkerrors.Wrapf(types.ErrInvalidClientType, "substitute client type %s does not match subject client type %s", substituteClientState.ClientType(), subjectClientState.ClientType())
-	}
-
 	// substitute clients with height across revision numbers is not allowed
 	if subjectClientState.GetLatestHeight().GetRevisionNumber() != substituteClientState.GetLatestHeight().GetRevisionNumber() {
 		return sdkerrors.Wrapf(types.ErrInvalidHeight, "subject client state and substitute client state must have the same revision number (%d != %d)", subjectClientState.GetLatestHeight().GetRevisionNumber(), substituteClientState.GetLatestHeight().GetRevisionNumber())
 	}
 
-	clientState, err := clientState.CheckSubstituteAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, p.SubjectClientId), k.ClientStore(ctx, p.SubstituteClientId), substituteClientState, p.InitialHeight)
+	clientState, err := subjectClientState.CheckSubstituteAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, p.SubjectClientId), k.ClientStore(ctx, p.SubstituteClientId), substituteClientState, p.InitialHeight)
 	if err != nil {
 		return err
 	}
+	k.SetClientState(ctx, p.SubjectClientId, clientState)
 
 	k.Logger(ctx).Info("client updated after governance proposal passed", "client-id", p.SubjectClientId, "height", clientState.GetLatestHeight().String())
 
@@ -79,7 +73,7 @@ func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdatePropo
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeUpdateClientProposal,
-			sdk.NewAttribute(types.AttributeKeySubjectClientId, p.SubjectClientId),
+			sdk.NewAttribute(types.AttributeKeySubjectClientID, p.SubjectClientId),
 			sdk.NewAttribute(types.AttributeKeyClientType, clientState.ClientType()),
 			sdk.NewAttribute(types.AttributeKeyConsensusHeight, clientState.GetLatestHeight().String()),
 		),

@@ -1,9 +1,7 @@
 package types
 
 import (
-	"time"
-
-	tmtypes "github.com/tendermint/tendermint/types"
+	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,21 +19,26 @@ import (
 // expired clients will also be updated even if AllowUpdateAfterExpiry is set to false.
 // Note, that even if the update happens, it may not be successful. The header may fail
 // validation checks and an error will be returned in that case.
-func (cs ClientState) CheckProposedHeaderAndUpdateState(
-	ctx sdk.Context, cdc codec.BinaryMarshaler, clientStore sdk.KVStore,
-	header exported.Header,
-) (exported.ClientState, exported.ConsensusState, error) {
-	tmHeader, ok := header.(*Header)
+func (cs ClientState) CheckSubstituteAndUpdateState(
+	ctx sdk.Context, cdc codec.BinaryMarshaler, subjectClientStore,
+	substituteClientStore sdk.KVStore, substituteClient exported.ClientState,
+	initialHeight exported.Height,
+) (exported.ClientState, error) {
+	substituteClientState, ok := substituteClient.(*ClientState)
 	if !ok {
-		return nil, nil, sdkerrors.Wrapf(
-			clienttypes.ErrInvalidHeader, "expected type %T, got %T", &Header{}, header,
+		return nil, sdkerrors.Wrapf(
+			clienttypes.ErrInvalidClient, "expected type %T, got %T", &ClientState{}, substituteClient,
 		)
 	}
 
+	if !IsMatchingClientState(cs, *substituteClientState) {
+		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidSubstitute, "subject client state does not match substitute client state")
+	}
+
 	// get consensus state corresponding to client state to check if the client is expired
-	consensusState, err := GetConsensusState(clientStore, cdc, cs.GetLatestHeight())
+	consensusState, err := GetConsensusState(subjectClientStore, cdc, cs.GetLatestHeight())
 	if err != nil {
-		return nil, nil, sdkerrors.Wrapf(
+		return nil, sdkerrors.Wrapf(
 			err, "could not get consensus state from clientstore at height: %d", cs.GetLatestHeight(),
 		)
 	}
@@ -44,84 +47,49 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 
 	case cs.IsFrozen():
 		if !cs.AllowUpdateAfterMisbehaviour {
-			return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "client is not allowed to be unfrozen")
+			return nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "client is not allowed to be unfrozen")
 		}
 
 		// unfreeze the client
 		cs.FrozenHeight = clienttypes.ZeroHeight()
 
-		// if the client is expired we unexpire the client using softer validation, otherwise
-		// full validation on the header is performed.
-		if cs.IsExpired(consensusState.Timestamp, ctx.BlockTime()) {
-			return cs.unexpireClient(ctx, clientStore, consensusState, tmHeader, ctx.BlockTime())
+	case cs.IsExpired(consensusState.Timestamp, ctx.BlockTime()):
+		if !cs.AllowUpdateAfterExpiry {
+			return nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "client is not allowed to be unexpired")
 		}
 
-		// NOTE: the client may be frozen again since the misbehaviour evidence may
-		// not be expired yet
-		return cs.CheckHeaderAndUpdateState(ctx, cdc, clientStore, header)
-
-	case cs.AllowUpdateAfterExpiry && cs.IsExpired(consensusState.Timestamp, ctx.BlockTime()):
-		return cs.unexpireClient(ctx, clientStore, consensusState, tmHeader, ctx.BlockTime())
-
 	default:
-		return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "client cannot be updated with proposal")
+		return nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "client cannot be updated with proposal")
 	}
 
+	// copy consensus states from substitute to subject starting from initial height
+	// and ending on the latest height (inclusive) of the substitute.
+	// CONTRACT: the revision number is same for substitute and subject
+	// as cheked in 02-client.
+	for i := initialHeight.GetRevisionHeight(); i <= substituteClientState.GetLatestHeight().GetRevisionHeight(); i++ {
+		height := clienttypes.NewHeight(substituteClientState.GetLatestHeight().GetRevisionNumber(), i)
+		consensusState, err := GetConsensusState(substituteClientStore, cdc, height)
+		if err != nil {
+			// not all consensus states will be filled in
+			continue
+		}
+
+		SetConsensusState(subjectClientStore, cdc, consensusState, height)
+	}
+
+	cs.LatestHeight = substituteClientState.LatestHeight
+
+	return &cs, nil
 }
 
-// unexpireClient checks if the proposed header is sufficient to update an expired client.
-// The client is updated if no error occurs.
-func (cs ClientState) unexpireClient(
-	ctx sdk.Context, clientStore sdk.KVStore, consensusState *ConsensusState, header *Header, currentTimestamp time.Time,
-) (exported.ClientState, exported.ConsensusState, error) {
+// IsMatchingClientState returns true if all the client state parameters match
+// except for frozen height and latest height.
+func IsMatchingClientState(subject, substitute ClientState) bool {
+	// zero out parameters which do not need to match
+	subject.LatestHeight = clienttypes.ZeroHeight()
+	subject.FrozenHeight = clienttypes.ZeroHeight()
+	substitute.LatestHeight = clienttypes.ZeroHeight()
+	substitute.FrozenHeight = clienttypes.ZeroHeight()
 
-	// the client is expired and either AllowUpdateAfterMisbehaviour or AllowUpdateAfterExpiry
-	// is set to true so light validation of the header is executed
-	if err := cs.checkProposedHeader(consensusState, header, currentTimestamp); err != nil {
-		return nil, nil, err
-	}
-
-	newClientState, consensusState := update(ctx, clientStore, &cs, header)
-	return newClientState, consensusState, nil
-}
-
-// checkProposedHeader checks if the Tendermint header is valid for updating a client after
-// a passed proposal.
-// It returns an error if:
-// - the header provided is not parseable to tendermint types
-// - header height is less than or equal to the latest client state height
-// - signed tendermint header is invalid
-// - header timestamp is less than or equal to the latest consensus state timestamp
-// - header timestamp is expired
-// NOTE: header.ValidateBasic is called in the 02-client proposal handler. Additional checks
-// on the validator set and the validator set hash are done in header.ValidateBasic.
-func (cs ClientState) checkProposedHeader(consensusState *ConsensusState, header *Header, currentTimestamp time.Time) error {
-	tmSignedHeader, err := tmtypes.SignedHeaderFromProto(header.SignedHeader)
-	if err != nil {
-		return sdkerrors.Wrap(err, "signed header in not tendermint signed header type")
-	}
-
-	if !header.GetTime().After(consensusState.Timestamp) {
-		return sdkerrors.Wrapf(
-			clienttypes.ErrInvalidHeader,
-			"header timestamp is less than or equal to latest consensus state timestamp (%s ≤ %s)", header.GetTime(), consensusState.Timestamp)
-	}
-
-	// assert header height is newer than latest client state
-	if header.GetHeight().LTE(cs.GetLatestHeight()) {
-		return sdkerrors.Wrapf(
-			clienttypes.ErrInvalidHeader,
-			"header height ≤ consensus state height (%s ≤ %s)", header.GetHeight(), cs.GetLatestHeight(),
-		)
-	}
-
-	if err := tmSignedHeader.ValidateBasic(cs.GetChainID()); err != nil {
-		return sdkerrors.Wrap(err, "signed header failed basic validation")
-	}
-
-	if cs.IsExpired(header.GetTime(), currentTimestamp) {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "header timestamp is already expired")
-	}
-
-	return nil
+	return reflect.DeepEqual(subject, substitute)
 }

@@ -326,13 +326,13 @@ func (k Keeper) ChannelOpenAck(goCtx context.Context, msg *channeltypes.MsgChann
 		return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 	}
 
-	if err = cbs.OnChanOpenAck(ctx, msg.PortId, msg.ChannelId, msg.CounterpartyVersion); err != nil {
-		return nil, sdkerrors.Wrap(err, "channel open ack callback failed")
-	}
-
 	_, err = channel.HandleMsgChannelOpenAck(ctx, k.ChannelKeeper, cap, msg)
 	if err != nil {
 		return nil, err
+	}
+
+	if err = cbs.OnChanOpenAck(ctx, msg.PortId, msg.ChannelId, msg.CounterpartyVersion); err != nil {
+		return nil, sdkerrors.Wrap(err, "channel open ack callback failed")
 	}
 
 	return &channeltypes.MsgChannelOpenAckResponse{}, nil
@@ -354,13 +354,13 @@ func (k Keeper) ChannelOpenConfirm(goCtx context.Context, msg *channeltypes.MsgC
 		return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 	}
 
-	if err = cbs.OnChanOpenConfirm(ctx, msg.PortId, msg.ChannelId); err != nil {
-		return nil, sdkerrors.Wrap(err, "channel open confirm callback failed")
-	}
-
 	_, err = channel.HandleMsgChannelOpenConfirm(ctx, k.ChannelKeeper, cap, msg)
 	if err != nil {
 		return nil, err
+	}
+
+	if err = cbs.OnChanOpenConfirm(ctx, msg.PortId, msg.ChannelId); err != nil {
+		return nil, sdkerrors.Wrap(err, "channel open confirm callback failed")
 	}
 
 	return &channeltypes.MsgChannelOpenConfirmResponse{}, nil

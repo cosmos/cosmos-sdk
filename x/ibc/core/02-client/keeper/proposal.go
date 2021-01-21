@@ -10,13 +10,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
-// ClientUpdateProposal will try to update the client with the new header if and only if
-// the proposal passes. The localhost client is not allowed to be modified with a proposal.
-// intitial height must be after latest height of subject client
-
-// TODO:
-// light clients handle copying and verification of the substitute
-// don't allow substitutes which have a different revision number
+// ClientUpdateProposal will retrieve the subject and substitute client.
+// The initial height must be greater than the latest height of the subject
+// client. The client types of the subject and subtitute must be identitical.
+// A callback will occur to the subject client state with the client prefixed
+// store being provided for both the subject and the substitute client. The
+// localhost client is not allowed to be modified with a proposal. The IBC
+// client implementations are responsible for validating the parameters of the
+// subtitute (enusring they match the subject's parameters) as well as copying
+// the necessary consensus states from the subtitute to the subject client
+// store.
+//
+// NOTE: Substitute clients with revision numbers not equal to the revision
+// number of the subject client is explicityly disallowed. We cannot support
+// this until there is a way to range query for the all the consensus
+// states which occurred between two IBC Revision heights.
+// https://github.com/cosmos/cosmos-sdk/issues/7712
 func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdateProposal) error {
 	if p.SubjectClientId == exported.Localhost {
 		return sdkerrors.Wrap(types.ErrInvalidUpdateClientProposal, "cannot update localhost client with proposal")
@@ -36,7 +45,18 @@ func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdatePropo
 		return sdkerrors.Wrapf(types.ErrClientNotFound, "substitute client with ID %s", p.SubstituteClientId)
 	}
 
-	clientState, consensusState, err := clientState.CheckSubstituteAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, p.SubjectClientId), k.ClientStore(ctx, p.SubstituteClientId), p.InitialHeight)
+	// ensure the client types are identitical, this prevents a different client implementation from maliciously
+	// modifying the client prefixed store of the substitute
+	if subjectClientState.ClientType() != substituteClientState.ClientType() {
+		return sdkerrors.Wrapf(types.ErrInvalidClientType, "substitute client type %s does not match subject client type %s", substituteClientState.ClientType(), subjectClientState.ClientType())
+	}
+
+	// substitute clients with height across revision numbers is not allowed
+	if subjectClientState.GetLatestHeight().GetRevisionNumber() != substituteClientState.GetLatestHeight().GetRevisionNumber() {
+		return sdkerrors.Wrapf(types.ErrInvalidHeight, "subject client state and substitute client state must have the same revision number (%d != %d)", subjectClientState.GetLatestHeight().GetRevisionNumber(), substituteClientState.GetLatestHeight().GetRevisionNumber())
+	}
+
+	clientState, err := clientState.CheckSubstituteAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, p.SubjectClientId), k.ClientStore(ctx, p.SubstituteClientId), substituteClientState, p.InitialHeight)
 	if err != nil {
 		return err
 	}
@@ -61,7 +81,7 @@ func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdatePropo
 			types.EventTypeUpdateClientProposal,
 			sdk.NewAttribute(types.AttributeKeySubjectClientId, p.SubjectClientId),
 			sdk.NewAttribute(types.AttributeKeyClientType, clientState.ClientType()),
-			sdk.NewAttribute(types.AttributeKeyConsensusHeight, header.GetHeight().String()),
+			sdk.NewAttribute(types.AttributeKeyConsensusHeight, clientState.GetLatestHeight().String()),
 		),
 	)
 

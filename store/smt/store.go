@@ -26,6 +26,13 @@ type Store struct {
 	tree *smt.SparseMerkleTree
 	db   dbm.DB
 
+	version int64
+
+	opts struct {
+		initialVersion int64
+		pruningOptions types.PruningOptions
+	}
+
 	mtx sync.RWMutex
 }
 
@@ -126,19 +133,29 @@ func (s *Store) ReverseIterator(start []byte, end []byte) types.Iterator {
 // CommitStore interface below:
 
 func (s *Store) Commit() types.CommitID {
-	panic("not implemented") // TODO(tzdybal): Implement
+	version := s.version + 1
+
+	if version == 1 && s.opts.initialVersion != 0 {
+		version = s.opts.initialVersion
+	}
+
+	s.version = version
+	return s.LastCommitID()
 }
 
 func (s *Store) LastCommitID() types.CommitID {
-	panic("not implemented") // TODO(tzdybal): Implement
+	return types.CommitID{
+		Version: s.version,
+		Hash:    s.tree.Root(),
+	}
 }
 
-func (s *Store) SetPruning(_ types.PruningOptions) {
-	panic("not implemented") // TODO(tzdybal): Implement
+func (s *Store) SetPruning(p types.PruningOptions) {
+	s.opts.pruningOptions = p
 }
 
 func (s *Store) GetPruning() types.PruningOptions {
-	panic("not implemented") // TODO(tzdybal): Implement
+	return s.opts.pruningOptions
 }
 
 // Queryable interface below:
@@ -152,5 +169,5 @@ func (s *Store) Query(_ abci.RequestQuery) abci.ResponseQuery {
 // SetInitialVersion sets the initial version of the IAVL tree. It is used when
 // starting a new chain at an arbitrary height.
 func (s *Store) SetInitialVersion(version int64) {
-	panic("not implemented") // TODO(tzdybal): Implement
+	s.opts.initialVersion = version
 }

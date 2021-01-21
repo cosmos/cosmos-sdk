@@ -51,7 +51,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 			func(res *types.QueryAuthorizationResponse) {},
 		},
 		{
-			"Succcess",
+			"Success",
 			func() {
 				now := ctx.BlockHeader().Time
 				newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))

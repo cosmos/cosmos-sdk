@@ -69,8 +69,8 @@ In the issue we discussed various modifications:
 
 ### Scope
 
-This ADR defines only an address bytes. The for the API level we already use bech32 and this ADR doesn't change that.
-Bech32 support checsum error codes and handles user typos.
+This ADR only defines a process for the generation of address bytes. For end-user interactions with addresses (through the API, or CLI, etc.), we still use bech32 to format these addresses as strings. This ADR doesn't change that.
+Using bech32 for string encoding gives us support for checsum error codes and handling of user typos.
 
 
 ## Decision

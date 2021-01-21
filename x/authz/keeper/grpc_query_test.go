@@ -79,7 +79,6 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 			testCase.malleate()
 			result, err := queryClient.Authorization(gocontext.Background(), req)
 			if testCase.expPass {
-				fmt.Println(result)
 				suite.Require().NoError(err)
 			} else {
 				suite.Require().Error(err)

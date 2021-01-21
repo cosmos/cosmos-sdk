@@ -7,9 +7,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
+	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -43,7 +46,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	val := s.network.Validators[0]
 	granter := val.Address
-	grantee := s.network.Validators[1].Address
+
+	// creating a account manually (This won't existed in accounts store)
+	_, _, grantee := testdata.KeyTestPubAddr()
 
 	clientCtx := val.ClientCtx
 	commonFlags := []string{
@@ -86,7 +91,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 	val := s.network.Validators[0]
 	granter := val.Address
-	grantee := s.network.Validators[1].Address
+	grantee := s.addedGrantee
 	clientCtx := val.ClientCtx
 
 	testCases := []struct {
@@ -167,9 +172,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 
 func (s *IntegrationTestSuite) TestCmdGetFeeGrants() {
 	val := s.network.Validators[0]
-	granter := val.Address
-	_ = granter
-	grantee := s.network.Validators[1].Address
+	grantee := s.addedGrantee
 	clientCtx := val.ClientCtx
 
 	testCases := []struct {
@@ -226,7 +229,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrants() {
 func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 	val := s.network.Validators[0]
 	granter := val.Address
-	grantee := s.network.Validators[1].Address
+	alreadyExistedGrantee := s.addedGrantee
 	clientCtx := val.ClientCtx
 
 	commonFlags := []string{
@@ -247,7 +250,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 			append(
 				[]string{
 					"wrong_granter",
-					grantee.String(),
+					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
 					"100steak",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
@@ -269,7 +272,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 			true, nil, 0,
 		},
 		{
-			"Valid basic fee grant",
+			"valid basic fee grant",
 			append(
 				[]string{
 					granter.String(),
@@ -282,11 +285,24 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 			false, &sdk.TxResponse{}, 0,
 		},
 		{
+			"try to add existed grant",
+			append(
+				[]string{
+					granter.String(),
+					alreadyExistedGrantee.String(),
+					"100steak",
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				},
+				commonFlags...,
+			),
+			false, &sdk.TxResponse{}, 18,
+		},
+		{
 			"invalid number of args(periodic fee grant)",
 			append(
 				[]string{
 					granter.String(),
-					grantee.String(),
+					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
 					"100steak",
 					"10steak",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
@@ -301,7 +317,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 			append(
 				[]string{
 					granter.String(),
-					grantee.String(),
+					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
 					"100steak",
 					fmt.Sprintf("%d", 10*60*60), //period
 					"10steak",
@@ -313,7 +329,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 			true, nil, 0,
 		},
 		{
-			"Valid periodic fee grant",
+			"valid periodic fee grant",
 			append(
 				[]string{
 					granter.String(),
@@ -445,6 +461,19 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 			}
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
+	val := s.network.Validators[0]
+	granter := s.addedGranter
+	grantee := s.addedGrantee
+
+	out, err := govtestutil.MsgSubmitProposal(val.ClientCtx, grantee.String(),
+		"Text Proposal", "No title", govtypes.ProposalTypeText,
+		fmt.Sprintf("--%s=%s", flags.FlagFeeAccount, granter.String()),
+	)
+
+	fmt.Println("out, err", out, err)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

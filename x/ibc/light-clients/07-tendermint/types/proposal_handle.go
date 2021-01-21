@@ -68,13 +68,20 @@ func (cs ClientState) CheckSubstituteAndUpdateState(
 	// as cheked in 02-client.
 	for i := initialHeight.GetRevisionHeight(); i <= substituteClientState.GetLatestHeight().GetRevisionHeight(); i++ {
 		height := clienttypes.NewHeight(substituteClientState.GetLatestHeight().GetRevisionNumber(), i)
+
 		consensusState, err := GetConsensusState(substituteClientStore, cdc, height)
 		if err != nil {
 			// not all consensus states will be filled in
 			continue
 		}
-
 		SetConsensusState(subjectClientStore, cdc, consensusState, height)
+
+		processedTime, found := GetProcessedTime(substituteClientStore, height)
+		if !found {
+			continue
+		}
+		SetProcessedTime(subjectClientStore, height, processedTime)
+
 	}
 
 	cs.LatestHeight = substituteClientState.LatestHeight

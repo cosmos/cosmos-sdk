@@ -49,7 +49,7 @@ message ClientUpdateProposal {
   // the substitute client identifier for the client standing in for the subject client
   string substitute_client_id = 4 [(gogoproto.moretags) = "yaml:\"subtitute_client_id\""];
   // the intital height to copy consensus states from the substitute to the subject
-  Height initial_height = 5 [(gogoproto.moretags) = "yaml:\"initial_height\""];
+  Height initial_height = 5 [(gogoproto.moretags) = "yaml:\"initial_height\"", (gogoproto.nullable) = false];
 }
 
 // Height is a monotonically increasing data type

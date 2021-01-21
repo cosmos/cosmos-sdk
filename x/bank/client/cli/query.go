@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -33,6 +32,7 @@ func GetQueryCmd() *cobra.Command {
 	cmd.AddCommand(
 		GetBalancesCmd(),
 		GetCmdQueryTotalSupply(),
+		GetCmdDenomsMetadata(),
 	)
 
 	return cmd
@@ -78,7 +78,7 @@ Example:
 			if denom == "" {
 				params := types.NewQueryAllBalancesRequest(addr, pageReq)
 
-				res, err := queryClient.AllBalances(context.Background(), params)
+				res, err := queryClient.AllBalances(cmd.Context(), params)
 				if err != nil {
 					return err
 				}
@@ -86,7 +86,7 @@ Example:
 			}
 
 			params := types.NewQueryBalanceRequest(addr, denom)
-			res, err := queryClient.Balance(context.Background(), params)
+			res, err := queryClient.Balance(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
@@ -98,6 +98,60 @@ Example:
 	cmd.Flags().String(FlagDenom, "", "The specific balance denomination to query for")
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "all balances")
+
+	return cmd
+}
+
+// GetCmdDenomsMetadata defines the cobra command to query client denomination metadata.
+func GetCmdDenomsMetadata() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "denom-metadata",
+		Short: "Query the client metadata for coin denominations",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query the client metadata for all the registered coin denominations
+
+Example:
+  To query for the client metadata of all coin denominations use:
+  $ %s query %s denom-metadata
+
+To query for the client metadata of a specific coin denomination use:
+  $ %s query %s denom-metadata --denom=[denom]
+`,
+				version.AppName, types.ModuleName, version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			denom, err := cmd.Flags().GetString(FlagDenom)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			if denom == "" {
+				res, err := queryClient.DenomsMetadata(cmd.Context(), &types.QueryDenomsMetadataRequest{})
+				if err != nil {
+					return err
+				}
+
+				return clientCtx.PrintProto(res)
+			}
+
+			res, err := queryClient.DenomMetadata(cmd.Context(), &types.QueryDenomMetadataRequest{Denom: denom})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	cmd.Flags().String(FlagDenom, "", "The specific denomination to query client metadata for")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -131,7 +185,7 @@ To query for the total supply of a specific coin denomination use:
 			queryClient := types.NewQueryClient(clientCtx)
 
 			if denom == "" {
-				res, err := queryClient.TotalSupply(context.Background(), &types.QueryTotalSupplyRequest{})
+				res, err := queryClient.TotalSupply(cmd.Context(), &types.QueryTotalSupplyRequest{})
 				if err != nil {
 					return err
 				}
@@ -139,7 +193,7 @@ To query for the total supply of a specific coin denomination use:
 				return clientCtx.PrintProto(res)
 			}
 
-			res, err := queryClient.SupplyOf(context.Background(), &types.QuerySupplyOfRequest{Denom: denom})
+			res, err := queryClient.SupplyOf(cmd.Context(), &types.QuerySupplyOfRequest{Denom: denom})
 			if err != nil {
 				return err
 			}

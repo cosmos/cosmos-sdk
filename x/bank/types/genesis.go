@@ -16,6 +16,8 @@ func (gs GenesisState) Validate() error {
 	}
 
 	seenBalances := make(map[string]bool)
+	seenMetadatas := make(map[string]bool)
+
 	for _, balance := range gs.Balances {
 		if seenBalances[balance.Address] {
 			return fmt.Errorf("duplicate balance for address %s", balance.Address)
@@ -28,6 +30,19 @@ func (gs GenesisState) Validate() error {
 		seenBalances[balance.Address] = true
 	}
 
+	for _, metadata := range gs.DenomMetadata {
+		if seenMetadatas[metadata.Base] {
+			return fmt.Errorf("duplicate client metadata for denom %s", metadata.Base)
+		}
+
+		if err := metadata.Validate(); err != nil {
+			return err
+		}
+
+		seenMetadatas[metadata.Base] = true
+	}
+
+	// NOTE: this errors if supply for any given coin is zero
 	return NewSupply(gs.Supply).ValidateBasic()
 }
 

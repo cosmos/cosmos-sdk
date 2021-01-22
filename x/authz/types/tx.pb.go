@@ -35,7 +35,7 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgGrantAuthorization grants the provided authorization to the grantee on the granter's
+// MsgGrantAuthorizationRequest grants the provided authorization to the grantee on the granter's
 // account with the provided expiration time.
 type MsgGrantAuthorizationRequest struct {
 	Granter       string     `protobuf:"bytes,1,opt,name=granter,proto3" json:"granter,omitempty"`
@@ -150,7 +150,7 @@ func (m *MsgExecAuthorizedResponse) GetResult() *types1.Result {
 	return nil
 }
 
-// MsgExecAuthorized attempts to execute the provided messages using
+// MsgExecAuthorizedRequest attempts to execute the provided messages using
 // authorizations granted to the grantee. Each message should have only
 // one signer corresponding to the granter of the authorization.
 type MsgExecAuthorizedRequest struct {

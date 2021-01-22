@@ -19,11 +19,12 @@ message SendAuthorization {
 }
 
 // GenericAuthorization gives the grantee unrestricted permissions to execute
-// the provide method on behalf of the granter's account.
+// the provided method on behalf of the granter's account.
 message GenericAuthorization {
   option (cosmos_proto.implements_interface) = "Authorization";
 
-  // MethodName() is already a method on `GenericAuthorization` type,
+  // method name to grant unrestricted permissions to execute
+  // Note: MethodName() is already a method on `GenericAuthorization` type,
   // we need some custom naming here so using `MessageName`
   string method_name = 1 [(gogoproto.customname) = "MessageName"];
 }

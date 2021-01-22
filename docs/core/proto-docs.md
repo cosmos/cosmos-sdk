@@ -1015,12 +1015,12 @@ the provide method with expiration time.
 
 ### GenericAuthorization
 GenericAuthorization gives the grantee unrestricted permissions to execute
-the provide method on behalf of the granter's account.
+the provided method on behalf of the granter's account.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `method_name` | [string](#string) |  |  |
+| `method_name` | [string](#string) |  | method name to grant unrestricted permissions to execute Note: MethodName() is already a method on `GenericAuthorization` type, we need some custom naming here so using `MessageName` |
 
 
 

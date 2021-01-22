@@ -78,8 +78,11 @@ func (m *SendAuthorization) GetSpendLimit() github_com_cosmos_cosmos_sdk_types.C
 }
 
 // GenericAuthorization gives the grantee unrestricted permissions to execute
-// the provide method on behalf of the granter's account.
+// the provided method on behalf of the granter's account.
 type GenericAuthorization struct {
+	// method name to grant unrestricted permissions to execute
+	// Note: MethodName() is already a method on `GenericAuthorization` type,
+	// we need some custom naming here so using `MessageName`
 	MessageName string `protobuf:"bytes,1,opt,name=method_name,json=methodName,proto3" json:"method_name,omitempty"`
 }
 

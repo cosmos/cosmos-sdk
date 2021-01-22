@@ -49,6 +49,7 @@ func (a FeeAllowanceGrant) ValidateBasic() error {
 	return a.GetFeeGrant().ValidateBasic()
 }
 
+// GetFeeGrant unpacks allowance
 func (a FeeAllowanceGrant) GetFeeGrant() FeeAllowanceI {
 	allowance, ok := a.Allowance.GetCachedValue().(FeeAllowanceI)
 	if !ok {
@@ -56,7 +57,6 @@ func (a FeeAllowanceGrant) GetFeeGrant() FeeAllowanceI {
 	}
 
 	return allowance
-	// return a.Allowance.GetFeeAllowanceI()
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -65,7 +65,7 @@ func (a FeeAllowanceGrant) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return unpacker.UnpackAny(a.Allowance, &allowance)
 }
 
-// PrepareForExport will m	ake all needed changes to the allowance to prepare to be
+// PrepareForExport will make all needed changes to the allowance to prepare to be
 // re-imported at height 0, and return a copy of this grant.
 func (a FeeAllowanceGrant) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceGrant {
 	feegrant := a.GetFeeGrant().PrepareForExport(dumpTime, dumpHeight)

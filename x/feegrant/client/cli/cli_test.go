@@ -47,7 +47,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	val := s.network.Validators[0]
 	granter := val.Address
 
-	// creating a account manually (This won't existed in accounts store)
+	// creating an account manually (This won't exist in accounts store)
 	_, _, grantee := testdata.KeyTestPubAddr()
 
 	clientCtx := val.ClientCtx
@@ -469,7 +469,7 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 	grantee := s.addedGrantee
 
 	out, err := govtestutil.MsgSubmitProposal(val.ClientCtx, grantee.String(),
-		"Text Proposal", "No title", govtypes.ProposalTypeText,
+		"Text Proposal", "No desc", govtypes.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", flags.FlagFeeAccount, granter.String()),
 	)
 

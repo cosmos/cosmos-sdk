@@ -289,7 +289,7 @@ func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 	return app, ctx
 }
 
-// don't cosume any gas
+// don't consume any gas
 func SigGasNoConsumer(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params authtypes.Params) error {
 	return nil
 }

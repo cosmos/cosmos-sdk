@@ -48,7 +48,7 @@ func NewCmdFeeGrant() *cobra.Command {
 		Short: "Grant Fee allowance to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(
-				`Grant authorization to use fee from your address. Note, the'--from' flag is
+				`Grant authorization to pay fees from your address. Note, the'--from' flag is
 				ignored as it is implied from [granter].
 
 Examples:

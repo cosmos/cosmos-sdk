@@ -11,8 +11,8 @@ import (
 )
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
-// numbers, checks signatures & account numbers, and deducts fees from the first
-// signer.
+// numbers, checks signatures & account numbers, and deducts fees from the
+// fee_payer or from fee_granter (if valid grant exist).
 func NewAnteHandler(
 	ak authkeeper.AccountKeeper, bankKeeper feegranttypes.BankKeeper, feeGrantKeeper feegrantkeeper.Keeper,
 	sigGasConsumer authante.SignatureVerificationGasConsumer, signModeHandler signing.SignModeHandler,

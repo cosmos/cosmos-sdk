@@ -36,7 +36,7 @@ func (e ExpiresAt) ValidateBasic() error {
 	return nil
 }
 
-// IsZero returns true for an uninitialized struct
+// Undefined returns true for an uninitialized struct
 func (e ExpiresAt) Undefined() bool {
 	return (e.GetTime() == nil || e.GetTime().Unix() <= 0) && e.GetHeight() == 0
 }

@@ -202,7 +202,6 @@ func execFeeAllowance(val *network.Validator, s *IntegrationTestSuite) {
 	cmd := cli.NewCmdFeeGrant()
 	_, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 	s.Require().NoError(err)
-
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

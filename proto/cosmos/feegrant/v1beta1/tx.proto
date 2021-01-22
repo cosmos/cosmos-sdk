@@ -22,7 +22,6 @@ service Msg {
 // MsgGrantFeeAllowance adds permission for Grantee to spend up to Allowance
 // of fees from the account of Granter.
 message MsgGrantFeeAllowance {
-
   string              granter   = 1;
   string              grantee   = 2;
   google.protobuf.Any allowance = 3 [(cosmos_proto.accepts_interface) = "FeeAllowanceI"];

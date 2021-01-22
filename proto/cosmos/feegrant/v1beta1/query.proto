@@ -10,6 +10,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant/types";
 
 // Query defines the gRPC querier service.
 service Query {
+  
   // FeeAllowance returns fee granted to the grantee by the granter.
   rpc FeeAllowance(QueryFeeAllowanceRequest) returns (QueryFeeAllowanceResponse) {
     option (google.api.http).get = "/cosmos/feegrant/v1beta1/fee_allowance/{granter}/{grantee}";

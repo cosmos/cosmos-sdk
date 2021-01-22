@@ -116,7 +116,6 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 		},
 		"addr has one": {
 			grantee: suite.addrs[0],
-			// grants:  []types.FeeAllowanceGrant{{Granter: suite.addrs[3], Grantee: suite.addrs[0], Allowance: basic2}},
 			grants: []types.FeeAllowanceGrant{
 				types.NewFeeAllowanceGrant(suite.addrs[3], suite.addrs[0], basic2),
 			},

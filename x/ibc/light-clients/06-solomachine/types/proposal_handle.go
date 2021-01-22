@@ -20,7 +20,7 @@ import (
 func (cs ClientState) CheckSubstituteAndUpdateState(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, subjectClientStore,
 	_ sdk.KVStore, substituteClient exported.ClientState,
-	inittialHeight exported.Height,
+	_ exported.Height,
 ) (exported.ClientState, error) {
 
 	if !cs.AllowUpdateAfterProposal {

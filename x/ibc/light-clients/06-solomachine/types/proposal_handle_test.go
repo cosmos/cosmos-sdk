@@ -8,7 +8,10 @@ import (
 )
 
 func (suite *SoloMachineTestSuite) TestCheckProposedHeaderAndUpdateState() {
-	var header exported.Header
+	var (
+		subjectClientState    *types.ClientState
+		substituteClientState exported.ClientState
+	)
 
 	// test singlesig and multisig public keys
 	for _, solomachine := range []*ibctesting.Solomachine{suite.solomachine, suite.solomachineMulti} {
@@ -19,21 +22,34 @@ func (suite *SoloMachineTestSuite) TestCheckProposedHeaderAndUpdateState() {
 			expPass  bool
 		}{
 			{
-				"valid header", func() {
-					header = solomachine.CreateHeader()
+				"valid substitute", func() {
+					subjectClientState.AllowUpdateAfterProposal = true
 				}, true,
 			},
 			{
-				"nil header", func() {
-					header = &ibctmtypes.Header{}
+				"subject not allowed to be updated", func() {
+					subjectClientState.AllowUpdateAfterProposal = false
 				}, false,
 			},
 			{
-				"header does not update public key", func() {
-					header = &types.Header{
-						Sequence:     1,
-						NewPublicKey: solomachine.ConsensusState().PublicKey,
-					}
+				"substitute is not the solo machine", func() {
+					substituteClientState = &ibctmtypes.ClientState{}
+				}, false,
+			},
+			{
+				"subject public key is nil", func() {
+					subjectClientState.ConsensusState.PublicKey = nil
+				}, false,
+			},
+
+			{
+				"substitute public key is nil", func() {
+					substituteClientState.(*types.ClientState).ConsensusState.PublicKey = nil
+				}, false,
+			},
+			{
+				"subject and substitute use the same public key", func() {
+					substituteClientState.(*types.ClientState).ConsensusState.PublicKey = subjectClientState.ConsensusState.PublicKey
 				}, false,
 			},
 		}
@@ -44,46 +60,27 @@ func (suite *SoloMachineTestSuite) TestCheckProposedHeaderAndUpdateState() {
 			suite.Run(tc.name, func() {
 				suite.SetupTest()
 
-				clientState := solomachine.ClientState()
+				subjectClientState = solomachine.ClientState()
+				subjectClientState.AllowUpdateAfterProposal = true
+				substitute := ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "substitute", "testing", 5)
+				substituteClientState = substitute.ClientState()
 
 				tc.malleate()
 
-				clientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), solomachine.ClientID)
+				subjectClientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), solomachine.ClientID)
+				substituteClientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), substitute.ClientID)
 
-				// all cases should always fail if the client has 'AllowUpdateAfterProposal' set to false
-				clientState.AllowUpdateAfterProposal = false
-				cs, consState, err := clientState.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), clientStore, header)
-				suite.Require().Error(err)
-				suite.Require().Nil(cs)
-				suite.Require().Nil(consState)
-
-				clientState.AllowUpdateAfterProposal = true
-				cs, consState, err = clientState.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), clientStore, header)
+				updatedClient, err := subjectClientState.CheckSubstituteAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), subjectClientStore, substituteClientStore, substituteClientState, nil)
 
 				if tc.expPass {
 					suite.Require().NoError(err)
 
-					smConsState, ok := consState.(*types.ConsensusState)
-					suite.Require().True(ok)
-					smHeader, ok := header.(*types.Header)
-					suite.Require().True(ok)
-
-					suite.Require().Equal(cs.(*types.ClientState).ConsensusState, consState)
-
-					headerPubKey, err := smHeader.GetPubKey()
-					suite.Require().NoError(err)
-
-					consStatePubKey, err := smConsState.GetPubKey()
-					suite.Require().NoError(err)
-
-					suite.Require().Equal(headerPubKey, consStatePubKey)
-					suite.Require().Equal(smHeader.NewDiversifier, smConsState.Diversifier)
-					suite.Require().Equal(smHeader.Timestamp, smConsState.Timestamp)
-					suite.Require().Equal(smHeader.GetHeight().GetRevisionHeight(), cs.(*types.ClientState).Sequence)
+					suite.Require().Equal(substituteClientState.(*types.ClientState).ConsensusState, updatedClient.(*types.ClientState).ConsensusState)
+					suite.Require().Equal(substituteClientState.(*types.ClientState).Sequence, updatedClient.(*types.ClientState).Sequence)
+					suite.Require().Equal(uint64(0), updatedClient.(*types.ClientState).FrozenSequence)
 				} else {
 					suite.Require().Error(err)
-					suite.Require().Nil(cs)
-					suite.Require().Nil(consState)
+					suite.Require().Nil(updatedClient)
 				}
 			})
 		}

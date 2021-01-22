@@ -18,7 +18,7 @@ service Msg {
 
   // ConnectionOpenAck defines a rpc handler method for MsgConnectionOpenAck.
   rpc ConnectionOpenAck(MsgConnectionOpenAck) returns (MsgConnectionOpenAckResponse);
-  
+
   // ConnectionOpenConfirm defines a rpc handler method for MsgConnectionOpenConfirm.
   rpc ConnectionOpenConfirm(MsgConnectionOpenConfirm) returns (MsgConnectionOpenConfirmResponse);
 }
@@ -29,15 +29,15 @@ message MsgConnectionOpenInit {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string       client_id     = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
-  string       connection_id = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
-  Counterparty counterparty  = 3 [(gogoproto.nullable) = false];
-  Version      version       = 4;
-  string       signer        = 5;
+  string       client_id    = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  Counterparty counterparty = 2 [(gogoproto.nullable) = false];
+  Version      version      = 3;
+  uint64       delay_period = 4 [(gogoproto.moretags) = "yaml:\"delay_period\""];
+  string       signer       = 5;
 }
 
 // MsgConnectionOpenInitResponse defines the Msg/ConnectionOpenInit response type.
-message MsgConnectionOpenInitResponse { }
+message MsgConnectionOpenInitResponse {}
 
 // MsgConnectionOpenTry defines a msg sent by a Relayer to try to open a
 // connection on Chain B.
@@ -45,13 +45,15 @@ message MsgConnectionOpenTry {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string client_id                         = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
-  string desired_connection_id             = 2 [(gogoproto.moretags) = "yaml:\"desired_connection_id\""];
-  string counterparty_chosen_connection_id = 3 [(gogoproto.moretags) = "yaml:\"counterparty_chosen_connection_id\""];
-  google.protobuf.Any client_state         = 4 [(gogoproto.moretags) = "yaml:\"client_state\""];
-  Counterparty        counterparty         = 5 [(gogoproto.nullable) = false];
-  repeated Version           counterparty_versions = 6 [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
-  ibc.core.client.v1.Height proof_height          = 7
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // in the case of crossing hello's, when both chains call OpenInit, we need the connection identifier
+  // of the previous connection in state INIT
+  string                    previous_connection_id = 2 [(gogoproto.moretags) = "yaml:\"previous_connection_id\""];
+  google.protobuf.Any       client_state           = 3 [(gogoproto.moretags) = "yaml:\"client_state\""];
+  Counterparty              counterparty           = 4 [(gogoproto.nullable) = false];
+  uint64                    delay_period           = 5 [(gogoproto.moretags) = "yaml:\"delay_period\""];
+  repeated Version          counterparty_versions  = 6 [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
+  ibc.core.client.v1.Height proof_height           = 7
       [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
   // proof of the initialization the connection on Chain A: `UNITIALIZED ->
   // INIT`
@@ -66,7 +68,7 @@ message MsgConnectionOpenTry {
 }
 
 // MsgConnectionOpenTryResponse defines the Msg/ConnectionOpenTry response type.
-message MsgConnectionOpenTryResponse { }
+message MsgConnectionOpenTryResponse {}
 
 // MsgConnectionOpenAck defines a msg sent by a Relayer to Chain A to
 // acknowledge the change of connection state to TRYOPEN on Chain B.
@@ -93,7 +95,7 @@ message MsgConnectionOpenAck {
 }
 
 // MsgConnectionOpenAckResponse defines the Msg/ConnectionOpenAck response type.
-message MsgConnectionOpenAckResponse { }
+message MsgConnectionOpenAckResponse {}
 
 // MsgConnectionOpenConfirm defines a msg sent by a Relayer to Chain B to
 // acknowledge the change of connection state to OPEN on Chain A.
@@ -110,4 +112,4 @@ message MsgConnectionOpenConfirm {
 }
 
 // MsgConnectionOpenConfirmResponse defines the Msg/ConnectionOpenConfirm response type.
-message MsgConnectionOpenConfirmResponse { }
+message MsgConnectionOpenConfirmResponse {}

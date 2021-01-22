@@ -38,6 +38,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 func (suite *KeeperTestSuite) TestInitializeAndSeal() {
 	sk := suite.keeper.ScopeToModule(banktypes.ModuleName)
+	suite.Require().Panics(func() {
+		suite.keeper.ScopeToModule("  ")
+	})
 
 	caps := make([]*types.Capability, 5)
 	// Get Latest Index before creating new ones to sychronize indices correctly
@@ -105,6 +108,10 @@ func (suite *KeeperTestSuite) TestNewCapability() {
 	suite.Require().True(ok)
 	suite.Require().Equal(cap, got)
 	suite.Require().True(cap == got, "expected memory addresses to be equal")
+
+	cap, err = sk.NewCapability(suite.ctx, "   ")
+	suite.Require().Error(err)
+	suite.Require().Nil(cap)
 }
 
 func (suite *KeeperTestSuite) TestOriginalCapabilityKeeper() {
@@ -151,11 +158,15 @@ func (suite *KeeperTestSuite) TestAuthenticateCapability() {
 	badCap := types.NewCapability(100)
 	suite.Require().False(sk1.AuthenticateCapability(suite.ctx, badCap, "transfer"))
 	suite.Require().False(sk2.AuthenticateCapability(suite.ctx, badCap, "bond"))
+
+	suite.Require().False(sk1.AuthenticateCapability(suite.ctx, cap1, "  "))
+	suite.Require().False(sk1.AuthenticateCapability(suite.ctx, nil, "transfer"))
 }
 
 func (suite *KeeperTestSuite) TestClaimCapability() {
 	sk1 := suite.keeper.ScopeToModule(banktypes.ModuleName)
 	sk2 := suite.keeper.ScopeToModule(stakingtypes.ModuleName)
+	sk3 := suite.keeper.ScopeToModule("foo")
 
 	cap, err := sk1.NewCapability(suite.ctx, "transfer")
 	suite.Require().NoError(err)
@@ -171,6 +182,9 @@ func (suite *KeeperTestSuite) TestClaimCapability() {
 	got, ok = sk2.GetCapability(suite.ctx, "transfer")
 	suite.Require().True(ok)
 	suite.Require().Equal(cap, got)
+
+	suite.Require().Error(sk3.ClaimCapability(suite.ctx, cap, "  "))
+	suite.Require().Error(sk3.ClaimCapability(suite.ctx, nil, "transfer"))
 }
 
 func (suite *KeeperTestSuite) TestGetOwners() {
@@ -237,6 +251,8 @@ func (suite *KeeperTestSuite) TestGetOwners() {
 		}
 	}
 
+	_, ok := sk1.GetOwners(suite.ctx, "  ")
+	suite.Require().False(ok, "got owners from empty capability name")
 }
 
 func (suite *KeeperTestSuite) TestReleaseCapability() {
@@ -264,6 +280,8 @@ func (suite *KeeperTestSuite) TestReleaseCapability() {
 	got, ok = sk1.GetCapability(suite.ctx, "transfer")
 	suite.Require().False(ok)
 	suite.Require().Nil(got)
+
+	suite.Require().Error(sk1.ReleaseCapability(suite.ctx, nil))
 }
 
 func (suite KeeperTestSuite) TestRevertCapability() {

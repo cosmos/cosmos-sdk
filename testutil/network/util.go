@@ -66,6 +66,9 @@ func startInProcess(cfg Config, val *Validator) error {
 
 		// Add the tx service in the gRPC router.
 		app.RegisterTxService(val.ClientCtx)
+
+		// Add the tendermint queries service in the gRPC router.
+		app.RegisterTendermintService(val.ClientCtx)
 	}
 
 	if val.APIAddress != "" {
@@ -96,6 +99,24 @@ func startInProcess(cfg Config, val *Validator) error {
 		}
 
 		val.grpc = grpcSrv
+
+		if val.AppConfig.GRPCWeb.Enable {
+			errCh1 := make(chan error)
+			go func() {
+				grpcWeb, err := servergrpc.StartGRPCWeb(grpcSrv, *val.AppConfig)
+				if err != nil {
+					errCh1 <- err
+				}
+
+				val.grpcWeb = grpcWeb
+			}()
+			select {
+			case err := <-errCh1:
+				return err
+			case <-time.After(5 * time.Second): // assume server started successfully
+			}
+
+		}
 	}
 
 	return nil

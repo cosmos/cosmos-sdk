@@ -8,6 +8,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
@@ -15,16 +16,15 @@ import (
 
 func (suite *TendermintTestSuite) TestMisbehaviour() {
 	signers := []tmtypes.PrivValidator{suite.privVal}
-	heightMinus1 := clienttypes.NewHeight(0, height.VersionHeight-1)
+	heightMinus1 := clienttypes.NewHeight(0, height.RevisionHeight-1)
 
 	misbehaviour := &types.Misbehaviour{
 		Header1:  suite.header,
-		Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, suite.valSet, suite.valSet, signers),
-		ChainId:  chainID,
+		Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.RevisionHeight), heightMinus1, suite.now, suite.valSet, suite.valSet, signers),
 		ClientId: clientID,
 	}
 
-	suite.Require().Equal(types.Tendermint, misbehaviour.ClientType())
+	suite.Require().Equal(exported.Tendermint, misbehaviour.ClientType())
 	suite.Require().Equal(clientID, misbehaviour.GetClientID())
 	suite.Require().Equal(height, misbehaviour.GetHeight())
 }
@@ -34,9 +34,9 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 	altPubKey, err := altPrivVal.GetPubKey()
 	suite.Require().NoError(err)
 
-	versionHeight := int64(height.VersionHeight)
+	revisionHeight := int64(height.RevisionHeight)
 
-	altVal := tmtypes.NewValidator(altPubKey, versionHeight)
+	altVal := tmtypes.NewValidator(altPubKey, revisionHeight)
 
 	// Create bothValSet with both suite validator and altVal
 	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))
@@ -51,7 +51,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 
 	altSigners := []tmtypes.PrivValidator{altPrivVal}
 
-	heightMinus1 := clienttypes.NewHeight(0, height.VersionHeight-1)
+	heightMinus1 := clienttypes.NewHeight(0, height.RevisionHeight-1)
 
 	testCases := []struct {
 		name                 string
@@ -63,8 +63,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			"valid misbehaviour",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
-				ChainId:  chainID,
+				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.RevisionHeight), heightMinus1, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
 				ClientId: clientID,
 			},
 			func(misbehaviour *types.Misbehaviour) error { return nil },
@@ -72,13 +71,13 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 		},
 		{
 			"misbehaviour Header1 is nil",
-			types.NewMisbehaviour(clientID, chainID, nil, suite.header),
+			types.NewMisbehaviour(clientID, nil, suite.header),
 			func(m *types.Misbehaviour) error { return nil },
 			false,
 		},
 		{
 			"misbehaviour Header2 is nil",
-			types.NewMisbehaviour(clientID, chainID, suite.header, nil),
+			types.NewMisbehaviour(clientID, suite.header, nil),
 			func(m *types.Misbehaviour) error { return nil },
 			false,
 		},
@@ -86,8 +85,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			"valid misbehaviour with different trusted headers",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), clienttypes.NewHeight(0, height.VersionHeight-3), suite.now.Add(time.Minute), suite.valSet, bothValSet, signers),
-				ChainId:  chainID,
+				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.RevisionHeight), clienttypes.NewHeight(0, height.RevisionHeight-3), suite.now.Add(time.Minute), suite.valSet, bothValSet, signers),
 				ClientId: clientID,
 			},
 			func(misbehaviour *types.Misbehaviour) error { return nil },
@@ -96,9 +94,8 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 		{
 			"trusted height is 0 in Header1",
 			&types.Misbehaviour{
-				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), clienttypes.ZeroHeight(), suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
+				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.RevisionHeight), clienttypes.ZeroHeight(), suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
 				Header2:  suite.header,
-				ChainId:  chainID,
 				ClientId: clientID,
 			},
 			func(misbehaviour *types.Misbehaviour) error { return nil },
@@ -108,8 +105,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			"trusted height is 0 in Header2",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), clienttypes.ZeroHeight(), suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
-				ChainId:  chainID,
+				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.RevisionHeight), clienttypes.ZeroHeight(), suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
 				ClientId: clientID,
 			},
 			func(misbehaviour *types.Misbehaviour) error { return nil },
@@ -118,9 +114,8 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 		{
 			"trusted valset is nil in Header1",
 			&types.Misbehaviour{
-				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now.Add(time.Minute), suite.valSet, nil, signers),
+				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.RevisionHeight), heightMinus1, suite.now.Add(time.Minute), suite.valSet, nil, signers),
 				Header2:  suite.header,
-				ChainId:  chainID,
 				ClientId: clientID,
 			},
 			func(misbehaviour *types.Misbehaviour) error { return nil },
@@ -130,8 +125,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			"trusted valset is nil in Header2",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now.Add(time.Minute), suite.valSet, nil, signers),
-				ChainId:  chainID,
+				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.RevisionHeight), heightMinus1, suite.now.Add(time.Minute), suite.valSet, nil, signers),
 				ClientId: clientID,
 			},
 			func(misbehaviour *types.Misbehaviour) error { return nil },
@@ -141,41 +135,17 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			"invalid client ID ",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, suite.valSet, suite.valSet, signers),
-				ChainId:  chainID,
+				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.RevisionHeight), heightMinus1, suite.now, suite.valSet, suite.valSet, signers),
 				ClientId: "GAIA",
 			},
 			func(misbehaviour *types.Misbehaviour) error { return nil },
 			false,
 		},
 		{
-			"wrong chainID on header1",
+			"chainIDs do not match",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  suite.chainA.CreateTMClientHeader("ethermint", int64(height.VersionHeight), heightMinus1, suite.now, suite.valSet, suite.valSet, signers),
-				ChainId:  "ethermint",
-				ClientId: clientID,
-			},
-			func(misbehaviour *types.Misbehaviour) error { return nil },
-			false,
-		},
-		{
-			"wrong chainID on header2",
-			&types.Misbehaviour{
-				Header1:  suite.header,
-				Header2:  suite.chainA.CreateTMClientHeader("ethermint", int64(height.VersionHeight), heightMinus1, suite.now, suite.valSet, suite.valSet, signers),
-				ChainId:  chainID,
-				ClientId: clientID,
-			},
-			func(misbehaviour *types.Misbehaviour) error { return nil },
-			false,
-		},
-		{
-			"wrong chainID in misbehaviour",
-			&types.Misbehaviour{
-				Header1:  suite.header,
-				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
-				ChainId:  "ethermint",
+				Header2:  suite.chainA.CreateTMClientHeader("ethermint", int64(height.RevisionHeight), heightMinus1, suite.now, suite.valSet, suite.valSet, signers),
 				ClientId: clientID,
 			},
 			func(misbehaviour *types.Misbehaviour) error { return nil },
@@ -186,7 +156,6 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			&types.Misbehaviour{
 				Header1:  suite.header,
 				Header2:  suite.chainA.CreateTMClientHeader(chainID, 6, clienttypes.NewHeight(0, 4), suite.now, suite.valSet, suite.valSet, signers),
-				ChainId:  chainID,
 				ClientId: clientID,
 			},
 			func(misbehaviour *types.Misbehaviour) error { return nil },
@@ -197,7 +166,6 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			&types.Misbehaviour{
 				Header1:  suite.header,
 				Header2:  suite.header,
-				ChainId:  chainID,
 				ClientId: clientID,
 			},
 			func(misbehaviour *types.Misbehaviour) error { return nil },
@@ -206,20 +174,19 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 		{
 			"header 1 doesn't have 2/3 majority",
 			&types.Misbehaviour{
-				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, bothValSet, suite.valSet, bothSigners),
+				Header1:  suite.chainA.CreateTMClientHeader(chainID, int64(height.RevisionHeight), heightMinus1, suite.now, bothValSet, suite.valSet, bothSigners),
 				Header2:  suite.header,
-				ChainId:  chainID,
 				ClientId: clientID,
 			},
 			func(misbehaviour *types.Misbehaviour) error {
 				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
-				wrongVoteSet := tmtypes.NewVoteSet(chainID, int64(misbehaviour.Header1.GetHeight().GetVersionHeight()), 1, tmproto.PrecommitType, altValSet)
+				wrongVoteSet := tmtypes.NewVoteSet(chainID, int64(misbehaviour.Header1.GetHeight().GetRevisionHeight()), 1, tmproto.PrecommitType, altValSet)
 				blockID, err := tmtypes.BlockIDFromProto(&misbehaviour.Header1.Commit.BlockID)
 				if err != nil {
 					return err
 				}
 
-				tmCommit, err := tmtypes.MakeCommit(*blockID, int64(misbehaviour.Header2.GetHeight().GetVersionHeight()), misbehaviour.Header1.Commit.Round, wrongVoteSet, altSigners, suite.now)
+				tmCommit, err := tmtypes.MakeCommit(*blockID, int64(misbehaviour.Header2.GetHeight().GetRevisionHeight()), misbehaviour.Header1.Commit.Round, wrongVoteSet, altSigners, suite.now)
 				misbehaviour.Header1.Commit = tmCommit.ToProto()
 				return err
 			},
@@ -229,19 +196,18 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			"header 2 doesn't have 2/3 majority",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, bothValSet, suite.valSet, bothSigners),
-				ChainId:  chainID,
+				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.RevisionHeight), heightMinus1, suite.now, bothValSet, suite.valSet, bothSigners),
 				ClientId: clientID,
 			},
 			func(misbehaviour *types.Misbehaviour) error {
 				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
-				wrongVoteSet := tmtypes.NewVoteSet(chainID, int64(misbehaviour.Header2.GetHeight().GetVersionHeight()), 1, tmproto.PrecommitType, altValSet)
+				wrongVoteSet := tmtypes.NewVoteSet(chainID, int64(misbehaviour.Header2.GetHeight().GetRevisionHeight()), 1, tmproto.PrecommitType, altValSet)
 				blockID, err := tmtypes.BlockIDFromProto(&misbehaviour.Header2.Commit.BlockID)
 				if err != nil {
 					return err
 				}
 
-				tmCommit, err := tmtypes.MakeCommit(*blockID, int64(misbehaviour.Header2.GetHeight().GetVersionHeight()), misbehaviour.Header2.Commit.Round, wrongVoteSet, altSigners, suite.now)
+				tmCommit, err := tmtypes.MakeCommit(*blockID, int64(misbehaviour.Header2.GetHeight().GetRevisionHeight()), misbehaviour.Header2.Commit.Round, wrongVoteSet, altSigners, suite.now)
 				misbehaviour.Header2.Commit = tmCommit.ToProto()
 				return err
 			},
@@ -251,8 +217,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			"validators sign off on wrong commit",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, bothValSet, suite.valSet, bothSigners),
-				ChainId:  chainID,
+				Header2:  suite.chainA.CreateTMClientHeader(chainID, int64(height.RevisionHeight), heightMinus1, suite.now, bothValSet, suite.valSet, bothSigners),
 				ClientId: clientID,
 			},
 			func(misbehaviour *types.Misbehaviour) error {

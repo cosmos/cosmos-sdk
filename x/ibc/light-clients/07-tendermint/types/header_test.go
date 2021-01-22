@@ -6,23 +6,18 @@ import (
 	tmprotocrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 )
 
 func (suite *TendermintTestSuite) TestGetHeight() {
 	header := suite.chainA.LastHeader
 	suite.Require().NotEqual(uint64(0), header.GetHeight())
-
-	header.Header = nil
-	suite.Require().Equal(clienttypes.ZeroHeight(), header.GetHeight())
 }
 
 func (suite *TendermintTestSuite) TestGetTime() {
 	header := suite.chainA.LastHeader
 	suite.Require().NotEqual(time.Time{}, header.GetTime())
-
-	header.Header = nil
-	suite.Require().Equal(time.Time{}, header.GetTime())
 }
 
 func (suite *TendermintTestSuite) TestHeaderValidateBasic() {
@@ -49,7 +44,7 @@ func (suite *TendermintTestSuite) TestHeaderValidateBasic() {
 			header.SignedHeader.Commit = nil
 		}, false},
 		{"trusted height is greater than header height", func() {
-			header.TrustedHeight = header.GetHeight().(clienttypes.Height).Increment()
+			header.TrustedHeight = header.GetHeight().(clienttypes.Height).Increment().(clienttypes.Height)
 		}, false},
 		{"validator set nil", func() {
 			header.ValidatorSet = nil
@@ -63,7 +58,7 @@ func (suite *TendermintTestSuite) TestHeaderValidateBasic() {
 		}, false},
 	}
 
-	suite.Require().Equal(types.Tendermint, suite.header.ClientType())
+	suite.Require().Equal(exported.Tendermint, suite.header.ClientType())
 
 	for _, tc := range testCases {
 		tc := tc

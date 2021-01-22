@@ -2,6 +2,7 @@ package types_test
 
 import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
@@ -12,7 +13,7 @@ var (
 
 // sanity checks
 func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateStateBasic() {
-	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 	clientState := suite.chainA.GetClientState(clientA).(*types.ClientState)
 	clientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
 
@@ -22,7 +23,7 @@ func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateStateBasic() {
 	suite.Require().Nil(cs)
 	suite.Require().Nil(consState)
 
-	clientState.LatestHeight = clientState.LatestHeight.Increment()
+	clientState.LatestHeight = clientState.LatestHeight.Increment().(clienttypes.Height)
 
 	// consensus state for latest height does not exist
 	cs, consState, err = clientState.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), clientStore, suite.chainA.LastHeader)
@@ -201,7 +202,7 @@ func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateState() {
 			suite.SetupTest() // reset
 
 			// construct client state based on test case parameters
-			clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+			clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 			clientState := suite.chainA.GetClientState(clientA).(*types.ClientState)
 			clientState.AllowUpdateAfterExpiry = tc.AllowUpdateAfterExpiry
 			clientState.AllowUpdateAfterMisbehaviour = tc.AllowUpdateAfterMisbehaviour
@@ -319,7 +320,7 @@ func (suite *TendermintTestSuite) TestCheckProposedHeader() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest() // reset
 
-			clientA, _ = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+			clientA, _ = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 			clientState = suite.chainA.GetClientState(clientA).(*types.ClientState)
 			clientState.AllowUpdateAfterExpiry = true
 			clientState.AllowUpdateAfterMisbehaviour = false

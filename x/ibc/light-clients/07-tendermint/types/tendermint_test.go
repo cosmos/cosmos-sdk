@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -20,19 +19,19 @@ import (
 )
 
 const (
-	chainID                       = "gaia"
-	chainIDVersion0               = "gaia-version-0"
-	chainIDVersion1               = "gaia-version-1"
-	clientID                      = "gaiamainnet"
-	trustingPeriod  time.Duration = time.Hour * 24 * 7 * 2
-	ubdPeriod       time.Duration = time.Hour * 24 * 7 * 3
-	maxClockDrift   time.Duration = time.Second * 10
+	chainID                        = "gaia"
+	chainIDRevision0               = "gaia-revision-0"
+	chainIDRevision1               = "gaia-revision-1"
+	clientID                       = "gaiamainnet"
+	trustingPeriod   time.Duration = time.Hour * 24 * 7 * 2
+	ubdPeriod        time.Duration = time.Hour * 24 * 7 * 3
+	maxClockDrift    time.Duration = time.Second * 10
 )
 
 var (
 	height          = clienttypes.NewHeight(0, 4)
 	newClientHeight = clienttypes.NewHeight(1, 1)
-	upgradePath     = fmt.Sprintf("%s/%s", "upgrade", "upgradedClient")
+	upgradePath     = []string{"upgrade", "upgradedIBCState"}
 )
 
 type TendermintTestSuite struct {
@@ -60,6 +59,9 @@ func (suite *TendermintTestSuite) SetupTest() {
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
 	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
+	// commit some blocks so that QueryProof returns valid proof (cannot return valid query if height <= 1)
+	suite.coordinator.CommitNBlocks(suite.chainA, 2)
+	suite.coordinator.CommitNBlocks(suite.chainB, 2)
 
 	// TODO: deprecate usage in favor of testing package
 	checkTx := false
@@ -79,12 +81,12 @@ func (suite *TendermintTestSuite) SetupTest() {
 	pubKey, err := suite.privVal.GetPubKey()
 	suite.Require().NoError(err)
 
-	heightMinus1 := clienttypes.NewHeight(0, height.VersionHeight-1)
+	heightMinus1 := clienttypes.NewHeight(0, height.RevisionHeight-1)
 
 	val := tmtypes.NewValidator(pubKey, 10)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 	suite.valsHash = suite.valSet.Hash()
-	suite.header = suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	suite.header = suite.chainA.CreateTMClientHeader(chainID, int64(height.RevisionHeight), heightMinus1, suite.now, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1, Time: suite.now})
 }
 

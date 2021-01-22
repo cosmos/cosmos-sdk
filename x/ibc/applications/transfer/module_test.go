@@ -1,10 +1,13 @@
 package transfer_test
 
 import (
+	"math"
+
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -26,13 +29,18 @@ func (suite *TransferTestSuite) TestOnChanOpenInit() {
 			"success", func() {}, true,
 		},
 		{
+			"max channels reached", func() {
+				testChannel.ID = channeltypes.FormatChannelIdentifier(math.MaxUint32 + 1)
+			}, false,
+		},
+		{
 			"invalid order - ORDERED", func() {
 				channel.Ordering = channeltypes.ORDERED
 			}, false,
 		},
 		{
 			"invalid port ID", func() {
-				testChannel = connA.NextTestChannel(ibctesting.MockPort)
+				testChannel = suite.chainA.NextTestChannel(connA, ibctesting.MockPort)
 			}, false,
 		},
 		{
@@ -54,8 +62,8 @@ func (suite *TransferTestSuite) TestOnChanOpenInit() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest() // reset
 
-			_, _, connA, _ = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
-			testChannel = connA.NextTestChannel(ibctesting.TransferPort)
+			_, _, connA, _ = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
+			testChannel = suite.chainA.NextTestChannel(connA, ibctesting.TransferPort)
 			counterparty := channeltypes.NewCounterparty(testChannel.PortID, testChannel.ID)
 			channel = &channeltypes.Channel{
 				State:          channeltypes.INIT,
@@ -109,6 +117,11 @@ func (suite *TransferTestSuite) TestOnChanOpenTry() {
 			"success", func() {}, true,
 		},
 		{
+			"max channels reached", func() {
+				testChannel.ID = channeltypes.FormatChannelIdentifier(math.MaxUint32 + 1)
+			}, false,
+		},
+		{
 			"capability already claimed in INIT should pass", func() {
 				err := suite.chainA.App.ScopedTransferKeeper.ClaimCapability(suite.chainA.GetContext(), chanCap, host.ChannelCapabilityPath(testChannel.PortID, testChannel.ID))
 				suite.Require().NoError(err)
@@ -121,7 +134,7 @@ func (suite *TransferTestSuite) TestOnChanOpenTry() {
 		},
 		{
 			"invalid port ID", func() {
-				testChannel = connA.NextTestChannel(ibctesting.MockPort)
+				testChannel = suite.chainA.NextTestChannel(connA, ibctesting.MockPort)
 			}, false,
 		},
 		{
@@ -142,8 +155,8 @@ func (suite *TransferTestSuite) TestOnChanOpenTry() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest() // reset
 
-			_, _, connA, _ = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
-			testChannel = connA.NextTestChannel(ibctesting.TransferPort)
+			_, _, connA, _ = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
+			testChannel = suite.chainA.NextTestChannel(connA, ibctesting.TransferPort)
 			counterparty := channeltypes.NewCounterparty(testChannel.PortID, testChannel.ID)
 			channel = &channeltypes.Channel{
 				State:          channeltypes.TRYOPEN,
@@ -208,8 +221,8 @@ func (suite *TransferTestSuite) TestOnChanOpenAck() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest() // reset
 
-			_, _, connA, _ = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
-			testChannel = connA.NextTestChannel(ibctesting.TransferPort)
+			_, _, connA, _ = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
+			testChannel = suite.chainA.NextTestChannel(connA, ibctesting.TransferPort)
 			counterpartyVersion = types.Version
 
 			module, _, err := suite.chainA.App.IBCKeeper.PortKeeper.LookupModuleByPort(suite.chainA.GetContext(), ibctesting.TransferPort)

@@ -1,6 +1,8 @@
 package types_test
 
 import (
+	"time"
+
 	ics23 "github.com/confio/ics23/go"
 
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
@@ -33,57 +35,57 @@ func (suite *TendermintTestSuite) TestValidate() {
 	}{
 		{
 			name:        "valid client",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			expPass:     true,
 		},
 		{
 			name:        "valid client with nil upgrade path",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), "", false, false),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), nil, false, false),
 			expPass:     true,
 		},
 		{
 			name:        "invalid chainID",
-			clientState: types.NewClientState("  ", types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			clientState: types.NewClientState("  ", types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			expPass:     false,
 		},
 		{
 			name:        "invalid trust level",
-			clientState: types.NewClientState(chainID, types.Fraction{Numerator: 0, Denominator: 1}, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			clientState: types.NewClientState(chainID, types.Fraction{Numerator: 0, Denominator: 1}, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			expPass:     false,
 		},
 		{
 			name:        "invalid trusting period",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, 0, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, 0, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			expPass:     false,
 		},
 		{
 			name:        "invalid unbonding period",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, 0, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, 0, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			expPass:     false,
 		},
 		{
 			name:        "invalid max clock drift",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, 0, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, 0, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			expPass:     false,
 		},
 		{
 			name:        "invalid height",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clienttypes.ZeroHeight(), ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clienttypes.ZeroHeight(), commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			expPass:     false,
 		},
 		{
 			name:        "trusting period not less than unbonding period",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
 			expPass:     false,
 		},
 		{
 			name:        "proof specs is nil",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, nil, upgradePath, false, false),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, nil, upgradePath, false, false),
 			expPass:     false,
 		},
 		{
 			name:        "proof specs contains nil",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, []*ics23.ProofSpec{ics23.TendermintSpec, nil}, upgradePath, false, false),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, []*ics23.ProofSpec{ics23.TendermintSpec, nil}, upgradePath, false, false),
 			expPass:     false,
 		},
 	}
@@ -98,11 +100,46 @@ func (suite *TendermintTestSuite) TestValidate() {
 	}
 }
 
+func (suite *TendermintTestSuite) TestInitialize() {
+
+	testCases := []struct {
+		name           string
+		consensusState exported.ConsensusState
+		expPass        bool
+	}{
+		{
+			name:           "valid consensus",
+			consensusState: &types.ConsensusState{},
+			expPass:        true,
+		},
+		{
+			name:           "invalid consensus: consensus state is solomachine consensus",
+			consensusState: ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 2).ConsensusState(),
+			expPass:        false,
+		},
+	}
+
+	clientA, err := suite.coordinator.CreateClient(suite.chainA, suite.chainB, exported.Tendermint)
+	suite.Require().NoError(err)
+
+	clientState := suite.chainA.GetClientState(clientA)
+	store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
+
+	for _, tc := range testCases {
+		err := clientState.Initialize(suite.chainA.GetContext(), suite.chainA.Codec, store, tc.consensusState)
+		if tc.expPass {
+			suite.Require().NoError(err, "valid case returned an error")
+		} else {
+			suite.Require().Error(err, "invalid case didn't return an error")
+		}
+	}
+}
+
 func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 	testCases := []struct {
 		name           string
 		clientState    *types.ClientState
-		consensusState types.ConsensusState
+		consensusState *types.ConsensusState
 		prefix         commitmenttypes.MerklePrefix
 		proof          []byte
 		expPass        bool
@@ -110,7 +147,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		// FIXME: uncomment
 		// {
 		// 	name:        "successful verification",
-		// 	clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs()),
+		// 	clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height,  commitmenttypes.GetSDKSpecs()),
 		// 	consensusState: types.ConsensusState{
 		// 		Root: commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 		// 	},
@@ -119,8 +156,8 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		// },
 		{
 			name:        "ApplyPrefix failed",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
-			consensusState: types.ConsensusState{
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			consensusState: &types.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 			},
 			prefix:  commitmenttypes.MerklePrefix{},
@@ -128,8 +165,8 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			name:        "latest client height < height",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
-			consensusState: types.ConsensusState{
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			consensusState: &types.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
@@ -137,8 +174,8 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			name:        "client is frozen",
-			clientState: &types.ClientState{LatestHeight: height, FrozenHeight: clienttypes.NewHeight(height.VersionNumber, height.VersionHeight-1)},
-			consensusState: types.ConsensusState{
+			clientState: &types.ClientState{LatestHeight: height, FrozenHeight: clienttypes.NewHeight(height.RevisionNumber, height.RevisionHeight-1)},
+			consensusState: &types.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
@@ -146,8 +183,8 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			name:        "proof verification failed",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
-			consensusState: types.ConsensusState{
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false),
+			consensusState: &types.ConsensusState{
 				Root:               commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 				NextValidatorsHash: suite.valsHash,
 			},
@@ -230,7 +267,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 			prefix = suite.chainB.GetPrefix()
 
 			// make connection proof
-			connectionKey := host.KeyConnection(connB.ID)
+			connectionKey := host.ConnectionKey(connB.ID)
 			proof, proofHeight = suite.chainB.QueryProof(connectionKey)
 
 			tc.malleate() // make changes as necessary
@@ -308,7 +345,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 			prefix = suite.chainB.GetPrefix()
 
 			// make channel proof
-			channelKey := host.KeyChannel(channelB.PortID, channelB.ID)
+			channelKey := host.ChannelKey(channelB.PortID, channelB.ID)
 			proof, proofHeight = suite.chainB.QueryProof(channelKey)
 
 			tc.malleate() // make changes as necessary
@@ -335,6 +372,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 	var (
 		clientState *types.ClientState
 		proof       []byte
+		delayPeriod uint64
 		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
@@ -346,6 +384,20 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 	}{
 		{
 			"successful verification", func() {}, true,
+		},
+		{
+			name: "delay period has passed",
+			malleate: func() {
+				delayPeriod = uint64(time.Second.Nanoseconds())
+			},
+			expPass: true,
+		},
+		{
+			name: "delay period has not passed",
+			malleate: func() {
+				delayPeriod = uint64(time.Hour.Nanoseconds())
+			},
+			expPass: false,
 		},
 		{
 			"ApplyPrefix failed", func() {
@@ -389,16 +441,18 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 			prefix = suite.chainB.GetPrefix()
 
 			// make packet commitment proof
-			packetKey := host.KeyPacketCommitment(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+			packetKey := host.PacketCommitmentKey(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 			proof, proofHeight = suite.chainB.QueryProof(packetKey)
 
 			tc.malleate() // make changes as necessary
 
 			store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
 
+			currentTime := uint64(suite.chainA.GetContext().BlockTime().UnixNano())
+			commitment := channeltypes.CommitPacket(suite.chainA.App.IBCKeeper.Codec(), packet)
 			err = clientState.VerifyPacketCommitment(
-				store, suite.chainA.Codec, proofHeight, &prefix, proof,
-				packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), channeltypes.CommitPacket(packet),
+				store, suite.chainA.Codec, proofHeight, currentTime, delayPeriod, &prefix, proof,
+				packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), commitment,
 			)
 
 			if tc.expPass {
@@ -417,6 +471,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 	var (
 		clientState *types.ClientState
 		proof       []byte
+		delayPeriod uint64
 		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
@@ -428,6 +483,20 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 	}{
 		{
 			"successful verification", func() {}, true,
+		},
+		{
+			name: "delay period has passed",
+			malleate: func() {
+				delayPeriod = uint64(time.Second.Nanoseconds())
+			},
+			expPass: true,
+		},
+		{
+			name: "delay period has not passed",
+			malleate: func() {
+				delayPeriod = uint64(time.Hour.Nanoseconds())
+			},
+			expPass: false,
 		},
 		{
 			"ApplyPrefix failed", func() {
@@ -477,15 +546,16 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 			prefix = suite.chainB.GetPrefix()
 
 			// make packet acknowledgement proof
-			acknowledgementKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			acknowledgementKey := host.PacketAcknowledgementKey(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 			proof, proofHeight = suite.chainB.QueryProof(acknowledgementKey)
 
 			tc.malleate() // make changes as necessary
 
 			store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
 
+			currentTime := uint64(suite.chainA.GetContext().BlockTime().UnixNano())
 			err = clientState.VerifyPacketAcknowledgement(
-				store, suite.chainA.Codec, proofHeight, &prefix, proof,
+				store, suite.chainA.Codec, proofHeight, currentTime, delayPeriod, &prefix, proof,
 				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(), ibcmock.MockAcknowledgement,
 			)
 
@@ -505,6 +575,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketReceiptAbsence() {
 	var (
 		clientState *types.ClientState
 		proof       []byte
+		delayPeriod uint64
 		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
@@ -516,6 +587,20 @@ func (suite *TendermintTestSuite) TestVerifyPacketReceiptAbsence() {
 	}{
 		{
 			"successful verification", func() {}, true,
+		},
+		{
+			name: "delay period has passed",
+			malleate: func() {
+				delayPeriod = uint64(time.Second.Nanoseconds())
+			},
+			expPass: true,
+		},
+		{
+			name: "delay period has not passed",
+			malleate: func() {
+				delayPeriod = uint64(time.Hour.Nanoseconds())
+			},
+			expPass: false,
 		},
 		{
 			"ApplyPrefix failed", func() {
@@ -554,7 +639,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketReceiptAbsence() {
 			suite.Require().NoError(err)
 
 			// need to update chainA's client representing chainB to prove missing ack
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 
 			var ok bool
 			clientStateI := suite.chainA.GetClientState(clientA)
@@ -564,15 +649,16 @@ func (suite *TendermintTestSuite) TestVerifyPacketReceiptAbsence() {
 			prefix = suite.chainB.GetPrefix()
 
 			// make packet receipt absence proof
-			receiptKey := host.KeyPacketReceipt(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			receiptKey := host.PacketReceiptKey(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 			proof, proofHeight = suite.chainB.QueryProof(receiptKey)
 
 			tc.malleate() // make changes as necessary
 
 			store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
 
+			currentTime := uint64(suite.chainA.GetContext().BlockTime().UnixNano())
 			err = clientState.VerifyPacketReceiptAbsence(
-				store, suite.chainA.Codec, proofHeight, &prefix, proof,
+				store, suite.chainA.Codec, proofHeight, currentTime, delayPeriod, &prefix, proof,
 				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 			)
 
@@ -592,6 +678,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 	var (
 		clientState *types.ClientState
 		proof       []byte
+		delayPeriod uint64
 		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
@@ -603,6 +690,20 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 	}{
 		{
 			"successful verification", func() {}, true,
+		},
+		{
+			name: "delay period has passed",
+			malleate: func() {
+				delayPeriod = uint64(time.Second.Nanoseconds())
+			},
+			expPass: true,
+		},
+		{
+			name: "delay period has not passed",
+			malleate: func() {
+				delayPeriod = uint64(time.Hour.Nanoseconds())
+			},
+			expPass: false,
 		},
 		{
 			"ApplyPrefix failed", func() {
@@ -645,7 +746,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 			suite.Require().NoError(err)
 
 			// need to update chainA's client representing chainB
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 
 			var ok bool
 			clientStateI := suite.chainA.GetClientState(clientA)
@@ -655,15 +756,16 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 			prefix = suite.chainB.GetPrefix()
 
 			// make next seq recv proof
-			nextSeqRecvKey := host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
+			nextSeqRecvKey := host.NextSequenceRecvKey(packet.GetDestPort(), packet.GetDestChannel())
 			proof, proofHeight = suite.chainB.QueryProof(nextSeqRecvKey)
 
 			tc.malleate() // make changes as necessary
 
 			store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
 
+			currentTime := uint64(suite.chainA.GetContext().BlockTime().UnixNano())
 			err = clientState.VerifyNextSequenceRecv(
-				store, suite.chainA.Codec, proofHeight, &prefix, proof,
+				store, suite.chainA.Codec, proofHeight, currentTime, delayPeriod, &prefix, proof,
 				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()+1,
 			)
 

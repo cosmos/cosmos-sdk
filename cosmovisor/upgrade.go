@@ -119,12 +119,12 @@ func GetDownloadURL(info *UpgradeInfo) (string, error) {
 	var config UpgradeConfig
 
 	if err := json.Unmarshal([]byte(doc), &config); err == nil {
-		url, ok := config.Binaries[osArch()]
+		url, ok := config.Binaries[OSArch()]
 		if !ok {
 			url, ok = config.Binaries["any"]
 		}
 		if !ok {
-			return "", fmt.Errorf("cannot find binary for os/arch: neither %s, nor any", osArch())
+			return "", fmt.Errorf("cannot find binary for os/arch: neither %s, nor any", OSArch())
 		}
 
 		return url, nil
@@ -133,7 +133,7 @@ func GetDownloadURL(info *UpgradeInfo) (string, error) {
 	return "", errors.New("upgrade info doesn't contain binary map")
 }
 
-func osArch() string {
+func OSArch() string {
 	return fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	ibcmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 )
@@ -111,6 +112,22 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
+		{"client state is frozen", func() {
+			_, _, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
+
+			connection := suite.chainA.GetConnection(connA)
+			clientState := suite.chainA.GetClientState(connection.ClientId)
+			cs, ok := clientState.(*ibctmtypes.ClientState)
+			suite.Require().True(ok)
+
+			// freeze client
+			cs.FrozenHeight = clienttypes.NewHeight(0, 1)
+			suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), connection.ClientId, cs)
+
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
+		}, false},
+
 		{"timeout height passed", func() {
 			clientA, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			// use client state latest height for timeout
@@ -130,9 +147,9 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"next sequence send not found", func() {
-			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
-			channelA := connA.NextTestChannel(ibctesting.TransferPort)
-			channelB := connB.NextTestChannel(ibctesting.TransferPort)
+			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
+			channelA := suite.chainA.NextTestChannel(connA, ibctesting.TransferPort)
+			channelB := suite.chainB.NextTestChannel(connB, ibctesting.TransferPort)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 			// manually creating channel prevents next sequence from being set
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(
@@ -276,13 +293,13 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 		}, false},
 		{"connection not OPEN", func() {
-			clientA, clientB := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+			clientA, clientB := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 			// connection on chainB is in INIT
 			connB, connA, err := suite.coordinator.ConnOpenInit(suite.chainB, suite.chainA, clientB, clientA)
 			suite.Require().NoError(err)
 
-			channelA := connA.NextTestChannel(ibctesting.TransferPort)
-			channelB := connB.NextTestChannel(ibctesting.TransferPort)
+			channelA := suite.chainA.NextTestChannel(connA, ibctesting.TransferPort)
+			channelB := suite.chainB.NextTestChannel(connB, ibctesting.TransferPort)
 			// pass channel check
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(
 				suite.chainB.GetContext(),
@@ -304,9 +321,9 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 		}, false},
 		{"next receive sequence is not found", func() {
-			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
-			channelA := connA.NextTestChannel(ibctesting.TransferPort)
-			channelB := connB.NextTestChannel(ibctesting.TransferPort)
+			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
+			channelA := suite.chainA.NextTestChannel(connA, ibctesting.TransferPort)
+			channelB := suite.chainB.NextTestChannel(connB, ibctesting.TransferPort)
 
 			// manually creating channel prevents next recv sequence from being set
 			suite.chainB.App.IBCKeeper.ChannelKeeper.SetChannel(
@@ -345,7 +362,7 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 			tc.malleate()
 
 			// get proof of packet commitment from chainA
-			packetKey := host.KeyPacketCommitment(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+			packetKey := host.PacketCommitmentKey(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 			proof, proofHeight := suite.chainA.QueryProof(packetKey)
 
 			err := suite.chainB.App.IBCKeeper.ChannelKeeper.RecvPacket(suite.chainB.GetContext(), channelCap, packet, proof, proofHeight)
@@ -364,7 +381,7 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 				} else {
 					suite.Require().Equal(uint64(1), nextSeqRecv, "sequence incremented for UNORDERED channel")
 					suite.Require().True(receiptStored, "packet receipt not stored after RecvPacket in UNORDERED channel")
-					suite.Require().Equal("", receipt, "packet receipt is not empty string")
+					suite.Require().Equal(string([]byte{byte(1)}), receipt, "packet receipt is not empty string")
 				}
 			} else {
 				suite.Require().Error(err)
@@ -548,13 +565,13 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"connection not OPEN", func() {
-			clientA, clientB := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+			clientA, clientB := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 			// connection on chainA is in INIT
 			connA, connB, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
 
-			channelA := connA.NextTestChannel(ibctesting.TransferPort)
-			channelB := connB.NextTestChannel(ibctesting.TransferPort)
+			channelA := suite.chainA.NextTestChannel(connA, ibctesting.TransferPort)
+			channelB := suite.chainB.NextTestChannel(connB, ibctesting.TransferPort)
 			// pass channel check
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(
 				suite.chainA.GetContext(),
@@ -581,9 +598,9 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"next ack sequence not found", func() {
-			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
-			channelA := connA.NextTestChannel(ibctesting.TransferPort)
-			channelB := connB.NextTestChannel(ibctesting.TransferPort)
+			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
+			channelA := suite.chainA.NextTestChannel(connA, ibctesting.TransferPort)
+			channelB := suite.chainB.NextTestChannel(connB, ibctesting.TransferPort)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 			// manually creating channel prevents next sequence acknowledgement from being set
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(
@@ -622,7 +639,7 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			suite.SetupTest() // reset
 			tc.malleate()
 
-			packetKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			packetKey := host.PacketAcknowledgementKey(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 			proof, proofHeight := suite.chainB.QueryProof(packetKey)
 
 			err := suite.chainA.App.IBCKeeper.ChannelKeeper.AcknowledgePacket(suite.chainA.GetContext(), channelCap, packet, ack, proof, proofHeight)

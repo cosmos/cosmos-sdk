@@ -35,7 +35,7 @@ func QueryChannel(
 }
 
 func queryChannelABCI(clientCtx client.Context, portID, channelID string) (*types.QueryChannelResponse, error) {
-	key := host.KeyChannel(portID, channelID)
+	key := host.ChannelKey(portID, channelID)
 
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
@@ -101,10 +101,10 @@ func QueryChannelConsensusState(
 
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryChannelConsensusStateRequest{
-		PortId:        portID,
-		ChannelId:     channelID,
-		VersionNumber: height.VersionNumber,
-		VersionHeight: height.VersionHeight,
+		PortId:         portID,
+		ChannelId:      channelID,
+		RevisionNumber: height.RevisionNumber,
+		RevisionHeight: height.RevisionHeight,
 	}
 
 	res, err := queryClient.ChannelConsensusState(context.Background(), req)
@@ -133,8 +133,9 @@ func QueryLatestConsensusState(
 	if err != nil {
 		return nil, clienttypes.Height{}, clienttypes.Height{}, err
 	}
-	clientState, err := clienttypes.UnpackClientState(clientRes.IdentifiedClientState.ClientState)
-	if err != nil {
+
+	var clientState exported.ClientState
+	if err := clientCtx.InterfaceRegistry.UnpackAny(clientRes.IdentifiedClientState.ClientState, &clientState); err != nil {
 		return nil, clienttypes.Height{}, clienttypes.Height{}, err
 	}
 
@@ -148,8 +149,8 @@ func QueryLatestConsensusState(
 		return nil, clienttypes.Height{}, clienttypes.Height{}, err
 	}
 
-	consensusState, err := clienttypes.UnpackConsensusState(res.ConsensusState)
-	if err != nil {
+	var consensusState exported.ConsensusState
+	if err := clientCtx.InterfaceRegistry.UnpackAny(res.ConsensusState, &consensusState); err != nil {
 		return nil, clienttypes.Height{}, clienttypes.Height{}, err
 	}
 
@@ -176,7 +177,7 @@ func QueryNextSequenceReceive(
 }
 
 func queryNextSequenceRecvABCI(clientCtx client.Context, portID, channelID string) (*types.QueryNextSequenceReceiveResponse, error) {
-	key := host.KeyNextSequenceRecv(portID, channelID)
+	key := host.NextSequenceRecvKey(portID, channelID)
 
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
@@ -217,7 +218,7 @@ func QueryPacketCommitment(
 func queryPacketCommitmentABCI(
 	clientCtx client.Context, portID, channelID string, sequence uint64,
 ) (*types.QueryPacketCommitmentResponse, error) {
-	key := host.KeyPacketCommitment(portID, channelID, sequence)
+	key := host.PacketCommitmentKey(portID, channelID, sequence)
 
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
@@ -256,7 +257,7 @@ func QueryPacketReceipt(
 func queryPacketReceiptABCI(
 	clientCtx client.Context, portID, channelID string, sequence uint64,
 ) (*types.QueryPacketReceiptResponse, error) {
-	key := host.KeyPacketReceipt(portID, channelID, sequence)
+	key := host.PacketReceiptKey(portID, channelID, sequence)
 
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
@@ -285,7 +286,7 @@ func QueryPacketAcknowledgement(clientCtx client.Context, portID, channelID stri
 }
 
 func queryPacketAcknowledgementABCI(clientCtx client.Context, portID, channelID string, sequence uint64) (*types.QueryPacketAcknowledgementResponse, error) {
-	key := host.KeyPacketAcknowledgement(portID, channelID, sequence)
+	key := host.PacketAcknowledgementKey(portID, channelID, sequence)
 
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {

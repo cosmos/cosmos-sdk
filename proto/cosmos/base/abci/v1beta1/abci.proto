@@ -58,7 +58,7 @@ message ABCIMessageLog {
 message StringEvent {
   option (gogoproto.stringer) = true;
 
-  string   type                 = 1;
+  string             type       = 1;
   repeated Attribute attributes = 2 [(gogoproto.nullable) = false];
 }
 

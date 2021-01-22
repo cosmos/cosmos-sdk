@@ -41,14 +41,12 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 		Short: "Submit a software upgrade proposal",
 		Long: "Submit a software upgrade along with an initial deposit.\n" +
 			"Please specify a unique name and height OR time for the upgrade to take effect.\n" +
-			"You may include info to reference a binary download link, in a format compatible with: https://github.com/regen-network/cosmosd",
+			"You may include info to reference a binary download link, in a format compatible with: https://github.com/cosmos/cosmos-sdk/tree/master/cosmovisor",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			name := args[0]
 			content, err := parseArgsToContent(cmd, name)
 			if err != nil {
@@ -61,7 +59,7 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			deposit, err := sdk.ParseCoins(depositStr)
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
 			if err != nil {
 				return err
 			}
@@ -97,12 +95,10 @@ func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 		Short: "Cancel the current software upgrade proposal",
 		Long:  "Cancel a software upgrade along with an initial deposit.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			from := clientCtx.GetFromAddress()
 
 			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
@@ -110,7 +106,7 @@ func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 				return err
 			}
 
-			deposit, err := sdk.ParseCoins(depositStr)
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
 			if err != nil {
 				return err
 			}

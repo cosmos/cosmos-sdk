@@ -6,8 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
-	tmmerkle "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 )
@@ -23,9 +21,9 @@ func (suite *MerkleTestSuite) TestVerifyMembership() {
 	})
 	require.NotNil(suite.T(), res.ProofOps)
 
-	proof := types.MerkleProof{
-		Proof: res.ProofOps,
-	}
+	proof, err := types.ConvertProofs(res.ProofOps)
+	require.NoError(suite.T(), err)
+
 	suite.Require().NoError(proof.ValidateBasic())
 	suite.Require().Error(types.MerkleProof{}.ValidateBasic())
 
@@ -49,9 +47,7 @@ func (suite *MerkleTestSuite) TestVerifyMembership() {
 		{"nil root", []byte(nil), []string{suite.storeKey.Name(), "MYKEY"}, []byte("MYVALUE"), func() {}, false},           // invalid proof with nil root
 		{"proof is wrong length", cid.Hash, []string{suite.storeKey.Name(), "MYKEY"}, []byte("MYVALUE"), func() {
 			proof = types.MerkleProof{
-				Proof: &tmmerkle.ProofOps{
-					Ops: res.ProofOps.Ops[1:],
-				},
+				Proofs: proof.Proofs[1:],
 			}
 		}, false}, // invalid proof with wrong length
 
@@ -63,7 +59,7 @@ func (suite *MerkleTestSuite) TestVerifyMembership() {
 			tc.malleate()
 
 			root := types.NewMerkleRoot(tc.root)
-			path := types.NewMerklePath(tc.pathArr)
+			path := types.NewMerklePath(tc.pathArr...)
 
 			err := proof.VerifyMembership(types.GetSDKSpecs(), &root, path, tc.value)
 
@@ -91,9 +87,9 @@ func (suite *MerkleTestSuite) TestVerifyNonMembership() {
 	})
 	require.NotNil(suite.T(), res.ProofOps)
 
-	proof := types.MerkleProof{
-		Proof: res.ProofOps,
-	}
+	proof, err := types.ConvertProofs(res.ProofOps)
+	require.NoError(suite.T(), err)
+
 	suite.Require().NoError(proof.ValidateBasic())
 
 	cases := []struct {
@@ -114,9 +110,7 @@ func (suite *MerkleTestSuite) TestVerifyNonMembership() {
 		{"nil root", []byte(nil), []string{suite.storeKey.Name(), "MYABSENTKEY"}, func() {}, false},           // invalid proof with nil root
 		{"proof is wrong length", cid.Hash, []string{suite.storeKey.Name(), "MYKEY"}, func() {
 			proof = types.MerkleProof{
-				Proof: &tmcrypto.ProofOps{
-					Ops: res.ProofOps.Ops[1:],
-				},
+				Proofs: proof.Proofs[1:],
 			}
 		}, false}, // invalid proof with wrong length
 
@@ -129,7 +123,7 @@ func (suite *MerkleTestSuite) TestVerifyNonMembership() {
 			tc.malleate()
 
 			root := types.NewMerkleRoot(tc.root)
-			path := types.NewMerklePath(tc.pathArr)
+			path := types.NewMerklePath(tc.pathArr...)
 
 			err := proof.VerifyNonMembership(types.GetSDKSpecs(), &root, path)
 
@@ -149,16 +143,30 @@ func TestApplyPrefix(t *testing.T) {
 	prefix := types.NewMerklePrefix([]byte("storePrefixKey"))
 
 	pathStr := "pathone/pathtwo/paththree/key"
+	path := types.MerklePath{
+		KeyPath: []string{pathStr},
+	}
 
-	prefixedPath, err := types.ApplyPrefix(prefix, pathStr)
-	require.Nil(t, err, "valid prefix returns error")
+	prefixedPath, err := types.ApplyPrefix(prefix, path)
+	require.NoError(t, err, "valid prefix returns error")
 
 	require.Equal(t, "/storePrefixKey/"+pathStr, prefixedPath.Pretty(), "Prefixed path incorrect")
-	require.Equal(t, "/storePrefixKey/pathone%2Fpathtwo%2Fpaththree%2Fkey", prefixedPath.String(), "Prefixed scaped path incorrect")
+	require.Equal(t, "/storePrefixKey/pathone%2Fpathtwo%2Fpaththree%2Fkey", prefixedPath.String(), "Prefixed escaped path incorrect")
+}
 
-	// invalid prefix contains non-alphanumeric character
-	invalidPathStr := "invalid-path/doesitfail?/hopefully"
-	invalidPath, err := types.ApplyPrefix(prefix, invalidPathStr)
-	require.NotNil(t, err, "invalid prefix does not returns error")
-	require.Equal(t, types.MerklePath{}, invalidPath, "invalid prefix returns valid Path on ApplyPrefix")
+func TestString(t *testing.T) {
+	path := types.NewMerklePath("rootKey", "storeKey", "path/to/leaf")
+
+	require.Equal(t, "/rootKey/storeKey/path%2Fto%2Fleaf", path.String(), "path String returns unxpected value")
+	require.Equal(t, "/rootKey/storeKey/path/to/leaf", path.Pretty(), "path's pretty string representation is incorrect")
+
+	onePath := types.NewMerklePath("path/to/leaf")
+
+	require.Equal(t, "/path%2Fto%2Fleaf", onePath.String(), "one element path does not have correct string representation")
+	require.Equal(t, "/path/to/leaf", onePath.Pretty(), "one element path has incorrect pretty string representation")
+
+	zeroPath := types.NewMerklePath()
+
+	require.Equal(t, "", zeroPath.String(), "zero element path does not have correct string representation")
+	require.Equal(t, "", zeroPath.Pretty(), "zero element path does not have correct pretty string representation")
 }

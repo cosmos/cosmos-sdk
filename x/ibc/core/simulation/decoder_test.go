@@ -40,15 +40,15 @@ func TestDecodeStore(t *testing.T) {
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
 			{
-				Key:   host.FullKeyClientPath(clientID, host.KeyClientState()),
+				Key:   host.FullClientStateKey(clientID),
 				Value: app.IBCKeeper.ClientKeeper.MustMarshalClientState(clientState),
 			},
 			{
-				Key:   host.KeyConnection(connectionID),
+				Key:   host.ConnectionKey(connectionID),
 				Value: app.IBCKeeper.Codec().MustMarshalBinaryBare(&connection),
 			},
 			{
-				Key:   host.KeyChannel(portID, channelID),
+				Key:   host.ChannelKey(portID, channelID),
 				Value: app.IBCKeeper.Codec().MustMarshalBinaryBare(&channel),
 			},
 			{

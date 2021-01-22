@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 func (suite *TendermintTestSuite) TestGetConsensusState() {
@@ -34,7 +35,7 @@ func (suite *TendermintTestSuite) TestGetConsensusState() {
 				// marshal an empty client state and set as consensus state
 				store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
 				clientStateBz := suite.chainA.App.IBCKeeper.ClientKeeper.MustMarshalClientState(&types.ClientState{})
-				store.Set(host.KeyConsensusState(height), clientStateBz)
+				store.Set(host.ConsensusStateKey(height), clientStateBz)
 			}, false,
 		},
 		{
@@ -42,7 +43,7 @@ func (suite *TendermintTestSuite) TestGetConsensusState() {
 				// marshal and set solomachine consensus state
 				store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
 				consensusStateBz := suite.chainA.App.IBCKeeper.ClientKeeper.MustMarshalConsensusState(&solomachinetypes.ConsensusState{})
-				store.Set(host.KeyConsensusState(height), consensusStateBz)
+				store.Set(host.ConsensusStateKey(height), consensusStateBz)
 			}, false,
 		},
 	}
@@ -73,4 +74,40 @@ func (suite *TendermintTestSuite) TestGetConsensusState() {
 			}
 		})
 	}
+}
+
+func (suite *TendermintTestSuite) TestGetProcessedTime() {
+	// Verify ProcessedTime on CreateClient
+	// coordinator increments time before creating client
+	expectedTime := suite.chainA.CurrentHeader.Time.Add(ibctesting.TimeIncrement)
+
+	clientA, err := suite.coordinator.CreateClient(suite.chainA, suite.chainB, exported.Tendermint)
+	suite.Require().NoError(err)
+
+	clientState := suite.chainA.GetClientState(clientA)
+	height := clientState.GetLatestHeight()
+
+	store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
+	actualTime, ok := types.GetProcessedTime(store, height)
+	suite.Require().True(ok, "could not retrieve processed time for stored consensus state")
+	suite.Require().Equal(uint64(expectedTime.UnixNano()), actualTime, "retrieved processed time is not expected value")
+
+	// Verify ProcessedTime on UpdateClient
+	// coordinator increments time before updating client
+	expectedTime = suite.chainA.CurrentHeader.Time.Add(ibctesting.TimeIncrement)
+
+	err = suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
+	suite.Require().NoError(err)
+
+	clientState = suite.chainA.GetClientState(clientA)
+	height = clientState.GetLatestHeight()
+
+	store = suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
+	actualTime, ok = types.GetProcessedTime(store, height)
+	suite.Require().True(ok, "could not retrieve processed time for stored consensus state")
+	suite.Require().Equal(uint64(expectedTime.UnixNano()), actualTime, "retrieved processed time is not expected value")
+
+	// try to get processed time for height that doesn't exist in store
+	_, ok = types.GetProcessedTime(store, clienttypes.NewHeight(1, 1))
+	suite.Require().False(ok, "retrieved processed time for a non-existent consensus state")
 }

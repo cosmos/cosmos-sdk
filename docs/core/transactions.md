@@ -8,84 +8,150 @@ order: 2
 
 ## Pre-requisite Readings
 
-* [Anatomy of an SDK Application](../basics/app-anatomy.md) {prereq}
+- [Anatomy of an SDK Application](../basics/app-anatomy.md) {prereq}
 
 ## Transactions
 
-Transactions are comprised of metadata held in [contexts](./context.md) and [messages](../building-modules/messages-and-queries.md) that trigger state changes within a module through the module's [Handler](../building-modules/handler.md).
+Transactions are comprised of metadata held in [contexts](./context.md) and [`Msg`s](../building-modules/messages-and-queries.md) that trigger state changes within a module through the module's [`Msg` service](../building-modules/msg-services.md).
 
-When users want to interact with an application and make state changes (e.g. sending coins), they create transactions. Each of a transaction's `message`s must be signed using the private key associated with the appropriate account(s), before the transaction is broadcasted to the network. A transaction must then be included in a block, validated, and approved by the network through the consensus process. To read more about the lifecycle of a transaction, click [here](../basics/tx-lifecycle.md).
+When users want to interact with an application and make state changes (e.g. sending coins), they create transactions. Each of a transaction's `Msg`s must be signed using the private key associated with the appropriate account(s), before the transaction is broadcasted to the network. A transaction must then be included in a block, validated, and approved by the network through the consensus process. To read more about the lifecycle of a transaction, click [here](../basics/tx-lifecycle.md).
 
 ## Type Definition
 
 Transaction objects are SDK types that implement the `Tx` interface
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/tx_msg.go#L34-L41
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/tx_msg.go#L49-L57
 
 It contains the following methods:
 
-* **GetMsgs:** unwraps the transaction and returns a list of its message(s) - one transaction may have one or multiple [messages](../building-modules/messages-and-queries.md#messages), which are defined by module developers.
-* **ValidateBasic:** includes lightweight, [*stateless*](../basics/tx-lifecycle.md#types-of-checks) checks used by ABCI messages [`CheckTx`](./baseapp.md#checktx) and [`DeliverTx`](./baseapp.md#delivertx) to make sure transactions are not invalid. For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth) module's `StdTx` `ValidateBasic` function checks that its transactions are signed by the correct number of signers and that the fees do not exceed what the user's maximum. Note that this function is to be distinct from the `ValidateBasic` functions for *`messages`*, which perform basic validity checks on messages only. For example, when [`runTx`](./baseapp.md#runtx) is checking a transaction created from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module, it first runs `ValidateBasic` on each message, then runs the `auth` module AnteHandler which calls `ValidateBasic` for the transaction itself.
-* **TxEncoder:** Nodes running the consensus engine (e.g. Tendermint Core) are responsible for gossiping transactions and ordering them into blocks, but only handle them in the generic `[]byte` form. Transactions are always [marshaled](./encoding.md) (encoded) before they are relayed to nodes, which compacts them to facilitate gossiping and helps maintain the consensus engine's separation from from application logic. The Cosmos SDK allows developers to specify any deterministic encoding format for their applications; the default is Amino.
-* **TxDecoder:** [ABCI](https://tendermint.com/docs/spec/abci/) calls from the consensus engine to the application, such as `CheckTx` and `DeliverTx`, are used to process transaction data to determine validity and state changes. Since transactions are passed in as `txBytes []byte`, they need to first be unmarshaled (decoded) using `TxDecoder` before any logic is applied.
+- **GetMsgs:** unwraps the transaction and returns a list of its `Msg`s - one transaction may have one or multiple [`Msg`s](../building-modules/messages-and-queries.md#messages), which are defined by module developers.
+- **ValidateBasic:** includes lightweight, [_stateless_](../basics/tx-lifecycle.md#types-of-checks) checks used by ABCI messages [`CheckTx`](./baseapp.md#checktx) and [`DeliverTx`](./baseapp.md#delivertx) to make sure transactions are not invalid. For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth) module's `StdTx` `ValidateBasic` function checks that its transactions are signed by the correct number of signers and that the fees do not exceed what the user's maximum. Note that this function is to be distinct from the `ValidateBasic` functions for `Msg`s, which perform basic validity checks on messages only. For example, when [`runTx`](./baseapp.md#runtx) is checking a transaction created from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module, it first runs `ValidateBasic` on each message, then runs the `auth` module AnteHandler which calls `ValidateBasic` for the transaction itself.
 
-The most used implementation of the `Tx` interface is  [`StdTx` from the `auth` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/types/stdtx.go). As a developer, using `StdTx` as your transaction format is as simple as importing the `auth` module in your application (which can be done in the [constructor of the application](../basics/app-anatomy.md#constructor-function)) 
+As a developer, you should rarely manipulate `Tx` directly, as `Tx` is really an intermediate type used for transaction generation. Instead, developers should prefer the `TxBuilder` interface, which you can learn more about [below](#transaction-generation).
+
+### Signing Transactions
+
+Every message in a transaction must be signed by the addresses specified by its `GetSigners`. The SDK currently allows signing transactions in two different ways.
+
+#### `SIGN_MODE_DIRECT` (preferred)
+
+The most used implementation of the `Tx` interface is the Protobuf `Tx` message, which is used in `SIGN_MODE_DIRECT`:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/proto/cosmos/tx/v1beta1/tx.proto#L12-L25
+
+Because Protobuf serialization is not deterministic, the SDK uses an additional `TxRaw` type to denote the pinned bytes over which a transaction is signed. Any user can generate a valid `body` and `auth_info` for a transaction, and serialize these two messages using Protobuf. `TxRaw` then pins the user's exact binary representation of `body` and `auth_info`, called respectively `body_bytes` and `auth_info_bytes`. The document that is signed by all signers of the transaction is `SignDoc` (deterministically serialized using [ADR-027](../architecture/adr-027-deterministic-protobuf-serialization.md)):
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/proto/cosmos/tx/v1beta1/tx.proto#L47-L64
+
+Once signed by all signers, the `body_bytes`, `auth_info_bytes` and `signatures` are gathered into `TxRaw`, whose serialized bytes are broadcasted over the network.
+
+#### `SIGN_MODE_LEGACY_AMINO_JSON`
+
+The legacy implemention of the `Tx` interface is the `StdTx` struct from `x/auth`:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/auth/legacy/legacytx/stdtx.go#L120-L130
+
+The document signed by all signers is `StdSignDoc`:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/auth/legacy/legacytx/stdsign.go#L20-L33
+
+which is encoded into bytes using Amino JSON. Once all signatures are gathered into `StdTx`, `StdTx` is serialized using Amino JSON, and these bytes are broadcasted over the network.
+
+#### Other Sign Modes
+
+Other sign modes, most notably `SIGN_MODE_TEXTUAL`, are being discussed. If you wish to learn more about them, please refer to [ADR-020](../architecture/adr-020-protobuf-transaction-encoding.md).
 
 ## Transaction Process
 
-A transaction is created by an end-user through one of the possible [interfaces](#interfaces). In the process, two contexts and an array of [messages](#messages) are created, which are then used to [generate](#transaction-generation) the transaction itself. The actual state changes triggered by transactions are enabled by the [handlers](#handlers). The rest of the document will describe each of these components, in this order.
+The process of an end-user sending a transaction is:
 
-### CLI and REST Interfaces
+- decide on the messages to put into the transaction,
+- generate the transaction using the SDK's `TxBuilder`,
+- broadcast the transaction using one of the available interfaces.
 
-Application developers create entrypoints to the application by creating a [command-line interface](../interfaces/cli.md) and/or [REST interface](../interfaces/rest.md), typically found in the application's `./cmd` folder. These interfaces allow users to interact with the application through command-line or through HTTP requests.
-
-For the [command-line interface](../building-modules/module-interfaces.md#cli), module developers create subcommands to add as children to the application top-level transaction command `TxCmd`. For [HTTP requests](../building-modules/module-interfaces.md#legacy-rest), module developers specify acceptable request types, register REST routes, and create HTTP Request Handlers.
-
-When users interact with the application's interfaces, they invoke the underlying modules' handlers or command functions, directly creating messages.
+The next paragraphs will describe each of these components, in this order.
 
 ### Messages
 
-**`Message`s** are module-specific objects that trigger state transitions within the scope of the module they belong to. Module developers define the `message`s for their module by implementing the `Msg` interface, and also define a [`Handler`](../building-modules/handler.md) to process them.
+::: tip
+Module `Msg`s are not to be confused with [ABCI Messages](https://tendermint.com/docs/spec/abci/abci.html#messages) which define interactions between the Tendermint and application layers.
+:::
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/tx_msg.go#L8-L29
+**Messages** (or `Msg`s) are module-specific objects that trigger state transitions within the scope of the module they belong to. Module developers define the messages for their module by adding methods to the Protobuf [`Msg` service](../building-modules/msg-services.md), and also implement the corresponding `MsgServer`.
 
-`Message`s in a module are typically defined in a `msgs.go` file (though not always), and one handler with multiple functions to handle each of the module's `message`s is defined in a `handler.go` file.
+`Msg`s in a module are defined as methods in the [`Msg` service] inside each module's `tx.proto` file. Since `Msg`s are module-specific, each module needs a to process all of its message types and trigger state changes within the module's scope. This design puts more responsibility on module developers, allowing application developers to reuse common functionalities without having to implement state transition logic repetitively. To achieve this, Protobuf generates a `MsgServer` interface for each module, and the module developer needs to implement this interface. The methods on the `MsgServer` interface corresponds on how to handle each of the different `Msg`.
 
-Note: module `messages` are not to be confused with [ABCI Messages](https://tendermint.com/docs/spec/abci/abci.html#messages) which define interactions between the Tendermint and application layers.
-
-To learn more about `message`s, click [here](../building-modules/messages-and-queries.md#messages).
+To learn more about `Msg` services and how to implement `MsgServer`, click [here](../building-modules/msg-services.md).
 
 While messages contain the information for state transition logic, a transaction's other metadata and relevant information are stored in the `TxBuilder` and `Context`.
 
 ### Transaction Generation
 
-Transactions are first created by end-users through an `appcli tx` command through the command-line or a POST request to an HTTPS server. For details about transaction creation, click [here](../basics/tx-lifecycle.md#transaction-creation).
+The `TxBuilder` interface contains data closely related with the generation of transactions, which an end-user can freely set to generate the desired transaction:
 
-[`Contexts`](https://godoc.org/context) are immutable objects that contain all the information needed to process a request. In the process of creating a transaction through the `auth` module (though it is not mandatory to create transactions this way), two contexts are created: the [`Context`](../interfaces/query-lifecycle.md#context) and `TxBuilder`. Both are automatically generated and do not need to be defined by application developers, but do require input from the transaction creator (e.g. using flags through the CLI).
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/client/tx_config.go#L32-L45
 
-The `TxBuilder` contains data closely related with the processing of transactions.
+- `Msg`s, the array of [messages](#messages) included in the transaction.
+- `GasLimit`, option chosen by the users for how to calculate how much gas they will need to pay.
+- `Memo`, to send with the transaction.
+- `FeeAmount`, the maximum amount the user is willing to pay in fees.
+- `TimeoutHeight`, block height until which the transaction is valid.
+- `Signatures`, the array of signatures from all signers of the transaction.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/auth/types/txbuilder.go#L18-L31
+As there are currently two sign modes for signing transactions, there are also two implementations of `TxBuilder`:
 
-* `TxEncoder` defined by the developer for this type of transaction. Used to encode messages before being processed by nodes running Tendermint.
-* `Keybase` that manages the user's keys and is used to perform signing operations.
-* `AccountNumber` from which this transaction originated.
-* `Sequence`, the number of transactions that the user has sent out, used to prevent replay attacks.
-* `Gas` option chosen by the users for how to calculate how much gas they will need to pay. A common option is "auto" which generates an automatic estimate.
-* `GasAdjustment` to adjust the estimate of gas by a scalar value, used to avoid underestimating the amount of gas required.
-* `SimulateAndExecute` option to simply simulate the transaction execution without broadcasting.
-* `ChainID` representing which blockchain this transaction pertains to.
-* `Memo` to send with the transaction.
-* `Fees`, the maximum amount the user is willing to pay in fees. Alternative to specifying gas prices.
-* `GasPrices`, the amount per unit of gas the user is willing to pay in fees. Alternative to specifying fees.
+- [wrapper](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/auth/tx/builder.go#L19-L33) for creating transactions for `SIGN_MODE_DIRECT`,
+- [StdTxBuilder](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/auth/legacy/legacytx/stdtx_builder.go#L14-L20) for `SIGN_MODE_LEGACY_AMINO_JSON`.
 
-The `Context` is initialized using the application's `codec` and data more closely related to the user interaction with the interface, holding data such as the output to the user and the broadcast mode. Read more about `Context` [here](../interfaces/query-lifecycle.md#context).
+However, the two implementation of `TxBuilder` should be hidden away from end-users, as they should prefer using the overarching `TxConfig` interface:
 
-Every message in a transaction must be signed by the addresses specified by `GetSigners`. The signing process must be handled by a module, and the most widely used one is the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module. Signing is automatically performed when the transaction is created, unless the user choses to generate and sign separately. The `TxBuilder` (namely, the `KeyBase`) is used to perform the signing operations, and the `Context` is used to broadcast transactions.
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/client/tx_config.go#L21-L30
 
-### Handlers
+`TxConfig` is an app-wide configuration for managing transactions. Most importantly, it holds the information about whether to sign each transaction with `SIGN_MODE_DIRECT` or `SIGN_MODE_LEGACY_AMINO_JSON`. By calling `txBuilder := txConfig.NewTxBuilder()`, a new `TxBuilder` will be created with the appropriate sign mode.
 
-Since `message`s are module-specific types, each module needs a [`handler`](../building-modules/handler.md) to process all of its `message` types and trigger state changes within the module's scope. This design puts more responsibility on module developers, allowing application developers to reuse common functionalities without having to implement state transition logic repetitively. To read more about `handler`s, click [here](../building-modules/handler.md).
+Once `TxBuilder` is correctly populated with the setters exposed above, `TxConfig` will also take care of correctly encoding the bytes (again, either using `SIGN_MODE_DIRECT` or `SIGN_MODE_LEGACY_AMINO_JSON`). Here's a pseudo-code snippet of how to generate and encode a transaction, using the `TxEncoder()` method:
+
+```go
+txBuilder := txConfig.NewTxBuilder()
+txBuilder.SetMsgs(...) // and other setters on txBuilder
+
+bz, err := txConfig.TxEncoder()(txBuilder.GetTx())
+// bz are bytes to be broadcasted over the network
+```
+
+### Broadcasting the Transaction
+
+Once the transaction bytes are generated, there are currently three ways of broadcasting it.
+
+#### CLI
+
+Application developers create entrypoints to the application by creating a [command-line interface](../interfaces/cli.md) and/or [REST interface](../interfaces/rest.md), typically found in the application's `./cmd` folder. These interfaces allow users to interact with the application through command-line.
+
+For the [command-line interface](../building-modules/module-interfaces.md#cli), module developers create subcommands to add as children to the application top-level transaction command `TxCmd`. CLI commands actually bundle all the steps of transaction processing into one simple command: creating messages, generating transactions and broadcasting. For concrete examples, see the [Interacting with a Node](../run-node/interact-node.md) section. An example transaction made using CLI looks like:
+
+```bash
+simd tx send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000stake
+```
+
+#### gRPC
+
+[gRPC](https://grpc.io) is introduced in Cosmos SDK 0.40 as the main component for the SDK's RPC layer. The principal usage of gRPC is in the context of modules' [`Query` services](../building-modules). However, the SDK also exposes a few other module-agnostic gRPC services, one of them being the `Tx` service:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/proto/cosmos/tx/v1beta1/service.proto
+
+The `Tx` service exposes a handful of utility functions, such as simulating a transaction or querying a transaction, and also one method to broadcast transactions.
+
+Examples of broadcasting and simulating a transaction are shown [here](../run-node/txs.md#programmatically-with-go).
+
+#### REST
+
+Each gRPC method has its corresponding REST endpoint, generated using [gRPC-gateway](https://github.com/grpc-ecosystem/grpc-gateway). Therefore, instead of using gRPC, you can also use HTTP to broadcast the same transaction, on the `POST /cosmos/tx/v1beta1/txs` endpoint.
+
+An example can be seen [here](../run-node/txs.md#using-rest)
+
+#### Tendermint RPC
+
+The three methods presented above are actually higher abstractions over the Tendermint RPC `/broadcast_tx_{async,sync,commit}` endpoints, documented [here](https://docs.tendermint.com/master/rpc/#/Tx). This means that you can use the Tendermint RPC endpoints directly to broadcast the transaction, if you wish so.
 
 ## Next {hide}
 

@@ -352,8 +352,11 @@ func (s *decCoinTestSuite) TestParseDecCoins() {
 		expectedErr    bool
 	}{
 		{"", nil, false},
-		{"4stake", nil, true},
-		{"5.5atom,4stake", nil, true},
+		{"4stake", sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdk.NewDecFromInt(sdk.NewInt(4)))}, false},
+		{"5.5atom,4stake", sdk.DecCoins{
+			sdk.NewDecCoinFromDec("atom", sdk.NewDecWithPrec(5500000000000000000, sdk.Precision)),
+			sdk.NewDecCoinFromDec("stake", sdk.NewDec(4)),
+		}, false},
 		{"0.0stake", sdk.DecCoins{}, false}, // remove zero coins
 		{"10.0btc,1.0atom,20.0btc", nil, true},
 		{

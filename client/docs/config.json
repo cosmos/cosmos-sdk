@@ -29,6 +29,14 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/cosmos/base/tendermint/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "BaseParams"
+        }
+      }
+    },
+    {
       "url": "./tmp-swagger-gen/cosmos/distribution/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
@@ -83,6 +91,12 @@
           "Params": "StakingParams",
           "DelegatorValidators": "StakingDelegatorValidators"
         }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/cosmos/tx/v1beta1/service.swagger.json",
+      "dereference": {
+        "circular": "ignore"
       }
     },
     {

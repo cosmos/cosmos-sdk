@@ -11,7 +11,6 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
@@ -31,15 +30,15 @@ const (
 
 	// AddrLen defines a valid address length
 	AddrLen = 20
-	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
+	// Bech32MainPrefix defines the main SDK Bech32 prefix of an account's address
 	Bech32MainPrefix = "cosmos"
 
-	// Atom in https://github.com/satoshilabs/slips/blob/master/slip-0044.md
+	// CoinType is the ATOM coin type as defined in SLIP44 (https://github.com/satoshilabs/slips/blob/master/slip-0044.md)
 	CoinType = 118
 
-	// BIP44Prefix is the parts of the BIP44 HD path that are fixed by
-	// what we used during the fundraiser.
-	FullFundraiserPath = "44'/118'/0'/0/0"
+	// FullFundraiserPath is the parts of the BIP44 HD path that are fixed by
+	// what we used during the ATOM fundraiser.
+	FullFundraiserPath = "m/44'/118'/0'/0/0"
 
 	// PrefixAccount is the prefix for account keys
 	PrefixAccount = "acc"
@@ -663,7 +662,7 @@ func GetPubKeyFromBech32(pkt Bech32PubKeyType, pubkeyStr string) (cryptotypes.Pu
 		return nil, err
 	}
 
-	return cryptocodec.PubKeyFromBytes(bz)
+	return legacy.PubKeyFromBytes(bz)
 }
 
 // MustGetPubKeyFromBech32 calls GetPubKeyFromBech32 except it panics on error.

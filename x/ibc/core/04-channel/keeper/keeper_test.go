@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -30,16 +31,19 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
 	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
+	// commit some blocks so that QueryProof returns valid proof (cannot return valid query if height <= 1)
+	suite.coordinator.CommitNBlocks(suite.chainA, 2)
+	suite.coordinator.CommitNBlocks(suite.chainB, 2)
 }
 
 // TestSetChannel create clients and connections on both chains. It tests for the non-existence
 // and existence of a channel in INIT on chainA.
 func (suite *KeeperTestSuite) TestSetChannel() {
 	// create client and connections on both chains
-	_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+	_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 
-	// check for channel to be created on chainB
-	channelA := connA.NextTestChannel(ibctesting.MockPort)
+	// check for channel to be created on chainA
+	channelA := suite.chainA.NextTestChannel(connA, ibctesting.MockPort)
 	_, found := suite.chainA.App.IBCKeeper.ChannelKeeper.GetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID)
 	suite.False(found)
 
@@ -48,7 +52,8 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 	suite.NoError(err)
 
 	storedChannel, found := suite.chainA.App.IBCKeeper.ChannelKeeper.GetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID)
-	expectedCounterparty := types.NewCounterparty(channelB.PortID, channelB.ID)
+	// counterparty channel id is empty after open init
+	expectedCounterparty := types.NewCounterparty(channelB.PortID, "")
 
 	suite.True(found)
 	suite.Equal(types.INIT, storedChannel.State)
@@ -79,9 +84,10 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	testchannel2, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA1, connB1, ibctesting.MockPort, ibctesting.MockPort, types.UNORDERED)
 	suite.Require().NoError(err)
 
+	// counterparty channel id is empty after open init
 	counterparty2 := types.Counterparty{
 		PortId:    connB1.Channels[0].PortID,
-		ChannelId: connB1.Channels[0].ID,
+		ChannelId: "",
 	}
 
 	channel0 := types.NewChannel(
@@ -160,12 +166,13 @@ func (suite KeeperTestSuite) TestGetAllPacketState() {
 	ack3 := types.NewPacketState(channelA1.PortID, channelA1.ID, 1, []byte("ack"))
 
 	// create channel 0 receipts
-	rec1 := types.NewPacketState(channelA0.PortID, channelA0.ID, 1, []byte(""))
-	rec2 := types.NewPacketState(channelA0.PortID, channelA0.ID, 2, []byte(""))
+	receipt := string([]byte{byte(1)})
+	rec1 := types.NewPacketState(channelA0.PortID, channelA0.ID, 1, []byte(receipt))
+	rec2 := types.NewPacketState(channelA0.PortID, channelA0.ID, 2, []byte(receipt))
 
 	// channel 1 receipts
-	rec3 := types.NewPacketState(channelA1.PortID, channelA1.ID, 1, []byte(""))
-	rec4 := types.NewPacketState(channelA1.PortID, channelA1.ID, 2, []byte(""))
+	rec3 := types.NewPacketState(channelA1.PortID, channelA1.ID, 1, []byte(receipt))
+	rec4 := types.NewPacketState(channelA1.PortID, channelA1.ID, 2, []byte(receipt))
 
 	// channel 0 packet commitments
 	comm1 := types.NewPacketState(channelA0.PortID, channelA0.ID, 1, []byte("hash"))

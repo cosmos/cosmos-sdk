@@ -5,9 +5,9 @@ package types
 
 import (
 	fmt "fmt"
+	_go "github.com/confio/ics23/go"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
-	crypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -23,34 +23,6 @@ var _ = math.Inf
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
-
-// KeyEncoding defines the encoding format of a key's bytes.
-type KeyEncoding int32
-
-const (
-	// URL encoding
-	URL KeyEncoding = 0
-	// Hex encoding
-	HEX KeyEncoding = 1
-)
-
-var KeyEncoding_name = map[int32]string{
-	0: "KEY_ENCODING_URL_UNSPECIFIED",
-	1: "KEY_ENCODING_HEX",
-}
-
-var KeyEncoding_value = map[string]int32{
-	"KEY_ENCODING_URL_UNSPECIFIED": 0,
-	"KEY_ENCODING_HEX":             1,
-}
-
-func (x KeyEncoding) String() string {
-	return proto.EnumName(KeyEncoding_name, int32(x))
-}
-
-func (KeyEncoding) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_7921d88972a41469, []int{0}
-}
 
 // MerkleRoot defines a merkle root hash.
 // In the Cosmos SDK, the AppHash of a block header becomes the root.
@@ -140,8 +112,9 @@ func (m *MerklePrefix) GetKeyPrefix() []byte {
 
 // MerklePath is the path used to verify commitment proofs, which can be an
 // arbitrary structured object (defined by a commitment type).
+// MerklePath is represented from root-to-leaf
 type MerklePath struct {
-	KeyPath KeyPath `protobuf:"bytes,1,opt,name=key_path,json=keyPath,proto3" json:"key_path" yaml:"key_path"`
+	KeyPath []string `protobuf:"bytes,1,rep,name=key_path,json=keyPath,proto3" json:"key_path,omitempty" yaml:"key_path"`
 }
 
 func (m *MerklePath) Reset()      { *m = MerklePath{} }
@@ -176,19 +149,20 @@ func (m *MerklePath) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MerklePath proto.InternalMessageInfo
 
-func (m *MerklePath) GetKeyPath() KeyPath {
+func (m *MerklePath) GetKeyPath() []string {
 	if m != nil {
 		return m.KeyPath
 	}
-	return KeyPath{}
+	return nil
 }
 
-// MerkleProof is a wrapper type that contains a merkle proof.
+// MerkleProof is a wrapper type over a chain of CommitmentProofs.
 // It demonstrates membership or non-membership for an element or set of
 // elements, verifiable in conjunction with a known commitment root. Proofs
 // should be succinct.
+// MerkleProofs are ordered from leaf-to-root
 type MerkleProof struct {
-	Proof *crypto.ProofOps `protobuf:"bytes,1,opt,name=proof,proto3" json:"proof,omitempty"`
+	Proofs []*_go.CommitmentProof `protobuf:"bytes,1,rep,name=proofs,proto3" json:"proofs,omitempty"`
 }
 
 func (m *MerkleProof) Reset()         { *m = MerkleProof{} }
@@ -224,97 +198,18 @@ func (m *MerkleProof) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MerkleProof proto.InternalMessageInfo
 
-func (m *MerkleProof) GetProof() *crypto.ProofOps {
+func (m *MerkleProof) GetProofs() []*_go.CommitmentProof {
 	if m != nil {
-		return m.Proof
+		return m.Proofs
 	}
 	return nil
 }
 
-// KeyPath defines a slice of keys
-type KeyPath struct {
-	Keys []*Key `protobuf:"bytes,1,rep,name=keys,proto3" json:"keys,omitempty"`
-}
-
-func (m *KeyPath) Reset()      { *m = KeyPath{} }
-func (*KeyPath) ProtoMessage() {}
-func (*KeyPath) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7921d88972a41469, []int{4}
-}
-func (m *KeyPath) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *KeyPath) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_KeyPath.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *KeyPath) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_KeyPath.Merge(m, src)
-}
-func (m *KeyPath) XXX_Size() int {
-	return m.Size()
-}
-func (m *KeyPath) XXX_DiscardUnknown() {
-	xxx_messageInfo_KeyPath.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_KeyPath proto.InternalMessageInfo
-
-// Key defines a proof Key
-type Key struct {
-	Name []byte      `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Enc  KeyEncoding `protobuf:"varint,2,opt,name=enc,proto3,enum=ibc.core.commitment.v1.KeyEncoding" json:"enc,omitempty"`
-}
-
-func (m *Key) Reset()         { *m = Key{} }
-func (m *Key) String() string { return proto.CompactTextString(m) }
-func (*Key) ProtoMessage()    {}
-func (*Key) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7921d88972a41469, []int{5}
-}
-func (m *Key) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *Key) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Key.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *Key) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Key.Merge(m, src)
-}
-func (m *Key) XXX_Size() int {
-	return m.Size()
-}
-func (m *Key) XXX_DiscardUnknown() {
-	xxx_messageInfo_Key.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Key proto.InternalMessageInfo
-
 func init() {
-	proto.RegisterEnum("ibc.core.commitment.v1.KeyEncoding", KeyEncoding_name, KeyEncoding_value)
 	proto.RegisterType((*MerkleRoot)(nil), "ibc.core.commitment.v1.MerkleRoot")
 	proto.RegisterType((*MerklePrefix)(nil), "ibc.core.commitment.v1.MerklePrefix")
 	proto.RegisterType((*MerklePath)(nil), "ibc.core.commitment.v1.MerklePath")
 	proto.RegisterType((*MerkleProof)(nil), "ibc.core.commitment.v1.MerkleProof")
-	proto.RegisterType((*KeyPath)(nil), "ibc.core.commitment.v1.KeyPath")
-	proto.RegisterType((*Key)(nil), "ibc.core.commitment.v1.Key")
 }
 
 func init() {
@@ -322,39 +217,28 @@ func init() {
 }
 
 var fileDescriptor_7921d88972a41469 = []byte{
-	// 499 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x92, 0x4f, 0x6f, 0xd3, 0x30,
-	0x18, 0xc6, 0x13, 0x5a, 0xe8, 0x70, 0x27, 0x28, 0x16, 0x7f, 0xaa, 0xc2, 0x92, 0x2a, 0x48, 0x30,
-	0x90, 0x16, 0xab, 0x1d, 0x5c, 0xca, 0x05, 0x75, 0x0d, 0xac, 0xea, 0xe8, 0x2a, 0x4f, 0x45, 0x03,
-	0x09, 0x55, 0x69, 0xea, 0x26, 0x51, 0x96, 0x38, 0x4a, 0xcc, 0xb4, 0x7c, 0x83, 0x89, 0x13, 0x47,
-	0x2e, 0x48, 0x48, 0x7c, 0x99, 0x1d, 0x77, 0xe4, 0x54, 0xa1, 0xf6, 0x1b, 0xec, 0x13, 0x20, 0xdb,
-	0x2d, 0x0b, 0x12, 0x70, 0xca, 0x6b, 0xbd, 0xbf, 0x37, 0xcf, 0xe3, 0xc7, 0x2f, 0x78, 0xec, 0x8f,
-	0x1d, 0xe4, 0xd0, 0x84, 0x20, 0x87, 0x86, 0xa1, 0xcf, 0x42, 0x12, 0x31, 0x74, 0xdc, 0xc8, 0x9d,
-	0xcc, 0x38, 0xa1, 0x8c, 0xc2, 0xbb, 0xfe, 0xd8, 0x31, 0x39, 0x68, 0xe6, 0x5a, 0xc7, 0x8d, 0xda,
-	0x6d, 0x97, 0xba, 0x54, 0x20, 0x88, 0x57, 0x92, 0xae, 0x6d, 0x30, 0x12, 0x4d, 0x48, 0x12, 0xfa,
-	0x11, 0x43, 0x4e, 0x92, 0xc5, 0x8c, 0xa2, 0x38, 0xa1, 0x74, 0x2a, 0xdb, 0xc6, 0x23, 0x00, 0xde,
-	0x90, 0x24, 0x38, 0x22, 0x98, 0x52, 0x06, 0x21, 0x28, 0x7a, 0x76, 0xea, 0x55, 0xd5, 0xba, 0xba,
-	0xb9, 0x8e, 0x45, 0xdd, 0x2a, 0x9e, 0x7e, 0xd3, 0x15, 0xa3, 0x03, 0xd6, 0x25, 0x37, 0x48, 0xc8,
-	0xd4, 0x3f, 0x81, 0xcf, 0x00, 0x08, 0x48, 0x36, 0x8a, 0xc5, 0x49, 0xf2, 0xed, 0x3b, 0x17, 0x33,
-	0xfd, 0x56, 0x66, 0x87, 0x47, 0x2d, 0xe3, 0xb2, 0x67, 0xe0, 0xeb, 0x01, 0xc9, 0xe4, 0x94, 0xe1,
-	0xae, 0xd4, 0x06, 0x36, 0xf3, 0xe0, 0x01, 0x58, 0x13, 0x9c, 0xcd, 0xa4, 0x62, 0xb9, 0xa9, 0x9b,
-	0x7f, 0xbf, 0x9b, 0xd9, 0x23, 0x19, 0x1f, 0x69, 0xdf, 0x3b, 0x9b, 0xe9, 0xca, 0xc5, 0x4c, 0xbf,
-	0x99, 0x93, 0xb1, 0x99, 0x67, 0xe0, 0x52, 0x20, 0x89, 0x56, 0xf1, 0x0b, 0xb7, 0xfb, 0x12, 0x94,
-	0x57, 0x76, 0x29, 0x9d, 0xc2, 0x06, 0xb8, 0x2a, 0x2e, 0xbd, 0x94, 0xb9, 0x6f, 0x5e, 0x86, 0x62,
-	0xca, 0x50, 0x4c, 0x01, 0xee, 0xc7, 0x29, 0x96, 0xa4, 0xd1, 0x01, 0xa5, 0xa5, 0x28, 0x44, 0xa0,
-	0x18, 0x90, 0x2c, 0xad, 0xaa, 0xf5, 0x82, 0x18, 0xfe, 0xb7, 0x47, 0x2c, 0xc0, 0xd6, 0x1a, 0x8f,
-	0x4c, 0xf8, 0x78, 0x0b, 0x0a, 0x3d, 0x92, 0xf1, 0x5c, 0x23, 0x3b, 0x24, 0xab, 0x5c, 0x79, 0x0d,
-	0x9f, 0x83, 0x02, 0x89, 0x9c, 0xea, 0x95, 0xba, 0xba, 0x79, 0xa3, 0xf9, 0xf0, 0x3f, 0x3f, 0xb5,
-	0x22, 0x87, 0x4e, 0xfc, 0xc8, 0xc5, 0x9c, 0x97, 0xcf, 0xf1, 0xf4, 0x03, 0x28, 0xe7, 0x3a, 0xf0,
-	0x09, 0x78, 0xd0, 0xb3, 0xde, 0x8d, 0xac, 0xfe, 0xce, 0x7e, 0xa7, 0xdb, 0x7f, 0x3d, 0x1a, 0xe2,
-	0xbd, 0xd1, 0xb0, 0x7f, 0x30, 0xb0, 0x76, 0xba, 0xaf, 0xba, 0x56, 0xa7, 0xa2, 0xd4, 0x4a, 0x9f,
-	0xbe, 0xd6, 0x0b, 0x43, 0xbc, 0x07, 0x37, 0x40, 0xe5, 0x0f, 0x74, 0xd7, 0x3a, 0xac, 0xa8, 0xb2,
-	0xbd, 0x6b, 0x1d, 0xd6, 0x8a, 0xa7, 0xdf, 0x35, 0xa5, 0x3d, 0x3c, 0x9b, 0x6b, 0xea, 0xf9, 0x5c,
-	0x53, 0x7f, 0xce, 0x35, 0xf5, 0xf3, 0x42, 0x53, 0xce, 0x17, 0x9a, 0xf2, 0x63, 0xa1, 0x29, 0xef,
-	0x5f, 0xb8, 0x3e, 0xf3, 0x3e, 0x8e, 0xb9, 0x4b, 0xe4, 0xd0, 0x34, 0xa4, 0xe9, 0xf2, 0xb3, 0x95,
-	0x4e, 0x02, 0x74, 0x82, 0x7e, 0x2f, 0x71, 0x73, 0x7b, 0x2b, 0xb7, 0xc7, 0x2c, 0x8b, 0x49, 0x3a,
-	0xbe, 0x26, 0x76, 0x6e, 0xfb, 0x57, 0x00, 0x00, 0x00, 0xff, 0xff, 0x8a, 0x78, 0x4b, 0x97, 0xeb,
-	0x02, 0x00, 0x00,
+	// 334 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x4c, 0x91, 0xcf, 0x4e, 0xfa, 0x40,
+	0x10, 0xc7, 0xdb, 0xfc, 0x08, 0x3f, 0x59, 0x48, 0x8c, 0x45, 0x89, 0xe1, 0x50, 0x4c, 0x0f, 0xca,
+	0x85, 0xdd, 0x00, 0x9e, 0x30, 0x5e, 0xaa, 0x57, 0x13, 0xd2, 0xc4, 0x8b, 0x17, 0xd3, 0xae, 0x5b,
+	0xba, 0x29, 0x65, 0x9a, 0xee, 0x4a, 0xe8, 0x1b, 0x78, 0xf4, 0xe8, 0xd1, 0xc7, 0xf1, 0xc8, 0xd1,
+	0x13, 0x31, 0xf0, 0x06, 0x3c, 0x81, 0xe9, 0x2e, 0x60, 0x4f, 0x3b, 0xb3, 0xf3, 0x99, 0x7f, 0xdf,
+	0x41, 0x57, 0x3c, 0xa0, 0x84, 0x42, 0xc6, 0x08, 0x85, 0x24, 0xe1, 0x32, 0x61, 0x33, 0x49, 0xe6,
+	0xfd, 0x92, 0x87, 0xd3, 0x0c, 0x24, 0x58, 0x2d, 0x1e, 0x50, 0x5c, 0x80, 0xb8, 0x14, 0x9a, 0xf7,
+	0xdb, 0xa7, 0x13, 0x98, 0x80, 0x42, 0x48, 0x61, 0x69, 0xba, 0xdd, 0xa4, 0x30, 0x0b, 0x39, 0x90,
+	0x34, 0x03, 0x08, 0x85, 0xfe, 0x74, 0x2e, 0x11, 0x7a, 0x60, 0x59, 0x3c, 0x65, 0x1e, 0x80, 0xb4,
+	0x2c, 0x54, 0x89, 0x7c, 0x11, 0x9d, 0x9b, 0x17, 0x66, 0xb7, 0xe1, 0x29, 0x7b, 0x54, 0x79, 0xfb,
+	0xec, 0x18, 0xce, 0x3d, 0x6a, 0x68, 0x6e, 0x9c, 0xb1, 0x90, 0x2f, 0xac, 0x6b, 0x84, 0x62, 0x96,
+	0x3f, 0xa7, 0xca, 0xd3, 0xbc, 0x7b, 0xb6, 0x5d, 0x75, 0x4e, 0x72, 0x3f, 0x99, 0x8e, 0x9c, 0xbf,
+	0x98, 0xe3, 0xd5, 0x62, 0x96, 0xeb, 0x2c, 0xc7, 0xdd, 0x77, 0x1b, 0xfb, 0x32, 0xb2, 0x30, 0x3a,
+	0x52, 0x9c, 0x2f, 0x8b, 0x8e, 0xff, 0xba, 0x35, 0xb7, 0xb9, 0x5d, 0x75, 0x8e, 0x4b, 0x15, 0x7c,
+	0x19, 0x39, 0xde, 0xff, 0x22, 0xdf, 0x97, 0xd1, 0xa8, 0xf2, 0x51, 0x4c, 0x72, 0x8b, 0xea, 0xfb,
+	0x49, 0x00, 0x42, 0x0b, 0xa3, 0xaa, 0x5e, 0x48, 0x95, 0xa8, 0x0f, 0x5a, 0x98, 0x53, 0x31, 0x18,
+	0xe2, 0xbb, 0x83, 0x22, 0x8a, 0xf3, 0x76, 0x94, 0xfb, 0xf8, 0xb5, 0xb6, 0xcd, 0xe5, 0xda, 0x36,
+	0x7f, 0xd6, 0xb6, 0xf9, 0xbe, 0xb1, 0x8d, 0xe5, 0xc6, 0x36, 0xbe, 0x37, 0xb6, 0xf1, 0x74, 0x33,
+	0xe1, 0x32, 0x7a, 0x0d, 0x0a, 0x2d, 0x09, 0x05, 0x91, 0x80, 0xd8, 0x3d, 0x3d, 0xf1, 0x12, 0x93,
+	0x05, 0x39, 0x5c, 0x65, 0x30, 0xec, 0x95, 0x0e, 0x23, 0xf3, 0x94, 0x89, 0xa0, 0xaa, 0xe4, 0x1c,
+	0xfe, 0x06, 0x00, 0x00, 0xff, 0xff, 0x1b, 0xe7, 0x68, 0xd0, 0xbc, 0x01, 0x00, 0x00,
 }
 
 func (m *MerkleRoot) Marshal() (dAtA []byte, err error) {
@@ -437,16 +321,15 @@ func (m *MerklePath) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size, err := m.KeyPath.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
+	if len(m.KeyPath) > 0 {
+		for iNdEx := len(m.KeyPath) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.KeyPath[iNdEx])
+			copy(dAtA[i:], m.KeyPath[iNdEx])
+			i = encodeVarintCommitment(dAtA, i, uint64(len(m.KeyPath[iNdEx])))
+			i--
+			dAtA[i] = 0xa
 		}
-		i -= size
-		i = encodeVarintCommitment(dAtA, i, uint64(size))
 	}
-	i--
-	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -470,45 +353,10 @@ func (m *MerkleProof) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Proof != nil {
-		{
-			size, err := m.Proof.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintCommitment(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *KeyPath) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *KeyPath) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *KeyPath) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Keys) > 0 {
-		for iNdEx := len(m.Keys) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.Proofs) > 0 {
+		for iNdEx := len(m.Proofs) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.Keys[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.Proofs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -518,41 +366,6 @@ func (m *KeyPath) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0xa
 		}
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *Key) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *Key) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Key) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Enc != 0 {
-		i = encodeVarintCommitment(dAtA, i, uint64(m.Enc))
-		i--
-		dAtA[i] = 0x10
-	}
-	if len(m.Name) > 0 {
-		i -= len(m.Name)
-		copy(dAtA[i:], m.Name)
-		i = encodeVarintCommitment(dAtA, i, uint64(len(m.Name)))
-		i--
-		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -600,8 +413,12 @@ func (m *MerklePath) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.KeyPath.Size()
-	n += 1 + l + sovCommitment(uint64(l))
+	if len(m.KeyPath) > 0 {
+		for _, s := range m.KeyPath {
+			l = len(s)
+			n += 1 + l + sovCommitment(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -611,40 +428,11 @@ func (m *MerkleProof) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Proof != nil {
-		l = m.Proof.Size()
-		n += 1 + l + sovCommitment(uint64(l))
-	}
-	return n
-}
-
-func (m *KeyPath) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.Keys) > 0 {
-		for _, e := range m.Keys {
+	if len(m.Proofs) > 0 {
+		for _, e := range m.Proofs {
 			l = e.Size()
 			n += 1 + l + sovCommitment(uint64(l))
 		}
-	}
-	return n
-}
-
-func (m *Key) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Name)
-	if l > 0 {
-		n += 1 + l + sovCommitment(uint64(l))
-	}
-	if m.Enc != 0 {
-		n += 1 + sovCommitment(uint64(m.Enc))
 	}
 	return n
 }
@@ -724,10 +512,7 @@ func (m *MerkleRoot) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthCommitment
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthCommitment
 			}
 			if (iNdEx + skippy) > l {
@@ -811,10 +596,7 @@ func (m *MerklePrefix) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthCommitment
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthCommitment
 			}
 			if (iNdEx + skippy) > l {
@@ -862,7 +644,7 @@ func (m *MerklePath) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field KeyPath", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCommitment
@@ -872,24 +654,23 @@ func (m *MerklePath) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthCommitment
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthCommitment
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.KeyPath.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.KeyPath = append(m.KeyPath, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -897,10 +678,7 @@ func (m *MerklePath) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthCommitment
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthCommitment
 			}
 			if (iNdEx + skippy) > l {
@@ -946,7 +724,7 @@ func (m *MerkleProof) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Proof", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Proofs", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -973,10 +751,8 @@ func (m *MerkleProof) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Proof == nil {
-				m.Proof = &crypto.ProofOps{}
-			}
-			if err := m.Proof.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Proofs = append(m.Proofs, &_go.CommitmentProof{})
+			if err := m.Proofs[len(m.Proofs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -986,203 +762,7 @@ func (m *MerkleProof) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthCommitment
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthCommitment
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *KeyPath) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowCommitment
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: KeyPath: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: KeyPath: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Keys", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCommitment
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthCommitment
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthCommitment
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Keys = append(m.Keys, &Key{})
-			if err := m.Keys[len(m.Keys)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipCommitment(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthCommitment
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthCommitment
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *Key) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowCommitment
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Key: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Key: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCommitment
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthCommitment
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthCommitment
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Name = append(m.Name[:0], dAtA[iNdEx:postIndex]...)
-			if m.Name == nil {
-				m.Name = []byte{}
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Enc", wireType)
-			}
-			m.Enc = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCommitment
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Enc |= KeyEncoding(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipCommitment(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthCommitment
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthCommitment
 			}
 			if (iNdEx + skippy) > l {

@@ -11,7 +11,7 @@ This repository contains documentation on concepts developers need to know in or
 1. [Introduction to Cosmos SDK Modules](./intro.md)
 2. [`AppModule` Interface and Module Manager](./module-manager.md)
 3. [Messages and Queries](./messages-and-queries.md)
-4. [`Handler`s - Processing Messages](./handler.md)
+4. [`Msg` services - Processing Messages](./msg-services.md)
 5. [Query Services - Processing Queries](./query-services.md)
 6. [BeginBlocker and EndBlocker](./beginblock-endblock.md)
 7. [`Keeper`s](./keeper.md)

@@ -13,25 +13,30 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types";
 service Query {
   // ClientState queries an IBC light client.
   rpc ClientState(QueryClientStateRequest) returns (QueryClientStateResponse) {
-    option (google.api.http).get = "/ibc/client/v1beta1/client_states/{client_id}";
+    option (google.api.http).get = "/ibc/core/client/v1beta1/client_states/{client_id}";
   }
 
   // ClientStates queries all the IBC light clients of a chain.
   rpc ClientStates(QueryClientStatesRequest) returns (QueryClientStatesResponse) {
-    option (google.api.http).get = "/ibc/client/v1beta1/client_states";
+    option (google.api.http).get = "/ibc/core/client/v1beta1/client_states";
   }
 
   // ConsensusState queries a consensus state associated with a client state at
   // a given height.
   rpc ConsensusState(QueryConsensusStateRequest) returns (QueryConsensusStateResponse) {
-    option (google.api.http).get = "/ibc/client/v1beta1/consensus_states/{client_id}/version/{version_number}/"
-                                   "height/{version_height}";
+    option (google.api.http).get = "/ibc/core/client/v1beta1/consensus_states/{client_id}/revision/{revision_number}/"
+                                   "height/{revision_height}";
   }
 
   // ConsensusStates queries all the consensus state associated with a given
   // client.
   rpc ConsensusStates(QueryConsensusStatesRequest) returns (QueryConsensusStatesResponse) {
-    option (google.api.http).get = "/ibc/client/v1beta1/consensus_states/{client_id}";
+    option (google.api.http).get = "/ibc/core/client/v1beta1/consensus_states/{client_id}";
+  }
+
+  // ClientParams queries all parameters of the ibc client.
+  rpc ClientParams(QueryClientParamsRequest) returns (QueryClientParamsResponse) {
+    option (google.api.http).get = "/ibc/client/v1beta1/params";
   }
 }
 
@@ -65,7 +70,8 @@ message QueryClientStatesRequest {
 // method.
 message QueryClientStatesResponse {
   // list of stored ClientStates of the chain.
-  repeated IdentifiedClientState client_states = 1;
+  repeated IdentifiedClientState client_states = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "IdentifiedClientStates"];
   // pagination response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
@@ -76,10 +82,10 @@ message QueryClientStatesResponse {
 message QueryConsensusStateRequest {
   // client identifier
   string client_id = 1;
-  // consensus state version number
-  uint64 version_number = 2;
-  // consensus state version height
-  uint64 version_height = 3;
+  // consensus state revision number
+  uint64 revision_number = 2;
+  // consensus state revision height
+  uint64 revision_height = 3;
   // latest_height overrrides the height field and queries the latest stored
   // ConsensusState
   bool latest_height = 4;
@@ -112,4 +118,13 @@ message QueryConsensusStatesResponse {
   repeated ConsensusStateWithHeight consensus_states = 1 [(gogoproto.nullable) = false];
   // pagination response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryClientParamsRequest is the request type for the Query/ClientParams RPC method.
+message QueryClientParamsRequest {}
+
+// QueryClientParamsResponse is the response type for the Query/ClientParams RPC method.
+message QueryClientParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1;
 }

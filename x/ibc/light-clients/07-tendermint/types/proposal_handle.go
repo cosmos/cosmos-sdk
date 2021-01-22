@@ -53,7 +53,7 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 		// if the client is expired we unexpire the client using softer validation, otherwise
 		// full validation on the header is performed.
 		if cs.IsExpired(consensusState.Timestamp, ctx.BlockTime()) {
-			return cs.unexpireClient(consensusState, tmHeader, ctx.BlockTime())
+			return cs.unexpireClient(ctx, clientStore, consensusState, tmHeader, ctx.BlockTime())
 		}
 
 		// NOTE: the client may be frozen again since the misbehaviour evidence may
@@ -61,7 +61,7 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 		return cs.CheckHeaderAndUpdateState(ctx, cdc, clientStore, header)
 
 	case cs.AllowUpdateAfterExpiry && cs.IsExpired(consensusState.Timestamp, ctx.BlockTime()):
-		return cs.unexpireClient(consensusState, tmHeader, ctx.BlockTime())
+		return cs.unexpireClient(ctx, clientStore, consensusState, tmHeader, ctx.BlockTime())
 
 	default:
 		return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "client cannot be updated with proposal")
@@ -72,7 +72,7 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 // unexpireClient checks if the proposed header is sufficient to update an expired client.
 // The client is updated if no error occurs.
 func (cs ClientState) unexpireClient(
-	consensusState *ConsensusState, header *Header, currentTimestamp time.Time,
+	ctx sdk.Context, clientStore sdk.KVStore, consensusState *ConsensusState, header *Header, currentTimestamp time.Time,
 ) (exported.ClientState, exported.ConsensusState, error) {
 
 	// the client is expired and either AllowUpdateAfterMisbehaviour or AllowUpdateAfterExpiry
@@ -81,7 +81,7 @@ func (cs ClientState) unexpireClient(
 		return nil, nil, err
 	}
 
-	newClientState, consensusState := update(&cs, header)
+	newClientState, consensusState := update(ctx, clientStore, &cs, header)
 	return newClientState, consensusState, nil
 }
 

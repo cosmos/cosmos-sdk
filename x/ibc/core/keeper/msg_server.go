@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/armon/go-metrics"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -32,14 +33,15 @@ func (k Keeper) CreateClient(goCtx context.Context, msg *clienttypes.MsgCreateCl
 		return nil, err
 	}
 
-	if err = k.ClientKeeper.CreateClient(ctx, msg.ClientId, clientState, consensusState); err != nil {
+	clientID, err := k.ClientKeeper.CreateClient(ctx, clientState, consensusState)
+	if err != nil {
 		return nil, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			clienttypes.EventTypeCreateClient,
-			sdk.NewAttribute(clienttypes.AttributeKeyClientID, msg.ClientId),
+			sdk.NewAttribute(clienttypes.AttributeKeyClientID, clientID),
 			sdk.NewAttribute(clienttypes.AttributeKeyClientType, clientState.ClientType()),
 			sdk.NewAttribute(clienttypes.AttributeKeyConsensusHeight, clientState.GetLatestHeight().String()),
 		),
@@ -83,8 +85,13 @@ func (k Keeper) UpgradeClient(goCtx context.Context, msg *clienttypes.MsgUpgrade
 	if err != nil {
 		return nil, err
 	}
+	upgradedConsState, err := clienttypes.UnpackConsensusState(msg.ConsensusState)
+	if err != nil {
+		return nil, err
+	}
 
-	if err = k.ClientKeeper.UpgradeClient(ctx, msg.ClientId, upgradedClient, msg.UpgradeHeight, msg.ProofUpgrade); err != nil {
+	if err = k.ClientKeeper.UpgradeClient(ctx, msg.ClientId, upgradedClient, upgradedConsState,
+		msg.ProofUpgradeClient, msg.ProofUpgradeConsensusState); err != nil {
 		return nil, err
 	}
 
@@ -127,16 +134,15 @@ func (k Keeper) SubmitMisbehaviour(goCtx context.Context, msg *clienttypes.MsgSu
 func (k Keeper) ConnectionOpenInit(goCtx context.Context, msg *connectiontypes.MsgConnectionOpenInit) (*connectiontypes.MsgConnectionOpenInitResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := k.ConnectionKeeper.ConnOpenInit(
-		ctx, msg.ConnectionId, msg.ClientId, msg.Counterparty, msg.Version,
-	); err != nil {
+	connectionID, err := k.ConnectionKeeper.ConnOpenInit(ctx, msg.ClientId, msg.Counterparty, msg.Version, msg.DelayPeriod)
+	if err != nil {
 		return nil, sdkerrors.Wrap(err, "connection handshake open init failed")
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			connectiontypes.EventTypeConnectionOpenInit,
-			sdk.NewAttribute(connectiontypes.AttributeKeyConnectionID, msg.ConnectionId),
+			sdk.NewAttribute(connectiontypes.AttributeKeyConnectionID, connectionID),
 			sdk.NewAttribute(connectiontypes.AttributeKeyClientID, msg.ClientId),
 			sdk.NewAttribute(connectiontypes.AttributeKeyCounterpartyClientID, msg.Counterparty.ClientId),
 			sdk.NewAttribute(connectiontypes.AttributeKeyCounterpartyConnectionID, msg.Counterparty.ConnectionId),
@@ -159,18 +165,19 @@ func (k Keeper) ConnectionOpenTry(goCtx context.Context, msg *connectiontypes.Ms
 		return nil, sdkerrors.Wrapf(err, "client in msg is not exported.ClientState. invalid client: %v.", targetClient)
 	}
 
-	if err := k.ConnectionKeeper.ConnOpenTry(
-		ctx, msg.DesiredConnectionId, msg.CounterpartyChosenConnectionId, msg.Counterparty, msg.ClientId, targetClient,
+	connectionID, err := k.ConnectionKeeper.ConnOpenTry(
+		ctx, msg.PreviousConnectionId, msg.Counterparty, msg.DelayPeriod, msg.ClientId, targetClient,
 		connectiontypes.ProtoVersionsToExported(msg.CounterpartyVersions), msg.ProofInit, msg.ProofClient, msg.ProofConsensus,
 		msg.ProofHeight, msg.ConsensusHeight,
-	); err != nil {
+	)
+	if err != nil {
 		return nil, sdkerrors.Wrap(err, "connection handshake open try failed")
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			connectiontypes.EventTypeConnectionOpenTry,
-			sdk.NewAttribute(connectiontypes.AttributeKeyConnectionID, msg.DesiredConnectionId),
+			sdk.NewAttribute(connectiontypes.AttributeKeyConnectionID, connectionID),
 			sdk.NewAttribute(connectiontypes.AttributeKeyClientID, msg.ClientId),
 			sdk.NewAttribute(connectiontypes.AttributeKeyCounterpartyClientID, msg.Counterparty.ClientId),
 			sdk.NewAttribute(connectiontypes.AttributeKeyCounterpartyConnectionID, msg.Counterparty.ConnectionId),
@@ -258,7 +265,7 @@ func (k Keeper) ChannelOpenInit(goCtx context.Context, msg *channeltypes.MsgChan
 		return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
 	}
 
-	_, cap, err := channel.HandleMsgChannelOpenInit(ctx, k.ChannelKeeper, portCap, msg)
+	_, channelID, cap, err := channel.HandleMsgChannelOpenInit(ctx, k.ChannelKeeper, portCap, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -269,7 +276,7 @@ func (k Keeper) ChannelOpenInit(goCtx context.Context, msg *channeltypes.MsgChan
 		return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 	}
 
-	if err = cbs.OnChanOpenInit(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortId, msg.ChannelId, cap, msg.Channel.Counterparty, msg.Channel.Version); err != nil {
+	if err = cbs.OnChanOpenInit(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortId, channelID, cap, msg.Channel.Counterparty, msg.Channel.Version); err != nil {
 		return nil, sdkerrors.Wrap(err, "channel open init callback failed")
 	}
 
@@ -285,7 +292,7 @@ func (k Keeper) ChannelOpenTry(goCtx context.Context, msg *channeltypes.MsgChann
 		return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
 	}
 
-	_, cap, err := channel.HandleMsgChannelOpenTry(ctx, k.ChannelKeeper, portCap, msg)
+	_, channelID, cap, err := channel.HandleMsgChannelOpenTry(ctx, k.ChannelKeeper, portCap, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -296,7 +303,7 @@ func (k Keeper) ChannelOpenTry(goCtx context.Context, msg *channeltypes.MsgChann
 		return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 	}
 
-	if err = cbs.OnChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortId, msg.DesiredChannelId, cap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion); err != nil {
+	if err = cbs.OnChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortId, channelID, cap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion); err != nil {
 		return nil, sdkerrors.Wrap(err, "channel open try callback failed")
 	}
 
@@ -319,13 +326,13 @@ func (k Keeper) ChannelOpenAck(goCtx context.Context, msg *channeltypes.MsgChann
 		return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 	}
 
-	if err = cbs.OnChanOpenAck(ctx, msg.PortId, msg.ChannelId, msg.CounterpartyVersion); err != nil {
-		return nil, sdkerrors.Wrap(err, "channel open ack callback failed")
-	}
-
 	_, err = channel.HandleMsgChannelOpenAck(ctx, k.ChannelKeeper, cap, msg)
 	if err != nil {
 		return nil, err
+	}
+
+	if err = cbs.OnChanOpenAck(ctx, msg.PortId, msg.ChannelId, msg.CounterpartyVersion); err != nil {
+		return nil, sdkerrors.Wrap(err, "channel open ack callback failed")
 	}
 
 	return &channeltypes.MsgChannelOpenAckResponse{}, nil
@@ -347,13 +354,13 @@ func (k Keeper) ChannelOpenConfirm(goCtx context.Context, msg *channeltypes.MsgC
 		return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 	}
 
-	if err = cbs.OnChanOpenConfirm(ctx, msg.PortId, msg.ChannelId); err != nil {
-		return nil, sdkerrors.Wrap(err, "channel open confirm callback failed")
-	}
-
 	_, err = channel.HandleMsgChannelOpenConfirm(ctx, k.ChannelKeeper, cap, msg)
 	if err != nil {
 		return nil, err
+	}
+
+	if err = cbs.OnChanOpenConfirm(ctx, msg.PortId, msg.ChannelId); err != nil {
+		return nil, sdkerrors.Wrap(err, "channel open confirm callback failed")
 	}
 
 	return &channeltypes.MsgChannelOpenConfirmResponse{}, nil
@@ -431,7 +438,7 @@ func (k Keeper) RecvPacket(goCtx context.Context, msg *channeltypes.MsgRecvPacke
 	}
 
 	// Perform TAO verification
-	if err := k.ChannelKeeper.RecvPacket(ctx, cap, msg.Packet, msg.Proof, msg.ProofHeight); err != nil {
+	if err := k.ChannelKeeper.RecvPacket(ctx, cap, msg.Packet, msg.ProofCommitment, msg.ProofHeight); err != nil {
 		return nil, sdkerrors.Wrap(err, "receive packet verification failed")
 	}
 
@@ -482,7 +489,7 @@ func (k Keeper) Timeout(goCtx context.Context, msg *channeltypes.MsgTimeout) (*c
 	}
 
 	// Perform TAO verification
-	if err := k.ChannelKeeper.TimeoutPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv); err != nil {
+	if err := k.ChannelKeeper.TimeoutPacket(ctx, msg.Packet, msg.ProofUnreceived, msg.ProofHeight, msg.NextSequenceRecv); err != nil {
 		return nil, sdkerrors.Wrap(err, "timeout packet verification failed")
 	}
 
@@ -531,7 +538,7 @@ func (k Keeper) TimeoutOnClose(goCtx context.Context, msg *channeltypes.MsgTimeo
 	}
 
 	// Perform TAO verification
-	if err := k.ChannelKeeper.TimeoutOnClose(ctx, cap, msg.Packet, msg.Proof, msg.ProofClose, msg.ProofHeight, msg.NextSequenceRecv); err != nil {
+	if err := k.ChannelKeeper.TimeoutOnClose(ctx, cap, msg.Packet, msg.ProofUnreceived, msg.ProofClose, msg.ProofHeight, msg.NextSequenceRecv); err != nil {
 		return nil, sdkerrors.Wrap(err, "timeout on close packet verification failed")
 	}
 
@@ -582,7 +589,7 @@ func (k Keeper) Acknowledgement(goCtx context.Context, msg *channeltypes.MsgAckn
 	}
 
 	// Perform TAO verification
-	if err := k.ChannelKeeper.AcknowledgePacket(ctx, cap, msg.Packet, msg.Acknowledgement, msg.Proof, msg.ProofHeight); err != nil {
+	if err := k.ChannelKeeper.AcknowledgePacket(ctx, cap, msg.Packet, msg.Acknowledgement, msg.ProofAcked, msg.ProofHeight); err != nil {
 		return nil, sdkerrors.Wrap(err, "acknowledge packet verification failed")
 	}
 

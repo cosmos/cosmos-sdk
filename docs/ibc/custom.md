@@ -45,11 +45,13 @@ func (k Keeper) OnChanOpenInit(ctx sdk.Context,
     portID string,
     channelID string,
     channelCap *capabilitytypes.Capability,
-    counterParty channeltypes.Counterparty,
+    counterparty channeltypes.Counterparty,
     version string,
 ) error {
     // OpenInit must claim the channelCapability that IBC passes into the callback
-    k.scopedKeeper.ClaimCapability(ctx, channelCap)
+    if err := k.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
+			return err
+	}
 
     // ... do custom initialization logic
 
@@ -72,9 +74,17 @@ OnChanOpenTry(
     version,
     counterpartyVersion string,
 ) error {
-    // OpenInit must claim the channelCapability that IBC passes into the callback
-    k.scopedKeeper.ClaimCapability(ctx, channelCap)
-
+    // Module may have already claimed capability in OnChanOpenInit in the case of crossing hellos
+    // (ie chainA and chainB both call ChanOpenInit before one of them calls ChanOpenTry)
+    // If the module can already authenticate the capability then the module already owns it so we don't need to claim
+    // Otherwise, module does not have channel capability and we must claim it from IBC
+    if !k.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) {
+        // Only claim channel capability passed back by IBC module if we do not already own it
+        if err := k.scopedKeeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
+            return err
+        }
+    }
+    
     // ... do custom initialization logic
 
     // Use above arguments to determine if we want to abort handshake
@@ -285,7 +295,7 @@ invoked by the IBC module after the packet has been proved valid and correctly p
 keepers. Thus, the `OnRecvPacket` callback only needs to worry about making the appropriate state
 changes given the packet data without worrying about whether the packet is valid or not.
 
-Modules must return an acknowledgement as a byte string and return it to the IBC handler.
+Modules may return an acknowledgement as a byte string and return it to the IBC handler.
 The IBC handler will then commit this acknowledgement of the packet so that a relayer may relay the
 acknowledgement back to the sender module.
 
@@ -331,8 +341,14 @@ acknowledgement. An example of this technique is in the `ibc-transfer` module's
 
 ### Acknowledgements
 
-Modules must commit an acknowledgement upon receiving and processing a packet. This
-acknowledgement can then be relayed back to the original sender chain, which can take action
+Modules may commit an acknowledgement upon receiving and processing a packet in the case of synchronous packet processing.
+In the case where a packet is processed at some later point after the packet has been received (asynchronous execution), the acknowledgement 
+will be written once the packet has been processed by the application which may be well after the packet receipt.
+
+NOTE: Most blockchain modules will want to use the synchronous execution model in which the module processes and writes the acknowledgement 
+for a packet as soon as it has been received from the IBC module.
+
+This acknowledgement can then be relayed back to the original sender chain, which can take action
 depending on the contents of the acknowledgement.
 
 Just as packet data was opaque to IBC, acknowledgements are similarly opaque. Modules must pass and
@@ -344,12 +360,31 @@ example above. [ICS 04](https://github.com/cosmos/ics/tree/master/spec/ics-004-c
 specifies a recommended format for acknowledgements. This acknowledgement type can be imported from
 [channel types](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/04-channel/types).
 
+While modules may choose arbitrary acknowledgement structs, a default acknowledgement types is provided by IBC [here](https://github.com/cosmos/cosmos-sdk/blob/master/proto/ibc/core/channel/v1/channel.proto):
+
+```proto
+// Acknowledgement is the recommended acknowledgement format to be used by
+// app-specific protocols.
+// NOTE: The field numbers 21 and 22 were explicitly chosen to avoid accidental
+// conflicts with other protobuf message formats used for acknowledgements.
+// The first byte of any message with this format will be the non-ASCII values
+// `0xaa` (result) or `0xb2` (error). Implemented as defined by ICS:
+// https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#acknowledgement-envelope
+message Acknowledgement {
+  // response contains either a result or an error and must be non-empty
+  oneof response {
+    bytes  result = 21;
+    string error  = 22;
+  }
+}
+```
+
 #### Acknowledging Packets
 
-After a module writes an acknowledgement while receiving a packet. a relayer can relay back the acknowledgement to the sender module. The sender module can
+After a module writes an acknowledgement, a relayer can relay back the acknowledgement to the sender module. The sender module can
 then process the acknowledgement using the `OnAcknowledgementPacket` callback. The contents of the
 acknowledgement is entirely upto the modules on the channel (just like the packet data); however, it
-may often contain information on whether the packet was successfully received and processed along
+may often contain information on whether the packet was successfully processed along
 with some additional data that could be useful for remediation if the packet processing failed.
 
 Since the modules are responsible for agreeing on an encoding/decoding standard for packet data and

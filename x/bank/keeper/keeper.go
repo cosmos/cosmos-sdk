@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -22,13 +21,13 @@ var _ Keeper = (*BaseKeeper)(nil)
 type Keeper interface {
 	SendKeeper
 
-	InitGenesis(sdk.Context, types.GenesisState)
+	InitGenesis(sdk.Context, *types.GenesisState)
 	ExportGenesis(sdk.Context) *types.GenesisState
 
 	GetSupply(ctx sdk.Context) exported.SupplyI
 	SetSupply(ctx sdk.Context, supply exported.SupplyI)
 
-	GetDenomMetaData(ctx sdk.Context, denom string) types.Metadata
+	GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool)
 	SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)
 	IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool)
 
@@ -181,16 +180,19 @@ func (k BaseKeeper) SetSupply(ctx sdk.Context, supply exported.SupplyI) {
 }
 
 // GetDenomMetaData retrieves the denomination metadata
-func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) types.Metadata {
+func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool) {
 	store := ctx.KVStore(k.storeKey)
 	store = prefix.NewStore(store, types.DenomMetadataKey(denom))
 
 	bz := store.Get([]byte(denom))
+	if bz == nil {
+		return types.Metadata{}, false
+	}
 
 	var metadata types.Metadata
 	k.cdc.MustUnmarshalBinaryBare(bz, &metadata)
 
-	return metadata
+	return metadata, true
 }
 
 // GetAllDenomMetaData retrieves all denominations metadata
@@ -342,7 +344,7 @@ func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 	k.SetSupply(ctx, supply)
 
 	logger := k.Logger(ctx)
-	logger.Info(fmt.Sprintf("minted %s from %s module account", amt.String(), moduleName))
+	logger.Info("minted coins from module account", "amount", amt.String(), "from", moduleName)
 
 	return nil
 }
@@ -370,7 +372,7 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 	k.SetSupply(ctx, supply)
 
 	logger := k.Logger(ctx)
-	logger.Info(fmt.Sprintf("burned %s from %s module account", amt.String(), moduleName))
+	logger.Info("burned tokens from module account", "amount", amt.String(), "from", moduleName)
 
 	return nil
 }
@@ -405,21 +407,14 @@ func (k BaseKeeper) trackUndelegation(ctx sdk.Context, addr sdk.AccAddress, amt 
 	return nil
 }
 
-// MarshalSupply marshals a Supply interface. If the given type implements
-// the Marshaler interface, it is treated as a Proto-defined message and
-// serialized that way. Otherwise, it falls back on the internal Amino codec.
+// MarshalSupply protobuf serializes a Supply interface
 func (k BaseKeeper) MarshalSupply(supplyI exported.SupplyI) ([]byte, error) {
-	return codec.MarshalAny(k.cdc, supplyI)
+	return k.cdc.MarshalInterface(supplyI)
 }
 
 // UnmarshalSupply returns a Supply interface from raw encoded supply
-// bytes of a Proto-based Supply type. An error is returned upon decoding
-// failure.
+// bytes of a Proto-based Supply type
 func (k BaseKeeper) UnmarshalSupply(bz []byte) (exported.SupplyI, error) {
 	var evi exported.SupplyI
-	if err := codec.UnmarshalAny(k.cdc, &evi, bz); err != nil {
-		return nil, err
-	}
-
-	return evi, nil
+	return evi, k.cdc.UnmarshalInterface(bz, &evi)
 }

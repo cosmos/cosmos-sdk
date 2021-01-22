@@ -62,7 +62,7 @@ func (suite *KeeperTestSuite) TestQueryChannel() {
 		{
 			"success",
 			func() {
-				_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 				// init channel
 				channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
 				suite.Require().NoError(err)
@@ -377,7 +377,7 @@ func (suite *KeeperTestSuite) TestQueryChannelClientState() {
 		{
 			"success",
 			func() {
-				clientA, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				clientA, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 				// init channel
 				channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
 				suite.Require().NoError(err)
@@ -407,6 +407,10 @@ func (suite *KeeperTestSuite) TestQueryChannelClientState() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
 				suite.Require().Equal(&expIdentifiedClientState, res.IdentifiedClientState)
+
+				// ensure UnpackInterfaces is defined
+				cachedValue := res.IdentifiedClientState.ClientState.GetCachedValue()
+				suite.Require().NotNil(cachedValue)
 			} else {
 				suite.Require().Error(err)
 			}
@@ -437,10 +441,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 			"invalid port ID",
 			func() {
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:        "",
-					ChannelId:     "test-channel-id",
-					VersionNumber: 0,
-					VersionHeight: 1,
+					PortId:         "",
+					ChannelId:      "test-channel-id",
+					RevisionNumber: 0,
+					RevisionHeight: 1,
 				}
 			},
 			false,
@@ -449,10 +453,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 			"invalid channel ID",
 			func() {
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:        "test-port-id",
-					ChannelId:     "",
-					VersionNumber: 0,
-					VersionHeight: 1,
+					PortId:         "test-port-id",
+					ChannelId:      "",
+					RevisionNumber: 0,
+					RevisionHeight: 1,
 				}
 			},
 			false,
@@ -461,10 +465,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 			"channel not found",
 			func() {
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:        "test-port-id",
-					ChannelId:     "test-channel-id",
-					VersionNumber: 0,
-					VersionHeight: 1,
+					PortId:         "test-port-id",
+					ChannelId:      "test-channel-id",
+					RevisionNumber: 0,
+					RevisionHeight: 1,
 				}
 			},
 			false,
@@ -482,10 +486,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID, channel)
 
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:        channelA.PortID,
-					ChannelId:     channelA.ID,
-					VersionNumber: 0,
-					VersionHeight: 1,
+					PortId:         channelA.PortID,
+					ChannelId:      channelA.ID,
+					RevisionNumber: 0,
+					RevisionHeight: 1,
 				}
 			}, false,
 		},
@@ -495,17 +499,17 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:        channelA.PortID,
-					ChannelId:     channelA.ID,
-					VersionNumber: 0,
-					VersionHeight: uint64(suite.chainA.GetContext().BlockHeight()), // use current height
+					PortId:         channelA.PortID,
+					ChannelId:      channelA.ID,
+					RevisionNumber: 0,
+					RevisionHeight: uint64(suite.chainA.GetContext().BlockHeight()), // use current height
 				}
 			}, false,
 		},
 		{
 			"success",
 			func() {
-				clientA, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				clientA, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 				// init channel
 				channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
 				suite.Require().NoError(err)
@@ -516,10 +520,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 				expClientID = clientA
 
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:        channelA.PortID,
-					ChannelId:     channelA.ID,
-					VersionNumber: clientState.GetLatestHeight().GetVersionNumber(),
-					VersionHeight: clientState.GetLatestHeight().GetVersionHeight(),
+					PortId:         channelA.PortID,
+					ChannelId:      channelA.ID,
+					RevisionNumber: clientState.GetLatestHeight().GetRevisionNumber(),
+					RevisionHeight: clientState.GetLatestHeight().GetRevisionHeight(),
 				}
 			},
 			true,
@@ -542,6 +546,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 				suite.Require().NoError(err)
 				suite.Require().Equal(expConsensusState, consensusState)
 				suite.Require().Equal(expClientID, res.ClientId)
+
+				// ensure UnpackInterfaces is defined
+				cachedValue := res.ConsensusState.GetCachedValue()
+				suite.Require().NotNil(cachedValue)
 			} else {
 				suite.Require().Error(err)
 			}

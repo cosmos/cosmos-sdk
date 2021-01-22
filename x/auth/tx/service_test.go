@@ -10,15 +10,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	query "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -30,6 +31,7 @@ type IntegrationTestSuite struct {
 	network *network.Network
 
 	queryClient tx.ServiceClient
+	txRes       sdk.TxResponse
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
@@ -40,67 +42,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.cfg = cfg
 	s.network = network.New(s.T(), cfg)
-
 	s.Require().NotNil(s.network)
+
+	val := s.network.Validators[0]
 
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
-	s.queryClient = tx.NewServiceClient(s.network.Validators[0].ClientCtx)
-}
-
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
-	s.network.Cleanup()
-}
-
-func (s IntegrationTestSuite) TestSimulate() {
-	val := s.network.Validators[0]
-
-	// prepare txBuilder with msg
-	txBuilder := val.ClientCtx.TxConfig.NewTxBuilder()
-	feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
-	gasLimit := testdata.NewTestGasLimit()
-	s.Require().NoError(
-		txBuilder.SetMsgs(&banktypes.MsgSend{
-			FromAddress: val.Address.String(),
-			ToAddress:   val.Address.String(),
-			Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
-		}),
-	)
-	txBuilder.SetFeeAmount(feeAmount)
-	txBuilder.SetGasLimit(gasLimit)
-	txBuilder.SetMemo("foobar")
-
-	// setup txFactory
-	txFactory := clienttx.Factory{}.
-		WithChainID(val.ClientCtx.ChainID).
-		WithKeybase(val.ClientCtx.Keyring).
-		WithTxConfig(val.ClientCtx.TxConfig).
-		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
-
-	// Sign Tx.
-	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false)
-	s.Require().NoError(err)
-
-	// Convert the txBuilder to a tx.Tx.
-	protoTx, err := txBuilderToProtoTx(txBuilder)
-	s.Require().NoError(err)
-
-	// Run the simulate gRPC query.
-	res, err := s.queryClient.Simulate(
-		context.Background(),
-		&tx.SimulateRequest{Tx: protoTx},
-	)
-	s.Require().NoError(err)
-
-	// Check the result and gas used are correct.
-	s.Require().Equal(len(res.GetResult().GetEvents()), 4) // 1 transfer, 3 messages.
-	s.Require().True(res.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
-}
-
-func (s IntegrationTestSuite) TestGetTx() {
-	val := s.network.Validators[0]
+	s.queryClient = tx.NewServiceClient(val.ClientCtx)
 
 	// Create a new MsgSend tx from val to itself.
 	out, err := bankcli.MsgSendExec(
@@ -117,48 +66,400 @@ func (s IntegrationTestSuite) TestGetTx() {
 		fmt.Sprintf("--%s=foobar", flags.FlagMemo),
 	)
 	s.Require().NoError(err)
-	var txRes sdk.TxResponse
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txRes))
-	s.Require().Equal(uint32(0), txRes.Code)
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &s.txRes))
+	s.Require().Equal(uint32(0), s.txRes.Code)
 
 	s.Require().NoError(s.network.WaitForNextBlock())
+}
 
-	// Query the tx via gRPC.
-	grpcRes, err := s.queryClient.GetTx(
-		context.Background(),
-		&tx.GetTxRequest{Hash: txRes.TxHash},
-	)
-	s.Require().NoError(err)
-	s.Require().Equal("foobar", grpcRes.Tx.Body.Memo)
+func (s *IntegrationTestSuite) TearDownSuite() {
+	s.T().Log("tearing down integration test suite")
+	s.network.Cleanup()
+}
 
-	// Query the tx via grpc-gateway.
-	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/tx/%s", val.APIAddress, txRes.TxHash))
+func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
+	txBuilder := s.mkTxBuilder()
+	// Convert the txBuilder to a tx.Tx.
+	protoTx, err := txBuilderToProtoTx(txBuilder)
 	s.Require().NoError(err)
-	var getTxRes tx.GetTxResponse
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getTxRes))
-	s.Require().Equal("foobar", getTxRes.Tx.Body.Memo)
+
+	testCases := []struct {
+		name      string
+		req       *tx.SimulateRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"nil request", nil, true, "request cannot be nil"},
+		{"empty request", &tx.SimulateRequest{}, true, "invalid empty tx"},
+		{"valid request", &tx.SimulateRequest{Tx: protoTx}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			// Broadcast the tx via gRPC via the validator's clientCtx (which goes
+			// through Tendermint).
+			res, err := s.queryClient.Simulate(context.Background(), tc.req)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
+				// Check the result and gas used are correct.
+				s.Require().Equal(len(res.GetResult().GetEvents()), 4) // 1 transfer, 3 messages.
+				s.Require().True(res.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
+			}
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
+	val := s.network.Validators[0]
+	txBuilder := s.mkTxBuilder()
+	// Convert the txBuilder to a tx.Tx.
+	protoTx, err := txBuilderToProtoTx(txBuilder)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name      string
+		req       *tx.SimulateRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"empty request", &tx.SimulateRequest{}, true, "invalid empty tx"},
+		{"valid request", &tx.SimulateRequest{Tx: protoTx}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			req, err := val.ClientCtx.JSONMarshaler.MarshalJSON(tc.req)
+			s.Require().NoError(err)
+			res, err := rest.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/simulate", val.APIAddress), "application/json", req)
+			s.Require().NoError(err)
+			if tc.expErr {
+				s.Require().Contains(string(res), tc.expErrMsg)
+			} else {
+				var result tx.SimulateResponse
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &result)
+				s.Require().NoError(err)
+				// Check the result and gas used are correct.
+				s.Require().Equal(len(result.GetResult().GetEvents()), 4) // 1 transfer, 3 messages.
+				s.Require().True(result.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
+			}
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
+	testCases := []struct {
+		name      string
+		req       *tx.GetTxsEventRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			"nil request",
+			nil,
+			true, "request cannot be nil",
+		},
+		{
+			"empty request",
+			&tx.GetTxsEventRequest{},
+			true, "must declare at least one event to search",
+		},
+		{
+			"request with dummy event",
+			&tx.GetTxsEventRequest{Events: []string{"foobar"}},
+			true, "event foobar should be of the format: {eventType}.{eventAttribute}={value}",
+		},
+		{
+			"without pagination",
+			&tx.GetTxsEventRequest{
+				Events: []string{"message.action=send"},
+			},
+			false, "",
+		},
+		{
+			"with pagination",
+			&tx.GetTxsEventRequest{
+				Events: []string{"message.action=send"},
+				Pagination: &query.PageRequest{
+					CountTotal: false,
+					Offset:     0,
+					Limit:      1,
+				},
+			},
+			false, "",
+		},
+		{
+			"with multi events",
+			&tx.GetTxsEventRequest{
+				Events: []string{"message.action=send", "message.module=bank"},
+			},
+			false, "",
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			// Query the tx via gRPC.
+			grpcRes, err := s.queryClient.GetTxsEvent(context.Background(), tc.req)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
+				s.Require().GreaterOrEqual(len(grpcRes.Txs), 1)
+				s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
+			}
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
+	val := s.network.Validators[0]
+	testCases := []struct {
+		name      string
+		url       string
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			"empty params",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress),
+			true,
+			"must declare at least one event to search",
+		},
+		{
+			"without pagination",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action=send"),
+			false,
+			"",
+		},
+		{
+			"with pagination",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action=send", 0, 10),
+			false,
+			"",
+		},
+		{
+			"expect pass with multiple-events",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s", val.APIAddress, "message.action=send", "message.module=bank"),
+			false,
+			"",
+		},
+		{
+			"expect pass with escape event",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action%3Dsend"),
+			false,
+			"",
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			res, err := rest.GetRequest(tc.url)
+			s.Require().NoError(err)
+			if tc.expErr {
+				s.Require().Contains(string(res), tc.expErrMsg)
+			} else {
+				var result tx.GetTxsEventResponse
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &result)
+				s.Require().NoError(err)
+				s.Require().GreaterOrEqual(len(result.Txs), 1)
+				s.Require().Equal("foobar", result.Txs[0].Body.Memo)
+				s.Require().NotZero(result.TxResponses[0].Height)
+			}
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestGetTx_GRPC() {
+	testCases := []struct {
+		name      string
+		req       *tx.GetTxRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"nil request", nil, true, "request cannot be nil"},
+		{"empty request", &tx.GetTxRequest{}, true, "transaction hash cannot be empty"},
+		{"request with dummy hash", &tx.GetTxRequest{Hash: "deadbeef"}, true, "tx (DEADBEEF) not found"},
+		{"good request", &tx.GetTxRequest{Hash: s.txRes.TxHash}, false, ""},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			// Query the tx via gRPC.
+			grpcRes, err := s.queryClient.GetTx(context.Background(), tc.req)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal("foobar", grpcRes.Tx.Body.Memo)
+			}
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestGetTx_GRPCGateway() {
+	val := s.network.Validators[0]
+	testCases := []struct {
+		name      string
+		url       string
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			"empty params",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/", val.APIAddress),
+			true, "transaction hash cannot be empty",
+		},
+		{
+			"dummy hash",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/%s", val.APIAddress, "deadbeef"),
+			true, "tx (DEADBEEF) not found",
+		},
+		{
+			"good hash",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/%s", val.APIAddress, s.txRes.TxHash),
+			false, "",
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			res, err := rest.GetRequest(tc.url)
+			s.Require().NoError(err)
+			if tc.expErr {
+				s.Require().Contains(string(res), tc.expErrMsg)
+			} else {
+				var result tx.GetTxResponse
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &result)
+				s.Require().NoError(err)
+				s.Require().Equal("foobar", result.Tx.Body.Memo)
+				s.Require().NotZero(result.TxResponse.Height)
+			}
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestBroadcastTx_GRPC() {
+	val := s.network.Validators[0]
+	txBuilder := s.mkTxBuilder()
+	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name      string
+		req       *tx.BroadcastTxRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"nil request", nil, true, "request cannot be nil"},
+		{"empty request", &tx.BroadcastTxRequest{}, true, "invalid empty tx"},
+		{"no mode", &tx.BroadcastTxRequest{
+			TxBytes: txBytes,
+		}, true, "supported types: sync, async, block"},
+		{"valid request", &tx.BroadcastTxRequest{
+			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
+			TxBytes: txBytes,
+		}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			// Broadcast the tx via gRPC via the validator's clientCtx (which goes
+			// through Tendermint).
+			grpcRes, err := s.queryClient.BroadcastTx(context.Background(), tc.req)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(uint32(0), grpcRes.TxResponse.Code)
+			}
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
+	val := s.network.Validators[0]
+	txBuilder := s.mkTxBuilder()
+	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name      string
+		req       *tx.BroadcastTxRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"empty request", &tx.BroadcastTxRequest{}, true, "invalid empty tx"},
+		{"no mode", &tx.BroadcastTxRequest{TxBytes: txBytes}, true, "supported types: sync, async, block"},
+		{"valid request", &tx.BroadcastTxRequest{
+			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
+			TxBytes: txBytes,
+		}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			req, err := val.ClientCtx.JSONMarshaler.MarshalJSON(tc.req)
+			s.Require().NoError(err)
+			res, err := rest.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress), "application/json", req)
+			s.Require().NoError(err)
+			if tc.expErr {
+				s.Require().Contains(string(res), tc.expErrMsg)
+			} else {
+				var result tx.BroadcastTxResponse
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &result)
+				s.Require().NoError(err)
+				s.Require().Equal(uint32(0), result.TxResponse.Code)
+			}
+		})
+	}
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }
 
+func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
+	val := s.network.Validators[0]
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// prepare txBuilder with msg
+	txBuilder := val.ClientCtx.TxConfig.NewTxBuilder()
+	feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
+	gasLimit := testdata.NewTestGasLimit()
+	s.Require().NoError(
+		txBuilder.SetMsgs(&banktypes.MsgSend{
+			FromAddress: val.Address.String(),
+			ToAddress:   val.Address.String(),
+			Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
+		}),
+	)
+	txBuilder.SetFeeAmount(feeAmount)
+	txBuilder.SetGasLimit(gasLimit)
+
+	// setup txFactory
+	txFactory := clienttx.Factory{}.
+		WithChainID(val.ClientCtx.ChainID).
+		WithKeybase(val.ClientCtx.Keyring).
+		WithTxConfig(val.ClientCtx.TxConfig).
+		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
+
+	// Sign Tx.
+	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false, true)
+	s.Require().NoError(err)
+
+	return txBuilder
+}
+
 // txBuilderToProtoTx converts a txBuilder into a proto tx.Tx.
 func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) { // nolint
-	intoAnyTx, ok := txBuilder.(codectypes.IntoAny)
+	protoProvider, ok := txBuilder.(authtx.ProtoTxProvider)
 	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (codectypes.IntoAny)(nil), intoAnyTx)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected proto tx builder, got %T", txBuilder)
 	}
 
-	any := intoAnyTx.AsAny().GetCachedValue()
-	if any == nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "any's cached value is empty")
-	}
-
-	protoTx, ok := any.(*tx.Tx)
-	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (codectypes.IntoAny)(nil), intoAnyTx)
-	}
-
-	return protoTx, nil
+	return protoProvider.GetProtoTx(), nil
 }

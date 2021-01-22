@@ -25,9 +25,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/anycompress"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/proto/crypto/keys"
-	tmtypes "github.com/tendermint/tendermint/proto/types"
-	"github.com/tendermint/tendermint/proto/version"
+	keys "github.com/tendermint/tendermint/proto/tendermint/crypto"
+	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/tendermint/tendermint/proto/tendermint/version"
 	dbm "github.com/tendermint/tm-db"
 )
 

@@ -23,7 +23,7 @@ func GetQueryCmd() *cobra.Command {
 		Short: "Query for evidence by hash or for all (paginated) submitted evidence",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query for specific submitted evidence by hash or query for all (paginated) evidence:
-	
+
 Example:
 $ %s query %s DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660
 $ %s query %s --page=2 --limit=50
@@ -47,18 +47,12 @@ $ %s query %s --page=2 --limit=50
 // can be queried for by hash or paginated evidence can be returned.
 func QueryEvidenceCmd() func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		if err := client.ValidateCmd(cmd, args); err != nil {
-			return err
-		}
-
-		clientCtx := client.GetClientContextFromCmd(cmd)
-		clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+		clientCtx, err := client.GetClientQueryContext(cmd)
 		if err != nil {
 			return err
 		}
-
-		if hash := args[0]; hash != "" {
-			return queryEvidence(clientCtx, hash)
+		if len(args) > 0 {
+			return queryEvidence(clientCtx, args[0])
 		}
 
 		pageReq, err := client.ReadPageRequest(cmd.Flags())
@@ -85,7 +79,7 @@ func queryEvidence(clientCtx client.Context, hash string) error {
 		return err
 	}
 
-	return clientCtx.PrintOutput(res.Evidence)
+	return clientCtx.PrintProto(res.Evidence)
 }
 
 func queryAllEvidence(clientCtx client.Context, pageReq *query.PageRequest) error {
@@ -100,5 +94,5 @@ func queryAllEvidence(clientCtx client.Context, pageReq *query.PageRequest) erro
 		return err
 	}
 
-	return clientCtx.PrintOutput(res)
+	return clientCtx.PrintProto(res)
 }

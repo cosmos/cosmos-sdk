@@ -21,5 +21,6 @@ type Keeper interface {
 
 	// Returns any Authorization (or nil), with the expiration time,
 	// granted to the grantee by the granter for the provided msg type.
-	GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (cap types.Authorization, expiration time.Time)
+	// If the Authorization is expired already, it will revoke the authorization and return nil
+	GetOrRevokeAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (cap types.Authorization, expiration time.Time)
 }

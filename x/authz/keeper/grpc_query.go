@@ -101,7 +101,7 @@ func (k Keeper) Authorization(c context.Context, req *types.QueryAuthorizationRe
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	authorization, expiration := k.GetAuthorization(ctx, grantee, granter, req.MethodName)
+	authorization, expiration := k.GetOrRevokeAuthorization(ctx, grantee, granter, req.MethodName)
 	if authorization == nil {
 		return nil, status.Errorf(codes.NotFound, "no authorization found for %s type", req.MethodName)
 	}

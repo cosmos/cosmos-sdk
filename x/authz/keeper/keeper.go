@@ -82,7 +82,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, service
 		}
 		granter := signers[0]
 		if !granter.Equals(grantee) {
-			authorization, _ := k.GetAuthorization(ctx, grantee, granter, serviceMsg.MethodName)
+			authorization, _ := k.GetOrRevokeAuthorization(ctx, grantee, granter, serviceMsg.MethodName)
 			if authorization == nil {
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
 			}
@@ -158,9 +158,10 @@ func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, grant
 	return authorizations
 }
 
-// GetAuthorization Returns any `Authorization` (or `nil`), with the expiration time,
+// GetOrRevokeAuthorization Returns any `Authorization` (or `nil`), with the expiration time,
 // granted to the grantee by the granter for the provided msg type.
-func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (cap types.Authorization, expiration time.Time) {
+// If the Authorization is expired already, it will revoke the authorization and return nil
+func (k Keeper) GetOrRevokeAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (cap types.Authorization, expiration time.Time) {
 	grant, found := k.getAuthorizationGrant(ctx, types.GetActorAuthorizationKey(grantee, granter, msgType))
 	if !found {
 		return nil, time.Time{}

@@ -199,6 +199,7 @@ More specifically, any special account, with custom naming, must not have length
 
 - addresses do not communicate key type, a prefixed approach would have done this
 - addresses are 60% longer and will consume more storage space
+- requires a refactor of KVStore store keys to handle variable length addresses
 
 ### Neutral
 

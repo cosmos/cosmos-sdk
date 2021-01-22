@@ -51,13 +51,13 @@ var (
 // GetValidatorKey gets the key for the validator with address
 // VALUE: staking/Validator
 func GetValidatorKey(operatorAddr sdk.ValAddress) []byte {
-	return append(append(ValidatorsKey, byte(len(operatorAddr))), operatorAddr.Bytes()...)
+	return append(ValidatorsKey, sdk.LengthPrefixAddress(operatorAddr)...)
 }
 
 // GetValidatorByConsAddrKey gets the key for the validator with pubkey
 // VALUE: validator operator address ([]byte)
 func GetValidatorByConsAddrKey(addr sdk.ConsAddress) []byte {
-	return append(append(ValidatorsByConsAddrKey, byte(len(addr))), addr.Bytes()...)
+	return append(ValidatorsByConsAddrKey, sdk.LengthPrefixAddress(addr)...)
 }
 
 // AddressFromLastValidatorPowerKey gets the validator operator address from LastValidatorPowerKey
@@ -104,7 +104,7 @@ func GetValidatorsByPowerIndexKey(validator Validator) []byte {
 
 // GetLastValidatorPowerKey gets the bonded validator index key for an operator address
 func GetLastValidatorPowerKey(operator sdk.ValAddress) []byte {
-	return append(append(LastValidatorPowerKey, byte(len(operator))), operator...)
+	return append(LastValidatorPowerKey, sdk.LengthPrefixAddress(operator)...)
 }
 
 // ParseValidatorPowerRankKey parses the validators operator address from power rank key
@@ -168,27 +168,24 @@ func ParseValidatorQueueKey(bz []byte) (time.Time, int64, error) {
 // GetDelegationKey gets the key for delegator bond with validator
 // VALUE: staking/Delegation
 func GetDelegationKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
-	return append(append(GetDelegationsKey(delAddr), byte(len(delAddr))), valAddr.Bytes()...)
+	return append(GetDelegationsKey(delAddr), sdk.LengthPrefixAddress(valAddr)...)
 }
 
 // GetDelegationsKey gets the prefix for a delegator for all validators
 func GetDelegationsKey(delAddr sdk.AccAddress) []byte {
-	return append(append(DelegationKey, byte(len(delAddr))), delAddr.Bytes()...)
+	return append(DelegationKey, sdk.LengthPrefixAddress(delAddr)...)
 }
 
 // GetUBDKey gets the key for an unbonding delegation by delegator and validator addr
 // VALUE: staking/UnbondingDelegation
 func GetUBDKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
-	return append(
-		append(GetUBDsKey(delAddr.Bytes()), byte(len(valAddr))),
-		valAddr.Bytes()...,
-	)
+	return append(GetUBDsKey(delAddr.Bytes()), sdk.LengthPrefixAddress(valAddr)...)
 }
 
 // GetUBDByValIndexKey gets the index-key for an unbonding delegation, stored by validator-index
 // VALUE: none (key rearrangement used)
 func GetUBDByValIndexKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
-	return append(append(GetUBDsByValIndexKey(valAddr), byte(len(delAddr))), delAddr.Bytes()...)
+	return append(GetUBDsByValIndexKey(valAddr), sdk.LengthPrefixAddress(valAddr)...)
 }
 
 // GetUBDKeyFromValIndexKey rearranges the ValIndexKey to get the UBDKey
@@ -204,12 +201,12 @@ func GetUBDKeyFromValIndexKey(indexKey []byte) []byte {
 
 // GetUBDsKey gets the prefix for all unbonding delegations from a delegator
 func GetUBDsKey(delAddr sdk.AccAddress) []byte {
-	return append(append(UnbondingDelegationKey, byte(len(delAddr))), delAddr.Bytes()...)
+	return append(UnbondingDelegationKey, sdk.LengthPrefixAddress(delAddr)...)
 }
 
 // GetUBDsByValIndexKey gets the prefix keyspace for the indexes of unbonding delegations for a validator
 func GetUBDsByValIndexKey(valAddr sdk.ValAddress) []byte {
-	return append(append(UnbondingDelegationByValIndexKey, byte(len(valAddr))), valAddr.Bytes()...)
+	return append(UnbondingDelegationByValIndexKey, sdk.LengthPrefixAddress(valAddr)...)
 }
 
 // GetUnbondingDelegationTimeKey gets the prefix for all unbonding delegations from a delegator
@@ -305,25 +302,25 @@ func GetRedelegationTimeKey(timestamp time.Time) []byte {
 // GetREDsKey returns a key prefix for indexing a redelegation from a delegator
 // address.
 func GetREDsKey(delAddr sdk.AccAddress) []byte {
-	return append(append(RedelegationKey, byte(len(delAddr))), delAddr.Bytes()...)
+	return append(RedelegationKey, sdk.LengthPrefixAddress(delAddr)...)
 }
 
 // GetREDsFromValSrcIndexKey returns a key prefix for indexing a redelegation to
 // a source validator.
 func GetREDsFromValSrcIndexKey(valSrcAddr sdk.ValAddress) []byte {
-	return append(append(RedelegationByValSrcIndexKey, byte(len(valSrcAddr))), valSrcAddr.Bytes()...)
+	return append(RedelegationByValSrcIndexKey, sdk.LengthPrefixAddress(valSrcAddr)...)
 }
 
 // GetREDsToValDstIndexKey returns a key prefix for indexing a redelegation to a
 // destination (target) validator.
 func GetREDsToValDstIndexKey(valDstAddr sdk.ValAddress) []byte {
-	return append(append(RedelegationByValDstIndexKey, byte(len(valDstAddr))), valDstAddr.Bytes()...)
+	return append(RedelegationByValDstIndexKey, sdk.LengthPrefixAddress(valDstAddr)...)
 }
 
 // GetREDsByDelToValDstIndexKey returns a key prefix for indexing a redelegation
 // from an address to a source validator.
 func GetREDsByDelToValDstIndexKey(delAddr sdk.AccAddress, valDstAddr sdk.ValAddress) []byte {
-	return append(append(GetREDsToValDstIndexKey(valDstAddr), byte(len(delAddr))), delAddr.Bytes()...)
+	return append(GetREDsToValDstIndexKey(valDstAddr), sdk.LengthPrefixAddress(delAddr)...)
 }
 
 // GetHistoricalInfoKey returns a key prefix for indexing HistoricalInfo objects.

@@ -256,6 +256,21 @@ func (aa AccAddress) Format(s fmt.State, verb rune) {
 	}
 }
 
+// LengthPrefixAddress prefixes the address bytes with its length, this is used
+// for variable-length components in store keys. Note: All addresses should be
+// max 255 bytes, or else this function panics.
+func LengthPrefixAddress(bz []byte) []byte {
+	if len(bz) == 0 {
+		return bz
+	}
+
+	if len(bz) > 255 {
+		panic("address length should be max 255 bytes")
+	}
+
+	return append([]byte{byte(len(bz))}, bz...)
+}
+
 // ----------------------------------------------------------------------------
 // validator operator
 // ----------------------------------------------------------------------------

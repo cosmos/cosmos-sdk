@@ -215,9 +215,6 @@ func (k BaseViewKeeper) ValidateBalance(ctx sdk.Context, addr sdk.AccAddress) er
 func (k BaseViewKeeper) getAccountStore(ctx sdk.Context, addr sdk.AccAddress) prefix.Store {
 	store := ctx.KVStore(k.storeKey)
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
-	// Addresses are length-prefixed in the store key, the SDK also has a hard
-	// requirement on addresses being max 255 bytes long.
-	addrLen := byte(len(addr))
 
-	return prefix.NewStore(balancesStore, append([]byte{addrLen}, addr.Bytes()...))
+	return prefix.NewStore(balancesStore, sdk.LengthPrefixAddress(addr))
 }

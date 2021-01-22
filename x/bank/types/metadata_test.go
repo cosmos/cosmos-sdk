@@ -9,6 +9,108 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
+func TestMetadataValidate(t *testing.T) {
+	testCases := []struct {
+		name     string
+		metadata types.Metadata
+		expErr   bool
+	}{
+		{
+			"non-empty coins",
+			types.Metadata{
+				Description: "The native staking token of the Cosmos Hub.",
+				DenomUnits: []*types.DenomUnit{
+					{"uatom", uint32(0), []string{"microatom"}},
+					{"matom", uint32(3), []string{"milliatom"}},
+					{"atom", uint32(6), nil},
+				},
+				Base:    "uatom",
+				Display: "atom",
+			},
+			false,
+		},
+		{"empty metadata", types.Metadata{}, true},
+		{
+			"invalid base denom",
+			types.Metadata{
+				Base: "",
+			},
+			true,
+		},
+		{
+			"invalid display denom",
+			types.Metadata{
+				Base:    "uatom",
+				Display: "",
+			},
+			true,
+		},
+		{
+			"duplicate denom unit",
+			types.Metadata{
+				Description: "The native staking token of the Cosmos Hub.",
+				DenomUnits: []*types.DenomUnit{
+					{"uatom", uint32(0), []string{"microatom"}},
+					{"uatom", uint32(0), []string{"microatom"}},
+				},
+				Base:    "uatom",
+				Display: "atom",
+			},
+			true,
+		},
+		{
+			"invalid denom unit",
+			types.Metadata{
+				Description: "The native staking token of the Cosmos Hub.",
+				DenomUnits: []*types.DenomUnit{
+					{"", uint32(0), []string{"microatom"}},
+				},
+				Base:    "uatom",
+				Display: "atom",
+			},
+			true,
+		},
+		{
+			"invalid denom unit alias",
+			types.Metadata{
+				Description: "The native staking token of the Cosmos Hub.",
+				DenomUnits: []*types.DenomUnit{
+					{"uatom", uint32(0), []string{""}},
+				},
+				Base:    "uatom",
+				Display: "atom",
+			},
+			true,
+		},
+		{
+			"duplicate denom unit alias",
+			types.Metadata{
+				Description: "The native staking token of the Cosmos Hub.",
+				DenomUnits: []*types.DenomUnit{
+					{"uatom", uint32(0), []string{"microatom", "microatom"}},
+				},
+				Base:    "uatom",
+				Display: "atom",
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+
+			err := tc.metadata.Validate()
+
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestMarshalJSONMetaData(t *testing.T) {
 	cdc := codec.NewLegacyAmino()
 

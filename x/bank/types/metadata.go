@@ -17,7 +17,7 @@ func (m Metadata) Validate() error {
 		return fmt.Errorf("invalid metadata display denom: %w", err)
 	}
 
-	seenUnits := make(map[string]bool, 0)
+	seenUnits := make(map[string]bool)
 	for _, denomUnit := range m.DenomUnits {
 		if seenUnits[denomUnit.Denom] {
 			return fmt.Errorf("duplicate denomination unit %s", denomUnit.Denom)
@@ -39,10 +39,17 @@ func (du DenomUnit) Validate() error {
 		return fmt.Errorf("invalid denom unit: %w", err)
 	}
 
+	seenAliases := make(map[string]bool)
 	for _, alias := range du.Aliases {
+		if seenAliases[alias] {
+			return fmt.Errorf("duplicate denomination unit alias %s", alias)
+		}
+
 		if strings.TrimSpace(alias) == "" {
 			return fmt.Errorf("alias for denom unit %s cannot be blank", du.Denom)
 		}
+
+		seenAliases[alias] = true
 	}
 
 	return nil

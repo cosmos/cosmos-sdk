@@ -2,7 +2,7 @@ package types
 
 import (
 	"encoding/json"
-	fmt "fmt"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -37,9 +37,9 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // getAuthorizationGrant returns grant between granter and grantee for the given msg type
-func (k Keeper) getAuthorizationGrant(ctx sdk.Context, actor []byte) (grant types.AuthorizationGrant, found bool) {
+func (k Keeper) getAuthorizationGrant(ctx sdk.Context, grantStoreKey []byte) (grant types.AuthorizationGrant, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(actor)
+	bz := store.Get(grantStoreKey)
 	if bz == nil {
 		return grant, false
 	}
@@ -48,8 +48,8 @@ func (k Keeper) getAuthorizationGrant(ctx sdk.Context, actor []byte) (grant type
 }
 
 func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated types.Authorization) error {
-	actor := types.GetActorAuthorizationKey(grantee, granter, updated.MethodName())
-	grant, found := k.getAuthorizationGrant(ctx, actor)
+	grantStoreKey := types.GetActorAuthorizationKey(grantee, granter, updated.MethodName())
+	grant, found := k.getAuthorizationGrant(ctx, grantStoreKey)
 	if !found {
 		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "authorization not found")
 	}
@@ -66,7 +66,7 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 
 	grant.Authorization = any
 	store := ctx.KVStore(k.storeKey)
-	store.Set(actor, k.cdc.MustMarshalBinaryBare(&grant))
+	store.Set(grantStoreKey, k.cdc.MustMarshalBinaryBare(&grant))
 	return nil
 }
 
@@ -134,12 +134,12 @@ func (k Keeper) Grant(ctx sdk.Context, grantee, granter sdk.AccAddress, authoriz
 // Revoke method revokes any authorization for the provided message type granted to the grantee by the granter.
 func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) error {
 	store := ctx.KVStore(k.storeKey)
-	actor := types.GetActorAuthorizationKey(grantee, granter, msgType)
-	_, found := k.getAuthorizationGrant(ctx, actor)
+	grantStoreKey := types.GetActorAuthorizationKey(grantee, granter, msgType)
+	_, found := k.getAuthorizationGrant(ctx, grantStoreKey)
 	if !found {
 		return sdkerrors.Wrap(sdkerrors.ErrNotFound, "authorization not found")
 	}
-	store.Delete(actor)
+	store.Delete(grantStoreKey)
 
 	return nil
 }

@@ -111,7 +111,7 @@ func ExampleFilteredPaginate() {
 	pageReq := &query.PageRequest{Key: nil, Limit: 1, CountTotal: true}
 	store := ctx.KVStore(app.GetKey(authtypes.StoreKey))
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
-	accountStore := prefix.NewStore(balancesStore, addr1.Bytes())
+	accountStore := prefix.NewStore(balancesStore, sdk.LengthPrefixAddress(addr1))
 
 	var balResult sdk.Coins
 	pageRes, err := query.FilteredPaginate(accountStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {

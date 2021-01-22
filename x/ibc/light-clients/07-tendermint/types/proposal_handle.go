@@ -10,15 +10,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
-// CheckProposedHeaderAndUpdateState will try to update the client with the new header if and
-// only if the proposal passes and one of the following two conditions is satisfied:
-// 		1) AllowUpdateAfterExpiry=true and Expire(ctx.BlockTime) = true
-// 		2) AllowUpdateAfterMisbehaviour and IsFrozen() = true
-// In case 2) before trying to update the client, the client will be unfrozen by resetting
-// the FrozenHeight to the zero Height. If AllowUpdateAfterMisbehaviour is set to true,
-// expired clients will also be updated even if AllowUpdateAfterExpiry is set to false.
-// Note, that even if the update happens, it may not be successful. The header may fail
-// validation checks and an error will be returned in that case.
+// CheckProposedHeaderAndUpdateState will try to update the client with the state of the
+// substitute if and only if the proposal passes and one of the following conditions  are
+// satisfied:
+//		1) The substitute client is the same type as the subject client
+//		2) The subject and substitute client states match in all parameters (expect frozen and latest height)
+// 		3) AllowUpdateAfterMisbehaviour and IsFrozen() = true
+// 		4) AllowUpdateAfterExpiry=true and Expire(ctx.BlockTime) = true
+// In case 3) before updating the client, the client will be unfrozen by resetting
+// the FrozenHeight to the zero Height. If a client is frozen and AllowUpdateAfterMisbehaviour
+// is set to true, the client will be unexpired even if AllowUpdateAfterExpiry is set to false.
+// Note, that even if the subject is updated to the state of the substitute, an error may be
+// returned if the updated client state is invalid or the client is expired.
 func (cs ClientState) CheckSubstituteAndUpdateState(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, subjectClientStore,
 	substituteClientStore sdk.KVStore, substituteClient exported.ClientState,
@@ -62,8 +65,8 @@ func (cs ClientState) CheckSubstituteAndUpdateState(
 		return nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "client cannot be updated with proposal")
 	}
 
-	// copy consensus states from substitute to subject starting from initial height
-	// and ending on the latest height (inclusive) of the substitute.
+	// copy consensus states and processed time from substitute to subject
+	// starting from initial height and ending on the latest height (inclusive)
 	// CONTRACT: the revision number is same for substitute and subject
 	// as cheked in 02-client.
 	for i := initialHeight.GetRevisionHeight(); i <= substituteClientState.GetLatestHeight().GetRevisionHeight(); i++ {
@@ -85,6 +88,22 @@ func (cs ClientState) CheckSubstituteAndUpdateState(
 	}
 
 	cs.LatestHeight = substituteClientState.LatestHeight
+
+	// validate the updated client and ensure it isn't expired
+	if err := cs.Validate(); err != nil {
+		return nil, sdkerrors.Wrap(err, "updated subject client state is invalid")
+	}
+
+	latestConsensusState, err := GetConsensusState(subjectClientStore, cdc, cs.GetLatestHeight())
+	if err != nil {
+		return nil, sdkerrors.Wrapf(
+			err, "could not get consensus state for updated subject client from clientstore at height: %d", cs.GetLatestHeight(),
+		)
+	}
+
+	if cs.IsExpired(latestConsensusState.Timestamp, ctx.BlockTime()) {
+		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClient, "updated subject client is expired")
+	}
 
 	return &cs, nil
 }

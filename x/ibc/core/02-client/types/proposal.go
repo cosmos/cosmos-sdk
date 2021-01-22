@@ -51,7 +51,7 @@ func (cup *ClientUpdateProposal) ValidateBasic() error {
 	}
 
 	if cup.InitialHeight.IsZero() {
-		return sdkerrors.Wrap(ErrInvalidHeight, "cannot begin from zero height")
+		return sdkerrors.Wrap(ErrInvalidHeight, "initial height cannot be zero height")
 	}
 
 	return nil

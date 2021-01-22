@@ -26,7 +26,7 @@ import (
 // states which occurred between two IBC Revision heights.
 // https://github.com/cosmos/cosmos-sdk/issues/7712
 func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdateProposal) error {
-	if p.SubjectClientId == exported.Localhost {
+	if p.SubjectClientId == exported.Localhost || p.SubstituteClientId == exported.Localhost {
 		return sdkerrors.Wrap(types.ErrInvalidUpdateClientProposal, "cannot update localhost client with proposal")
 	}
 
@@ -36,7 +36,7 @@ func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdatePropo
 	}
 
 	if subjectClientState.GetLatestHeight().GTE(p.InitialHeight) {
-		return sdkerrors.Wrapf(types.ErrInvalidHeight, "subject client state latest height is greater or equal to initital height (%s >= %s)", subjectClientState.GetLatestHeight(), p.InitialHeight)
+		return sdkerrors.Wrapf(types.ErrInvalidHeight, "subject client state latest height is greater or equal to initial height (%s >= %s)", subjectClientState.GetLatestHeight(), p.InitialHeight)
 	}
 
 	substituteClientState, found := k.GetClientState(ctx, p.SubstituteClientId)

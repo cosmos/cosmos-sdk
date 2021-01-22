@@ -12,10 +12,11 @@ import (
 
 // CheckSubstituteAndUpdateState verifies that the subject is allowed to be updated by
 // a governance proposal and that the substitute client is a solo machine.
-// updates the consensus state to the header's sequence and
-// public key. An error is returned if the client has been disallowed to be updated by a
-// governance proposal, the header cannot be casted to a solo machine header, or the current
-// public key equals the new public key.
+// It will update the consensus state to the substitute's consensus state and
+// the sequence to the substitute's current sequence. An error is returned if
+// the client has been disallowed to be updated by a governance proposal,
+// the substitute is not a solo machine, or the current public key equals
+// the new public key.
 func (cs ClientState) CheckSubstituteAndUpdateState(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, subjectClientStore,
 	_ sdk.KVStore, substituteClient exported.ClientState,
@@ -32,11 +33,11 @@ func (cs ClientState) CheckSubstituteAndUpdateState(
 	substituteClientState, ok := substituteClient.(*ClientState)
 	if !ok {
 		return nil, sdkerrors.Wrapf(
-			clienttypes.ErrInvalidClientType, "client state type %T, expected  %T", substituteClient, &ClientState{},
+			clienttypes.ErrInvalidClientType, "substitute client state type %T, expected  %T", substituteClient, &ClientState{},
 		)
 	}
 
-	consensusPublicKey, err := cs.ConsensusState.GetPubKey()
+	subjectPublicKey, err := cs.ConsensusState.GetPubKey()
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to get consensus public key")
 	}
@@ -46,9 +47,9 @@ func (cs ClientState) CheckSubstituteAndUpdateState(
 		return nil, sdkerrors.Wrap(err, "failed to get substitute client public key")
 	}
 
-	if reflect.DeepEqual(consensusPublicKey, substitutePublicKey) {
+	if reflect.DeepEqual(subjectPublicKey, substitutePublicKey) {
 		return nil, sdkerrors.Wrapf(
-			clienttypes.ErrInvalidHeader, "new public key in substitute equals current public key",
+			clienttypes.ErrInvalidHeader, "subject and substitute have the same public key",
 		)
 	}
 

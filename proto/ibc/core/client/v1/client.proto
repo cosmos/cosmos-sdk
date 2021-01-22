@@ -47,7 +47,7 @@ message ClientUpdateProposal {
   // the client identifier for the client to be updated if the proposal passes
   string subject_client_id = 3 [(gogoproto.moretags) = "yaml:\"subject_client_id\""];
   // the substitute client identifier for the client standing in for the subject client
-  string substitute_client_id = 4 [(gogoproto.moretags) = "yaml:\"subtitute_client_id\""];
+  string substitute_client_id = 4 [(gogoproto.moretags) = "yaml:\"susbtitute_client_id\""];
   // the intital height to copy consensus states from the substitute to the subject
   Height initial_height = 5 [(gogoproto.moretags) = "yaml:\"initial_height\"", (gogoproto.nullable) = false];
 }

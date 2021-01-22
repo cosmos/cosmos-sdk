@@ -11,7 +11,7 @@ import (
 var _ types.MsgServer = Keeper{}
 
 // GrantAuthorization implements the MsgServer.GrantAuthorization method.
-func (k Keeper) GrantAuthorization(goCtx context.Context, msg *types.MsgGrantAuthorization) (*types.MsgGrantAuthorizationResponse, error) {
+func (k Keeper) GrantAuthorization(goCtx context.Context, msg *types.MsgGrantAuthorizationRequest) (*types.MsgGrantAuthorizationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
@@ -47,7 +47,7 @@ func (k Keeper) GrantAuthorization(goCtx context.Context, msg *types.MsgGrantAut
 }
 
 // RevokeAuthorization implements the MsgServer.RevokeAuthorization method.
-func (k Keeper) RevokeAuthorization(goCtx context.Context, msg *types.MsgRevokeAuthorization) (*types.MsgRevokeAuthorizationResponse, error) {
+func (k Keeper) RevokeAuthorization(goCtx context.Context, msg *types.MsgRevokeAuthorizationRequest) (*types.MsgRevokeAuthorizationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
@@ -76,7 +76,7 @@ func (k Keeper) RevokeAuthorization(goCtx context.Context, msg *types.MsgRevokeA
 }
 
 // ExecAuthorized implements the MsgServer.ExecAuthorized method.
-func (k Keeper) ExecAuthorized(goCtx context.Context, msg *types.MsgExecAuthorized) (*types.MsgExecAuthorizedResponse, error) {
+func (k Keeper) ExecAuthorized(goCtx context.Context, msg *types.MsgExecAuthorizedRequest) (*types.MsgExecAuthorizedResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {

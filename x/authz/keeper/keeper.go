@@ -1,11 +1,10 @@
 package keeper
 
 import (
-	"bytes"
 	"fmt"
 	"time"
 
-	proto "github.com/gogo/protobuf/proto"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -82,7 +81,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, service
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "authorization can be given to msg with only one signer")
 		}
 		granter := signers[0]
-		if !bytes.Equal(granter, grantee) {
+		if !granter.Equals(grantee) {
 			authorization, _ := k.GetAuthorization(ctx, grantee, granter, serviceMsg.MethodName)
 			if authorization == nil {
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")

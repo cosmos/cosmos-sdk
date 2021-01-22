@@ -14,8 +14,7 @@ var grantee = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 var msgType = SendAuthorization{}.MethodName()
 
 func TestGrantkey(t *testing.T) {
-	actor := GetActorAuthorizationKey(grantee, granter, msgType)
-	granter1, grantee1 := ExtractAddressesFromGrantKey(actor)
+	granter1, grantee1 := ExtractAddressesFromGrantKey(GetAuthorizationStoreKey(grantee, granter, msgType))
 	require.Equal(t, granter, granter1)
 	require.Equal(t, grantee, grantee1)
 }

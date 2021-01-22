@@ -37,7 +37,7 @@ func (k Keeper) Authorizations(c context.Context, req *types.QueryAuthorizations
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetActorAuthorizationKey(grantee, granter, "")
+	key := types.GetAuthorizationStoreKey(grantee, granter, "")
 	authStore := prefix.NewStore(store, key)
 	var authorizations []*types.AuthorizationGrant
 	pageRes, err := query.FilteredPaginate(authStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {

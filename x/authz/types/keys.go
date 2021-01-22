@@ -28,8 +28,8 @@ var (
 	GrantKey = []byte{0x01} // prefix for each key
 )
 
-// GetActorAuthorizationKey - return authorization store key
-func GetActorAuthorizationKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) []byte {
+// GetAuthorizationStoreKey - return authorization store key
+func GetAuthorizationStoreKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) []byte {
 	return append(append(append(GrantKey, granter.Bytes()...), grantee.Bytes()...), []byte(msgType)...)
 }
 

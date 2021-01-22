@@ -118,7 +118,7 @@ Examples:
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
-	cmd.Flags().String(FlagMsgType, "", "The Unix timestamp. Default is one year.")
+	cmd.Flags().String(FlagMsgType, "", "The Msg method name for which we are creating a GenericAuthorization")
 	cmd.Flags().String(FlagSpendLimit, "", "SpendLimit for Send Authorization, an array of Coins allowed spend")
 	cmd.Flags().Int64(FlagExpiration, time.Now().AddDate(1, 0, 0).Unix(), "The Unix timestamp. Default is one year.")
 	return cmd

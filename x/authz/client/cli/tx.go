@@ -19,6 +19,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
 )
 
+const FlagExpiration = "expiration"
+
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd() *cobra.Command {
 	AuthorizationTxCmd := &cobra.Command{

@@ -37,25 +37,25 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // MsgGrantAuthorization grants the provided authorization to the grantee on the granter's
 // account with the provided expiration time.
-type MsgGrantAuthorization struct {
+type MsgGrantAuthorizationRequest struct {
 	Granter       string     `protobuf:"bytes,1,opt,name=granter,proto3" json:"granter,omitempty"`
 	Grantee       string     `protobuf:"bytes,2,opt,name=grantee,proto3" json:"grantee,omitempty"`
 	Authorization *types.Any `protobuf:"bytes,3,opt,name=authorization,proto3" json:"authorization,omitempty"`
 	Expiration    time.Time  `protobuf:"bytes,4,opt,name=expiration,proto3,stdtime" json:"expiration"`
 }
 
-func (m *MsgGrantAuthorization) Reset()         { *m = MsgGrantAuthorization{} }
-func (m *MsgGrantAuthorization) String() string { return proto.CompactTextString(m) }
-func (*MsgGrantAuthorization) ProtoMessage()    {}
-func (*MsgGrantAuthorization) Descriptor() ([]byte, []int) {
+func (m *MsgGrantAuthorizationRequest) Reset()         { *m = MsgGrantAuthorizationRequest{} }
+func (m *MsgGrantAuthorizationRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgGrantAuthorizationRequest) ProtoMessage()    {}
+func (*MsgGrantAuthorizationRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3ceddab7d8589ad1, []int{0}
 }
-func (m *MsgGrantAuthorization) XXX_Unmarshal(b []byte) error {
+func (m *MsgGrantAuthorizationRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgGrantAuthorization) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgGrantAuthorizationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgGrantAuthorization.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgGrantAuthorizationRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -65,40 +65,40 @@ func (m *MsgGrantAuthorization) XXX_Marshal(b []byte, deterministic bool) ([]byt
 		return b[:n], nil
 	}
 }
-func (m *MsgGrantAuthorization) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgGrantAuthorization.Merge(m, src)
+func (m *MsgGrantAuthorizationRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgGrantAuthorizationRequest.Merge(m, src)
 }
-func (m *MsgGrantAuthorization) XXX_Size() int {
+func (m *MsgGrantAuthorizationRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgGrantAuthorization) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgGrantAuthorization.DiscardUnknown(m)
+func (m *MsgGrantAuthorizationRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgGrantAuthorizationRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgGrantAuthorization proto.InternalMessageInfo
+var xxx_messageInfo_MsgGrantAuthorizationRequest proto.InternalMessageInfo
 
-func (m *MsgGrantAuthorization) GetGranter() string {
+func (m *MsgGrantAuthorizationRequest) GetGranter() string {
 	if m != nil {
 		return m.Granter
 	}
 	return ""
 }
 
-func (m *MsgGrantAuthorization) GetGrantee() string {
+func (m *MsgGrantAuthorizationRequest) GetGrantee() string {
 	if m != nil {
 		return m.Grantee
 	}
 	return ""
 }
 
-func (m *MsgGrantAuthorization) GetAuthorization() *types.Any {
+func (m *MsgGrantAuthorizationRequest) GetAuthorization() *types.Any {
 	if m != nil {
 		return m.Authorization
 	}
 	return nil
 }
 
-func (m *MsgGrantAuthorization) GetExpiration() time.Time {
+func (m *MsgGrantAuthorizationRequest) GetExpiration() time.Time {
 	if m != nil {
 		return m.Expiration
 	}
@@ -153,23 +153,23 @@ func (m *MsgExecAuthorizedResponse) GetResult() *types1.Result {
 // MsgExecAuthorized attempts to execute the provided messages using
 // authorizations granted to the grantee. Each message should have only
 // one signer corresponding to the granter of the authorization.
-type MsgExecAuthorized struct {
+type MsgExecAuthorizedRequest struct {
 	Grantee string       `protobuf:"bytes,1,opt,name=grantee,proto3" json:"grantee,omitempty"`
 	Msgs    []*types.Any `protobuf:"bytes,2,rep,name=msgs,proto3" json:"msgs,omitempty"`
 }
 
-func (m *MsgExecAuthorized) Reset()         { *m = MsgExecAuthorized{} }
-func (m *MsgExecAuthorized) String() string { return proto.CompactTextString(m) }
-func (*MsgExecAuthorized) ProtoMessage()    {}
-func (*MsgExecAuthorized) Descriptor() ([]byte, []int) {
+func (m *MsgExecAuthorizedRequest) Reset()         { *m = MsgExecAuthorizedRequest{} }
+func (m *MsgExecAuthorizedRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgExecAuthorizedRequest) ProtoMessage()    {}
+func (*MsgExecAuthorizedRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3ceddab7d8589ad1, []int{2}
 }
-func (m *MsgExecAuthorized) XXX_Unmarshal(b []byte) error {
+func (m *MsgExecAuthorizedRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgExecAuthorized) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgExecAuthorizedRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgExecAuthorized.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgExecAuthorizedRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -179,26 +179,26 @@ func (m *MsgExecAuthorized) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
-func (m *MsgExecAuthorized) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgExecAuthorized.Merge(m, src)
+func (m *MsgExecAuthorizedRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgExecAuthorizedRequest.Merge(m, src)
 }
-func (m *MsgExecAuthorized) XXX_Size() int {
+func (m *MsgExecAuthorizedRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgExecAuthorized) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgExecAuthorized.DiscardUnknown(m)
+func (m *MsgExecAuthorizedRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgExecAuthorizedRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgExecAuthorized proto.InternalMessageInfo
+var xxx_messageInfo_MsgExecAuthorizedRequest proto.InternalMessageInfo
 
-func (m *MsgExecAuthorized) GetGrantee() string {
+func (m *MsgExecAuthorizedRequest) GetGrantee() string {
 	if m != nil {
 		return m.Grantee
 	}
 	return ""
 }
 
-func (m *MsgExecAuthorized) GetMsgs() []*types.Any {
+func (m *MsgExecAuthorizedRequest) GetMsgs() []*types.Any {
 	if m != nil {
 		return m.Msgs
 	}
@@ -242,26 +242,26 @@ func (m *MsgGrantAuthorizationResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgGrantAuthorizationResponse proto.InternalMessageInfo
 
-// MsgRevokeAuthorization revokes any authorization with the provided sdk.Msg type on the
+// MsgRevokeAuthorizationRequest revokes any authorization with the provided sdk.Msg type on the
 // granter's account with that has been granted to the grantee.
-type MsgRevokeAuthorization struct {
+type MsgRevokeAuthorizationRequest struct {
 	Granter    string `protobuf:"bytes,1,opt,name=granter,proto3" json:"granter,omitempty"`
 	Grantee    string `protobuf:"bytes,2,opt,name=grantee,proto3" json:"grantee,omitempty"`
 	MethodName string `protobuf:"bytes,3,opt,name=method_name,json=methodName,proto3" json:"method_name,omitempty"`
 }
 
-func (m *MsgRevokeAuthorization) Reset()         { *m = MsgRevokeAuthorization{} }
-func (m *MsgRevokeAuthorization) String() string { return proto.CompactTextString(m) }
-func (*MsgRevokeAuthorization) ProtoMessage()    {}
-func (*MsgRevokeAuthorization) Descriptor() ([]byte, []int) {
+func (m *MsgRevokeAuthorizationRequest) Reset()         { *m = MsgRevokeAuthorizationRequest{} }
+func (m *MsgRevokeAuthorizationRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgRevokeAuthorizationRequest) ProtoMessage()    {}
+func (*MsgRevokeAuthorizationRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3ceddab7d8589ad1, []int{4}
 }
-func (m *MsgRevokeAuthorization) XXX_Unmarshal(b []byte) error {
+func (m *MsgRevokeAuthorizationRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgRevokeAuthorization) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgRevokeAuthorizationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgRevokeAuthorization.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgRevokeAuthorizationRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -271,33 +271,33 @@ func (m *MsgRevokeAuthorization) XXX_Marshal(b []byte, deterministic bool) ([]by
 		return b[:n], nil
 	}
 }
-func (m *MsgRevokeAuthorization) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgRevokeAuthorization.Merge(m, src)
+func (m *MsgRevokeAuthorizationRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRevokeAuthorizationRequest.Merge(m, src)
 }
-func (m *MsgRevokeAuthorization) XXX_Size() int {
+func (m *MsgRevokeAuthorizationRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgRevokeAuthorization) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgRevokeAuthorization.DiscardUnknown(m)
+func (m *MsgRevokeAuthorizationRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRevokeAuthorizationRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgRevokeAuthorization proto.InternalMessageInfo
+var xxx_messageInfo_MsgRevokeAuthorizationRequest proto.InternalMessageInfo
 
-func (m *MsgRevokeAuthorization) GetGranter() string {
+func (m *MsgRevokeAuthorizationRequest) GetGranter() string {
 	if m != nil {
 		return m.Granter
 	}
 	return ""
 }
 
-func (m *MsgRevokeAuthorization) GetGrantee() string {
+func (m *MsgRevokeAuthorizationRequest) GetGrantee() string {
 	if m != nil {
 		return m.Grantee
 	}
 	return ""
 }
 
-func (m *MsgRevokeAuthorization) GetMethodName() string {
+func (m *MsgRevokeAuthorizationRequest) GetMethodName() string {
 	if m != nil {
 		return m.MethodName
 	}
@@ -342,51 +342,51 @@ func (m *MsgRevokeAuthorizationResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgRevokeAuthorizationResponse proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*MsgGrantAuthorization)(nil), "cosmos.authz.v1beta1.MsgGrantAuthorization")
+	proto.RegisterType((*MsgGrantAuthorizationRequest)(nil), "cosmos.authz.v1beta1.MsgGrantAuthorizationRequest")
 	proto.RegisterType((*MsgExecAuthorizedResponse)(nil), "cosmos.authz.v1beta1.MsgExecAuthorizedResponse")
-	proto.RegisterType((*MsgExecAuthorized)(nil), "cosmos.authz.v1beta1.MsgExecAuthorized")
+	proto.RegisterType((*MsgExecAuthorizedRequest)(nil), "cosmos.authz.v1beta1.MsgExecAuthorizedRequest")
 	proto.RegisterType((*MsgGrantAuthorizationResponse)(nil), "cosmos.authz.v1beta1.MsgGrantAuthorizationResponse")
-	proto.RegisterType((*MsgRevokeAuthorization)(nil), "cosmos.authz.v1beta1.MsgRevokeAuthorization")
+	proto.RegisterType((*MsgRevokeAuthorizationRequest)(nil), "cosmos.authz.v1beta1.MsgRevokeAuthorizationRequest")
 	proto.RegisterType((*MsgRevokeAuthorizationResponse)(nil), "cosmos.authz.v1beta1.MsgRevokeAuthorizationResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/authz/v1beta1/tx.proto", fileDescriptor_3ceddab7d8589ad1) }
 
 var fileDescriptor_3ceddab7d8589ad1 = []byte{
-	// 513 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x94, 0xc1, 0x6e, 0xd3, 0x40,
-	0x10, 0x86, 0xe3, 0xa4, 0x2a, 0x74, 0xa2, 0x22, 0xd5, 0x04, 0x94, 0x58, 0xaa, 0x13, 0x99, 0x03,
-	0x11, 0xd0, 0xb5, 0x9a, 0x72, 0xe0, 0xda, 0xa8, 0x88, 0x93, 0x39, 0x58, 0x20, 0x24, 0x2e, 0xd5,
-	0x3a, 0x19, 0x36, 0xa6, 0xb5, 0xd7, 0xf2, 0xae, 0xa3, 0xa4, 0x4f, 0xd1, 0x87, 0xe1, 0x21, 0x2a,
-	0x4e, 0x3d, 0x72, 0x82, 0x2a, 0xe1, 0x41, 0x50, 0xd6, 0xeb, 0x90, 0xb4, 0x8e, 0x44, 0xc5, 0x29,
-	0x99, 0x99, 0xcf, 0xff, 0x8c, 0xff, 0x59, 0x2f, 0xec, 0x0f, 0xb8, 0x88, 0xb8, 0x70, 0x69, 0x26,
-	0x47, 0x17, 0xee, 0xf8, 0x30, 0x40, 0x49, 0x0f, 0x5d, 0x39, 0x21, 0x49, 0xca, 0x25, 0x37, 0x1b,
-	0x79, 0x99, 0xa8, 0x32, 0xd1, 0x65, 0xab, 0x95, 0x67, 0x4f, 0x15, 0xe3, 0x6a, 0x44, 0x05, 0x56,
-	0x83, 0x71, 0xc6, 0xf3, 0xfc, 0xe2, 0x9f, 0xce, 0xb6, 0x19, 0xe7, 0xec, 0x1c, 0x5d, 0x15, 0x05,
-	0xd9, 0x17, 0x57, 0x86, 0x11, 0x0a, 0x49, 0xa3, 0x44, 0x03, 0xad, 0xdb, 0x00, 0x8d, 0xa7, 0xba,
-	0xf4, 0x4c, 0x4f, 0x18, 0x50, 0x81, 0x2e, 0x0d, 0x06, 0xe1, 0x72, 0xca, 0x45, 0x90, 0x43, 0xce,
-	0x8d, 0x01, 0x4f, 0x3c, 0xc1, 0xde, 0xa5, 0x34, 0x96, 0xc7, 0x99, 0x1c, 0xf1, 0x34, 0xbc, 0xa0,
-	0x32, 0xe4, 0xb1, 0xd9, 0x84, 0x07, 0x6c, 0x91, 0xc5, 0xb4, 0x69, 0x74, 0x8c, 0xee, 0x8e, 0x5f,
-	0x84, 0x7f, 0x2b, 0xd8, 0xac, 0xae, 0x56, 0xd0, 0xf4, 0x60, 0x97, 0xae, 0x8a, 0x34, 0x6b, 0x1d,
-	0xa3, 0x5b, 0xef, 0x35, 0x48, 0x3e, 0x25, 0x29, 0xa6, 0x24, 0xc7, 0xf1, 0xb4, 0xbf, 0xf7, 0xfd,
-	0xdb, 0xc1, 0xee, 0x5a, 0x4f, 0x7f, 0xfd, 0x69, 0xf3, 0x04, 0x00, 0x27, 0x49, 0x98, 0xe6, 0x5a,
-	0x5b, 0x4a, 0xcb, 0xba, 0xa3, 0xf5, 0xa1, 0xb0, 0xa4, 0xff, 0xf0, 0xea, 0x67, 0xbb, 0x72, 0xf9,
-	0xab, 0x6d, 0xf8, 0x2b, 0xcf, 0x39, 0x1f, 0xa1, 0xe5, 0x09, 0xf6, 0x76, 0x82, 0x83, 0xa2, 0x19,
-	0x0e, 0x7d, 0x14, 0x09, 0x8f, 0x05, 0x9a, 0x6f, 0x60, 0x3b, 0x45, 0x91, 0x9d, 0x4b, 0xf5, 0x92,
-	0xf5, 0x5e, 0x87, 0xe8, 0xad, 0x2c, 0x5c, 0x23, 0xca, 0x28, 0xed, 0x1a, 0xf1, 0x15, 0xe7, 0x6b,
-	0xde, 0xf9, 0x04, 0x7b, 0x77, 0x64, 0x57, 0xad, 0x31, 0xd6, 0xad, 0xe9, 0xc2, 0x56, 0x24, 0x98,
-	0x68, 0x56, 0x3b, 0xb5, 0x4d, 0x8e, 0xf8, 0x8a, 0x70, 0xda, 0xb0, 0x5f, 0xba, 0x91, 0x62, 0x66,
-	0x27, 0x82, 0xa7, 0x9e, 0x60, 0x3e, 0x8e, 0xf9, 0x19, 0xfe, 0xff, 0xce, 0xda, 0x50, 0x8f, 0x50,
-	0x8e, 0xf8, 0xf0, 0x34, 0xa6, 0x11, 0xaa, 0x8d, 0xed, 0xf8, 0x90, 0xa7, 0xde, 0xd3, 0x08, 0x9d,
-	0x0e, 0xd8, 0xe5, 0xed, 0x8a, 0x81, 0x7a, 0xbf, 0xab, 0x50, 0xf3, 0x04, 0x33, 0xc7, 0x60, 0x96,
-	0x1c, 0xa4, 0x97, 0xa4, 0xec, 0x5b, 0x20, 0xa5, 0xef, 0x68, 0x1d, 0xdd, 0x03, 0x5e, 0x2e, 0xf1,
-	0x2b, 0x3c, 0xba, 0xb5, 0x87, 0xe7, 0x1b, 0x65, 0xd6, 0x41, 0xcb, 0xfd, 0x47, 0x70, 0xd9, 0x6b,
-	0x0a, 0x8f, 0xcb, 0x9c, 0x7f, 0xb5, 0x51, 0xa7, 0x84, 0xb6, 0x5e, 0xdf, 0x87, 0x2e, 0x5a, 0xf7,
-	0x4f, 0xae, 0x66, 0xb6, 0x71, 0x3d, 0xb3, 0x8d, 0x9b, 0x99, 0x6d, 0x5c, 0xce, 0xed, 0xca, 0xf5,
-	0xdc, 0xae, 0xfc, 0x98, 0xdb, 0x95, 0xcf, 0x2f, 0x58, 0x28, 0x47, 0x59, 0x40, 0x06, 0x3c, 0xd2,
-	0xb7, 0x8a, 0xfe, 0x39, 0x10, 0xc3, 0x33, 0x77, 0xa2, 0x2f, 0x29, 0x39, 0x4d, 0x50, 0x04, 0xdb,
-	0xea, 0xc8, 0x1d, 0xfd, 0x09, 0x00, 0x00, 0xff, 0xff, 0x9a, 0x84, 0x70, 0xcd, 0xc1, 0x04, 0x00,
-	0x00,
+	// 521 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xc1, 0x6e, 0xd3, 0x40,
+	0x10, 0x8d, 0x93, 0xaa, 0xd0, 0x8d, 0x8a, 0xc4, 0x92, 0x83, 0x63, 0x51, 0xdb, 0x32, 0x97, 0x08,
+	0xa9, 0x6b, 0x35, 0xe5, 0xc0, 0xb5, 0x51, 0x11, 0xa7, 0x70, 0xb0, 0xe0, 0xc2, 0x81, 0x6a, 0x9d,
+	0x0c, 0x1b, 0xab, 0xb5, 0xd7, 0xf5, 0xae, 0xab, 0xa4, 0x12, 0x12, 0x9f, 0xd0, 0x8f, 0xe1, 0x23,
+	0x2a, 0x4e, 0x3d, 0x72, 0x02, 0x94, 0x1c, 0xf8, 0x07, 0x4e, 0x28, 0xbb, 0x1b, 0x48, 0xda, 0x18,
+	0x11, 0x89, 0x93, 0x3d, 0x33, 0x6f, 0x66, 0x9e, 0xdf, 0x5b, 0x2f, 0xda, 0x1b, 0x70, 0x91, 0x72,
+	0x11, 0xd2, 0x52, 0x8e, 0x2e, 0xc3, 0x8b, 0x83, 0x18, 0x24, 0x3d, 0x08, 0xe5, 0x98, 0xe4, 0x05,
+	0x97, 0x1c, 0xb7, 0x74, 0x99, 0xa8, 0x32, 0x31, 0x65, 0xa7, 0xad, 0xb3, 0x27, 0x0a, 0x13, 0x1a,
+	0x88, 0x0a, 0x9c, 0x16, 0xe3, 0x8c, 0xeb, 0xfc, 0xfc, 0xcd, 0x64, 0x3d, 0xc6, 0x39, 0x3b, 0x83,
+	0x50, 0x45, 0x71, 0xf9, 0x3e, 0x94, 0x49, 0x0a, 0x42, 0xd2, 0x34, 0x37, 0x80, 0xf6, 0x6d, 0x00,
+	0xcd, 0x26, 0xa6, 0xf4, 0xc4, 0x30, 0x8c, 0xa9, 0x80, 0x90, 0xc6, 0x83, 0xe4, 0x37, 0xcb, 0x79,
+	0xa0, 0x41, 0xc1, 0x0f, 0x0b, 0x3d, 0xee, 0x0b, 0xf6, 0xb2, 0xa0, 0x99, 0x3c, 0x2a, 0xe5, 0x88,
+	0x17, 0xc9, 0x25, 0x95, 0x09, 0xcf, 0x22, 0x38, 0x2f, 0x41, 0x48, 0x6c, 0xa3, 0x7b, 0x6c, 0x5e,
+	0x84, 0xc2, 0xb6, 0x7c, 0xab, 0xb3, 0x13, 0x2d, 0xc2, 0x3f, 0x15, 0xb0, 0xeb, 0xcb, 0x15, 0xc0,
+	0x7d, 0xb4, 0x4b, 0x97, 0x67, 0xd9, 0x0d, 0xdf, 0xea, 0x34, 0xbb, 0x2d, 0xa2, 0xc9, 0x92, 0x05,
+	0x59, 0x72, 0x94, 0x4d, 0x7a, 0x0f, 0x3f, 0x7f, 0xda, 0xdf, 0x5d, 0x5d, 0xbd, 0xda, 0x8d, 0x8f,
+	0x11, 0x82, 0x71, 0x9e, 0x14, 0x7a, 0xd6, 0x96, 0x9a, 0xe5, 0xdc, 0x99, 0xf5, 0x7a, 0xa1, 0x4c,
+	0xef, 0xfe, 0xf5, 0x57, 0xaf, 0x76, 0xf5, 0xcd, 0xb3, 0xa2, 0xa5, 0xbe, 0xe0, 0x0d, 0x6a, 0xf7,
+	0x05, 0x7b, 0x31, 0x86, 0xc1, 0x62, 0x19, 0x0c, 0x23, 0x10, 0x39, 0xcf, 0x04, 0xe0, 0xe7, 0x68,
+	0xbb, 0x00, 0x51, 0x9e, 0x49, 0xf5, 0x91, 0xcd, 0xae, 0x4f, 0x8c, 0x39, 0x73, 0xf1, 0x88, 0xd2,
+	0xcb, 0x88, 0x47, 0x22, 0x85, 0x8b, 0x0c, 0x3e, 0x78, 0x87, 0xec, 0x35, 0x63, 0x6f, 0x69, 0x07,
+	0xab, 0xda, 0x01, 0xee, 0xa0, 0xad, 0x54, 0x30, 0x61, 0xd7, 0xfd, 0x46, 0x95, 0x30, 0x91, 0x42,
+	0x04, 0x1e, 0xda, 0xab, 0xf0, 0x47, 0x53, 0x0f, 0xa4, 0x02, 0x44, 0x70, 0xc1, 0x4f, 0xe1, 0xbf,
+	0x39, 0xe8, 0xa1, 0x66, 0x0a, 0x72, 0xc4, 0x87, 0x27, 0x19, 0x4d, 0x41, 0xf9, 0xb7, 0x13, 0x21,
+	0x9d, 0x7a, 0x45, 0x53, 0x08, 0x7c, 0xe4, 0x56, 0x6d, 0xd5, 0xbc, 0xba, 0x3f, 0xeb, 0xa8, 0xd1,
+	0x17, 0x0c, 0x7f, 0x40, 0xf8, 0x2e, 0x7b, 0xdc, 0x25, 0xeb, 0x7e, 0x10, 0xf2, 0xb7, 0xa3, 0xe8,
+	0x1c, 0x6e, 0xd4, 0x63, 0x9c, 0x3d, 0x47, 0x0f, 0x56, 0xcd, 0xc1, 0xa4, 0x72, 0xcc, 0x5a, 0x17,
+	0x9d, 0xf0, 0x9f, 0xf1, 0x66, 0xe5, 0x47, 0x0b, 0x3d, 0x5a, 0xa3, 0x0c, 0xae, 0xe6, 0x5f, 0xed,
+	0x9e, 0xf3, 0x6c, 0xb3, 0x26, 0x4d, 0xa1, 0x77, 0x7c, 0x3d, 0x75, 0xad, 0x9b, 0xa9, 0x6b, 0x7d,
+	0x9f, 0xba, 0xd6, 0xd5, 0xcc, 0xad, 0xdd, 0xcc, 0xdc, 0xda, 0x97, 0x99, 0x5b, 0x7b, 0xfb, 0x94,
+	0x25, 0x72, 0x54, 0xc6, 0x64, 0xc0, 0x53, 0x73, 0x01, 0x99, 0xc7, 0xbe, 0x18, 0x9e, 0x86, 0x63,
+	0x73, 0x9f, 0xc9, 0x49, 0x0e, 0x22, 0xde, 0x56, 0xe7, 0xf1, 0xf0, 0x57, 0x00, 0x00, 0x00, 0xff,
+	0xff, 0xff, 0x9d, 0x19, 0xe1, 0xec, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -403,14 +403,14 @@ const _ = grpc.SupportPackageIsVersion4
 type MsgClient interface {
 	// GrantAuthorization grants the provided authorization to the grantee on the granter's
 	// account with the provided expiration time.
-	GrantAuthorization(ctx context.Context, in *MsgGrantAuthorization, opts ...grpc.CallOption) (*MsgGrantAuthorizationResponse, error)
+	GrantAuthorization(ctx context.Context, in *MsgGrantAuthorizationRequest, opts ...grpc.CallOption) (*MsgGrantAuthorizationResponse, error)
 	// ExecAuthorized attempts to execute the provided messages using
 	// authorizations granted to the grantee. Each message should have only
 	// one signer corresponding to the granter of the authorization.
-	ExecAuthorized(ctx context.Context, in *MsgExecAuthorized, opts ...grpc.CallOption) (*MsgExecAuthorizedResponse, error)
+	ExecAuthorized(ctx context.Context, in *MsgExecAuthorizedRequest, opts ...grpc.CallOption) (*MsgExecAuthorizedResponse, error)
 	// RevokeAuthorization revokes any authorization corresponding to the provided method name on the
 	// granter's account that has been granted to the grantee.
-	RevokeAuthorization(ctx context.Context, in *MsgRevokeAuthorization, opts ...grpc.CallOption) (*MsgRevokeAuthorizationResponse, error)
+	RevokeAuthorization(ctx context.Context, in *MsgRevokeAuthorizationRequest, opts ...grpc.CallOption) (*MsgRevokeAuthorizationResponse, error)
 }
 
 type msgClient struct {
@@ -421,7 +421,7 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
 }
 
-func (c *msgClient) GrantAuthorization(ctx context.Context, in *MsgGrantAuthorization, opts ...grpc.CallOption) (*MsgGrantAuthorizationResponse, error) {
+func (c *msgClient) GrantAuthorization(ctx context.Context, in *MsgGrantAuthorizationRequest, opts ...grpc.CallOption) (*MsgGrantAuthorizationResponse, error) {
 	out := new(MsgGrantAuthorizationResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.authz.v1beta1.Msg/GrantAuthorization", in, out, opts...)
 	if err != nil {
@@ -430,7 +430,7 @@ func (c *msgClient) GrantAuthorization(ctx context.Context, in *MsgGrantAuthoriz
 	return out, nil
 }
 
-func (c *msgClient) ExecAuthorized(ctx context.Context, in *MsgExecAuthorized, opts ...grpc.CallOption) (*MsgExecAuthorizedResponse, error) {
+func (c *msgClient) ExecAuthorized(ctx context.Context, in *MsgExecAuthorizedRequest, opts ...grpc.CallOption) (*MsgExecAuthorizedResponse, error) {
 	out := new(MsgExecAuthorizedResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.authz.v1beta1.Msg/ExecAuthorized", in, out, opts...)
 	if err != nil {
@@ -439,7 +439,7 @@ func (c *msgClient) ExecAuthorized(ctx context.Context, in *MsgExecAuthorized, o
 	return out, nil
 }
 
-func (c *msgClient) RevokeAuthorization(ctx context.Context, in *MsgRevokeAuthorization, opts ...grpc.CallOption) (*MsgRevokeAuthorizationResponse, error) {
+func (c *msgClient) RevokeAuthorization(ctx context.Context, in *MsgRevokeAuthorizationRequest, opts ...grpc.CallOption) (*MsgRevokeAuthorizationResponse, error) {
 	out := new(MsgRevokeAuthorizationResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.authz.v1beta1.Msg/RevokeAuthorization", in, out, opts...)
 	if err != nil {
@@ -452,27 +452,27 @@ func (c *msgClient) RevokeAuthorization(ctx context.Context, in *MsgRevokeAuthor
 type MsgServer interface {
 	// GrantAuthorization grants the provided authorization to the grantee on the granter's
 	// account with the provided expiration time.
-	GrantAuthorization(context.Context, *MsgGrantAuthorization) (*MsgGrantAuthorizationResponse, error)
+	GrantAuthorization(context.Context, *MsgGrantAuthorizationRequest) (*MsgGrantAuthorizationResponse, error)
 	// ExecAuthorized attempts to execute the provided messages using
 	// authorizations granted to the grantee. Each message should have only
 	// one signer corresponding to the granter of the authorization.
-	ExecAuthorized(context.Context, *MsgExecAuthorized) (*MsgExecAuthorizedResponse, error)
+	ExecAuthorized(context.Context, *MsgExecAuthorizedRequest) (*MsgExecAuthorizedResponse, error)
 	// RevokeAuthorization revokes any authorization corresponding to the provided method name on the
 	// granter's account that has been granted to the grantee.
-	RevokeAuthorization(context.Context, *MsgRevokeAuthorization) (*MsgRevokeAuthorizationResponse, error)
+	RevokeAuthorization(context.Context, *MsgRevokeAuthorizationRequest) (*MsgRevokeAuthorizationResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
 type UnimplementedMsgServer struct {
 }
 
-func (*UnimplementedMsgServer) GrantAuthorization(ctx context.Context, req *MsgGrantAuthorization) (*MsgGrantAuthorizationResponse, error) {
+func (*UnimplementedMsgServer) GrantAuthorization(ctx context.Context, req *MsgGrantAuthorizationRequest) (*MsgGrantAuthorizationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GrantAuthorization not implemented")
 }
-func (*UnimplementedMsgServer) ExecAuthorized(ctx context.Context, req *MsgExecAuthorized) (*MsgExecAuthorizedResponse, error) {
+func (*UnimplementedMsgServer) ExecAuthorized(ctx context.Context, req *MsgExecAuthorizedRequest) (*MsgExecAuthorizedResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ExecAuthorized not implemented")
 }
-func (*UnimplementedMsgServer) RevokeAuthorization(ctx context.Context, req *MsgRevokeAuthorization) (*MsgRevokeAuthorizationResponse, error) {
+func (*UnimplementedMsgServer) RevokeAuthorization(ctx context.Context, req *MsgRevokeAuthorizationRequest) (*MsgRevokeAuthorizationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RevokeAuthorization not implemented")
 }
 
@@ -481,7 +481,7 @@ func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 }
 
 func _Msg_GrantAuthorization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgGrantAuthorization)
+	in := new(MsgGrantAuthorizationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -493,13 +493,13 @@ func _Msg_GrantAuthorization_Handler(srv interface{}, ctx context.Context, dec f
 		FullMethod: "/cosmos.authz.v1beta1.Msg/GrantAuthorization",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).GrantAuthorization(ctx, req.(*MsgGrantAuthorization))
+		return srv.(MsgServer).GrantAuthorization(ctx, req.(*MsgGrantAuthorizationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_ExecAuthorized_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgExecAuthorized)
+	in := new(MsgExecAuthorizedRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -511,13 +511,13 @@ func _Msg_ExecAuthorized_Handler(srv interface{}, ctx context.Context, dec func(
 		FullMethod: "/cosmos.authz.v1beta1.Msg/ExecAuthorized",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).ExecAuthorized(ctx, req.(*MsgExecAuthorized))
+		return srv.(MsgServer).ExecAuthorized(ctx, req.(*MsgExecAuthorizedRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_RevokeAuthorization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgRevokeAuthorization)
+	in := new(MsgRevokeAuthorizationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -529,7 +529,7 @@ func _Msg_RevokeAuthorization_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: "/cosmos.authz.v1beta1.Msg/RevokeAuthorization",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).RevokeAuthorization(ctx, req.(*MsgRevokeAuthorization))
+		return srv.(MsgServer).RevokeAuthorization(ctx, req.(*MsgRevokeAuthorizationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -555,7 +555,7 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	Metadata: "cosmos/authz/v1beta1/tx.proto",
 }
 
-func (m *MsgGrantAuthorization) Marshal() (dAtA []byte, err error) {
+func (m *MsgGrantAuthorizationRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -565,12 +565,12 @@ func (m *MsgGrantAuthorization) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgGrantAuthorization) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgGrantAuthorizationRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgGrantAuthorization) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgGrantAuthorizationRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -647,7 +647,7 @@ func (m *MsgExecAuthorizedResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgExecAuthorized) Marshal() (dAtA []byte, err error) {
+func (m *MsgExecAuthorizedRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -657,12 +657,12 @@ func (m *MsgExecAuthorized) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgExecAuthorized) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgExecAuthorizedRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgExecAuthorized) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgExecAuthorizedRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -714,7 +714,7 @@ func (m *MsgGrantAuthorizationResponse) MarshalToSizedBuffer(dAtA []byte) (int, 
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgRevokeAuthorization) Marshal() (dAtA []byte, err error) {
+func (m *MsgRevokeAuthorizationRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -724,12 +724,12 @@ func (m *MsgRevokeAuthorization) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgRevokeAuthorization) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgRevokeAuthorizationRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgRevokeAuthorization) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgRevokeAuthorizationRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -792,7 +792,7 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *MsgGrantAuthorization) Size() (n int) {
+func (m *MsgGrantAuthorizationRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -828,7 +828,7 @@ func (m *MsgExecAuthorizedResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgExecAuthorized) Size() (n int) {
+func (m *MsgExecAuthorizedRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -856,7 +856,7 @@ func (m *MsgGrantAuthorizationResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgRevokeAuthorization) Size() (n int) {
+func (m *MsgRevokeAuthorizationRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -892,7 +892,7 @@ func sovTx(x uint64) (n int) {
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *MsgGrantAuthorization) Unmarshal(dAtA []byte) error {
+func (m *MsgGrantAuthorizationRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -915,10 +915,10 @@ func (m *MsgGrantAuthorization) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgGrantAuthorization: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgGrantAuthorizationRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgGrantAuthorization: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgGrantAuthorizationRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1161,7 +1161,7 @@ func (m *MsgExecAuthorizedResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgExecAuthorized) Unmarshal(dAtA []byte) error {
+func (m *MsgExecAuthorizedRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1184,10 +1184,10 @@ func (m *MsgExecAuthorized) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgExecAuthorized: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgExecAuthorizedRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgExecAuthorized: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgExecAuthorizedRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1327,7 +1327,7 @@ func (m *MsgGrantAuthorizationResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgRevokeAuthorization) Unmarshal(dAtA []byte) error {
+func (m *MsgRevokeAuthorizationRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1350,10 +1350,10 @@ func (m *MsgRevokeAuthorization) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgRevokeAuthorization: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgRevokeAuthorizationRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgRevokeAuthorization: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgRevokeAuthorizationRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

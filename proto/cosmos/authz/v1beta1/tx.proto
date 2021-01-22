@@ -12,21 +12,21 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/authz/types";
 service Msg {
   // GrantAuthorization grants the provided authorization to the grantee on the granter's
   // account with the provided expiration time.
-  rpc GrantAuthorization(MsgGrantAuthorization) returns (MsgGrantAuthorizationResponse);
+  rpc GrantAuthorization(MsgGrantAuthorizationRequest) returns (MsgGrantAuthorizationResponse);
 
   // ExecAuthorized attempts to execute the provided messages using
   // authorizations granted to the grantee. Each message should have only
   // one signer corresponding to the granter of the authorization.
-  rpc ExecAuthorized(MsgExecAuthorized) returns (MsgExecAuthorizedResponse);
+  rpc ExecAuthorized(MsgExecAuthorizedRequest) returns (MsgExecAuthorizedResponse);
 
   // RevokeAuthorization revokes any authorization corresponding to the provided method name on the
   // granter's account that has been granted to the grantee.
-  rpc RevokeAuthorization(MsgRevokeAuthorization) returns (MsgRevokeAuthorizationResponse);
+  rpc RevokeAuthorization(MsgRevokeAuthorizationRequest) returns (MsgRevokeAuthorizationResponse);
 }
 
-// MsgGrantAuthorization grants the provided authorization to the grantee on the granter's
+// MsgGrantAuthorizationRequest grants the provided authorization to the grantee on the granter's
 // account with the provided expiration time.
-message MsgGrantAuthorization {
+message MsgGrantAuthorizationRequest {
   string granter = 1;
   string grantee = 2;
 
@@ -39,10 +39,10 @@ message MsgExecAuthorizedResponse {
   cosmos.base.abci.v1beta1.Result result = 1;
 }
 
-// MsgExecAuthorized attempts to execute the provided messages using
+// MsgExecAuthorizedRequest attempts to execute the provided messages using
 // authorizations granted to the grantee. Each message should have only
 // one signer corresponding to the granter of the authorization.
-message MsgExecAuthorized {
+message MsgExecAuthorizedRequest {
   string   grantee                  = 1;
   repeated google.protobuf.Any msgs = 2;
 }
@@ -50,9 +50,9 @@ message MsgExecAuthorized {
 // MsgGrantAuthorizationResponse defines the Msg/MsgGrantAuthorization response type.
 message MsgGrantAuthorizationResponse {}
 
-// MsgRevokeAuthorization revokes any authorization with the provided sdk.Msg type on the
+// MsgRevokeAuthorizationRequest revokes any authorization with the provided sdk.Msg type on the
 // granter's account with that has been granted to the grantee.
-message MsgRevokeAuthorization {
+message MsgRevokeAuthorizationRequest {
   string granter     = 1;
   string grantee     = 2;
   string method_name = 3;

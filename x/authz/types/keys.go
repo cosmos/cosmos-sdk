@@ -21,7 +21,7 @@ const (
 // Keys for authz store
 // Items are stored with the following key: values
 //
-// - 0x01<accAddress_Bytes><accAddress_Bytes><msgType_Bytes>: Grant
+// - 0x01<granterAddress_Bytes><granteeAddress_Bytes><msgType_Bytes>: Grant
 
 var (
 	// Keys for store prefixes

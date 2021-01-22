@@ -60,14 +60,14 @@ message MsgVote {
 
 // MsgVote defines a message to cast a vote.
 message MsgWeightedVote {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  uint64                      proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
-  string                      voter       = 2;
-  repeated WeightedVoteOption options     = 3 [(gogoproto.nullable) = false];
+  uint64 proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
+  string voter       = 2;
+  repeated WeightedVoteOption options = 3 [(gogoproto.nullable) = false];
 }
 
 // MsgVoteResponse defines the Msg/Vote response type.

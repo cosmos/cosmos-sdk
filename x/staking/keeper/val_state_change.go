@@ -184,7 +184,10 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		totalPower = totalPower.Add(sdk.NewInt(newPower))
 	}
 
-	noLongerBonded := sortNoLongerBonded(last)
+	noLongerBonded, err := sortNoLongerBonded(last)
+	if err != nil {
+		return nil, err
+	}
 	for _, valAddrBytes := range noLongerBonded {
 		validator := k.mustGetValidator(ctx, sdk.ValAddress(valAddrBytes))
 		validator, err = k.bondedToUnbonding(ctx, validator)
@@ -344,6 +347,7 @@ func (k Keeper) completeUnbondingValidator(ctx sdk.Context, validator types.Vali
 }
 
 // map of operator bech32-addresses to serialized power
+// We use bech32 strings here, because we can't have slices as keys: map[[]byte][]byte
 type validatorsByAddr map[string][]byte
 
 // get the last validator set
@@ -371,14 +375,18 @@ func (k Keeper) getLastValidatorsByAddr(ctx sdk.Context) (validatorsByAddr, erro
 
 // given a map of remaining validators to previous bonded power
 // returns the list of validators to be unbonded, sorted by operator address
-func sortNoLongerBonded(last validatorsByAddr) [][]byte {
+func sortNoLongerBonded(last validatorsByAddr) ([][]byte, error) {
 	// sort the map keys for determinism
 	noLongerBonded := make([][]byte, len(last))
 	index := 0
 
-	for valAddrBytes := range last {
-		valAddr := make([]byte, sdk.AddrLen)
-		copy(valAddr, valAddrBytes[:])
+	for valAddrStr := range last {
+		valAddrBytes, err := sdk.ValAddressFromBech32(valAddrStr)
+		if err != nil {
+			return nil, err
+		}
+		valAddr := make([]byte, len(valAddrBytes))
+		copy(valAddr, valAddrBytes)
 		noLongerBonded[index] = valAddr
 		index++
 	}
@@ -388,5 +396,5 @@ func sortNoLongerBonded(last validatorsByAddr) [][]byte {
 		return bytes.Compare(noLongerBonded[i], noLongerBonded[j]) == -1
 	})
 
-	return noLongerBonded
+	return noLongerBonded, nil
 }

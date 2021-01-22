@@ -128,6 +128,16 @@ func (k Keeper) Grant(ctx sdk.Context, grantee, granter sdk.AccAddress, authoriz
 	bz := k.cdc.MustMarshalBinaryBare(&grant)
 	actor := types.GetActorAuthorizationKey(grantee, granter, authorization.MethodName())
 	store.Set(actor, bz)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventGrantAuthorization,
+			sdk.NewAttribute(types.AttributeKeyGrantType, authorization.MethodName()),
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(types.AttributeKeyGranterAddress, granter.String()),
+			sdk.NewAttribute(types.AttributeKeyGranteeAddress, grantee.String()),
+		),
+	)
 	return nil
 }
 
@@ -141,6 +151,15 @@ func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 	}
 	store.Delete(grantStoreKey)
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventRevokeAuthorization,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(types.AttributeKeyGrantType, msgType),
+			sdk.NewAttribute(types.AttributeKeyGranterAddress, granter.String()),
+			sdk.NewAttribute(types.AttributeKeyGranteeAddress, grantee.String()),
+		),
+	)
 	return nil
 }
 

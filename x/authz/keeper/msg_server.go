@@ -33,16 +33,6 @@ func (k Keeper) GrantAuthorization(goCtx context.Context, msg *types.MsgGrantAut
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventGrantAuthorization,
-			sdk.NewAttribute(types.AttributeKeyGrantType, authorization.MethodName()),
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(types.AttributeKeyGranterAddress, msg.Granter),
-			sdk.NewAttribute(types.AttributeKeyGranteeAddress, msg.Grantee),
-		),
-	)
-
 	return &types.MsgGrantAuthorizationResponse{}, nil
 }
 
@@ -62,15 +52,6 @@ func (k Keeper) RevokeAuthorization(goCtx context.Context, msg *types.MsgRevokeA
 	if err != nil {
 		return nil, err
 	}
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventRevokeAuthorization,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(types.AttributeKeyGrantType, msg.MethodName),
-			sdk.NewAttribute(types.AttributeKeyGranterAddress, msg.Granter),
-			sdk.NewAttribute(types.AttributeKeyGranteeAddress, msg.Grantee),
-		),
-	)
 
 	return &types.MsgRevokeAuthorizationResponse{}, nil
 }

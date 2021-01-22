@@ -20,7 +20,7 @@ const (
 
 // KVStore keys
 var (
-	BalancesPrefix      = []byte("balances")
+	BalancesPrefix      = []byte{0x02}
 	SupplyKey           = []byte{0x00}
 	DenomMetadataPrefix = []byte{0x1}
 )

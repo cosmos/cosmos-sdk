@@ -3,7 +3,7 @@
 ## Changelog
 
 - 2020/08/18: Initial version
-- 2020/08/15: Analysis and algorithm update
+- 2021/01/15: Analysis and algorithm update
 
 ## Status
 

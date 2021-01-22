@@ -3,7 +3,6 @@ package types
 import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 )
 
 const (
@@ -43,10 +42,13 @@ func (cup *ClientUpdateProposal) ValidateBasic() error {
 		return err
 	}
 
-	if err := host.ClientIdentifierValidator(cup.SubjectClientId); err != nil {
+	if cup.SubjectClientId == cup.SubstituteClientId {
+		return sdkerrors.Wrap(ErrInvalidSubstitute, "subject and substitute client identifiers are equaL")
+	}
+	if _, _, err := ParseClientIdentifier(cup.SubjectClientId); err != nil {
 		return err
 	}
-	if err := host.ClientIdentifierValidator(cup.SubstituteClientId); err != nil {
+	if _, _, err := ParseClientIdentifier(cup.SubstituteClientId); err != nil {
 		return err
 	}
 

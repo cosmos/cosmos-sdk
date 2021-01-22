@@ -176,12 +176,16 @@ func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.ServiceMsg) MsgExec
 func (msg MsgExecAuthorizedRequest) GetServiceMsgs() ([]sdk.ServiceMsg, error) {
 	msgs := make([]sdk.ServiceMsg, len(msg.Msgs))
 	for i, msgAny := range msg.Msgs {
-		msg1 := sdk.ServiceMsg{
+		msgReq, ok := msgAny.GetCachedValue().(sdk.MsgRequest)
+		if !ok {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "messages contains %T which is not a sdk.MsgRequest", msgAny)
+		}
+		srvMsg := sdk.ServiceMsg{
 			MethodName: msgAny.TypeUrl,
-			Request:    msgAny.GetCachedValue().(sdk.MsgRequest),
+			Request:    msgReq,
 		}
 
-		msgs[i] = msg1
+		msgs[i] = srvMsg
 	}
 
 	return msgs, nil

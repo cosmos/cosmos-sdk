@@ -106,12 +106,7 @@ func (k Keeper) Authorization(c context.Context, req *types.QueryAuthorizationRe
 		return nil, status.Errorf(codes.NotFound, "no authorization found for %s type", req.MethodName)
 	}
 
-	msg, ok := authorization.(proto.Message)
-	if !ok {
-		return nil, status.Errorf(codes.Internal, "can't protomarshal %T", msg)
-	}
-
-	authorizationAny, err := codectypes.NewAnyWithValue(msg)
+	authorizationAny, err := codectypes.NewAnyWithValue(authorization)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}

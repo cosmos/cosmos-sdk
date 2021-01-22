@@ -1,15 +1,15 @@
 package types
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	types "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type Authorization interface {
@@ -30,7 +30,7 @@ func NewAuthorizationGrant(authorization Authorization, expiration time.Time) (A
 	}
 	msg, ok := authorization.(proto.Message)
 	if !ok {
-		return AuthorizationGrant{}, fmt.Errorf("cannot proto marshal %T", authorization)
+		return AuthorizationGrant{}, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", authorization)
 	}
 
 	any, err := types.NewAnyWithValue(msg)

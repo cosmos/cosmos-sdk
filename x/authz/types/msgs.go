@@ -1,12 +1,11 @@
 package types
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
 
-	types "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -47,10 +46,10 @@ func (msg MsgGrantAuthorizationRequest) GetSigners() []sdk.AccAddress {
 // ValidateBasic implements Msg
 func (msg MsgGrantAuthorizationRequest) ValidateBasic() error {
 	if msg.Granter == "" {
-		return sdkerrors.Wrap(ErrInvalidGranter, "missing granter address")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
 	}
 	if msg.Grantee == "" {
-		return sdkerrors.Wrap(ErrInvalidGrantee, "missing grantee address")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
 	}
 	if msg.Expiration.Unix() < time.Now().Unix() {
 		return sdkerrors.Wrap(ErrInvalidExpirationTime, "Time can't be in the past")
@@ -72,7 +71,7 @@ func (msg *MsgGrantAuthorizationRequest) GetGrantAuthorization() Authorization {
 func (msg *MsgGrantAuthorizationRequest) SetAuthorization(authorization Authorization) error {
 	m, ok := authorization.(proto.Message)
 	if !ok {
-		return fmt.Errorf("can't proto marshal %T", m)
+		return sdkerrors.Wrapf(sdkerrors.ErrPackAny, "can't proto marshal %T", m)
 	}
 	any, err := types.NewAnyWithValue(m)
 	if err != nil {
@@ -123,10 +122,10 @@ func (msg MsgRevokeAuthorizationRequest) GetSigners() []sdk.AccAddress {
 // ValidateBasic implements MsgRequest.ValidateBasic
 func (msg MsgRevokeAuthorizationRequest) ValidateBasic() error {
 	if msg.Granter == "" {
-		return sdkerrors.Wrap(ErrInvalidGranter, "missing granter address")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
 	}
 	if msg.Grantee == "" {
-		return sdkerrors.Wrap(ErrInvalidGrantee, "missing grantee address")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
 	}
 	return nil
 }
@@ -182,7 +181,7 @@ func (msg MsgExecAuthorizedRequest) GetSigners() []sdk.AccAddress {
 // ValidateBasic implements Msg
 func (msg MsgExecAuthorizedRequest) ValidateBasic() error {
 	if msg.Grantee == "" {
-		return sdkerrors.Wrap(ErrInvalidGranter, "missing grantee address")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
 	}
 	return nil
 }

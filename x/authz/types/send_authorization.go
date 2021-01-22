@@ -28,16 +28,18 @@ func (authorization SendAuthorization) MethodName() string {
 // Accept implements Authorization.Accept.
 func (authorization SendAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (allow bool, updated Authorization, delete bool) {
 	if reflect.TypeOf(msg.Request) == reflect.TypeOf(&bank.MsgSend{}) {
-		msg := msg.Request.(*bank.MsgSend)
-		limitLeft, isNegative := authorization.SpendLimit.SafeSub(msg.Amount)
-		if isNegative {
-			return false, nil, false
-		}
-		if limitLeft.IsZero() {
-			return true, nil, true
-		}
+		msg, ok := msg.Request.(*bank.MsgSend)
+		if ok {
+			limitLeft, isNegative := authorization.SpendLimit.SafeSub(msg.Amount)
+			if isNegative {
+				return false, nil, false
+			}
+			if limitLeft.IsZero() {
+				return true, nil, true
+			}
 
-		return true, &SendAuthorization{SpendLimit: limitLeft}, false
+			return true, &SendAuthorization{SpendLimit: limitLeft}, false
+		}
 	}
 	return false, nil, false
 }

@@ -31,7 +31,6 @@ var (
 // GetActorAuthorizationKey - return authorization store key
 func GetActorAuthorizationKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) []byte {
 	return append(append(append(GrantKey, granter.Bytes()...), grantee.Bytes()...), []byte(msgType)...)
-
 }
 
 // ExtractAddressesFromGrantKey - split granter & grantee address from the authorization key

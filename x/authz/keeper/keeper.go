@@ -52,12 +52,12 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 	actor := types.GetActorAuthorizationKey(grantee, granter, updated.MethodName())
 	grant, found := k.getAuthorizationGrant(ctx, actor)
 	if !found {
-		return fmt.Errorf("no authorization found")
+		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "authorization not found")
 	}
 
 	msg, ok := updated.(proto.Message)
 	if !ok {
-		return fmt.Errorf("cannot proto marshal %T", updated)
+		sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", updated)
 	}
 
 	any, err := codectypes.NewAnyWithValue(msg)
@@ -79,7 +79,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, service
 	for _, serviceMsg := range serviceMsgs {
 		signers := serviceMsg.GetSigners()
 		if len(signers) != 1 {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "authorization can be given to msg with only one signer")
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "authorization can be given to msg with only one signer")
 		}
 		granter := signers[0]
 		if !bytes.Equal(granter, grantee) {
@@ -89,7 +89,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, service
 			}
 			allow, updated, del := authorization.Accept(serviceMsg, ctx.BlockHeader())
 			if !allow {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "Requested amount is more than spent limit")
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "requested amount is more than spend limit")
 			}
 			if del {
 				k.Revoke(ctx, grantee, granter, serviceMsg.Type())
@@ -138,7 +138,7 @@ func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 	actor := types.GetActorAuthorizationKey(grantee, granter, msgType)
 	_, found := k.getAuthorizationGrant(ctx, actor)
 	if !found {
-		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "authorization not found")
+		return sdkerrors.Wrap(sdkerrors.ErrNotFound, "authorization not found")
 	}
 	store.Delete(actor)
 

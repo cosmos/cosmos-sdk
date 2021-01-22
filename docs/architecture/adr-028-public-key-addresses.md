@@ -184,9 +184,6 @@ Some accounts can have a fixed name. We were discussing an idea of an account wi
 Without going into details, this kind of addresses are compatible with the hash based addresses discussed here as long as they don't conflict with the same length.
 More specifically, any special account, with custom naming, must not have length equal 20 byte nor 32 bytes.
 
-### Module Addresses
-
-TODO
 
 ## Consequences
 

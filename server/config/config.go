@@ -101,6 +101,29 @@ type APIConfig struct {
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/6420
 }
 
+// RosettaConfig defines the Rosetta API listener configuration.
+type RosettaConfig struct {
+	// Address defines the API server to listen on
+	Address string `mapstructure:"address"`
+
+	// Blockchain defines the blockchain name
+	// defaults to DefaultBlockchain
+	Blockchain string `mapstructure:"blockchain"`
+
+	// Network defines the network name
+	Network string `mapstructure:"network"`
+
+	// Retries defines the maximum number of retries
+	// rosetta will do before quitting
+	Retries int `mapstructure:"retries"`
+
+	// Enable defines if the API server should be enabled.
+	Enable bool `mapstructure:"enable"`
+
+	// Offline defines if the server must be run in offline mode
+	Offline bool `mapstructure:"offline"`
+}
+
 // GRPCConfig defines configuration for the gRPC server.
 type GRPCConfig struct {
 	// Enable defines if the gRPC server should be enabled.
@@ -138,6 +161,7 @@ type Config struct {
 	Telemetry telemetry.Config `mapstructure:"telemetry"`
 	API       APIConfig        `mapstructure:"api"`
 	GRPC      GRPCConfig       `mapstructure:"grpc"`
+	Rosetta   RosettaConfig    `mapstructure:"rosetta"`
 	GRPCWeb   GRPCWebConfig    `mapstructure:"grpc-web"`
 	StateSync StateSyncConfig  `mapstructure:"state-sync"`
 }
@@ -198,6 +222,14 @@ func DefaultConfig() *Config {
 			Enable:  true,
 			Address: DefaultGRPCAddress,
 		},
+		Rosetta: RosettaConfig{
+			Enable:     false,
+			Address:    ":8080",
+			Blockchain: "app",
+			Network:    "network",
+			Retries:    3,
+			Offline:    false,
+		},
 		GRPCWeb: GRPCWebConfig{
 			Enable:  true,
 			Address: DefaultGRPCWebAddress,
@@ -251,6 +283,14 @@ func GetConfig(v *viper.Viper) Config {
 			RPCWriteTimeout:    v.GetUint("api.rpc-write-timeout"),
 			RPCMaxBodyBytes:    v.GetUint("api.rpc-max-body-bytes"),
 			EnableUnsafeCORS:   v.GetBool("api.enabled-unsafe-cors"),
+		},
+		Rosetta: RosettaConfig{
+			Enable:     v.GetBool("rosetta.enable"),
+			Address:    v.GetString("rosetta.address"),
+			Blockchain: v.GetString("rosetta.blockchain"),
+			Network:    v.GetString("rosetta.network"),
+			Retries:    v.GetInt("rosetta.retries"),
+			Offline:    v.GetBool("rosetta.offline"),
 		},
 		GRPC: GRPCConfig{
 			Enable:  v.GetBool("grpc.enable"),

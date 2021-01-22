@@ -95,8 +95,8 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 		val,
 		[]string{
 			grantee.String(),
-			typeMsgSend,
-			"100steak",
+			"send",
+			fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
 			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -173,8 +173,8 @@ func (s *IntegrationTestSuite) TestQueryAuthorization() {
 		val,
 		[]string{
 			grantee.String(),
-			typeMsgSend,
-			"100steak",
+			"send",
+			fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
 			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -270,8 +270,8 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			"Invalid granter Address",
 			[]string{
 				"grantee_addr",
-				typeMsgSend,
-				"100steak",
+				"send",
+				fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, "granter"),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
@@ -284,8 +284,8 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			"Invalid grantee Address",
 			[]string{
 				"grantee_addr",
-				typeMsgSend,
-				"100steak",
+				"send",
+				fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
@@ -297,8 +297,8 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			"Invalid expiration time",
 			[]string{
 				grantee.String(),
-				typeMsgSend,
-				"100steak",
+				"send",
+				fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, pastHour),
@@ -310,7 +310,8 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			"fail with error invalid msg-type",
 			[]string{
 				grantee.String(),
-				"invalid-msg-type",
+				"generic",
+				fmt.Sprintf("--%s=invalid-msg-type", cli.FlagMsgType),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
@@ -324,8 +325,8 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			"Valid tx send authorization",
 			[]string{
 				grantee.String(),
-				typeMsgSend,
-				"100steak",
+				"send",
+				fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
@@ -339,7 +340,8 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			"Valid tx generic authorization",
 			[]string{
 				grantee.String(),
-				typeMsgVote,
+				"generic",
+				fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
@@ -388,8 +390,8 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 		val,
 		[]string{
 			grantee.String(),
-			typeMsgSend,
-			"100steak",
+			"send",
+			fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
 			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -404,7 +406,8 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 		val,
 		[]string{
 			grantee.String(),
-			typeMsgVote,
+			"generic",
+			fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
 			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -501,7 +504,8 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 		val,
 		[]string{
 			grantee.String(),
-			typeMsgVote,
+			"generic",
+			fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
 			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -529,7 +533,6 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 	})
 	s.Require().NoError(err)
 	s.Require().Contains(res.String(), "authorization not found")
-
 }
 
 func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
@@ -541,7 +544,8 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 		val,
 		[]string{
 			grantee.String(),
-			typeMsgVote,
+			"generic",
+			fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
 			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -622,17 +626,15 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 
 func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 	val := s.network.Validators[0]
-
 	grantee := s.grantee
-
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	_, err := execGrantAuthorization(
 		val,
 		[]string{
 			grantee.String(),
-			typeMsgSend,
-			fmt.Sprintf("12%stoken", val.Moniker),
+			"send",
+			fmt.Sprintf("--%s=12%stoken", cli.FlagSpendLimit, val.Moniker),
 			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -704,7 +706,6 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-
 			cmd := cli.NewCmdExecAuthorization()
 			clientCtx := val.ClientCtx
 

@@ -19,6 +19,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
 )
 
+const FlagSpendLimit = "spend-limit"
+const FlagMsgType = "msg-type"
 const FlagExpiration = "expiration"
 
 // GetTxCmd returns the transaction commands for this module
@@ -43,14 +45,14 @@ func GetTxCmd() *cobra.Command {
 
 func NewCmdGrantAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant [grantee_address] [msg-type] [limit] --from=[granter]",
+		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"> --from <granter>",
 		Short: "Grant authorization to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Grant authorization to an address to execute a transaction on your behalf:
 
 Examples:
- $ %s tx %s grant cosmos1skjw.. %s 1000stake --from=cosmos1skl..
- $ %s tx %s grant cosmos1skjw.. /cosmos.gov.v1beta1.Msg/Vote --from=cosmos1sk..
+ $ %s tx %s grant cosmos1skjw.. send %s --spend-limit=1000stake --from=cosmos1skl..
+ $ %s tx %s grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1beta1.Msg/Vote --from=cosmos1sk..
 	`, version.AppName, types.ModuleName, types.SendAuthorization{}.MethodName(), version.AppName, types.ModuleName),
 		),
 		Args: cobra.RangeArgs(2, 3),
@@ -64,19 +66,35 @@ Examples:
 				return err
 			}
 
-			msgType := args[1]
-
 			var authorization types.Authorization
-			if msgType == (types.SendAuthorization{}.MethodName()) {
-				limit, err := sdk.ParseCoinsNormalized(args[2])
+			switch args[1] {
+			case "send":
+				limit, err := cmd.Flags().GetString(FlagSpendLimit)
 				if err != nil {
 					return err
 				}
-				authorization = &types.SendAuthorization{
-					SpendLimit: limit,
+
+				spendLimit, err := sdk.ParseCoinsNormalized(limit)
+				if err != nil {
+					return err
 				}
-			} else {
+
+				if !spendLimit.IsAllPositive() {
+					return fmt.Errorf("spend-limit should be greater than zero")
+				}
+
+				authorization = &types.SendAuthorization{
+					SpendLimit: spendLimit,
+				}
+			case "generic":
+				msgType, err := cmd.Flags().GetString(FlagMsgType)
+				if err != nil {
+					return err
+				}
+
 				authorization = types.NewGenericAuthorization(msgType)
+			default:
+				fmt.Errorf("invalid authorization type, %s", args[1])
 			}
 
 			exp, err := cmd.Flags().GetInt64(FlagExpiration)
@@ -97,10 +115,11 @@ Examples:
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
-
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().String(FlagMsgType, "", "The Unix timestamp. Default is one year.")
+	cmd.Flags().String(FlagSpendLimit, "", "SpendLimit for Send Authorization, an array of Coins allowed spend")
 	cmd.Flags().Int64(FlagExpiration, time.Now().AddDate(1, 0, 0).Unix(), "The Unix timestamp. Default is one year.")
 	return cmd
 }

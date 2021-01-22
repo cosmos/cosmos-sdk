@@ -160,7 +160,7 @@ Implementation Tip: account implementations should cache address in their struct
 ### Account Types
 
 The Account Types used in various account classes SHOULD be unique for each class.
-Since both public keys and accounts are serialized in the state, we propose to use the protobuf message name string (`proto.MessageName(msg)`).
+Since both public keys and accounts are serialized in the state, we propose to use the protobuf message name string.
 
 Example: all public key types have a unique protobuf message type similar to:
 
@@ -174,10 +174,9 @@ message PubKey {
 
 All protobuf messages have unique fully qualified names, in this example `cosmos.crypto.sr25519.PubKey`.
 These names are derived directly from .proto files in a standardized way and used
-in other places such as the type URL in `Any`s. Since there is an easy and obvious
-way to get this name for every protobuf type, we can use this message name as the
-key type `prefix` when creating addresses. For all basic public keys, `contents`
-should just be the raw unencoded public key bytes.
+in other places such as the type URL in `Any`s. We can easily obtain the name using
+`proto.MessageName(msg)`.
+
 
 ### Named Accounts
 

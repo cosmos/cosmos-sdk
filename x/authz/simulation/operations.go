@@ -84,9 +84,8 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-
-		granter, _ := simtypes.RandomAcc(r, accs)
-		grantee, _ := simtypes.RandomAcc(r, accs)
+		granter := accs[0]
+		grantee := accs[1]
 
 		account := ak.GetAccount(ctx, granter.Address)
 
@@ -139,7 +138,6 @@ func SimulateMsgRevokeAuthorization(ak types.AccountKeeper, bk types.BankKeeper,
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-
 		hasGrant := false
 		var targetGrant types.AuthorizationGrant
 		var granterAddr sdk.AccAddress

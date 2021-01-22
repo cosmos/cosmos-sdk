@@ -22,7 +22,7 @@ func TestAddressFromBalancesStore(t *testing.T) {
 	addrLen := len(addr)
 	require.Equal(t, 20, addrLen)
 
-	key := cloneAppend(append([]byte{byte(addrLen)}, addr.Bytes()...), []byte("stake"))
+	key := cloneAppend(sdk.LengthPrefixAddress(addr), []byte("stake"))
 	res := types.AddressFromBalancesStore(key)
 	require.Equal(t, res, addr)
 }

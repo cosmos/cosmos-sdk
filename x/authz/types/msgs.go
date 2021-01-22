@@ -45,12 +45,19 @@ func (msg MsgGrantAuthorizationRequest) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic implements Msg
 func (msg MsgGrantAuthorizationRequest) ValidateBasic() error {
-	if msg.Granter == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
+	granter, err := sdk.AccAddressFromBech32(msg.Granter)
+	if err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "invalid granter address")
 	}
-	if msg.Grantee == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
+	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
+	if err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "invalid granter address")
 	}
+
+	if granter.Equals(grantee) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "granter and grantee cannot be same")
+	}
+
 	if msg.Expiration.Unix() < time.Now().Unix() {
 		return sdkerrors.Wrap(ErrInvalidExpirationTime, "Time can't be in the past")
 	}
@@ -121,12 +128,23 @@ func (msg MsgRevokeAuthorizationRequest) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic implements MsgRequest.ValidateBasic
 func (msg MsgRevokeAuthorizationRequest) ValidateBasic() error {
-	if msg.Granter == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
+	granter, err := sdk.AccAddressFromBech32(msg.Granter)
+	if err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "invalid granter address")
 	}
-	if msg.Grantee == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
+	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
+	if err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "invalid grantee address")
 	}
+
+	if granter.Equals(grantee) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "granter and grantee cannot be same")
+	}
+
+	if msg.MethodName == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "missing method name")
+	}
+
 	return nil
 }
 
@@ -180,8 +198,14 @@ func (msg MsgExecAuthorizedRequest) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic implements Msg
 func (msg MsgExecAuthorizedRequest) ValidateBasic() error {
-	if msg.Grantee == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
+	_, err := sdk.AccAddressFromBech32(msg.Grantee)
+	if err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "invalid grantee address")
 	}
+
+	if len(msg.Msgs) == 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "messages cannot be empty")
+	}
+
 	return nil
 }

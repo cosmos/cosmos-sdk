@@ -8,6 +8,38 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
+var (
+	amino = codec.NewLegacyAmino()
+
+	// ModuleCdc references the global x/ibc channel codec. Note, the codec should
+	// ONLY be used in certain instances of tests and for JSON encoding as Amino is
+	// still used for that purpose.
+	//
+	// The actual codec used for serialization should be provided to x/staking and
+	// defined at the application level.
+	ModuleCdc = codec.NewAminoCodec(amino)
+)
+
+func init() {
+	RegisterLegacyAminoCodec(amino)
+	amino.Seal()
+}
+
+// RegisterLegacyAminoCodec registers the necessary x/ibc channel interfaces and concrete types
+// on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	cdc.RegisterConcrete(&MsgChannelOpenInit{}, "cosmos-sdk/MsgChannelOpenInit", nil)
+	cdc.RegisterConcrete(&MsgChannelOpenTry{}, "cosmos-sdk/MsgChannelOpenTry", nil)
+	cdc.RegisterConcrete(&MsgChannelOpenAck{}, "cosmos-sdk/MsgChannelOpenAck", nil)
+	cdc.RegisterConcrete(&MsgChannelOpenConfirm{}, "cosmos-sdk/MsgChannelOpenConfirm", nil)
+	cdc.RegisterConcrete(&MsgChannelCloseInit{}, "cosmos-sdk/MsgChannelCloseInit", nil)
+	cdc.RegisterConcrete(&MsgChannelCloseConfirm{}, "cosmos-sdk/MsgChannelCloseConfirm", nil)
+	cdc.RegisterConcrete(&MsgRecvPacket{}, "cosmos-sdk/MsgRecvPacket", nil)
+	cdc.RegisterConcrete(&MsgAcknowledgement{}, "cosmos-sdk/MsgAcknowledgement", nil)
+	cdc.RegisterConcrete(&MsgTimeout{}, "cosmos-sdk/MsgTimeout", nil)
+	cdc.RegisterConcrete(&MsgTimeoutOnClose{}, "cosmos-sdk/MsgTimeoutOnClose", nil)
+}
+
 // RegisterInterfaces register the ibc channel submodule interfaces to protobuf
 // Any.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {

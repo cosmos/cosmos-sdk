@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
@@ -20,4 +21,12 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	ibctmtypes.RegisterInterfaces(registry)
 	localhosttypes.RegisterInterfaces(registry)
 	commitmenttypes.RegisterInterfaces(registry)
+}
+
+// RegisterLegacyAminoCodec registers the necessary client interfaces and concrete types
+// on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	clienttypes.RegisterLegacyAminoCodec(cdc)
+	connectiontypes.RegisterLegacyAminoCodec(cdc)
+	channeltypes.RegisterLegacyAminoCodec(cdc)
 }

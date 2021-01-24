@@ -71,10 +71,9 @@ func (msg MsgConnectionOpenInit) ValidateBasic() error {
 	return msg.Counterparty.ValidateBasic()
 }
 
-// GetSignBytes implements sdk.Msg. The function will panic since it is used
-// for amino transaction verification which IBC does not support.
+// GetSignBytes implements sdk.Msg.
 func (msg MsgConnectionOpenInit) GetSignBytes() []byte {
-	panic("IBC messages do not support amino")
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -184,10 +183,9 @@ func (msg MsgConnectionOpenTry) UnpackInterfaces(unpacker codectypes.AnyUnpacker
 	return unpacker.UnpackAny(msg.ClientState, new(exported.ClientState))
 }
 
-// GetSignBytes implements sdk.Msg. The function will panic since it is used
-// for amino transaction verification which IBC does not support.
+// GetSignBytes implements sdk.Msg.
 func (msg MsgConnectionOpenTry) GetSignBytes() []byte {
-	panic("IBC messages do not support amino")
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -281,10 +279,9 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 	return nil
 }
 
-// GetSignBytes implements sdk.Msg. The function will panic since it is used
-// for amino transaction verification which IBC does not support.
+// GetSignBytes implements sdk.Msg.
 func (msg MsgConnectionOpenAck) GetSignBytes() []byte {
-	panic("IBC messages do not support amino")
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -338,10 +335,9 @@ func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 	return nil
 }
 
-// GetSignBytes implements sdk.Msg. The function will panic since it is used
-// for amino transaction verification which IBC does not support.
+// GetSignBytes implements sdk.Msg.
 func (msg MsgConnectionOpenConfirm) GetSignBytes() []byte {
-	panic("IBC messages do not support amino")
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg

@@ -90,10 +90,9 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	return consensusState.ValidateBasic()
 }
 
-// GetSignBytes implements sdk.Msg. The function will panic since it is used
-// for amino transaction verification which IBC does not support.
+// GetSignBytes implements sdk.Msg.
 func (msg MsgCreateClient) GetSignBytes() []byte {
-	panic("IBC messages do not support amino")
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -161,10 +160,9 @@ func (msg MsgUpdateClient) ValidateBasic() error {
 	return host.ClientIdentifierValidator(msg.ClientId)
 }
 
-// GetSignBytes implements sdk.Msg. The function will panic since it is used
-// for amino transaction verification which IBC does not support.
+// GetSignBytes implements sdk.Msg.
 func (msg MsgUpdateClient) GetSignBytes() []byte {
-	panic("IBC messages do not support amino")
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -247,10 +245,9 @@ func (msg MsgUpgradeClient) ValidateBasic() error {
 	return host.ClientIdentifierValidator(msg.ClientId)
 }
 
-// GetSignBytes implements sdk.Msg. The function will panic since it is used
-// for amino transaction verification which IBC does not support.
+// GetSignBytes implements sdk.Msg.
 func (msg MsgUpgradeClient) GetSignBytes() []byte {
-	panic("IBC messages do not support amino")
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -321,10 +318,9 @@ func (msg MsgSubmitMisbehaviour) ValidateBasic() error {
 	return host.ClientIdentifierValidator(msg.ClientId)
 }
 
-// GetSignBytes implements sdk.Msg. The function will panic since it is used
-// for amino transaction verification which IBC does not support.
+// GetSignBytes implements sdk.Msg.
 func (msg MsgSubmitMisbehaviour) GetSignBytes() []byte {
-	panic("IBC messages do not support amino")
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners returns the single expected signer for a MsgSubmitMisbehaviour.

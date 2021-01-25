@@ -364,34 +364,34 @@ func (s *addressTestSuite) TestCustomAddressVerifier() {
 	accBech := types.AccAddress(addr).String()
 	valBech := types.ValAddress(addr).String()
 	consBech := types.ConsAddress(addr).String()
-	// Verifiy that the default logic rejects this 10 byte address
+	// Verifiy that the default logic doesn't reject this 10 byte address
 	err := types.VerifyAddressFormat(addr)
-	s.Require().NotNil(err)
+	s.Require().Nil(err)
 	_, err = types.AccAddressFromBech32(accBech)
-	s.Require().NotNil(err)
+	s.Require().Nil(err)
 	_, err = types.ValAddressFromBech32(valBech)
-	s.Require().NotNil(err)
+	s.Require().Nil(err)
 	_, err = types.ConsAddressFromBech32(consBech)
-	s.Require().NotNil(err)
+	s.Require().Nil(err)
 
-	// Set a custom address verifier that accepts 10 or 20 byte addresses
+	// Set a custom address verifier only accepts 20 byte addresses
 	types.GetConfig().SetAddressVerifier(func(bz []byte) error {
 		n := len(bz)
-		if n == 10 || n == types.AddrLen {
+		if n == 20 {
 			return nil
 		}
 		return fmt.Errorf("incorrect address length %d", n)
 	})
 
-	// Verifiy that the custom logic accepts this 10 byte address
+	// Verifiy that the custom logic rejects this 10 byte address
 	err = types.VerifyAddressFormat(addr)
-	s.Require().Nil(err)
+	s.Require().NotNil(err)
 	_, err = types.AccAddressFromBech32(accBech)
-	s.Require().Nil(err)
+	s.Require().NotNil(err)
 	_, err = types.ValAddressFromBech32(valBech)
-	s.Require().Nil(err)
+	s.Require().NotNil(err)
 	_, err = types.ConsAddressFromBech32(consBech)
-	s.Require().Nil(err)
+	s.Require().NotNil(err)
 }
 
 func (s *addressTestSuite) TestBech32ifyAddressBytes() {
@@ -519,4 +519,14 @@ func (s *addressTestSuite) TestGetFromBech32() {
 	_, err = types.GetFromBech32("cosmos1qqqsyqcyq5rqwzqfys8f67", "x")
 	s.Require().Error(err)
 	s.Require().Equal("invalid Bech32 prefix; expected x, got cosmos", err.Error())
+}
+
+func (s *addressTestSuite) TestLengthPrefixAddress() {
+	addr10byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
+	addr256byte := make([]byte, 256)
+
+	s.Require().Equal(append([]byte{byte(10)}, addr10byte...), types.LengthPrefixAddress(addr10byte))
+	s.Require().Equal(append([]byte{byte(20)}, addr20byte...), types.LengthPrefixAddress(addr20byte))
+	s.Require().Panics(func() { types.LengthPrefixAddress(addr256byte) })
 }

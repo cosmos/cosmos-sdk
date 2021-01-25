@@ -444,3 +444,91 @@ func (suite *TypesTestSuite) TestMsgAcknowledgementValidateBasic() {
 		})
 	}
 }
+
+func (suite *TypesTestSuite) TestChannelMsgsGetSignBytes() {
+	var (
+		msg       sdk.Msg
+		expString string
+	)
+
+	testCases := []struct {
+		name     string
+		malleate func()
+	}{
+		{
+			"MsgChannelOpenInit", func() {
+				msg = types.NewMsgChannelOpenInit(portid, version, types.ORDERED, connHops, cpportid, addr)
+				expString = fmt.Sprintf(`{"type":"cosmos-sdk/MsgChannelOpenInit","value":{"channel":{"connection_hops":["testconnection"],"counterparty":{"port_id":"testcpport"},"ordering":2,"state":1,"version":"1.0"},"port_id":"testportid","signer":"%s"}}`, addr)
+			},
+		},
+		{
+			"MsgChannelOpenTry", func() {
+				msg = types.NewMsgChannelOpenTry(portid, chanid, version, types.ORDERED, connHops, cpportid, cpchanid, version, suite.proof, height, addr)
+				expString = fmt.Sprintf(`{"type":"cosmos-sdk/MsgChannelOpenTry","value":{"channel":{"connection_hops":["testconnection"],"counterparty":{"channel_id":"testcpchannel","port_id":"testcpport"},"ordering":2,"state":2,"version":"1.0"},"counterparty_version":"1.0","port_id":"testportid","previous_channel_id":"channel-0","proof_height":{"revision_height":"1"},"proof_init":"ChsKGQoDS0VZEgVWQUxVRRoLCAEYASABKgMAAgIKPQo7CgxpYXZsU3RvcmVLZXkSIBwiINdIdBFK+H9ZrTsxilMrQHhe1tpe3PEEQPvrGTRaGgkIARgBIAEqAQA=","signer":"%s"}}`, addr)
+			},
+		},
+		{
+			"MsgChannelOpenAck", func() {
+				msg = types.NewMsgChannelOpenAck(portid, chanid, chanid, version, suite.proof, height, addr)
+				expString = fmt.Sprintf(`{"type":"cosmos-sdk/MsgChannelOpenAck","value":{"channel_id":"channel-0","counterparty_channel_id":"channel-0","counterparty_version":"1.0","port_id":"testportid","proof_height":{"revision_height":"1"},"proof_try":"ChsKGQoDS0VZEgVWQUxVRRoLCAEYASABKgMAAgIKPQo7CgxpYXZsU3RvcmVLZXkSIBwiINdIdBFK+H9ZrTsxilMrQHhe1tpe3PEEQPvrGTRaGgkIARgBIAEqAQA=","signer":"%s"}}`, addr)
+			},
+		},
+		{
+			"MsgChannelOpenConfirm", func() {
+				msg = types.NewMsgChannelOpenConfirm(portid, chanid, suite.proof, height, addr)
+				expString = fmt.Sprintf(`{"type":"cosmos-sdk/MsgChannelOpenConfirm","value":{"channel_id":"channel-0","port_id":"testportid","proof_ack":"ChsKGQoDS0VZEgVWQUxVRRoLCAEYASABKgMAAgIKPQo7CgxpYXZsU3RvcmVLZXkSIBwiINdIdBFK+H9ZrTsxilMrQHhe1tpe3PEEQPvrGTRaGgkIARgBIAEqAQA=","proof_height":{"revision_height":"1"},"signer":"%s"}}`, addr)
+			},
+		},
+		{
+			"MsgChannelCloseInit", func() {
+				msg = types.NewMsgChannelCloseInit(portid, chanid, addr)
+				expString = fmt.Sprintf(`{"type":"cosmos-sdk/MsgChannelCloseInit","value":{"channel_id":"channel-0","port_id":"testportid","signer":"%s"}}`, addr)
+			},
+		},
+		{
+			"MsgChannelCloseConfirm", func() {
+				msg = types.NewMsgChannelCloseConfirm(portid, chanid, suite.proof, height, addr)
+				expString = fmt.Sprintf(`{"type":"cosmos-sdk/MsgChannelCloseConfirm","value":{"channel_id":"channel-0","port_id":"testportid","proof_height":{"revision_height":"1"},"proof_init":"ChsKGQoDS0VZEgVWQUxVRRoLCAEYASABKgMAAgIKPQo7CgxpYXZsU3RvcmVLZXkSIBwiINdIdBFK+H9ZrTsxilMrQHhe1tpe3PEEQPvrGTRaGgkIARgBIAEqAQA=","signer":"%s"}}`, addr)
+			},
+		},
+		{
+			"MsgRecvPacket", func() {
+				msg = types.NewMsgRecvPacket(packet, suite.proof, height, addr)
+				expString = fmt.Sprintf(`{"type":"cosmos-sdk/MsgRecvPacket","value":{"packet":{"data":"dGVzdGRhdGE=","destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"channel-0","source_port":"testportid","timeout_height":{"revision_height":"100"},"timeout_timestamp":"100"},"proof_commitment":"ChsKGQoDS0VZEgVWQUxVRRoLCAEYASABKgMAAgIKPQo7CgxpYXZsU3RvcmVLZXkSIBwiINdIdBFK+H9ZrTsxilMrQHhe1tpe3PEEQPvrGTRaGgkIARgBIAEqAQA=","proof_height":{"revision_height":"1"},"signer":"%s"}}`, addr)
+			},
+		},
+		{
+			"MsgTimeout", func() {
+				msg = types.NewMsgTimeout(packet, 1, suite.proof, height, addr)
+				expString = fmt.Sprintf(`{"type":"cosmos-sdk/MsgTimeout","value":{"next_sequence_recv":"1","packet":{"data":"dGVzdGRhdGE=","destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"channel-0","source_port":"testportid","timeout_height":{"revision_height":"100"},"timeout_timestamp":"100"},"proof_height":{"revision_height":"1"},"proof_unreceived":"ChsKGQoDS0VZEgVWQUxVRRoLCAEYASABKgMAAgIKPQo7CgxpYXZsU3RvcmVLZXkSIBwiINdIdBFK+H9ZrTsxilMrQHhe1tpe3PEEQPvrGTRaGgkIARgBIAEqAQA=","signer":"%s"}}`, addr)
+			},
+		},
+		{
+			"MsgTimeoutOnClose", func() {
+				msg = types.NewMsgTimeoutOnClose(packet, 1, suite.proof, suite.proof, height, addr)
+				expString = fmt.Sprintf(`{"type":"cosmos-sdk/MsgTimeoutOnClose","value":{"next_sequence_recv":"1","packet":{"data":"dGVzdGRhdGE=","destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"channel-0","source_port":"testportid","timeout_height":{"revision_height":"100"},"timeout_timestamp":"100"},"proof_close":"ChsKGQoDS0VZEgVWQUxVRRoLCAEYASABKgMAAgIKPQo7CgxpYXZsU3RvcmVLZXkSIBwiINdIdBFK+H9ZrTsxilMrQHhe1tpe3PEEQPvrGTRaGgkIARgBIAEqAQA=","proof_height":{"revision_height":"1"},"proof_unreceived":"ChsKGQoDS0VZEgVWQUxVRRoLCAEYASABKgMAAgIKPQo7CgxpYXZsU3RvcmVLZXkSIBwiINdIdBFK+H9ZrTsxilMrQHhe1tpe3PEEQPvrGTRaGgkIARgBIAEqAQA=","signer":"%s"}}`, addr)
+			},
+		},
+		{
+			"MsgAcknowledgement", func() {
+				msg = types.NewMsgAcknowledgement(packet, packet.GetData(), suite.proof, height, addr)
+				expString = fmt.Sprintf(`{"type":"cosmos-sdk/MsgAcknowledgement","value":{"acknowledgement":"dGVzdGRhdGE=","packet":{"data":"dGVzdGRhdGE=","destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"channel-0","source_port":"testportid","timeout_height":{"revision_height":"100"},"timeout_timestamp":"100"},"proof_acked":"ChsKGQoDS0VZEgVWQUxVRRoLCAEYASABKgMAAgIKPQo7CgxpYXZsU3RvcmVLZXkSIBwiINdIdBFK+H9ZrTsxilMrQHhe1tpe3PEEQPvrGTRaGgkIARgBIAEqAQA=","proof_height":{"revision_height":"1"},"signer":"%s"}}`, addr)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			tc.malleate()
+
+			suite.Require().NotPanics(func() {
+				res := msg.GetSignBytes()
+				suite.Require().Equal(expString, string(res))
+			})
+		})
+	}
+}

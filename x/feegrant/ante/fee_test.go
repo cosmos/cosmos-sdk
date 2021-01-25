@@ -73,12 +73,7 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	priv2, _, addr2 := testdata.KeyTestPubAddr()
 	priv3, _, addr3 := testdata.KeyTestPubAddr()
 	priv4, _, addr4 := testdata.KeyTestPubAddr()
-
-	nonExistedAccNums := make(map[string]uint64)
-	nonExistedAccNums[addr1.String()] = 0
-	nonExistedAccNums[addr2.String()] = 1
-	nonExistedAccNums[addr3.String()] = 2
-	nonExistedAccNums[addr4.String()] = 3
+	priv5, _, addr5 := testdata.KeyTestPubAddr()
 
 	// Set addr1 with insufficient funds
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
@@ -138,8 +133,8 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 			valid:     true,
 		},
 		"no fee with no account (only ours)": {
-			signerKey: priv4,
-			signer:    addr4,
+			signerKey: priv5,
+			signer:    addr5,
 			fee:       0,
 			handler:   ourAnteHandler,
 			valid:     false,
@@ -205,8 +200,8 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 			valid:     true,
 		},
 		"no fee with no account (whole stack)": {
-			signerKey: priv4,
-			signer:    addr4,
+			signerKey: priv5,
+			signer:    addr5,
 			fee:       0,
 			handler:   anteHandlerStack,
 			valid:     false,
@@ -253,7 +248,7 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 			msgs := []sdk.Msg{testdata.NewTestMsg(tc.signer)}
 
 			acc := app.AccountKeeper.GetAccount(ctx, tc.signer)
-			privs, accNums, seqs := []cryptotypes.PrivKey{tc.signerKey}, []uint64{nonExistedAccNums[tc.signer.String()]}, []uint64{0}
+			privs, accNums, seqs := []cryptotypes.PrivKey{tc.signerKey}, []uint64{0}, []uint64{0}
 			if acc != nil {
 				accNums, seqs = []uint64{acc.GetAccountNumber()}, []uint64{acc.GetSequence()}
 			}

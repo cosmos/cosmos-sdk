@@ -60,7 +60,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
-	fee := sdk.NewCoin("steak", sdk.NewInt(100))
+	fee := sdk.NewCoin("stake", sdk.NewInt(100))
 	duration := 365 * 24 * 60 * 60
 
 	args := append(
@@ -254,7 +254,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				[]string{
 					"wrong_granter",
 					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
-					"100steak",
+					"100stake",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
 				commonFlags...,
@@ -267,7 +267,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				[]string{
 					granter.String(),
 					"wrong_grantee",
-					"100steak",
+					"100stake",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
 				commonFlags...,
@@ -280,7 +280,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				[]string{
 					granter.String(),
 					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
-					"100steak",
+					"100stake",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
 				commonFlags...,
@@ -293,7 +293,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				[]string{
 					granter.String(),
 					alreadyExistedGrantee.String(),
-					"100steak",
+					"100stake",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
 				commonFlags...,
@@ -306,8 +306,8 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				[]string{
 					granter.String(),
 					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
-					"100steak",
-					"10steak",
+					"100stake",
+					"10stake",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 10*60*60),
 				},
@@ -321,9 +321,9 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				[]string{
 					granter.String(),
 					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
-					"100steak",
+					"100stake",
 					fmt.Sprintf("%d", 10*60*60), //period
-					"10steak",
+					"10stake",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 60*60),
 				},
@@ -337,9 +337,9 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				[]string{
 					granter.String(),
 					"cosmos1w55kgcf3ltaqdy4ww49nge3klxmrdavrr6frmp",
-					"100steak",
+					"100stake",
 					fmt.Sprintf("%d", 60*60),
-					"10steak",
+					"10stake",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 10*60*60),
 				},
@@ -468,15 +468,21 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 
 func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
 	granter := s.addedGranter
 	grantee := s.addedGrantee
 
+	// granted fee allowance for an account which is not in state and creating
+	// any tx with it by using --fee-account shouldn't fail
 	out, err := govtestutil.MsgSubmitProposal(val.ClientCtx, grantee.String(),
 		"Text Proposal", "No desc", govtypes.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", flags.FlagFeeAccount, granter.String()),
 	)
 
-	fmt.Println("out, err", out, err)
+	s.Require().NoError(err)
+	var resp sdk.TxResponse
+	s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
+	s.Require().Equal(uint32(0), resp.Code)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

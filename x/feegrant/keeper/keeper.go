@@ -14,13 +14,18 @@ import (
 // Keeper manages state of all fee grants, as well as calculating approval.
 // It must have a codec with all available allowances registered.
 type Keeper struct {
-	cdc      codec.BinaryMarshaler
-	storeKey sdk.StoreKey
+	cdc        codec.BinaryMarshaler
+	storeKey   sdk.StoreKey
+	authKeeper types.AccountKeeper
 }
 
 // NewKeeper creates a fee grant Keeper
-func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey) Keeper {
-	return Keeper{cdc: cdc, storeKey: storeKey}
+func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, ak types.AccountKeeper) Keeper {
+	return Keeper{
+		cdc:        cdc,
+		storeKey:   storeKey,
+		authKeeper: ak,
+	}
 }
 
 // Logger returns a module-specific logger.
@@ -30,6 +35,14 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // GrantFeeAllowance creates a new grant
 func (k Keeper) GrantFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance types.FeeAllowanceI) {
+
+	// create the account if it is not in account state
+	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
+	if granteeAcc == nil {
+		granteeAcc = k.authKeeper.NewAccountWithAddress(ctx, grantee)
+		k.authKeeper.SetAccount(ctx, granteeAcc)
+	}
+
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(granter, grantee)
 	grant := types.NewFeeAllowanceGrant(granter, grantee, feeAllowance)

@@ -58,13 +58,6 @@ func (d DeductGrantedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 			return ctx, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
 		}
 
-		// if there was a valid grant, ensure that the feeGranter account exists (we create it if needed)
-		signerAcc := d.ak.GetAccount(ctx, feePayer)
-		if signerAcc == nil {
-			signerAcc = d.ak.NewAccountWithAddress(ctx, feePayer)
-			d.ak.SetAccount(ctx, signerAcc)
-		}
-
 		deductFeesFrom = feeGranter
 	}
 

@@ -1,0 +1,37 @@
+syntax = "proto3";
+package cosmos.authz.v1beta1;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/timestamp.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/authz/types";
+
+// SendAuthorization allows the grantee to spend up to spend_limit coins from
+// the granter's account.
+message SendAuthorization {
+  option (cosmos_proto.implements_interface) = "Authorization";
+
+  repeated cosmos.base.v1beta1.Coin spend_limit = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+// GenericAuthorization gives the grantee unrestricted permissions to execute
+// the provided method on behalf of the granter's account.
+message GenericAuthorization {
+  option (cosmos_proto.implements_interface) = "Authorization";
+
+  // method name to grant unrestricted permissions to execute
+  // Note: MethodName() is already a method on `GenericAuthorization` type,
+  // we need some custom naming here so using `MessageName`
+  string method_name = 1 [(gogoproto.customname) = "MessageName"];
+}
+
+// AuthorizationGrant gives permissions to execute
+// the provide method with expiration time.
+message AuthorizationGrant {
+  google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
+  google.protobuf.Timestamp expiration    = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+}

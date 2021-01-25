@@ -94,7 +94,7 @@ Examples:
 
 				authorization = types.NewGenericAuthorization(msgType)
 			default:
-				fmt.Errorf("invalid authorization type, %s", args[1])
+				return fmt.Errorf("invalid authorization type, %s", args[1])
 			}
 
 			exp, err := cmd.Flags().GetInt64(FlagExpiration)

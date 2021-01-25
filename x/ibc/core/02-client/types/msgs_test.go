@@ -38,7 +38,7 @@ func TestTypesTestSuite(t *testing.T) {
 
 func (suite *TypesTestSuite) TestMsgCreateClientGetSignBytes() {
 	var (
-		msg       *types.MsgCreateClient
+		msg       sdk.Msg
 		err       error
 		expString string
 	)

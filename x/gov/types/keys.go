@@ -33,9 +33,9 @@ const (
 //
 // - 0x03: nextProposalID
 //
-// - 0x10<proposalID_Bytes><depositorAddr_Bytes>: Deposit
+// - 0x10<proposalID_Bytes><depositorAddrLen (1 Byte)><depositorAddr_Bytes>: Deposit
 //
-// - 0x20<proposalID_Bytes><voterAddr_Bytes>: Voter
+// - 0x20<proposalID_Bytes><voterAddrLen (1 Byte)><voterAddr_Bytes>: Voter
 var (
 	ProposalsKeyPrefix          = []byte{0x00}
 	ActiveProposalQueuePrefix   = []byte{0x01}
@@ -154,11 +154,9 @@ func splitKeyWithTime(key []byte) (proposalID uint64, endTime time.Time) {
 }
 
 func splitKeyWithAddress(key []byte) (proposalID uint64, addr sdk.AccAddress) {
-	if len(key[1:]) != 8+sdk.AddrLen {
-		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(key), 8+sdk.AddrLen))
-	}
-
+	// Both Vote and Deposit store keys are of format:
+	// <prefix (1 Byte)><proposalID (8 bytes)><addrLen (1 Byte)><addr_Bytes>
 	proposalID = GetProposalIDFromBytes(key[1:9])
-	addr = sdk.AccAddress(key[9:])
+	addr = sdk.AccAddress(key[10:])
 	return
 }

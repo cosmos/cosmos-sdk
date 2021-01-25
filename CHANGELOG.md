@@ -36,6 +36,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### State Machine Breaking
+
+* (x/{bank,distrib,gov,slashing,staking}) [\#8363](https://github.com/cosmos/cosmos-sdk/issues/8363) Store keys have been modified to allow for variable-length addresses.
+
 ### Improvements
 
 

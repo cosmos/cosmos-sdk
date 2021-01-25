@@ -16,6 +16,17 @@ import (
 
 var _ Keeper = (*BaseKeeper)(nil)
 
+// UnsafeKeeper defines the unsafe version of the bank keeper, it should only be used for tests
+// as methods exposed bypass correct supply tracking.
+type UnsafeKeeper interface {
+	// safe interface
+	Keeper
+
+	// unsafe interface
+	SetSupply(ctx sdk.Context, supply exported.SupplyI)
+	UnsafeSendKeeper
+}
+
 // Keeper defines a module interface that facilitates the transfer of coins
 // between accounts.
 type Keeper interface {
@@ -25,7 +36,6 @@ type Keeper interface {
 	ExportGenesis(sdk.Context) *types.GenesisState
 
 	GetSupply(ctx sdk.Context) exported.SupplyI
-	SetSupply(ctx sdk.Context, supply exported.SupplyI)
 
 	GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool)
 	SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)

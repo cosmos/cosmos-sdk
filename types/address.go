@@ -28,8 +28,6 @@ const (
 	//	config.SetFullFundraiserPath(yourFullFundraiserPath)
 	//	config.Seal()
 
-	// AddrLen defines a valid address length
-	AddrLen = 20
 	// Bech32MainPrefix defines the main SDK Bech32 prefix of an account's address
 	Bech32MainPrefix = "cosmos"
 
@@ -110,9 +108,7 @@ func VerifyAddressFormat(bz []byte) error {
 	if verifier != nil {
 		return verifier(bz)
 	}
-	if len(bz) != AddrLen {
-		return fmt.Errorf("incorrect address length (expected: %d, actual: %d)", AddrLen, len(bz))
-	}
+
 	return nil
 }
 

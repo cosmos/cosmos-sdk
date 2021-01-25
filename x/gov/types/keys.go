@@ -93,7 +93,7 @@ func DepositsKey(proposalID uint64) []byte {
 
 // DepositKey key of a specific deposit from the store
 func DepositKey(proposalID uint64, depositorAddr sdk.AccAddress) []byte {
-	return append(DepositsKey(proposalID), depositorAddr.Bytes()...)
+	return append(DepositsKey(proposalID), sdk.LengthPrefixAddress(depositorAddr.Bytes())...)
 }
 
 // VotesKey gets the first part of the votes key based on the proposalID
@@ -103,7 +103,7 @@ func VotesKey(proposalID uint64) []byte {
 
 // VoteKey key of a specific vote from the store
 func VoteKey(proposalID uint64, voterAddr sdk.AccAddress) []byte {
-	return append(VotesKey(proposalID), voterAddr.Bytes()...)
+	return append(VotesKey(proposalID), sdk.LengthPrefixAddress(voterAddr.Bytes())...)
 }
 
 // Split keys function; used for iterators

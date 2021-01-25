@@ -31,7 +31,7 @@ jobs:
           path: ~/go/bin
           key: ${{ runner.os }}-go-tparse-binary
 
-  build-architectures:
+  build:
     runs-on: ubuntu-latest
     strategy:
       matrix:

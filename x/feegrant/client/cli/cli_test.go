@@ -47,11 +47,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	val := s.network.Validators[0]
 	granter := val.Address
-
-	// creating an account manually (This won't exist in accounts store)
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
-	s.Require().NoError(err)
-	grantee := sdk.AccAddress(info.GetPubKey().Address())
+	grantee := s.network.Validators[1].Address
 
 	clientCtx := val.ClientCtx
 	commonFlags := []string{
@@ -77,6 +73,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	cmd := cli.NewCmdFeeGrant()
 
 	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	s.Require().NoError(err)
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
 	s.addedGranter = granter
@@ -469,8 +467,39 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-	granter := s.addedGranter
-	grantee := s.addedGrantee
+	granter := val.Address
+
+	// creating an account manually (This account won't be exist in state)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
+	grantee := sdk.AccAddress(info.GetPubKey().Address())
+
+	commonFlags := []string{
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	}
+
+	fee := sdk.NewCoin("stake", sdk.NewInt(100))
+	duration := 365 * 24 * 60 * 60
+
+	args := append(
+		[]string{
+			granter.String(),
+			grantee.String(),
+			fee.String(),
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+			fmt.Sprintf("--%s=%v", cli.FlagExpiration, duration),
+		},
+		commonFlags...,
+	)
+
+	cmd := cli.NewCmdFeeGrant()
+
+	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	s.Require().NoError(err)
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
 
 	// granted fee allowance for an account which is not in state and creating
 	// any tx with it by using --fee-account shouldn't fail

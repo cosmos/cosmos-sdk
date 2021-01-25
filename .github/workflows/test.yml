@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-arch: ["386", "amd64", "arm", "arm64"]
+        go-arch: ["amd64", "arm", "arm64"]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2.1.3

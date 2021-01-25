@@ -241,3 +241,60 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenConfirm() {
 		}
 	}
 }
+
+func (suite *MsgTestSuite) TestConnectionMsgsGetSignBytes() {
+	var (
+		msg       sdk.Msg
+		expString string
+	)
+
+	clientState := ibctmtypes.NewClientState(
+		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false,
+	)
+	prefix := commitmenttypes.NewMerklePrefix([]byte("storePrefixKey"))
+
+	testCases := []struct {
+		name     string
+		malleate func()
+	}{
+		{
+			"MsgConnectionOpenInit", func() {
+				msg = types.NewMsgConnectionOpenInit("clienttotest", "clienttotest", prefix, nil, 500, suite.chainA.SenderAccount.GetAddress())
+				expString = fmt.Sprintf(`{"type":"cosmos-sdk/MsgConnectionOpenInit","value":{"client_id":"clienttotest","counterparty":{"client_id":"clienttotest","prefix":{"key_prefix":"c3RvcmVQcmVmaXhLZXk="}},"delay_period":"500","signer":"%s"}}`, suite.chainA.SenderAccount.GetAddress())
+			},
+		},
+		{
+			"MsgConnectionOpenTry", func() {
+				msg = types.NewMsgConnectionOpenTry(connectionID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []*types.Version{ibctesting.ConnectionVersion}, 500, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, suite.chainA.SenderAccount.GetAddress())
+				expString = fmt.Sprintf(`{"type":"cosmos-sdk/MsgConnectionOpenTry","value":{"client_id":"clienttotesta","client_state":{"chain_id":"gaiamainnet","frozen_height":{},"latest_height":{"revision_height":"6"},"max_clock_drift":"10000000000","proof_specs":[{"inner_spec":{"child_order":[0,1],"child_size":33,"hash":1,"max_prefix_length":12,"min_prefix_length":4},"leaf_spec":{"hash":1,"length":1,"prefix":"AA==","prehash_value":1}},{"inner_spec":{"child_order":[0,1],"child_size":32,"hash":1,"max_prefix_length":1,"min_prefix_length":1},"leaf_spec":{"hash":1,"length":1,"prefix":"AA==","prehash_value":1}}],"trust_level":{"denominator":"3","numerator":"1"},"trusting_period":"1209600000000000","unbonding_period":"1814400000000000","upgrade_path":["upgrade","upgradedIBCState"]},"consensus_height":{"revision_height":"6"},"counterparty":{"client_id":"clienttotest","connection_id":"connectiontotest","prefix":{"key_prefix":"c3RvcmVQcmVmaXhLZXk="}},"counterparty_versions":[{"features":["ORDER_ORDERED","ORDER_UNORDERED"],"identifier":"1"}],"delay_period":"500","previous_connection_id":"connection-0","proof_client":"ChsKGQoDS0VZEgVWQUxVRRoLCAEYASABKgMAAgIKPQo7CgxpYXZsU3RvcmVLZXkSIBwiINdIdBFK+H9ZrTsxilMrQHhe1tpe3PEEQPvrGTRaGgkIARgBIAEqAQA=","proof_consensus":"ChsKGQoDS0VZEgVWQUxVRRoLCAEYASABKgMAAgIKPQo7CgxpYXZsU3RvcmVLZXkSIBwiINdIdBFK+H9ZrTsxilMrQHhe1tpe3PEEQPvrGTRaGgkIARgBIAEqAQA=","proof_height":{"revision_height":"6"},"proof_init":"ChsKGQoDS0VZEgVWQUxVRRoLCAEYASABKgMAAgIKPQo7CgxpYXZsU3RvcmVLZXkSIBwiINdIdBFK+H9ZrTsxilMrQHhe1tpe3PEEQPvrGTRaGgkIARgBIAEqAQA=","signer":"%s"}}`, suite.chainA.SenderAccount.GetAddress())
+			},
+		},
+		{
+			"MsgConnectionOpenAck", func() {
+				msg = types.NewMsgConnectionOpenAck(connectionID, connectionID, clientState, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, ibctesting.ConnectionVersion, suite.chainA.SenderAccount.GetAddress())
+				expString = fmt.Sprintf(`{"type":"cosmos-sdk/MsgConnectionOpenAck","value":{"client_state":{"chain_id":"gaiamainnet","frozen_height":{},"latest_height":{"revision_height":"6"},"max_clock_drift":"10000000000","proof_specs":[{"inner_spec":{"child_order":[0,1],"child_size":33,"hash":1,"max_prefix_length":12,"min_prefix_length":4},"leaf_spec":{"hash":1,"length":1,"prefix":"AA==","prehash_value":1}},{"inner_spec":{"child_order":[0,1],"child_size":32,"hash":1,"max_prefix_length":1,"min_prefix_length":1},"leaf_spec":{"hash":1,"length":1,"prefix":"AA==","prehash_value":1}}],"trust_level":{"denominator":"3","numerator":"1"},"trusting_period":"1209600000000000","unbonding_period":"1814400000000000","upgrade_path":["upgrade","upgradedIBCState"]},"connection_id":"connection-0","consensus_height":{"revision_height":"6"},"counterparty_connection_id":"connection-0","proof_client":"ChsKGQoDS0VZEgVWQUxVRRoLCAEYASABKgMAAgIKPQo7CgxpYXZsU3RvcmVLZXkSIBwiINdIdBFK+H9ZrTsxilMrQHhe1tpe3PEEQPvrGTRaGgkIARgBIAEqAQA=","proof_consensus":"ChsKGQoDS0VZEgVWQUxVRRoLCAEYASABKgMAAgIKPQo7CgxpYXZsU3RvcmVLZXkSIBwiINdIdBFK+H9ZrTsxilMrQHhe1tpe3PEEQPvrGTRaGgkIARgBIAEqAQA=","proof_height":{"revision_height":"6"},"proof_try":"ChsKGQoDS0VZEgVWQUxVRRoLCAEYASABKgMAAgIKPQo7CgxpYXZsU3RvcmVLZXkSIBwiINdIdBFK+H9ZrTsxilMrQHhe1tpe3PEEQPvrGTRaGgkIARgBIAEqAQA=","signer":"%s","version":{"features":["ORDER_ORDERED","ORDER_UNORDERED"],"identifier":"1"}}}`, suite.chainA.SenderAccount.GetAddress())
+			},
+		},
+		{
+			"MsgConnectionOpenConfirm", func() {
+				msg = types.NewMsgConnectionOpenConfirm(connectionID, suite.proof, clientHeight, suite.chainA.SenderAccount.GetAddress())
+				expString = fmt.Sprintf(`{"type":"cosmos-sdk/MsgConnectionOpenConfirm","value":{"connection_id":"connection-0","proof_ack":"ChsKGQoDS0VZEgVWQUxVRRoLCAEYASABKgMAAgIKPQo7CgxpYXZsU3RvcmVLZXkSIBwiINdIdBFK+H9ZrTsxilMrQHhe1tpe3PEEQPvrGTRaGgkIARgBIAEqAQA=","proof_height":{"revision_height":"6"},"signer":"%s"}}`, suite.chainA.SenderAccount.GetAddress())
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			tc.malleate()
+
+			suite.Require().NotPanics(func() {
+				res := msg.GetSignBytes()
+				suite.Require().Equal(expString, string(res))
+			})
+		})
+	}
+}

@@ -5,9 +5,10 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
@@ -48,7 +49,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	granter := val.Address
 
 	// creating an account manually (This won't exist in accounts store)
-	_, _, grantee := testdata.KeyTestPubAddr()
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
+	grantee := sdk.AccAddress(info.GetPubKey().Address())
 
 	clientCtx := val.ClientCtx
 	commonFlags := []string{

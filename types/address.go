@@ -28,6 +28,9 @@ const (
 	//	config.SetFullFundraiserPath(yourFullFundraiserPath)
 	//	config.Seal()
 
+	// Maximum allowed length (in bytes) for an address
+	maxAddrLen = 255
+
 	// Bech32MainPrefix defines the main SDK Bech32 prefix of an account's address
 	Bech32MainPrefix = "cosmos"
 
@@ -260,7 +263,7 @@ func LengthPrefixAddress(bz []byte) []byte {
 		return bz
 	}
 
-	if len(bz) > 255 {
+	if len(bz) > maxAddrLen {
 		panic("address length should be max 255 bytes")
 	}
 

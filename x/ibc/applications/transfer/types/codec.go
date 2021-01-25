@@ -30,7 +30,9 @@ var (
 	//
 	// The actual codec used for serialization should be provided to x/ibc transfer and
 	// defined at the application level.
-	ModuleCdc = codec.NewAminoCodec(amino)
+	ModuleCdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
+	// AminoCdc is a amino codec created to support amino json compatible msgs.
+	AminoCdc = codec.NewAminoCodec(amino)
 )
 
 func init() {

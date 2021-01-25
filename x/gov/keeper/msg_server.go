@@ -89,7 +89,7 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	return &types.MsgVoteResponse{}, nil
 }
 
-func (k msgServer) WeightedVote(goCtx context.Context, msg *types.MsgWeightedVote) (*types.MsgWeightedVoteResponse, error) {
+func (k msgServer) VoteWeighted(goCtx context.Context, msg *types.MsgVoteWeighted) (*types.MsgVoteWeightedResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	accAddr, accErr := sdk.AccAddressFromBech32(msg.Voter)
 	if accErr != nil {
@@ -116,7 +116,7 @@ func (k msgServer) WeightedVote(goCtx context.Context, msg *types.MsgWeightedVot
 		),
 	)
 
-	return &types.MsgWeightedVoteResponse{}, nil
+	return &types.MsgVoteWeightedResponse{}, nil
 }
 
 func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDeposit) (*types.MsgDepositResponse, error) {

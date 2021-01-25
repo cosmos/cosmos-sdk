@@ -75,7 +75,7 @@ func TestGetPaginatedVotes(t *testing.T) {
 	}
 	acc2Msgs := []sdk.Msg{
 		types.NewMsgVote(acc2, 0, types.OptionYes),
-		types.NewMsgWeightedVote(acc2, 0, types.NewNonSplitVoteOption(types.OptionYes)),
+		types.NewMsgVoteWeighted(acc2, 0, types.NewNonSplitVoteOption(types.OptionYes)),
 	}
 	for _, tc := range []testCase{
 		{

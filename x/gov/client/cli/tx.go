@@ -286,7 +286,7 @@ $ %s tx gov vote 1 yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05 --from mykey
 			}
 
 			// Build vote message and run basic validation
-			msg := types.NewMsgWeightedVote(from, proposalID, options)
+			msg := types.NewMsgVoteWeighted(from, proposalID, options)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err

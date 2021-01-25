@@ -27,8 +27,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.Vote(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
-		case *types.MsgWeightedVote:
-			res, err := msgServer.WeightedVote(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgVoteWeighted:
+			res, err := msgServer.VoteWeighted(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
 		default:

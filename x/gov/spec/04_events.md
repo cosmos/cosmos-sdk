@@ -41,7 +41,7 @@ The governance module emits the following events:
 | message       | action        | vote            |
 | message       | sender        | {senderAddress} |
 
-### MsgWeightedVote
+### MsgVoteWeighted
 
 | Type          | Attribute Key | Attribute Value          |
 | ------------- | ------------- | ------------------------ |

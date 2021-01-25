@@ -118,8 +118,8 @@ func TestMsgVote(t *testing.T) {
 	}
 }
 
-// test ValidateBasic for MsgWeightedVote
-func TestMsgWeightedVote(t *testing.T) {
+// test ValidateBasic for MsgVoteWeighted
+func TestMsgVoteWeighted(t *testing.T) {
 	tests := []struct {
 		proposalID uint64
 		voterAddr  sdk.AccAddress
@@ -150,7 +150,7 @@ func TestMsgWeightedVote(t *testing.T) {
 	}
 
 	for i, tc := range tests {
-		msg := NewMsgWeightedVote(tc.voterAddr, tc.proposalID, tc.options)
+		msg := NewMsgVoteWeighted(tc.voterAddr, tc.proposalID, tc.options)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", i)
 		} else {

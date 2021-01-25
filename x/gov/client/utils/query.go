@@ -80,7 +80,7 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 	var (
 		events = []string{
 			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgVote),
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgWeightedVote),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgVoteWeighted),
 			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 		}
 		votes      []types.Vote
@@ -104,8 +104,8 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 						ProposalId: params.ProposalID,
 						Options:    types.NewNonSplitVoteOption(voteMsg.Option),
 					})
-				} else if msg.Type() == types.TypeMsgWeightedVote {
-					voteMsg := msg.(*types.MsgWeightedVote)
+				} else if msg.Type() == types.TypeMsgVoteWeighted {
+					voteMsg := msg.(*types.MsgVoteWeighted)
 
 					votes = append(votes, types.Vote{
 						Voter:      voteMsg.Voter,
@@ -166,8 +166,8 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 				}
 
 				return bz, nil
-			} else if msg.Type() == types.TypeMsgWeightedVote {
-				voteMsg := msg.(*types.MsgWeightedVote)
+			} else if msg.Type() == types.TypeMsgVoteWeighted {
+				voteMsg := msg.(*types.MsgVoteWeighted)
 
 				vote := types.Vote{
 					Voter:      voteMsg.Voter,

@@ -22,7 +22,7 @@ var initialProposalID = uint64(100000000000000)
 const (
 	OpWeightMsgDeposit      = "op_weight_msg_deposit"
 	OpWeightMsgVote         = "op_weight_msg_vote"
-	OpWeightMsgWeightedVote = "op_weight_msg_weighted_vote"
+	OpWeightMsgVoteWeighted = "op_weight_msg_weighted_vote"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -34,7 +34,7 @@ func WeightedOperations(
 	var (
 		weightMsgDeposit      int
 		weightMsgVote         int
-		weightMsgWeightedVote int
+		weightMsgVoteWeighted int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgDeposit, &weightMsgDeposit, nil,
@@ -49,9 +49,9 @@ func WeightedOperations(
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgWeightedVote, &weightMsgWeightedVote, nil,
+	appParams.GetOrGenerate(cdc, OpWeightMsgVoteWeighted, &weightMsgVoteWeighted, nil,
 		func(_ *rand.Rand) {
-			weightMsgWeightedVote = simappparams.DefaultWeightMsgWeightedVote
+			weightMsgVoteWeighted = simappparams.DefaultWeightMsgVoteWeighted
 		},
 	)
 
@@ -83,8 +83,8 @@ func WeightedOperations(
 			SimulateMsgVote(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
-			weightMsgWeightedVote,
-			SimulateMsgWeightedVote(ak, bk, k),
+			weightMsgVoteWeighted,
+			SimulateMsgVoteWeighted(ak, bk, k),
 		),
 	}
 
@@ -327,12 +327,12 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k kee
 	}
 }
 
-// SimulateMsgWeightedVote generates a MsgWeightedVote with random values.
-func SimulateMsgWeightedVote(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
-	return operationSimulateMsgWeightedVote(ak, bk, k, simtypes.Account{}, -1)
+// SimulateMsgVoteWeighted generates a MsgVoteWeighted with random values.
+func SimulateMsgVoteWeighted(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
+	return operationSimulateMsgVoteWeighted(ak, bk, k, simtypes.Account{}, -1)
 }
 
-func operationSimulateMsgWeightedVote(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper,
+func operationSimulateMsgVoteWeighted(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper,
 	simAccount simtypes.Account, proposalIDInt int64) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -349,14 +349,14 @@ func operationSimulateMsgWeightedVote(ak types.AccountKeeper, bk types.BankKeepe
 			var ok bool
 			proposalID, ok = randomProposalID(r, k, ctx, types.StatusVotingPeriod)
 			if !ok {
-				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWeightedVote, "unable to generate proposalID"), nil, nil
+				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgVoteWeighted, "unable to generate proposalID"), nil, nil
 			}
 		default:
 			proposalID = uint64(proposalIDInt)
 		}
 
 		options := randomWeightedVotingOptions(r)
-		msg := types.NewMsgWeightedVote(simAccount.Address, proposalID, options)
+		msg := types.NewMsgVoteWeighted(simAccount.Address, proposalID, options)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())

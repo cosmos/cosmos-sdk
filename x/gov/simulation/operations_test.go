@@ -80,7 +80,7 @@ func TestWeightedOperations(t *testing.T) {
 		{2, types.ModuleName, "submit_proposal"},
 		{simappparams.DefaultWeightMsgDeposit, types.ModuleName, types.TypeMsgDeposit},
 		{simappparams.DefaultWeightMsgVote, types.ModuleName, types.TypeMsgVote},
-		{simappparams.DefaultWeightMsgWeightedVote, types.ModuleName, types.TypeMsgWeightedVote},
+		{simappparams.DefaultWeightMsgVoteWeighted, types.ModuleName, types.TypeMsgVoteWeighted},
 	}
 
 	for i, w := range weightesOps {
@@ -208,9 +208,9 @@ func TestSimulateMsgVote(t *testing.T) {
 	require.Equal(t, types.TypeMsgVote, msg.Type())
 }
 
-// TestSimulateMsgWeightedVote tests the normal scenario of a valid message of type TypeMsgWeightedVote.
+// TestSimulateMsgVoteWeighted tests the normal scenario of a valid message of type TypeMsgVoteWeighted.
 // Abonormal scenarios, where the message is created by an errors are not tested here.
-func TestSimulateMsgWeightedVote(t *testing.T) {
+func TestSimulateMsgVoteWeighted(t *testing.T) {
 	app, ctx := createTestApp(false)
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
@@ -235,11 +235,11 @@ func TestSimulateMsgWeightedVote(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
 
 	// execute operation
-	op := simulation.SimulateMsgWeightedVote(app.AccountKeeper, app.BankKeeper, app.GovKeeper)
+	op := simulation.SimulateMsgVoteWeighted(app.AccountKeeper, app.BankKeeper, app.GovKeeper)
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 
-	var msg types.MsgWeightedVote
+	var msg types.MsgVoteWeighted
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(t, operationMsg.OK)
@@ -247,7 +247,7 @@ func TestSimulateMsgWeightedVote(t *testing.T) {
 	require.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Voter)
 	require.True(t, len(msg.Options) >= 1)
 	require.Equal(t, "gov", msg.Route())
-	require.Equal(t, types.TypeMsgWeightedVote, msg.Type())
+	require.Equal(t, types.TypeMsgVoteWeighted, msg.Type())
 }
 
 // returns context and an app with updated mint keeper

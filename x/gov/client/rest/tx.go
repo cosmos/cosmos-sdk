@@ -159,7 +159,7 @@ func newWeightedVoteHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := types.NewMsgWeightedVote(req.Voter, proposalID, options)
+		msg := types.NewMsgVoteWeighted(req.Voter, proposalID, options)
 		if rest.CheckBadRequestError(w, msg.ValidateBasic()) {
 			return
 		}

@@ -16,12 +16,12 @@ import (
 const (
 	TypeMsgDeposit        = "deposit"
 	TypeMsgVote           = "vote"
-	TypeMsgWeightedVote   = "weighted_vote"
+	TypeMsgVoteWeighted   = "weighted_vote"
 	TypeMsgSubmitProposal = "submit_proposal"
 )
 
 var (
-	_, _, _, _ sdk.Msg                       = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgWeightedVote{}
+	_, _, _, _ sdk.Msg                       = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}
 	_          types.UnpackInterfacesMessage = &MsgSubmitProposal{}
 )
 
@@ -219,20 +219,20 @@ func (msg MsgVote) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{voter}
 }
 
-// NewMsgWeightedVote creates a message to cast a vote on an active proposal
+// NewMsgVoteWeighted creates a message to cast a vote on an active proposal
 //nolint:interfacer
-func NewMsgWeightedVote(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions) *MsgWeightedVote {
-	return &MsgWeightedVote{proposalID, voter.String(), options}
+func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions) *MsgVoteWeighted {
+	return &MsgVoteWeighted{proposalID, voter.String(), options}
 }
 
 // Route implements Msg
-func (msg MsgWeightedVote) Route() string { return RouterKey }
+func (msg MsgVoteWeighted) Route() string { return RouterKey }
 
 // Type implements Msg
-func (msg MsgWeightedVote) Type() string { return TypeMsgWeightedVote }
+func (msg MsgVoteWeighted) Type() string { return TypeMsgVoteWeighted }
 
 // ValidateBasic implements Msg
-func (msg MsgWeightedVote) ValidateBasic() error {
+func (msg MsgVoteWeighted) ValidateBasic() error {
 	if msg.Voter == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Voter)
 	}
@@ -262,19 +262,19 @@ func (msg MsgWeightedVote) ValidateBasic() error {
 }
 
 // String implements the Stringer interface
-func (msg MsgWeightedVote) String() string {
+func (msg MsgVoteWeighted) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
 // GetSignBytes implements Msg
-func (msg MsgWeightedVote) GetSignBytes() []byte {
+func (msg MsgVoteWeighted) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners implements Msg
-func (msg MsgWeightedVote) GetSigners() []sdk.AccAddress {
+func (msg MsgVoteWeighted) GetSigners() []sdk.AccAddress {
 	voter, _ := sdk.AccAddressFromBech32(msg.Voter)
 	return []sdk.AccAddress{voter}
 }

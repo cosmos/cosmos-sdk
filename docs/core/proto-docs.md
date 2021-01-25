@@ -5130,7 +5130,7 @@ validator.
 | ----- | ---- | ----- | ----------- |
 | `delegator_address` | [string](#string) |  | delegator_address is the bech32-encoded address of the delegator. |
 | `validator_address` | [string](#string) |  | validator_address is the bech32-encoded address of the validator. |
-| `shares` | [string](#string) |  | shared define the delegation shares received. |
+| `shares` | [string](#string) |  | shares define the delegation shares received. |
 
 
 

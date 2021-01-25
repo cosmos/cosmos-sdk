@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
@@ -97,7 +98,7 @@ func SimulateMsgGrantFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, k
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantFeeAllowance, err.Error()), nil, err
 		}
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		svcMsgClientConn := &helpers.ServiceMsgClientConn{}
+		svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 		feegrantMsgClient := types.NewMsgClient(svcMsgClientConn)
 		_, err = feegrantMsgClient.GrantFeeAllowance(context.Background(), msg)
 		if err != nil {
@@ -171,7 +172,7 @@ func SimulateMsgRevokeFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, 
 		msg := types.NewMsgRevokeFeeAllowance(granterAddr, granteeAddr)
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		svcMsgClientConn := &helpers.ServiceMsgClientConn{}
+		svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 		feegrantMsgClient := types.NewMsgClient(svcMsgClientConn)
 		_, err = feegrantMsgClient.RevokeFeeAllowance(context.Background(), &msg)
 		if err != nil {

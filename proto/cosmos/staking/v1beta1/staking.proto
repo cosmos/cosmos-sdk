@@ -189,7 +189,7 @@ message Delegation {
   string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
   // validator_address is the bech32-encoded address of the validator.
   string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
-  // shared define the delegation shares received.
+  // shares define the delegation shares received.
   string shares = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 

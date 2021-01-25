@@ -1,11 +1,10 @@
-package simapp
+package ante
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	feegrantante "github.com/cosmos/cosmos-sdk/x/feegrant/ante"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	feegranttypes "github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
@@ -29,7 +28,7 @@ func NewAnteHandler(
 		// DeductGrantedFeeDecorator will create an empty account if we sign with no
 		// tokens but valid validation. This must be before SetPubKey, ValidateSigCount,
 		// SigVerification, which error if account doesn't exist yet.
-		feegrantante.NewDeductGrantedFeeDecorator(ak, bankKeeper, feeGrantKeeper),
+		NewDeductGrantedFeeDecorator(ak, bankKeeper, feeGrantKeeper),
 		authante.NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
 		authante.NewValidateSigCountDecorator(ak),
 		authante.NewSigGasConsumeDecorator(ak, sigGasConsumer),

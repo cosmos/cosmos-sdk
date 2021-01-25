@@ -13,7 +13,9 @@ import (
 func (k Keeper) SendCoinsFromModuleToAccount(
 	ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
 ) error {
-
+	if k.bk.BlacklistedAddr(recipientAddr) {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "can not use module account %s as user account", recipientAddr)
+	}
 	senderAddr := k.GetModuleAddress(senderModule)
 	if senderAddr == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))

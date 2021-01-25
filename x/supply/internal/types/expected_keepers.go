@@ -21,4 +21,6 @@ type BankKeeper interface {
 
 	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, error)
 	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, error)
+
+	BlacklistedAddr(addr sdk.AccAddress) bool
 }

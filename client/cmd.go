@@ -222,8 +222,7 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 	}
 
 	if clientCtx.FeeGranter == nil || flagSet.Changed(flags.FlagFeeAccount) {
-		granter, err := flagSet.GetString(flags.FlagFeeAccount)
-		fmt.Println("granter", granter, err)
+		granter, _ := flagSet.GetString(flags.FlagFeeAccount)
 
 		if granter != "" {
 			granterAcc, err := sdk.AccAddressFromBech32(granter)

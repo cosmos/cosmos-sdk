@@ -90,24 +90,15 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	app.AccountKeeper.SetAccount(ctx, acc2)
 	app.BankKeeper.SetBalances(ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99999))})
 
-	// Set grant from addr2 to addr3 (plenty to pay)
+	// grant fee allowance from `addr2` to `addr3` (plenty to pay)
 	app.FeeGrantKeeper.GrantFeeAllowance(ctx, addr2, addr3, &types.BasicFeeAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
 	})
 
-	// Set low grant from addr2 to addr4 (keeper will reject)
+	// grant low fee allowance (20atom), to check the tx requesting more than allowed.
 	app.FeeGrantKeeper.GrantFeeAllowance(ctx, addr2, addr4, &types.BasicFeeAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 20)),
 	})
-
-	// Set grant from addr1 to addr4 (cannot cover this )
-	app.FeeGrantKeeper.GrantFeeAllowance(ctx, addr2, addr3, &types.BasicFeeAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
-	})
-
-	// app.FeeGrantKeeper.GrantFeeAllowance(ctx, addr1, addr4, &types.BasicFeeAllowance{
-	// 	SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
-	// })
 
 	cases := map[string]struct {
 		signerKey     cryptotypes.PrivKey

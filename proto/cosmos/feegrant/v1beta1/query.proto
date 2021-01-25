@@ -44,7 +44,7 @@ message QueryFeeAllowancesRequest {
 
 // QueryFeeAllowancesResponse is the response type for the Query/FeeAllowances RPC method.
 message QueryFeeAllowancesResponse {
-  // fee_allowance is a fee_allowance granted for grantee by granter.
+  //fee_allowances are fee_allowance's granted for grantee by granter.
   repeated cosmos.feegrant.v1beta1.FeeAllowanceGrant fee_allowances = 1;
 
   // pagination defines an pagination for the response.

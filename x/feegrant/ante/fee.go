@@ -11,8 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
 
-// DeductGrantedFeeDecorator deducts fees from the first signer of the tx
-// If the first signer does not have the funds to pay for the fees, return with InsufficientFunds error
+// DeductGrantedFeeDecorator deducts fees from fee_payer or fee_granter (if exists a valid fee allowance) of the tx
+// If the fee_payer or fee_granter does not have the funds to pay for the fees, return with InsufficientFunds error
 // Call next AnteHandler if fees successfully deducted
 // CONTRACT: Tx must implement GrantedFeeTx interface to use DeductGrantedFeeDecorator
 type DeductGrantedFeeDecorator struct {

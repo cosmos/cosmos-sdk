@@ -113,8 +113,3 @@ func (any *Any) pack(x proto.Message) error {
 func (any *Any) GetCachedValue() interface{} {
 	return any.cachedValue
 }
-
-// ClearCachedValue clears the cached value from the Any
-func (any *Any) ClearCachedValue() {
-	any.cachedValue = nil
-}

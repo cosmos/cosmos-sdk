@@ -97,7 +97,7 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 	return validatorUpdates
 }
 
-// ApplyAndReturnValidatorSetUpdates applies and return saccumulated updates to the bonded validator set. Also,
+// ApplyAndReturnValidatorSetUpdates applies and return accumulated updates to the bonded validator set. Also,
 // * Updates the active valset as keyed by LastValidatorPowerKey.
 // * Updates the total power as keyed by LastTotalPowerKey.
 // * Updates validator status' according to updated powers.

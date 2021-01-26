@@ -21,7 +21,7 @@ const (
 // Keys for authz store
 // Items are stored with the following key: values
 //
-// - 0x01<granterAddress_Bytes><granteeAddress_Bytes><msgType_Bytes>: Grant
+// - 0x01<granterAddressLen (1 Byte)><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes><msgType_Bytes>: Grant
 
 var (
 	// Keys for store prefixes
@@ -30,12 +30,19 @@ var (
 
 // GetAuthorizationStoreKey - return authorization store key
 func GetAuthorizationStoreKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) []byte {
-	return append(append(append(GrantKey, granter.Bytes()...), grantee.Bytes()...), []byte(msgType)...)
+	return append(append(append(
+		GrantKey, sdk.LengthPrefixAddress(granter)...),
+		sdk.LengthPrefixAddress(grantee)...),
+		[]byte(msgType)...,
+	)
 }
 
 // ExtractAddressesFromGrantKey - split granter & grantee address from the authorization key
 func ExtractAddressesFromGrantKey(key []byte) (granterAddr, granteeAddr sdk.AccAddress) {
-	granterAddr = sdk.AccAddress(key[1 : sdk.AddrLen+1])
-	granteeAddr = sdk.AccAddress(key[sdk.AddrLen+1 : sdk.AddrLen*2+1])
+	granterAddrLen := key[1] // remove prefix key
+	granterAddr = sdk.AccAddress(key[2 : 2+granterAddrLen])
+	granteeAddrLen := key[2+granterAddrLen]
+	granteeAddr = sdk.AccAddress(key[3+granterAddrLen : 3+granterAddrLen+granteeAddrLen])
+
 	return granterAddr, granteeAddr
 }

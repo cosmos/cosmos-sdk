@@ -156,18 +156,7 @@ func TestBurnCoins(t *testing.T) {
 func TestKeeper_SendCoinsFromModuleToAccountBlackList(t *testing.T) {
 	app, ctx := createTestApp(false)
 	keeper := app.SupplyKeeper
-	ak := app.AccountKeeper
 
-	baseAcc := ak.NewAccountWithAddress(ctx, types.NewModuleAddress("baseAcc"))
-
-	err := holderAcc.SetCoins(initCoins)
-	require.NoError(t, err)
-	keeper.SetSupply(ctx, types.NewSupply(initCoins))
-
-	keeper.SetModuleAccount(ctx, holderAcc)
-	keeper.SetModuleAccount(ctx, burnerAcc)
-	ak.SetAccount(ctx, baseAcc)
-
-	err = keeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, types.NewModuleAddress(types.ModuleName), initCoins)
+	err := keeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, types.NewModuleAddress(types.ModuleName), initCoins)
 	require.Error(t, err)
 }

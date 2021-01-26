@@ -96,7 +96,7 @@ This `queryCmd` function adds all the queries available to end-users for the app
 
 Here is an example of a `queryCmd` aggregating subcommands from the `simapp` application:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/0.40.0/simapp/simd/cmd/root.go#L99-L121
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L99-L121
 
 ## Flags
 

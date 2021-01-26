@@ -4,15 +4,16 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
-	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
+	//	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 var (
 	frozenHeight = clienttypes.NewHeight(0, 1)
 )
 
+/*
 // sanity checks
-func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateStateBasic() {
+func (suite *TendermintTestSuite) TestCheckSubstituteUpdateStateBasic() {
 	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 	clientState := suite.chainA.GetClientState(clientA).(*types.ClientState)
 	clientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
@@ -31,10 +32,11 @@ func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateStateBasic() {
 	suite.Require().Nil(cs)
 	suite.Require().Nil(consState)
 }
+*/
 
 // to expire clients, time needs to be fast forwarded on both chainA and chainB.
 // this is to prevent headers from failing when attempting to update later.
-func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateState() {
+func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 	testCases := []struct {
 		name                         string
 		AllowUpdateAfterExpiry       bool
@@ -201,60 +203,73 @@ func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateState() {
 			// start by testing unexpiring the client
 			suite.SetupTest() // reset
 
-			// construct client state based on test case parameters
-			clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
-			clientState := suite.chainA.GetClientState(clientA).(*types.ClientState)
-			clientState.AllowUpdateAfterExpiry = tc.AllowUpdateAfterExpiry
-			clientState.AllowUpdateAfterMisbehaviour = tc.AllowUpdateAfterMisbehaviour
+			// construct subject and substitute using test case parameters
+			subject, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+			substitute, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+
+			subjectClientState := suite.chainA.GetClientState(subject).(*types.ClientState)
+			subjectClientState.AllowUpdateAfterExpiry = tc.AllowUpdateAfterExpiry
+			subjectClientState.AllowUpdateAfterMisbehaviour = tc.AllowUpdateAfterMisbehaviour
+			//		initialHeight := clienttypes.NewHeight(substituteClientState.GetLatestHeight().GetRevisionNumber(), substituteClientState.GetLatestHeight().GetRevisionHeight()+1)
+
+			// update substitute a few times
+
+			substituteClientState := suite.chainA.GetClientState(substitute).(*types.ClientState)
+			initialHeight := substituteClientState.GetLatestHeight()
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, substitute, exported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, substitute, exported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, substitute, exported.Tendermint)
+
+			substituteClientState = suite.chainA.GetClientState(substitute).(*types.ClientState)
+			substituteClientState.AllowUpdateAfterExpiry = tc.AllowUpdateAfterExpiry
+			substituteClientState.AllowUpdateAfterMisbehaviour = tc.AllowUpdateAfterMisbehaviour
+
 			if tc.FreezeClient {
-				clientState.FrozenHeight = frozenHeight
+				subjectClientState.FrozenHeight = frozenHeight
 			}
 			if tc.ExpireClient {
-				suite.chainA.ExpireClient(clientState.TrustingPeriod)
-				suite.chainB.ExpireClient(clientState.TrustingPeriod)
+				suite.chainA.ExpireClient(subjectClientState.TrustingPeriod)
+				suite.chainB.ExpireClient(subjectClientState.TrustingPeriod)
 				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
 			}
 
-			// use next header for chainB to unfreeze client on chainA
-			unfreezeClientHeader, err := suite.chainA.ConstructUpdateTMClientHeader(suite.chainB, clientA)
-			suite.Require().NoError(err)
-
-			clientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
-			cs, consState, err := clientState.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), clientStore, unfreezeClientHeader)
+			subjectClientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), subject)
+			substituteClientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), substitute)
+			updatedClient, err := subjectClientState.CheckSubstituteAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), subjectClientStore, substituteClientStore, substituteClientState, initialHeight)
 
 			if tc.expPassUnfreeze {
 				suite.Require().NoError(err)
-				suite.Require().Equal(clienttypes.ZeroHeight(), cs.GetFrozenHeight())
-				suite.Require().NotNil(consState)
+				suite.Require().Equal(clienttypes.ZeroHeight(), updatedClient.GetFrozenHeight())
 			} else {
 				suite.Require().Error(err)
-				suite.Require().Nil(cs)
-				suite.Require().Nil(consState)
+				suite.Require().Nil(updatedClient)
 			}
 
-			// use next header for chainB to unexpire clients but with empty trusted heights
-			// and validators. Update chainB time so header won't be expired.
-			unexpireClientHeader, err := suite.chainA.ConstructUpdateTMClientHeader(suite.chainB, clientA)
-			suite.Require().NoError(err)
-			unexpireClientHeader.TrustedHeight = clienttypes.ZeroHeight()
-			unexpireClientHeader.TrustedValidators = nil
-
-			clientStore = suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
-			cs, consState, err = clientState.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), clientStore, unexpireClientHeader)
-
-			if tc.expPassUnexpire {
+			/*
+				// use next header for chainB to unexpire clients but with empty trusted heights
+				// and validators. Update chainB time so header won't be expired.
+				unexpireClientHeader, err := suite.chainA.ConstructUpdateTMClientHeader(suite.chainB, clientA)
 				suite.Require().NoError(err)
-				suite.Require().NotNil(cs)
-				suite.Require().NotNil(consState)
-			} else {
-				suite.Require().Error(err)
-				suite.Require().Nil(cs)
-				suite.Require().Nil(consState)
-			}
+				unexpireClientHeader.TrustedHeight = clienttypes.ZeroHeight()
+				unexpireClientHeader.TrustedValidators = nil
+
+				clientStore = suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
+				cs, consState, err = clientState.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), clientStore, unexpireClientHeader)
+
+				if tc.expPassUnexpire {
+					suite.Require().NoError(err)
+					suite.Require().NotNil(cs)
+					suite.Require().NotNil(consState)
+				} else {
+					suite.Require().Error(err)
+					suite.Require().Nil(cs)
+					suite.Require().Nil(consState)
+				} */
 		})
 	}
 }
 
+/*
 // test softer validation on headers used for unexpiring clients
 func (suite *TendermintTestSuite) TestCheckProposedHeader() {
 	var (
@@ -354,3 +369,4 @@ func (suite *TendermintTestSuite) TestCheckProposedHeader() {
 		})
 	}
 }
+*/

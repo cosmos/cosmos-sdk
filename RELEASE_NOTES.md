@@ -26,5 +26,3 @@ Now `x/bank` correctly verifies balances and metadata at init genesis stage.
 
 `simapp` correctly adds the coins of genesis accounts to supply.
 
-
-IBC channel data is persisted in a way that callbacks implementations can access it.

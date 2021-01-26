@@ -29,7 +29,7 @@ In the current design, IAVL is used for both data storage and as a Merkle Tree f
 ).
 
 
-Moreover, the IAVL project lacks a support and we already see better, well adapted alternatives. Instead of optimizing the IAVL, we are looking in another solutions for both storage and state commitments.
+Moreover, the IAVL project lacks support and a maintainer and we already see better and well-established alternatives. Instead of optimizing the IAVL, we are looking into other solutions for both storage and state commitments.
 
 
 ## Decision

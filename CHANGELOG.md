@@ -36,6 +36,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* (x/ibc) [\#8404](https://github.com/cosmos/cosmos-sdk/pull/8404) Reorder IBC `ChanOpenAck` and `ChanOpenConfirm` handler execution to perform core handler first, followed by application callbacks. 
+
 ### Bug Fixes
 
 * (x/bank) [\#8417](https://github.com/cosmos/cosmos-sdk/pull/8417) Validate balances and coin denom metadata on genesis

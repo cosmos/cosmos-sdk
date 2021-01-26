@@ -32,7 +32,8 @@ In a new file, `store/types/listening.go`, we will create a `WriteListener` inte
 type WriteListener interface {
 	// if value is nil then it was deleted
 	// storeKey indicates the source KVStore, to facilitate using the the same WriteListener across separate KVStores
-	OnWrite(storeKey types.StoreKey, key []byte, value []byte)
+	// set bool indicates if it was a set; true: set, false: delete
+	OnWrite(storeKey types.StoreKey, set bool, key []byte, value []byte)
 }
 ```
 
@@ -47,9 +48,10 @@ and determine the source of each KV pair.
 
 ```protobuf
 message StoreKVPair {
-  optional string store_key = 1;
-  required bytes key = 2;
-  required bytes value = 3;
+  optional string store_key = 1; // the store key for the KVStore this pair originates from
+  required bool set = 2; // true indicates a set operation, false indicates a delete operation
+  required bytes key = 3;
+  required bytes value = 4;
 }
 ```
 
@@ -58,24 +60,25 @@ message StoreKVPair {
 // protobuf encoded StoreKVPairs to an underlying io.Writer
 type StoreKVPairWriteListener struct {
 	writer io.Writer
-	marshaler codec.BinaryMarshaler
+	marshaller codec.BinaryMarshaler
 }
 
 // NewStoreKVPairWriteListener wraps creates a StoreKVPairWriteListener with a provdied io.Writer and codec.BinaryMarshaler
 func NewStoreKVPairWriteListener(w io.Writer, m codec.BinaryMarshaler) *StoreKVPairWriteListener {
 	return &StoreKVPairWriteListener{
 		writer: w,
-		marshaler: m,
+		marshaller: m,
 	}
 }
 
 // OnWrite satisfies the WriteListener interface by writing length-prefixed protobuf encoded StoreKVPairs
-func (wl *StoreKVPairWriteListener) OnWrite(storeKey types.StoreKey, key []byte, value []byte) {
+func (wl *StoreKVPairWriteListener) OnWrite(storeKey types.StoreKey, set bool, key []byte, value []byte) {
 	kvPair := new(types.StoreKVPair)
 	kvPair.StoreKey = storeKey.Name()
+	kvPair.Set = set
 	kvPair.Key = key
 	kvPair.Value = value
-	if by, err := wl.marshaler.MarshalBinaryLengthPrefixed(kvPair); err == nil {
+	if by, err := wl.marshaller.MarshalBinaryLengthPrefixed(kvPair); err == nil {
 		wl.writer.Write(by)
 	}
 }
@@ -107,20 +110,20 @@ func NewStore(parent types.KVStore, psk types.StoreKey, listeners []types.WriteL
 func (s *Store) Set(key []byte, value []byte) {
 	types.AssertValidKey(key)
 	s.parent.Set(key, value)
-	s.onWrite(key, value)
+	s.onWrite(true, key, value)
 }
 
 // Delete implements the KVStore interface. It traces a write operation and
 // delegates the Delete call to the parent KVStore.
 func (s *Store) Delete(key []byte) {
 	s.parent.Delete(key)
-	s.onWrite(key, nil)
+	s.onWrite(false, key, nil)
 }
 
 // onWrite writes a KVStore operation to all of the WriteListeners
-func (s *Store) onWrite(key, value []byte) {
+func (s *Store) onWrite(set bool, key, value []byte) {
 	for _, l := range s.listeners {
-		l.OnWrite(s.parentStoreKey, key, value)
+		l.OnWrite(s.parentStoreKey, set, key, value)
 	}
 }
 ```
@@ -234,11 +237,11 @@ subsequent state changes are written out to this file until the next `BeginBlock
 // FileStreamingService is a concrete implementation of StreamingService that writes state changes out to a file
 type FileStreamingService struct {
 	listeners map[sdk.StoreKey][]storeTypes.WriteListener // the listeners that will be initialized with BaseApp
-	srcChan <-chan []byte // the channel that all of the WriteListeners write their out to
+	srcChan <-chan []byte // the channel that all of the WriteListeners write their data out to
 	filePrefix string // optional prefix for each of the generated files
 	writeDir string // directory to write files into
 	dstFile *os.File // the current write output file
-	marshaler codec.BinaryMarshaler // marshaler used for re-marshalling the ABCI messages to write them out to the destination files
+	marshaller codec.BinaryMarshaler // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
 	stateCache [][]byte // cache the protobuf binary encoded StoreKVPairs in the order they are received
 }
 ```
@@ -284,13 +287,12 @@ func NewFileStreamingService(writeDir, filePrefix string, storeKeys []sdk.StoreK
 		return nil, err
 	}
 	return &FileStreamingService{
-		listeners: listener
+		listeners: listeners,
 		srcChan: listenChan,
 		filePrefix: filePrefix,
 		writeDir: writeDir,
-		marshaler: m,
+		marshaller: m,
 		stateCache: make([][]byte, 0),
-		cacheLock: new(sync.Mutex),
 	}, nil
 }
 
@@ -300,6 +302,7 @@ func (fss *FileStreamingService) Listeners() map[sdk.StoreKey][]storeTypes.Write
 }
 
 func (fss *FileStreamingService) ListenBeginBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) {
+	// NOTE: this could either be done synchronously or asynchronously
 	// create a new file with the req info according to naming schema
 	// write req to file
 	// write all state changes cached for this stage to file
@@ -309,6 +312,7 @@ func (fss *FileStreamingService) ListenBeginBlock(ctx sdk.Context, req abci.Requ
 }
 
 func (fss *FileStreamingService) ListenEndBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) {
+	// NOTE: this could either be done synchronously or asynchronously
 	// create a new file with the req info according to naming schema
 	// write req to file
 	// write all state changes cached for this stage to file
@@ -318,6 +322,7 @@ func (fss *FileStreamingService) ListenEndBlock(ctx sdk.Context, req abci.Reques
 }
 
 func (fss *FileStreamingService) ListenDeliverTx(ctx sdk.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) {
+	// NOTE: this could either be done synchronously or asynchronously
 	// create a new file with the req info according to naming schema
 	// NOTE: if the tx failed, handle accordingly
 	// write req to file
@@ -352,7 +357,7 @@ or an auxiliary streaming services can read from the files and serve the data ov
 
 We will create a separate standalone process that reads and internally queues the state as it is written out to these files
 and serves the data over a gRPC API. This API will allow filtering of requested data, e.g. by block number, block/tx hash, ABCI message type,
-whether a DeliverTx message failed or succeeded, etc.
+whether a DeliverTx message failed or succeeded, etc. In addition to unary RPC endpoints this service will expose `stream` RPC endpoints for realtime subscriptions.
 
 #### File pruning
 

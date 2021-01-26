@@ -347,15 +347,18 @@ func (s *addressTestSuite) TestVerifyAddressFormat() {
 	addr5 := make([]byte, 5)
 	addr20 := make([]byte, 20)
 	addr32 := make([]byte, 32)
+	addr256 := make([]byte, 256)
 
 	err := types.VerifyAddressFormat(addr0)
-	s.Require().EqualError(err, "incorrect address length 0")
+	s.Require().EqualError(err, "addresses cannot be empty: unknown address")
 	err = types.VerifyAddressFormat(addr5)
-	s.Require().EqualError(err, "incorrect address length 5")
+	s.Require().NoError(err)
 	err = types.VerifyAddressFormat(addr20)
-	s.Require().Nil(err)
+	s.Require().NoError(err)
 	err = types.VerifyAddressFormat(addr32)
-	s.Require().EqualError(err, "incorrect address length 32")
+	s.Require().NoError(err)
+	err = types.VerifyAddressFormat(addr256)
+	s.Require().EqualError(err, "address max length is 255, got 256: unknown address")
 }
 
 func (s *addressTestSuite) TestCustomAddressVerifier() {

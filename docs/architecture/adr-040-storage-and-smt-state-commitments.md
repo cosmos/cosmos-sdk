@@ -100,7 +100,7 @@ We change a storage layout, so storage migration and a blockchain reboot is requ
 
 + Decoupling state from state commitment introduce better engineering opportunities for further optimizations and better storage patterns.
 + Performance improvements.
-+ Joining SMT based camp which has wider and proven adoption than IAVL.
++ Joining SMT based camp which has wider and proven adoption than IAVL. Example projects which decided on SMT: Ethereum2, Diem (Libra), Trillan, Tezos, LazyLedger.
 
 ### Negative
 

@@ -12,6 +12,14 @@ At the moment hardware wallets are [unable to sign messages using `SIGN_MODE_DIR
 
 In order to enable hardware wallets users to interact with IBC, amino JSON support was added to `MsgTransfer` only.
 
+### Counterparty.ChannelID not available in OnChanOpenAck callback implementation.
+
+This change **breaks state backward compatibility**.
+
+In a previous version the `Counterparty.ChannelID` was available for an `OnChanOpenAck` callback implementation (read via `channelKeeper.GetChannel()`. Due to a regression, the channelID is currently empty.
+
+The issue has been fixed by reordering IBC `ChanOpenAck` and `ChanOpenConfirm` to execute the core handlers logic first, followed by application callbacks.
+
 ### Bug Fixes
 
 Now `x/bank` correctly verifies balances and metadata at init genesis stage.

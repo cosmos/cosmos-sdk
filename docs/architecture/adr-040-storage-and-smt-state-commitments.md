@@ -34,7 +34,7 @@ Moreover, the IAVL project lacks support and a maintainer and we already see bet
 
 ## Decision
 
-We propose separate the concerns of state commitment (**SC**), needed for consensus, and state storage (**SS**), needed for state machine. Finally we replace IAVL with LazyLedger SMT.
+We propose separate the concerns of state commitment (**SC**), needed for consensus, and state storage (**SS**), needed for state machine. Finally we replace IAVL with [LazyLedger SMT](https://github.com/lazyledger/smt).
 
 
 ### Decouple state commitment from storage
@@ -57,29 +57,35 @@ State Storage requirements:
 + range queries
 + quick (key, value) access
 + creating a snapshot
++ prunning (garbage collection)
 
 State Commitment requirements:
 + fast updates
 + path length should be short
 + creating a snapshot
-+ pruning
++ pruning (garbage collection)
 
 
 ### LazyLedger SMT for State Commitment
 
 A Sparse Merkle tree is based on the idea of a complete Merkle tree of an intractable size. The assumption here is that as the size of the tree is intractable, there would only be a few leaf nodes with valid data blocks relative to the tree size, rendering the tree as sparse.
 
-TODO:
-+ describe pruning and version management
 
 ### Snapshots
 
 One of the Stargate core features are snapshots and fast sync. Currently this feature is implemented through IAVL.
-Many underlying DB engines support snapshotting. Hence, we propose to reuse that functionality and limit the supported DB engines to ones which support snapshots (Badger, RocksDB, BoltDB)
+Many underlying DB engines support snapshotting. Hence, we propose to reuse that functionality and limit the supported DB engines to ones which support snapshots (Badger, RocksDB, BoltDB) using a _copy on write_ mechanism.
 
 ### Pruning
 
-TODO: discuss state storage pruning requirements
+At minimum SC doesn't need to keep old versions. However we need to be able to process transactions and roll-back state updates if transaction fails. This can be done in the following way:dDuring transaction processing, we keep all state change requests (writes) in a `CacheWrapper` abstraction (as it's done today). Only when we commit on a root store, all changes are written to the the SMT.
+
+We can use the same approach for SM Storage. However, we need to keep few past versions (configurable by user, eg: 10 past versions every 100 blocks) in a form of snapshot. Ideally we would like to shift that functionality to a DB engine itself.
+
+TODO: Verify which DB engines support that.
+Otherwise, the solution is to implement a sort of _mark and sweep GC_: once per defined period, a GC will start, mark old objects and prune them. This will require encoding a version mechanism in a KV store.
+
+
 
 ## Consequences
 
@@ -99,6 +105,7 @@ We change a storage layout, so storage migration and a blockchain reboot is requ
 ### Negative
 
 + Storage migration
++ LL SMT doesn't support pruning - we will need to add and test that functionality.
 
 ### Neutral
 

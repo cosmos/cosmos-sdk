@@ -1,6 +1,6 @@
 # Cosmos SDK v0.41.0 "Stargate" Release Notes
 
-This release includes a breaking change, and a few minor bugfixes.
+This release includes two breaking changes, and a few minor bugfixes.
 
 See the [Cosmos SDK v0.41.0 milestone](https://github.com/cosmos/cosmos-sdk/milestone/37?closed=1) on our issue tracker for details.
 
@@ -19,6 +19,8 @@ This change **breaks state backward compatibility**.
 In a previous version the `Counterparty.ChannelID` was available for an `OnChanOpenAck` callback implementation (read via `channelKeeper.GetChannel()`. Due to a regression, the channelID is currently empty.
 
 The issue has been fixed by reordering IBC `ChanOpenAck` and `ChanOpenConfirm` to execute the core handlers logic first, followed by application callbacks.
+
+It breaks state backward compatibility because the current change consumes more gas, which means that in an updated node a TX might fail because it ran out of gas whilst in older versions it would be successful.
 
 ### Bug Fixes
 

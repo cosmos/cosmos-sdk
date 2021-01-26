@@ -1,45 +1,30 @@
-# Cosmos SDK v0.40.1 "Stargate" Release Notes
+# Cosmos SDK v0.41.0 "Stargate" Release Notes
 
-This is a bug fix release to the *Cosmos SDK 0.40* "Stargate" release series. No breaking changes are introduced, thus no migration should be needed.
-Among the various bugfixes, this release introduces important security patches.
+This release includes two breaking changes, and a few minor bugfixes.
 
-See the [Cosmos SDK v0.40.1 milestone](https://github.com/cosmos/cosmos-sdk/milestone/36?closed=1) on our issue tracker for details.
+See the [Cosmos SDK v0.41.0 milestone](https://github.com/cosmos/cosmos-sdk/milestone/37?closed=1) on our issue tracker for details.
 
-### Gogo protobuf security release
+### Support Amino JSON for IBC MsgTransfer
 
-[Gogoprotobuf](https://github.com/gogo/protobuf) released a bugfix addressing [CVE-2021-3121](https://nvd.nist.gov/vuln/detail/CVE-2021-3121). Cosmos SDK respective dependency has been updated and protobuf generated files were regenerated.
+This change **breaks state backward compatibility**.
 
-### Tendermint security patches
+At the moment hardware wallets are [unable to sign messages using `SIGN_MODE_DIRECT` because the cosmos ledger app does not support proto encoding and`SIGN_MODE_TEXTUAL` is not available yet](https://https://github.com/cosmos/cosmos-sdk/issues/8266).
 
-This release comes with a newer release of Tendermint that, other than fixing various bugs it also addresses a high-severity security vulnerability.
-For the comprehensive list of changes introduced by Tendermint since Cosmos SDK v0.40.0, please refer to [Tendermint's v0.34.3 release notes](https://github.com/tendermint/tendermint/blob/v0.34.3/CHANGELOG.md#v0.34.3).
+In order to enable hardware wallets users to interact with IBC, amino JSON support was added to `MsgTransfer` only.
 
-### Fix zero time checks
+### Counterparty.ChannelID not available in OnChanOpenAck callback implementation.
 
-In Cosmos SDK applications, it is recommended to use `Time.Unix() <= 0` instead of `Time.IsZero()`, which may lead to unexpected results.
-See [\#8085](https://github.com/cosmos/cosmos-sdk/pull/8058) for more information.
+This change **breaks state backward compatibility**.
 
-### Querying upgrade plans panics when no plan exists
+In a previous version the `Counterparty.ChannelID` was available for an `OnChanOpenAck` callback implementation (read via `channelKeeper.GetChannel()`. Due to a regression, the channelID is currently empty.
 
-The `x/upgrade` module command and REST endpoints for querying upgrade plans would panic when no plan existed. This is now resolved.
+The issue has been fixed by reordering IBC `ChanOpenAck` and `ChanOpenConfirm` to execute the core handlers logic first, followed by application callbacks.
 
-### Fix account sequence
+It breaks state backward compatibility because the current change consumes more gas, which means that in an updated node a TX might fail because it ran out of gas whilst in older versions it would be successful.
 
-In Cosmos SDK v0.40.0 a new structure (`SignatureV2`) for handling message signatures was introduced.
-Although the `tx sign --signature-only` command was still capable of generating correct signatures, it was not returning the account's correct sequence number.
+### Bug Fixes
 
-### Reproducible builds
+Now `x/bank` correctly verifies balances and metadata at init genesis stage.
 
-Our automatic builds were not working correctly due to small gaps in file paths. Fixed in [\8300](https://github.com/cosmos/cosmos-sdk/pull/8300) and [\8301](https://github.com/cosmos/cosmos-sdk/pull/8301).
+`simapp` correctly adds the coins of genesis accounts to supply.
 
-### Wrapper errors were not reflective
-
-Cosmos SDK errors typically support the `Is()` method. The `Go` `errors.Is()` function compares an error to a value and should always return `true` when the receiver is passed as an argument to its own method, e.g. `err.Is(err)`. This was not a case for the error types provided by the `types/errors` package.
-
-### Fix latest consensus state
-
-Errors occur when using the client to send IBC transactions without flag `--absolute-timeouts`, e.g:
-
-    gaiad tx ibc-transfer transfer
-
-The issue was caused by incorrect interface decoding and unpacking of `Any` values and is now fixed.

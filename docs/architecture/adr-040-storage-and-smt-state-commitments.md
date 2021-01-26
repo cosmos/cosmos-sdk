@@ -39,7 +39,7 @@ We propose separate the concerns of state commitment (**SC**), needed for consen
 
 ### Decouple state commitment from storage
 
-Separation of storage and SMT will allow a specialization in terms of various optimization patterns.
+Separation of storage and commitment (by the SMT) will allow to optimize the different components according to their usage and access patterns.
 
 SMT will use it's own storage (could use the same database underneath) from the state machine store. For every `(key, value)` pair, the SMT will store `hash(key)` in a path and `hash(key, value)` in a leaf.
 

@@ -34,14 +34,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased]
+## [v0.41.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.0) - 2021-01-26
 
 ### State Machine Breaking
 
 * (x/ibc) [\#8266](https://github.com/cosmos/cosmos-sdk/issues/8266) Add amino JSON for IBC messages in order to support Ledger text signing.
-
-### Improvements
-
 * (x/ibc) [\#8404](https://github.com/cosmos/cosmos-sdk/pull/8404) Reorder IBC `ChanOpenAck` and `ChanOpenConfirm` handler execution to perform core handler first, followed by application callbacks. 
 
 ### Bug Fixes

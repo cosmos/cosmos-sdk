@@ -94,7 +94,7 @@ func TestMintCoins(t *testing.T) {
 
 	require.Panics(t, func() { keeper.MintCoins(ctx, "", initCoins) }, "no module account")
 	require.Panics(t, func() { keeper.MintCoins(ctx, types.Burner, initCoins) }, "invalid permission")
-	err := keeper.MintCoins(ctx, types.Minter, sdk.Coins{sdk.Coin{Denom: "denom", Amount: sdk.NewInt(-10)}})
+	err := keeper.MintCoins(ctx, types.Minter, sdk.Coins{sdk.Coin{Denom: "denom", Amount: sdk.NewDec(-10)}})
 	require.Error(t, err, "insufficient coins")
 
 	require.Panics(t, func() { keeper.MintCoins(ctx, randomPerm, initCoins) })
@@ -151,4 +151,23 @@ func TestBurnCoins(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, sdk.Coins(nil), getCoinsByName(ctx, keeper, ak, multiPermAcc.GetName()))
 	require.Equal(t, initialSupply.GetTotal().Sub(initCoins), keeper.GetSupply(ctx).GetTotal())
+}
+
+func TestKeeper_SendCoinsFromModuleToAccountBlackList(t *testing.T) {
+	app, ctx := createTestApp(false)
+	keeper := app.SupplyKeeper
+	ak := app.AccountKeeper
+
+	baseAcc := ak.NewAccountWithAddress(ctx, types.NewModuleAddress("baseAcc"))
+
+	err := holderAcc.SetCoins(initCoins)
+	require.NoError(t, err)
+	keeper.SetSupply(ctx, types.NewSupply(initCoins))
+
+	keeper.SetModuleAccount(ctx, holderAcc)
+	keeper.SetModuleAccount(ctx, burnerAcc)
+	ak.SetAccount(ctx, baseAcc)
+
+	err = keeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, types.NewModuleAddress(types.ModuleName), initCoins)
+	require.Error(t, err)
 }

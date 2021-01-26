@@ -81,7 +81,7 @@ func GetCmdQuerySigningInfos() *cobra.Command {
 
 $ <appd> query slashing signing-infos
 `),
-		Args: cobra.ExactArgs(1),
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {

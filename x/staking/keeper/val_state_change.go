@@ -386,9 +386,7 @@ func sortNoLongerBonded(last validatorsByAddr) ([][]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		valAddr := make([]byte, len(valAddrBytes))
-		copy(valAddr, valAddrBytes)
-		noLongerBonded[index] = valAddr
+		noLongerBonded[index] = valAddrBytes
 		index++
 	}
 	// sorted by address - order doesn't matter

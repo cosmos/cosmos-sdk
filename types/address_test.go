@@ -395,6 +395,9 @@ func (s *addressTestSuite) TestCustomAddressVerifier() {
 	s.Require().NotNil(err)
 	_, err = types.ConsAddressFromBech32(consBech)
 	s.Require().NotNil(err)
+
+	// Reinitialize the global config to default address verifier (nil)
+	types.GetConfig().SetAddressVerifier(nil)
 }
 
 func (s *addressTestSuite) TestBech32ifyAddressBytes() {

@@ -34,7 +34,7 @@ Moreover, the IAVL project lacks support and a maintainer and we already see bet
 
 ## Decision
 
-We propose separate the concerns of state commitment (**SC**), needed for consensus, and state storage (**SS**), needed for state machine. Finally we replace IAVL with [LazyLedger SMT](https://github.com/lazyledger/smt).
+We propose separate the concerns of state commitment (**SC**), needed for consensus, and state storage (**SS**), needed for state machine. Finally we replace IAVL with [LazyLedger SMT](https://github.com/lazyledger/smt). LazyLedger SMT is based on Diem (called jellyfish) design [*] - it uses a compute-optimised SMT by replacing subtrees with only default values with a single node (same approach is used by Ethereum2 as  well).
 
 
 ### Decouple state commitment from storage
@@ -44,7 +44,7 @@ Separation of storage and commitment (by the SMT) will allow to optimize the dif
 SMT will use it's own storage (could use the same database underneath) from the state machine store. For every `(key, value)` pair, the SMT will store `hash(key)` in a path and `hash(key, value)` in a leaf.
 
 For data access we propose 2 additional KV buckets:
-1. B1: `key → value`: the principal object storage, used by a state machine, behind the SDK `KVStore` interface.
+1. B1: `key → value`: the principal object storage, used by a state machine, behind the SDK `KVStore` interface: provides direct access by key and allows prefix iteration (KV DB backend must support it).
 2. B2: `hash(key, value) → key`: an index needed to extract a value (through: B2 -> B1) having a only a Merkle Path. Recall that SMT will store `hash(key, value)` in it's leafs.
 3. we could use more buckets to optimize the app usage if needed.
 
@@ -82,7 +82,7 @@ At minimum SC doesn't need to keep old versions. However we need to be able to p
 
 We can use the same approach for SM Storage. However, we need to keep few past versions (configurable by user, eg: 10 past versions every 100 blocks) in a form of snapshot. Ideally we would like to shift that functionality to a DB engine itself.
 
-TODO: Verify which DB engines support that.
+TODO: Verify which DB engines support that. I'm pretty confident this (pruning and versioning)can and should be offloaded to a DB engine.
 Otherwise, the solution is to implement a sort of _mark and sweep GC_: once per defined period, a GC will start, mark old objects and prune them. This will require encoding a version mechanism in a KV store.
 
 
@@ -111,6 +111,7 @@ We change a storage layout, so storage migration and a blockchain reboot is requ
 
 + Deprecating IAVL, which is one of the core proposals of Cosmos Whitepaper.
 
+
 ## Further Discussions
 
 ### RDBMS
@@ -120,6 +121,9 @@ Use of RDBMS instead of simple KV store for state. Use of RDBMS will require an 
 
 ## References
 
-- [IAVL What's Next?](https://github.com/cosmos/cosmos-sdk/issues/7100)
-- [IAVL overview](https://docs.google.com/document/d/16Z_hW2rSAmoyMENO-RlAhQjAG3mSNKsQueMnKpmcBv0/edit#heading=h.yd2th7x3o1iv) of it's state v0.15
-- [State commitments and storage report](https://paper.dropbox.com/published/State-commitments-and-storage-review--BDvA1MLwRtOx55KRihJ5xxLbBw-KeEB7eOd11pNrZvVtqUgL3h)
++ [IAVL What's Next?](https://github.com/cosmos/cosmos-sdk/issues/7100)
++ [IAVL overview](https://docs.google.com/document/d/16Z_hW2rSAmoyMENO-RlAhQjAG3mSNKsQueMnKpmcBv0/edit#heading=h.yd2th7x3o1iv) of it's state v0.15
++ [State commitments and storage report](https://paper.dropbox.com/published/State-commitments-and-storage-review--BDvA1MLwRtOx55KRihJ5xxLbBw-KeEB7eOd11pNrZvVtqUgL3h)
++ [LazyLedger SMT](https://github.com/lazyledger/smt)
++ Facebook Diem (Libra) SMT [design](https://developers.diem.com/papers/jellyfish-merkle-tree/2021-01-14.pdf)
++ [Trillian Revocation Transparency](https://github.com/google/trillian/blob/master/docs/papers/RevocationTransparency.pdf), [Trillian Verifiable Data Structures](https://github.com/google/trillian/blob/master/docs/papers/VerifiableDataStructures.pdf).

@@ -367,7 +367,9 @@ func (s *addressTestSuite) TestCustomAddressVerifier() {
 	accBech := types.AccAddress(addr).String()
 	valBech := types.ValAddress(addr).String()
 	consBech := types.ConsAddress(addr).String()
-	// Verifiy that the default logic doesn't reject this 10 byte address
+	// Verify that the default logic doesn't reject this 10 byte address
+	// The default verifier is nil, we're only checking address length is
+	// between 1-255 bytes.
 	err := types.VerifyAddressFormat(addr)
 	s.Require().Nil(err)
 	_, err = types.AccAddressFromBech32(accBech)
@@ -527,12 +529,13 @@ func (s *addressTestSuite) TestGetFromBech32() {
 	s.Require().Equal("invalid Bech32 prefix; expected x, got cosmos", err.Error())
 }
 
-func (s *addressTestSuite) TestLengthPrefixAddress() {
+func (s *addressTestSuite) TestMustLengthPrefixedAddress() {
 	addr10byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
 	addr256byte := make([]byte, 256)
 
-	s.Require().Equal(append([]byte{byte(10)}, addr10byte...), types.LengthPrefixAddress(addr10byte))
-	s.Require().Equal(append([]byte{byte(20)}, addr20byte...), types.LengthPrefixAddress(addr20byte))
-	s.Require().Panics(func() { types.LengthPrefixAddress(addr256byte) })
+	s.Require().Equal(append([]byte{byte(10)}, addr10byte...), types.MustLengthPrefixedAddress(addr10byte))
+	s.Require().Equal(append([]byte{byte(20)}, addr20byte...), types.MustLengthPrefixedAddress(addr20byte))
+	// Address is too long, so panics.
+	s.Require().Panics(func() { types.MustLengthPrefixedAddress(addr256byte) })
 }

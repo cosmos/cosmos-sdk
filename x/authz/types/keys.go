@@ -31,8 +31,8 @@ var (
 // GetAuthorizationStoreKey - return authorization store key
 func GetAuthorizationStoreKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) []byte {
 	return append(append(append(
-		GrantKey, sdk.LengthPrefixAddress(granter)...),
-		sdk.LengthPrefixAddress(grantee)...),
+		GrantKey, sdk.MustLengthPrefixedAddress(granter)...),
+		sdk.MustLengthPrefixedAddress(grantee)...),
 		[]byte(msgType)...,
 	)
 }
@@ -41,8 +41,11 @@ func GetAuthorizationStoreKey(grantee sdk.AccAddress, granter sdk.AccAddress, ms
 func ExtractAddressesFromGrantKey(key []byte) (granterAddr, granteeAddr sdk.AccAddress) {
 	granterAddrLen := key[1] // remove prefix key
 	granterAddr = sdk.AccAddress(key[2 : 2+granterAddrLen])
-	granteeAddrLen := key[2+granterAddrLen]
-	granteeAddr = sdk.AccAddress(key[3+granterAddrLen : 3+granterAddrLen+granteeAddrLen])
+	granteeAddrLen := int(key[2+granterAddrLen])
+	granteeAddr = sdk.AccAddress(key[3+granterAddrLen:])
+	if len(granteeAddr) != granteeAddrLen {
+		panic("error")
+	}
 
 	return granterAddr, granteeAddr
 }

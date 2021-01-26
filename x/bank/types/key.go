@@ -20,6 +20,8 @@ const (
 
 // KVStore keys
 var (
+	// BalancesPrefix is the for the account balances store. We use a byte
+	// (instead of say `[]]byte("balances")` to save some disk space).
 	BalancesPrefix      = []byte{0x02}
 	SupplyKey           = []byte{0x00}
 	DenomMetadataPrefix = []byte{0x1}

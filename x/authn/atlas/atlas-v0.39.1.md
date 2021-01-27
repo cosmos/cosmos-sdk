@@ -1,6 +1,6 @@
-# x/authn
+# x/auth
 
-The `x/authn` module is responsible for specifying the base transaction and
+The `x/auth` module is responsible for specifying the base transaction and
 account types for an application, as well as AnteHandler and authentication logic.
 
 ## Usage
@@ -9,7 +9,7 @@ account types for an application, as well as AnteHandler and authentication logi
 
    ```go
    import (
-       "github.com/cosmos/cosmos-sdk/x/authn"
+       "github.com/cosmos/cosmos-sdk/x/auth"
    )
    ```
 
@@ -19,7 +19,7 @@ account types for an application, as well as AnteHandler and authentication logi
     var (
       ModuleBasics = module.NewBasicManager(
         // ...
-        authn.AppModuleBasic{},
+        auth.AppModuleBasic{},
       }
     )
     ```
@@ -29,7 +29,7 @@ account types for an application, as well as AnteHandler and authentication logi
    ```go
    func NewApp(...) *App {
      // ...
-     app.subspaces[authn.ModuleName] = app.ParamsKeeper.Subspace(authn.DefaultParamspace)
+     app.subspaces[auth.ModuleName] = app.ParamsKeeper.Subspace(auth.DefaultParamspace)
    }
    ```
 
@@ -38,48 +38,48 @@ account types for an application, as well as AnteHandler and authentication logi
    ```go
    func NewApp(...) *App {
       // ...
-      app.AccountKeeper = authn.NewAccountKeeper(
-       app.cdc, keys[authn.StoreKey], app.subspaces[authn.ModuleName], authn.ProtoBaseAccount,
+      app.AccountKeeper = auth.NewAccountKeeper(
+       app.cdc, keys[auth.StoreKey], app.subspaces[auth.ModuleName], auth.ProtoBaseAccount,
       )
    }
    ```
 
-5. Add the `x/authn` module to the app's `ModuleManager`.
+5. Add the `x/auth` module to the app's `ModuleManager`.
 
    ```go
    func NewApp(...) *App {
      // ...
      app.mm = module.NewManager(
        // ...
-       authn.NewAppModule(app.AccountKeeper),
+       auth.NewAppModule(app.AccountKeeper),
        // ...
      )
    }
    ```
 
-6. Set the `x/authn` module genesis order.
+6. Set the `x/auth` module genesis order.
 
    ```go
    func NewApp(...) *App {
      // ...
-     app.mm.SetOrderInitGenesis(..., authn.ModuleName, ...)
+     app.mm.SetOrderInitGenesis(..., auth.ModuleName, ...)
    }
    ```
 
-7. Add the `x/authn` module to the simulation manager (if you have one set).
+7. Add the `x/auth` module to the simulation manager (if you have one set).
 
    ```go
    func NewApp(...) *App {
      // ...
      app.sm = module.NewSimulationManager(
        // ...
-       authn.NewAppModule(app.AccountKeeper),
+       auth.NewAppModule(app.AccountKeeper),
        // ...
      )
    }
 
-8. Set the `AnteHandler` if you're using the default provided by `x/authn`. Note,
-the default `AnteHandler` provided by the `x/authn` module depends on the `x/supply`
+8. Set the `AnteHandler` if you're using the default provided by `x/auth`. Note,
+the default `AnteHandler` provided by the `x/auth` module depends on the `x/supply`
 module.
 
    ```go
@@ -87,14 +87,14 @@ module.
      app.SetAnteHandler(ante.NewAnteHandler(
        app.AccountKeeper,
        app.SupplyKeeper, 
-       authn.DefaultSigVerificationGasConsumer,
+       auth.DefaultSigVerificationGasConsumer,
      ))
    }
    ```
 
 ### Vesting Accounts
 
-The `x/authn` modules also defines a few standard vesting account types under the
+The `x/auth` modules also defines a few standard vesting account types under the
 `vesting` sub-package. In order to get your application to automatically support
 these in terms of encoding and decoding, you must register the types with your
 application Amino codec.
@@ -103,7 +103,7 @@ Where ever you define the application `Codec`, be sure to register types via:
 
 ```go
 import (
-    "github.com/cosmos/cosmos-sdk/x/authn/vesting"
+    "github.com/cosmos/cosmos-sdk/x/auth/vesting"
 )
 
 func MakeCodec() *codec.Codec {
@@ -119,7 +119,7 @@ func MakeCodec() *codec.Codec {
 
 ## Genesis
 
-The `x/authn` module defines its genesis state as follows:
+The `x/auth` module defines its genesis state as follows:
 
 ```go
 type GenesisState struct {
@@ -159,31 +159,31 @@ type Params struct {
 
 ### CLI
 
-The `x/authn` module provides various auxiliary CLI commands and a few that are
+The `x/auth` module provides various auxiliary CLI commands and a few that are
 part of the module itself via the `ModuleManager`. The commands that are part of
 the module itself are defined below:
 
 1. Query an account.
 
    ```shell
-   $ app q authn account [address] [...flags]
+   $ app q auth account [address] [...flags]
    ```
 
 2. Sign an unsigned transaction using a single signature.
 
    ```shell
-   $ app tx authn sign [file]
+   $ app tx auth sign [file]
    ```
 
 3. Sign an unsigned transaction using a multisig.
 
    ```shell
-   $ app tx authn multisign [file] [name] [[signature]...]
+   $ app tx auth multisign [file] [name] [[signature]...]
    ```
 
 ### REST
 
-The `x/authn` module provides various auxiliary REST handlers and a few that are
+The `x/auth` module provides various auxiliary REST handlers and a few that are
 part of the module itself via the `ModuleManager`. The endpoints that are part of
 the module itself are defined below:
 
@@ -191,4 +191,4 @@ the module itself are defined below:
 
    | Method | Path                     |
    | :----- | :----------------------- |
-   | `GET` | `/authn/accounts/{address}` |
+   | `GET` | `/auth/accounts/{address}` |

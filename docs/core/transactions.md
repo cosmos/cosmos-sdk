@@ -49,11 +49,11 @@ Once signed by all signers, the `body_bytes`, `auth_info_bytes` and `signatures`
 
 The legacy implemention of the `Tx` interface is the `StdTx` struct from `x/authn`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/authn/legacy/legacytx/stdtx.go#L120-L130
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/auth/legacy/legacytx/stdtx.go#L120-L130
 
 The document signed by all signers is `StdSignDoc`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/authn/legacy/legacytx/stdsign.go#L20-L33
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/auth/legacy/legacytx/stdsign.go#L20-L33
 
 which is encoded into bytes using Amino JSON. Once all signatures are gathered into `StdTx`, `StdTx` is serialized using Amino JSON, and these bytes are broadcasted over the network.
 

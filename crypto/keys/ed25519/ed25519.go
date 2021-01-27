@@ -157,7 +157,7 @@ func (pubKey *PubKey) Address() crypto.Address {
 	if len(pubKey.Key) != PubKeySize {
 		panic("pubkey is incorrect size")
 	}
-	address.MkBase(proto.MessageName(pubkey), pubKey.Key)
+	address.MkBase(proto.MessageName(pubKey), pubKey.Key)
 	return crypto.Address(tmhash.SumTruncated(pubKey.Key))
 }
 

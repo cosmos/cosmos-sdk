@@ -1,6 +1,7 @@
 package address
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"reflect"
 	"sort"
@@ -48,11 +49,11 @@ func MkComposed(typ string, subAddresses []Addressable) []byte {
 		totalLen += len(as[i])
 	}
 
-	sort.Slice(as, func(i, j int) { byte.Compare(as[i], as[j]) <= 0 })
-	key := make(key, totalLen)
+	sort.Slice(as, func(i, j int) bool { return bytes.Compare(as[i], as[j]) <= 0 })
+	key := make([]byte, totalLen)
 	offset := 0
 	for i := range as {
-		key = copy(key[offset:], as[i])
+		copy(key[offset:], as[i])
 		offset += len(as[i])
 	}
 	return MkBase(typ, key)

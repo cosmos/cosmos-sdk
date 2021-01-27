@@ -144,8 +144,8 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 		"addr3 has two": {
 			grantee: suite.addrs[2],
 			grants: []types.FeeAllowanceGrant{
-				grant2,
 				grant3,
+				grant2,
 			},
 		},
 	}

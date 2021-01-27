@@ -34,7 +34,7 @@ var (
 		sdk.ValAddress(pubkeys[2].Address()),
 	}
 
-	initAmt   = sdk.TokensFromConsensusPower(200)
+	initAmt   = sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
 	initCoins = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 )
 

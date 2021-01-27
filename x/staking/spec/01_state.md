@@ -19,10 +19,11 @@ and defines overall functioning of the staking module.
 
 ```go
 type Params struct {
-    UnbondingTime time.Duration // time duration of unbonding
-    MaxValidators uint16        // maximum number of validators
-    MaxEntries    uint16        // max entries for either unbonding delegation or redelegation (per pair/trio)
-    BondDenom     string        // bondable coin denomination
+    UnbondingTime  time.Duration // time duration of unbonding
+    MaxValidators  uint16        // maximum number of validators
+    MaxEntries     uint16        // max entries for either unbonding delegation or redelegation (per pair/trio)
+    BondDenom      string        // bondable coin denomination
+    PowerReduction sdk.Int       // power reduction on-chain param
 }
 ```
 

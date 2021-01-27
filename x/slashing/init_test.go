@@ -5,5 +5,5 @@ import (
 )
 
 var (
-	InitTokens = sdk.TokensFromConsensusPower(200)
+	InitTokens = sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
 )

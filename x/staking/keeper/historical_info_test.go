@@ -25,7 +25,7 @@ func TestHistoricalInfo(t *testing.T) {
 		validators[i] = teststaking.NewValidator(t, valAddr, PKs[i])
 	}
 
-	hi := types.NewHistoricalInfo(ctx.BlockHeader(), validators)
+	hi := types.NewHistoricalInfo(ctx.BlockHeader(), validators, sdk.DefaultPowerReduction)
 	app.StakingKeeper.SetHistoricalInfo(ctx, 2, &hi)
 
 	recv, found := app.StakingKeeper.GetHistoricalInfo(ctx, 2)
@@ -65,8 +65,8 @@ func TestTrackHistoricalInfo(t *testing.T) {
 		teststaking.NewValidator(t, addrVals[0], PKs[0]),
 		teststaking.NewValidator(t, addrVals[1], PKs[1]),
 	}
-	hi4 := types.NewHistoricalInfo(h4, valSet)
-	hi5 := types.NewHistoricalInfo(h5, valSet)
+	hi4 := types.NewHistoricalInfo(h4, valSet, sdk.DefaultPowerReduction)
+	hi5 := types.NewHistoricalInfo(h5, valSet, sdk.DefaultPowerReduction)
 	app.StakingKeeper.SetHistoricalInfo(ctx, 4, &hi4)
 	app.StakingKeeper.SetHistoricalInfo(ctx, 5, &hi5)
 	recv, found := app.StakingKeeper.GetHistoricalInfo(ctx, 4)

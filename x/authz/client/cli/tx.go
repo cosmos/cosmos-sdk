@@ -15,7 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/version"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	authnclient "github.com/cosmos/cosmos-sdk/x/authn/client"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
 )
 
@@ -190,7 +190,7 @@ Example:
 				return errors.New("cannot broadcast tx during offline mode")
 			}
 
-			theTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
+			theTx, err := authnclient.ReadTxFromFile(clientCtx, args[0])
 			if err != nil {
 				return err
 			}

@@ -267,15 +267,16 @@ func (aa AccAddress) Format(s fmt.State, verb rune) {
 // LengthPrefixedAddressStoreKey prefixes the address bytes with its length, this is used
 // for variable-length components in store keys.
 func LengthPrefixedAddressStoreKey(bz []byte) ([]byte, error) {
-	if len(bz) == 0 {
+	bzLen := len(bz)
+	if bzLen == 0 {
 		return bz, nil
 	}
 
-	if len(bz) > maxAddrLen {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "address length should be max %d bytes, got %d", maxAddrLen, len(bz))
+	if bzLen > maxAddrLen {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "address length should be max %d bytes, got %d", maxAddrLen, bzLen)
 	}
 
-	return append([]byte{byte(len(bz))}, bz...), nil
+	return append([]byte{byte(bzLen)}, bz...), nil
 }
 
 // MustLengthPrefixedAddressStoreKey is LengthPrefixedAddressStoreKey with a panic.

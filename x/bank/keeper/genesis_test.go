@@ -44,13 +44,13 @@ func (suite *IntegrationTestSuite) getTestBalances() []types.Balance {
 }
 
 func (suite *IntegrationTestSuite) TestInitGenesis() {
-	require := suite.Require()
 	m := types.Metadata{Description: sdk.DefaultBondDenom, Base: sdk.DefaultBondDenom, Display: sdk.DefaultBondDenom}
 	g := types.DefaultGenesisState()
 	g.DenomMetadata = []types.Metadata{m}
 	bk := suite.app.BankKeeper
 	bk.InitGenesis(suite.ctx, g)
 
-	m2 := bk.GetDenomMetaData(suite.ctx, m.Base)
-	require.Equal(m, m2)
+	m2, found := bk.GetDenomMetaData(suite.ctx, m.Base)
+	suite.Require().True(found)
+	suite.Require().Equal(m, m2)
 }

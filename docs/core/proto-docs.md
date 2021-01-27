@@ -26,6 +26,49 @@
     - [DecProto](#cosmos.base.v1beta1.DecProto)
     - [IntProto](#cosmos.base.v1beta1.IntProto)
   
+- [cosmos/authz/v1beta1/authz.proto](#cosmos/authz/v1beta1/authz.proto)
+    - [AuthorizationGrant](#cosmos.authz.v1beta1.AuthorizationGrant)
+    - [GenericAuthorization](#cosmos.authz.v1beta1.GenericAuthorization)
+    - [SendAuthorization](#cosmos.authz.v1beta1.SendAuthorization)
+  
+- [cosmos/base/abci/v1beta1/abci.proto](#cosmos/base/abci/v1beta1/abci.proto)
+    - [ABCIMessageLog](#cosmos.base.abci.v1beta1.ABCIMessageLog)
+    - [Attribute](#cosmos.base.abci.v1beta1.Attribute)
+    - [GasInfo](#cosmos.base.abci.v1beta1.GasInfo)
+    - [MsgData](#cosmos.base.abci.v1beta1.MsgData)
+    - [Result](#cosmos.base.abci.v1beta1.Result)
+    - [SearchTxsResult](#cosmos.base.abci.v1beta1.SearchTxsResult)
+    - [SimulationResponse](#cosmos.base.abci.v1beta1.SimulationResponse)
+    - [StringEvent](#cosmos.base.abci.v1beta1.StringEvent)
+    - [TxMsgData](#cosmos.base.abci.v1beta1.TxMsgData)
+    - [TxResponse](#cosmos.base.abci.v1beta1.TxResponse)
+  
+- [cosmos/authz/v1beta1/tx.proto](#cosmos/authz/v1beta1/tx.proto)
+    - [MsgExecAuthorizedRequest](#cosmos.authz.v1beta1.MsgExecAuthorizedRequest)
+    - [MsgExecAuthorizedResponse](#cosmos.authz.v1beta1.MsgExecAuthorizedResponse)
+    - [MsgGrantAuthorizationRequest](#cosmos.authz.v1beta1.MsgGrantAuthorizationRequest)
+    - [MsgGrantAuthorizationResponse](#cosmos.authz.v1beta1.MsgGrantAuthorizationResponse)
+    - [MsgRevokeAuthorizationRequest](#cosmos.authz.v1beta1.MsgRevokeAuthorizationRequest)
+    - [MsgRevokeAuthorizationResponse](#cosmos.authz.v1beta1.MsgRevokeAuthorizationResponse)
+  
+    - [Msg](#cosmos.authz.v1beta1.Msg)
+  
+- [cosmos/authz/v1beta1/genesis.proto](#cosmos/authz/v1beta1/genesis.proto)
+    - [GenesisState](#cosmos.authz.v1beta1.GenesisState)
+    - [GrantAuthorization](#cosmos.authz.v1beta1.GrantAuthorization)
+  
+- [cosmos/base/query/v1beta1/pagination.proto](#cosmos/base/query/v1beta1/pagination.proto)
+    - [PageRequest](#cosmos.base.query.v1beta1.PageRequest)
+    - [PageResponse](#cosmos.base.query.v1beta1.PageResponse)
+  
+- [cosmos/authz/v1beta1/query.proto](#cosmos/authz/v1beta1/query.proto)
+    - [QueryAuthorizationRequest](#cosmos.authz.v1beta1.QueryAuthorizationRequest)
+    - [QueryAuthorizationResponse](#cosmos.authz.v1beta1.QueryAuthorizationResponse)
+    - [QueryAuthorizationsRequest](#cosmos.authz.v1beta1.QueryAuthorizationsRequest)
+    - [QueryAuthorizationsResponse](#cosmos.authz.v1beta1.QueryAuthorizationsResponse)
+  
+    - [Query](#cosmos.authz.v1beta1.Query)
+  
 - [cosmos/bank/v1beta1/bank.proto](#cosmos/bank/v1beta1/bank.proto)
     - [DenomUnit](#cosmos.bank.v1beta1.DenomUnit)
     - [Input](#cosmos.bank.v1beta1.Input)
@@ -39,15 +82,15 @@
     - [Balance](#cosmos.bank.v1beta1.Balance)
     - [GenesisState](#cosmos.bank.v1beta1.GenesisState)
   
-- [cosmos/base/query/v1beta1/pagination.proto](#cosmos/base/query/v1beta1/pagination.proto)
-    - [PageRequest](#cosmos.base.query.v1beta1.PageRequest)
-    - [PageResponse](#cosmos.base.query.v1beta1.PageResponse)
-  
 - [cosmos/bank/v1beta1/query.proto](#cosmos/bank/v1beta1/query.proto)
     - [QueryAllBalancesRequest](#cosmos.bank.v1beta1.QueryAllBalancesRequest)
     - [QueryAllBalancesResponse](#cosmos.bank.v1beta1.QueryAllBalancesResponse)
     - [QueryBalanceRequest](#cosmos.bank.v1beta1.QueryBalanceRequest)
     - [QueryBalanceResponse](#cosmos.bank.v1beta1.QueryBalanceResponse)
+    - [QueryDenomMetadataRequest](#cosmos.bank.v1beta1.QueryDenomMetadataRequest)
+    - [QueryDenomMetadataResponse](#cosmos.bank.v1beta1.QueryDenomMetadataResponse)
+    - [QueryDenomsMetadataRequest](#cosmos.bank.v1beta1.QueryDenomsMetadataRequest)
+    - [QueryDenomsMetadataResponse](#cosmos.bank.v1beta1.QueryDenomsMetadataResponse)
     - [QueryParamsRequest](#cosmos.bank.v1beta1.QueryParamsRequest)
     - [QueryParamsResponse](#cosmos.bank.v1beta1.QueryParamsResponse)
     - [QuerySupplyOfRequest](#cosmos.bank.v1beta1.QuerySupplyOfRequest)
@@ -64,18 +107,6 @@
     - [MsgSendResponse](#cosmos.bank.v1beta1.MsgSendResponse)
   
     - [Msg](#cosmos.bank.v1beta1.Msg)
-  
-- [cosmos/base/abci/v1beta1/abci.proto](#cosmos/base/abci/v1beta1/abci.proto)
-    - [ABCIMessageLog](#cosmos.base.abci.v1beta1.ABCIMessageLog)
-    - [Attribute](#cosmos.base.abci.v1beta1.Attribute)
-    - [GasInfo](#cosmos.base.abci.v1beta1.GasInfo)
-    - [MsgData](#cosmos.base.abci.v1beta1.MsgData)
-    - [Result](#cosmos.base.abci.v1beta1.Result)
-    - [SearchTxsResult](#cosmos.base.abci.v1beta1.SearchTxsResult)
-    - [SimulationResponse](#cosmos.base.abci.v1beta1.SimulationResponse)
-    - [StringEvent](#cosmos.base.abci.v1beta1.StringEvent)
-    - [TxMsgData](#cosmos.base.abci.v1beta1.TxMsgData)
-    - [TxResponse](#cosmos.base.abci.v1beta1.TxResponse)
   
 - [cosmos/base/kv/v1beta1/kv.proto](#cosmos/base/kv/v1beta1/kv.proto)
     - [Pair](#cosmos.base.kv.v1beta1.Pair)
@@ -956,125 +987,56 @@ IntProto defines a Protobuf wrapper around an Int object.
 
 
 
-<a name="cosmos/bank/v1beta1/bank.proto"></a>
+<a name="cosmos/authz/v1beta1/authz.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## cosmos/bank/v1beta1/bank.proto
+## cosmos/authz/v1beta1/authz.proto
 
 
 
-<a name="cosmos.bank.v1beta1.DenomUnit"></a>
+<a name="cosmos.authz.v1beta1.AuthorizationGrant"></a>
 
-### DenomUnit
-DenomUnit represents a struct that describes a given
-denomination unit of the basic token.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `denom` | [string](#string) |  | denom represents the string name of the given denom unit (e.g uatom). |
-| `exponent` | [uint32](#uint32) |  | exponent represents power of 10 exponent that one must raise the base_denom to in order to equal the given DenomUnit's denom 1 denom = 1^exponent base_denom (e.g. with a base_denom of uatom, one can create a DenomUnit of 'atom' with exponent = 6, thus: 1 atom = 10^6 uatom). |
-| `aliases` | [string](#string) | repeated | aliases is a list of string aliases for the given denom |
-
-
-
-
-
-
-<a name="cosmos.bank.v1beta1.Input"></a>
-
-### Input
-Input models transaction input.
+### AuthorizationGrant
+AuthorizationGrant gives permissions to execute
+the provide method with expiration time.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
-| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `authorization` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `expiration` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 
 
 
 
 
 
-<a name="cosmos.bank.v1beta1.Metadata"></a>
+<a name="cosmos.authz.v1beta1.GenericAuthorization"></a>
 
-### Metadata
-Metadata represents a struct that describes
-a basic token.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `description` | [string](#string) |  |  |
-| `denom_units` | [DenomUnit](#cosmos.bank.v1beta1.DenomUnit) | repeated | denom_units represents the list of DenomUnit's for a given coin |
-| `base` | [string](#string) |  | base represents the base denom (should be the DenomUnit with exponent = 0). |
-| `display` | [string](#string) |  | display indicates the suggested denom that should be displayed in clients. |
-
-
-
-
-
-
-<a name="cosmos.bank.v1beta1.Output"></a>
-
-### Output
-Output models transaction outputs.
+### GenericAuthorization
+GenericAuthorization gives the grantee unrestricted permissions to execute
+the provided method on behalf of the granter's account.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
-| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `method_name` | [string](#string) |  | method name to grant unrestricted permissions to execute Note: MethodName() is already a method on `GenericAuthorization` type, we need some custom naming here so using `MessageName` |
 
 
 
 
 
 
-<a name="cosmos.bank.v1beta1.Params"></a>
+<a name="cosmos.authz.v1beta1.SendAuthorization"></a>
 
-### Params
-Params defines the parameters for the bank module.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `send_enabled` | [SendEnabled](#cosmos.bank.v1beta1.SendEnabled) | repeated |  |
-| `default_send_enabled` | [bool](#bool) |  |  |
-
-
-
-
-
-
-<a name="cosmos.bank.v1beta1.SendEnabled"></a>
-
-### SendEnabled
-SendEnabled maps coin denom to a send_enabled status (whether a denom is
-sendable).
+### SendAuthorization
+SendAuthorization allows the grantee to spend up to spend_limit coins from
+the granter's account.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `denom` | [string](#string) |  |  |
-| `enabled` | [bool](#bool) |  |  |
-
-
-
-
-
-
-<a name="cosmos.bank.v1beta1.Supply"></a>
-
-### Supply
-Supply represents a struct that passively keeps track of the total supply
-amounts in the network.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `total` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `spend_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
 
 
@@ -1085,375 +1047,6 @@ amounts in the network.
  <!-- end enums -->
 
  <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="cosmos/bank/v1beta1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/bank/v1beta1/genesis.proto
-
-
-
-<a name="cosmos.bank.v1beta1.Balance"></a>
-
-### Balance
-Balance defines an account address and balance pair used in the bank module's
-genesis state.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  | address is the address of the balance holder. |
-| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | coins defines the different coins this balance holds. |
-
-
-
-
-
-
-<a name="cosmos.bank.v1beta1.GenesisState"></a>
-
-### GenesisState
-GenesisState defines the bank module's genesis state.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `params` | [Params](#cosmos.bank.v1beta1.Params) |  | params defines all the paramaters of the module. |
-| `balances` | [Balance](#cosmos.bank.v1beta1.Balance) | repeated | balances is an array containing the balances of all the accounts. |
-| `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply represents the total supply. |
-| `denom_metadata` | [Metadata](#cosmos.bank.v1beta1.Metadata) | repeated | denom_metadata defines the metadata of the differents coins. |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="cosmos/base/query/v1beta1/pagination.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/base/query/v1beta1/pagination.proto
-
-
-
-<a name="cosmos.base.query.v1beta1.PageRequest"></a>
-
-### PageRequest
-PageRequest is to be embedded in gRPC request messages for efficient
-pagination. Ex:
-
- message SomeRequest {
-         Foo some_parameter = 1;
-         PageRequest pagination = 2;
- }
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [bytes](#bytes) |  | key is a value returned in PageResponse.next_key to begin querying the next page most efficiently. Only one of offset or key should be set. |
-| `offset` | [uint64](#uint64) |  | offset is a numeric offset that can be used when key is unavailable. It is less efficient than using key. Only one of offset or key should be set. |
-| `limit` | [uint64](#uint64) |  | limit is the total number of results to be returned in the result page. If left empty it will default to a value to be set by each app. |
-| `count_total` | [bool](#bool) |  | count_total is set to true to indicate that the result set should include a count of the total number of items available for pagination in UIs. count_total is only respected when offset is used. It is ignored when key is set. |
-
-
-
-
-
-
-<a name="cosmos.base.query.v1beta1.PageResponse"></a>
-
-### PageResponse
-PageResponse is to be embedded in gRPC response messages where the
-corresponding request message has used PageRequest.
-
- message SomeResponse {
-         repeated Bar results = 1;
-         PageResponse page = 2;
- }
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `next_key` | [bytes](#bytes) |  | next_key is the key to be passed to PageRequest.key to query the next page most efficiently |
-| `total` | [uint64](#uint64) |  | total is total number of results available if PageRequest.count_total was set, its value is undefined otherwise |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="cosmos/bank/v1beta1/query.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/bank/v1beta1/query.proto
-
-
-
-<a name="cosmos.bank.v1beta1.QueryAllBalancesRequest"></a>
-
-### QueryAllBalancesRequest
-QueryBalanceRequest is the request type for the Query/AllBalances RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  | address is the address to query balances for. |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="cosmos.bank.v1beta1.QueryAllBalancesResponse"></a>
-
-### QueryAllBalancesResponse
-QueryAllBalancesResponse is the response type for the Query/AllBalances RPC
-method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `balances` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | balances is the balances of all the coins. |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
-
-
-
-
-
-
-<a name="cosmos.bank.v1beta1.QueryBalanceRequest"></a>
-
-### QueryBalanceRequest
-QueryBalanceRequest is the request type for the Query/Balance RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  | address is the address to query balances for. |
-| `denom` | [string](#string) |  | denom is the coin denom to query balances for. |
-
-
-
-
-
-
-<a name="cosmos.bank.v1beta1.QueryBalanceResponse"></a>
-
-### QueryBalanceResponse
-QueryBalanceResponse is the response type for the Query/Balance RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | balance is the balance of the coin. |
-
-
-
-
-
-
-<a name="cosmos.bank.v1beta1.QueryParamsRequest"></a>
-
-### QueryParamsRequest
-QueryParamsRequest defines the request type for querying x/bank parameters.
-
-
-
-
-
-
-<a name="cosmos.bank.v1beta1.QueryParamsResponse"></a>
-
-### QueryParamsResponse
-QueryParamsResponse defines the response type for querying x/bank parameters.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `params` | [Params](#cosmos.bank.v1beta1.Params) |  |  |
-
-
-
-
-
-
-<a name="cosmos.bank.v1beta1.QuerySupplyOfRequest"></a>
-
-### QuerySupplyOfRequest
-QuerySupplyOfRequest is the request type for the Query/SupplyOf RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `denom` | [string](#string) |  | denom is the coin denom to query balances for. |
-
-
-
-
-
-
-<a name="cosmos.bank.v1beta1.QuerySupplyOfResponse"></a>
-
-### QuerySupplyOfResponse
-QuerySupplyOfResponse is the response type for the Query/SupplyOf RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | amount is the supply of the coin. |
-
-
-
-
-
-
-<a name="cosmos.bank.v1beta1.QueryTotalSupplyRequest"></a>
-
-### QueryTotalSupplyRequest
-QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC
-method.
-
-
-
-
-
-
-<a name="cosmos.bank.v1beta1.QueryTotalSupplyResponse"></a>
-
-### QueryTotalSupplyResponse
-QueryTotalSupplyResponse is the response type for the Query/TotalSupply RPC
-method
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply is the supply of the coins |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="cosmos.bank.v1beta1.Query"></a>
-
-### Query
-Query defines the gRPC querier service.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Balance` | [QueryBalanceRequest](#cosmos.bank.v1beta1.QueryBalanceRequest) | [QueryBalanceResponse](#cosmos.bank.v1beta1.QueryBalanceResponse) | Balance queries the balance of a single coin for a single account. | GET|/cosmos/bank/v1beta1/balances/{address}/{denom}|
-| `AllBalances` | [QueryAllBalancesRequest](#cosmos.bank.v1beta1.QueryAllBalancesRequest) | [QueryAllBalancesResponse](#cosmos.bank.v1beta1.QueryAllBalancesResponse) | AllBalances queries the balance of all coins for a single account. | GET|/cosmos/bank/v1beta1/balances/{address}|
-| `TotalSupply` | [QueryTotalSupplyRequest](#cosmos.bank.v1beta1.QueryTotalSupplyRequest) | [QueryTotalSupplyResponse](#cosmos.bank.v1beta1.QueryTotalSupplyResponse) | TotalSupply queries the total supply of all coins. | GET|/cosmos/bank/v1beta1/supply|
-| `SupplyOf` | [QuerySupplyOfRequest](#cosmos.bank.v1beta1.QuerySupplyOfRequest) | [QuerySupplyOfResponse](#cosmos.bank.v1beta1.QuerySupplyOfResponse) | SupplyOf queries the supply of a single coin. | GET|/cosmos/bank/v1beta1/supply/{denom}|
-| `Params` | [QueryParamsRequest](#cosmos.bank.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.bank.v1beta1.QueryParamsResponse) | Params queries the parameters of x/bank module. | GET|/cosmos/bank/v1beta1/params|
-
- <!-- end services -->
-
-
-
-<a name="cosmos/bank/v1beta1/tx.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/bank/v1beta1/tx.proto
-
-
-
-<a name="cosmos.bank.v1beta1.MsgMultiSend"></a>
-
-### MsgMultiSend
-MsgMultiSend represents an arbitrary multi-in, multi-out send message.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `inputs` | [Input](#cosmos.bank.v1beta1.Input) | repeated |  |
-| `outputs` | [Output](#cosmos.bank.v1beta1.Output) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.bank.v1beta1.MsgMultiSendResponse"></a>
-
-### MsgMultiSendResponse
-MsgMultiSendResponse defines the Msg/MultiSend response type.
-
-
-
-
-
-
-<a name="cosmos.bank.v1beta1.MsgSend"></a>
-
-### MsgSend
-MsgSend represents a message to send coins from one account to another.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `from_address` | [string](#string) |  |  |
-| `to_address` | [string](#string) |  |  |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.bank.v1beta1.MsgSendResponse"></a>
-
-### MsgSendResponse
-MsgSendResponse defines the Msg/Send response type.
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="cosmos.bank.v1beta1.Msg"></a>
-
-### Msg
-Msg defines the bank Msg service.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Send` | [MsgSend](#cosmos.bank.v1beta1.MsgSend) | [MsgSendResponse](#cosmos.bank.v1beta1.MsgSendResponse) | Send defines a method for sending coins from one account to another account. | |
-| `MultiSend` | [MsgMultiSend](#cosmos.bank.v1beta1.MsgMultiSend) | [MsgMultiSendResponse](#cosmos.bank.v1beta1.MsgMultiSendResponse) | MultiSend defines a method for sending coins from some accounts to other accounts. | |
 
  <!-- end services -->
 
@@ -1651,6 +1244,833 @@ tags are stringified and the log is JSON decoded.
  <!-- end enums -->
 
  <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/authz/v1beta1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/authz/v1beta1/tx.proto
+
+
+
+<a name="cosmos.authz.v1beta1.MsgExecAuthorizedRequest"></a>
+
+### MsgExecAuthorizedRequest
+MsgExecAuthorizedRequest attempts to execute the provided messages using
+authorizations granted to the grantee. Each message should have only
+one signer corresponding to the granter of the authorization.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `grantee` | [string](#string) |  |  |
+| `msgs` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.authz.v1beta1.MsgExecAuthorizedResponse"></a>
+
+### MsgExecAuthorizedResponse
+MsgExecAuthorizedResponse defines the Msg/MsgExecAuthorizedResponse response type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `result` | [cosmos.base.abci.v1beta1.Result](#cosmos.base.abci.v1beta1.Result) |  |  |
+
+
+
+
+
+
+<a name="cosmos.authz.v1beta1.MsgGrantAuthorizationRequest"></a>
+
+### MsgGrantAuthorizationRequest
+MsgGrantAuthorizationRequest grants the provided authorization to the grantee on the granter's
+account with the provided expiration time.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+| `authorization` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `expiration` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+
+
+
+
+
+
+<a name="cosmos.authz.v1beta1.MsgGrantAuthorizationResponse"></a>
+
+### MsgGrantAuthorizationResponse
+MsgGrantAuthorizationResponse defines the Msg/MsgGrantAuthorization response type.
+
+
+
+
+
+
+<a name="cosmos.authz.v1beta1.MsgRevokeAuthorizationRequest"></a>
+
+### MsgRevokeAuthorizationRequest
+MsgRevokeAuthorizationRequest revokes any authorization with the provided sdk.Msg type on the
+granter's account with that has been granted to the grantee.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+| `method_name` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.authz.v1beta1.MsgRevokeAuthorizationResponse"></a>
+
+### MsgRevokeAuthorizationResponse
+MsgRevokeAuthorizationResponse defines the Msg/MsgRevokeAuthorizationResponse response type.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.authz.v1beta1.Msg"></a>
+
+### Msg
+Msg defines the authz Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `GrantAuthorization` | [MsgGrantAuthorizationRequest](#cosmos.authz.v1beta1.MsgGrantAuthorizationRequest) | [MsgGrantAuthorizationResponse](#cosmos.authz.v1beta1.MsgGrantAuthorizationResponse) | GrantAuthorization grants the provided authorization to the grantee on the granter's account with the provided expiration time. | |
+| `ExecAuthorized` | [MsgExecAuthorizedRequest](#cosmos.authz.v1beta1.MsgExecAuthorizedRequest) | [MsgExecAuthorizedResponse](#cosmos.authz.v1beta1.MsgExecAuthorizedResponse) | ExecAuthorized attempts to execute the provided messages using authorizations granted to the grantee. Each message should have only one signer corresponding to the granter of the authorization. | |
+| `RevokeAuthorization` | [MsgRevokeAuthorizationRequest](#cosmos.authz.v1beta1.MsgRevokeAuthorizationRequest) | [MsgRevokeAuthorizationResponse](#cosmos.authz.v1beta1.MsgRevokeAuthorizationResponse) | RevokeAuthorization revokes any authorization corresponding to the provided method name on the granter's account that has been granted to the grantee. | |
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/authz/v1beta1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/authz/v1beta1/genesis.proto
+
+
+
+<a name="cosmos.authz.v1beta1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the authz module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authorization` | [GrantAuthorization](#cosmos.authz.v1beta1.GrantAuthorization) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.authz.v1beta1.GrantAuthorization"></a>
+
+### GrantAuthorization
+GrantAuthorization defines the GenesisState/GrantAuthorization type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+| `authorization` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `expiration` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/base/query/v1beta1/pagination.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/base/query/v1beta1/pagination.proto
+
+
+
+<a name="cosmos.base.query.v1beta1.PageRequest"></a>
+
+### PageRequest
+PageRequest is to be embedded in gRPC request messages for efficient
+pagination. Ex:
+
+ message SomeRequest {
+         Foo some_parameter = 1;
+         PageRequest pagination = 2;
+ }
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [bytes](#bytes) |  | key is a value returned in PageResponse.next_key to begin querying the next page most efficiently. Only one of offset or key should be set. |
+| `offset` | [uint64](#uint64) |  | offset is a numeric offset that can be used when key is unavailable. It is less efficient than using key. Only one of offset or key should be set. |
+| `limit` | [uint64](#uint64) |  | limit is the total number of results to be returned in the result page. If left empty it will default to a value to be set by each app. |
+| `count_total` | [bool](#bool) |  | count_total is set to true to indicate that the result set should include a count of the total number of items available for pagination in UIs. count_total is only respected when offset is used. It is ignored when key is set. |
+
+
+
+
+
+
+<a name="cosmos.base.query.v1beta1.PageResponse"></a>
+
+### PageResponse
+PageResponse is to be embedded in gRPC response messages where the
+corresponding request message has used PageRequest.
+
+ message SomeResponse {
+         repeated Bar results = 1;
+         PageResponse page = 2;
+ }
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `next_key` | [bytes](#bytes) |  | next_key is the key to be passed to PageRequest.key to query the next page most efficiently |
+| `total` | [uint64](#uint64) |  | total is total number of results available if PageRequest.count_total was set, its value is undefined otherwise |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/authz/v1beta1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/authz/v1beta1/query.proto
+
+
+
+<a name="cosmos.authz.v1beta1.QueryAuthorizationRequest"></a>
+
+### QueryAuthorizationRequest
+QueryAuthorizationRequest is the request type for the Query/Authorization RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+| `method_name` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.authz.v1beta1.QueryAuthorizationResponse"></a>
+
+### QueryAuthorizationResponse
+QueryAuthorizationResponse is the response type for the Query/Authorization RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authorization` | [AuthorizationGrant](#cosmos.authz.v1beta1.AuthorizationGrant) |  | authorization is a authorization granted for grantee by granter. |
+
+
+
+
+
+
+<a name="cosmos.authz.v1beta1.QueryAuthorizationsRequest"></a>
+
+### QueryAuthorizationsRequest
+QueryAuthorizationsRequest is the request type for the Query/Authorizations RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.authz.v1beta1.QueryAuthorizationsResponse"></a>
+
+### QueryAuthorizationsResponse
+QueryAuthorizationsResponse is the response type for the Query/Authorizations RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authorizations` | [AuthorizationGrant](#cosmos.authz.v1beta1.AuthorizationGrant) | repeated | authorizations is a list of grants granted for grantee by granter. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.authz.v1beta1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Authorization` | [QueryAuthorizationRequest](#cosmos.authz.v1beta1.QueryAuthorizationRequest) | [QueryAuthorizationResponse](#cosmos.authz.v1beta1.QueryAuthorizationResponse) | Returns any `Authorization` (or `nil`), with the expiration time, granted to the grantee by the granter for the provided msg type. | GET|/cosmos/authz/v1beta1/granters/{granter}/grantees/{grantee}/grant|
+| `Authorizations` | [QueryAuthorizationsRequest](#cosmos.authz.v1beta1.QueryAuthorizationsRequest) | [QueryAuthorizationsResponse](#cosmos.authz.v1beta1.QueryAuthorizationsResponse) | Returns list of `Authorization`, granted to the grantee by the granter. | GET|/cosmos/authz/v1beta1/granters/{granter}/grantees/{grantee}/grants|
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/bank/v1beta1/bank.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/bank/v1beta1/bank.proto
+
+
+
+<a name="cosmos.bank.v1beta1.DenomUnit"></a>
+
+### DenomUnit
+DenomUnit represents a struct that describes a given
+denomination unit of the basic token.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | denom represents the string name of the given denom unit (e.g uatom). |
+| `exponent` | [uint32](#uint32) |  | exponent represents power of 10 exponent that one must raise the base_denom to in order to equal the given DenomUnit's denom 1 denom = 1^exponent base_denom (e.g. with a base_denom of uatom, one can create a DenomUnit of 'atom' with exponent = 6, thus: 1 atom = 10^6 uatom). |
+| `aliases` | [string](#string) | repeated | aliases is a list of string aliases for the given denom |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.Input"></a>
+
+### Input
+Input models transaction input.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.Metadata"></a>
+
+### Metadata
+Metadata represents a struct that describes
+a basic token.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `description` | [string](#string) |  |  |
+| `denom_units` | [DenomUnit](#cosmos.bank.v1beta1.DenomUnit) | repeated | denom_units represents the list of DenomUnit's for a given coin |
+| `base` | [string](#string) |  | base represents the base denom (should be the DenomUnit with exponent = 0). |
+| `display` | [string](#string) |  | display indicates the suggested denom that should be displayed in clients. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.Output"></a>
+
+### Output
+Output models transaction outputs.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.Params"></a>
+
+### Params
+Params defines the parameters for the bank module.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `send_enabled` | [SendEnabled](#cosmos.bank.v1beta1.SendEnabled) | repeated |  |
+| `default_send_enabled` | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.SendEnabled"></a>
+
+### SendEnabled
+SendEnabled maps coin denom to a send_enabled status (whether a denom is
+sendable).
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `enabled` | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.Supply"></a>
+
+### Supply
+Supply represents a struct that passively keeps track of the total supply
+amounts in the network.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `total` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/bank/v1beta1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/bank/v1beta1/genesis.proto
+
+
+
+<a name="cosmos.bank.v1beta1.Balance"></a>
+
+### Balance
+Balance defines an account address and balance pair used in the bank module's
+genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the address of the balance holder. |
+| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | coins defines the different coins this balance holds. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the bank module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#cosmos.bank.v1beta1.Params) |  | params defines all the paramaters of the module. |
+| `balances` | [Balance](#cosmos.bank.v1beta1.Balance) | repeated | balances is an array containing the balances of all the accounts. |
+| `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply represents the total supply. |
+| `denom_metadata` | [Metadata](#cosmos.bank.v1beta1.Metadata) | repeated | denom_metadata defines the metadata of the differents coins. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/bank/v1beta1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/bank/v1beta1/query.proto
+
+
+
+<a name="cosmos.bank.v1beta1.QueryAllBalancesRequest"></a>
+
+### QueryAllBalancesRequest
+QueryBalanceRequest is the request type for the Query/AllBalances RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the address to query balances for. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryAllBalancesResponse"></a>
+
+### QueryAllBalancesResponse
+QueryAllBalancesResponse is the response type for the Query/AllBalances RPC
+method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `balances` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | balances is the balances of all the coins. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryBalanceRequest"></a>
+
+### QueryBalanceRequest
+QueryBalanceRequest is the request type for the Query/Balance RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the address to query balances for. |
+| `denom` | [string](#string) |  | denom is the coin denom to query balances for. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryBalanceResponse"></a>
+
+### QueryBalanceResponse
+QueryBalanceResponse is the response type for the Query/Balance RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | balance is the balance of the coin. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryDenomMetadataRequest"></a>
+
+### QueryDenomMetadataRequest
+QueryDenomMetadataRequest is the request type for the Query/DenomMetadata RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | denom is the coin denom to query the metadata for. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryDenomMetadataResponse"></a>
+
+### QueryDenomMetadataResponse
+QueryDenomMetadataResponse is the response type for the Query/DenomMetadata RPC
+method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `metadata` | [Metadata](#cosmos.bank.v1beta1.Metadata) |  | metadata describes and provides all the client information for the requested token. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryDenomsMetadataRequest"></a>
+
+### QueryDenomsMetadataRequest
+QueryDenomsMetadataRequest is the request type for the Query/DenomsMetadata RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryDenomsMetadataResponse"></a>
+
+### QueryDenomsMetadataResponse
+QueryDenomsMetadataResponse is the response type for the Query/DenomsMetadata RPC
+method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `metadatas` | [Metadata](#cosmos.bank.v1beta1.Metadata) | repeated | metadata provides the client information for all the registered tokens. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest defines the request type for querying x/bank parameters.
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse defines the response type for querying x/bank parameters.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#cosmos.bank.v1beta1.Params) |  |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QuerySupplyOfRequest"></a>
+
+### QuerySupplyOfRequest
+QuerySupplyOfRequest is the request type for the Query/SupplyOf RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | denom is the coin denom to query balances for. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QuerySupplyOfResponse"></a>
+
+### QuerySupplyOfResponse
+QuerySupplyOfResponse is the response type for the Query/SupplyOf RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | amount is the supply of the coin. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryTotalSupplyRequest"></a>
+
+### QueryTotalSupplyRequest
+QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC
+method.
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryTotalSupplyResponse"></a>
+
+### QueryTotalSupplyResponse
+QueryTotalSupplyResponse is the response type for the Query/TotalSupply RPC
+method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply is the supply of the coins |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.bank.v1beta1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Balance` | [QueryBalanceRequest](#cosmos.bank.v1beta1.QueryBalanceRequest) | [QueryBalanceResponse](#cosmos.bank.v1beta1.QueryBalanceResponse) | Balance queries the balance of a single coin for a single account. | GET|/cosmos/bank/v1beta1/balances/{address}/{denom}|
+| `AllBalances` | [QueryAllBalancesRequest](#cosmos.bank.v1beta1.QueryAllBalancesRequest) | [QueryAllBalancesResponse](#cosmos.bank.v1beta1.QueryAllBalancesResponse) | AllBalances queries the balance of all coins for a single account. | GET|/cosmos/bank/v1beta1/balances/{address}|
+| `TotalSupply` | [QueryTotalSupplyRequest](#cosmos.bank.v1beta1.QueryTotalSupplyRequest) | [QueryTotalSupplyResponse](#cosmos.bank.v1beta1.QueryTotalSupplyResponse) | TotalSupply queries the total supply of all coins. | GET|/cosmos/bank/v1beta1/supply|
+| `SupplyOf` | [QuerySupplyOfRequest](#cosmos.bank.v1beta1.QuerySupplyOfRequest) | [QuerySupplyOfResponse](#cosmos.bank.v1beta1.QuerySupplyOfResponse) | SupplyOf queries the supply of a single coin. | GET|/cosmos/bank/v1beta1/supply/{denom}|
+| `Params` | [QueryParamsRequest](#cosmos.bank.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.bank.v1beta1.QueryParamsResponse) | Params queries the parameters of x/bank module. | GET|/cosmos/bank/v1beta1/params|
+| `DenomMetadata` | [QueryDenomMetadataRequest](#cosmos.bank.v1beta1.QueryDenomMetadataRequest) | [QueryDenomMetadataResponse](#cosmos.bank.v1beta1.QueryDenomMetadataResponse) | DenomsMetadata queries the client metadata of a given coin denomination. | GET|/cosmos/bank/v1beta1/denoms_metadata/{denom}|
+| `DenomsMetadata` | [QueryDenomsMetadataRequest](#cosmos.bank.v1beta1.QueryDenomsMetadataRequest) | [QueryDenomsMetadataResponse](#cosmos.bank.v1beta1.QueryDenomsMetadataResponse) | DenomsMetadata queries the client metadata for all registered coin denominations. | GET|/cosmos/bank/v1beta1/denoms_metadata|
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/bank/v1beta1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/bank/v1beta1/tx.proto
+
+
+
+<a name="cosmos.bank.v1beta1.MsgMultiSend"></a>
+
+### MsgMultiSend
+MsgMultiSend represents an arbitrary multi-in, multi-out send message.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `inputs` | [Input](#cosmos.bank.v1beta1.Input) | repeated |  |
+| `outputs` | [Output](#cosmos.bank.v1beta1.Output) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.MsgMultiSendResponse"></a>
+
+### MsgMultiSendResponse
+MsgMultiSendResponse defines the Msg/MultiSend response type.
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.MsgSend"></a>
+
+### MsgSend
+MsgSend represents a message to send coins from one account to another.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `from_address` | [string](#string) |  |  |
+| `to_address` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.MsgSendResponse"></a>
+
+### MsgSendResponse
+MsgSendResponse defines the Msg/Send response type.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.bank.v1beta1.Msg"></a>
+
+### Msg
+Msg defines the bank Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Send` | [MsgSend](#cosmos.bank.v1beta1.MsgSend) | [MsgSendResponse](#cosmos.bank.v1beta1.MsgSendResponse) | Send defines a method for sending coins from one account to another account. | |
+| `MultiSend` | [MsgMultiSend](#cosmos.bank.v1beta1.MsgMultiSend) | [MsgMultiSendResponse](#cosmos.bank.v1beta1.MsgMultiSendResponse) | MultiSend defines a method for sending coins from some accounts to other accounts. | |
 
  <!-- end services -->
 
@@ -2222,8 +2642,8 @@ Service defines the gRPC querier service for tendermint queries.
 | `GetSyncing` | [GetSyncingRequest](#cosmos.base.tendermint.v1beta1.GetSyncingRequest) | [GetSyncingResponse](#cosmos.base.tendermint.v1beta1.GetSyncingResponse) | GetSyncing queries node syncing. | GET|/cosmos/base/tendermint/v1beta1/syncing|
 | `GetLatestBlock` | [GetLatestBlockRequest](#cosmos.base.tendermint.v1beta1.GetLatestBlockRequest) | [GetLatestBlockResponse](#cosmos.base.tendermint.v1beta1.GetLatestBlockResponse) | GetLatestBlock returns the latest block. | GET|/cosmos/base/tendermint/v1beta1/blocks/latest|
 | `GetBlockByHeight` | [GetBlockByHeightRequest](#cosmos.base.tendermint.v1beta1.GetBlockByHeightRequest) | [GetBlockByHeightResponse](#cosmos.base.tendermint.v1beta1.GetBlockByHeightResponse) | GetBlockByHeight queries block for given height. | GET|/cosmos/base/tendermint/v1beta1/blocks/{height}|
-| `GetLatestValidatorSet` | [GetLatestValidatorSetRequest](#cosmos.base.tendermint.v1beta1.GetLatestValidatorSetRequest) | [GetLatestValidatorSetResponse](#cosmos.base.tendermint.v1beta1.GetLatestValidatorSetResponse) | GetLatestValidatorSet queries latest validator-set. | GET|/cosmos/base/tendermint/v1beta1/validators/latest|
-| `GetValidatorSetByHeight` | [GetValidatorSetByHeightRequest](#cosmos.base.tendermint.v1beta1.GetValidatorSetByHeightRequest) | [GetValidatorSetByHeightResponse](#cosmos.base.tendermint.v1beta1.GetValidatorSetByHeightResponse) | GetValidatorSetByHeight queries validator-set at a given height. | GET|/cosmos/base/tendermint/v1beta1/validators/{height}|
+| `GetLatestValidatorSet` | [GetLatestValidatorSetRequest](#cosmos.base.tendermint.v1beta1.GetLatestValidatorSetRequest) | [GetLatestValidatorSetResponse](#cosmos.base.tendermint.v1beta1.GetLatestValidatorSetResponse) | GetLatestValidatorSet queries latest validator-set. | GET|/cosmos/base/tendermint/v1beta1/validatorsets/latest|
+| `GetValidatorSetByHeight` | [GetValidatorSetByHeightRequest](#cosmos.base.tendermint.v1beta1.GetValidatorSetByHeightRequest) | [GetValidatorSetByHeightResponse](#cosmos.base.tendermint.v1beta1.GetValidatorSetByHeightResponse) | GetValidatorSetByHeight queries validator-set at a given height. | GET|/cosmos/base/tendermint/v1beta1/validatorsets/{height}|
 
  <!-- end services -->
 
@@ -4669,11 +5089,11 @@ liveness activity.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  |  |
-| `start_height` | [int64](#int64) |  | height at which validator was first a candidate OR was unjailed |
-| `index_offset` | [int64](#int64) |  | index offset into signed block bit array |
-| `jailed_until` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | timestamp validator cannot be unjailed until |
-| `tombstoned` | [bool](#bool) |  | whether or not a validator has been tombstoned (killed out of validator set) |
-| `missed_blocks_counter` | [int64](#int64) |  | missed blocks counter (to avoid scanning the array every time) |
+| `start_height` | [int64](#int64) |  | Height at which validator was first a candidate OR was unjailed |
+| `index_offset` | [int64](#int64) |  | Index which is incremented each time the validator was a bonded in a block and may have signed a precommit or not. This in conjunction with the `SignedBlocksWindow` param determines the index in the `MissedBlocksBitArray`. |
+| `jailed_until` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Timestamp until which the validator is jailed due to liveness downtime. |
+| `tombstoned` | [bool](#bool) |  | Whether or not a validator has been tombstoned (killed out of validator set). It is set once the validator commits an equivocation or for any other configured misbehiavor. |
+| `missed_blocks_counter` | [int64](#int64) |  | A counter kept to avoid unnecessary array reads. Note that `Sum(MissedBlocksBitArray)` always equals `MissedBlocksCounter`. |
 
 
 

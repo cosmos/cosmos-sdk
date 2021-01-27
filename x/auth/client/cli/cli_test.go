@@ -15,7 +15,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -145,11 +144,21 @@ func (s *IntegrationTestSuite) TestCLISign() {
 	valInfo, err := val1.ClientCtx.Keyring.Key(val1.Moniker)
 	require.NoError(err)
 
+	// query account info
+	queryResJSON, err := authtest.QueryAccountExec(val1.ClientCtx, val1.Address)
+	require.NoError(err)
+	var account authtypes.AccountI
+	require.NoError(val1.ClientCtx.JSONMarshaler.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
+
 	/****  test signature-only  ****/
 	res, err := authtest.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag,
 		sigOnlyFlag)
 	require.NoError(err)
 	checkSignatures(require, txCfg, res.Bytes(), valInfo.GetPubKey())
+	sigs, err := txCfg.UnmarshalSignatureJSON(res.Bytes())
+	require.NoError(err)
+	require.Equal(1, len(sigs))
+	require.Equal(account.GetSequence(), sigs[0].Sequence)
 
 	/****  test full output  ****/
 	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag)
@@ -426,7 +435,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	// Write the output to disk
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx.String())
 
-	// Validate Signature
+	// validate Signature
 	res, err = authtest.TxValidateSignaturesExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 	s.Require().True(strings.Contains(res.String(), "[OK]"))
@@ -814,19 +823,17 @@ func (s *IntegrationTestSuite) TestGetAccountCmd() {
 
 	testCases := []struct {
 		name      string
-		args      []string
+		address   sdk.AccAddress
 		expectErr bool
 	}{
 		{
 			"invalid address",
-			[]string{addr1.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			addr1,
 			true,
 		},
 		{
 			"valid address",
-			[]string{val.Address.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			val.Address,
 			false,
 		},
 	}
@@ -834,18 +841,15 @@ func (s *IntegrationTestSuite) TestGetAccountCmd() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			cmd := authcli.GetAccountCmd()
 			clientCtx := val.ClientCtx
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := authtest.QueryAccountExec(clientCtx, tc.address)
 			if tc.expectErr {
 				s.Require().Error(err)
 				s.Require().NotEqual("internal", err.Error())
 			} else {
-				var any types.Any
-				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &any))
 				var acc authtypes.AccountI
-				s.Require().NoError(val.ClientCtx.InterfaceRegistry.UnpackAny(&any, &acc))
+				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalInterfaceJSON(out.Bytes(), &acc))
 				s.Require().Equal(val.Address, acc.GetAddress())
 			}
 		})

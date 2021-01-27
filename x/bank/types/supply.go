@@ -50,8 +50,8 @@ func (supply Supply) String() string {
 
 // ValidateBasic validates the Supply coins and returns error if invalid
 func (supply Supply) ValidateBasic() error {
-	if !supply.Total.IsValid() {
-		return fmt.Errorf("invalid total supply: %s", supply.Total.String())
+	if err := supply.Total.Validate(); err != nil {
+		return fmt.Errorf("invalid total supply: %w", err)
 	}
 
 	return nil

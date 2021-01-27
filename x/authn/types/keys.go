@@ -6,15 +6,15 @@ import (
 
 const (
 	// module name
-	ModuleName = "auth"
+	ModuleName = "authn"
 
-	// StoreKey is string representation of the store key for auth
+	// StoreKey is string representation of the store key for authn
 	StoreKey = "acc"
 
 	// FeeCollectorName the root string for the fee collector account address
 	FeeCollectorName = "fee_collector"
 
-	// QuerierRoute is the querier route for auth
+	// QuerierRoute is the querier route for authn
 	QuerierRoute = ModuleName
 )
 

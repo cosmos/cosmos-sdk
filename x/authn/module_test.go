@@ -1,4 +1,4 @@
-package auth_test
+package authn_test
 
 import (
 	"testing"

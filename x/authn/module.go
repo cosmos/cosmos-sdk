@@ -1,4 +1,4 @@
-package auth
+package authn
 
 import (
 	"context"
@@ -31,26 +31,26 @@ var (
 	_ module.AppModuleSimulation = AppModule{}
 )
 
-// AppModuleBasic defines the basic application module used by the auth module.
+// AppModuleBasic defines the basic application module used by the authn module.
 type AppModuleBasic struct{}
 
-// Name returns the auth module's name.
+// Name returns the authn module's name.
 func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterLegacyAminoCodec registers the auth module's types for the given codec.
+// RegisterLegacyAminoCodec registers the authn module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
-// DefaultGenesis returns default genesis state as raw bytes for the auth
+// DefaultGenesis returns default genesis state as raw bytes for the authn
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
 	return cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
-// ValidateGenesis performs genesis state validation for the auth module.
+// ValidateGenesis performs genesis state validation for the authn module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
@@ -60,34 +60,34 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 	return types.ValidateGenesis(data)
 }
 
-// RegisterRESTRoutes registers the REST routes for the auth module.
+// RegisterRESTRoutes registers the REST routes for the authn module.
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
 	rest.RegisterRoutes(clientCtx, rtr, types.StoreKey)
 }
 
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the auth module.
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the authn module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
-// GetTxCmd returns the root tx command for the auth module.
+// GetTxCmd returns the root tx command for the authn module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return nil
 }
 
-// GetQueryCmd returns the root query command for the auth module.
+// GetQueryCmd returns the root query command for the authn module.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
 
-// RegisterInterfaces registers interfaces and implementations of the auth module.
+// RegisterInterfaces registers interfaces and implementations of the authn module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
 //____________________________________________________________________________
 
-// AppModule implements an application module for the auth module.
+// AppModule implements an application module for the authn module.
 type AppModule struct {
 	AppModuleBasic
 
@@ -104,7 +104,7 @@ func NewAppModule(cdc codec.Marshaler, accountKeeper keeper.AccountKeeper, randG
 	}
 }
 
-// Name returns the auth module's name.
+// Name returns the authn module's name.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
@@ -112,15 +112,15 @@ func (AppModule) Name() string {
 // RegisterInvariants performs a no-op.
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Route returns the message routing key for the auth module.
+// Route returns the message routing key for the authn module.
 func (AppModule) Route() sdk.Route { return sdk.Route{} }
 
-// QuerierRoute returns the auth module's querier route name.
+// QuerierRoute returns the authn module's querier route name.
 func (AppModule) QuerierRoute() string {
 	return types.QuerierRoute
 }
 
-// LegacyQuerierHandler returns the auth module sdk.Querier.
+// LegacyQuerierHandler returns the authn module sdk.Querier.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return keeper.NewQuerier(am.accountKeeper, legacyQuerierCdc)
 }
@@ -131,7 +131,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), am.accountKeeper)
 }
 
-// InitGenesis performs genesis initialization for the auth module. It returns
+// InitGenesis performs genesis initialization for the authn module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
@@ -140,17 +140,17 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data j
 	return []abci.ValidatorUpdate{}
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the auth
+// ExportGenesis returns the exported genesis state as raw bytes for the authn
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
 	gs := ExportGenesis(ctx, am.accountKeeper)
 	return cdc.MustMarshalJSON(gs)
 }
 
-// BeginBlock returns the begin blocker for the auth module.
+// BeginBlock returns the begin blocker for the authn module.
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
-// EndBlock returns the end blocker for the auth module. It returns no validator
+// EndBlock returns the end blocker for the authn module. It returns no validator
 // updates.
 func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
@@ -160,7 +160,7 @@ func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Validato
 
 // AppModuleSimulation functions
 
-// GenerateGenesisState creates a randomized GenState of the auth module
+// GenerateGenesisState creates a randomized GenState of the authn module
 func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState, am.randGenAccountsFn)
 }
@@ -170,17 +170,17 @@ func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.We
 	return nil
 }
 
-// RandomizedParams creates randomized auth param changes for the simulator.
+// RandomizedParams creates randomized authn param changes for the simulator.
 func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	return simulation.ParamChanges(r)
 }
 
-// RegisterStoreDecoder registers a decoder for auth module's types
+// RegisterStoreDecoder registers a decoder for authn module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.accountKeeper)
 }
 
-// WeightedOperations doesn't return any auth module operation.
+// WeightedOperations doesn't return any authn module operation.
 func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
 	return nil
 }

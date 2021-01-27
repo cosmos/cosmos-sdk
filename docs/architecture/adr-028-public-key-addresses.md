@@ -130,7 +130,7 @@ We use `address.Hash` function for generating address for all accounts represent
 
 ### Composed Account Addresses
 
-For simple composed accounts (like naive multisig), we generalize the `address.Hash`. The address is constructed by recursively creating addresses for the sub accounts, sorting the addresses and composing it into a single address:
+For simple composed accounts (like new naive multisig), we generalize the `address.Hash`. The address is constructed by recursively creating addresses for the sub accounts, sorting the addresses and composing it into a single address. It ensures that the ordering of keys doesn't impact the created address.
 
 ```go
 // We don't need a PubKey interface - we need anything which is addressable.
@@ -145,7 +145,41 @@ func Composed(typ string, subaccounts []Addressable) []byte {
 }
 ```
 
+The `typ` parameter should contain all significant attributes with deterministic serialization.
+
 Implementation Tip: account implementations should cache address in their structure.
+
+
+#### Multisig Addresses
+
+For new multisig public keys, we define the `typ` parameter not based on any encoding scheme (amino or protobuf). This avoids issues with non-determinism in the encoding scheme.
+
+Example:
+
+```proto
+package cosmos.crypto.multisig;
+
+message PubKey {
+  uint32 threshold = 1;
+  repeated google.protobuf.Any pubkeys = 2;
+}
+```
+
+```go
+func (multisig PubKey) Address() {
+  // first gather all nested pub keys
+  var keys []address.Addressable  // cryptotypes.PubKey implements Addressable
+  for _, _key := range multisig.Pubkeys {
+    keys = append(keys, key.GetCachedValue().(cryptotypes.PubKey))
+  }
+
+  // form the type from the message name (cosmos.crypto.multisig.PubKey) and the threshold joined together
+  prefix := fmt.Sprintf("%s/%d", proto.MessageName(multisig), multisig.Threshold)
+
+  // use the Composed function defined above
+  return address.Composed(prefix, keys)
+}
+```
 
 
 ### Account Types

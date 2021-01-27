@@ -196,12 +196,12 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	return nil
 }
 
-// RegisterStoreDecoder registers a decoder for staking module's types
+// RegisterStoreDecoder registers a decoder for feegrant module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
-// WeightedOperations returns the all the staking module operations with their respective weights.
+// WeightedOperations returns all the feegrant module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	protoCdc := codec.NewProtoCodec(am.registry)
 	return simulation.WeightedOperations(

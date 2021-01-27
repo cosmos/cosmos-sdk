@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -28,10 +26,11 @@ var (
 // FeeAllowanceKey is the canonical key to store a grant from granter to grantee
 // We store by grantee first to allow searching by everyone who granted to you
 func FeeAllowanceKey(granter sdk.AccAddress, grantee sdk.AccAddress) []byte {
-	return append(FeeAllowanceKeyPrefix, []byte(fmt.Sprintf("%s/%s", grantee, granter))...)
+	// return append(FeeAllowanceKeyPrefix, []byte(fmt.Sprintf("%s/%s", grantee, granter))...)
+	return append(append(FeeAllowanceKeyPrefix, grantee.Bytes()...), granter.Bytes()...)
 }
 
 // FeeAllowancePrefixByGrantee returns a prefix to scan for all grants to this given address.
 func FeeAllowancePrefixByGrantee(grantee sdk.AccAddress) []byte {
-	return append(FeeAllowanceKeyPrefix, []byte(fmt.Sprintf("%s/", grantee))...)
+	return append(FeeAllowanceKeyPrefix, grantee.Bytes()...)
 }

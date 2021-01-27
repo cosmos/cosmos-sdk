@@ -47,7 +47,7 @@ SDK Modules can be seen as little state-machines within the state-machine. They 
                                                                   |
 +----------------+  +---------------+  +----------------+  +------v----------+
 |                |  |               |  |                |  |                 |
-|  AUTH MODULE   |  |  BANK MODULE  |  | STAKING MODULE |  |   GOV MODULE    |
+|  AUTHN MODULE   |  |  BANK MODULE  |  | STAKING MODULE |  |   GOV MODULE    |
 |                |  |               |  |                |  |                 |
 |                |  |               |  |                |  | Handles message,|
 |                |  |               |  |                |  | Updates state   |

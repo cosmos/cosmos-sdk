@@ -393,7 +393,7 @@ func UndelegateCoins(to Account, amount Coins) {
 
 ## Keepers & Handlers
 
-The `VestingAccount` implementations reside in `x/auth`. However, any keeper in
+The `VestingAccount` implementations reside in `x/authn`. However, any keeper in
 a module (e.g. staking in `x/staking`) wishing to potentially utilize any vesting
 coins, must call explicit methods on the `x/bank` keeper (e.g. `DelegateCoins`)
 opposed to `SendCoins` and `SubtractCoins`.

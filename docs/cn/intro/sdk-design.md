@@ -59,7 +59,7 @@ Cosmos SDK 的强大之处在于其模块化开发的理念。SDK 应用程序�
                                                                   |
 +----------------+  +---------------+  +----------------+  +------v----------+
 |                |  |               |  |                |  |                 |
-|  AUTH MODULE   |  |  BANK MODULE  |  | STAKING MODULE |  |   GOV MODULE    |
+|  AUTHN MODULE  |  |  BANK MODULE  |  | STAKING MODULE |  |   GOV MODULE    |
 |                |  |               |  |                |  |                 |
 |                |  |               |  |                |  | Handles message,|
 |                |  |               |  |                |  | Updates state   |
@@ -80,7 +80,7 @@ Cosmos SDK 的强大之处在于其模块化开发的理念。SDK 应用程序�
 
 SDK 模块被定义在 SDK 的 `x/` 文件夹中，一些核心的模块包括：
 
-- `x/auth`：用于管理账户和签名。
+- `x/authn`：用于管理账户和签名。
 - `x/bank`：用于启动 tokens 和 token 转账。
 - `x/staking` + `s/slashing`：用于构建 POS 区块链。
 

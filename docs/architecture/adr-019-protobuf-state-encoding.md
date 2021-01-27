@@ -100,7 +100,7 @@ to the module and will contain method contracts that know how to serialize the n
 Example:
 
 ```go
-// x/auth/types/codec.go
+// x/authn/types/codec.go
 
 type Codec interface {
   codec.Marshaler

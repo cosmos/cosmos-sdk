@@ -25,7 +25,7 @@ Transaction objects are SDK types that implement the `Tx` interface
 It contains the following methods:
 
 - **GetMsgs:** unwraps the transaction and returns a list of its `Msg`s - one transaction may have one or multiple [`Msg`s](../building-modules/messages-and-queries.md#messages), which are defined by module developers.
-- **ValidateBasic:** includes lightweight, [_stateless_](../basics/tx-lifecycle.md#types-of-checks) checks used by ABCI messages [`CheckTx`](./baseapp.md#checktx) and [`DeliverTx`](./baseapp.md#delivertx) to make sure transactions are not invalid. For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth) module's `StdTx` `ValidateBasic` function checks that its transactions are signed by the correct number of signers and that the fees do not exceed what the user's maximum. Note that this function is to be distinct from the `ValidateBasic` functions for `Msg`s, which perform basic validity checks on messages only. For example, when [`runTx`](./baseapp.md#runtx) is checking a transaction created from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/authn/spec) module, it first runs `ValidateBasic` on each message, then runs the `auth` module AnteHandler which calls `ValidateBasic` for the transaction itself.
+- **ValidateBasic:** includes lightweight, [_stateless_](../basics/tx-lifecycle.md#types-of-checks) checks used by ABCI messages [`CheckTx`](./baseapp.md#checktx) and [`DeliverTx`](./baseapp.md#delivertx) to make sure transactions are not invalid. For example, the [`authn`](https://github.com/cosmos/cosmos-sdk/tree/master/x/authn) module's `StdTx` `ValidateBasic` function checks that its transactions are signed by the correct number of signers and that the fees do not exceed what the user's maximum. Note that this function is to be distinct from the `ValidateBasic` functions for `Msg`s, which perform basic validity checks on messages only. For example, when [`runTx`](./baseapp.md#runtx) is checking a transaction created from the [`authn`](https://github.com/cosmos/cosmos-sdk/tree/master/x/authn/spec) module, it first runs `ValidateBasic` on each message, then runs the `authn` module AnteHandler which calls `ValidateBasic` for the transaction itself.
 
 As a developer, you should rarely manipulate `Tx` directly, as `Tx` is really an intermediate type used for transaction generation. Instead, developers should prefer the `TxBuilder` interface, which you can learn more about [below](#transaction-generation).
 
@@ -47,7 +47,7 @@ Once signed by all signers, the `body_bytes`, `auth_info_bytes` and `signatures`
 
 #### `SIGN_MODE_LEGACY_AMINO_JSON`
 
-The legacy implemention of the `Tx` interface is the `StdTx` struct from `x/auth`:
+The legacy implemention of the `Tx` interface is the `StdTx` struct from `x/authn`:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/authn/legacy/legacytx/stdtx.go#L120-L130
 
@@ -100,8 +100,8 @@ The `TxBuilder` interface contains data closely related with the generation of t
 
 As there are currently two sign modes for signing transactions, there are also two implementations of `TxBuilder`:
 
-- [wrapper](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/authn/tx/builder.go#L19-L33) for creating transactions for `SIGN_MODE_DIRECT`,
-- [StdTxBuilder](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/authn/legacy/legacytx/stdtx_builder.go#L14-L20) for `SIGN_MODE_LEGACY_AMINO_JSON`.
+- [wrapper](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/auth/tx/builder.go#L19-L33) for creating transactions for `SIGN_MODE_DIRECT`,
+- [StdTxBuilder](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/x/auth/legacy/legacytx/stdtx_builder.go#L14-L20) for `SIGN_MODE_LEGACY_AMINO_JSON`.
 
 However, the two implementation of `TxBuilder` should be hidden away from end-users, as they should prefer using the overarching `TxConfig` interface:
 

@@ -63,7 +63,7 @@ Here is a simplified view of how a transaction is processed by the application o
                                                                   |
 +----------------+  +---------------+  +----------------+  +------v----------+
 |                |  |               |  |                |  |                 |
-|  AUTH MODULE   |  |  BANK MODULE  |  | STAKING MODULE |  |   GOV MODULE    |
+|  AUTHN MODULE  |  |  BANK MODULE  |  | STAKING MODULE |  |   GOV MODULE    |
 |                |  |               |  |                |  |                 |
 |                |  |               |  |                |  | Handles message,|
 |                |  |               |  |                |  | Updates state   |
@@ -84,7 +84,7 @@ Each module can be seen as a little state-machine. Developers need to define the
 
 SDK modules are defined in the `x/` folder of the SDK. Some core modules include:
 
-- `x/auth`: Used to manage accounts and signatures.
+- `x/authn`: Used to manage accounts and signatures.
 - `x/bank`: Used to enable tokens and token transfers.
 - `x/staking` + `x/slashing`: Used to build Proof-Of-Stake blockchains.
 

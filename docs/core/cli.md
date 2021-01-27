@@ -72,7 +72,7 @@ The root-level `status` and `keys` subcommands are common across most applicatio
 
 This `txCmd` function adds all the transaction available to end-users for the application. This typically includes:
 
-- **Sign command** from the [`auth`](../../x/authn/spec/README.md) module that signs messages in a transaction. To enable multisig, add the `auth` module's `MultiSign` command. Since every transaction requires some sort of signature in order to be valid, thithe signing command is necessary for every application.
+- **Sign command** from the [`authn`](../../x/authn/spec/README.md) module that signs messages in a transaction. To enable multisig, add the `authn` module's `MultiSign` command. Since every transaction requires some sort of signature in order to be valid, thithe signing command is necessary for every application.
 - **Broadcast command** from the SDK client tools, to broadcast transactions.
 - **All [module transaction commands](../building-modules/module-interfaces.md#transaction-commands)** the application is dependent on, retrieved by using the [basic module manager's](../building-modules/module-manager.md#basic-manager) `AddTxCommands()` function.
 
@@ -88,8 +88,8 @@ Here is an example of a `txCmd` aggregating these subcommands from the `simapp` 
 
 This `queryCmd` function adds all the queries available to end-users for the application. This typically includes:
 
-- **QueryTx** and/or other transaction query commands] from the `auth` module which allow the user to search for a transaction by inputting its hash, a list of tags, or a block height. These queries allow users to see if transactions have been included in a block.
-- **Account command** from the `auth` module, which displays the state (e.g. account balance) of an account given an address.
+- **QueryTx** and/or other transaction query commands] from the `authn` module which allow the user to search for a transaction by inputting its hash, a list of tags, or a block height. These queries allow users to see if transactions have been included in a block.
+- **Account command** from the `authn` module, which displays the state (e.g. account balance) of an account given an address.
 - **Validator command** from the SDK rpc client tools, which displays the validator set of a given height.
 - **Block command** from the SDK rpc client tools, which displays the block data for a given height.
 - **All [module query commands](../building-modules/module-interfaces.md#query-commands)** the application is dependent on, retrieved by using the [basic module manager's](../building-modules/module-manager.md#basic-manager) `AddQueryCommands()` function.

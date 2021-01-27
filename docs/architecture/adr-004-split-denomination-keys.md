@@ -23,7 +23,7 @@ Simply rejecting incoming deposits after a denomination count limit doesn't work
 
 Balances shall be stored per-account & per-denomination under a denomination- and account-unique key, thus enabling O(1) read & write access to the balance of a particular account in a particular denomination.
 
-### Account interface (x/auth)
+### Account interface (x/authn)
 
 `GetCoins()` and `SetCoins()` will be removed from the account interface, since coin balances will
 now be stored in & managed by the bank module.

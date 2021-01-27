@@ -106,7 +106,7 @@ interface described above.
 func NewCustomApp(...) {
   // create the simulation manager and define the order of the modules for deterministic simulations
   app.sm = module.NewSimulationManager(
-    auth.NewAppModule(app.accountKeeper),
+    authn.NewAppModule(app.accountKeeper),
     bank.NewAppModule(app.bankKeeper, app.accountKeeper),
     supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
     ov.NewAppModule(app.govKeeper, app.accountKeeper, app.supplyKeeper),

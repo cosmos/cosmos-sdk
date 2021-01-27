@@ -154,7 +154,7 @@ Module developers create custom `Msg`s when they build their own module. The gen
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/proto/cosmos/bank/v1beta1/tx.proto#L10-L17
 
-These two `Msg`s are processed by the `Msg` service of the `x/bank` module, which ultimately calls the `keeper` of the `x/auth` module in order to update the state.
+These two `Msg`s are processed by the `Msg` service of the `x/bank` module, which ultimately calls the `keeper` of the `x/authn` module in order to update the state.
 
 Each module should also implement the `RegisterServices` method as part of the [`AppModule` interface](#application-module-interface). This method should call the `RegisterMsgServer` function provided by the generated Protobuf code.
 

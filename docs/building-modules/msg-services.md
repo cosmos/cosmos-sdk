@@ -92,7 +92,7 @@ In this regard, `handler`s functions need to be implemented for each module `Msg
 
 New [telemetry metrics](../core/telemetry.md) can be created from `msgServer` methods when handling messages. 
 
-This is an example from the `x/auth/vesting` module:
+This is an example from the `x/authn/vesting` module:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/authn/vesting/msg_server.go#L73-L85
 

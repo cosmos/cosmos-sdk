@@ -71,7 +71,7 @@ The examples above show how an external user can interact with a node by queryin
 The first thing that is created in the execution of a CLI command is a `client.Context`. A `client.Context` is an object that stores all the data needed to process a request on the user side. In particular, a `client.Context` stores the following:
 
 - **Codec**: The [encoder/decoder](../core/encoding.md) used by the application, used to marshal the parameters and query before making the Tendermint RPC request and unmarshal the returned response into a JSON object. The default codec used by the CLI is Protobuf.
-- **Account Decoder**: The account decoder from the [`auth`](../..//x/authn/spec/README.md) module, which translates `[]byte`s into accounts.
+- **Account Decoder**: The account decoder from the [`authn`](../..//x/authn/spec/README.md) module, which translates `[]byte`s into accounts.
 - **RPC Client**: The Tendermint RPC Client, or node, to which the request will be relayed to.
 - **Keyring**: A [Key Manager](../basics/accounts.md#keyring) used to sign transactions and handle other operations with keys.
 - **Output Writer**: A [Writer](https://golang.org/pkg/io/#Writer) used to output the response.

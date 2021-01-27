@@ -68,7 +68,7 @@ appcli tx send <recipientAddress> 1000uatom --from <senderAddress> --gas auto --
 
 [`AnteHandler`](https://docs.cosmos.network/master/basics/gas-fees.html#antehandler)是可选的，但每个应用程序都需要定义。`AnteHandler` 使用副本为特定的 `Tx` 执行有限的检查，副本可以使对 `Tx` 进行状态检查时无需修改最后的提交状态，如果执行失败，还可以还原为原始状态。
 
-例如，[`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/authn/spec) 模块的 `AnteHandler` 检查并增加序列号，检查签名和帐号，并从 `Tx` 的第一个签名者中扣除费用，这个过程中所有状态更改都使用 `checkState`
+例如，[`authn`](https://github.com/cosmos/cosmos-sdk/tree/master/x/authn/spec) 模块的 `AnteHandler` 检查并增加序列号，检查签名和帐号，并从 `Tx` 的第一个签名者中扣除费用，这个过程中所有状态更改都使用 `checkState`
 
 ### Gas
 

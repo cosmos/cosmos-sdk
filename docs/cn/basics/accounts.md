@@ -66,7 +66,7 @@ Cosmos SDK 使用一套称之为 [BIP32](https://github.com/bitcoin/bips/blob/ma
 
 `dbKeybase` 上面对 `Keybase` 接口中方法实现的笔记:
 
-- `Sign(name, passphrase string, msg []byte) ([]byte, crypto.PubKey, error)` 对 `message` 字节进行签名。需要做一些准备工作将 `message` 编码成 []byte 类型，可以参考 `auth` 模块 `message` 准备的例子。注意，SDK 上面没有实现签名的验证，签名验证被推迟到[`anteHandler`](#antehandler)中进行
+- `Sign(name, passphrase string, msg []byte) ([]byte, crypto.PubKey, error)` 对 `message` 字节进行签名。需要做一些准备工作将 `message` 编码成 []byte 类型，可以参考 `authn` 模块 `message` 准备的例子。注意，SDK 上面没有实现签名的验证，签名验证被推迟到[`anteHandler`](#antehandler)中进行
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/authn/types/txbuilder.go#L176-L209
 

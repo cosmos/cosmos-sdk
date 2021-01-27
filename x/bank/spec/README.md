@@ -64,7 +64,7 @@ type ModuleAccount interface {
 > **WARNING!**
 > Any module or message handler that allows either direct or indirect sending of funds must explicitly guarantee those funds cannot be sent to module accounts (unless allowed).
 
-The supply `Keeper` also introduces new wrapper functions for the auth `Keeper`
+The supply `Keeper` also introduces new wrapper functions for the authn `Keeper`
 and the bank `Keeper` that are related to `ModuleAccount`s in order to be able
 to:
 

@@ -4,7 +4,7 @@ order: 7
 
 # Parameters
 
-The auth module contains the following parameters:
+The authn module contains the following parameters:
 
 | Key                    | Type            | Example |
 | ---------------------- | --------------- | ------- |

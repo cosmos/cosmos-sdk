@@ -67,7 +67,7 @@ ctx.BlockGasMeter().ConsumeGas(
 type AnteHandler func(ctx Context, tx Tx, simulate bool) (newCtx Context, result Result, abort bool)
 ```
 
-`AnteHandler` 不是在核心 SDK 中实现的，而是在每一个模块中实现的，这使开发者可以使用适合其程序需求的`AnteHandler`版本，也就是说当前大多数应用程序都使用 [`auth` module](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth) 中定义的默认实现。下面是 `AnteHandler` 在普通 Cosmos SDK 程序中的作用:
+`AnteHandler` 不是在核心 SDK 中实现的，而是在每一个模块中实现的，这使开发者可以使用适合其程序需求的`AnteHandler`版本，也就是说当前大多数应用程序都使用 [`authn` module](https://github.com/cosmos/cosmos-sdk/tree/master/x/authn) 中定义的默认实现。下面是 `AnteHandler` 在普通 Cosmos SDK 程序中的作用:
 
 - 验证事务的类型正确。事务类型在实现 `anteHandler` 的模块中定义，它们遵循事务接口：
 

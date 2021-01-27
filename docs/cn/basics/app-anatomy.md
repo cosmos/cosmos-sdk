@@ -139,7 +139,7 @@ AppModule 在模块上公开了一组有用的方法，这些方法有助于将�
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/bank/internal/types/msgs.go#L10-L15
 
-它由 `bank` 模块的回调 `handler` 处理，最终会调用 `auth` 模块来写 `keeper` 以更新状态。
+它由 `bank` 模块的回调 `handler` 处理，最终会调用 `authn` 模块来写 `keeper` 以更新状态。
 
 ### Handler
 

@@ -7,7 +7,7 @@ parent:
 
 Here are some production-grade modules that can be used in Cosmos SDK applications, along with their respective documentation:
 
-- [Auth](auth/spec/README.md) - Authentication of accounts and transactions for Cosmos SDK application.
+- [Authn](authn/spec/README.md) - Authentication of accounts and transactions for Cosmos SDK application.
 - [Bank](bank/spec/README.md) - Token transfer functionalities.
 - [Capability](capability/spec/README.md) - Object capability implementation.
 - [Crisis](crisis/spec/README.md) - Halting the blockchain under certain circumstances (e.g. if an invariant is broken).

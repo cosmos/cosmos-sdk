@@ -176,7 +176,7 @@ logic, whereas application can misbehave(in terms of IBC protocol) by
 mistake.
 
 The `ProofVerificationDecorator` should come right after the default sybil attack
-resistent layer from the current `auth.NewAnteHandler`:
+resistent layer from the current `authn.NewAnteHandler`:
 
 ```go
 // add IBC ProofVerificationDecorator to the Chain of

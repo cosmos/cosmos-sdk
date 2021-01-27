@@ -4,7 +4,7 @@ order: 5
 
 # Keepers
 
-The auth module only exposes one keeper, the account keeper, which can be used to read and write accounts.
+The authn module only exposes one keeper, the account keeper, which can be used to read and write accounts.
 
 ## Account Keeper
 
@@ -12,7 +12,7 @@ Presently only one fully-permissioned account keeper is exposed, which has the a
 all fields of all accounts, and to iterate over all stored accounts.
 
 ```go
-// AccountKeeperI is the interface contract that x/auth's keeper implements.
+// AccountKeeperI is the interface contract that x/authn's keeper implements.
 type AccountKeeperI interface {
 	// Return a new account with the next account number and the specified address. Does not save the new account to the store.
 	NewAccountWithAddress(sdk.Context, sdk.AccAddress) types.AccountI

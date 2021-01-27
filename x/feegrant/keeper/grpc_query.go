@@ -22,14 +22,6 @@ func (q Keeper) FeeAllowance(c context.Context, req *types.QueryFeeAllowanceRequ
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	if req.Granter == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid granter addr")
-	}
-
-	if req.Grantee == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid grantee addr")
-	}
-
 	granterAddr, err := sdk.AccAddressFromBech32(req.Granter)
 	if err != nil {
 		return nil, err
@@ -69,10 +61,6 @@ func (q Keeper) FeeAllowance(c context.Context, req *types.QueryFeeAllowanceRequ
 func (q Keeper) FeeAllowances(c context.Context, req *types.QueryFeeAllowancesRequest) (*types.QueryFeeAllowancesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	if req.Grantee == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid grantee addr")
 	}
 
 	granteeAddr, err := sdk.AccAddressFromBech32(req.Grantee)

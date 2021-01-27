@@ -318,14 +318,29 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 			true, nil, 0,
 		},
 		{
+			"period mentioned and period limit omitted, invalid periodic grant",
+			append(
+				[]string{
+					granter.String(),
+					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
+					"100stake",
+					fmt.Sprintf("--%s=%d", cli.FlagPeriod, 10*60*60),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 60*60),
+				},
+				commonFlags...,
+			),
+			true, nil, 0,
+		},
+		{
 			"period cannot be greater than the actual expiration(periodic fee grant)",
 			append(
 				[]string{
 					granter.String(),
 					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
 					"100stake",
-					fmt.Sprintf("%d", 10*60*60), //period
-					"10stake",
+					fmt.Sprintf("--%s=%d", cli.FlagPeriod, 10*60*60),
+					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 60*60),
 				},
@@ -340,8 +355,8 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 					granter.String(),
 					"cosmos1w55kgcf3ltaqdy4ww49nge3klxmrdavrr6frmp",
 					"100stake",
-					fmt.Sprintf("%d", 60*60),
-					"10stake",
+					fmt.Sprintf("--%s=%d", cli.FlagPeriod, 60*60),
+					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 10*60*60),
 				},

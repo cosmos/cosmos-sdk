@@ -1,6 +1,8 @@
 package smt
 
 import (
+	"crypto/sha256"
+	"encoding/binary"
 	"io"
 	"sync"
 	"time"
@@ -21,6 +23,10 @@ var (
 	_ types.CommitKVStore           = (*Store)(nil)
 	_ types.Queryable               = (*Store)(nil)
 	_ types.StoreWithInitialVersion = (*Store)(nil)
+)
+
+var (
+	versionsPrefix = []byte("smt-versions-")
 )
 
 // Store Implements types.KVStore and CommitKVStore.
@@ -67,9 +73,8 @@ func (s *Store) Get(key []byte) []byte {
 	s.mtx.RLock()
 	defer s.mtx.RUnlock()
 	val, err := s.tree.Get(key)
-	// TODO(tzdybal): how to handle this err?
 	if err != nil {
-		return nil
+		panic(err)
 	}
 	return val
 }
@@ -86,8 +91,6 @@ func (s *Store) Has(key []byte) bool {
 // Set sets the key. Panics on nil key or value.
 func (s *Store) Set(key []byte, value []byte) {
 	s.mtx.Lock()
-	// TODO(tzdybal): how to handle this err?
-	// TODO(tzdybal): it should be done as batch, but probably using mutex is easier
 	_, err := s.tree.Update(key, value)
 	if err != nil {
 		panic(err.Error())
@@ -146,6 +149,11 @@ func (s *Store) Commit() types.CommitID {
 	}
 
 	s.version = version
+
+	b := make([]byte, 8)
+	binary.LittleEndian.PutUint64(b, uint64(version))
+	s.db.Set(append(versionsPrefix, b...), s.tree.Root())
+
 	return s.LastCommitID()
 }
 
@@ -167,12 +175,12 @@ func (s *Store) GetPruning() types.PruningOptions {
 // Queryable interface below:
 
 func (s *Store) Query(_ abci.RequestQuery) abci.ResponseQuery {
-	panic("not implemented") // TODO(tzdybal): Implement
+	panic("not implemented")
 }
 
 // StoreWithInitialVersion interface below:
 
-// SetInitialVersion sets the initial version of the IAVL tree. It is used when
+// SetInitialVersion sets the initial version of the SMT tree. It is used when
 // starting a new chain at an arbitrary height.
 func (s *Store) SetInitialVersion(version int64) {
 	s.opts.initialVersion = version

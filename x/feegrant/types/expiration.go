@@ -131,9 +131,6 @@ func (d Duration) ValidateBasic() error {
 	if d.GetBlocks() != 0 && d.GetDuration() != nil && d.GetDuration().Seconds() != float64(0) {
 		return sdkerrors.Wrap(ErrInvalidDuration, "both time and height are set")
 	}
-	if d.GetBlocks() < 0 {
-		return sdkerrors.Wrap(ErrInvalidDuration, "negative block step")
-	}
 	if d.GetDuration() != nil && d.GetDuration().Seconds() < 0 {
 		return sdkerrors.Wrap(ErrInvalidDuration, "negative clock step")
 	}

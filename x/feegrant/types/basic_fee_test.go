@@ -14,6 +14,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 10))
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 43))
+	bigAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1000))
 	leftAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 512))
 
 	cases := map[string]struct {
@@ -80,6 +81,16 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			blockHeight: 121,
 			accept:      false,
 			remove:      true,
+		},
+		"fee more than allowed": {
+			allow: &types.BasicFeeAllowance{
+				SpendLimit: atom,
+				Expiration: types.ExpiresAtHeight(100),
+			},
+			valid:       true,
+			fee:         bigAtom,
+			blockHeight: 85,
+			accept:      false,
 		},
 	}
 

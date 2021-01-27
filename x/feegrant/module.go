@@ -75,8 +75,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
 func (a AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		// return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
-		sdkerrors.Wrapf(err, "failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+		sdkerrors.Wrapf(err, "failed to unmarshal %s genesis state: %w", types.ModuleName)
 	}
 
 	return types.ValidateGenesis(data)

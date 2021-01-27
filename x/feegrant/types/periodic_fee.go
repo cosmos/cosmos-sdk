@@ -24,7 +24,7 @@ func (a *PeriodicFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockH
 		return true, sdkerrors.Wrap(ErrFeeLimitExpired, "absolute limit")
 	}
 
-	a.TryResetPeriod(blockTime, blockHeight)
+	a.tryResetPeriod(blockTime, blockHeight)
 
 	// deduct from both the current period and the max amount
 	var isNeg bool
@@ -40,13 +40,13 @@ func (a *PeriodicFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockH
 	return a.Basic.SpendLimit.IsZero(), nil
 }
 
-// TryResetPeriod will check if the PeriodReset has been hit. If not, it is a no-op.
+// tryResetPeriod will check if the PeriodReset has been hit. If not, it is a no-op.
 // If we hit the reset period, it will top up the PeriodCanSpend amount to
 // min(PeriodicSpendLimit, a.Basic.SpendLimit) so it is never more than the maximum allowed.
 // It will also update the PeriodReset. If we are within one Period, it will update from the
 // last PeriodReset (eg. if you always do one tx per day, it will always reset the same time)
 // If we are more then one period out (eg. no activity in a week), reset is one Period from the execution of this method
-func (a *PeriodicFeeAllowance) TryResetPeriod(blockTime time.Time, blockHeight int64) {
+func (a *PeriodicFeeAllowance) tryResetPeriod(blockTime time.Time, blockHeight int64) {
 	if !a.PeriodReset.Undefined() && !a.PeriodReset.IsExpired(&blockTime, blockHeight) {
 		return
 	}

@@ -108,7 +108,7 @@ We start with defining a hash base algorithm for generating addresses. Notably, 
 ```go
 const A_LEN = 32
 
-func BaseAddress(typ string, key []byte) []byte {
+func Hash(typ string, key []byte) []byte {
     return hash(hash(typ) + key)[:A_LEN]
 }
 ```
@@ -120,17 +120,17 @@ Motivation: this algorithm keeps the address relatively small (length of the `ty
 and it's more secure than [post-hash-prefix-proposal] (which uses first 20 bytes of a pubkey hash, that significantly reduce the address space).
 Moreover the cryptographer motivated the choice to add `typ` in the hash to protect against switch table attack.
 
-We use `BaseAddress` function for generating address for all accounts represented by a single key:
-* simple public keys: `BaseAddress(keyType, pubkey)`
-+ aggregated keys (eg: BLS): `BaseAddress(keyType, aggregatedPubKey)`
-+ modules accounts: `BaseAddress("module", moduleKey)`
+We use `address.Hash` function for generating address for all accounts represented by a single key:
+* simple public keys: `address.Hash(keyType, pubkey)`
++ aggregated keys (eg: BLS): `address.Hash(keyType, aggregatedPubKey)`
++ module accounts: `addoress.Hash("module", moduleID)`
   For module subaccount, or module specific content we append a specific key to the moduleKey:
-  `BaseAddress("module", moduleKey+moduleSubaccountKey)`
+  `address.Hash("module", moduleSubaccountKey)`  (note: `moduleSubaccountKey` already composes the `modleKey`).
 
 
 ### Composed Account Addresses
 
-For simple composed accounts (like naive multisig), we generalize the `BaseAddress`. The address is constructed by recursively creating addresses for the sub accounts, sorting the addresses and composing it into a single address:
+For simple composed accounts (like naive multisig), we generalize the `address.Hash`. The address is constructed by recursively creating addresses for the sub accounts, sorting the addresses and composing it into a single address:
 
 ```go
 // We don't need a PubKey interface - we need anything which is addressable.
@@ -138,10 +138,10 @@ type Addressable interface {
     Address() []byte
 }
 
-func ComposedAddress(typ string, subaccounts []Addressable) []byte {
+func Composed(typ string, subaccounts []Addressable) []byte {
     addresses = map(subaccounts, \a -> a.Address())
     addresses = sort(addresses)
-    return BaseAddress(typ, addresses[0] + ... + addresses[n])
+    return address.Hash(typ, addresses[0] + ... + addresses[n])
 }
 ```
 

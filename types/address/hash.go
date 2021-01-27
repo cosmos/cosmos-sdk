@@ -10,25 +10,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-/*
-   TODO
-
-   I still need to think how to organize it.
-   Ideally, I wanted to Addressable Account abstraction
-   - so all kinds of accounts which could be addressable (base, multisig, module...)
-
-   Other idea is to leave away this abstraction, and only implement the related functions,
-   which would take more
-*/
-
-// BaseLen is the length of generated addresses constructed by BaseAddress.
-const BaseLen = sha256.Size
+// Len is the length of base addresses
+const Len = sha256.Size
 
 type Addressable interface {
 	Address() []byte
 }
 
-func MkBase(typ string, key []byte) []byte {
+// Hash creates a new address from address type and key
+func Hash(typ string, key []byte) []byte {
 	hasher := sha256.New()
 	hasher.Write(unsafeStrToByteArray(typ))
 	th := hasher.Sum(nil)
@@ -41,7 +31,8 @@ func MkBase(typ string, key []byte) []byte {
 	return hasher.Sum(nil)
 }
 
-func MkComposed(typ string, subAddresses []Addressable) []byte {
+// NewComposed creates a new address based on sub addresses.
+func NewComposed(typ string, subAddresses []Addressable) []byte {
 	as := make([][]byte, len(subAddresses))
 	totalLen := 0
 	for i := range subAddresses {
@@ -56,7 +47,7 @@ func MkComposed(typ string, subAddresses []Addressable) []byte {
 		copy(key[offset:], as[i])
 		offset += len(as[i])
 	}
-	return MkBase(typ, key)
+	return Hash(typ, key)
 }
 
 // unsafeStrToByteArray uses unsafe to convert string into byte array. Returned array

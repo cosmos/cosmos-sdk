@@ -711,9 +711,9 @@ func (rs *Store) Restore(
 	if height == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrLogic, "cannot restore snapshot at height 0")
 	}
-	if height > math.MaxInt64 {
+	if height > uint64(math.MaxUint64) {
 		return sdkerrors.Wrapf(snapshottypes.ErrInvalidMetadata,
-			"snapshot height %v cannot exceed %v", height, math.MaxInt64)
+			"snapshot height %v cannot exceed %v", height, int64(math.MaxInt64))
 	}
 
 	// Signal readiness. Must be done before the readers below are set up, since the zlib

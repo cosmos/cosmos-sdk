@@ -44,8 +44,6 @@ jobs:
       - uses: technote-space/get-diff-action@v4
         id: git_diff
         with:
-          PREFIX_FILTER: |
-            cosmovisor
           PATTERNS: |
             **/**.go
             go.mod

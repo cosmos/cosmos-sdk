@@ -40,7 +40,7 @@ simd query bank balances $RECIPIENT --chain-id my-test-chain
 Finally, delegate some of the stake tokens sent to the `recipient` account to the validator:
 
 ```bash
-simd tx staking delegate $(simd keys show my_validator --bech val -a --keyring-backend test) 500stake --from recipient --chain-id my-test-chain
+simd tx staking delegate $(simd keys show my_validator --bech val -a --keyring-backend test) 500stake --from recipient --chain-id my-test-chain --keyring-backend test
 
 # Query the total delegations to `validator`.
 simd query staking delegations-to $(simd keys show my_validator --bech val -a --keyring-backend test) --chain-id my-test-chain

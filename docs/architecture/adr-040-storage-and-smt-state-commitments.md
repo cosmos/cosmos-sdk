@@ -73,18 +73,28 @@ A Sparse Merkle tree is based on the idea of a complete Merkle tree of an intrac
 
 ### Snapshots
 
-One of the Stargate core features are snapshots and fast sync. Currently this feature is implemented through IAVL.
-Many underlying DB engines support snapshotting. Hence, we propose to reuse that functionality and limit the supported DB engines to ones which support snapshots (Badger, RocksDB, BoltDB) using a _copy on write_ mechanism.
+One of the Stargate core features are snapshots and fast sync delivered in the `/snapshot` package. Currently this feature is implemented through IAVL.
+Many underlying DB engines support snapshotting. Hence, we propose to reuse that functionality and limit the supported DB engines to ones which support snapshots (Badger, RocksDB, ...) using a _copy on write_ mechanism (we can't create a full copy - it would be too big).
 
-### Pruning
+The number of snapshots should be configurable by user (eg: 10 past versions - one every 100 blocks).
+
+Pruning old snapshots is effectively done by DB. If DB allows to configure max number of snapshots, then we are done. Otherwise, we need to hook this mechanism into `EndBlocker`.
+
+### Versioning
 
 At minimum SC doesn't need to keep old versions. However we need to be able to process transactions and roll-back state updates if transaction fails. This can be done in the following way:dDuring transaction processing, we keep all state change requests (writes) in a `CacheWrapper` abstraction (as it's done today). Only when we commit on a root store, all changes are written to the the SMT.
 
-We can use the same approach for SM Storage. However, we need to keep few past versions (configurable by user, eg: 10 past versions every 100 blocks) in a form of snapshot. Ideally we would like to shift that functionality to a DB engine itself.
+We can use the same approach for SM Storage.
 
-TODO: Verify which DB engines support that. I'm pretty confident this (pruning and versioning)can and should be offloaded to a DB engine.
-Otherwise, the solution is to implement a sort of _mark and sweep GC_: once per defined period, a GC will start, mark old objects and prune them. This will require encoding a version mechanism in a KV store.
+#### Accessing old, committed state versions
 
+ABCI interface requires a support for querying data in past versions. The version is specified by a block height (so we query for an object by key `K` at a version committed in block height `H`). The query is defined in the `abci.Query` structure. The number of old versions we support for `abci.Query` is configurable.
+
+TODO: Verify if we can use same mechanism as for snapshots (offloading it to DB engine):
++ what's DB storage impact - are snapshots expensive?
+
+If this won't work, then we will integrate other mechanism discussed in https://github.com/cosmos/cosmos-sdk/discussions/8297#discussioncomment-309918.
+Pruning custom versions could be done using _mark and sweep GC_: once per defined period, a GC will start, mark old objects and prune them. This will require encoding a version mechanism in a KV store.
 
 
 ## Consequences

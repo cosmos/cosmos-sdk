@@ -39,13 +39,12 @@ func GetAuthorizationStoreKey(grantee sdk.AccAddress, granter sdk.AccAddress, ms
 
 // ExtractAddressesFromGrantKey - split granter & grantee address from the authorization key
 func ExtractAddressesFromGrantKey(key []byte) (granterAddr, granteeAddr sdk.AccAddress) {
+	// key if of format:
+	// 0x01<granterAddressLen (1 Byte)><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes><msgType_Bytes>: Grant
 	granterAddrLen := key[1] // remove prefix key
 	granterAddr = sdk.AccAddress(key[2 : 2+granterAddrLen])
 	granteeAddrLen := int(key[2+granterAddrLen])
-	granteeAddr = sdk.AccAddress(key[3+granterAddrLen:])
-	if len(granteeAddr) != granteeAddrLen {
-		panic("error")
-	}
+	granteeAddr = sdk.AccAddress(key[3+granterAddrLen : 3+granterAddrLen+byte(granteeAddrLen)])
 
 	return granterAddr, granteeAddr
 }

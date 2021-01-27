@@ -27,6 +27,57 @@
   
 - [ibc/applications/transfer/v1/genesis.proto](#ibc/applications/transfer/v1/genesis.proto)
     - [GenesisState](#ibc.applications.transfer.v1.GenesisState)
+- [cosmos/authz/v1beta1/authz.proto](#cosmos/authz/v1beta1/authz.proto)
+    - [AuthorizationGrant](#cosmos.authz.v1beta1.AuthorizationGrant)
+    - [GenericAuthorization](#cosmos.authz.v1beta1.GenericAuthorization)
+    - [SendAuthorization](#cosmos.authz.v1beta1.SendAuthorization)
+  
+- [cosmos/base/abci/v1beta1/abci.proto](#cosmos/base/abci/v1beta1/abci.proto)
+    - [ABCIMessageLog](#cosmos.base.abci.v1beta1.ABCIMessageLog)
+    - [Attribute](#cosmos.base.abci.v1beta1.Attribute)
+    - [GasInfo](#cosmos.base.abci.v1beta1.GasInfo)
+    - [MsgData](#cosmos.base.abci.v1beta1.MsgData)
+    - [Result](#cosmos.base.abci.v1beta1.Result)
+    - [SearchTxsResult](#cosmos.base.abci.v1beta1.SearchTxsResult)
+    - [SimulationResponse](#cosmos.base.abci.v1beta1.SimulationResponse)
+    - [StringEvent](#cosmos.base.abci.v1beta1.StringEvent)
+    - [TxMsgData](#cosmos.base.abci.v1beta1.TxMsgData)
+    - [TxResponse](#cosmos.base.abci.v1beta1.TxResponse)
+  
+- [cosmos/authz/v1beta1/tx.proto](#cosmos/authz/v1beta1/tx.proto)
+    - [MsgExecAuthorizedRequest](#cosmos.authz.v1beta1.MsgExecAuthorizedRequest)
+    - [MsgExecAuthorizedResponse](#cosmos.authz.v1beta1.MsgExecAuthorizedResponse)
+    - [MsgGrantAuthorizationRequest](#cosmos.authz.v1beta1.MsgGrantAuthorizationRequest)
+    - [MsgGrantAuthorizationResponse](#cosmos.authz.v1beta1.MsgGrantAuthorizationResponse)
+    - [MsgRevokeAuthorizationRequest](#cosmos.authz.v1beta1.MsgRevokeAuthorizationRequest)
+    - [MsgRevokeAuthorizationResponse](#cosmos.authz.v1beta1.MsgRevokeAuthorizationResponse)
+  
+    - [Msg](#cosmos.authz.v1beta1.Msg)
+  
+- [cosmos/authz/v1beta1/genesis.proto](#cosmos/authz/v1beta1/genesis.proto)
+    - [GenesisState](#cosmos.authz.v1beta1.GenesisState)
+    - [GrantAuthorization](#cosmos.authz.v1beta1.GrantAuthorization)
+  
+- [cosmos/base/query/v1beta1/pagination.proto](#cosmos/base/query/v1beta1/pagination.proto)
+    - [PageRequest](#cosmos.base.query.v1beta1.PageRequest)
+    - [PageResponse](#cosmos.base.query.v1beta1.PageResponse)
+  
+- [cosmos/authz/v1beta1/query.proto](#cosmos/authz/v1beta1/query.proto)
+    - [QueryAuthorizationRequest](#cosmos.authz.v1beta1.QueryAuthorizationRequest)
+    - [QueryAuthorizationResponse](#cosmos.authz.v1beta1.QueryAuthorizationResponse)
+    - [QueryAuthorizationsRequest](#cosmos.authz.v1beta1.QueryAuthorizationsRequest)
+    - [QueryAuthorizationsResponse](#cosmos.authz.v1beta1.QueryAuthorizationsResponse)
+  
+    - [Query](#cosmos.authz.v1beta1.Query)
+  
+- [cosmos/bank/v1beta1/bank.proto](#cosmos/bank/v1beta1/bank.proto)
+    - [DenomUnit](#cosmos.bank.v1beta1.DenomUnit)
+    - [Input](#cosmos.bank.v1beta1.Input)
+    - [Metadata](#cosmos.bank.v1beta1.Metadata)
+    - [Output](#cosmos.bank.v1beta1.Output)
+    - [Params](#cosmos.bank.v1beta1.Params)
+    - [SendEnabled](#cosmos.bank.v1beta1.SendEnabled)
+    - [Supply](#cosmos.bank.v1beta1.Supply)
   
 - [ibc/core/types/v1/genesis.proto](#ibc/core/types/v1/genesis.proto)
     - [GenesisState](#ibc.core.types.v1.GenesisState)
@@ -48,6 +99,21 @@
     - [MsgUpdateClientResponse](#ibc.core.client.v1.MsgUpdateClientResponse)
     - [MsgUpgradeClient](#ibc.core.client.v1.MsgUpgradeClient)
     - [MsgUpgradeClientResponse](#ibc.core.client.v1.MsgUpgradeClientResponse)
+- [cosmos/bank/v1beta1/query.proto](#cosmos/bank/v1beta1/query.proto)
+    - [QueryAllBalancesRequest](#cosmos.bank.v1beta1.QueryAllBalancesRequest)
+    - [QueryAllBalancesResponse](#cosmos.bank.v1beta1.QueryAllBalancesResponse)
+    - [QueryBalanceRequest](#cosmos.bank.v1beta1.QueryBalanceRequest)
+    - [QueryBalanceResponse](#cosmos.bank.v1beta1.QueryBalanceResponse)
+    - [QueryDenomMetadataRequest](#cosmos.bank.v1beta1.QueryDenomMetadataRequest)
+    - [QueryDenomMetadataResponse](#cosmos.bank.v1beta1.QueryDenomMetadataResponse)
+    - [QueryDenomsMetadataRequest](#cosmos.bank.v1beta1.QueryDenomsMetadataRequest)
+    - [QueryDenomsMetadataResponse](#cosmos.bank.v1beta1.QueryDenomsMetadataResponse)
+    - [QueryParamsRequest](#cosmos.bank.v1beta1.QueryParamsRequest)
+    - [QueryParamsResponse](#cosmos.bank.v1beta1.QueryParamsResponse)
+    - [QuerySupplyOfRequest](#cosmos.bank.v1beta1.QuerySupplyOfRequest)
+    - [QuerySupplyOfResponse](#cosmos.bank.v1beta1.QuerySupplyOfResponse)
+    - [QueryTotalSupplyRequest](#cosmos.bank.v1beta1.QueryTotalSupplyRequest)
+    - [QueryTotalSupplyResponse](#cosmos.bank.v1beta1.QueryTotalSupplyResponse)
   
     - [Msg](#ibc.core.client.v1.Msg)
   
@@ -75,6 +141,9 @@
     - [MerklePrefix](#ibc.core.commitment.v1.MerklePrefix)
     - [MerkleProof](#ibc.core.commitment.v1.MerkleProof)
     - [MerkleRoot](#ibc.core.commitment.v1.MerkleRoot)
+- [cosmos/base/kv/v1beta1/kv.proto](#cosmos/base/kv/v1beta1/kv.proto)
+    - [Pair](#cosmos.base.kv.v1beta1.Pair)
+    - [Pairs](#cosmos.base.kv.v1beta1.Pairs)
   
 - [ibc/core/channel/v1/tx.proto](#ibc/core/channel/v1/tx.proto)
     - [MsgAcknowledgement](#ibc.core.channel.v1.MsgAcknowledgement)
@@ -807,6 +876,15 @@ MsgTransferResponse defines the Msg/Transfer response type.
 
  <!-- end HasExtensions -->
 
+ <!-- end services -->
+
+
+
+<a name="cosmos/authz/v1beta1/authz.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/authz/v1beta1/authz.proto
+
 
 <a name="ibc.applications.transfer.v1.Msg"></a>
 
@@ -816,9 +894,18 @@ Msg defines the ibc/transfer Msg service.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Transfer` | [MsgTransfer](#ibc.applications.transfer.v1.MsgTransfer) | [MsgTransferResponse](#ibc.applications.transfer.v1.MsgTransferResponse) | Transfer defines a rpc handler method for MsgTransfer. | |
+<a name="cosmos.authz.v1beta1.AuthorizationGrant"></a>
+
+### AuthorizationGrant
+AuthorizationGrant gives permissions to execute
+the provide method with expiration time.
 
  <!-- end services -->
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authorization` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `expiration` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 
 
 <a name="ibc/applications/transfer/v1/query.proto"></a>
@@ -833,11 +920,17 @@ Msg defines the ibc/transfer Msg service.
 ### QueryDenomTraceRequest
 QueryDenomTraceRequest is the request type for the Query/DenomTrace RPC
 method
+<a name="cosmos.authz.v1beta1.GenericAuthorization"></a>
+
+### GenericAuthorization
+GenericAuthorization gives the grantee unrestricted permissions to execute
+the provided method on behalf of the granter's account.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `hash` | [string](#string) |  | hash (in hex format) of the denomination trace information. |
+| `method_name` | [string](#string) |  | method name to grant unrestricted permissions to execute Note: MethodName() is already a method on `GenericAuthorization` type, we need some custom naming here so using `MessageName` |
 
 
 
@@ -849,27 +942,56 @@ method
 ### QueryDenomTraceResponse
 QueryDenomTraceResponse is the response type for the Query/DenomTrace RPC
 method.
+<a name="cosmos.authz.v1beta1.SendAuthorization"></a>
+
+### SendAuthorization
+SendAuthorization allows the grantee to spend up to spend_limit coins from
+the granter's account.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `denom_trace` | [DenomTrace](#ibc.applications.transfer.v1.DenomTrace) |  | denom_trace returns the requested denomination trace information. |
+| `spend_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
 
 
 
 
+ <!-- end messages -->
 
 <a name="ibc.applications.transfer.v1.QueryDenomTracesRequest"></a>
 
 ### QueryDenomTracesRequest
 QueryConnectionsRequest is the request type for the Query/DenomTraces RPC
 method
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/base/abci/v1beta1/abci.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/base/abci/v1beta1/abci.proto
+
+
+
+<a name="cosmos.base.abci.v1beta1.ABCIMessageLog"></a>
+
+### ABCIMessageLog
+ABCIMessageLog defines a structure containing an indexed tx ABCI message log.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+| `msg_index` | [uint32](#uint32) |  |  |
+| `log` | [string](#string) |  |  |
+| `events` | [StringEvent](#cosmos.base.abci.v1beta1.StringEvent) | repeated | Events contains a slice of Event objects that were emitted during some execution. |
 
 
 
@@ -881,22 +1003,39 @@ method
 ### QueryDenomTracesResponse
 QueryConnectionsResponse is the response type for the Query/DenomTraces RPC
 method.
+<a name="cosmos.base.abci.v1beta1.Attribute"></a>
+
+### Attribute
+Attribute defines an attribute wrapper where the key and value are
+strings instead of raw bytes.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `denom_traces` | [DenomTrace](#ibc.applications.transfer.v1.DenomTrace) | repeated | denom_traces returns all denominations trace information. |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+| `key` | [string](#string) |  |  |
+| `value` | [string](#string) |  |  |
 
 
 
 
 
+
+
+<a name="cosmos.base.abci.v1beta1.GasInfo"></a>
+
+### GasInfo
+GasInfo defines tx execution gas context.
 
 <a name="ibc.applications.transfer.v1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
 QueryParamsRequest is the request type for the Query/Params RPC method.
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `gas_wanted` | [uint64](#uint64) |  | GasWanted is the maximum units of work we allow this tx to perform. |
+| `gas_used` | [uint64](#uint64) |  | GasUsed is the amount of gas actually consumed. |
 
 
 
@@ -907,21 +1046,38 @@ QueryParamsRequest is the request type for the Query/Params RPC method.
 
 ### QueryParamsResponse
 QueryParamsResponse is the response type for the Query/Params RPC method.
+<a name="cosmos.base.abci.v1beta1.MsgData"></a>
+
+### MsgData
+MsgData defines the data returned in a Result object during message
+execution.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#ibc.applications.transfer.v1.Params) |  | params defines the parameters of the module. |
+| `msg_type` | [string](#string) |  |  |
+| `data` | [bytes](#bytes) |  |  |
 
 
 
 
 
- <!-- end messages -->
 
- <!-- end enums -->
+<a name="cosmos.base.abci.v1beta1.Result"></a>
 
- <!-- end HasExtensions -->
+### Result
+Result is the union of ResponseFormat and ResponseCheckTx.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `data` | [bytes](#bytes) |  | Data is any data returned from message or handler execution. It MUST be length prefixed in order to separate data from multiple message executions. |
+| `log` | [string](#string) |  | Log contains the log information from message or handler execution. |
+| `events` | [tendermint.abci.Event](#tendermint.abci.Event) | repeated | Events contains a slice of Event objects that were emitted during message or handler execution. |
+
+
+
 
 
 <a name="ibc.applications.transfer.v1.Query"></a>
@@ -934,9 +1090,21 @@ Query provides defines the gRPC querier service.
 | `DenomTrace` | [QueryDenomTraceRequest](#ibc.applications.transfer.v1.QueryDenomTraceRequest) | [QueryDenomTraceResponse](#ibc.applications.transfer.v1.QueryDenomTraceResponse) | DenomTrace queries a denomination trace information. | GET|/ibc/applications/transfer/v1beta1/denom_traces/{hash}|
 | `DenomTraces` | [QueryDenomTracesRequest](#ibc.applications.transfer.v1.QueryDenomTracesRequest) | [QueryDenomTracesResponse](#ibc.applications.transfer.v1.QueryDenomTracesResponse) | DenomTraces queries all denomination traces. | GET|/ibc/applications/transfer/v1beta1/denom_traces|
 | `Params` | [QueryParamsRequest](#ibc.applications.transfer.v1.QueryParamsRequest) | [QueryParamsResponse](#ibc.applications.transfer.v1.QueryParamsResponse) | Params queries all parameters of the ibc-transfer module. | GET|/ibc/applications/transfer/v1beta1/params|
+<a name="cosmos.base.abci.v1beta1.SearchTxsResult"></a>
+
+### SearchTxsResult
+SearchTxsResult defines a structure for querying txs pageable
 
  <!-- end services -->
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `total_count` | [uint64](#uint64) |  | Count of all txs |
+| `count` | [uint64](#uint64) |  | Count of txs in current page |
+| `page_number` | [uint64](#uint64) |  | Index of current page, start from 1 |
+| `page_total` | [uint64](#uint64) |  | Count of total pages |
+| `limit` | [uint64](#uint64) |  | Max count txs per page |
+| `txs` | [TxResponse](#cosmos.base.abci.v1beta1.TxResponse) | repeated | List of txs in current page |
 
 
 <a name="ibc/applications/transfer/v1/genesis.proto"></a>
@@ -950,6 +1118,11 @@ Query provides defines the gRPC querier service.
 
 ### GenesisState
 GenesisState defines the ibc-transfer genesis state
+<a name="cosmos.base.abci.v1beta1.SimulationResponse"></a>
+
+### SimulationResponse
+SimulationResponse defines the response generated when a transaction is
+successfully simulated.
 
 
 | Field | Type | Label | Description |
@@ -958,19 +1131,25 @@ GenesisState defines the ibc-transfer genesis state
 | `denom_traces` | [DenomTrace](#ibc.applications.transfer.v1.DenomTrace) | repeated |  |
 | `params` | [Params](#ibc.applications.transfer.v1.Params) |  |  |
 
+| `gas_info` | [GasInfo](#cosmos.base.abci.v1beta1.GasInfo) |  |  |
+| `result` | [Result](#cosmos.base.abci.v1beta1.Result) |  |  |
 
 
 
 
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
 
 
+<a name="cosmos.base.abci.v1beta1.StringEvent"></a>
+
+### StringEvent
+StringEvent defines en Event object wrapper where all the attributes
+contain key/value pairs that are strings instead of raw bytes.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `type` | [string](#string) |  |  |
+| `attributes` | [Attribute](#cosmos.base.abci.v1beta1.Attribute) | repeated |  |
 
 <a name="ibc/core/types/v1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
@@ -985,11 +1164,49 @@ GenesisState defines the ibc-transfer genesis state
 GenesisState defines the ibc module's genesis state.
 
 
+
+
+
+<a name="cosmos.base.abci.v1beta1.TxMsgData"></a>
+
+### TxMsgData
+TxMsgData defines a list of MsgData. A transaction will have a MsgData object
+for each message.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `data` | [MsgData](#cosmos.base.abci.v1beta1.MsgData) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.base.abci.v1beta1.TxResponse"></a>
+
+### TxResponse
+TxResponse defines a structure containing relevant tx data and metadata. The
+tags are stringified and the log is JSON decoded.
+
+
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `client_genesis` | [ibc.core.client.v1.GenesisState](#ibc.core.client.v1.GenesisState) |  | ICS002 - Clients genesis state |
 | `connection_genesis` | [ibc.core.connection.v1.GenesisState](#ibc.core.connection.v1.GenesisState) |  | ICS003 - Connections genesis state |
 | `channel_genesis` | [ibc.core.channel.v1.GenesisState](#ibc.core.channel.v1.GenesisState) |  | ICS004 - Channel genesis state |
+| `height` | [int64](#int64) |  | The block height |
+| `txhash` | [string](#string) |  | The transaction hash. |
+| `codespace` | [string](#string) |  | Namespace for the Code |
+| `code` | [uint32](#uint32) |  | Response code. |
+| `data` | [string](#string) |  | Result bytes, if any. |
+| `raw_log` | [string](#string) |  | The output of the application's logger (raw string). May be non-deterministic. |
+| `logs` | [ABCIMessageLog](#cosmos.base.abci.v1beta1.ABCIMessageLog) | repeated | The output of the application's logger (typed). May be non-deterministic. |
+| `info` | [string](#string) |  | Additional information. May be non-deterministic. |
+| `gas_wanted` | [int64](#int64) |  | Amount of gas requested for transaction. |
+| `gas_used` | [int64](#int64) |  | Amount of gas consumed by transaction. |
+| `tx` | [google.protobuf.Any](#google.protobuf.Any) |  | The request transaction bytes. |
+| `timestamp` | [string](#string) |  | Time of the previous block. For heights > 1, it's the weighted median of the timestamps of the valid votes in the block.LastCommit. For height == 1, it's genesis time. |
 
 
 
@@ -1017,12 +1234,27 @@ GenesisState defines the ibc module's genesis state.
 ### ClientConsensusStates
 ClientConsensusStates defines all the stored consensus states for a given
 client.
+<a name="cosmos/authz/v1beta1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/authz/v1beta1/tx.proto
+
+
+
+<a name="cosmos.authz.v1beta1.MsgExecAuthorizedRequest"></a>
+
+### MsgExecAuthorizedRequest
+MsgExecAuthorizedRequest attempts to execute the provided messages using
+authorizations granted to the grantee. Each message should have only
+one signer corresponding to the granter of the authorization.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `client_id` | [string](#string) |  | client identifier |
 | `consensus_states` | [ConsensusStateWithHeight](#ibc.core.client.v1.ConsensusStateWithHeight) | repeated | consensus states and their heights associated with the client |
+| `grantee` | [string](#string) |  |  |
+| `msgs` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
 
 
 
@@ -1035,6 +1267,10 @@ client.
 ClientUpdateProposal is a governance proposal. If it passes, the client is
 updated with the provided header. The update may fail if the header is not
 valid given certain conditions specified by the client implementation.
+<a name="cosmos.authz.v1beta1.MsgExecAuthorizedResponse"></a>
+
+### MsgExecAuthorizedResponse
+MsgExecAuthorizedResponse defines the Msg/MsgExecAuthorizedResponse response type.
 
 
 | Field | Type | Label | Description |
@@ -1043,6 +1279,7 @@ valid given certain conditions specified by the client implementation.
 | `description` | [string](#string) |  | the description of the proposal |
 | `client_id` | [string](#string) |  | the client identifier for the client to be updated if the proposal passes |
 | `header` | [google.protobuf.Any](#google.protobuf.Any) |  | the header used to update the client if the proposal passes |
+| `result` | [cosmos.base.abci.v1beta1.Result](#cosmos.base.abci.v1beta1.Result) |  |  |
 
 
 
@@ -1053,6 +1290,11 @@ valid given certain conditions specified by the client implementation.
 
 ### ConsensusStateWithHeight
 ConsensusStateWithHeight defines a consensus state with an additional height field.
+<a name="cosmos.authz.v1beta1.MsgGrantAuthorizationRequest"></a>
+
+### MsgGrantAuthorizationRequest
+MsgGrantAuthorizationRequest grants the provided authorization to the grantee on the granter's
+account with the provided expiration time.
 
 
 | Field | Type | Label | Description |
@@ -1060,6 +1302,10 @@ ConsensusStateWithHeight defines a consensus state with an additional height fie
 | `height` | [Height](#ibc.core.client.v1.Height) |  | consensus state height |
 | `consensus_state` | [google.protobuf.Any](#google.protobuf.Any) |  | consensus state |
 
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+| `authorization` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `expiration` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 
 
 
@@ -1078,11 +1324,15 @@ height in certain conditions e.g. hard forks, state-machine breaking changes
 In these cases, the RevisionNumber is incremented so that height continues to
 be monitonically increasing even as the RevisionHeight gets reset
 
+<a name="cosmos.authz.v1beta1.MsgGrantAuthorizationResponse"></a>
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `revision_number` | [uint64](#uint64) |  | the revision that the client is currently on |
 | `revision_height` | [uint64](#uint64) |  | the height within the given revision |
+### MsgGrantAuthorizationResponse
+MsgGrantAuthorizationResponse defines the Msg/MsgGrantAuthorization response type.
+
 
 
 
@@ -1094,12 +1344,20 @@ be monitonically increasing even as the RevisionHeight gets reset
 ### IdentifiedClientState
 IdentifiedClientState defines a client state with an additional client
 identifier field.
+<a name="cosmos.authz.v1beta1.MsgRevokeAuthorizationRequest"></a>
+
+### MsgRevokeAuthorizationRequest
+MsgRevokeAuthorizationRequest revokes any authorization with the provided sdk.Msg type on the
+granter's account with that has been granted to the grantee.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `client_id` | [string](#string) |  | client identifier |
 | `client_state` | [google.protobuf.Any](#google.protobuf.Any) |  | client state |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+| `method_name` | [string](#string) |  |  |
 
 
 
@@ -1116,7 +1374,10 @@ Params defines the set of IBC light client parameters.
 | ----- | ---- | ----- | ----------- |
 | `allowed_clients` | [string](#string) | repeated | allowed_clients defines the list of allowed client state types. |
 
+<a name="cosmos.authz.v1beta1.MsgRevokeAuthorizationResponse"></a>
 
+### MsgRevokeAuthorizationResponse
+MsgRevokeAuthorizationResponse defines the Msg/MsgRevokeAuthorizationResponse response type.
 
 
 
@@ -1129,13 +1390,26 @@ Params defines the set of IBC light client parameters.
  <!-- end services -->
 
 
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
 
 <a name="ibc/core/client/v1/tx.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## ibc/core/client/v1/tx.proto
+<a name="cosmos.authz.v1beta1.Msg"></a>
 
+### Msg
+Msg defines the authz Msg service.
 
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `GrantAuthorization` | [MsgGrantAuthorizationRequest](#cosmos.authz.v1beta1.MsgGrantAuthorizationRequest) | [MsgGrantAuthorizationResponse](#cosmos.authz.v1beta1.MsgGrantAuthorizationResponse) | GrantAuthorization grants the provided authorization to the grantee on the granter's account with the provided expiration time. | |
+| `ExecAuthorized` | [MsgExecAuthorizedRequest](#cosmos.authz.v1beta1.MsgExecAuthorizedRequest) | [MsgExecAuthorizedResponse](#cosmos.authz.v1beta1.MsgExecAuthorizedResponse) | ExecAuthorized attempts to execute the provided messages using authorizations granted to the grantee. Each message should have only one signer corresponding to the granter of the authorization. | |
+| `RevokeAuthorization` | [MsgRevokeAuthorizationRequest](#cosmos.authz.v1beta1.MsgRevokeAuthorizationRequest) | [MsgRevokeAuthorizationResponse](#cosmos.authz.v1beta1.MsgRevokeAuthorizationResponse) | RevokeAuthorization revokes any authorization corresponding to the provided method name on the granter's account that has been granted to the grantee. | |
 
 <a name="ibc.core.client.v1.MsgCreateClient"></a>
 
@@ -1148,16 +1422,30 @@ MsgCreateClient defines a message to create an IBC client
 | `client_state` | [google.protobuf.Any](#google.protobuf.Any) |  | light client state |
 | `consensus_state` | [google.protobuf.Any](#google.protobuf.Any) |  | consensus state associated with the client that corresponds to a given height. |
 | `signer` | [string](#string) |  | signer address |
+ <!-- end services -->
 
 
 
+<a name="cosmos/authz/v1beta1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/authz/v1beta1/genesis.proto
 
 
+
+<a name="cosmos.authz.v1beta1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the authz module's genesis state.
 
 <a name="ibc.core.client.v1.MsgCreateClientResponse"></a>
 
 ### MsgCreateClientResponse
 MsgCreateClientResponse defines the Msg/CreateClient response type.
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authorization` | [GrantAuthorization](#cosmos.authz.v1beta1.GrantAuthorization) | repeated |  |
 
 
 
@@ -1169,6 +1457,10 @@ MsgCreateClientResponse defines the Msg/CreateClient response type.
 ### MsgSubmitMisbehaviour
 MsgSubmitMisbehaviour defines an sdk.Msg type that submits Evidence for
 light client misbehaviour.
+<a name="cosmos.authz.v1beta1.GrantAuthorization"></a>
+
+### GrantAuthorization
+GrantAuthorization defines the GenesisState/GrantAuthorization type.
 
 
 | Field | Type | Label | Description |
@@ -1176,27 +1468,51 @@ light client misbehaviour.
 | `client_id` | [string](#string) |  | client unique identifier |
 | `misbehaviour` | [google.protobuf.Any](#google.protobuf.Any) |  | misbehaviour used for freezing the light client |
 | `signer` | [string](#string) |  | signer address |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+| `authorization` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `expiration` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 
 
 
 
 
+ <!-- end messages -->
+
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
 
 <a name="ibc.core.client.v1.MsgSubmitMisbehaviourResponse"></a>
 
 ### MsgSubmitMisbehaviourResponse
 MsgSubmitMisbehaviourResponse defines the Msg/SubmitMisbehaviour response type.
 
+<a name="cosmos/base/query/v1beta1/pagination.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/base/query/v1beta1/pagination.proto
 
 
 
-
+<a name="cosmos.base.query.v1beta1.PageRequest"></a>
 
 <a name="ibc.core.client.v1.MsgUpdateClient"></a>
 
 ### MsgUpdateClient
 MsgUpdateClient defines an sdk.Msg to update a IBC client state using
 the given header.
+### PageRequest
+PageRequest is to be embedded in gRPC request messages for efficient
+pagination. Ex:
+
+ message SomeRequest {
+         Foo some_parameter = 1;
+         PageRequest pagination = 2;
+ }
 
 
 | Field | Type | Label | Description |
@@ -1214,16 +1530,30 @@ the given header.
 
 ### MsgUpdateClientResponse
 MsgUpdateClientResponse defines the Msg/UpdateClient response type.
+| `key` | [bytes](#bytes) |  | key is a value returned in PageResponse.next_key to begin querying the next page most efficiently. Only one of offset or key should be set. |
+| `offset` | [uint64](#uint64) |  | offset is a numeric offset that can be used when key is unavailable. It is less efficient than using key. Only one of offset or key should be set. |
+| `limit` | [uint64](#uint64) |  | limit is the total number of results to be returned in the result page. If left empty it will default to a value to be set by each app. |
+| `count_total` | [bool](#bool) |  | count_total is set to true to indicate that the result set should include a count of the total number of items available for pagination in UIs. count_total is only respected when offset is used. It is ignored when key is set. |
 
 
 
 
 
+
+<a name="cosmos.base.query.v1beta1.PageResponse"></a>
 
 <a name="ibc.core.client.v1.MsgUpgradeClient"></a>
 
 ### MsgUpgradeClient
 MsgUpgradeClient defines an sdk.Msg to upgrade an IBC client to a new client state
+### PageResponse
+PageResponse is to be embedded in gRPC response messages where the
+corresponding request message has used PageRequest.
+
+ message SomeResponse {
+         repeated Bar results = 1;
+         PageResponse page = 2;
+ }
 
 
 | Field | Type | Label | Description |
@@ -1234,6 +1564,10 @@ MsgUpgradeClient defines an sdk.Msg to upgrade an IBC client to a new client sta
 | `proof_upgrade_client` | [bytes](#bytes) |  | proof that old chain committed to new client |
 | `proof_upgrade_consensus_state` | [bytes](#bytes) |  | proof that old chain committed to new consensus state |
 | `signer` | [string](#string) |  | signer address |
+| `next_key` | [bytes](#bytes) |  | next_key is the key to be passed to PageRequest.key to query the next page most efficiently |
+| `total` | [uint64](#uint64) |  | total is total number of results available if PageRequest.count_total was set, its value is undefined otherwise |
+
+
 
 
 
@@ -1247,6 +1581,7 @@ MsgUpgradeClientResponse defines the Msg/UpgradeClient response type.
 
 
 
+ <!-- end services -->
 
 
  <!-- end messages -->
@@ -1254,6 +1589,10 @@ MsgUpgradeClientResponse defines the Msg/UpgradeClient response type.
  <!-- end enums -->
 
  <!-- end HasExtensions -->
+<a name="cosmos/authz/v1beta1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/authz/v1beta1/query.proto
 
 
 <a name="ibc.core.client.v1.Msg"></a>
@@ -1267,9 +1606,18 @@ Msg defines the ibc/client Msg service.
 | `UpdateClient` | [MsgUpdateClient](#ibc.core.client.v1.MsgUpdateClient) | [MsgUpdateClientResponse](#ibc.core.client.v1.MsgUpdateClientResponse) | UpdateClient defines a rpc handler method for MsgUpdateClient. | |
 | `UpgradeClient` | [MsgUpgradeClient](#ibc.core.client.v1.MsgUpgradeClient) | [MsgUpgradeClientResponse](#ibc.core.client.v1.MsgUpgradeClientResponse) | UpgradeClient defines a rpc handler method for MsgUpgradeClient. | |
 | `SubmitMisbehaviour` | [MsgSubmitMisbehaviour](#ibc.core.client.v1.MsgSubmitMisbehaviour) | [MsgSubmitMisbehaviourResponse](#ibc.core.client.v1.MsgSubmitMisbehaviourResponse) | SubmitMisbehaviour defines a rpc handler method for MsgSubmitMisbehaviour. | |
+<a name="cosmos.authz.v1beta1.QueryAuthorizationRequest"></a>
+
+### QueryAuthorizationRequest
+QueryAuthorizationRequest is the request type for the Query/Authorization RPC method.
 
  <!-- end services -->
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+| `method_name` | [string](#string) |  |  |
 
 
 <a name="ibc/core/client/v1/query.proto"></a>
@@ -1283,7 +1631,15 @@ Msg defines the ibc/client Msg service.
 
 ### QueryClientParamsRequest
 QueryClientParamsRequest is the request type for the Query/ClientParams RPC method.
+<a name="cosmos.authz.v1beta1.QueryAuthorizationResponse"></a>
 
+### QueryAuthorizationResponse
+QueryAuthorizationResponse is the response type for the Query/Authorization RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authorization` | [AuthorizationGrant](#cosmos.authz.v1beta1.AuthorizationGrant) |  | authorization is a authorization granted for grantee by granter. |
 
 
 
@@ -1294,15 +1650,35 @@ QueryClientParamsRequest is the request type for the Query/ClientParams RPC meth
 ### QueryClientParamsResponse
 QueryClientParamsResponse is the response type for the Query/ClientParams RPC method.
 
+<a name="cosmos.authz.v1beta1.QueryAuthorizationsRequest"></a>
+
+### QueryAuthorizationsRequest
+QueryAuthorizationsRequest is the request type for the Query/Authorizations RPC method.
+
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#ibc.core.client.v1.Params) |  | params defines the parameters of the module. |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
 
 
 
 
 
+
+
+<a name="cosmos.authz.v1beta1.QueryAuthorizationsResponse"></a>
+
+### QueryAuthorizationsResponse
+QueryAuthorizationsResponse is the response type for the Query/Authorizations RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authorizations` | [AuthorizationGrant](#cosmos.authz.v1beta1.AuthorizationGrant) | repeated | authorizations is a list of grants granted for grantee by granter. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
 
 <a name="ibc.core.client.v1.QueryClientStateRequest"></a>
 
@@ -1326,6 +1702,15 @@ method
 QueryClientStateResponse is the response type for the Query/ClientState RPC
 method. Besides the client state, it includes a proof and the height from
 which the proof was retrieved.
+<a name="cosmos.authz.v1beta1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Authorization` | [QueryAuthorizationRequest](#cosmos.authz.v1beta1.QueryAuthorizationRequest) | [QueryAuthorizationResponse](#cosmos.authz.v1beta1.QueryAuthorizationResponse) | Returns any `Authorization` (or `nil`), with the expiration time, granted to the grantee by the granter for the provided msg type. | GET|/cosmos/authz/v1beta1/granters/{granter}/grantees/{grantee}/grant|
+| `Authorizations` | [QueryAuthorizationsRequest](#cosmos.authz.v1beta1.QueryAuthorizationsRequest) | [QueryAuthorizationsResponse](#cosmos.authz.v1beta1.QueryAuthorizationsResponse) | Returns list of `Authorization`, granted to the grantee by the granter. | GET|/cosmos/authz/v1beta1/granters/{granter}/grantees/{grantee}/grants|
 
 
 | Field | Type | Label | Description |
@@ -1344,11 +1729,26 @@ which the proof was retrieved.
 ### QueryClientStatesRequest
 QueryClientStatesRequest is the request type for the Query/ClientStates RPC
 method
+<a name="cosmos/bank/v1beta1/bank.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/bank/v1beta1/bank.proto
+
+
+
+<a name="cosmos.bank.v1beta1.DenomUnit"></a>
+
+### DenomUnit
+DenomUnit represents a struct that describes a given
+denomination unit of the basic token.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination request |
+| `denom` | [string](#string) |  | denom represents the string name of the given denom unit (e.g uatom). |
+| `exponent` | [uint32](#uint32) |  | exponent represents power of 10 exponent that one must raise the base_denom to in order to equal the given DenomUnit's denom 1 denom = 1^exponent base_denom (e.g. with a base_denom of uatom, one can create a DenomUnit of 'atom' with exponent = 6, thus: 1 atom = 10^6 uatom). |
+| `aliases` | [string](#string) | repeated | aliases is a list of string aliases for the given denom |
 
 
 
@@ -1360,12 +1760,18 @@ method
 ### QueryClientStatesResponse
 QueryClientStatesResponse is the response type for the Query/ClientStates RPC
 method.
+<a name="cosmos.bank.v1beta1.Input"></a>
+
+### Input
+Input models transaction input.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `client_states` | [IdentifiedClientState](#ibc.core.client.v1.IdentifiedClientState) | repeated | list of stored ClientStates of the chain. |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination response |
+| `address` | [string](#string) |  |  |
+| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
 
 
@@ -1378,6 +1784,11 @@ method.
 QueryConsensusStateRequest is the request type for the Query/ConsensusState
 RPC method. Besides the consensus state, it includes a proof and the height
 from which the proof was retrieved.
+<a name="cosmos.bank.v1beta1.Metadata"></a>
+
+### Metadata
+Metadata represents a struct that describes
+a basic token.
 
 
 | Field | Type | Label | Description |
@@ -1386,6 +1797,10 @@ from which the proof was retrieved.
 | `revision_number` | [uint64](#uint64) |  | consensus state revision number |
 | `revision_height` | [uint64](#uint64) |  | consensus state revision height |
 | `latest_height` | [bool](#bool) |  | latest_height overrrides the height field and queries the latest stored ConsensusState |
+| `description` | [string](#string) |  |  |
+| `denom_units` | [DenomUnit](#cosmos.bank.v1beta1.DenomUnit) | repeated | denom_units represents the list of DenomUnit's for a given coin |
+| `base` | [string](#string) |  | base represents the base denom (should be the DenomUnit with exponent = 0). |
+| `display` | [string](#string) |  | display indicates the suggested denom that should be displayed in clients. |
 
 
 
@@ -1397,6 +1812,10 @@ from which the proof was retrieved.
 ### QueryConsensusStateResponse
 QueryConsensusStateResponse is the response type for the Query/ConsensusState
 RPC method
+<a name="cosmos.bank.v1beta1.Output"></a>
+
+### Output
+Output models transaction outputs.
 
 
 | Field | Type | Label | Description |
@@ -1404,6 +1823,8 @@ RPC method
 | `consensus_state` | [google.protobuf.Any](#google.protobuf.Any) |  | consensus state associated with the client identifier at the given height |
 | `proof` | [bytes](#bytes) |  | merkle proof of existence |
 | `proof_height` | [Height](#ibc.core.client.v1.Height) |  | height at which the proof was retrieved |
+| `address` | [string](#string) |  |  |
+| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
 
 
@@ -1415,12 +1836,18 @@ RPC method
 ### QueryConsensusStatesRequest
 QueryConsensusStatesRequest is the request type for the Query/ConsensusStates
 RPC method.
+<a name="cosmos.bank.v1beta1.Params"></a>
+
+### Params
+Params defines the parameters for the bank module.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `client_id` | [string](#string) |  | client identifier |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination request |
+| `send_enabled` | [SendEnabled](#cosmos.bank.v1beta1.SendEnabled) | repeated |  |
+| `default_send_enabled` | [bool](#bool) |  |  |
 
 
 
@@ -1432,12 +1859,19 @@ RPC method.
 ### QueryConsensusStatesResponse
 QueryConsensusStatesResponse is the response type for the
 Query/ConsensusStates RPC method
+<a name="cosmos.bank.v1beta1.SendEnabled"></a>
+
+### SendEnabled
+SendEnabled maps coin denom to a send_enabled status (whether a denom is
+sendable).
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `consensus_states` | [ConsensusStateWithHeight](#ibc.core.client.v1.ConsensusStateWithHeight) | repeated | consensus states associated with the identifier |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination response |
+| `denom` | [string](#string) |  |  |
+| `enabled` | [bool](#bool) |  |  |
 
 
 
@@ -1451,6 +1885,16 @@ Query/ConsensusStates RPC method
 
 
 <a name="ibc.core.client.v1.Query"></a>
+<a name="cosmos.bank.v1beta1.Supply"></a>
+
+### Supply
+Supply represents a struct that passively keeps track of the total supply
+amounts in the network.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `total` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
 ### Query
 Query provides defines the gRPC querier service
@@ -1466,6 +1910,7 @@ Query provides defines the gRPC querier service
  <!-- end services -->
 
 
+ <!-- end messages -->
 
 <a name="ibc/core/client/v1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
@@ -1479,7 +1924,11 @@ Query provides defines the gRPC querier service
 ### GenesisMetadata
 GenesisMetadata defines the genesis type for metadata that clients may return
 with ExportMetadata
+ <!-- end enums -->
 
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -1487,7 +1936,10 @@ with ExportMetadata
 | `value` | [bytes](#bytes) |  | metadata value |
 
 
+<a name="cosmos/bank/v1beta1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
 
+## cosmos/bank/v1beta1/genesis.proto
 
 
 
@@ -1495,6 +1947,11 @@ with ExportMetadata
 
 ### GenesisState
 GenesisState defines the ibc client submodule's genesis state.
+<a name="cosmos.bank.v1beta1.Balance"></a>
+
+### Balance
+Balance defines an account address and balance pair used in the bank module's
+genesis state.
 
 
 | Field | Type | Label | Description |
@@ -1505,6 +1962,8 @@ GenesisState defines the ibc client submodule's genesis state.
 | `params` | [Params](#ibc.core.client.v1.Params) |  |  |
 | `create_localhost` | [bool](#bool) |  | create localhost on initialization |
 | `next_client_sequence` | [uint64](#uint64) |  | the sequence for the next generated client identifier |
+| `address` | [string](#string) |  | address is the address of the balance holder. |
+| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | coins defines the different coins this balance holds. |
 
 
 
@@ -1515,12 +1974,20 @@ GenesisState defines the ibc client submodule's genesis state.
 
 ### IdentifiedGenesisMetadata
 IdentifiedGenesisMetadata has the client metadata with the corresponding client id.
+<a name="cosmos.bank.v1beta1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the bank module's genesis state.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `client_id` | [string](#string) |  |  |
 | `client_metadata` | [GenesisMetadata](#ibc.core.client.v1.GenesisMetadata) | repeated |  |
+| `params` | [Params](#cosmos.bank.v1beta1.Params) |  | params defines all the paramaters of the module. |
+| `balances` | [Balance](#cosmos.bank.v1beta1.Balance) | repeated | balances is an array containing the balances of all the accounts. |
+| `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply represents the total supply. |
+| `denom_metadata` | [Metadata](#cosmos.bank.v1beta1.Metadata) | repeated | denom_metadata defines the metadata of the differents coins. |
 
 
 
@@ -1537,6 +2004,328 @@ IdentifiedGenesisMetadata has the client metadata with the corresponding client 
 
 
 <a name="ibc/core/commitment/v1/commitment.proto"></a>
+<a name="cosmos/bank/v1beta1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/bank/v1beta1/query.proto
+
+
+
+<a name="cosmos.bank.v1beta1.QueryAllBalancesRequest"></a>
+
+### QueryAllBalancesRequest
+QueryBalanceRequest is the request type for the Query/AllBalances RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the address to query balances for. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryAllBalancesResponse"></a>
+
+### QueryAllBalancesResponse
+QueryAllBalancesResponse is the response type for the Query/AllBalances RPC
+method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `balances` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | balances is the balances of all the coins. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryBalanceRequest"></a>
+
+### QueryBalanceRequest
+QueryBalanceRequest is the request type for the Query/Balance RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the address to query balances for. |
+| `denom` | [string](#string) |  | denom is the coin denom to query balances for. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryBalanceResponse"></a>
+
+### QueryBalanceResponse
+QueryBalanceResponse is the response type for the Query/Balance RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | balance is the balance of the coin. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryDenomMetadataRequest"></a>
+
+### QueryDenomMetadataRequest
+QueryDenomMetadataRequest is the request type for the Query/DenomMetadata RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | denom is the coin denom to query the metadata for. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryDenomMetadataResponse"></a>
+
+### QueryDenomMetadataResponse
+QueryDenomMetadataResponse is the response type for the Query/DenomMetadata RPC
+method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `metadata` | [Metadata](#cosmos.bank.v1beta1.Metadata) |  | metadata describes and provides all the client information for the requested token. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryDenomsMetadataRequest"></a>
+
+### QueryDenomsMetadataRequest
+QueryDenomsMetadataRequest is the request type for the Query/DenomsMetadata RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryDenomsMetadataResponse"></a>
+
+### QueryDenomsMetadataResponse
+QueryDenomsMetadataResponse is the response type for the Query/DenomsMetadata RPC
+method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `metadatas` | [Metadata](#cosmos.bank.v1beta1.Metadata) | repeated | metadata provides the client information for all the registered tokens. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest defines the request type for querying x/bank parameters.
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse defines the response type for querying x/bank parameters.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#cosmos.bank.v1beta1.Params) |  |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QuerySupplyOfRequest"></a>
+
+### QuerySupplyOfRequest
+QuerySupplyOfRequest is the request type for the Query/SupplyOf RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | denom is the coin denom to query balances for. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QuerySupplyOfResponse"></a>
+
+### QuerySupplyOfResponse
+QuerySupplyOfResponse is the response type for the Query/SupplyOf RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | amount is the supply of the coin. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryTotalSupplyRequest"></a>
+
+### QueryTotalSupplyRequest
+QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC
+method.
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryTotalSupplyResponse"></a>
+
+### QueryTotalSupplyResponse
+QueryTotalSupplyResponse is the response type for the Query/TotalSupply RPC
+method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply is the supply of the coins |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.bank.v1beta1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Balance` | [QueryBalanceRequest](#cosmos.bank.v1beta1.QueryBalanceRequest) | [QueryBalanceResponse](#cosmos.bank.v1beta1.QueryBalanceResponse) | Balance queries the balance of a single coin for a single account. | GET|/cosmos/bank/v1beta1/balances/{address}/{denom}|
+| `AllBalances` | [QueryAllBalancesRequest](#cosmos.bank.v1beta1.QueryAllBalancesRequest) | [QueryAllBalancesResponse](#cosmos.bank.v1beta1.QueryAllBalancesResponse) | AllBalances queries the balance of all coins for a single account. | GET|/cosmos/bank/v1beta1/balances/{address}|
+| `TotalSupply` | [QueryTotalSupplyRequest](#cosmos.bank.v1beta1.QueryTotalSupplyRequest) | [QueryTotalSupplyResponse](#cosmos.bank.v1beta1.QueryTotalSupplyResponse) | TotalSupply queries the total supply of all coins. | GET|/cosmos/bank/v1beta1/supply|
+| `SupplyOf` | [QuerySupplyOfRequest](#cosmos.bank.v1beta1.QuerySupplyOfRequest) | [QuerySupplyOfResponse](#cosmos.bank.v1beta1.QuerySupplyOfResponse) | SupplyOf queries the supply of a single coin. | GET|/cosmos/bank/v1beta1/supply/{denom}|
+| `Params` | [QueryParamsRequest](#cosmos.bank.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.bank.v1beta1.QueryParamsResponse) | Params queries the parameters of x/bank module. | GET|/cosmos/bank/v1beta1/params|
+| `DenomMetadata` | [QueryDenomMetadataRequest](#cosmos.bank.v1beta1.QueryDenomMetadataRequest) | [QueryDenomMetadataResponse](#cosmos.bank.v1beta1.QueryDenomMetadataResponse) | DenomsMetadata queries the client metadata of a given coin denomination. | GET|/cosmos/bank/v1beta1/denoms_metadata/{denom}|
+| `DenomsMetadata` | [QueryDenomsMetadataRequest](#cosmos.bank.v1beta1.QueryDenomsMetadataRequest) | [QueryDenomsMetadataResponse](#cosmos.bank.v1beta1.QueryDenomsMetadataResponse) | DenomsMetadata queries the client metadata for all registered coin denominations. | GET|/cosmos/bank/v1beta1/denoms_metadata|
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/bank/v1beta1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/bank/v1beta1/tx.proto
+
+
+
+<a name="cosmos.bank.v1beta1.MsgMultiSend"></a>
+
+### MsgMultiSend
+MsgMultiSend represents an arbitrary multi-in, multi-out send message.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `inputs` | [Input](#cosmos.bank.v1beta1.Input) | repeated |  |
+| `outputs` | [Output](#cosmos.bank.v1beta1.Output) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.MsgMultiSendResponse"></a>
+
+### MsgMultiSendResponse
+MsgMultiSendResponse defines the Msg/MultiSend response type.
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.MsgSend"></a>
+
+### MsgSend
+MsgSend represents a message to send coins from one account to another.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `from_address` | [string](#string) |  |  |
+| `to_address` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.MsgSendResponse"></a>
+
+### MsgSendResponse
+MsgSendResponse defines the Msg/Send response type.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.bank.v1beta1.Msg"></a>
+
+### Msg
+Msg defines the bank Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Send` | [MsgSend](#cosmos.bank.v1beta1.MsgSend) | [MsgSendResponse](#cosmos.bank.v1beta1.MsgSendResponse) | Send defines a method for sending coins from one account to another account. | |
+| `MultiSend` | [MsgMultiSend](#cosmos.bank.v1beta1.MsgMultiSend) | [MsgMultiSendResponse](#cosmos.bank.v1beta1.MsgMultiSendResponse) | MultiSend defines a method for sending coins from some accounts to other accounts. | |
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/base/kv/v1beta1/kv.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## ibc/core/commitment/v1/commitment.proto

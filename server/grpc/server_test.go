@@ -21,7 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	authclient "github.com/cosmos/cosmos-sdk/x/authn/client"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 

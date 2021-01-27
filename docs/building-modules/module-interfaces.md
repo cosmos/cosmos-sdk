@@ -18,9 +18,9 @@ One of the main interfaces for an application is the [command-line interface](..
 
 [Transactions](../core/transactions.md) are created by users to wrap messages that trigger state changes when they get included in a valid block. Transaction commands typically have their own `tx.go` file in the module `./x/moduleName/client/cli` folder. The commands are specified in getter functions and include the name of the command.
 
-Here is an example from the `auth` module:
+Here is an example from the `authn` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/auth/client/cli/tx_sign.go#L160-L194
++++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/authn/client/cli/tx_sign.go#L160-L194
 
 This getter function creates the command for the `Sign` transaction. It does the following:
 
@@ -37,17 +37,17 @@ This getter function creates the command for the `Sign` transaction. It does the
   - Depending on what the user wants, the transaction is either generated offline or signed and broadcasted to the preconfigured node using `GenerateOrBroadcastMsgs()`.
 - **Flags.** Add any [flags](#flags) to the command. All transaction commands have flags to provide additional information from the user (e.g. amount of fees they are willing to pay). These _persistent_ [transaction flags](../interfaces/cli.md#flags) can be added to a higher-level command so that they apply to all transaction commands.
 
-Finally, the module needs to have a `GetTxCmd()`, which aggregates all of the transaction commands of the module. Often, each command getter function has its own file in the module's `cli` folder, and a separate `tx.go` file contains `GetTxCmd()`. Application developers wishing to include the module's transactions will call this function to add them as subcommands in their CLI. Here is the `auth` `GetTxCmd()` function, which adds the `Sign`, `MultiSign`, `ValidateSignatures` and `SignBatch` commands.
+Finally, the module needs to have a `GetTxCmd()`, which aggregates all of the transaction commands of the module. Often, each command getter function has its own file in the module's `cli` folder, and a separate `tx.go` file contains `GetTxCmd()`. Application developers wishing to include the module's transactions will call this function to add them as subcommands in their CLI. Here is the `authn` `GetTxCmd()` function, which adds the `Sign`, `MultiSign`, `ValidateSignatures` and `SignBatch` commands.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/351192aa0b52a42b66ff06e81cfa7a9e26667a7f/x/auth/client/cli/tx.go#L10-L26
++++ https://github.com/cosmos/cosmos-sdk/blob/351192aa0b52a42b66ff06e81cfa7a9e26667a7f/x/authn/client/cli/tx.go#L10-L26
 
 An application using this module likely adds `auth` module commands to its root `TxCmd` command by calling `txCmd.AddCommand(authModuleClient.GetTxCmd())`.
 
 ### Query Commands
 
-[Queries](./messages-and-queries.md#queries) allow users to gather information about the application or network state; they are routed by the application and processed by the module in which they are defined. Query commands typically have their own `query.go` file in the module `x/moduleName/client/cli` folder. Like transaction commands, they are specified in getter functions. Here is an example of a query command from the `auth` module:
+[Queries](./messages-and-queries.md#queries) allow users to gather information about the application or network state; they are routed by the application and processed by the module in which they are defined. Query commands typically have their own `query.go` file in the module `x/moduleName/client/cli` folder. Like transaction commands, they are specified in getter functions. Here is an example of a query command from the `authn` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/x/auth/client/cli/query.go#L76-L108
++++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/x/authn/client/cli/query.go#L76-L108
 
 This query returns the account at a given address. The getter function does the following:
 
@@ -99,9 +99,9 @@ In addition to providing an ABCI query pathway, modules [custom queries](./messa
 
 In order to do that, module should implement `RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux)` on `AppModuleBasic` to wire the client gRPC requests to the correct handler inside the module.
 
-Here's an example from the `auth` module:
+Here's an example from the `authn` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/auth/module.go#L69-L72
++++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/authn/module.go#L69-L72
 
 ## gRPC-gateway REST
 
@@ -109,19 +109,19 @@ Applications typically support web services that use HTTP requests (e.g. a web w
 
 [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway) translates REST calls into gRPC calls, which might be useful for clients that do not use gRPC.
 
-Modules that want to expose REST queries should add `google.api.http` annotations to their `rpc` methods, such as in the example below from the `auth` module:
+Modules that want to expose REST queries should add `google.api.http` annotations to their `rpc` methods, such as in the example below from the `authn` module:
 
 ```proto
 // Query defines the gRPC querier service.
 service Query{
     // Account returns account details based on address.
     rpc Account (QueryAccountRequest) returns (QueryAccountResponse) {
-      option (google.api.http).get = "/cosmos/auth/v1beta1/accounts/{address}";
+      option (google.api.http).get = "/cosmos/authn/v1beta1/accounts/{address}";
     }
 
     // Params queries all parameters.
     rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
-      option (google.api.http).get = "/cosmos/auth/v1beta1/params";
+      option (google.api.http).get = "/cosmos/authn/v1beta1/params";
     }
 }
 ```

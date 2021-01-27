@@ -10,9 +10,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authclient "github.com/cosmos/cosmos-sdk/x/authn/client"
+	"github.com/cosmos/cosmos-sdk/x/authn/legacy/legacytx"
+	authtypes "github.com/cosmos/cosmos-sdk/x/authn/types"
 	bankrest "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )

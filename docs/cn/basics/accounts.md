@@ -68,7 +68,7 @@ Cosmos SDK 使用一套称之为 [BIP32](https://github.com/bitcoin/bips/blob/ma
 
 - `Sign(name, passphrase string, msg []byte) ([]byte, crypto.PubKey, error)` 对 `message` 字节进行签名。需要做一些准备工作将 `message` 编码成 []byte 类型，可以参考 `auth` 模块 `message` 准备的例子。注意，SDK 上面没有实现签名的验证，签名验证被推迟到[`anteHandler`](#antehandler)中进行
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/auth/types/txbuilder.go#L176-L209
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/authn/types/txbuilder.go#L176-L209
 
 - `CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, seed string, err error)`创建一个新的助记符并打印在日志里，但是**并不保存在磁盘上**
 - `CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error)` 基于[`bip44 path`](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki)创建一个新的账户并将其保存在磁盘上。注意私钥在[保存前用密码加密](https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/crypto/keys/mintkey/mintkey.go),**永远不会储存未加密的私钥**.在这个方法的上下文中, `account`和 `address` 参数指的是 BIP44 派生路径的段(例如`0`, `1`, `2`, ...)用于从助记符派生出私钥和公钥(注意：给相同的助记符和 `account` 将派生出相同的私钥，给相同的 `account` 和 `address` 也会派生出相同的公钥和 `Address`)。最后注意 `CreateAccount` 方法使用在 [Tendermint library](https://github.com/tendermint/tendermint/tree/bc572217c07b90ad9cee851f193aaa8e9557cbc7/crypto/secp256k1) 中的 `secp256k1` 派生出公私钥和 `Address`。总之，这个方法是用来创建用户的钥匙和地址的，并不是共识秘钥，参见[`Addresses`](#addresses) 获取更多信息

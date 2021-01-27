@@ -31,9 +31,9 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authclient "github.com/cosmos/cosmos-sdk/x/authn/client"
+	authtx "github.com/cosmos/cosmos-sdk/x/authn/tx"
+	auth "github.com/cosmos/cosmos-sdk/x/authn/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 

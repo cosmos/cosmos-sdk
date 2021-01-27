@@ -76,9 +76,9 @@ For more, see an example of `keeper`'s [methods implementation from the `staking
 
 The [module `KVStore`](../core/store.md#kvstore-and-commitkvstore-interfaces) also provides an `Iterator()` method which returns an `Iterator` object to iterate over a domain of keys.
 
-This is an example from the `auth` module to iterate accounts:
+This is an example from the `authn` module to iterate accounts:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/bf8809ef9840b4f5369887a38d8345e2380a567f/x/auth/keeper/account.go#L70-L83
++++ https://github.com/cosmos/cosmos-sdk/blob/bf8809ef9840b4f5369887a38d8345e2380a567f/x/authn/keeper/account.go#L70-L83
 
 ## Next {hide}
 

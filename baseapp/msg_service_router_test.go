@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authnsigning "github.com/cosmos/cosmos-sdk/x/authn/signing"
 )
 
 func TestRegisterMsgService(t *testing.T) {
@@ -102,7 +102,7 @@ func TestMsgService(t *testing.T) {
 	require.NoError(t, err)
 
 	// Second round: all signer infos are set, so each signer can sign.
-	signerData := authsigning.SignerData{
+	signerData := authnsigning.SignerData{
 		ChainID:       "test",
 		AccountNumber: 0,
 		Sequence:      0,

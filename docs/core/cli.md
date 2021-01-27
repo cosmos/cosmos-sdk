@@ -72,7 +72,7 @@ The root-level `status` and `keys` subcommands are common across most applicatio
 
 This `txCmd` function adds all the transaction available to end-users for the application. This typically includes:
 
-- **Sign command** from the [`auth`](../../x/auth/spec/README.md) module that signs messages in a transaction. To enable multisig, add the `auth` module's `MultiSign` command. Since every transaction requires some sort of signature in order to be valid, thithe signing command is necessary for every application.
+- **Sign command** from the [`auth`](../../x/authn/spec/README.md) module that signs messages in a transaction. To enable multisig, add the `auth` module's `MultiSign` command. Since every transaction requires some sort of signature in order to be valid, thithe signing command is necessary for every application.
 - **Broadcast command** from the SDK client tools, to broadcast transactions.
 - **All [module transaction commands](../building-modules/module-interfaces.md#transaction-commands)** the application is dependent on, retrieved by using the [basic module manager's](../building-modules/module-manager.md#basic-manager) `AddTxCommands()` function.
 

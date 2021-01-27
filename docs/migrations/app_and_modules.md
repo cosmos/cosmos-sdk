@@ -36,7 +36,7 @@ The rule of thumb is that any object that needs to be serialized (into binary or
 - objects that are stored in state. This is because the SDK stores the binary representation of these types in state.
 - genesis types. These are used when importing and exporting state snapshots during chain upgrades.
 
-Let's have a look at [x/auth's](../../x/auth/spec/README.md) `BaseAccount` objects, which are stored in a state. The migration looks like:
+Let's have a look at [x/auth's](../../x/authn/spec/README.md) `BaseAccount` objects, which are stored in a state. The migration looks like:
 
 ```diff
 // We were definining `MsgSend` as a Go struct in v0.39.
@@ -67,7 +67,7 @@ You might have noticed that the `PubKey` interface in v0.39's `BaseAccount` has 
 
 Once all your Protobuf messages are defined, use the `make proto-gen` command defined in the [tooling section](#tooling) to generate Go structs. These structs will be generated into `*.pb.go` files. As a quick example, here is the generated Go struct for the Protobuf BaseAccount we defined above:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/x/auth/types/auth.pb.go#L28-L36
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/x/authn/types/auth.pb.go#L28-L36
 
 There might be some back and forth removing old Go structs/interfaces and defining new Protobuf messages before your Go app compiles and your tests pass.
 

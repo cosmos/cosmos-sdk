@@ -24,7 +24,7 @@ in for Tendermint and other lower-level libraries (eg. [IAVL](https://github.com
 
 ### Modules
 
-- [`x/auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth)
+- [`x/authn`](https://github.com/cosmos/cosmos-sdk/tree/master/x/authn)
 - [`x/bank`](https://github.com/cosmos/cosmos-sdk/tree/master/x/bank)
 - [`x/capability`](https://github.com/cosmos/cosmos-sdk/tree/master/x/capability)
 - [`x/staking`](https://github.com/cosmos/cosmos-sdk/tree/master/x/staking)
@@ -44,7 +44,7 @@ the code.
 
 - Integer operations on tx parameters, especially `sdk.Int` / `sdk.Dec`
 - Gas calculation & parameter choices
-- Tx signature verification (see [`x/auth/ante`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/ante))
+- Tx signature verification (see [`x/authn/ante`](https://github.com/cosmos/cosmos-sdk/tree/master/x/authn/ante))
 - Possible Node DoS vectors (perhaps due to gas weighting / non constant timing)
 
 ### Handling private keys

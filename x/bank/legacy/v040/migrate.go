@@ -1,7 +1,7 @@
 package v040
 
 import (
-	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v039"
+	v039auth "github.com/cosmos/cosmos-sdk/x/authn/legacy/v039"
 	v036supply "github.com/cosmos/cosmos-sdk/x/bank/legacy/v036"
 	v038bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v038"
 	v040bank "github.com/cosmos/cosmos-sdk/x/bank/types"

@@ -94,7 +94,7 @@ New [telemetry metrics](../core/telemetry.md) can be created from `msgServer` me
 
 This is an example from the `x/auth/vesting` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/auth/vesting/msg_server.go#L73-L85
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/authn/vesting/msg_server.go#L73-L85
 
 ## Next {hide}
 

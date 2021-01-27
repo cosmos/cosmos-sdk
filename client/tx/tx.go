@@ -19,8 +19,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authsigning "github.com/cosmos/cosmos-sdk/x/authn/signing"
+	authtx "github.com/cosmos/cosmos-sdk/x/authn/tx"
 )
 
 // GenerateOrBroadcastTxCLI will either generate and print and unsigned transaction

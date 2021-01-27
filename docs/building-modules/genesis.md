@@ -25,13 +25,13 @@ Next we present the main genesis-related methods that need to be implemented by 
 
 The `DefaultGenesis()` method is a simple method that calls the constructor function for `GenesisState` with the default value for each parameter. See an example from the `auth` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/auth/module.go#L48-L52
++++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/authn/module.go#L48-L52
 
 ### `ValidateGenesis`
 
 The `ValidateGenesis(genesisState GenesisState)` method is called to verify that the provided `genesisState` is correct. It should perform validity checks on each of the parameter listed in `GenesisState`. See an example from the `auth` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/auth/types/genesis.go#L57-L70
++++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/authn/types/genesis.go#L57-L70
 
 ## Other Genesis Methods
 
@@ -45,7 +45,7 @@ The [module manager](./module-manager.md#manager) of the application is responsi
 
 See an example of `InitGenesis` from the `auth` module
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/auth/genesis.go#L13-L28
++++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/authn/genesis.go#L13-L28
 
 ### `ExportGenesis`
 
@@ -53,7 +53,7 @@ The `ExportGenesis` method is executed whenever an export of the state is made. 
 
 See an example of `ExportGenesis` from the `auth` module.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/auth/genesis.go#L31-L42
++++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/authn/genesis.go#L31-L42
 
 ## Next {hide}
 

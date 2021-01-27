@@ -3,8 +3,8 @@ package v038
 import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	v036auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v036"
-	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v038"
+	v036auth "github.com/cosmos/cosmos-sdk/x/authn/legacy/v036"
+	v038auth "github.com/cosmos/cosmos-sdk/x/authn/legacy/v038"
 	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v036"
 	v038distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v038"
 	v036genaccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v036"

@@ -14,9 +14,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types"
 	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	"github.com/cosmos/cosmos-sdk/x/authn/legacy/legacytx"
+	"github.com/cosmos/cosmos-sdk/x/authn/signing"
+	"github.com/cosmos/cosmos-sdk/x/authn/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 

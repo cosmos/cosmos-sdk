@@ -3,8 +3,8 @@ package v039
 import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v038"
-	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v039"
+	v038auth "github.com/cosmos/cosmos-sdk/x/authn/legacy/v038"
+	v039auth "github.com/cosmos/cosmos-sdk/x/authn/legacy/v039"
 	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v036"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v036"

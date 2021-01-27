@@ -75,7 +75,7 @@ type AnteHandler func(ctx Context, tx Tx, simulate bool) (newCtx Context, result
 
   这使开发人员可以使用各种类型的应用程序进行交易。 在默认的 auth 模块中，标准事务类型为 StdTx：
 
-  +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/auth/types/stdtx.go#L22-L29
+  +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/authn/types/stdtx.go#L22-L29
 
 - 验证交易中包含的每个 [`message`](../building-modules/messages-and-queries.md#messages) 的签名，每个 `message` 应该由一个或多个发送者签名，这些签名必须在 `anteHandler` 中进行验证.
 - 在 `CheckTx` 期间，验证 `transaction` 提供的 `gas prices` 是否大于本地配置 `min-gas-prices`(提醒一下，`gas-prices` 可以从以下等式中扣除`fees = gas * gas-prices`)`min-gas-prices` 是每个独立节点的本地配置，在`CheckTx`期间用于丢弃未提供最低费用的交易。这确保了内存池不会被垃圾交易填充.

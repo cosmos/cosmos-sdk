@@ -164,7 +164,7 @@ In the current `TxBuilder`'s API, both steps are done using the same method: `Se
 import (
     cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	xauthsigning "github.com/cosmos/cosmos-sdk/x/authn/signing"
 )
 
 func sendTx() error {
@@ -296,7 +296,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authtx "github.com/cosmos/cosmos-sdk/x/authn/tx"
 )
 
 func simulateTx() error {

@@ -99,16 +99,7 @@ in protobuf. We will also create multisig public keys without amino addresses to
 
 ### Hash Function Choice
 
-We propose to use [blake2b](https://www.blake2.net/) as a hash function choice:
-+ The main arguments are speed and separating from `sha256` which is widely used
-  by miners and could potentially be used to find collisions.
-+ The function was in the final round of the 2012 NIST hash function competition.
-+ It's well studied with security covered in many academic papers.
-+ Faster than `sha2` on non ASICs chipsets.
-+ It's getting more traction in other blockchains (Pokadot, Sia, Zcash, ...). Related [zcash discussion](https://github.com/zcash/zcash/issues/706#issuecomment-187807410).
-+ It's already widely supported by all major programming languages.
-+ Cryptography consulting reviled no argument against `blake2b`
-
+As in other parts of the Cosmos SDK, we will use `sha256`.
 
 ### Simple Account Address
 
@@ -209,4 +200,3 @@ More specifically, any special account, with custom naming, must not have length
 ## References
 
 * [Notes](https://hackmd.io/_NGWI4xZSbKzj1BkCqyZMw) from consulting meeting with [Alan Szepieniec](https://scholar.google.be/citations?user=4LyZn8oAAAAJ&hl=en).
-* Blake2b security analysis: [1](https://eprint.iacr.org/2013/467), [2](https://eprint.iacr.org/2014/1012), [3](https://eprint.iacr.org/2015/515).

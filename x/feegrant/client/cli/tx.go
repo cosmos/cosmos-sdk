@@ -45,7 +45,7 @@ func GetTxCmd() *cobra.Command {
 // NewCmdFeeGrant returns a CLI command handler for creating a MsgGrantFeeAllowance transaction.
 func NewCmdFeeGrant() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant [granter] [grantee] [limit] or grant [granter] [grantee] [limit] [period] [periodLimit]",
+		Use:   "grant [granter] [grantee] [limit]",
 		Short: "Grant Fee allowance to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(
@@ -54,7 +54,7 @@ func NewCmdFeeGrant() *cobra.Command {
 
 Examples:
 %s tx %s grant cosmos1skjw... cosmos1skjw... 100stake --expiration 36000 or
-%s tx %s grant cosmos1skjw... cosmos1skjw... 100stake --period 3600 --periodlimit 10stake --expiration 36000
+%s tx %s grant cosmos1skjw... cosmos1skjw... 100stake --period 3600 --period-limit 10stake --expiration 36000
 				`, version.AppName, types.ModuleName, version.AppName, types.ModuleName,
 			),
 		),

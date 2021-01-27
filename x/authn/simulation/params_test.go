@@ -19,9 +19,9 @@ func TestParamChanges(t *testing.T) {
 		simValue    string
 		subspace    string
 	}{
-		{"auth/MaxMemoCharacters", "MaxMemoCharacters", "\"181\"", "auth"},
-		{"auth/TxSigLimit", "TxSigLimit", "\"7\"", "auth"},
-		{"auth/TxSizeCostPerByte", "TxSizeCostPerByte", "\"12\"", "auth"},
+		{"authn/MaxMemoCharacters", "MaxMemoCharacters", "\"181\"", "authn"},
+		{"authn/TxSigLimit", "TxSigLimit", "\"7\"", "authn"},
+		{"authn/TxSizeCostPerByte", "TxSizeCostPerByte", "\"12\"", "authn"},
 	}
 
 	paramChanges := simulation.ParamChanges(r)

@@ -4614,7 +4614,7 @@ paths:
           description: Invalid coin denomination
         '500':
           description: Internal Server Error
-  '/cosmos/auth/v1beta1/accounts/{address}':
+  '/cosmos/authn/v1beta1/accounts/{address}':
     get:
       summary: Account returns account details based on address.
       operationId: Account
@@ -4695,7 +4695,7 @@ paths:
               QueryAccountResponse is the response type for the Query/Account
               RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -4891,7 +4891,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/auth/v1beta1/params:
+  /cosmos/authn/v1beta1/params:
     get:
       summary: Params queries all parameters.
       operationId: AuthParams
@@ -4924,7 +4924,7 @@ paths:
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -5166,7 +5166,7 @@ paths:
 
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -5239,6 +5239,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/cosmos/bank/v1beta1/balances/{address}/{denom}':
@@ -5263,7 +5264,7 @@ paths:
               QueryBalanceResponse is the response type for the Query/Balance
               RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -5297,6 +5298,277 @@ paths:
           type: string
       tags:
         - Query
+  /cosmos/bank/v1beta1/denoms_metadata:
+    get:
+      summary: >-
+        DenomsMetadata queries the client metadata for all registered coin
+        denominations.
+      operationId: DenomsMetadata
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              metadatas:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    description:
+                      type: string
+                    denom_units:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          denom:
+                            type: string
+                            description: >-
+                              denom represents the string name of the given
+                              denom unit (e.g uatom).
+                          exponent:
+                            type: integer
+                            format: int64
+                            description: >-
+                              exponent represents power of 10 exponent that one
+                              must
+
+                              raise the base_denom to in order to equal the
+                              given DenomUnit's denom
+
+                              1 denom = 1^exponent base_denom
+
+                              (e.g. with a base_denom of uatom, one can create a
+                              DenomUnit of 'atom' with
+
+                              exponent = 6, thus: 1 atom = 10^6 uatom).
+                          aliases:
+                            type: array
+                            items:
+                              type: string
+                            title: >-
+                              aliases is a list of string aliases for the given
+                              denom
+                        description: |-
+                          DenomUnit represents a struct that describes a given
+                          denomination unit of the basic token.
+                      title: >-
+                        denom_units represents the list of DenomUnit's for a
+                        given coin
+                    base:
+                      type: string
+                      description: >-
+                        base represents the base denom (should be the DenomUnit
+                        with exponent = 0).
+                    display:
+                      type: string
+                      description: |-
+                        display indicates the suggested denom that should be
+                        displayed in clients.
+                  description: |-
+                    Metadata represents a struct that describes
+                    a basic token.
+                description: >-
+                  metadata provides the client information for all the
+                  registered tokens.
+              pagination:
+                description: pagination defines the pagination in the response.
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+            description: >-
+              QueryDenomsMetadataResponse is the response type for the
+              Query/DenomsMetadata RPC
+
+              method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+      tags:
+        - Query
+  '/cosmos/bank/v1beta1/denoms_metadata/{denom}':
+    get:
+      summary: DenomsMetadata queries the client metadata of a given coin denomination.
+      operationId: DenomMetadata
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              metadata:
+                description: >-
+                  metadata describes and provides all the client information for
+                  the requested token.
+                type: object
+                properties:
+                  description:
+                    type: string
+                  denom_units:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                          description: >-
+                            denom represents the string name of the given denom
+                            unit (e.g uatom).
+                        exponent:
+                          type: integer
+                          format: int64
+                          description: >-
+                            exponent represents power of 10 exponent that one
+                            must
+
+                            raise the base_denom to in order to equal the given
+                            DenomUnit's denom
+
+                            1 denom = 1^exponent base_denom
+
+                            (e.g. with a base_denom of uatom, one can create a
+                            DenomUnit of 'atom' with
+
+                            exponent = 6, thus: 1 atom = 10^6 uatom).
+                        aliases:
+                          type: array
+                          items:
+                            type: string
+                          title: >-
+                            aliases is a list of string aliases for the given
+                            denom
+                      description: |-
+                        DenomUnit represents a struct that describes a given
+                        denomination unit of the basic token.
+                    title: >-
+                      denom_units represents the list of DenomUnit's for a given
+                      coin
+                  base:
+                    type: string
+                    description: >-
+                      base represents the base denom (should be the DenomUnit
+                      with exponent = 0).
+                  display:
+                    type: string
+                    description: |-
+                      display indicates the suggested denom that should be
+                      displayed in clients.
+            description: >-
+              QueryDenomMetadataResponse is the response type for the
+              Query/DenomMetadata RPC
+
+              method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: denom
+          description: denom is the coin denom to query the metadata for.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /cosmos/bank/v1beta1/params:
     get:
       summary: Params queries the parameters of x/bank module.
@@ -5319,6 +5591,7 @@ paths:
                           type: string
                         enabled:
                           type: boolean
+                          format: boolean
                       description: >-
                         SendEnabled maps coin denom to a send_enabled status
                         (whether a denom is
@@ -5326,12 +5599,13 @@ paths:
                         sendable).
                   default_send_enabled:
                     type: boolean
+                    format: boolean
                 description: Params defines the parameters for the bank module.
             description: >-
               QueryParamsResponse defines the response type for querying x/bank
               parameters.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -5388,7 +5662,7 @@ paths:
 
               method
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -5433,7 +5707,7 @@ paths:
               QuerySupplyOfResponse is the response type for the Query/SupplyOf
               RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -6030,7 +6304,7 @@ paths:
               GetLatestBlockResponse is the response type for the
               Query/GetLatestBlock RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -6788,7 +7062,7 @@ paths:
               GetBlockByHeightResponse is the response type for the
               Query/GetBlockByHeight RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -7064,7 +7338,7 @@ paths:
               GetNodeInfoResponse is the request type for the Query/GetNodeInfo
               RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -7266,11 +7540,12 @@ paths:
             properties:
               syncing:
                 type: boolean
+                format: boolean
             description: >-
               GetSyncingResponse is the response type for the Query/GetSyncing
               RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -7686,7 +7961,7 @@ paths:
               GetLatestValidatorSetResponse is the response type for the
               Query/GetValidatorSetByHeight RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -7921,6 +8196,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Service
   '/cosmos/base/tendermint/v1beta1/validatorsets/{height}':
@@ -8149,7 +8425,7 @@ paths:
               GetValidatorSetByHeightResponse is the response type for the
               Query/GetValidatorSetByHeight RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -8389,6 +8665,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Service
   /cosmos/distribution/v1beta1/community_pool:
@@ -8426,7 +8703,7 @@ paths:
 
               RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -8513,7 +8790,7 @@ paths:
               QueryDelegationTotalRewardsResponse is the response type for the
               Query/DelegationTotalRewards RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -8575,7 +8852,7 @@ paths:
               QueryDelegationRewardsResponse is the response type for the
               Query/DelegationRewards RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -8630,7 +8907,7 @@ paths:
               QueryDelegatorValidatorsResponse is the response type for the
               Query/DelegatorValidators RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -8676,7 +8953,7 @@ paths:
               QueryDelegatorWithdrawAddressResponse is the response type for the
               Query/DelegatorWithdrawAddress RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -8727,11 +9004,12 @@ paths:
                     type: string
                   withdraw_addr_enabled:
                     type: boolean
+                    format: boolean
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -8790,7 +9068,7 @@ paths:
               QueryValidatorCommissionResponse is the response type for the
               Query/ValidatorCommission RPC method
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -8862,7 +9140,7 @@ paths:
 
               Query/ValidatorOutstandingRewards RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -8944,7 +9222,7 @@ paths:
               QueryValidatorSlashesResponse is the response type for the
               Query/ValidatorSlashes RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -9033,6 +9311,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   /cosmos/evidence/v1beta1/evidence:
@@ -9247,7 +9526,7 @@ paths:
 
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -9482,6 +9761,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/cosmos/evidence/v1beta1/evidence/{evidence_hash}':
@@ -9565,7 +9845,7 @@ paths:
               QueryEvidenceResponse is the response type for the Query/Evidence
               RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -9835,7 +10115,7 @@ paths:
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -10326,7 +10606,7 @@ paths:
 
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -10597,6 +10877,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/cosmos/gov/v1beta1/proposals/{proposal_id}':
@@ -10865,7 +11146,7 @@ paths:
               QueryProposalResponse is the response type for the Query/Proposal
               RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -11127,7 +11408,7 @@ paths:
               QueryDepositsResponse is the response type for the Query/Deposits
               RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -11368,6 +11649,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}':
@@ -11412,7 +11694,7 @@ paths:
               QueryDepositResponse is the response type for the Query/Deposit
               RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -11640,7 +11922,7 @@ paths:
               QueryTallyResultResponse is the response type for the Query/Tally
               RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -11903,7 +12185,7 @@ paths:
               QueryVotesResponse is the response type for the Query/Votes RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -12144,6 +12426,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}':
@@ -12187,7 +12470,7 @@ paths:
               QueryVoteResponse is the response type for the Query/Vote RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -12409,7 +12692,7 @@ paths:
               QueryAnnualProvisionsResponse is the response type for the
               Query/AnnualProvisions RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -12452,7 +12735,7 @@ paths:
 
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -12512,7 +12795,7 @@ paths:
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -12561,7 +12844,7 @@ paths:
               QueryParamsResponse is response type for the Query/Params RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -12629,7 +12912,7 @@ paths:
               QueryParamsResponse is the response type for the Query/Params RPC
               method
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -12673,29 +12956,43 @@ paths:
                       type: string
                       format: int64
                       title: >-
-                        height at which validator was first a candidate OR was
+                        Height at which validator was first a candidate OR was
                         unjailed
                     index_offset:
                       type: string
                       format: int64
-                      title: index offset into signed block bit array
+                      description: >-
+                        Index which is incremented each time the validator was a
+                        bonded
+
+                        in a block and may have signed a precommit or not. This
+                        in conjunction with the
+
+                        `SignedBlocksWindow` param determines the index in the
+                        `MissedBlocksBitArray`.
                     jailed_until:
                       type: string
                       format: date-time
-                      title: timestamp validator cannot be unjailed until
+                      description: >-
+                        Timestamp until which the validator is jailed due to
+                        liveness downtime.
                     tombstoned:
                       type: boolean
-                      title: >-
-                        whether or not a validator has been tombstoned (killed
-                        out of validator
+                      format: boolean
+                      description: >-
+                        Whether or not a validator has been tombstoned (killed
+                        out of validator set). It is set
 
-                        set)
+                        once the validator commits an equivocation or for any
+                        other configured misbehiavor.
                     missed_blocks_counter:
                       type: string
                       format: int64
-                      title: >-
-                        missed blocks counter (to avoid scanning the array every
-                        time)
+                      description: >-
+                        A counter kept to avoid unnecessary array reads.
+
+                        Note that `Sum(MissedBlocksBitArray)` always equals
+                        `MissedBlocksCounter`.
                   description: >-
                     ValidatorSigningInfo defines a validator's signing info for
                     monitoring their
@@ -12735,7 +13032,7 @@ paths:
 
               method
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -12803,6 +13100,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/cosmos/slashing/v1beta1/signing_infos/{cons_address}':
@@ -12827,29 +13125,43 @@ paths:
                     type: string
                     format: int64
                     title: >-
-                      height at which validator was first a candidate OR was
+                      Height at which validator was first a candidate OR was
                       unjailed
                   index_offset:
                     type: string
                     format: int64
-                    title: index offset into signed block bit array
+                    description: >-
+                      Index which is incremented each time the validator was a
+                      bonded
+
+                      in a block and may have signed a precommit or not. This in
+                      conjunction with the
+
+                      `SignedBlocksWindow` param determines the index in the
+                      `MissedBlocksBitArray`.
                   jailed_until:
                     type: string
                     format: date-time
-                    title: timestamp validator cannot be unjailed until
+                    description: >-
+                      Timestamp until which the validator is jailed due to
+                      liveness downtime.
                   tombstoned:
                     type: boolean
-                    title: >-
-                      whether or not a validator has been tombstoned (killed out
-                      of validator
+                    format: boolean
+                    description: >-
+                      Whether or not a validator has been tombstoned (killed out
+                      of validator set). It is set
 
-                      set)
+                      once the validator commits an equivocation or for any
+                      other configured misbehiavor.
                   missed_blocks_counter:
                     type: string
                     format: int64
-                    title: >-
-                      missed blocks counter (to avoid scanning the array every
-                      time)
+                    description: >-
+                      A counter kept to avoid unnecessary array reads.
+
+                      Note that `Sum(MissedBlocksBitArray)` always equals
+                      `MissedBlocksCounter`.
                 description: >-
                   ValidatorSigningInfo defines a validator's signing info for
                   monitoring their
@@ -12861,7 +13173,7 @@ paths:
 
               method
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -12970,7 +13282,7 @@ paths:
               QueryDelegatorDelegationsResponse is response type for the
               Query/DelegatorDelegations RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -13210,6 +13522,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/cosmos/staking/v1beta1/delegators/{delegator_addr}/redelegations':
@@ -13323,7 +13636,7 @@ paths:
 
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -13573,6 +13886,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/cosmos/staking/v1beta1/delegators/{delegator_addr}/unbonding_delegations':
@@ -13645,7 +13959,7 @@ paths:
 
               Query/UnbondingDelegatorDelegations RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -13885,6 +14199,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators':
@@ -14085,6 +14400,7 @@ paths:
                             }
                     jailed:
                       type: boolean
+                      format: boolean
                     status:
                       type: string
                       enum:
@@ -14195,7 +14511,7 @@ paths:
               QueryDelegatorValidatorsResponse is response type for the
               Query/DelegatorValidators RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -14435,6 +14751,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators/{validator_addr}':
@@ -14632,6 +14949,7 @@ paths:
                           }
                   jailed:
                     type: boolean
+                    format: boolean
                   status:
                     type: string
                     enum:
@@ -14700,7 +15018,7 @@ paths:
               QueryDelegatorValidatorResponse response type for the
               Query/DelegatorValidator RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -15179,6 +15497,7 @@ paths:
                                 }
                         jailed:
                           type: boolean
+                          format: boolean
                         status:
                           type: string
                           enum:
@@ -15272,7 +15591,7 @@ paths:
 
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -15500,7 +15819,7 @@ paths:
               QueryParamsResponse is response type for the Query/Params RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -15710,7 +16029,7 @@ paths:
                     type: string
             description: QueryPoolResponse is response type for the Query/Pool RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -16096,6 +16415,7 @@ paths:
                             }
                     jailed:
                       type: boolean
+                      format: boolean
                     status:
                       type: string
                       enum:
@@ -16206,7 +16526,7 @@ paths:
               QueryValidatorsResponse is response type for the Query/Validators
               RPC method
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -16446,6 +16766,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/cosmos/staking/v1beta1/validators/{validator_addr}':
@@ -16641,6 +16962,7 @@ paths:
                           }
                   jailed:
                     type: boolean
+                    format: boolean
                   status:
                     type: string
                     enum:
@@ -16709,7 +17031,7 @@ paths:
               QueryValidatorResponse is response type for the Query/Validator
               RPC method
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -16980,7 +17302,7 @@ paths:
               QueryValidatorDelegationsResponse is response type for the
               Query/ValidatorDelegations RPC method
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -17220,6 +17542,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}':
@@ -17274,7 +17597,7 @@ paths:
               QueryDelegationResponse is response type for the Query/Delegation
               RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -17519,7 +17842,7 @@ paths:
 
               RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -17788,7 +18111,7 @@ paths:
 
               Query/ValidatorUnbondingDelegations RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -18028,6 +18351,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   /cosmos/tx/v1beta1/simulate:
@@ -18092,6 +18416,7 @@ paths:
                                 format: byte
                               index:
                                 type: boolean
+                                format: boolean
                             description: >-
                               EventAttribute is a single key-value pair,
                               associated with an event.
@@ -18112,7 +18437,7 @@ paths:
               SimulateResponse is the response type for the
               Service.SimulateRPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -18318,7 +18643,7 @@ paths:
           schema:
             $ref: '#/definitions/cosmos.tx.v1beta1.GetTxsEventResponse'
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -18561,6 +18886,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Service
     post:
@@ -18741,7 +19067,7 @@ paths:
               BroadcastTxResponse is the response type for the
               Service.BroadcastTx method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -18976,7 +19302,7 @@ paths:
           schema:
             $ref: '#/definitions/cosmos.tx.v1beta1.GetTxResponse'
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -19192,7 +19518,7 @@ paths:
 
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -19641,7 +19967,7 @@ paths:
 
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -20022,7 +20348,7 @@ paths:
 
               RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -20370,7 +20696,7 @@ paths:
               QueryChannelsResponse is the response type for the Query/Channels
               RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -20605,6 +20931,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}':
@@ -20731,7 +21058,7 @@ paths:
 
               proof was retrieved.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -21169,7 +21496,7 @@ paths:
               QueryChannelClientStateResponse is the Response type for the
               Query/QueryChannelClientState RPC method
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -21592,7 +21919,7 @@ paths:
               QueryChannelClientStateResponse is the Response type for the
               Query/QueryChannelClientState RPC method
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -21856,7 +22183,7 @@ paths:
               QuerySequenceResponse is the request type for the
               Query/QueryNextSequenceReceiveResponse RPC method
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -22159,7 +22486,7 @@ paths:
               QueryPacketAcknowledgemetsResponse is the request type for the
               Query/QueryPacketAcknowledgements RPC method
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -22404,6 +22731,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acks/{sequence}':
@@ -22459,7 +22787,7 @@ paths:
 
               proof was retrieved
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -22766,7 +23094,7 @@ paths:
               QueryPacketCommitmentsResponse is the request type for the
               Query/QueryPacketCommitments RPC method
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -23011,6 +23339,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{packet_ack_sequences}/unreceived_acks':
@@ -23064,7 +23393,7 @@ paths:
               QueryUnreceivedAcksResponse is the response type for the
               Query/UnreceivedAcks RPC method
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -23326,7 +23655,7 @@ paths:
               QueryUnreceivedPacketsResponse is the response type for the
               Query/UnreceivedPacketCommitments RPC method
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -23591,7 +23920,7 @@ paths:
 
               retrieved
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -23812,6 +24141,7 @@ paths:
             properties:
               received:
                 type: boolean
+                format: boolean
                 title: success flag for if receipt exists
               proof:
                 type: string
@@ -23853,7 +24183,7 @@ paths:
 
               retrieved
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -24211,7 +24541,7 @@ paths:
               QueryConnectionChannelsResponse is the Response type for the
               Query/QueryConnectionChannels RPC method
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -24451,6 +24781,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   /ibc/client/v1beta1/params:
@@ -24478,7 +24809,7 @@ paths:
               QueryClientParamsResponse is the response type for the
               Query/ClientParams RPC method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -24904,7 +25235,7 @@ paths:
 
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -25139,6 +25470,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/ibc/core/client/v1beta1/client_states/{client_id}':
@@ -25363,7 +25695,7 @@ paths:
 
               which the proof was retrieved.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -25817,7 +26149,7 @@ paths:
               QueryConsensusStatesResponse is the response type for the
               Query/ConsensusStates RPC method
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -26057,6 +26389,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/ibc/core/client/v1beta1/consensus_states/{client_id}/revision/{revision_number}/height/{revision_height}':
@@ -26284,7 +26617,7 @@ paths:
 
               RPC method
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -26499,6 +26832,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/ibc/core/connection/v1beta1/client_connections/{client_id}':
@@ -26553,7 +26887,7 @@ paths:
               QueryClientConnectionsResponse is the response type for the
               Query/ClientConnections RPC method
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -26907,7 +27241,7 @@ paths:
 
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -27142,6 +27476,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/ibc/core/connection/v1beta1/connections/{connection_id}':
@@ -27285,7 +27620,7 @@ paths:
 
               which the proof was retrieved.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -27716,7 +28051,7 @@ paths:
               QueryConnectionClientStateResponse is the response type for the
               Query/ConnectionClientState RPC method
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -28134,7 +28469,7 @@ paths:
               QueryConnectionConsensusStateResponse is the response type for the
               Query/ConnectionConsensusState RPC method
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -28395,7 +28730,7 @@ paths:
 
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -28463,6 +28798,7 @@ paths:
           in: query
           required: false
           type: boolean
+          format: boolean
       tags:
         - Query
   '/ibc/applications/transfer/v1beta1/denom_traces/{hash}':
@@ -28497,7 +28833,7 @@ paths:
 
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -28542,6 +28878,7 @@ paths:
                 properties:
                   send_enabled:
                     type: boolean
+                    format: boolean
                     description: >-
                       send_enabled enables or disables all cross-chain token
                       transfers from this
@@ -28549,6 +28886,7 @@ paths:
                       chain.
                   receive_enabled:
                     type: boolean
+                    format: boolean
                     description: >-
                       receive_enabled enables or disables all cross-chain token
                       transfers to this
@@ -28558,7 +28896,7 @@ paths:
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
         default:
-          description: An unexpected error response.
+          description: An unexpected error response
           schema:
             type: object
             properties:
@@ -29862,7 +30200,7 @@ definitions:
             amount:
               type: string
               example: '50'
-  cosmos.auth.v1beta1.Params:
+  cosmos.authn.v1beta1.Params:
     type: object
     properties:
       max_memo_characters:
@@ -29881,7 +30219,7 @@ definitions:
         type: string
         format: uint64
     description: Params defines the parameters for the auth module.
-  cosmos.auth.v1beta1.QueryAccountResponse:
+  cosmos.authn.v1beta1.QueryAccountResponse:
     type: object
     properties:
       account:
@@ -29949,7 +30287,7 @@ definitions:
     description: >-
       QueryAccountResponse is the response type for the Query/Account RPC
       method.
-  cosmos.auth.v1beta1.QueryParamsResponse:
+  cosmos.authn.v1beta1.QueryParamsResponse:
     type: object
     properties:
       params:
@@ -30301,6 +30639,86 @@ definitions:
                   "@type": "type.googleapis.com/google.protobuf.Duration",
                   "value": "1.212s"
                 }
+  cosmos.bank.v1beta1.DenomUnit:
+    type: object
+    properties:
+      denom:
+        type: string
+        description: denom represents the string name of the given denom unit (e.g uatom).
+      exponent:
+        type: integer
+        format: int64
+        description: >-
+          exponent represents power of 10 exponent that one must
+
+          raise the base_denom to in order to equal the given DenomUnit's denom
+
+          1 denom = 1^exponent base_denom
+
+          (e.g. with a base_denom of uatom, one can create a DenomUnit of 'atom'
+          with
+
+          exponent = 6, thus: 1 atom = 10^6 uatom).
+      aliases:
+        type: array
+        items:
+          type: string
+        title: aliases is a list of string aliases for the given denom
+    description: |-
+      DenomUnit represents a struct that describes a given
+      denomination unit of the basic token.
+  cosmos.bank.v1beta1.Metadata:
+    type: object
+    properties:
+      description:
+        type: string
+      denom_units:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+              description: >-
+                denom represents the string name of the given denom unit (e.g
+                uatom).
+            exponent:
+              type: integer
+              format: int64
+              description: >-
+                exponent represents power of 10 exponent that one must
+
+                raise the base_denom to in order to equal the given DenomUnit's
+                denom
+
+                1 denom = 1^exponent base_denom
+
+                (e.g. with a base_denom of uatom, one can create a DenomUnit of
+                'atom' with
+
+                exponent = 6, thus: 1 atom = 10^6 uatom).
+            aliases:
+              type: array
+              items:
+                type: string
+              title: aliases is a list of string aliases for the given denom
+          description: |-
+            DenomUnit represents a struct that describes a given
+            denomination unit of the basic token.
+        title: denom_units represents the list of DenomUnit's for a given coin
+      base:
+        type: string
+        description: >-
+          base represents the base denom (should be the DenomUnit with exponent
+          = 0).
+      display:
+        type: string
+        description: |-
+          display indicates the suggested denom that should be
+          displayed in clients.
+    description: |-
+      Metadata represents a struct that describes
+      a basic token.
   cosmos.bank.v1beta1.Params:
     type: object
     properties:
@@ -30313,6 +30731,7 @@ definitions:
               type: string
             enabled:
               type: boolean
+              format: boolean
           description: >-
             SendEnabled maps coin denom to a send_enabled status (whether a
             denom is
@@ -30320,6 +30739,7 @@ definitions:
             sendable).
       default_send_enabled:
         type: boolean
+        format: boolean
     description: Params defines the parameters for the bank module.
   cosmos.bank.v1beta1.QueryAllBalancesResponse:
     type: object
@@ -30376,6 +30796,149 @@ definitions:
     description: >-
       QueryBalanceResponse is the response type for the Query/Balance RPC
       method.
+  cosmos.bank.v1beta1.QueryDenomMetadataResponse:
+    type: object
+    properties:
+      metadata:
+        description: >-
+          metadata describes and provides all the client information for the
+          requested token.
+        type: object
+        properties:
+          description:
+            type: string
+          denom_units:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                  description: >-
+                    denom represents the string name of the given denom unit
+                    (e.g uatom).
+                exponent:
+                  type: integer
+                  format: int64
+                  description: >-
+                    exponent represents power of 10 exponent that one must
+
+                    raise the base_denom to in order to equal the given
+                    DenomUnit's denom
+
+                    1 denom = 1^exponent base_denom
+
+                    (e.g. with a base_denom of uatom, one can create a DenomUnit
+                    of 'atom' with
+
+                    exponent = 6, thus: 1 atom = 10^6 uatom).
+                aliases:
+                  type: array
+                  items:
+                    type: string
+                  title: aliases is a list of string aliases for the given denom
+              description: |-
+                DenomUnit represents a struct that describes a given
+                denomination unit of the basic token.
+            title: denom_units represents the list of DenomUnit's for a given coin
+          base:
+            type: string
+            description: >-
+              base represents the base denom (should be the DenomUnit with
+              exponent = 0).
+          display:
+            type: string
+            description: |-
+              display indicates the suggested denom that should be
+              displayed in clients.
+    description: >-
+      QueryDenomMetadataResponse is the response type for the
+      Query/DenomMetadata RPC
+
+      method.
+  cosmos.bank.v1beta1.QueryDenomsMetadataResponse:
+    type: object
+    properties:
+      metadatas:
+        type: array
+        items:
+          type: object
+          properties:
+            description:
+              type: string
+            denom_units:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                    description: >-
+                      denom represents the string name of the given denom unit
+                      (e.g uatom).
+                  exponent:
+                    type: integer
+                    format: int64
+                    description: >-
+                      exponent represents power of 10 exponent that one must
+
+                      raise the base_denom to in order to equal the given
+                      DenomUnit's denom
+
+                      1 denom = 1^exponent base_denom
+
+                      (e.g. with a base_denom of uatom, one can create a
+                      DenomUnit of 'atom' with
+
+                      exponent = 6, thus: 1 atom = 10^6 uatom).
+                  aliases:
+                    type: array
+                    items:
+                      type: string
+                    title: aliases is a list of string aliases for the given denom
+                description: |-
+                  DenomUnit represents a struct that describes a given
+                  denomination unit of the basic token.
+              title: denom_units represents the list of DenomUnit's for a given coin
+            base:
+              type: string
+              description: >-
+                base represents the base denom (should be the DenomUnit with
+                exponent = 0).
+            display:
+              type: string
+              description: |-
+                display indicates the suggested denom that should be
+                displayed in clients.
+          description: |-
+            Metadata represents a struct that describes
+            a basic token.
+        description: >-
+          metadata provides the client information for all the registered
+          tokens.
+      pagination:
+        description: pagination defines the pagination in the response.
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+    description: >-
+      QueryDenomsMetadataResponse is the response type for the
+      Query/DenomsMetadata RPC
+
+      method.
   cosmos.bank.v1beta1.QueryParamsResponse:
     type: object
     properties:
@@ -30391,6 +30954,7 @@ definitions:
                   type: string
                 enabled:
                   type: boolean
+                  format: boolean
               description: >-
                 SendEnabled maps coin denom to a send_enabled status (whether a
                 denom is
@@ -30398,6 +30962,7 @@ definitions:
                 sendable).
           default_send_enabled:
             type: boolean
+            format: boolean
         description: Params defines the parameters for the bank module.
     description: >-
       QueryParamsResponse defines the response type for querying x/bank
@@ -30446,6 +31011,7 @@ definitions:
         type: string
       enabled:
         type: boolean
+        format: boolean
     description: |-
       SendEnabled maps coin denom to a send_enabled status (whether a denom is
       sendable).
@@ -30476,6 +31042,7 @@ definitions:
           If left empty it will default to a value to be set by each app.
       count_total:
         type: boolean
+        format: boolean
         description: >-
           count_total is set to true  to indicate that the result set should
           include
@@ -31918,6 +32485,7 @@ definitions:
     properties:
       syncing:
         type: boolean
+        format: boolean
     description: >-
       GetSyncingResponse is the response type for the Query/GetSyncing RPC
       method.
@@ -34780,6 +35348,7 @@ definitions:
         type: string
       withdraw_addr_enabled:
         type: boolean
+        format: boolean
     description: Params defines the set of params for the distribution module.
   cosmos.distribution.v1beta1.QueryCommunityPoolResponse:
     type: object
@@ -34910,6 +35479,7 @@ definitions:
             type: string
           withdraw_addr_enabled:
             type: boolean
+            format: boolean
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
   cosmos.distribution.v1beta1.QueryValidatorCommissionResponse:
     type: object
@@ -36625,26 +37195,41 @@ definitions:
           start_height:
             type: string
             format: int64
-            title: height at which validator was first a candidate OR was unjailed
+            title: Height at which validator was first a candidate OR was unjailed
           index_offset:
             type: string
             format: int64
-            title: index offset into signed block bit array
+            description: >-
+              Index which is incremented each time the validator was a bonded
+
+              in a block and may have signed a precommit or not. This in
+              conjunction with the
+
+              `SignedBlocksWindow` param determines the index in the
+              `MissedBlocksBitArray`.
           jailed_until:
             type: string
             format: date-time
-            title: timestamp validator cannot be unjailed until
+            description: >-
+              Timestamp until which the validator is jailed due to liveness
+              downtime.
           tombstoned:
             type: boolean
-            title: >-
-              whether or not a validator has been tombstoned (killed out of
-              validator
+            format: boolean
+            description: >-
+              Whether or not a validator has been tombstoned (killed out of
+              validator set). It is set
 
-              set)
+              once the validator commits an equivocation or for any other
+              configured misbehiavor.
           missed_blocks_counter:
             type: string
             format: int64
-            title: missed blocks counter (to avoid scanning the array every time)
+            description: >-
+              A counter kept to avoid unnecessary array reads.
+
+              Note that `Sum(MissedBlocksBitArray)` always equals
+              `MissedBlocksCounter`.
         description: >-
           ValidatorSigningInfo defines a validator's signing info for monitoring
           their
@@ -36668,26 +37253,41 @@ definitions:
             start_height:
               type: string
               format: int64
-              title: height at which validator was first a candidate OR was unjailed
+              title: Height at which validator was first a candidate OR was unjailed
             index_offset:
               type: string
               format: int64
-              title: index offset into signed block bit array
+              description: >-
+                Index which is incremented each time the validator was a bonded
+
+                in a block and may have signed a precommit or not. This in
+                conjunction with the
+
+                `SignedBlocksWindow` param determines the index in the
+                `MissedBlocksBitArray`.
             jailed_until:
               type: string
               format: date-time
-              title: timestamp validator cannot be unjailed until
+              description: >-
+                Timestamp until which the validator is jailed due to liveness
+                downtime.
             tombstoned:
               type: boolean
-              title: >-
-                whether or not a validator has been tombstoned (killed out of
-                validator
+              format: boolean
+              description: >-
+                Whether or not a validator has been tombstoned (killed out of
+                validator set). It is set
 
-                set)
+                once the validator commits an equivocation or for any other
+                configured misbehiavor.
             missed_blocks_counter:
               type: string
               format: int64
-              title: missed blocks counter (to avoid scanning the array every time)
+              description: >-
+                A counter kept to avoid unnecessary array reads.
+
+                Note that `Sum(MissedBlocksBitArray)` always equals
+                `MissedBlocksCounter`.
           description: >-
             ValidatorSigningInfo defines a validator's signing info for
             monitoring their
@@ -36732,26 +37332,41 @@ definitions:
       start_height:
         type: string
         format: int64
-        title: height at which validator was first a candidate OR was unjailed
+        title: Height at which validator was first a candidate OR was unjailed
       index_offset:
         type: string
         format: int64
-        title: index offset into signed block bit array
+        description: >-
+          Index which is incremented each time the validator was a bonded
+
+          in a block and may have signed a precommit or not. This in conjunction
+          with the
+
+          `SignedBlocksWindow` param determines the index in the
+          `MissedBlocksBitArray`.
       jailed_until:
         type: string
         format: date-time
-        title: timestamp validator cannot be unjailed until
+        description: >-
+          Timestamp until which the validator is jailed due to liveness
+          downtime.
       tombstoned:
         type: boolean
-        title: >-
-          whether or not a validator has been tombstoned (killed out of
-          validator
+        format: boolean
+        description: >-
+          Whether or not a validator has been tombstoned (killed out of
+          validator set). It is set
 
-          set)
+          once the validator commits an equivocation or for any other configured
+          misbehiavor.
       missed_blocks_counter:
         type: string
         format: int64
-        title: missed blocks counter (to avoid scanning the array every time)
+        description: >-
+          A counter kept to avoid unnecessary array reads.
+
+          Note that `Sum(MissedBlocksBitArray)` always equals
+          `MissedBlocksCounter`.
     description: >-
       ValidatorSigningInfo defines a validator's signing info for monitoring
       their
@@ -37123,6 +37738,7 @@ definitions:
                     }
             jailed:
               type: boolean
+              format: boolean
             status:
               type: string
               enum:
@@ -37585,6 +38201,7 @@ definitions:
                   }
           jailed:
             type: boolean
+            format: boolean
           status:
             type: string
             enum:
@@ -37831,6 +38448,7 @@ definitions:
                     }
             jailed:
               type: boolean
+              format: boolean
             status:
               type: string
               enum:
@@ -38204,6 +38822,7 @@ definitions:
                         }
                 jailed:
                   type: boolean
+                  format: boolean
                 status:
                   type: string
                   enum:
@@ -38707,6 +39326,7 @@ definitions:
                   }
           jailed:
             type: boolean
+            format: boolean
           status:
             type: string
             enum:
@@ -39007,6 +39627,7 @@ definitions:
                     }
             jailed:
               type: boolean
+              format: boolean
             status:
               type: string
               enum:
@@ -39470,6 +40091,7 @@ definitions:
               }
       jailed:
         type: boolean
+        format: boolean
       status:
         type: string
         enum:
@@ -39647,6 +40269,7 @@ definitions:
                     format: byte
                   index:
                     type: boolean
+                    format: boolean
                 description: >-
                   EventAttribute is a single key-value pair, associated with an
                   event.
@@ -40841,6 +41464,7 @@ definitions:
                         format: byte
                       index:
                         type: boolean
+                        format: boolean
                     description: >-
                       EventAttribute is a single key-value pair, associated with
                       an event.
@@ -41049,7 +41673,6 @@ definitions:
               added to
 
               the list only the first time it occurs.
-
 
               By convention, the first required signer (usually from the first
               message)
@@ -41622,7 +42245,6 @@ definitions:
 
           the list only the first time it occurs.
 
-
           By convention, the first required signer (usually from the first
           message)
 
@@ -41999,6 +42621,7 @@ definitions:
               format: byte
             index:
               type: boolean
+              format: boolean
           description: 'EventAttribute is a single key-value pair, associated with an event.'
     description: >-
       Event allows application developers to attach additional information to
@@ -42018,6 +42641,7 @@ definitions:
         format: byte
       index:
         type: boolean
+        format: boolean
     description: 'EventAttribute is a single key-value pair, associated with an event.'
   cosmos.upgrade.v1beta1.Plan:
     type: object
@@ -43902,6 +44526,7 @@ definitions:
     properties:
       received:
         type: boolean
+        format: boolean
         title: success flag for if receipt exists
       proof:
         type: string
@@ -46281,6 +46906,7 @@ definitions:
     properties:
       send_enabled:
         type: boolean
+        format: boolean
         description: >-
           send_enabled enables or disables all cross-chain token transfers from
           this
@@ -46288,6 +46914,7 @@ definitions:
           chain.
       receive_enabled:
         type: boolean
+        format: boolean
         description: >-
           receive_enabled enables or disables all cross-chain token transfers to
           this
@@ -46378,6 +47005,7 @@ definitions:
         properties:
           send_enabled:
             type: boolean
+            format: boolean
             description: >-
               send_enabled enables or disables all cross-chain token transfers
               from this
@@ -46385,6 +47013,7 @@ definitions:
               chain.
           receive_enabled:
             type: boolean
+            format: boolean
             description: >-
               receive_enabled enables or disables all cross-chain token
               transfers to this

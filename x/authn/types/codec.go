@@ -23,14 +23,14 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 // and creates a registry of it's concrete implementations
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterInterface(
-		"cosmos.auth.v1beta1.AccountI",
+		"cosmos.authn.v1beta1.AccountI",
 		(*AccountI)(nil),
 		&BaseAccount{},
 		&ModuleAccount{},
 	)
 
 	registry.RegisterInterface(
-		"cosmos.auth.v1beta1.GenesisAccount",
+		"cosmos.authn.v1beta1.GenesisAccount",
 		(*GenesisAccount)(nil),
 		&BaseAccount{},
 		&ModuleAccount{},

@@ -13,7 +13,7 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/cosmos/auth/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/cosmos/authn/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "AuthParams"

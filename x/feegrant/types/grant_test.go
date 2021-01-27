@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -78,11 +77,8 @@ func TestGrant(t *testing.T) {
 
 			err = loaded.ValidateBasic()
 			require.NoError(t, err)
-			fmt.Println("tc", tc.grant)
-			fmt.Println("tc", loaded)
 
 			assert.Equal(t, tc.grant, loaded)
 		})
 	}
-
 }

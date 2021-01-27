@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -25,7 +23,7 @@ const (
 func NewMsgGrantFeeAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAddress) (*MsgGrantFeeAllowance, error) {
 	msg, ok := feeAllowance.(proto.Message)
 	if !ok {
-		return nil, fmt.Errorf("cannot proto marshal %T", msg)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", msg)
 	}
 	any, err := types.NewAnyWithValue(msg)
 	if err != nil {

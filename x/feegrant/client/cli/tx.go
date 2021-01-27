@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -137,7 +136,7 @@ Examples:
 
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 			feeGrantMsgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = feeGrantMsgClient.GrantFeeAllowance(context.Background(), msg)
+			_, err = feeGrantMsgClient.GrantFeeAllowance(cmd.Context(), msg)
 			if err != nil {
 				return err
 			}
@@ -180,7 +179,7 @@ Example:
 			msg := types.NewMsgRevokeFeeAllowance(clientCtx.GetFromAddress(), grantee)
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 			feeGrantMsgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = feeGrantMsgClient.RevokeFeeAllowance(context.Background(), &msg)
+			_, err = feeGrantMsgClient.RevokeFeeAllowance(cmd.Context(), &msg)
 			if err != nil {
 				return err
 			}

@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -60,7 +59,7 @@ $ %s query feegrant grant [granter] [grantee]
 			}
 
 			res, err := queryClient.FeeAllowance(
-				context.Background(),
+				cmd.Context(),
 				&types.QueryFeeAllowanceRequest{
 					Granter: granterAddr.String(),
 					Grantee: granteeAddr.String(),
@@ -108,7 +107,7 @@ $ %s query feegrant grants [grantee]
 			}
 
 			res, err := queryClient.FeeAllowances(
-				context.Background(),
+				cmd.Context(),
 				&types.QueryFeeAllowancesRequest{
 					Grantee:    granteeAddr.String(),
 					Pagination: pageReq,

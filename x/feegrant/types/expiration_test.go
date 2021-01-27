@@ -41,7 +41,7 @@ func TestExpiresAt(t *testing.T) {
 			example: types.ExpiresAtTime(now),
 			valid:   true,
 			before:  types.ExpiresAtTime(now.Add(-1 * time.Second)),
-			after:   types.ExpiresAtTime(now),
+			after:   types.ExpiresAtTime(now.Add(1 * time.Second)),
 		},
 	}
 
@@ -93,10 +93,6 @@ func TestDurationValid(t *testing.T) {
 		},
 		"negative clock": {
 			period: types.ClockDuration(-1 * time.Hour),
-			valid:  false,
-		},
-		"negative block": {
-			period: types.BlockDuration(-5),
 			valid:  false,
 		},
 	}

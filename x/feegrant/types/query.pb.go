@@ -185,7 +185,7 @@ func (m *QueryFeeAllowancesRequest) GetPagination() *query.PageRequest {
 
 // QueryFeeAllowancesResponse is the response type for the Query/FeeAllowances RPC method.
 type QueryFeeAllowancesResponse struct {
-	// fee_allowance is a fee_allowance granted for grantee by granter.
+	// fee_allowances are fee_allowance's granted for grantee by granter.
 	FeeAllowances []*FeeAllowanceGrant `protobuf:"bytes,1,rep,name=fee_allowances,json=feeAllowances,proto3" json:"fee_allowances,omitempty"`
 	// pagination defines an pagination for the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`

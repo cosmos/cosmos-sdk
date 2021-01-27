@@ -14,7 +14,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	)
 
 	registry.RegisterInterface(
-		"cosmos.authz.v1beta1.FeeAllowance",
+		"cosmos.feegrant.v1beta1.FeeAllowanceI",
 		(*FeeAllowanceI)(nil),
 		&BasicFeeAllowance{},
 		&PeriodicFeeAllowance{},

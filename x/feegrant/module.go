@@ -3,7 +3,6 @@ package feegrant
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"math/rand"
 
 	"github.com/gorilla/mux"
@@ -16,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/client/cli"
@@ -75,7 +75,8 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
 func (a AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+		// return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+		sdkerrors.Wrapf(err, "failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
 	return types.ValidateGenesis(data)

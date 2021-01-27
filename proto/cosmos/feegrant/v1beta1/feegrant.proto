@@ -41,7 +41,7 @@ message Duration {
   // sum is the oneof that represents either duration or block
   oneof sum {
     google.protobuf.Duration duration = 1 [(gogoproto.stdduration) = true];
-    int64                    block    = 2;
+    uint64                   blocks   = 2;
   }
 }
 

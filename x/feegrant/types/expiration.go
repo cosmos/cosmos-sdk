@@ -62,7 +62,7 @@ func (e ExpiresAt) FastForward(t time.Time, h int64) ExpiresAt {
 //
 // Note a "zero" ExpiresAt is never expired
 func (e ExpiresAt) IsExpired(t *time.Time, h int64) bool {
-	if e.HasDefinedTime() && !t.Before(*e.GetTime()) {
+	if e.HasDefinedTime() && t.After(*e.GetTime()) {
 		return true
 	}
 
@@ -75,7 +75,7 @@ func (e ExpiresAt) IsCompatible(d Duration) bool {
 	if e.HasDefinedTime() {
 		return d.GetDuration() != nil && d.GetDuration().Seconds() > float64(0)
 	}
-	return d.GetBlock() > 0
+	return d.GetBlocks() > 0
 }
 
 // Step will increase the expiration point by one Duration
@@ -87,7 +87,7 @@ func (e ExpiresAt) Step(d Duration) (ExpiresAt, error) {
 	if e.HasDefinedTime() {
 		return ExpiresAtTime(e.GetTime().Add(*d.GetDuration())), nil
 	}
-	return ExpiresAtHeight(e.GetHeight() + d.GetBlock()), nil
+	return ExpiresAtHeight(e.GetHeight() + int64(d.GetBlocks())), nil
 }
 
 // MustStep is like Step, but panics on error
@@ -116,22 +116,22 @@ func ClockDuration(d time.Duration) Duration {
 }
 
 // BlockDuration creates an Duration by block height
-func BlockDuration(h int64) Duration {
-	return Duration{Sum: &Duration_Block{
-		Block: h,
+func BlockDuration(h uint64) Duration {
+	return Duration{Sum: &Duration_Blocks{
+		Blocks: h,
 	}}
 }
 
 // ValidateBasic performs basic sanity checks
 // Note that exactly one must be set and it must be positive
 func (d Duration) ValidateBasic() error {
-	if d.GetBlock() == 0 && d.GetDuration() == nil {
+	if d.GetBlocks() == 0 && d.GetDuration() == nil {
 		return sdkerrors.Wrap(ErrInvalidDuration, "neither time and height are set")
 	}
-	if d.GetBlock() != 0 && d.GetDuration() != nil && d.GetDuration().Seconds() != float64(0) {
+	if d.GetBlocks() != 0 && d.GetDuration() != nil && d.GetDuration().Seconds() != float64(0) {
 		return sdkerrors.Wrap(ErrInvalidDuration, "both time and height are set")
 	}
-	if d.GetBlock() < 0 {
+	if d.GetBlocks() < 0 {
 		return sdkerrors.Wrap(ErrInvalidDuration, "negative block step")
 	}
 	if d.GetDuration() != nil && d.GetDuration().Seconds() < 0 {

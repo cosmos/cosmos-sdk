@@ -34,6 +34,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [Unreleased]
+
+### Improvements
+
+* [\#8396](https://github.com/cosmos/cosmos-sdk/pull/8396) Add support for ARM platform
+
 ## [v0.41.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.0) - 2021-01-26
 
 ### State Machine Breaking

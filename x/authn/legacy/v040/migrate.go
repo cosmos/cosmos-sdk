@@ -42,8 +42,8 @@ func convertBaseVestingAccount(old *v039auth.BaseVestingAccount) *v040vesting.Ba
 	}
 }
 
-// Migrate accepts exported x/auth genesis state from v0.38/v0.39 and migrates
-// it to v0.40 x/auth genesis state. The migration includes:
+// Migrate accepts exported x/authn genesis state from v0.38/v0.39 and migrates
+// it to v0.40 x/authn genesis state. The migration includes:
 //
 // - Removing coins from account encoding.
 // - Re-encode in v0.40 GenesisState.

@@ -86,7 +86,7 @@ func TestMigrate(t *testing.T) {
 	expected := `{
   "accounts": [
     {
-      "@type": "/cosmos.auth.v1beta1.BaseAccount",
+      "@type": "/cosmos.authn.v1beta1.BaseAccount",
       "account_number": "1",
       "address": "cosmos13syh7de9xndv9wmklccpfvc0d8dcyvay4s6z6l",
       "pub_key": {
@@ -96,7 +96,7 @@ func TestMigrate(t *testing.T) {
       "sequence": "0"
     },
     {
-      "@type": "/cosmos.auth.v1beta1.ModuleAccount",
+      "@type": "/cosmos.authn.v1beta1.ModuleAccount",
       "base_account": {
         "account_number": "1",
         "address": "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
@@ -225,7 +225,7 @@ func TestMigrate(t *testing.T) {
       }
     },
     {
-      "@type": "/cosmos.auth.v1beta1.BaseAccount",
+      "@type": "/cosmos.authn.v1beta1.BaseAccount",
       "account_number": "1",
       "address": "cosmos16ydaqh0fcnh4qt7a3jme4mmztm2qel5axcpw00",
       "pub_key": null,

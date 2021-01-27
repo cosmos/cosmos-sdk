@@ -18,6 +18,36 @@ func TestGrant(t *testing.T) {
 	require.NoError(t, err)
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 
+	goodGrant, err := types.NewFeeAllowanceGrant(addr2, addr, &types.BasicFeeAllowance{
+		SpendLimit: atom,
+		Expiration: types.ExpiresAtHeight(100),
+	})
+	require.NoError(t, err)
+
+	noGranteeGrant, err := types.NewFeeAllowanceGrant(addr2, nil, &types.BasicFeeAllowance{
+		SpendLimit: atom,
+		Expiration: types.ExpiresAtHeight(100),
+	})
+	require.NoError(t, err)
+
+	noGranterGrant, err := types.NewFeeAllowanceGrant(nil, addr, &types.BasicFeeAllowance{
+		SpendLimit: atom,
+		Expiration: types.ExpiresAtHeight(100),
+	})
+	require.NoError(t, err)
+
+	selfGrant, err := types.NewFeeAllowanceGrant(addr2, addr2, &types.BasicFeeAllowance{
+		SpendLimit: atom,
+		Expiration: types.ExpiresAtHeight(100),
+	})
+	require.NoError(t, err)
+
+	badAllowanceGrant, err := types.NewFeeAllowanceGrant(addr2, addr, &types.BasicFeeAllowance{
+		SpendLimit: atom,
+		Expiration: types.ExpiresAtHeight(-1),
+	})
+	require.NoError(t, err)
+
 	cdc := app.AppCodec()
 	// RegisterLegacyAminoCodec(cdc)
 
@@ -26,35 +56,20 @@ func TestGrant(t *testing.T) {
 		valid bool
 	}{
 		"good": {
-			grant: types.NewFeeAllowanceGrant(addr2, addr, &types.BasicFeeAllowance{
-				SpendLimit: atom,
-				Expiration: types.ExpiresAtHeight(100),
-			}),
+			grant: goodGrant,
 			valid: true,
 		},
 		"no grantee": {
-			grant: types.NewFeeAllowanceGrant(addr2, nil, &types.BasicFeeAllowance{
-				SpendLimit: atom,
-				Expiration: types.ExpiresAtHeight(100),
-			}),
+			grant: noGranteeGrant,
 		},
 		"no granter": {
-			grant: types.NewFeeAllowanceGrant(nil, addr, &types.BasicFeeAllowance{
-				SpendLimit: atom,
-				Expiration: types.ExpiresAtHeight(100),
-			}),
+			grant: noGranterGrant,
 		},
 		"self-grant": {
-			grant: types.NewFeeAllowanceGrant(addr2, addr2, &types.BasicFeeAllowance{
-				SpendLimit: atom,
-				Expiration: types.ExpiresAtHeight(100),
-			}),
+			grant: selfGrant,
 		},
 		"bad allowance": {
-			grant: types.NewFeeAllowanceGrant(addr2, addr, &types.BasicFeeAllowance{
-				SpendLimit: atom,
-				Expiration: types.ExpiresAtHeight(-1),
-			}),
+			grant: badAllowanceGrant,
 		},
 	}
 

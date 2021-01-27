@@ -32,7 +32,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, data *types.GenesisState) {
 			panic(err)
 		}
 
-		k.GrantFeeAllowance(ctx, granter, grantee, f.GetFeeGrant())
+		err = k.GrantFeeAllowance(ctx, granter, grantee, f.GetFeeGrant())
+		panic(err)
 	}
 }
 

@@ -50,18 +50,30 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	}
 
 	// let's set up some initial state here
-	k.GrantFeeAllowance(ctx, suite.addrs[0], suite.addrs[1], basic)
-	k.GrantFeeAllowance(ctx, suite.addrs[0], suite.addrs[2], basic2)
-	k.GrantFeeAllowance(ctx, suite.addrs[1], suite.addrs[2], basic)
-	k.GrantFeeAllowance(ctx, suite.addrs[1], suite.addrs[3], basic)
-	k.GrantFeeAllowance(ctx, suite.addrs[3], suite.addrs[0], basic2)
+	err := k.GrantFeeAllowance(ctx, suite.addrs[0], suite.addrs[1], basic)
+	suite.Require().NoError(err)
+
+	err = k.GrantFeeAllowance(ctx, suite.addrs[0], suite.addrs[2], basic2)
+	suite.Require().NoError(err)
+
+	err = k.GrantFeeAllowance(ctx, suite.addrs[1], suite.addrs[2], basic)
+	suite.Require().NoError(err)
+
+	err = k.GrantFeeAllowance(ctx, suite.addrs[1], suite.addrs[3], basic)
+	suite.Require().NoError(err)
+
+	err = k.GrantFeeAllowance(ctx, suite.addrs[3], suite.addrs[0], basic2)
+	suite.Require().NoError(err)
 
 	// remove some, overwrite other
 	k.RevokeFeeAllowance(ctx, suite.addrs[0], suite.addrs[1])
 	k.RevokeFeeAllowance(ctx, suite.addrs[0], suite.addrs[2])
 
-	k.GrantFeeAllowance(ctx, suite.addrs[0], suite.addrs[2], basic)
-	k.GrantFeeAllowance(ctx, suite.addrs[1], suite.addrs[2], basic2)
+	err = k.GrantFeeAllowance(ctx, suite.addrs[0], suite.addrs[2], basic)
+	suite.Require().NoError(err)
+
+	err = k.GrantFeeAllowance(ctx, suite.addrs[1], suite.addrs[2], basic2)
+	suite.Require().NoError(err)
 
 	// end state:
 	// addr -> addr3 (basic)
@@ -107,6 +119,15 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 		})
 	}
 
+	grant1, err := types.NewFeeAllowanceGrant(suite.addrs[3], suite.addrs[0], basic2)
+	suite.NoError(err)
+
+	grant2, err := types.NewFeeAllowanceGrant(suite.addrs[1], suite.addrs[2], basic2)
+	suite.NoError(err)
+
+	grant3, err := types.NewFeeAllowanceGrant(suite.addrs[0], suite.addrs[2], basic)
+	suite.NoError(err)
+
 	allCases := map[string]struct {
 		grantee sdk.AccAddress
 		grants  []types.FeeAllowanceGrant
@@ -117,14 +138,14 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 		"addr has one": {
 			grantee: suite.addrs[0],
 			grants: []types.FeeAllowanceGrant{
-				types.NewFeeAllowanceGrant(suite.addrs[3], suite.addrs[0], basic2),
+				grant1,
 			},
 		},
 		"addr3 has two": {
 			grantee: suite.addrs[2],
 			grants: []types.FeeAllowanceGrant{
-				types.NewFeeAllowanceGrant(suite.addrs[1], suite.addrs[2], basic2),
-				types.NewFeeAllowanceGrant(suite.addrs[0], suite.addrs[2], basic),
+				grant2,
+				grant3,
 			},
 		},
 	}
@@ -215,10 +236,13 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 			// addr -> addr2 (future)
 			// addr -> addr3 (expired)
 
-			k.GrantFeeAllowance(ctx, suite.addrs[0], suite.addrs[1], future)
-			k.GrantFeeAllowance(ctx, suite.addrs[0], suite.addrs[3], expired)
+			err := k.GrantFeeAllowance(ctx, suite.addrs[0], suite.addrs[1], future)
+			suite.Require().NoError(err)
 
-			err := k.UseGrantedFees(ctx, tc.granter, tc.grantee, tc.fee)
+			err = k.GrantFeeAllowance(ctx, suite.addrs[0], suite.addrs[3], expired)
+			suite.Require().NoError(err)
+
+			err = k.UseGrantedFees(ctx, tc.granter, tc.grantee, tc.fee)
 			if tc.allowed {
 				suite.NoError(err)
 			} else {

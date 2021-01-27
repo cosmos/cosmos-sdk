@@ -1,7 +1,6 @@
 package types
 
 import (
-	fmt "fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -16,21 +15,22 @@ var (
 
 // NewFeeAllowanceGrant creates a new FeeAllowanceGrant.
 //nolint:interfacer
-func NewFeeAllowanceGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllowanceI) FeeAllowanceGrant {
+func NewFeeAllowanceGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllowanceI) (FeeAllowanceGrant, error) {
 	msg, ok := feeAllowance.(proto.Message)
 	if !ok {
-		panic(fmt.Errorf("cannot proto marshal %T", msg))
+		return FeeAllowanceGrant{}, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", feeAllowance)
 	}
+
 	any, err := types.NewAnyWithValue(msg)
 	if err != nil {
-		panic(err)
+		return FeeAllowanceGrant{}, err
 	}
 
 	return FeeAllowanceGrant{
 		Granter:   granter.String(),
 		Grantee:   grantee.String(),
 		Allowance: any,
-	}
+	}, nil
 }
 
 // ValidateBasic performs basic validation on
@@ -83,5 +83,10 @@ func (a FeeAllowanceGrant) PrepareForExport(dumpTime time.Time, dumpHeight int64
 		return FeeAllowanceGrant{}
 	}
 
-	return NewFeeAllowanceGrant(granter, grantee, feegrant)
+	grant, err := NewFeeAllowanceGrant(granter, grantee, feegrant)
+	if err != nil {
+		return FeeAllowanceGrant{}
+	}
+
+	return grant
 }

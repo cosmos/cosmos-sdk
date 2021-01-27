@@ -143,7 +143,7 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeFeeAllowance() {
 
 	granter, grantee := accounts[0], accounts[1]
 
-	app.FeeGrantKeeper.GrantFeeAllowance(
+	err := app.FeeGrantKeeper.GrantFeeAllowance(
 		ctx,
 		granter.Address,
 		grantee.Address,
@@ -152,6 +152,7 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeFeeAllowance() {
 			Expiration: types.ExpiresAtTime(ctx.BlockTime().Add(30 * time.Hour)),
 		},
 	)
+	require.NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgRevokeFeeAllowance(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, suite.protoCdc)

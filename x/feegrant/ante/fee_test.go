@@ -86,14 +86,16 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	app.BankKeeper.SetBalances(ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99999))})
 
 	// grant fee allowance from `addr2` to `addr3` (plenty to pay)
-	app.FeeGrantKeeper.GrantFeeAllowance(ctx, addr2, addr3, &types.BasicFeeAllowance{
+	err := app.FeeGrantKeeper.GrantFeeAllowance(ctx, addr2, addr3, &types.BasicFeeAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
 	})
+	suite.Require().NoError(err)
 
 	// grant low fee allowance (20atom), to check the tx requesting more than allowed.
-	app.FeeGrantKeeper.GrantFeeAllowance(ctx, addr2, addr4, &types.BasicFeeAllowance{
+	err = app.FeeGrantKeeper.GrantFeeAllowance(ctx, addr2, addr4, &types.BasicFeeAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 20)),
 	})
+	suite.Require().NoError(err)
 
 	cases := map[string]struct {
 		signerKey     cryptotypes.PrivKey

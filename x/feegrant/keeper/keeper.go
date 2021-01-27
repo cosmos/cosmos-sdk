@@ -34,7 +34,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GrantFeeAllowance creates a new grant
-func (k Keeper) GrantFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance types.FeeAllowanceI) {
+func (k Keeper) GrantFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance types.FeeAllowanceI) error {
 
 	// create the account if it is not in account state
 	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
@@ -45,8 +45,16 @@ func (k Keeper) GrantFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddre
 
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(granter, grantee)
-	grant := types.NewFeeAllowanceGrant(granter, grantee, feeAllowance)
-	bz := k.cdc.MustMarshalBinaryBare(&grant)
+	grant, err := types.NewFeeAllowanceGrant(granter, grantee, feeAllowance)
+	if err != nil {
+		return err
+	}
+
+	bz, err := k.cdc.MarshalBinaryBare(&grant)
+	if err != nil {
+		return err
+	}
+
 	store.Set(key, bz)
 
 	ctx.EventManager().EmitEvent(
@@ -56,6 +64,8 @@ func (k Keeper) GrantFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddre
 			sdk.NewAttribute(types.AttributeKeyGrantee, grant.Grantee),
 		),
 	)
+
+	return nil
 }
 
 // RevokeFeeAllowance removes an existing grant
@@ -176,6 +186,5 @@ func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	}
 
 	// if we accepted, store the updated state of the allowance
-	k.GrantFeeAllowance(ctx, granter, grantee, grant.GetFeeGrant())
-	return nil
+	return k.GrantFeeAllowance(ctx, granter, grantee, grant.GetFeeGrant())
 }

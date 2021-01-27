@@ -79,9 +79,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.addedGranter = granter
 	s.addedGrantee = grantee
-	s.addedGrant = types.NewFeeAllowanceGrant(granter, grantee, &types.BasicFeeAllowance{
+
+	grant, err := types.NewFeeAllowanceGrant(granter, grantee, &types.BasicFeeAllowance{
 		SpendLimit: sdk.NewCoins(fee),
 	})
+	s.Require().NoError(err)
+
+	s.addedGrant = grant
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {

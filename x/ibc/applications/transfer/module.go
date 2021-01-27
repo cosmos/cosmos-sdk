@@ -202,8 +202,8 @@ func ValidateTransferChannelParams(
 	if err != nil {
 		return err
 	}
-	if channelSequence > math.MaxUint32 {
-		return sdkerrors.Wrapf(types.ErrMaxTransferChannels, "channel sequence %d is greater than max allowed transfer channels %d", channelSequence, math.MaxUint32)
+	if channelSequence > uint64(math.MaxUint32) {
+		return sdkerrors.Wrapf(types.ErrMaxTransferChannels, "channel sequence %d is greater than max allowed transfer channels %d", channelSequence, uint64(math.MaxUint32))
 	}
 	if order != channeltypes.UNORDERED {
 		return sdkerrors.Wrapf(channeltypes.ErrInvalidChannelOrdering, "expected %s channel, got %s ", channeltypes.UNORDERED, order)

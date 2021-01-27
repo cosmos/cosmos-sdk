@@ -169,14 +169,12 @@ in other places such as the type URL in `Any`s. We can easily obtain the name us
 `proto.MessageName(msg)`.
 
 
-### Named Accounts
-
-Some accounts can have a fixed name. We were discussing an idea of an account with a predefined name (eg: `me.regen`), this could be used by institutions or modules.
-Without going into details, this kind of addresses are compatible with the hash based addresses discussed here as long as they don't conflict with the same length.
-More specifically, any special account, with custom naming, must not have length equal 20 byte nor 32 bytes.
-
 
 ## Consequences
+
+### Backwards Compatibility
+
+This ADR is compatible to what was committed and directly supported in the SDK repository.
 
 ### Positive
 
@@ -195,6 +193,13 @@ More specifically, any special account, with custom naming, must not have length
 ### Neutral
 
 - protobuf message names are used as key type prefixes
+
+
+## Further Discussions
+
+Some accounts can have a fixed name or may be constructed in other way (eg: module accounts). We were discussing an idea of an account with a predefined name (eg: `me.regen`), which could be used by institutions.
+Without going into details, this kind of addresses are compatible with the hash based addresses described here as long as they don't have the same length.
+More specifically, any special account address, must not have length equal to 20 byte nor 32 bytes.
 
 
 ## References

@@ -191,7 +191,7 @@ func execFeeAllowance(val *network.Validator, s *IntegrationTestSuite) {
 	args := []string{
 		val.Address.String(),
 		s.grantee.String(),
-		fee.String(),
+		fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, fee.String()),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 		fmt.Sprintf("--%s=%v", cli.FlagExpiration, duration),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),

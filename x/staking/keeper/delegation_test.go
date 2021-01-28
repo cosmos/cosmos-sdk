@@ -187,9 +187,9 @@ func TestUnbondDelegation(t *testing.T) {
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 
 	require.NoError(t,
-		app.BankKeeper.SetBalances(
+		app.BankKeeper.MintCoins(
 			ctx,
-			notBondedPool.GetAddress(),
+			notBondedPool.GetName(),
 			sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), startTokens)),
 		),
 	)
@@ -233,7 +233,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	bondDenom := app.StakingKeeper.BondDenom(ctx)
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 
-	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens)))
+	err := app.BankKeeper.MintCoins(ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens)))
 	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
@@ -323,7 +323,7 @@ func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 	// add bonded tokens to pool for delegations
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 	oldNotBonded := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
-	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), oldNotBonded.Add(delCoins...))
+	err := app.BankKeeper.MintCoins(ctx, notBondedPool.GetName(), oldNotBonded.Add(delCoins...))
 	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
@@ -337,7 +337,7 @@ func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 	// add bonded tokens to pool for delegations
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	oldBonded := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	err = app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), oldBonded.Add(delCoins...))
+	err = app.BankKeeper.MintCoins(ctx, bondedPool.GetName(), oldBonded.Add(delCoins...))
 	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
@@ -349,7 +349,7 @@ func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 
 	// add bonded tokens to pool for delegations
 	oldBonded = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	err = app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), oldBonded.Add(delCoins...))
+	err = app.BankKeeper.MintCoins(ctx, bondedPool.GetName(), oldBonded.Add(delCoins...))
 	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
@@ -389,7 +389,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	// add bonded tokens to pool for delegations
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 	oldNotBonded := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
-	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), oldNotBonded.Add(delCoins...))
+	err := app.BankKeeper.MintCoins(ctx, notBondedPool.GetName(), oldNotBonded.Add(delCoins...))
 	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
@@ -401,7 +401,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	oldBonded := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	err = app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), oldBonded.Add(delCoins...))
+	err = app.BankKeeper.MintCoins(ctx, bondedPool.GetName(), oldBonded.Add(delCoins...))
 	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
@@ -412,7 +412,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	require.Equal(t, delTokens, issuedShares.RoundInt())
 
 	oldBonded = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	err = app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), oldBonded.Add(delCoins...))
+	err = app.BankKeeper.MintCoins(ctx, bondedPool.GetName(), oldBonded.Add(delCoins...))
 	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
@@ -421,7 +421,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	app.StakingKeeper.SetDelegation(ctx, delegation)
 
 	oldBonded = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	err = app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), oldBonded.Add(delCoins...))
+	err = app.BankKeeper.MintCoins(ctx, bondedPool.GetName(), oldBonded.Add(delCoins...))
 	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
@@ -475,7 +475,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	// add bonded tokens to pool for delegations
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 	oldNotBonded := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
-	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), oldNotBonded.Add(delCoins...))
+	err := app.BankKeeper.MintCoins(ctx, notBondedPool.GetName(), oldNotBonded.Add(delCoins...))
 	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
@@ -495,7 +495,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	oldBonded := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	err = app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), oldBonded.Add(delCoins...))
+	err = app.BankKeeper.MintCoins(ctx, bondedPool.GetName(), oldBonded.Add(delCoins...))
 	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
@@ -559,7 +559,7 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 	// add bonded tokens to pool for delegations
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 	oldNotBonded := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
-	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), oldNotBonded.Add(delCoins...))
+	err := app.BankKeeper.MintCoins(ctx, notBondedPool.GetName(), oldNotBonded.Add(delCoins...))
 	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
@@ -585,7 +585,7 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	oldBonded := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	err = app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), oldBonded.Add(delCoins...))
+	err = app.BankKeeper.MintCoins(ctx, bondedPool.GetName(), oldBonded.Add(delCoins...))
 	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
@@ -726,7 +726,7 @@ func TestRedelegateToSameValidator(t *testing.T) {
 	// add bonded tokens to pool for delegations
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 	oldNotBonded := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
-	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), oldNotBonded.Add(startCoins...))
+	err := app.BankKeeper.MintCoins(ctx, notBondedPool.GetName(), oldNotBonded.Add(startCoins...))
 	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
@@ -757,7 +757,7 @@ func TestRedelegationMaxEntries(t *testing.T) {
 	// add bonded tokens to pool for delegations
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 	oldNotBonded := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
-	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), oldNotBonded.Add(startCoins...))
+	err := app.BankKeeper.MintCoins(ctx, notBondedPool.GetName(), oldNotBonded.Add(startCoins...))
 	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
@@ -815,7 +815,7 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	// add bonded tokens to pool for delegations
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 	oldNotBonded := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
-	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), oldNotBonded.Add(startCoins...))
+	err := app.BankKeeper.MintCoins(ctx, notBondedPool.GetName(), oldNotBonded.Add(startCoins...))
 	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
@@ -873,7 +873,7 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	// add bonded tokens to pool for delegations
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 	oldNotBonded := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
-	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), oldNotBonded.Add(startCoins...))
+	err := app.BankKeeper.MintCoins(ctx, notBondedPool.GetName(), oldNotBonded.Add(startCoins...))
 	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
@@ -957,7 +957,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	// add bonded tokens to pool for delegations
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 	oldNotBonded := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
-	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), oldNotBonded.Add(startCoins...))
+	err := app.BankKeeper.MintCoins(ctx, notBondedPool.GetName(), oldNotBonded.Add(startCoins...))
 	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 

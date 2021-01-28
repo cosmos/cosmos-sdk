@@ -109,24 +109,35 @@ func InitGenesis(
 	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
 	// add coins if not provided on genesis
 	if bankKeeper.GetAllBalances(ctx, bondedPool.GetAddress()).IsZero() {
-		if err := bankKeeper.SetBalances(ctx, bondedPool.GetAddress(), bondedCoins); err != nil {
+		// TODO(fdymylja): temp
+		/*
+			if err := bankKeeper.SetBalances(ctx, bondedPool.GetAddress(), bondedCoins); err != nil {
+				panic(err)
+			}
+		*/
+		accountKeeper.SetModuleAccount(ctx, bondedPool)
+		err := bankKeeper.MintCoins(ctx, bondedPool.GetName(), bondedCoins)
+		if err != nil {
 			panic(err)
 		}
-
-		accountKeeper.SetModuleAccount(ctx, bondedPool)
 	}
 
 	notBondedPool := keeper.GetNotBondedPool(ctx)
 	if notBondedPool == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
 	}
-
 	if bankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress()).IsZero() {
-		if err := bankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), notBondedCoins); err != nil {
+		// TODO(fdymylja): temp
+		/*
+			if err := bankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), notBondedCoins); err != nil {
+				panic(err)
+			}
+		*/
+		// accountKeeper.SetModuleAccount(ctx, notBondedPool)
+		err := bankKeeper.MintCoins(ctx, notBondedPool.GetName(), notBondedCoins)
+		if err != nil {
 			panic(err)
 		}
-
-		accountKeeper.SetModuleAccount(ctx, notBondedPool)
 	}
 
 	// don't need to run Tendermint updates if we exported

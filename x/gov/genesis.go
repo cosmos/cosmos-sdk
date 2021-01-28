@@ -43,11 +43,16 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 
 	// add coins if not provided on genesis
 	if bk.GetAllBalances(ctx, moduleAcc.GetAddress()).IsZero() {
-		if err := bk.SetBalances(ctx, moduleAcc.GetAddress(), totalDeposits); err != nil {
-			panic(err)
-		}
-
+		// TODO(fdymylja): temp
+		/*
+			if err := bk.SetBalances(ctx, moduleAcc.GetAddress(), totalDeposits); err != nil {
+				panic(err)
+			}
+		*/
 		ak.SetModuleAccount(ctx, moduleAcc)
+		if totalDeposits != nil && !totalDeposits.IsZero() {
+			panic("module account balance on exported genesis is zero but total deposits are not")
+		}
 	}
 }
 

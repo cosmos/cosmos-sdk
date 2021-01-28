@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -243,7 +245,11 @@ func AddTestAddrsFromPubKeys(app *SimApp, ctx sdk.Context, pubKeys []cryptotypes
 func setTotalSupply(app *SimApp, ctx sdk.Context, accAmt sdk.Int, totalAccounts int) {
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt.MulRaw(int64(totalAccounts))))
 	prevSupply := app.BankKeeper.GetSupply(ctx)
-	app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(prevSupply.GetTotal().Add(totalSupply...)))
+	unsafeBankKeeper, ok := app.BankKeeper.(keeper.UnsafeKeeper)
+	if !ok {
+		panic(fmt.Sprintf("unable to cast bank.Keeper got type: %T", app.BankKeeper))
+	}
+	unsafeBankKeeper.SetSupply(ctx, banktypes.NewSupply(prevSupply.GetTotal().Add(totalSupply...)))
 }
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
@@ -276,7 +282,11 @@ func addTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int, stra
 func saveAccount(app *SimApp, ctx sdk.Context, addr sdk.AccAddress, initCoins sdk.Coins) {
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 	app.AccountKeeper.SetAccount(ctx, acc)
-	err := app.BankKeeper.AddCoins(ctx, addr, initCoins)
+	bankUnsafeKeeper, ok := app.BankKeeper.(keeper.UnsafeKeeper)
+	if !ok {
+		panic(fmt.Sprintf("needed bank.UnsafeKeeper got: %T", app.BankKeeper))
+	}
+	err := bankUnsafeKeeper.AddCoins(ctx, addr, initCoins)
 	if err != nil {
 		panic(err)
 	}

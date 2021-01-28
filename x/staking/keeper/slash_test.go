@@ -10,7 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -26,7 +25,7 @@ func bootstrapSlashTest(t *testing.T, power int64) (*simapp.SimApp, sdk.Context,
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), amt.MulRaw(int64(len(addrDels)))))
 
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
-	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), totalSupply)
+	err := app.BankKeeper.MintCoins(ctx, notBondedPool.GetName(), totalSupply)
 	require.NoError(t, err)
 
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
@@ -35,11 +34,11 @@ func bootstrapSlashTest(t *testing.T, power int64) (*simapp.SimApp, sdk.Context,
 	bondedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), amt.MulRaw(numVals)))
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 
-	err = app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), bondedCoins)
+	err = app.BankKeeper.MintCoins(ctx, bondedPool.GetName(), bondedCoins)
 	require.NoError(t, err)
 
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
-	app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(totalSupply))
+	// app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(totalSupply))
 
 	for i := int64(0); i < numVals; i++ {
 		validator := teststaking.NewValidator(t, addrVals[i], PKs[i])
@@ -129,7 +128,7 @@ func TestSlashRedelegation(t *testing.T) {
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	balances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
-	require.NoError(t, app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), balances.Add(startCoins...)))
+	require.NoError(t, app.BankKeeper.MintCoins(ctx, bondedPool.GetName(), balances.Add(startCoins...)))
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
 	// set a redelegation with an expiration timestamp beyond which the
@@ -410,7 +409,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 
 	balances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
-	err := app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), balances.Add(rdCoins...))
+	err := app.BankKeeper.MintCoins(ctx, bondedPool.GetName(), balances.Add(rdCoins...))
 	require.NoError(t, err)
 
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
@@ -575,10 +574,10 @@ func TestSlashBoth(t *testing.T) {
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 
 	bondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	require.NoError(t, app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), bondedPoolBalances.Add(bondedCoins...)))
+	require.NoError(t, app.BankKeeper.MintCoins(ctx, bondedPool.GetName(), bondedPoolBalances.Add(bondedCoins...)))
 
 	notBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
-	require.NoError(t, app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), notBondedPoolBalances.Add(notBondedCoins...)))
+	require.NoError(t, app.BankKeeper.MintCoins(ctx, notBondedPool.GetName(), notBondedPoolBalances.Add(notBondedCoins...)))
 
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)

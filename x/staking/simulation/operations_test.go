@@ -278,13 +278,15 @@ func getTestingAccounts(t *testing.T, r *rand.Rand, app *simapp.SimApp, ctx sdk.
 
 	initAmt := sdk.TokensFromConsensusPower(200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
-
+	// mint coins
+	require.NoError(t, app.MintKeeper.MintCoins(ctx, initCoins))
 	// add coins to the accounts
 	for _, account := range accounts {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, account.Address)
 		app.AccountKeeper.SetAccount(ctx, acc)
-		err := app.BankKeeper.SetBalances(ctx, account.Address, initCoins)
+		err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, initCoins)
 		require.NoError(t, err)
+		require.NoError(t, app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, acc.GetAddress(), initCoins))
 	}
 
 	return accounts

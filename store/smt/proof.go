@@ -20,20 +20,20 @@ const (
 )
 
 const (
-	SMTProofType = "smt"
+	ProofType = "smt"
 )
 
-type SMTProof struct {
+type ProofOp struct {
 	Root   []byte
 	Key    []byte
 	Hasher HasherType
 	Proof  smt.SparseMerkleProof
 }
 
-var _ merkle.ProofOperator = &SMTProof{}
+var _ merkle.ProofOperator = &ProofOp{}
 
-func NewSMTProof(root, key []byte, hasher HasherType, proof smt.SparseMerkleProof) *SMTProof {
-	return &SMTProof{
+func NewProofOp(root, key []byte, hasher HasherType, proof smt.SparseMerkleProof) *ProofOp {
+	return &ProofOp{
 		Root:   root,
 		Key:    key,
 		Hasher: hasher,
@@ -41,7 +41,7 @@ func NewSMTProof(root, key []byte, hasher HasherType, proof smt.SparseMerkleProo
 	}
 }
 
-func (p *SMTProof) Run(args [][]byte) ([][]byte, error) {
+func (p *ProofOp) Run(args [][]byte) ([][]byte, error) {
 	switch len(args) {
 	case 0: // non-membership proof
 		if !smt.VerifyProof(p.Proof, p.Root, p.Key, []byte{}, getHasher(p.Hasher)) {
@@ -57,11 +57,11 @@ func (p *SMTProof) Run(args [][]byte) ([][]byte, error) {
 	return [][]byte{p.Root}, nil
 }
 
-func (p *SMTProof) GetKey() []byte {
+func (p *ProofOp) GetKey() []byte {
 	return p.Key
 }
 
-func (p *SMTProof) ProofOp() tmmerkle.ProofOp {
+func (p *ProofOp) ProofOp() tmmerkle.ProofOp {
 	var data bytes.Buffer
 	enc := gob.NewEncoder(&data)
 	enc.Encode(p)
@@ -74,7 +74,7 @@ func (p *SMTProof) ProofOp() tmmerkle.ProofOp {
 
 func ProofDecoder(pop tmmerkle.ProofOp) (merkle.ProofOperator, error) {
 	dec := gob.NewDecoder(bytes.NewBuffer(pop.Data))
-	var proof SMTProof
+	var proof ProofOp
 	err := dec.Decode(&proof)
 	if err != nil {
 		return nil, err

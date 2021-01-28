@@ -24,7 +24,7 @@ func TestProofOpInterface(t *testing.T) {
 	proof, err := tree.Prove(key)
 	require.True(t, smt.VerifyProof(proof, root, key, value, hasher))
 
-	storeProofOp := smtstore.NewSMTProof(root, key, smtstore.SHA256, proof)
+	storeProofOp := smtstore.NewProofOp(root, key, smtstore.SHA256, proof)
 	require.NotNil(t, storeProofOp)
 	// inclusion proof
 	r, err := storeProofOp.Run([][]byte{value})
@@ -50,7 +50,7 @@ func TestProofOpInterface(t *testing.T) {
 	// encode
 	tmProofOp := storeProofOp.ProofOp()
 	assert.NotNil(t, tmProofOp)
-	assert.Equal(t, smtstore.SMTProofType, tmProofOp.Type)
+	assert.Equal(t, smtstore.ProofType, tmProofOp.Type)
 	assert.Equal(t, key, tmProofOp.Key, key)
 	assert.NotEmpty(t, tmProofOp.Data)
 

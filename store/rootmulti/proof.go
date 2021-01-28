@@ -29,5 +29,6 @@ func DefaultProofRuntime() (prt *merkle.ProofRuntime) {
 
 func SMTProofRuntime() (prt *merkle.ProofRuntime) {
 	prt = merkle.NewProofRuntime()
-	prt.RegisterOpDecoder(smt.SMTProofType, smt.ProofDecoder)
+	prt.RegisterOpDecoder(smt.ProofType, smt.ProofDecoder)
+	return prt
 }

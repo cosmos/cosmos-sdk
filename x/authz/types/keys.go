@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 const (
@@ -32,8 +33,8 @@ var (
 func GetAuthorizationStoreKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) []byte {
 	return append(append(append(
 		GrantKey,
-		sdk.MustLengthPrefixedAddressStoreKey(granter)...),
-		sdk.MustLengthPrefixedAddressStoreKey(grantee)...),
+		address.MustLengthPrefixedStoreKey(granter)...),
+		address.MustLengthPrefixedStoreKey(grantee)...),
 		[]byte(msgType)...,
 	)
 }

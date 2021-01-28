@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -28,9 +29,6 @@ const (
 	//	config.SetCoinType(yourCoinType)
 	//	config.SetFullFundraiserPath(yourFullFundraiserPath)
 	//	config.Seal()
-
-	// Maximum allowed length (in bytes) for an address
-	maxAddrLen = 255
 
 	// Bech32MainPrefix defines the main SDK Bech32 prefix of an account's address
 	Bech32MainPrefix = "cosmos"
@@ -117,8 +115,8 @@ func VerifyAddressFormat(bz []byte) error {
 		return sdkerrors.Wrap(sdkerrors.ErrUnknownAddress, "addresses cannot be empty")
 	}
 
-	if len(bz) > maxAddrLen {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "address max length is %d, got %d", maxAddrLen, len(bz))
+	if len(bz) > address.MaxAddrLen {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "address max length is %d, got %d", address.MaxAddrLen, len(bz))
 	}
 
 	return nil
@@ -262,31 +260,6 @@ func (aa AccAddress) Format(s fmt.State, verb rune) {
 	default:
 		s.Write([]byte(fmt.Sprintf("%X", []byte(aa))))
 	}
-}
-
-// LengthPrefixedAddressStoreKey prefixes the address bytes with its length, this is used
-// for variable-length components in store keys.
-func LengthPrefixedAddressStoreKey(bz []byte) ([]byte, error) {
-	bzLen := len(bz)
-	if bzLen == 0 {
-		return bz, nil
-	}
-
-	if bzLen > maxAddrLen {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "address length should be max %d bytes, got %d", maxAddrLen, bzLen)
-	}
-
-	return append([]byte{byte(bzLen)}, bz...), nil
-}
-
-// MustLengthPrefixedAddressStoreKey is LengthPrefixedAddressStoreKey with a panic.
-func MustLengthPrefixedAddressStoreKey(bz []byte) []byte {
-	res, err := LengthPrefixedAddressStoreKey(bz)
-	if err != nil {
-		panic(err)
-	}
-
-	return res
 }
 
 // ----------------------------------------------------------------------------

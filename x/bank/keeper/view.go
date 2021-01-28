@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -216,5 +217,5 @@ func (k BaseViewKeeper) getAccountStore(ctx sdk.Context, addr sdk.AccAddress) pr
 	store := ctx.KVStore(k.storeKey)
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 
-	return prefix.NewStore(balancesStore, sdk.MustLengthPrefixedAddressStoreKey(addr))
+	return prefix.NewStore(balancesStore, address.MustLengthPrefixedStoreKey(addr))
 }

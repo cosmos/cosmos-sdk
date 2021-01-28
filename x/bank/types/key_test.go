@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -22,7 +23,7 @@ func TestAddressFromBalancesStore(t *testing.T) {
 	addrLen := len(addr)
 	require.Equal(t, 20, addrLen)
 
-	key := cloneAppend(sdk.MustLengthPrefixedAddressStoreKey(addr), []byte("stake"))
+	key := cloneAppend(address.MustLengthPrefixedStoreKey(addr), []byte("stake"))
 	res := types.AddressFromBalancesStore(key)
 	require.Equal(t, res, addr)
 }

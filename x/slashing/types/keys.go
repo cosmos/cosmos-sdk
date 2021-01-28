@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 const (
@@ -36,7 +37,7 @@ var (
 
 // ValidatorSigningInfoKey - stored by *Consensus* address (not operator address)
 func ValidatorSigningInfoKey(v sdk.ConsAddress) []byte {
-	return append(ValidatorSigningInfoKeyPrefix, sdk.MustLengthPrefixedAddressStoreKey(v.Bytes())...)
+	return append(ValidatorSigningInfoKeyPrefix, address.MustLengthPrefixedStoreKey(v.Bytes())...)
 }
 
 // ValidatorSigningInfoAddress - extract the address from a validator signing info key
@@ -49,7 +50,7 @@ func ValidatorSigningInfoAddress(key []byte) (v sdk.ConsAddress) {
 
 // ValidatorMissedBlockBitArrayPrefixKey - stored by *Consensus* address (not operator address)
 func ValidatorMissedBlockBitArrayPrefixKey(v sdk.ConsAddress) []byte {
-	return append(ValidatorMissedBlockBitArrayKeyPrefix, sdk.MustLengthPrefixedAddressStoreKey(v.Bytes())...)
+	return append(ValidatorMissedBlockBitArrayKeyPrefix, address.MustLengthPrefixedStoreKey(v.Bytes())...)
 }
 
 // ValidatorMissedBlockBitArrayKey - stored by *Consensus* address (not operator address)
@@ -61,6 +62,6 @@ func ValidatorMissedBlockBitArrayKey(v sdk.ConsAddress, i int64) []byte {
 }
 
 // AddrPubkeyRelationKey gets pubkey relation key used to get the pubkey from the address
-func AddrPubkeyRelationKey(address []byte) []byte {
-	return append(AddrPubkeyRelationKeyPrefix, sdk.MustLengthPrefixedAddressStoreKey(address)...)
+func AddrPubkeyRelationKey(addr []byte) []byte {
+	return append(AddrPubkeyRelationKeyPrefix, address.MustLengthPrefixedStoreKey(addr)...)
 }

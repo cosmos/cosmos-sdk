@@ -3,8 +3,9 @@ package smt_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/store/smt"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/cosmos/cosmos-sdk/store/smt"
 	dbm "github.com/tendermint/tm-db"
 )
 

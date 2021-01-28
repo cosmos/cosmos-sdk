@@ -240,7 +240,9 @@ func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metada
 func (k BaseKeeper) SendCoinsFromModuleToAccount(
 	ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
 ) error {
-
+	if k.BlockedAddr(recipientAddr) {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "Address <%s> in blacklist is not allowed", recipientAddr)
+	}
 	senderAddr := k.ak.GetModuleAddress(senderModule)
 	if senderAddr == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
@@ -307,7 +309,9 @@ func (k BaseKeeper) DelegateCoinsFromAccountToModule(
 func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 	ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
 ) error {
-
+	if k.BlockedAddr(recipientAddr) {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "Address <%s> in blacklist is not allowed", recipientAddr)
+	}
 	acc := k.ak.GetModuleAccount(ctx, senderModule)
 	if acc == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))

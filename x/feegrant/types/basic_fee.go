@@ -24,13 +24,17 @@ func (a *BasicFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockHeig
 		return true, sdkerrors.Wrap(ErrFeeLimitExpired, "basic allowance")
 	}
 
-	left, invalid := a.SpendLimit.SafeSub(fee)
-	if invalid {
-		return false, sdkerrors.Wrap(ErrFeeLimitExceeded, "basic allowance")
+	if a.SpendLimit != nil {
+		left, invalid := a.SpendLimit.SafeSub(fee)
+		if invalid {
+			return false, sdkerrors.Wrap(ErrFeeLimitExceeded, "basic allowance")
+		}
+
+		a.SpendLimit = left
+		return left.IsZero(), nil
 	}
 
-	a.SpendLimit = left
-	return left.IsZero(), nil
+	return false, nil
 }
 
 // PrepareForExport will adjust the expiration based on export time. In particular,
@@ -45,11 +49,13 @@ func (a *BasicFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int6
 
 // ValidateBasic implements FeeAllowance and enforces basic sanity checks
 func (a BasicFeeAllowance) ValidateBasic() error {
-	if !a.SpendLimit.IsValid() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "send amount is invalid: %s", a.SpendLimit)
-	}
-	if !a.SpendLimit.IsAllPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "spend limit must be positive")
+	if a.SpendLimit != nil {
+		if !a.SpendLimit.IsValid() {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "send amount is invalid: %s", a.SpendLimit)
+		}
+		if !a.SpendLimit.IsAllPositive() {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "spend limit must be positive")
+		}
 	}
 	return a.Expiration.ValidateBasic()
 }

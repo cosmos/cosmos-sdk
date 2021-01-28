@@ -21,6 +21,7 @@ const (
 	FlagExpiration  = "expiration"
 	FlagPeriod      = "period"
 	FlagPeriodLimit = "period-limit"
+	FlagSpendLimit  = "spend-limit"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -45,7 +46,7 @@ func GetTxCmd() *cobra.Command {
 // NewCmdFeeGrant returns a CLI command handler for creating a MsgGrantFeeAllowance transaction.
 func NewCmdFeeGrant() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant [granter] [grantee] [limit]",
+		Use:   "grant [granter] [grantee]",
 		Short: "Grant Fee allowance to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(
@@ -53,12 +54,12 @@ func NewCmdFeeGrant() *cobra.Command {
 				ignored as it is implied from [granter].
 
 Examples:
-%s tx %s grant cosmos1skjw... cosmos1skjw... 100stake --expiration 36000 or
-%s tx %s grant cosmos1skjw... cosmos1skjw... 100stake --period 3600 --period-limit 10stake --expiration 36000
+%s tx %s grant cosmos1skjw... cosmos1skjw... --spend-limit 100stake --expiration 36000 or
+%s tx %s grant cosmos1skjw... cosmos1skjw... --spend-limit 100stake --period 3600 --period-limit 10stake --expiration 36000
 				`, version.AppName, types.ModuleName, version.AppName, types.ModuleName,
 			),
 		),
-		Args: cobra.ExactArgs(3),
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			_, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -77,8 +78,13 @@ Examples:
 			}
 
 			granter := clientCtx.GetFromAddress()
+			sl, err := cmd.Flags().GetString(FlagSpendLimit)
+			if err != nil {
+				return err
+			}
 
-			limit, err := sdk.ParseCoinsNormalized(args[2])
+			// if `FlagSpendLimit` isn't set, limit will be nil
+			limit, err := sdk.ParseCoinsNormalized(sl)
 			if err != nil {
 				return err
 			}
@@ -88,11 +94,13 @@ Examples:
 				return err
 			}
 
-			expDuration := time.Duration(exp) * time.Second
-
 			basic := types.BasicFeeAllowance{
 				SpendLimit: limit,
-				Expiration: types.ExpiresAtTime(time.Now().Add(expDuration)),
+			}
+
+			if exp != 0 {
+				expDuration := time.Duration(exp) * time.Second
+				basic.Expiration = types.ExpiresAtTime(time.Now().Add(expDuration))
 			}
 
 			var grant types.FeeAllowanceI
@@ -116,8 +124,7 @@ Examples:
 				}
 
 				if periodClock > 0 && periodLimit != nil {
-
-					if periodClock > exp {
+					if exp > 0 && periodClock > exp {
 						return fmt.Errorf("period(%d) cannot be greater than the expiration(%d)", periodClock, exp)
 					}
 
@@ -153,7 +160,8 @@ Examples:
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
-	cmd.Flags().Int64(FlagExpiration, int64(365*24*60*60), "The second unit of time duration which the grant is active for the user; Default is a year")
+	cmd.Flags().Int64(FlagExpiration, 0, "The second unit of time duration which the grant is active for the user")
+	cmd.Flags().String(FlagSpendLimit, "", "Spend limit specifies the max limit can be used, if not mentioned there is no limit")
 	cmd.Flags().Int64(FlagPeriod, 0, "period specifies the time duration in which period_spend_limit coins can be spent before that allowance is reset")
 	cmd.Flags().String(FlagPeriodLimit, "", "// period limit specifies the maximum number of coins that can be spent in the period")
 

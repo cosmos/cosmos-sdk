@@ -63,7 +63,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		[]string{
 			granter.String(),
 			grantee.String(),
-			fee.String(),
+			fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, fee.String()),
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 			fmt.Sprintf("--%s=%v", cli.FlagExpiration, duration),
 		},
@@ -256,7 +256,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				[]string{
 					"wrong_granter",
 					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
-					"100stake",
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
 				commonFlags...,
@@ -269,7 +269,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				[]string{
 					granter.String(),
 					"wrong_grantee",
-					"100stake",
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
 				commonFlags...,
@@ -282,7 +282,44 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				[]string{
 					granter.String(),
 					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
-					"100stake",
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				},
+				commonFlags...,
+			),
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"valid basic fee grant without spend limit",
+			append(
+				[]string{
+					granter.String(),
+					"cosmos17h5lzptx3ghvsuhk7wx4c4hnl7rsswxjer97em",
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				},
+				commonFlags...,
+			),
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"valid basic fee grant without expiration",
+			append(
+				[]string{
+					granter.String(),
+					"cosmos16dlc38dcqt0uralyd8hksxyrny6kaeqfjvjwp5",
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				},
+				commonFlags...,
+			),
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"valid basic fee grant without spend-limit and expiration",
+			append(
+				[]string{
+					granter.String(),
+					"cosmos1ku40qup9vwag4wtf8cls9mkszxfthaklxkp3c8",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
 				commonFlags...,
@@ -295,7 +332,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				[]string{
 					granter.String(),
 					alreadyExistedGrantee.String(),
-					"100stake",
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
 				commonFlags...,
@@ -308,8 +345,8 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				[]string{
 					granter.String(),
 					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
-					"100stake",
-					"10stake",
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
+					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 10*60*60),
 				},
@@ -323,7 +360,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				[]string{
 					granter.String(),
 					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
-					"100stake",
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%d", cli.FlagPeriod, 10*60*60),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 60*60),
@@ -338,7 +375,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				[]string{
 					granter.String(),
 					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
-					"100stake",
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%d", cli.FlagPeriod, 10*60*60),
 					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
@@ -354,11 +391,55 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				[]string{
 					granter.String(),
 					"cosmos1w55kgcf3ltaqdy4ww49nge3klxmrdavrr6frmp",
-					"100stake",
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%d", cli.FlagPeriod, 60*60),
 					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 10*60*60),
+				},
+				commonFlags...,
+			),
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"valid periodic fee grant without spend-limit",
+			append(
+				[]string{
+					granter.String(),
+					"cosmos1vevyks8pthkscvgazc97qyfjt40m6g9xe85ry8",
+					fmt.Sprintf("--%s=%d", cli.FlagPeriod, 60*60),
+					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 10*60*60),
+				},
+				commonFlags...,
+			),
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"valid periodic fee grant without expiration",
+			append(
+				[]string{
+					granter.String(),
+					"cosmos14cm33pvnrv2497tyt8sp9yavhmw83nwej3m0e8",
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
+					fmt.Sprintf("--%s=%d", cli.FlagPeriod, 60*60),
+					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				},
+				commonFlags...,
+			),
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"valid periodic fee grant without spend-limit and expiration",
+			append(
+				[]string{
+					granter.String(),
+					"cosmos12nyk4pcf4arshznkpz882e4l4ts0lt0ap8ce54",
+					fmt.Sprintf("--%s=%d", cli.FlagPeriod, 60*60),
+					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
 				commonFlags...,
 			),

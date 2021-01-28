@@ -45,10 +45,15 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 		},
 		"empty basic": {
 			allow: types.PeriodicFeeAllowance{
-				Period:           types.BlockDuration(50),
+				Period:           types.BlockDuration(10),
 				PeriodSpendLimit: smallAtom,
+				PeriodReset:      types.ExpiresAtHeight(70),
 			},
-			valid: false,
+			blockHeight: 75,
+			valid:       true,
+			accept:      true,
+			remove:      false,
+			periodReset: types.ExpiresAtHeight(80),
 		},
 		"mismatched currencies": {
 			allow: types.PeriodicFeeAllowance{

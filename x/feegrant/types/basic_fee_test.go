@@ -29,10 +29,11 @@ func TestBasicFeeValidAllow(t *testing.T) {
 		remains     sdk.Coins
 	}{
 		"empty": {
-			allow: &types.BasicFeeAllowance{},
-			valid: false,
+			allow:  &types.BasicFeeAllowance{},
+			valid:  true,
+			accept: true,
 		},
-		"small fee": {
+		"small fee without expire": {
 			allow: &types.BasicFeeAllowance{
 				SpendLimit: atom,
 			},
@@ -42,7 +43,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			remove:  false,
 			remains: leftAtom,
 		},
-		"all fee": {
+		"all fee without expire": {
 			allow: &types.BasicFeeAllowance{
 				SpendLimit: smallAtom,
 			},
@@ -90,6 +91,24 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			valid:       true,
 			fee:         bigAtom,
 			blockHeight: 85,
+			accept:      false,
+		},
+		"with out spend limit": {
+			allow: &types.BasicFeeAllowance{
+				Expiration: types.ExpiresAtHeight(100),
+			},
+			valid:       true,
+			fee:         bigAtom,
+			blockHeight: 85,
+			accept:      true,
+		},
+		"expired no spend limit": {
+			allow: &types.BasicFeeAllowance{
+				Expiration: types.ExpiresAtHeight(100),
+			},
+			valid:       true,
+			fee:         bigAtom,
+			blockHeight: 120,
 			accept:      false,
 		},
 	}

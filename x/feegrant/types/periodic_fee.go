@@ -32,12 +32,17 @@ func (a *PeriodicFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockH
 	if isNeg {
 		return false, sdkerrors.Wrap(ErrFeeLimitExceeded, "period limit")
 	}
-	a.Basic.SpendLimit, isNeg = a.Basic.SpendLimit.SafeSub(fee)
-	if isNeg {
-		return false, sdkerrors.Wrap(ErrFeeLimitExceeded, "absolute limit")
+
+	if a.Basic.SpendLimit != nil {
+		a.Basic.SpendLimit, isNeg = a.Basic.SpendLimit.SafeSub(fee)
+		if isNeg {
+			return false, sdkerrors.Wrap(ErrFeeLimitExceeded, "absolute limit")
+		}
+
+		return a.Basic.SpendLimit.IsZero(), nil
 	}
 
-	return a.Basic.SpendLimit.IsZero(), nil
+	return false, nil
 }
 
 // tryResetPeriod will check if the PeriodReset has been hit. If not, it is a no-op.
@@ -103,7 +108,7 @@ func (a PeriodicFeeAllowance) ValidateBasic() error {
 	}
 
 	// ensure PeriodSpendLimit can be subtracted from total (same coin types)
-	if !a.PeriodSpendLimit.DenomsSubsetOf(a.Basic.SpendLimit) {
+	if a.Basic.SpendLimit != nil && !a.PeriodSpendLimit.DenomsSubsetOf(a.Basic.SpendLimit) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "period spend limit has different currency than basic spend limit")
 	}
 

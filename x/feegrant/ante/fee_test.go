@@ -173,74 +173,6 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 			handler:    ourAnteHandler,
 			valid:      false,
 		},
-		"paying with low funds (whole stack)": {
-			signerKey: priv1,
-			signer:    addr1,
-			fee:       50,
-			handler:   anteHandlerStack,
-			valid:     false,
-		},
-		"paying with good funds (whole stack)": {
-			signerKey: priv2,
-			signer:    addr2,
-			fee:       50,
-			handler:   anteHandlerStack,
-			valid:     true,
-		},
-		"paying with no account (whole stack)": {
-			signerKey: priv3,
-			signer:    addr3,
-			fee:       1,
-			handler:   anteHandlerStack,
-			valid:     false,
-		},
-		"no fee with real account (whole stack)": {
-			signerKey: priv1,
-			signer:    addr1,
-			fee:       0,
-			handler:   anteHandlerStack,
-			valid:     true,
-		},
-		"no fee with no account (whole stack)": {
-			signerKey: priv5,
-			signer:    addr5,
-			fee:       0,
-			handler:   anteHandlerStack,
-			valid:     false,
-		},
-		"valid fee grant without account (whole stack)": {
-			signerKey:     priv3,
-			signer:        addr3,
-			feeAccountKey: priv2,
-			feeAccount:    addr2,
-			fee:           50,
-			handler:       anteHandlerStack,
-			valid:         true,
-		},
-		"no fee grant (whole stack)": {
-			signerKey:  priv3,
-			signer:     addr3,
-			feeAccount: addr1,
-			fee:        2,
-			handler:    anteHandlerStack,
-			valid:      false,
-		},
-		"allowance smaller than requested fee (whole stack)": {
-			signerKey:  priv4,
-			signer:     addr4,
-			feeAccount: addr2,
-			fee:        50,
-			handler:    anteHandlerStack,
-			valid:      false,
-		},
-		"granter cannot cover allowed fee grant (whole stack)": {
-			signerKey:  priv4,
-			signer:     addr4,
-			feeAccount: addr1,
-			fee:        50,
-			handler:    anteHandlerStack,
-			valid:      false,
-		},
 	}
 
 	for name, stc := range cases {
@@ -257,8 +189,14 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 
 			tx, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
 			suite.Require().NoError(err)
-			_, err = tc.handler(ctx, tx, false)
+			_, err = ourAnteHandler(ctx, tx, false)
+			if tc.valid {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
 
+			_, err = anteHandlerStack(ctx, tx, false)
 			if tc.valid {
 				suite.Require().NoError(err)
 			} else {

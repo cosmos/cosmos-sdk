@@ -84,7 +84,7 @@ func TestPowerReductionChangeValidatorSetUpdates(t *testing.T) {
 	params.PowerReduction = sdk.DefaultPowerReduction
 	app.StakingKeeper.SetParams(ctx, params)
 
-	// power reduction change for all validators
+	// validator updates for tendermint power
 	updates, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.NoError(t, err)
 	require.Equal(t, 2, len(updates))

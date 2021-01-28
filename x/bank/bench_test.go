@@ -18,6 +18,7 @@ import (
 var moduleAccAddr = authtypes.NewModuleAddress(stakingtypes.BondedPoolName)
 
 func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
+	b.ReportAllocs()
 	// Add an account at genesis
 	acc := authtypes.BaseAccount{
 		Address: addr1.String(),

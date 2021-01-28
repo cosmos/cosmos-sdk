@@ -31,6 +31,7 @@ const (
 	flagDryRun      = "dry-run"
 	flagAccount     = "account"
 	flagIndex       = "index"
+	flagCointype    = "coin-type"
 	flagMultisig    = "multisig"
 	flagNoSort      = "nosort"
 	flagHDPath      = "hd-path"
@@ -75,9 +76,10 @@ the flag --nosort is set.
 	cmd.Flags().Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
 	cmd.Flags().Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 	cmd.Flags().Bool(flagDryRun, false, "Perform action, but don't add key to local keystore")
-	cmd.Flags().String(flagHDPath, "", "Manual HD Path derivation (overrides BIP44 config). Pass eth or m/44'/60'/0'/0/0 to generate an Ethernum compatible address")
+	cmd.Flags().String(flagHDPath, "", "Manual HD Path derivation (overrides BIP44 config)")
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
+	cmd.Flags().Uint32(flagCointype, 60, "Coin type for HD derivation")
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
 	cmd.Flags().String(flagKeyAlgo, string(keys.Secp256k1), "Key signing algorithm to generate keys for")
 
@@ -191,17 +193,15 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 
 	account := uint32(viper.GetInt(flagAccount))
 	index := uint32(viper.GetInt(flagIndex))
+	cointype := uint32(viper.GetInt(flagCointype))
 
 	useBIP44 := !viper.IsSet(flagHDPath)
 	var hdPath string
 
 	if useBIP44 {
-		hdPath = keys.CreateHDPath(account, index).String()
+		hdPath = keys.CreateHDPathEx(cointype, account, index).String()
 	} else {
 		hdPath = viper.GetString(flagHDPath)
-		if hdPath == "eth" {
-			hdPath = "m/44'/60'/0'/0/0"
-		}
 	}
 
 	// If we're using ledger, only thing we need is the path and the bech32 prefix.

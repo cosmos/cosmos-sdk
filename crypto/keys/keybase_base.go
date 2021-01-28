@@ -290,6 +290,11 @@ func CreateHDPath(account uint32, index uint32) *hd.BIP44Params {
 	return hd.NewFundraiserParams(account, types.GetConfig().GetCoinType(), index)
 }
 
+// CreateHDPath returns BIP 44 object from account and index parameters.
+func CreateHDPathEx(cointype, account, index uint32) *hd.BIP44Params {
+	return hd.NewFundraiserParams(account, cointype, index)
+}
+
 // SupportedAlgos returns a list of supported signing algorithms.
 func (kb baseKeybase) SupportedAlgos() []SigningAlgo {
 	return kb.options.supportedAlgos

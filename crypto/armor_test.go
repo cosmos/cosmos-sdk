@@ -158,6 +158,8 @@ func TestUnarmorInfoBytesErrors(t *testing.T) {
 }
 
 func BenchmarkBcryptGenerateFromPassword(b *testing.B) {
+	b.ReportAllocs()
+
 	passphrase := []byte("passphrase")
 	for securityParam := 9; securityParam < 16; securityParam++ {
 		param := securityParam

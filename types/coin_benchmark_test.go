@@ -6,7 +6,7 @@ import (
 )
 
 func coinName(suffix int) string {
-	return fmt.Sprintf("COINZ_%d", suffix)
+	return fmt.Sprintf("coinz%d", suffix)
 }
 
 func BenchmarkCoinsAdditionIntersect(b *testing.B) {

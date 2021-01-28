@@ -35,8 +35,12 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // BasicFeeAllowance implements FeeAllowance with a one-time grant of tokens
 // that optionally expires. The delegatee can use up to SpendLimit to cover fees.
 type BasicFeeAllowance struct {
+	// spend_limit specifies the maximum amount of tokens that can be spent
+	// by this allowance and will be updated as tokens are spent. If it is
+	// empty, there is no spend limit and any amount of coins can be spent.
 	SpendLimit github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=spend_limit,json=spendLimit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"spend_limit"`
-	Expiration ExpiresAt                                `protobuf:"bytes,2,opt,name=expiration,proto3" json:"expiration"`
+	// expiration specifies an optional time when this allowance expires
+	Expiration ExpiresAt `protobuf:"bytes,2,opt,name=expiration,proto3" json:"expiration"`
 }
 
 func (m *BasicFeeAllowance) Reset()         { *m = BasicFeeAllowance{} }
@@ -89,11 +93,20 @@ func (m *BasicFeeAllowance) GetExpiration() ExpiresAt {
 // PeriodicFeeAllowance extends FeeAllowance to allow for both a maximum cap,
 // as well as a limit per time period.
 type PeriodicFeeAllowance struct {
-	Basic            BasicFeeAllowance                        `protobuf:"bytes,1,opt,name=basic,proto3" json:"basic"`
-	Period           Duration                                 `protobuf:"bytes,2,opt,name=period,proto3" json:"period"`
+	// basic specifies a struct of `BasicFeeAllowance`
+	Basic BasicFeeAllowance `protobuf:"bytes,1,opt,name=basic,proto3" json:"basic"`
+	// period specifies the time duration in which period_spend_limit coins can
+	// be spent before that allowance is reset
+	Period Duration `protobuf:"bytes,2,opt,name=period,proto3" json:"period"`
+	// period_spend_limit specifies the maximum number of coins that can be spent
+	// in the period
 	PeriodSpendLimit github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=period_spend_limit,json=periodSpendLimit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"period_spend_limit"`
-	PeriodCanSpend   github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=period_can_spend,json=periodCanSpend,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"period_can_spend"`
-	PeriodReset      ExpiresAt                                `protobuf:"bytes,5,opt,name=period_reset,json=periodReset,proto3" json:"period_reset"`
+	// period_can_spend is the number of coins left to be spent before the period_reset time
+	PeriodCanSpend github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=period_can_spend,json=periodCanSpend,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"period_can_spend"`
+	// period_reset is the time at which this period resets and a new one begins,
+	// it is calculated from the start time of the first transaction after the
+	// last period ended
+	PeriodReset ExpiresAt `protobuf:"bytes,5,opt,name=period_reset,json=periodReset,proto3" json:"period_reset"`
 }
 
 func (m *PeriodicFeeAllowance) Reset()         { *m = PeriodicFeeAllowance{} }

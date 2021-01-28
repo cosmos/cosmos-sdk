@@ -6,10 +6,11 @@ import (
 )
 
 func coinName(suffix int) string {
-	return fmt.Sprintf("COINZ_%d", suffix)
+	return fmt.Sprintf("coinz%d", suffix)
 }
 
 func BenchmarkCoinsAdditionIntersect(b *testing.B) {
+	b.ReportAllocs()
 	benchmarkingFunc := func(numCoinsA int, numCoinsB int) func(b *testing.B) {
 		return func(b *testing.B) {
 			coinsA := Coins(make([]Coin, numCoinsA))
@@ -39,6 +40,7 @@ func BenchmarkCoinsAdditionIntersect(b *testing.B) {
 }
 
 func BenchmarkCoinsAdditionNoIntersect(b *testing.B) {
+	b.ReportAllocs()
 	benchmarkingFunc := func(numCoinsA int, numCoinsB int) func(b *testing.B) {
 		return func(b *testing.B) {
 			coinsA := Coins(make([]Coin, numCoinsA))

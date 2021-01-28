@@ -12,6 +12,7 @@ var (
 )
 
 /*
+// TODO update to handle other lines of code
 // sanity checks
 func (suite *TendermintTestSuite) TestCheckSubstituteUpdateStateBasic() {
 	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
@@ -43,8 +44,7 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 		AllowUpdateAfterMisbehaviour bool
 		FreezeClient                 bool
 		ExpireClient                 bool
-		expPassUnfreeze              bool // expected result using a header that passes stronger validation
-		expPassUnexpire              bool // expected result using a header that passes weaker validation
+		expPass                      bool
 	}{
 		{
 			name:                         "not allowed to be updated, not frozen or expired",
@@ -52,8 +52,7 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 			AllowUpdateAfterMisbehaviour: false,
 			FreezeClient:                 false,
 			ExpireClient:                 false,
-			expPassUnfreeze:              false,
-			expPassUnexpire:              false,
+			expPass:                      false,
 		},
 		{
 			name:                         "not allowed to be updated, client is frozen",
@@ -61,8 +60,7 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 			AllowUpdateAfterMisbehaviour: false,
 			FreezeClient:                 true,
 			ExpireClient:                 false,
-			expPassUnfreeze:              false,
-			expPassUnexpire:              false,
+			expPass:                      false,
 		},
 		{
 			name:                         "not allowed to be updated, client is expired",
@@ -70,8 +68,7 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 			AllowUpdateAfterMisbehaviour: false,
 			FreezeClient:                 false,
 			ExpireClient:                 true,
-			expPassUnfreeze:              false,
-			expPassUnexpire:              false,
+			expPass:                      false,
 		},
 		{
 			name:                         "not allowed to be updated, client is frozen and expired",
@@ -79,8 +76,7 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 			AllowUpdateAfterMisbehaviour: false,
 			FreezeClient:                 true,
 			ExpireClient:                 true,
-			expPassUnfreeze:              false,
-			expPassUnexpire:              false,
+			expPass:                      false,
 		},
 		{
 			name:                         "allowed to be updated only after misbehaviour, not frozen or expired",
@@ -88,8 +84,7 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 			AllowUpdateAfterMisbehaviour: true,
 			FreezeClient:                 false,
 			ExpireClient:                 false,
-			expPassUnfreeze:              false,
-			expPassUnexpire:              false,
+			expPass:                      false,
 		},
 		{
 			name:                         "PASS: allowed to be updated only after misbehaviour, client is frozen",
@@ -97,8 +92,7 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 			AllowUpdateAfterMisbehaviour: true,
 			FreezeClient:                 true,
 			ExpireClient:                 false,
-			expPassUnfreeze:              true,
-			expPassUnexpire:              false,
+			expPass:                      true,
 		},
 		{
 			name:                         "allowed to be updated only after misbehaviour, client is expired",
@@ -106,17 +100,15 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 			AllowUpdateAfterMisbehaviour: true,
 			FreezeClient:                 false,
 			ExpireClient:                 true,
-			expPassUnfreeze:              false,
-			expPassUnexpire:              false,
+			expPass:                      false,
 		},
 		{
-			name:                         "allowed to be updated only after misbehaviour, client is frozen and expired",
+			name:                         "PASS: allowed to be updated only after misbehaviour, client is frozen and expired",
 			AllowUpdateAfterExpiry:       false,
 			AllowUpdateAfterMisbehaviour: true,
 			FreezeClient:                 true,
 			ExpireClient:                 true,
-			expPassUnfreeze:              true,
-			expPassUnexpire:              true,
+			expPass:                      true,
 		},
 		{
 			name:                         "allowed to be updated only after expiry, not frozen or expired",
@@ -124,8 +116,7 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 			AllowUpdateAfterMisbehaviour: false,
 			FreezeClient:                 false,
 			ExpireClient:                 false,
-			expPassUnfreeze:              false,
-			expPassUnexpire:              false,
+			expPass:                      false,
 		},
 		{
 			name:                         "allowed to be updated only after expiry, client is frozen",
@@ -133,8 +124,7 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 			AllowUpdateAfterMisbehaviour: false,
 			FreezeClient:                 true,
 			ExpireClient:                 false,
-			expPassUnfreeze:              false,
-			expPassUnexpire:              false,
+			expPass:                      false,
 		},
 		{
 			name:                         "PASS: allowed to be updated only after expiry, client is expired",
@@ -142,8 +132,7 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 			AllowUpdateAfterMisbehaviour: false,
 			FreezeClient:                 false,
 			ExpireClient:                 true,
-			expPassUnfreeze:              true,
-			expPassUnexpire:              true,
+			expPass:                      true,
 		},
 		{
 			name:                         "allowed to be updated only after expiry, client is frozen and expired",
@@ -151,8 +140,7 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 			AllowUpdateAfterMisbehaviour: false,
 			FreezeClient:                 true,
 			ExpireClient:                 true,
-			expPassUnfreeze:              false,
-			expPassUnexpire:              false,
+			expPass:                      false,
 		},
 		{
 			name:                         "allowed to be updated after expiry and misbehaviour, not frozen or expired",
@@ -160,8 +148,7 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 			AllowUpdateAfterMisbehaviour: true,
 			FreezeClient:                 false,
 			ExpireClient:                 false,
-			expPassUnfreeze:              false,
-			expPassUnexpire:              false,
+			expPass:                      false,
 		},
 		{
 			name:                         "PASS: allowed to be updated after expiry and misbehaviour, client is frozen",
@@ -169,8 +156,7 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 			AllowUpdateAfterMisbehaviour: true,
 			FreezeClient:                 true,
 			ExpireClient:                 false,
-			expPassUnfreeze:              true,
-			expPassUnexpire:              false,
+			expPass:                      true,
 		},
 		{
 			name:                         "PASS: allowed to be updated after expiry and misbehaviour, client is expired",
@@ -178,8 +164,7 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 			AllowUpdateAfterMisbehaviour: true,
 			FreezeClient:                 false,
 			ExpireClient:                 true,
-			expPassUnfreeze:              true,
-			expPassUnexpire:              true,
+			expPass:                      true,
 		},
 		{
 			name:                         "PASS: allowed to be updated after expiry and misbehaviour, client is frozen and expired",
@@ -187,8 +172,7 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 			AllowUpdateAfterMisbehaviour: true,
 			FreezeClient:                 true,
 			ExpireClient:                 true,
-			expPassUnfreeze:              true,
-			expPassUnexpire:              true,
+			expPass:                      true,
 		},
 	}
 
@@ -203,27 +187,13 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 			// start by testing unexpiring the client
 			suite.SetupTest() // reset
 
-			// construct subject and substitute using test case parameters
+			// construct subject using test case parameters
 			subject, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
-			substitute, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
-
 			subjectClientState := suite.chainA.GetClientState(subject).(*types.ClientState)
 			subjectClientState.AllowUpdateAfterExpiry = tc.AllowUpdateAfterExpiry
 			subjectClientState.AllowUpdateAfterMisbehaviour = tc.AllowUpdateAfterMisbehaviour
-			//		initialHeight := clienttypes.NewHeight(substituteClientState.GetLatestHeight().GetRevisionNumber(), substituteClientState.GetLatestHeight().GetRevisionHeight()+1)
 
-			// update substitute a few times
-
-			substituteClientState := suite.chainA.GetClientState(substitute).(*types.ClientState)
-			initialHeight := substituteClientState.GetLatestHeight()
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, substitute, exported.Tendermint)
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, substitute, exported.Tendermint)
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, substitute, exported.Tendermint)
-
-			substituteClientState = suite.chainA.GetClientState(substitute).(*types.ClientState)
-			substituteClientState.AllowUpdateAfterExpiry = tc.AllowUpdateAfterExpiry
-			substituteClientState.AllowUpdateAfterMisbehaviour = tc.AllowUpdateAfterMisbehaviour
-
+			// apply freezing or expiry as determined by the test case
 			if tc.FreezeClient {
 				subjectClientState.FrozenHeight = frozenHeight
 			}
@@ -233,11 +203,28 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
 			}
 
+			// cosntruct the substitute to match the subject client
+			// NOTE: the substitute is explicitly created after the freezing or expiry occurs,
+			// primarily to prevent the substitute from becoming frozen. It also should be
+			// the natural flow of events in practice. The subject will become frozne/expired
+			// and a substitute will be created along with a governance proposal as a response
+
+			substitute, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+			substituteClientState := suite.chainA.GetClientState(substitute).(*types.ClientState)
+			substituteClientState.AllowUpdateAfterExpiry = tc.AllowUpdateAfterExpiry
+			substituteClientState.AllowUpdateAfterMisbehaviour = tc.AllowUpdateAfterMisbehaviour
+			initialHeight := substituteClientState.GetLatestHeight()
+
+			// update substitute a few times
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, substitute, exported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, substitute, exported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, substitute, exported.Tendermint)
+
 			subjectClientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), subject)
 			substituteClientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), substitute)
 			updatedClient, err := subjectClientState.CheckSubstituteAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), subjectClientStore, substituteClientStore, substituteClientState, initialHeight)
 
-			if tc.expPassUnfreeze {
+			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().Equal(clienttypes.ZeroHeight(), updatedClient.GetFrozenHeight())
 			} else {
@@ -245,128 +232,8 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 				suite.Require().Nil(updatedClient)
 			}
 
-			/*
-				// use next header for chainB to unexpire clients but with empty trusted heights
-				// and validators. Update chainB time so header won't be expired.
-				unexpireClientHeader, err := suite.chainA.ConstructUpdateTMClientHeader(suite.chainB, clientA)
-				suite.Require().NoError(err)
-				unexpireClientHeader.TrustedHeight = clienttypes.ZeroHeight()
-				unexpireClientHeader.TrustedValidators = nil
-
-				clientStore = suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
-				cs, consState, err = clientState.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), clientStore, unexpireClientHeader)
-
-				if tc.expPassUnexpire {
-					suite.Require().NoError(err)
-					suite.Require().NotNil(cs)
-					suite.Require().NotNil(consState)
-				} else {
-					suite.Require().Error(err)
-					suite.Require().Nil(cs)
-					suite.Require().Nil(consState)
-				} */
 		})
 	}
 }
 
-/*
-// test softer validation on headers used for unexpiring clients
-func (suite *TendermintTestSuite) TestCheckProposedHeader() {
-	var (
-		header      *types.Header
-		clientState *types.ClientState
-		clientA     string
-		err         error
-	)
-
-	testCases := []struct {
-		name     string
-		malleate func()
-		expPass  bool
-	}{
-		{
-			"success", func() {}, true,
-		},
-		{
-			"invalid signed header", func() {
-				header.SignedHeader = nil
-			}, false,
-		},
-		{
-			"header time is less than or equal to consensus state timestamp", func() {
-				consensusState, found := suite.chainA.GetConsensusState(clientA, clientState.GetLatestHeight())
-				suite.Require().True(found)
-				consensusState.(*types.ConsensusState).Timestamp = header.GetTime()
-				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), clientA, clientState.GetLatestHeight(), consensusState)
-
-				// update block time so client is expired
-				suite.chainA.ExpireClient(clientState.TrustingPeriod)
-				suite.chainB.ExpireClient(clientState.TrustingPeriod)
-				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
-			}, false,
-		},
-		{
-			"header height is not newer than client state", func() {
-				consensusState, found := suite.chainA.GetConsensusState(clientA, clientState.GetLatestHeight())
-				suite.Require().True(found)
-				clientState.LatestHeight = header.GetHeight().(clienttypes.Height)
-				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), clientA, clientState.GetLatestHeight(), consensusState)
-
-			}, false,
-		},
-		{
-			"signed header failed validate basic - wrong chain ID", func() {
-				clientState.ChainId = ibctesting.InvalidID
-			}, false,
-		},
-		{
-			"header is already expired", func() {
-				// expire client
-				suite.chainA.ExpireClient(clientState.TrustingPeriod)
-				suite.chainB.ExpireClient(clientState.TrustingPeriod)
-				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
-			}, false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		suite.Run(tc.name, func() {
-			suite.SetupTest() // reset
-
-			clientA, _ = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
-			clientState = suite.chainA.GetClientState(clientA).(*types.ClientState)
-			clientState.AllowUpdateAfterExpiry = true
-			clientState.AllowUpdateAfterMisbehaviour = false
-
-			// expire client
-			suite.chainA.ExpireClient(clientState.TrustingPeriod)
-			suite.chainB.ExpireClient(clientState.TrustingPeriod)
-			suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
-
-			// use next header for chainB to unexpire clients but with empty trusted heights
-			// and validators.
-			header, err = suite.chainA.ConstructUpdateTMClientHeader(suite.chainB, clientA)
-			suite.Require().NoError(err)
-			header.TrustedHeight = clienttypes.ZeroHeight()
-			header.TrustedValidators = nil
-
-			tc.malleate()
-
-			clientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
-			cs, consState, err := clientState.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), clientStore, header)
-
-			if tc.expPass {
-				suite.Require().NoError(err)
-				suite.Require().NotNil(cs)
-				suite.Require().NotNil(consState)
-			} else {
-				suite.Require().Error(err)
-				suite.Require().Nil(cs)
-				suite.Require().Nil(consState)
-			}
-		})
-	}
-}
-*/
+// TODO: add test for equality helper function

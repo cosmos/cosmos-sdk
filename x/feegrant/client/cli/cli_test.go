@@ -587,7 +587,7 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 		[]string{
 			granter.String(),
 			grantee.String(),
-			fee.String(),
+			fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, fee.String()),
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 			fmt.Sprintf("--%s=%v", cli.FlagExpiration, duration),
 		},

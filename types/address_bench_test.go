@@ -12,6 +12,7 @@ import (
 )
 
 func BenchmarkBech32ifyPubKey(b *testing.B) {
+	b.ReportAllocs()
 	pkBz := make([]byte, ed25519.PubKeySize)
 	pk := &ed25519.PubKey{Key: pkBz}
 	rng := rand.New(rand.NewSource(time.Now().Unix()))
@@ -29,6 +30,7 @@ func BenchmarkBech32ifyPubKey(b *testing.B) {
 }
 
 func BenchmarkGetPubKeyFromBech32(b *testing.B) {
+	b.ReportAllocs()
 	pkBz := make([]byte, ed25519.PubKeySize)
 	pk := &ed25519.PubKey{Key: pkBz}
 	rng := rand.New(rand.NewSource(time.Now().Unix()))

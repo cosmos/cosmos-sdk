@@ -75,7 +75,7 @@ the flag --nosort is set.
 	cmd.Flags().Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
 	cmd.Flags().Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 	cmd.Flags().Bool(flagDryRun, false, "Perform action, but don't add key to local keystore")
-	cmd.Flags().String(flagHDPath, "", "Manual HD Path derivation (overrides BIP44 config)")
+	cmd.Flags().String(flagHDPath, "", "Manual HD Path derivation (overrides BIP44 config). Pass eth or m/44'/60'/0'/0/0 to generate an Ethernum compatible address")
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
@@ -199,6 +199,9 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 		hdPath = keys.CreateHDPath(account, index).String()
 	} else {
 		hdPath = viper.GetString(flagHDPath)
+		if hdPath == "eth" {
+			hdPath = "m/44'/60'/0'/0/0"
+		}
 	}
 
 	// If we're using ledger, only thing we need is the path and the bech32 prefix.

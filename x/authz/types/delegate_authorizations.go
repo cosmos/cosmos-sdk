@@ -11,27 +11,28 @@ import (
 )
 
 var (
-	_ Authorization = &SendAuthorization{}
+	_ Authorization = &DelegateAuthorization{}
 )
 
-// NewSendAuthorization creates a new SendAuthorization object.
-func NewSendAuthorization(spendLimit sdk.Coins) *SendAuthorization {
-	return &SendAuthorization{
-		SpendLimit: spendLimit,
+// NewDelegateAuthorization creates a new DelegateAuthorization object.
+func NewDelegateAuthorization(validatorAddress sdk.ValAddress, amount sdk.Coins) *DelegateAuthorization {
+	return &DelegateAuthorization{
+		ValidatorAddress: validatorAddress.String(),
+		Amount:           amount,
 	}
 }
 
 // MethodName implements Authorization.MethodName.
-func (authorization SendAuthorization) MethodName() string {
-	return "/cosmos.bank.v1beta1.Msg/Send"
+func (authorization DelegateAuthorization) MethodName() string {
+	return "/cosmos.staking.v1beta1.Msg/Delegate"
 }
 
 // Accept implements Authorization.Accept.
-func (authorization SendAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (allow bool, updated Authorization, delete bool, err error) {
+func (authorization DelegateAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (allow bool, updated Authorization, delete bool, err error) {
 	if reflect.TypeOf(msg.Request) == reflect.TypeOf(&bank.MsgSend{}) {
 		msg, ok := msg.Request.(*bank.MsgSend)
 		if ok {
-			limitLeft, isNegative := authorization.SpendLimit.SafeSub(msg.Amount)
+			limitLeft, isNegative := authorization.Amount.SafeSub(msg.Amount)
 			if isNegative {
 				return false, nil, false, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "requested amount is more than spend limit")
 			}
@@ -39,7 +40,7 @@ func (authorization SendAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.
 				return true, nil, true, nil
 			}
 
-			return true, &SendAuthorization{SpendLimit: limitLeft}, false, nil
+			return true, &DelegateAuthorization{Amount: limitLeft}, false, nil
 		}
 	}
 	return false, nil, false, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "type mismatch")

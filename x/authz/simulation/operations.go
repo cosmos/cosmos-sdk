@@ -249,7 +249,7 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 
 		msg := types.NewMsgExecAuthorized(grantee.Address, []sdk.ServiceMsg{execMsg})
 		sendGrant := targetGrant.Authorization.GetCachedValue().(*types.SendAuthorization)
-		allow, _, _ := sendGrant.Accept(execMsg, ctx.BlockHeader())
+		allow, _, _, _ := sendGrant.Accept(execMsg, ctx.BlockHeader())
 		if !allow {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecDelegated, "not allowed"), nil, nil
 		}

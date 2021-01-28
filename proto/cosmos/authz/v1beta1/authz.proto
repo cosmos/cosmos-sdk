@@ -35,3 +35,21 @@ message AuthorizationGrant {
   google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
   google.protobuf.Timestamp expiration    = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }
+
+message DelegateAuthorization {
+  option (cosmos_proto.implements_interface) = "Authorization";
+
+  string validator_address = 1;
+  repeated cosmos.base.v1beta1.Coin amount = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+
+}
+
+message UndelegateAuthorization {
+  option (cosmos_proto.implements_interface) = "Authorization";
+
+  string validator_address = 1;
+  repeated cosmos.base.v1beta1.Coin amount = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+
+}

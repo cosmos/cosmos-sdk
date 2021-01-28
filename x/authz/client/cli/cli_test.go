@@ -83,7 +83,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 var typeMsgSend = types.SendAuthorization{}.MethodName()
-var typeMsgVote = "/cosmos.gov.v1beta1.Msg/Vote"
+var typeMsgVote = types.VoteAuthorization{}.MethodName()
 
 func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 	val := s.network.Validators[0]
@@ -724,4 +724,94 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
+}
+
+func (s *IntegrationTestSuite) TestNewExecVoteAuthorized() {
+	val := s.network.Validators[0]
+	grantee := s.grantee
+	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
+
+	_, err := execGrantAuthorization(
+		val,
+		[]string{
+			grantee.String(),
+			"vote",
+			fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		},
+	)
+	s.Require().NoError(err)
+
+	// msg vote
+	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1beta1.Msg/Vote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
+
+	execMsg := testutil.WriteToNewTempFile(s.T(), voteTx)
+
+	testCases := []struct {
+		name         string
+		args         []string
+		respType     proto.Message
+		expectedCode uint32
+		expectErr    bool
+	}{
+		{
+			"fail invalid grantee",
+			[]string{
+				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, "grantee"),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+			},
+			nil,
+			0,
+			true,
+		},
+		{
+			"fail invalid json path",
+			[]string{
+				"/invalid/file.txt",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			},
+			nil,
+			0,
+			true,
+		},
+		{
+			"valid txn",
+			[]string{
+				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			},
+			&sdk.TxResponse{},
+			0,
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+
+			cmd := cli.NewCmdExecAuthorization()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
 }

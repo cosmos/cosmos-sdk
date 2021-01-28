@@ -23,6 +23,6 @@ func (cap GenericAuthorization) MethodName() string {
 }
 
 // Accept implements Authorization.Accept.
-func (cap GenericAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (allow bool, updated Authorization, delete bool) {
-	return true, &cap, false
+func (cap GenericAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (allow bool, updated Authorization, delete bool, err error) {
+	return true, &cap, false, nil
 }

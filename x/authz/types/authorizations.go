@@ -20,7 +20,7 @@ type Authorization interface {
 
 	// Accept determines whether this grant permits the provided sdk.ServiceMsg to be performed, and if
 	// so provides an upgraded authorization instance.
-	Accept(msg sdk.ServiceMsg, block tmproto.Header) (allow bool, updated Authorization, delete bool)
+	Accept(msg sdk.ServiceMsg, block tmproto.Header) (allow bool, updated Authorization, delete bool, err error)
 }
 
 // NewAuthorizationGrant returns new AuthrizationGrant

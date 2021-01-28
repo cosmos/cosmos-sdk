@@ -35,3 +35,8 @@ message AuthorizationGrant {
   google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
   google.protobuf.Timestamp expiration    = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }
+
+// VoteAuthorization allows the grantee to vote on a proposal on behalf of the granter's account.
+message VoteAuthorization {
+  option (cosmos_proto.implements_interface) = "Authorization";
+}

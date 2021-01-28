@@ -93,6 +93,8 @@ Examples:
 				}
 
 				authorization = types.NewGenericAuthorization(msgType)
+			case "vote":
+				authorization = types.NewVoteAuthorization()
 			default:
 				return fmt.Errorf("invalid authorization type, %s", args[1])
 			}

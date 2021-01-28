@@ -32,7 +32,7 @@ func bootstrapHandlerGenesisTest(t *testing.T, power int64, numAddrs int, accAmo
 
 	addrDels, addrVals := generateAddresses(app, ctx, numAddrs, accAmount)
 
-	amt := sdk.TokensFromConsensusPower(power, sdk.DefaultPowerReduction)
+	amt := app.StakingKeeper.TokensFromConsensusPower(ctx, power)
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), amt.MulRaw(int64(len(addrDels)))))
 
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
@@ -43,6 +43,51 @@ func bootstrapHandlerGenesisTest(t *testing.T, power int64, numAddrs int, accAmo
 	app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(totalSupply))
 
 	return app, ctx, addrDels, addrVals
+}
+
+func TestPowerReductionChangeValidatorSetUpdates(t *testing.T) {
+	initPower := int64(1000000)
+	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 10, sdk.TokensFromConsensusPower(initPower, sdk.DefaultPowerReduction))
+	validatorAddr, validatorAddr3 := valAddrs[0], valAddrs[1]
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
+
+	// create validator
+	tstaking.CreateValidatorWithValPower(validatorAddr, PKs[0], initPower, true)
+
+	// must end-block
+	updates, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(updates))
+
+	// create a second validator keep it bonded
+	tstaking.CreateValidatorWithValPower(validatorAddr3, PKs[2], initPower, true)
+
+	// must end-block
+	updates, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(updates))
+
+	// modify power reduction to 10 times bigger one
+	params := app.StakingKeeper.GetParams(ctx)
+	params.PowerReduction = sdk.DefaultPowerReduction.Mul(sdk.NewInt(10))
+	app.StakingKeeper.SetParams(ctx, params)
+
+	// validator updates for tendermint power
+	updates, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(updates))
+	require.Equal(t, updates[0].Power, initPower/10)
+	require.Equal(t, updates[1].Power, initPower/10)
+
+	// power reduction back to default
+	params = app.StakingKeeper.GetParams(ctx)
+	params.PowerReduction = sdk.DefaultPowerReduction
+	app.StakingKeeper.SetParams(ctx, params)
+
+	// power reduction change for all validators
+	updates, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(updates))
 }
 
 func TestValidatorByPowerIndex(t *testing.T) {
@@ -68,7 +113,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	// verify that the by power index exists
 	validator, found := app.StakingKeeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	power := types.GetValidatorsByPowerIndexKey(validator, sdk.DefaultPowerReduction)
+	power := types.GetValidatorsByPowerIndexKey(validator, app.StakingKeeper.PowerReduction(ctx))
 	require.True(t, keeper.ValidatorByPowerIndexExists(ctx, app.StakingKeeper, power))
 
 	// create a second validator keep it bonded
@@ -97,11 +142,11 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	// but the new power record should have been created
 	validator, found = app.StakingKeeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	power2 := types.GetValidatorsByPowerIndexKey(validator, sdk.DefaultPowerReduction)
+	power2 := types.GetValidatorsByPowerIndexKey(validator, app.StakingKeeper.PowerReduction(ctx))
 	require.True(t, keeper.ValidatorByPowerIndexExists(ctx, app.StakingKeeper, power2))
 
 	// now the new record power index should be the same as the original record
-	power3 := types.GetValidatorsByPowerIndexKey(validator, sdk.DefaultPowerReduction)
+	power3 := types.GetValidatorsByPowerIndexKey(validator, app.StakingKeeper.PowerReduction(ctx))
 	require.Equal(t, power2, power3)
 
 	// unbond self-delegation
@@ -491,8 +536,8 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 	errorCases := []sdk.Int{
 		//1<<64 - 1, // more than int64 power
 		//1<<63 + 1, // more than int64 power
-		sdk.TokensFromConsensusPower(1<<63-1, sdk.DefaultPowerReduction),
-		sdk.TokensFromConsensusPower(1<<31, sdk.DefaultPowerReduction),
+		app.StakingKeeper.TokensFromConsensusPower(ctx, 1<<63-1),
+		app.StakingKeeper.TokensFromConsensusPower(ctx, 1<<31),
 		initBond,
 	}
 
@@ -527,7 +572,7 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 	}
 
 	// bond them all
-	amt := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
+	amt := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	for i, validatorAddr := range validatorAddrs {
 		tstaking.CreateValidator(validatorAddr, PKs[i], amt, true)
 		// verify that the account is bonded
@@ -1094,11 +1139,11 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	tstaking.Ctx = ctx
 
 	// begin unbonding 4 stake
-	unbondAmt := sdk.TokensFromConsensusPower(4, sdk.DefaultPowerReduction)
+	unbondAmt := app.StakingKeeper.TokensFromConsensusPower(ctx, 4)
 	tstaking.Undelegate(del, valA, unbondAmt, true)
 
 	// begin redelegate 6 stake
-	redAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(6, sdk.DefaultPowerReduction))
+	redAmt := sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 6))
 	msgBeginRedelegate := types.NewMsgBeginRedelegate(del, valA, valB, redAmt)
 	tstaking.Handle(msgBeginRedelegate, true)
 
@@ -1182,7 +1227,7 @@ func TestInvalidCoinDenom(t *testing.T) {
 	valA, valB, delAddr := valAddrs[0], valAddrs[1], delAddrs[2]
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
-	valTokens := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
+	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 100)
 	invalidCoin := sdk.NewCoin("churros", valTokens)
 	validCoin := sdk.NewCoin(sdk.DefaultBondDenom, valTokens)
 	oneCoin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())

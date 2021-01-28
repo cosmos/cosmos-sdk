@@ -111,7 +111,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		val.Tokens = sdk.NewInt(rand.Int63())
 		validators = append(validators, val)
 
-		hi := stakingtypes.NewHistoricalInfo(suite.ctx.BlockHeader(), validators, sdk.DefaultPowerReduction)
+		hi := stakingtypes.NewHistoricalInfo(suite.ctx.BlockHeader(), validators, app.StakingKeeper.PowerReduction(suite.ctx))
 		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), &hi)
 	}
 

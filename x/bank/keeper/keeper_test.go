@@ -86,7 +86,7 @@ func (suite *IntegrationTestSuite) TestSupply() {
 	app, ctx := suite.app, suite.ctx
 
 	initialPower := int64(100)
-	initTokens := sdk.TokensFromConsensusPower(initialPower, sdk.DefaultPowerReduction)
+	initTokens := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, initialPower)
 
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 	app.BankKeeper.SetSupply(ctx, types.NewSupply(totalSupply))

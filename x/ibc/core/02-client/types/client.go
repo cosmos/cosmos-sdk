@@ -93,7 +93,7 @@ func ValidateClientType(clientType string) error {
 	}
 
 	smallestPossibleClientID := FormatClientIdentifier(clientType, 0)
-	largestPossibleClientID := FormatClientIdentifier(clientType, math.MaxUint64)
+	largestPossibleClientID := FormatClientIdentifier(clientType, uint64(math.MaxUint64))
 
 	// IsValidClientID will check client type format and if the sequence is a uint64
 	if !IsValidClientID(smallestPossibleClientID) {

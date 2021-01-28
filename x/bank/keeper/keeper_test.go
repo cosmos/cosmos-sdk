@@ -433,7 +433,7 @@ func (suite *IntegrationTestSuite) TestValidateBalance() {
 
 func (suite *IntegrationTestSuite) TestBalance() {
 	app, ctx := suite.app, suite.ctx
-	addr := sdk.AccAddress([]byte("addr1_______________"))
+	addr := sdk.AccAddress("addr1_______________")
 
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 	app.AccountKeeper.SetAccount(ctx, acc)

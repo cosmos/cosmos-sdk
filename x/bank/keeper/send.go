@@ -195,7 +195,7 @@ func (k BaseSendKeeper) SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 
 		newBalance := balance.Sub(coin)
 
-		err := k.SetBalance(ctx, addr, newBalance)
+		err := k.setBalance(ctx, addr, newBalance)
 		if err != nil {
 			return err
 		}
@@ -216,7 +216,7 @@ func (k BaseSendKeeper) AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.C
 		balance := k.GetBalance(ctx, addr, coin.Denom)
 		newBalance := balance.Add(coin)
 
-		err := k.SetBalance(ctx, addr, newBalance)
+		err := k.setBalance(ctx, addr, newBalance)
 		if err != nil {
 			return err
 		}
@@ -249,7 +249,7 @@ func (k BaseSendKeeper) SetBalances(ctx sdk.Context, addr sdk.AccAddress, balanc
 	k.ClearBalances(ctx, addr)
 
 	for _, balance := range balances {
-		err := k.SetBalance(ctx, addr, balance)
+		err := k.setBalance(ctx, addr, balance)
 		if err != nil {
 			return err
 		}
@@ -260,6 +260,11 @@ func (k BaseSendKeeper) SetBalances(ctx sdk.Context, addr sdk.AccAddress, balanc
 
 // SetBalance sets the coin balance for an account by address.
 func (k BaseSendKeeper) SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) error {
+	return k.setBalance(ctx, addr, balance)
+}
+
+// setBalance sets the coin balance for an account by address.
+func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) error {
 	if !balance.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, balance.String())
 	}

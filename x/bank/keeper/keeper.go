@@ -102,7 +102,7 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 		}
 
 		balances = balances.Add(balance)
-		err := k.SetBalance(ctx, delegatorAddr, balance.Sub(coin))
+		err := k.setBalance(ctx, delegatorAddr, balance.Sub(coin))
 		if err != nil {
 			return err
 		}

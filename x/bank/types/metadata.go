@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -17,10 +18,35 @@ func (m Metadata) Validate() error {
 		return fmt.Errorf("invalid metadata display denom: %w", err)
 	}
 
+	var (
+		hasDisplay      bool
+		currentExponent uint32 // check that the exponents are increasing
+	)
+
 	seenUnits := make(map[string]bool)
-	for _, denomUnit := range m.DenomUnits {
+
+	for i, denomUnit := range m.DenomUnits {
+		// The first denomination unit MUST be the base
+		if i == 0 {
+			// validate denomination and exponent
+			if denomUnit.Denom != m.Base {
+				return fmt.Errorf("metadata's first denomination unit must be the one with base denom '%s'", m.Base)
+			}
+			if denomUnit.Exponent != 0 {
+				return fmt.Errorf("the exponent for base denomination unit %s must be 0", m.Base)
+			}
+		} else if currentExponent >= denomUnit.Exponent {
+			return errors.New("denom units should be sorted asc by exponent")
+		}
+
+		currentExponent = denomUnit.Exponent
+
 		if seenUnits[denomUnit.Denom] {
 			return fmt.Errorf("duplicate denomination unit %s", denomUnit.Denom)
+		}
+
+		if denomUnit.Denom == m.Display {
+			hasDisplay = true
 		}
 
 		if err := denomUnit.Validate(); err != nil {
@@ -28,6 +54,10 @@ func (m Metadata) Validate() error {
 		}
 
 		seenUnits[denomUnit.Denom] = true
+	}
+
+	if !hasDisplay {
+		return fmt.Errorf("metadata must contain a denomination unit with display denom '%s'", m.Display)
 	}
 
 	return nil

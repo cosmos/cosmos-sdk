@@ -122,7 +122,7 @@ func InitGenesis(
 	if balance := bankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress()); balance.IsZero() {
 		accountKeeper.SetModuleAccount(ctx, notBondedPool)
 		if !notBondedCoins.IsZero() {
-			panic(fmt.Sprintf("bonded pool balance different from bonded coins: %s -> %s", balance, bondedCoins))
+			panic(fmt.Sprintf("not bonded pool balance different from not bonded coins: %s -> %s", balance, bondedCoins))
 		}
 	}
 

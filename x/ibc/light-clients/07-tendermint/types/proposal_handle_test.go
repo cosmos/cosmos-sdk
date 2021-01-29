@@ -319,4 +319,56 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 	}
 }
 
-// TODO: add test for equality helper function
+func (suite *TendermintTestSuite) TestIsMatchingClientState() {
+	var (
+		subject, substitute                       string
+		subjectClientState, substituteClientState *types.ClientState
+	)
+
+	testCases := []struct {
+		name     string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"matching clients", func() {
+				subjectClientState = suite.chainA.GetClientState(subject).(*types.ClientState)
+				substituteClientState = suite.chainA.GetClientState(substitute).(*types.ClientState)
+			}, true,
+		},
+		{
+			"matching, frozen height is not used in check for equality", func() {
+				subjectClientState.FrozenHeight = frozenHeight
+				substituteClientState.FrozenHeight = clienttypes.ZeroHeight()
+			}, true,
+		},
+		{
+			"matching, latest height is not used in check for equality", func() {
+				subjectClientState.LatestHeight = clienttypes.NewHeight(0, 10)
+				substituteClientState.FrozenHeight = clienttypes.ZeroHeight()
+			}, true,
+		},
+		{
+			"not matching, chain id is different", func() {
+				subjectClientState.ChainId = "bitcoin"
+				substituteClientState.ChainId = "ethereum"
+			}, false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			suite.SetupTest() // reset
+
+			subject, _ = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+			substitute, _ = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+
+			tc.malleate()
+
+			suite.Require().Equal(tc.expPass, types.IsMatchingClientState(*subjectClientState, *substituteClientState))
+
+		})
+	}
+}

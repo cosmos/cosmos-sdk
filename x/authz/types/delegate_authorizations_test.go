@@ -21,57 +21,75 @@ var (
 )
 
 func TestDelegateAuthorizations(t *testing.T) {
-	delAuth := types.NewDelegateAuthorization([]sdk.ValAddress{val1, val2}, &coin100)
 
 	// verify MethodName
+	delAuth := types.NewDelegateAuthorization([]sdk.ValAddress{val1, val2}, &coin100)
 	require.Equal(t, delAuth.MethodName(), "/cosmos.staking.v1beta1.Msg/Delegate")
 
-	// expect 0 remaining coins
-	srvMsg := createSrvMsgDelegate(delAuth.MethodName(), delAddr, val1, coin100)
-	updated, del, err := delAuth.Accept(srvMsg, tmproto.Header{})
-	require.Equal(t, true, del)
-	require.NoError(t, err)
-	require.Nil(t, updated)
+	testCases := []struct {
+		msg                  string
+		validators           []sdk.ValAddress
+		limit                *sdk.Coin
+		srvMsg               sdk.ServiceMsg
+		expectErr            bool
+		isDelete             bool
+		updatedAuthorization *types.DelegateAuthorization
+	}{
+		{
+			"expect 0 remaining coins",
+			[]sdk.ValAddress{val1, val2},
+			&coin100,
+			createSrvMsgDelegate(delAuth.MethodName(), delAddr, val1, coin100),
+			false,
+			true,
+			nil,
+		},
+		{
+			"verify remaining coins",
+			[]sdk.ValAddress{val1, val2},
+			&coin100,
+			createSrvMsgDelegate(delAuth.MethodName(), delAddr, val1, coin50),
+			false,
+			false,
+			&types.DelegateAuthorization{ValidatorAddress: []string{val1.String(), val2.String()}, MaxTokens: &coin50},
+		},
+		{
+			"testing with invalid validator",
+			[]sdk.ValAddress{val1, val2},
+			&coin100,
+			createSrvMsgDelegate(delAuth.MethodName(), delAddr, val3, coin100),
+			true,
+			false,
+			nil,
+		},
+		{
+			"testing delegate without spent limit",
+			[]sdk.ValAddress{val1, val2},
+			nil,
+			createSrvMsgDelegate(delAuth.MethodName(), delAddr, val2, coin100),
+			false,
+			false,
+			&types.DelegateAuthorization{ValidatorAddress: []string{val1.String(), val2.String()}, MaxTokens: nil},
+		},
+	}
 
-	// verify remaing coins
-	delAuth = types.NewDelegateAuthorization([]sdk.ValAddress{val1, val2}, &coin100)
-	srvMsg = createSrvMsgDelegate(delAuth.MethodName(), delAddr, val1, coin50)
-	updated, del, err = delAuth.Accept(srvMsg, tmproto.Header{})
-	require.Equal(t, del, false)
-	require.NoError(t, err)
-	actual, ok := updated.(*types.DelegateAuthorization)
-	require.True(t, ok)
-	expected := types.DelegateAuthorization{ValidatorAddress: []string{val1.String(), val2.String()}, MaxTokens: &coin50}
-	require.Equal(t, expected.String(), actual.String())
-
-	// expect error: testing with more than spend-limit
-	delAuth = types.NewDelegateAuthorization([]sdk.ValAddress{val1, val2}, &coin100)
-	srvMsg = createSrvMsgDelegate(delAuth.MethodName(), delAddr, val3, coin100.Add(coin50))
-	updated, del, err = delAuth.Accept(srvMsg, tmproto.Header{})
-	require.Error(t, err)
-	require.Nil(t, updated)
-	require.False(t, del)
-
-	// testing with invalid validator
-	delAuth = types.NewDelegateAuthorization([]sdk.ValAddress{val1, val2}, &coin100)
-	srvMsg = createSrvMsgDelegate(delAuth.MethodName(), delAddr, val3, coin50)
-	updated, del, err = delAuth.Accept(srvMsg, tmproto.Header{})
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "validator not found")
-	require.Nil(t, updated)
-	require.False(t, del)
-
-	// testing delegate without spent limit
-	delAuth = types.NewDelegateAuthorization([]sdk.ValAddress{val1, val2}, nil)
-	srvMsg = createSrvMsgDelegate(delAuth.MethodName(), delAddr, val1, coin50)
-	updated, del, err = delAuth.Accept(srvMsg, tmproto.Header{})
-	require.Equal(t, del, false)
-	require.NoError(t, err)
-	actual, ok = updated.(*types.DelegateAuthorization)
-	require.True(t, ok)
-	expected = types.DelegateAuthorization{ValidatorAddress: []string{val1.String(), val2.String()}, MaxTokens: nil}
-	require.Equal(t, expected.String(), actual.String())
-
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.msg, func(t *testing.T) {
+			delAuth = types.NewDelegateAuthorization(tc.validators, tc.limit)
+			updated, del, err := delAuth.Accept(tc.srvMsg, tmproto.Header{})
+			if tc.expectErr {
+				require.Error(t, err)
+				require.Equal(t, tc.isDelete, del)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.isDelete, del)
+				if tc.updatedAuthorization != nil {
+					require.Equal(t, tc.updatedAuthorization.String(), updated.String())
+				}
+			}
+		})
+	}
 }
 
 func createSrvMsgDelegate(methodName string, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) sdk.ServiceMsg {

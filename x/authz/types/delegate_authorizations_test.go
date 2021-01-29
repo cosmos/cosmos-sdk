@@ -23,7 +23,7 @@ var (
 func TestDelegateAuthorizations(t *testing.T) {
 	delAuth := types.NewDelegateAuthorization([]sdk.ValAddress{val1, val2}, &coin100)
 
-	//verify MethodName
+	// verify MethodName
 	require.Equal(t, delAuth.MethodName(), "/cosmos.staking.v1beta1.Msg/Delegate")
 
 	// expect 0 remaining coins
@@ -44,7 +44,7 @@ func TestDelegateAuthorizations(t *testing.T) {
 	expected := types.DelegateAuthorization{ValidatorAddress: []string{val1.String(), val2.String()}, MaxTokens: &coin50}
 	require.Equal(t, expected.String(), actual.String())
 
-	// fail over spent
+	// expect error: testing with more than spend-limit
 	delAuth = types.NewDelegateAuthorization([]sdk.ValAddress{val1, val2}, &coin100)
 	srvMsg = createSrvMsgDelegate(delAuth.MethodName(), delAddr, val3, coin100.Add(coin50))
 	updated, del, err = delAuth.Accept(srvMsg, tmproto.Header{})
@@ -52,7 +52,7 @@ func TestDelegateAuthorizations(t *testing.T) {
 	require.Nil(t, updated)
 	require.False(t, del)
 
-	// fail with no validator
+	// testing with invalid validator
 	delAuth = types.NewDelegateAuthorization([]sdk.ValAddress{val1, val2}, &coin100)
 	srvMsg = createSrvMsgDelegate(delAuth.MethodName(), delAddr, val3, coin50)
 	updated, del, err = delAuth.Accept(srvMsg, tmproto.Header{})
@@ -60,6 +60,17 @@ func TestDelegateAuthorizations(t *testing.T) {
 	require.Contains(t, err.Error(), "validator not found")
 	require.Nil(t, updated)
 	require.False(t, del)
+
+	// testing delegate without spent limit
+	delAuth = types.NewDelegateAuthorization([]sdk.ValAddress{val1, val2}, nil)
+	srvMsg = createSrvMsgDelegate(delAuth.MethodName(), delAddr, val1, coin50)
+	updated, del, err = delAuth.Accept(srvMsg, tmproto.Header{})
+	require.Equal(t, del, false)
+	require.NoError(t, err)
+	actual, ok = updated.(*types.DelegateAuthorization)
+	require.True(t, ok)
+	expected = types.DelegateAuthorization{ValidatorAddress: []string{val1.String(), val2.String()}, MaxTokens: nil}
+	require.Equal(t, expected.String(), actual.String())
 
 }
 

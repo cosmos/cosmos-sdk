@@ -4275,8 +4275,8 @@ on behalf of the granter's account.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `validator_address` | [string](#string) | repeated |  |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `validator_address` | [string](#string) | repeated | validator_address specifies list of validator addresses to whom grantee can delegate tokens on behalf of granter's account. |
+| `max_tokens` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | max_tokens specifies the maximum amount of tokens can be delegate to a validator. If it is empty, there is no spend limit and any amount of coins can be delegated. |
 
 
 

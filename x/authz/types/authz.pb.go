@@ -183,9 +183,10 @@ func (m *AuthorizationGrant) GetExpiration() time.Time {
 // DelegateAuthorization allows the grantee to delegate tokens to provided set of validators
 // on behalf of the granter's account.
 type DelegateAuthorization struct {
-	// Defines list of validator addresses to whom grantee can delegate tokens on behalf of granter's account.
+	// validator_address specifies list of validator addresses to whom grantee can delegate tokens on behalf of granter's account.
 	ValidatorAddress []string `protobuf:"bytes,1,rep,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
-	// Defines maximum number of tokens grantee can delegate to a validator.
+	// max_tokens specifies the maximum amount of tokens can be delegate to a validator. If it is
+	// empty, there is no spend limit and any amount of coins can be delegated.
 	MaxTokens *types.Coin `protobuf:"bytes,2,opt,name=max_tokens,json=maxTokens,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coin" json:"max_tokens,omitempty"`
 }
 

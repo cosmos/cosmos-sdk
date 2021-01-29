@@ -97,6 +97,17 @@ If this won't work, then we will integrate other mechanism discussed in https://
 Pruning custom versions could be done using _mark and sweep GC_: once per defined period, a GC will start, mark old objects and prune them. This will require encoding a version mechanism in a KV store.
 
 
+### Managing versions and pruning
+
+Number of historical versions for `abci.Query` and snapshots for fast sync is part of a node configuration, not a chain configuration.
+As outlined above, snapshot and versioning feature is fully offloaded to the underlying DB engine. However, we still need to have a process to instrument the DB engine to create or remove a version.
+The `rootmulti.Store` keeps track of the version number. The `Store.Commit` function increments the version on each call, and checks if it needs to remove old versions. We need to add support for not `IAVL` store types there.
+
+NOTE: `Commit` must be called exactly once per block. Otherwise we risk going out of sync for the version number and block height.
+
+TODO: It seams we don't need to update the `MultiStore` interface - it encapsulates a `Commiter` interface, which has the `Commit`, `SetPruning`, `GetPruning` functions. However, we may consider splitting that interface into `Committer` and `PrunningCommiter` - only the multiroot should implement `PrunningCommiter`.
+
+
 ## Consequences
 
 

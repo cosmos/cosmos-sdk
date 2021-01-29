@@ -16,9 +16,9 @@ var (
 
 // NewDelegateAuthorization creates a new DelegateAuthorization object.
 func NewDelegateAuthorization(validatorsAddr []sdk.ValAddress, amount sdk.Coin) *DelegateAuthorization {
-	var validators []string
-	for _, validator := range validatorsAddr {
-		validators = append(validators, validator.String())
+	validators := make([]string, len(validatorsAddr))
+	for i, validator := range validatorsAddr {
+		validators[i] = validator.String()
 	}
 	return &DelegateAuthorization{
 		ValidatorAddress: validators,

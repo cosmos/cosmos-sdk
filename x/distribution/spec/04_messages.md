@@ -57,7 +57,6 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 }
 ```
 
-
 ## Withdraw Validator Rewards All
 
 When a validator wishes to withdraw their rewards it must send an

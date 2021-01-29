@@ -22,6 +22,7 @@ import (
 const FlagSpendLimit = "spend-limit"
 const FlagMsgType = "msg-type"
 const FlagExpiration = "expiration"
+const FlagValidators = "validators"
 
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd() *cobra.Command {
@@ -45,7 +46,7 @@ func GetTxCmd() *cobra.Command {
 
 func NewCmdGrantAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"> --from <granter>",
+		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"|\"delegate\"> --from <granter>",
 		Short: "Grant authorization to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Grant authorization to an address to execute a transaction on your behalf:
@@ -93,6 +94,37 @@ Examples:
 				}
 
 				authorization = types.NewGenericAuthorization(msgType)
+			case "delegate":
+				limit, err := cmd.Flags().GetString(FlagSpendLimit)
+				if err != nil {
+					return err
+				}
+
+				spendLimit, err := sdk.ParseCoinsNormalized(limit)
+				if err != nil {
+					return err
+				}
+
+				if !spendLimit.IsAllPositive() {
+					return fmt.Errorf("spend-limit should be greater than zero")
+				}
+
+				validatorsString, err := cmd.Flags().GetString(FlagValidators)
+				if err != nil {
+					return err
+				}
+				validators := strings.Split(validatorsString, ",")
+				var vals []sdk.ValAddress
+				for _, validator := range validators {
+					addr, err := sdk.ValAddressFromBech32(validator)
+					if err != nil {
+						return err
+					}
+					vals = append(vals, addr)
+				}
+
+				authorization = types.NewDelegateAuthorization(vals, spendLimit[0])
+
 			default:
 				return fmt.Errorf("invalid authorization type, %s", args[1])
 			}
@@ -120,6 +152,7 @@ Examples:
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(FlagMsgType, "", "The Msg method name for which we are creating a GenericAuthorization")
 	cmd.Flags().String(FlagSpendLimit, "", "SpendLimit for Send Authorization, an array of Coins allowed spend")
+	cmd.Flags().String(FlagValidators, "", "Validators addresses separated by ,")
 	cmd.Flags().Int64(FlagExpiration, time.Now().AddDate(1, 0, 0).Unix(), "The Unix timestamp. Default is one year.")
 	return cmd
 }

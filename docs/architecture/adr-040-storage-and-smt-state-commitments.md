@@ -82,7 +82,7 @@ Pruning old snapshots is effectively done by DB. If DB allows to configure max n
 
 ### Versioning
 
-At minimum SC doesn't need to keep old versions. However we need to be able to process transactions and roll-back state updates if transaction fails. This can be done in the following way:dDuring transaction processing, we keep all state change requests (writes) in a `CacheWrapper` abstraction (as it's done today). Only when we commit on a root store, all changes are written to the the SMT.
+At minimum SC doesn't need to keep old versions. However we need to be able to process transactions and roll-back state updates if transaction fails. This can be done in the following way: during transaction processing, we keep all state change requests (writes) in a `CacheWrapper` abstraction (as it's done today). Only when we commit on a root store, all changes are written to the the SMT.
 
 We can use the same approach for SM Storage.
 

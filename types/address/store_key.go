@@ -7,9 +7,9 @@ import (
 // MaxAddrLen is the maximum allowed length (in bytes) for an address.
 const MaxAddrLen = 255
 
-// LengthPrefixStoreKey prefixes the address bytes with its length, this is used
-// for variable-length components in store keys.
-func LengthPrefixStoreKey(bz []byte) ([]byte, error) {
+// LengthPrefix prefixes the address bytes with its length, this is used
+// for example for variable-length components in store keys.
+func LengthPrefix(bz []byte) ([]byte, error) {
 	bzLen := len(bz)
 	if bzLen == 0 {
 		return bz, nil
@@ -22,9 +22,9 @@ func LengthPrefixStoreKey(bz []byte) ([]byte, error) {
 	return append([]byte{byte(bzLen)}, bz...), nil
 }
 
-// MustLengthPrefixStoreKey is LengthPrefixStoreKey with panic on error.
-func MustLengthPrefixStoreKey(bz []byte) []byte {
-	res, err := LengthPrefixStoreKey(bz)
+// MustLengthPrefix is LengthPrefix with panic on error.
+func MustLengthPrefix(bz []byte) []byte {
+	res, err := LengthPrefix(bz)
 	if err != nil {
 		panic(err)
 	}

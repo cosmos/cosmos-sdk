@@ -217,5 +217,5 @@ func (k BaseViewKeeper) getAccountStore(ctx sdk.Context, addr sdk.AccAddress) pr
 	store := ctx.KVStore(k.storeKey)
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 
-	return prefix.NewStore(balancesStore, address.MustLengthPrefixStoreKey(addr))
+	return prefix.NewStore(balancesStore, address.MustLengthPrefix(addr))
 }

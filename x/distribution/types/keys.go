@@ -153,44 +153,44 @@ func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, he
 
 // GetValidatorOutstandingRewardsKey creates the outstanding rewards key for a validator.
 func GetValidatorOutstandingRewardsKey(valAddr sdk.ValAddress) []byte {
-	return append(ValidatorOutstandingRewardsPrefix, address.MustLengthPrefixStoreKey(valAddr.Bytes())...)
+	return append(ValidatorOutstandingRewardsPrefix, address.MustLengthPrefix(valAddr.Bytes())...)
 }
 
 // GetDelegatorWithdrawAddrKey creates the key for a delegator's withdraw addr.
 func GetDelegatorWithdrawAddrKey(delAddr sdk.AccAddress) []byte {
-	return append(DelegatorWithdrawAddrPrefix, address.MustLengthPrefixStoreKey(delAddr.Bytes())...)
+	return append(DelegatorWithdrawAddrPrefix, address.MustLengthPrefix(delAddr.Bytes())...)
 }
 
 // GetDelegatorStartingInfoKey creates the key for a delegator's starting info.
 func GetDelegatorStartingInfoKey(v sdk.ValAddress, d sdk.AccAddress) []byte {
-	return append(append(DelegatorStartingInfoPrefix, address.MustLengthPrefixStoreKey(v.Bytes())...), address.MustLengthPrefixStoreKey(d.Bytes())...)
+	return append(append(DelegatorStartingInfoPrefix, address.MustLengthPrefix(v.Bytes())...), address.MustLengthPrefix(d.Bytes())...)
 }
 
 // GetValidatorHistoricalRewardsPrefix creates the prefix key for a validator's historical rewards.
 func GetValidatorHistoricalRewardsPrefix(v sdk.ValAddress) []byte {
-	return append(ValidatorHistoricalRewardsPrefix, address.MustLengthPrefixStoreKey(v.Bytes())...)
+	return append(ValidatorHistoricalRewardsPrefix, address.MustLengthPrefix(v.Bytes())...)
 }
 
 // GetValidatorHistoricalRewardsKey creates the key for a validator's historical rewards.
 func GetValidatorHistoricalRewardsKey(v sdk.ValAddress, k uint64) []byte {
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, k)
-	return append(append(ValidatorHistoricalRewardsPrefix, address.MustLengthPrefixStoreKey(v.Bytes())...), b...)
+	return append(append(ValidatorHistoricalRewardsPrefix, address.MustLengthPrefix(v.Bytes())...), b...)
 }
 
 // GetValidatorCurrentRewardsKey creates the key for a validator's current rewards.
 func GetValidatorCurrentRewardsKey(v sdk.ValAddress) []byte {
-	return append(ValidatorCurrentRewardsPrefix, address.MustLengthPrefixStoreKey(v.Bytes())...)
+	return append(ValidatorCurrentRewardsPrefix, address.MustLengthPrefix(v.Bytes())...)
 }
 
 // GetValidatorAccumulatedCommissionKey creates the key for a validator's current commission.
 func GetValidatorAccumulatedCommissionKey(v sdk.ValAddress) []byte {
-	return append(ValidatorAccumulatedCommissionPrefix, address.MustLengthPrefixStoreKey(v.Bytes())...)
+	return append(ValidatorAccumulatedCommissionPrefix, address.MustLengthPrefix(v.Bytes())...)
 }
 
 // GetValidatorSlashEventPrefix creates the prefix key for a validator's slash fractions.
 func GetValidatorSlashEventPrefix(v sdk.ValAddress) []byte {
-	return append(ValidatorSlashEventPrefix, address.MustLengthPrefixStoreKey(v.Bytes())...)
+	return append(ValidatorSlashEventPrefix, address.MustLengthPrefix(v.Bytes())...)
 }
 
 // GetValidatorSlashEventKeyPrefix creates the prefix key for a validator's slash fraction (ValidatorSlashEventPrefix + height).
@@ -200,7 +200,7 @@ func GetValidatorSlashEventKeyPrefix(v sdk.ValAddress, height uint64) []byte {
 
 	return append(
 		ValidatorSlashEventPrefix,
-		append(address.MustLengthPrefixStoreKey(v.Bytes()), heightBz...)...,
+		append(address.MustLengthPrefix(v.Bytes()), heightBz...)...,
 	)
 }
 

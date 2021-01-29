@@ -19,6 +19,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*Authorization)(nil),
 		&SendAuthorization{},
 		&GenericAuthorization{},
+		&DelegateAuthorization{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

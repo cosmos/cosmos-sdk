@@ -258,11 +258,6 @@ func (k BaseSendKeeper) SetBalances(ctx sdk.Context, addr sdk.AccAddress, balanc
 	return nil
 }
 
-// SetBalance sets the coin balance for an account by address.
-func (k BaseSendKeeper) SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) error {
-	return k.setBalance(ctx, addr, balance)
-}
-
 // setBalance sets the coin balance for an account by address.
 func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) error {
 	if !balance.IsValid() {

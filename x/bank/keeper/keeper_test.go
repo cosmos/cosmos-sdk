@@ -381,11 +381,11 @@ func (suite *IntegrationTestSuite) TestSendCoins() {
 	app, ctx := suite.app, suite.ctx
 	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
 
-	addr1 := sdk.AccAddress([]byte("addr1_______________"))
+	addr1 := sdk.AccAddress("addr1_______________")
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
 
-	addr2 := sdk.AccAddress([]byte("addr2_______________"))
+	addr2 := sdk.AccAddress("addr2_______________")
 	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
 	app.AccountKeeper.SetAccount(ctx, acc2)
 	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr2, balances))
@@ -429,34 +429,6 @@ func (suite *IntegrationTestSuite) TestValidateBalance() {
 	app.AccountKeeper.SetAccount(ctx, vacc)
 	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr2, balances))
 	suite.Require().Error(app.BankKeeper.ValidateBalance(ctx, addr2))
-}
-
-func (suite *IntegrationTestSuite) TestBalance() {
-	app, ctx := suite.app, suite.ctx
-	addr := sdk.AccAddress("addr1_______________")
-
-	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
-	app.AccountKeeper.SetAccount(ctx, acc)
-
-	suite.Require().Equal(sdk.NewCoin(fooDenom, sdk.ZeroInt()), app.BankKeeper.GetBalance(ctx, addr, fooDenom))
-	balances := sdk.NewCoins(newFooCoin(100))
-	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr, balances))
-
-	suite.Require().Equal(balances.AmountOf(fooDenom), app.BankKeeper.GetBalance(ctx, addr, fooDenom).Amount)
-	suite.Require().Equal(balances, app.BankKeeper.GetAllBalances(ctx, addr))
-
-	newFooBalance := newFooCoin(99)
-	suite.Require().NoError(app.BankKeeper.SetBalance(ctx, addr, newFooBalance))
-	suite.Require().Equal(newFooBalance, app.BankKeeper.GetBalance(ctx, addr, fooDenom))
-
-	balances = sdk.NewCoins(newBarCoin(500))
-	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr, balances))
-	suite.Require().Equal(sdk.NewCoin(fooDenom, sdk.ZeroInt()), app.BankKeeper.GetBalance(ctx, addr, fooDenom))
-	suite.Require().Equal(balances.AmountOf(barDenom), app.BankKeeper.GetBalance(ctx, addr, barDenom).Amount)
-	suite.Require().Equal(balances, app.BankKeeper.GetAllBalances(ctx, addr))
-
-	invalidBalance := sdk.Coin{Denom: "fooDenom", Amount: sdk.NewInt(-50)}
-	suite.Require().Error(app.BankKeeper.SetBalance(ctx, addr, invalidBalance))
 }
 
 func (suite *IntegrationTestSuite) TestSendEnabled() {

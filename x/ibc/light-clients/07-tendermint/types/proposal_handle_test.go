@@ -4,36 +4,111 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
-	//	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 var (
 	frozenHeight = clienttypes.NewHeight(0, 1)
 )
 
-/*
-// TODO update to handle other lines of code
-// sanity checks
 func (suite *TendermintTestSuite) TestCheckSubstituteUpdateStateBasic() {
-	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
-	clientState := suite.chainA.GetClientState(clientA).(*types.ClientState)
-	clientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
+	var (
+		substitute            string
+		substituteClientState exported.ClientState
+		initialHeight         clienttypes.Height
+	)
+	testCases := []struct {
+		name     string
+		malleate func()
+	}{
+		{
+			"solo machine used for substitute", func() {
+				substituteClientState = ibctesting.NewSolomachine(suite.T(), suite.cdc, "solo machine", "", 1).ClientState()
+			},
+		},
+		{
+			"non-matching substitute", func() {
+				substitute, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+				substituteClientState = suite.chainA.GetClientState(substitute).(*types.ClientState)
+				tmClientState, ok := substituteClientState.(*types.ClientState)
+				suite.Require().True(ok)
 
-	// use nil header
-	cs, consState, err := clientState.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), clientStore, nil)
-	suite.Require().Error(err)
-	suite.Require().Nil(cs)
-	suite.Require().Nil(consState)
+				tmClientState.ChainId = tmClientState.ChainId + "different chain"
+			},
+		},
+		{
+			"updated client is invalid - revision height is zero", func() {
+				substitute, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+				substituteClientState = suite.chainA.GetClientState(substitute).(*types.ClientState)
+				tmClientState, ok := substituteClientState.(*types.ClientState)
+				suite.Require().True(ok)
+				// match subject
+				tmClientState.AllowUpdateAfterMisbehaviour = true
+				tmClientState.AllowUpdateAfterExpiry = true
 
-	clientState.LatestHeight = clientState.LatestHeight.Increment().(clienttypes.Height)
+				// will occur. This case should never occur (caught by upstream checks)
+				initialHeight = clienttypes.NewHeight(5, 0)
+				tmClientState.LatestHeight = clienttypes.NewHeight(5, 0)
+			},
+		},
+		{
+			"updated client is expired", func() {
+				substitute, _ = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+				substituteClientState = suite.chainA.GetClientState(substitute).(*types.ClientState)
+				tmClientState, ok := substituteClientState.(*types.ClientState)
+				suite.Require().True(ok)
+				initialHeight = tmClientState.LatestHeight
 
-	// consensus state for latest height does not exist
-	cs, consState, err = clientState.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), clientStore, suite.chainA.LastHeader)
-	suite.Require().Error(err)
-	suite.Require().Nil(cs)
-	suite.Require().Nil(consState)
+				// match subject
+				tmClientState.AllowUpdateAfterMisbehaviour = true
+				tmClientState.AllowUpdateAfterExpiry = true
+				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), substitute, tmClientState)
+
+				// update substitute a few times
+				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, substitute, exported.Tendermint)
+				suite.Require().NoError(err)
+				substituteClientState = suite.chainA.GetClientState(substitute)
+
+				err = suite.coordinator.UpdateClient(suite.chainA, suite.chainB, substitute, exported.Tendermint)
+				suite.Require().NoError(err)
+
+				suite.chainA.ExpireClient(tmClientState.TrustingPeriod)
+				suite.chainB.ExpireClient(tmClientState.TrustingPeriod)
+				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
+
+				substituteClientState = suite.chainA.GetClientState(substitute)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+
+			suite.SetupTest() // reset
+
+			subject, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+			subjectClientState := suite.chainA.GetClientState(subject).(*types.ClientState)
+			subjectClientState.AllowUpdateAfterMisbehaviour = true
+			subjectClientState.AllowUpdateAfterExpiry = true
+
+			// expire subject
+			suite.chainA.ExpireClient(subjectClientState.TrustingPeriod)
+			suite.chainB.ExpireClient(subjectClientState.TrustingPeriod)
+			suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
+
+			tc.malleate()
+
+			subjectClientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), subject)
+			substituteClientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), substitute)
+
+			updatedClient, err := subjectClientState.CheckSubstituteAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), subjectClientStore, substituteClientStore, substituteClientState, initialHeight)
+			suite.Require().Error(err)
+			suite.Require().Nil(updatedClient)
+		})
+	}
 }
-*/
 
 // to expire clients, time needs to be fast forwarded on both chainA and chainB.
 // this is to prevent headers from failing when attempting to update later.
@@ -213,12 +288,20 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 			substituteClientState := suite.chainA.GetClientState(substitute).(*types.ClientState)
 			substituteClientState.AllowUpdateAfterExpiry = tc.AllowUpdateAfterExpiry
 			substituteClientState.AllowUpdateAfterMisbehaviour = tc.AllowUpdateAfterMisbehaviour
+			suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), substitute, substituteClientState)
+
 			initialHeight := substituteClientState.GetLatestHeight()
 
 			// update substitute a few times
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, substitute, exported.Tendermint)
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, substitute, exported.Tendermint)
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, substitute, exported.Tendermint)
+			for i := 0; i < 3; i++ {
+				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, substitute, exported.Tendermint)
+				suite.Require().NoError(err)
+				// skip a block
+				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
+			}
+
+			// get updated substitue
+			substituteClientState = suite.chainA.GetClientState(substitute).(*types.ClientState)
 
 			subjectClientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), subject)
 			substituteClientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), substitute)

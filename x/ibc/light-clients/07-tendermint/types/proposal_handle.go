@@ -42,7 +42,7 @@ func (cs ClientState) CheckSubstituteAndUpdateState(
 	consensusState, err := GetConsensusState(subjectClientStore, cdc, cs.GetLatestHeight())
 	if err != nil {
 		return nil, sdkerrors.Wrapf(
-			err, "could not get consensus state from clientstore at height: %d", cs.GetLatestHeight(),
+			err, "unexpected error: could not get consensus state from clientstore at height: %d", cs.GetLatestHeight(),
 		)
 	}
 
@@ -91,13 +91,13 @@ func (cs ClientState) CheckSubstituteAndUpdateState(
 
 	// validate the updated client and ensure it isn't expired
 	if err := cs.Validate(); err != nil {
-		return nil, sdkerrors.Wrap(err, "updated subject client state is invalid")
+		return nil, sdkerrors.Wrap(err, "unexpected error: updated subject client state is invalid")
 	}
 
 	latestConsensusState, err := GetConsensusState(subjectClientStore, cdc, cs.GetLatestHeight())
 	if err != nil {
 		return nil, sdkerrors.Wrapf(
-			err, "could not get consensus state for updated subject client from clientstore at height: %d", cs.GetLatestHeight(),
+			err, "unexpected error: could not get consensus state for updated subject client from clientstore at height: %d", cs.GetLatestHeight(),
 		)
 	}
 

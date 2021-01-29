@@ -100,15 +100,6 @@ Examples:
 					return err
 				}
 
-				spendLimit, err := sdk.ParseCoinsNormalized(limit)
-				if err != nil {
-					return err
-				}
-
-				if !spendLimit.IsAllPositive() {
-					return fmt.Errorf("spend-limit should be greater than zero")
-				}
-
 				validatorsString, err := cmd.Flags().GetString(FlagValidators)
 				if err != nil {
 					return err
@@ -123,7 +114,20 @@ Examples:
 					vals = append(vals, addr)
 				}
 
-				authorization = types.NewDelegateAuthorization(vals, spendLimit[0])
+				if limit != "" {
+					spendLimit, err := sdk.ParseCoinsNormalized(limit)
+					if err != nil {
+						return err
+					}
+
+					if !spendLimit.IsAllPositive() {
+						return fmt.Errorf("spend-limit should be greater than zero")
+					}
+
+					authorization = types.NewDelegateAuthorization(vals, &spendLimit[0])
+				} else {
+					authorization = types.NewDelegateAuthorization(vals, nil)
+				}
 
 			default:
 				return fmt.Errorf("invalid authorization type, %s", args[1])

@@ -15,15 +15,20 @@ var (
 )
 
 // NewDelegateAuthorization creates a new DelegateAuthorization object.
-func NewDelegateAuthorization(validatorsAddr []sdk.ValAddress, amount sdk.Coin) *DelegateAuthorization {
+func NewDelegateAuthorization(validatorsAddr []sdk.ValAddress, amount *sdk.Coin) *DelegateAuthorization {
 	validators := make([]string, len(validatorsAddr))
 	for i, validator := range validatorsAddr {
 		validators[i] = validator.String()
 	}
-	return &DelegateAuthorization{
+	authorization := &DelegateAuthorization{
 		ValidatorAddress: validators,
-		Amount:           amount,
 	}
+
+	if amount != nil {
+		authorization.MaxTokens = amount
+	}
+
+	return authorization
 }
 
 // MethodName implements Authorization.MethodName.
@@ -49,12 +54,16 @@ func (authorization DelegateAuthorization) Accept(msg sdk.ServiceMsg, block tmpr
 				return nil, false, sdkerrors.Wrapf(sdkerrors.ErrNotFound, " validator not found")
 			}
 
-			limitLeft := authorization.Amount.Sub(msg.Amount)
+			if authorization.MaxTokens == nil {
+				return &DelegateAuthorization{ValidatorAddress: authorization.ValidatorAddress}, false, nil
+			}
+
+			limitLeft := authorization.MaxTokens.Sub(msg.Amount)
 			if limitLeft.IsZero() {
 				return nil, true, nil
 			}
 
-			return &DelegateAuthorization{ValidatorAddress: authorization.ValidatorAddress, Amount: limitLeft}, false, nil
+			return &DelegateAuthorization{ValidatorAddress: authorization.ValidatorAddress, MaxTokens: &limitLeft}, false, nil
 		}
 	}
 

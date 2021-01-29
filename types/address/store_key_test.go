@@ -26,7 +26,7 @@ func TestLengthPrefixedAddressStoreKey(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			storeKey, err := address.LengthPrefixedStoreKey(tt.addr)
+			storeKey, err := address.LengthPrefixStoreKey(tt.addr)
 			if tt.expErr {
 				require.Error(t, err)
 			} else {

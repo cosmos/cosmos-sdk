@@ -33,8 +33,8 @@ var (
 func GetAuthorizationStoreKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) []byte {
 	return append(append(append(
 		GrantKey,
-		address.MustLengthPrefixedStoreKey(granter)...),
-		address.MustLengthPrefixedStoreKey(grantee)...),
+		address.MustLengthPrefixStoreKey(granter)...),
+		address.MustLengthPrefixStoreKey(grantee)...),
 		[]byte(msgType)...,
 	)
 }

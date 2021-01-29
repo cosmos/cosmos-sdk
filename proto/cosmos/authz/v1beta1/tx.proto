@@ -1,0 +1,62 @@
+syntax = "proto3";
+package cosmos.authz.v1beta1;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+import "cosmos/base/abci/v1beta1/abci.proto";
+option go_package = "github.com/cosmos/cosmos-sdk/x/authz/types";
+
+// Msg defines the authz Msg service.
+service Msg {
+  // GrantAuthorization grants the provided authorization to the grantee on the granter's
+  // account with the provided expiration time.
+  rpc GrantAuthorization(MsgGrantAuthorizationRequest) returns (MsgGrantAuthorizationResponse);
+
+  // ExecAuthorized attempts to execute the provided messages using
+  // authorizations granted to the grantee. Each message should have only
+  // one signer corresponding to the granter of the authorization.
+  rpc ExecAuthorized(MsgExecAuthorizedRequest) returns (MsgExecAuthorizedResponse);
+
+  // RevokeAuthorization revokes any authorization corresponding to the provided method name on the
+  // granter's account that has been granted to the grantee.
+  rpc RevokeAuthorization(MsgRevokeAuthorizationRequest) returns (MsgRevokeAuthorizationResponse);
+}
+
+// MsgGrantAuthorizationRequest grants the provided authorization to the grantee on the granter's
+// account with the provided expiration time.
+message MsgGrantAuthorizationRequest {
+  string granter = 1;
+  string grantee = 2;
+
+  google.protobuf.Any       authorization = 3 [(cosmos_proto.accepts_interface) = "Authorization"];
+  google.protobuf.Timestamp expiration    = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}
+
+// MsgExecAuthorizedResponse defines the Msg/MsgExecAuthorizedResponse response type.
+message MsgExecAuthorizedResponse {
+  cosmos.base.abci.v1beta1.Result result = 1;
+}
+
+// MsgExecAuthorizedRequest attempts to execute the provided messages using
+// authorizations granted to the grantee. Each message should have only
+// one signer corresponding to the granter of the authorization.
+message MsgExecAuthorizedRequest {
+  string   grantee                  = 1;
+  repeated google.protobuf.Any msgs = 2;
+}
+
+// MsgGrantAuthorizationResponse defines the Msg/MsgGrantAuthorization response type.
+message MsgGrantAuthorizationResponse {}
+
+// MsgRevokeAuthorizationRequest revokes any authorization with the provided sdk.Msg type on the
+// granter's account with that has been granted to the grantee.
+message MsgRevokeAuthorizationRequest {
+  string granter     = 1;
+  string grantee     = 2;
+  string method_name = 3;
+}
+
+// MsgRevokeAuthorizationResponse defines the Msg/MsgRevokeAuthorizationResponse response type.
+message MsgRevokeAuthorizationResponse {}

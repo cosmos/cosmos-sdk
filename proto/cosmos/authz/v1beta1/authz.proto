@@ -36,20 +36,13 @@ message AuthorizationGrant {
   google.protobuf.Timestamp expiration    = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }
 
+// DelegateAuthorization allows the grantee to delegate tokens to provided set of validators
+// on behalf of the granter's account.
 message DelegateAuthorization {
   option (cosmos_proto.implements_interface) = "Authorization";
 
-  string validator_address = 1;
-  repeated cosmos.base.v1beta1.Coin amount = 2
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-
-}
-
-message UndelegateAuthorization {
-  option (cosmos_proto.implements_interface) = "Authorization";
-
-  string validator_address = 1;
-  repeated cosmos.base.v1beta1.Coin amount = 2
+  repeated string validator_address = 1;
+  cosmos.base.v1beta1.Coin amount = 2
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
 }

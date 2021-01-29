@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -15,9 +15,13 @@ var (
 )
 
 // NewDelegateAuthorization creates a new DelegateAuthorization object.
-func NewDelegateAuthorization(validatorAddress sdk.ValAddress, amount sdk.Coins) *DelegateAuthorization {
+func NewDelegateAuthorization(validatorsAddr []sdk.ValAddress, amount sdk.Coin) *DelegateAuthorization {
+	var validators []string
+	for _, validator := range validatorsAddr {
+		validators = append(validators, validator.String())
+	}
 	return &DelegateAuthorization{
-		ValidatorAddress: validatorAddress.String(),
+		ValidatorAddress: validators,
 		Amount:           amount,
 	}
 }
@@ -28,20 +32,31 @@ func (authorization DelegateAuthorization) MethodName() string {
 }
 
 // Accept implements Authorization.Accept.
-func (authorization DelegateAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (allow bool, updated Authorization, delete bool, err error) {
-	if reflect.TypeOf(msg.Request) == reflect.TypeOf(&bank.MsgSend{}) {
-		msg, ok := msg.Request.(*bank.MsgSend)
+func (authorization DelegateAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (updated Authorization, delete bool, err error) {
+	if reflect.TypeOf(msg.Request) == reflect.TypeOf(&staking.MsgDelegate{}) {
+		msg, ok := msg.Request.(*staking.MsgDelegate)
 		if ok {
-			limitLeft, isNegative := authorization.Amount.SafeSub(msg.Amount)
-			if isNegative {
-				return false, nil, false, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "requested amount is more than spend limit")
-			}
-			if limitLeft.IsZero() {
-				return true, nil, true, nil
+			isValidatorExists := false
+
+			for _, validator := range authorization.ValidatorAddress {
+				if validator == msg.ValidatorAddress {
+					isValidatorExists = true
+					break
+				}
 			}
 
-			return true, &DelegateAuthorization{Amount: limitLeft}, false, nil
+			if !isValidatorExists {
+				return nil, false, sdkerrors.Wrapf(sdkerrors.ErrNotFound, " validator not found")
+			}
+
+			limitLeft := authorization.Amount.Sub(msg.Amount)
+			if limitLeft.IsZero() {
+				return nil, true, nil
+			}
+
+			return &DelegateAuthorization{ValidatorAddress: authorization.ValidatorAddress, Amount: limitLeft}, false, nil
 		}
 	}
-	return false, nil, false, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "type mismatch")
+
+	return nil, false, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "type mismatch")
 }

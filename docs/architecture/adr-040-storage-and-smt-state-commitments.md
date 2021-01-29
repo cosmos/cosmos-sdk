@@ -48,7 +48,7 @@ For data access we propose 2 additional KV buckets:
 2. B2: `hash(key, value) → key`: an index needed to extract a value (through: B2 -> B1) having a only a Merkle Path. Recall that SMT will store `hash(key, value)` in it's leafs.
 3. we could use more buckets to optimize the app usage if needed.
 
-Above, we propose to use KV DB. However, for state machine we could use RDBMS, which we discuss below.
+Above, we propose to use KV DB. However, for the state machine, we could use an RDBMS, which we discuss below.
 
 
 ### Requirements

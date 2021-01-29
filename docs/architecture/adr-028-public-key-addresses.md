@@ -141,11 +141,14 @@ type Addressable interface {
 func Composed(typ string, subaccounts []Addressable) []byte {
     addresses = map(subaccounts, \a -> a.Address())
     addresses = sort(addresses)
+    addresses = map(addresses, \a -> LengthPrefix(a))
     return address.Hash(typ, addresses[0] + ... + addresses[n])
 }
 ```
 
 The `typ` parameter should contain all significant attributes with deterministic serialization.
+`LengthPrefix` is a function which prepends 1 byte to the address. The value of that byte is the length of the address bits before prepending. The address must be at most 255 bits long.
+We are using `LengthPrefix` to eliminate conflicts - it assures, that for 2 lists of addresses: `as = {a1, a2, ..., an}` and `bs = {b1, b2, ..., bm}` such that every `bi` and `ai` is at most 255 long, `concatenate(map(as, \a -> LengthPrefix(a))) = map(bs, \b -> LengthPrefix(b))` iff `as = bs`.
 
 Implementation Tip: account implementations should cache address in their structure.
 

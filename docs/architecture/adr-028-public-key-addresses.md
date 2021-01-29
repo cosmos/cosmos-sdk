@@ -45,7 +45,7 @@ And explained how this approach should be sufficiently collision resistant:
 > The good example you brought up was eg. a public key bytes being a valid public key on two algorithms supported by the codec. Meaning if either was broken, you would break accounts even if they were secured with the safer variant. This is only as the issue when no differentiating type info is present in the preimage (before hashing into an address).
 > I would like to hear an argument if the 20 bytes space is an actual issue for security, as I would be happy to increase my address sizes in weave. I just figured cosmos and ethereum and bitcoin all use 20 bytes, it should be good enough. And the arguments above which made me feel it was secure. But I have not done a deeper analysis.
 
-This lead to the first proposal (which we proved to be not good enough):
+This led to the first proposal (which we proved to be not good enough):
 we concatenate a key type with a public key, hash it and take the first 20 bytes of that hash, summarized as `sha256(keyTypePrefix || keybytes)[:20]`.
 
 
@@ -70,7 +70,7 @@ In the issue we discussed various modifications:
 ### Scope
 
 This ADR only defines a process for the generation of address bytes. For end-user interactions with addresses (through the API, or CLI, etc.), we still use bech32 to format these addresses as strings. This ADR doesn't change that.
-Using bech32 for string encoding gives us support for checsum error codes and handling of user typos.
+Using bech32 for string encoding gives us support for checksum error codes and handling of user typos.
 
 
 ## Decision

@@ -9,7 +9,7 @@ import (
 )
 
 // Validate performs a basic validation of the coin metadata fields. It checks:
-// 	- Base and Display denominations are valid coin denominations
+//  - Base and Display denominations are valid coin denominations
 //  - Base and Display denominations are present in the DenomUnit slice
 //  - Base denomination has exponent 0
 //  - Denomination units are sorted in ascending order

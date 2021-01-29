@@ -108,6 +108,24 @@ Flags are added to commands directly (generally in the [module's CLI file](../bu
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L118
 
+## Environment variables
+
+Each flag is bound to it's respecteve named environment variable. Then name of the environment variable consist of two parts - capital case `basename` followed by flag name of the flag. `-` must be substituted with `_`. For example flag `--home` for application with basename `GAIA` is bound to `GAIA_HOME`. It allows to reduce amount of flags typed for routine operations. For example instead of:
+```sh
+gaia --home=./ --node=<node address> --chain-id="testchain-1" --keyring-backend=test tx ... --from=<key name>
+```
+this will be more convinient:
+```sh
+# define env variables in .env, .envrc etc
+GAIA_HOME=<path to home>
+GAIA_NODE=<node address>
+GAIA_CHAIN_ID="testchain-1"
+GAIA_KEYRING_BACKEND="test"
+
+# and later just use
+gaia tx ... --from=<key name>
+```
+
 ## Configurations
 
 It is vital that the root command of an application uses `PersistentPreRun()` cobra command property for executing the command, so all child commands have access to the server and client contexts. These contexts are set as their default values initially and maybe modified, scoped to the command, in their respective `PersistentPreRun()` functions. Note that the `client.Context` is typically pre-populated with "default" values that may be useful for all commands to inherit and override if necessary.

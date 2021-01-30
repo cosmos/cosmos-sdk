@@ -123,9 +123,7 @@ Moreover the cryptographer motivated the choice to add `typ` in the hash to prot
 We use `address.Hash` function for generating address for all accounts represented by a single key:
 * simple public keys: `address.Hash(keyType, pubkey)`
 + aggregated keys (eg: BLS): `address.Hash(keyType, aggregatedPubKey)`
-+ module accounts: `addoress.Hash("module", moduleID)`
-  For module subaccount, or module specific content we append a specific key to the moduleKey:
-  `address.Hash("module", moduleSubaccountKey)`  (note: `moduleSubaccountKey` already composes the `modleKey`).
++ module accounts: `addoress.Hash("module", moduleName)`
 
 
 ### Composed Account Addresses
@@ -151,7 +149,6 @@ The `typ` parameter should contain all significant attributes with deterministic
 We are using `LengthPrefix` to eliminate conflicts - it assures, that for 2 lists of addresses: `as = {a1, a2, ..., an}` and `bs = {b1, b2, ..., bm}` such that every `bi` and `ai` is at most 255 long, `concatenate(map(as, \a -> LengthPrefix(a))) = map(bs, \b -> LengthPrefix(b))` iff `as = bs`.
 
 Implementation Tip: account implementations should cache address in their structure.
-
 
 #### Multisig Addresses
 
@@ -183,6 +180,16 @@ func (multisig PubKey) Address() {
   return address.Composed(prefix, keys)
 }
 ```
+
+#### Composing Module Accounts
+
+Very often, modules define child accounts. We use `Compose` function to create module sub-accounts:
+
+```
+Compose("module", LengthPrefix(moduleName) + LengthPrefix(moduleSubaccountKey))
+```
+
+We use `"module"` as a schema type for all module keys.
 
 
 ### Account Types

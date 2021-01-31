@@ -246,6 +246,49 @@ Without going into details, this kind of addresses are compatible with the hash 
 More specifically, any special account address, must not have length equal to 20 byte nor 32 bytes.
 
 
-## References
+## Appendix: Consulting session
 
-* [Notes](https://hackmd.io/_NGWI4xZSbKzj1BkCqyZMw) from consulting meeting with [Alan Szepieniec](https://scholar.google.be/citations?user=4LyZn8oAAAAJ&hl=en).
+End of Dec 2020 we had a session with [Alan Szepieniec](https://scholar.google.be/citations?user=4LyZn8oAAAAJ&hl=en) to consult the approach presented above.
+
+Alan general observations:
++ we don’t need 2-preimage resistance
++ we need 32bytes address space for collision resistance
++ when an attacker can control an input for object with an address then we have a problem with birthday attack
++ there is an issue with smart-contracts for hashing
++ sha2 mining can be use to breaking address pre-image
+
+Hashing algorithm
++ any attack breaking blake3 will break blake2
++ Alan is pretty confident about the current security analysis of the blake hash algorithm. It was a finalist, and the author is well known in security analysis.
+
+
+Algorithm:
++ Alan recommends to hash the prefix: `address(pub_key) = hash(hash(key_type) + pub_key)[:32]`, main benefits:
+    + we are free to user arbitrary long prefix names
+    + we still don’t risk collisions
+    + switch tables
++ discussion about penalization -> about adding prefix post hash
++ Aaron asked about post hash prefixes (`address(pub_key) = key_type + hash(pub_key)`) and differences. Alan noted that this approach has longer address space and it’s stronger.
+
+Algorithm for complex / composed keys:
++ merging tree like addresses with same algorithm are fine
+
+Module addresses: Should module addresses have different size to differentiate it?
++ we will need to set a pre-image prefix for module addresse to keept them in 32-byte space: `hash(hash('module') + module_key)`
++ Aaron observation: we already need to deal with variable length (to not break secp256k1 keys).
+
+Discssion about arithmetic hash function for ZKP
++ Posseidon / Rescue
++ Problem: much bigger risk because we don’t know much techniques and history of crypto-analysis of arithmetic constructions. It’s still a new ground and area of active research.
+
+Post quantum signature size
++ Alan suggestion: Falcon: speed / size ration - very good.
++ Aaron - should we think about it?
+  Alan: based on early extrapolation this thing will get able to break EC cryptography in 2050 . But that’s a lot of uncertainty. But there is magic happening with recurions / linking / simulation and that can speedup the progress.
+
+Other ideas
++ Let’s say we use same key and two different address algorithms for 2 different use cases. Is it still safe to use it? Alan: if we want to hide the public key (which is not our use case), then it’s less secure but there are fixes.
+
+
+### References
++ [Notes](https://hackmd.io/_NGWI4xZSbKzj1BkCqyZMw)

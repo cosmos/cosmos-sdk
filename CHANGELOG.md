@@ -43,11 +43,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (x/bank) [\#8479](https://github.com/cosmos/cosmos-sdk/pull/8479) Adittional client denom metadata validation for `base` and `display` denoms.
 * (x/ibc) [\#8404](https://github.com/cosmos/cosmos-sdk/pull/8404) Reorder IBC `ChanOpenAck` and `ChanOpenConfirm` handler execution to perform core handler first, followed by application callbacks.
 * [\#8396](https://github.com/cosmos/cosmos-sdk/pull/8396) Add support for ARM platform
 
 ### Bug Fixes
 
+* (x/evidence) [#8461](https://github.com/cosmos/cosmos-sdk/pull/8461) Fix bech32 prefix in evidence validator address conversion
 * (x/slashing) [\#8427](https://github.com/cosmos/cosmos-sdk/pull/8427) Fix query signing infos command
 * (simapp) [\#8418](https://github.com/cosmos/cosmos-sdk/pull/8418) Add balance coin to supply when adding a new genesis account
 * (x/bank) [\#8417](https://github.com/cosmos/cosmos-sdk/pull/8417) Validate balances and coin denom metadata on genesis

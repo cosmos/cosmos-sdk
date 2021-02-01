@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-// NewDecodeStore returns a decoder function closure that umarshals the KVPair's
+// NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
 // Value to the corresponding mint type.
 func NewDecodeStore(cdc codec.Marshaler) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {

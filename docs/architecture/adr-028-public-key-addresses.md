@@ -137,9 +137,8 @@ type Addressable interface {
 }
 
 func Composed(typ string, subaccounts []Addressable) []byte {
-    addresses = map(subaccounts, \a -> a.Address())
+    addresses = map(subaccounts, \a -> LengthPrefix(a.Address()))
     addresses = sort(addresses)
-    addresses = map(addresses, \a -> LengthPrefix(a))
     return address.Hash(typ, addresses[0] + ... + addresses[n])
 }
 ```

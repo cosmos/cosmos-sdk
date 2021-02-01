@@ -123,7 +123,7 @@ Moreover the cryptographer motivated the choice to add `typ` in the hash to prot
 We use `address.Hash` function for generating address for all accounts represented by a single key:
 * simple public keys: `address.Hash(keyType, pubkey)`
 + aggregated keys (eg: BLS): `address.Hash(keyType, aggregatedPubKey)`
-+ module accounts: `addoress.Hash("module", moduleName)`
++ module accounts: `address.Hash("module", moduleName)`
 
 
 ### Composed Account Addresses

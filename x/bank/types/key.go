@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 const (
@@ -41,4 +42,9 @@ func AddressFromBalancesStore(key []byte) sdk.AccAddress {
 	addr := key[1 : addrLen+1]
 
 	return sdk.AccAddress(addr)
+}
+
+// CreateAccountBalancesPrefix creates the prefix for an account's balances.
+func CreateAccountBalancesPrefix(addr []byte) []byte {
+	return append(BalancesPrefix, address.MustLengthPrefix(addr)...)
 }

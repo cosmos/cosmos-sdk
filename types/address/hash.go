@@ -3,6 +3,7 @@ package address
 import (
 	"bytes"
 	"crypto/sha256"
+	"fmt"
 	"reflect"
 	"sort"
 	"unsafe"
@@ -32,11 +33,16 @@ func Hash(typ string, key []byte) []byte {
 }
 
 // NewComposed creates a new address based on sub addresses.
-func NewComposed(typ string, subAddresses []Addressable) []byte {
+func NewComposed(typ string, subAddresses []Addressable) ([]byte, error) {
 	as := make([][]byte, len(subAddresses))
 	totalLen := 0
+	var err error
 	for i := range subAddresses {
-		as[i] = subAddresses[i].Address()
+		a := subAddresses[i].Address()
+		as[i], err = LengthPrefix(a)
+		if err != nil {
+			return nil, fmt.Errorf("not compatible sub-adddress=%v at index=%d [%w]", a, i, err)
+		}
 		totalLen += len(as[i])
 	}
 
@@ -47,7 +53,7 @@ func NewComposed(typ string, subAddresses []Addressable) []byte {
 		copy(key[offset:], as[i])
 		offset += len(as[i])
 	}
-	return Hash(typ, key)
+	return Hash(typ, key), nil
 }
 
 // unsafeStrToByteArray uses unsafe to convert string into byte array. Returned array

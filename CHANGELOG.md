@@ -42,6 +42,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (x/ibc) [\#8458](https://github.com/cosmos/cosmos-sdk/pull/8458) Add `packet_connection` attribute to ibc events to enable relayer filtering
 * (x/bank) [\#8479](https://github.com/cosmos/cosmos-sdk/pull/8479) Adittional client denom metadata validation for `base` and `display` denoms.
 * (x/ibc) [\#8404](https://github.com/cosmos/cosmos-sdk/pull/8404) Reorder IBC `ChanOpenAck` and `ChanOpenConfirm` handler execution to perform core handler first, followed by application callbacks.
 * [\#8396](https://github.com/cosmos/cosmos-sdk/pull/8396) Add support for ARM platform

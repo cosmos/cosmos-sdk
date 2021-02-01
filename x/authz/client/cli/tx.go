@@ -46,7 +46,7 @@ func GetTxCmd() *cobra.Command {
 
 func NewCmdGrantAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"|\"delegate\"> --from <granter>",
+		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"> --from <granter>",
 		Short: "Grant authorization to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Grant authorization to an address to execute a transaction on your behalf:
@@ -94,7 +94,7 @@ Examples:
 				}
 
 				authorization = types.NewGenericAuthorization(msgType)
-			case "delegate":
+			case "delegate", "unbond":
 				limit, err := cmd.Flags().GetString(FlagSpendLimit)
 				if err != nil {
 					return err
@@ -123,12 +123,18 @@ Examples:
 					if !spendLimit.IsAllPositive() {
 						return fmt.Errorf("spend-limit should be greater than zero")
 					}
-
-					authorization = types.NewDelegateAuthorization(vals, &spendLimit[0])
+					if args[1] == "delegate" {
+						authorization = types.NewDelegateAuthorization(vals, &spendLimit[0])
+					} else {
+						authorization = types.NewUndelegateAuthorization(vals, &spendLimit[0])
+					}
 				} else {
-					authorization = types.NewDelegateAuthorization(vals, nil)
+					if args[1] == "delegate" {
+						authorization = types.NewDelegateAuthorization(vals, nil)
+					} else {
+						authorization = types.NewUndelegateAuthorization(vals, nil)
+					}
 				}
-
 			default:
 				return fmt.Errorf("invalid authorization type, %s", args[1])
 			}

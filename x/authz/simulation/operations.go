@@ -251,7 +251,7 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 		sendGrant := targetGrant.Authorization.GetCachedValue().(*types.SendAuthorization)
 		_, _, err = sendGrant.Accept(execMsg, ctx.BlockHeader())
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecDelegated, "not allowed"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecDelegated, err.Error()), nil, nil
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig

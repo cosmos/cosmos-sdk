@@ -47,3 +47,14 @@ message DelegateAuthorization {
   // empty, there is no spend limit and any amount of coins can be delegated.
   cosmos.base.v1beta1.Coin max_tokens = 2 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"];
 }
+// UndelegateAuthorization allows the grantee to un-delegate tokens from provided set of validators
+// on behalf of the granter's account.
+message UndelegateAuthorization {
+  option (cosmos_proto.implements_interface) = "Authorization";
+
+  // validator_address specifies list of validator addresses from whom grantee can un-delegate tokens on behalf of granter's account.
+  repeated string validator_address = 1;
+  // max_tokens specifies the maximum amount of tokens can be un-delegate from a validator. If it is
+  // empty, there is no spend limit and any amount of coins can be un-delegated.
+  cosmos.base.v1beta1.Coin max_tokens = 2 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+}

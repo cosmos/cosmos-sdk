@@ -1,17 +1,18 @@
-package v040_test
+package v042_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v034"
-	v038staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v038"
 	v040staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v040"
+	v042staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v042"
 )
 
 func TestMigrate(t *testing.T) {
@@ -23,15 +24,18 @@ func TestMigrate(t *testing.T) {
 		WithJSONMarshaler(encodingConfig.Marshaler)
 
 	consPubKey := ed25519.GenPrivKeyFromSecret([]byte("val0")).PubKey()
-	stakingGenState := v038staking.GenesisState{
-		Validators: v038staking.Validators{v038staking.Validator{
-			ConsPubKey: consPubKey,
-			Status:     v034staking.Unbonded,
+	pkAny, err := codectypes.NewAnyWithValue(consPubKey)
+	if err != nil {
+		panic(fmt.Sprintf("Can't pack validator consensus PK as Any: %s", err))
+	}
+	stakingGenState := v040staking.GenesisState{
+		Validators: v040staking.Validators{v040staking.Validator{
+			ConsensusPubkey: pkAny,
+			Status:          v040staking.Unbonded,
 		}},
 	}
 
-	migrated := v040staking.Migrate(stakingGenState)
-
+	migrated := v042staking.Migrate(stakingGenState)
 	bz, err := clientCtx.JSONMarshaler.MarshalJSON(migrated)
 	require.NoError(t, err)
 
@@ -55,6 +59,7 @@ func TestMigrate(t *testing.T) {
     "historical_entries": 0,
     "max_entries": 0,
     "max_validators": 0,
+    "power_reduction": "1000000",
     "unbonding_time": "0s"
   },
   "redelegations": [],

@@ -16,7 +16,6 @@ import (
 // it will first sort valset before inclusion into historical info
 func NewHistoricalInfo(header tmproto.Header, valSet Validators, powerReduction sdk.Int) HistoricalInfo {
 	// Must sort in the same way that tendermint does
-	// TODO: check with sort.Sort(ValidatorsByVotingPower(valSet))
 	sort.SliceStable(valSet, func(i, j int) bool {
 		return ValidatorsByVotingPower(valSet).LessAfterPowerReductionApply(i, j, powerReduction)
 	})

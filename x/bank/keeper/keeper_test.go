@@ -35,6 +35,7 @@ var (
 	multiPermAcc  = authtypes.NewEmptyModuleAccount(multiPerm, authtypes.Burner, authtypes.Minter, authtypes.Staking)
 	randomPermAcc = authtypes.NewEmptyModuleAccount(randomPerm, "random")
 
+	// The default power validators are initialized to have within tests
 	initTokens = sdk.TokensFromConsensusPower(initialPower, sdk.DefaultPowerReduction)
 	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 )

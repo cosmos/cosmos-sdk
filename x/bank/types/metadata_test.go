@@ -51,7 +51,7 @@ func TestMetadataValidate(t *testing.T) {
 				Description: "The native staking token of the Cosmos Hub.",
 				DenomUnits: []*types.DenomUnit{
 					{"uatom", uint32(0), []string{"microatom"}},
-					{"uatom", uint32(0), []string{"microatom"}},
+					{"uatom", uint32(1), []string{"microatom"}},
 				},
 				Base:    "uatom",
 				Display: "atom",
@@ -88,6 +88,59 @@ func TestMetadataValidate(t *testing.T) {
 				Description: "The native staking token of the Cosmos Hub.",
 				DenomUnits: []*types.DenomUnit{
 					{"uatom", uint32(0), []string{"microatom", "microatom"}},
+				},
+				Base:    "uatom",
+				Display: "atom",
+			},
+			true,
+		},
+		{
+			"no base denom unit",
+			types.Metadata{
+				Description: "The native staking token of the Cosmos Hub.",
+				DenomUnits: []*types.DenomUnit{
+					{"matom", uint32(3), []string{"milliatom"}},
+					{"atom", uint32(6), nil},
+				},
+				Base:    "uatom",
+				Display: "atom",
+			},
+			true,
+		},
+		{
+			"base denom exponent not zero",
+			types.Metadata{
+				Description: "The native staking token of the Cosmos Hub.",
+				DenomUnits: []*types.DenomUnit{
+					{"uatom", uint32(1), []string{"microatom"}},
+					{"matom", uint32(3), []string{"milliatom"}},
+					{"atom", uint32(6), nil},
+				},
+				Base:    "uatom",
+				Display: "atom",
+			},
+			true,
+		},
+		{
+			"no display denom unit",
+			types.Metadata{
+				Description: "The native staking token of the Cosmos Hub.",
+				DenomUnits: []*types.DenomUnit{
+					{"uatom", uint32(0), []string{"microatom"}},
+				},
+				Base:    "uatom",
+				Display: "atom",
+			},
+			true,
+		},
+		{
+			"denom units not sorted",
+			types.Metadata{
+				Description: "The native staking token of the Cosmos Hub.",
+				DenomUnits: []*types.DenomUnit{
+					{"uatom", uint32(0), []string{"microatom"}},
+					{"atom", uint32(6), nil},
+					{"matom", uint32(3), []string{"milliatom"}},
 				},
 				Base:    "uatom",
 				Display: "atom",

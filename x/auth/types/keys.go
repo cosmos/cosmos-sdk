@@ -1,11 +1,13 @@
 package types
 
 import (
+	"crypto/sha256"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
-	// module name
+	// ModuleName is "auth"
 	ModuleName = "auth"
 
 	// StoreKey is string representation of the store key for auth
@@ -22,11 +24,13 @@ var (
 	// AddressStoreKeyPrefix prefix for account-by-address store
 	AddressStoreKeyPrefix = []byte{0x01}
 
-	// param key for global account number
+	// GlobalAccountNumberKey param key for global account number
 	GlobalAccountNumberKey = []byte("globalAccountNumber")
 )
 
 // AddressStoreKey turn an address to key used to get it from the account store
-func AddressStoreKey(addr sdk.AccAddress) []byte {
-	return append(AddressStoreKeyPrefix, addr.Bytes()...)
+func AddressStoreKey(accountType string, addr sdk.AccAddress) []byte {
+	typeHash := sha256.Sum256([]byte(accountType))
+	key := append(AddressStoreKeyPrefix, typeHash[:]...)
+	return append(key, addr.Bytes()...)
 }

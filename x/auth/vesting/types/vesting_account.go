@@ -181,6 +181,11 @@ func (bva BaseVestingAccount) String() string {
 	return out.(string)
 }
 
+// Type represents the registered Account proto type.
+func (BaseVestingAccount) Type() string {
+	return "cosmos.vesting.v1beta1.BaseVestingAccount"
+}
+
 // MarshalYAML returns the YAML representation of a BaseVestingAccount.
 func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 	accAddr, err := sdk.AccAddressFromBech32(bva.Address)
@@ -307,6 +312,11 @@ func (cva ContinuousVestingAccount) Validate() error {
 func (cva ContinuousVestingAccount) String() string {
 	out, _ := cva.MarshalYAML()
 	return out.(string)
+}
+
+// Type represents the registered Account proto type.
+func (ContinuousVestingAccount) Type() string {
+	return "cosmos.vesting.v1beta1.ContinuousVestingAccount"
 }
 
 // MarshalYAML returns the YAML representation of a ContinuousVestingAccount.
@@ -467,6 +477,11 @@ func (pva PeriodicVestingAccount) String() string {
 	return out.(string)
 }
 
+// Type represents the registered Account proto type.
+func (PeriodicVestingAccount) Type() string {
+	return "cosmos.vesting.v1beta1.PeriodicVestingAccount"
+}
+
 // MarshalYAML returns the YAML representation of a PeriodicVestingAccount.
 func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 	accAddr, err := sdk.AccAddressFromBech32(pva.Address)
@@ -569,4 +584,9 @@ func (dva DelayedVestingAccount) Validate() error {
 func (dva DelayedVestingAccount) String() string {
 	out, _ := dva.MarshalYAML()
 	return out.(string)
+}
+
+// Type represents the registered Account proto type.
+func (DelayedVestingAccount) Type() string {
+	return "cosmos.vesting.v1beta1.DelayedVestingAccount"
 }

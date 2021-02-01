@@ -34,7 +34,7 @@ func TestDecodeStore(t *testing.T) {
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
 			{
-				Key:   types.AddressStoreKey(delAddr1),
+				Key:   types.AddressStoreKey(acc.Type(), delAddr1),
 				Value: accBz,
 			},
 			{

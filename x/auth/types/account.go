@@ -135,9 +135,15 @@ func (acc BaseAccount) Validate() error {
 	return nil
 }
 
+// String implements the fmt.Stringer interface
 func (acc BaseAccount) String() string {
 	out, _ := acc.MarshalYAML()
 	return out.(string)
+}
+
+// Type represents the registered Account proto type.
+func (BaseAccount) Type() string {
+	return "cosmos.auth.v1beta1.BaseAccount"
 }
 
 // MarshalYAML returns the YAML representation of an account.
@@ -244,9 +250,15 @@ type moduleAccountPretty struct {
 	Permissions   []string       `json:"permissions" yaml:"permissions"`
 }
 
+// String implements the fmt.Stringer interface
 func (ma ModuleAccount) String() string {
 	out, _ := ma.MarshalYAML()
 	return out.(string)
+}
+
+// Type represents the registered Account proto type.
+func (ModuleAccount) Type() string {
+	return "cosmos.auth.v1beta1.ModuleAccount"
 }
 
 // MarshalYAML returns the YAML representation of a ModuleAccount.
@@ -326,6 +338,9 @@ type AccountI interface {
 
 	// Ensure that account implements stringer
 	String() string
+
+	// Type represents the protobuf RegisterType string that is used for the account key
+	Type() string
 }
 
 // ModuleAccountI defines an account interface for modules that hold tokens in

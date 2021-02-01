@@ -1,7 +1,6 @@
 package keys
 
 import (
-	"context"
 	"encoding/hex"
 	"errors"
 	"fmt"

@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
@@ -251,7 +250,7 @@ func GetCmdParams() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, _ := queryClient.ClientParams(cmd.Context(), &types.QueryClientParamsRequest{})
-			return clientCtx.PrintOutput(res.Params)
+			return clientCtx.PrintProto(res.Params)
 		},
 	}
 

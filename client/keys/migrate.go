@@ -86,12 +86,12 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 		))
 	}
 
-	for _, key := range oldKeys {
-		legKeyInfo, err := legacyKb.Export(key.GetName())
-		if err != nil {
-			return err
-		}
+	if len(oldKeys) == 0 {
+		cmd.Print("Migration Aborted: no keys to migrate")
+		return nil
+	}
 
+	for _, key := range oldKeys {
 		keyName := key.GetName()
 		keyType := key.GetType()
 
@@ -107,7 +107,12 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 		}
 
 		if keyType != keyring.TypeLocal {
-			if err := migrator.ImportPubKey(keyName, legKeyInfo); err != nil {
+			pubKey, err := legacyKb.ExportPubKey(keyName)
+			if err != nil {
+				return err
+			}
+
+			if err := migrator.ImportPubKey(keyName, pubKey); err != nil {
 				return err
 			}
 
@@ -131,6 +136,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	}
+	cmd.Print("Migration Complete")
 
 	return err
 }

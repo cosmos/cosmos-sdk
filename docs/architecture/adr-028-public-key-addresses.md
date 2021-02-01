@@ -11,8 +11,7 @@ LAST CALL 2021-01-22
 
 ## Abstract
 
-This ADR defines an address format for all addressable SDK accounts. That includes: new public key algorithms, multisig public keys, and module
-accounts.
+This ADR defines an address format for all addressable SDK accounts. That includes: new public key algorithms, multisig public keys, and modules.
 
 ## Context
 
@@ -101,7 +100,7 @@ in protobuf. We will also create multisig public keys without amino addresses to
 
 As in other parts of the Cosmos SDK, we will use `sha256`.
 
-### Simple Account Address
+### Basic Address
 
 We start with defining a hash base algorithm for generating addresses. Notably, it's used for accounts represented by a single key pair. For each public key schema we have to have an associated `typ` string, which we are discussing in a section below. `hash` is a cryptographic hash function defined in the previous section.
 
@@ -123,7 +122,7 @@ Moreover the cryptographer motivated the choice to add `typ` in the hash to prot
 We use `address.Hash` function for generating address for all accounts represented by a single key:
 * simple public keys: `address.Hash(keyType, pubkey)`
 + aggregated keys (eg: BLS): `address.Hash(keyType, aggregatedPubKey)`
-+ module accounts: `address.Hash("module", moduleName)`
++ modules: `address.Hash("module", moduleName)`
 
 
 ### Composed Addresses
@@ -143,7 +142,7 @@ func NewComposed(typ string, subaccounts []Addressable) []byte {
 }
 ```
 
-The `typ` parameter should contain all significant attributes with deterministic serialization.
+The `typ` parameter should be a schema description, containing all significant attributes with deterministic serialization (eg: utf8 string).
 `LengthPrefix` is a function which prepends 1 byte to the address. The value of that byte is the length of the address bits before prepending. The address must be at most 255 bits long.
 We are using `LengthPrefix` to eliminate conflicts - it assures, that for 2 lists of addresses: `as = {a1, a2, ..., an}` and `bs = {b1, b2, ..., bm}` such that every `bi` and `ai` is at most 255 long, `concatenate(map(as, \a -> LengthPrefix(a))) = map(bs, \b -> LengthPrefix(b))` iff `as = bs`.
 
@@ -180,9 +179,9 @@ func (multisig PubKey) Address() {
 }
 ```
 
-#### Module Account Addresses
+#### Module Addresses
 
-Module accounts are very heavily used in SDK, so it make sense to have an optimized function for module addresses.
+Module addresses are very heavily used in SDK, so it make sense to have an optimized function for module addresses.
 
 We use `"module"` as a schema type for all module addresses. Since, modules have a clear order, and the module / submodule names are strings, we propose to use an null byte (`'\x00'`) as a separator instead of length prefixes.
 
@@ -205,10 +204,10 @@ btcAtomAMM := address.Module("amm", btc.Addrress() + atom.Address()})
 ```
 
 
-### Account Types
+### Schema Types
 
-The Account Types used in various account classes SHOULD be unique for each class.
-Since both public keys and accounts are serialized in the state, we propose to use the protobuf message name string.
+A `typ` parameter used in `Hash` function SHOULD be unique for each account type.
+Since all SDK account types are serialized in the state, we propose to use the protobuf message name string.
 
 Example: all public key types have a unique protobuf message type similar to:
 
@@ -235,11 +234,11 @@ This ADR is compatible to what was committed and directly supported in the SDK r
 
 ### Positive
 
-- a simple algorithm for generating addresses for new public keys, complex accounts and module accounts
+- a simple algorithm for generating addresses for new public keys, complex accounts and modules
 - the algorithm generalizes for _native composed keys_
 - increase security and collision resistance of addresses
 - the approach is extensible for future use-cases - one can use other address types, as long as they don't conflict with the address length specified here (20 or 32 bytes).
-- support multiple types accounts.
+- support new account types.
 
 ### Negative
 
@@ -254,7 +253,7 @@ This ADR is compatible to what was committed and directly supported in the SDK r
 
 ## Further Discussions
 
-Some accounts can have a fixed name or may be constructed in other way (eg: module accounts). We were discussing an idea of an account with a predefined name (eg: `me.regen`), which could be used by institutions.
+Some accounts can have a fixed name or may be constructed in other way (eg: modules). We were discussing an idea of an account with a predefined name (eg: `me.regen`), which could be used by institutions.
 Without going into details, this kind of addresses are compatible with the hash based addresses described here as long as they don't have the same length.
 More specifically, any special account address, must not have length equal to 20 byte nor 32 bytes.
 

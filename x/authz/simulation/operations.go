@@ -249,9 +249,9 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 
 		msg := types.NewMsgExecAuthorized(grantee.Address, []sdk.ServiceMsg{execMsg})
 		sendGrant := targetGrant.Authorization.GetCachedValue().(*types.SendAuthorization)
-		allow, _, _ := sendGrant.Accept(execMsg, ctx.BlockHeader())
-		if !allow {
-			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecDelegated, "not allowed"), nil, nil
+		_, _, err = sendGrant.Accept(execMsg, ctx.BlockHeader())
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecDelegated, err.Error()), nil, nil
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig

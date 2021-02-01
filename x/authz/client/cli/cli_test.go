@@ -1,5 +1,3 @@
-// +build norace
-
 package cli_test
 
 import (
@@ -25,6 +23,7 @@ import (
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
@@ -379,6 +378,12 @@ func execGrantAuthorization(val *network.Validator, args []string) (testutil.Buf
 	return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 }
 
+func execDelegate(val *network.Validator, args []string) (testutil.BufferWriter, error) {
+	cmd := stakingcli.NewDelegateCmd()
+	clientCtx := val.ClientCtx
+	return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+}
+
 func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 	val := s.network.Validators[0]
 
@@ -720,6 +725,229 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 			}
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
+	val := s.network.Validators[0]
+	grantee := s.grantee
+	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
+
+	_, err := execGrantAuthorization(
+		val,
+		[]string{
+			grantee.String(),
+			"unbond",
+			fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+			fmt.Sprintf("--%s=%s", cli.FlagValidators, fmt.Sprintf("%s", val.ValAddress.String())),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		},
+	)
+	s.Require().NoError(err)
+
+	// create delegation
+	_, err = execDelegate(
+		val,
+		[]string{
+			val.ValAddress.String(),
+			"100stake",
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		},
+	)
+	s.Require().NoError(err)
+
+	tokens := sdk.NewCoins(
+		sdk.NewCoin("stake", sdk.NewInt(50)),
+	)
+
+	undelegateTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.Msg/Undelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
+		tokens.GetDenomByIndex(0), tokens[0].Amount)
+	execMsg := testutil.WriteToNewTempFile(s.T(), undelegateTx)
+
+	testCases := []struct {
+		name         string
+		args         []string
+		respType     proto.Message
+		expectedCode uint32
+		expectErr    bool
+		errMsg       string
+	}{
+		{
+			"fail invalid grantee",
+			[]string{
+				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, "invalid_grantee"),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			nil,
+			0,
+			true,
+			"The specified item could not be found in the keyring",
+		},
+		{
+			"fail invalid json path",
+			[]string{
+				"/invalid/file.txt",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			},
+			nil,
+			0,
+			true,
+			"",
+		},
+		{
+			"valid txn: (undelegate half tokens)",
+			[]string{
+				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			},
+			&sdk.TxResponse{},
+			0,
+			false,
+			"",
+		},
+		{
+			"valid txn: (undelegate remaining half tokens)",
+			[]string{
+				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			},
+			&sdk.TxResponse{},
+			0,
+			false,
+			"",
+		},
+		{
+			"failed with error no authorization found",
+			[]string{
+				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			},
+			&sdk.TxResponse{},
+			4,
+			false,
+			"authorization not found",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.NewCmdExecAuthorization()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.errMsg)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+
+	// grant undelegate authorization without limit
+	_, err = execGrantAuthorization(
+		val,
+		[]string{
+			grantee.String(),
+			"unbond",
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+			fmt.Sprintf("--%s=%s", cli.FlagValidators, fmt.Sprintf("%s", val.ValAddress.String())),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		},
+	)
+	s.Require().NoError(err)
+	tokens = sdk.NewCoins(
+		sdk.NewCoin("stake", sdk.NewInt(50)),
+	)
+
+	undelegateTx = fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.Msg/Undelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
+		tokens.GetDenomByIndex(0), tokens[0].Amount)
+	execMsg = testutil.WriteToNewTempFile(s.T(), undelegateTx)
+
+	testCases = []struct {
+		name         string
+		args         []string
+		respType     proto.Message
+		expectedCode uint32
+		expectErr    bool
+		errMsg       string
+	}{
+		{
+			"valid txn",
+			[]string{
+				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			},
+			&sdk.TxResponse{},
+			0,
+			false,
+			"",
+		},
+		{
+			"valid txn",
+			[]string{
+				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			},
+			&sdk.TxResponse{},
+			0,
+			false,
+			"",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.NewCmdExecAuthorization()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.errMsg)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

@@ -136,7 +136,7 @@ type Addressable interface {
     Address() []byte
 }
 
-func Composed(typ string, subaccounts []Addressable) []byte {
+func NewComposed(typ string, subaccounts []Addressable) []byte {
     addresses = map(subaccounts, \a -> LengthPrefix(a.Address()))
     addresses = sort(addresses)
     return address.Hash(typ, addresses[0] + ... + addresses[n])
@@ -176,19 +176,33 @@ func (multisig PubKey) Address() {
   prefix := fmt.Sprintf("%s/%d", proto.MessageName(multisig), multisig.Threshold)
 
   // use the Composed function defined above
-  return address.Composed(prefix, keys)
+  return address.NewComposed(prefix, keys)
 }
 ```
 
-#### Composing Module Accounts
+#### Module Account Addresses
 
-Very often, modules define child accounts. We use `Compose` function to create module sub-accounts:
+Module accounts are very heavily used in SDK, so it make sense to have an optimized function for module addresses.
+
+We use `"module"` as a schema type for all module addresses. Since, modules have a clear order, and the module / submodule names are strings, we propose to use an null byte (`'\x00'`) as a separator instead of length prefixes.
 
 ```
-Compose("module", LengthPrefix(moduleName) + LengthPrefix(moduleSubaccountKey))
+func Module(moduleName string, key []byte) []byte{
+	return Hash("module", append([]byte(moduleName), 0, key...))
+}
 ```
 
-We use `"module"` as a schema type for all module keys.
+Example
+
+A lending BTC pool address would be:
+```
+btcPool := address.Module("lending", btc.Addrress()})
+```
+
+If we want to create an address for a module account depending on more than one key, we can concatenate them:
+```
+btcAtomAMM := address.Module("amm", btc.Addrress() + atom.Address()})
+```
 
 
 ### Account Types

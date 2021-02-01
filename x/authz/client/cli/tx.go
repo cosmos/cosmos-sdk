@@ -23,6 +23,7 @@ const FlagSpendLimit = "spend-limit"
 const FlagMsgType = "msg-type"
 const FlagExpiration = "expiration"
 const FlagValidators = "validators"
+const delegate = "delegate"
 
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd() *cobra.Command {
@@ -94,7 +95,7 @@ Examples:
 				}
 
 				authorization = types.NewGenericAuthorization(msgType)
-			case "delegate", "unbond":
+			case delegate, "unbond":
 				limit, err := cmd.Flags().GetString(FlagSpendLimit)
 				if err != nil {
 					return err
@@ -128,13 +129,13 @@ Examples:
 					if !spendLimit.IsAllPositive() {
 						return fmt.Errorf("spend-limit should be greater than zero")
 					}
-					if args[1] == "delegate" {
+					if args[1] == delegate {
 						authorization = types.NewDelegateAuthorization(vals, &spendLimit[0])
 					} else {
 						authorization = types.NewUndelegateAuthorization(vals, &spendLimit[0])
 					}
 				} else {
-					if args[1] == "delegate" {
+					if args[1] == delegate {
 						authorization = types.NewDelegateAuthorization(vals, nil)
 					} else {
 						authorization = types.NewUndelegateAuthorization(vals, nil)

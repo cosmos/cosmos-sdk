@@ -598,6 +598,32 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
 }
 
+// MigrateStore performs in-place store migrations. This function is not called
+// automatically, it is meant to be called from an x/upgrade UpgradeHandler.
+// `migrationsMap` is a map of moduleName to fromVersion (unit64), where
+// fromVersion denotes the version from which we should migrate the module.
+//
+// Example:
+//   app.UpgradeKeeper.SetUpgradeHandler("store-migration", func(ctx sdk.Context, plan upgradetypes.Plan) {
+//   	err := app.MigrateStore(ctx, map[string]unint64{
+//   		"bank": 1,		// Migrate x/bank from v1 to current x/bank's ConsensusVersion
+//   		"staking": 8,	// Migrate x/staking from v8 to current x/staking's ConsensusVersion
+//   	})
+//   	if err != nil {
+//   		panic(err)
+//   	}
+//	 })
+func (app *SimApp) MigrateStore(ctx sdk.Context, migrationsMap map[string]uint64) error {
+	for moduleName, module := range app.mm.Modules {
+		err := module.MigrateStore(ctx, app.keys[moduleName], migrationsMap[moduleName])
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // RegisterSwaggerAPI registers swagger route with API Server
 func RegisterSwaggerAPI(ctx client.Context, rtr *mux.Router) {
 	statikFS, err := fs.New()

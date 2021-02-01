@@ -139,6 +139,14 @@ func (am AppModule) ExportGenesis(_ sdk.Context, _ codec.JSONMarshaler) json.Raw
 	return nil
 }
 
+// ConsensusVersion tracks state-breaking versions of the module.
+func (AppModule) ConsensusVersion() uint64 { return 0 }
+
+// MigrateStore performs in-place store migrations.
+func (am AppModule) MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, fromVersion uint64) error {
+	return nil
+}
+
 // BeginBlock performs a no-op.
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 

@@ -174,6 +174,12 @@ type AppModule interface {
 	// RegisterServices allows a module to register services
 	RegisterServices(Configurator)
 
+	// ConsensusVersion tracks state-breaking versions of the module
+	ConsensusVersion() uint64
+
+	// MigrateStore performs in-place store migrations.
+	MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, fromVersion uint64) error
+
 	// ABCI
 	BeginBlock(sdk.Context, abci.RequestBeginBlock)
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
@@ -207,6 +213,14 @@ func (gam GenesisOnlyAppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Que
 
 // RegisterServices registers all services.
 func (gam GenesisOnlyAppModule) RegisterServices(Configurator) {}
+
+// ConsensusVersion tracks state-breaking versions of the module.
+func (gam GenesisOnlyAppModule) ConsensusVersion() uint64 { return 0 }
+
+// MigrateStore performs in-place store migrations.
+func (gam GenesisOnlyAppModule) MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, fromVersion uint64) error {
+	return nil
+}
 
 // BeginBlock returns an empty module begin-block
 func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}

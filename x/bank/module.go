@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	v042bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v042"
 	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -149,6 +150,30 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data j
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
 	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
+}
+
+// ConsensusVersion tracks state-breaking versions of the module.
+func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// MigrateStore performs in-place store migrations.
+func (am AppModule) MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, fromVersion uint64) error {
+	// Map of version n -> migrate function from version n to version n+1.
+	migrationsMap := map[uint64]func(store sdk.KVStore) error{
+		0: v042bank.StoreMigration,
+	}
+
+	// Run in-place migrations sequentially until current ConsensusVersion.
+	for i := fromVersion; i < am.ConsensusVersion(); i++ {
+		migrateFn, found := migrationsMap[i]
+		if found {
+			err := migrateFn(ctx.KVStore(storeKey))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 // BeginBlock performs a no-op.

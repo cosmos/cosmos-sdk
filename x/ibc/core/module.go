@@ -156,6 +156,14 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json
 	return cdc.MustMarshalJSON(ExportGenesis(ctx, *am.keeper))
 }
 
+// ConsensusVersion tracks state-breaking versions of the module.
+func (AppModule) ConsensusVersion() uint64 { return 0 }
+
+// MigrateStore performs in-place store migrations.
+func (am AppModule) MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, fromVersion uint64) error {
+	return nil
+}
+
 // BeginBlock returns the begin blocker for the ibc module.
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 	ibcclient.BeginBlocker(ctx, am.keeper.ClientKeeper)

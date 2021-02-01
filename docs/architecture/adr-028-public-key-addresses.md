@@ -126,7 +126,7 @@ We use `address.Hash` function for generating address for all accounts represent
 + module accounts: `address.Hash("module", moduleName)`
 
 
-### Composed Account Addresses
+### Composed Addresses
 
 For simple composed accounts (like new naive multisig), we generalize the `address.Hash`. The address is constructed by recursively creating addresses for the sub accounts, sorting the addresses and composing it into a single address. It ensures that the ordering of keys doesn't impact the created address.
 

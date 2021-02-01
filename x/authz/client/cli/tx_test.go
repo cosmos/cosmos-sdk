@@ -1,3 +1,5 @@
+// +build norace
+
 package cli_test
 
 import (
@@ -684,7 +686,6 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 		})
 	}
 
-	//
 	_, err = execGrantAuthorization(
 		val,
 		[]string{
@@ -985,7 +986,6 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 			}
 		})
 	}
-
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

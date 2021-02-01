@@ -104,7 +104,12 @@ Examples:
 				if err != nil {
 					return err
 				}
+
 				validators := strings.Split(validatorsString, ",")
+				if len(validators) == 0 {
+					return fmt.Errorf("validator set cannot be empty")
+				}
+
 				var vals []sdk.ValAddress
 				for _, validator := range validators {
 					addr, err := sdk.ValAddressFromBech32(validator)

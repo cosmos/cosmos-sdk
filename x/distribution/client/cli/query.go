@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -252,7 +251,7 @@ $ %s query distribution rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p %s1ggh
 			}
 
 			// query for rewards from a particular delegation
-			ctx  := cmd.Context()
+			ctx := cmd.Context()
 			if len(args) == 2 {
 				validatorAddr, err := sdk.ValAddressFromBech32(args[1])
 				if err != nil {

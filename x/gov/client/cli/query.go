@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -208,7 +207,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			}
 
 			// check to see if the proposal is in the store
-			ctx  := cmd.Context()
+			ctx := cmd.Context()
 			_, err = queryClient.Proposal(
 				ctx,
 				&types.QueryProposalRequest{ProposalId: proposalID},
@@ -221,7 +220,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			if err != nil {
 				return err
 			}
-			
+
 			res, err := queryClient.Vote(
 				ctx,
 				&types.QueryVoteRequest{ProposalId: proposalID, Voter: args[1]},

@@ -65,6 +65,19 @@ func TestInitGenesis(t *testing.T) {
 	validators[1].Tokens = valTokens
 	validators[1].DelegatorShares = valTokens.ToDec()
 
+	// mint coins in the bonded pool representing the validators coins
+	require.NoError(t,
+		app.BankKeeper.MintCoins(ctx,
+			types.BondedPoolName,
+			sdk.NewCoins(
+				sdk.NewCoin(params.BondDenom,
+					valTokens.MulRaw(
+						(int64)(len(validators)),
+					),
+				),
+			),
+		),
+	)
 	genesisState := types.NewGenesisState(params, validators, delegations)
 	vals := staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, genesisState)
 

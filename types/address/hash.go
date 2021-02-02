@@ -56,6 +56,11 @@ func NewComposed(typ string, subAddresses []Addressable) ([]byte, error) {
 	return Hash(typ, key), nil
 }
 
+// Module is a specialized version of a composed address for modules
+func Module(moduleName string, key []byte) []byte {
+	return Hash("module", append([]byte(moduleName), 0, key...))
+}
+
 // unsafeStrToByteArray uses unsafe to convert string into byte array. Returned array
 // cannot be altered after this functions is called
 func unsafeStrToByteArray(s string) []byte {

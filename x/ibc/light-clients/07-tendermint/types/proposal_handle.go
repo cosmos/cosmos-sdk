@@ -14,7 +14,7 @@ import (
 // substitute if and only if the proposal passes and one of the following conditions  are
 // satisfied:
 //		1) The substitute client is the same type as the subject client
-//		2) The subject and substitute client states match in all parameters (expect frozen and latest height)
+//		2) The subject and substitute client states match in all parameters (expect frozen height, latest height, and chain-id)
 // 		3) AllowUpdateAfterMisbehaviour and IsFrozen() = true
 // 		4) AllowUpdateAfterExpiry=true and Expire(ctx.BlockTime) = true
 // In case 3) before updating the client, the client will be unfrozen by resetting
@@ -109,13 +109,15 @@ func (cs ClientState) CheckSubstituteAndUpdateState(
 }
 
 // IsMatchingClientState returns true if all the client state parameters match
-// except for frozen height and latest height.
+// except for frozen height, latest height, and chain-id.
 func IsMatchingClientState(subject, substitute ClientState) bool {
 	// zero out parameters which do not need to match
 	subject.LatestHeight = clienttypes.ZeroHeight()
 	subject.FrozenHeight = clienttypes.ZeroHeight()
 	substitute.LatestHeight = clienttypes.ZeroHeight()
 	substitute.FrozenHeight = clienttypes.ZeroHeight()
+	subject.ChainId = ""
+	substitute.ChainId = ""
 
 	return reflect.DeepEqual(subject, substitute)
 }

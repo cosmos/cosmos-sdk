@@ -1,6 +1,8 @@
 package types_test
 
 import (
+	"time"
+
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
@@ -349,9 +351,15 @@ func (suite *TendermintTestSuite) TestIsMatchingClientState() {
 			}, true,
 		},
 		{
-			"not matching, chain id is different", func() {
+			"matching, chain id is different", func() {
 				subjectClientState.ChainId = "bitcoin"
 				substituteClientState.ChainId = "ethereum"
+			}, true,
+		},
+		{
+			"not matching, trusting period is different", func() {
+				subjectClientState.TrustingPeriod = time.Duration(time.Hour * 10)
+				substituteClientState.TrustingPeriod = time.Duration(time.Hour * 1)
 			}, false,
 		},
 	}

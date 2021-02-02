@@ -198,6 +198,9 @@ type SimApp struct {
 
 	// simulation manager
 	sm *module.SimulationManager
+
+	// the configurator
+	configurator module.Configurator
 }
 
 func init() {
@@ -393,7 +396,8 @@ func NewSimApp(
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
-	app.mm.RegisterServices(module.NewConfigurator(app.MsgServiceRouter(), app.GRPCQueryRouter(), app.keys))
+	app.configurator = module.NewConfigurator(app.MsgServiceRouter(), app.GRPCQueryRouter(), app.keys)
+	app.mm.RegisterServices(app.configurator)
 
 	// add test gRPC service for testing gRPC queries in isolation
 	testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})
@@ -596,6 +600,29 @@ func (app *SimApp) RegisterTxService(clientCtx client.Context) {
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
+}
+
+// RunMigrations performs in-place store migrations for all modules. This
+// function is not called automatically, it is meant to be called from an
+// x/upgrade UpgradeHandler.
+//
+// `migrationsMap` is a map of moduleName to fromVersion (unit64), where
+// fromVersion denotes the version from which we should migrate the module, the
+// target version being the module's latest ConsensusVersion.
+//
+// Example:
+//   cfg := module.NewConfigurator(...)
+//   app.UpgradeKeeper.SetUpgradeHandler("store-migration", func(ctx sdk.Context, plan upgradetypes.Plan) {
+//       err := app.RunMigrations(ctx, map[string]unint64{
+//           "bank": 1,     // Migrate x/bank from v1 to current x/bank's ConsensusVersion
+//           "staking": 8,  // Migrate x/staking from v8 to current x/staking's ConsensusVersion
+//      })
+//      if err != nil {
+//           panic(err)
+//      }
+//   })
+func (app *SimApp) RunMigrations(ctx sdk.Context, migrationsMap map[string]uint64) error {
+	return app.mm.RunMigrations(ctx, app.configurator, migrationsMap)
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server

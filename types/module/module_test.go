@@ -179,7 +179,7 @@ func TestManager_RegisterQueryServices(t *testing.T) {
 
 	msgRouter := mocks.NewMockServer(mockCtrl)
 	queryRouter := mocks.NewMockServer(mockCtrl)
-	cfg := module.NewConfigurator(msgRouter, queryRouter)
+	cfg := module.NewConfigurator(msgRouter, queryRouter, nil)
 	mockAppModule1.EXPECT().RegisterServices(cfg).Times(1)
 	mockAppModule2.EXPECT().RegisterServices(cfg).Times(1)
 

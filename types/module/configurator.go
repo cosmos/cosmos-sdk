@@ -23,7 +23,7 @@ type Configurator interface {
 	// RegisterMigration registers an in-place store migration for a module. The
 	// handler is a migration script to perform in-place migrations from version
 	// `fromVersion` to version `fromVersion+1`.
-	RegisterMigration(moduleName string, fromVersion uint64, handler func(store sdk.KVStore) error)
+	RegisterMigration(moduleName string, fromVersion uint64, handler func(store sdk.KVStore) error) error
 
 	// RunMigrations runs all in-place store migrations for a module from a
 	// given version to another version.
@@ -42,7 +42,12 @@ type configurator struct {
 
 // NewConfigurator returns a new Configurator instance
 func NewConfigurator(msgServer grpc.Server, queryServer grpc.Server, storeKeys map[string]*sdk.KVStoreKey) Configurator {
-	return configurator{msgServer: msgServer, queryServer: queryServer, storeKeys: storeKeys}
+	return configurator{
+		msgServer:   msgServer,
+		queryServer: queryServer,
+		storeKeys:   storeKeys,
+		migrations:  map[string]map[uint64]func(store sdk.KVStore) error{},
+	}
 }
 
 var _ Configurator = configurator{}
@@ -58,12 +63,33 @@ func (c configurator) QueryServer() grpc.Server {
 }
 
 // RegisterMigration implements the Configurator.RegisterMigration method
-func (c configurator) RegisterMigration(moduleName string, fromVersion uint64, handler func(store sdk.KVStore) error) {
+func (c configurator) RegisterMigration(moduleName string, fromVersion uint64, handler func(store sdk.KVStore) error) error {
+	if c.migrations[moduleName][fromVersion] != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrLogic, "another migration for module %s and version %d already exists", moduleName, fromVersion)
+	}
+
+	_, found := c.storeKeys[moduleName]
+	if !found {
+		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "store key for module %s not found", moduleName)
+	}
+
+	if c.migrations[moduleName] == nil {
+		c.migrations[moduleName] = map[uint64]func(store sdk.KVStore) error{}
+	}
+
 	c.migrations[moduleName][fromVersion] = handler
+
+	return nil
 }
 
 // RunMigration implements the Configurator.RunMigration method
 func (c configurator) RunMigrations(ctx sdk.Context, moduleName string, fromVersion, toVersion uint64) error {
+	_, found := c.migrations[moduleName]
+	if !found {
+		// If no migrations has been registered for this module, we just skip.
+		return nil
+	}
+
 	storeKey, found := c.storeKeys[moduleName]
 	if !found {
 		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "store key for module %s not found", moduleName)
@@ -72,7 +98,7 @@ func (c configurator) RunMigrations(ctx sdk.Context, moduleName string, fromVers
 	// Run in-place migrations for the module sequentially until toVersion.
 	for i := fromVersion; i < toVersion; i++ {
 		migrateFn, found := c.migrations[moduleName][i]
-		// If no migrations has been registered for this module, we just skip.
+		// If no migrations has been registered for this version, we just skip.
 		if found {
 			err := migrateFn(ctx.KVStore(storeKey))
 			if err != nil {

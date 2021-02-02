@@ -2,14 +2,18 @@ package simapp
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
@@ -44,4 +48,69 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 func TestGetMaccPerms(t *testing.T) {
 	dup := GetMaccPerms()
 	require.Equal(t, maccPerms, dup, "duplicated module account permissions differed from actual module account permissions")
+}
+
+func TestRunMigrations(t *testing.T) {
+	db := dbm.NewMemDB()
+	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeTestEncodingConfig(), EmptyAppOptions{})
+
+	// Create a new configurator for the purpose of this test.
+	app.configurator = module.NewConfigurator(app.MsgServiceRouter(), app.GRPCQueryRouter(), app.keys)
+
+	testCases := []struct {
+		name         string
+		moduleName   string
+		expRegErr    bool
+		expRegErrMsg string
+		expCalled    int
+	}{
+		{
+			"cannot register migration for non-existant module",
+			"foo",
+			true, "store key for module foo not found: not found", 0,
+		},
+		{
+			"can register and run migration handler for x/bank",
+			"bank",
+			false, "", 1,
+		},
+		{
+			"cannot register migration handler for same module & fromVersion",
+			"bank",
+			true, "another migration for module bank and version 0 already exists: internal logic error", 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			// Since it's very hard to test in-place store migrations in tests (due
+			// to the difficulty of maintaing multiple versions of a module), we're
+			// just testing here that the migration logic is called or not for our
+			// custom module.
+			called := 0
+
+			err := app.configurator.RegisterMigration(tc.moduleName, 0, func(sdk.KVStore) error {
+				fmt.Println("HELLO")
+				called++
+
+				return nil
+			})
+
+			if tc.expRegErr {
+				require.Error(t, err)
+				require.Equal(t, tc.expRegErrMsg, err.Error())
+
+				return
+			}
+			require.NoError(t, err)
+
+			err = app.RunMigrations(
+				app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}),
+				map[string]uint64{"bank": 0},
+			)
+			require.NoError(t, err)
+			require.Equal(t, tc.expCalled, called)
+		})
+	}
 }

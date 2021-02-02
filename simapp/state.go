@@ -73,7 +73,56 @@ func AppStateFn(cdc codec.JSONMarshaler, simManager *module.SimulationManager) s
 			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 		}
 
-		appState, err := fixStateCoherence(cdc, appState)
+		// here the change
+		rawState := make(map[string]json.RawMessage)
+		err := json.Unmarshal(appState, &rawState)
+		if err != nil {
+			panic(err)
+		}
+
+		stakingStateBz, ok := rawState[stakingtypes.ModuleName]
+		// TODO(fdymylja/jonathan): should we panic in this case?
+		if !ok {
+			panic("staking genesis state is missing")
+		}
+
+		stakingState := new(stakingtypes.GenesisState)
+		err = cdc.UnmarshalJSON(stakingStateBz, stakingState)
+		if err != nil {
+			panic(err)
+		}
+		// compute not bonded balance
+		notBondedTokens := sdk.ZeroInt()
+		for _, val := range stakingState.Validators {
+			if val.Status != stakingtypes.Unbonded {
+				continue
+			}
+			notBondedTokens = notBondedTokens.Add(val.GetTokens())
+		}
+		notBondedCoins := sdk.NewCoin(stakingState.Params.BondDenom, notBondedTokens)
+		// edit bank state to make it have the not bonded pool tokens
+		bankStateBz, ok := rawState[banktypes.ModuleName]
+		// TODO(fdymylja/jonathan): should we panic in this case
+		if !ok {
+			panic("bank genesis state is missing")
+		}
+		bankState := new(banktypes.GenesisState)
+		err = cdc.UnmarshalJSON(bankStateBz, bankState)
+		if err != nil {
+			panic(err)
+		}
+
+		bankState.Balances = append(bankState.Balances, banktypes.Balance{
+			Address: authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName).String(),
+			Coins:   sdk.NewCoins(notBondedCoins),
+		})
+
+		// change appState back
+		rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
+		rawState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
+
+		// replace appstate
+		appState, err = json.Marshal(rawState)
 		if err != nil {
 			panic(err)
 		}
@@ -185,63 +234,4 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONMarshaler, genesisFile
 	}
 
 	return genesis, newAccs
-}
-
-// fixStateCoherence makes the raw state coherent, which means that
-// if there are validators which are on unbonding status then we expect
-// to have the non_bonded_pool balance to be the total of those validators tokens
-func fixStateCoherence(cdc codec.JSONMarshaler, rawState []byte) (fixedState []byte, err error) {
-	modulesState := make(map[string]json.RawMessage)
-	err = json.Unmarshal(rawState, &modulesState)
-	if err != nil {
-		return nil, err
-	}
-
-	stakingStateBz, ok := modulesState[stakingtypes.ModuleName]
-	// TODO(fdymylja/jonathan): should we error in this case
-	if !ok {
-		return nil, fmt.Errorf("staking state missing")
-	}
-
-	stakingState := new(stakingtypes.GenesisState)
-	err = cdc.UnmarshalJSON(stakingStateBz, stakingState)
-	if err != nil {
-		return nil, err
-	}
-	// compute not bonded balance
-	notBondedTokens := sdk.ZeroInt()
-	for _, val := range stakingState.Validators {
-		if val.Status != stakingtypes.Unbonded {
-			continue
-		}
-		notBondedTokens = notBondedTokens.Add(val.GetTokens())
-	}
-	notBondedCoins := sdk.NewCoin(stakingState.Params.BondDenom, notBondedTokens)
-	// edit bank state to make it have the not bonded pool tokens
-	bankStateBz, ok := modulesState[banktypes.ModuleName]
-	// TODO(fdymylja/jonathan): should we panic in this case
-	if !ok {
-		panic("bank genesis state is missing")
-	}
-	bankState := new(banktypes.GenesisState)
-	err = cdc.UnmarshalJSON(bankStateBz, bankState)
-	if err != nil {
-		return nil, err
-	}
-
-	bankState.Balances = append(bankState.Balances, banktypes.Balance{
-		Address: authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName).String(),
-		Coins:   sdk.NewCoins(notBondedCoins),
-	})
-
-	// change appState back
-	modulesState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
-	modulesState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
-
-	// replace appstate
-	fixedState, err = json.Marshal(rawState)
-	if err != nil {
-		return nil, err
-	}
-	return fixedState, nil
 }

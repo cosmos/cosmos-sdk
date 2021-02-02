@@ -60,6 +60,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank) [\#8417](https://github.com/cosmos/cosmos-sdk/pull/8417) Validate balances and coin denom metadata on genesis
 * (server) [\#8399](https://github.com/cosmos/cosmos-sdk/pull/8399) fix gRPC-web flag default value
 * (client/keys) [\#8436](https://github.com/cosmos/cosmos-sdk/pull/8436) Fix key migration issue
+* (server) [\#8481](https://github.com/cosmos/cosmos-sdk/pull/8481) Don't create
+  files when running `{appd} tendermint show-*` subcommands
 
 ## [v0.40.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.1) - 2021-01-19
 

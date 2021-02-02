@@ -181,19 +181,22 @@ func (multisig PubKey) Address() {
 
 #### Module Addresses
 
-Module addresses are very heavily used in SDK, so it make sense to have an optimized function for module addresses.
+In Basic Address section we defined a module address as:
 
-We use `"module"` as a schema type for all module addresses. Since, modules have a clear order, and the module / submodule names are strings, we propose to use an null byte (`'\x00'`) as a separator instead of length prefixes.
+```
+address.Hash("module", moduleName)
+```
+
+We use `"module"` as a schema type for all module addresses. Module addresses can have sub accounts. The derivation process has a clear order: module name, submodule, key, subsubmodule key.
+Module addresses are heavily used in the SDK so it make sense to optimize the derivation process: instead of using of using `LengthPrefix` for the module name, we use a null byte (`'\x00'`) as a separator. This works, because null byte is not a part of a valid module name.
 
 ```
 func Module(moduleName string, key []byte) []byte{
-	return Hash("module", append([]byte(moduleName), 0, key...))
+	return Hash("module", []byte(moduleName) + 0 + key)
 }
 ```
 
-Example
-
-A lending BTC pool address would be:
+**Example**  A lending BTC pool address would be:
 ```
 btcPool := address.Module("lending", btc.Addrress()})
 ```
@@ -202,6 +205,20 @@ If we want to create an address for a module account depending on more than one 
 ```
 btcAtomAMM := address.Module("amm", btc.Addrress() + atom.Address()})
 ```
+
+We can continue the derivation process and can create an address for a submodule account:
+
+```
+func Submodule(address []byte, derivationKey []byte) {
+    return Hash("module", address + derivationKey)
+}
+```
+
+**Example**  For a cosmwasm smart-contract address we could use the following construction:
+```
+smartContractAddr := Submodule(Module("cosmwasm", smartContractsNamespace), smartContractKey)
+```
+
 
 
 ### Schema Types

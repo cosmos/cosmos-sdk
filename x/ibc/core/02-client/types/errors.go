@@ -31,5 +31,5 @@ var (
 	ErrInvalidUpdateClientProposal            = sdkerrors.Register(SubModuleName, 24, "invalid update client proposal")
 	ErrInvalidUpgradeClient                   = sdkerrors.Register(SubModuleName, 25, "invalid client upgrade")
 	ErrInvalidHeight                          = sdkerrors.Register(SubModuleName, 26, "invalid height")
-	ErrInvalidSubstitute                      = sdkerrors.Register(SubModuleName, 27, "invalid substitute")
+	ErrInvalidSubstitute                      = sdkerrors.Register(SubModuleName, 27, "invalid client state substitute")
 )

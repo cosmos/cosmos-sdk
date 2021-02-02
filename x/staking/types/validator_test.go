@@ -295,7 +295,9 @@ func TestValidatorsSortTendermint(t *testing.T) {
 	sort.Sort(tmtypes.ValidatorsByVotingPower(expectedVals))
 
 	// sort in SDK and then convert to tendermint
-	sort.Sort(types.ValidatorsByVotingPower(valz))
+	sort.SliceStable(valz, func(i, j int) bool {
+		return types.ValidatorsByVotingPower(valz).Less(i, j, sdk.DefaultPowerReduction)
+	})
 	actualVals, err := teststaking.ToTmValidators(valz, sdk.DefaultPowerReduction)
 	require.NoError(t, err)
 

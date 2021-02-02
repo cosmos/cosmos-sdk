@@ -116,11 +116,7 @@ type ValidatorsByVotingPower []Validator
 
 func (valz ValidatorsByVotingPower) Len() int { return len(valz) }
 
-func (valz ValidatorsByVotingPower) Less(i, j int) bool {
-	return valz.LessAfterPowerReductionApply(i, j, sdk.DefaultPowerReduction)
-}
-
-func (valz ValidatorsByVotingPower) LessAfterPowerReductionApply(i, j int, powerReduction sdk.Int) bool {
+func (valz ValidatorsByVotingPower) Less(i, j int, powerReduction sdk.Int) bool {
 	if valz[i].ConsensusPower(powerReduction) == valz[j].ConsensusPower(powerReduction) {
 		addrI, errI := valz[i].GetConsAddr()
 		addrJ, errJ := valz[j].GetConsAddr()

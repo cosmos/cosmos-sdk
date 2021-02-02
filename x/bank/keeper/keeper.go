@@ -170,6 +170,11 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context) exported.SupplyI {
 
 // SetSupply sets the Supply to store
 func (k BaseKeeper) SetSupply(ctx sdk.Context, supply exported.SupplyI) {
+	k.setSupply(ctx, supply)
+}
+
+// setSupply sets the Supply to store
+func (k BaseKeeper) setSupply(ctx sdk.Context, supply exported.SupplyI) {
 	store := ctx.KVStore(k.storeKey)
 	bz, err := k.MarshalSupply(supply)
 	if err != nil {
@@ -341,7 +346,7 @@ func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 	supply := k.GetSupply(ctx)
 	supply.Inflate(amt)
 
-	k.SetSupply(ctx, supply)
+	k.setSupply(ctx, supply)
 
 	logger := k.Logger(ctx)
 	logger.Info("minted coins from module account", "amount", amt.String(), "from", moduleName)
@@ -369,7 +374,7 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 	// update total supply
 	supply := k.GetSupply(ctx)
 	supply.Deflate(amt)
-	k.SetSupply(ctx, supply)
+	k.setSupply(ctx, supply)
 
 	logger := k.Logger(ctx)
 	logger.Info("burned tokens from module account", "amount", amt.String(), "from", moduleName)

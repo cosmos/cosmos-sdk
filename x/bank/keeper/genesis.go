@@ -31,7 +31,7 @@ func (k BaseKeeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		genState.Supply = totalSupply
 	}
 
-	k.SetSupply(ctx, types.NewSupply(genState.Supply))
+	k.setSupply(ctx, types.NewSupply(genState.Supply))
 
 	for _, meta := range genState.DenomMetadata {
 		k.SetDenomMetaData(ctx, meta)

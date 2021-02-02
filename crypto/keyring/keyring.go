@@ -108,6 +108,7 @@ type Signer interface {
 type Importer interface {
 	// ImportPrivKey imports ASCII armored passphrase-encrypted private keys.
 	ImportPrivKey(uid, armor, passphrase string) error
+
 	// ImportPubKey imports ASCII armored public keys.
 	ImportPubKey(uid string, armor string) error
 }

@@ -21,7 +21,7 @@ import (
 // store.
 //
 // NOTE: Substitute clients with revision numbers not equal to the revision
-// number of the subject client is explicityly disallowed. We cannot support
+// number of the subject client is explicitly disallowed. We cannot support
 // this until there is a way to range query for the all the consensus
 // states which occurred between two IBC Revision heights.
 // https://github.com/cosmos/cosmos-sdk/issues/7712

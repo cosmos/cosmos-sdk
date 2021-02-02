@@ -41,17 +41,17 @@ func StoreMigration(store sdk.KVStore) error {
 	// new key is of format
 	// prefix (0x02) || addrLen (1 byte) || addrBytes || denomBytes
 	oldStore := prefix.NewStore(store, v040bank.BalancesPrefix)
-	newStore := prefix.NewStore(store, BalancesPrefix)
 
 	oldStoreIter := oldStore.Iterator(nil, nil)
 	defer oldStoreIter.Close()
 
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
 		addr := v040bank.AddressFromBalancesStore(oldStoreIter.Key())
-		denom := oldStoreIter.Key()[1+v040auth.AddrLen:]
+		denom := oldStoreIter.Key()[v040auth.AddrLen:]
 		newStoreKey := append(CreateAccountBalancesPrefix(addr), denom...)
 
-		newStore.Set(newStoreKey, oldStoreIter.Value()) // Values don't change.
+		// Set new key on store. Values don't change.
+		store.Set(newStoreKey, oldStoreIter.Value())
 		oldStore.Delete(oldStoreIter.Key())
 	}
 

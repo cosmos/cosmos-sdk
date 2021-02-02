@@ -25,9 +25,9 @@ type Configurator interface {
 	// `fromVersion` to version `fromVersion+1`.
 	RegisterMigration(moduleName string, fromVersion uint64, handler func(store sdk.KVStore) error)
 
-	// RunMigration runs all in-place store migrations for a module from a
+	// RunMigrations runs all in-place store migrations for a module from a
 	// given version to another version.
-	RunMigration(ctx sdk.Context, moduleName string, fromVersion, toVersion uint64) error
+	RunMigrations(ctx sdk.Context, moduleName string, fromVersion, toVersion uint64) error
 }
 
 type configurator struct {
@@ -63,7 +63,7 @@ func (c configurator) RegisterMigration(moduleName string, fromVersion uint64, h
 }
 
 // RunMigration implements the Configurator.RunMigration method
-func (c configurator) RunMigration(ctx sdk.Context, moduleName string, fromVersion, toVersion uint64) error {
+func (c configurator) RunMigrations(ctx sdk.Context, moduleName string, fromVersion, toVersion uint64) error {
 	storeKey, found := c.storeKeys[moduleName]
 	if !found {
 		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "store key for module %s not found", moduleName)

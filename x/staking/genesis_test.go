@@ -120,6 +120,8 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	delegations := []types.Delegation{}
 	validators := make([]types.Validator, size)
 	var err error
+
+	bondedPoolAmt := sdk.ZeroInt()
 	for i := range validators {
 		validators[i], err = types.NewValidator(sdk.ValAddress(addrs[i]),
 			PKs[i], types.NewDescription(fmt.Sprintf("#%d", i), "", "", "", ""))
@@ -132,9 +134,23 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 		}
 		validators[i].Tokens = tokens
 		validators[i].DelegatorShares = tokens.ToDec()
+		// add bonded coins
+		bondedPoolAmt = bondedPoolAmt.Add(tokens)
 	}
-
 	genesisState := types.NewGenesisState(params, validators, delegations)
+	// mint coins in the bonded pool representing the validators coins
+	require.NoError(t,
+		app.BankKeeper.MintCoins(ctx,
+			types.BondedPoolName,
+			sdk.NewCoins(
+				sdk.NewCoin(
+					params.BondDenom,
+					bondedPoolAmt,
+				),
+			),
+		),
+	)
+
 	vals := staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, genesisState)
 
 	abcivals := make([]abci.ValidatorUpdate, 100)

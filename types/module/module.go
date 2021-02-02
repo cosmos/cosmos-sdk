@@ -177,9 +177,6 @@ type AppModule interface {
 	// ConsensusVersion tracks state-breaking versions of the module
 	ConsensusVersion() uint64
 
-	// MigrateStore performs in-place store migrations.
-	MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, fromVersion uint64) error
-
 	// ABCI
 	BeginBlock(sdk.Context, abci.RequestBeginBlock)
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
@@ -216,11 +213,6 @@ func (gam GenesisOnlyAppModule) RegisterServices(Configurator) {}
 
 // ConsensusVersion tracks state-breaking versions of the module.
 func (gam GenesisOnlyAppModule) ConsensusVersion() uint64 { return 0 }
-
-// MigrateStore performs in-place store migrations.
-func (gam GenesisOnlyAppModule) MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, fromVersion uint64) error {
-	return nil
-}
 
 // BeginBlock returns an empty module begin-block
 func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
@@ -340,6 +332,33 @@ func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) map[st
 	}
 
 	return genesisData
+}
+
+// MigrateStore performs in-place store migrations. This function is not called
+// automatically, it is meant to be called from an x/upgrade UpgradeHandler.
+// `migrationsMap` is a map of moduleName to fromVersion (unit64), where
+// fromVersion denotes the version from which we should migrate the module.
+//
+// Example:
+//   cfg := module.NewConfigurator(...)
+//   app.UpgradeKeeper.SetUpgradeHandler("store-migration", func(ctx sdk.Context, plan upgradetypes.Plan) {
+//       err := app.mm.MigrateStore(ctx, cfg, map[string]unint64{
+//           "bank": 1,     // Migrate x/bank from v1 to current x/bank's ConsensusVersion
+//           "staking": 8,  // Migrate x/staking from v8 to current x/staking's ConsensusVersion
+//      })
+//      if err != nil {
+//           panic(err)
+//      }
+//   })
+func (m Manager) MigrateStore(ctx sdk.Context, cfg Configurator, migrationsMap map[string]uint64) error {
+	for moduleName, module := range m.Modules {
+		err := cfg.RunMigration(ctx, moduleName, migrationsMap[moduleName], module.ConsensusVersion())
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // BeginBlock performs begin block functionality for all modules. It creates a

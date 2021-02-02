@@ -123,11 +123,6 @@ func (am AppModule) ExportGenesis(_ sdk.Context, cdc codec.JSONMarshaler) json.R
 // ConsensusVersion tracks state-breaking versions of the module.
 func (AppModule) ConsensusVersion() uint64 { return 0 }
 
-// MigrateStore performs in-place store migrations.
-func (am AppModule) MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, fromVersion uint64) error {
-	return nil
-}
-
 // BeginBlock calls the upgrade module hooks
 //
 // CONTRACT: this is registered in BeginBlocker *before* all other modules' BeginBlock functions

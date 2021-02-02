@@ -1,6 +1,10 @@
 package module
 
-import "github.com/gogo/protobuf/grpc"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/gogo/protobuf/grpc"
+)
 
 // Configurator provides the hooks to allow modules to configure and register
 // their services in the RegisterServices method. It is designed to eventually
@@ -15,16 +19,30 @@ type Configurator interface {
 	// QueryServer returns a grpc.Server instance which allows registering services
 	// that will be exposed as gRPC services as well as ABCI query handlers.
 	QueryServer() grpc.Server
+
+	// RegisterMigration registers an in-place store migration for a module. The
+	// handler is a migration script to perform in-place migrations from version
+	// `fromVersion` to version `fromVersion+1`.
+	RegisterMigration(moduleName string, fromVersion uint64, handler func(store sdk.KVStore) error)
+
+	// RunMigration runs all in-place store migrations for a module from a
+	// given version to another version.
+	RunMigration(ctx sdk.Context, moduleName string, fromVersion, toVersion uint64) error
 }
 
 type configurator struct {
 	msgServer   grpc.Server
 	queryServer grpc.Server
+
+	// storeKeys is used to access module stores inside in-place store migrations.
+	storeKeys map[string]*sdk.KVStoreKey
+	// migrations is a map of moduleName -> fromVersion -> migration script handler
+	migrations map[string]map[uint64]func(store sdk.KVStore) error
 }
 
 // NewConfigurator returns a new Configurator instance
-func NewConfigurator(msgServer grpc.Server, queryServer grpc.Server) Configurator {
-	return configurator{msgServer: msgServer, queryServer: queryServer}
+func NewConfigurator(msgServer grpc.Server, queryServer grpc.Server, storeKeys map[string]*sdk.KVStoreKey) Configurator {
+	return configurator{msgServer: msgServer, queryServer: queryServer, storeKeys: storeKeys}
 }
 
 var _ Configurator = configurator{}
@@ -37,4 +55,31 @@ func (c configurator) MsgServer() grpc.Server {
 // QueryServer implements the Configurator.QueryServer method
 func (c configurator) QueryServer() grpc.Server {
 	return c.queryServer
+}
+
+// RegisterMigration implements the Configurator.RegisterMigration method
+func (c configurator) RegisterMigration(moduleName string, fromVersion uint64, handler func(store sdk.KVStore) error) {
+	c.migrations[moduleName][fromVersion] = handler
+}
+
+// RunMigration implements the Configurator.RunMigration method
+func (c configurator) RunMigration(ctx sdk.Context, moduleName string, fromVersion, toVersion uint64) error {
+	storeKey, found := c.storeKeys[moduleName]
+	if !found {
+		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "store key for module %s not found", moduleName)
+	}
+
+	// Run in-place migrations for the module sequentially until toVersion.
+	for i := fromVersion; i < toVersion; i++ {
+		migrateFn, found := c.migrations[moduleName][i]
+		// If no migrations has been registered for this module, we just skip.
+		if found {
+			err := migrateFn(ctx.KVStore(storeKey))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }

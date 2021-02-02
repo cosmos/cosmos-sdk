@@ -148,11 +148,6 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json
 // ConsensusVersion tracks state-breaking versions of the module.
 func (AppModule) ConsensusVersion() uint64 { return 0 }
 
-// MigrateStore performs in-place store migrations.
-func (am AppModule) MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, fromVersion uint64) error {
-	return nil
-}
-
 // BeginBlock implements the AppModule interface
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 }

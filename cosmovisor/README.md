@@ -107,7 +107,7 @@ on the disk before the upgrade happens. However, for people who don't need such
 control and want an easier setup (maybe they are syncing a non-validating fullnode
 and want to  do little maintenance), there is another option.
 
-If you set `DAEMON_ALLOW_DOWNLOAD_BINARIES=on` then when an upgrade is triggered and no local binary
+If you set `DAEMON_ALLOW_DOWNLOAD_BINARIES=true` then when an upgrade is triggered and no local binary
 can be found, the `cosmovisor` will attempt to download and install the binary itself.
 The plan stored in the upgrade module has an info field for arbitrary json.
 This info is expected to be outputed on the halt log message. There are two

@@ -62,7 +62,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 
 	var (
 		tmpDir   string
-		migrator keyring.InfoImporter
+		migrator keyring.Importer
 	)
 
 	if dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun); dryRun {
@@ -73,10 +73,10 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 
 		defer os.RemoveAll(tmpDir)
 
-		migrator, err = keyring.NewInfoImporter(keyringServiceName, "test", tmpDir, buf)
+		migrator, err = keyring.New(keyringServiceName, keyring.BackendTest, tmpDir, buf)
 	} else {
 		backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-		migrator, err = keyring.NewInfoImporter(keyringServiceName, backend, rootDir, buf)
+		migrator, err = keyring.New(keyringServiceName, backend, rootDir, buf)
 	}
 
 	if err != nil {
@@ -86,12 +86,12 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 		))
 	}
 
-	for _, key := range oldKeys {
-		legKeyInfo, err := legacyKb.Export(key.GetName())
-		if err != nil {
-			return err
-		}
+	if len(oldKeys) == 0 {
+		cmd.Print("Migration Aborted: no keys to migrate")
+		return nil
+	}
 
+	for _, key := range oldKeys {
 		keyName := key.GetName()
 		keyType := key.GetType()
 
@@ -107,7 +107,12 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 		}
 
 		if keyType != keyring.TypeLocal {
-			if err := migrator.Import(keyName, legKeyInfo); err != nil {
+			pubkeyArmor, err := legacyKb.ExportPubKey(keyName)
+			if err != nil {
+				return err
+			}
+
+			if err := migrator.ImportPubKey(keyName, pubkeyArmor); err != nil {
 				return err
 			}
 
@@ -127,10 +132,11 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		if err := migrator.Import(keyName, armoredPriv); err != nil {
+		if err := migrator.ImportPrivKey(keyName, armoredPriv, migratePassphrase); err != nil {
 			return err
 		}
 	}
+	cmd.Print("Migration Complete")
 
 	return err
 }

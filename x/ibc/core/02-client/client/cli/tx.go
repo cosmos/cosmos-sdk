@@ -256,7 +256,7 @@ func NewCmdSubmitUpdateClientProposal() *cobra.Command {
 		Short: "Submit an update IBC client proposal",
 		Long: "Submit an update IBC client proposal along with an initial deposit.\n" +
 			"Please specify a subject client identifier you want to update..\n" +
-			"Please specify the substitute client the subject client will use and the intial height to reference the substitute client's state.",
+			"Please specify the substitute client the subject client will use and the initial height to reference the substitute client's state.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

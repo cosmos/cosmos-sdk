@@ -270,9 +270,10 @@ func (suite *IntegrationTestSuite) TestSupply_BurnCoins() {
 	suite.Require().Equal(supplyAfterInflation.GetTotal().Sub(initCoins), keeper.GetSupply(ctx).GetTotal())
 
 	// test same functionality on module account with multiple permissions
+	suite.
+		Require().
+		NoError(keeper.MintCoins(ctx, authtypes.Minter, initCoins))
 	supplyAfterInflation = keeper.GetSupply(ctx)
-	supplyAfterInflation.Inflate(initCoins)
-	keeper.SetSupply(ctx, supplyAfterInflation)
 
 	suite.Require().NoError(keeper.SetBalances(ctx, multiPermAcc.GetAddress(), initCoins))
 	authKeeper.SetModuleAccount(ctx, multiPermAcc)

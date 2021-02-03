@@ -84,9 +84,11 @@ func (c configurator) RegisterMigration(moduleName string, fromVersion uint64, h
 
 // RunMigration implements the Configurator.RunMigration method
 func (c configurator) RunMigrations(ctx sdk.Context, moduleName string, fromVersion, toVersion uint64) error {
-	_, found := c.migrations[moduleName]
-	if !found {
-		// If no migrations has been registered for this module, we just skip.
+	// No-op if toVersion is the initial version.
+	// Some modules don't have a store key (e.g. vesting), in this case, their
+	// ConsensusVersion will always stay at 0, and running migrations on
+	// those modules will be skipped on this line.
+	if toVersion == 0 {
 		return nil
 	}
 
@@ -98,12 +100,13 @@ func (c configurator) RunMigrations(ctx sdk.Context, moduleName string, fromVers
 	// Run in-place migrations for the module sequentially until toVersion.
 	for i := fromVersion; i < toVersion; i++ {
 		migrateFn, found := c.migrations[moduleName][i]
-		// If no migrations has been registered for this version, we just skip.
-		if found {
-			err := migrateFn(ctx.KVStore(storeKey))
-			if err != nil {
-				return err
-			}
+		if !found {
+			return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "no migration found for module %s from version %d to version %d", moduleName, i, i+1)
+		}
+
+		err := migrateFn(ctx.KVStore(storeKey))
+		if err != nil {
+			return err
 		}
 	}
 

@@ -2,7 +2,6 @@ package simapp
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"testing"
 
@@ -60,42 +59,51 @@ func TestRunMigrations(t *testing.T) {
 	testCases := []struct {
 		name         string
 		moduleName   string
-		expRegErr    bool
+		expRegErr    bool // errors while registering migration
 		expRegErrMsg string
+		expRunErr    bool // errors while running migration
+		expRunErrMsg string
 		expCalled    int
 	}{
 		{
 			"cannot register migration for non-existant module",
 			"foo",
-			true, "store key for module foo not found: not found", 0,
+			true, "store key for module foo not found: not found", false, "", 0,
+		},
+		{
+			"throws error on RunMigrations if no migration registered for bank",
+			"",
+			false, "", true, "no migration found for module bank from version 0 to version 1: not found", 0,
 		},
 		{
 			"can register and run migration handler for x/bank",
 			"bank",
-			false, "", 1,
+			false, "", false, "", 1,
 		},
 		{
 			"cannot register migration handler for same module & fromVersion",
 			"bank",
-			true, "another migration for module bank and version 0 already exists: internal logic error", 0,
+			true, "another migration for module bank and version 0 already exists: internal logic error", false, "", 0,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			var err error
 
-			// Since it's very hard to test in-place store migrations in tests (due
-			// to the difficulty of maintaing multiple versions of a module), we're
-			// just testing here that the migration logic is called or not for our
-			// custom module.
+			// Since it's very hard to test actual in-place store migrations in
+			// tests (due to the difficulty of maintaing multiple versions of a
+			// module), we're just testing here that the migration logic is
+			// called.
 			called := 0
 
-			err := app.configurator.RegisterMigration(tc.moduleName, 0, func(sdk.KVStore) error {
-				fmt.Println("HELLO")
-				called++
+			if tc.moduleName != "" {
+				err = app.configurator.RegisterMigration(tc.moduleName, 0, func(sdk.KVStore) error {
+					called++
 
-				return nil
-			})
+					return nil
+				})
+			}
 
 			if tc.expRegErr {
 				require.Error(t, err)
@@ -109,8 +117,13 @@ func TestRunMigrations(t *testing.T) {
 				app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}),
 				map[string]uint64{"bank": 0},
 			)
-			require.NoError(t, err)
-			require.Equal(t, tc.expCalled, called)
+			if tc.expRunErr {
+				require.Error(t, err)
+				require.Equal(t, tc.expRunErrMsg, err.Error())
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expCalled, called)
+			}
 		})
 	}
 }

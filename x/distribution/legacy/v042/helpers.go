@@ -8,9 +8,9 @@ import (
 )
 
 // MigratePrefixAddress is a helper function that migrates all keys of format:
-// <prefix_bytes><address_bytes>
+// prefix_bytes | address_bytes
 // into format:
-// <prefix_bytes><address_len (1 byte)><address_bytes>
+// prefix_bytes | address_len (1 byte) | address_bytes
 func MigratePrefixAddress(store sdk.KVStore, prefixBz []byte) {
 	oldStore := prefix.NewStore(store, prefixBz)
 
@@ -28,9 +28,9 @@ func MigratePrefixAddress(store sdk.KVStore, prefixBz []byte) {
 }
 
 // MigratePrefixAddressBytes is a helper function that migrates all keys of format:
-// <prefix_bytes><address_bytes><arbitrary_bytes>
+// prefix_bytes | address_bytes | arbitrary_bytes
 // into format:
-// <prefix_bytes><address_len (1 byte)><address_bytes><arbitrary_bytes>
+// prefix_bytes | address_len (1 byte) | address_bytes | arbitrary_bytes
 func MigratePrefixAddressBytes(store sdk.KVStore, prefixBz []byte) {
 	oldStore := prefix.NewStore(store, prefixBz)
 
@@ -49,9 +49,9 @@ func MigratePrefixAddressBytes(store sdk.KVStore, prefixBz []byte) {
 }
 
 // MigratePrefixAddressAddress is a helper function that migrates all keys of format:
-// <prefix_bytes><address_1_bytes><address_2_bytes>
+// prefix_bytes | address_1_bytes | address_2_bytes
 // into format:
-// <prefix_bytes><address_1_len (1 byte)><address_1_bytes><address_2_len (1 byte)><address_2_bytes>
+// prefix_bytes | address_1_len (1 byte) | address_1_bytes | address_2_len (1 byte) | address_2_bytes
 func MigratePrefixAddressAddress(store sdk.KVStore, prefixBz []byte) {
 	oldStore := prefix.NewStore(store, prefixBz)
 

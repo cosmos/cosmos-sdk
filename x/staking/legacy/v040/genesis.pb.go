@@ -6,13 +6,12 @@ import (
 	math_bits "math/bits"
 
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 )
 
 // GenesisState defines the staking module's genesis state.
 type GenesisState struct {
-	// params defines all the paramaters of related to deposit.
+	// params defines all the parameters of related to deposit.
 	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 	// last_total_power tracks the total amounts of bonded tokens recorded during
 	// the previous end block.
@@ -281,9 +280,7 @@ func (m *LastValidatorPower) Size() (n int) {
 func sovGenesis(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
-func sozGenesis(x uint64) (n int) {
-	return sovGenesis(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
+
 func (m *GenesisState) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0

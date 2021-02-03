@@ -4,19 +4,13 @@ import (
 	fmt "fmt"
 	io "io"
 	math_bits "math/bits"
-	reflect "reflect"
 	strings "strings"
 	time "time"
 
 	types1 "github.com/cosmos/cosmos-sdk/codec/types"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	types2 "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/gogo/protobuf/gogoproto"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	proto "github.com/gogo/protobuf/proto"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
-	_ "github.com/golang/protobuf/ptypes/duration"
-	_ "github.com/golang/protobuf/ptypes/timestamp"
-	_ "github.com/regen-network/cosmos-proto"
 )
 
 // BondStatus is the status of a validator.
@@ -33,30 +27,12 @@ const (
 	Bonded BondStatus = 3
 )
 
-var BondStatus_name = map[int32]string{
-	0: "BOND_STATUS_UNSPECIFIED",
-	1: "BOND_STATUS_UNBONDED",
-	2: "BOND_STATUS_UNBONDING",
-	3: "BOND_STATUS_BONDED",
-}
-
-var BondStatus_value = map[string]int32{
-	"BOND_STATUS_UNSPECIFIED": 0,
-	"BOND_STATUS_UNBONDED":    1,
-	"BOND_STATUS_UNBONDING":   2,
-	"BOND_STATUS_BONDED":      3,
-}
-
-func (x BondStatus) String() string {
-	return proto.EnumName(BondStatus_name, int32(x))
-}
-
 // CommissionRates defines the initial commission rates to be used for creating
 // a validator.
 type CommissionRates struct {
-	Rate          github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=rate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"rate"`
-	MaxRate       github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=max_rate,json=maxRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"max_rate" yaml:"max_rate"`
-	MaxChangeRate github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=max_change_rate,json=maxChangeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"max_change_rate" yaml:"max_change_rate"`
+	Rate          sdk.Dec `protobuf:"bytes,1,opt,name=rate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"rate"`
+	MaxRate       sdk.Dec `protobuf:"bytes,2,opt,name=max_rate,json=maxRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"max_rate" yaml:"max_rate"`
+	MaxChangeRate sdk.Dec `protobuf:"bytes,3,opt,name=max_change_rate,json=maxChangeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"max_change_rate" yaml:"max_change_rate"`
 }
 
 func (m *CommissionRates) Reset()      { *m = CommissionRates{} }
@@ -92,17 +68,17 @@ func (*Description) ProtoMessage() {}
 // exchange rate. Voting power can be calculated as total bonded shares
 // multiplied by exchange rate.
 type Validator struct {
-	OperatorAddress   string                                 `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty" yaml:"operator_address"`
-	ConsensusPubkey   *types1.Any                            `protobuf:"bytes,2,opt,name=consensus_pubkey,json=consensusPubkey,proto3" json:"consensus_pubkey,omitempty" yaml:"consensus_pubkey"`
-	Jailed            bool                                   `protobuf:"varint,3,opt,name=jailed,proto3" json:"jailed,omitempty"`
-	Status            BondStatus                             `protobuf:"varint,4,opt,name=status,proto3,enum=cosmos.staking.v1beta1.BondStatus" json:"status,omitempty"`
-	Tokens            github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,5,opt,name=tokens,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"tokens"`
-	DelegatorShares   github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=delegator_shares,json=delegatorShares,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"delegator_shares" yaml:"delegator_shares"`
-	Description       Description                            `protobuf:"bytes,7,opt,name=description,proto3" json:"description"`
-	UnbondingHeight   int64                                  `protobuf:"varint,8,opt,name=unbonding_height,json=unbondingHeight,proto3" json:"unbonding_height,omitempty" yaml:"unbonding_height"`
-	UnbondingTime     time.Time                              `protobuf:"bytes,9,opt,name=unbonding_time,json=unbondingTime,proto3,stdtime" json:"unbonding_time" yaml:"unbonding_time"`
-	Commission        Commission                             `protobuf:"bytes,10,opt,name=commission,proto3" json:"commission"`
-	MinSelfDelegation github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,11,opt,name=min_self_delegation,json=minSelfDelegation,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"min_self_delegation" yaml:"min_self_delegation"`
+	OperatorAddress   string      `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty" yaml:"operator_address"`
+	ConsensusPubkey   *types1.Any `protobuf:"bytes,2,opt,name=consensus_pubkey,json=consensusPubkey,proto3" json:"consensus_pubkey,omitempty" yaml:"consensus_pubkey"`
+	Jailed            bool        `protobuf:"varint,3,opt,name=jailed,proto3" json:"jailed,omitempty"`
+	Status            BondStatus  `protobuf:"varint,4,opt,name=status,proto3,enum=cosmos.staking.v1beta1.BondStatus" json:"status,omitempty"`
+	Tokens            sdk.Int     `protobuf:"bytes,5,opt,name=tokens,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"tokens"`
+	DelegatorShares   sdk.Dec     `protobuf:"bytes,6,opt,name=delegator_shares,json=delegatorShares,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"delegator_shares" yaml:"delegator_shares"`
+	Description       Description `protobuf:"bytes,7,opt,name=description,proto3" json:"description"`
+	UnbondingHeight   int64       `protobuf:"varint,8,opt,name=unbonding_height,json=unbondingHeight,proto3" json:"unbonding_height,omitempty" yaml:"unbonding_height"`
+	UnbondingTime     time.Time   `protobuf:"bytes,9,opt,name=unbonding_time,json=unbondingTime,proto3,stdtime" json:"unbonding_time" yaml:"unbonding_time"`
+	Commission        Commission  `protobuf:"bytes,10,opt,name=commission,proto3" json:"commission"`
+	MinSelfDelegation sdk.Int     `protobuf:"bytes,11,opt,name=min_self_delegation,json=minSelfDelegation,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"min_self_delegation" yaml:"min_self_delegation"`
 }
 
 func (m *Validator) Reset()      { *m = Validator{} }
@@ -120,9 +96,9 @@ func (*ValAddresses) ProtoMessage() {}
 // owned by one delegator, and is associated with the voting power of one
 // validator.
 type Delegation struct {
-	DelegatorAddress string                                 `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty" yaml:"delegator_address"`
-	ValidatorAddress string                                 `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty" yaml:"validator_address"`
-	Shares           github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=shares,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"shares"`
+	DelegatorAddress string  `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty" yaml:"delegator_address"`
+	ValidatorAddress string  `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty" yaml:"validator_address"`
+	Shares           sdk.Dec `protobuf:"bytes,3,opt,name=shares,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"shares"`
 }
 
 func (m *Delegation) Reset()      { *m = Delegation{} }
@@ -141,10 +117,10 @@ func (*UnbondingDelegation) ProtoMessage() {}
 
 // UnbondingDelegationEntry defines an unbonding object with relevant metadata.
 type UnbondingDelegationEntry struct {
-	CreationHeight int64                                  `protobuf:"varint,1,opt,name=creation_height,json=creationHeight,proto3" json:"creation_height,omitempty" yaml:"creation_height"`
-	CompletionTime time.Time                              `protobuf:"bytes,2,opt,name=completion_time,json=completionTime,proto3,stdtime" json:"completion_time" yaml:"completion_time"`
-	InitialBalance github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=initial_balance,json=initialBalance,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"initial_balance" yaml:"initial_balance"`
-	Balance        github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=balance,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"balance"`
+	CreationHeight int64     `protobuf:"varint,1,opt,name=creation_height,json=creationHeight,proto3" json:"creation_height,omitempty" yaml:"creation_height"`
+	CompletionTime time.Time `protobuf:"bytes,2,opt,name=completion_time,json=completionTime,proto3,stdtime" json:"completion_time" yaml:"completion_time"`
+	InitialBalance sdk.Int   `protobuf:"bytes,3,opt,name=initial_balance,json=initialBalance,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"initial_balance" yaml:"initial_balance"`
+	Balance        sdk.Int   `protobuf:"bytes,4,opt,name=balance,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"balance"`
 }
 
 func (m *UnbondingDelegationEntry) Reset()      { *m = UnbondingDelegationEntry{} }
@@ -152,10 +128,10 @@ func (*UnbondingDelegationEntry) ProtoMessage() {}
 
 // RedelegationEntry defines a redelegation object with relevant metadata.
 type RedelegationEntry struct {
-	CreationHeight int64                                  `protobuf:"varint,1,opt,name=creation_height,json=creationHeight,proto3" json:"creation_height,omitempty" yaml:"creation_height"`
-	CompletionTime time.Time                              `protobuf:"bytes,2,opt,name=completion_time,json=completionTime,proto3,stdtime" json:"completion_time" yaml:"completion_time"`
-	InitialBalance github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=initial_balance,json=initialBalance,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"initial_balance" yaml:"initial_balance"`
-	SharesDst      github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=shares_dst,json=sharesDst,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"shares_dst"`
+	CreationHeight int64     `protobuf:"varint,1,opt,name=creation_height,json=creationHeight,proto3" json:"creation_height,omitempty" yaml:"creation_height"`
+	CompletionTime time.Time `protobuf:"bytes,2,opt,name=completion_time,json=completionTime,proto3,stdtime" json:"completion_time" yaml:"completion_time"`
+	InitialBalance sdk.Int   `protobuf:"bytes,3,opt,name=initial_balance,json=initialBalance,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"initial_balance" yaml:"initial_balance"`
+	SharesDst      sdk.Dec   `protobuf:"bytes,4,opt,name=shares_dst,json=sharesDst,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"shares_dst"`
 }
 
 func (m *RedelegationEntry) Reset()      { *m = RedelegationEntry{} }
@@ -188,15 +164,15 @@ func (*Params) ProtoMessage() {}
 // DelegationResponse is equivalent to Delegation except that it contains a
 // balance in addition to shares which is more suitable for client responses.
 type DelegationResponse struct {
-	Delegation Delegation  `protobuf:"bytes,1,opt,name=delegation,proto3" json:"delegation"`
-	Balance    types2.Coin `protobuf:"bytes,2,opt,name=balance,proto3" json:"balance"`
+	Delegation Delegation `protobuf:"bytes,1,opt,name=delegation,proto3" json:"delegation"`
+	Balance    sdk.Coin   `protobuf:"bytes,2,opt,name=balance,proto3" json:"balance"`
 }
 
 // Pool is used for tracking bonded and not-bonded token supply of the bond
 // denomination.
 type Pool struct {
-	NotBondedTokens github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=not_bonded_tokens,json=notBondedTokens,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"not_bonded_tokens"`
-	BondedTokens    github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=bonded_tokens,json=bondedTokens,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"bonded_tokens" yaml:"bonded_tokens"`
+	NotBondedTokens sdk.Int `protobuf:"bytes,1,opt,name=not_bonded_tokens,json=notBondedTokens,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"not_bonded_tokens"`
+	BondedTokens    sdk.Int `protobuf:"bytes,2,opt,name=bonded_tokens,json=bondedTokens,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"bonded_tokens" yaml:"bonded_tokens"`
 }
 
 func (m *Pool) Reset()         { *m = Pool{} }
@@ -1141,26 +1117,16 @@ func (m *Pool) Size() (n int) {
 func sovStaking(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
-func sozStaking(x uint64) (n int) {
-	return sovStaking(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *ValAddresses) String() string {
-	if this == nil {
+
+func (m *ValAddresses) String() string {
+	if m == nil {
 		return "nil"
 	}
 	s := strings.Join([]string{`&ValAddresses{`,
-		`Addresses:` + fmt.Sprintf("%v", this.Addresses) + `,`,
+		`Addresses:` + fmt.Sprintf("%v", m.Addresses) + `,`,
 		`}`,
 	}, "")
 	return s
-}
-func valueToStringStaking(v interface{}) string {
-	rv := reflect.ValueOf(v)
-	if rv.IsNil() {
-		return "nil"
-	}
-	pv := reflect.Indirect(rv).Interface()
-	return fmt.Sprintf("*%v", pv)
 }
 
 func (m *CommissionRates) Unmarshal(dAtA []byte) error {

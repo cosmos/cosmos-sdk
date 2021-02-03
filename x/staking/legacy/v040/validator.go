@@ -7,10 +7,10 @@ import (
 )
 
 var (
-	BondStatusUnspecified = BondStatus_name[int32(Unspecified)]
-	BondStatusUnbonded    = BondStatus_name[int32(Unbonded)]
-	BondStatusUnbonding   = BondStatus_name[int32(Unbonding)]
-	BondStatusBonded      = BondStatus_name[int32(Bonded)]
+	BondStatusUnspecified = "BOND_STATUS_UNSPECIFIED"
+	BondStatusUnbonded    = "BOND_STATUS_UNBONDED"
+	BondStatusUnbonding   = "BOND_STATUS_UNBONDING"
+	BondStatusBonded      = "BOND_STATUS_BONDED"
 )
 
 // String implements the Stringer interface for a Validator object.

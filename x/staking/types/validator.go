@@ -116,8 +116,8 @@ type ValidatorsByVotingPower []Validator
 
 func (valz ValidatorsByVotingPower) Len() int { return len(valz) }
 
-func (valz ValidatorsByVotingPower) Less(i, j int, powerReduction sdk.Int) bool {
-	if valz[i].ConsensusPower(powerReduction) == valz[j].ConsensusPower(powerReduction) {
+func (valz ValidatorsByVotingPower) Less(i, j int, r sdk.Int) bool {
+	if valz[i].ConsensusPower(r) == valz[j].ConsensusPower(r) {
 		addrI, errI := valz[i].GetConsAddr()
 		addrJ, errJ := valz[j].GetConsAddr()
 		// If either returns error, then return false
@@ -126,7 +126,7 @@ func (valz ValidatorsByVotingPower) Less(i, j int, powerReduction sdk.Int) bool 
 		}
 		return bytes.Compare(addrI, addrJ) == -1
 	}
-	return valz[i].ConsensusPower(powerReduction) > valz[j].ConsensusPower(powerReduction)
+	return valz[i].ConsensusPower(r) > valz[j].ConsensusPower(r)
 }
 
 func (valz ValidatorsByVotingPower) Swap(i, j int) {
@@ -257,7 +257,7 @@ func (d Description) EnsureLength() (Description, error) {
 
 // ABCIValidatorUpdate returns an abci.ValidatorUpdate from a staking validator type
 // with the full validator power
-func (v Validator) ABCIValidatorUpdate(powerReduction sdk.Int) abci.ValidatorUpdate {
+func (v Validator) ABCIValidatorUpdate(r sdk.Int) abci.ValidatorUpdate {
 	tmProtoPk, err := v.TmConsPublicKey()
 	if err != nil {
 		panic(err)
@@ -265,7 +265,7 @@ func (v Validator) ABCIValidatorUpdate(powerReduction sdk.Int) abci.ValidatorUpd
 
 	return abci.ValidatorUpdate{
 		PubKey: tmProtoPk,
-		Power:  v.ConsensusPower(powerReduction),
+		Power:  v.ConsensusPower(r),
 	}
 }
 
@@ -349,17 +349,17 @@ func (v Validator) BondedTokens() sdk.Int {
 
 // ConsensusPower gets the consensus-engine power. Aa reduction of 10^6 from
 // validator tokens is applied
-func (v Validator) ConsensusPower(powerReduction sdk.Int) int64 {
+func (v Validator) ConsensusPower(r sdk.Int) int64 {
 	if v.IsBonded() {
-		return v.PotentialConsensusPower(powerReduction)
+		return v.PotentialConsensusPower(r)
 	}
 
 	return 0
 }
 
 // PotentialConsensusPower returns the potential consensus-engine power.
-func (v Validator) PotentialConsensusPower(powerReduction sdk.Int) int64 {
-	return sdk.TokensToConsensusPower(v.Tokens, powerReduction)
+func (v Validator) PotentialConsensusPower(r sdk.Int) int64 {
+	return sdk.TokensToConsensusPower(v.Tokens, r)
 }
 
 // UpdateStatus updates the location of the shares within a validator
@@ -507,8 +507,8 @@ func (v Validator) GetConsAddr() (sdk.ConsAddress, error) {
 
 func (v Validator) GetTokens() sdk.Int       { return v.Tokens }
 func (v Validator) GetBondedTokens() sdk.Int { return v.BondedTokens() }
-func (v Validator) GetConsensusPower(powerReduction sdk.Int) int64 {
-	return v.ConsensusPower(powerReduction)
+func (v Validator) GetConsensusPower(r sdk.Int) int64 {
+	return v.ConsensusPower(r)
 }
 func (v Validator) GetCommission() sdk.Dec        { return v.Commission.Rate }
 func (v Validator) GetMinSelfDelegation() sdk.Int { return v.MinSelfDelegation }

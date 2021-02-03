@@ -20,21 +20,21 @@ func GetTmConsPubKey(v types.Validator) (tmcrypto.PubKey, error) {
 }
 
 // ToTmValidator casts an SDK validator to a tendermint type Validator.
-func ToTmValidator(v types.Validator, powerReduction sdk.Int) (*tmtypes.Validator, error) {
+func ToTmValidator(v types.Validator, r sdk.Int) (*tmtypes.Validator, error) {
 	tmPk, err := GetTmConsPubKey(v)
 	if err != nil {
 		return nil, err
 	}
 
-	return tmtypes.NewValidator(tmPk, v.ConsensusPower(powerReduction)), nil
+	return tmtypes.NewValidator(tmPk, v.ConsensusPower(r)), nil
 }
 
 // ToTmValidators casts all validators to the corresponding tendermint type.
-func ToTmValidators(v types.Validators, powerReduction sdk.Int) ([]*tmtypes.Validator, error) {
+func ToTmValidators(v types.Validators, r sdk.Int) ([]*tmtypes.Validator, error) {
 	validators := make([]*tmtypes.Validator, len(v))
 	var err error
 	for i, val := range v {
-		validators[i], err = ToTmValidator(val, powerReduction)
+		validators[i], err = ToTmValidator(val, r)
 		if err != nil {
 			return nil, err
 		}

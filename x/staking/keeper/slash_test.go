@@ -10,7 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -35,11 +34,9 @@ func bootstrapSlashTest(t *testing.T, power int64) (*simapp.SimApp, sdk.Context,
 	bondedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), amt.MulRaw(numVals)))
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 
-	err = app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), bondedCoins)
-	require.NoError(t, err)
-
+	// set bonded pool balance
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
-	app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(totalSupply))
+	require.NoError(t, app.BankKeeper.MintCoins(ctx, bondedPool.GetName(), bondedCoins))
 
 	for i := int64(0); i < numVals; i++ {
 		validator := teststaking.NewValidator(t, addrVals[i], PKs[i])

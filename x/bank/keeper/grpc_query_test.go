@@ -6,6 +6,8 @@ import (
 	gocontext "context"
 	"fmt"
 
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -87,7 +89,9 @@ func (suite *IntegrationTestSuite) TestQueryAllBalances() {
 func (suite *IntegrationTestSuite) TestQueryTotalSupply() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
 	expectedTotalSupply := types.NewSupply(sdk.NewCoins(sdk.NewInt64Coin("test", 400000000)))
-	app.BankKeeper.SetSupply(ctx, expectedTotalSupply)
+	suite.
+		Require().
+		NoError(app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply.Total))
 
 	res, err := queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
 	suite.Require().NoError(err)
@@ -102,7 +106,9 @@ func (suite *IntegrationTestSuite) TestQueryTotalSupplyOf() {
 	test1Supply := sdk.NewInt64Coin("test1", 4000000)
 	test2Supply := sdk.NewInt64Coin("test2", 700000000)
 	expectedTotalSupply := types.NewSupply(sdk.NewCoins(test1Supply, test2Supply))
-	app.BankKeeper.SetSupply(ctx, expectedTotalSupply)
+	suite.
+		Require().
+		NoError(app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply.Total))
 
 	_, err := queryClient.SupplyOf(gocontext.Background(), &types.QuerySupplyOfRequest{})
 	suite.Require().Error(err)

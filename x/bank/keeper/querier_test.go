@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"fmt"
 
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -89,7 +91,9 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupply() {
 	app, ctx := suite.app, suite.ctx
 	legacyAmino := app.LegacyAmino()
 	expectedTotalSupply := types.NewSupply(sdk.NewCoins(sdk.NewInt64Coin("test", 400000000)))
-	app.BankKeeper.SetSupply(ctx, expectedTotalSupply)
+	suite.
+		Require().
+		NoError(app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply.Total))
 
 	req := abci.RequestQuery{
 		Path: fmt.Sprintf("custom/%s/%s", types.ModuleName, types.QueryTotalSupply),
@@ -118,7 +122,9 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupplyOf() {
 	test1Supply := sdk.NewInt64Coin("test1", 4000000)
 	test2Supply := sdk.NewInt64Coin("test2", 700000000)
 	expectedTotalSupply := types.NewSupply(sdk.NewCoins(test1Supply, test2Supply))
-	app.BankKeeper.SetSupply(ctx, expectedTotalSupply)
+	suite.
+		Require().
+		NoError(app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply.Total))
 
 	req := abci.RequestQuery{
 		Path: fmt.Sprintf("custom/%s/%s", types.ModuleName, types.QuerySupplyOf),

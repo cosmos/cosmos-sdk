@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -236,19 +238,9 @@ func createIncrementalAccounts(accNum int) []sdk.AccAddress {
 func AddTestAddrsFromPubKeys(app *SimApp, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt sdk.Int) {
 	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
 
-	setTotalSupply(app, ctx, accAmt, len(pubKeys))
-
-	// fill all the addresses with some coins, set the loose pool tokens simultaneously
-	for _, pubKey := range pubKeys {
-		saveAccount(app, ctx, sdk.AccAddress(pubKey.Address()), initCoins)
+	for _, pk := range pubKeys {
+		initAccountWithCoins(app, ctx, sdk.AccAddress(pk.Address()), initCoins)
 	}
-}
-
-// setTotalSupply provides the total supply based on accAmt * totalAccounts.
-func setTotalSupply(app *SimApp, ctx sdk.Context, accAmt sdk.Int, totalAccounts int) {
-	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt.MulRaw(int64(totalAccounts))))
-	prevSupply := app.BankKeeper.GetSupply(ctx)
-	app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(prevSupply.GetTotal().Add(totalSupply...)))
 }
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
@@ -267,21 +259,21 @@ func addTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int, stra
 	testAddrs := strategy(accNum)
 
 	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
-	setTotalSupply(app, ctx, accAmt, accNum)
 
-	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range testAddrs {
-		saveAccount(app, ctx, addr, initCoins)
+		initAccountWithCoins(app, ctx, addr, initCoins)
 	}
 
 	return testAddrs
 }
 
-// saveAccount saves the provided account into the simapp with balance based on initCoins.
-func saveAccount(app *SimApp, ctx sdk.Context, addr sdk.AccAddress, initCoins sdk.Coins) {
-	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
-	app.AccountKeeper.SetAccount(ctx, acc)
-	err := app.BankKeeper.AddCoins(ctx, addr, initCoins)
+func initAccountWithCoins(app *SimApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
+	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
+	if err != nil {
+		panic(err)
+	}
+
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, coins)
 	if err != nil {
 		panic(err)
 	}

@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -31,7 +30,7 @@ func GetCmdQueryDenomTrace() *cobra.Command {
 				Hash: args[0],
 			}
 
-			res, err := queryClient.DenomTrace(context.Background(), req)
+			res, err := queryClient.DenomTrace(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -69,7 +68,7 @@ func GetCmdQueryDenomTraces() *cobra.Command {
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.DenomTraces(context.Background(), req)
+			res, err := queryClient.DenomTraces(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -98,7 +97,7 @@ func GetCmdParams() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, _ := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
+			res, _ := queryClient.Params(cmd.Context(), &types.QueryParamsRequest{})
 			return clientCtx.PrintProto(res.Params)
 		},
 	}

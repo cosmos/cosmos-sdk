@@ -343,7 +343,7 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, migrationsMap 
 	}
 
 	for moduleName, module := range m.Modules {
-		err := runMigrations(c, ctx, moduleName, migrationsMap[moduleName], module.ConsensusVersion())
+		err := runModuleMigrations(c, ctx, moduleName, migrationsMap[moduleName], module.ConsensusVersion())
 		if err != nil {
 			return err
 		}
@@ -396,7 +396,7 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 
 // runMigrations runs all in-place store migrations for one given module from a
 // version to another version.
-func runMigrations(cfg configurator, ctx sdk.Context, moduleName string, fromVersion, toVersion uint64) error {
+func runModuleMigrations(cfg configurator, ctx sdk.Context, moduleName string, fromVersion, toVersion uint64) error {
 	// No-op if toVersion is the initial version.
 	// Some modules don't have a store key (e.g. vesting), in this case, their
 	// ConsensusVersion will always stay at 0, and running migrations on

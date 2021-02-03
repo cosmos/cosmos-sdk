@@ -4,7 +4,6 @@ import (
 	fmt "fmt"
 	io "io"
 	math_bits "math/bits"
-	strings "strings"
 	time "time"
 
 	types1 "github.com/cosmos/cosmos-sdk/codec/types"
@@ -26,6 +25,17 @@ const (
 	// BONDED defines a validator that is bonded.
 	Bonded BondStatus = 3
 )
+
+var BondStatusName = map[int32]string{
+	0: "BOND_STATUS_UNSPECIFIED",
+	1: "BOND_STATUS_UNBONDED",
+	2: "BOND_STATUS_UNBONDING",
+	3: "BOND_STATUS_BONDED",
+}
+
+func (x BondStatus) String() string {
+	return proto.EnumName(BondStatusName, int32(x))
+}
 
 // CommissionRates defines the initial commission rates to be used for creating
 // a validator.
@@ -83,14 +93,6 @@ type Validator struct {
 
 func (m *Validator) Reset()      { *m = Validator{} }
 func (*Validator) ProtoMessage() {}
-
-// ValAddresses defines a repeated set of validator addresses.
-type ValAddresses struct {
-	Addresses []string `protobuf:"bytes,1,rep,name=addresses,proto3" json:"addresses,omitempty"`
-}
-
-func (m *ValAddresses) Reset()      { *m = ValAddresses{} }
-func (*ValAddresses) ProtoMessage() {}
 
 // Delegation represents the bond with tokens held by an account. It is
 // owned by one delegator, and is associated with the voting power of one
@@ -447,38 +449,6 @@ func (m *Validator) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintStaking(dAtA, i, uint64(len(m.OperatorAddress)))
 		i--
 		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *ValAddresses) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *ValAddresses) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ValAddresses) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Addresses) > 0 {
-		for iNdEx := len(m.Addresses) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.Addresses[iNdEx])
-			copy(dAtA[i:], m.Addresses[iNdEx])
-			i = encodeVarintStaking(dAtA, i, uint64(len(m.Addresses[iNdEx])))
-			i--
-			dAtA[i] = 0xa
-		}
 	}
 	return len(dAtA) - i, nil
 }
@@ -956,21 +926,6 @@ func (m *Validator) Size() (n int) {
 	return n
 }
 
-func (m *ValAddresses) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.Addresses) > 0 {
-		for _, s := range m.Addresses {
-			l = len(s)
-			n += 1 + l + sovStaking(uint64(l))
-		}
-	}
-	return n
-}
-
 func (m *Delegation) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1116,17 +1071,6 @@ func (m *Pool) Size() (n int) {
 
 func sovStaking(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
-}
-
-func (m *ValAddresses) String() string {
-	if m == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ValAddresses{`,
-		`Addresses:` + fmt.Sprintf("%v", m.Addresses) + `,`,
-		`}`,
-	}, "")
-	return s
 }
 
 func (m *CommissionRates) Unmarshal(dAtA []byte) error {
@@ -1962,88 +1906,6 @@ func (m *Validator) Unmarshal(dAtA []byte) error {
 			if err := m.MinSelfDelegation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipStaking(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthStaking
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *ValAddresses) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowStaking
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: ValAddresses: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ValAddresses: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Addresses", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowStaking
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthStaking
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthStaking
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Addresses = append(m.Addresses, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

@@ -179,16 +179,18 @@ func (multisig PubKey) Address() {
 }
 ```
 
-#### Module Addresses
+#### Module Account Addresses
 
-In Basic Address section we defined a module address as:
+NOTE: this section is not finalize and it's in active discussion.
+
+In Basic Address section we defined a module account address as:
 
 ```
 address.Hash("module", moduleName)
 ```
 
-We use `"module"` as a schema type for all module addresses. Module addresses can have sub accounts. The derivation process has a clear order: module name, submodule, key, subsubmodule key.
-Module addresses are heavily used in the SDK so it make sense to optimize the derivation process: instead of using of using `LengthPrefix` for the module name, we use a null byte (`'\x00'`) as a separator. This works, because null byte is not a part of a valid module name.
+We use `"module"` as a schema type for all module derived addresses. Module accounts can have sub accounts. The derivation process has a defined order: module name, submodule, key, subsubmodule key.
+Module account addresses are heavily used in the SDK so it make sense to optimize the derivation process: instead of using of using `LengthPrefix` for the module name, we use a null byte (`'\x00'`) as a separator. This works, because null byte is not a part of a valid module name.
 
 ```
 func Module(moduleName string, key []byte) []byte{
@@ -206,13 +208,16 @@ If we want to create an address for a module account depending on more than one 
 btcAtomAMM := address.Module("amm", btc.Addrress() + atom.Address()})
 ```
 
-We can continue the derivation process and can create an address for a submodule account:
+We can continue the derivation process and can create an address for a submodule account.
 
 ```
 func Submodule(address []byte, derivationKey []byte) {
     return Hash("module", address + derivationKey)
 }
 ```
+
+NOTE: if `address` is not a hash based address (with `LEN` length) then we should use `LengthPrefix`. Alternative would be to use one `Module` function, which takes a slice of keys and mapped with `LenghtPrefix`. For final version we need to validate what's the most common use.
+
 
 **Example**  For a cosmwasm smart-contract address we could use the following construction:
 ```

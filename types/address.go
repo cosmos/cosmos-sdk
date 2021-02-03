@@ -132,6 +132,13 @@ func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 
 	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
 
+	if !strings.HasPrefix(address, bech32PrefixAccAddr) {
+		// strip 0x prefix if exists
+		addrStr := strings.TrimPrefix(address, "0x")
+		return AccAddressFromHex(addrStr)
+	}
+
+	//decodes a bytestring from a Bech32 encoded string
 	bz, err := GetFromBech32(address, bech32PrefixAccAddr)
 	if err != nil {
 		return nil, err

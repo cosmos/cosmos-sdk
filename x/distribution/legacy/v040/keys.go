@@ -7,6 +7,20 @@ import (
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v040"
 )
 
+const (
+	// ModuleName is the module name constant used in many places
+	ModuleName = "distribution"
+
+	// StoreKey is the store key string for distribution
+	StoreKey = ModuleName
+
+	// RouterKey is the message route for distribution
+	RouterKey = ModuleName
+
+	// QuerierRoute is the querier route for distribution
+	QuerierRoute = ModuleName
+)
+
 // Keys for distribution store
 // Items are stored with the following key: values
 //

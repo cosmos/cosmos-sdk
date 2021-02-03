@@ -1,6 +1,7 @@
 package v042_test
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -28,6 +29,16 @@ func TestStoreMigration(t *testing.T) {
 		oldKey []byte
 		newKey []byte
 	}{
+		{
+			"FeePoolKey",
+			v040distribution.FeePoolKey,
+			v042distribution.FeePoolKey,
+		},
+		{
+			"ProposerKey",
+			v040distribution.ProposerKey,
+			v042distribution.ProposerKey,
+		},
 		{
 			"ValidatorOutstandingRewards",
 			v040distribution.GetValidatorOutstandingRewardsKey(valAddr),
@@ -78,7 +89,9 @@ func TestStoreMigration(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			require.Nil(t, store.Get(tc.oldKey))
+			if bytes.Compare(tc.oldKey, tc.newKey) != 0 {
+				require.Nil(t, store.Get(tc.oldKey))
+			}
 			require.Equal(t, value, store.Get(tc.newKey))
 		})
 	}

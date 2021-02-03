@@ -18,10 +18,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authnante "github.com/cosmos/cosmos-sdk/x/authn/ante"
+	authnsign "github.com/cosmos/cosmos-sdk/x/authn/signing"
+	"github.com/cosmos/cosmos-sdk/x/authn/tx"
+	authntypes "github.com/cosmos/cosmos-sdk/x/authn/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/ante"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
@@ -51,7 +51,7 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	suite.clientCtx = client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig)
 
-	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper, authante.DefaultSigVerificationGasConsumer, encodingConfig.TxConfig.SignModeHandler())
+	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper, authnante.DefaultSigVerificationGasConsumer, encodingConfig.TxConfig.SignModeHandler())
 }
 
 func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
@@ -210,13 +210,13 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(isCheckTx)
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
-	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	app.AccountKeeper.SetParams(ctx, authntypes.DefaultParams())
 
 	return app, ctx
 }
 
 // don't consume any gas
-func SigGasNoConsumer(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params authtypes.Params) error {
+func SigGasNoConsumer(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params authntypes.Params) error {
 	return nil
 }
 
@@ -259,7 +259,7 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 
 	// 2nd round: once all signer infos are set, every signer can sign.
 	for i, p := range priv {
-		signerData := authsign.SignerData{
+		signerData := authnsign.SignerData{
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],

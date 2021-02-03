@@ -2,18 +2,17 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
-	// supply "github.com/cosmos/cosmos-sdk/x/supply/exported"
+	authn "github.com/cosmos/cosmos-sdk/x/authn/types"
 )
 
 // AccountKeeper defines the expected auth Account Keeper (noalias)
 type AccountKeeper interface {
 	GetModuleAddress(moduleName string) sdk.AccAddress
-	GetModuleAccount(ctx sdk.Context, moduleName string) auth.ModuleAccountI
+	GetModuleAccount(ctx sdk.Context, moduleName string) authn.ModuleAccountI
 
-	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) auth.AccountI
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) auth.AccountI
-	SetAccount(ctx sdk.Context, acc auth.AccountI)
+	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) authn.AccountI
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authn.AccountI
+	SetAccount(ctx sdk.Context, acc authn.AccountI)
 }
 
 // BankKeeper defines the expected supply Keeper (noalias)

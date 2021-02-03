@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -106,6 +107,51 @@ func TestInitGenesis(t *testing.T) {
 	}
 
 	require.Equal(t, abcivals, vals)
+}
+
+func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.NewContext(false, tmproto.Header{})
+
+	consPub, err := codectypes.NewAnyWithValue(PKs[0])
+	require.NoError(t, err)
+
+	// create mock validator
+	validator := types.Validator{
+		OperatorAddress: sdk.ValAddress("12345678901234567890").String(),
+		ConsensusPubkey: consPub,
+		Jailed:          false,
+		Tokens:          sdk.NewInt(10),
+		DelegatorShares: sdk.NewInt(10).ToDec(),
+		Description:     types.NewDescription("bloop", "", "", "", ""),
+	}
+	// valid params
+	params := types.Params{
+		UnbondingTime: 10000,
+		MaxValidators: 1,
+		MaxEntries:    10,
+		BondDenom:     "stake",
+	}
+
+	// test
+
+	require.Panics(t, func() {
+		// setting validator status to bonded so the balance counts towards bonded pool
+		validator.Status = types.Bonded
+		staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, &types.GenesisState{
+			Params:     params,
+			Validators: []types.Validator{validator},
+		})
+	}, "should panic because bonded pool balance is different from bonded pool coins")
+
+	require.Panics(t, func() {
+		// setting validator status to unbonded so the balance counts towards not bonded pool
+		validator.Status = types.Unbonded
+		staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, &types.GenesisState{
+			Params:     params,
+			Validators: []types.Validator{validator},
+		})
+	}, "should panic because not bonded pool balance is different from not bonded pool coins")
 }
 
 func TestInitGenesisLargeValidatorSet(t *testing.T) {

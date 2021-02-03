@@ -106,26 +106,27 @@ func InitGenesis(
 		panic(fmt.Sprintf("%s module account has not been set", types.BondedPoolName))
 	}
 	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
-	// add coins if not provided on genesis
-	if balance := bankKeeper.GetAllBalances(ctx, bondedPool.GetAddress()); balance.IsZero() {
+	bondedBalance := bankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
+	if bondedBalance.IsZero() {
 		accountKeeper.SetModuleAccount(ctx, bondedPool)
-		if !bondedCoins.IsZero() {
-			panic(fmt.Sprintf("bonded pool balance different from bonded coins: %s -> %s", balance, bondedCoins))
-		}
 	}
-
+	// if balance is different from bonded coins panic because genesis is most likely malformed
+	if !bondedBalance.IsEqual(bondedCoins) {
+		panic(fmt.Sprintf("bonded pool balance is different from bonded coins: %s <-> %s", bondedBalance, bondedCoins))
+	}
 	notBondedPool := keeper.GetNotBondedPool(ctx)
 	if notBondedPool == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
 	}
 
-	if balance := bankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress()); balance.IsZero() {
+	notBondedBalance := bankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
+	if notBondedBalance.IsZero() {
 		accountKeeper.SetModuleAccount(ctx, notBondedPool)
-		if !notBondedCoins.IsZero() {
-			panic(fmt.Sprintf("not bonded pool balance different from not bonded coins: %s -> %s", balance, notBondedCoins))
-		}
 	}
-
+	// if balance is different from non bonded coins panic because genesis is most likely malformed
+	if !notBondedBalance.IsEqual(notBondedCoins) {
+		panic(fmt.Sprintf("not bonded pool balance is different from not bonded coins: %s <-> %s", notBondedBalance, notBondedCoins))
+	}
 	// don't need to run Tendermint updates if we exported
 	if data.Exported {
 		for _, lv := range data.LastValidatorPowers {

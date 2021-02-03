@@ -17,20 +17,69 @@ func TestStoreMigration(t *testing.T) {
 	ctx := testutil.DefaultContext(distributionKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(distributionKey)
 
-	_, _, addr := testdata.KeyTestPubAddr()
-	denom := []byte("foo")
-	value := []byte("bar")
+	_, _, addr1 := testdata.KeyTestPubAddr()
+	valAddr := sdk.ValAddress(addr1)
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	// Use dummy value for all keys.
+	value := []byte("foo")
 
-	oldKey := append(append(v040distribution.BalancesPrefix, addr...), denom...)
-	store.Set(oldKey, value)
+	testCases := []struct {
+		name   string
+		oldKey []byte
+		newKey []byte
+	}{
+		{
+			"ValidatorOutstandingRewards",
+			v040distribution.GetValidatorOutstandingRewardsKey(valAddr),
+			v042distribution.GetValidatorOutstandingRewardsKey(valAddr),
+		},
+		{
+			"DelegatorWithdrawAddr",
+			v040distribution.GetDelegatorWithdrawAddrKey(addr2),
+			v042distribution.GetDelegatorWithdrawAddrKey(addr2),
+		},
+		{
+			"DelegatorStartingInfo",
+			v040distribution.GetDelegatorStartingInfoKey(valAddr, addr2),
+			v042distribution.GetDelegatorStartingInfoKey(valAddr, addr2),
+		},
+		{
+			"ValidatorHistoricalRewards",
+			v040distribution.GetValidatorHistoricalRewardsKey(valAddr, 6),
+			v042distribution.GetValidatorHistoricalRewardsKey(valAddr, 6),
+		},
+		{
+			"ValidatorCurrentRewards",
+			v040distribution.GetValidatorCurrentRewardsKey(valAddr),
+			v042distribution.GetValidatorCurrentRewardsKey(valAddr),
+		},
+		{
+			"ValidatorAccumulatedCommission",
+			v040distribution.GetValidatorAccumulatedCommissionKey(valAddr),
+			v042distribution.GetValidatorAccumulatedCommissionKey(valAddr),
+		},
+		{
+			"ValidatorSlashEvent",
+			v040distribution.GetValidatorSlashEventKey(valAddr, 6, 8),
+			v042distribution.GetValidatorSlashEventKey(valAddr, 6, 8),
+		},
+	}
 
-	err := v042distribution.StoreMigration(store)
+	// Set all the old keys to the store
+	for _, tc := range testCases {
+		store.Set(tc.oldKey, value)
+	}
+
+	// Run migrations.
+	err := v042distribution.MigrateStore(store)
 	require.NoError(t, err)
 
-	newKey := append(v042distribution.CreateAccountBalancesPrefix(addr), denom...)
-	// -7 because we replaced "balances" with 0x02,
-	// +1 because we added length-prefix to address.
-	require.Equal(t, len(oldKey)-7+1, len(newKey))
-	require.Nil(t, store.Get(oldKey))
-	require.Equal(t, value, store.Get(newKey))
+	// Make sure the new keys are set and old keys are deleted.
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			require.Nil(t, store.Get(tc.oldKey))
+			require.Equal(t, value, store.Get(tc.newKey))
+		})
+	}
 }

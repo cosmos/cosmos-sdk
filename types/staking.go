@@ -22,15 +22,15 @@ const (
 	ValidatorUpdateDelay int64 = 1
 )
 
-// PowerReduction is the amount of staking tokens required for 1 unit of consensus-engine power
-var PowerReduction = NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil))
+// DefaultPowerReduction is the default amount of staking tokens required for 1 unit of consensus-engine power
+var DefaultPowerReduction = NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil))
 
 // TokensToConsensusPower - convert input tokens to potential consensus-engine power
-func TokensToConsensusPower(tokens Int) int64 {
-	return (tokens.Quo(PowerReduction)).Int64()
+func TokensToConsensusPower(tokens Int, powerReduction Int) int64 {
+	return (tokens.Quo(powerReduction)).Int64()
 }
 
 // TokensFromConsensusPower - convert input power to tokens
-func TokensFromConsensusPower(power int64) Int {
-	return NewInt(power).Mul(PowerReduction)
+func TokensFromConsensusPower(power int64, powerReduction Int) Int {
+	return NewInt(power).Mul(powerReduction)
 }

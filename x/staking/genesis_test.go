@@ -23,7 +23,7 @@ func bootstrapGenesisTest(t *testing.T, power int64, numAddrs int) (*simapp.SimA
 
 	addrDels, _ := generateAddresses(app, ctx, numAddrs, sdk.NewInt(10000))
 
-	amt := sdk.TokensFromConsensusPower(power)
+	amt := app.StakingKeeper.TokensFromConsensusPower(ctx, power)
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), amt.MulRaw(int64(len(addrDels)))))
 
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
@@ -39,7 +39,7 @@ func bootstrapGenesisTest(t *testing.T, power int64, numAddrs int) (*simapp.SimA
 func TestInitGenesis(t *testing.T) {
 	app, ctx, addrs := bootstrapGenesisTest(t, 1000, 10)
 
-	valTokens := sdk.TokensFromConsensusPower(1)
+	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 1)
 
 	params := app.StakingKeeper.GetParams(ctx)
 	validators := make([]types.Validator, 2)
@@ -91,7 +91,7 @@ func TestInitGenesis(t *testing.T) {
 
 	abcivals := make([]abci.ValidatorUpdate, len(vals))
 	for i, val := range validators {
-		abcivals[i] = val.ABCIValidatorUpdate()
+		abcivals[i] = val.ABCIValidatorUpdate(app.StakingKeeper.PowerReduction(ctx))
 	}
 
 	require.Equal(t, abcivals, vals)
@@ -113,9 +113,9 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 		require.NoError(t, err)
 		validators[i].Status = types.Bonded
 
-		tokens := sdk.TokensFromConsensusPower(1)
+		tokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 1)
 		if i < 100 {
-			tokens = sdk.TokensFromConsensusPower(2)
+			tokens = app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
 		}
 		validators[i].Tokens = tokens
 		validators[i].DelegatorShares = tokens.ToDec()
@@ -126,7 +126,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 
 	abcivals := make([]abci.ValidatorUpdate, 100)
 	for i, val := range validators[:100] {
-		abcivals[i] = val.ABCIValidatorUpdate()
+		abcivals[i] = val.ABCIValidatorUpdate(app.StakingKeeper.PowerReduction(ctx))
 	}
 
 	require.Equal(t, abcivals, vals)

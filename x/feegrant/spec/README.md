@@ -7,9 +7,9 @@ parent:
 
 ## Abstract
 
-This ADR specifies the feegrant module. [Fee Grant](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/docs/architecture/adr-029-fee-grant-module.md)
+This document specifies the feegrant module. [Fee Grant](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/docs/architecture/adr-029-fee-grant-module.md)
 
-This module allows accounts to grant fee allowances and to use fees from their accounts. grantees can be able to execute any transaction even their accounts' are not having gas fees.
+This module allows accounts to grant fee allowances and to use fees from their accounts. Grantees can execute any transaction without the need to maintain sufficient fees.
 
 ## Contents
 

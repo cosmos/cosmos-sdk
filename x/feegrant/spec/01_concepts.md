@@ -6,16 +6,16 @@ order: 1
 
 ## FeeAllowanceGrant
 
-`FeeAllowanceGrant` is stored in the KVStore to record a grant with full context. Every grant will contain `granter`, `grantee` and what kind of `allowance` is granted. `granter` is an account address who is giving permissoin to `grantee`(another account address) to use fees, where as `grantee` is an account address of beneficiary. and `allowance` is what kind of fee allowance(`BasicFeeAllowance` or `PeriodicFeeAllowance`) is granted to grantee. `allowance` can accepts an interface which implements `FeeAllowanceI` as `Any` type. There can be only one existing feegrant allowed for a `grantee` and `granter`, self grant not allowed.
+`FeeAllowanceGrant` is stored in the KVStore to record a grant with full context. Every grant will contain `granter`, `grantee` and what kind of `allowance` is granted. `granter` is an account address who is giving permission to `grantee`(another account address) to use fees, where as `grantee` is an account address of beneficiary. `allowance` defines what kind of fee allowance (`BasicFeeAllowance` or `PeriodicFeeAllowance`) is granted to grantee. `allowance` can accepts an interface which implements `FeeAllowanceI` as `Any` type. There can be only one existing feegrant allowed for a `grantee` and `granter`, self grant not allowed.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/proto/cosmos/feegrant/v1beta1/feegrant.proto#L75-L81
++++ https://github.com/cosmos/cosmos-sdk/blob/d97e7907f176777ed8a464006d360bb3e1a223e4/proto/cosmos/feegrant/v1beta1/feegrant.proto#L75-L81
 
 `FeeAllowanceI` looks like: 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/x/feegrant/types/fees.go#L9-L32
++++ https://github.com/cosmos/cosmos-sdk/blob/d97e7907f176777ed8a464006d360bb3e1a223e4/x/feegrant/types/fees.go#L9-L32
 
 ## Fee Allowance types
-There are two types of fee allowances present at the moment
+There are two types of fee allowances present at the moment:
 - `BasicFeeAllowance`
 - `PeriodicFeeAllowance`
 
@@ -24,33 +24,39 @@ There are two types of fee allowances present at the moment
 `BasicFeeAllowance` is one time permission for `grantee` to use fee from a `granter`'s account. if any of the `spend_limit` or `expiration` reached the grant will be removed from the state.
  
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/proto/cosmos/feegrant/v1beta1/feegrant.proto#L13-L26
++++ https://github.com/cosmos/cosmos-sdk/blob/d97e7907f176777ed8a464006d360bb3e1a223e4/proto/cosmos/feegrant/v1beta1/feegrant.proto#L13-L26
 
-- `spend_limit` is a limit of coins that are allowed to use from the `granter` account. If no value mentioned assumes as no limit for coins, `grantee` can use any number of available tokens from `granter` account address before the expiration.
+- `spend_limit` is a limit of coins that are allowed to use from the `granter` account. If it is empty, it assumes there's no spend limit, `grantee` can use any number of available tokens from `granter` account address before the expiration.
 
-- `expiration` is time of when the grant can be expire. If the value left empty there is no expiry for the grant.
+- `expiration` specifies an optional time when this allowance expires. If the value is left empty, there is no expiry for the grant.
 
-- whenever a grant created with the empty values of `spend_limit` and `expiration` still it is valid grant. It won't restrict the `grantee` to use any number of tokens from `granter` and no expiration. The only way to restrict the `grantee` is revoking the grant. 
+- Whenever a grant is created with empty values for `spend_limit` and `expiration`, it is still a valid grant. It won't restrict the `grantee` to use any number of tokens from `granter` and it won't have any expiration. The only way to restrict the `grantee` is by revoking the grant.
 
 ## PeriodicFeeAllowance
 
 `PeriodicFeeAllowance` is a repeating fee allowance for the mentioned period, we can mention when the grant can expire as well as when a period can reset. We can also mention how many maximum of coins can be used in a mentioned period of time.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/proto/cosmos/feegrant/v1beta1/feegrant.proto#L28-L73
++++ https://github.com/cosmos/cosmos-sdk/blob/d97e7907f176777ed8a464006d360bb3e1a223e4/proto/cosmos/feegrant/v1beta1/feegrant.proto#L28-L73
 
-- `basic` is the instance of `BasicFeeAllowance` which is optional for periodic fee allowance. if empty grant will have no `expiration` and no `spend_limit`
+- `basic` is the instance of `BasicFeeAllowance` which is optional for periodic fee allowance. If empty, the grant will have no `expiration` and no `spend_limit`.
 
 - `period` is the specific period of time or blocks, after period crossed `period_spend_limit` will be reset. 
 
-- `period_spend_limit` keeps track of how many coins left in the period.
+- `period_spend_limit` specifies the maximum number of coins that can be spent in the period.
 
-- `period_can_spend` specifies max coins can be used in every period.
+- `period_can_spend` is the number of coins left to be spent before the period_reset time.
 
 - `period_reset` keeps track of when a next period reset should happen.
 
 ## FeeAccount flag
 
-`feegrant` module will introduce a `FeeAccount` flag for cli for the sake executing transactions with fee granter, when this flag set `clientCtx` will append the granter account address for transaction generated through cli.
+`feegrant` module introduces a `FeeAccount` flag for CLI for the sake of executing transactions with fee granter. When this flag is set, `clientCtx` will append the granter account address for transactions generated through CLI.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/d97e7907f176777ed8a464006d360bb3e1a223e4/client/cmd.go#L224-L235
+
++++ https://github.com/cosmos/cosmos-sdk/blob/d97e7907f176777ed8a464006d360bb3e1a223e4/client/tx/tx.go#L120
+
++++ https://github.com/cosmos/cosmos-sdk/blob/d97e7907f176777ed8a464006d360bb3e1a223e4/x/auth/tx/builder.go#L268-L277
 
 ```go 
 message Fee {

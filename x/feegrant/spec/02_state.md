@@ -12,4 +12,4 @@ Fee allowances are stored in the state as follows:
 
 - FeeAllowance: `0x00 | grantee | granter -> ProtocolBuffer(FeeAllowance)`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/x/feegrant/types/feegrant.pb.go#L358-L363
++++ https://github.com/cosmos/cosmos-sdk/blob/d97e7907f176777ed8a464006d360bb3e1a223e4/x/feegrant/types/feegrant.pb.go#L358-L363

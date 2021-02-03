@@ -97,11 +97,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 
 	balances := k.bankKeeper.GetAllBalances(ctx, moduleAcc.GetAddress())
 	if balances.IsZero() {
-		if err := k.bankKeeper.SetBalances(ctx, moduleAcc.GetAddress(), moduleHoldingsInt); err != nil {
-			panic(err)
-		}
-
 		k.authKeeper.SetModuleAccount(ctx, moduleAcc)
+	}
+
+	if !balances.IsEqual(moduleHoldingsInt) {
+		panic(fmt.Sprintf("expected module account was %s but we got %s module holdings", balances.String(), moduleHoldingsInt.String()))
 	}
 }
 

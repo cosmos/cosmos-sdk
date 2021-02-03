@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -109,6 +111,27 @@ func TestImportExportQueues(t *testing.T) {
 	proposal2, ok = app2.GovKeeper.GetProposal(ctx2, proposalID2)
 	require.True(t, ok)
 	require.True(t, proposal2.Status == types.StatusRejected)
+}
+
+func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	require.Panics(t, func() {
+		gov.InitGenesis(ctx, app.AccountKeeper, app.BankKeeper, app.GovKeeper, &types.GenesisState{
+			Deposits: types.Deposits{
+				{
+					1234,
+					"me",
+					sdk.Coins{
+						{
+							"stake",
+							sdk.NewInt(1234),
+						},
+					},
+				},
+			},
+		})
+	})
 }
 
 func TestEqualProposals(t *testing.T) {

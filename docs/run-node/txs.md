@@ -11,7 +11,7 @@ This document describes how to generate an (unsigned) transaction, signing it (w
 The easiest way to send transactions is using the CLI, as we have seen in the previous page when [interacting with a node](./interact-node.md#using-the-cli). For example, running the following command
 
 ```bash
-simd tx bank send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000stake --chain-id my-test-chain
+simd tx bank send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000stake --chain-id my-test-chain --keyring-backend test
 ```
 
 will run the following steps:

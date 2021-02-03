@@ -7,7 +7,7 @@
 
 ## Status
 
-LAST CALL 2021-01-22
+Proposed
 
 ## Abstract
 
@@ -23,7 +23,7 @@ address spaces are currently overlapping. We confirmed that it significantly dec
 
 An attacker can control an input for an address generation function. This leads to a birthday attack, which significantly decreases the security space.
 To overcome this, we need to separate the inputs for different kind of account types:
-a security break of one account type shouldn't impact the security of other account types. 
+a security break of one account type shouldn't impact the security of other account types.
 
 
 ### Initial proposals
@@ -146,7 +146,7 @@ The `typ` parameter should be a schema descriptor, containing all significant at
 `LengthPrefix` is a function which prepends 1 byte to the address. The value of that byte is the length of the address bits before prepending. The address must be at most 255 bits long.
 We are using `LengthPrefix` to eliminate conflicts - it assures, that for 2 lists of addresses: `as = {a1, a2, ..., an}` and `bs = {b1, b2, ..., bm}` such that every `bi` and `ai` is at most 255 long, `concatenate(map(as, \a -> LengthPrefix(a))) = map(bs, \b -> LengthPrefix(b))` iff `as = bs`.
 
-Implementation Tip: account implementations should cache addresses. 
+Implementation Tip: account implementations should cache addresses.
 
 #### Multisig Addresses
 

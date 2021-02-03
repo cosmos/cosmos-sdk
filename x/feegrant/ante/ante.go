@@ -2,9 +2,9 @@ package ante
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authnante "github.com/cosmos/cosmos-sdk/x/authn/ante"
 	authnkeeper "github.com/cosmos/cosmos-sdk/x/authn/keeper"
+	"github.com/cosmos/cosmos-sdk/x/authn/signing"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	feegranttypes "github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )

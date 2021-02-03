@@ -1,0 +1,32 @@
+<!--
+order: 0
+title: Fee grant
+parent:
+  title: "feegrant"
+-->
+
+## Abstract
+
+This ADR specifies the feegrant module. [Fee Grant](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/docs/architecture/adr-029-fee-grant-module.md)
+
+This module allows accounts to grant fee allowances and to use fees from their accounts. grantees can be able to execute any transaction even their accounts' are not having gas fees.
+
+## Contents
+
+1. **[Concepts](01_concepts.md)**
+    - [FeeAllowanceGrant](01_concepts.md#feeallowancegrant)
+    - [Fee Allowance types](01_concepts.md#fee-allowance-types)
+    - [BasicFeeAllowance](01_concepts.md#basicfeeallowance)
+    - [PeriodicFeeAllowance](01_concepts.md#periodicfeeallowance)
+    - [FeeAccount flag](01_concepts.md#feeaccount-flag)
+    - [DeductGrantedFeeDecorator](01_concepts.md#deductgrantedfeedecorator)
+2. **[State](02_state.md)**
+    - [FeeAllowance](02_state.md#feeallowance)
+3. **[Messages](03_messages.md)**
+    - [MsgGrantFeeAllowance](03_messages.md#msggrantfeeallowance)
+    - [MsgRevokeFeeAllowance](03_messages.md#msgrevokefeeallowance)
+3. **[Events](04_events.md)**
+    - [MsgGrantFeeAllowance](04_events.md#msggrantfeeallowance)
+    - [MsgrevokeFeeAllowance](04_events.md#msgrevokefeeallowance)
+    - [Exec fee allowance](04_events.md#exec-fee-allowance)
+    

@@ -60,6 +60,10 @@ func (c configurator) QueryServer() grpc.Server {
 
 // RegisterMigration implements the Configurator.RegisterMigration method
 func (c configurator) RegisterMigration(moduleName string, fromVersion uint64, handler func(store sdk.KVStore) error) error {
+	if c.migrations[moduleName] == nil {
+		c.migrations[moduleName] = map[uint64]func(store sdk.KVStore) error{}
+	}
+
 	if c.migrations[moduleName][fromVersion] != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrLogic, "another migration for module %s and version %d already exists", moduleName, fromVersion)
 	}
@@ -67,10 +71,6 @@ func (c configurator) RegisterMigration(moduleName string, fromVersion uint64, h
 	_, found := c.storeKeys[moduleName]
 	if !found {
 		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "store key for module %s not found", moduleName)
-	}
-
-	if c.migrations[moduleName] == nil {
-		c.migrations[moduleName] = map[uint64]func(store sdk.KVStore) error{}
 	}
 
 	c.migrations[moduleName][fromVersion] = handler

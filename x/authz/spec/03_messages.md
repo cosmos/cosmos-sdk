@@ -8,7 +8,7 @@ In this section we describe the processing of messages for the authz module.
 
 ## MsgGrantAuthorization
 
-An authorization-grant is created using the MsgGrantAuthorization message.
+An authorization-grant is created using the `MsgGrantAuthorization` message.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/master/proto/cosmos/authz/v1beta1/tx.proto#L27-L35
 
@@ -20,7 +20,7 @@ This message is expected to fail if:
 
 ## MsgRevokeAuthorization
 
-The revoke authorization message revokes authorization.
+An allowed authorization can be removed with `MsgRevokeAuthorization` message.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/master/proto/cosmos/authz/v1beta1/tx.proto#L53-L59
 
@@ -39,4 +39,4 @@ This message is expected to fail if:
 
 - authorization not implemented for the provided msg.
 - grantee don't have permission to run transaction.
-- granted authorization is expired.
+- if granted authorization is expired.

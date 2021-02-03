@@ -1,5 +1,5 @@
 <!--
-order: 0
+order: 1
 -->
 
 # Concepts
@@ -13,8 +13,25 @@ Any concrete type of authorization defined in the `x/authz` module must fulfill 
 
 ## Built-in Authorizations
 
+Cosmos-SDK `x/authz` module comes with following authorization types
+
 ### SendAuthorization
 
+`SendAuthorization` implements `Authorization` interface for the `MsgSend` ServiceMsg, that takes a `SpendLimit` and updates it down to zero.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/master/proto/cosmos/authz/v1beta1/authz.proto#L12-L19
+
++++ https://github.com/cosmos/cosmos-sdk/blob/master/x/authz/types/send_authorization.go#L23-L45
+
+- `spent_limit` keeps track of how many coins left in the authorization.
 
 
 ### GenericAuthorization
+
+`GenericAuthorization` implements the `Authorization` interface, that gives unrestricted permission to execute the provided ServiceMsg on behalf of granter's account.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/master/proto/cosmos/authz/v1beta1/authz.proto#L21-L30
+
++++ https://github.com/cosmos/cosmos-sdk/blob/master/x/authz/types/generic_authorization.go#L20-L28
+
+- `method_name` holds ServiceMsg type.

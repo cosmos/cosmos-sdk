@@ -834,11 +834,17 @@ var xxx_messageInfo_Redelegation proto.InternalMessageInfo
 
 // Params defines the parameters for the staking module.
 type Params struct {
-	UnbondingTime     time.Duration                          `protobuf:"bytes,1,opt,name=unbonding_time,json=unbondingTime,proto3,stdduration" json:"unbonding_time" yaml:"unbonding_time"`
-	MaxValidators     uint32                                 `protobuf:"varint,2,opt,name=max_validators,json=maxValidators,proto3" json:"max_validators,omitempty" yaml:"max_validators"`
-	MaxEntries        uint32                                 `protobuf:"varint,3,opt,name=max_entries,json=maxEntries,proto3" json:"max_entries,omitempty" yaml:"max_entries"`
-	HistoricalEntries uint32                                 `protobuf:"varint,4,opt,name=historical_entries,json=historicalEntries,proto3" json:"historical_entries,omitempty" yaml:"historical_entries"`
-	BondDenom         string                                 `protobuf:"bytes,5,opt,name=bond_denom,json=bondDenom,proto3" json:"bond_denom,omitempty" yaml:"bond_denom"`
+	// unbonding_time is the time duration of unbonding.
+	UnbondingTime time.Duration `protobuf:"bytes,1,opt,name=unbonding_time,json=unbondingTime,proto3,stdduration" json:"unbonding_time" yaml:"unbonding_time"`
+	// max_validators is the maximum number of validators.
+	MaxValidators uint32 `protobuf:"varint,2,opt,name=max_validators,json=maxValidators,proto3" json:"max_validators,omitempty" yaml:"max_validators"`
+	// max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio).
+	MaxEntries uint32 `protobuf:"varint,3,opt,name=max_entries,json=maxEntries,proto3" json:"max_entries,omitempty" yaml:"max_entries"`
+	// historical_entries is the number of historical entries to persist.
+	HistoricalEntries uint32 `protobuf:"varint,4,opt,name=historical_entries,json=historicalEntries,proto3" json:"historical_entries,omitempty" yaml:"historical_entries"`
+	// bond_denom defines the bondable coin denomination.
+	BondDenom string `protobuf:"bytes,5,opt,name=bond_denom,json=bondDenom,proto3" json:"bond_denom,omitempty" yaml:"bond_denom"`
+  // power_reduction xxx
 	PowerReduction    github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,6,opt,name=power_reduction,json=powerReduction,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"power_reduction" yaml:"power_reduction"`
 }
 

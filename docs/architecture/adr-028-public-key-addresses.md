@@ -11,7 +11,7 @@ LAST CALL 2021-01-22
 
 ## Abstract
 
-This ADR defines an address format for all addressable SDK accounts. That includes: new public key algorithms, multisig public keys, and modules.
+This ADR defines an address format for all addressable SDK accounts. That includes: new public key algorithms, multisig public keys, and module accounts.
 
 ## Context
 
@@ -23,7 +23,7 @@ address spaces are currently overlapping. We confirmed that it significantly dec
 
 An attacker can control an input for an address generation function. This leads to a birthday attack, which significantly decreases the security space.
 To overcome this, we need to separate the inputs for different kind of account types:
-a security break of one account type shouldn't impact the security of other account type.
+a security break of one account type shouldn't impact the security of other account types. 
 
 
 ### Initial proposals
@@ -102,7 +102,7 @@ As in other parts of the Cosmos SDK, we will use `sha256`.
 
 ### Basic Address
 
-We start with defining a hash base algorithm for generating addresses. Notably, it's used for accounts represented by a single key pair. For each public key schema we have to have an associated `typ` string, which we are discussing in a section below. `hash` is a cryptographic hash function defined in the previous section.
+We start with defining a base hash algorithm for generating addresses. Notably, it's used for accounts represented by a single key pair. For each public key schema we have to have an associated `typ` string, which we discuss in a section below. `hash` is the cryptographic hash function defined in the previous section.
 
 ```go
 const A_LEN = 32
@@ -112,14 +112,14 @@ func Hash(typ string, key []byte) []byte {
 }
 ```
 
-The `+` is a bytes concatenation, which doesn't use any separator.
+The `+` is bytes concatenation, which doesn't use any separator.
 
-This algorithm is an outcome from a consulting session with a cryptographer.
-Motivation: this algorithm keeps the address relatively small (length of the `typ` doesn't impact on the length of the final address)
-and it's more secure than [post-hash-prefix-proposal] (which uses first 20 bytes of a pubkey hash, that significantly reduce the address space).
-Moreover the cryptographer motivated the choice to add `typ` in the hash to protect against switch table attack.
+This algorithm is the outcome of a consultation session with a professional cryptographer.
+Motivation: this algorithm keeps the address relatively small (length of the `typ` doesn't impact the length of the final address)
+and it's more secure than [post-hash-prefix-proposal] (which uses the first 20 bytes of a pubkey hash, significantly reducing the address space).
+Moreover the cryptographer motivated the choice of adding `typ` in the hash to protect against a switch table attack.
 
-We use `address.Hash` function for generating address for all accounts represented by a single key:
+We use the `address.Hash` function for generating addresses for all accounts represented by a single key:
 * simple public keys: `address.Hash(keyType, pubkey)`
 + aggregated keys (eg: BLS): `address.Hash(keyType, aggregatedPubKey)`
 + modules: `address.Hash("module", moduleName)`
@@ -127,7 +127,7 @@ We use `address.Hash` function for generating address for all accounts represent
 
 ### Composed Addresses
 
-For simple composed accounts (like new naive multisig), we generalize the `address.Hash`. The address is constructed by recursively creating addresses for the sub accounts, sorting the addresses and composing it into a single address. It ensures that the ordering of keys doesn't impact the created address.
+For simple composed accounts (like new naive multisig), we generalize the `address.Hash`. The address is constructed by recursively creating addresses for the sub accounts, sorting the addresses and composing them into a single address. It ensures that the ordering of keys doesn't impact the resulting address.
 
 ```go
 // We don't need a PubKey interface - we need anything which is addressable.
@@ -142,11 +142,11 @@ func NewComposed(typ string, subaccounts []Addressable) []byte {
 }
 ```
 
-The `typ` parameter should be a schema description, containing all significant attributes with deterministic serialization (eg: utf8 string).
+The `typ` parameter should be a schema descriptor, containing all significant attributes with deterministic serialization (eg: utf8 string).
 `LengthPrefix` is a function which prepends 1 byte to the address. The value of that byte is the length of the address bits before prepending. The address must be at most 255 bits long.
 We are using `LengthPrefix` to eliminate conflicts - it assures, that for 2 lists of addresses: `as = {a1, a2, ..., an}` and `bs = {b1, b2, ..., bm}` such that every `bi` and `ai` is at most 255 long, `concatenate(map(as, \a -> LengthPrefix(a))) = map(bs, \b -> LengthPrefix(b))` iff `as = bs`.
 
-Implementation Tip: account implementations should cache address in their structure.
+Implementation Tip: account implementations should cache addresses. 
 
 #### Multisig Addresses
 
@@ -189,8 +189,8 @@ In Basic Address section we defined a module account address as:
 address.Hash("module", moduleName)
 ```
 
-We use `"module"` as a schema type for all module derived addresses. Module accounts can have sub accounts. The derivation process has a defined order: module name, submodule, key, subsubmodule key.
-Module account addresses are heavily used in the SDK so it make sense to optimize the derivation process: instead of using of using `LengthPrefix` for the module name, we use a null byte (`'\x00'`) as a separator. This works, because null byte is not a part of a valid module name.
+We use `"module"` as a schema type for all module derived addresses. Module accounts can have sub accounts. The derivation process has a defined order: module name, submodule key, subsubmodule key.
+Module account addresses are heavily used in the SDK so it makes sense to optimize the derivation process: instead of using of using `LengthPrefix` for the module name, we use a null byte (`'\x00'`) as a separator. This works, because null byte is not a part of a valid module name.
 
 ```
 func Module(moduleName string, key []byte) []byte{
@@ -216,7 +216,7 @@ func Submodule(address []byte, derivationKey []byte) {
 }
 ```
 
-NOTE: if `address` is not a hash based address (with `LEN` length) then we should use `LengthPrefix`. Alternative would be to use one `Module` function, which takes a slice of keys and mapped with `LenghtPrefix`. For final version we need to validate what's the most common use.
+NOTE: if `address` is not a hash based address (with `LEN` length) then we should use `LengthPrefix`. An alternative would be to use one `Module` function, which takes a slice of keys and mapped with `LengthPrefix`. For final version we need to validate what's the most common use.
 
 
 **Example**  For a cosmwasm smart-contract address we could use the following construction:
@@ -252,13 +252,13 @@ in other places such as the type URL in `Any`s. We can easily obtain the name us
 
 ### Backwards Compatibility
 
-This ADR is compatible to what was committed and directly supported in the SDK repository.
+This ADR is compatible with what was committed and directly supported in the SDK repository.
 
 ### Positive
 
 - a simple algorithm for generating addresses for new public keys, complex accounts and modules
-- the algorithm generalizes for _native composed keys_
-- increase security and collision resistance of addresses
+- the algorithm generalizes _native composed keys_
+- increased security and collision resistance of addresses
 - the approach is extensible for future use-cases - one can use other address types, as long as they don't conflict with the address length specified here (20 or 32 bytes).
 - support new account types.
 
@@ -276,8 +276,8 @@ This ADR is compatible to what was committed and directly supported in the SDK r
 ## Further Discussions
 
 Some accounts can have a fixed name or may be constructed in other way (eg: modules). We were discussing an idea of an account with a predefined name (eg: `me.regen`), which could be used by institutions.
-Without going into details, this kind of addresses are compatible with the hash based addresses described here as long as they don't have the same length.
-More specifically, any special account address, must not have length equal to 20 byte nor 32 bytes.
+Without going into details, these kinds of addresses are compatible with the hash based addresses described here as long as they don't have the same length.
+More specifically, any special account address must not have a length equal to 20 or 32 bytes.
 
 
 ## Appendix: Consulting session

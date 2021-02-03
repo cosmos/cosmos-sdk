@@ -34,6 +34,8 @@ func migratePrefixAddressAddressAddress(store sdk.KVStore, prefixBz []byte) {
 	}
 }
 
+const powerBytesLen = 8
+
 func migrateValidatorsByPowerIndexKey(store sdk.KVStore) {
 	oldStore := prefix.NewStore(store, v040staking.ValidatorsByPowerIndexKey)
 
@@ -41,6 +43,9 @@ func migrateValidatorsByPowerIndexKey(store sdk.KVStore) {
 	defer oldStoreIter.Close()
 
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
+		powerBytes := oldStoreIter.Key()[:8]
+		valAddr := oldStoreIter.Key()[8:]
+		newStoreKey := append(append(ValidatorsByPowerIndexKey, powerBytes...), address.MustLengthPrefix(valAddr)...)
 
 		// Set new key on store. Values don't change.
 		store.Set(newStoreKey, oldStoreIter.Value())
@@ -57,7 +62,7 @@ func MigrateStore(store sdk.KVStore) error {
 
 	v042distribution.MigratePrefixAddress(store, v040staking.ValidatorsKey)
 	v042distribution.MigratePrefixAddress(store, v040staking.ValidatorsByConsAddrKey)
-	// todo ValidatorsByPowerIndexKey
+	migrateValidatorsByPowerIndexKey(store)
 
 	v042distribution.MigratePrefixAddressAddress(store, v040staking.DelegationKey)
 	v042distribution.MigratePrefixAddressAddress(store, v040staking.UnbondingDelegationKey)

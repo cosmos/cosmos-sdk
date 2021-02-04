@@ -31,6 +31,11 @@ Types of changes (Stanzas):
 "State Machine Breaking" for any changes that result in a different AppState given same genesisState and txList.
 Ref: https://keepachangelog.com/en/1.0.0/
 -->
+# Unreleased
+
+### Improvements
+
+* (x/ibc) [\#8458](https://github.com/cosmos/cosmos-sdk/pull/8458) Add `packet_connection` attribute to ibc events to enable relayer filtering
 
 # Changelog
 

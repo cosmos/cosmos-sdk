@@ -39,6 +39,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## Unreleased
+
+### Bug Fixes
+
+* (client/keys) [\#8436](https://github.com/cosmos/cosmos-sdk/pull/8436) Fix keybase->keyring keys migration.
+
+### Improvements
+
+* (x/bank) [\#8479](https://github.com/cosmos/cosmos-sdk/pull/8479) Aditional client denom metadata validation for `base` and `display` denoms.
+
 ## [v0.41.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.0) - 2021-01-26
 
 ### State Machine Breaking

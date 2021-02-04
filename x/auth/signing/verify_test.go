@@ -40,9 +40,9 @@ func TestVerifySignature(t *testing.T) {
 	_ = app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
 	balances := sdk.NewCoins(sdk.NewInt64Coin("atom", 200))
-	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr, balances))
+	require.NoError(t, simapp.FundAccount(app, ctx, addr, balances))
 	acc, err := ante.GetSignerAcc(ctx, app.AccountKeeper, addr)
-	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr, balances))
+	require.NoError(t, simapp.FundAccount(app, ctx, addr, balances))
 
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	fee := legacytx.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})

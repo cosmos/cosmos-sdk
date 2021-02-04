@@ -2,6 +2,7 @@ package staking_test
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -18,30 +19,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func bootstrapGenesisTest(t *testing.T, power int64, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
+func bootstrapGenesisTest(numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
 	_, app, ctx := getBaseSimappWithCustomKeeper()
 
 	addrDels, _ := generateAddresses(app, ctx, numAddrs, sdk.NewInt(10000))
-
-	amt := sdk.TokensFromConsensusPower(power)
-	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), amt.MulRaw(int64(len(addrDels)))))
-
-	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
-
-	// set non bonded pool balance
-	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
-	require.NoError(t, app.BankKeeper.MintCoins(ctx, notBondedPool.GetName(), totalSupply))
-
 	return app, ctx, addrDels
 }
 
 func TestInitGenesis(t *testing.T) {
-	app, ctx, addrs := bootstrapGenesisTest(t, 1000, 10)
+	app, ctx, addrs := bootstrapGenesisTest(10)
 
 	valTokens := sdk.TokensFromConsensusPower(1)
 
 	params := app.StakingKeeper.GetParams(ctx)
-	validators := make([]types.Validator, 2)
+	validators := app.StakingKeeper.GetAllValidators(ctx)
 	var delegations []types.Delegation
 
 	pk0, err := codectypes.NewAnyWithValue(PKs[0])
@@ -51,19 +42,26 @@ func TestInitGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	// initialize the validators
-	validators[0].OperatorAddress = sdk.ValAddress(addrs[0]).String()
-	validators[0].ConsensusPubkey = pk0
-	validators[0].Description = types.NewDescription("hoop", "", "", "", "")
-	validators[0].Status = types.Bonded
-	validators[0].Tokens = valTokens
-	validators[0].DelegatorShares = valTokens.ToDec()
-	validators[1].OperatorAddress = sdk.ValAddress(addrs[1]).String()
-	validators[1].ConsensusPubkey = pk1
-	validators[1].Description = types.NewDescription("bloop", "", "", "", "")
-	validators[1].Status = types.Bonded
-	validators[1].Tokens = valTokens
-	validators[1].DelegatorShares = valTokens.ToDec()
+	bondedVal1 := types.Validator{
+		OperatorAddress: sdk.ValAddress(addrs[0]).String(),
+		ConsensusPubkey: pk0,
+		Status:          types.Bonded,
+		Tokens:          valTokens,
+		DelegatorShares: valTokens.ToDec(),
+		Description:     types.NewDescription("hoop", "", "", "", ""),
+	}
+	bondedVal2 := types.Validator{
+		OperatorAddress: sdk.ValAddress(addrs[1]).String(),
+		ConsensusPubkey: pk1,
+		Status:          types.Bonded,
+		Tokens:          valTokens,
+		DelegatorShares: valTokens.ToDec(),
+		Description:     types.NewDescription("bloop", "", "", "", ""),
+	}
 
+	// append new bonded validators to the list
+	validators = append(validators, bondedVal1, bondedVal2)
+	log.Printf("%#v", len(validators))
 	// mint coins in the bonded pool representing the validators coins
 	require.NoError(t,
 		app.BankKeeper.MintCoins(ctx,
@@ -158,7 +156,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	size := 200
 	require.True(t, size > 100)
 
-	app, ctx, addrs := bootstrapGenesisTest(t, 1000, 200)
+	app, ctx, addrs := bootstrapGenesisTest(200)
 
 	params := app.StakingKeeper.GetParams(ctx)
 	delegations := []types.Delegation{}

@@ -58,14 +58,7 @@ There are two types of fee allowances present at the moment:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/d97e7907f176777ed8a464006d360bb3e1a223e4/x/auth/tx/builder.go#L268-L277
 
-```go 
-message Fee {
-  repeated cosmos.base.v1beta1.Coin amount = 1;
-  uint64 gas_limit = 2;
-  string payer = 3;
-  string granter = 4;
-}
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/d97e7907f176777ed8a464006d360bb3e1a223e4/proto/cosmos/tx/v1beta1/tx.proto#L160-L181
 
 Example cmd:
 ```go

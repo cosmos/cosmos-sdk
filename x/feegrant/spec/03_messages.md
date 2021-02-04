@@ -4,15 +4,14 @@ order: 3
 
 # Messages
 
-## MsgGrantFeeAllowance
+## Msg/GrantFeeAllowance
 
 A fee allowance grant will be created `MsgGrantFeeAllowance` message.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/d97e7907f176777ed8a464006d360bb3e1a223e4/proto/cosmos/feegrant/v1beta1/tx.proto#L22-L28
 
-## MsgRevokeFeeAllowance
+## Msg/RevokeFeeAllowance
 
 An allowed grant fee allowance can be removed with `MsgRevokeFeeAllowance` message.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/d97e7907f176777ed8a464006d360bb3e1a223e4/proto/cosmos/feegrant/v1beta1/tx.proto#L33-L37
-

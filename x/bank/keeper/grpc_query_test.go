@@ -6,6 +6,8 @@ import (
 	gocontext "context"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
+
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -34,7 +36,7 @@ func (suite *IntegrationTestSuite) TestQueryBalance() {
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 
 	app.AccountKeeper.SetAccount(ctx, acc)
-	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, acc.GetAddress(), origCoins))
+	suite.Require().NoError(simapp.FundAccount(app, ctx, acc.GetAddress(), origCoins))
 
 	res, err = queryClient.Balance(gocontext.Background(), req)
 	suite.Require().NoError(err)
@@ -66,7 +68,7 @@ func (suite *IntegrationTestSuite) TestQueryAllBalances() {
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 
 	app.AccountKeeper.SetAccount(ctx, acc)
-	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, acc.GetAddress(), origCoins))
+	suite.Require().NoError(simapp.FundAccount(app, ctx, acc.GetAddress(), origCoins))
 
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)

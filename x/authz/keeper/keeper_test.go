@@ -132,10 +132,7 @@ func (s *TestSuite) TestKeeperFees() {
 	granterAddr := addrs[0]
 	granteeAddr := addrs[1]
 	recipientAddr := addrs[2]
-	//err := app.BankKeeper.SetBalances(s.ctx, granterAddr, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000)))
-	//s.Require().Nil(err)
-	//s.Require().True(app.BankKeeper.GetBalance(s.ctx, granterAddr, "steak").IsEqual(sdk.NewCoin("steak", sdk.NewInt(10000))))
-	s.Require().NoError(simapp.FundAccount(app, s.ctx, granteeAddr, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000))))
+	s.Require().NoError(simapp.FundAccount(app, s.ctx, granterAddr, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000))))
 	now := s.ctx.BlockHeader().Time
 	s.Require().NotNil(now)
 

@@ -35,7 +35,22 @@ type StdSignDoc struct {
 func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
 	msgsBytes := make([]json.RawMessage, 0, len(msgs))
 	for _, msg := range msgs {
-		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
+		var msgBytes []byte
+
+		// Here, we're gracefully supporting supporting Amino JSON for service
+		// Msgs.
+		// ref: https://github.com/cosmos/cosmos-sdk/issues/8346
+		// If `msg` is a service Msg, then we cast its `Request` to a sdk.Msg
+		// and call GetSignBytes on the `Request`. If `msg` is a amino sdk.Msg,
+		// we just call GetSignBytes on it.
+		svcMsg, ok := msg.(sdk.ServiceMsg)
+		if ok {
+			msgBytes = svcMsg.Request.(sdk.Msg).GetSignBytes()
+		} else {
+			msgBytes = msg.GetSignBytes()
+		}
+
+		msgsBytes = append(msgsBytes, json.RawMessage(msgBytes))
 	}
 
 	bz, err := legacy.Cdc.MarshalJSON(StdSignDoc{

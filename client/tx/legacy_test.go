@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -30,7 +31,6 @@ var (
 	fee            = types.NewCoins(types.NewInt64Coin("bam", 100))
 	_, pub1, addr1 = testdata.KeyTestPubAddr()
 	_, _, addr2    = testdata.KeyTestPubAddr()
-	msg            = banktypes.NewMsgSend(addr1, addr2, types.NewCoins(types.NewInt64Coin("wack", 10000)))
 	sig            = signing2.SignatureV2{
 		PubKey: pub1,
 		Data: &signing2.SingleSignatureData{
@@ -38,13 +38,18 @@ var (
 			Signature: []byte("dummy"),
 		},
 	}
+	msg0 = banktypes.NewMsgSend(addr1, addr2, types.NewCoins(types.NewInt64Coin("wack", 10000)))
+	msg1 = sdk.ServiceMsg{
+		MethodName: "cosmos.bank.v1beta1.Msg/Send",
+		Request:    banktypes.NewMsgSend(addr1, addr2, types.NewCoins(types.NewInt64Coin("wack", 10000))),
+	}
 )
 
 func buildTestTx(t *testing.T, builder client.TxBuilder) {
 	builder.SetMemo(memo)
 	builder.SetGasLimit(gas)
 	builder.SetFeeAmount(fee)
-	err := builder.SetMsgs(msg)
+	err := builder.SetMsgs(msg0, msg1)
 	require.NoError(t, err)
 	err = builder.SetSignatures(sig)
 	require.NoError(t, err)
@@ -106,7 +111,8 @@ func (s *TestSuite) TestConvertTxToStdTx() {
 	s.Require().Equal(memo, stdTx.Memo)
 	s.Require().Equal(gas, stdTx.Fee.Gas)
 	s.Require().Equal(fee, stdTx.Fee.Amount)
-	s.Require().Equal(msg, stdTx.Msgs[0])
+	s.Require().Equal(msg0, stdTx.Msgs[0])
+	s.Require().Equal(msg0, stdTx.Msgs[1])
 	s.Require().Equal(timeoutHeight, stdTx.TimeoutHeight)
 	s.Require().Equal(sig.PubKey, stdTx.Signatures[0].PubKey)
 	s.Require().Equal(sig.Data.(*signing2.SingleSignatureData).Signature, stdTx.Signatures[0].Signature)
@@ -125,7 +131,8 @@ func (s *TestSuite) TestConvertTxToStdTx() {
 	s.Require().Equal(memo, stdTx.Memo)
 	s.Require().Equal(gas, stdTx.Fee.Gas)
 	s.Require().Equal(fee, stdTx.Fee.Amount)
-	s.Require().Equal(msg, stdTx.Msgs[0])
+	s.Require().Equal(msg0, stdTx.Msgs[0])
+	s.Require().Equal(msg1, stdTx.Msgs[1])
 	s.Require().Equal(timeoutHeight, stdTx.TimeoutHeight)
 	s.Require().Empty(stdTx.Signatures)
 

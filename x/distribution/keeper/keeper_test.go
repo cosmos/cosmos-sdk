@@ -3,8 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -51,8 +49,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	// set module account coins
 	distrAcc := app.DistrKeeper.GetDistributionAccount(ctx)
 	coins := sdk.NewCoins(sdk.NewCoin("mytoken", sdk.NewInt(2)), sdk.NewCoin("stake", sdk.NewInt(2)))
-	require.NoError(t, app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins))
-	require.NoError(t, app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins))
+	require.NoError(t, simapp.FundAccount(app, ctx, distrAcc.GetAddress(), coins))
 
 	app.AccountKeeper.SetModuleAccount(ctx, distrAcc)
 
@@ -118,8 +115,7 @@ func TestFundCommunityPool(t *testing.T) {
 
 	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 
-	require.NoError(t, app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, amount))
-	require.NoError(t, app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr[0], amount))
+	require.NoError(t, simapp.FundAccount(app, ctx, addr[0], amount))
 
 	initPool := app.DistrKeeper.GetFeePool(ctx)
 	assert.Empty(t, initPool.CommunityPool)

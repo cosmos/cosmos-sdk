@@ -6,7 +6,7 @@ order: 1
 
 ## FeeAllowanceGrant
 
-`FeeAllowanceGrant` is stored in the KVStore to record a grant with full context. Every grant will contain `granter`, `grantee` and what kind of `allowance` is granted. `granter` is an account address who is giving permission to `grantee`(another account address) to use fees, where as `grantee` is an account address of beneficiary. `allowance` defines what kind of fee allowance (`BasicFeeAllowance` or `PeriodicFeeAllowance`) is granted to grantee. `allowance` can accepts an interface which implements `FeeAllowanceI` as `Any` type. There can be only one existing feegrant allowed for a `grantee` and `granter`, self grant not allowed.
+`FeeAllowanceGrant` is stored in the KVStore to record a grant with full context. Every grant will contain `granter`, `grantee` and what kind of `allowance` is granted. `granter` is an account address who is giving permission to `grantee` (the beneficiary account address) to pay for some or all of `grantee`'s transaction fees. `allowance` defines what kind of fee allowance (`BasicFeeAllowance` or `PeriodicFeeAllowance`, see below) is granted to `grantee`. `allowance` accepts an interface which implements `FeeAllowanceI`, encoded as `Any` type. There can be only one existing fee grant allowed for a `grantee` and `granter`, self grants are not allowed.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/d97e7907f176777ed8a464006d360bb3e1a223e4/proto/cosmos/feegrant/v1beta1/feegrant.proto#L75-L81
 
@@ -21,26 +21,26 @@ There are two types of fee allowances present at the moment:
 
 ## BasicFeeAllowance
 
-`BasicFeeAllowance` is one time permission for `grantee` to use fee from a `granter`'s account. if any of the `spend_limit` or `expiration` reached the grant will be removed from the state.
+`BasicFeeAllowance` is permission for `grantee` to use fee from a `granter`'s account. If any of the `spend_limit` or `expiration` reaches its limit, the grant will be removed from the state.
  
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/d97e7907f176777ed8a464006d360bb3e1a223e4/proto/cosmos/feegrant/v1beta1/feegrant.proto#L13-L26
 
-- `spend_limit` is a limit of coins that are allowed to use from the `granter` account. If it is empty, it assumes there's no spend limit, `grantee` can use any number of available tokens from `granter` account address before the expiration.
+- `spend_limit` is the limit of coins that are allowed to be used from the `granter` account. If it is empty, it assumes there's no spend limit, `grantee` can use any number of available tokens from `granter` account address before the expiration.
 
 - `expiration` specifies an optional time when this allowance expires. If the value is left empty, there is no expiry for the grant.
 
-- Whenever a grant is created with empty values for `spend_limit` and `expiration`, it is still a valid grant. It won't restrict the `grantee` to use any number of tokens from `granter` and it won't have any expiration. The only way to restrict the `grantee` is by revoking the grant.
+- When a grant is created with empty values for `spend_limit` and `expiration`, it is still a valid grant. It won't restrict the `grantee` to use any number of tokens from `granter` and it won't have any expiration. The only way to restrict the `grantee` is by revoking the grant.
 
 ## PeriodicFeeAllowance
 
-`PeriodicFeeAllowance` is a repeating fee allowance for the mentioned period, we can mention when the grant can expire as well as when a period can reset. We can also mention how many maximum of coins can be used in a mentioned period of time.
+`PeriodicFeeAllowance` is a repeating fee allowance for the mentioned period, we can mention when the grant can expire as well as when a period can reset. We can also define the maximum number of coins that can be used in a mentioned period of time.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/d97e7907f176777ed8a464006d360bb3e1a223e4/proto/cosmos/feegrant/v1beta1/feegrant.proto#L28-L73
 
 - `basic` is the instance of `BasicFeeAllowance` which is optional for periodic fee allowance. If empty, the grant will have no `expiration` and no `spend_limit`.
 
-- `period` is the specific period of time or blocks, after period crossed `period_spend_limit` will be reset. 
+- `period` is the specific period of time or blocks, after each period passes, `period_spend_limit` will be reset. 
 
 - `period_spend_limit` specifies the maximum number of coins that can be spent in the period.
 
@@ -74,4 +74,4 @@ Example cmd:
 
 ## DeductGrantedFeeDecorator
 
-`feegrant` module also adds a `DeductGrantedFeeDecorator` ante handler. Whenever a transaction is being executed with `granter` field set, then this ante handler will check whether `payer` and `granter` has proper fee allowance grant in state. If it exists the fees will be deducted from the `granter`'s account address. If the `granter` field isn't set then this ante handler works as normal fee deductor.
+`feegrant` module also adds a `DeductGrantedFeeDecorator` ante handler. Whenever a transaction is being executed with `granter` field set, then this ante handler will check whether `payer` and `granter` have proper fee allowance grant in state. If it exists the fees will be deducted from the `granter`'s account address. If the `granter` field isn't set then this ante handler works as normal fee deductor.

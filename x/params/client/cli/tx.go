@@ -11,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramscutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
@@ -83,7 +82,7 @@ Where proposal.json contains:
 				return err
 			}
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-			msgClient := types.NewMsgClient(svcMsgClientConn)
+			msgClient := govtypes.NewMsgClient(svcMsgClientConn)
 			_, err = msgClient.SubmitProposal(cmd.Context(), msg)
 			if err != nil {
 				return err

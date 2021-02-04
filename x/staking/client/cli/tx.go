@@ -72,7 +72,7 @@ func NewCreateValidatorCmd() *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, svcMsgClientConn.GetMsgs()...)
 		},
 	}
 

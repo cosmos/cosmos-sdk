@@ -437,3 +437,13 @@ type EmptyAppOptions struct{}
 func (ao EmptyAppOptions) Get(o string) interface{} {
 	return nil
 }
+
+// FundAccount is a utility function that funds an account by minting and sending the coins to the address
+// TODO(fdymylja): instead of using the mint module account, which has the permission of minting, create a "faucet" account
+func FundAccount(app *SimApp, ctx sdk.Context, addr sdk.AccAddress, amount sdk.Coins) error {
+	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, amount)
+	if err != nil {
+		return err
+	}
+	return app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, amount)
+}

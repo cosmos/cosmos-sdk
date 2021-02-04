@@ -372,7 +372,10 @@ func (s *IntegrationTestSuite) TestNewSendTxCmdGenOnly() {
 	s.Require().NoError(err)
 	tx, err := s.cfg.TxConfig.TxJSONDecoder()(bz.Bytes())
 	s.Require().NoError(err)
-	s.Require().Equal([]sdk.Msg{types.NewMsgSend(from, to, amount)}, tx.GetMsgs())
+	s.Require().Equal([]sdk.Msg{sdk.ServiceMsg{
+		MethodName: "/cosmos.bank.v1beta1.Msg/Send",
+		Request:    types.NewMsgSend(from, to, amount),
+	}}, tx.GetMsgs())
 }
 
 func (s *IntegrationTestSuite) TestNewSendTxCmd() {
@@ -461,20 +464,20 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 	}
 }
 
-// TestBankMsgService does a basic test of whether or not service Msg's as defined
-// in ADR 031 work in the most basic end-to-end case.
-func (s *IntegrationTestSuite) TestBankMsgService() {
+// TestLegacyProtoMsgSend uses the legacy proto MsgSend CLI util to make sure
+// legacy proto Msgs are still handled. The real CLI commands use service Msgs.
+func (s *IntegrationTestSuite) TestLegacyProtoMsgSend() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
-		name           string
-		from, to       sdk.AccAddress
-		amount         sdk.Coins
-		args           []string
-		expectErr      bool
-		respType       proto.Message
-		expectedCode   uint32
-		rawLogContains string
+		name              string
+		from, to          sdk.AccAddress
+		amount            sdk.Coins
+		args              []string
+		expectErr         bool
+		respType          proto.Message
+		expectedCode      uint32
+		rawLogNotContains string
 	}{
 		{
 			"valid transaction",
@@ -492,7 +495,7 @@ func (s *IntegrationTestSuite) TestBankMsgService() {
 			false,
 			&sdk.TxResponse{},
 			0,
-			"/cosmos.bank.v1beta1.Msg/Send", // indicates we are using ServiceMsg and not a regular Msg
+			"/cosmos.bank.v1beta1.Msg/Send", // Make sure logs do NOT contain service Msg. They do in service Msg.
 		},
 	}
 
@@ -501,7 +504,7 @@ func (s *IntegrationTestSuite) TestBankMsgService() {
 
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
-			bz, err := banktestutil.ServiceMsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
+			bz, err := banktestutil.LegacyMsgSendProtoExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -510,7 +513,8 @@ func (s *IntegrationTestSuite) TestBankMsgService() {
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bz.Bytes(), tc.respType), bz.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
-				s.Require().Contains(txResp.RawLog, tc.rawLogContains)
+				fmt.Printf("%+v", txResp)
+				s.Require().NotContains(txResp.RawLog, tc.rawLogNotContains)
 			}
 		})
 	}

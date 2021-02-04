@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -31,9 +30,9 @@ func QueryBalancesExec(clientCtx client.Context, address fmt.Stringer, extraArgs
 	return clitestutil.ExecTestCLICmd(clientCtx, bankcli.GetBalancesCmd(), args)
 }
 
-// newSendTxMsgServiceCmd is just for the purpose of testing ServiceMsg's in an end-to-end case. It is effectively
-// NewSendTxCmd but using MsgClient.
-func newSendTxMsgServiceCmd() *cobra.Command {
+// newLegacyMsgSendProto is just for the purpose of testing legacy Proto Msg.
+// CLI now generate ADR-031 service Msgs by default.
+func newLegacyMsgSendProto() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "send [from_key_or_address] [to_address] [amount]",
 		Short: `Send funds from one account to another. Note, the'--from' flag is
@@ -56,14 +55,12 @@ ignored as it is implied from [from_key_or_address].`,
 			}
 
 			msg := types.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
-			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-			bankMsgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = bankMsgClient.Send(cmd.Context(), msg)
+			err = msg.ValidateBasic()
 			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -72,13 +69,14 @@ ignored as it is implied from [from_key_or_address].`,
 	return cmd
 }
 
-// ServiceMsgSendExec is a temporary method to test Msg services in CLI using
-// x/bank's Msg/Send service. After https://github.com/cosmos/cosmos-sdk/issues/7541
-// is merged, this method should be removed, and we should prefer MsgSendExec
-// instead.
-func ServiceMsgSendExec(clientCtx client.Context, from, to, amount fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
+// LegacyMsgSendProtoExec is a legacy method to test proto Msg services in CLI.
+// All CLI generate txs with Service Msgs right now, but we are keeping this
+// legacy function to make sure sending proto Msgs works in a backwards-compatible
+// way.
+// Deprecated.
+func LegacyMsgSendProtoExec(clientCtx client.Context, from, to, amount fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := []string{from.String(), to.String(), amount.String()}
 	args = append(args, extraArgs...)
 
-	return clitestutil.ExecTestCLICmd(clientCtx, newSendTxMsgServiceCmd(), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, newLegacyMsgSendProto(), args)
 }

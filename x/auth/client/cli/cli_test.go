@@ -230,8 +230,8 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
 
 	// Send coins, try both with legacy Msg and with Msg service.
-	// Legacy Msg.
-	legacyMsgOut, err := bankcli.MsgSendExec(
+	// Legacy proto Msg.
+	legacyMsgOut, err := bankcli.LegacyMsgSendProtoExec(
 		val.ClientCtx,
 		val.Address,
 		account2.GetAddress(),
@@ -246,7 +246,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(legacyMsgOut.Bytes(), &legacyMsgTxRes))
 
 	// Service Msg.
-	out, err := bankcli.ServiceMsgSendExec(
+	out, err := bankcli.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		account2.GetAddress(),

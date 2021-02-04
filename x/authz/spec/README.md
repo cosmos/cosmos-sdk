@@ -18,9 +18,9 @@ granting arbitrary privileges from one account (the granter) to another account 
     - [Built-in Authorizations](01_concepts.md#Built-in-Authorization)
 2. **[State](02_state.md)**
 3. **[Messages](03_messages.md)**
-    - [MsgGrantAuthorization](03_messages.md#MsgGrantAuthorization)
-    - [MsgRevokeAuthorization](03_messages.md#MsgRevokeAuthorization)
-    - [MsgExecAuthorized](03_messages.md#MsgExecAuthorized)
+    - [Msg/GrantAuthorization](03_messages.md#MsgGrantAuthorization)
+    - [Msg/RevokeAuthorization](03_messages.md#MsgRevokeAuthorization)
+    - [Msg/ExecAuthorized](03_messages.md#MsgExecAuthorized)
 4. **[Events](04_events.md)**
     - [Keeper](04_events.md#Keeper)
     

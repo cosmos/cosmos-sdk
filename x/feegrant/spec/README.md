@@ -23,8 +23,8 @@ This module allows accounts to grant fee allowances and to use fees from their a
 2. **[State](02_state.md)**
     - [FeeAllowance](02_state.md#feeallowance)
 3. **[Messages](03_messages.md)**
-    - [MsgGrantFeeAllowance](03_messages.md#msggrantfeeallowance)
-    - [MsgRevokeFeeAllowance](03_messages.md#msgrevokefeeallowance)
+    - [Msg/GrantFeeAllowance](03_messages.md#msggrantfeeallowance)
+    - [Msg/RevokeFeeAllowance](03_messages.md#msgrevokefeeallowance)
 3. **[Events](04_events.md)**
     - [MsgGrantFeeAllowance](04_events.md#msggrantfeeallowance)
     - [MsgrevokeFeeAllowance](04_events.md#msgrevokefeeallowance)

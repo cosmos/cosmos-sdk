@@ -495,7 +495,7 @@ func (s *IntegrationTestSuite) TestLegacyProtoMsgSend() {
 			false,
 			&sdk.TxResponse{},
 			0,
-			"/cosmos.bank.v1beta1.Msg/Send", // Make sure logs do NOT contain service Msg. They do in service Msg.
+			"/cosmos.bank.v1beta1.Msg/Send", // Make sure logs do NOT contain this FQ method name. They do in service Msg.
 		},
 	}
 

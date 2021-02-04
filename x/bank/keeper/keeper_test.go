@@ -275,7 +275,7 @@ func (suite *IntegrationTestSuite) TestSupply_BurnCoins() {
 		NoError(keeper.MintCoins(ctx, authtypes.Minter, initCoins))
 	supplyAfterInflation = keeper.GetSupply(ctx)
 
-	suite.Require().NoError(keeper.SetBalances(ctx, multiPermAcc.GetAddress(), initCoins)) //TODO(fdymylja): IDK
+	suite.Require().NoError(keeper.SendCoins(ctx, authtypes.NewModuleAddress(authtypes.Minter), multiPermAcc.GetAddress(), initCoins))
 	authKeeper.SetModuleAccount(ctx, multiPermAcc)
 
 	err = keeper.BurnCoins(ctx, multiPermAcc.GetName(), initCoins)
@@ -549,15 +549,16 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 	suite.Require().Equal(abci.Event(event1), events[0])
 	suite.Require().Equal(abci.Event(event2), events[1])
 
-	app.BankKeeper.SetBalances(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))) //TODO(fdymylja): IDK
+	suite.Require().NoError(simapp.FundAccount(app, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))))
 	newCoins = sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 
 	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr, addr2, newCoins))
 
+	// events are shifted due to the funding account events
 	events = ctx.EventManager().ABCIEvents()
-	suite.Require().Equal(4, len(events))
-	suite.Require().Equal(abci.Event(event1), events[2])
-	suite.Require().Equal(abci.Event(event2), events[3])
+	suite.Require().Equal(6, len(events))
+	suite.Require().Equal(abci.Event(event1), events[4])
+	suite.Require().Equal(abci.Event(event2), events[5])
 }
 
 func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
@@ -592,12 +593,11 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	suite.Require().Equal(0, len(events))
 
 	// Set addr's coins but not addr2's coins
-	app.BankKeeper.SetBalances(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))) // TODO(fdymylja): IDK
-
+	suite.Require().NoError(simapp.FundAccount(app, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))))
 	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	events = ctx.EventManager().ABCIEvents()
-	suite.Require().Equal(1, len(events))
+	suite.Require().Equal(3, len(events)) // 3 events because minting event is there
 
 	event1 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
@@ -607,19 +607,19 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 		event1.Attributes,
 		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
 	)
-	suite.Require().Equal(abci.Event(event1), events[0])
+	suite.Require().Equal(abci.Event(event1), events[2]) // it's the third event since we have the minting event before
 
 	// Set addr's coins and addr2's coins
-	app.BankKeeper.SetBalances(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))) //TODO(fdymylja): IDK
+	suite.Require().NoError(simapp.FundAccount(app, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))))
 	newCoins = sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 
-	app.BankKeeper.SetBalances(ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))) // TODO(fdymylja): IDK
+	suite.Require().NoError(simapp.FundAccount(app, ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))))
 	newCoins2 = sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
 
 	suite.Require().NoError(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	events = ctx.EventManager().ABCIEvents()
-	suite.Require().Equal(5, len(events))
+	suite.Require().Equal(11, len(events))
 
 	event2 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
@@ -653,10 +653,11 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins2.String())},
 	)
 
-	suite.Require().Equal(abci.Event(event1), events[1])
-	suite.Require().Equal(abci.Event(event2), events[2])
-	suite.Require().Equal(abci.Event(event3), events[3])
-	suite.Require().Equal(abci.Event(event4), events[4])
+	// events are shifted due to the funding account events
+	suite.Require().Equal(abci.Event(event1), events[7])
+	suite.Require().Equal(abci.Event(event2), events[8])
+	suite.Require().Equal(abci.Event(event3), events[9])
+	suite.Require().Equal(abci.Event(event4), events[10])
 }
 
 func (suite *IntegrationTestSuite) TestSpendableCoins() {
@@ -877,11 +878,8 @@ func (suite *IntegrationTestSuite) TestDelegateCoins_Invalid() {
 	suite.Require().Error(app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, invalidCoins))
 
 	app.AccountKeeper.SetAccount(ctx, macc)
-	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins)) // TODO(fdymylja): IDK
-
 	suite.Require().Error(app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins))
 	app.AccountKeeper.SetAccount(ctx, acc)
-
 	suite.Require().Error(app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, origCoins.Add(origCoins...)))
 }
 

@@ -28,7 +28,7 @@ func ShowNodeIDCmd() *cobra.Command {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
 
-			nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
+			nodeKey, err := p2p.LoadNodeKey(cfg.NodeKeyFile())
 			if err != nil {
 				return err
 			}
@@ -48,7 +48,7 @@ func ShowValidatorCmd() *cobra.Command {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
 
-			privValidator := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
+			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			valPubKey, err := privValidator.GetPubKey()
 			if err != nil {
 				return err
@@ -86,7 +86,7 @@ func ShowAddressCmd() *cobra.Command {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
 
-			privValidator := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
+			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			valConsAddr := (sdk.ConsAddress)(privValidator.GetAddress())
 
 			output, _ := cmd.Flags().GetString(cli.OutputFlag)

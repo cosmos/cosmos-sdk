@@ -350,7 +350,7 @@ func (fss *FileStreamingService) Stream(wg *sync.WaitGroup, quitChan <-chan stru
 ```
 
 Writing to a file is the simplest approach for streaming the data out to consumers.
-This approach also provide the advantages of being persistent and durable, and the files can be read directly,
+This approach also provides the advantages of being persistent and durable, and the files can be read directly,
 or an auxiliary streaming services can read from the files and serve the data over a remote interface.
 
 #### Auxiliary streaming service

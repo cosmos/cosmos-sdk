@@ -31,7 +31,7 @@ is a list of the most popular operating systems and their respective passwords m
 GNU/Linux distributions that use GNOME as default desktop environment typically come with
 [Seahorse](https://wiki.gnome.org/Apps/Seahorse). Users of KDE based distributions are
 commonly provided with [KDE Wallet Manager](https://userbase.kde.org/KDE_Wallet_Manager).
-Whilst the former is in fact a `libsecret` convenient frontend, the former is a `kwallet`
+Whilst the former is in fact a `libsecret` convenient frontend, the latter is a `kwallet`
 client.
 
 `os` is the default option since operating system's default credentials managers are

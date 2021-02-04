@@ -24,8 +24,12 @@ type Keeper interface {
 	InitGenesis(sdk.Context, *types.GenesisState)
 	ExportGenesis(sdk.Context) *types.GenesisState
 
-	GetSupply(ctx sdk.Context) exported.SupplyI
-	SetSupply(ctx sdk.Context, supply exported.SupplyI)
+	GetSupply(ctx sdk.Context, denom string) sdk.Coin
+	GetTotalSupply(ctx sdk.Context) sdk.Coins
+	SetSupply(ctx sdk.Context, supply sdk.Coins)
+	InflateSupply()
+	DeflateSupply()
+
 
 	GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool)
 	SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)
@@ -153,30 +157,45 @@ func (k BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAdd
 }
 
 // GetSupply retrieves the Supply from store
-func (k BaseKeeper) GetSupply(ctx sdk.Context) exported.SupplyI {
+func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.SupplyKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
+
+	bz := supplyStore.Get([]byte(denom))
 	if bz == nil {
 		panic("stored supply should not have been nil")
 	}
 
-	supply, err := k.UnmarshalSupply(bz)
+	var coin sdk.Coin
+	err := k.cdc.UnmarshalBinaryBare(bz, &coin)
 	if err != nil {
 		panic(err)
 	}
 
-	return supply
+	return coin
 }
 
 // SetSupply sets the Supply to store
-func (k BaseKeeper) SetSupply(ctx sdk.Context, supply exported.SupplyI) {
+func (k BaseKeeper) SetSupply(ctx sdk.Context, supply sdk.Coins) {
 	store := ctx.KVStore(k.storeKey)
-	bz, err := k.MarshalSupply(supply)
-	if err != nil {
-		panic(err)
-	}
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
 
-	store.Set(types.SupplyKey, bz)
+	for _, coin := range supply{
+		bz := k.cdc.MustMarshalBinaryBare(&coin)
+		supplyStore.Set([]byte(coin.Denom), bz)
+	}
+}
+
+func (k BaseKeeper) GetTotalSupply(ctx sdk.Context) sdk.Coins {
+	for
+}
+
+func (k BaseKeeper) InflateSupply() {
+	panic("implement me")
+}
+
+func (k BaseKeeper) DeflateSupply() {
+	panic("implement me")
 }
 
 // GetDenomMetaData retrieves the denomination metadata

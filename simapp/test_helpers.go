@@ -243,7 +243,7 @@ func AddTestAddrsFromPubKeys(app *SimApp, ctx sdk.Context, pubKeys []cryptotypes
 func setTotalSupply(app *SimApp, ctx sdk.Context, accAmt sdk.Int, totalAccounts int) {
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt.MulRaw(int64(totalAccounts))))
 	prevSupply := app.BankKeeper.GetSupply(ctx)
-	app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(prevSupply.GetTotal().Add(totalSupply...)))
+	app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(prevSupply.Add(totalSupply...)).GetTotal())
 }
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an

@@ -43,6 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (server) [\#8481](https://github.com/cosmos/cosmos-sdk/pull/8481) Don't create files when running `{appd} tendermint show-*` subcommands.
 * (client/keys) [\#8436](https://github.com/cosmos/cosmos-sdk/pull/8436) Fix keybase->keyring keys migration.
 
 ### Improvements

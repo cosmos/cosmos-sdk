@@ -77,7 +77,7 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 		suite.app.BankKeeper.SetBalances(suite.ctx, addr, sdk.Coins{
 			sdk.NewInt64Coin("atom", 10000000),
-		})
+		}) // TODO(fdymylja): IDK
 
 		accounts = append(accounts, TestAccount{acc, priv})
 	}

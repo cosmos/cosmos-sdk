@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
+
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	"github.com/stretchr/testify/require"
@@ -439,7 +441,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 
 // Test logic around fee deduction.
 func (suite *AnteTestSuite) TestAnteHandlerFees() {
-	suite.SetupTest(true) // setup
+	suite.SetupTest(false) // setup
 
 	// Same data for every test cases
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
@@ -470,7 +472,8 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 		{
 			"signer does not have enough funds to pay the fee",
 			func() {
-				suite.app.BankKeeper.SetBalances(suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 149))) // TODO(fdymylja): IDK
+				err := simapp.FundAccount(suite.app, suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 149)))
+				suite.Require().NoError(err)
 			},
 			false,
 			false,
@@ -479,12 +482,14 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 		{
 			"signer as enough funds, should pass",
 			func() {
+				accNums = []uint64{7}
 				modAcc := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 
 				suite.Require().True(suite.app.BankKeeper.GetAllBalances(suite.ctx, modAcc.GetAddress()).Empty())
 				require.True(sdk.IntEq(suite.T(), suite.app.BankKeeper.GetAllBalances(suite.ctx, addr0).AmountOf("atom"), sdk.NewInt(149)))
 
-				suite.app.BankKeeper.SetBalances(suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 150))) // TODO(fdymylja): IDK
+				err := simapp.FundAccount(suite.app, suite.ctx, addr0, sdk.NewCoins(sdk.NewInt64Coin("atom", 1)))
+				suite.Require().NoError(err)
 			},
 			false,
 			true,

@@ -494,6 +494,8 @@
     - [MsgCreateVestingAccount](#cosmos.vesting.v1beta1.MsgCreateVestingAccount)
     - [MsgCreateVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse)
   
+    - [VestingAccountType](#cosmos.vesting.v1beta1.VestingAccountType)
+  
     - [Msg](#cosmos.vesting.v1beta1.Msg)
   
 - [cosmos/vesting/v1beta1/vesting.proto](#cosmos/vesting/v1beta1/vesting.proto)
@@ -502,6 +504,7 @@
     - [DelayedVestingAccount](#cosmos.vesting.v1beta1.DelayedVestingAccount)
     - [Period](#cosmos.vesting.v1beta1.Period)
     - [PeriodicVestingAccount](#cosmos.vesting.v1beta1.PeriodicVestingAccount)
+    - [PermanentLockedVestingAccount](#cosmos.vesting.v1beta1.PermanentLockedVestingAccount)
   
 - [ibc/applications/transfer/v1/transfer.proto](#ibc/applications/transfer/v1/transfer.proto)
     - [DenomTrace](#ibc.applications.transfer.v1.DenomTrace)
@@ -7175,7 +7178,7 @@ account.
 | `to_address` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 | `end_time` | [int64](#int64) |  |  |
-| `delayed` | [bool](#bool) |  |  |
+| `vesting_account_type` | [VestingAccountType](#cosmos.vesting.v1beta1.VestingAccountType) |  |  |
 
 
 
@@ -7192,6 +7195,19 @@ MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount response ty
 
 
  <!-- end messages -->
+
+
+<a name="cosmos.vesting.v1beta1.VestingAccountType"></a>
+
+### VestingAccountType
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| DELAYED_VESTING_ACCOUNT_TYPE | 0 |  |
+| CONTINUOUS_VESTING_ACCOUNT_TYPE | 1 |  |
+| PERMANENT_LOCKED_VESTING_ACCOUNT_TYPE | 2 |  |
+
 
  <!-- end enums -->
 
@@ -7300,6 +7316,23 @@ periodically vests by unlocking coins during each specified period.
 | `base_vesting_account` | [BaseVestingAccount](#cosmos.vesting.v1beta1.BaseVestingAccount) |  |  |
 | `start_time` | [int64](#int64) |  |  |
 | `vesting_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.vesting.v1beta1.PermanentLockedVestingAccount"></a>
+
+### PermanentLockedVestingAccount
+PermanentLockedVestingAccount implements the VestingAccount interface. It does
+not ever release coins, locking them indefinitely. Coins in this account can
+still be used for delegating and for governance votes even while locked.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `base_vesting_account` | [BaseVestingAccount](#cosmos.vesting.v1beta1.BaseVestingAccount) |  |  |
 
 
 

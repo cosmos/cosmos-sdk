@@ -12,13 +12,13 @@ var _ sdk.Msg = &MsgCreateVestingAccount{}
 
 // NewMsgCreateVestingAccount returns a reference to a new MsgCreateVestingAccount.
 //nolint:interfacer
-func NewMsgCreateVestingAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins, endTime int64, delayed bool) *MsgCreateVestingAccount {
+func NewMsgCreateVestingAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins, endTime int64, vestingAccountType VestingAccountType) *MsgCreateVestingAccount {
 	return &MsgCreateVestingAccount{
-		FromAddress: fromAddr.String(),
-		ToAddress:   toAddr.String(),
-		Amount:      amount,
-		EndTime:     endTime,
-		Delayed:     delayed,
+		FromAddress:        fromAddr.String(),
+		ToAddress:          toAddr.String(),
+		Amount:             amount,
+		EndTime:            endTime,
+		VestingAccountType: vestingAccountType,
 	}
 }
 

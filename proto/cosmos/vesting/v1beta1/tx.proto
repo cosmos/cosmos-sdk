@@ -24,8 +24,16 @@ message MsgCreateVestingAccount {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   int64 end_time = 4 [(gogoproto.moretags) = "yaml:\"end_time\""];
-  bool  delayed  = 5;
+
+  VestingAccountType vesting_account_type = 5 [(gogoproto.moretags) = "yaml:\"vesting_account_type\""];
+}
+
+enum VestingAccountType {
+  DELAYED_VESTING_ACCOUNT_TYPE = 0;
+  CONTINUOUS_VESTING_ACCOUNT_TYPE = 1;
+  PERMANENT_LOCKED_VESTING_ACCOUNT_TYPE = 2;
 }
 
 // MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount response type.
 message MsgCreateVestingAccountResponse {}
+

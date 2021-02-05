@@ -1,13 +1,13 @@
 package types
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	proto "github.com/gogo/protobuf/proto"
 )
 
 // NewVote creates a new Vote instance
@@ -62,16 +62,19 @@ func NewNonSplitVoteOption(option VoteOption) WeightedVoteOptions {
 }
 
 func (v WeightedVoteOption) String() string {
-	out, _ := json.Marshal(v)
+	out, _ := proto.Marshal(&v)
 	return string(out)
 }
 
 // WeightedVoteOptions describes array of WeightedVoteOptions
 type WeightedVoteOptions []WeightedVoteOption
 
-func (v WeightedVoteOptions) String() string {
-	out, _ := json.Marshal(v)
-	return string(out)
+func (v WeightedVoteOptions) String() (out string) {
+	for _, opt := range v {
+		out += opt.String() + "\n"
+	}
+
+	return strings.TrimSpace(out)
 }
 
 // ValidWeightedVoteOption returns true if the sub vote is valid and false otherwise.

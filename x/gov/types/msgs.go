@@ -258,6 +258,10 @@ func (msg MsgVoteWeighted) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidVote, "Total weight overflow 1.00")
 	}
 
+	if totalWeight.LT(sdk.NewDec(1)) {
+		return sdkerrors.Wrap(ErrInvalidVote, "Total weight lower than 1.00")
+	}
+
 	return nil
 }
 

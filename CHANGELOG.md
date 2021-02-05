@@ -38,6 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (x/gov) [\#7733](https://github.com/cosmos/cosmos-sdk/pull/7733) ADR 037 Implementation: Governance Split Votes
 * (x/bank) [\#8302](https://github.com/cosmos/cosmos-sdk/issues/8302) Add gRPC and CLI queries for client denomination metadata.
 * (tendermint) [\#8316](https://github.com/cosmos/cosmos-sdk/pull/8316) Bump Tendermint version to [v0.34.2](https://github.com/tendermint/tendermint/releases/tag/v0.34.2)
 

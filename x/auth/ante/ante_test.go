@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -76,7 +78,7 @@ func (suite *AnteTestSuite) TestSimulateGasCost() {
 
 // Test various error cases in the AnteHandler control flow.
 func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
-	suite.SetupTest(true) // reset
+	suite.SetupTest(false) // reset
 
 	// Same data for every test cases
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
@@ -137,7 +139,9 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 			func() {
 				acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr0)
 				suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
-				err := suite.app.BankKeeper.SetBalances(suite.ctx, addr0, feeAmount) // TODO(fdymylja): IDK
+				err := suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, feeAmount)
+				suite.Require().NoError(err)
+				err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addr0, feeAmount)
 				suite.Require().NoError(err)
 			},
 			false,

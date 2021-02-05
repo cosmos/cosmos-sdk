@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -155,7 +154,7 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			delValsRes, err := queryClient.DelegatorValidators(context.Background(), &types.QueryDelegatorValidatorsRequest{DelegatorAddress: delAddr.String()})
+			delValsRes, err := queryClient.DelegatorValidators(cmd.Context(), &types.QueryDelegatorValidatorsRequest{DelegatorAddress: delAddr.String()})
 			if err != nil {
 				return err
 			}

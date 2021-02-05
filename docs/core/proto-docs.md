@@ -260,10 +260,7 @@
   
 - [cosmos/authz/v1beta1/authz.proto](#cosmos/authz/v1beta1/authz.proto)
     - [AuthorizationGrant](#cosmos.authz.v1beta1.AuthorizationGrant)
-    - [DelegateAuthorization](#cosmos.authz.v1beta1.DelegateAuthorization)
     - [GenericAuthorization](#cosmos.authz.v1beta1.GenericAuthorization)
-    - [SendAuthorization](#cosmos.authz.v1beta1.SendAuthorization)
-    - [UndelegateAuthorization](#cosmos.authz.v1beta1.UndelegateAuthorization)
   
 - [cosmos/authz/v1beta1/query.proto](#cosmos/authz/v1beta1/query.proto)
     - [QueryAuthorizationRequest](#cosmos.authz.v1beta1.QueryAuthorizationRequest)
@@ -354,6 +351,7 @@
     - [DVPairs](#cosmos.staking.v1beta1.DVPairs)
     - [DVVTriplet](#cosmos.staking.v1beta1.DVVTriplet)
     - [DVVTriplets](#cosmos.staking.v1beta1.DVVTriplets)
+    - [DelegateAuthorization](#cosmos.staking.v1beta1.DelegateAuthorization)
     - [Delegation](#cosmos.staking.v1beta1.Delegation)
     - [DelegationResponse](#cosmos.staking.v1beta1.DelegationResponse)
     - [Description](#cosmos.staking.v1beta1.Description)
@@ -366,6 +364,7 @@
     - [RedelegationResponse](#cosmos.staking.v1beta1.RedelegationResponse)
     - [UnbondingDelegation](#cosmos.staking.v1beta1.UnbondingDelegation)
     - [UnbondingDelegationEntry](#cosmos.staking.v1beta1.UnbondingDelegationEntry)
+    - [UndelegateAuthorization](#cosmos.staking.v1beta1.UndelegateAuthorization)
     - [ValAddresses](#cosmos.staking.v1beta1.ValAddresses)
     - [Validator](#cosmos.staking.v1beta1.Validator)
   
@@ -520,6 +519,7 @@
     - [Metadata](#cosmos.bank.v1beta1.Metadata)
     - [Output](#cosmos.bank.v1beta1.Output)
     - [Params](#cosmos.bank.v1beta1.Params)
+    - [SendAuthorization](#cosmos.bank.v1beta1.SendAuthorization)
     - [SendEnabled](#cosmos.bank.v1beta1.SendEnabled)
     - [Supply](#cosmos.bank.v1beta1.Supply)
   
@@ -4293,24 +4293,6 @@ the provide method with expiration time.
 
 
 
-<a name="cosmos.authz.v1beta1.DelegateAuthorization"></a>
-
-### DelegateAuthorization
-DelegateAuthorization allows the grantee to delegate tokens to provided set of validators
-on behalf of the granter's account.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `allow_list` | [string](#string) | repeated | allow_list specifies list of validator addresses to whom grantee can delegate tokens on behalf of granter's account. |
-| `deny_list` | [string](#string) | repeated | deny_list specifies list of validator addresses to whom grantee can not delegate tokens. |
-| `max_tokens` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | max_tokens specifies the maximum amount of tokens can be delegate to a validator. If it is empty, there is no spend limit and any amount of coins can be delegated. |
-
-
-
-
-
-
 <a name="cosmos.authz.v1beta1.GenericAuthorization"></a>
 
 ### GenericAuthorization
@@ -4321,39 +4303,6 @@ the provided method on behalf of the granter's account.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `method_name` | [string](#string) |  | method name to grant unrestricted permissions to execute Note: MethodName() is already a method on `GenericAuthorization` type, we need some custom naming here so using `MessageName` |
-
-
-
-
-
-
-<a name="cosmos.authz.v1beta1.SendAuthorization"></a>
-
-### SendAuthorization
-SendAuthorization allows the grantee to spend up to spend_limit coins from
-the granter's account.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `spend_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.authz.v1beta1.UndelegateAuthorization"></a>
-
-### UndelegateAuthorization
-UndelegateAuthorization allows the grantee to un-delegate tokens from provided set of validators
-on behalf of the granter's account.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `validator_address` | [string](#string) | repeated | validator_address specifies list of validator addresses from whom grantee can un-delegate tokens on behalf of granter's account. |
-| `max_tokens` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | max_tokens specifies the maximum amount of tokens can be un-delegate from a validator. If it is empty, there is no spend limit and any amount of coins can be un-delegated. |
 
 
 
@@ -5503,6 +5452,24 @@ DVVTriplets defines an array of DVVTriplet objects.
 
 
 
+<a name="cosmos.staking.v1beta1.DelegateAuthorization"></a>
+
+### DelegateAuthorization
+DelegateAuthorization allows the grantee to delegate tokens to provided set of validators
+on behalf of the granter's account.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `allow_list` | [string](#string) | repeated | allow_list specifies list of validator addresses to whom grantee can delegate tokens on behalf of granter's account. |
+| `deny_list` | [string](#string) | repeated | deny_list specifies list of validator addresses to whom grantee can not delegate tokens. |
+| `max_tokens` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | max_tokens specifies the maximum amount of tokens can be delegate to a validator. If it is empty, there is no spend limit and any amount of coins can be delegated. |
+
+
+
+
+
+
 <a name="cosmos.staking.v1beta1.Delegation"></a>
 
 ### Delegation
@@ -5720,6 +5687,23 @@ UnbondingDelegationEntry defines an unbonding object with relevant metadata.
 | `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | completion_time is the unix time for unbonding completion. |
 | `initial_balance` | [string](#string) |  | initial_balance defines the tokens initially scheduled to receive at completion. |
 | `balance` | [string](#string) |  | balance defines the tokens to receive at completion. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.UndelegateAuthorization"></a>
+
+### UndelegateAuthorization
+UndelegateAuthorization allows the grantee to un-delegate tokens from provided set of validators
+on behalf of the granter's account.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `validator_address` | [string](#string) | repeated | validator_address specifies list of validator addresses from whom grantee can un-delegate tokens on behalf of granter's account. |
+| `max_tokens` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | max_tokens specifies the maximum amount of tokens can be un-delegate from a validator. If it is empty, there is no spend limit and any amount of coins can be un-delegated. |
 
 
 
@@ -7843,6 +7827,22 @@ Params defines the parameters for the bank module.
 | ----- | ---- | ----- | ----------- |
 | `send_enabled` | [SendEnabled](#cosmos.bank.v1beta1.SendEnabled) | repeated |  |
 | `default_send_enabled` | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.SendAuthorization"></a>
+
+### SendAuthorization
+SendAuthorization allows the grantee to spend up to spend_limit coins from
+the granter's account.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `spend_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
 
 

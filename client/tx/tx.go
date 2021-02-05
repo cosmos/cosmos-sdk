@@ -56,7 +56,7 @@ func GenerateTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		}
 
 		txf = txf.WithGas(adjusted)
-		_, _ = fmt.Fprintf(os.Stderr, "%s\n", GasEstimateResponse{GasEstimate: txf.Gas()})
+		_, _ = fmt.Fprintf(clientCtx.Output, "%s\n", GasEstimateResponse{GasEstimate: txf.Gas()})
 	}
 
 	tx, err := BuildUnsignedTx(txf, msgs...)
@@ -88,7 +88,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		}
 
 		txf = txf.WithGas(adjusted)
-		_, _ = fmt.Fprintf(os.Stderr, "%s\n", GasEstimateResponse{GasEstimate: txf.Gas()})
+		_, _ = fmt.Fprintf(clientCtx.Output, "%s\n", GasEstimateResponse{GasEstimate: txf.Gas()})
 	}
 
 	if clientCtx.Simulate {

@@ -119,4 +119,5 @@ func (k Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 
 	k.slashingKeeper.JailUntil(ctx, consAddr, types.DoubleSignJailEndTime)
 	k.slashingKeeper.Tombstone(ctx, consAddr)
+	k.SetEvidence(ctx, evidence)
 }

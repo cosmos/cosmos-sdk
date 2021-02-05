@@ -1,13 +1,12 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
-	yaml "gopkg.in/yaml.v2"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	proto "github.com/gogo/protobuf/proto"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // NewVote creates a new Vote instance
@@ -62,7 +61,7 @@ func NewNonSplitVoteOption(option VoteOption) WeightedVoteOptions {
 }
 
 func (v WeightedVoteOption) String() string {
-	out, _ := proto.Marshal(&v)
+	out, _ := json.Marshal(v)
 	return string(out)
 }
 

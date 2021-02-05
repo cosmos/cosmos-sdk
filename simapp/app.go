@@ -603,8 +603,7 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 }
 
 // RunMigrations performs in-place store migrations for all modules. This
-// function is not called automatically, it is meant to be called from an
-// x/upgrade UpgradeHandler.
+// function MUST be only called by x/upgrade UpgradeHandler.
 //
 // `migrationsMap` is a map of moduleName to fromVersion (unit64), where
 // fromVersion denotes the version from which we should migrate the module, the

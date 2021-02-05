@@ -153,18 +153,18 @@ func delegatorTxsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		switch {
 		case isBondTx:
-			actions = append(actions, types.MsgDelegate{}.Type())
+			actions = append(actions, types.TypeSvcMsgDelegate)
 
 		case isUnbondTx:
-			actions = append(actions, types.MsgUndelegate{}.Type())
+			actions = append(actions, types.TypeSvcMsgUndelegate)
 
 		case isRedTx:
-			actions = append(actions, types.MsgBeginRedelegate{}.Type())
+			actions = append(actions, types.TypeSvcMsgBeginRedelegate)
 
 		case noQuery:
-			actions = append(actions, types.MsgDelegate{}.Type())
-			actions = append(actions, types.MsgUndelegate{}.Type())
-			actions = append(actions, types.MsgBeginRedelegate{}.Type())
+			actions = append(actions, types.TypeSvcMsgDelegate)
+			actions = append(actions, types.TypeSvcMsgUndelegate)
+			actions = append(actions, types.TypeSvcMsgBeginRedelegate)
 
 		default:
 			w.WriteHeader(http.StatusNoContent)

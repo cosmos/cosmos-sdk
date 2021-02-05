@@ -18,9 +18,9 @@ The staking module emits the following events:
 | complete_redelegation | destination_validator | {dstValidatorAddress}     |
 | complete_redelegation | delegator             | {delegatorAddress}        |
 
-## Handlers
+## Service Messages
 
-### MsgCreateValidator
+### Msg/CreateValidator
 
 | Type             | Attribute Key | Attribute Value    |
 | ---------------- | ------------- | ------------------ |
@@ -30,7 +30,7 @@ The staking module emits the following events:
 | message          | action        | create_validator   |
 | message          | sender        | {senderAddress}    |
 
-### MsgEditValidator
+### Msg/EditValidator
 
 | Type           | Attribute Key       | Attribute Value     |
 | -------------- | ------------------- | ------------------- |
@@ -40,7 +40,7 @@ The staking module emits the following events:
 | message        | action              | edit_validator      |
 | message        | sender              | {senderAddress}     |
 
-### MsgDelegate
+### Msg/Delegate
 
 | Type     | Attribute Key | Attribute Value    |
 | -------- | ------------- | ------------------ |
@@ -50,7 +50,7 @@ The staking module emits the following events:
 | message  | action        | delegate           |
 | message  | sender        | {senderAddress}    |
 
-### MsgUndelegate
+### Msg/Undelegate
 
 | Type    | Attribute Key       | Attribute Value    |
 | ------- | ------------------- | ------------------ |
@@ -61,9 +61,9 @@ The staking module emits the following events:
 | message | action              | begin_unbonding    |
 | message | sender              | {senderAddress}    |
 
-* [0] Time is formatted in the RFC3339 standard
+- [0] Time is formatted in the RFC3339 standard
 
-### MsgBeginRedelegate
+### Msg/BeginRedelegate
 
 | Type       | Attribute Key         | Attribute Value       |
 | ---------- | --------------------- | --------------------- |
@@ -75,4 +75,4 @@ The staking module emits the following events:
 | message    | action                | begin_redelegate      |
 | message    | sender                | {senderAddress}       |
 
-* [0] Time is formatted in the RFC3339 standard
+- [0] Time is formatted in the RFC3339 standard

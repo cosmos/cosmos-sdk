@@ -556,6 +556,7 @@ func TestIAVLStoreQuery(t *testing.T) {
 }
 
 func BenchmarkIAVLIteratorNext(b *testing.B) {
+	b.ReportAllocs()
 	db := dbm.NewMemDB()
 	treeSize := 1000
 	tree, err := iavl.NewMutableTree(db, cacheSize)

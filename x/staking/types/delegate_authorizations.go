@@ -7,11 +7,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
+	authz "github.com/cosmos/cosmos-sdk/x/authz/exported"
 )
 
 var (
-	_ Authorization = &DelegateAuthorization{}
+	_ authz.Authorization = &DelegateAuthorization{}
 )
 
 // NewDelegateAuthorization creates a new DelegateAuthorization object.
@@ -42,9 +42,9 @@ func (authorization DelegateAuthorization) MethodName() string {
 }
 
 // Accept implements Authorization.Accept.
-func (authorization DelegateAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (updated Authorization, delete bool, err error) {
-	if reflect.TypeOf(msg.Request) == reflect.TypeOf(&staking.MsgDelegate{}) {
-		msg, ok := msg.Request.(*staking.MsgDelegate)
+func (authorization DelegateAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (updated authz.Authorization, delete bool, err error) {
+	if reflect.TypeOf(msg.Request) == reflect.TypeOf(&MsgDelegate{}) {
+		msg, ok := msg.Request.(*MsgDelegate)
 		if ok {
 
 			for _, validator := range authorization.DenyList {

@@ -97,7 +97,7 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 
 		blockTime := ctx.BlockTime()
 		msg, err := types.NewMsgGrantAuthorization(granter.Address, grantee.Address,
-			types.NewSendAuthorization(spendableCoins.Sub(fees)), blockTime.AddDate(1, 0, 0))
+			banktype.NewSendAuthorization(spendableCoins.Sub(fees)), blockTime.AddDate(1, 0, 0))
 
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantAuthorization, err.Error()), nil, err
@@ -239,7 +239,7 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 		sendCoins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)))
 
 		execMsg := sdk.ServiceMsg{
-			MethodName: types.SendAuthorization{}.MethodName(),
+			MethodName: banktype.SendAuthorization{}.MethodName(),
 			Request: banktype.NewMsgSend(
 				granterAddr,
 				granteeAddr,
@@ -248,7 +248,7 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 		}
 
 		msg := types.NewMsgExecAuthorized(grantee.Address, []sdk.ServiceMsg{execMsg})
-		sendGrant := targetGrant.Authorization.GetCachedValue().(*types.SendAuthorization)
+		sendGrant := targetGrant.Authorization.GetCachedValue().(*banktype.SendAuthorization)
 		_, _, err = sendGrant.Accept(execMsg, ctx.BlockHeader())
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecDelegated, err.Error()), nil, nil

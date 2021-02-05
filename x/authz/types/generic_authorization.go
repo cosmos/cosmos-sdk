@@ -4,10 +4,11 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz/exported"
 )
 
 var (
-	_ Authorization = &GenericAuthorization{}
+	_ exported.Authorization = &GenericAuthorization{}
 )
 
 // NewGenericAuthorization creates a new GenericAuthorization object.
@@ -23,6 +24,6 @@ func (cap GenericAuthorization) MethodName() string {
 }
 
 // Accept implements Authorization.Accept.
-func (cap GenericAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (updated Authorization, delete bool, err error) {
+func (cap GenericAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (updated exported.Authorization, delete bool, err error) {
 	return &cap, false, nil
 }

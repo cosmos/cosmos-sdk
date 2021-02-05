@@ -1,5 +1,3 @@
-// +build norace
-
 package cli_test
 
 import (
@@ -25,9 +23,10 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 
-	"github.com/cosmos/cosmos-sdk/x/authz/types"
+	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type IntegrationTestSuite struct {
@@ -81,7 +80,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-var typeMsgSend = types.SendAuthorization{}.MethodName()
+var typeMsgSend = bank.SendAuthorization{}.MethodName()
 var typeMsgVote = "/cosmos.gov.v1beta1.Msg/Vote"
 
 func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
@@ -205,7 +204,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 		tc := tc
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
-			out, err := execGrantAuthorization(
+			out, err := authztestutil.ExecGrantAuthorization(
 				val,
 				tc.args,
 			)
@@ -221,12 +220,6 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	}
 }
 
-func execGrantAuthorization(val *network.Validator, args []string) (testutil.BufferWriter, error) {
-	cmd := cli.NewCmdGrantAuthorization()
-	clientCtx := val.ClientCtx
-	return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-}
-
 func execDelegate(val *network.Validator, args []string) (testutil.BufferWriter, error) {
 	cmd := stakingcli.NewDelegateCmd()
 	clientCtx := val.ClientCtx
@@ -240,7 +233,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	// send-authorization
-	_, err := execGrantAuthorization(
+	_, err := authztestutil.ExecGrantAuthorization(
 		val,
 		[]string{
 			grantee.String(),
@@ -256,7 +249,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 	s.Require().NoError(err)
 
 	// generic-authorization
-	_, err = execGrantAuthorization(
+	_, err = authztestutil.ExecGrantAuthorization(
 		val,
 		[]string{
 			grantee.String(),
@@ -354,7 +347,7 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 	grantee := s.grantee
 	tenSeconds := time.Now().Add(time.Second * time.Duration(10)).Unix()
 
-	_, err := execGrantAuthorization(
+	_, err := authztestutil.ExecGrantAuthorization(
 		val,
 		[]string{
 			grantee.String(),
@@ -394,7 +387,7 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 	grantee := s.grantee
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := execGrantAuthorization(
+	_, err := authztestutil.ExecGrantAuthorization(
 		val,
 		[]string{
 			grantee.String(),
@@ -483,7 +476,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 	grantee := s.grantee
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := execGrantAuthorization(
+	_, err := authztestutil.ExecGrantAuthorization(
 		val,
 		[]string{
 			grantee.String(),
@@ -581,7 +574,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 	grantee := s.grantee
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := execGrantAuthorization(
+	_, err := authztestutil.ExecGrantAuthorization(
 		val,
 		[]string{
 			grantee.String(),
@@ -702,7 +695,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 		})
 	}
 
-	_, err = execGrantAuthorization(
+	_, err = authztestutil.ExecGrantAuthorization(
 		val,
 		[]string{
 			grantee.String(),
@@ -781,7 +774,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 		})
 	}
 
-	_, err = execGrantAuthorization(
+	_, err = authztestutil.ExecGrantAuthorization(
 		val,
 		[]string{
 			grantee.String(),
@@ -817,7 +810,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 	grantee := s.grantee
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := execGrantAuthorization(
+	_, err := authztestutil.ExecGrantAuthorization(
 		val,
 		[]string{
 			grantee.String(),
@@ -954,7 +947,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 	}
 
 	// grant undelegate authorization without limit
-	_, err = execGrantAuthorization(
+	_, err = authztestutil.ExecGrantAuthorization(
 		val,
 		[]string{
 			grantee.String(),

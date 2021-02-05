@@ -6,7 +6,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/authz/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 )
@@ -23,7 +22,7 @@ var (
 func TestUndelegateAuthorizations(t *testing.T) {
 
 	// verify MethodName
-	undelAuth := types.NewUndelegateAuthorization([]sdk.ValAddress{val1, val2}, &coin100)
+	undelAuth := stakingtypes.NewUndelegateAuthorization([]sdk.ValAddress{val1, val2}, &coin100)
 	require.Equal(t, undelAuth.MethodName(), "/cosmos.staking.v1beta1.Msg/Undelegate")
 
 	testCases := []struct {
@@ -33,7 +32,7 @@ func TestUndelegateAuthorizations(t *testing.T) {
 		srvMsg               sdk.ServiceMsg
 		expectErr            bool
 		isDelete             bool
-		updatedAuthorization *types.UndelegateAuthorization
+		updatedAuthorization *stakingtypes.UndelegateAuthorization
 	}{
 		{
 			"expect 0 remaining coins",
@@ -51,7 +50,7 @@ func TestUndelegateAuthorizations(t *testing.T) {
 			createSrvMsgUndelegate(undelAuth.MethodName(), delAddr, val1, coin50),
 			false,
 			false,
-			&types.UndelegateAuthorization{ValidatorAddress: []string{val1.String(), val2.String()}, MaxTokens: &coin50},
+			&stakingtypes.UndelegateAuthorization{ValidatorAddress: []string{val1.String(), val2.String()}, MaxTokens: &coin50},
 		},
 		{
 			"testing with invalid validator",
@@ -69,14 +68,14 @@ func TestUndelegateAuthorizations(t *testing.T) {
 			createSrvMsgUndelegate(undelAuth.MethodName(), delAddr, val2, coin100),
 			false,
 			false,
-			&types.UndelegateAuthorization{ValidatorAddress: []string{val1.String(), val2.String()}, MaxTokens: nil},
+			&stakingtypes.UndelegateAuthorization{ValidatorAddress: []string{val1.String(), val2.String()}, MaxTokens: nil},
 		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.msg, func(t *testing.T) {
-			undelAuth = types.NewUndelegateAuthorization(tc.validators, tc.limit)
+			undelAuth = stakingtypes.NewUndelegateAuthorization(tc.validators, tc.limit)
 			updated, del, err := undelAuth.Accept(tc.srvMsg, tmproto.Header{})
 			if tc.expectErr {
 				require.Error(t, err)

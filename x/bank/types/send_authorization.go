@@ -7,11 +7,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+	authz "github.com/cosmos/cosmos-sdk/x/authz/exported"
 )
 
 var (
-	_ Authorization = &SendAuthorization{}
+	_ authz.Authorization = &SendAuthorization{}
 )
 
 // NewSendAuthorization creates a new SendAuthorization object.
@@ -27,9 +27,9 @@ func (authorization SendAuthorization) MethodName() string {
 }
 
 // Accept implements Authorization.Accept.
-func (authorization SendAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (updated Authorization, delete bool, err error) {
-	if reflect.TypeOf(msg.Request) == reflect.TypeOf(&bank.MsgSend{}) {
-		msg, ok := msg.Request.(*bank.MsgSend)
+func (authorization SendAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (updated authz.Authorization, delete bool, err error) {
+	if reflect.TypeOf(msg.Request) == reflect.TypeOf(&MsgSend{}) {
+		msg, ok := msg.Request.(*MsgSend)
 		if ok {
 			limitLeft, isNegative := authorization.SpendLimit.SafeSub(msg.Amount)
 			if isNegative {

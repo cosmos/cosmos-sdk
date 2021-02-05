@@ -7,11 +7,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
+	authz "github.com/cosmos/cosmos-sdk/x/authz/exported"
 )
 
 var (
-	_ Authorization = &UndelegateAuthorization{}
+	_ authz.Authorization = &UndelegateAuthorization{}
 )
 
 // NewUndelegateAuthorization creates a new UndlegateAuthorization object.
@@ -37,9 +37,9 @@ func (authorization UndelegateAuthorization) MethodName() string {
 }
 
 // Accept implements Authorization.Accept.
-func (authorization UndelegateAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (updated Authorization, delete bool, err error) {
-	if reflect.TypeOf(msg.Request) == reflect.TypeOf(&staking.MsgUndelegate{}) {
-		msg, ok := msg.Request.(*staking.MsgUndelegate)
+func (authorization UndelegateAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (updated authz.Authorization, delete bool, err error) {
+	if reflect.TypeOf(msg.Request) == reflect.TypeOf(&MsgUndelegate{}) {
+		msg, ok := msg.Request.(*MsgUndelegate)
 		if ok {
 			isValidatorExists := false
 

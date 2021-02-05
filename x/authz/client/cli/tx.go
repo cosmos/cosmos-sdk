@@ -16,7 +16,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/x/authz/exported"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const FlagSpendLimit = "spend-limit"
@@ -56,7 +59,7 @@ func NewCmdGrantAuthorization() *cobra.Command {
 Examples:
  $ %s tx %s grant cosmos1skjw.. send %s --spend-limit=1000stake --from=cosmos1skl..
  $ %s tx %s grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1beta1.Msg/Vote --from=cosmos1sk..
-	`, version.AppName, types.ModuleName, types.SendAuthorization{}.MethodName(), version.AppName, types.ModuleName),
+	`, version.AppName, types.ModuleName, bank.SendAuthorization{}.MethodName(), version.AppName, types.ModuleName),
 		),
 		Args: cobra.RangeArgs(2, 3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -69,7 +72,7 @@ Examples:
 				return err
 			}
 
-			var authorization types.Authorization
+			var authorization exported.Authorization
 			switch args[1] {
 			case "send":
 				limit, err := cmd.Flags().GetString(FlagSpendLimit)
@@ -86,7 +89,7 @@ Examples:
 					return fmt.Errorf("spend-limit should be greater than zero")
 				}
 
-				authorization = &types.SendAuthorization{
+				authorization = &bank.SendAuthorization{
 					SpendLimit: spendLimit,
 				}
 			case "generic":
@@ -134,15 +137,15 @@ Examples:
 						return fmt.Errorf("spend-limit should be greater than zero")
 					}
 					if args[1] == delegate {
-						authorization = types.NewDelegateAuthorization(allowedValidators, deniedValidators, &spendLimit[0])
+						authorization = staking.NewDelegateAuthorization(allowedValidators, deniedValidators, &spendLimit[0])
 					} else {
-						authorization = types.NewUndelegateAuthorization(allowedValidators, &spendLimit[0])
+						authorization = staking.NewUndelegateAuthorization(allowedValidators, &spendLimit[0])
 					}
 				} else {
 					if args[1] == delegate {
-						authorization = types.NewDelegateAuthorization(allowedValidators, deniedValidators, nil)
+						authorization = staking.NewDelegateAuthorization(allowedValidators, deniedValidators, nil)
 					} else {
-						authorization = types.NewUndelegateAuthorization(allowedValidators, nil)
+						authorization = staking.NewUndelegateAuthorization(allowedValidators, nil)
 					}
 				}
 			default:
@@ -186,7 +189,7 @@ func NewCmdRevokeAuthorization() *cobra.Command {
 			fmt.Sprintf(`revoke authorization from a granter to a grantee:
 Example:
  $ %s tx %s revoke cosmos1skj.. %s --from=cosmos1skj..
-			`, version.AppName, types.ModuleName, types.SendAuthorization{}.MethodName()),
+			`, version.AppName, types.ModuleName, bank.SendAuthorization{}.MethodName()),
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {

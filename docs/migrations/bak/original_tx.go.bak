@@ -1,0 +1,90 @@
+package bak
+
+import (
+	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/types"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"io/ioutil"
+	"net/http"
+)
+
+type BankSendBody struct {
+	AccountNumber uint64           `json:"accountNumber"`
+	Sequence      uint64           `json:"sequence"`
+	Sender        types.AccAddress `json:"sender"`
+	Receiver      types.AccAddress `json:"receiver"`
+	Amount        int64            `json:"amount"`
+	ChainID       string           `json:"chainId"`
+	Memo          string           `json:"memo,omitempty"`
+	Fee           int64            `json:"fees,omitempty"`
+	GasAdjustment string           `json:"gasAdjustment,omitempty"`
+}
+
+func (sdk *CosmosSdkApi) Send(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("%s - %s\n", r.Method, r.URL.Path)
+
+	cfg := simapp.MakeTestEncodingConfig().TxConfig
+	var bsb BankSendBody
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, errors.Wrap(err, "send:ioutil.ReadAll").Error(), 500)
+		return
+	}
+
+	if err := json.Unmarshal(body, &bsb); err != nil {
+		http.Error(w, errors.Wrap(err, "send:json.Unmarshal").Error(), 500)
+		return
+	}
+
+	info, err := sdk.keyring.KeyByAddress(bsb.Sender)
+	if err != nil {
+		http.Error(w, errors.Wrap(err, "sdk.keyring.KeyByAddress").Error(), 500)
+		return
+	}
+
+	txfNoKeybase := tx.Factory{}.
+		WithTxConfig(cfg).
+		WithAccountNumber(bsb.AccountNumber).
+		WithSequence(bsb.Sequence).
+		WithFees(fmt.Sprintf("%d%s", bsb.Fee, sdk.Config.Denom)).
+		WithMemo(bsb.Memo).
+		WithGas(uint64(sdk.Config.GasFee)).
+		WithGasAdjustment(sdk.Config.GasAdjustment).
+		WithChainID(bsb.ChainID)
+
+	txfDirect := txfNoKeybase.
+		WithKeybase(sdk.keyring).
+		WithSignMode(signingtypes.SignMode_SIGN_MODE_DIRECT)
+
+	txfAmino := txfDirect.
+		WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+
+	msg := banktypes.NewMsgSend(info.GetAddress(), cosmossdk.AccAddress(bsb.Receiver), nil)
+	// pubKey := info.GetPubKey()
+
+	txb, err := tx.BuildUnsignedTx(txfNoKeybase, msg)
+	if err != nil {
+		http.Error(w, errors.Wrap(err, "sdk.tx.BuildUnsignedTx").Error(), 500)
+		return
+	}
+
+	if err = tx.Sign(txfAmino, bsb.Sender.String(), txb, true); err != nil {
+		http.Error(w, errors.Wrap(err, "sdk.tx.Sign").Error(), 500)
+		return
+	}
+
+	stx := txb.GetTx()
+	log.Printf("stx: %+v\n", stx)
+	sigs, err := stx.GetSignaturesV2()
+	if err != nil {
+		http.Error(w, errors.Wrap(err, "sdk.stx.GetSignaturesV2").Error(), 500)
+		return
+	}
+
+	for _, sig := range sigs {
+		fmt.Printf("sig: %+v\n", sig)
+	}
+}

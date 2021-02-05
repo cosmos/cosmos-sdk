@@ -22,7 +22,8 @@ import (
 const FlagSpendLimit = "spend-limit"
 const FlagMsgType = "msg-type"
 const FlagExpiration = "expiration"
-const FlagValidators = "validators"
+const FlagAllowedValidators = "allowed-validators"
+const FlagDenyValidators = "deny-validators"
 const delegate = "delegate"
 
 // GetTxCmd returns the transaction commands for this module
@@ -101,23 +102,26 @@ Examples:
 					return err
 				}
 
-				validatorsString, err := cmd.Flags().GetString(FlagValidators)
+				var allowedValidators []sdk.ValAddress
+				allowedRaw, err := cmd.Flags().GetString(FlagAllowedValidators)
+				if err != nil {
+					return err
+				}
+				allowedValidators, err = parseValidators(allowedRaw)
 				if err != nil {
 					return err
 				}
 
-				validators := strings.Split(validatorsString, ",")
-				if len(validators) == 0 {
-					return fmt.Errorf("validator set cannot be empty")
+				var deniedValidators []sdk.ValAddress
+				denyRaw, err := cmd.Flags().GetString(FlagDenyValidators)
+				if err != nil {
+					return err
 				}
-
-				var vals []sdk.ValAddress
-				for _, validator := range validators {
-					addr, err := sdk.ValAddressFromBech32(validator)
+				if denyRaw != "" {
+					deniedValidators, err = parseValidators(denyRaw)
 					if err != nil {
 						return err
 					}
-					vals = append(vals, addr)
 				}
 
 				if limit != "" {
@@ -130,15 +134,15 @@ Examples:
 						return fmt.Errorf("spend-limit should be greater than zero")
 					}
 					if args[1] == delegate {
-						authorization = types.NewDelegateAuthorization(vals, &spendLimit[0])
+						authorization = types.NewDelegateAuthorization(allowedValidators, deniedValidators, &spendLimit[0])
 					} else {
-						authorization = types.NewUndelegateAuthorization(vals, &spendLimit[0])
+						authorization = types.NewUndelegateAuthorization(allowedValidators, &spendLimit[0])
 					}
 				} else {
 					if args[1] == delegate {
-						authorization = types.NewDelegateAuthorization(vals, nil)
+						authorization = types.NewDelegateAuthorization(allowedValidators, deniedValidators, nil)
 					} else {
-						authorization = types.NewUndelegateAuthorization(vals, nil)
+						authorization = types.NewUndelegateAuthorization(allowedValidators, nil)
 					}
 				}
 			default:
@@ -168,7 +172,8 @@ Examples:
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(FlagMsgType, "", "The Msg method name for which we are creating a GenericAuthorization")
 	cmd.Flags().String(FlagSpendLimit, "", "SpendLimit for Send Authorization, an array of Coins allowed spend")
-	cmd.Flags().String(FlagValidators, "", "Validators addresses separated by ,")
+	cmd.Flags().String(FlagAllowedValidators, "", "Allowed validators addresses separated by ,")
+	cmd.Flags().String(FlagDenyValidators, "", "Deny validators addresses separated by ,")
 	cmd.Flags().Int64(FlagExpiration, time.Now().AddDate(1, 0, 0).Unix(), "The Unix timestamp. Default is one year.")
 	return cmd
 }
@@ -268,4 +273,21 @@ Example:
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
+}
+
+func parseValidators(rawAddrs string) ([]sdk.ValAddress, error) {
+	validators := strings.Split(rawAddrs, ",")
+	if len(validators) == 0 {
+		return nil, fmt.Errorf("validator set cannot be empty")
+	}
+
+	vals := make([]sdk.ValAddress, len(validators))
+	for i, validator := range validators {
+		addr, err := sdk.ValAddressFromBech32(validator)
+		if err != nil {
+			return nil, err
+		}
+		vals[i] = addr
+	}
+	return vals, nil
 }

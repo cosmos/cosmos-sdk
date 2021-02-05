@@ -15,20 +15,25 @@ var (
 )
 
 // NewDelegateAuthorization creates a new DelegateAuthorization object.
-func NewDelegateAuthorization(validatorsAddr []sdk.ValAddress, amount *sdk.Coin) *DelegateAuthorization {
-	validators := make([]string, len(validatorsAddr))
-	for i, validator := range validatorsAddr {
-		validators[i] = validator.String()
+func NewDelegateAuthorization(allowed []sdk.ValAddress, denied []sdk.ValAddress, amount *sdk.Coin) *DelegateAuthorization {
+	allowedValidators := make([]string, len(allowed))
+	authorization := DelegateAuthorization{}
+	for i, validator := range allowed {
+		allowedValidators[i] = validator.String()
 	}
-	authorization := &DelegateAuthorization{
-		ValidatorAddress: validators,
+	authorization.AllowList = allowedValidators
+
+	deniedValidators := make([]string, len(denied))
+	for i, validator := range denied {
+		deniedValidators[i] = validator.String()
 	}
+	authorization.DenyList = deniedValidators
 
 	if amount != nil {
 		authorization.MaxTokens = amount
 	}
 
-	return authorization
+	return &authorization
 }
 
 // MethodName implements Authorization.MethodName.
@@ -41,9 +46,15 @@ func (authorization DelegateAuthorization) Accept(msg sdk.ServiceMsg, block tmpr
 	if reflect.TypeOf(msg.Request) == reflect.TypeOf(&staking.MsgDelegate{}) {
 		msg, ok := msg.Request.(*staking.MsgDelegate)
 		if ok {
-			isValidatorExists := false
 
-			for _, validator := range authorization.ValidatorAddress {
+			for _, validator := range authorization.DenyList {
+				if validator == msg.ValidatorAddress {
+					return nil, false, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, " cannot delegate to %s validator", validator)
+				}
+			}
+
+			isValidatorExists := false
+			for _, validator := range authorization.AllowList {
 				if validator == msg.ValidatorAddress {
 					isValidatorExists = true
 					break
@@ -55,7 +66,7 @@ func (authorization DelegateAuthorization) Accept(msg sdk.ServiceMsg, block tmpr
 			}
 
 			if authorization.MaxTokens == nil {
-				return &DelegateAuthorization{ValidatorAddress: authorization.ValidatorAddress}, false, nil
+				return &DelegateAuthorization{AllowList: authorization.AllowList, DenyList: authorization.DenyList}, false, nil
 			}
 
 			limitLeft := authorization.MaxTokens.Sub(msg.Amount)
@@ -63,7 +74,7 @@ func (authorization DelegateAuthorization) Accept(msg sdk.ServiceMsg, block tmpr
 				return nil, true, nil
 			}
 
-			return &DelegateAuthorization{ValidatorAddress: authorization.ValidatorAddress, MaxTokens: &limitLeft}, false, nil
+			return &DelegateAuthorization{AllowList: authorization.AllowList, DenyList: authorization.DenyList, MaxTokens: &limitLeft}, false, nil
 		}
 	}
 

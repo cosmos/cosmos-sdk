@@ -154,6 +154,22 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			false,
 		},
 		{
+			"valid tx delegate authorization",
+			[]string{
+				grantee.String(),
+				"delegate",
+				fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+				fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, fmt.Sprintf("%s", val.ValAddress.String())),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			&sdk.TxResponse{}, 0,
+			false,
+		},
+		{
 			"Valid tx send authorization",
 			[]string{
 				grantee.String(),
@@ -575,7 +591,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", cli.FlagValidators, fmt.Sprintf("%s", val.ValAddress.String())),
+			fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, fmt.Sprintf("%s", val.ValAddress.String())),
 			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		},
 	)
@@ -695,7 +711,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", cli.FlagValidators, fmt.Sprintf("%s", val.ValAddress.String())),
+			fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, fmt.Sprintf("%s", val.ValAddress.String())),
 			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		},
 	)
@@ -764,6 +780,36 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 			}
 		})
 	}
+
+	_, err = execGrantAuthorization(
+		val,
+		[]string{
+			grantee.String(),
+			"delegate",
+			fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+			fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, fmt.Sprintf("%s", val.ValAddress.String())),
+			fmt.Sprintf("--%s=%s", cli.FlagDenyValidators, fmt.Sprintf("%s", val.ValAddress.String())),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		},
+	)
+	s.Require().NoError(err)
+
+	args := []string{
+		execMsg.Name(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+	}
+	cmd := cli.NewCmdExecAuthorization()
+	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
+	s.Require().NoError(err)
+	s.Contains(out.String(), fmt.Sprintf("cannot delegate to %s validator", val.ValAddress.String()))
+
 }
 
 func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
@@ -781,7 +827,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", cli.FlagValidators, fmt.Sprintf("%s", val.ValAddress.String())),
+			fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, fmt.Sprintf("%s", val.ValAddress.String())),
 			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		},
 	)
@@ -917,7 +963,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", cli.FlagValidators, fmt.Sprintf("%s", val.ValAddress.String())),
+			fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, fmt.Sprintf("%s", val.ValAddress.String())),
 			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		},
 	)

@@ -23,7 +23,7 @@ import (
 
 // Test that simulate transaction accurately estimates gas cost
 func (suite *AnteTestSuite) TestSimulateGasCost() {
-	suite.SetupTest(true) // reset
+	suite.SetupTest(false) // reset
 
 	// Same data for every test cases
 	accounts := suite.CreateTestAccounts(3)
@@ -960,7 +960,7 @@ func TestCountSubkeys(t *testing.T) {
 }
 
 func (suite *AnteTestSuite) TestAnteHandlerSigLimitExceeded() {
-	suite.SetupTest(true) // setup
+	suite.SetupTest(false) // setup
 
 	// Same data for every test cases
 	accounts := suite.CreateTestAccounts(8)
@@ -997,7 +997,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSigLimitExceeded() {
 
 // Test custom SignatureVerificationGasConsumer
 func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
-	suite.SetupTest(true) // setup
+	suite.SetupTest(false) // setup
 
 	// setup an ante handler that only accepts PubKeyEd25519
 	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error {
@@ -1047,7 +1047,7 @@ func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
 }
 
 func (suite *AnteTestSuite) TestAnteHandlerReCheck() {
-	suite.SetupTest(true) // setup
+	suite.SetupTest(false) // setup
 	// Set recheck=true
 	suite.ctx = suite.ctx.WithIsReCheckTx(true)
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()

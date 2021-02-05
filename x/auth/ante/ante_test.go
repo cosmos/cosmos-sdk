@@ -1129,7 +1129,9 @@ func (suite *AnteTestSuite) TestAnteHandlerReCheck() {
 
 	// remove funds for account so antehandler fails on recheck
 	suite.app.AccountKeeper.SetAccount(suite.ctx, accounts[0].acc)
-	suite.app.BankKeeper.SetBalances(suite.ctx, accounts[0].acc.GetAddress(), sdk.NewCoins()) // TODO(fdymylja): IDK
+	balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, accounts[0].acc.GetAddress())
+	err = suite.app.BankKeeper.SendCoinsFromAccountToModule(suite.ctx, accounts[0].acc.GetAddress(), minttypes.ModuleName, balances)
+	suite.Require().NoError(err)
 
 	_, err = suite.anteHandler(suite.ctx, tx, false)
 	suite.Require().NotNil(err, "antehandler on recheck did not fail once feePayer no longer has sufficient funds")

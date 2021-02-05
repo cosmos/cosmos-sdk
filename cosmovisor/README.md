@@ -1,5 +1,7 @@
 # Cosmovisor
 
+Cosmovisor is a binary that runs in parallel to your node and monitors the governance module to see if there's a chain upgrade proposal coming in. If it see a proposal that gets approved it can be run manually or automatically to download the new code, stop the node, run the migration script, replace the node binary, and start with the new genesis file.
+
 This is a tiny shim around Cosmos SDK binaries that use the upgrade
 module that allows for smooth and configurable management of upgrading
 binaries as a live chain is upgraded, and can be used to simplify validator

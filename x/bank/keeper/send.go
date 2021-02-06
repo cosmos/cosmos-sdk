@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -233,9 +232,7 @@ func (k BaseSendKeeper) ClearBalances(ctx sdk.Context, addr sdk.AccAddress) {
 		return false
 	})
 
-	store := ctx.KVStore(k.storeKey)
-	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
-	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
+	accountStore := k.getAccountStore(ctx, addr)
 
 	for _, key := range keys {
 		accountStore.Delete(key)
@@ -264,9 +261,7 @@ func (k BaseSendKeeper) SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, balance.String())
 	}
 
-	store := ctx.KVStore(k.storeKey)
-	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
-	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
+	accountStore := k.getAccountStore(ctx, addr)
 
 	bz := k.cdc.MustMarshalBinaryBare(&balance)
 	accountStore.Set([]byte(balance.Denom), bz)

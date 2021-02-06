@@ -327,7 +327,7 @@ func (k Keeper) IterateLastValidatorPowers(ctx sdk.Context, handler func(operato
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {
-		addr := sdk.ValAddress(iter.Key()[len(types.LastValidatorPowerKey):])
+		addr := sdk.ValAddress(types.AddressFromLastValidatorPowerKey(iter.Key()))
 		intV := &gogotypes.Int64Value{}
 
 		k.cdc.MustUnmarshalBinaryBare(iter.Value(), intV)

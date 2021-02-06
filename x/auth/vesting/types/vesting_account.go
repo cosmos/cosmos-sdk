@@ -579,6 +579,7 @@ var _ authtypes.GenesisAccount = (*PermanentLockedVestingAccount)(nil)
 
 // NewPermanentLockedVestingAccountRaw creates a new PermanentLockedVestingAccount object from BaseVestingAccount
 func NewPermanentLockedVestingAccountRaw(bva *BaseVestingAccount) *PermanentLockedVestingAccount {
+	// ensure EndTime is set to -1, as PermanentLockedVestingAccount's do not have an EndTime
 	bva.EndTime = -1
 
 	return &PermanentLockedVestingAccount{

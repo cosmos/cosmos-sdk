@@ -62,14 +62,10 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 
 	var acc authtypes.AccountI
 
-	if msg.VestingAccountType == types.MsgCreateVestingAccount_CONTINUOUS_VESTING_ACCOUNT {
-		acc = types.NewContinuousVestingAccountRaw(baseVestingAccount, ctx.BlockTime().Unix())
-	} else if msg.VestingAccountType == types.MsgCreateVestingAccount_DELAYED_VESTING_ACCOUNT {
+	if msg.Delayed {
 		acc = types.NewDelayedVestingAccountRaw(baseVestingAccount)
-	} else if msg.VestingAccountType == types.MsgCreateVestingAccount_PERMANENT_LOCKED_VESTING_ACCOUNT {
-		acc = types.NewPermanentLockedVestingAccountRaw(baseVestingAccount)
 	} else {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid account type; expected valid VestingAccountType, got: %v", msg.VestingAccountType)
+		acc = types.NewContinuousVestingAccountRaw(baseVestingAccount, ctx.BlockTime().Unix())
 	}
 
 	ak.SetAccount(ctx, acc)

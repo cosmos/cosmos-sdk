@@ -491,10 +491,10 @@
     - [Query](#cosmos.upgrade.v1beta1.Query)
   
 - [cosmos/vesting/v1beta1/tx.proto](#cosmos/vesting/v1beta1/tx.proto)
+    - [MsgCreatePermanentLockedAccount](#cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccount)
+    - [MsgCreatePermanentLockedAccountResponse](#cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccountResponse)
     - [MsgCreateVestingAccount](#cosmos.vesting.v1beta1.MsgCreateVestingAccount)
     - [MsgCreateVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse)
-  
-    - [VestingAccountType](#cosmos.vesting.v1beta1.VestingAccountType)
   
     - [Msg](#cosmos.vesting.v1beta1.Msg)
   
@@ -7165,6 +7165,35 @@ Query defines the gRPC upgrade querier service.
 
 
 
+<a name="cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccount"></a>
+
+### MsgCreatePermanentLockedAccount
+MsgCreatePermanentLockedAccount defines a message that creates a permanent locked
+account. The original coin balance of this account can be used for voting and delegation, but can
+never be traded or sent to another account.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `from_address` | [string](#string) |  |  |
+| `to_address` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccountResponse"></a>
+
+### MsgCreatePermanentLockedAccountResponse
+MsgCreatePermanentLockedAccountResponse defines the Msg/CreatePermanentLockedAccount response type.
+
+
+
+
+
+
 <a name="cosmos.vesting.v1beta1.MsgCreateVestingAccount"></a>
 
 ### MsgCreateVestingAccount
@@ -7178,7 +7207,7 @@ account.
 | `to_address` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 | `end_time` | [int64](#int64) |  |  |
-| `vesting_account_type` | [VestingAccountType](#cosmos.vesting.v1beta1.VestingAccountType) |  |  |
+| `delayed` | [bool](#bool) |  |  |
 
 
 
@@ -7195,19 +7224,6 @@ MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount response ty
 
 
  <!-- end messages -->
-
-
-<a name="cosmos.vesting.v1beta1.VestingAccountType"></a>
-
-### VestingAccountType
-
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| DELAYED_VESTING_ACCOUNT_TYPE | 0 |  |
-| CONTINUOUS_VESTING_ACCOUNT_TYPE | 1 |  |
-| PERMANENT_LOCKED_VESTING_ACCOUNT_TYPE | 2 |  |
-
 
  <!-- end enums -->
 

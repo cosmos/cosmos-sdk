@@ -52,16 +52,6 @@ message DelayedVestingAccount {
   BaseVestingAccount base_vesting_account = 1 [(gogoproto.embed) = true];
 }
 
-// PermanentLockedVestingAccount implements the VestingAccount interface. It does
-// not ever release coins, locking them indefinitely. Coins in this account can
-// still be used for delegating and for governance votes even while locked.
-message PermanentLockedVestingAccount {
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = false;
-
-  BaseVestingAccount base_vesting_account = 1 [(gogoproto.embed) = true];
-}
-
 // Period defines a length of time and amount of coins that will vest.
 message Period {
   option (gogoproto.goproto_stringer) = false;
@@ -81,3 +71,14 @@ message PeriodicVestingAccount {
   int64              start_time           = 2 [(gogoproto.moretags) = "yaml:\"start_time\""];
   repeated Period vesting_periods = 3 [(gogoproto.moretags) = "yaml:\"vesting_periods\"", (gogoproto.nullable) = false];
 }
+
+// PermanentLockedVestingAccount implements the VestingAccount interface. It does
+// not ever release coins, locking them indefinitely. Coins in this account can
+// still be used for delegating and for governance votes even while locked.
+message PermanentLockedVestingAccount {
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  BaseVestingAccount base_vesting_account = 1 [(gogoproto.embed) = true];
+}
+

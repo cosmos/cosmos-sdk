@@ -1,0 +1,24 @@
+syntax = "proto3";
+package cosmos.crypto.secp256r1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/types";
+option (gogoproto.goproto_stringer_all) = false;
+option (gogoproto.stringer_all)         = false;
+
+// PBBytes defines a structure wrapping protocol buffers raw bytes serialization
+message PBBytes {
+  bytes bytes = 1;
+}
+
+
+// // PubKey defines a P-256 s(ecp256r1) public key
+// message PubKey {
+//   bytes key = 1;
+// }
+
+// // PrivKey defines a P-256 (secp256r1) private key
+// message PrivKey {
+//   bytes key = 1;
+// }

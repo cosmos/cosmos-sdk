@@ -6,12 +6,11 @@ import (
 	"fmt"
 	"io"
 
-	proto "github.com/gogo/protobuf/proto"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/tmhash"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -156,7 +155,8 @@ func (pubKey *PubKey) Address() crypto.Address {
 	if len(pubKey.Key) != PubKeySize {
 		panic("pubkey is incorrect size")
 	}
-	return address.Hash(proto.MessageName(pubKey), pubKey.Key)
+	return crypto.Address(tmhash.SumTruncated(pubKey.Key))
+	// TODO use ADR-28: return address.Hash(proto.MessageName(pubKey), pubKey.Key)
 }
 
 // Bytes returns the PubKey byte format.

@@ -61,13 +61,19 @@ Examples:
  $ %s tx %s grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1beta1.Msg/Vote --from=cosmos1sk..
 	`, version.AppName, types.ModuleName, bank.SendAuthorization{}.MethodName(), version.AppName, types.ModuleName),
 		),
-		Args: cobra.RangeArgs(2, 3),
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
+
 			grantee, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			exp, err := cmd.Flags().GetInt64(FlagExpiration)
 			if err != nil {
 				return err
 			}
@@ -105,28 +111,17 @@ Examples:
 					return err
 				}
 
-				var allowedValidators []sdk.ValAddress
-				allowedRaw, err := cmd.Flags().GetString(FlagAllowedValidators)
-				if err != nil {
-					return err
-				}
-				allowedValidators, err = parseValidators(allowedRaw)
+				allowValidators, err := cmd.Flags().GetStringSlice(FlagAllowedValidators)
 				if err != nil {
 					return err
 				}
 
-				var deniedValidators []sdk.ValAddress
-				denyRaw, err := cmd.Flags().GetString(FlagDenyValidators)
+				denyValidators, err := cmd.Flags().GetStringSlice(FlagDenyValidators)
 				if err != nil {
 					return err
 				}
-				if denyRaw != "" {
-					deniedValidators, err = parseValidators(denyRaw)
-					if err != nil {
-						return err
-					}
-				}
 
+				var delegateLimit *sdk.Coin
 				if limit != "" {
 					spendLimit, err := sdk.ParseCoinsNormalized(limit)
 					if err != nil {
@@ -136,25 +131,31 @@ Examples:
 					if !spendLimit.IsAllPositive() {
 						return fmt.Errorf("spend-limit should be greater than zero")
 					}
-					if args[1] == delegate {
-						authorization = staking.NewDelegateAuthorization(allowedValidators, deniedValidators, &spendLimit[0])
-					} else {
-						authorization = staking.NewUndelegateAuthorization(allowedValidators, &spendLimit[0])
-					}
-				} else {
-					if args[1] == delegate {
-						authorization = staking.NewDelegateAuthorization(allowedValidators, deniedValidators, nil)
-					} else {
-						authorization = staking.NewUndelegateAuthorization(allowedValidators, nil)
-					}
+					delegateLimit = &spendLimit[0]
 				}
+
+				allowed, err := bech32toValidatorAddress(allowValidators)
+				if err != nil {
+					return err
+				}
+
+				denied, err := bech32toValidatorAddress(denyValidators)
+				if err != nil {
+					return err
+				}
+
+				if args[1] == delegate {
+					authorization, err = staking.NewDelegateAuthorization(allowed, denied, delegateLimit)
+
+				} else {
+					authorization, err = staking.NewUndelegateAuthorization(allowed, denied, delegateLimit)
+				}
+				if err != nil {
+					return err
+				}
+
 			default:
 				return fmt.Errorf("invalid authorization type, %s", args[1])
-			}
-
-			exp, err := cmd.Flags().GetInt64(FlagExpiration)
-			if err != nil {
-				return err
 			}
 
 			msg, err := types.NewMsgGrantAuthorization(clientCtx.GetFromAddress(), grantee, authorization, time.Unix(exp, 0))
@@ -175,8 +176,8 @@ Examples:
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(FlagMsgType, "", "The Msg method name for which we are creating a GenericAuthorization")
 	cmd.Flags().String(FlagSpendLimit, "", "SpendLimit for Send Authorization, an array of Coins allowed spend")
-	cmd.Flags().String(FlagAllowedValidators, "", "Allowed validators addresses separated by ,")
-	cmd.Flags().String(FlagDenyValidators, "", "Deny validators addresses separated by ,")
+	cmd.Flags().StringSlice(FlagAllowedValidators, []string{}, "Allowed validators addresses separated by ,")
+	cmd.Flags().StringSlice(FlagDenyValidators, []string{}, "Deny validators addresses separated by ,")
 	cmd.Flags().Int64(FlagExpiration, time.Now().AddDate(1, 0, 0).Unix(), "The Unix timestamp. Default is one year.")
 	return cmd
 }
@@ -278,12 +279,7 @@ Example:
 	return cmd
 }
 
-func parseValidators(rawAddrs string) ([]sdk.ValAddress, error) {
-	validators := strings.Split(rawAddrs, ",")
-	if len(validators) == 0 {
-		return nil, fmt.Errorf("validator set cannot be empty")
-	}
-
+func bech32toValidatorAddress(validators []string) ([]sdk.ValAddress, error) {
 	vals := make([]sdk.ValAddress, len(validators))
 	for i, validator := range validators {
 		addr, err := sdk.ValAddressFromBech32(validator)

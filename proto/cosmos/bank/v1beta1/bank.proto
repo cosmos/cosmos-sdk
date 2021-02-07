@@ -83,13 +83,3 @@ message Metadata {
   // displayed in clients.
   string display = 4;
 }
-
-
-// SendAuthorization allows the grantee to spend up to spend_limit coins from
-// the granter's account.
-message SendAuthorization {
-  option (cosmos_proto.implements_interface) = "Authorization";
-
-  repeated cosmos.base.v1beta1.Coin spend_limit = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-}

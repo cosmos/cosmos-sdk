@@ -83,6 +83,8 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 var typeMsgSend = bank.SendAuthorization{}.MethodName()
 var typeMsgVote = "/cosmos.gov.v1beta1.Msg/Vote"
 
+var commonFlags = []string{}
+
 func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	val := s.network.Validators[0]
 	grantee := s.grantee
@@ -145,18 +147,67 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 				fmt.Sprintf("--%s=invalid-msg-type", cli.FlagMsgType),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
 			},
 			&sdk.TxResponse{}, 29,
 			false,
 		},
 		{
-			"valid tx delegate authorization",
+			"failed with error both validators not allowed",
 			[]string{
 				grantee.String(),
 				"delegate",
+				fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+				fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, fmt.Sprintf("%s", val.ValAddress.String())),
+				fmt.Sprintf("--%s=%s", cli.FlagDenyValidators, fmt.Sprintf("%s", val.ValAddress.String())),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			nil, 0,
+			true,
+		},
+		{
+			"valid tx delegate authorization allowed validators",
+			[]string{
+				grantee.String(),
+				"delegate",
+				fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+				fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, fmt.Sprintf("%s", val.ValAddress.String())),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			&sdk.TxResponse{}, 0,
+			false,
+		},
+		{
+			"valid tx delegate authorization deny validators",
+			[]string{
+				grantee.String(),
+				"delegate",
+				fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+				fmt.Sprintf("--%s=%s", cli.FlagDenyValidators, fmt.Sprintf("%s", val.ValAddress.String())),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			&sdk.TxResponse{}, 0,
+			false,
+		},
+		{
+			"valid tx undelegate authorization",
+			[]string{
+				grantee.String(),
+				"unbond",
 				fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
@@ -508,33 +559,9 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 	testCases := []struct {
 		name         string
 		args         []string
-		respType     proto.Message
 		expectedCode uint32
 		expectErr    bool
 	}{
-		{
-			"fail invalid grantee",
-			[]string{
-				execMsg.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, "grantee"),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-			},
-			nil,
-			0,
-			true,
-		},
-		{
-			"fail invalid json path",
-			[]string{
-				"/invalid/file.txt",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-			},
-			nil,
-			0,
-			true,
-		},
 		{
 			"valid txn",
 			[]string{
@@ -544,8 +571,19 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			},
-			&sdk.TxResponse{},
 			0,
+			false,
+		},
+		{
+			"error over spent",
+			[]string{
+				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			},
+			4,
 			false,
 		},
 	}
@@ -560,10 +598,10 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
+				var response sdk.TxResponse
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &response), out.String())
+				s.Require().Equal(tc.expectedCode, response.Code, out.String())
 			}
 		})
 	}
@@ -600,38 +638,10 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 	testCases := []struct {
 		name         string
 		args         []string
-		respType     proto.Message
 		expectedCode uint32
 		expectErr    bool
 		errMsg       string
 	}{
-		{
-			"fail invalid grantee",
-			[]string{
-				execMsg.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, "invalid_grantee"),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			nil,
-			0,
-			true,
-			"The specified item could not be found in the keyring",
-		},
-		{
-			"fail invalid json path",
-			[]string{
-				"/invalid/file.txt",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			},
-			nil,
-			0,
-			true,
-			"",
-		},
 		{
 			"valid txn: (delegate half tokens)",
 			[]string{
@@ -641,7 +651,6 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			},
-			&sdk.TxResponse{},
 			0,
 			false,
 			"",
@@ -655,7 +664,6 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			},
-			&sdk.TxResponse{},
 			0,
 			false,
 			"",
@@ -669,7 +677,6 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			},
-			&sdk.TxResponse{},
 			4,
 			false,
 			"authorization not found",
@@ -687,14 +694,15 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), tc.errMsg)
 			} else {
+				var response sdk.TxResponse
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &response), out.String())
+				s.Require().Equal(tc.expectedCode, response.Code, out.String())
 			}
 		})
 	}
 
+	//test delegate no spend-limit
 	_, err = authztestutil.ExecGrantAuthorization(
 		val,
 		[]string{
@@ -720,7 +728,6 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 	testCases = []struct {
 		name         string
 		args         []string
-		respType     proto.Message
 		expectedCode uint32
 		expectErr    bool
 		errMsg       string
@@ -734,7 +741,6 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			},
-			&sdk.TxResponse{},
 			0,
 			false,
 			"",
@@ -748,7 +754,6 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			},
-			&sdk.TxResponse{},
 			0,
 			false,
 			"",
@@ -766,14 +771,15 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), tc.errMsg)
 			} else {
+				var response sdk.TxResponse
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &response), out.String())
+				s.Require().Equal(tc.expectedCode, response.Code, out.String())
 			}
 		})
 	}
 
+	// test delegating to denied validator
 	_, err = authztestutil.ExecGrantAuthorization(
 		val,
 		[]string{
@@ -784,7 +790,6 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, fmt.Sprintf("%s", val.ValAddress.String())),
 			fmt.Sprintf("--%s=%s", cli.FlagDenyValidators, fmt.Sprintf("%s", val.ValAddress.String())),
 			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		},
@@ -810,6 +815,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 	grantee := s.grantee
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
+	// granting undelegate msg authorization
 	_, err := authztestutil.ExecGrantAuthorization(
 		val,
 		[]string{
@@ -826,7 +832,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 	)
 	s.Require().NoError(err)
 
-	// create delegation
+	// delegating stakes to validator
 	_, err = execDelegate(
 		val,
 		[]string{
@@ -851,38 +857,10 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 	testCases := []struct {
 		name         string
 		args         []string
-		respType     proto.Message
 		expectedCode uint32
 		expectErr    bool
 		errMsg       string
 	}{
-		{
-			"fail invalid grantee",
-			[]string{
-				execMsg.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, "invalid_grantee"),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			nil,
-			0,
-			true,
-			"The specified item could not be found in the keyring",
-		},
-		{
-			"fail invalid json path",
-			[]string{
-				"/invalid/file.txt",
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			},
-			nil,
-			0,
-			true,
-			"",
-		},
 		{
 			"valid txn: (undelegate half tokens)",
 			[]string{
@@ -892,7 +870,6 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			},
-			&sdk.TxResponse{},
 			0,
 			false,
 			"",
@@ -906,7 +883,6 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			},
-			&sdk.TxResponse{},
 			0,
 			false,
 			"",
@@ -920,7 +896,6 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			},
-			&sdk.TxResponse{},
 			4,
 			false,
 			"authorization not found",
@@ -938,10 +913,10 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), tc.errMsg)
 			} else {
+				var response sdk.TxResponse
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &response), out.String())
+				s.Require().Equal(tc.expectedCode, response.Code, out.String())
 			}
 		})
 	}
@@ -972,7 +947,6 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 	testCases = []struct {
 		name         string
 		args         []string
-		respType     proto.Message
 		expectedCode uint32
 		expectErr    bool
 		errMsg       string
@@ -986,7 +960,6 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			},
-			&sdk.TxResponse{},
 			0,
 			false,
 			"",
@@ -1000,7 +973,6 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			},
-			&sdk.TxResponse{},
 			0,
 			false,
 			"",
@@ -1018,10 +990,10 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), tc.errMsg)
 			} else {
+				var response sdk.TxResponse
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &response), out.String())
+				s.Require().Equal(tc.expectedCode, response.Code, out.String())
 			}
 		})
 	}

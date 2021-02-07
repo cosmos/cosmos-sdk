@@ -5963,7 +5963,7 @@ on behalf of the granter's account.
 <a name="cosmos.staking.v1beta1.DelegateAuthorization.Validators"></a>
 
 ### DelegateAuthorization.Validators
-
+Validators defines list of validator addresses.
 
 
 | Field | Type | Label | Description |
@@ -5996,7 +5996,7 @@ on behalf of the granter's account.
 <a name="cosmos.staking.v1beta1.UndelegateAuthorization.Validators"></a>
 
 ### UndelegateAuthorization.Validators
-
+Validators defines list of validator addresses.
 
 
 | Field | Type | Label | Description |

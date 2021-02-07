@@ -1,7 +1,6 @@
 syntax = "proto3";
 package cosmos.authz.v1beta1;
 
-import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
 import "gogoproto/gogo.proto";

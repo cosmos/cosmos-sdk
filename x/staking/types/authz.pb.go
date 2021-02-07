@@ -31,6 +31,8 @@ type DelegateAuthorization struct {
 	// max_tokens specifies the maximum amount of tokens can be delegate to a validator. If it is
 	// empty, there is no spend limit and any amount of coins can be delegated.
 	MaxTokens *types.Coin `protobuf:"bytes,1,opt,name=max_tokens,json=maxTokens,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coin" json:"max_tokens,omitempty"`
+	// validators is the oneof that represents either allow_list or deny_list
+	//
 	// Types that are valid to be assigned to Validators:
 	//	*DelegateAuthorization_AllowList
 	//	*DelegateAuthorization_DenyList
@@ -122,6 +124,7 @@ func (*DelegateAuthorization) XXX_OneofWrappers() []interface{} {
 	}
 }
 
+// Validators defines list of validator addresses.
 type DelegateAuthorization_Validators struct {
 	Address []string `protobuf:"bytes,1,rep,name=address,proto3" json:"address,omitempty"`
 }
@@ -172,6 +175,8 @@ type UndelegateAuthorization struct {
 	// max_tokens specifies the maximum amount of tokens can be un-delegate from a validator. If it is
 	// empty, there is no spend limit and any amount of coins can be un-delegated.
 	MaxTokens *types.Coin `protobuf:"bytes,1,opt,name=max_tokens,json=maxTokens,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coin" json:"max_tokens,omitempty"`
+	// validators is the oneof that represents either allow_list or deny_list
+	//
 	// Types that are valid to be assigned to Validators:
 	//	*UndelegateAuthorization_AllowList
 	//	*UndelegateAuthorization_DenyList
@@ -263,6 +268,7 @@ func (*UndelegateAuthorization) XXX_OneofWrappers() []interface{} {
 	}
 }
 
+// Validators defines list of validator addresses.
 type UndelegateAuthorization_Validators struct {
 	Address []string `protobuf:"bytes,1,rep,name=address,proto3" json:"address,omitempty"`
 }

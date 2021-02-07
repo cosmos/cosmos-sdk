@@ -56,7 +56,8 @@ func NewComposed(typ string, subAddresses []Addressable) ([]byte, error) {
 	return Hash(typ, key), nil
 }
 
-// Module is a specialized version of a composed address for modules
+// Module is a specialized version of a composed address for modules. Each module account
+// is constructed from a module name and module account key.
 func Module(moduleName string, key []byte) []byte {
 	mKey := append([]byte(moduleName), 0)
 	return Hash("module", append(mKey, key...))

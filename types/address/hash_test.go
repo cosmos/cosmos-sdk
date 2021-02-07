@@ -5,10 +5,17 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 )
 
-func TestHash(t *testing.T) {
-	assert := assert.New(t)
+func TestAddressSuite(t *testing.T) {
+	suite.Run(t, new(AddressSuite))
+}
+
+type AddressSuite struct{ suite.Suite }
+
+func (suite *AddressSuite) TestHash() {
+	assert := suite.Assert()
 	typ := "1"
 	key := []byte{1}
 	part1 := sha256.Sum256([]byte(typ))
@@ -18,12 +25,11 @@ func TestHash(t *testing.T) {
 
 	received = Hash("other", key)
 	assert.NotEqual(expected[:], received, "must create a correct address")
-
 	assert.Len(received, Len, "must have correcte length")
 }
 
-func TestComposed(t *testing.T) {
-	assert := assert.New(t)
+func (suite *AddressSuite) TestComposed() {
+	assert := suite.Assert()
 	a1 := addrMock{[]byte{11, 12}}
 	a2 := addrMock{[]byte{21, 22}}
 
@@ -33,8 +39,8 @@ func TestComposed(t *testing.T) {
 	assert.Len(ac, Len)
 
 	// check if optimizations work
-	checkingKey := append([]byte{}, a1.AddressWithLen(t)...)
-	checkingKey = append(checkingKey, a2.AddressWithLen(t)...)
+	checkingKey := append([]byte{}, a1.AddressWithLen(suite.T())...)
+	checkingKey = append(checkingKey, a2.AddressWithLen(suite.T())...)
 	ac2 := Hash(typ, checkingKey)
 	assert.Equal(ac, ac2, "NewComposed works correctly")
 
@@ -53,6 +59,20 @@ func TestComposed(t *testing.T) {
 	ac2, err = NewComposed(typ, []Addressable{a1, addrMock{make([]byte, 300, 300)}})
 	assert.Error(err)
 	assert.Contains(err.Error(), "should be max 255 bytes, got 300")
+}
+
+func (suite *AddressSuite) TestModule() {
+	assert := suite.Assert()
+	var modName, key = "myModule", []byte{1, 2}
+	addr := Module(modName, key)
+	assert.Len(addr, Len, "must have address length")
+
+	addr2 := Module("myModule2", key)
+	assert.NotEqual(addr, addr2, "changing module name must change address")
+
+	addr3 := Module(modName, []byte{1, 2, 3})
+	assert.NotEqual(addr, addr3, "changing key must change address")
+	assert.NotEqual(addr2, addr3, "changing key must change address")
 }
 
 type addrMock struct {

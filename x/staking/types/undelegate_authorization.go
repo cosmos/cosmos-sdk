@@ -37,8 +37,6 @@ func NewUndelegateAuthorization(allowed []sdk.ValAddress, denied []sdk.ValAddres
 			deniedValidators[i] = validator.String()
 		}
 		authorization.Validators = &UndelegateAuthorization_DenyList{DenyList: &UndelegateAuthorization_Validators{Address: deniedValidators}}
-	} else {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, " allow & deny lists are empty")
 	}
 
 	if amount != nil {

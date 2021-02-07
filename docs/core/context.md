@@ -13,7 +13,7 @@ The `context` is a data structure intended to be passed from function to functio
 
 ## Context Definition
 
-The SDK `Context` is a custom data structure that contains Go's stdlib [`context`](https://golang.org/pkg/context) as its base, and has many additional types within its definition that are specific to the Cosmos SDK. he `Context` is integral to transaction processing in that it allows modules to easily access their respective [store](./store.md#base-layer-kvstores) in the [`multistore`](./store.md#multistore) and retrieve transactional context such as the block header and gas meter.
+The SDK `Context` is a custom data structure that contains Go's stdlib [`context`](https://golang.org/pkg/context) as its base, and has many additional types within its definition that are specific to the Cosmos SDK. The `Context` is integral to transaction processing in that it allows modules to easily access their respective [store](./store.md#base-layer-kvstores) in the [`multistore`](./store.md#multistore) and retrieve transactional context such as the block header and gas meter.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/context.go#L16-L39
 

@@ -14,13 +14,17 @@ import (
 )
 
 func TestDecodeStore(t *testing.T) {
-	app := simapp.Setup(false)
-	dec := simulation.NewDecodeStore(app.BankKeeper)
+	cdc := simapp.MakeTestEncodingConfig().Marshaler
+	dec := simulation.NewDecodeStore(cdc)
 
-	totalSupply := types.NewSupply(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)))
+	totalSupply := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000))
 
-	supplyBz, err := app.BankKeeper.MarshalSupply(totalSupply)
-	require.NoError(t, err)
+	var supplyBz []byte
+	for _, bal := range totalSupply {
+		bz, err := cdc.MarshalBinaryBare(&bal)
+		require.NoError(t, err)
+		supplyBz = append(supplyBz, bz...)
+	}
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{

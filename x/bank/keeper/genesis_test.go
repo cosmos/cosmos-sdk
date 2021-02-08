@@ -20,7 +20,7 @@ func (suite *IntegrationTestSuite) TestExportGenesis() {
 		suite.Require().NoError(err)
 	}
 
-	totalSupply := types.NewSupply(sdk.NewCoins(sdk.NewInt64Coin("test", 400000000)))
+	totalSupply := sdk.NewCoins(sdk.NewInt64Coin("test", 400000000))
 	app.BankKeeper.SetSupply(ctx, totalSupply)
 	app.BankKeeper.SetParams(ctx, types.DefaultParams())
 
@@ -28,7 +28,7 @@ func (suite *IntegrationTestSuite) TestExportGenesis() {
 
 	suite.Require().Len(exportGenesis.Params.SendEnabled, 0)
 	suite.Require().Equal(types.DefaultParams().DefaultSendEnabled, exportGenesis.Params.DefaultSendEnabled)
-	suite.Require().Equal(totalSupply.GetTotal(), exportGenesis.Supply)
+	suite.Require().Equal(totalSupply, exportGenesis.Supply)
 	suite.Require().Equal(expectedBalances, exportGenesis.Balances)
 	suite.Require().Equal(expectedMetadata, exportGenesis.DenomMetadata)
 }

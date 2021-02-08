@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -40,7 +39,7 @@ func createTestApp() (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
 	feePool := distrtypes.InitialFeePool()
 	feePool.CommunityPool = sdk.NewDecCoinsFromCoins(sdk.NewCoins(constantFee)...)
 	app.DistrKeeper.SetFeePool(ctx, feePool)
-	app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(sdk.Coins{}))
+	app.BankKeeper.SetSupply(ctx, sdk.Coins{})
 
 	addrs := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(10000))
 

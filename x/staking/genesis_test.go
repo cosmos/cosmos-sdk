@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -31,7 +30,7 @@ func bootstrapGenesisTest(t *testing.T, power int64, numAddrs int) (*simapp.SimA
 	require.NoError(t, err)
 
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
-	app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(totalSupply))
+	app.BankKeeper.SetSupply(ctx, totalSupply)
 
 	return app, ctx, addrDels
 }

@@ -20,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
@@ -40,7 +39,7 @@ func bootstrapHandlerGenesisTest(t *testing.T, power int64, numAddrs int, accAmo
 	require.NoError(t, err)
 
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
-	app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(totalSupply))
+	app.BankKeeper.SetSupply(ctx, totalSupply)
 
 	return app, ctx, addrDels, addrVals
 }

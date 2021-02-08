@@ -56,7 +56,13 @@ type BaseKeeper struct {
 }
 
 func (k BaseKeeper) GetTotalSupply(ctx sdk.Context) sdk.Coins {
-	panic("implement me")
+	balances := sdk.NewCoins()
+	k.IterateTotalSupply(ctx, func(balance sdk.Coin) bool {
+		balances = balances.Add(balance)
+		return false
+	})
+
+	return balances.Sort()
 }
 
 func NewBaseKeeper(
@@ -344,13 +350,7 @@ func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 
 	// update total supply
 	supply := k.GetTotalSupply(ctx)
-	for _, coin := range supply {
-		for _, amnt := range amt {
-			if coin.Denom == amnt.Denom {
-				coin.Amount = coin.Amount.Sub(amnt.Amount)
-			}
-		}
-	}
+	supply = supply.Add(amt...)
 
 	k.SetSupply(ctx, supply)
 
@@ -379,13 +379,7 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 
 	// update total supply
 	supply := k.GetTotalSupply(ctx)
-	for _, coin := range supply {
-		for _, amnt := range amt {
-			if coin.Denom == amnt.Denom {
-				coin.Amount = coin.Amount.Sub(amnt.Amount)
-			}
-		}
-	}
+	supply = supply.Sub(amt)
 
 	k.SetSupply(ctx, supply)
 
@@ -425,14 +419,19 @@ func (k BaseKeeper) trackUndelegation(ctx sdk.Context, addr sdk.AccAddress, amt 
 	return nil
 }
 
-//// MarshalSupply protobuf serializes a Supply interface
-//func (k BaseKeeper) MarshalSupply(supplyI exported.SupplyI) ([]byte, error) {
-//	return k.cdc.MarshalInterface(supplyI)
-//}
-//
-//// UnmarshalSupply returns a Supply interface from raw encoded supply
-//// bytes of a Proto-based Supply type
-//func (k BaseKeeper) UnmarshalSupply(bz []byte) (exported.SupplyI, error) {
-//	var evi exported.SupplyI
-//	return evi, k.cdc.UnmarshalInterface(bz, &evi)
-//}
+func (k BaseViewKeeper) IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bool) {
+	store := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
+
+	iterator := supplyStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var balance sdk.Coin
+		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &balance)
+
+		if cb(balance) {
+			break
+		}
+	}
+}

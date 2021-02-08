@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-//TODO: check decode store
 // NewDecodeStore returns a function closure that unmarshals the KVPair's values
 // to the corresponding types.
 func NewDecodeStore(cdc codec.Marshaler) func(kvA, kvB kv.Pair) string {

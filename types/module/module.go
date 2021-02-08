@@ -335,6 +335,13 @@ func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) map[st
 	return genesisData
 }
 
+// MigrationHandler is the migration function that each module registers.
+type MigrationHandler func(store sdk.Context, storeKey sdk.StoreKey, cdc codec.Marshaler) error
+
+// MigrationMap is a map of moduleName -> version, where version denotes the
+// version from which we should perform the migration for each module.
+type MigrationMap map[string]uint64
+
 // RunMigrations performs in-place store migrations for all modules.
 func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, migrationsMap map[string]uint64) error {
 	c, ok := cfg.(configurator)
@@ -343,7 +350,7 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, migrationsMap 
 	}
 
 	for moduleName, module := range m.Modules {
-		err := runModuleMigrations(c, ctx, moduleName, migrationsMap[moduleName], module.ConsensusVersion())
+		err := c.runModuleMigrations(ctx, moduleName, migrationsMap[moduleName], module.ConsensusVersion())
 		if err != nil {
 			return err
 		}
@@ -392,36 +399,4 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 		ValidatorUpdates: validatorUpdates,
 		Events:           ctx.EventManager().ABCIEvents(),
 	}
-}
-
-// runMigrations runs all in-place store migrations for one given module from a
-// version to another version.
-func runModuleMigrations(cfg configurator, ctx sdk.Context, moduleName string, fromVersion, toVersion uint64) error {
-	// No-op if toVersion is the initial version.
-	// Some modules don't have a store key (e.g. vesting), in this case, their
-	// ConsensusVersion will always stay at 0, and running migrations on
-	// those modules will be skipped on this line.
-	if toVersion == 0 {
-		return nil
-	}
-
-	storeKey, found := cfg.storeKeys[moduleName]
-	if !found {
-		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "store key for module %s not found", moduleName)
-	}
-
-	// Run in-place migrations for the module sequentially until toVersion.
-	for i := fromVersion; i < toVersion; i++ {
-		migrateFn, found := cfg.migrations[moduleName][i]
-		if !found {
-			return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "no migration found for module %s from version %d to version %d", moduleName, i, i+1)
-		}
-
-		err := migrateFn(ctx.KVStore(storeKey))
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

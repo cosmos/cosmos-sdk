@@ -24,7 +24,7 @@ func TestStoreMigration(t *testing.T) {
 	oldKey := append(append(v040bank.BalancesPrefix, addr...), denom...)
 	store.Set(oldKey, value)
 
-	err := v042bank.MigrateStore(store)
+	err := v042bank.MigrateStore(ctx, bankKey, nil)
 	require.NoError(t, err)
 
 	newKey := append(v042bank.CreateAccountBalancesPrefix(addr), denom...)

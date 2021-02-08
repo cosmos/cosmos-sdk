@@ -11,6 +11,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
@@ -51,10 +52,11 @@ func TestGetMaccPerms(t *testing.T) {
 
 func TestRunMigrations(t *testing.T) {
 	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeTestEncodingConfig(), EmptyAppOptions{})
+	encCfg := MakeTestEncodingConfig()
+	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
 
 	// Create a new configurator for the purpose of this test.
-	app.configurator = module.NewConfigurator(app.MsgServiceRouter(), app.GRPCQueryRouter(), app.keys)
+	app.configurator = module.NewConfigurator(encCfg.Marshaler, app.MsgServiceRouter(), app.GRPCQueryRouter(), app.keys)
 
 	testCases := []struct {
 		name         string
@@ -98,7 +100,7 @@ func TestRunMigrations(t *testing.T) {
 			called := 0
 
 			if tc.moduleName != "" {
-				err = app.configurator.RegisterMigration(tc.moduleName, 0, func(sdk.KVStore) error {
+				err = app.configurator.RegisterMigration(tc.moduleName, 0, func(sdk.Context, sdk.StoreKey, codec.Marshaler) error {
 					called++
 
 					return nil

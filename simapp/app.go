@@ -396,7 +396,7 @@ func NewSimApp(
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
-	app.configurator = module.NewConfigurator(app.MsgServiceRouter(), app.GRPCQueryRouter(), app.keys)
+	app.configurator = module.NewConfigurator(app.AppCodec(), app.MsgServiceRouter(), app.GRPCQueryRouter(), app.keys)
 	app.mm.RegisterServices(app.configurator)
 
 	// add test gRPC service for testing gRPC queries in isolation

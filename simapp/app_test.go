@@ -105,13 +105,9 @@ func TestRunMigrations(t *testing.T) {
 
 					return nil
 				})
-			}
-
 			if tc.expRegErr {
-				require.Error(t, err)
-				require.Equal(t, tc.expRegErrMsg, err.Error())
-
-				return
+				assert.ErrorEqual(t, err, tc.expRegErrMsg)
+			}
 			}
 			require.NoError(t, err)
 

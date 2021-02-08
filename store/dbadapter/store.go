@@ -3,6 +3,8 @@ package dbadapter
 import (
 	"io"
 
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
+
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
@@ -83,6 +85,11 @@ func (dsa Store) CacheWrap() types.CacheWrap {
 // CacheWrapWithTrace implements KVStore.
 func (dsa Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
 	return cachekv.NewStore(tracekv.NewStore(dsa, w, tc))
+}
+
+// CacheWrapWithListeners implements the CacheWrapper interface.
+func (dsa Store) CacheWrapWithListeners(storeKey types.StoreKey, listeners []types.WriteListener) types.CacheWrap {
+	return cachekv.NewStore(listenkv.NewStore(dsa, storeKey, listeners))
 }
 
 // dbm.DB implements KVStore so we can CacheKVStore it.

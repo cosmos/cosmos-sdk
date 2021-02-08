@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
+
 	iavltree "github.com/cosmos/iavl"
 	protoio "github.com/gogo/protobuf/io"
 	gogotypes "github.com/gogo/protobuf/types"
@@ -58,6 +60,9 @@ type Store struct {
 	traceContext types.TraceContext
 
 	interBlockCache types.MultiStorePersistentCache
+
+	listeners      map[types.StoreKey][]types.WriteListener
+	cacheListening bool
 }
 
 var (
@@ -312,6 +317,23 @@ func (rs *Store) TracingEnabled() bool {
 	return rs.traceWriter != nil
 }
 
+// SetListener sets the listeners for a specific KVStore
+func (rs *Store) SetListeners(key types.StoreKey, listeners []types.WriteListener) {
+	if ls, ok := rs.listeners[key]; ok {
+		rs.listeners[key] = append(ls, listeners...)
+	} else {
+		rs.listeners[key] = listeners
+	}
+}
+
+// ListeningEnabled returns if listening is enabled for a specific KVStore
+func (rs *Store) ListeningEnabled(key types.StoreKey) bool {
+	if ls, ok := rs.listeners[key]; ok {
+		return len(ls) != 0
+	}
+	return false
+}
+
 // LastCommitID implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
 	if rs.lastCommitInfo == nil {
@@ -404,6 +426,11 @@ func (rs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 	return rs.CacheWrap()
 }
 
+// CacheWrapWithListeners implements the CacheWrapper interface.
+func (rs *Store) CacheWrapWithListeners(_ types.StoreKey, _ []types.WriteListener) types.CacheWrap {
+	return rs.CacheWrap()
+}
+
 // CacheMultiStore creates ephemeral branch of the multi-store and returns a CacheMultiStore.
 // It implements the MultiStore interface.
 func (rs *Store) CacheMultiStore() types.CacheMultiStore {
@@ -411,8 +438,7 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	for k, v := range rs.stores {
 		stores[k] = v
 	}
-
-	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext)
+	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext, rs.listeners)
 }
 
 // CacheMultiStoreWithVersion is analogous to CacheMultiStore except that it
@@ -441,8 +467,12 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 			cachedStores[key] = store
 		}
 	}
+	var cacheListeners map[types.StoreKey][]types.WriteListener
+	if rs.cacheListening {
+		cacheListeners = rs.listeners
+	}
 
-	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.traceContext), nil
+	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.traceContext, cacheListeners), nil
 }
 
 // GetStore returns a mounted Store for a given StoreKey. If the StoreKey does
@@ -471,6 +501,9 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 
 	if rs.TracingEnabled() {
 		store = tracekv.NewStore(store, rs.traceWriter, rs.traceContext)
+	}
+	if rs.ListeningEnabled(key) {
+		store = listenkv.NewStore(store, key, rs.listeners[key])
 	}
 
 	return store

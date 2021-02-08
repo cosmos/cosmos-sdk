@@ -81,7 +81,7 @@ func TestRunMigrations(t *testing.T) {
 		{
 			"throws error on RunMigrations if no migration registered for bank",
 			"", 1,
-			false, "", true, "no migration found for module bank from version 1 to version 2: not found", 0,
+			false, "", true, "no migrations found for module bank: not found", 0,
 		},
 		{
 			"can register and run migration handler for x/bank",

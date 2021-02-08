@@ -61,6 +61,7 @@ func TestRunMigrations(t *testing.T) {
 	testCases := []struct {
 		name         string
 		moduleName   string
+		forVersion   uint64
 		expRegErr    bool // errors while registering migration
 		expRegErrMsg string
 		expRunErr    bool // errors while running migration
@@ -69,22 +70,27 @@ func TestRunMigrations(t *testing.T) {
 	}{
 		{
 			"cannot register migration for non-existant module",
-			"foo",
+			"foo", 0,
+			true, "store key for module foo not found: not found", false, "", 0,
+		},
+		{
+			"cannot register migration for version 0",
+			"foo", 1,
 			true, "store key for module foo not found: not found", false, "", 0,
 		},
 		{
 			"throws error on RunMigrations if no migration registered for bank",
-			"",
+			"", 1,
 			false, "", true, "no migration found for module bank from version 0 to version 1: not found", 0,
 		},
 		{
 			"can register and run migration handler for x/bank",
-			"bank",
+			"bank", 1,
 			false, "", false, "", 1,
 		},
 		{
-			"cannot register migration handler for same module & fromVersion",
-			"bank",
+			"cannot register migration handler for same module & forVersion",
+			"bank", 1,
 			true, "another migration for module bank and version 0 already exists: internal logic error", false, "", 0,
 		},
 	}
@@ -100,7 +106,7 @@ func TestRunMigrations(t *testing.T) {
 			called := 0
 
 			if tc.moduleName != "" {
-				err = app.configurator.RegisterMigration(tc.moduleName, 0, func(sdk.Context, sdk.StoreKey, codec.Marshaler) error {
+				err = app.configurator.RegisterMigration(tc.moduleName, tc.forVersion, func(sdk.Context, sdk.StoreKey, codec.Marshaler) error {
 					called++
 
 					return nil

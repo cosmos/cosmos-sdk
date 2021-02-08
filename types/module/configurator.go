@@ -24,8 +24,8 @@ type Configurator interface {
 
 	// RegisterMigration registers an in-place store migration for a module. The
 	// handler is a migration script to perform in-place migrations from version
-	// `fromVersion` to version `fromVersion+1`.
-	RegisterMigration(moduleName string, fromVersion uint64, handler MigrationHandler) error
+	// `forVersion` to version `forVersion+1`.
+	RegisterMigration(moduleName string, forVersion uint64, handler MigrationHandler) error
 }
 
 type configurator struct {
@@ -35,7 +35,7 @@ type configurator struct {
 
 	// storeKeys is used to access module stores inside in-place store migrations.
 	storeKeys map[string]*sdk.KVStoreKey
-	// migrations is a map of moduleName -> fromVersion -> migration script handler
+	// migrations is a map of moduleName -> forVersion -> migration script handler
 	migrations map[string]map[uint64]MigrationHandler
 }
 
@@ -63,13 +63,17 @@ func (c configurator) QueryServer() grpc.Server {
 }
 
 // RegisterMigration implements the Configurator.RegisterMigration method
-func (c configurator) RegisterMigration(moduleName string, fromVersion uint64, handler MigrationHandler) error {
+func (c configurator) RegisterMigration(moduleName string, forVersion uint64, handler MigrationHandler) error {
+	if forVersion == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "module migration versions should start at 1")
+	}
+
 	if c.migrations[moduleName] == nil {
 		c.migrations[moduleName] = map[uint64]MigrationHandler{}
 	}
 
-	if c.migrations[moduleName][fromVersion] != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrLogic, "another migration for module %s and version %d already exists", moduleName, fromVersion)
+	if c.migrations[moduleName][forVersion] != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrLogic, "another migration for module %s and version %d already exists", moduleName, forVersion)
 	}
 
 	_, found := c.storeKeys[moduleName]
@@ -77,14 +81,14 @@ func (c configurator) RegisterMigration(moduleName string, fromVersion uint64, h
 		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "store key for module %s not found", moduleName)
 	}
 
-	c.migrations[moduleName][fromVersion] = handler
+	c.migrations[moduleName][forVersion] = handler
 
 	return nil
 }
 
 // runModuleMigrations runs all in-place store migrations for one given module from a
 // version to another version.
-func (c configurator) runModuleMigrations(ctx sdk.Context, moduleName string, fromVersion, toVersion uint64) error {
+func (c configurator) runModuleMigrations(ctx sdk.Context, moduleName string, forVersion, toVersion uint64) error {
 	// No-op if toVersion is the initial version.
 	// Some modules don't have a store key (e.g. vesting), in this case, their
 	// ConsensusVersion will always stay at 0, and running migrations on
@@ -99,7 +103,7 @@ func (c configurator) runModuleMigrations(ctx sdk.Context, moduleName string, fr
 	}
 
 	// Run in-place migrations for the module sequentially until toVersion.
-	for i := fromVersion; i < toVersion; i++ {
+	for i := forVersion; i < toVersion; i++ {
 		migrateFn, found := c.migrations[moduleName][i]
 		if !found {
 			return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "no migration found for module %s from version %d to version %d", moduleName, i, i+1)

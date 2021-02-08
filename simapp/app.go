@@ -612,7 +612,7 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 // Example:
 //   cfg := module.NewConfigurator(...)
 //   app.UpgradeKeeper.SetUpgradeHandler("store-migration", func(ctx sdk.Context, plan upgradetypes.Plan) {
-//       err := app.RunMigrations(ctx, map[string]unint64{
+//       err := app.RunMigrations(ctx, module.MigrationMap{
 //           "bank": 1,     // Migrate x/bank from v1 to current x/bank's ConsensusVersion
 //           "staking": 8,  // Migrate x/staking from v8 to current x/staking's ConsensusVersion
 //      })
@@ -620,7 +620,7 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 //           panic(err)
 //      }
 //   })
-func (app *SimApp) RunMigrations(ctx sdk.Context, migrationsMap map[string]uint64) error {
+func (app *SimApp) RunMigrations(ctx sdk.Context, migrationsMap module.MigrationMap) error {
 	return app.mm.RunMigrations(ctx, app.configurator, migrationsMap)
 }
 

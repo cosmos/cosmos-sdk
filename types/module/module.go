@@ -349,14 +349,14 @@ type MigrationHandler func(store sdk.Context, storeKey sdk.StoreKey, cdc codec.M
 type MigrationMap map[string]uint64
 
 // RunMigrations performs in-place store migrations for all modules.
-func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, migrationsMap map[string]uint64) error {
+func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, migrationMap MigrationMap) error {
 	c, ok := cfg.(configurator)
 	if !ok {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
 	}
 
 	for moduleName, module := range m.Modules {
-		err := c.runModuleMigrations(ctx, moduleName, migrationsMap[moduleName], module.ConsensusVersion())
+		err := c.runModuleMigrations(ctx, moduleName, migrationMap[moduleName], module.ConsensusVersion())
 		if err != nil {
 			return err
 		}

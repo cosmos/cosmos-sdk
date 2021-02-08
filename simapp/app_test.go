@@ -70,18 +70,18 @@ func TestRunMigrations(t *testing.T) {
 	}{
 		{
 			"cannot register migration for non-existant module",
-			"foo", 0,
-			true, "store key for module foo not found: not found", false, "", 0,
-		},
-		{
-			"cannot register migration for version 0",
 			"foo", 1,
 			true, "store key for module foo not found: not found", false, "", 0,
 		},
 		{
+			"cannot register migration for version 0",
+			"bank", 0,
+			true, "module migration versions should start at 1: invalid version", false, "", 0,
+		},
+		{
 			"throws error on RunMigrations if no migration registered for bank",
 			"", 1,
-			false, "", true, "no migration found for module bank from version 0 to version 1: not found", 0,
+			false, "", true, "no migration found for module bank from version 1 to version 2: not found", 0,
 		},
 		{
 			"can register and run migration handler for x/bank",
@@ -91,7 +91,7 @@ func TestRunMigrations(t *testing.T) {
 		{
 			"cannot register migration handler for same module & forVersion",
 			"bank", 1,
-			true, "another migration for module bank and version 0 already exists: internal logic error", false, "", 0,
+			true, "another migration for module bank and version 1 already exists: internal logic error", false, "", 0,
 		},
 	}
 
@@ -106,20 +106,28 @@ func TestRunMigrations(t *testing.T) {
 			called := 0
 
 			if tc.moduleName != "" {
+				// Register migration for module from version `forVersion` to `forVersion+1`.
 				err = app.configurator.RegisterMigration(tc.moduleName, tc.forVersion, func(sdk.Context, sdk.StoreKey, codec.Marshaler) error {
 					called++
 
 					return nil
 				})
+
 				if tc.expRegErr {
 					require.EqualError(t, err, tc.expRegErrMsg)
+
+					return
 				}
 			}
 			require.NoError(t, err)
 
 			err = app.RunMigrations(
 				app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}),
-				map[string]uint64{"bank": 0},
+				module.MigrationMap{
+					"auth": 1, "authz": 1, "bank": 1, "staking": 1, "mint": 1, "distribution": 1,
+					"slashing": 1, "gov": 1, "params": 1, "ibc": 1, "upgrade": 1, "vesting": 1,
+					"feegrant": 1, "transfer": 1, "evidence": 1, "crisis": 1, "genutil": 1, "capability": 1,
+				},
 			)
 			if tc.expRunErr {
 				require.EqualError(t, err, tc.expRunErrMsg)

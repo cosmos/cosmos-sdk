@@ -105,9 +105,9 @@ func TestRunMigrations(t *testing.T) {
 
 					return nil
 				})
-			if tc.expRegErr {
-				assert.ErrorEqual(t, err, tc.expRegErrMsg)
-			}
+				if tc.expRegErr {
+					require.EqualError(t, err, tc.expRegErrMsg)
+				}
 			}
 			require.NoError(t, err)
 
@@ -116,8 +116,7 @@ func TestRunMigrations(t *testing.T) {
 				map[string]uint64{"bank": 0},
 			)
 			if tc.expRunErr {
-				require.Error(t, err)
-				require.Equal(t, tc.expRunErrMsg, err.Error())
+				require.EqualError(t, err, tc.expRunErrMsg)
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tc.expCalled, called)

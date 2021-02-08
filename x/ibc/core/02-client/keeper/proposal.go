@@ -19,12 +19,6 @@ import (
 // subtitute (enusring they match the subject's parameters) as well as copying
 // the necessary consensus states from the subtitute to the subject client
 // store.
-//
-// NOTE: Substitute clients with revision numbers not equal to the revision
-// number of the subject client is explicitly disallowed. We cannot support
-// this until there is a way to range query for the all the consensus
-// states which occurred between two IBC Revision heights.
-// https://github.com/cosmos/cosmos-sdk/issues/7712
 func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdateProposal) error {
 	if p.SubjectClientId == exported.Localhost || p.SubstituteClientId == exported.Localhost {
 		return sdkerrors.Wrap(types.ErrInvalidUpdateClientProposal, "cannot update localhost client with proposal")
@@ -42,11 +36,6 @@ func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdatePropo
 	substituteClientState, found := k.GetClientState(ctx, p.SubstituteClientId)
 	if !found {
 		return sdkerrors.Wrapf(types.ErrClientNotFound, "substitute client with ID %s", p.SubstituteClientId)
-	}
-
-	// substitute clients with height across revision numbers is not allowed
-	if subjectClientState.GetLatestHeight().GetRevisionNumber() != substituteClientState.GetLatestHeight().GetRevisionNumber() {
-		return sdkerrors.Wrapf(types.ErrInvalidHeight, "subject client state and substitute client state must have the same revision number (%d != %d)", subjectClientState.GetLatestHeight().GetRevisionNumber(), substituteClientState.GetLatestHeight().GetRevisionNumber())
 	}
 
 	clientState, err := subjectClientState.CheckSubstituteAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, p.SubjectClientId), k.ClientStore(ctx, p.SubstituteClientId), substituteClientState, p.InitialHeight)

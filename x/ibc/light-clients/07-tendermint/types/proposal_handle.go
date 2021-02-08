@@ -34,6 +34,14 @@ func (cs ClientState) CheckSubstituteAndUpdateState(
 		)
 	}
 
+	// substitute clients are not allowed to be upgraded during the voting period
+	if substituteClientState.GetLatestHeight().GetRevisionNumber() != initialHeight.GetRevisionNumber() {
+		return nil, sdkerrors.Wrapf(
+			clienttypes.ErrInvalidHeight, "substitute client revision number must equal initial height revision number (%d != %d)",
+			substituteClientState.GetLatestHeight().GetRevisionNumber(), initialHeight.GetRevisionNumber(),
+		)
+	}
+
 	if !IsMatchingClientState(cs, *substituteClientState) {
 		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidSubstitute, "subject client state does not match substitute client state")
 	}
@@ -67,8 +75,6 @@ func (cs ClientState) CheckSubstituteAndUpdateState(
 
 	// copy consensus states and processed time from substitute to subject
 	// starting from initial height and ending on the latest height (inclusive)
-	// CONTRACT: the revision number is same for substitute and subject
-	// as cheked in 02-client.
 	for i := initialHeight.GetRevisionHeight(); i <= substituteClientState.GetLatestHeight().GetRevisionHeight(); i++ {
 		height := clienttypes.NewHeight(substituteClientState.GetLatestHeight().GetRevisionNumber(), i)
 

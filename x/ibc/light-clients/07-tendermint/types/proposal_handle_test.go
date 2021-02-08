@@ -29,6 +29,11 @@ func (suite *TendermintTestSuite) TestCheckSubstituteUpdateStateBasic() {
 			},
 		},
 		{
+			"initial height and substitute revision numbers do not match", func() {
+				initialHeight = clienttypes.NewHeight(substituteClientState.GetLatestHeight().GetRevisionNumber()+1, 1)
+			},
+		},
+		{
 			"non-matching substitute", func() {
 				substitute, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 				substituteClientState = suite.chainA.GetClientState(substitute).(*types.ClientState)

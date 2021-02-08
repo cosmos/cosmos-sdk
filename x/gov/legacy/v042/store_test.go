@@ -68,7 +68,7 @@ func TestStoreMigration(t *testing.T) {
 	}
 
 	// Run migrations.
-	err := v042gov.MigrateStore(store)
+	err := v042gov.MigrateStore(ctx, govKey, nil)
 	require.NoError(t, err)
 
 	// Make sure the new keys are set and old keys are deleted.

@@ -51,7 +51,7 @@ func TestStoreMigration(t *testing.T) {
 	}
 
 	// Run migrations.
-	err := v042slashing.MigrateStore(store)
+	err := v042slashing.MigrateStore(ctx, slashingKey, nil)
 	require.NoError(t, err)
 
 	// Make sure the new keys are set and old keys are deleted.

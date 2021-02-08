@@ -1,6 +1,7 @@
 package v042
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v042distribution "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v042"
 	v040slashing "github.com/cosmos/cosmos-sdk/x/slashing/legacy/v040"
@@ -10,7 +11,8 @@ import (
 // migration includes:
 //
 // - Change addresses to be length-prefixed.
-func MigrateStore(store sdk.KVStore) error {
+func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, _ codec.Marshaler) error {
+	store := ctx.KVStore(storeKey)
 	v042distribution.MigratePrefixAddress(store, v040slashing.ValidatorSigningInfoKeyPrefix)
 	v042distribution.MigratePrefixAddressBytes(store, v040slashing.ValidatorMissedBlockBitArrayKeyPrefix)
 	v042distribution.MigratePrefixAddress(store, v040slashing.AddrPubkeyRelationKeyPrefix)

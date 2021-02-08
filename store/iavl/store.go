@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
+
 	ics23 "github.com/confio/ics23/go"
 	"github.com/cosmos/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"

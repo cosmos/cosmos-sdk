@@ -219,7 +219,7 @@ func (gam GenesisOnlyAppModule) RegisterServices(Configurator) {}
 // module. It should be incremented on each consensus-breaking change
 // introduced by the module. To avoid wrong/empty versions, the initial version
 // is set to 1.
-func (gam GenesisOnlyAppModule) ConsensusVersion() uint64 { return 0 }
+func (gam GenesisOnlyAppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock returns an empty module begin-block
 func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}

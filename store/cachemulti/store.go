@@ -60,6 +60,9 @@ func NewFromKVStore(
 		} else {
 			cms.stores[key] = cacheWrapped
 		}
+		if cms.ListeningEnabled(key) {
+			cacheWrapped = cacheWrapped.CacheWrapWithListeners(key, cms.listeners[key])
+		}
 	}
 
 	return cms

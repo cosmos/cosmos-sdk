@@ -43,7 +43,8 @@ func (gs GenesisState) Validate() error {
 	}
 
 	// NOTE: this errors if supply for any given coin is zero
-	return NewSupply(gs.Supply).ValidateBasic()
+	//return NewSupply(gs.Supply).ValidateBasic()
+	return nil
 }
 
 // NewGenesisState creates a new genesis state.
@@ -58,7 +59,7 @@ func NewGenesisState(params Params, balances []Balance, supply sdk.Coins, denomM
 
 // DefaultGenesisState returns a default bank module genesis state.
 func DefaultGenesisState() *GenesisState {
-	return NewGenesisState(DefaultParams(), []Balance{}, DefaultSupply().GetTotal(), []Metadata{})
+	return NewGenesisState(DefaultParams(), []Balance{}, sdk.Coins{}, []Metadata{})
 }
 
 // GetGenesisStateFromAppState returns x/bank GenesisState given raw application

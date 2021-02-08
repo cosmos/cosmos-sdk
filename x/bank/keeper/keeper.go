@@ -9,7 +9,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
-	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -27,9 +26,6 @@ type Keeper interface {
 	GetSupply(ctx sdk.Context, denom string) sdk.Coin
 	GetTotalSupply(ctx sdk.Context) sdk.Coins
 	SetSupply(ctx sdk.Context, supply sdk.Coins)
-	InflateSupply()
-	DeflateSupply()
-
 
 	GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool)
 	SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)
@@ -45,8 +41,6 @@ type Keeper interface {
 
 	DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
 	UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
-	MarshalSupply(supplyI exported.SupplyI) ([]byte, error)
-	UnmarshalSupply(bz []byte) (exported.SupplyI, error)
 
 	types.QueryServer
 }
@@ -59,6 +53,10 @@ type BaseKeeper struct {
 	cdc        codec.BinaryMarshaler
 	storeKey   sdk.StoreKey
 	paramSpace paramtypes.Subspace
+}
+
+func (k BaseKeeper) GetTotalSupply(ctx sdk.Context) sdk.Coins {
+	panic("implement me")
 }
 
 func NewBaseKeeper(
@@ -180,22 +178,10 @@ func (k BaseKeeper) SetSupply(ctx sdk.Context, supply sdk.Coins) {
 	store := ctx.KVStore(k.storeKey)
 	supplyStore := prefix.NewStore(store, types.SupplyKey)
 
-	for _, coin := range supply{
+	for _, coin := range supply {
 		bz := k.cdc.MustMarshalBinaryBare(&coin)
 		supplyStore.Set([]byte(coin.Denom), bz)
 	}
-}
-
-func (k BaseKeeper) GetTotalSupply(ctx sdk.Context) sdk.Coins {
-	for
-}
-
-func (k BaseKeeper) InflateSupply() {
-	panic("implement me")
-}
-
-func (k BaseKeeper) DeflateSupply() {
-	panic("implement me")
 }
 
 // GetDenomMetaData retrieves the denomination metadata
@@ -357,8 +343,14 @@ func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 	}
 
 	// update total supply
-	supply := k.GetSupply(ctx)
-	supply.Inflate(amt)
+	supply := k.GetTotalSupply(ctx)
+	for _, coin := range supply {
+		for _, amnt := range amt {
+			if coin.Denom == amnt.Denom {
+				coin.Amount = coin.Amount.Sub(amnt.Amount)
+			}
+		}
+	}
 
 	k.SetSupply(ctx, supply)
 
@@ -386,8 +378,15 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 	}
 
 	// update total supply
-	supply := k.GetSupply(ctx)
-	supply.Deflate(amt)
+	supply := k.GetTotalSupply(ctx)
+	for _, coin := range supply {
+		for _, amnt := range amt {
+			if coin.Denom == amnt.Denom {
+				coin.Amount = coin.Amount.Sub(amnt.Amount)
+			}
+		}
+	}
+
 	k.SetSupply(ctx, supply)
 
 	logger := k.Logger(ctx)
@@ -426,14 +425,14 @@ func (k BaseKeeper) trackUndelegation(ctx sdk.Context, addr sdk.AccAddress, amt 
 	return nil
 }
 
-// MarshalSupply protobuf serializes a Supply interface
-func (k BaseKeeper) MarshalSupply(supplyI exported.SupplyI) ([]byte, error) {
-	return k.cdc.MarshalInterface(supplyI)
-}
-
-// UnmarshalSupply returns a Supply interface from raw encoded supply
-// bytes of a Proto-based Supply type
-func (k BaseKeeper) UnmarshalSupply(bz []byte) (exported.SupplyI, error) {
-	var evi exported.SupplyI
-	return evi, k.cdc.UnmarshalInterface(bz, &evi)
-}
+//// MarshalSupply protobuf serializes a Supply interface
+//func (k BaseKeeper) MarshalSupply(supplyI exported.SupplyI) ([]byte, error) {
+//	return k.cdc.MarshalInterface(supplyI)
+//}
+//
+//// UnmarshalSupply returns a Supply interface from raw encoded supply
+//// bytes of a Proto-based Supply type
+//func (k BaseKeeper) UnmarshalSupply(bz []byte) (exported.SupplyI, error) {
+//	var evi exported.SupplyI
+//	return evi, k.cdc.UnmarshalInterface(bz, &evi)
+//}

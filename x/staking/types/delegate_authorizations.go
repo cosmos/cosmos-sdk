@@ -17,28 +17,18 @@ var (
 
 // NewDelegateAuthorization creates a new DelegateAuthorization object.
 func NewDelegateAuthorization(allowed []sdk.ValAddress, denied []sdk.ValAddress, amount *sdk.Coin) (*DelegateAuthorization, error) {
-	if len(allowed) == 0 && len(denied) == 0 {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "both allowed & deny list cannot be empty")
-	}
-
-	if len(allowed) > 0 && len(denied) > 0 {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "cannot set both allowed & deny list")
+	allowedValidators, deniedValidators, err := validateAndBech32fy(allowed, denied)
+	if err != nil {
+		return nil, err
 	}
 
 	authorization := DelegateAuthorization{}
-	if len(allowed) > 0 {
-		allowedValidators := make([]string, len(allowed))
-		for i, validator := range allowed {
-			allowedValidators[i] = validator.String()
-		}
+	if allowedValidators != nil {
 		authorization.Validators = &DelegateAuthorization_AllowList{AllowList: &DelegateAuthorization_Validators{Address: allowedValidators}}
-	} else if len(denied) > 0 {
-		deniedValidators := make([]string, len(denied))
-		for i, validator := range denied {
-			deniedValidators[i] = validator.String()
-		}
+	} else {
 		authorization.Validators = &DelegateAuthorization_DenyList{DenyList: &DelegateAuthorization_Validators{Address: deniedValidators}}
 	}
+
 	if amount != nil {
 		authorization.MaxTokens = amount
 	}

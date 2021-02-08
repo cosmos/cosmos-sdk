@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Authorization represents the interface of various Authorization types.
 type Authorization interface {
 	proto.Message
 

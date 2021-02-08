@@ -14,28 +14,43 @@ var (
 	_ authz.Authorization = &UndelegateAuthorization{}
 )
 
-// NewUndelegateAuthorization creates a new UndlegateAuthorization object.
-func NewUndelegateAuthorization(allowed []sdk.ValAddress, denied []sdk.ValAddress, amount *sdk.Coin) (*UndelegateAuthorization, error) {
+func validateAndBech32fy(allowed []sdk.ValAddress, denied []sdk.ValAddress) ([]string, []string, error) {
 	if len(allowed) == 0 && len(denied) == 0 {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "both allowed & deny list cannot be empty")
+		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "both allowed & deny list cannot be empty")
 	}
 
 	if len(allowed) > 0 && len(denied) > 0 {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "cannot set both allowed & deny list")
+		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "cannot set both allowed & deny list")
 	}
 
-	authorization := UndelegateAuthorization{}
+	allowedValidators := make([]string, len(allowed))
 	if len(allowed) > 0 {
-		allowedValidators := make([]string, len(allowed))
 		for i, validator := range allowed {
 			allowedValidators[i] = validator.String()
 		}
+		return allowedValidators, nil, nil
+	}
+
+	deniedValidators := make([]string, len(denied))
+	for i, validator := range denied {
+		deniedValidators[i] = validator.String()
+	}
+
+	return nil, deniedValidators, nil
+}
+
+// NewUndelegateAuthorization creates a new UndlegateAuthorization object.
+func NewUndelegateAuthorization(allowed []sdk.ValAddress, denied []sdk.ValAddress, amount *sdk.Coin) (*UndelegateAuthorization, error) {
+	authorization := UndelegateAuthorization{}
+
+	allowedValidators, deniedValidators, err := validateAndBech32fy(allowed, denied)
+	if err != nil {
+		return nil, err
+	}
+
+	if allowedValidators != nil {
 		authorization.Validators = &UndelegateAuthorization_AllowList{AllowList: &UndelegateAuthorization_Validators{Address: allowedValidators}}
-	} else if len(denied) > 0 {
-		deniedValidators := make([]string, len(denied))
-		for i, validator := range denied {
-			deniedValidators[i] = validator.String()
-		}
+	} else {
 		authorization.Validators = &UndelegateAuthorization_DenyList{DenyList: &UndelegateAuthorization_Validators{Address: deniedValidators}}
 	}
 

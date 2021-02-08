@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -14,7 +16,6 @@ import (
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
-	"github.com/stretchr/testify/suite"
 )
 
 type IntegrationTestSuite struct {

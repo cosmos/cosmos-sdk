@@ -5,7 +5,7 @@ order: 5
 # Governance Proposals
 
 In uncommon situations, a highly valued client may become frozen due to uncontrollable 
-circumstances. A highly valued client, might have hundreds of channels being actively used.
+circumstances. A highly valued client might have hundreds of channels being actively used.
 Some of those channels might have a significant amount of locked tokens used for ICS 20.
 
 If the one third of the validator set the chain the client represents decides to collude,
@@ -36,4 +36,3 @@ while the subject is on trial. It is best practice to create a substitute client
 has become frozen to avoid the substitute from also becoming frozen. An active substitute client
 allows headers to be submitted during the voting period to prevent accidental expiry once the proposal
 passes. 
-

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
@@ -168,6 +169,7 @@ func TestManager_RegisterRoutes(t *testing.T) {
 func TestManager_RegisterQueryServices(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
+	encCfg := simapp.MakeTestEncodingConfig()
 
 	mockAppModule1 := mocks.NewMockAppModule(mockCtrl)
 	mockAppModule2 := mocks.NewMockAppModule(mockCtrl)
@@ -179,7 +181,7 @@ func TestManager_RegisterQueryServices(t *testing.T) {
 
 	msgRouter := mocks.NewMockServer(mockCtrl)
 	queryRouter := mocks.NewMockServer(mockCtrl)
-	cfg := module.NewConfigurator(msgRouter, queryRouter, nil)
+	cfg := module.NewConfigurator(encCfg.Marshaler, msgRouter, queryRouter, nil)
 	mockAppModule1.EXPECT().RegisterServices(cfg).Times(1)
 	mockAppModule2.EXPECT().RegisterServices(cfg).Times(1)
 

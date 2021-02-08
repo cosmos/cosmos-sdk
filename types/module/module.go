@@ -175,7 +175,10 @@ type AppModule interface {
 	// RegisterServices allows a module to register services
 	RegisterServices(Configurator)
 
-	// ConsensusVersion tracks state-breaking versions of the module
+	// ConsensusVersion is a sequence number for state-breaking change of the
+	// module. It should be incremented on each consensus-breaking change
+	// introduced by the module. To avoid wrong/empty versions, the initial version
+	// is set to 1.
 	ConsensusVersion() uint64
 
 	// ABCI
@@ -212,7 +215,10 @@ func (gam GenesisOnlyAppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Que
 // RegisterServices registers all services.
 func (gam GenesisOnlyAppModule) RegisterServices(Configurator) {}
 
-// ConsensusVersion tracks state-breaking versions of the module.
+// ConsensusVersion is a sequence number for state-breaking change of the
+// module. It should be incremented on each consensus-breaking change
+// introduced by the module. To avoid wrong/empty versions, the initial version
+// is set to 1.
 func (gam GenesisOnlyAppModule) ConsensusVersion() uint64 { return 0 }
 
 // BeginBlock returns an empty module begin-block

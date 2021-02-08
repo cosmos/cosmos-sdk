@@ -3,6 +3,8 @@ package dbadapter
 import (
 	"io"
 
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
+
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"

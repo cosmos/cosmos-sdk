@@ -237,3 +237,14 @@ func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 	app.grpcQueryRouter.SetInterfaceRegistry(registry)
 	app.msgServiceRouter.SetInterfaceRegistry(registry)
 }
+
+// SetHooks is used to set a streaming service into the BaseApp hooks
+func (app *BaseApp) SetHooks(s sdk.StreamingService) {
+	// set the listeners for each StoreKey
+	for key, lis := range s.Listeners() {
+		app.cms.SetListeners(key, lis)
+	}
+	// register the streaming service hooks within the BaseApp
+	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context using these hooks
+	app.hooks = append(app.hooks, s)
+}

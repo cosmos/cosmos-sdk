@@ -32,7 +32,7 @@ func (s *paginationTestSuite) TestFilteredPaginations() {
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
 	s.Require().NoError(simapp.FundAccount(app, ctx, addr1, balances))
-	store := ctx.KVStore(app.GetKey(authtypes.StoreKey))
+	store := ctx.KVStore(app.GetKey(types.StoreKey))
 
 	// verify pagination with limit > total values
 	pageReq := &query.PageRequest{Key: nil, Limit: 5, CountTotal: true}
@@ -144,10 +144,9 @@ func ExampleFilteredPaginate() {
 
 func execFilterPaginate(store sdk.KVStore, pageReq *query.PageRequest, appCodec codec.Marshaler) (balances sdk.Coins, res *query.PageResponse, err error) {
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
-	accountStore := prefix.NewStore(balancesStore, addr1.Bytes())
 
 	var balResult sdk.Coins
-	res, err = query.FilteredPaginate(accountStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	res, err = query.FilteredPaginate(balancesStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var bal sdk.Coin
 		err := appCodec.UnmarshalBinaryBare(value, &bal)
 		if err != nil {

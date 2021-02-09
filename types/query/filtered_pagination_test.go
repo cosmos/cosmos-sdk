@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -101,6 +100,8 @@ func ExampleFilteredPaginate() {
 		denom := fmt.Sprintf("test%ddenom", i)
 		balances = append(balances, sdk.NewInt64Coin(denom, 250))
 	}
+
+	balances = balances.Sort()
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
@@ -110,7 +111,7 @@ func ExampleFilteredPaginate() {
 	}
 
 	pageReq := &query.PageRequest{Key: nil, Limit: 1, CountTotal: true}
-	store := ctx.KVStore(app.GetKey(authtypes.StoreKey))
+	store := ctx.KVStore(app.GetKey(types.StoreKey))
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, addr1.Bytes())
 
@@ -144,9 +145,10 @@ func ExampleFilteredPaginate() {
 
 func execFilterPaginate(store sdk.KVStore, pageReq *query.PageRequest, appCodec codec.Marshaler) (balances sdk.Coins, res *query.PageResponse, err error) {
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
+	accountStore := prefix.NewStore(balancesStore, addr1.Bytes())
 
 	var balResult sdk.Coins
-	res, err = query.FilteredPaginate(balancesStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	res, err = query.FilteredPaginate(accountStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var bal sdk.Coin
 		err := appCodec.UnmarshalBinaryBare(value, &bal)
 		if err != nil {

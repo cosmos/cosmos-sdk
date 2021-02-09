@@ -3,6 +3,9 @@ package query_test
 import (
 	gocontext "context"
 	"fmt"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -18,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -73,13 +75,11 @@ func (s *paginationTestSuite) TestPagination() {
 		balances = append(balances, sdk.NewInt64Coin(denom, 100))
 	}
 
-	balances = balances.Sort()
-
 	addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	// s.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, balances))
-	s.Require().NoError(simapp.FundAccount(app, ctx, addr1, balances))
+	s.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, balances))
+
 	s.T().Log("verify empty page request results a max of defaultLimit records and counts total records")
 	pageReq := &query.PageRequest{}
 	request := types.NewQueryAllBalancesRequest(addr1, pageReq)
@@ -180,18 +180,19 @@ func ExamplePaginate() {
 		balances = append(balances, sdk.NewInt64Coin(denom, 100))
 	}
 
+	balances = balances.Sort()
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	err := app.BankKeeper.SetBalances(ctx, addr1, balances)
-	if err != nil {
+	err := simapp.FundAccount(app, ctx, addr1, balances)
+	if err != nil { // should return no error
 		fmt.Println(err)
 	}
 	// Paginate example
 	pageReq := &query.PageRequest{Key: nil, Limit: 1, CountTotal: true}
 	request := types.NewQueryAllBalancesRequest(addr1, pageReq)
 	balResult := sdk.NewCoins()
-	authStore := ctx.KVStore(app.GetKey(authtypes.StoreKey))
+	authStore := ctx.KVStore(app.GetKey(types.StoreKey))
 	balancesStore := prefix.NewStore(authStore, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, addr1.Bytes())
 	pageRes, err := query.Paginate(accountStore, request.Pagination, func(key []byte, value []byte) error {
@@ -227,6 +228,15 @@ func setupTest() (*simapp.SimApp, sdk.Context, codec.Marshaler) {
 	maccPerms[authtypes.Minter] = []string{authtypes.Minter}
 	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
 	maccPerms[randomPerm] = []string{"random"}
+
+	app.AccountKeeper = authkeeper.NewAccountKeeper(
+		appCodec, app.GetKey(authtypes.StoreKey), app.GetSubspace(authtypes.ModuleName),
+		authtypes.ProtoBaseAccount, maccPerms,
+	)
+	app.BankKeeper = bankkeeper.NewBaseKeeper(
+		appCodec, app.GetKey(types.StoreKey), app.AccountKeeper,
+		app.GetSubspace(types.ModuleName), make(map[string]bool),
+	)
 
 	return app, ctx, appCodec
 }

@@ -72,19 +72,9 @@ func (app *BaseApp) RegisterGRPCServer(clientCtx client.Context, server gogogrpc
 			return nil, err
 		}
 
+		// TODO Add metadata height in response?
+
 		return
-
-		// // Attach the sdk.Context into the gRPC's context.Context.
-		// grpcCtx = context.WithValue(grpcCtx, sdk.SdkContextKey, sdkCtx)
-
-		// // Add relevant gRPC headers
-		// if height == 0 {
-		// 	height = sdkCtx.BlockHeight() // If height was not set in the request, set it to the latest
-		// }
-		// md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
-		// grpc.SetHeader(grpcCtx, md)
-
-		// return handler(grpcCtx, req)
 	}
 
 	// Loop through all services and methods, add the interceptor, and register

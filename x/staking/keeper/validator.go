@@ -10,22 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// Cache the amino decoding of validators, as it can be the case that repeated slashing calls
-// cause many calls to GetValidator, which were shown to throttle the state machine in our
-// simulation. Note this is quite biased though, as the simulator does more slashes than a
-// live chain should, however we require the slashing to be fast as noone pays gas for it.
-type cachedValidator struct {
-	val        types.Validator
-	marshalled string // marshalled amino bytes for the validator object (not operator address)
-}
-
-func newCachedValidator(val types.Validator, marshalled string) cachedValidator {
-	return cachedValidator{
-		val:        val,
-		marshalled: marshalled,
-	}
-}
-
 // get a single validator
 func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator types.Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
@@ -36,15 +20,6 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 	}
 
 	validator = types.MustUnmarshalValidator(k.cdc, value)
-
-	// if the cache is too big, pop off the last element from it
-	if k.validatorCacheList.Len() > aminoCacheSize {
-		valToRemove := k.validatorCacheList.Remove(k.validatorCacheList.Front()).(cachedValidator)
-		delete(k.validatorCache, valToRemove.marshalled)
-	}
-
-	validator = types.MustUnmarshalValidator(k.cdc, value)
-
 	return validator, true
 }
 

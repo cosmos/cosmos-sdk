@@ -3,9 +3,6 @@ package query_test
 import (
 	gocontext "context"
 	"fmt"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -21,6 +18,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -75,10 +75,11 @@ func (s *paginationTestSuite) TestPagination() {
 		balances = append(balances, sdk.NewInt64Coin(denom, 100))
 	}
 
+	balances = balances.Sort()
 	addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	s.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, balances))
+	s.Require().NoError(simapp.FundAccount(app, ctx, addr1, balances))
 
 	s.T().Log("verify empty page request results a max of defaultLimit records and counts total records")
 	pageReq := &query.PageRequest{}

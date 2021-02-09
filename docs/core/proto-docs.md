@@ -2882,7 +2882,8 @@ Msg defines the bank Msg service.
 <a name="cosmos.crypto.ed25519.PrivKey"></a>
 
 ### PrivKey
-PrivKey defines a ed25519 private key.
+Deprecated: PrivKey defines a ed25519 private key.
+NOTE: ed25519 keys must not be used in SDK apps except in a tendermint validator context.
 
 
 | Field | Type | Label | Description |

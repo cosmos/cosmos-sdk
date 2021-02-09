@@ -138,7 +138,7 @@ func genPrivKey(rand io.Reader) *PrivKey {
 
 // GenPrivKeyFromSecret hashes the secret with SHA2, and uses
 // that 32 byte output to create the private key.
-// These ed25519 keys must not be used in SDK apps except in a tendermint validator context.
+// NOTE: ed25519 keys must not be used in SDK apps except in a tendermint validator context.
 // NOTE: secret should be the output of a KDF like bcrypt,
 // if it's derived from user input.
 func GenPrivKeyFromSecret(secret []byte) *PrivKey {

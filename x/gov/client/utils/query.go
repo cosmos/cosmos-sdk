@@ -38,7 +38,15 @@ func (p Proposer) String() string {
 // support configurable pagination.
 func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposalParams) ([]byte, error) {
 	events := []string{
-		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeSvcMsgDeposit),
+		fmt.Sprintf(
+			// There are two ways to send Msgs:
+			// - via legacy Msgs (amino or proto), their `Type()`` is a custom string,
+			// - via ADR-031 service msgs, their `Type()` is the protobuf FQ method name.
+			// In searching for events, we search for both `Type()`s.
+			"%s.%s='%s' OR %s.%s='%s'",
+			sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgDeposit,
+			sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeSvcMsgDeposit,
+		),
 		fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 	}
 
@@ -53,9 +61,14 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposal
 
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
+			var depMsg *types.MsgDeposit
 			if msg.Type() == types.TypeSvcMsgDeposit {
-				depMsg := msg.(sdk.ServiceMsg).Request.(*types.MsgDeposit)
+				depMsg = msg.(sdk.ServiceMsg).Request.(*types.MsgDeposit)
+			} else if msg.Type() == types.TypeMsgDeposit {
+				depMsg = msg.(*types.MsgDeposit)
+			}
 
+			if depMsg != nil {
 				deposits = append(deposits, types.Deposit{
 					Depositor:  depMsg.Depositor,
 					ProposalId: params.ProposalID,
@@ -79,7 +92,15 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposal
 func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVotesParams) ([]byte, error) {
 	var (
 		events = []string{
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeSvcMsgVote),
+			fmt.Sprintf(
+				// There are two ways to send Msgs:
+				// - via legacy Msgs (amino or proto), their `Type()`` is a custom string,
+				// - via ADR-031 service msgs, their `Type()` is the protobuf FQ method name.
+				// In searching for events, we search for both `Type()`s.
+				"%s.%s='%s' OR %s.%s='%s'",
+				sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgVote,
+				sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeSvcMsgVote,
+			),
 			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 		}
 		votes      []types.Vote
@@ -95,9 +116,14 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 		nextTxPage++
 		for _, info := range searchResult.Txs {
 			for _, msg := range info.GetTx().GetMsgs() {
+				var voteMsg *types.MsgVote
 				if msg.Type() == types.TypeSvcMsgVote {
-					voteMsg := msg.(sdk.ServiceMsg).Request.(*types.MsgVote)
+					voteMsg = msg.(sdk.ServiceMsg).Request.(*types.MsgVote)
+				} else if msg.Type() == types.TypeMsgVote {
+					voteMsg = msg.(*types.MsgVote)
+				}
 
+				if voteMsg != nil {
 					votes = append(votes, types.Vote{
 						Voter:      voteMsg.Voter,
 						ProposalId: params.ProposalID,
@@ -128,7 +154,15 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 // QueryVoteByTxQuery will query for a single vote via a direct txs tags query.
 func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) ([]byte, error) {
 	events := []string{
-		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeSvcMsgVote),
+		fmt.Sprintf(
+			// There are two ways to send Msgs:
+			// - via legacy Msgs (amino or proto), their `Type()`` is a custom string,
+			// - via ADR-031 service msgs, their `Type()` is the protobuf FQ method name.
+			// In searching for events, we search for both `Type()`s.
+			"%s.%s='%s' OR %s.%s='%s'",
+			sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgVote,
+			sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeSvcMsgVote,
+		),
 		fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, []byte(params.Voter.String())),
 	}
@@ -141,10 +175,15 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 	}
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
+			var voteMsg *types.MsgVote
 			// there should only be a single vote under the given conditions
 			if msg.Type() == types.TypeSvcMsgVote {
-				voteMsg := msg.(sdk.ServiceMsg).Request.(*types.MsgVote)
+				voteMsg = msg.(sdk.ServiceMsg).Request.(*types.MsgVote)
+			} else if msg.Type() == types.TypeMsgVote {
+				voteMsg = msg.(*types.MsgVote)
+			}
 
+			if voteMsg != nil {
 				vote := types.Vote{
 					Voter:      voteMsg.Voter,
 					ProposalId: params.ProposalID,
@@ -168,7 +207,15 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 // query.
 func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositParams) ([]byte, error) {
 	events := []string{
-		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeSvcMsgDeposit),
+		fmt.Sprintf(
+			// There are two ways to send Msgs:
+			// - via legacy Msgs (amino or proto), their `Type()`` is a custom string,
+			// - via ADR-031 service msgs, their `Type()` is the protobuf FQ method name.
+			// In searching for events, we search for both `Type()`s.
+			"%s.%s='%s' OR %s.%s='%s'",
+			sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgDeposit,
+			sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeSvcMsgDeposit,
+		),
 		fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, []byte(params.Depositor.String())),
 	}
@@ -182,10 +229,15 @@ func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositPa
 
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
+			var depMsg *types.MsgDeposit
 			// there should only be a single deposit under the given conditions
 			if msg.Type() == types.TypeSvcMsgDeposit {
-				depMsg := msg.(sdk.ServiceMsg).Request.(*types.MsgDeposit)
+				depMsg = msg.(sdk.ServiceMsg).Request.(*types.MsgDeposit)
+			} else if msg.Type() == types.TypeMsgDeposit {
+				depMsg = msg.(*types.MsgDeposit)
+			}
 
+			if depMsg != nil {
 				deposit := types.Deposit{
 					Depositor:  depMsg.Depositor,
 					ProposalId: params.ProposalID,
@@ -209,7 +261,15 @@ func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositPa
 // ID.
 func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Proposer, error) {
 	events := []string{
-		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeSvcMsgSubmitProposal),
+		fmt.Sprintf(
+			// There are two ways to send Msgs:
+			// - via legacy Msgs (amino or proto), their `Type()`` is a custom string,
+			// - via ADR-031 service msgs, their `Type()` is the protobuf FQ method name.
+			// In searching for events, we search for both `Type()`s.
+			"%s.%s='%s' OR %s.%s='%s'",
+			sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgSubmitProposal,
+			sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeSvcMsgSubmitProposal,
+		),
 		fmt.Sprintf("%s.%s='%s'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", proposalID))),
 	}
 
@@ -225,6 +285,11 @@ func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Propos
 			// there should only be a single proposal under the given conditions
 			if msg.Type() == types.TypeSvcMsgSubmitProposal {
 				subMsg := msg.(sdk.ServiceMsg).Request.(*types.MsgSubmitProposal)
+
+				return NewProposer(proposalID, subMsg.Proposer), nil
+			} else if msg.Type() == types.TypeMsgSubmitProposal {
+				subMsg := msg.(*types.MsgSubmitProposal)
+
 				return NewProposer(proposalID, subMsg.Proposer), nil
 			}
 		}

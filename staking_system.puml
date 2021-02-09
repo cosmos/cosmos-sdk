@@ -1,0 +1,23 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+abstract class Staking
+abstract class Distribution
+abstract class Slashing
+abstract class Evidence
+abstract class Bank
+abstract class Auth
+
+Bank <|-- Distribution
+Auth <|-- Distribution
+Staking <|-- Distribution
+
+Staking <|-- Evidence
+Slashing <|-- Evidence
+
+Staking <|-- Slashing
+
+Auth <|-- Staking
+Bank <|-- Staking
+
+@enduml

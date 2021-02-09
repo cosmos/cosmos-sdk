@@ -672,6 +672,27 @@ func TestSetInitialVersion(t *testing.T) {
 	require.True(t, iavlStore.VersionExists(5))
 }
 
+func TestSetListenersAndListeningEnabled(t *testing.T) {
+	db := dbm.NewMemDB()
+	multi := newMultiStoreWithMounts(db, types.PruneNothing)
+	testKey := types.NewKVStoreKey("listening_test_key")
+	enabled := multi.ListeningEnabled(testKey)
+	require.False(t, enabled)
+
+	multi.SetListeners(testKey, []types.WriteListener{})
+	enabled = multi.ListeningEnabled(testKey)
+	require.False(t, enabled)
+
+	mockListener := types.NewStoreKVPairWriteListener(nil, nil)
+	multi.SetListeners(testKey, []types.WriteListener{mockListener})
+	wrongTestKey := types.NewKVStoreKey("wrong_listening_test_key")
+	enabled = multi.ListeningEnabled(wrongTestKey)
+	require.False(t, enabled)
+
+	enabled = multi.ListeningEnabled(testKey)
+	require.True(t, enabled)
+}
+
 func BenchmarkMultistoreSnapshot100K(b *testing.B) {
 	benchmarkMultistoreSnapshot(b, 10, 10000)
 }

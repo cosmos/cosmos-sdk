@@ -82,6 +82,7 @@ func NewStore(db dbm.DB) *Store {
 		stores:       make(map[types.StoreKey]types.CommitKVStore),
 		keysByName:   make(map[string]types.StoreKey),
 		pruneHeights: make([]int64, 0),
+		listeners:    make(map[types.StoreKey][]types.WriteListener),
 	}
 }
 
@@ -317,7 +318,7 @@ func (rs *Store) TracingEnabled() bool {
 	return rs.traceWriter != nil
 }
 
-// SetListener sets the listeners for a specific KVStore
+// SetListeners sets the listeners for a specific KVStore
 func (rs *Store) SetListeners(key types.StoreKey, listeners []types.WriteListener) {
 	if ls, ok := rs.listeners[key]; ok {
 		rs.listeners[key] = append(ls, listeners...)

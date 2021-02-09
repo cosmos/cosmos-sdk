@@ -53,8 +53,8 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposal
 
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
-			if msg.Type() == types.TypeMsgDeposit {
-				depMsg := msg.(*types.MsgDeposit)
+			if msg.Type() == types.TypeSvcMsgDeposit {
+				depMsg := msg.(sdk.ServiceMsg).Request.(*types.MsgDeposit)
 
 				deposits = append(deposits, types.Deposit{
 					Depositor:  depMsg.Depositor,
@@ -95,8 +95,8 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 		nextTxPage++
 		for _, info := range searchResult.Txs {
 			for _, msg := range info.GetTx().GetMsgs() {
-				if msg.Type() == types.TypeMsgVote {
-					voteMsg := msg.(*types.MsgVote)
+				if msg.Type() == types.TypeSvcMsgVote {
+					voteMsg := msg.(sdk.ServiceMsg).Request.(*types.MsgVote)
 
 					votes = append(votes, types.Vote{
 						Voter:      voteMsg.Voter,
@@ -142,8 +142,8 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
 			// there should only be a single vote under the given conditions
-			if msg.Type() == types.TypeMsgVote {
-				voteMsg := msg.(*types.MsgVote)
+			if msg.Type() == types.TypeSvcMsgVote {
+				voteMsg := msg.(sdk.ServiceMsg).Request.(*types.MsgVote)
 
 				vote := types.Vote{
 					Voter:      voteMsg.Voter,
@@ -183,8 +183,8 @@ func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositPa
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
 			// there should only be a single deposit under the given conditions
-			if msg.Type() == types.TypeMsgDeposit {
-				depMsg := msg.(*types.MsgDeposit)
+			if msg.Type() == types.TypeSvcMsgDeposit {
+				depMsg := msg.(sdk.ServiceMsg).Request.(*types.MsgDeposit)
 
 				deposit := types.Deposit{
 					Depositor:  depMsg.Depositor,
@@ -223,8 +223,8 @@ func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Propos
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
 			// there should only be a single proposal under the given conditions
-			if msg.Type() == types.TypeMsgSubmitProposal {
-				subMsg := msg.(*types.MsgSubmitProposal)
+			if msg.Type() == types.TypeSvcMsgSubmitProposal {
+				subMsg := msg.(sdk.ServiceMsg).Request.(*types.MsgSubmitProposal)
 				return NewProposer(proposalID, subMsg.Proposer), nil
 			}
 		}

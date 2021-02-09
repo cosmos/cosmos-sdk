@@ -18,7 +18,7 @@ type MsgRequest interface {
 }
 
 // ServiceMsg is the struct into which an Any whose typeUrl matches a service
-// method format (ex. `/cosmos.gov.Msg/SubmitProposal`) unpacks.
+// method format (ex. `/cosmos.gov.v1beta1.Msg/SubmitProposal`) unpacks.
 type ServiceMsg struct {
 	// MethodName is the fully-qualified service method name.
 	MethodName string

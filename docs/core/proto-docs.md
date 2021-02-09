@@ -264,6 +264,32 @@
   
     - [Msg](#cosmos.evidence.v1beta1.Msg)
   
+- [cosmos/feegrant/v1beta1/feegrant.proto](#cosmos/feegrant/v1beta1/feegrant.proto)
+    - [BasicFeeAllowance](#cosmos.feegrant.v1beta1.BasicFeeAllowance)
+    - [Duration](#cosmos.feegrant.v1beta1.Duration)
+    - [ExpiresAt](#cosmos.feegrant.v1beta1.ExpiresAt)
+    - [FeeAllowanceGrant](#cosmos.feegrant.v1beta1.FeeAllowanceGrant)
+    - [PeriodicFeeAllowance](#cosmos.feegrant.v1beta1.PeriodicFeeAllowance)
+  
+- [cosmos/feegrant/v1beta1/genesis.proto](#cosmos/feegrant/v1beta1/genesis.proto)
+    - [GenesisState](#cosmos.feegrant.v1beta1.GenesisState)
+  
+- [cosmos/feegrant/v1beta1/query.proto](#cosmos/feegrant/v1beta1/query.proto)
+    - [QueryFeeAllowanceRequest](#cosmos.feegrant.v1beta1.QueryFeeAllowanceRequest)
+    - [QueryFeeAllowanceResponse](#cosmos.feegrant.v1beta1.QueryFeeAllowanceResponse)
+    - [QueryFeeAllowancesRequest](#cosmos.feegrant.v1beta1.QueryFeeAllowancesRequest)
+    - [QueryFeeAllowancesResponse](#cosmos.feegrant.v1beta1.QueryFeeAllowancesResponse)
+  
+    - [Query](#cosmos.feegrant.v1beta1.Query)
+  
+- [cosmos/feegrant/v1beta1/tx.proto](#cosmos/feegrant/v1beta1/tx.proto)
+    - [MsgGrantFeeAllowance](#cosmos.feegrant.v1beta1.MsgGrantFeeAllowance)
+    - [MsgGrantFeeAllowanceResponse](#cosmos.feegrant.v1beta1.MsgGrantFeeAllowanceResponse)
+    - [MsgRevokeFeeAllowance](#cosmos.feegrant.v1beta1.MsgRevokeFeeAllowance)
+    - [MsgRevokeFeeAllowanceResponse](#cosmos.feegrant.v1beta1.MsgRevokeFeeAllowanceResponse)
+  
+    - [Msg](#cosmos.feegrant.v1beta1.Msg)
+  
 - [cosmos/genutil/v1beta1/genesis.proto](#cosmos/genutil/v1beta1/genesis.proto)
     - [GenesisState](#cosmos.genutil.v1beta1.GenesisState)
   
@@ -4097,6 +4123,312 @@ Msg defines the evidence Msg service.
 
 
 
+<a name="cosmos/feegrant/v1beta1/feegrant.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/feegrant/v1beta1/feegrant.proto
+
+
+
+<a name="cosmos.feegrant.v1beta1.BasicFeeAllowance"></a>
+
+### BasicFeeAllowance
+BasicFeeAllowance implements FeeAllowance with a one-time grant of tokens
+that optionally expires. The delegatee can use up to SpendLimit to cover fees.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `spend_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | spend_limit specifies the maximum amount of tokens that can be spent by this allowance and will be updated as tokens are spent. If it is empty, there is no spend limit and any amount of coins can be spent. |
+| `expiration` | [ExpiresAt](#cosmos.feegrant.v1beta1.ExpiresAt) |  | expiration specifies an optional time when this allowance expires |
+
+
+
+
+
+
+<a name="cosmos.feegrant.v1beta1.Duration"></a>
+
+### Duration
+Duration is a span of a clock time or number of blocks.
+This is designed to be added to an ExpiresAt struct.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
+| `blocks` | [uint64](#uint64) |  |  |
+
+
+
+
+
+
+<a name="cosmos.feegrant.v1beta1.ExpiresAt"></a>
+
+### ExpiresAt
+ExpiresAt is a point in time where something expires.
+It may be *either* block time or block height
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `height` | [int64](#int64) |  |  |
+
+
+
+
+
+
+<a name="cosmos.feegrant.v1beta1.FeeAllowanceGrant"></a>
+
+### FeeAllowanceGrant
+FeeAllowanceGrant is stored in the KVStore to record a grant with full context
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+| `allowance` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+
+
+
+
+
+
+<a name="cosmos.feegrant.v1beta1.PeriodicFeeAllowance"></a>
+
+### PeriodicFeeAllowance
+PeriodicFeeAllowance extends FeeAllowance to allow for both a maximum cap,
+as well as a limit per time period.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `basic` | [BasicFeeAllowance](#cosmos.feegrant.v1beta1.BasicFeeAllowance) |  | basic specifies a struct of `BasicFeeAllowance` |
+| `period` | [Duration](#cosmos.feegrant.v1beta1.Duration) |  | period specifies the time duration in which period_spend_limit coins can be spent before that allowance is reset |
+| `period_spend_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | period_spend_limit specifies the maximum number of coins that can be spent in the period |
+| `period_can_spend` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | period_can_spend is the number of coins left to be spent before the period_reset time |
+| `period_reset` | [ExpiresAt](#cosmos.feegrant.v1beta1.ExpiresAt) |  | period_reset is the time at which this period resets and a new one begins, it is calculated from the start time of the first transaction after the last period ended |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/feegrant/v1beta1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/feegrant/v1beta1/genesis.proto
+
+
+
+<a name="cosmos.feegrant.v1beta1.GenesisState"></a>
+
+### GenesisState
+GenesisState contains a set of fee allowances, persisted from the store
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `fee_allowances` | [FeeAllowanceGrant](#cosmos.feegrant.v1beta1.FeeAllowanceGrant) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/feegrant/v1beta1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/feegrant/v1beta1/query.proto
+
+
+
+<a name="cosmos.feegrant.v1beta1.QueryFeeAllowanceRequest"></a>
+
+### QueryFeeAllowanceRequest
+QueryFeeAllowanceRequest is the request type for the Query/FeeAllowance RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.feegrant.v1beta1.QueryFeeAllowanceResponse"></a>
+
+### QueryFeeAllowanceResponse
+QueryFeeAllowanceResponse is the response type for the Query/FeeAllowance RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `fee_allowance` | [FeeAllowanceGrant](#cosmos.feegrant.v1beta1.FeeAllowanceGrant) |  | fee_allowance is a fee_allowance granted for grantee by granter. |
+
+
+
+
+
+
+<a name="cosmos.feegrant.v1beta1.QueryFeeAllowancesRequest"></a>
+
+### QueryFeeAllowancesRequest
+QueryFeeAllowancesRequest is the request type for the Query/FeeAllowances RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `grantee` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.feegrant.v1beta1.QueryFeeAllowancesResponse"></a>
+
+### QueryFeeAllowancesResponse
+QueryFeeAllowancesResponse is the response type for the Query/FeeAllowances RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `fee_allowances` | [FeeAllowanceGrant](#cosmos.feegrant.v1beta1.FeeAllowanceGrant) | repeated | fee_allowances are fee_allowance's granted for grantee by granter. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.feegrant.v1beta1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `FeeAllowance` | [QueryFeeAllowanceRequest](#cosmos.feegrant.v1beta1.QueryFeeAllowanceRequest) | [QueryFeeAllowanceResponse](#cosmos.feegrant.v1beta1.QueryFeeAllowanceResponse) | FeeAllowance returns fee granted to the grantee by the granter. | GET|/cosmos/feegrant/v1beta1/fee_allowance/{granter}/{grantee}|
+| `FeeAllowances` | [QueryFeeAllowancesRequest](#cosmos.feegrant.v1beta1.QueryFeeAllowancesRequest) | [QueryFeeAllowancesResponse](#cosmos.feegrant.v1beta1.QueryFeeAllowancesResponse) | FeeAllowances returns all the grants for address. | GET|/cosmos/feegrant/v1beta1/fee_allowances/{grantee}|
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/feegrant/v1beta1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/feegrant/v1beta1/tx.proto
+
+
+
+<a name="cosmos.feegrant.v1beta1.MsgGrantFeeAllowance"></a>
+
+### MsgGrantFeeAllowance
+MsgGrantFeeAllowance adds permission for Grantee to spend up to Allowance
+of fees from the account of Granter.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+| `allowance` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+
+
+
+
+
+
+<a name="cosmos.feegrant.v1beta1.MsgGrantFeeAllowanceResponse"></a>
+
+### MsgGrantFeeAllowanceResponse
+MsgGrantFeeAllowanceResponse defines the Msg/GrantFeeAllowanceResponse response type.
+
+
+
+
+
+
+<a name="cosmos.feegrant.v1beta1.MsgRevokeFeeAllowance"></a>
+
+### MsgRevokeFeeAllowance
+MsgRevokeFeeAllowance removes any existing FeeAllowance from Granter to Grantee.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.feegrant.v1beta1.MsgRevokeFeeAllowanceResponse"></a>
+
+### MsgRevokeFeeAllowanceResponse
+MsgRevokeFeeAllowanceResponse defines the Msg/RevokeFeeAllowanceResponse response type.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.feegrant.v1beta1.Msg"></a>
+
+### Msg
+Msg defines the feegrant msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `GrantFeeAllowance` | [MsgGrantFeeAllowance](#cosmos.feegrant.v1beta1.MsgGrantFeeAllowance) | [MsgGrantFeeAllowanceResponse](#cosmos.feegrant.v1beta1.MsgGrantFeeAllowanceResponse) | GrantFeeAllowance grants fee allowance to the grantee on the granter's account with the provided expiration time. | |
+| `RevokeFeeAllowance` | [MsgRevokeFeeAllowance](#cosmos.feegrant.v1beta1.MsgRevokeFeeAllowance) | [MsgRevokeFeeAllowanceResponse](#cosmos.feegrant.v1beta1.MsgRevokeFeeAllowanceResponse) | RevokeFeeAllowance revokes any fee allowance of granter's account that has been granted to the grantee. | |
+
+ <!-- end services -->
+
+
+
 <a name="cosmos/genutil/v1beta1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -5375,8 +5707,8 @@ Commission defines commission parameters for a given validator.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `commission_rates` | [CommissionRates](#cosmos.staking.v1beta1.CommissionRates) |  |  |
-| `update_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `commission_rates` | [CommissionRates](#cosmos.staking.v1beta1.CommissionRates) |  | commission_rates defines the initial commission rates to be used for creating a validator. |
+| `update_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | update_time is the last time the commission rate was changed. |
 
 
 
@@ -5392,9 +5724,9 @@ a validator.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `rate` | [string](#string) |  |  |
-| `max_rate` | [string](#string) |  |  |
-| `max_change_rate` | [string](#string) |  |  |
+| `rate` | [string](#string) |  | rate is the commission rate charged to delegators, as a fraction. |
+| `max_rate` | [string](#string) |  | max_rate defines the maximum commission rate which validator can ever charge, as a fraction. |
+| `max_change_rate` | [string](#string) |  | max_change_rate defines the maximum daily increase of the validator commission, as a fraction. |
 
 
 
@@ -5479,9 +5811,9 @@ validator.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `delegator_address` | [string](#string) |  |  |
-| `validator_address` | [string](#string) |  |  |
-| `shares` | [string](#string) |  |  |
+| `delegator_address` | [string](#string) |  | delegator_address is the bech32-encoded address of the delegator. |
+| `validator_address` | [string](#string) |  | validator_address is the bech32-encoded address of the validator. |
+| `shares` | [string](#string) |  | shares define the delegation shares received. |
 
 
 
@@ -5513,11 +5845,11 @@ Description defines a validator description.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `moniker` | [string](#string) |  |  |
-| `identity` | [string](#string) |  |  |
-| `website` | [string](#string) |  |  |
-| `security_contact` | [string](#string) |  |  |
-| `details` | [string](#string) |  |  |
+| `moniker` | [string](#string) |  | moniker defines a human-readable name for the validator. |
+| `identity` | [string](#string) |  | identity defines an optional identity signature (ex. UPort or Keybase). |
+| `website` | [string](#string) |  | website defines an optional website link. |
+| `security_contact` | [string](#string) |  | security_contact defines an optional email for security contact. |
+| `details` | [string](#string) |  | details define other optional details. |
 
 
 
@@ -5551,11 +5883,11 @@ Params defines the parameters for the staking module.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `unbonding_time` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
-| `max_validators` | [uint32](#uint32) |  |  |
-| `max_entries` | [uint32](#uint32) |  |  |
-| `historical_entries` | [uint32](#uint32) |  |  |
-| `bond_denom` | [string](#string) |  |  |
+| `unbonding_time` | [google.protobuf.Duration](#google.protobuf.Duration) |  | unbonding_time is the time duration of unbonding. |
+| `max_validators` | [uint32](#uint32) |  | max_validators is the maximum number of validators. |
+| `max_entries` | [uint32](#uint32) |  | max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio). |
+| `historical_entries` | [uint32](#uint32) |  | historical_entries is the number of historical entries to persist. |
+| `bond_denom` | [string](#string) |  | bond_denom defines the bondable coin denomination. |
 
 
 
@@ -5588,10 +5920,12 @@ from a particular source validator to a particular destination validator.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `delegator_address` | [string](#string) |  |  |
-| `validator_src_address` | [string](#string) |  |  |
-| `validator_dst_address` | [string](#string) |  |  |
-| `entries` | [RedelegationEntry](#cosmos.staking.v1beta1.RedelegationEntry) | repeated | redelegation entries |
+| `delegator_address` | [string](#string) |  | delegator_address is the bech32-encoded address of the delegator. |
+| `validator_src_address` | [string](#string) |  | validator_src_address is the validator redelegation source operator address. |
+| `validator_dst_address` | [string](#string) |  | validator_dst_address is the validator redelegation destination operator address. |
+| `entries` | [RedelegationEntry](#cosmos.staking.v1beta1.RedelegationEntry) | repeated | entries are the redelegation entries.
+
+redelegation entries |
 
 
 
@@ -5606,10 +5940,10 @@ RedelegationEntry defines a redelegation object with relevant metadata.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `creation_height` | [int64](#int64) |  |  |
-| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `initial_balance` | [string](#string) |  |  |
-| `shares_dst` | [string](#string) |  |  |
+| `creation_height` | [int64](#int64) |  | creation_height defines the height which the redelegation took place. |
+| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | completion_time defines the unix time for redelegation completion. |
+| `initial_balance` | [string](#string) |  | initial_balance defines the initial balance when redelegation started. |
+| `shares_dst` | [string](#string) |  | shares_dst is the amount of destination-validator shares created by redelegation. |
 
 
 
@@ -5661,9 +5995,11 @@ for a single validator in an time-ordered list.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `delegator_address` | [string](#string) |  |  |
-| `validator_address` | [string](#string) |  |  |
-| `entries` | [UnbondingDelegationEntry](#cosmos.staking.v1beta1.UnbondingDelegationEntry) | repeated | unbonding delegation entries |
+| `delegator_address` | [string](#string) |  | delegator_address is the bech32-encoded address of the delegator. |
+| `validator_address` | [string](#string) |  | validator_address is the bech32-encoded address of the validator. |
+| `entries` | [UnbondingDelegationEntry](#cosmos.staking.v1beta1.UnbondingDelegationEntry) | repeated | entries are the unbonding delegation entries.
+
+unbonding delegation entries |
 
 
 
@@ -5678,10 +6014,10 @@ UnbondingDelegationEntry defines an unbonding object with relevant metadata.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `creation_height` | [int64](#int64) |  |  |
-| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `initial_balance` | [string](#string) |  |  |
-| `balance` | [string](#string) |  |  |
+| `creation_height` | [int64](#int64) |  | creation_height is the height which the unbonding took place. |
+| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | completion_time is the unix time for unbonding completion. |
+| `initial_balance` | [string](#string) |  | initial_balance defines the tokens initially scheduled to receive at completion. |
+| `balance` | [string](#string) |  | balance defines the tokens to receive at completion. |
 
 
 
@@ -5718,17 +6054,17 @@ multiplied by exchange rate.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `operator_address` | [string](#string) |  |  |
-| `consensus_pubkey` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `jailed` | [bool](#bool) |  |  |
-| `status` | [BondStatus](#cosmos.staking.v1beta1.BondStatus) |  |  |
-| `tokens` | [string](#string) |  |  |
-| `delegator_shares` | [string](#string) |  |  |
-| `description` | [Description](#cosmos.staking.v1beta1.Description) |  |  |
-| `unbonding_height` | [int64](#int64) |  |  |
-| `unbonding_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `commission` | [Commission](#cosmos.staking.v1beta1.Commission) |  |  |
-| `min_self_delegation` | [string](#string) |  |  |
+| `operator_address` | [string](#string) |  | operator_address defines the address of the validator's operator; bech encoded in JSON. |
+| `consensus_pubkey` | [google.protobuf.Any](#google.protobuf.Any) |  | consensus_pubkey is the consensus public key of the validator, as a Protobuf Any. |
+| `jailed` | [bool](#bool) |  | jailed defined whether the validator has been jailed from bonded status or not. |
+| `status` | [BondStatus](#cosmos.staking.v1beta1.BondStatus) |  | status is the validator status (bonded/unbonding/unbonded). |
+| `tokens` | [string](#string) |  | tokens define the delegated tokens (incl. self-delegation). |
+| `delegator_shares` | [string](#string) |  | delegator_shares defines total shares issued to a validator's delegators. |
+| `description` | [Description](#cosmos.staking.v1beta1.Description) |  | description defines the description terms for the validator. |
+| `unbonding_height` | [int64](#int64) |  | unbonding_height defines, if unbonding, the height at which this validator has begun unbonding. |
+| `unbonding_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | unbonding_time defines, if unbonding, the min time for the validator to complete unbonding. |
+| `commission` | [Commission](#cosmos.staking.v1beta1.Commission) |  | commission defines the commission parameters. |
+| `min_self_delegation` | [string](#string) |  | min_self_delegation is the validator's self declared minimum self delegation. |
 
 
 

@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -193,7 +194,7 @@ func ExamplePaginate() {
 	balResult := sdk.NewCoins()
 	authStore := ctx.KVStore(app.GetKey(authtypes.StoreKey))
 	balancesStore := prefix.NewStore(authStore, types.BalancesPrefix)
-	accountStore := prefix.NewStore(balancesStore, addr1.Bytes())
+	accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
 	pageRes, err := query.Paginate(accountStore, request.Pagination, func(key []byte, value []byte) error {
 		var tempRes sdk.Coin
 		err := app.AppCodec().UnmarshalBinaryBare(value, &tempRes)

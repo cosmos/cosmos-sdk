@@ -79,10 +79,17 @@ This message is expected to fail if:
 - the validator is does not exist
 - the validator is jailed
 - the `Amount` `Coin` has a denomination different than one defined by `params.BondDenom`
+- the exchange rate is invalid, meaning the validator has no tokens (due to slashing) but there are outstanding shares
+- the amount delegated is less than the minimum allowed delegation
 
 If an existing `Delegation` object for provided addresses does not already
-exist than it is created as part of this message otherwise the existing
+exist then it is created as part of this message otherwise the existing
 `Delegation` is updated to include the newly received shares.
+
+The delegator receives newly minted shares at the current exchange rate.
+The exchange rate is the number of existing shares in the validator divided by the number of currently delegated tokens.
+
+TODO: Explain subtractTokens.
 
 ## MsgBeginUnbonding
 

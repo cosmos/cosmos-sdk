@@ -39,8 +39,8 @@ func (p Proposer) String() string {
 func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposalParams) ([]byte, error) {
 	events := []string{
 		fmt.Sprintf(
-			// There are two ways to send Msgs:
-			// - via legacy Msgs (amino or proto), their `Type()`` is a custom string,
+			// Msgs `Type()`s are indexed in TM in 2 ways:
+			// - via legacy Msgs (amino or proto), their `Type()` is a custom string,
 			// - via ADR-031 service msgs, their `Type()` is the protobuf FQ method name.
 			// In searching for events, we search for both `Type()`s.
 			"%s.%s='%s' OR %s.%s='%s'",
@@ -93,8 +93,8 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 	var (
 		events = []string{
 			fmt.Sprintf(
-				// There are two ways to send Msgs:
-				// - via legacy Msgs (amino or proto), their `Type()`` is a custom string,
+				// Msgs `Type()`s are indexed in TM in 2 ways:
+				// - via legacy Msgs (amino or proto), their `Type()` is a custom string,
 				// - via ADR-031 service msgs, their `Type()` is the protobuf FQ method name.
 				// In searching for events, we search for both `Type()`s.
 				"%s.%s='%s' OR %s.%s='%s'",
@@ -155,8 +155,8 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) ([]byte, error) {
 	events := []string{
 		fmt.Sprintf(
-			// There are two ways to send Msgs:
-			// - via legacy Msgs (amino or proto), their `Type()`` is a custom string,
+			// Msgs `Type()`s are indexed in TM in 2 ways:
+			// - via legacy Msgs (amino or proto), their `Type()` is a custom string,
 			// - via ADR-031 service msgs, their `Type()` is the protobuf FQ method name.
 			// In searching for events, we search for both `Type()`s.
 			"%s.%s='%s' OR %s.%s='%s'",
@@ -208,8 +208,8 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositParams) ([]byte, error) {
 	events := []string{
 		fmt.Sprintf(
-			// There are two ways to send Msgs:
-			// - via legacy Msgs (amino or proto), their `Type()`` is a custom string,
+			// Msgs `Type()`s are indexed in TM in 2 ways:
+			// - via legacy Msgs (amino or proto), their `Type()` is a custom string,
 			// - via ADR-031 service msgs, their `Type()` is the protobuf FQ method name.
 			// In searching for events, we search for both `Type()`s.
 			"%s.%s='%s' OR %s.%s='%s'",
@@ -262,8 +262,8 @@ func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositPa
 func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Proposer, error) {
 	events := []string{
 		fmt.Sprintf(
-			// There are two ways to send Msgs:
-			// - via legacy Msgs (amino or proto), their `Type()`` is a custom string,
+			// Msgs `Type()`s are indexed in TM in 2 ways:
+			// - via legacy Msgs (amino or proto), their `Type()` is a custom string,
 			// - via ADR-031 service msgs, their `Type()` is the protobuf FQ method name.
 			// In searching for events, we search for both `Type()`s.
 			"%s.%s='%s' OR %s.%s='%s'",

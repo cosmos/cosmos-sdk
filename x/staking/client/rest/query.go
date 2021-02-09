@@ -153,17 +153,23 @@ func delegatorTxsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		switch {
 		case isBondTx:
+			actions = append(actions, types.TypeMsgDelegate)
 			actions = append(actions, types.TypeSvcMsgDelegate)
 
 		case isUnbondTx:
+			actions = append(actions, types.TypeMsgUndelegate)
 			actions = append(actions, types.TypeSvcMsgUndelegate)
 
 		case isRedTx:
+			actions = append(actions, types.TypeMsgBeginRedelegate)
 			actions = append(actions, types.TypeSvcMsgBeginRedelegate)
 
 		case noQuery:
+			actions = append(actions, types.TypeMsgDelegate)
 			actions = append(actions, types.TypeSvcMsgDelegate)
+			actions = append(actions, types.TypeMsgUndelegate)
 			actions = append(actions, types.TypeSvcMsgUndelegate)
+			actions = append(actions, types.TypeMsgBeginRedelegate)
 			actions = append(actions, types.TypeSvcMsgBeginRedelegate)
 
 		default:

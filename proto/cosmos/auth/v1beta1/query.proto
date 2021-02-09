@@ -31,7 +31,7 @@ service Query {
 // QueryAccountsRequest is the request type for the Query/Accounts RPC method.
 message QueryAccountsRequest {
   // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
 // QueryAccountsResponse is the response type for the Query/Accounts RPC method.

@@ -19,13 +19,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func newMonikerValidator(t *testing.T, operator sdk.ValAddress, pubKey cryptotypes.PubKey, moniker string) types.Validator {
+func newMonikerValidator(t testing.TB, operator sdk.ValAddress, pubKey cryptotypes.PubKey, moniker string) types.Validator {
 	v, err := types.NewValidator(operator, pubKey, types.Description{Moniker: moniker})
 	require.NoError(t, err)
 	return v
 }
 
-func bootstrapValidatorTest(t *testing.T, power int64, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
+func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
 	_, app, ctx := createTestInput()
 
 	addrDels, addrVals := generateAddresses(app, ctx, numAddrs)
@@ -43,16 +43,43 @@ func bootstrapValidatorTest(t *testing.T, power int64, numAddrs int) (*simapp.Si
 	return app, ctx, addrDels, addrVals
 }
 
-func initValidators(t *testing.T, power int64, numAddrs int, powers []int64) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
-	app, ctx, addrs, valAddrs := bootstrapValidatorTest(t, 1000, 20)
+func initValidators(t testing.TB, power int64, numAddrs int, powers []int64) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
+	app, ctx, addrs, valAddrs := bootstrapValidatorTest(t, power, numAddrs)
+	pks := simapp.CreateTestPubKeys(numAddrs)
 
 	vs := make([]types.Validator, len(powers))
 	for i, power := range powers {
-		vs[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i])
+		vs[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), pks[i])
 		tokens := sdk.TokensFromConsensusPower(power)
 		vs[i], _ = vs[i].AddTokensFromDel(tokens)
 	}
 	return app, ctx, addrs, valAddrs, vs
+}
+
+func BenchmarkGetValidator(b *testing.B) {
+	// 900 is the max number we are allowed to use in order to avoid simapp.CreateTestPubKeys
+	// panic: encoding/hex: odd length hex string
+	var powersNumber = 900
+
+	var totalPower int64 = 0
+	var powers = make([]int64, powersNumber)
+	for i := range powers {
+		powers[i] = int64(i)
+		totalPower += int64(i)
+	}
+
+	app, ctx, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
+
+	for _, validator := range vals {
+		app.StakingKeeper.SetValidator(ctx, validator)
+	}
+
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		for _, addr := range valAddrs {
+			_, _ = app.StakingKeeper.GetValidator(ctx, addr)
+		}
+	}
 }
 
 func TestSetValidator(t *testing.T) {

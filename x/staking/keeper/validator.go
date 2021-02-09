@@ -35,21 +35,7 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 		return validator, false
 	}
 
-	// If these amino encoded bytes are in the cache, return the cached validator
-	strValue := string(value)
-	if val, ok := k.validatorCache[strValue]; ok {
-		valToReturn := val.val
-		// Doesn't mutate the cache's value
-		valToReturn.OperatorAddress = addr.String()
-
-		return valToReturn, true
-	}
-
-	// amino bytes weren't found in cache, so amino unmarshal and add it to the cache
 	validator = types.MustUnmarshalValidator(k.cdc, value)
-	cachedVal := newCachedValidator(validator, strValue)
-	k.validatorCache[strValue] = newCachedValidator(validator, strValue)
-	k.validatorCacheList.PushBack(cachedVal)
 
 	// if the cache is too big, pop off the last element from it
 	if k.validatorCacheList.Len() > aminoCacheSize {

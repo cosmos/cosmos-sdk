@@ -10,10 +10,8 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -50,15 +48,9 @@ func (mock TxSearchMock) Block(ctx context.Context, height *int64) (*ctypes.Resu
 	return &ctypes.ResultBlock{Block: &tmtypes.Block{}}, nil
 }
 
-func newTestCodec() *codec.LegacyAmino {
-	cdc := codec.NewLegacyAmino()
-	sdk.RegisterLegacyAminoCodec(cdc)
-	types.RegisterLegacyAminoCodec(cdc)
-	authtypes.RegisterLegacyAminoCodec(cdc)
-	return cdc
-}
-
 func TestGetPaginatedVotes(t *testing.T) {
+	encCfg := simapp.MakeTestEncodingConfig()
+
 	type testCase struct {
 		description string
 		page, limit int
@@ -142,17 +134,12 @@ func TestGetPaginatedVotes(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.description, func(t *testing.T) {
-			var (
-				marshalled = make([]tmtypes.Tx, len(tc.msgs))
-				cdc        = newTestCodec()
-			)
-
-			encodingConfig := simapp.MakeTestEncodingConfig()
+			var marshalled = make([]tmtypes.Tx, len(tc.msgs))
 			cli := TxSearchMock{txs: marshalled}
 			clientCtx := client.Context{}.
-				WithLegacyAmino(cdc).
+				WithLegacyAmino(encCfg.Amino).
 				WithClient(cli).
-				WithTxConfig(encodingConfig.TxConfig)
+				WithTxConfig(encCfg.TxConfig)
 
 			for i := range tc.msgs {
 				txBuilder := clientCtx.TxConfig.NewTxBuilder()

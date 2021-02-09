@@ -53,6 +53,7 @@ type Store struct {
 	stores         map[types.StoreKey]types.CommitKVStore
 	keysByName     map[string]types.StoreKey
 	lazyLoading    bool
+	cacheListening bool
 	pruneHeights   []int64
 	initialVersion int64
 
@@ -61,8 +62,7 @@ type Store struct {
 
 	interBlockCache types.MultiStorePersistentCache
 
-	listeners      map[types.StoreKey][]types.WriteListener
-	cacheListening bool
+	listeners map[types.StoreKey][]types.WriteListener
 }
 
 var (

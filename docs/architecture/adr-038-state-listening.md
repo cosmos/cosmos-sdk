@@ -342,7 +342,7 @@ func (fss *FileStreamingService) Stream(wg *sync.WaitGroup, quitChan <-chan stru
 			case <-quitChan:
 				return
                         case by := <-fss.srcChan:
-                        	append(fss.stateCache, by)
+                        	fss.stateCache = append(fss.stateCache, by)
 			}
 		}
 	}()
@@ -398,7 +398,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	...
 	
 	// Call the streaming service hooks with the BeginBlock messages
-	for _ hook := range app.hooks {
+	for _, hook := range app.hooks {
 		hook.ListenBeginBlock(app.deliverState.ctx, req, res)
 	}
 	
@@ -445,7 +445,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 	}
 	
 	// Call the streaming service hooks with the DeliverTx messages
-	for _, hook := range app.hook {
+	for _, hook := range app.hooks {
 		hook.ListenDeliverTx(app.deliverState.ctx, req, res)
 	}
 	

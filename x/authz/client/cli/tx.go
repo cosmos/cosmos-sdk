@@ -145,10 +145,10 @@ Examples:
 				}
 
 				if args[1] == delegate {
-					authorization, err = staking.NewDelegateAuthorization(allowed, denied, delegateLimit)
+					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.TypeDelegate, delegateLimit)
 
 				} else {
-					authorization, err = staking.NewUndelegateAuthorization(allowed, denied, delegateLimit)
+					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.TypeUndelegate, delegateLimit)
 				}
 				if err != nil {
 					return err

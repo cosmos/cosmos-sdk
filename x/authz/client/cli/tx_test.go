@@ -1,5 +1,3 @@
-// +build norace
-
 package cli_test
 
 import (
@@ -629,6 +627,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 		},
 	)
 	s.Require().NoError(err)
+
 	tokens := sdk.NewCoins(
 		sdk.NewCoin("stake", sdk.NewInt(50)),
 	)

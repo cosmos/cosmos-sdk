@@ -5,14 +5,16 @@ import (
 	"strconv"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
+	"github.com/gogo/protobuf/proto"
 	grpcmiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/client"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
@@ -21,10 +23,10 @@ import (
 func (app *BaseApp) GRPCQueryRouter() *GRPCQueryRouter { return app.grpcQueryRouter }
 
 // RegisterGRPCServer registers gRPC services directly with the gRPC server.
-func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
+func (app *BaseApp) RegisterGRPCServer(clientCtx client.Context, server gogogrpc.Server) {
 	// Define an interceptor for all gRPC queries: this interceptor will create
 	// a new sdk.Context, and pass it into the query handler.
-	interceptor := func(grpcCtx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+	interceptor := func(grpcCtx context.Context, req interface{}, info *grpc.UnaryServerInfo, _ grpc.UnaryHandler) (resp interface{}, err error) {
 		// If there's some metadata in the context, retrieve it.
 		md, ok := metadata.FromIncomingContext(grpcCtx)
 		if !ok {
@@ -38,31 +40,51 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 			if err != nil {
 				return nil, sdkerrors.Wrapf(
 					sdkerrors.ErrInvalidRequest,
-					"Baseapp.RegisterGRPCServer: invalid height header %q: %v", grpctypes.GRPCBlockHeightHeader, err)
+					"baseapp.RegisterGRPCServer: invalid height header %q: %v", grpctypes.GRPCBlockHeightHeader, err)
 			}
 			if err := checkNegativeHeight(height); err != nil {
 				return nil, err
 			}
 		}
 
-		// Create the sdk.Context. Passing false as 2nd arg, as we can't
-		// actually support proofs with gRPC right now.
-		sdkCtx, err := app.createQueryContext(height, false)
+		reqProto, ok := req.(proto.Message)
+		if !ok {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "expected %T, got %T", (proto.Message)(nil), req)
+		}
+		reqBz, err := proto.Marshal(reqProto)
+		if err != nil {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "cannot proto marshal: %v", err)
+		}
+
+		abciReq := abci.RequestQuery{
+			Path:   info.FullMethod,
+			Data:   reqBz,
+			Height: height,
+			Prove:  false, // Enable here: https://github.com/cosmos/cosmos-sdk/issues/7036
+		}
+		abciRes, err := clientCtx.QueryABCI(abciReq)
 		if err != nil {
 			return nil, err
 		}
 
-		// Attach the sdk.Context into the gRPC's context.Context.
-		grpcCtx = context.WithValue(grpcCtx, sdk.SdkContextKey, sdkCtx)
-
-		// Add relevant gRPC headers
-		if height == 0 {
-			height = sdkCtx.BlockHeight() // If height was not set in the request, set it to the latest
+		err = protoCodec.Unmarshal(abciRes.Value, resp)
+		if err != nil {
+			return nil, err
 		}
-		md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
-		grpc.SetHeader(grpcCtx, md)
 
-		return handler(grpcCtx, req)
+		return
+
+		// // Attach the sdk.Context into the gRPC's context.Context.
+		// grpcCtx = context.WithValue(grpcCtx, sdk.SdkContextKey, sdkCtx)
+
+		// // Add relevant gRPC headers
+		// if height == 0 {
+		// 	height = sdkCtx.BlockHeight() // If height was not set in the request, set it to the latest
+		// }
+		// md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
+		// grpc.SetHeader(grpcCtx, md)
+
+		// return handler(grpcCtx, req)
 	}
 
 	// Loop through all services and methods, add the interceptor, and register

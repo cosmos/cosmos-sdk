@@ -52,6 +52,8 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		app.StoreConsensusParams(app.deliverState.ctx, req.ConsensusParams)
 	}
 
+	app.grpcQueryRouter.dryRunMethodHandlers(app.checkState.ctx)
+
 	if app.initChainer == nil {
 		return
 	}

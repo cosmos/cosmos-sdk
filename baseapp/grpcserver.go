@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"context"
+	"reflect"
 	"strconv"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
@@ -67,12 +68,11 @@ func (app *BaseApp) RegisterGRPCServer(clientCtx client.Context, server gogogrpc
 			return nil, err
 		}
 
-		err = protoCodec.Unmarshal(abciRes.Value, resp)
+		res := reflect.New(app.GRPCQueryRouter().returnTypes[info.FullMethod]).Elem().Interface()
+		err = protoCodec.Unmarshal(abciRes.Value, res)
 		if err != nil {
 			return nil, err
 		}
-
-		// TODO Add metadata height in response?
 
 		return
 	}

@@ -383,10 +383,8 @@
     - [Msg](#cosmos.staking.v1beta1.Msg)
   
 - [cosmos/staking/v1beta1/authz.proto](#cosmos/staking/v1beta1/authz.proto)
-    - [DelegateAuthorization](#cosmos.staking.v1beta1.DelegateAuthorization)
-    - [DelegateAuthorization.Validators](#cosmos.staking.v1beta1.DelegateAuthorization.Validators)
-    - [UndelegateAuthorization](#cosmos.staking.v1beta1.UndelegateAuthorization)
-    - [UndelegateAuthorization.Validators](#cosmos.staking.v1beta1.UndelegateAuthorization.Validators)
+    - [StakeAuthorization](#cosmos.staking.v1beta1.StakeAuthorization)
+    - [StakeAuthorization.Validators](#cosmos.staking.v1beta1.StakeAuthorization.Validators)
   
 - [cosmos/staking/v1beta1/query.proto](#cosmos/staking/v1beta1/query.proto)
     - [QueryDelegationRequest](#cosmos.staking.v1beta1.QueryDelegationRequest)
@@ -5942,60 +5940,27 @@ Msg defines the staking Msg service.
 
 
 
-<a name="cosmos.staking.v1beta1.DelegateAuthorization"></a>
+<a name="cosmos.staking.v1beta1.StakeAuthorization"></a>
 
-### DelegateAuthorization
-DelegateAuthorization allows the grantee to delegate tokens to provided set of validators
-on behalf of the granter's account.
+### StakeAuthorization
+StakeAuthorization defines authorization for delegate/undelegate/redelegate.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `max_tokens` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | max_tokens specifies the maximum amount of tokens can be delegate to a validator. If it is empty, there is no spend limit and any amount of coins can be delegated. |
-| `allow_list` | [DelegateAuthorization.Validators](#cosmos.staking.v1beta1.DelegateAuthorization.Validators) |  | allow_list specifies list of validator addresses to whom grantee can delegate tokens on behalf of granter's account. |
-| `deny_list` | [DelegateAuthorization.Validators](#cosmos.staking.v1beta1.DelegateAuthorization.Validators) |  | deny_list specifies list of validator addresses to whom grantee can not delegate tokens. |
+| `allow_list` | [StakeAuthorization.Validators](#cosmos.staking.v1beta1.StakeAuthorization.Validators) |  | allow_list specifies list of validator addresses to whom grantee can delegate tokens on behalf of granter's account. |
+| `deny_list` | [StakeAuthorization.Validators](#cosmos.staking.v1beta1.StakeAuthorization.Validators) |  | deny_list specifies list of validator addresses to whom grantee can not delegate tokens. |
+| `authorization_type` | [string](#string) |  | authorization_type defines staking msg-type. |
 
 
 
 
 
 
-<a name="cosmos.staking.v1beta1.DelegateAuthorization.Validators"></a>
+<a name="cosmos.staking.v1beta1.StakeAuthorization.Validators"></a>
 
-### DelegateAuthorization.Validators
-Validators defines list of validator addresses.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.UndelegateAuthorization"></a>
-
-### UndelegateAuthorization
-UndelegateAuthorization allows the grantee to un-delegate tokens from provided set of validators
-on behalf of the granter's account.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `max_tokens` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | max_tokens specifies the maximum amount of tokens can be un-delegate from a validator. If it is empty, there is no spend limit and any amount of coins can be un-delegated. |
-| `allow_list` | [UndelegateAuthorization.Validators](#cosmos.staking.v1beta1.UndelegateAuthorization.Validators) |  | allow_list specifies list of validator addresses from whom grantee can un-delegate tokens on behalf of granter's account. |
-| `deny_list` | [UndelegateAuthorization.Validators](#cosmos.staking.v1beta1.UndelegateAuthorization.Validators) |  | deny_list specifies list of validator addresses from whom grantee can not undelegate tokens. |
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.UndelegateAuthorization.Validators"></a>
-
-### UndelegateAuthorization.Validators
+### StakeAuthorization.Validators
 Validators defines list of validator addresses.
 
 

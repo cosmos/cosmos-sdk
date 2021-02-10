@@ -22,8 +22,6 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*exported.Authorization)(nil),
 		&bank.SendAuthorization{},
 		&GenericAuthorization{},
-		&staking.DelegateAuthorization{},
-		&staking.UndelegateAuthorization{},
 		&staking.StakeAuthorization{},
 	)
 

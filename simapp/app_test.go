@@ -55,7 +55,7 @@ func TestRunMigrations(t *testing.T) {
 	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
 
 	// Create a new configurator for the purpose of this test.
-	app.configurator = module.NewConfigurator(encCfg.Marshaler, app.MsgServiceRouter(), app.GRPCQueryRouter(), app.keys)
+	app.configurator = module.NewConfigurator(app.MsgServiceRouter(), app.GRPCQueryRouter())
 
 	testCases := []struct {
 		name         string

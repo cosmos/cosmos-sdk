@@ -3,7 +3,6 @@ package module
 import (
 	"github.com/gogo/protobuf/grpc"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -29,7 +28,6 @@ type Configurator interface {
 }
 
 type configurator struct {
-	cdc         codec.Marshaler
 	msgServer   grpc.Server
 	queryServer grpc.Server
 
@@ -38,9 +36,8 @@ type configurator struct {
 }
 
 // NewConfigurator returns a new Configurator instance
-func NewConfigurator(cdc codec.Marshaler, msgServer grpc.Server, queryServer grpc.Server, storeKeys map[string]*sdk.KVStoreKey) Configurator {
+func NewConfigurator(msgServer grpc.Server, queryServer grpc.Server) Configurator {
 	return configurator{
-		cdc:         cdc,
 		msgServer:   msgServer,
 		queryServer: queryServer,
 		migrations:  map[string]map[uint64]MigrationHandler{},

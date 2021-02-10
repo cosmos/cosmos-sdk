@@ -139,10 +139,7 @@ func (am AppModule) ExportGenesis(_ sdk.Context, _ codec.JSONMarshaler) json.Raw
 	return nil
 }
 
-// ConsensusVersion is a sequence number for state-breaking change of the
-// module. It should be incremented on each consensus-breaking change
-// introduced by the module. To avoid wrong/empty versions, the initial version
-// is set to 1.
+// ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock performs a no-op.

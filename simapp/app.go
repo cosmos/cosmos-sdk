@@ -605,7 +605,7 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 // RunMigrations performs in-place store migrations for all modules. This
 // function MUST be only called by x/upgrade UpgradeHandler.
 //
-// `migrationsMap` is a map of moduleName to fromVersion (unit64), where
+// `migrateFromVersions` is a map of moduleName to fromVersion (unit64), where
 // fromVersion denotes the version from which we should migrate the module, the
 // target version being the module's latest ConsensusVersion.
 //
@@ -620,8 +620,8 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 //           panic(err)
 //      }
 //   })
-func (app *SimApp) RunMigrations(ctx sdk.Context, migrationsMap module.MigrationMap) error {
-	return app.mm.RunMigrations(ctx, app.configurator, migrationsMap)
+func (app *SimApp) RunMigrations(ctx sdk.Context, migrateFromVersions module.MigrationMap) error {
+	return app.mm.RunMigrations(ctx, app.configurator, migrateFromVersions)
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server

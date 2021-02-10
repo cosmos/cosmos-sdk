@@ -178,7 +178,7 @@ type AppModule interface {
 	// ConsensusVersion is a sequence number for state-breaking change of the
 	// module. It should be incremented on each consensus-breaking change
 	// introduced by the module. To avoid wrong/empty versions, the initial version
-	// is set to 1.
+	// should be set to 1.
 	ConsensusVersion() uint64
 
 	// ABCI
@@ -215,10 +215,7 @@ func (gam GenesisOnlyAppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Que
 // RegisterServices registers all services.
 func (gam GenesisOnlyAppModule) RegisterServices(Configurator) {}
 
-// ConsensusVersion is a sequence number for state-breaking change of the
-// module. It should be incremented on each consensus-breaking change
-// introduced by the module. To avoid wrong/empty versions, the initial version
-// is set to 1.
+// ConsensusVersion implements AppModule/ConsensusVersion.
 func (gam GenesisOnlyAppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock returns an empty module begin-block
@@ -349,14 +346,14 @@ type MigrationHandler func(store sdk.Context) error
 type MigrationMap map[string]uint64
 
 // RunMigrations performs in-place store migrations for all modules.
-func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, migrationMap MigrationMap) error {
+func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, migrateFromVersions MigrationMap) error {
 	c, ok := cfg.(configurator)
 	if !ok {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
 	}
 
 	for moduleName, module := range m.Modules {
-		err := c.runModuleMigrations(ctx, moduleName, migrationMap[moduleName], module.ConsensusVersion())
+		err := c.runModuleMigrations(ctx, moduleName, migrateFromVersions[moduleName], module.ConsensusVersion())
 		if err != nil {
 			return err
 		}

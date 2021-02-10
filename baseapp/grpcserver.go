@@ -21,8 +21,7 @@ func (app *BaseApp) GRPCQueryRouter() *GRPCQueryRouter { return app.grpcQueryRou
 // RegisterGRPCServer registers gRPC services directly with the gRPC server.
 func (app *BaseApp) RegisterGRPCServer(clientCtx client.Context, server gogogrpc.Server) {
 	// Define an interceptor for all gRPC queries: this interceptor will route
-	// the query through the clientCtx (via its Invoke methodd), which itself
-	// hits tendermint via ABCI Query.
+	// the query through the `clientCtx`, which itself queries Tendermint.
 	interceptor := func(grpcCtx context.Context, req interface{}, info *grpc.UnaryServerInfo, _ grpc.UnaryHandler) (interface{}, error) {
 		// Two things can happen here:
 		// 1. either we're broadcasting a Tx, in which case we call Tendermint's broadcast endpoint directly,
@@ -45,7 +44,7 @@ func (app *BaseApp) RegisterGRPCServer(clientCtx client.Context, server gogogrpc
 			return nil, err
 		}
 
-		// We need to know the return type of the grpc method
+		// We need to know the return type of the grpc method for
 		// unmarshalling abciRes.Value.
 		//
 		// When we call each method handler for the first time, we save its

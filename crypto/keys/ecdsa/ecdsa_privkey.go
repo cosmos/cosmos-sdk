@@ -3,7 +3,8 @@ package ecdsa
 import (
 	"crypto/ecdsa"
 	"crypto/rand"
-	//	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // "github.com/cosmos/cosmos-sdk/codec"
@@ -20,8 +21,8 @@ func GenSecp256r1() (ecdsaSK, error) {
 	return ecdsaSK{key}, err
 }
 
-// TODO: change return type
-func (sk ecdsaSK) PubKey() ecdsaPK {
+// PubKey implements SDK PrivKey interface
+func (sk ecdsaSK) PubKey() cryptotypes.PubKey {
 	return ecdsaPK{&sk.PublicKey, nil}
 }
 

@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"testing"
@@ -6,34 +6,34 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestBalanceValidate(t *testing.T) {
-
 	testCases := []struct {
 		name    string
-		balance Balance
+		balance bank.Balance
 		expErr  bool
 	}{
 		{
 			"valid balance",
-			Balance{
+			bank.Balance{
 				Address: "cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t",
 				Coins:   sdk.Coins{sdk.NewInt64Coin("uatom", 1)},
 			},
 			false,
 		},
-		{"empty balance", Balance{}, true},
+		{"empty balance", bank.Balance{}, true},
 		{
 			"nil balance coins",
-			Balance{
+			bank.Balance{
 				Address: "cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t",
 			},
 			true,
 		},
 		{
 			"dup coins",
-			Balance{
+			bank.Balance{
 				Address: "cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t",
 				Coins: sdk.Coins{
 					sdk.NewInt64Coin("uatom", 1),
@@ -44,7 +44,7 @@ func TestBalanceValidate(t *testing.T) {
 		},
 		{
 			"invalid coin denom",
-			Balance{
+			bank.Balance{
 				Address: "cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t",
 				Coins: sdk.Coins{
 					sdk.Coin{Denom: "", Amount: sdk.OneInt()},
@@ -54,7 +54,7 @@ func TestBalanceValidate(t *testing.T) {
 		},
 		{
 			"negative coin",
-			Balance{
+			bank.Balance{
 				Address: "cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t",
 				Coins: sdk.Coins{
 					sdk.Coin{Denom: "uatom", Amount: sdk.NewInt(-1)},
@@ -74,6 +74,29 @@ func TestBalanceValidate(t *testing.T) {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestBalance_GetAddress(t *testing.T) {
+	tests := []struct {
+		name      string
+		Address   string
+		wantPanic bool
+	}{
+		{"empty address", "", true},
+		{"malformed address", "invalid", true},
+		{"valid address", "cosmos1vy0ga0klndqy92ceqehfkvgmn4t94eteq4hmqv", false},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			b := bank.Balance{Address: tt.Address}
+			if tt.wantPanic {
+				require.Panics(t, func() { b.GetAddress() })
+			} else {
+				require.False(t, b.GetAddress().Empty())
 			}
 		})
 	}

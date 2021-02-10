@@ -16,7 +16,7 @@ jobs:
         with:
           PATTERNS: |
             x/auth/atlas/**
-      - uses: marbar3778/atlas_action@v0.1
+      - uses: marbar3778/atlas_action@main
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
           path: ./x/auth/atlas/atlas.toml
@@ -31,7 +31,7 @@ jobs:
         with:
           PATTERNS: |
             x/bank/atlas/**
-      - uses: marbar3778/atlas_action@v0.1
+      - uses: marbar3778/atlas_action@main
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
           path: ./x/bank/atlas/atlas.toml
@@ -46,7 +46,7 @@ jobs:
         with:
           PATTERNS: |
             x/evidence/atlas/**
-      - uses: marbar3778/atlas_action@v0.1
+      - uses: marbar3778/atlas_action@main
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
           path: ./x/evidence/atlas/atlas.toml

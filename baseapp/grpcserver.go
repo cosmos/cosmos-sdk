@@ -27,7 +27,7 @@ func (app *BaseApp) GRPCQueryRouter() *GRPCQueryRouter { return app.grpcQueryRou
 func (app *BaseApp) RegisterGRPCServer(clientCtx client.Context, server gogogrpc.Server) {
 	// Define an interceptor for all gRPC queries: this interceptor will create
 	// a new sdk.Context, and pass it into the query handler.
-	interceptor := func(grpcCtx context.Context, req interface{}, info *grpc.UnaryServerInfo, _ grpc.UnaryHandler) (resp interface{}, err error) {
+	interceptor := func(grpcCtx context.Context, req interface{}, info *grpc.UnaryServerInfo, _ grpc.UnaryHandler) (_ interface{}, err error) {
 		// If there's some metadata in the context, retrieve it.
 		md, ok := metadata.FromIncomingContext(grpcCtx)
 		if !ok {
@@ -68,13 +68,23 @@ func (app *BaseApp) RegisterGRPCServer(clientCtx client.Context, server gogogrpc
 			return nil, err
 		}
 
-		res := reflect.New(app.GRPCQueryRouter().returnTypes[info.FullMethod]).Elem().Interface()
+		// When we call each method handler for the first time, we saved its
+		// return tyep in the `returnTypes` map. Here, we're retrieving it for
+		// decoding.
+		returnType, found := app.GRPCQueryRouter().returnTypes[info.FullMethod]
+		if !found {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "cannot find %s return type", info.FullMethod)
+		}
+
+		// returnType is a pointer to a struct. Here, we're creating res which
+		// is a new pointer to the underlying struct.
+		res := reflect.New(returnType.Elem()).Interface()
 		err = protoCodec.Unmarshal(abciRes.Value, res)
 		if err != nil {
 			return nil, err
 		}
 
-		return
+		return res, nil
 	}
 
 	// Loop through all services and methods, add the interceptor, and register

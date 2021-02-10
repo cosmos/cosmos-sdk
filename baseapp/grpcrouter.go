@@ -85,13 +85,6 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 			// call the method handler from the service description with the handler object,
 			// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
 			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), func(i interface{}) error {
-				// If it's the first time we call this handler, then we save
-				// the return type of the handler in the `returnTypes` map.
-				// The return type will be used for decoding subsequent requests.
-				if _, found := qrt.returnTypes[fqName]; !found {
-					qrt.returnTypes[fqName] = reflect.TypeOf(i)
-				}
-
 				err := protoCodec.Unmarshal(req.Data, i)
 				if err != nil {
 					return err
@@ -99,8 +92,17 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 				if qrt.interfaceRegistry != nil {
 					return codectypes.UnpackInterfaces(i, qrt.interfaceRegistry)
 				}
+
 				return nil
 			}, nil)
+
+			// If it's the first time we call this handler, then we save
+			// the return type of the handler in the `returnTypes` map.
+			// The return type will be used for decoding subsequent requests.
+			if _, found := qrt.returnTypes[fqName]; !found {
+				qrt.returnTypes[fqName] = reflect.TypeOf(res)
+			}
+
 			if err != nil {
 				return abci.ResponseQuery{}, err
 			}
@@ -123,18 +125,6 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 		serviceDesc: sd,
 		handler:     handler,
 	})
-}
-
-// dryRunMethodHandlers runs all methods saved in `routes` once. This should
-// be called once at startup (after the stores are mounted), to populate the
-// `returnTypes` map. It is called from InitChain.
-func (qrt *GRPCQueryRouter) dryRunMethodHandlers(ctx sdk.Context) {
-	for fqName, handler := range qrt.routes {
-		fmt.Println("dry running fqNanem", fqName)
-		handler(ctx, abci.RequestQuery{
-			Path: fqName,
-		})
-	}
 }
 
 // SetInterfaceRegistry sets the interface registry for the router. This will

@@ -1,7 +1,6 @@
 package client
 
 import (
-	"context"
 	gocontext "context"
 	"fmt"
 	"reflect"
@@ -58,6 +57,10 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 	// Case 2. Querying state.
 	inMd, _ := metadata.FromOutgoingContext(grpcCtx)
 	abciRes, outMd, err := ctx.RunGRPCQuery(grpcCtx, method, req, inMd)
+	if err != nil {
+		return err
+	}
+
 	err = protoCodec.Unmarshal(abciRes.Value, reply)
 	if err != nil {
 		return err
@@ -82,7 +85,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 // RunGRPCQuery runs a gRPC query given all necessary arguments, and returns
 // the ABCI response. It is used to factorize code between client and server
 // grpc handling.
-func (ctx Context) RunGRPCQuery(grpcCtx context.Context, method string, req interface{}, md metadata.MD) (abci.ResponseQuery, metadata.MD, error) {
+func (ctx Context) RunGRPCQuery(grpcCtx gocontext.Context, method string, req interface{}, md metadata.MD) (abci.ResponseQuery, metadata.MD, error) {
 	reqBz, err := protoCodec.Marshal(req)
 	if err != nil {
 		return abci.ResponseQuery{}, nil, err

@@ -35,17 +35,15 @@ func (app *BaseApp) RegisterGRPCServer(clientCtx client.Context, server gogogrpc
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxRequest)(nil), req)
 			}
 
-			broadcastRes, err := client.TxServiceBroadcast(grpcCtx, clientCtx, reqProto)
-			if err != nil {
-				return nil, err
-			}
-
-			return broadcastRes, err
+			return client.TxServiceBroadcast(grpcCtx, clientCtx, reqProto)
 		}
 
 		// Case 2. Querying state.
 		inMd, _ := metadata.FromOutgoingContext(grpcCtx)
 		abciRes, outMd, err := clientCtx.RunGRPCQuery(grpcCtx, info.FullMethod, req, inMd)
+		if err != nil {
+			return nil, err
+		}
 
 		// We need to know the return type of the grpc method
 		// unmarshalling abciRes.Value.
@@ -72,7 +70,10 @@ func (app *BaseApp) RegisterGRPCServer(clientCtx client.Context, server gogogrpc
 
 		// Send the metadata header back. The metadata currently includes:
 		// - block height.
-		grpc.SendHeader(grpcCtx, outMd)
+		err = grpc.SendHeader(grpcCtx, outMd)
+		if err != nil {
+			return nil, err
+		}
 
 		return res, nil
 	}

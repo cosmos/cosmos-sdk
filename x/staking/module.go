@@ -21,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	v042staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v042"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -139,7 +138,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	querier := keeper.Querier{Keeper: am.keeper}
 	types.RegisterQueryServer(cfg.QueryServer(), querier)
-	cfg.RegisterMigration(types.ModuleName, 0, v042staking.MigrateStore)
+	cfg.RegisterMigration(types.ModuleName, 1, func(ctx sdk.Context) error {
+		return am.keeper.Migrate1(ctx)
+	})
 }
 
 // InitGenesis performs genesis initialization for the staking module. It returns

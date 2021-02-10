@@ -22,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
-	v042slashing "github.com/cosmos/cosmos-sdk/x/slashing/legacy/v042"
 	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -142,7 +141,9 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
-	cfg.RegisterMigration(types.ModuleName, 0, v042slashing.MigrateStore)
+	cfg.RegisterMigration(types.ModuleName, 1, func(ctx sdk.Context) error {
+		return am.keeper.Migrate1(ctx)
+	})
 }
 
 // InitGenesis performs genesis initialization for the slashing module. It returns

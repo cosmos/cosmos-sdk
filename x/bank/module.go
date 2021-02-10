@@ -100,7 +100,7 @@ type AppModule struct {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
-	cfg.RegisterMigration(types.ModuleName, 0, func(ctx sdk.Context) error {
+	cfg.RegisterMigration(types.ModuleName, 1, func(ctx sdk.Context) error {
 		return am.keeper.(keeper.MigrationKeeper).Migrate1(ctx)
 	})
 }

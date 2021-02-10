@@ -21,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	v042distribution "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v042"
 	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -144,7 +143,9 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
-	cfg.RegisterMigration(types.ModuleName, 0, v042distribution.MigrateStore)
+	cfg.RegisterMigration(types.ModuleName, 1, func(ctx sdk.Context) error {
+		return am.keeper.Migrate1(ctx)
+	})
 }
 
 // InitGenesis performs genesis initialization for the distribution module. It returns

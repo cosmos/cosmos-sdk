@@ -1,7 +1,6 @@
 package v042
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -58,7 +57,7 @@ func migrateValidatorsByPowerIndexKey(store sdk.KVStore) {
 // migration includes:
 //
 // - Change addresses to be length-prefixed.
-func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, _ codec.Marshaler) error {
+func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey) error {
 	store := ctx.KVStore(storeKey)
 
 	v042distribution.MigratePrefixAddress(store, v040staking.LastValidatorPowerKey)

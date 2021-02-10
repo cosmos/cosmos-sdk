@@ -82,7 +82,7 @@ func TestStoreMigration(t *testing.T) {
 	}
 
 	// Run migrations.
-	err := v042distribution.MigrateStore(ctx, distributionKey, nil)
+	err := v042distribution.MigrateStore(ctx, distributionKey)
 	require.NoError(t, err)
 
 	// Make sure the new keys are set and old keys are deleted.

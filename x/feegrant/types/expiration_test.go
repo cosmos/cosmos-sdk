@@ -4,9 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
 
 func TestExpiresAt(t *testing.T) {

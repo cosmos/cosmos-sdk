@@ -18,8 +18,6 @@ type SendKeeper interface {
 	InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) error
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 
-	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error
-
 	GetParams(ctx sdk.Context) types.Params
 	SetParams(ctx sdk.Context, params types.Params)
 
@@ -104,7 +102,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 		if err != nil {
 			return err
 		}
-		err = k.AddCoins(ctx, outAddress, out.Coins)
+		err = k.addCoins(ctx, outAddress, out.Coins)
 		if err != nil {
 			return err
 		}
@@ -152,7 +150,7 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 		return err
 	}
 
-	err = k.AddCoins(ctx, toAddr, amt)
+	err = k.addCoins(ctx, toAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -200,10 +198,10 @@ func (k BaseSendKeeper) subtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 	return nil
 }
 
-// AddCoins adds amt to the account balance given by the provided address. An
+// addCoins adds amt to the account balance given by the provided address. An
 // error is returned if the initial amount is invalid or if any resulting new
 // balance is negative.
-func (k BaseSendKeeper) AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
+func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
 	if !amt.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}

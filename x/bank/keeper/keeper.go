@@ -134,7 +134,7 @@ func (k BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAdd
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	err := k.SubtractCoins(ctx, moduleAccAddr, amt)
+	err := k.subtractCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -360,7 +360,7 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to burn tokens", moduleName))
 	}
 
-	err := k.SubtractCoins(ctx, acc.GetAddress(), amt)
+	err := k.subtractCoins(ctx, acc.GetAddress(), amt)
 	if err != nil {
 		return err
 	}

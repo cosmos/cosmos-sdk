@@ -56,7 +56,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank) [\#8479](https://github.com/cosmos/cosmos-sdk/pull/8479) Adittional client denom metadata validation for `base` and `display` denoms.
 * (x/ibc) [\#8404](https://github.com/cosmos/cosmos-sdk/pull/8404) Reorder IBC `ChanOpenAck` and `ChanOpenConfirm` handler execution to perform core handler first, followed by application callbacks.
 * [\#8396](https://github.com/cosmos/cosmos-sdk/pull/8396) Add support for ARM platform
-* (x/staking) [\#8546](https://github.com/cosmos/cosmos-sdk/pull/8546) Allow GetValidator to be called concurrently
 
 ### Bug Fixes
 
@@ -68,6 +67,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client/keys) [\#8436](https://github.com/cosmos/cosmos-sdk/pull/8436) Fix key migration issue
 * (server) [\#8481](https://github.com/cosmos/cosmos-sdk/pull/8481) Don't create
   files when running `{appd} tendermint show-*` subcommands
+* (x/staking) [\#8546](https://github.com/cosmos/cosmos-sdk/pull/8546) Allow GetValidator to be called concurrently
 
 ## [v0.40.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.1) - 2021-01-19
 

@@ -8,9 +8,10 @@ import (
 )
 
 var (
-	_              authz.Authorization = &StakeAuthorization{}
-	TypeDelegate                       = "/cosmos.staking.v1beta1.Msg/Delegate"
-	TypeUndelegate                     = "/cosmos.staking.v1beta1.Msg/Undelegate"
+	_                   authz.Authorization = &StakeAuthorization{}
+	TypeDelegate                            = "/cosmos.staking.v1beta1.Msg/Delegate"
+	TypeUndelegate                          = "/cosmos.staking.v1beta1.Msg/Undelegate"
+	TypeBeginRedelegate                     = "/cosmos.staking.v1beta1.Msg/BeginRedelegate"
 )
 
 // NewStakeAuthorization creates a new StakeAuthorization object.
@@ -52,6 +53,9 @@ func (authorization StakeAuthorization) Accept(msg sdk.ServiceMsg, block tmproto
 	case *MsgUndelegate:
 		validatorAddress = msg.ValidatorAddress
 		amount = msg.Amount
+	case *MsgBeginRedelegate:
+		validatorAddress = msg.ValidatorDstAddress
+		amount = msg.Amount
 	default:
 		return nil, false, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "unknown msg type")
 	}
@@ -72,7 +76,7 @@ func (authorization StakeAuthorization) Accept(msg sdk.ServiceMsg, block tmproto
 	}
 
 	if !isValidatorExists {
-		return nil, false, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "cannot delegate/undelegate")
+		return nil, false, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "cannot delegate/undelegate to %s validator", validatorAddress)
 	}
 
 	if authorization.MaxTokens == nil {
@@ -86,4 +90,29 @@ func (authorization StakeAuthorization) Accept(msg sdk.ServiceMsg, block tmproto
 
 	return &StakeAuthorization{Validators: authorization.GetValidators(), MaxTokens: &limitLeft, AuthorizationType: authorization.GetAuthorizationType()}, false, nil
 
+}
+
+func validateAndBech32fy(allowed []sdk.ValAddress, denied []sdk.ValAddress) ([]string, []string, error) {
+	if len(allowed) == 0 && len(denied) == 0 {
+		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "both allowed & deny list cannot be empty")
+	}
+
+	if len(allowed) > 0 && len(denied) > 0 {
+		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "cannot set both allowed & deny list")
+	}
+
+	allowedValidators := make([]string, len(allowed))
+	if len(allowed) > 0 {
+		for i, validator := range allowed {
+			allowedValidators[i] = validator.String()
+		}
+		return allowedValidators, nil, nil
+	}
+
+	deniedValidators := make([]string, len(denied))
+	for i, validator := range denied {
+		deniedValidators[i] = validator.String()
+	}
+
+	return nil, deniedValidators, nil
 }

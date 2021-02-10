@@ -65,6 +65,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	s.grantee = newAddr
 
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
 	// create a proposal with deposit
 	_, err = govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 1", "Where is the title!?", govtypes.ProposalTypeText,
@@ -807,7 +810,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 	cmd := cli.NewCmdExecAuthorization()
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 	s.Require().NoError(err)
-	s.Contains(out.String(), fmt.Sprintf("cannot delegate to %s validator", val.ValAddress.String()))
+	s.Contains(out.String(), fmt.Sprintf("cannot delegate/undelegate to %s validator", val.ValAddress.String()))
 
 }
 

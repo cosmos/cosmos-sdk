@@ -10,15 +10,32 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	coin100 = sdk.NewInt64Coin("steak", 100)
+	coin50  = sdk.NewInt64Coin("steak", 50)
+	delAddr = sdk.AccAddress("_____delegator _____")
+	val1    = sdk.ValAddress("_____validator1_____")
+	val2    = sdk.ValAddress("_____validator2_____")
+	val3    = sdk.ValAddress("_____validator3_____")
+)
+
 func TestAuthzAuthorizations(t *testing.T) {
 
 	// verify MethodName
 	delAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, "/cosmos.staking.v1beta1.Msg/Delegate", &coin100)
-	require.Equal(t, delAuth.MethodName(), "/cosmos.staking.v1beta1.Msg/Delegate")
+	require.Equal(t, delAuth.MethodName(), stakingtypes.TypeDelegate)
+
+	// error both allow & deny list
+	_, err := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{val1}, "/cosmos.staking.v1beta1.Msg/Delegate", &coin100)
+	require.Error(t, err)
 
 	// verify MethodName
 	undelAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, "/cosmos.staking.v1beta1.Msg/Undelegate", &coin100)
-	require.Equal(t, undelAuth.MethodName(), "/cosmos.staking.v1beta1.Msg/Undelegate")
+	require.Equal(t, undelAuth.MethodName(), stakingtypes.TypeUndelegate)
+
+	// verify MethodName
+	beginRedelAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, "/cosmos.staking.v1beta1.Msg/BeginRedelegate", &coin100)
+	require.Equal(t, beginRedelAuth.MethodName(), stakingtypes.TypeBeginRedelegate)
 
 	validators1_2 := []string{val1.String(), val2.String()}
 
@@ -156,6 +173,68 @@ func TestAuthzAuthorizations(t *testing.T) {
 			false,
 			nil,
 		},
+
+		{
+			"redelegate: expect 0 remaining coins",
+			[]sdk.ValAddress{val1, val2},
+			[]sdk.ValAddress{},
+			"/cosmos.staking.v1beta1.Msg/BeginRedelegate",
+			&coin100,
+			createSrvMsgUndelegate(undelAuth.MethodName(), delAddr, val1, coin100),
+			false,
+			true,
+			nil,
+		},
+		{
+			"redelegate: verify remaining coins",
+			[]sdk.ValAddress{val1, val2},
+			[]sdk.ValAddress{},
+			"/cosmos.staking.v1beta1.Msg/BeginRedelegate",
+			&coin100,
+			createSrvMsgReDelegate(undelAuth.MethodName(), delAddr, val1, coin50),
+			false,
+			false,
+			&stakingtypes.StakeAuthorization{
+				Validators: &stakingtypes.StakeAuthorization_AllowList{
+					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
+				}, MaxTokens: &coin50, AuthorizationType: stakingtypes.TypeBeginRedelegate},
+		},
+		{
+			"redelegate: testing with invalid validator",
+			[]sdk.ValAddress{val1, val2},
+			[]sdk.ValAddress{},
+			"/cosmos.staking.v1beta1.Msg/BeginRedelegate",
+			&coin100,
+			createSrvMsgReDelegate(undelAuth.MethodName(), delAddr, val3, coin100),
+			true,
+			false,
+			nil,
+		},
+		{
+			"redelegate: testing delegate without spent limit",
+			[]sdk.ValAddress{val1, val2},
+			[]sdk.ValAddress{},
+			"/cosmos.staking.v1beta1.Msg/BeginRedelegate",
+			nil,
+			createSrvMsgReDelegate(undelAuth.MethodName(), delAddr, val2, coin100),
+			false,
+			false,
+			&stakingtypes.StakeAuthorization{
+				Validators: &stakingtypes.StakeAuthorization_AllowList{
+					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
+				}, MaxTokens: nil, AuthorizationType: stakingtypes.TypeBeginRedelegate},
+		},
+		{
+			"redelegate: fail cannot undelegate, permission denied",
+			[]sdk.ValAddress{},
+			[]sdk.ValAddress{val1},
+			"/cosmos.staking.v1beta1.Msg/BeginRedelegate",
+			&coin100,
+			createSrvMsgReDelegate(undelAuth.MethodName(), delAddr, val1, coin100),
+			true,
+			false,
+			nil,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -178,16 +257,24 @@ func TestAuthzAuthorizations(t *testing.T) {
 	}
 }
 
-// func createSrvMsgDelegate(methodName string, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) sdk.ServiceMsg {
-// 	msg := stakingtypes.NewMsgDelegate(delAddr, valAddr, amount)
-// 	return sdk.ServiceMsg{
-// 		MethodName: methodName,
-// 		Request:    msg,
-// 	}
-// }
-
-func createSrvMsgUnDelegate(methodName string, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) sdk.ServiceMsg {
+func createSrvMsgUndelegate(methodName string, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) sdk.ServiceMsg {
 	msg := stakingtypes.NewMsgUndelegate(delAddr, valAddr, amount)
+	return sdk.ServiceMsg{
+		MethodName: methodName,
+		Request:    msg,
+	}
+}
+
+func createSrvMsgReDelegate(methodName string, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) sdk.ServiceMsg {
+	msg := stakingtypes.NewMsgBeginRedelegate(delAddr, valAddr, valAddr, amount)
+	return sdk.ServiceMsg{
+		MethodName: methodName,
+		Request:    msg,
+	}
+}
+
+func createSrvMsgDelegate(methodName string, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) sdk.ServiceMsg {
+	msg := stakingtypes.NewMsgDelegate(delAddr, valAddr, amount)
 	return sdk.ServiceMsg{
 		MethodName: methodName,
 		Request:    msg,

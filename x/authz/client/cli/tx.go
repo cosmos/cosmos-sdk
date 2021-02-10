@@ -28,6 +28,7 @@ const FlagExpiration = "expiration"
 const FlagAllowedValidators = "allowed-validators"
 const FlagDenyValidators = "deny-validators"
 const delegate = "delegate"
+const redelegate = "redelegate"
 
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd() *cobra.Command {
@@ -51,7 +52,7 @@ func GetTxCmd() *cobra.Command {
 
 func NewCmdGrantAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"> --from <granter>",
+		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from <granter>",
 		Short: "Grant authorization to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Grant authorization to an address to execute a transaction on your behalf:
@@ -95,9 +96,7 @@ Examples:
 					return fmt.Errorf("spend-limit should be greater than zero")
 				}
 
-				authorization = &bank.SendAuthorization{
-					SpendLimit: spendLimit,
-				}
+				authorization = bank.NewSendAuthorization(spendLimit)
 			case "generic":
 				msgType, err := cmd.Flags().GetString(FlagMsgType)
 				if err != nil {
@@ -105,7 +104,7 @@ Examples:
 				}
 
 				authorization = types.NewGenericAuthorization(msgType)
-			case delegate, "unbond":
+			case delegate, "unbond", redelegate:
 				limit, err := cmd.Flags().GetString(FlagSpendLimit)
 				if err != nil {
 					return err
@@ -144,11 +143,13 @@ Examples:
 					return err
 				}
 
-				if args[1] == delegate {
+				switch args[1] {
+				case delegate:
 					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.TypeDelegate, delegateLimit)
-
-				} else {
+				case "unbond":
 					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.TypeUndelegate, delegateLimit)
+				default:
+					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.TypeBeginRedelegate, delegateLimit)
 				}
 				if err != nil {
 					return err

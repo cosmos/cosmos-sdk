@@ -52,7 +52,6 @@ type Store struct {
 	stores         map[types.StoreKey]types.CommitKVStore
 	keysByName     map[string]types.StoreKey
 	lazyLoading    bool
-	cacheListening bool
 	pruneHeights   []int64
 	initialVersion int64
 

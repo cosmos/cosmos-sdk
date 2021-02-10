@@ -56,7 +56,7 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 }
 
 func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
-	suite.SetupTest(true)
+	suite.SetupTest(false)
 	// setup
 	app, ctx := suite.app, suite.ctx
 

@@ -92,7 +92,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_BankBalance() {
 		grpc.Header(&header),
 	)
 	blockHeight = header.Get(grpctypes.GRPCBlockHeightHeader)
-	s.Require().Equal([]string{"1"}, blockHeight)
+	s.Require().NotEmpty(blockHeight[0]) // blockHeight is []string, first element is block height.
 }
 
 func (s *IntegrationTestSuite) TestGRPCServer_Reflection() {
@@ -124,8 +124,6 @@ func (s *IntegrationTestSuite) TestGRPCServer_GetTxsEvent() {
 			Events: []string{"message.action=send"},
 		},
 	)
-	// TODO Once https://github.com/cosmos/cosmos-sdk/pull/8029 is merged, this
-	// should not error anymore.
 	s.Require().NoError(err)
 }
 

@@ -84,6 +84,11 @@ func (app *BaseApp) RegisterGRPCServer(clientCtx client.Context, server gogogrpc
 			return nil, err
 		}
 
+		// Send the metadata header back. The metadata currently includes:
+		// - block height.
+		header := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(abciRes.Height, 10))
+		grpc.SendHeader(grpcCtx, header)
+
 		return res, nil
 	}
 

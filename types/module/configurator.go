@@ -24,6 +24,12 @@ type Configurator interface {
 	// RegisterMigration registers an in-place store migration for a module. The
 	// handler is a migration script to perform in-place migrations from version
 	// `forVersion` to version `forVersion+1`.
+	//
+	// EACH TIME a module's ConsensusVersion increments, a new migration MUST
+	// be registered using this function. If a migration handler is missing for
+	// a particular function, the upgrade logic (see RunMigrations function)
+	// will panic. If the ConsensusVersion bump does not introduce any store
+	// changes, then a no-op function must be registered here.
 	RegisterMigration(moduleName string, forVersion uint64, handler MigrationHandler) error
 }
 
@@ -79,9 +85,6 @@ func (c configurator) RegisterMigration(moduleName string, forVersion uint64, ha
 // version to another version.
 func (c configurator) runModuleMigrations(ctx sdk.Context, moduleName string, fromVersion, toVersion uint64) error {
 	// No-op if toVersion is the initial version.
-	// Some modules don't have a store key (e.g. vesting), in this case, their
-	// ConsensusVersion will always stay at 1, and running migrations on
-	// those modules will be skipped on this line.
 	if toVersion <= 1 {
 		return nil
 	}

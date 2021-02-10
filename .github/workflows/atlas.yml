@@ -18,7 +18,7 @@ jobs:
             x/auth/atlas/**
       - uses: marbar3778/atlas_action@v0.1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.ATLAS_TOKEN }}
           path: ./x/auth/atlas/atlas.toml
           dry-run: ${{ github.event_name != 'pull_request' }}
         if: env.GIT_DIFF
@@ -33,7 +33,7 @@ jobs:
             x/bank/atlas/**
       - uses: marbar3778/atlas_action@v0.1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.ATLAS_TOKEN }}
           path: ./x/bank/atlas/atlas.toml
           dry-run: ${{ github.event_name != 'pull_request' }}
         if: env.GIT_DIFF
@@ -48,7 +48,7 @@ jobs:
             x/evidence/atlas/**
       - uses: marbar3778/atlas_action@v0.1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.ATLAS_TOKEN }}
           path: ./x/evidence/atlas/atlas.toml
           dry-run: ${{ github.event_name != 'pull_request' }}
         if: env.GIT_DIFF

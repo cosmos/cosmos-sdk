@@ -183,9 +183,9 @@ func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 		value   string
 		wantErr string
 	}{
-		{"-1", "height < 0"},
+		{"-1", "\"x-cosmos-block-height\" must be >= 0"},
 		{"9223372036854775808", "value out of range"}, // > max(int64) by 1
-		{"-10", "height < 0"},
+		{"-10", "\"x-cosmos-block-height\" must be >= 0"},
 		{"18446744073709551615", "value out of range"}, // max uint64, which is  > max(int64)
 		{"-9223372036854775809", "value out of range"}, // Out of the range of for negative int64
 	}

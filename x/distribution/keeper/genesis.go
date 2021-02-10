@@ -99,9 +99,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	if balances.IsZero() {
 		k.authKeeper.SetModuleAccount(ctx, moduleAcc)
 	}
-
 	if !balances.IsEqual(moduleHoldingsInt) {
-		panic(fmt.Sprintf("expected module account was %s but we got %s module holdings", balances.String(), moduleHoldingsInt.String()))
+		panic(fmt.Sprintf("distribution module balance does not match the module holdings: %s <-> %s", balances, moduleHoldingsInt))
 	}
 }
 

@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -26,12 +26,12 @@ func (s *paginationTestSuite) TestFilteredPaginations() {
 		denom := fmt.Sprintf("test%ddenom", i)
 		balances = append(balances, sdk.NewInt64Coin(denom, 250))
 	}
-
+	balances = balances.Sort()
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	s.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, balances))
-	store := ctx.KVStore(app.GetKey(authtypes.StoreKey))
+	s.Require().NoError(simapp.FundAccount(app, ctx, addr1, balances))
+	store := ctx.KVStore(app.GetKey(types.StoreKey))
 
 	// verify pagination with limit > total values
 	pageReq := &query.PageRequest{Key: nil, Limit: 5, CountTotal: true}
@@ -100,16 +100,18 @@ func ExampleFilteredPaginate() {
 		denom := fmt.Sprintf("test%ddenom", i)
 		balances = append(balances, sdk.NewInt64Coin(denom, 250))
 	}
+
+	balances = balances.Sort()
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	err := app.BankKeeper.SetBalances(ctx, addr1, balances)
+	err := simapp.FundAccount(app, ctx, addr1, balances)
 	if err != nil { // should return no error
 		fmt.Println(err)
 	}
 
 	pageReq := &query.PageRequest{Key: nil, Limit: 1, CountTotal: true}
-	store := ctx.KVStore(app.GetKey(authtypes.StoreKey))
+	store := ctx.KVStore(app.GetKey(types.StoreKey))
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, addr1.Bytes())
 

@@ -21,8 +21,6 @@ type SendKeeper interface {
 	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error
 	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error
 
-	SetBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error
-
 	GetParams(ctx sdk.Context) types.Params
 	SetParams(ctx sdk.Context, params types.Params)
 
@@ -239,13 +237,6 @@ func (k BaseSendKeeper) ClearBalances(ctx sdk.Context, addr sdk.AccAddress) {
 	for _, key := range keys {
 		accountStore.Delete(key)
 	}
-}
-
-// SetBalances sets the balance (multiple coins) for an account by address. It will
-// clear out all balances prior to setting the new coins as to set existing balances
-// to zero if they don't exist in amt. An error is returned upon failure.
-func (k BaseSendKeeper) SetBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
-	return k.setBalances(ctx, addr, balances)
 }
 
 // setBalances sets the balance (multiple coins) for an account by address. It will

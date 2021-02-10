@@ -73,7 +73,7 @@ message MsgVoteWeighted {
 // MsgVoteResponse defines the Msg/Vote response type.
 message MsgVoteResponse {}
 
-// MsgVoteWeightedResponse defines the MsgVoteWeighted response type.
+// MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.
 message MsgVoteWeightedResponse {}
 
 // MsgDeposit defines a message to submit a deposit to an existing proposal.

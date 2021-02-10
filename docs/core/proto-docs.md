@@ -108,6 +108,9 @@
   
     - [Msg](#cosmos.bank.v1beta1.Msg)
   
+- [cosmos/base/bytes.proto](#cosmos/base/bytes.proto)
+    - [PBBytes](#cosmos.crypto.secp256r1.PBBytes)
+  
 - [cosmos/base/kv/v1beta1/kv.proto](#cosmos/base/kv/v1beta1/kv.proto)
     - [Pair](#cosmos.base.kv.v1beta1.Pair)
     - [Pairs](#cosmos.base.kv.v1beta1.Pairs)
@@ -2097,6 +2100,37 @@ Msg defines the bank Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Send` | [MsgSend](#cosmos.bank.v1beta1.MsgSend) | [MsgSendResponse](#cosmos.bank.v1beta1.MsgSendResponse) | Send defines a method for sending coins from one account to another account. | |
 | `MultiSend` | [MsgMultiSend](#cosmos.bank.v1beta1.MsgMultiSend) | [MsgMultiSendResponse](#cosmos.bank.v1beta1.MsgMultiSendResponse) | MultiSend defines a method for sending coins from some accounts to other accounts. | |
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/base/bytes.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/base/bytes.proto
+
+
+
+<a name="cosmos.crypto.secp256r1.PBBytes"></a>
+
+### PBBytes
+PBBytes defines a structure wrapping protocol buffers raw bytes serialization
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `bytes` | [bytes](#bytes) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
 
  <!-- end services -->
 

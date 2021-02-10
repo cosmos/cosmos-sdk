@@ -1,25 +1,41 @@
-package secp256r1
+package ecdsa
 
 import (
 	"crypto/ecdsa"
 	"crypto/rand"
-	"crypto/sha256"
-	"crypto/subtle"
-	"fmt"
-
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	//	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // "github.com/cosmos/cosmos-sdk/codec"
-//
 // "github.com/cosmos/cosmos-sdk/types/errors"
 
-// GenPrivKey generates a new secp256r1 private key. It uses OS randomness.
-func GenPrivKey() *PrivKey {
-	key, err := ecdsa.GenerateKey(curve, rand.Reader)
-	return PrivKey{key}, err
+type ecdsaSK struct {
+	*ecdsa.PrivateKey
 }
 
+// GenPrivKey generates a new secp256r1 private key. It uses OS randomness.
+// TODO: return cryptotypes.PrivKey
+func GenSecp256r1() (ecdsaSK, error) {
+	key, err := ecdsa.GenerateKey(secp256r1, rand.Reader)
+	return ecdsaSK{key}, err
+}
+
+// TODO: change return type
+func (sk ecdsaSK) PubKey() ecdsaPK {
+	return ecdsaPK{&sk.PublicKey, nil}
+}
+
+/*
+type LedgerPrivKey interface {
+	Bytes() []byte
+	Sign(msg []byte) ([]byte, error)
+	PubKey() PubKey
+	Equals(LedgerPrivKey) bool
+	Type() string
+    }
+*/
+
+/*
 // Bytes returns the byte representation of the Private Key.
 // func (privKey *PrivKey) Bytes() []byte {
 // 	return privKey.Key
@@ -52,3 +68,5 @@ func (privKey *PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
 
 	return subtle.ConstantTimeCompare(privKey.Bytes(), other.Bytes()) == 1
 }
+
+*/

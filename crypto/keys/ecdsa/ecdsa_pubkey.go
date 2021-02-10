@@ -1,11 +1,14 @@
-package secp256r1
+package ecdsa
 
 import (
+	"crypto"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"fmt"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
+	//	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // "github.com/cosmos/cosmos-sdk/codec"
@@ -13,11 +16,8 @@ import (
 // "github.com/cosmos/cosmos-sdk/types/errors"
 
 const (
-	keyType     = "secp256r1"
-	PrivKeyName = "cosmos/PrivKeySecp256r1"
-	PubKeyName  = "cosmos/PubKeySecp256r1"
 	// PubKeySize is is the size, in bytes, of public keys as used in this package.
-	// PubKeySize = 32
+	PubKeySize = 32 + 1
 	// PrivKeySize is the size, in bytes, of private keys as used in this package.
 	// PrivKeySize = 64
 	// SeedSize is the size, in bytes, of private key seeds. These are the
@@ -25,27 +25,62 @@ const (
 	SeedSize = 32
 )
 
-var curve elliptic.Curve
+var secp256r1 elliptic.Curve
+var curveNames map[elliptic.Curve]string
 
 func init() {
-	curve = elliptic.P256()
-	// params := curve.Params()
-	// if params.BitSize/8 != PubKeySize {
-	// 	panic(fmt.Sprintf("Wrong PubKeySize=%d, expecting=%d", PubKeySize, params.BitSize/8))
-	// }
-}
+	secp256r1 = elliptic.P256()
+	params := secp256r1.Params()
+	if params.BitSize/8 != PubKeySize-1 {
+		panic(fmt.Sprintf("Wrong PubKeySize=%d, expecting=%d", PubKeySize, params.BitSize/8))
+	}
 
-// type curve
+	curveNames = map[elliptic.Curve]string{
+		secp256r1: "secp256r1",
+	}
+}
 
 type ecdsaPK struct {
-	ecdsa.PublicKey
-	//	typ
+	*ecdsa.PublicKey
+
+	// cache
+	address []byte // skd.AccAddress
 }
 
+// TODO:
 // var _ cryptotypes.PubKey = &PubKey{}
 
+// String implements PubKey interface
+func (pk ecdsaPK) Address() sdk.AccAddress {
+	if pk.address == nil {
+		pk.address = address.Hash(curveNames[pk.Curve], pk.Bytes())
+	}
+	return pk.address
+}
+
+// String implements PubKey interface
+func (pk ecdsaPK) String() string {
+	return fmt.Sprintf("%s{%X}", curveNames[pk.Curve], pk.Bytes())
+}
+
+// Bytes returns the byte representation of the public key in a compressed representation.
+func (pk ecdsaPK) Bytes() []byte {
+	return elliptic.MarshalCompressed(pk.Curve, pk.X, pk.Y)
+}
+
+// Equals - you probably don't need to use this.
+// Runs in constant time based on length of the keys.
+func (pk ecdsaPK) Equal(other crypto.PublicKey) bool {
+	pk2, ok := other.(ecdsaPK)
+	if !ok {
+		return false
+	}
+
+	return pk.PublicKey.Equal(pk2.PublicKey)
+}
+
 /*
-type PubKey interface {
+   type PubKey interface {
 	proto.Message
 
 	Address() Address
@@ -53,27 +88,12 @@ type PubKey interface {
 	VerifySignature(msg []byte, sig []byte) bool
 	Equals(PubKey) bool
 	Type() string
-}
+    }
 
-// Message is implemented by generated protocol buffer messages.
-type Message interface {
+   // Message is implemented by generated protocol buffer messages.
+   type Message interface {
 	Reset()
 	String() string
 	ProtoMessage()
-}
+    }
 */
-
-// Bytes returns the byte representation of the Private Key.
-// func (privKey *PrivKey) Bytes() []byte {
-// 	return privKey.Key
-// }
-
-func (pk *ecdsaPK) String() string {
-	return fmt.Sprintf("secp256r1{%X}", pubKey.Key)
-}
-
-// Equals - you probably don't need to use this.
-// Runs in constant time based on length of the keys.
-func (pk *ecdsaPK) Equals(other cryptotypes.PubKey) bool {
-
-}

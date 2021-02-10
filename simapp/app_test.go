@@ -11,7 +11,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
@@ -69,11 +68,6 @@ func TestRunMigrations(t *testing.T) {
 		expCalled    int
 	}{
 		{
-			"cannot register migration for non-existant module",
-			"foo", 1,
-			true, "store key for module foo not found: not found", false, "", 0,
-		},
-		{
 			"cannot register migration for version 0",
 			"bank", 0,
 			true, "module migration versions should start at 1: invalid version", false, "", 0,
@@ -107,7 +101,7 @@ func TestRunMigrations(t *testing.T) {
 
 			if tc.moduleName != "" {
 				// Register migration for module from version `forVersion` to `forVersion+1`.
-				err = app.configurator.RegisterMigration(tc.moduleName, tc.forVersion, func(sdk.Context, sdk.StoreKey, codec.Marshaler) error {
+				err = app.configurator.RegisterMigration(tc.moduleName, tc.forVersion, func(sdk.Context) error {
 					called++
 
 					return nil

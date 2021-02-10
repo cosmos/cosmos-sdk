@@ -1,7 +1,6 @@
 package v042
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v040"
@@ -13,7 +12,7 @@ import (
 //
 // - Change addresses to be length-prefixed.
 // - Change balances prefix to 1 byte
-func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, _ codec.Marshaler) error {
+func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey) error {
 	store := ctx.KVStore(storeKey)
 
 	// old key is of format:

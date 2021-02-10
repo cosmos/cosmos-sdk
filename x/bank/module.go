@@ -22,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	v042 "github.com/cosmos/cosmos-sdk/x/bank/legacy/v042"
 	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -101,7 +100,9 @@ type AppModule struct {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
-	cfg.RegisterMigration(types.ModuleName, 0, v042.MigrateStore)
+	cfg.RegisterMigration(types.ModuleName, 0, func(ctx sdk.Context) error {
+		return am.keeper.(keeper.MigrationKeeper).Migrate1(ctx)
+	})
 }
 
 // NewAppModule creates a new AppModule object

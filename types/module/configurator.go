@@ -33,8 +33,6 @@ type configurator struct {
 	msgServer   grpc.Server
 	queryServer grpc.Server
 
-	// storeKeys is used to access module stores inside in-place store migrations.
-	storeKeys map[string]*sdk.KVStoreKey
 	// migrations is a map of moduleName -> forVersion -> migration script handler
 	migrations map[string]map[uint64]MigrationHandler
 }
@@ -45,7 +43,6 @@ func NewConfigurator(cdc codec.Marshaler, msgServer grpc.Server, queryServer grp
 		cdc:         cdc,
 		msgServer:   msgServer,
 		queryServer: queryServer,
-		storeKeys:   storeKeys,
 		migrations:  map[string]map[uint64]MigrationHandler{},
 	}
 }
@@ -76,11 +73,6 @@ func (c configurator) RegisterMigration(moduleName string, forVersion uint64, ha
 		return sdkerrors.Wrapf(sdkerrors.ErrLogic, "another migration for module %s and version %d already exists", moduleName, forVersion)
 	}
 
-	_, found := c.storeKeys[moduleName]
-	if !found {
-		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "store key for module %s not found", moduleName)
-	}
-
 	c.migrations[moduleName][forVersion] = handler
 
 	return nil
@@ -97,11 +89,6 @@ func (c configurator) runModuleMigrations(ctx sdk.Context, moduleName string, fr
 		return nil
 	}
 
-	storeKey, found := c.storeKeys[moduleName]
-	if !found {
-		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "store key for module %s not found", moduleName)
-	}
-
 	moduleMigrationsMap, found := c.migrations[moduleName]
 	if !found {
 		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "no migrations found for module %s", moduleName)
@@ -114,7 +101,7 @@ func (c configurator) runModuleMigrations(ctx sdk.Context, moduleName string, fr
 			return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "no migration found for module %s from version %d to version %d", moduleName, i, i+1)
 		}
 
-		err := migrateFn(ctx, storeKey, c.cdc)
+		err := migrateFn(ctx)
 		if err != nil {
 			return err
 		}

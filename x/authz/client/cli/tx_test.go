@@ -223,6 +223,22 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			false,
 		},
 		{
+			"valid tx redelegate authorization",
+			[]string{
+				grantee.String(),
+				"redelegate",
+				fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+				fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, fmt.Sprintf("%s", val.ValAddress.String())),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			&sdk.TxResponse{}, 0,
+			false,
+		},
+		{
 			"Valid tx send authorization",
 			[]string{
 				grantee.String(),

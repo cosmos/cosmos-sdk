@@ -145,11 +145,11 @@ Examples:
 
 				switch args[1] {
 				case delegate:
-					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.TypeDelegate, delegateLimit)
+					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, delegateLimit)
 				case "unbond":
-					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.TypeUndelegate, delegateLimit)
+					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE, delegateLimit)
 				default:
-					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.TypeBeginRedelegate, delegateLimit)
+					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE, delegateLimit)
 				}
 				if err != nil {
 					return err

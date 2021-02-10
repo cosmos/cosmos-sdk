@@ -386,6 +386,8 @@
     - [StakeAuthorization](#cosmos.staking.v1beta1.StakeAuthorization)
     - [StakeAuthorization.Validators](#cosmos.staking.v1beta1.StakeAuthorization.Validators)
   
+    - [AuthorizationType](#cosmos.staking.v1beta1.AuthorizationType)
+  
 - [cosmos/staking/v1beta1/query.proto](#cosmos/staking/v1beta1/query.proto)
     - [QueryDelegationRequest](#cosmos.staking.v1beta1.QueryDelegationRequest)
     - [QueryDelegationResponse](#cosmos.staking.v1beta1.QueryDelegationResponse)
@@ -5951,7 +5953,7 @@ StakeAuthorization defines authorization for delegate/undelegate/redelegate.
 | `max_tokens` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | max_tokens specifies the maximum amount of tokens can be delegate to a validator. If it is empty, there is no spend limit and any amount of coins can be delegated. |
 | `allow_list` | [StakeAuthorization.Validators](#cosmos.staking.v1beta1.StakeAuthorization.Validators) |  | allow_list specifies list of validator addresses to whom grantee can delegate tokens on behalf of granter's account. |
 | `deny_list` | [StakeAuthorization.Validators](#cosmos.staking.v1beta1.StakeAuthorization.Validators) |  | deny_list specifies list of validator addresses to whom grantee can not delegate tokens. |
-| `authorization_type` | [string](#string) |  | authorization_type defines staking msg-type. |
+| `authorization_type` | [AuthorizationType](#cosmos.staking.v1beta1.AuthorizationType) |  | authorization_type defines one of AuthorizationType. |
 
 
 
@@ -5973,6 +5975,20 @@ Validators defines list of validator addresses.
 
 
  <!-- end messages -->
+
+
+<a name="cosmos.staking.v1beta1.AuthorizationType"></a>
+
+### AuthorizationType
+AuthorizationType defines staking authz types.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| AUTHORIZATION_TYPE_UNSPECIFIED | 0 | zero-value for ordering |
+| AUTHORIZATION_TYPE_DELEGATE | 1 | AUTHORIZATION_TYPE_DELEGATE defines a delegate authorization type. |
+| AUTHORIZATION_TYPE_UNDELEGATE | 2 | AUTHORIZATION_TYPE_UNDELEGATE defines a undelegate authorization type. |
+| AUTHORIZATION_TYPE_REDELEGATE | 3 | AUTHORIZATION_TYPE_REDELEGATE defines a redelegate authorization type. |
+
 
  <!-- end enums -->
 

@@ -15,7 +15,7 @@ var (
 )
 
 // NewStakeAuthorization creates a new StakeAuthorization object.
-func NewStakeAuthorization(allowed []sdk.ValAddress, denied []sdk.ValAddress, authzType string, amount *sdk.Coin) (*StakeAuthorization, error) {
+func NewStakeAuthorization(allowed []sdk.ValAddress, denied []sdk.ValAddress, authzType AuthorizationType, amount *sdk.Coin) (*StakeAuthorization, error) {
 	allowedValidators, deniedValidators, err := validateAndBech32fy(allowed, denied)
 	if err != nil {
 		return nil, err
@@ -38,7 +38,11 @@ func NewStakeAuthorization(allowed []sdk.ValAddress, denied []sdk.ValAddress, au
 
 // MethodName implements Authorization.MethodName.
 func (authorization StakeAuthorization) MethodName() string {
-	return authorization.AuthorizationType
+	authzType, err := normalizeAuthzType(authorization.AuthorizationType)
+	if err != nil {
+		panic(err)
+	}
+	return authzType
 }
 
 // Accept implements Authorization.Accept.
@@ -115,4 +119,17 @@ func validateAndBech32fy(allowed []sdk.ValAddress, denied []sdk.ValAddress) ([]s
 	}
 
 	return nil, deniedValidators, nil
+}
+
+func normalizeAuthzType(authzType AuthorizationType) (string, error) {
+	switch authzType {
+	case AuthorizationType_AUTHORIZATION_TYPE_DELEGATE:
+		return TypeDelegate, nil
+	case AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE:
+		return TypeUndelegate, nil
+	case AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE:
+		return TypeBeginRedelegate, nil
+	default:
+		return "", sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "unknown authorization type %T", authzType)
+	}
 }

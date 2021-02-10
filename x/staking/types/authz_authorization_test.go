@@ -22,19 +22,19 @@ var (
 func TestAuthzAuthorizations(t *testing.T) {
 
 	// verify MethodName
-	delAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, "/cosmos.staking.v1beta1.Msg/Delegate", &coin100)
+	delAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, &coin100)
 	require.Equal(t, delAuth.MethodName(), stakingtypes.TypeDelegate)
 
 	// error both allow & deny list
-	_, err := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{val1}, "/cosmos.staking.v1beta1.Msg/Delegate", &coin100)
+	_, err := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{val1}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, &coin100)
 	require.Error(t, err)
 
 	// verify MethodName
-	undelAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, "/cosmos.staking.v1beta1.Msg/Undelegate", &coin100)
+	undelAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE, &coin100)
 	require.Equal(t, undelAuth.MethodName(), stakingtypes.TypeUndelegate)
 
 	// verify MethodName
-	beginRedelAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, "/cosmos.staking.v1beta1.Msg/BeginRedelegate", &coin100)
+	beginRedelAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE, &coin100)
 	require.Equal(t, beginRedelAuth.MethodName(), stakingtypes.TypeBeginRedelegate)
 
 	validators1_2 := []string{val1.String(), val2.String()}
@@ -43,7 +43,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 		msg                  string
 		allowed              []sdk.ValAddress
 		denied               []sdk.ValAddress
-		msgType              string
+		msgType              stakingtypes.AuthorizationType
 		limit                *sdk.Coin
 		srvMsg               sdk.ServiceMsg
 		expectErr            bool
@@ -54,7 +54,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			"delegate: expect 0 remaining coins",
 			[]sdk.ValAddress{val1, val2},
 			[]sdk.ValAddress{},
-			"/cosmos.staking.v1beta1.Msg/Delegate",
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			&coin100,
 			createSrvMsgDelegate(delAuth.MethodName(), delAddr, val1, coin100),
 			false,
@@ -65,7 +65,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			"delegate: verify remaining coins",
 			[]sdk.ValAddress{val1, val2},
 			[]sdk.ValAddress{},
-			"/cosmos.staking.v1beta1.Msg/Delegate",
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			&coin100,
 			createSrvMsgDelegate(delAuth.MethodName(), delAddr, val1, coin50),
 			false,
@@ -73,13 +73,13 @@ func TestAuthzAuthorizations(t *testing.T) {
 			&stakingtypes.StakeAuthorization{
 				Validators: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
-				}, MaxTokens: &coin50, AuthorizationType: stakingtypes.TypeDelegate},
+				}, MaxTokens: &coin50, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE},
 		},
 		{
 			"delegate: testing with invalid validator",
 			[]sdk.ValAddress{val1, val2},
 			[]sdk.ValAddress{},
-			"/cosmos.staking.v1beta1.Msg/Delegate",
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			&coin100,
 			createSrvMsgDelegate(delAuth.MethodName(), delAddr, val3, coin100),
 			true,
@@ -90,7 +90,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			"delegate: testing delegate without spent limit",
 			[]sdk.ValAddress{val1, val2},
 			[]sdk.ValAddress{},
-			"/cosmos.staking.v1beta1.Msg/Delegate",
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			nil,
 			createSrvMsgDelegate(delAuth.MethodName(), delAddr, val2, coin100),
 			false,
@@ -98,13 +98,13 @@ func TestAuthzAuthorizations(t *testing.T) {
 			&stakingtypes.StakeAuthorization{
 				Validators: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
-				}, MaxTokens: nil, AuthorizationType: stakingtypes.TypeDelegate},
+				}, MaxTokens: nil, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE},
 		},
 		{
 			"delegate: fail validator denied",
 			[]sdk.ValAddress{},
 			[]sdk.ValAddress{val1},
-			"/cosmos.staking.v1beta1.Msg/Delegate",
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			nil,
 			createSrvMsgDelegate(delAuth.MethodName(), delAddr, val1, coin100),
 			true,
@@ -116,7 +116,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			"undelegate: expect 0 remaining coins",
 			[]sdk.ValAddress{val1, val2},
 			[]sdk.ValAddress{},
-			"/cosmos.staking.v1beta1.Msg/undelegate",
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE,
 			&coin100,
 			createSrvMsgUndelegate(undelAuth.MethodName(), delAddr, val1, coin100),
 			false,
@@ -127,7 +127,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			"undelegate: verify remaining coins",
 			[]sdk.ValAddress{val1, val2},
 			[]sdk.ValAddress{},
-			"/cosmos.staking.v1beta1.Msg/Undelegate",
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE,
 			&coin100,
 			createSrvMsgUndelegate(undelAuth.MethodName(), delAddr, val1, coin50),
 			false,
@@ -135,13 +135,13 @@ func TestAuthzAuthorizations(t *testing.T) {
 			&stakingtypes.StakeAuthorization{
 				Validators: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
-				}, MaxTokens: &coin50, AuthorizationType: stakingtypes.TypeUndelegate},
+				}, MaxTokens: &coin50, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE},
 		},
 		{
 			"undelegate: testing with invalid validator",
 			[]sdk.ValAddress{val1, val2},
 			[]sdk.ValAddress{},
-			"/cosmos.staking.v1beta1.Msg/Undelegate",
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE,
 			&coin100,
 			createSrvMsgUndelegate(undelAuth.MethodName(), delAddr, val3, coin100),
 			true,
@@ -152,7 +152,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			"undelegate: testing delegate without spent limit",
 			[]sdk.ValAddress{val1, val2},
 			[]sdk.ValAddress{},
-			"/cosmos.staking.v1beta1.Msg/Undelegate",
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE,
 			nil,
 			createSrvMsgUndelegate(undelAuth.MethodName(), delAddr, val2, coin100),
 			false,
@@ -160,13 +160,13 @@ func TestAuthzAuthorizations(t *testing.T) {
 			&stakingtypes.StakeAuthorization{
 				Validators: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
-				}, MaxTokens: nil, AuthorizationType: stakingtypes.TypeUndelegate},
+				}, MaxTokens: nil, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE},
 		},
 		{
 			"undelegate: fail cannot undelegate, permission denied",
 			[]sdk.ValAddress{},
 			[]sdk.ValAddress{val1},
-			"/cosmos.staking.v1beta1.Msg/Undelegate",
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE,
 			&coin100,
 			createSrvMsgUndelegate(undelAuth.MethodName(), delAddr, val1, coin100),
 			true,
@@ -178,7 +178,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			"redelegate: expect 0 remaining coins",
 			[]sdk.ValAddress{val1, val2},
 			[]sdk.ValAddress{},
-			"/cosmos.staking.v1beta1.Msg/BeginRedelegate",
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE,
 			&coin100,
 			createSrvMsgUndelegate(undelAuth.MethodName(), delAddr, val1, coin100),
 			false,
@@ -189,7 +189,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			"redelegate: verify remaining coins",
 			[]sdk.ValAddress{val1, val2},
 			[]sdk.ValAddress{},
-			"/cosmos.staking.v1beta1.Msg/BeginRedelegate",
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE,
 			&coin100,
 			createSrvMsgReDelegate(undelAuth.MethodName(), delAddr, val1, coin50),
 			false,
@@ -197,13 +197,13 @@ func TestAuthzAuthorizations(t *testing.T) {
 			&stakingtypes.StakeAuthorization{
 				Validators: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
-				}, MaxTokens: &coin50, AuthorizationType: stakingtypes.TypeBeginRedelegate},
+				}, MaxTokens: &coin50, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE},
 		},
 		{
 			"redelegate: testing with invalid validator",
 			[]sdk.ValAddress{val1, val2},
 			[]sdk.ValAddress{},
-			"/cosmos.staking.v1beta1.Msg/BeginRedelegate",
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE,
 			&coin100,
 			createSrvMsgReDelegate(undelAuth.MethodName(), delAddr, val3, coin100),
 			true,
@@ -214,7 +214,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			"redelegate: testing delegate without spent limit",
 			[]sdk.ValAddress{val1, val2},
 			[]sdk.ValAddress{},
-			"/cosmos.staking.v1beta1.Msg/BeginRedelegate",
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE,
 			nil,
 			createSrvMsgReDelegate(undelAuth.MethodName(), delAddr, val2, coin100),
 			false,
@@ -222,13 +222,13 @@ func TestAuthzAuthorizations(t *testing.T) {
 			&stakingtypes.StakeAuthorization{
 				Validators: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: validators1_2},
-				}, MaxTokens: nil, AuthorizationType: stakingtypes.TypeBeginRedelegate},
+				}, MaxTokens: nil, AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE},
 		},
 		{
 			"redelegate: fail cannot undelegate, permission denied",
 			[]sdk.ValAddress{},
 			[]sdk.ValAddress{val1},
-			"/cosmos.staking.v1beta1.Msg/BeginRedelegate",
+			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE,
 			&coin100,
 			createSrvMsgReDelegate(undelAuth.MethodName(), delAddr, val1, coin100),
 			true,

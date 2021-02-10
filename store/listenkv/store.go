@@ -6,6 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
+var _ types.KVStore = &Store{}
+
 // Store implements the KVStore interface with listening enabled.
 // Operations are traced on each core KVStore call and written to any of the
 // underlying listeners with the proper key and operation permissions

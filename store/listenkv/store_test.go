@@ -6,16 +6,16 @@ import (
 	"io"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/stretchr/testify/require"
 
 	dbm "github.com/tendermint/tm-db"
-
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 func bz(s string) []byte { return []byte(s) }
@@ -30,7 +30,8 @@ var kvPairs = []types.KVPair{
 }
 
 var testStoreKey = types.NewKVStoreKey("listen_test")
-var testMarshaller = simapp.MakeTestEncodingConfig().Marshaler
+var interfaceRegistry = codecTypes.NewInterfaceRegistry()
+var testMarshaller = codec.NewProtoCodec(interfaceRegistry)
 
 func newListenKVStore(w io.Writer) *listenkv.Store {
 	store := newEmptyListenKVStore(w)
@@ -49,7 +50,7 @@ func newEmptyListenKVStore(w io.Writer) *listenkv.Store {
 	return listenkv.NewStore(memDB, testStoreKey, []types.WriteListener{listener})
 }
 
-func TestTraceKVStoreGet(t *testing.T) {
+func TestListenKVStoreGet(t *testing.T) {
 	testCases := []struct {
 		key           []byte
 		expectedValue []byte
@@ -75,7 +76,7 @@ func TestTraceKVStoreGet(t *testing.T) {
 	}
 }
 
-func TestTraceKVStoreSet(t *testing.T) {
+func TestListenKVStoreSet(t *testing.T) {
 	testCases := []struct {
 		key         []byte
 		value       []byte
@@ -132,7 +133,7 @@ func TestTraceKVStoreSet(t *testing.T) {
 
 }
 
-func TestTraceKVStoreDelete(t *testing.T) {
+func TestListenKVStoreDelete(t *testing.T) {
 	testCases := []struct {
 		key         []byte
 		expectedOut *types.StoreKVPair
@@ -161,7 +162,7 @@ func TestTraceKVStoreDelete(t *testing.T) {
 	}
 }
 
-func TestTraceKVStoreHas(t *testing.T) {
+func TestListenKVStoreHas(t *testing.T) {
 	testCases := []struct {
 		key      []byte
 		expected bool
@@ -183,7 +184,7 @@ func TestTraceKVStoreHas(t *testing.T) {
 	}
 }
 
-func TestTestTraceKVStoreIterator(t *testing.T) {
+func TestTestListenKVStoreIterator(t *testing.T) {
 	var buf bytes.Buffer
 
 	store := newListenKVStore(&buf)
@@ -226,7 +227,7 @@ func TestTestTraceKVStoreIterator(t *testing.T) {
 	require.NoError(t, iterator.Close())
 }
 
-func TestTestTraceKVStoreReverseIterator(t *testing.T) {
+func TestTestListenKVStoreReverseIterator(t *testing.T) {
 	var buf bytes.Buffer
 
 	store := newListenKVStore(&buf)
@@ -269,23 +270,29 @@ func TestTestTraceKVStoreReverseIterator(t *testing.T) {
 	require.NoError(t, iterator.Close())
 }
 
-func TestTraceKVStorePrefix(t *testing.T) {
+func TestListenKVStorePrefix(t *testing.T) {
 	store := newEmptyListenKVStore(nil)
 	pStore := prefix.NewStore(store, []byte("listen_prefix"))
 	require.IsType(t, prefix.Store{}, pStore)
 }
 
-func TestTraceKVStoreGetStoreType(t *testing.T) {
+func TestListenKVStoreGetStoreType(t *testing.T) {
 	memDB := dbadapter.Store{DB: dbm.NewMemDB()}
 	store := newEmptyListenKVStore(nil)
 	require.Equal(t, memDB.GetStoreType(), store.GetStoreType())
 }
 
-func TestTraceKVStoreCacheWrap(t *testing.T) {
+func TestListenKVStoreCacheWrap(t *testing.T) {
 	store := newEmptyListenKVStore(nil)
 	require.Panics(t, func() { store.CacheWrap() })
 }
-func TestTraceKVStoreCacheWrapWithTrace(t *testing.T) {
+
+func TestListenKVStoreCacheWrapWithTrace(t *testing.T) {
 	store := newEmptyListenKVStore(nil)
 	require.Panics(t, func() { store.CacheWrapWithTrace(nil, nil) })
+}
+
+func TestListenKVStoreCacheWrapWithListeners(t *testing.T) {
+	store := newEmptyListenKVStore(nil)
+	require.Panics(t, func() { store.CacheWrapWithListeners(nil, nil) })
 }

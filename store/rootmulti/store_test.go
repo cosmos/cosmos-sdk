@@ -11,6 +11,9 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/store/cachemulti"
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -60,6 +63,14 @@ func TestStoreMount(t *testing.T) {
 	require.Panics(t, func() { store.MountStoreWithDB(key1, types.StoreTypeIAVL, db) })
 	require.Panics(t, func() { store.MountStoreWithDB(nil, types.StoreTypeIAVL, db) })
 	require.Panics(t, func() { store.MountStoreWithDB(dup1, types.StoreTypeIAVL, db) })
+}
+
+func TestCacheMultiStore(t *testing.T) {
+	var db dbm.DB = dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, types.PruneNothing)
+
+	cacheMulti := ms.CacheMultiStore()
+	require.IsType(t, cachemulti.Store{}, cacheMulti)
 }
 
 func TestCacheMultiStoreWithVersion(t *testing.T) {
@@ -693,6 +704,38 @@ func TestSetListenersAndListeningEnabled(t *testing.T) {
 	require.True(t, enabled)
 }
 
+func TestGetListenWrappedKVStore(t *testing.T) {
+	var db dbm.DB = dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, types.PruneNothing)
+	ms.LoadLatestVersion()
+	mockListeners := []types.WriteListener{types.NewStoreKVPairWriteListener(nil, nil)}
+	ms.SetListeners(testStoreKey1, mockListeners)
+	ms.SetListeners(testStoreKey2, mockListeners)
+
+	listenWrappedStore1 := ms.GetKVStore(testStoreKey1)
+	require.IsType(t, &listenkv.Store{}, listenWrappedStore1)
+
+	listenWrappedStore2 := ms.GetKVStore(testStoreKey2)
+	require.IsType(t, &listenkv.Store{}, listenWrappedStore2)
+
+	unwrappedStore3 := ms.GetKVStore(testStoreKey3)
+	require.IsType(t, &iavl.Store{}, unwrappedStore3)
+}
+
+func TestCacheWraps(t *testing.T) {
+	db := dbm.NewMemDB()
+	multi := newMultiStoreWithMounts(db, types.PruneNothing)
+
+	cacheWrapper := multi.CacheWrap()
+	require.IsType(t, cachemulti.Store{}, cacheWrapper)
+
+	cacheWrappedWithTrace := multi.CacheWrapWithTrace(nil, nil)
+	require.IsType(t, cachemulti.Store{}, cacheWrappedWithTrace)
+
+	cacheWrappedWithListeners := multi.CacheWrapWithListeners(nil, nil)
+	require.IsType(t, cachemulti.Store{}, cacheWrappedWithListeners)
+}
+
 func BenchmarkMultistoreSnapshot100K(b *testing.B) {
 	benchmarkMultistoreSnapshot(b, 10, 10000)
 }
@@ -769,13 +812,19 @@ func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys ui
 //-----------------------------------------------------------------------
 // utils
 
+var (
+	testStoreKey1 = types.NewKVStoreKey("store1")
+	testStoreKey2 = types.NewKVStoreKey("store2")
+	testStoreKey3 = types.NewKVStoreKey("store3")
+)
+
 func newMultiStoreWithMounts(db dbm.DB, pruningOpts types.PruningOptions) *Store {
 	store := NewStore(db)
 	store.pruningOpts = pruningOpts
 
-	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil)
-	store.MountStoreWithDB(types.NewKVStoreKey("store2"), types.StoreTypeIAVL, nil)
-	store.MountStoreWithDB(types.NewKVStoreKey("store3"), types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(testStoreKey1, types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(testStoreKey2, types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(testStoreKey3, types.StoreTypeIAVL, nil)
 
 	return store
 }

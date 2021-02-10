@@ -71,7 +71,6 @@ func AppStateFn(cdc codec.JSONMarshaler, simManager *module.SimulationManager) s
 			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 		}
 
-		// here the change
 		rawState := make(map[string]json.RawMessage)
 		err := json.Unmarshal(appState, &rawState)
 		if err != nil {
@@ -79,7 +78,6 @@ func AppStateFn(cdc codec.JSONMarshaler, simManager *module.SimulationManager) s
 		}
 
 		stakingStateBz, ok := rawState[stakingtypes.ModuleName]
-		// TODO(fdymylja/jonathan): should we panic in this case?
 		if !ok {
 			panic("staking genesis state is missing")
 		}

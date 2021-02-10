@@ -77,17 +77,15 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	priv5, _, addr5 := testdata.KeyTestPubAddr()
 
 	// Set addr1 with insufficient funds
-	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	app.AccountKeeper.SetAccount(ctx, acc1)
-	app.BankKeeper.SetBalances(ctx, addr1, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(10))})
+	err := simapp.FundAccount(suite.app, suite.ctx, addr1, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(10))})
+	suite.Require().NoError(err)
 
 	// Set addr2 with more funds
-	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
-	app.AccountKeeper.SetAccount(ctx, acc2)
-	app.BankKeeper.SetBalances(ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99999))})
+	err = simapp.FundAccount(suite.app, suite.ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99999))})
+	suite.Require().NoError(err)
 
 	// grant fee allowance from `addr2` to `addr3` (plenty to pay)
-	err := app.FeeGrantKeeper.GrantFeeAllowance(ctx, addr2, addr3, &types.BasicFeeAllowance{
+	err = app.FeeGrantKeeper.GrantFeeAllowance(ctx, addr2, addr3, &types.BasicFeeAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
 	})
 	suite.Require().NoError(err)

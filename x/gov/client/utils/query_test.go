@@ -2,6 +2,7 @@ package utils_test
 
 import (
 	"context"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -17,6 +18,7 @@ import (
 )
 
 type TxSearchMock struct {
+	txConfig client.TxConfig
 	mock.Client
 	txs []tmtypes.Tx
 }
@@ -30,12 +32,35 @@ func (mock TxSearchMock) TxSearch(ctx context.Context, query string, prove bool,
 		*perPage = 0
 	}
 
+	// Get the `message.action` value from the query.
+	messageAction := regexp.MustCompile(`message\.action='(.*)'$`)
+	msgType := messageAction.FindStringSubmatch(query)[1]
+
+	// Filter only the txs that match the query
+	matchingTxs := make([]tmtypes.Tx, 0)
+	for _, tx := range mock.txs {
+		sdkTx, err := mock.txConfig.TxDecoder()(tx)
+		if err != nil {
+			return nil, err
+		}
+		for _, msg := range sdkTx.GetMsgs() {
+			if msg.Type() == msgType {
+				matchingTxs = append(matchingTxs, tx)
+				break
+			}
+		}
+	}
+
 	start, end := client.Paginate(len(mock.txs), *page, *perPage, 100)
 	if start < 0 || end < 0 {
 		// nil result with nil error crashes utils.QueryTxsByEvents
 		return &ctypes.ResultTxSearch{}, nil
 	}
-	txs := mock.txs[start:end]
+	if len(matchingTxs) < end {
+		return &ctypes.ResultTxSearch{}, nil
+	}
+
+	txs := matchingTxs[start:end]
 	rst := &ctypes.ResultTxSearch{Txs: make([]*ctypes.ResultTx, len(txs)), TotalCount: len(txs)}
 	for i := range txs {
 		rst.Txs[i] = &ctypes.ResultTx{Tx: txs[i]}
@@ -135,7 +160,7 @@ func TestGetPaginatedVotes(t *testing.T) {
 
 		t.Run(tc.description, func(t *testing.T) {
 			var marshalled = make([]tmtypes.Tx, len(tc.msgs))
-			cli := TxSearchMock{txs: marshalled}
+			cli := TxSearchMock{txs: marshalled, txConfig: encCfg.TxConfig}
 			clientCtx := client.Context{}.
 				WithLegacyAmino(encCfg.Amino).
 				WithClient(cli).

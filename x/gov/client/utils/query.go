@@ -260,16 +260,6 @@ func QueryProposalByID(proposalID uint64, clientCtx client.Context, queryRoute s
 	return res, err
 }
 
-func queryTxsByEvents(clientCtx client.Context, msgType string, page int, otherEvents ...string) (*sdk.SearchTxsResult, error) {
-	events := append([]string{
-		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, msgType),
-	}, otherEvents...)
-
-	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
-	// support configurable pagination.
-	return authclient.QueryTxsByEvents(clientCtx, events, page, defaultLimit, "")
-}
-
 // searchEvents queries txs by events with both `oldMsgType` and `newMsgtype`,
 // merges the results into one *sdk.SearchTxsResult.
 func searchEvents(clientCtx client.Context, oldMsgType, newMsgType string, page int, otherEvents ...string) (*sdk.SearchTxsResult, error) {
@@ -277,11 +267,17 @@ func searchEvents(clientCtx client.Context, oldMsgType, newMsgType string, page 
 	// - via legacy Msgs (amino or proto), their `Type()` is a custom string,
 	// - via ADR-031 service msgs, their `Type()` is the protobuf FQ method name.
 	// In searching for events, we search for both `Type()`s.
-	oldsearchEvents, err := queryTxsByEvents(clientCtx, oldMsgType, page, otherEvents...)
+	oldSearchResults, err := authclient.QueryTxsByEvents(
+		clientCtx,
+		append(otherEvents, fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, oldMsgType)),
+		page, defaultLimit, "")
 	if err != nil {
 		return nil, err
 	}
-	newsearchEvents, err := queryTxsByEvents(clientCtx, newMsgType, page, otherEvents...)
+	newSearchResults, err := authclient.QueryTxsByEvents(
+		clientCtx,
+		append(otherEvents, fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, newMsgType)),
+		page, defaultLimit, "")
 	if err != nil {
 		return nil, err
 	}
@@ -289,6 +285,6 @@ func searchEvents(clientCtx client.Context, oldMsgType, newMsgType string, page 
 	return &sdk.SearchTxsResult{
 		// Only the Txs field will be used by other functions, so we don't need
 		// to populate the other fields.
-		Txs: append(oldsearchEvents.Txs, newsearchEvents.Txs...),
+		Txs: append(oldSearchResults.Txs, newSearchResults.Txs...),
 	}, nil
 }

@@ -10,14 +10,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
-// CheckProposedHeaderAndUpdateState will try to update the client with the state of the
-// substitute if and only if the proposal passes and one of the following conditions  are
+// CheckSubstituteAndUpdateState will try to update the client with the state of the
+// substitute if and only if the proposal passes and one of the following conditions are
 // satisfied:
-//		1) The substitute client is the same type as the subject client
-//		2) The subject and substitute client states match in all parameters (expect frozen height, latest height, and chain-id)
-// 		3) AllowUpdateAfterMisbehaviour and IsFrozen() = true
-// 		4) AllowUpdateAfterExpiry=true and Expire(ctx.BlockTime) = true
-// In case 3) before updating the client, the client will be unfrozen by resetting
+//	1) AllowUpdateAfterMisbehaviour and IsFrozen() = true
+// 	2) AllowUpdateAfterExpiry=true and Expire(ctx.BlockTime) = true
+//
+// The following must always be true:
+//	- The substitute client is the same type as the subject client
+//	- The subject and substitute client states match in all parameters (expect frozen height, latest height, and chain-id)
+//
+// In case 1) before updating the client, the client will be unfrozen by resetting
 // the FrozenHeight to the zero Height. If a client is frozen and AllowUpdateAfterMisbehaviour
 // is set to true, the client will be unexpired even if AllowUpdateAfterExpiry is set to false.
 // Note, that even if the subject is updated to the state of the substitute, an error may be

@@ -24,16 +24,20 @@ func (suite *KeeperTestSuite) TestClientUpdateProposal() {
 	}{
 		{
 			"valid update client proposal", func() {
-				tmClientState, ok := subjectClientState.(*ibctmtypes.ClientState)
+				content = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, subject, substitute, initialHeight)
+			}, true,
+		},
+		{
+			"subject and substitute use different revision numbers", func() {
+				tmClientState, ok := substituteClientState.(*ibctmtypes.ClientState)
 				suite.Require().True(ok)
-				tmClientState.AllowUpdateAfterMisbehaviour = true
-				tmClientState.FrozenHeight = tmClientState.LatestHeight
-				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), subject, tmClientState)
+				consState, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientConsensusState(suite.chainA.GetContext(), substitute, tmClientState.LatestHeight)
+				suite.Require().True(found)
+				newRevisionNumber := tmClientState.GetLatestHeight().GetRevisionNumber() + 1
 
-				// replicate changes to substitute (they must match)
-				tmClientState, ok = substituteClientState.(*ibctmtypes.ClientState)
-				suite.Require().True(ok)
-				tmClientState.AllowUpdateAfterMisbehaviour = true
+				tmClientState.LatestHeight = clienttypes.NewHeight(newRevisionNumber, tmClientState.GetLatestHeight().GetRevisionHeight())
+				initialHeight = clienttypes.NewHeight(newRevisionNumber, initialHeight.GetRevisionHeight())
+				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), substitute, tmClientState.LatestHeight, consState)
 				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), substitute, tmClientState)
 
 				content = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, subject, substitute, initialHeight)
@@ -69,19 +73,13 @@ func (suite *KeeperTestSuite) TestClientUpdateProposal() {
 				content = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, subject, substitute, initialHeight)
 			}, false,
 		},
-
-		{
-			"subject and substitute use different revision numbers", func() {
-				tmClientState, ok := substituteClientState.(*ibctmtypes.ClientState)
-				suite.Require().True(ok)
-				tmClientState.LatestHeight = clienttypes.NewHeight(tmClientState.GetLatestHeight().GetRevisionNumber()+1, tmClientState.GetLatestHeight().GetRevisionHeight())
-				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), substitute, tmClientState)
-
-				content = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, subject, substitute, initialHeight)
-			}, false,
-		},
 		{
 			"update fails, client is not frozen or expired", func() {
+				tmClientState, ok := subjectClientState.(*ibctmtypes.ClientState)
+				suite.Require().True(ok)
+				tmClientState.FrozenHeight = clienttypes.ZeroHeight()
+				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), subject, tmClientState)
+
 				content = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, subject, substitute, initialHeight)
 			}, false,
 		},
@@ -102,6 +100,20 @@ func (suite *KeeperTestSuite) TestClientUpdateProposal() {
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, substitute, exported.Tendermint)
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, substitute, exported.Tendermint)
 			substituteClientState = suite.chainA.GetClientState(substitute)
+
+			tmClientState, ok := subjectClientState.(*ibctmtypes.ClientState)
+			suite.Require().True(ok)
+			tmClientState.AllowUpdateAfterMisbehaviour = true
+			tmClientState.AllowUpdateAfterExpiry = true
+			tmClientState.FrozenHeight = tmClientState.LatestHeight
+			suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), subject, tmClientState)
+
+			tmClientState, ok = substituteClientState.(*ibctmtypes.ClientState)
+			suite.Require().True(ok)
+			tmClientState.AllowUpdateAfterMisbehaviour = true
+			tmClientState.AllowUpdateAfterExpiry = true
+			tmClientState.FrozenHeight = tmClientState.LatestHeight
+			suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), substitute, tmClientState)
 
 			tc.malleate()
 

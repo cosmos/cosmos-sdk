@@ -7,7 +7,7 @@ import (
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
-func (suite *SoloMachineTestSuite) TestCheckProposedHeaderAndUpdateState() {
+func (suite *SoloMachineTestSuite) TestCheckSubstituteAndUpdateState() {
 	var (
 		subjectClientState    *types.ClientState
 		substituteClientState exported.ClientState

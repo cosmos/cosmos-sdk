@@ -85,9 +85,10 @@ with particular kinds of accounts.
 
 The `x/evidence` module defines its genesis state as follows:
 
-```go
+```proto
 type GenesisState struct {
-
+ // evidence defines all the evidence at genesis.
+ Evidence []*types.Any `protobuf:"bytes,1,rep,name=evidence,proto3" json:"evidence,omitempty"`
 }
 ```
 

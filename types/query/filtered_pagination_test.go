@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -32,7 +31,7 @@ func (s *paginationTestSuite) TestFilteredPaginations() {
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
 	s.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, balances))
-	store := ctx.KVStore(app.GetKey(authtypes.StoreKey))
+	store := ctx.KVStore(app.GetKey(types.StoreKey))
 
 	// verify pagination with limit > total values
 	pageReq := &query.PageRequest{Key: nil, Limit: 5, CountTotal: true}
@@ -110,7 +109,7 @@ func ExampleFilteredPaginate() {
 	}
 
 	pageReq := &query.PageRequest{Key: nil, Limit: 1, CountTotal: true}
-	store := ctx.KVStore(app.GetKey(authtypes.StoreKey))
+	store := ctx.KVStore(app.GetKey(types.StoreKey))
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
 

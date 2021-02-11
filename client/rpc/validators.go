@@ -79,12 +79,14 @@ type ValidatorOutput struct {
 type ResultValidatorsOutput struct {
 	BlockHeight int64             `json:"block_height"`
 	Validators  []ValidatorOutput `json:"validators"`
+	Total       uint64            `json:"total"`
 }
 
 func (rvo ResultValidatorsOutput) String() string {
 	var b strings.Builder
 
 	b.WriteString(fmt.Sprintf("block height: %d\n", rvo.BlockHeight))
+	b.WriteString(fmt.Sprintf("total count: %d\n", rvo.Total))
 
 	for _, val := range rvo.Validators {
 		b.WriteString(
@@ -129,9 +131,15 @@ func GetValidators(ctx context.Context, clientCtx client.Context, height *int64,
 		return ResultValidatorsOutput{}, err
 	}
 
+	total := validatorsRes.Total
+	if validatorsRes.Total < 0 {
+		total = 0
+	}
+
 	outputValidatorsRes := ResultValidatorsOutput{
 		BlockHeight: validatorsRes.BlockHeight,
 		Validators:  make([]ValidatorOutput, len(validatorsRes.Validators)),
+		Total:       uint64(total),
 	}
 
 	for i := 0; i < len(validatorsRes.Validators); i++ {

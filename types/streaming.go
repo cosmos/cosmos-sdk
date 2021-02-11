@@ -11,11 +11,11 @@ import (
 // Hook interface used to hook into the ABCI message processing of the BaseApp
 type Hook interface {
 	// update the streaming service with the latest BeginBlock messages
-	ListenBeginBlock(ctx Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock)
+	ListenBeginBlock(ctx Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error
 	// update the steaming service with the latest EndBlock messages
-	ListenEndBlock(ctx Context, req abci.RequestEndBlock, res abci.ResponseEndBlock)
+	ListenEndBlock(ctx Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
 	// update the steaming service with the latest DeliverTx messages
-	ListenDeliverTx(ctx Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx)
+	ListenDeliverTx(ctx Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
 }
 
 // StreamingService interface for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks

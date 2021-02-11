@@ -198,7 +198,9 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	// call the hooks with the BeginBlock messages
 	for _, hook := range app.hooks {
-		hook.ListenBeginBlock(app.deliverState.ctx, req, res)
+		if err := hook.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
+			app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", err)
+		}
 	}
 
 	return res
@@ -223,7 +225,9 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 
 	// call the streaming service hooks with the EndBlock messages
 	for _, hook := range app.hooks {
-		hook.ListenEndBlock(app.deliverState.ctx, req, res)
+		if err := hook.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
+			app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", err)
+		}
 	}
 
 	return res
@@ -289,7 +293,9 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 		res := sdkerrors.ResponseDeliverTx(err, gInfo.GasWanted, gInfo.GasUsed, app.trace)
 		// if we throw and error, be sure to still call the streaming service's hook
 		for _, hook := range app.hooks {
-			hook.ListenDeliverTx(app.deliverState.ctx, req, res)
+			if err := hook.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
+				app.logger.Error("DeliverTx listening hook failed", "err", err)
+			}
 		}
 		return res
 	}
@@ -304,7 +310,9 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 
 	// call the streaming service hooks with the DeliverTx messages
 	for _, hook := range app.hooks {
-		hook.ListenDeliverTx(app.deliverState.ctx, req, res)
+		if err := hook.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
+			app.logger.Error("DeliverTx listening hook failed", "err", err)
+		}
 	}
 
 	return res

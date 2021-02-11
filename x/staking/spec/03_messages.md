@@ -89,8 +89,6 @@ exist then it is created as part of this message otherwise the existing
 The delegator receives newly minted shares at the current exchange rate.
 The exchange rate is the number of existing shares in the validator divided by the number of currently delegated tokens.
 
-TODO: Explain subtractTokens.
-
 ## MsgBeginUnbonding
 
 The begin unbonding message allows delegators to undelegate their tokens from

@@ -8,9 +8,9 @@ In uncommon situations, a highly valued client may become frozen due to uncontro
 circumstances. A highly valued client might have hundreds of channels being actively used.
 Some of those channels might have a significant amount of locked tokens used for ICS 20.
 
-If the one third of the validator set the chain the client represents decides to collude,
+If the one third of the validator set of the chain the client represents decides to collude,
 they can sign off on two valid but conflicting headers each signed by the other one third
-of the honest validator sets. The light client can now be updated with two valid, but conflicting
+of the honest validator set. The light client can now be updated with two valid, but conflicting
 headers at the same height. The light client cannot know which header is trustworthy and therefore
 evidence of such misbehaviour is likely to be submitted resulting in a frozen light client. 
 

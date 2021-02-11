@@ -11,8 +11,28 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/capability"
+	"github.com/cosmos/cosmos-sdk/x/crisis"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
+	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	transfer "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer"
+	ibc "github.com/cosmos/cosmos-sdk/x/ibc/core"
+	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/upgrade"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
@@ -52,10 +72,33 @@ func TestGetMaccPerms(t *testing.T) {
 func TestRunMigrations(t *testing.T) {
 	db := dbm.NewMemDB()
 	encCfg := MakeTestEncodingConfig()
-	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
 
-	// Create a new configurator for the purpose of this test.
+	// Create a new baseapp and configurator for the purpose of this test.
+	bApp := baseapp.NewBaseApp(appName, logger, db, encCfg.TxConfig.TxDecoder())
+	bApp.SetCommitMultiStoreTracer(nil)
+	bApp.SetAppVersion(version.Version)
+	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	app.BaseApp = bApp
 	app.configurator = module.NewConfigurator(app.MsgServiceRouter(), app.GRPCQueryRouter())
+
+	// We register all modules on the Configurator, except x/bank. x/bank will
+	// serve as the test subject on which we run the migration tests.
+	//
+	// The loop below is the same as calling `RegisterServices` on
+	// ModuleManager, except that we skip x/bank.
+	for _, module := range app.mm.Modules {
+		if module.Name() == banktypes.ModuleName {
+			continue
+		}
+
+		module.RegisterServices(app.configurator)
+	}
+
+	// Initialize the chain
+	app.InitChain(abci.RequestInitChain{})
+	app.Commit()
 
 	testCases := []struct {
 		name         string
@@ -115,12 +158,30 @@ func TestRunMigrations(t *testing.T) {
 			}
 			require.NoError(t, err)
 
+			// Run migrations for all modules from their current
+			// Consensusversion, except x/bank, which we start from the initial
+			// version 1, as we are specifically testing x/bank.
 			err = app.RunMigrations(
 				app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}),
 				module.MigrationMap{
-					"auth": 1, "authz": 1, "bank": 1, "staking": 1, "mint": 1, "distribution": 1,
-					"slashing": 1, "gov": 1, "params": 1, "ibc": 1, "upgrade": 1, "vesting": 1,
-					"feegrant": 1, "transfer": 1, "evidence": 1, "crisis": 1, "genutil": 1, "capability": 1,
+					"bank":         1,
+					"auth":         auth.AppModule{}.ConsensusVersion(),
+					"authz":        authz.AppModule{}.ConsensusVersion(),
+					"staking":      staking.AppModule{}.ConsensusVersion(),
+					"mint":         mint.AppModule{}.ConsensusVersion(),
+					"distribution": distribution.AppModule{}.ConsensusVersion(),
+					"slashing":     slashing.AppModule{}.ConsensusVersion(),
+					"gov":          gov.AppModule{}.ConsensusVersion(),
+					"params":       params.AppModule{}.ConsensusVersion(),
+					"ibc":          ibc.AppModule{}.ConsensusVersion(),
+					"upgrade":      upgrade.AppModule{}.ConsensusVersion(),
+					"vesting":      vesting.AppModule{}.ConsensusVersion(),
+					"feegrant":     feegrant.AppModule{}.ConsensusVersion(),
+					"transfer":     transfer.AppModule{}.ConsensusVersion(),
+					"evidence":     evidence.AppModule{}.ConsensusVersion(),
+					"crisis":       crisis.AppModule{}.ConsensusVersion(),
+					"genutil":      genutil.AppModule{}.ConsensusVersion(),
+					"capability":   capability.AppModule{}.ConsensusVersion(),
 				},
 			)
 			if tc.expRunErr {

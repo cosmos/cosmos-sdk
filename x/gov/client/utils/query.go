@@ -38,7 +38,7 @@ func (p Proposer) String() string {
 // support configurable pagination.
 func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposalParams) ([]byte, error) {
 	searchResult, err := searchEvents(
-		clientCtx, types.TypeMsgDeposit, types.TypeSvcMsgDeposit,
+		clientCtx, types.TypeMsgDeposit, types.TypeSvcMsgDeposit, defaultPage,
 		fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 	)
 	if err != nil {
@@ -87,7 +87,7 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 	// query interrupted either if we collected enough votes or tx indexer run out of relevant txs
 	for len(votes) < totalLimit {
 		searchResult, err := searchEvents(
-			clientCtx, types.TypeMsgVote, types.TypeSvcMsgVote,
+			clientCtx, types.TypeMsgVote, types.TypeSvcMsgVote, nextTxPage,
 			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 		)
 		if err != nil {
@@ -135,7 +135,7 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 // QueryVoteByTxQuery will query for a single vote via a direct txs tags query.
 func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) ([]byte, error) {
 	searchResult, err := searchEvents(
-		clientCtx, types.TypeMsgVote, types.TypeSvcMsgVote,
+		clientCtx, types.TypeMsgVote, types.TypeSvcMsgVote, defaultPage,
 		fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, []byte(params.Voter.String())),
 	)
@@ -177,7 +177,7 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 // query.
 func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositParams) ([]byte, error) {
 	searchResult, err := searchEvents(
-		clientCtx, types.TypeMsgDeposit, types.TypeSvcMsgDeposit,
+		clientCtx, types.TypeMsgDeposit, types.TypeSvcMsgDeposit, defaultPage,
 		fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, []byte(params.Depositor.String())),
 	)
@@ -219,7 +219,7 @@ func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositPa
 // ID.
 func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Proposer, error) {
 	searchResult, err := searchEvents(
-		clientCtx, types.TypeMsgSubmitProposal, types.TypeSvcMsgSubmitProposal,
+		clientCtx, types.TypeMsgSubmitProposal, types.TypeSvcMsgSubmitProposal, defaultPage,
 		fmt.Sprintf("%s.%s='%s'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", proposalID))),
 	)
 	if err != nil {
@@ -260,28 +260,28 @@ func QueryProposalByID(proposalID uint64, clientCtx client.Context, queryRoute s
 	return res, err
 }
 
-func queryTxsByEvents(clientCtx client.Context, msgType string, otherEvents ...string) (*sdk.SearchTxsResult, error) {
+func queryTxsByEvents(clientCtx client.Context, msgType string, page int, otherEvents ...string) (*sdk.SearchTxsResult, error) {
 	events := append([]string{
 		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, msgType),
 	}, otherEvents...)
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	return authclient.QueryTxsByEvents(clientCtx, events, defaultPage, defaultLimit, "")
+	return authclient.QueryTxsByEvents(clientCtx, events, page, defaultLimit, "")
 }
 
 // searchEvents queries txs by events with both `oldMsgType` and `newMsgtype`,
 // merges the results into one *sdk.SearchTxsResult.
-func searchEvents(clientCtx client.Context, oldMsgType, newMsgType string, otherEvents ...string) (*sdk.SearchTxsResult, error) {
+func searchEvents(clientCtx client.Context, oldMsgType, newMsgType string, page int, otherEvents ...string) (*sdk.SearchTxsResult, error) {
 	// Tx are indexed in tendermint via their Msgs `Type()`, which can be:
 	// - via legacy Msgs (amino or proto), their `Type()` is a custom string,
 	// - via ADR-031 service msgs, their `Type()` is the protobuf FQ method name.
 	// In searching for events, we search for both `Type()`s.
-	oldsearchEvents, err := queryTxsByEvents(clientCtx, oldMsgType, otherEvents...)
+	oldsearchEvents, err := queryTxsByEvents(clientCtx, oldMsgType, page, otherEvents...)
 	if err != nil {
 		return nil, err
 	}
-	newsearchEvents, err := queryTxsByEvents(clientCtx, newMsgType, otherEvents...)
+	newsearchEvents, err := queryTxsByEvents(clientCtx, newMsgType, page, otherEvents...)
 	if err != nil {
 		return nil, err
 	}

@@ -12,7 +12,7 @@ import (
 type EcdsaSuite struct {
 	suite.Suite
 	pk cryptotypes.PubKey
-	sk ecdsaSK
+	sk cryptotypes.PrivKey
 }
 
 func TestEcdsaSuite(t *testing.T) {
@@ -21,7 +21,8 @@ func TestEcdsaSuite(t *testing.T) {
 
 func (suite *EcdsaSuite) SetupSuite() {
 	sk, err := GenSecp256r1()
-	suite.Assert().NoError(err)
+	suite.Require().NoError(err)
+	suite.sk = sk
 	suite.pk = sk.PubKey()
 }
 
@@ -41,17 +42,17 @@ func (suite *EcdsaSuite) TestString() {
 }
 
 func (suite *EcdsaSuite) TestEqual() {
-	assert := suite.Assert()
+	require := suite.Require()
 
 	skOther, err := GenSecp256r1()
-	assert.NoError(err)
+	require.NoError(err)
 	pkOther := skOther.PubKey()
-	pkOther2 := ecdsaPK{&skOther.PublicKey, nil}
+	pkOther2 := ecdsaPK{skOther.(ecdsaSK).PublicKey, nil}
 
-	assert.False(suite.pk.Equals(pkOther))
+	require.False(suite.pk.Equals(pkOther))
 
-	assert.True(pkOther.Equals(pkOther2))
-	assert.True(pkOther2.Equals(pkOther), "Equals must be reflexive")
+	require.True(pkOther.Equals(pkOther2))
+	require.True(pkOther2.Equals(pkOther), "Equals must be reflexive")
 }
 
 func (suite *EcdsaSuite) TestMarshalAmino() {

@@ -23,10 +23,7 @@ const (
 	// PubKeySize is is the size, in bytes, of public keys as used in this package.
 	PubKeySize = 32 + 1 + 1
 	// PrivKeySize is the size, in bytes, of private keys as used in this package.
-	// PrivKeySize = 64
-	// SeedSize is the size, in bytes, of private key seeds. These are the
-	// private key representations used by RFC 8032.
-	SeedSize = 32
+	PrivKeySize = 32 + 1
 )
 
 var secp256r1 elliptic.Curve
@@ -61,7 +58,7 @@ type signature struct {
 }
 
 type ecdsaPK struct {
-	*ecdsa.PublicKey
+	ecdsa.PublicKey
 
 	// cache
 	address tmcrypto.Address
@@ -94,14 +91,13 @@ func (pk ecdsaPK) Bytes() []byte {
 
 // Equals - you probably don't need to use this.
 // Runs in constant time based on length of the keys.
-// TODO: change to Equals
 func (pk ecdsaPK) Equals(other cryptotypes.PubKey) bool {
 	pk2, ok := other.(ecdsaPK)
 	if !ok {
 		return false
 	}
 
-	return pk.PublicKey.Equal(pk2.PublicKey)
+	return pk.PublicKey.Equal(&pk2.PublicKey)
 }
 
 // VerifySignature implements skd.PubKey interface
@@ -112,7 +108,7 @@ func (pk ecdsaPK) VerifySignature(msg []byte, sig []byte) bool {
 	}
 
 	h := sha256.Sum256(msg)
-	return ecdsa.Verify(pk.PublicKey, h[:], s.R, s.S)
+	return ecdsa.Verify(&pk.PublicKey, h[:], s.R, s.S)
 }
 
 // Type returns key type name. Implements sdk.PubKey interface
@@ -155,7 +151,8 @@ func (pk *ecdsaPK) UnmarshalAmino(bz []byte) error {
 	if x == nil || y == nil {
 		return errors.Wrap(errors.ErrInvalidPubKey, "invalid pubkey bytes")
 	}
-	pk.PublicKey = &ecdsa.PublicKey{Curve: curve, X: x, Y: y}
+	pk.PublicKey.Curve = curve
+	pk.PublicKey.X, pk.PublicKey.Y = x, y
 	return nil
 }
 

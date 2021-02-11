@@ -56,7 +56,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 
 	// Case 2. Querying state.
 	inMd, _ := metadata.FromOutgoingContext(grpcCtx)
-	abciRes, outMd, err := ctx.RunGRPCQuery(grpcCtx, method, req, inMd)
+	abciRes, outMd, err := RunGRPCQuery(ctx, grpcCtx, method, req, inMd)
 	if err != nil {
 		return err
 	}
@@ -82,10 +82,16 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 	return nil
 }
 
-// RunGRPCQuery runs a gRPC query given all necessary arguments, and returns
-// the ABCI response. It is used to factorize code between client and server
-// grpc handling.
-func (ctx Context) RunGRPCQuery(grpcCtx gocontext.Context, method string, req interface{}, md metadata.MD) (abci.ResponseQuery, metadata.MD, error) {
+// NewStream implements the grpc ClientConn.NewStream method
+func (Context) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
+	return nil, fmt.Errorf("streaming rpc not supported")
+}
+
+// RunGRPCQuery runs a gRPC query from the clientCtx, given all necessary
+// arguments for the gRPC method, and returns the ABCI response. It is used
+// to factorize code between client (Invoke) and server (RegisterGRPCServer)
+// gRPC handlers.
+func RunGRPCQuery(ctx Context, grpcCtx gocontext.Context, method string, req interface{}, md metadata.MD) (abci.ResponseQuery, metadata.MD, error) {
 	reqBz, err := protoCodec.Marshal(req)
 	if err != nil {
 		return abci.ResponseQuery{}, nil, err
@@ -124,11 +130,6 @@ func (ctx Context) RunGRPCQuery(grpcCtx gocontext.Context, method string, req in
 	md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(abciRes.Height, 10))
 
 	return abciRes, md, nil
-}
-
-// NewStream implements the grpc ClientConn.NewStream method
-func (Context) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
-	return nil, fmt.Errorf("streaming rpc not supported")
 }
 
 // IsGRPCBroadcastTx returns true if the gRPC method is broadcasting tx.

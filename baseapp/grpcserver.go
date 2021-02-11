@@ -39,7 +39,7 @@ func (app *BaseApp) RegisterGRPCServer(clientCtx client.Context, server gogogrpc
 
 		// Case 2. Querying state.
 		inMd, _ := metadata.FromIncomingContext(grpcCtx)
-		abciRes, outMd, err := clientCtx.RunGRPCQuery(grpcCtx, info.FullMethod, req, inMd)
+		abciRes, outMd, err := client.RunGRPCQuery(clientCtx, grpcCtx, info.FullMethod, req, inMd)
 		if err != nil {
 			return nil, err
 		}

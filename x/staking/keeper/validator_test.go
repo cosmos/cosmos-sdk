@@ -36,8 +36,7 @@ func bootstrapValidatorTest(t *testing.T, power int64, numAddrs int) (*simapp.Si
 	// set bonded pool supply
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
-	err := app.BankKeeper.MintCoins(ctx, notBondedPool.GetName(), totalSupply)
-	require.NoError(t, err)
+	require.NoError(t, simapp.FundAccount(app, ctx, notBondedPool.GetAddress(), totalSupply))
 
 	return app, ctx, addrDels, addrVals
 }

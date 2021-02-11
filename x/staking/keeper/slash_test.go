@@ -35,7 +35,7 @@ func bootstrapSlashTest(t *testing.T, power int64) (*simapp.SimApp, sdk.Context,
 
 	// set bonded pool balance
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
-	require.NoError(t, app.BankKeeper.MintCoins(ctx, bondedPool.GetName(), bondedCoins))
+	require.NoError(t, simapp.FundAccount(app, ctx, bondedPool.GetAddress(), bondedCoins))
 
 	for i := int64(0); i < numVals; i++ {
 		validator := teststaking.NewValidator(t, addrVals[i], PKs[i])

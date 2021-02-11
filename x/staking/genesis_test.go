@@ -5,6 +5,8 @@ import (
 	"log"
 	"testing"
 
+	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -64,13 +66,14 @@ func TestInitGenesis(t *testing.T) {
 	log.Printf("%#v", len(validators))
 	// mint coins in the bonded pool representing the validators coins
 	require.NoError(t,
-		app.BankKeeper.MintCoins(ctx,
-			types.BondedPoolName,
+		simapp.FundAccount(
+			app,
+			ctx,
+			auth.NewModuleAddress(types.BondedPoolName),
 			sdk.NewCoins(
-				sdk.NewCoin(params.BondDenom,
-					valTokens.MulRaw(
-						(int64)(len(validators)),
-					),
+				sdk.NewCoin(
+					params.BondDenom,
+					valTokens.MulRaw((int64)(len(validators))),
 				),
 			),
 		),
@@ -182,8 +185,10 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	genesisState := types.NewGenesisState(params, validators, delegations)
 	// mint coins in the bonded pool representing the validators coins
 	require.NoError(t,
-		app.BankKeeper.MintCoins(ctx,
-			types.BondedPoolName,
+		simapp.FundAccount(
+			app,
+			ctx,
+			auth.NewModuleAddress(types.BondedPoolName),
 			sdk.NewCoins(
 				sdk.NewCoin(
 					params.BondDenom,

@@ -151,6 +151,10 @@ func delegatorTxsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			actions []string
 		)
 
+		// For each case, we search txs for both:
+		// - legacy messages: their Type() is a custom string, e.g. "delegate"
+		// - service Msgs: their Type() is their FQ method name, e.g. "/cosmos.staking.v1beta1.Msg/Deledate"
+		// and we combine the results.
 		switch {
 		case isBondTx:
 			actions = append(actions, types.TypeMsgDelegate)

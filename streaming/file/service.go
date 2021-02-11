@@ -1,9 +1,11 @@
 package file
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"sync"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -13,15 +15,35 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+/*
+The naming schema and data format for the files this service writes out to is as such:
+
+After every `BeginBlock` request a new file is created with the name `block-{N}-begin`, where N is the block number. All
+subsequent state changes are written out to this file until the first `DeliverTx` request is received. At the head of these files,
+the length-prefixed protobuf encoded `BeginBlock` request is written, and the response is written at the tail.
+
+After every `DeliverTx` request a new file is created with the name `block-{N}-tx-{M}` where N is the block number and M
+is the tx number in the block (i.e. 0, 1, 2...). All subsequent state changes are written out to this file until the next
+`DeliverTx` request is received or an `EndBlock` request is received. At the head of these files, the length-prefixed protobuf
+encoded `DeliverTx` request is written, and the response is written at the tail.
+
+After every `EndBlock` request a new file is created with the name `block-{N}-end`, where N is the block number. All
+subsequent state changes are written out to this file until the next `BeginBlock` request is received. At the head of these files,
+the length-prefixed protobuf encoded `EndBlock` request is written, and the response is written at the tail.
+*/
+
+var _ sdk.StreamingService = &StreamingService{}
+
 // StreamingService is a concrete implementation of StreamingService that writes state changes out to files
 type StreamingService struct {
-	listeners  map[sdk.StoreKey][]types.WriteListener // the listeners that will be initialized with BaseApp
-	srcChan    <-chan []byte                          // the channel that all of the WriteListeners write their data out to
-	filePrefix string                                 // optional prefix for each of the generated files
-	writeDir   string                                 // directory to write files into
-	dstFile    *os.File                               // the current write output file
-	marshaller codec.BinaryMarshaler                  // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
-	stateCache [][]byte                               // cache the protobuf binary encoded StoreKVPairs in the order they are received
+	listeners          map[sdk.StoreKey][]types.WriteListener // the listeners that will be initialized with BaseApp
+	srcChan            <-chan []byte                          // the channel that all of the WriteListeners write their data out to
+	filePrefix         string                                 // optional prefix for each of the generated files
+	writeDir           string                                 // directory to write files into
+	marshaller         codec.BinaryMarshaler                  // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
+	stateCache         [][]byte                               // cache the protobuf binary encoded StoreKVPairs in the order they are received
+	currentBlockNumber int64                                  // the current block number
+	currentTxIndex     int64                                  // the index of the current tx
 }
 
 // intermediateWriter is used so that we do not need to update the underlying io.Writer inside the StoreKVPairWriteListener
@@ -73,35 +95,124 @@ func (fss *StreamingService) Listeners() map[sdk.StoreKey][]types.WriteListener 
 	return fss.listeners
 }
 
-func (fss *StreamingService) ListenBeginBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) {
-	// NOTE: this could either be done synchronously or asynchronously
-	// create a new file with the req info according to naming schema
+// ListenBeginBlock satisfies the Hook interface
+// It writes out the received BeginBlock request and response and the resulting state changes out to a file as described
+// in the above the naming schema
+func (fss *StreamingService) ListenBeginBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
+	// generate the new file
+	dstFile, err := fss.openBeginBlockFile(req)
+	if err != nil {
+		return err
+	}
 	// write req to file
+	lengthPrefixedReqBytes, err := fss.marshaller.MarshalBinaryLengthPrefixed(&req)
+	if err != nil {
+		return err
+	}
+	if _, err = dstFile.Write(lengthPrefixedReqBytes); err != nil {
+		return err
+	}
 	// write all state changes cached for this stage to file
+	for _, stateChange := range fss.stateCache {
+		if _, err = dstFile.Write(stateChange); err != nil {
+			return err
+		}
+	}
 	// reset cache
+	fss.stateCache = nil
 	// write res to file
+	lengthPrefixedResBytes, err := fss.marshaller.MarshalBinaryLengthPrefixed(&res)
+	if _, err = dstFile.Write(lengthPrefixedResBytes); err != nil {
+		return err
+	}
 	// close file
+	return dstFile.Close()
 }
 
-func (fss *StreamingService) ListenEndBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) {
-	// NOTE: this could either be done synchronously or asynchronously
-	// create a new file with the req info according to naming schema
-	// write req to file
-	// write all state changes cached for this stage to file
-	// reset cache
-	// write res to file
-	// close file
+func (fss *StreamingService) openBeginBlockFile(req abci.RequestBeginBlock) (*os.File, error) {
+	fss.currentBlockNumber = req.GetHeader().Height
+	fss.currentTxIndex = 0
+	fileName := fmt.Sprintf("block-%d-begin", fss.currentBlockNumber)
+	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0600)
 }
 
-func (fss *StreamingService) ListenDeliverTx(ctx sdk.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) {
-	// NOTE: this could either be done synchronously or asynchronously
-	// create a new file with the req info according to naming schema
-	// NOTE: if the tx failed, handle accordingly
+// ListenDeliverTx satisfies the Hook interface
+// It writes out the received DeliverTx request and response and the resulting state changes out to a file as described
+// in the above the naming schema
+func (fss *StreamingService) ListenDeliverTx(ctx sdk.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
+	// generate the new file
+	dstFile, err := fss.openDeliverTxFile()
+	if err != nil {
+		return err
+	}
 	// write req to file
+	lengthPrefixedReqBytes, err := fss.marshaller.MarshalBinaryLengthPrefixed(&req)
+	if err != nil {
+		return err
+	}
+	if _, err = dstFile.Write(lengthPrefixedReqBytes); err != nil {
+		return err
+	}
 	// write all state changes cached for this stage to file
+	for _, stateChange := range fss.stateCache {
+		if _, err = dstFile.Write(stateChange); err != nil {
+			return err
+		}
+	}
 	// reset cache
+	fss.stateCache = nil
 	// write res to file
+	lengthPrefixedResBytes, err := fss.marshaller.MarshalBinaryLengthPrefixed(&res)
+	if _, err = dstFile.Write(lengthPrefixedResBytes); err != nil {
+		return err
+	}
 	// close file
+	return dstFile.Close()
+}
+
+func (fss *StreamingService) openDeliverTxFile() (*os.File, error) {
+	fileName := fmt.Sprintf("block-%d-tx-%d", fss.currentBlockNumber, fss.currentTxIndex)
+	fss.currentTxIndex++
+	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0600)
+}
+
+// ListenEndBlock satisfies the Hook interface
+// It writes out the received EndBlock request and response and the resulting state changes out to a file as described
+// in the above the naming schema
+func (fss *StreamingService) ListenEndBlock(ctx sdk.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
+	// generate the new file
+	dstFile, err := fss.openEndBlockFile()
+	if err != nil {
+		return err
+	}
+	// write req to file
+	lengthPrefixedReqBytes, err := fss.marshaller.MarshalBinaryLengthPrefixed(&req)
+	if err != nil {
+		return err
+	}
+	if _, err = dstFile.Write(lengthPrefixedReqBytes); err != nil {
+		return err
+	}
+	// write all state changes cached for this stage to file
+	for _, stateChange := range fss.stateCache {
+		if _, err = dstFile.Write(stateChange); err != nil {
+			return err
+		}
+	}
+	// reset cache
+	fss.stateCache = nil
+	// write res to file
+	lengthPrefixedResBytes, err := fss.marshaller.MarshalBinaryLengthPrefixed(&res)
+	if _, err = dstFile.Write(lengthPrefixedResBytes); err != nil {
+		return err
+	}
+	// close file
+	return dstFile.Close()
+}
+
+func (fss *StreamingService) openEndBlockFile() (*os.File, error) {
+	fileName := fmt.Sprintf("block-%d-end", fss.currentBlockNumber)
+	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0600)
 }
 
 // Stream spins up a goroutine select loop which awaits length-prefixed binary encoded KV pairs and caches them in the order they were received

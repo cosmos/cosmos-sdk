@@ -42,6 +42,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* (x/bank) [\#8473](https://github.com/cosmos/cosmos-sdk/pull/8473) Bank keeper does not expose unsafe balance changing methods such as `SetBalance`, `SetSupply` etc.
+* (x/staking) [\#8473](https://github.com/cosmos/cosmos-sdk/pull/8473) On genesis init, if non bonded pool and bonded pool balance, coming from the bank module, does not match what is saved in the staking state, the initialization will panic.
+* (x/gov) [\#8473](https://github.com/cosmos/cosmos-sdk/pull/8473) On genesis init, if the gov module account balance, coming from bank module state, does not match the one in gov module state, the initialization will panic.
+* (x/distribution) [\#8473](https://github.com/cosmos/cosmos-sdk/pull/8473) On genesis init, if the distribution module account balance, coming from bank module state, does not match the one in distribution module state, the initialization will panic.
 * (client/keys) [\#8500](https://github.com/cosmos/cosmos-sdk/pull/8500) `InfoImporter` interface is removed from legacy keybase.
 
 ### State Machine Breaking
@@ -51,7 +55,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/evidence) [\#8502](https://github.com/cosmos/cosmos-sdk/pull/8502) `HandleEquivocationEvidence` persists the evidence to state.
 
 ### Improvements
-
 * (x/ibc) [\#8458](https://github.com/cosmos/cosmos-sdk/pull/8458) Add `packet_connection` attribute to ibc events to enable relayer filtering
 * (x/bank) [\#8479](https://github.com/cosmos/cosmos-sdk/pull/8479) Adittional client denom metadata validation for `base` and `display` denoms.
 * (x/ibc) [\#8404](https://github.com/cosmos/cosmos-sdk/pull/8404) Reorder IBC `ChanOpenAck` and `ChanOpenConfirm` handler execution to perform core handler first, followed by application callbacks.

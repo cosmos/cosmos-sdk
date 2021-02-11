@@ -24,5 +24,5 @@ The authz module emits the following events:
 |----------------------|-------------------|--------------------|
 | revoke-authorization | module            | authz              |
 | revoke-authorization | grant-type        | {msgType}          |
-| revoke-authorization | granter           |                    |
-| revoke-authorization | grantee           |                    |
+| revoke-authorization | granter           | {granterAddress}   |
+| revoke-authorization | grantee           | {granteeAddress}   |

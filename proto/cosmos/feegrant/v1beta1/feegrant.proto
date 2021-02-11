@@ -1,0 +1,81 @@
+syntax = "proto3";
+package cosmos.feegrant.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant/types";
+
+// BasicFeeAllowance implements FeeAllowance with a one-time grant of tokens
+// that optionally expires. The delegatee can use up to SpendLimit to cover fees.
+message BasicFeeAllowance {
+  option (cosmos_proto.implements_interface) = "FeeAllowanceI";
+
+  // spend_limit specifies the maximum amount of tokens that can be spent
+  // by this allowance and will be updated as tokens are spent. If it is
+  // empty, there is no spend limit and any amount of coins can be spent.
+  repeated cosmos.base.v1beta1.Coin spend_limit = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+
+  // expiration specifies an optional time when this allowance expires
+  ExpiresAt expiration = 2 [(gogoproto.nullable) = false];
+}
+
+// PeriodicFeeAllowance extends FeeAllowance to allow for both a maximum cap,
+// as well as a limit per time period.
+message PeriodicFeeAllowance {
+  option (cosmos_proto.implements_interface) = "FeeAllowanceI";
+
+  // basic specifies a struct of `BasicFeeAllowance`
+  BasicFeeAllowance basic = 1 [(gogoproto.nullable) = false];
+
+  // period specifies the time duration in which period_spend_limit coins can
+  // be spent before that allowance is reset
+  Duration period = 2 [(gogoproto.nullable) = false];
+
+  // period_spend_limit specifies the maximum number of coins that can be spent
+  // in the period
+  repeated cosmos.base.v1beta1.Coin period_spend_limit = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+
+  // period_can_spend is the number of coins left to be spent before the period_reset time
+  repeated cosmos.base.v1beta1.Coin period_can_spend = 4
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+
+  // period_reset is the time at which this period resets and a new one begins,
+  // it is calculated from the start time of the first transaction after the
+  // last period ended
+  ExpiresAt period_reset = 5 [(gogoproto.nullable) = false];
+}
+
+// Duration is a span of a clock time or number of blocks.
+// This is designed to be added to an ExpiresAt struct.
+message Duration {
+  // sum is the oneof that represents either duration or block
+  oneof sum {
+    google.protobuf.Duration duration = 1 [(gogoproto.stdduration) = true];
+    uint64                   blocks   = 2;
+  }
+}
+
+// ExpiresAt is a point in time where something expires.
+// It may be *either* block time or block height
+message ExpiresAt {
+  // sum is the oneof that represents either time or height
+  oneof sum {
+    google.protobuf.Timestamp time   = 1 [(gogoproto.stdtime) = true];
+    int64                     height = 2;
+  }
+}
+
+// FeeAllowanceGrant is stored in the KVStore to record a grant with full context
+message FeeAllowanceGrant {
+
+  string              granter   = 1;
+  string              grantee   = 2;
+  google.protobuf.Any allowance = 3 [(cosmos_proto.accepts_interface) = "FeeAllowanceI"];
+}

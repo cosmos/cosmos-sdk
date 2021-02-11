@@ -17,10 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -191,9 +189,9 @@ func ExamplePaginate() {
 	pageReq := &query.PageRequest{Key: nil, Limit: 1, CountTotal: true}
 	request := types.NewQueryAllBalancesRequest(addr1, pageReq)
 	balResult := sdk.NewCoins()
-	authStore := ctx.KVStore(app.GetKey(authtypes.StoreKey))
+	authStore := ctx.KVStore(app.GetKey(types.StoreKey))
 	balancesStore := prefix.NewStore(authStore, types.BalancesPrefix)
-	accountStore := prefix.NewStore(balancesStore, addr1.Bytes())
+	accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
 	pageRes, err := query.Paginate(accountStore, request.Pagination, func(key []byte, value []byte) error {
 		var tempRes sdk.Coin
 		err := app.AppCodec().UnmarshalBinaryBare(value, &tempRes)
@@ -220,21 +218,6 @@ func setupTest() (*simapp.SimApp, sdk.Context, codec.Marshaler) {
 	ms := store.NewCommitMultiStore(db)
 
 	ms.LoadLatestVersion()
-
-	maccPerms := simapp.GetMaccPerms()
-	maccPerms[holder] = nil
-	maccPerms[authtypes.Burner] = []string{authtypes.Burner}
-	maccPerms[authtypes.Minter] = []string{authtypes.Minter}
-	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
-	maccPerms[randomPerm] = []string{"random"}
-	app.AccountKeeper = authkeeper.NewAccountKeeper(
-		appCodec, app.GetKey(authtypes.StoreKey), app.GetSubspace(authtypes.ModuleName),
-		authtypes.ProtoBaseAccount, maccPerms,
-	)
-	app.BankKeeper = bankkeeper.NewBaseKeeper(
-		appCodec, app.GetKey(authtypes.StoreKey), app.AccountKeeper,
-		app.GetSubspace(types.ModuleName), make(map[string]bool),
-	)
 
 	return app, ctx, appCodec
 }

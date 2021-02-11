@@ -1,3 +1,5 @@
+// Package v042 is copy-pasted from:
+// https://github.com/cosmos/cosmos-sdk/blob/bddbc131fd232a0c4c3acf402eb5880109c96281/x/bank/types/key.go
 package v042
 
 import (

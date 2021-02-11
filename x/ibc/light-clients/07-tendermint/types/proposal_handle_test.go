@@ -285,10 +285,10 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
 			}
 
-			// cosntruct the substitute to match the subject client
+			// construct the substitute to match the subject client
 			// NOTE: the substitute is explicitly created after the freezing or expiry occurs,
 			// primarily to prevent the substitute from becoming frozen. It also should be
-			// the natural flow of events in practice. The subject will become frozne/expired
+			// the natural flow of events in practice. The subject will become frozen/expired
 			// and a substitute will be created along with a governance proposal as a response
 
 			substitute, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)

@@ -35,6 +35,8 @@ func (cs ClientState) CheckSubstituteAndUpdateState(
 	}
 
 	// substitute clients are not allowed to be upgraded during the voting period
+	// If an upgrade passes before the subject client has been updated, a new proposal must be created
+	// with an initial height that contains the new revision number.
 	if substituteClientState.GetLatestHeight().GetRevisionNumber() != initialHeight.GetRevisionNumber() {
 		return nil, sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeight, "substitute client revision number must equal initial height revision number (%d != %d)",

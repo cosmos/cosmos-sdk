@@ -29,6 +29,7 @@ const FlagAllowedValidators = "allowed-validators"
 const FlagDenyValidators = "deny-validators"
 const delegate = "delegate"
 const redelegate = "redelegate"
+const unbond = "unbond"
 
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd() *cobra.Command {
@@ -104,7 +105,7 @@ Examples:
 				}
 
 				authorization = types.NewGenericAuthorization(msgType)
-			case delegate, "unbond", redelegate:
+			case delegate, unbond, redelegate:
 				limit, err := cmd.Flags().GetString(FlagSpendLimit)
 				if err != nil {
 					return err
@@ -133,12 +134,12 @@ Examples:
 					delegateLimit = &spendLimit[0]
 				}
 
-				allowed, err := bech32toValidatorAddress(allowValidators)
+				allowed, err := bech32toValidatorAddresses(allowValidators)
 				if err != nil {
 					return err
 				}
 
-				denied, err := bech32toValidatorAddress(denyValidators)
+				denied, err := bech32toValidatorAddresses(denyValidators)
 				if err != nil {
 					return err
 				}
@@ -146,7 +147,7 @@ Examples:
 				switch args[1] {
 				case delegate:
 					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, delegateLimit)
-				case "unbond":
+				case unbond:
 					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE, delegateLimit)
 				default:
 					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE, delegateLimit)
@@ -280,7 +281,7 @@ Example:
 	return cmd
 }
 
-func bech32toValidatorAddress(validators []string) ([]sdk.ValAddress, error) {
+func bech32toValidatorAddresses(validators []string) ([]sdk.ValAddress, error) {
 	vals := make([]sdk.ValAddress, len(validators))
 	for i, validator := range validators {
 		addr, err := sdk.ValAddressFromBech32(validator)

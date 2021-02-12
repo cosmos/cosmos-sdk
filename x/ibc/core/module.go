@@ -156,6 +156,9 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json
 	return cdc.MustMarshalJSON(ExportGenesis(ctx, *am.keeper))
 }
 
+// ConsensusVersion implements AppModule/ConsensusVersion.
+func (AppModule) ConsensusVersion() uint64 { return 1 }
+
 // BeginBlock returns the begin blocker for the ibc module.
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 	ibcclient.BeginBlocker(ctx, am.keeper.ClientKeeper)

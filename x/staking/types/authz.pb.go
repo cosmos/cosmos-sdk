@@ -25,17 +25,17 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// AuthorizationType defines staking authz types.
+// AuthorizationType defines the type of staking module authorization type
 type AuthorizationType int32
 
 const (
-	// zero-value for ordering
+	// AUTHORIZATION_TYPE_UNSPECIFIED specifies an unknown authorization type
 	AuthorizationType_AUTHORIZATION_TYPE_UNSPECIFIED AuthorizationType = 0
-	// AUTHORIZATION_TYPE_DELEGATE defines a delegate authorization type.
+	// AUTHORIZATION_TYPE_DELEGATE defines an authorization type for Msg/Delegate
 	AuthorizationType_AUTHORIZATION_TYPE_DELEGATE AuthorizationType = 1
-	// AUTHORIZATION_TYPE_UNDELEGATE defines a undelegate authorization type.
+	// AUTHORIZATION_TYPE_UNDELEGATE defines an authorization type for Msg/Undelegate
 	AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE AuthorizationType = 2
-	// AUTHORIZATION_TYPE_REDELEGATE defines a redelegate authorization type.
+	// AUTHORIZATION_TYPE_REDELEGATE defines an authorization type for Msg/BeginRedelegate
 	AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE AuthorizationType = 3
 )
 

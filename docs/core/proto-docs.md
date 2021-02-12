@@ -5980,14 +5980,14 @@ Validators defines list of validator addresses.
 <a name="cosmos.staking.v1beta1.AuthorizationType"></a>
 
 ### AuthorizationType
-AuthorizationType defines staking authz types.
+AuthorizationType defines the type of staking module authorization type
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| AUTHORIZATION_TYPE_UNSPECIFIED | 0 | zero-value for ordering |
-| AUTHORIZATION_TYPE_DELEGATE | 1 | AUTHORIZATION_TYPE_DELEGATE defines a delegate authorization type. |
-| AUTHORIZATION_TYPE_UNDELEGATE | 2 | AUTHORIZATION_TYPE_UNDELEGATE defines a undelegate authorization type. |
-| AUTHORIZATION_TYPE_REDELEGATE | 3 | AUTHORIZATION_TYPE_REDELEGATE defines a redelegate authorization type. |
+| AUTHORIZATION_TYPE_UNSPECIFIED | 0 | AUTHORIZATION_TYPE_UNSPECIFIED specifies an unknown authorization type |
+| AUTHORIZATION_TYPE_DELEGATE | 1 | AUTHORIZATION_TYPE_DELEGATE defines an authorization type for Msg/Delegate |
+| AUTHORIZATION_TYPE_UNDELEGATE | 2 | AUTHORIZATION_TYPE_UNDELEGATE defines an authorization type for Msg/Undelegate |
+| AUTHORIZATION_TYPE_REDELEGATE | 3 | AUTHORIZATION_TYPE_REDELEGATE defines an authorization type for Msg/BeginRedelegate |
 
 
  <!-- end enums -->

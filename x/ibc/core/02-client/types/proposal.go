@@ -12,6 +12,10 @@ const (
 
 var _ govtypes.Content = &ClientUpdateProposal{}
 
+func init() {
+	govtypes.RegisterProposalType(ProposalTypeClientUpdate)
+}
+
 // NewClientUpdateProposal creates a new client update proposal.
 func NewClientUpdateProposal(title, description, subjectClientID, substituteClientID string, initialHeight Height) *ClientUpdateProposal {
 	return &ClientUpdateProposal{

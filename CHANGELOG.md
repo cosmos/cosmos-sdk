@@ -68,6 +68,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client/keys) [\#8436](https://github.com/cosmos/cosmos-sdk/pull/8436) Fix key migration issue
 * (server) [\#8481](https://github.com/cosmos/cosmos-sdk/pull/8481) Don't create
   files when running `{appd} tendermint show-*` subcommands
+* (x/staking) [\#8546](https://github.com/cosmos/cosmos-sdk/pull/8546) Fix caching bug where concurrent calls to GetValidator could cause a node to crash
 
 ## [v0.40.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.1) - 2021-01-19
 

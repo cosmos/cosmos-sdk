@@ -43,7 +43,7 @@ func (cup *ClientUpdateProposal) ValidateBasic() error {
 	}
 
 	if cup.SubjectClientId == cup.SubstituteClientId {
-		return sdkerrors.Wrap(ErrInvalidSubstitute, "subject and substitute client identifiers are equaL")
+		return sdkerrors.Wrap(ErrInvalidSubstitute, "subject and substitute client identifiers are equal")
 	}
 	if _, _, err := ParseClientIdentifier(cup.SubjectClientId); err != nil {
 		return err

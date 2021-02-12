@@ -15,16 +15,20 @@ headers at the same height. The light client cannot know which header is trustwo
 evidence of such misbehaviour is likely to be submitted resulting in a frozen light client. 
 
 Frozen light clients cannot be updated under any circumstance except via a governance proposal.
-Since validators can arbitarily agree to make state transitions that defy the written code, a 
-governance proposal has been added to ease the complexity of unfreezing or updating clients
-which have become "stuck". Unfreezing clients, re-enables all of the channels built upon that
-client. This may result in recovery of otherwise lost funds. 
+Since a quorum of validators can sign arbitrary state roots which may not be valid executions 
+of the state machine, a governance proposal has been added to ease the complexity of unfreezing
+or updating clients which have become "stuck". Without this mechanism, validator sets would need
+to construct a state root to unfreeze the client. Unfreezing clients, re-enables all of the channels 
+built upon that client. This may result in recovery of otherwise lost funds. 
 
-Tendermint light clients may also become expired if the trusting period has passed since their 
-last update. If a chain undergoes an unplanned upgrade, there may be no commitment to that upgrade
-signed by the validator set before the chain-id changes. In this situation, the validator set of
-the last valid update for the light client is never expected to produce another valid header since 
-the chain-id has changed, which will ultimately lead the on-chain light client to become expired.  
+Tendermint light clients may become expired if the trusting period has passed since their 
+last update. This may occur if relayers stop submitting headers to update the clients.
+
+An unplanned upgrade by the counterparty chain may also result in expired clients. If the counterparty 
+chain undergoes an unplanned upgrade, there may be no commitment to that upgrade signed by the validator 
+set before the chain-id changes. In this situation, the validator set of the last valid update for the 
+light client is never expected to produce another valid header since the chain-id has changed, which will 
+ultimately lead the on-chain light client to become expired.  
 
 In the case that a highly valued light client is frozen, expired, or rendered non-updateable, a
 governance proposal may be submitted to update this client, known as the subject client. The 

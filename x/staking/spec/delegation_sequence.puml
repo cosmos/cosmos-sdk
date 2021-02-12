@@ -6,7 +6,7 @@ autonumber
 
 actor User
 User -> SDK : Delegate
-SDK -> "handler (staking)": MsgDelegate(Context,  Msg(DelegatorAddress,  ValidatorAddress, Amount))
+SDK -> "handler (staking)": MsgDelegate(Context, \n Msg(DelegatorAddress,  ValidatorAddress, Amount))
 "handler (staking)" -> "msgServer (staking)" : Delegate(Context, Msg)
 "msgServer (staking)" -> "msgServer (staking)" : Check validator address is valid.
 "msgServer (staking)" -> "msgServer (staking)" : Check correct staking denomination
@@ -24,7 +24,6 @@ note left: Calls IncrementValidatorPeriod (Used to calculate distribution) in ke
 
 keeper -> keeper.bankKeeper : DelegateCoinsFromAccountToModule
 keeper.bankKeeper -> "func:DelegateCoinsFromAccountToModule" as DelegateCoinsFromAccountToModule **
-note left : TODO this should interact with the store, too
 DelegateCoinsFromAccountToModule -->  DelegateCoinsFromAccountToModule  : Check recipient has permission to stake
 DelegateCoinsFromAccountToModule ->  "func:DelegateCoins" as DelegateCoins **
 DelegateCoins --> DelegateCoins : Check the delegator has enough balances of all tokens delegated
@@ -39,6 +38,7 @@ keeper -> validator : AddTokensFromDel
 validator -> validator : calculate number of shares to issue
 note left: If there are no shares (validator being created) then 1 token = 1 share.\nIf there are already shares, then\nadded shares =  (added tokens amount) * (current validator shares) / (current validator tokens)
 
+'TODO: Find right keyword.
 database store
 
 validator -> validator : add delegated tokens to validator
@@ -59,7 +59,7 @@ note left: Calls initializeDelegation\nStore the previous period\nCalculate the 
 "msgServer (staking)" -> "msgServer (staking)" : Emit event: Delegation(ValidatorAddress)
 "msgServer (staking)" -> "msgServer (staking)" : Emit event: Message(DelegatorAddress)
 "msgServer (staking)" -> "msgServer (staking)" : telemetry(Amount, Denom)
-"handler (staking)" <-- "msgServer (staking)" : res := MsgDelegateResponse{} (empty struct)
+"handler (staking)" <-- "msgServer (staking)" : res := MsgDelegateResponse{}\n(empty struct)
 SDK <-- "handler (staking)": return (Context, res, err)
 
 @enduml

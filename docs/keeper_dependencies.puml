@@ -15,8 +15,8 @@ abstract class Gov
 abstract class Mint
 abstract class Upgrade
 
-Staking <-- Mint
-Bank <-- Mint
+Staking <|-- Mint
+Bank <|-- Mint
 
 Staking <|-- Gov
 Bank <|-- Gov

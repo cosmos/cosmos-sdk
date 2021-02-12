@@ -302,6 +302,7 @@
     - [TextProposal](#cosmos.gov.v1beta1.TextProposal)
     - [Vote](#cosmos.gov.v1beta1.Vote)
     - [VotingParams](#cosmos.gov.v1beta1.VotingParams)
+    - [WeightedVoteOption](#cosmos.gov.v1beta1.WeightedVoteOption)
   
     - [ProposalStatus](#cosmos.gov.v1beta1.ProposalStatus)
     - [VoteOption](#cosmos.gov.v1beta1.VoteOption)
@@ -336,6 +337,8 @@
     - [MsgSubmitProposalResponse](#cosmos.gov.v1beta1.MsgSubmitProposalResponse)
     - [MsgVote](#cosmos.gov.v1beta1.MsgVote)
     - [MsgVoteResponse](#cosmos.gov.v1beta1.MsgVoteResponse)
+    - [MsgVoteWeighted](#cosmos.gov.v1beta1.MsgVoteWeighted)
+    - [MsgVoteWeightedResponse](#cosmos.gov.v1beta1.MsgVoteWeightedResponse)
   
     - [Msg](#cosmos.gov.v1beta1.Msg)
   
@@ -4587,7 +4590,7 @@ A Vote consists of a proposal ID, the voter, and the vote option.
 | ----- | ---- | ----- | ----------- |
 | `proposal_id` | [uint64](#uint64) |  |  |
 | `voter` | [string](#string) |  |  |
-| `option` | [VoteOption](#cosmos.gov.v1beta1.VoteOption) |  |  |
+| `options` | [WeightedVoteOption](#cosmos.gov.v1beta1.WeightedVoteOption) | repeated |  |
 
 
 
@@ -4603,6 +4606,22 @@ VotingParams defines the params for voting on governance proposals.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `voting_period` | [google.protobuf.Duration](#google.protobuf.Duration) |  | Length of the voting period. |
+
+
+
+
+
+
+<a name="cosmos.gov.v1beta1.WeightedVoteOption"></a>
+
+### WeightedVoteOption
+WeightedVoteOption defines a unit of vote for vote split.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `option` | [VoteOption](#cosmos.gov.v1beta1.VoteOption) |  |  |
+| `weight` | [string](#string) |  |  |
 
 
 
@@ -5065,6 +5084,33 @@ MsgVoteResponse defines the Msg/Vote response type.
 
 
 
+
+<a name="cosmos.gov.v1beta1.MsgVoteWeighted"></a>
+
+### MsgVoteWeighted
+MsgVote defines a message to cast a vote.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal_id` | [uint64](#uint64) |  |  |
+| `voter` | [string](#string) |  |  |
+| `options` | [WeightedVoteOption](#cosmos.gov.v1beta1.WeightedVoteOption) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.gov.v1beta1.MsgVoteWeightedResponse"></a>
+
+### MsgVoteWeightedResponse
+MsgVoteWeightedResponse defines the MsgVoteWeighted response type.
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -5081,6 +5127,7 @@ Msg defines the bank Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `SubmitProposal` | [MsgSubmitProposal](#cosmos.gov.v1beta1.MsgSubmitProposal) | [MsgSubmitProposalResponse](#cosmos.gov.v1beta1.MsgSubmitProposalResponse) | SubmitProposal defines a method to create new proposal given a content. | |
 | `Vote` | [MsgVote](#cosmos.gov.v1beta1.MsgVote) | [MsgVoteResponse](#cosmos.gov.v1beta1.MsgVoteResponse) | Vote defines a method to add a vote on a specific proposal. | |
+| `VoteWeighted` | [MsgVoteWeighted](#cosmos.gov.v1beta1.MsgVoteWeighted) | [MsgVoteWeightedResponse](#cosmos.gov.v1beta1.MsgVoteWeightedResponse) | WeightedVote defines a method to add a weighted vote on a specific proposal. | |
 | `Deposit` | [MsgDeposit](#cosmos.gov.v1beta1.MsgDeposit) | [MsgDepositResponse](#cosmos.gov.v1beta1.MsgDepositResponse) | Deposit defines a method to add deposit on a specific proposal. | |
 
  <!-- end services -->

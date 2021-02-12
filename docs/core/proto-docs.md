@@ -8,7 +8,6 @@
     - [BaseAccount](#cosmos.auth.v1beta1.BaseAccount)
     - [ModuleAccount](#cosmos.auth.v1beta1.ModuleAccount)
     - [Params](#cosmos.auth.v1beta1.Params)
-<<<<<<< HEAD
   
 - [cosmos/auth/v1beta1/genesis.proto](#cosmos/auth/v1beta1/genesis.proto)
     - [GenesisState](#cosmos.auth.v1beta1.GenesisState)
@@ -26,68 +25,6 @@
     - [DecCoin](#cosmos.base.v1beta1.DecCoin)
     - [DecProto](#cosmos.base.v1beta1.DecProto)
     - [IntProto](#cosmos.base.v1beta1.IntProto)
-=======
-  
-- [cosmos/auth/v1beta1/genesis.proto](#cosmos/auth/v1beta1/genesis.proto)
-    - [GenesisState](#cosmos.auth.v1beta1.GenesisState)
-  
-- [cosmos/auth/v1beta1/query.proto](#cosmos/auth/v1beta1/query.proto)
-    - [QueryAccountRequest](#cosmos.auth.v1beta1.QueryAccountRequest)
-    - [QueryAccountResponse](#cosmos.auth.v1beta1.QueryAccountResponse)
-    - [QueryParamsRequest](#cosmos.auth.v1beta1.QueryParamsRequest)
-    - [QueryParamsResponse](#cosmos.auth.v1beta1.QueryParamsResponse)
-  
-    - [Query](#cosmos.auth.v1beta1.Query)
-  
-- [cosmos/base/v1beta1/coin.proto](#cosmos/base/v1beta1/coin.proto)
-    - [Coin](#cosmos.base.v1beta1.Coin)
-    - [DecCoin](#cosmos.base.v1beta1.DecCoin)
-    - [DecProto](#cosmos.base.v1beta1.DecProto)
-    - [IntProto](#cosmos.base.v1beta1.IntProto)
-  
-- [cosmos/authz/v1beta1/authz.proto](#cosmos/authz/v1beta1/authz.proto)
-    - [AuthorizationGrant](#cosmos.authz.v1beta1.AuthorizationGrant)
-    - [GenericAuthorization](#cosmos.authz.v1beta1.GenericAuthorization)
-    - [SendAuthorization](#cosmos.authz.v1beta1.SendAuthorization)
-  
-- [cosmos/base/abci/v1beta1/abci.proto](#cosmos/base/abci/v1beta1/abci.proto)
-    - [ABCIMessageLog](#cosmos.base.abci.v1beta1.ABCIMessageLog)
-    - [Attribute](#cosmos.base.abci.v1beta1.Attribute)
-    - [GasInfo](#cosmos.base.abci.v1beta1.GasInfo)
-    - [MsgData](#cosmos.base.abci.v1beta1.MsgData)
-    - [Result](#cosmos.base.abci.v1beta1.Result)
-    - [SearchTxsResult](#cosmos.base.abci.v1beta1.SearchTxsResult)
-    - [SimulationResponse](#cosmos.base.abci.v1beta1.SimulationResponse)
-    - [StringEvent](#cosmos.base.abci.v1beta1.StringEvent)
-    - [TxMsgData](#cosmos.base.abci.v1beta1.TxMsgData)
-    - [TxResponse](#cosmos.base.abci.v1beta1.TxResponse)
-  
-- [cosmos/authz/v1beta1/tx.proto](#cosmos/authz/v1beta1/tx.proto)
-    - [MsgExecAuthorizedRequest](#cosmos.authz.v1beta1.MsgExecAuthorizedRequest)
-    - [MsgExecAuthorizedResponse](#cosmos.authz.v1beta1.MsgExecAuthorizedResponse)
-    - [MsgGrantAuthorizationRequest](#cosmos.authz.v1beta1.MsgGrantAuthorizationRequest)
-    - [MsgGrantAuthorizationResponse](#cosmos.authz.v1beta1.MsgGrantAuthorizationResponse)
-    - [MsgRevokeAuthorizationRequest](#cosmos.authz.v1beta1.MsgRevokeAuthorizationRequest)
-    - [MsgRevokeAuthorizationResponse](#cosmos.authz.v1beta1.MsgRevokeAuthorizationResponse)
-  
-    - [Msg](#cosmos.authz.v1beta1.Msg)
-  
-- [cosmos/authz/v1beta1/genesis.proto](#cosmos/authz/v1beta1/genesis.proto)
-    - [GenesisState](#cosmos.authz.v1beta1.GenesisState)
-    - [GrantAuthorization](#cosmos.authz.v1beta1.GrantAuthorization)
-  
-- [cosmos/base/query/v1beta1/pagination.proto](#cosmos/base/query/v1beta1/pagination.proto)
-    - [PageRequest](#cosmos.base.query.v1beta1.PageRequest)
-    - [PageResponse](#cosmos.base.query.v1beta1.PageResponse)
-  
-- [cosmos/authz/v1beta1/query.proto](#cosmos/authz/v1beta1/query.proto)
-    - [QueryAuthorizationRequest](#cosmos.authz.v1beta1.QueryAuthorizationRequest)
-    - [QueryAuthorizationResponse](#cosmos.authz.v1beta1.QueryAuthorizationResponse)
-    - [QueryAuthorizationsRequest](#cosmos.authz.v1beta1.QueryAuthorizationsRequest)
-    - [QueryAuthorizationsResponse](#cosmos.authz.v1beta1.QueryAuthorizationsResponse)
-  
-    - [Query](#cosmos.authz.v1beta1.Query)
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
   
 - [cosmos/bank/v1beta1/bank.proto](#cosmos/bank/v1beta1/bank.proto)
     - [DenomUnit](#cosmos.bank.v1beta1.DenomUnit)
@@ -102,13 +39,10 @@
     - [Balance](#cosmos.bank.v1beta1.Balance)
     - [GenesisState](#cosmos.bank.v1beta1.GenesisState)
   
-<<<<<<< HEAD
 - [cosmos/base/query/v1beta1/pagination.proto](#cosmos/base/query/v1beta1/pagination.proto)
     - [PageRequest](#cosmos.base.query.v1beta1.PageRequest)
     - [PageResponse](#cosmos.base.query.v1beta1.PageResponse)
   
-=======
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 - [cosmos/bank/v1beta1/query.proto](#cosmos/bank/v1beta1/query.proto)
     - [QueryAllBalancesRequest](#cosmos.bank.v1beta1.QueryAllBalancesRequest)
     - [QueryAllBalancesResponse](#cosmos.bank.v1beta1.QueryAllBalancesResponse)
@@ -135,7 +69,6 @@
   
     - [Msg](#cosmos.bank.v1beta1.Msg)
   
-<<<<<<< HEAD
 - [cosmos/base/abci/v1beta1/abci.proto](#cosmos/base/abci/v1beta1/abci.proto)
     - [ABCIMessageLog](#cosmos.base.abci.v1beta1.ABCIMessageLog)
     - [Attribute](#cosmos.base.abci.v1beta1.Attribute)
@@ -148,8 +81,6 @@
     - [TxMsgData](#cosmos.base.abci.v1beta1.TxMsgData)
     - [TxResponse](#cosmos.base.abci.v1beta1.TxResponse)
   
-=======
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 - [cosmos/base/kv/v1beta1/kv.proto](#cosmos/base/kv/v1beta1/kv.proto)
     - [Pair](#cosmos.base.kv.v1beta1.Pair)
     - [Pairs](#cosmos.base.kv.v1beta1.Pairs)
@@ -306,7 +237,6 @@
   
     - [Msg](#cosmos.evidence.v1beta1.Msg)
   
-<<<<<<< HEAD
 - [cosmos/genutil/v1beta1/genesis.proto](#cosmos/genutil/v1beta1/genesis.proto)
     - [GenesisState](#cosmos.genutil.v1beta1.GenesisState)
   
@@ -377,104 +307,6 @@
     - [ParamChange](#cosmos.params.v1beta1.ParamChange)
     - [ParameterChangeProposal](#cosmos.params.v1beta1.ParameterChangeProposal)
   
-=======
-- [cosmos/feegrant/v1beta1/feegrant.proto](#cosmos/feegrant/v1beta1/feegrant.proto)
-    - [BasicFeeAllowance](#cosmos.feegrant.v1beta1.BasicFeeAllowance)
-    - [Duration](#cosmos.feegrant.v1beta1.Duration)
-    - [ExpiresAt](#cosmos.feegrant.v1beta1.ExpiresAt)
-    - [FeeAllowanceGrant](#cosmos.feegrant.v1beta1.FeeAllowanceGrant)
-    - [PeriodicFeeAllowance](#cosmos.feegrant.v1beta1.PeriodicFeeAllowance)
-  
-- [cosmos/feegrant/v1beta1/genesis.proto](#cosmos/feegrant/v1beta1/genesis.proto)
-    - [GenesisState](#cosmos.feegrant.v1beta1.GenesisState)
-  
-- [cosmos/feegrant/v1beta1/query.proto](#cosmos/feegrant/v1beta1/query.proto)
-    - [QueryFeeAllowanceRequest](#cosmos.feegrant.v1beta1.QueryFeeAllowanceRequest)
-    - [QueryFeeAllowanceResponse](#cosmos.feegrant.v1beta1.QueryFeeAllowanceResponse)
-    - [QueryFeeAllowancesRequest](#cosmos.feegrant.v1beta1.QueryFeeAllowancesRequest)
-    - [QueryFeeAllowancesResponse](#cosmos.feegrant.v1beta1.QueryFeeAllowancesResponse)
-  
-    - [Query](#cosmos.feegrant.v1beta1.Query)
-  
-- [cosmos/feegrant/v1beta1/tx.proto](#cosmos/feegrant/v1beta1/tx.proto)
-    - [MsgGrantFeeAllowance](#cosmos.feegrant.v1beta1.MsgGrantFeeAllowance)
-    - [MsgGrantFeeAllowanceResponse](#cosmos.feegrant.v1beta1.MsgGrantFeeAllowanceResponse)
-    - [MsgRevokeFeeAllowance](#cosmos.feegrant.v1beta1.MsgRevokeFeeAllowance)
-    - [MsgRevokeFeeAllowanceResponse](#cosmos.feegrant.v1beta1.MsgRevokeFeeAllowanceResponse)
-  
-    - [Msg](#cosmos.feegrant.v1beta1.Msg)
-  
-- [cosmos/genutil/v1beta1/genesis.proto](#cosmos/genutil/v1beta1/genesis.proto)
-    - [GenesisState](#cosmos.genutil.v1beta1.GenesisState)
-  
-- [cosmos/gov/v1beta1/gov.proto](#cosmos/gov/v1beta1/gov.proto)
-    - [Deposit](#cosmos.gov.v1beta1.Deposit)
-    - [DepositParams](#cosmos.gov.v1beta1.DepositParams)
-    - [Proposal](#cosmos.gov.v1beta1.Proposal)
-    - [TallyParams](#cosmos.gov.v1beta1.TallyParams)
-    - [TallyResult](#cosmos.gov.v1beta1.TallyResult)
-    - [TextProposal](#cosmos.gov.v1beta1.TextProposal)
-    - [Vote](#cosmos.gov.v1beta1.Vote)
-    - [VotingParams](#cosmos.gov.v1beta1.VotingParams)
-  
-    - [ProposalStatus](#cosmos.gov.v1beta1.ProposalStatus)
-    - [VoteOption](#cosmos.gov.v1beta1.VoteOption)
-  
-- [cosmos/gov/v1beta1/genesis.proto](#cosmos/gov/v1beta1/genesis.proto)
-    - [GenesisState](#cosmos.gov.v1beta1.GenesisState)
-  
-- [cosmos/gov/v1beta1/query.proto](#cosmos/gov/v1beta1/query.proto)
-    - [QueryDepositRequest](#cosmos.gov.v1beta1.QueryDepositRequest)
-    - [QueryDepositResponse](#cosmos.gov.v1beta1.QueryDepositResponse)
-    - [QueryDepositsRequest](#cosmos.gov.v1beta1.QueryDepositsRequest)
-    - [QueryDepositsResponse](#cosmos.gov.v1beta1.QueryDepositsResponse)
-    - [QueryParamsRequest](#cosmos.gov.v1beta1.QueryParamsRequest)
-    - [QueryParamsResponse](#cosmos.gov.v1beta1.QueryParamsResponse)
-    - [QueryProposalRequest](#cosmos.gov.v1beta1.QueryProposalRequest)
-    - [QueryProposalResponse](#cosmos.gov.v1beta1.QueryProposalResponse)
-    - [QueryProposalsRequest](#cosmos.gov.v1beta1.QueryProposalsRequest)
-    - [QueryProposalsResponse](#cosmos.gov.v1beta1.QueryProposalsResponse)
-    - [QueryTallyResultRequest](#cosmos.gov.v1beta1.QueryTallyResultRequest)
-    - [QueryTallyResultResponse](#cosmos.gov.v1beta1.QueryTallyResultResponse)
-    - [QueryVoteRequest](#cosmos.gov.v1beta1.QueryVoteRequest)
-    - [QueryVoteResponse](#cosmos.gov.v1beta1.QueryVoteResponse)
-    - [QueryVotesRequest](#cosmos.gov.v1beta1.QueryVotesRequest)
-    - [QueryVotesResponse](#cosmos.gov.v1beta1.QueryVotesResponse)
-  
-    - [Query](#cosmos.gov.v1beta1.Query)
-  
-- [cosmos/gov/v1beta1/tx.proto](#cosmos/gov/v1beta1/tx.proto)
-    - [MsgDeposit](#cosmos.gov.v1beta1.MsgDeposit)
-    - [MsgDepositResponse](#cosmos.gov.v1beta1.MsgDepositResponse)
-    - [MsgSubmitProposal](#cosmos.gov.v1beta1.MsgSubmitProposal)
-    - [MsgSubmitProposalResponse](#cosmos.gov.v1beta1.MsgSubmitProposalResponse)
-    - [MsgVote](#cosmos.gov.v1beta1.MsgVote)
-    - [MsgVoteResponse](#cosmos.gov.v1beta1.MsgVoteResponse)
-  
-    - [Msg](#cosmos.gov.v1beta1.Msg)
-  
-- [cosmos/mint/v1beta1/mint.proto](#cosmos/mint/v1beta1/mint.proto)
-    - [Minter](#cosmos.mint.v1beta1.Minter)
-    - [Params](#cosmos.mint.v1beta1.Params)
-  
-- [cosmos/mint/v1beta1/genesis.proto](#cosmos/mint/v1beta1/genesis.proto)
-    - [GenesisState](#cosmos.mint.v1beta1.GenesisState)
-  
-- [cosmos/mint/v1beta1/query.proto](#cosmos/mint/v1beta1/query.proto)
-    - [QueryAnnualProvisionsRequest](#cosmos.mint.v1beta1.QueryAnnualProvisionsRequest)
-    - [QueryAnnualProvisionsResponse](#cosmos.mint.v1beta1.QueryAnnualProvisionsResponse)
-    - [QueryInflationRequest](#cosmos.mint.v1beta1.QueryInflationRequest)
-    - [QueryInflationResponse](#cosmos.mint.v1beta1.QueryInflationResponse)
-    - [QueryParamsRequest](#cosmos.mint.v1beta1.QueryParamsRequest)
-    - [QueryParamsResponse](#cosmos.mint.v1beta1.QueryParamsResponse)
-  
-    - [Query](#cosmos.mint.v1beta1.Query)
-  
-- [cosmos/params/v1beta1/params.proto](#cosmos/params/v1beta1/params.proto)
-    - [ParamChange](#cosmos.params.v1beta1.ParamChange)
-    - [ParameterChangeProposal](#cosmos.params.v1beta1.ParameterChangeProposal)
-  
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 - [cosmos/params/v1beta1/query.proto](#cosmos/params/v1beta1/query.proto)
     - [QueryParamsRequest](#cosmos.params.v1beta1.QueryParamsRequest)
     - [QueryParamsResponse](#cosmos.params.v1beta1.QueryParamsResponse)
@@ -669,19 +501,11 @@
     - [Height](#ibc.core.client.v1.Height)
     - [IdentifiedClientState](#ibc.core.client.v1.IdentifiedClientState)
     - [Params](#ibc.core.client.v1.Params)
-<<<<<<< HEAD
   
 - [ibc/applications/transfer/v1/tx.proto](#ibc/applications/transfer/v1/tx.proto)
     - [MsgTransfer](#ibc.applications.transfer.v1.MsgTransfer)
     - [MsgTransferResponse](#ibc.applications.transfer.v1.MsgTransferResponse)
   
-=======
-  
-- [ibc/applications/transfer/v1/tx.proto](#ibc/applications/transfer/v1/tx.proto)
-    - [MsgTransfer](#ibc.applications.transfer.v1.MsgTransfer)
-    - [MsgTransferResponse](#ibc.applications.transfer.v1.MsgTransferResponse)
-  
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
     - [Msg](#ibc.applications.transfer.v1.Msg)
   
 - [ibc/core/channel/v1/channel.proto](#ibc/core/channel/v1/channel.proto)
@@ -863,24 +687,6 @@
     - [Misbehaviour](#ibc.lightclients.tendermint.v1.Misbehaviour)
   
 - [Scalar Value Types](#scalar-value-types)
-<<<<<<< HEAD
-
-
-
-<a name="cosmos/auth/v1beta1/auth.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/auth/v1beta1/auth.proto
-
-
-
-<a name="cosmos.auth.v1beta1.BaseAccount"></a>
-
-### BaseAccount
-BaseAccount defines a base account type. It contains all the necessary fields
-for basic account functionality. Any custom account type should extend this
-type for additional functionality (e.g. vesting).
-=======
 
 
 
@@ -1154,56 +960,125 @@ IntProto defines a Protobuf wrapper around an Int object.
 
 
 
-<a name="cosmos/authz/v1beta1/authz.proto"></a>
+<a name="cosmos/bank/v1beta1/bank.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## cosmos/authz/v1beta1/authz.proto
+## cosmos/bank/v1beta1/bank.proto
 
 
 
-<a name="cosmos.authz.v1beta1.AuthorizationGrant"></a>
+<a name="cosmos.bank.v1beta1.DenomUnit"></a>
 
-### AuthorizationGrant
-AuthorizationGrant gives permissions to execute
-the provide method with expiration time.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `authorization` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `expiration` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-
-
-
-
-
-
-<a name="cosmos.authz.v1beta1.GenericAuthorization"></a>
-
-### GenericAuthorization
-GenericAuthorization gives the grantee unrestricted permissions to execute
-the provided method on behalf of the granter's account.
+### DenomUnit
+DenomUnit represents a struct that describes a given
+denomination unit of the basic token.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `method_name` | [string](#string) |  | method name to grant unrestricted permissions to execute Note: MethodName() is already a method on `GenericAuthorization` type, we need some custom naming here so using `MessageName` |
+| `denom` | [string](#string) |  | denom represents the string name of the given denom unit (e.g uatom). |
+| `exponent` | [uint32](#uint32) |  | exponent represents power of 10 exponent that one must raise the base_denom to in order to equal the given DenomUnit's denom 1 denom = 1^exponent base_denom (e.g. with a base_denom of uatom, one can create a DenomUnit of 'atom' with exponent = 6, thus: 1 atom = 10^6 uatom). |
+| `aliases` | [string](#string) | repeated | aliases is a list of string aliases for the given denom |
 
 
 
 
 
 
-<a name="cosmos.authz.v1beta1.SendAuthorization"></a>
+<a name="cosmos.bank.v1beta1.Input"></a>
 
-### SendAuthorization
-SendAuthorization allows the grantee to spend up to spend_limit coins from
-the granter's account.
+### Input
+Input models transaction input.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `spend_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `address` | [string](#string) |  |  |
+| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.Metadata"></a>
+
+### Metadata
+Metadata represents a struct that describes
+a basic token.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `description` | [string](#string) |  |  |
+| `denom_units` | [DenomUnit](#cosmos.bank.v1beta1.DenomUnit) | repeated | denom_units represents the list of DenomUnit's for a given coin |
+| `base` | [string](#string) |  | base represents the base denom (should be the DenomUnit with exponent = 0). |
+| `display` | [string](#string) |  | display indicates the suggested denom that should be displayed in clients. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.Output"></a>
+
+### Output
+Output models transaction outputs.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.Params"></a>
+
+### Params
+Params defines the parameters for the bank module.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `send_enabled` | [SendEnabled](#cosmos.bank.v1beta1.SendEnabled) | repeated |  |
+| `default_send_enabled` | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.SendEnabled"></a>
+
+### SendEnabled
+SendEnabled maps coin denom to a send_enabled status (whether a denom is
+sendable).
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `enabled` | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.Supply"></a>
+
+### Supply
+Supply represents a struct that passively keeps track of the total supply
+amounts in the network.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `total` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
 
 
@@ -1219,355 +1094,42 @@ the granter's account.
 
 
 
-<a name="cosmos/base/abci/v1beta1/abci.proto"></a>
+<a name="cosmos/bank/v1beta1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## cosmos/base/abci/v1beta1/abci.proto
+## cosmos/bank/v1beta1/genesis.proto
 
 
 
-<a name="cosmos.base.abci.v1beta1.ABCIMessageLog"></a>
+<a name="cosmos.bank.v1beta1.Balance"></a>
 
-### ABCIMessageLog
-ABCIMessageLog defines a structure containing an indexed tx ABCI message log.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_index` | [uint32](#uint32) |  |  |
-| `log` | [string](#string) |  |  |
-| `events` | [StringEvent](#cosmos.base.abci.v1beta1.StringEvent) | repeated | Events contains a slice of Event objects that were emitted during some execution. |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.Attribute"></a>
-
-### Attribute
-Attribute defines an attribute wrapper where the key and value are
-strings instead of raw bytes.
+### Balance
+Balance defines an account address and balance pair used in the bank module's
+genesis state.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [string](#string) |  |  |
-| `value` | [string](#string) |  |  |
+| `address` | [string](#string) |  | address is the address of the balance holder. |
+| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | coins defines the different coins this balance holds. |
 
 
 
 
 
 
-<a name="cosmos.base.abci.v1beta1.GasInfo"></a>
-
-### GasInfo
-GasInfo defines tx execution gas context.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `gas_wanted` | [uint64](#uint64) |  | GasWanted is the maximum units of work we allow this tx to perform. |
-| `gas_used` | [uint64](#uint64) |  | GasUsed is the amount of gas actually consumed. |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.MsgData"></a>
-
-### MsgData
-MsgData defines the data returned in a Result object during message
-execution.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_type` | [string](#string) |  |  |
-| `data` | [bytes](#bytes) |  |  |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.Result"></a>
-
-### Result
-Result is the union of ResponseFormat and ResponseCheckTx.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `data` | [bytes](#bytes) |  | Data is any data returned from message or handler execution. It MUST be length prefixed in order to separate data from multiple message executions. |
-| `log` | [string](#string) |  | Log contains the log information from message or handler execution. |
-| `events` | [tendermint.abci.Event](#tendermint.abci.Event) | repeated | Events contains a slice of Event objects that were emitted during message or handler execution. |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.SearchTxsResult"></a>
-
-### SearchTxsResult
-SearchTxsResult defines a structure for querying txs pageable
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `total_count` | [uint64](#uint64) |  | Count of all txs |
-| `count` | [uint64](#uint64) |  | Count of txs in current page |
-| `page_number` | [uint64](#uint64) |  | Index of current page, start from 1 |
-| `page_total` | [uint64](#uint64) |  | Count of total pages |
-| `limit` | [uint64](#uint64) |  | Max count txs per page |
-| `txs` | [TxResponse](#cosmos.base.abci.v1beta1.TxResponse) | repeated | List of txs in current page |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.SimulationResponse"></a>
-
-### SimulationResponse
-SimulationResponse defines the response generated when a transaction is
-successfully simulated.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `gas_info` | [GasInfo](#cosmos.base.abci.v1beta1.GasInfo) |  |  |
-| `result` | [Result](#cosmos.base.abci.v1beta1.Result) |  |  |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.StringEvent"></a>
-
-### StringEvent
-StringEvent defines en Event object wrapper where all the attributes
-contain key/value pairs that are strings instead of raw bytes.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `type` | [string](#string) |  |  |
-| `attributes` | [Attribute](#cosmos.base.abci.v1beta1.Attribute) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.TxMsgData"></a>
-
-### TxMsgData
-TxMsgData defines a list of MsgData. A transaction will have a MsgData object
-for each message.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `data` | [MsgData](#cosmos.base.abci.v1beta1.MsgData) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.base.abci.v1beta1.TxResponse"></a>
-
-### TxResponse
-TxResponse defines a structure containing relevant tx data and metadata. The
-tags are stringified and the log is JSON decoded.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `height` | [int64](#int64) |  | The block height |
-| `txhash` | [string](#string) |  | The transaction hash. |
-| `codespace` | [string](#string) |  | Namespace for the Code |
-| `code` | [uint32](#uint32) |  | Response code. |
-| `data` | [string](#string) |  | Result bytes, if any. |
-| `raw_log` | [string](#string) |  | The output of the application's logger (raw string). May be non-deterministic. |
-| `logs` | [ABCIMessageLog](#cosmos.base.abci.v1beta1.ABCIMessageLog) | repeated | The output of the application's logger (typed). May be non-deterministic. |
-| `info` | [string](#string) |  | Additional information. May be non-deterministic. |
-| `gas_wanted` | [int64](#int64) |  | Amount of gas requested for transaction. |
-| `gas_used` | [int64](#int64) |  | Amount of gas consumed by transaction. |
-| `tx` | [google.protobuf.Any](#google.protobuf.Any) |  | The request transaction bytes. |
-| `timestamp` | [string](#string) |  | Time of the previous block. For heights > 1, it's the weighted median of the timestamps of the valid votes in the block.LastCommit. For height == 1, it's genesis time. |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="cosmos/authz/v1beta1/tx.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/authz/v1beta1/tx.proto
-
-
-
-<a name="cosmos.authz.v1beta1.MsgExecAuthorizedRequest"></a>
-
-### MsgExecAuthorizedRequest
-MsgExecAuthorizedRequest attempts to execute the provided messages using
-authorizations granted to the grantee. Each message should have only
-one signer corresponding to the granter of the authorization.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `grantee` | [string](#string) |  |  |
-| `msgs` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.authz.v1beta1.MsgExecAuthorizedResponse"></a>
-
-### MsgExecAuthorizedResponse
-MsgExecAuthorizedResponse defines the Msg/MsgExecAuthorizedResponse response type.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `result` | [cosmos.base.abci.v1beta1.Result](#cosmos.base.abci.v1beta1.Result) |  |  |
-
-
-
-
-
-
-<a name="cosmos.authz.v1beta1.MsgGrantAuthorizationRequest"></a>
-
-### MsgGrantAuthorizationRequest
-MsgGrantAuthorizationRequest grants the provided authorization to the grantee on the granter's
-account with the provided expiration time.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `granter` | [string](#string) |  |  |
-| `grantee` | [string](#string) |  |  |
-| `authorization` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `expiration` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-
-
-
-
-
-
-<a name="cosmos.authz.v1beta1.MsgGrantAuthorizationResponse"></a>
-
-### MsgGrantAuthorizationResponse
-MsgGrantAuthorizationResponse defines the Msg/MsgGrantAuthorization response type.
-
-
-
-
-
-
-<a name="cosmos.authz.v1beta1.MsgRevokeAuthorizationRequest"></a>
-
-### MsgRevokeAuthorizationRequest
-MsgRevokeAuthorizationRequest revokes any authorization with the provided sdk.Msg type on the
-granter's account with that has been granted to the grantee.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `granter` | [string](#string) |  |  |
-| `grantee` | [string](#string) |  |  |
-| `method_name` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.authz.v1beta1.MsgRevokeAuthorizationResponse"></a>
-
-### MsgRevokeAuthorizationResponse
-MsgRevokeAuthorizationResponse defines the Msg/MsgRevokeAuthorizationResponse response type.
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="cosmos.authz.v1beta1.Msg"></a>
-
-### Msg
-Msg defines the authz Msg service.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `GrantAuthorization` | [MsgGrantAuthorizationRequest](#cosmos.authz.v1beta1.MsgGrantAuthorizationRequest) | [MsgGrantAuthorizationResponse](#cosmos.authz.v1beta1.MsgGrantAuthorizationResponse) | GrantAuthorization grants the provided authorization to the grantee on the granter's account with the provided expiration time. | |
-| `ExecAuthorized` | [MsgExecAuthorizedRequest](#cosmos.authz.v1beta1.MsgExecAuthorizedRequest) | [MsgExecAuthorizedResponse](#cosmos.authz.v1beta1.MsgExecAuthorizedResponse) | ExecAuthorized attempts to execute the provided messages using authorizations granted to the grantee. Each message should have only one signer corresponding to the granter of the authorization. | |
-| `RevokeAuthorization` | [MsgRevokeAuthorizationRequest](#cosmos.authz.v1beta1.MsgRevokeAuthorizationRequest) | [MsgRevokeAuthorizationResponse](#cosmos.authz.v1beta1.MsgRevokeAuthorizationResponse) | RevokeAuthorization revokes any authorization corresponding to the provided method name on the granter's account that has been granted to the grantee. | |
-
- <!-- end services -->
-
-
-
-<a name="cosmos/authz/v1beta1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/authz/v1beta1/genesis.proto
-
-
-
-<a name="cosmos.authz.v1beta1.GenesisState"></a>
+<a name="cosmos.bank.v1beta1.GenesisState"></a>
 
 ### GenesisState
-GenesisState defines the authz module's genesis state.
+GenesisState defines the bank module's genesis state.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `authorization` | [GrantAuthorization](#cosmos.authz.v1beta1.GrantAuthorization) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.authz.v1beta1.GrantAuthorization"></a>
-
-### GrantAuthorization
-GrantAuthorization defines the GenesisState/GrantAuthorization type.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `granter` | [string](#string) |  |  |
-| `grantee` | [string](#string) |  |  |
-| `authorization` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `expiration` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `params` | [Params](#cosmos.bank.v1beta1.Params) |  | params defines all the paramaters of the module. |
+| `balances` | [Balance](#cosmos.bank.v1beta1.Balance) | repeated | balances is an array containing the balances of all the accounts. |
+| `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply represents the total supply. |
+| `denom_metadata` | [Metadata](#cosmos.bank.v1beta1.Metadata) | repeated | denom_metadata defines the metadata of the differents coins. |
 
 
 
@@ -1645,438 +1207,13 @@ corresponding request message has used PageRequest.
 
 
 
-<a name="cosmos/authz/v1beta1/query.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/authz/v1beta1/query.proto
-
-
-
-<a name="cosmos.authz.v1beta1.QueryAuthorizationRequest"></a>
-
-### QueryAuthorizationRequest
-QueryAuthorizationRequest is the request type for the Query/Authorization RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `granter` | [string](#string) |  |  |
-| `grantee` | [string](#string) |  |  |
-| `method_name` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.authz.v1beta1.QueryAuthorizationResponse"></a>
-
-### QueryAuthorizationResponse
-QueryAuthorizationResponse is the response type for the Query/Authorization RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `authorization` | [AuthorizationGrant](#cosmos.authz.v1beta1.AuthorizationGrant) |  | authorization is a authorization granted for grantee by granter. |
-
-
-
-
-
-
-<a name="cosmos.authz.v1beta1.QueryAuthorizationsRequest"></a>
-
-### QueryAuthorizationsRequest
-QueryAuthorizationsRequest is the request type for the Query/Authorizations RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `granter` | [string](#string) |  |  |
-| `grantee` | [string](#string) |  |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
-
-
-
-
-
-
-<a name="cosmos.authz.v1beta1.QueryAuthorizationsResponse"></a>
-
-### QueryAuthorizationsResponse
-QueryAuthorizationsResponse is the response type for the Query/Authorizations RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `authorizations` | [AuthorizationGrant](#cosmos.authz.v1beta1.AuthorizationGrant) | repeated | authorizations is a list of grants granted for grantee by granter. |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="cosmos.authz.v1beta1.Query"></a>
-
-### Query
-Query defines the gRPC querier service.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Authorization` | [QueryAuthorizationRequest](#cosmos.authz.v1beta1.QueryAuthorizationRequest) | [QueryAuthorizationResponse](#cosmos.authz.v1beta1.QueryAuthorizationResponse) | Returns any `Authorization` (or `nil`), with the expiration time, granted to the grantee by the granter for the provided msg type. | GET|/cosmos/authz/v1beta1/granters/{granter}/grantees/{grantee}/grant|
-| `Authorizations` | [QueryAuthorizationsRequest](#cosmos.authz.v1beta1.QueryAuthorizationsRequest) | [QueryAuthorizationsResponse](#cosmos.authz.v1beta1.QueryAuthorizationsResponse) | Returns list of `Authorization`, granted to the grantee by the granter. | GET|/cosmos/authz/v1beta1/granters/{granter}/grantees/{grantee}/grants|
-
- <!-- end services -->
-
-
-
-<a name="cosmos/bank/v1beta1/bank.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/bank/v1beta1/bank.proto
-
-
-
-<a name="cosmos.bank.v1beta1.DenomUnit"></a>
-
-### DenomUnit
-DenomUnit represents a struct that describes a given
-denomination unit of the basic token.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `address` | [string](#string) |  |  |
-| `pub_key` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `account_number` | [uint64](#uint64) |  |  |
-| `sequence` | [uint64](#uint64) |  |  |
-=======
-| `denom` | [string](#string) |  | denom represents the string name of the given denom unit (e.g uatom). |
-| `exponent` | [uint32](#uint32) |  | exponent represents power of 10 exponent that one must raise the base_denom to in order to equal the given DenomUnit's denom 1 denom = 1^exponent base_denom (e.g. with a base_denom of uatom, one can create a DenomUnit of 'atom' with exponent = 6, thus: 1 atom = 10^6 uatom). |
-| `aliases` | [string](#string) | repeated | aliases is a list of string aliases for the given denom |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-
-
-
-
-<<<<<<< HEAD
-<a name="cosmos.auth.v1beta1.ModuleAccount"></a>
-
-### ModuleAccount
-ModuleAccount defines an account for modules that holds coins on a pool.
-=======
-<a name="cosmos.bank.v1beta1.Input"></a>
-
-### Input
-Input models transaction input.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `base_account` | [BaseAccount](#cosmos.auth.v1beta1.BaseAccount) |  |  |
-| `name` | [string](#string) |  |  |
-| `permissions` | [string](#string) | repeated |  |
-=======
-| `address` | [string](#string) |  |  |
-| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-
-
-
-
-<<<<<<< HEAD
-<a name="cosmos.auth.v1beta1.Params"></a>
-
-### Params
-Params defines the parameters for the auth module.
-=======
-<a name="cosmos.bank.v1beta1.Metadata"></a>
-
-### Metadata
-Metadata represents a struct that describes
-a basic token.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `max_memo_characters` | [uint64](#uint64) |  |  |
-| `tx_sig_limit` | [uint64](#uint64) |  |  |
-| `tx_size_cost_per_byte` | [uint64](#uint64) |  |  |
-| `sig_verify_cost_ed25519` | [uint64](#uint64) |  |  |
-| `sig_verify_cost_secp256k1` | [uint64](#uint64) |  |  |
-=======
-| `description` | [string](#string) |  |  |
-| `denom_units` | [DenomUnit](#cosmos.bank.v1beta1.DenomUnit) | repeated | denom_units represents the list of DenomUnit's for a given coin |
-| `base` | [string](#string) |  | base represents the base denom (should be the DenomUnit with exponent = 0). |
-| `display` | [string](#string) |  | display indicates the suggested denom that should be displayed in clients. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-
-
-
- <!-- end messages -->
-
-<<<<<<< HEAD
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-=======
-<a name="cosmos.bank.v1beta1.Output"></a>
-
-### Output
-Output models transaction outputs.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
- <!-- end services -->
-
-<<<<<<< HEAD
-=======
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
-| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-<a name="cosmos/auth/v1beta1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/auth/v1beta1/genesis.proto
-
-
-
-<<<<<<< HEAD
-<a name="cosmos.auth.v1beta1.GenesisState"></a>
-
-### GenesisState
-GenesisState defines the auth module's genesis state.
-=======
-<a name="cosmos.bank.v1beta1.Params"></a>
-
-### Params
-Params defines the parameters for the bank module.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `params` | [Params](#cosmos.auth.v1beta1.Params) |  | params defines all the paramaters of the module. |
-| `accounts` | [google.protobuf.Any](#google.protobuf.Any) | repeated | accounts are the accounts present at genesis. |
-=======
-| `send_enabled` | [SendEnabled](#cosmos.bank.v1beta1.SendEnabled) | repeated |  |
-| `default_send_enabled` | [bool](#bool) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-
-
-
-
-<a name="cosmos.bank.v1beta1.SendEnabled"></a>
-
-### SendEnabled
-SendEnabled maps coin denom to a send_enabled status (whether a denom is
-sendable).
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `denom` | [string](#string) |  |  |
-| `enabled` | [bool](#bool) |  |  |
-
-
-<<<<<<< HEAD
-<a name="cosmos/auth/v1beta1/query.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/auth/v1beta1/query.proto
-
-
-
-<a name="cosmos.auth.v1beta1.QueryAccountRequest"></a>
-
-### QueryAccountRequest
-QueryAccountRequest is the request type for the Query/Account RPC method.
-=======
-
-
-
-
-<a name="cosmos.bank.v1beta1.Supply"></a>
-
-### Supply
-Supply represents a struct that passively keeps track of the total supply
-amounts in the network.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `address` | [string](#string) |  | address defines the address to query for. |
-=======
-| `total` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-
-
-
- <!-- end messages -->
-
-<<<<<<< HEAD
-<a name="cosmos.auth.v1beta1.QueryAccountResponse"></a>
-
-### QueryAccountResponse
-QueryAccountResponse is the response type for the Query/Account RPC method.
-=======
- <!-- end enums -->
-
- <!-- end HasExtensions -->
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
- <!-- end services -->
-
-<<<<<<< HEAD
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `account` | [google.protobuf.Any](#google.protobuf.Any) |  | account defines the account of the corresponding address. |
-=======
-
-
-<a name="cosmos/bank/v1beta1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-## cosmos/bank/v1beta1/genesis.proto
-
-
-
-<<<<<<< HEAD
-
-=======
-<a name="cosmos.bank.v1beta1.Balance"></a>
-
-### Balance
-Balance defines an account address and balance pair used in the bank module's
-genesis state.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-<a name="cosmos.auth.v1beta1.QueryParamsRequest"></a>
-
-<<<<<<< HEAD
-### QueryParamsRequest
-QueryParamsRequest is the request type for the Query/Params RPC method.
-=======
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  | address is the address of the balance holder. |
-| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | coins defines the different coins this balance holds. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-
-
-
-
-<<<<<<< HEAD
-<a name="cosmos.auth.v1beta1.QueryParamsResponse"></a>
-
-### QueryParamsResponse
-QueryParamsResponse is the response type for the Query/Params RPC method.
-=======
-<a name="cosmos.bank.v1beta1.GenesisState"></a>
-
-### GenesisState
-GenesisState defines the bank module's genesis state.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `params` | [Params](#cosmos.auth.v1beta1.Params) |  | params defines the parameters of the module. |
-=======
-| `params` | [Params](#cosmos.bank.v1beta1.Params) |  | params defines all the paramaters of the module. |
-| `balances` | [Balance](#cosmos.bank.v1beta1.Balance) | repeated | balances is an array containing the balances of all the accounts. |
-| `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply represents the total supply. |
-| `denom_metadata` | [Metadata](#cosmos.bank.v1beta1.Metadata) | repeated | denom_metadata defines the metadata of the differents coins. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-<<<<<<< HEAD
-<a name="cosmos.auth.v1beta1.Query"></a>
-=======
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-<<<<<<< HEAD
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Account` | [QueryAccountRequest](#cosmos.auth.v1beta1.QueryAccountRequest) | [QueryAccountResponse](#cosmos.auth.v1beta1.QueryAccountResponse) | Account returns account details based on address. | GET|/cosmos/auth/v1beta1/accounts/{address}|
-| `Params` | [QueryParamsRequest](#cosmos.auth.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.auth.v1beta1.QueryParamsResponse) | Params queries all parameters. | GET|/cosmos/auth/v1beta1/params|
-=======
 <a name="cosmos/bank/v1beta1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 ## cosmos/bank/v1beta1/query.proto
 
 
 
-<<<<<<< HEAD
-<a name="cosmos/base/v1beta1/coin.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/base/v1beta1/coin.proto
-
-
-
-<a name="cosmos.base.v1beta1.Coin"></a>
-
-### Coin
-Coin defines a token with a denomination and an amount.
-
-NOTE: The amount field is an Int which implements the custom method
-signatures required by gogoproto.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `denom` | [string](#string) |  |  |
-| `amount` | [string](#string) |  |  |
-
-=======
 <a name="cosmos.bank.v1beta1.QueryAllBalancesRequest"></a>
 
 ### QueryAllBalancesRequest
@@ -2120,34 +1257,20 @@ QueryBalanceRequest is the request type for the Query/Balance RPC method.
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | address is the address to query balances for. |
 | `denom` | [string](#string) |  | denom is the coin denom to query balances for. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
-<a name="cosmos.base.v1beta1.DecCoin"></a>
 
-<<<<<<< HEAD
-### DecCoin
-DecCoin defines a token with a denomination and a decimal amount.
-
-NOTE: The amount field is an Dec which implements the custom method
-signatures required by gogoproto.
-=======
 <a name="cosmos.bank.v1beta1.QueryBalanceResponse"></a>
 
 ### QueryBalanceResponse
 QueryBalanceResponse is the response type for the Query/Balance RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `denom` | [string](#string) |  |  |
-| `amount` | [string](#string) |  |  |
-=======
 | `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | balance is the balance of the coin. |
 
 
@@ -2164,62 +1287,37 @@ QueryDenomMetadataRequest is the request type for the Query/DenomMetadata RPC me
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  | denom is the coin denom to query the metadata for. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.base.v1beta1.DecProto"></a>
-
-### DecProto
-DecProto defines a Protobuf wrapper around a Dec object.
-=======
 <a name="cosmos.bank.v1beta1.QueryDenomMetadataResponse"></a>
 
 ### QueryDenomMetadataResponse
 QueryDenomMetadataResponse is the response type for the Query/DenomMetadata RPC
 method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `dec` | [string](#string) |  |  |
-=======
 | `metadata` | [Metadata](#cosmos.bank.v1beta1.Metadata) |  | metadata describes and provides all the client information for the requested token. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.base.v1beta1.IntProto"></a>
-
-### IntProto
-IntProto defines a Protobuf wrapper around an Int object.
-=======
 <a name="cosmos.bank.v1beta1.QueryDenomsMetadataRequest"></a>
 
 ### QueryDenomsMetadataRequest
 QueryDenomsMetadataRequest is the request type for the Query/DenomsMetadata RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `int` | [string](#string) |  |  |
-
-
-=======
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -2233,20 +1331,6 @@ QueryDenomsMetadataResponse is the response type for the Query/DenomsMetadata RP
 method.
 
 
-<<<<<<< HEAD
-<a name="cosmos/bank/v1beta1/bank.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/bank/v1beta1/bank.proto
-
-
-
-<a name="cosmos.bank.v1beta1.DenomUnit"></a>
-
-### DenomUnit
-DenomUnit represents a struct that describes a given
-denomination unit of the basic token.
-=======
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `metadatas` | [Metadata](#cosmos.bank.v1beta1.Metadata) | repeated | metadata provides the client information for all the registered tokens. |
@@ -2256,77 +1340,40 @@ denomination unit of the basic token.
 
 
 
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 <a name="cosmos.bank.v1beta1.QueryParamsRequest"></a>
 
-<<<<<<< HEAD
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `denom` | [string](#string) |  | denom represents the string name of the given denom unit (e.g uatom). |
-| `exponent` | [uint32](#uint32) |  | exponent represents power of 10 exponent that one must raise the base_denom to in order to equal the given DenomUnit's denom 1 denom = 1^exponent base_denom (e.g. with a base_denom of uatom, one can create a DenomUnit of 'atom' with exponent = 6, thus: 1 atom = 10^6 uatom). |
-| `aliases` | [string](#string) | repeated | aliases is a list of string aliases for the given denom |
-=======
 ### QueryParamsRequest
 QueryParamsRequest defines the request type for querying x/bank parameters.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.bank.v1beta1.Input"></a>
-
-### Input
-Input models transaction input.
-=======
 <a name="cosmos.bank.v1beta1.QueryParamsResponse"></a>
 
 ### QueryParamsResponse
 QueryParamsResponse defines the response type for querying x/bank parameters.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `address` | [string](#string) |  |  |
-| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-=======
 | `params` | [Params](#cosmos.bank.v1beta1.Params) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.bank.v1beta1.Metadata"></a>
-
-### Metadata
-Metadata represents a struct that describes
-a basic token.
-=======
 <a name="cosmos.bank.v1beta1.QuerySupplyOfRequest"></a>
 
 ### QuerySupplyOfRequest
 QuerySupplyOfRequest is the request type for the Query/SupplyOf RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `description` | [string](#string) |  |  |
-| `denom_units` | [DenomUnit](#cosmos.bank.v1beta1.DenomUnit) | repeated | denom_units represents the list of DenomUnit's for a given coin |
-| `base` | [string](#string) |  | base represents the base denom (should be the DenomUnit with exponent = 0). |
-| `display` | [string](#string) |  | display indicates the suggested denom that should be displayed in clients. |
-
-
-=======
 | `denom` | [string](#string) |  | denom is the coin denom to query balances for. |
 
 
@@ -2343,74 +1390,44 @@ QuerySupplyOfResponse is the response type for the Query/SupplyOf RPC method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | amount is the supply of the coin. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.bank.v1beta1.Output"></a>
 
-### Output
-Output models transaction outputs.
-=======
-
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 <a name="cosmos.bank.v1beta1.QueryTotalSupplyRequest"></a>
 
-<<<<<<< HEAD
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
-| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-=======
 ### QueryTotalSupplyRequest
 QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC
 method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.bank.v1beta1.Params"></a>
-
-### Params
-Params defines the parameters for the bank module.
-=======
 <a name="cosmos.bank.v1beta1.QueryTotalSupplyResponse"></a>
 
 ### QueryTotalSupplyResponse
 QueryTotalSupplyResponse is the response type for the Query/TotalSupply RPC
 method
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `send_enabled` | [SendEnabled](#cosmos.bank.v1beta1.SendEnabled) | repeated |  |
-| `default_send_enabled` | [bool](#bool) |  |  |
-=======
 | `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply is the supply of the coins |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
+ <!-- end messages -->
 
-<a name="cosmos.bank.v1beta1.SendEnabled"></a>
+ <!-- end enums -->
 
-### SendEnabled
-SendEnabled maps coin denom to a send_enabled status (whether a denom is
-sendable).
+ <!-- end HasExtensions -->
 
-<<<<<<< HEAD
-=======
 
 <a name="cosmos.bank.v1beta1.Query"></a>
 
@@ -2428,25 +1445,9 @@ Query defines the gRPC querier service.
 | `DenomsMetadata` | [QueryDenomsMetadataRequest](#cosmos.bank.v1beta1.QueryDenomsMetadataRequest) | [QueryDenomsMetadataResponse](#cosmos.bank.v1beta1.QueryDenomsMetadataResponse) | DenomsMetadata queries the client metadata for all registered coin denominations. | GET|/cosmos/bank/v1beta1/denoms_metadata|
 
  <!-- end services -->
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `denom` | [string](#string) |  |  |
-| `enabled` | [bool](#bool) |  |  |
-
-
-<<<<<<< HEAD
 
 
 
-
-<a name="cosmos.bank.v1beta1.Supply"></a>
-
-### Supply
-Supply represents a struct that passively keeps track of the total supply
-amounts in the network.
-=======
 <a name="cosmos/bank/v1beta1/tx.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -2458,498 +1459,28 @@ amounts in the network.
 
 ### MsgMultiSend
 MsgMultiSend represents an arbitrary multi-in, multi-out send message.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `total` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-=======
 | `inputs` | [Input](#cosmos.bank.v1beta1.Input) | repeated |  |
 | `outputs` | [Output](#cosmos.bank.v1beta1.Output) | repeated |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
- <!-- end messages -->
 
-<<<<<<< HEAD
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-=======
 
 
 <a name="cosmos.bank.v1beta1.MsgMultiSendResponse"></a>
 
 ### MsgMultiSendResponse
 MsgMultiSendResponse defines the Msg/MultiSend response type.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
-<a name="cosmos/bank/v1beta1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
 
-## cosmos/bank/v1beta1/genesis.proto
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.bank.v1beta1.Balance"></a>
-
-### Balance
-Balance defines an account address and balance pair used in the bank module's
-genesis state.
-=======
-<a name="cosmos.bank.v1beta1.MsgSend"></a>
-
-### MsgSend
-MsgSend represents a message to send coins from one account to another.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `address` | [string](#string) |  | address is the address of the balance holder. |
-| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | coins defines the different coins this balance holds. |
-=======
-| `from_address` | [string](#string) |  |  |
-| `to_address` | [string](#string) |  |  |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-
-
-
-
-<<<<<<< HEAD
-<a name="cosmos.bank.v1beta1.GenesisState"></a>
-
-### GenesisState
-GenesisState defines the bank module's genesis state.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `params` | [Params](#cosmos.bank.v1beta1.Params) |  | params defines all the paramaters of the module. |
-| `balances` | [Balance](#cosmos.bank.v1beta1.Balance) | repeated | balances is an array containing the balances of all the accounts. |
-| `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply represents the total supply. |
-| `denom_metadata` | [Metadata](#cosmos.bank.v1beta1.Metadata) | repeated | denom_metadata defines the metadata of the differents coins. |
-=======
-<a name="cosmos.bank.v1beta1.MsgSendResponse"></a>
-
-### MsgSendResponse
-MsgSendResponse defines the Msg/Send response type.
-
-
-
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end messages -->
-
-<<<<<<< HEAD
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-=======
-<a name="cosmos.bank.v1beta1.Msg"></a>
-
-### Msg
-Msg defines the bank Msg service.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Send` | [MsgSend](#cosmos.bank.v1beta1.MsgSend) | [MsgSendResponse](#cosmos.bank.v1beta1.MsgSendResponse) | Send defines a method for sending coins from one account to another account. | |
-| `MultiSend` | [MsgMultiSend](#cosmos.bank.v1beta1.MsgMultiSend) | [MsgMultiSendResponse](#cosmos.bank.v1beta1.MsgMultiSendResponse) | MultiSend defines a method for sending coins from some accounts to other accounts. | |
-
- <!-- end services -->
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-<a name="cosmos/base/query/v1beta1/pagination.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-<<<<<<< HEAD
-## cosmos/base/query/v1beta1/pagination.proto
-=======
-<a name="cosmos/base/kv/v1beta1/kv.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-## cosmos/base/kv/v1beta1/kv.proto
-
-
-<<<<<<< HEAD
-<a name="cosmos.base.query.v1beta1.PageRequest"></a>
-
-### PageRequest
-PageRequest is to be embedded in gRPC request messages for efficient
-pagination. Ex:
-
- message SomeRequest {
-         Foo some_parameter = 1;
-         PageRequest pagination = 2;
- }
-=======
-
-<a name="cosmos.base.kv.v1beta1.Pair"></a>
-
-### Pair
-Pair defines a key/value bytes tuple.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `key` | [bytes](#bytes) |  | key is a value returned in PageResponse.next_key to begin querying the next page most efficiently. Only one of offset or key should be set. |
-| `offset` | [uint64](#uint64) |  | offset is a numeric offset that can be used when key is unavailable. It is less efficient than using key. Only one of offset or key should be set. |
-| `limit` | [uint64](#uint64) |  | limit is the total number of results to be returned in the result page. If left empty it will default to a value to be set by each app. |
-| `count_total` | [bool](#bool) |  | count_total is set to true to indicate that the result set should include a count of the total number of items available for pagination in UIs. count_total is only respected when offset is used. It is ignored when key is set. |
-=======
-| `key` | [bytes](#bytes) |  |  |
-| `value` | [bytes](#bytes) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-
-
-
-
-<<<<<<< HEAD
-<a name="cosmos.base.query.v1beta1.PageResponse"></a>
-
-### PageResponse
-PageResponse is to be embedded in gRPC response messages where the
-corresponding request message has used PageRequest.
-
- message SomeResponse {
-         repeated Bar results = 1;
-         PageResponse page = 2;
- }
-=======
-<a name="cosmos.base.kv.v1beta1.Pairs"></a>
-
-### Pairs
-Pairs defines a repeated slice of Pair objects.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `next_key` | [bytes](#bytes) |  | next_key is the key to be passed to PageRequest.key to query the next page most efficiently |
-| `total` | [uint64](#uint64) |  | total is total number of results available if PageRequest.count_total was set, its value is undefined otherwise |
-=======
-| `pairs` | [Pair](#cosmos.base.kv.v1beta1.Pair) | repeated |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="cosmos/base/reflection/v1beta1/reflection.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/base/reflection/v1beta1/reflection.proto
-
-
-
-<a name="cosmos.base.reflection.v1beta1.ListAllInterfacesRequest"></a>
-
-### ListAllInterfacesRequest
-ListAllInterfacesRequest is the request type of the ListAllInterfaces RPC.
-
-
-
-
-
-
-<a name="cosmos.base.reflection.v1beta1.ListAllInterfacesResponse"></a>
-
-### ListAllInterfacesResponse
-ListAllInterfacesResponse is the response type of the ListAllInterfaces RPC.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `interface_names` | [string](#string) | repeated | interface_names is an array of all the registered interfaces. |
-
-
-
-
-
-
-<a name="cosmos.base.reflection.v1beta1.ListImplementationsRequest"></a>
-
-### ListImplementationsRequest
-ListImplementationsRequest is the request type of the ListImplementations
-RPC.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `interface_name` | [string](#string) |  | interface_name defines the interface to query the implementations for. |
-
-
-
-
-
-
-<a name="cosmos.base.reflection.v1beta1.ListImplementationsResponse"></a>
-
-### ListImplementationsResponse
-ListImplementationsResponse is the response type of the ListImplementations
-RPC.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `implementation_message_names` | [string](#string) | repeated |  |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="cosmos.base.reflection.v1beta1.ReflectionService"></a>
-
-### ReflectionService
-ReflectionService defines a service for interface reflection.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `ListAllInterfaces` | [ListAllInterfacesRequest](#cosmos.base.reflection.v1beta1.ListAllInterfacesRequest) | [ListAllInterfacesResponse](#cosmos.base.reflection.v1beta1.ListAllInterfacesResponse) | ListAllInterfaces lists all the interfaces registered in the interface registry. | GET|/cosmos/base/reflection/v1beta1/interfaces|
-| `ListImplementations` | [ListImplementationsRequest](#cosmos.base.reflection.v1beta1.ListImplementationsRequest) | [ListImplementationsResponse](#cosmos.base.reflection.v1beta1.ListImplementationsResponse) | ListImplementations list all the concrete types that implement a given interface. | GET|/cosmos/base/reflection/v1beta1/interfaces/{interface_name}/implementations|
-
- <!-- end services -->
-
-
-
-<a name="cosmos/base/snapshots/v1beta1/snapshot.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/base/snapshots/v1beta1/snapshot.proto
-
-
-
-<a name="cosmos.base.snapshots.v1beta1.Metadata"></a>
-
-### Metadata
-Metadata contains SDK-specific snapshot metadata.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `chunk_hashes` | [bytes](#bytes) | repeated | SHA-256 chunk hashes |
-
-
-
-
-
-
-<a name="cosmos.base.snapshots.v1beta1.Snapshot"></a>
-
-### Snapshot
-Snapshot contains Tendermint state sync snapshot info.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `height` | [uint64](#uint64) |  |  |
-| `format` | [uint32](#uint32) |  |  |
-| `chunks` | [uint32](#uint32) |  |  |
-| `hash` | [bytes](#bytes) |  |  |
-| `metadata` | [Metadata](#cosmos.base.snapshots.v1beta1.Metadata) |  |  |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="cosmos/base/store/v1beta1/commit_info.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/base/store/v1beta1/commit_info.proto
-
-
-
-<a name="cosmos.base.store.v1beta1.CommitID"></a>
-
-### CommitID
-CommitID defines the committment information when a specific store is
-committed.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `version` | [int64](#int64) |  |  |
-| `hash` | [bytes](#bytes) |  |  |
-
-
-
-
-
-
-<a name="cosmos.base.store.v1beta1.CommitInfo"></a>
-
-### CommitInfo
-CommitInfo defines commit information used by the multi-store when committing
-a version/height.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `version` | [int64](#int64) |  |  |
-| `store_infos` | [StoreInfo](#cosmos.base.store.v1beta1.StoreInfo) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.base.store.v1beta1.StoreInfo"></a>
-
-### StoreInfo
-StoreInfo defines store-specific commit information. It contains a reference
-between a store name and the commit ID.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `name` | [string](#string) |  |  |
-| `commit_id` | [CommitID](#cosmos.base.store.v1beta1.CommitID) |  |  |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="cosmos/base/store/v1beta1/snapshot.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/base/store/v1beta1/snapshot.proto
-
-
-
-<a name="cosmos.base.store.v1beta1.SnapshotIAVLItem"></a>
-
-### SnapshotIAVLItem
-SnapshotIAVLItem is an exported IAVL node.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [bytes](#bytes) |  |  |
-| `value` | [bytes](#bytes) |  |  |
-| `version` | [int64](#int64) |  |  |
-| `height` | [int32](#int32) |  |  |
-
-
-
-
-
-
-<a name="cosmos.base.store.v1beta1.SnapshotItem"></a>
-
-### SnapshotItem
-SnapshotItem is an item contained in a rootmulti.Store snapshot.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `store` | [SnapshotStoreItem](#cosmos.base.store.v1beta1.SnapshotStoreItem) |  |  |
-| `iavl` | [SnapshotIAVLItem](#cosmos.base.store.v1beta1.SnapshotIAVLItem) |  |  |
-
-
-
-
-
-
-<a name="cosmos.base.store.v1beta1.SnapshotStoreItem"></a>
-
-### SnapshotStoreItem
-SnapshotStoreItem contains metadata about a snapshotted store.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `name` | [string](#string) |  |  |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="cosmos/base/tendermint/v1beta1/query.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/base/tendermint/v1beta1/query.proto
-
-
-
-<<<<<<< HEAD
 <a name="cosmos.bank.v1beta1.MsgSend"></a>
 
 ### MsgSend
@@ -3147,28 +1678,17 @@ contain key/value pairs that are strings instead of raw bytes.
 ### TxMsgData
 TxMsgData defines a list of MsgData. A transaction will have a MsgData object
 for each message.
-=======
-<a name="cosmos.base.tendermint.v1beta1.GetBlockByHeightRequest"></a>
-
-### GetBlockByHeightRequest
-GetBlockByHeightRequest is the request type for the Query/GetBlockByHeight RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `data` | [MsgData](#cosmos.base.abci.v1beta1.MsgData) | repeated |  |
-=======
-| `height` | [int64](#int64) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.base.abci.v1beta1.TxResponse"></a>
 
 ### TxResponse
@@ -3190,25 +1710,17 @@ tags are stringified and the log is JSON decoded.
 | `gas_used` | [int64](#int64) |  | Amount of gas consumed by transaction. |
 | `tx` | [google.protobuf.Any](#google.protobuf.Any) |  | The request transaction bytes. |
 | `timestamp` | [string](#string) |  | Time of the previous block. For heights > 1, it's the weighted median of the timestamps of the valid votes in the block.LastCommit. For height == 1, it's genesis time. |
-=======
-<a name="cosmos.base.tendermint.v1beta1.GetBlockByHeightResponse"></a>
-
-### GetBlockByHeightResponse
-GetBlockByHeightResponse is the response type for the Query/GetBlockByHeight RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `block_id` | [tendermint.types.BlockID](#tendermint.types.BlockID) |  |  |
-| `block` | [tendermint.types.Block](#tendermint.types.Block) |  |  |
 
 
 
 
 
+ <!-- end messages -->
 
-<<<<<<< HEAD
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
  <!-- end services -->
 
 
@@ -3224,91 +1736,42 @@ GetBlockByHeightResponse is the response type for the Query/GetBlockByHeight RPC
 
 ### Pair
 Pair defines a key/value bytes tuple.
-=======
-<a name="cosmos.base.tendermint.v1beta1.GetLatestBlockRequest"></a>
-
-### GetLatestBlockRequest
-GetLatestBlockRequest is the request type for the Query/GetLatestBlock RPC method.
-
-
-
-
-
-
-<a name="cosmos.base.tendermint.v1beta1.GetLatestBlockResponse"></a>
-
-### GetLatestBlockResponse
-GetLatestBlockResponse is the response type for the Query/GetLatestBlock RPC method.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `block_id` | [tendermint.types.BlockID](#tendermint.types.BlockID) |  |  |
-| `block` | [tendermint.types.Block](#tendermint.types.Block) |  |  |
-
-
-
-
-
-
-<a name="cosmos.base.tendermint.v1beta1.GetLatestValidatorSetRequest"></a>
-
-### GetLatestValidatorSetRequest
-GetLatestValidatorSetRequest is the request type for the Query/GetValidatorSetByHeight RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `key` | [bytes](#bytes) |  |  |
 | `value` | [bytes](#bytes) |  |  |
-=======
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.base.kv.v1beta1.Pairs"></a>
 
 ### Pairs
 Pairs defines a repeated slice of Pair objects.
-=======
-<a name="cosmos.base.tendermint.v1beta1.GetLatestValidatorSetResponse"></a>
-
-### GetLatestValidatorSetResponse
-GetLatestValidatorSetResponse is the response type for the Query/GetValidatorSetByHeight RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `pairs` | [Pair](#cosmos.base.kv.v1beta1.Pair) | repeated |  |
 
 
-=======
-| `block_height` | [int64](#int64) |  |  |
-| `validators` | [Validator](#cosmos.base.tendermint.v1beta1.Validator) | repeated |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
 
 
 
-<a name="cosmos.base.tendermint.v1beta1.GetNodeInfoRequest"></a>
-
-### GetNodeInfoRequest
-GetNodeInfoRequest is the request type for the Query/GetNodeInfo RPC method.
-
-
-<<<<<<< HEAD
 <a name="cosmos/base/reflection/v1beta1/reflection.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -3330,91 +1793,54 @@ ListAllInterfacesRequest is the request type of the ListAllInterfaces RPC.
 
 ### ListAllInterfacesResponse
 ListAllInterfacesResponse is the response type of the ListAllInterfaces RPC.
-=======
-
-
-
-
-<a name="cosmos.base.tendermint.v1beta1.GetNodeInfoResponse"></a>
-
-### GetNodeInfoResponse
-GetNodeInfoResponse is the request type for the Query/GetNodeInfo RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `interface_names` | [string](#string) | repeated | interface_names is an array of all the registered interfaces. |
 
 
-=======
-| `default_node_info` | [tendermint.p2p.DefaultNodeInfo](#tendermint.p2p.DefaultNodeInfo) |  |  |
-| `application_version` | [VersionInfo](#cosmos.base.tendermint.v1beta1.VersionInfo) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.base.reflection.v1beta1.ListImplementationsRequest"></a>
 
 ### ListImplementationsRequest
 ListImplementationsRequest is the request type of the ListImplementations
 RPC.
-=======
 
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
-<a name="cosmos.base.tendermint.v1beta1.GetSyncingRequest"></a>
-
-<<<<<<< HEAD
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `interface_name` | [string](#string) |  | interface_name defines the interface to query the implementations for. |
-=======
-### GetSyncingRequest
-GetSyncingRequest is the request type for the Query/GetSyncing RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.base.reflection.v1beta1.ListImplementationsResponse"></a>
 
 ### ListImplementationsResponse
 ListImplementationsResponse is the response type of the ListImplementations
 RPC.
-=======
-<a name="cosmos.base.tendermint.v1beta1.GetSyncingResponse"></a>
-
-### GetSyncingResponse
-GetSyncingResponse is the response type for the Query/GetSyncing RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `implementation_message_names` | [string](#string) | repeated |  |
-=======
-| `syncing` | [bool](#bool) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
+ <!-- end messages -->
 
-<a name="cosmos.base.tendermint.v1beta1.GetValidatorSetByHeightRequest"></a>
+ <!-- end enums -->
 
-### GetValidatorSetByHeightRequest
-GetValidatorSetByHeightRequest is the request type for the Query/GetValidatorSetByHeight RPC method.
+ <!-- end HasExtensions -->
 
-<<<<<<< HEAD
 
 <a name="cosmos.base.reflection.v1beta1.ReflectionService"></a>
 
@@ -3427,16 +1853,9 @@ ReflectionService defines a service for interface reflection.
 | `ListImplementations` | [ListImplementationsRequest](#cosmos.base.reflection.v1beta1.ListImplementationsRequest) | [ListImplementationsResponse](#cosmos.base.reflection.v1beta1.ListImplementationsResponse) | ListImplementations list all the concrete types that implement a given interface. | GET|/cosmos/base/reflection/v1beta1/interfaces/{interface_name}/implementations|
 
  <!-- end services -->
-=======
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `height` | [int64](#int64) |  |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
 
 
-<<<<<<< HEAD
+
 <a name="cosmos/base/snapshots/v1beta1/snapshot.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -3448,59 +1867,30 @@ ReflectionService defines a service for interface reflection.
 
 ### Metadata
 Metadata contains SDK-specific snapshot metadata.
-=======
-
-
-
-
-<a name="cosmos.base.tendermint.v1beta1.GetValidatorSetByHeightResponse"></a>
-
-### GetValidatorSetByHeightResponse
-GetValidatorSetByHeightResponse is the response type for the Query/GetValidatorSetByHeight RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `chunk_hashes` | [bytes](#bytes) | repeated | SHA-256 chunk hashes |
-=======
-| `block_height` | [int64](#int64) |  |  |
-| `validators` | [Validator](#cosmos.base.tendermint.v1beta1.Validator) | repeated |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.base.snapshots.v1beta1.Snapshot"></a>
 
 ### Snapshot
 Snapshot contains Tendermint state sync snapshot info.
-=======
-<a name="cosmos.base.tendermint.v1beta1.Module"></a>
-
-### Module
-Module is the type for VersionInfo
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `height` | [uint64](#uint64) |  |  |
 | `format` | [uint32](#uint32) |  |  |
 | `chunks` | [uint32](#uint32) |  |  |
 | `hash` | [bytes](#bytes) |  |  |
 | `metadata` | [Metadata](#cosmos.base.snapshots.v1beta1.Metadata) |  |  |
-=======
-| `path` | [string](#string) |  | module path |
-| `version` | [string](#string) |  | module version |
-| `sum` | [string](#string) |  | checksum |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -3508,28 +1898,12 @@ Module is the type for VersionInfo
 
  <!-- end messages -->
 
-<<<<<<< HEAD
  <!-- end enums -->
 
  <!-- end HasExtensions -->
-=======
-<a name="cosmos.base.tendermint.v1beta1.Validator"></a>
-
-### Validator
-Validator is the type for the validator-set.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
  <!-- end services -->
 
-<<<<<<< HEAD
-=======
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
-| `pub_key` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `voting_power` | [int64](#int64) |  |  |
-| `proposer_priority` | [int64](#int64) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 <a name="cosmos/base/store/v1beta1/commit_info.proto"></a>
@@ -3539,65 +1913,28 @@ Validator is the type for the validator-set.
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.base.store.v1beta1.CommitID"></a>
 
 ### CommitID
 CommitID defines the committment information when a specific store is
 committed.
-=======
-<a name="cosmos.base.tendermint.v1beta1.VersionInfo"></a>
-
-### VersionInfo
-VersionInfo is the type for the GetNodeInfoResponse message.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `version` | [int64](#int64) |  |  |
 | `hash` | [bytes](#bytes) |  |  |
-=======
-| `name` | [string](#string) |  |  |
-| `app_name` | [string](#string) |  |  |
-| `version` | [string](#string) |  |  |
-| `git_commit` | [string](#string) |  |  |
-| `build_tags` | [string](#string) |  |  |
-| `go_version` | [string](#string) |  |  |
-| `build_deps` | [Module](#cosmos.base.tendermint.v1beta1.Module) | repeated |  |
-
-
-
-
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
-<<<<<<< HEAD
 
 <a name="cosmos.base.store.v1beta1.CommitInfo"></a>
 
 ### CommitInfo
 CommitInfo defines commit information used by the multi-store when committing
 a version/height.
-=======
-<a name="cosmos.base.tendermint.v1beta1.Service"></a>
-
-### Service
-Service defines the gRPC querier service for tendermint queries.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `GetNodeInfo` | [GetNodeInfoRequest](#cosmos.base.tendermint.v1beta1.GetNodeInfoRequest) | [GetNodeInfoResponse](#cosmos.base.tendermint.v1beta1.GetNodeInfoResponse) | GetNodeInfo queries the current node info. | GET|/cosmos/base/tendermint/v1beta1/node_info|
-| `GetSyncing` | [GetSyncingRequest](#cosmos.base.tendermint.v1beta1.GetSyncingRequest) | [GetSyncingResponse](#cosmos.base.tendermint.v1beta1.GetSyncingResponse) | GetSyncing queries node syncing. | GET|/cosmos/base/tendermint/v1beta1/syncing|
-| `GetLatestBlock` | [GetLatestBlockRequest](#cosmos.base.tendermint.v1beta1.GetLatestBlockRequest) | [GetLatestBlockResponse](#cosmos.base.tendermint.v1beta1.GetLatestBlockResponse) | GetLatestBlock returns the latest block. | GET|/cosmos/base/tendermint/v1beta1/blocks/latest|
-| `GetBlockByHeight` | [GetBlockByHeightRequest](#cosmos.base.tendermint.v1beta1.GetBlockByHeightRequest) | [GetBlockByHeightResponse](#cosmos.base.tendermint.v1beta1.GetBlockByHeightResponse) | GetBlockByHeight queries block for given height. | GET|/cosmos/base/tendermint/v1beta1/blocks/{height}|
-| `GetLatestValidatorSet` | [GetLatestValidatorSetRequest](#cosmos.base.tendermint.v1beta1.GetLatestValidatorSetRequest) | [GetLatestValidatorSetResponse](#cosmos.base.tendermint.v1beta1.GetLatestValidatorSetResponse) | GetLatestValidatorSet queries latest validator-set. | GET|/cosmos/base/tendermint/v1beta1/validatorsets/latest|
-| `GetValidatorSetByHeight` | [GetValidatorSetByHeightRequest](#cosmos.base.tendermint.v1beta1.GetValidatorSetByHeightRequest) | [GetValidatorSetByHeightResponse](#cosmos.base.tendermint.v1beta1.GetValidatorSetByHeightResponse) | GetValidatorSetByHeight queries validator-set at a given height. | GET|/cosmos/base/tendermint/v1beta1/validatorsets/{height}|
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
@@ -3606,7 +1943,6 @@ Service defines the gRPC querier service for tendermint queries.
 | `store_infos` | [StoreInfo](#cosmos.base.store.v1beta1.StoreInfo) | repeated |  |
 
 
-<<<<<<< HEAD
 
 
 
@@ -3625,36 +1961,16 @@ between a store name and the commit ID.
 
 
 
-=======
-<a name="cosmos/capability/v1beta1/capability.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/capability/v1beta1/capability.proto
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
  <!-- end messages -->
 
-<<<<<<< HEAD
  <!-- end enums -->
 
  <!-- end HasExtensions -->
-=======
-<a name="cosmos.capability.v1beta1.Capability"></a>
-
-### Capability
-Capability defines an implementation of an object capability. The index
-provided to a Capability must be globally unique.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
  <!-- end services -->
 
-<<<<<<< HEAD
-=======
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `index` | [uint64](#uint64) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 <a name="cosmos/base/store/v1beta1/snapshot.proto"></a>
@@ -3664,53 +1980,32 @@ provided to a Capability must be globally unique.
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.base.store.v1beta1.SnapshotIAVLItem"></a>
 
 ### SnapshotIAVLItem
 SnapshotIAVLItem is an exported IAVL node.
-=======
-<a name="cosmos.capability.v1beta1.CapabilityOwners"></a>
-
-### CapabilityOwners
-CapabilityOwners defines a set of owners of a single Capability. The set of
-owners must be unique.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `key` | [bytes](#bytes) |  |  |
 | `value` | [bytes](#bytes) |  |  |
 | `version` | [int64](#int64) |  |  |
 | `height` | [int32](#int32) |  |  |
-=======
-| `owners` | [Owner](#cosmos.capability.v1beta1.Owner) | repeated |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.base.store.v1beta1.SnapshotItem"></a>
 
 ### SnapshotItem
 SnapshotItem is an item contained in a rootmulti.Store snapshot.
-=======
-<a name="cosmos.capability.v1beta1.Owner"></a>
-
-### Owner
-Owner defines a single capability owner. An owner is defined by the name of
-capability and the module name.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `store` | [SnapshotStoreItem](#cosmos.base.store.v1beta1.SnapshotStoreItem) |  |  |
 | `iavl` | [SnapshotIAVLItem](#cosmos.base.store.v1beta1.SnapshotIAVLItem) |  |  |
 
@@ -3727,9 +2022,6 @@ SnapshotStoreItem contains metadata about a snapshotted store.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-=======
-| `module` | [string](#string) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 | `name` | [string](#string) |  |  |
 
 
@@ -3746,7 +2038,6 @@ SnapshotStoreItem contains metadata about a snapshotted store.
 
 
 
-<<<<<<< HEAD
 <a name="cosmos/base/tendermint/v1beta1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -3758,57 +2049,27 @@ SnapshotStoreItem contains metadata about a snapshotted store.
 
 ### GetBlockByHeightRequest
 GetBlockByHeightRequest is the request type for the Query/GetBlockByHeight RPC method.
-=======
-<a name="cosmos/capability/v1beta1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/capability/v1beta1/genesis.proto
-
-
-
-<a name="cosmos.capability.v1beta1.GenesisOwners"></a>
-
-### GenesisOwners
-GenesisOwners defines the capability owners with their corresponding index.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `height` | [int64](#int64) |  |  |
-=======
-| `index` | [uint64](#uint64) |  | index is the index of the capability owner. |
-| `index_owners` | [CapabilityOwners](#cosmos.capability.v1beta1.CapabilityOwners) |  | index_owners are the owners at the given index. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.base.tendermint.v1beta1.GetBlockByHeightResponse"></a>
 
 ### GetBlockByHeightResponse
 GetBlockByHeightResponse is the response type for the Query/GetBlockByHeight RPC method.
-=======
-<a name="cosmos.capability.v1beta1.GenesisState"></a>
-
-### GenesisState
-GenesisState defines the capability module's genesis state.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `block_id` | [tendermint.types.BlockID](#tendermint.types.BlockID) |  |  |
 | `block` | [tendermint.types.Block](#tendermint.types.Block) |  |  |
-=======
-| `index` | [uint64](#uint64) |  | index is the capability global index. |
-| `owners` | [GenesisOwners](#cosmos.capability.v1beta1.GenesisOwners) | repeated | owners represents a map from index to owners of the capability index index key is string to allow amino marshalling. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -3823,7 +2084,6 @@ GetLatestBlockRequest is the request type for the Query/GetLatestBlock RPC metho
 
 
 
-<<<<<<< HEAD
 
 
 <a name="cosmos.base.tendermint.v1beta1.GetLatestBlockResponse"></a>
@@ -3846,93 +2106,44 @@ GetLatestBlockResponse is the response type for the Query/GetLatestBlock RPC met
 
 ### GetLatestValidatorSetRequest
 GetLatestValidatorSetRequest is the request type for the Query/GetValidatorSetByHeight RPC method.
-=======
-<a name="cosmos/crisis/v1beta1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/crisis/v1beta1/genesis.proto
-
-
-
-<a name="cosmos.crisis.v1beta1.GenesisState"></a>
-
-### GenesisState
-GenesisState defines the crisis module's genesis state.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
-=======
-| `constant_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | constant_fee is the fee used to verify the invariant in the crisis module. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
- <!-- end messages -->
 
-<<<<<<< HEAD
 <a name="cosmos.base.tendermint.v1beta1.GetLatestValidatorSetResponse"></a>
 
 ### GetLatestValidatorSetResponse
 GetLatestValidatorSetResponse is the response type for the Query/GetValidatorSetByHeight RPC method.
-=======
- <!-- end enums -->
 
- <!-- end HasExtensions -->
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
- <!-- end services -->
-
-<<<<<<< HEAD
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `block_height` | [int64](#int64) |  |  |
 | `validators` | [Validator](#cosmos.base.tendermint.v1beta1.Validator) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
-=======
-
-
-<a name="cosmos/crisis/v1beta1/tx.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-## cosmos/crisis/v1beta1/tx.proto
 
 
 
-<<<<<<< HEAD
 
-=======
-<a name="cosmos.crisis.v1beta1.MsgVerifyInvariant"></a>
 
-### MsgVerifyInvariant
-MsgVerifyInvariant represents a message to verify a particular invariance.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 <a name="cosmos.base.tendermint.v1beta1.GetNodeInfoRequest"></a>
 
-<<<<<<< HEAD
 ### GetNodeInfoRequest
 GetNodeInfoRequest is the request type for the Query/GetNodeInfo RPC method.
-=======
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `sender` | [string](#string) |  |  |
-| `invariant_module_name` | [string](#string) |  |  |
-| `invariant_route` | [string](#string) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.base.tendermint.v1beta1.GetNodeInfoResponse"></a>
 
 ### GetNodeInfoResponse
@@ -3943,172 +2154,86 @@ GetNodeInfoResponse is the request type for the Query/GetNodeInfo RPC method.
 | ----- | ---- | ----- | ----------- |
 | `default_node_info` | [tendermint.p2p.DefaultNodeInfo](#tendermint.p2p.DefaultNodeInfo) |  |  |
 | `application_version` | [VersionInfo](#cosmos.base.tendermint.v1beta1.VersionInfo) |  |  |
-=======
-<a name="cosmos.crisis.v1beta1.MsgVerifyInvariantResponse"></a>
-
-### MsgVerifyInvariantResponse
-MsgVerifyInvariantResponse defines the Msg/VerifyInvariant response type.
 
 
 
 
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<<<<<<< HEAD
 
 <a name="cosmos.base.tendermint.v1beta1.GetSyncingRequest"></a>
 
 ### GetSyncingRequest
 GetSyncingRequest is the request type for the Query/GetSyncing RPC method.
-=======
-<a name="cosmos.crisis.v1beta1.Msg"></a>
-
-### Msg
-Msg defines the bank Msg service.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `VerifyInvariant` | [MsgVerifyInvariant](#cosmos.crisis.v1beta1.MsgVerifyInvariant) | [MsgVerifyInvariantResponse](#cosmos.crisis.v1beta1.MsgVerifyInvariantResponse) | VerifyInvariant defines a method to verify a particular invariance. | |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
- <!-- end services -->
 
 
 
-<a name="cosmos/crypto/ed25519/keys.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
 
-## cosmos/crypto/ed25519/keys.proto
 
-<<<<<<< HEAD
+
 <a name="cosmos.base.tendermint.v1beta1.GetSyncingResponse"></a>
 
 ### GetSyncingResponse
 GetSyncingResponse is the response type for the Query/GetSyncing RPC method.
-=======
-
-
-<a name="cosmos.crypto.ed25519.PrivKey"></a>
-
-### PrivKey
-PrivKey defines a ed25519 private key.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `syncing` | [bool](#bool) |  |  |
-=======
-| `key` | [bytes](#bytes) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.base.tendermint.v1beta1.GetValidatorSetByHeightRequest"></a>
 
 ### GetValidatorSetByHeightRequest
 GetValidatorSetByHeightRequest is the request type for the Query/GetValidatorSetByHeight RPC method.
-=======
-<a name="cosmos.crypto.ed25519.PubKey"></a>
-
-### PubKey
-PubKey defines a ed25519 public key
-Key is the compressed form of the pubkey. The first byte depends is a 0x02 byte
-if the y-coordinate is the lexicographically largest of the two associated with
-the x-coordinate. Otherwise the first byte is a 0x03.
-This prefix is followed with the x-coordinate.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `height` | [int64](#int64) |  |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
 
-=======
-| `key` | [bytes](#bytes) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.base.tendermint.v1beta1.GetValidatorSetByHeightResponse"></a>
 
 ### GetValidatorSetByHeightResponse
 GetValidatorSetByHeightResponse is the response type for the Query/GetValidatorSetByHeight RPC method.
-=======
- <!-- end messages -->
 
- <!-- end enums -->
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
- <!-- end HasExtensions -->
-
-<<<<<<< HEAD
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `block_height` | [int64](#int64) |  |  |
 | `validators` | [Validator](#cosmos.base.tendermint.v1beta1.Validator) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
-=======
- <!-- end services -->
-
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-<a name="cosmos/crypto/multisig/keys.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/crypto/multisig/keys.proto
 
 
 
-<<<<<<< HEAD
+
+
+
 <a name="cosmos.base.tendermint.v1beta1.Module"></a>
 
 ### Module
 Module is the type for VersionInfo
-=======
-<a name="cosmos.crypto.multisig.LegacyAminoPubKey"></a>
-
-### LegacyAminoPubKey
-LegacyAminoPubKey specifies a public key type
-which nests multiple public keys and a threshold,
-it uses legacy amino address rules.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `path` | [string](#string) |  | module path |
 | `version` | [string](#string) |  | module version |
 | `sum` | [string](#string) |  | checksum |
-=======
-| `threshold` | [uint32](#uint32) |  |  |
-| `public_keys` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
- <!-- end messages -->
 
 <a name="cosmos.base.tendermint.v1beta1.Validator"></a>
 
@@ -4124,7 +2249,6 @@ Validator is the type for the validator-set.
 | `proposer_priority` | [int64](#int64) |  |  |
 
 
-<<<<<<< HEAD
 
 
 
@@ -4133,27 +2257,10 @@ Validator is the type for the validator-set.
 
 ### VersionInfo
 VersionInfo is the type for the GetNodeInfoResponse message.
-=======
-<a name="cosmos/crypto/multisig/v1beta1/multisig.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/crypto/multisig/v1beta1/multisig.proto
-
-
-
-<a name="cosmos.crypto.multisig.v1beta1.CompactBitArray"></a>
-
-### CompactBitArray
-CompactBitArray is an implementation of a space efficient bit array.
-This is used to ensure that the encoded data takes up a minimal amount of
-space after proto encoding.
-This is not thread safe, and is not intended for concurrent usage.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `name` | [string](#string) |  |  |
 | `app_name` | [string](#string) |  |  |
 | `version` | [string](#string) |  |  |
@@ -4161,10 +2268,6 @@ This is not thread safe, and is not intended for concurrent usage.
 | `build_tags` | [string](#string) |  |  |
 | `go_version` | [string](#string) |  |  |
 | `build_deps` | [Module](#cosmos.base.tendermint.v1beta1.Module) | repeated |  |
-=======
-| `extra_bits_stored` | [uint32](#uint32) |  |  |
-| `elems` | [bytes](#bytes) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -4172,7 +2275,6 @@ This is not thread safe, and is not intended for concurrent usage.
 
  <!-- end messages -->
 
-<<<<<<< HEAD
  <!-- end enums -->
 
  <!-- end HasExtensions -->
@@ -4182,19 +2284,6 @@ This is not thread safe, and is not intended for concurrent usage.
 
 ### Service
 Service defines the gRPC querier service for tendermint queries.
-=======
-<a name="cosmos.crypto.multisig.v1beta1.MultiSignature"></a>
-
-### MultiSignature
-MultiSignature wraps the signatures from a multisig.LegacyAminoPubKey.
-See cosmos.tx.v1betata1.ModeInfo.Multi for how to specify which signers
-signed and with which modes.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `signatures` | [bytes](#bytes) | repeated |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
@@ -4209,7 +2298,6 @@ signed and with which modes.
 
 
 
-<<<<<<< HEAD
 <a name="cosmos/capability/v1beta1/capability.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -4222,84 +2310,44 @@ signed and with which modes.
 ### Capability
 Capability defines an implementation of an object capability. The index
 provided to a Capability must be globally unique.
-=======
- <!-- end messages -->
 
- <!-- end enums -->
 
- <!-- end HasExtensions -->
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
- <!-- end services -->
-
-<<<<<<< HEAD
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `index` | [uint64](#uint64) |  |  |
-=======
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-<a name="cosmos/crypto/secp256k1/keys.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/crypto/secp256k1/keys.proto
 
 
 
-<<<<<<< HEAD
+
+
+
 <a name="cosmos.capability.v1beta1.CapabilityOwners"></a>
 
 ### CapabilityOwners
 CapabilityOwners defines a set of owners of a single Capability. The set of
 owners must be unique.
-=======
-<a name="cosmos.crypto.secp256k1.PrivKey"></a>
-
-### PrivKey
-PrivKey defines a secp256k1 private key.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `owners` | [Owner](#cosmos.capability.v1beta1.Owner) | repeated |  |
-=======
-| `key` | [bytes](#bytes) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.capability.v1beta1.Owner"></a>
 
 ### Owner
 Owner defines a single capability owner. An owner is defined by the name of
 capability and the module name.
-=======
-<a name="cosmos.crypto.secp256k1.PubKey"></a>
-
-### PubKey
-PubKey defines a secp256k1 public key
-Key is the compressed form of the pubkey. The first byte depends is a 0x02 byte
-if the y-coordinate is the lexicographically largest of the two associated with
-the x-coordinate. Otherwise the first byte is a 0x03.
-This prefix is followed with the x-coordinate.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `module` | [string](#string) |  |  |
 | `name` | [string](#string) |  |  |
-=======
-| `key` | [bytes](#bytes) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -4315,7 +2363,6 @@ This prefix is followed with the x-coordinate.
 
 
 
-<<<<<<< HEAD
 <a name="cosmos/capability/v1beta1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -4327,66 +2374,28 @@ This prefix is followed with the x-coordinate.
 
 ### GenesisOwners
 GenesisOwners defines the capability owners with their corresponding index.
-=======
-<a name="cosmos/distribution/v1beta1/distribution.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/distribution/v1beta1/distribution.proto
-
-
-
-<a name="cosmos.distribution.v1beta1.CommunityPoolSpendProposal"></a>
-
-### CommunityPoolSpendProposal
-CommunityPoolSpendProposal details a proposal for use of community funds,
-together with how many coins are proposed to be spent, and to which
-recipient account.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `index` | [uint64](#uint64) |  | index is the index of the capability owner. |
 | `index_owners` | [CapabilityOwners](#cosmos.capability.v1beta1.CapabilityOwners) |  | index_owners are the owners at the given index. |
-=======
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
-| `recipient` | [string](#string) |  |  |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.capability.v1beta1.GenesisState"></a>
 
 ### GenesisState
 GenesisState defines the capability module's genesis state.
-=======
-<a name="cosmos.distribution.v1beta1.CommunityPoolSpendProposalWithDeposit"></a>
-
-### CommunityPoolSpendProposalWithDeposit
-CommunityPoolSpendProposalWithDeposit defines a CommunityPoolSpendProposal
-with a deposit
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `index` | [uint64](#uint64) |  | index is the capability global index. |
 | `owners` | [GenesisOwners](#cosmos.capability.v1beta1.GenesisOwners) | repeated | owners represents a map from index to owners of the capability index index key is string to allow amino marshalling. |
-=======
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
-| `recipient` | [string](#string) |  |  |
-| `amount` | [string](#string) |  |  |
-| `deposit` | [string](#string) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -4394,27 +2403,12 @@ with a deposit
 
  <!-- end messages -->
 
-<<<<<<< HEAD
  <!-- end enums -->
 
  <!-- end HasExtensions -->
-=======
-<a name="cosmos.distribution.v1beta1.DelegationDelegatorReward"></a>
-
-### DelegationDelegatorReward
-DelegationDelegatorReward represents the properties
-of a delegator's delegation reward.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
  <!-- end services -->
 
-<<<<<<< HEAD
-=======
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `validator_address` | [string](#string) |  |  |
-| `reward` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 <a name="cosmos/crisis/v1beta1/genesis.proto"></a>
@@ -4424,33 +2418,15 @@ of a delegator's delegation reward.
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.crisis.v1beta1.GenesisState"></a>
 
 ### GenesisState
 GenesisState defines the crisis module's genesis state.
-=======
-<a name="cosmos.distribution.v1beta1.DelegatorStartingInfo"></a>
-
-### DelegatorStartingInfo
-DelegatorStartingInfo represents the starting info for a delegator reward
-period. It tracks the previous validator period, the delegation's amount of
-staking token, and the creation height (to check later on if any slashes have
-occurred). NOTE: Even though validators are slashed to whole staking tokens,
-the delegators within the validator may be left with less than a full token,
-thus sdk.Dec is used.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `constant_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | constant_fee is the fee used to verify the invariant in the crisis module. |
-=======
-| `previous_period` | [uint64](#uint64) |  |  |
-| `stake` | [string](#string) |  |  |
-| `height` | [uint64](#uint64) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -4458,25 +2434,12 @@ thus sdk.Dec is used.
 
  <!-- end messages -->
 
-<<<<<<< HEAD
  <!-- end enums -->
 
  <!-- end HasExtensions -->
-=======
-<a name="cosmos.distribution.v1beta1.FeePool"></a>
-
-### FeePool
-FeePool is the global fee pool for distribution.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
  <!-- end services -->
 
-<<<<<<< HEAD
-=======
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `community_pool` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 <a name="cosmos/crisis/v1beta1/tx.proto"></a>
@@ -4486,56 +2449,29 @@ FeePool is the global fee pool for distribution.
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.crisis.v1beta1.MsgVerifyInvariant"></a>
 
 ### MsgVerifyInvariant
 MsgVerifyInvariant represents a message to verify a particular invariance.
-=======
-<a name="cosmos.distribution.v1beta1.Params"></a>
-
-### Params
-Params defines the set of params for the distribution module.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `sender` | [string](#string) |  |  |
 | `invariant_module_name` | [string](#string) |  |  |
 | `invariant_route` | [string](#string) |  |  |
-=======
-| `community_tax` | [string](#string) |  |  |
-| `base_proposer_reward` | [string](#string) |  |  |
-| `bonus_proposer_reward` | [string](#string) |  |  |
-| `withdraw_addr_enabled` | [bool](#bool) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.crisis.v1beta1.MsgVerifyInvariantResponse"></a>
 
 ### MsgVerifyInvariantResponse
 MsgVerifyInvariantResponse defines the Msg/VerifyInvariant response type.
 
 
-=======
-<a name="cosmos.distribution.v1beta1.ValidatorAccumulatedCommission"></a>
-
-### ValidatorAccumulatedCommission
-ValidatorAccumulatedCommission represents accumulated commission
-for a validator kept as a running counter, can be withdrawn at any time.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `commission` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -4545,31 +2481,15 @@ for a validator kept as a running counter, can be withdrawn at any time.
 
  <!-- end HasExtensions -->
 
-<<<<<<< HEAD
 
 <a name="cosmos.crisis.v1beta1.Msg"></a>
-=======
-<a name="cosmos.distribution.v1beta1.ValidatorCurrentRewards"></a>
-
-### ValidatorCurrentRewards
-ValidatorCurrentRewards represents current rewards and current
-period for a validator kept as a running counter and incremented
-each block as long as the validator's tokens remain constant.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 ### Msg
 Msg defines the bank Msg service.
 
-<<<<<<< HEAD
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `VerifyInvariant` | [MsgVerifyInvariant](#cosmos.crisis.v1beta1.MsgVerifyInvariant) | [MsgVerifyInvariantResponse](#cosmos.crisis.v1beta1.MsgVerifyInvariantResponse) | VerifyInvariant defines a method to verify a particular invariance. | |
-=======
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `rewards` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated |  |
-| `period` | [uint64](#uint64) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
  <!-- end services -->
 
@@ -4580,47 +2500,23 @@ Msg defines the bank Msg service.
 
 ## cosmos/crypto/ed25519/keys.proto
 
-<<<<<<< HEAD
 
 
 <a name="cosmos.crypto.ed25519.PrivKey"></a>
 
 ### PrivKey
 PrivKey defines a ed25519 private key.
-=======
-<a name="cosmos.distribution.v1beta1.ValidatorHistoricalRewards"></a>
-
-### ValidatorHistoricalRewards
-ValidatorHistoricalRewards represents historical rewards for a validator.
-Height is implicit within the store key.
-Cumulative reward ratio is the sum from the zeroeth period
-until this period of rewards / tokens, per the spec.
-The reference count indicates the number of objects
-which might need to reference this historical entry at any point.
-ReferenceCount =
-   number of outstanding delegations which ended the associated period (and
-   might need to read that record)
- + number of slashes which ended the associated period (and might need to
- read that record)
- + one per validator for the zeroeth period, set on initialization
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `key` | [bytes](#bytes) |  |  |
-=======
-| `cumulative_reward_ratio` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated |  |
-| `reference_count` | [uint32](#uint32) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.crypto.ed25519.PubKey"></a>
 
 ### PubKey
@@ -4629,52 +2525,26 @@ Key is the compressed form of the pubkey. The first byte depends is a 0x02 byte
 if the y-coordinate is the lexicographically largest of the two associated with
 the x-coordinate. Otherwise the first byte is a 0x03.
 This prefix is followed with the x-coordinate.
-=======
-<a name="cosmos.distribution.v1beta1.ValidatorOutstandingRewards"></a>
-
-### ValidatorOutstandingRewards
-ValidatorOutstandingRewards represents outstanding (un-withdrawn) rewards
-for a validator inexpensive to track, allows simple sanity checks.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `key` | [bytes](#bytes) |  |  |
 
 
 
 
-=======
-| `rewards` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
+ <!-- end messages -->
 
+ <!-- end enums -->
 
+ <!-- end HasExtensions -->
 
-<<<<<<< HEAD
  <!-- end services -->
-=======
 
 
-<a name="cosmos.distribution.v1beta1.ValidatorSlashEvent"></a>
 
-### ValidatorSlashEvent
-ValidatorSlashEvent represents a validator slash event.
-Height is implicit within the store key.
-This is needed to calculate appropriate amount of staking tokens
-for delegations which are withdrawn after a slash has occurred.
-
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `validator_period` | [uint64](#uint64) |  |  |
-| `fraction` | [string](#string) |  |  |
-
-
-<<<<<<< HEAD
 <a name="cosmos/crypto/multisig/keys.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -4688,26 +2558,12 @@ for delegations which are withdrawn after a slash has occurred.
 LegacyAminoPubKey specifies a public key type
 which nests multiple public keys and a threshold,
 it uses legacy amino address rules.
-=======
-
-
-
-
-<a name="cosmos.distribution.v1beta1.ValidatorSlashEvents"></a>
-
-### ValidatorSlashEvents
-ValidatorSlashEvents is a collection of ValidatorSlashEvent messages.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `threshold` | [uint32](#uint32) |  |  |
 | `public_keys` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
-=======
-| `validator_slash_events` | [ValidatorSlashEvent](#cosmos.distribution.v1beta1.ValidatorSlashEvent) | repeated |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -4723,7 +2579,6 @@ ValidatorSlashEvents is a collection of ValidatorSlashEvent messages.
 
 
 
-<<<<<<< HEAD
 <a name="cosmos/crypto/multisig/v1beta1/multisig.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -4738,62 +2593,29 @@ CompactBitArray is an implementation of a space efficient bit array.
 This is used to ensure that the encoded data takes up a minimal amount of
 space after proto encoding.
 This is not thread safe, and is not intended for concurrent usage.
-=======
-<a name="cosmos/distribution/v1beta1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/distribution/v1beta1/genesis.proto
-
-
-
-<a name="cosmos.distribution.v1beta1.DelegatorStartingInfoRecord"></a>
-
-### DelegatorStartingInfoRecord
-DelegatorStartingInfoRecord used for import / export via genesis json.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `extra_bits_stored` | [uint32](#uint32) |  |  |
 | `elems` | [bytes](#bytes) |  |  |
-=======
-| `delegator_address` | [string](#string) |  | delegator_address is the address of the delegator. |
-| `validator_address` | [string](#string) |  | validator_address is the address of the validator. |
-| `starting_info` | [DelegatorStartingInfo](#cosmos.distribution.v1beta1.DelegatorStartingInfo) |  | starting_info defines the starting info of a delegator. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.crypto.multisig.v1beta1.MultiSignature"></a>
 
 ### MultiSignature
 MultiSignature wraps the signatures from a multisig.LegacyAminoPubKey.
 See cosmos.tx.v1betata1.ModeInfo.Multi for how to specify which signers
 signed and with which modes.
-=======
-<a name="cosmos.distribution.v1beta1.DelegatorWithdrawInfo"></a>
-
-### DelegatorWithdrawInfo
-DelegatorWithdrawInfo is the address for where distributions rewards are
-withdrawn to by default this struct is only used at genesis to feed in
-default withdraw addresses.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `signatures` | [bytes](#bytes) | repeated |  |
-=======
-| `delegator_address` | [string](#string) |  | delegator_address is the address of the delegator. |
-| `withdraw_address` | [string](#string) |  | withdraw_address is the address to withdraw the delegation rewards to. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -4801,76 +2623,38 @@ default withdraw addresses.
 
  <!-- end messages -->
 
-<<<<<<< HEAD
  <!-- end enums -->
 
  <!-- end HasExtensions -->
-=======
-<a name="cosmos.distribution.v1beta1.GenesisState"></a>
-
-### GenesisState
-GenesisState defines the distribution module's genesis state.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
  <!-- end services -->
 
-<<<<<<< HEAD
 
 
 <a name="cosmos/crypto/secp256k1/keys.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
-=======
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `params` | [Params](#cosmos.distribution.v1beta1.Params) |  | params defines all the paramaters of the module. |
-| `fee_pool` | [FeePool](#cosmos.distribution.v1beta1.FeePool) |  | fee_pool defines the fee pool at genesis. |
-| `delegator_withdraw_infos` | [DelegatorWithdrawInfo](#cosmos.distribution.v1beta1.DelegatorWithdrawInfo) | repeated | fee_pool defines the delegator withdraw infos at genesis. |
-| `previous_proposer` | [string](#string) |  | fee_pool defines the previous proposer at genesis. |
-| `outstanding_rewards` | [ValidatorOutstandingRewardsRecord](#cosmos.distribution.v1beta1.ValidatorOutstandingRewardsRecord) | repeated | fee_pool defines the outstanding rewards of all validators at genesis. |
-| `validator_accumulated_commissions` | [ValidatorAccumulatedCommissionRecord](#cosmos.distribution.v1beta1.ValidatorAccumulatedCommissionRecord) | repeated | fee_pool defines the accumulated commisions of all validators at genesis. |
-| `validator_historical_rewards` | [ValidatorHistoricalRewardsRecord](#cosmos.distribution.v1beta1.ValidatorHistoricalRewardsRecord) | repeated | fee_pool defines the historical rewards of all validators at genesis. |
-| `validator_current_rewards` | [ValidatorCurrentRewardsRecord](#cosmos.distribution.v1beta1.ValidatorCurrentRewardsRecord) | repeated | fee_pool defines the current rewards of all validators at genesis. |
-| `delegator_starting_infos` | [DelegatorStartingInfoRecord](#cosmos.distribution.v1beta1.DelegatorStartingInfoRecord) | repeated | fee_pool defines the delegator starting infos at genesis. |
-| `validator_slash_events` | [ValidatorSlashEventRecord](#cosmos.distribution.v1beta1.ValidatorSlashEventRecord) | repeated | fee_pool defines the validator slash events at genesis. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 ## cosmos/crypto/secp256k1/keys.proto
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.crypto.secp256k1.PrivKey"></a>
 
 ### PrivKey
 PrivKey defines a secp256k1 private key.
-=======
 
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
-<a name="cosmos.distribution.v1beta1.ValidatorAccumulatedCommissionRecord"></a>
-
-<<<<<<< HEAD
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [bytes](#bytes) |  |  |
-=======
-### ValidatorAccumulatedCommissionRecord
-ValidatorAccumulatedCommissionRecord is used for import / export via genesis
-json.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `validator_address` | [string](#string) |  | validator_address is the address of the validator. |
-| `accumulated` | [ValidatorAccumulatedCommission](#cosmos.distribution.v1beta1.ValidatorAccumulatedCommission) |  | accumulated is the accumulated commission of a validator. |
 
 
 
 
 <a name="cosmos.crypto.secp256k1.PubKey"></a>
 
-<<<<<<< HEAD
 ### PubKey
 PubKey defines a secp256k1 public key
 Key is the compressed form of the pubkey. The first byte depends is a 0x02 byte
@@ -4882,52 +2666,23 @@ This prefix is followed with the x-coordinate.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [bytes](#bytes) |  |  |
-=======
-
-<a name="cosmos.distribution.v1beta1.ValidatorCurrentRewardsRecord"></a>
-
-### ValidatorCurrentRewardsRecord
-ValidatorCurrentRewardsRecord is used for import / export via genesis json.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `validator_address` | [string](#string) |  | validator_address is the address of the validator. |
-| `rewards` | [ValidatorCurrentRewards](#cosmos.distribution.v1beta1.ValidatorCurrentRewards) |  | rewards defines the current rewards of a validator. |
 
 
 
-<<<<<<< HEAD
+
+
  <!-- end messages -->
-=======
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
  <!-- end enums -->
 
  <!-- end HasExtensions -->
 
-<<<<<<< HEAD
  <!-- end services -->
 
 
 
 <a name="cosmos/distribution/v1beta1/distribution.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
-=======
-<a name="cosmos.distribution.v1beta1.ValidatorHistoricalRewardsRecord"></a>
-
-### ValidatorHistoricalRewardsRecord
-ValidatorHistoricalRewardsRecord is used for import / export via genesis
-json.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `validator_address` | [string](#string) |  | validator_address is the address of the validator. |
-| `period` | [uint64](#uint64) |  | period defines the period the historical rewards apply to. |
-| `rewards` | [ValidatorHistoricalRewards](#cosmos.distribution.v1beta1.ValidatorHistoricalRewards) |  | rewards defines the historical rewards of a validator. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 ## cosmos/distribution/v1beta1/distribution.proto
 
@@ -4935,7 +2690,6 @@ json.
 
 <a name="cosmos.distribution.v1beta1.CommunityPoolSpendProposal"></a>
 
-<<<<<<< HEAD
 ### CommunityPoolSpendProposal
 CommunityPoolSpendProposal details a proposal for use of community funds,
 together with how many coins are proposed to be spent, and to which
@@ -4948,19 +2702,8 @@ recipient account.
 | `description` | [string](#string) |  |  |
 | `recipient` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-=======
-
-<a name="cosmos.distribution.v1beta1.ValidatorOutstandingRewardsRecord"></a>
-
-### ValidatorOutstandingRewardsRecord
-ValidatorOutstandingRewardsRecord is used for import/export via genesis json.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `validator_address` | [string](#string) |  | validator_address is the address of the validator. |
-| `outstanding_rewards` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated | outstanding_rewards represents the oustanding rewards of a validator. |
 
 
 
@@ -4971,7 +2714,6 @@ ValidatorOutstandingRewardsRecord is used for import/export via genesis json.
 CommunityPoolSpendProposalWithDeposit defines a CommunityPoolSpendProposal
 with a deposit
 
-<<<<<<< HEAD
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -4982,20 +2724,6 @@ with a deposit
 | `deposit` | [string](#string) |  |  |
 
 
-=======
-<a name="cosmos.distribution.v1beta1.ValidatorSlashEventRecord"></a>
-
-### ValidatorSlashEventRecord
-ValidatorSlashEventRecord is used for import / export via genesis json.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `validator_address` | [string](#string) |  | validator_address is the address of the validator. |
-| `height` | [uint64](#uint64) |  | height defines the block height at which the slash event occured. |
-| `period` | [uint64](#uint64) |  | period is the period of the slash event. |
-| `validator_slash_event` | [ValidatorSlashEvent](#cosmos.distribution.v1beta1.ValidatorSlashEvent) |  | validator_slash_event describes the slash event. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -5283,326 +3011,60 @@ ValidatorCurrentRewardsRecord is used for import / export via genesis json.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `validator_address` | [string](#string) |  | validator_address is the address of the validator. |
 | `rewards` | [ValidatorCurrentRewards](#cosmos.distribution.v1beta1.ValidatorCurrentRewards) |  | rewards defines the current rewards of a validator. |
-=======
-| `validator_address` | [string](#string) |  | validator_address defines the validator address to query for. |
 
 
 
 
 
 
-<a name="cosmos.distribution.v1beta1.QueryValidatorOutstandingRewardsResponse"></a>
-
-### QueryValidatorOutstandingRewardsResponse
-QueryValidatorOutstandingRewardsResponse is the response type for the
-Query/ValidatorOutstandingRewards RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `rewards` | [ValidatorOutstandingRewards](#cosmos.distribution.v1beta1.ValidatorOutstandingRewards) |  |  |
-
-
-
-
-
-
-<a name="cosmos.distribution.v1beta1.QueryValidatorSlashesRequest"></a>
-
-### QueryValidatorSlashesRequest
-QueryValidatorSlashesRequest is the request type for the
-Query/ValidatorSlashes RPC method
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `validator_address` | [string](#string) |  | validator_address defines the validator address to query for. |
-| `starting_height` | [uint64](#uint64) |  | starting_height defines the optional starting height to query the slashes. |
-| `ending_height` | [uint64](#uint64) |  | starting_height defines the optional ending height to query the slashes. |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="cosmos.distribution.v1beta1.QueryValidatorSlashesResponse"></a>
-
-### QueryValidatorSlashesResponse
-QueryValidatorSlashesResponse is the response type for the
-Query/ValidatorSlashes RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `slashes` | [ValidatorSlashEvent](#cosmos.distribution.v1beta1.ValidatorSlashEvent) | repeated | slashes defines the slashes the validator received. |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="cosmos.distribution.v1beta1.Query"></a>
-
-### Query
-Query defines the gRPC querier service for distribution module.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Params` | [QueryParamsRequest](#cosmos.distribution.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.distribution.v1beta1.QueryParamsResponse) | Params queries params of the distribution module. | GET|/cosmos/distribution/v1beta1/params|
-| `ValidatorOutstandingRewards` | [QueryValidatorOutstandingRewardsRequest](#cosmos.distribution.v1beta1.QueryValidatorOutstandingRewardsRequest) | [QueryValidatorOutstandingRewardsResponse](#cosmos.distribution.v1beta1.QueryValidatorOutstandingRewardsResponse) | ValidatorOutstandingRewards queries rewards of a validator address. | GET|/cosmos/distribution/v1beta1/validators/{validator_address}/outstanding_rewards|
-| `ValidatorCommission` | [QueryValidatorCommissionRequest](#cosmos.distribution.v1beta1.QueryValidatorCommissionRequest) | [QueryValidatorCommissionResponse](#cosmos.distribution.v1beta1.QueryValidatorCommissionResponse) | ValidatorCommission queries accumulated commission for a validator. | GET|/cosmos/distribution/v1beta1/validators/{validator_address}/commission|
-| `ValidatorSlashes` | [QueryValidatorSlashesRequest](#cosmos.distribution.v1beta1.QueryValidatorSlashesRequest) | [QueryValidatorSlashesResponse](#cosmos.distribution.v1beta1.QueryValidatorSlashesResponse) | ValidatorSlashes queries slash events of a validator. | GET|/cosmos/distribution/v1beta1/validators/{validator_address}/slashes|
-| `DelegationRewards` | [QueryDelegationRewardsRequest](#cosmos.distribution.v1beta1.QueryDelegationRewardsRequest) | [QueryDelegationRewardsResponse](#cosmos.distribution.v1beta1.QueryDelegationRewardsResponse) | DelegationRewards queries the total rewards accrued by a delegation. | GET|/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards/{validator_address}|
-| `DelegationTotalRewards` | [QueryDelegationTotalRewardsRequest](#cosmos.distribution.v1beta1.QueryDelegationTotalRewardsRequest) | [QueryDelegationTotalRewardsResponse](#cosmos.distribution.v1beta1.QueryDelegationTotalRewardsResponse) | DelegationTotalRewards queries the total rewards accrued by a each validator. | GET|/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards|
-| `DelegatorValidators` | [QueryDelegatorValidatorsRequest](#cosmos.distribution.v1beta1.QueryDelegatorValidatorsRequest) | [QueryDelegatorValidatorsResponse](#cosmos.distribution.v1beta1.QueryDelegatorValidatorsResponse) | DelegatorValidators queries the validators of a delegator. | GET|/cosmos/distribution/v1beta1/delegators/{delegator_address}/validators|
-| `DelegatorWithdrawAddress` | [QueryDelegatorWithdrawAddressRequest](#cosmos.distribution.v1beta1.QueryDelegatorWithdrawAddressRequest) | [QueryDelegatorWithdrawAddressResponse](#cosmos.distribution.v1beta1.QueryDelegatorWithdrawAddressResponse) | DelegatorWithdrawAddress queries withdraw address of a delegator. | GET|/cosmos/distribution/v1beta1/delegators/{delegator_address}/withdraw_address|
-| `CommunityPool` | [QueryCommunityPoolRequest](#cosmos.distribution.v1beta1.QueryCommunityPoolRequest) | [QueryCommunityPoolResponse](#cosmos.distribution.v1beta1.QueryCommunityPoolResponse) | CommunityPool queries the community pool coins. | GET|/cosmos/distribution/v1beta1/community_pool|
-
- <!-- end services -->
-
-
-
-<a name="cosmos/distribution/v1beta1/tx.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/distribution/v1beta1/tx.proto
-
-
-
-<a name="cosmos.distribution.v1beta1.MsgFundCommunityPool"></a>
-
-### MsgFundCommunityPool
-MsgFundCommunityPool allows an account to directly
-fund the community pool.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-| `depositor` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.distribution.v1beta1.MsgFundCommunityPoolResponse"></a>
-
-### MsgFundCommunityPoolResponse
-MsgFundCommunityPoolResponse defines the Msg/FundCommunityPool response type.
-
-
-
-
-
-
-<a name="cosmos.distribution.v1beta1.MsgSetWithdrawAddress"></a>
-
-### MsgSetWithdrawAddress
-MsgSetWithdrawAddress sets the withdraw address for
-a delegator (or validator self-delegation).
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `delegator_address` | [string](#string) |  |  |
-| `withdraw_address` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.distribution.v1beta1.MsgSetWithdrawAddressResponse"></a>
-
-### MsgSetWithdrawAddressResponse
-MsgSetWithdrawAddressResponse defines the Msg/SetWithdrawAddress response type.
-
-
-
-
-
-
-<a name="cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward"></a>
-
-### MsgWithdrawDelegatorReward
-MsgWithdrawDelegatorReward represents delegation withdrawal to a delegator
-from a single validator.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `delegator_address` | [string](#string) |  |  |
-| `validator_address` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse"></a>
-
-### MsgWithdrawDelegatorRewardResponse
-MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward response type.
-
-
-
-
-
-
-<a name="cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission"></a>
-
-### MsgWithdrawValidatorCommission
-MsgWithdrawValidatorCommission withdraws the full commission to the validator
-address.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `validator_address` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse"></a>
-
-### MsgWithdrawValidatorCommissionResponse
-MsgWithdrawValidatorCommissionResponse defines the Msg/WithdrawValidatorCommission response type.
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="cosmos.distribution.v1beta1.Msg"></a>
-
-### Msg
-Msg defines the distribution Msg service.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `SetWithdrawAddress` | [MsgSetWithdrawAddress](#cosmos.distribution.v1beta1.MsgSetWithdrawAddress) | [MsgSetWithdrawAddressResponse](#cosmos.distribution.v1beta1.MsgSetWithdrawAddressResponse) | SetWithdrawAddress defines a method to change the withdraw address for a delegator (or validator self-delegation). | |
-| `WithdrawDelegatorReward` | [MsgWithdrawDelegatorReward](#cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward) | [MsgWithdrawDelegatorRewardResponse](#cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse) | WithdrawDelegatorReward defines a method to withdraw rewards of delegator from a single validator. | |
-| `WithdrawValidatorCommission` | [MsgWithdrawValidatorCommission](#cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission) | [MsgWithdrawValidatorCommissionResponse](#cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse) | WithdrawValidatorCommission defines a method to withdraw the full commission to the validator address. | |
-| `FundCommunityPool` | [MsgFundCommunityPool](#cosmos.distribution.v1beta1.MsgFundCommunityPool) | [MsgFundCommunityPoolResponse](#cosmos.distribution.v1beta1.MsgFundCommunityPoolResponse) | FundCommunityPool defines a method to allow an account to directly fund the community pool. | |
-
- <!-- end services -->
-
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-<a name="cosmos/evidence/v1beta1/evidence.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/evidence/v1beta1/evidence.proto
-
-
-
-<<<<<<< HEAD
 <a name="cosmos.distribution.v1beta1.ValidatorHistoricalRewardsRecord"></a>
 
 ### ValidatorHistoricalRewardsRecord
 ValidatorHistoricalRewardsRecord is used for import / export via genesis
 json.
-=======
-<a name="cosmos.evidence.v1beta1.Equivocation"></a>
-
-### Equivocation
-Equivocation implements the Evidence interface and defines evidence of double
-signing misbehavior.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `validator_address` | [string](#string) |  | validator_address is the address of the validator. |
 | `period` | [uint64](#uint64) |  | period defines the period the historical rewards apply to. |
 | `rewards` | [ValidatorHistoricalRewards](#cosmos.distribution.v1beta1.ValidatorHistoricalRewards) |  | rewards defines the historical rewards of a validator. |
-=======
-| `height` | [int64](#int64) |  |  |
-| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `power` | [int64](#int64) |  |  |
-| `consensus_address` | [string](#string) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
- <!-- end messages -->
 
-<<<<<<< HEAD
 <a name="cosmos.distribution.v1beta1.ValidatorOutstandingRewardsRecord"></a>
 
 ### ValidatorOutstandingRewardsRecord
 ValidatorOutstandingRewardsRecord is used for import/export via genesis json.
-=======
- <!-- end enums -->
 
- <!-- end HasExtensions -->
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
- <!-- end services -->
-
-<<<<<<< HEAD
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `validator_address` | [string](#string) |  | validator_address is the address of the validator. |
 | `outstanding_rewards` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated | outstanding_rewards represents the oustanding rewards of a validator. |
-=======
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-<a name="cosmos/evidence/v1beta1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/evidence/v1beta1/genesis.proto
 
 
 
-<<<<<<< HEAD
+
+
+
 <a name="cosmos.distribution.v1beta1.ValidatorSlashEventRecord"></a>
 
 ### ValidatorSlashEventRecord
 ValidatorSlashEventRecord is used for import / export via genesis json.
-=======
-<a name="cosmos.evidence.v1beta1.GenesisState"></a>
-
-### GenesisState
-GenesisState defines the evidence module's genesis state.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `validator_address` | [string](#string) |  | validator_address is the address of the validator. |
 | `height` | [uint64](#uint64) |  | height defines the block height at which the slash event occured. |
 | `period` | [uint64](#uint64) |  | period is the period of the slash event. |
 | `validator_slash_event` | [ValidatorSlashEvent](#cosmos.distribution.v1beta1.ValidatorSlashEvent) |  | validator_slash_event describes the slash event. |
-=======
-| `evidence` | [google.protobuf.Any](#google.protobuf.Any) | repeated | evidence defines all the evidence at genesis. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -5618,7 +3080,6 @@ GenesisState defines the evidence module's genesis state.
 
 
 
-<<<<<<< HEAD
 <a name="cosmos/distribution/v1beta1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -5633,25 +3094,6 @@ QueryCommunityPoolRequest is the request type for the Query/CommunityPool RPC
 method.
 
 
-=======
-<a name="cosmos/evidence/v1beta1/query.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/evidence/v1beta1/query.proto
-
-
-
-<a name="cosmos.evidence.v1beta1.QueryAllEvidenceRequest"></a>
-
-### QueryAllEvidenceRequest
-QueryEvidenceRequest is the request type for the Query/AllEvidence RPC
-method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -5662,117 +3104,65 @@ method.
 QueryCommunityPoolResponse is the response type for the Query/CommunityPool
 RPC method.
 
-<<<<<<< HEAD
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `pool` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated | pool defines community pool's coins. |
-=======
-<a name="cosmos.evidence.v1beta1.QueryAllEvidenceResponse"></a>
-
-### QueryAllEvidenceResponse
-QueryAllEvidenceResponse is the response type for the Query/AllEvidence RPC
-method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `evidence` | [google.protobuf.Any](#google.protobuf.Any) | repeated | evidence returns all evidences. |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
 
 
 
 
-<<<<<<< HEAD
+
+
 <a name="cosmos.distribution.v1beta1.QueryDelegationRewardsRequest"></a>
 
 ### QueryDelegationRewardsRequest
 QueryDelegationRewardsRequest is the request type for the
 Query/DelegationRewards RPC method.
-=======
-
-
-<a name="cosmos.evidence.v1beta1.QueryEvidenceRequest"></a>
-
-### QueryEvidenceRequest
-QueryEvidenceRequest is the request type for the Query/Evidence RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `delegator_address` | [string](#string) |  | delegator_address defines the delegator address to query for. |
 | `validator_address` | [string](#string) |  | validator_address defines the validator address to query for. |
 
-=======
-| `evidence_hash` | [bytes](#bytes) |  | evidence_hash defines the hash of the requested evidence. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.distribution.v1beta1.QueryDelegationRewardsResponse"></a>
 
 ### QueryDelegationRewardsResponse
 QueryDelegationRewardsResponse is the response type for the
 Query/DelegationRewards RPC method.
-=======
 
-<a name="cosmos.evidence.v1beta1.QueryEvidenceResponse"></a>
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-### QueryEvidenceResponse
-QueryEvidenceResponse is the response type for the Query/Evidence RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `rewards` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated | rewards defines the rewards accrued by a delegation. |
 
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `evidence` | [google.protobuf.Any](#google.protobuf.Any) |  | evidence returns the requested evidence. |
 
 
 
 
-<<<<<<< HEAD
 
 <a name="cosmos.distribution.v1beta1.QueryDelegationTotalRewardsRequest"></a>
 
 ### QueryDelegationTotalRewardsRequest
 QueryDelegationTotalRewardsRequest is the request type for the
 Query/DelegationTotalRewards RPC method.
-=======
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
- <!-- end messages -->
 
-<<<<<<< HEAD
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `delegator_address` | [string](#string) |  | delegator_address defines the delegator address to query for. |
-=======
- <!-- end enums -->
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
- <!-- end HasExtensions -->
 
 
-<a name="cosmos.evidence.v1beta1.Query"></a>
 
-### Query
-Query defines the gRPC querier service.
 
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Evidence` | [QueryEvidenceRequest](#cosmos.evidence.v1beta1.QueryEvidenceRequest) | [QueryEvidenceResponse](#cosmos.evidence.v1beta1.QueryEvidenceResponse) | Evidence queries evidence based on evidence hash. | GET|/cosmos/evidence/v1beta1/evidence/{evidence_hash}|
-| `AllEvidence` | [QueryAllEvidenceRequest](#cosmos.evidence.v1beta1.QueryAllEvidenceRequest) | [QueryAllEvidenceResponse](#cosmos.evidence.v1beta1.QueryAllEvidenceResponse) | AllEvidence queries all evidence. | GET|/cosmos/evidence/v1beta1/evidence|
 
-<<<<<<< HEAD
+
 <a name="cosmos.distribution.v1beta1.QueryDelegationTotalRewardsResponse"></a>
 
 ### QueryDelegationTotalRewardsResponse
@@ -5784,41 +3174,17 @@ Query/DelegationTotalRewards RPC method.
 | ----- | ---- | ----- | ----------- |
 | `rewards` | [DelegationDelegatorReward](#cosmos.distribution.v1beta1.DelegationDelegatorReward) | repeated | rewards defines all the rewards accrued by a delegator. |
 | `total` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated | total defines the sum of all the rewards. |
-=======
- <!-- end services -->
 
 
 
-<a name="cosmos/evidence/v1beta1/tx.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-## cosmos/evidence/v1beta1/tx.proto
 
 
-
-<<<<<<< HEAD
-
-=======
-<a name="cosmos.evidence.v1beta1.MsgSubmitEvidence"></a>
-
-### MsgSubmitEvidence
-MsgSubmitEvidence represents a message that supports submitting arbitrary
-Evidence of misbehavior such as equivocation or counterfactual signing.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 <a name="cosmos.distribution.v1beta1.QueryDelegatorValidatorsRequest"></a>
 
-<<<<<<< HEAD
 ### QueryDelegatorValidatorsRequest
 QueryDelegatorValidatorsRequest is the request type for the
 Query/DelegatorValidators RPC method.
-=======
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `submitter` | [string](#string) |  |  |
-| `evidence` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
@@ -5828,19 +3194,7 @@ Query/DelegatorValidators RPC method.
 
 
 
-<<<<<<< HEAD
 
-=======
-<a name="cosmos.evidence.v1beta1.MsgSubmitEvidenceResponse"></a>
-
-### MsgSubmitEvidenceResponse
-MsgSubmitEvidenceResponse defines the Msg/SubmitEvidence response type.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `hash` | [bytes](#bytes) |  | hash defines the hash of the evidence. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 <a name="cosmos.distribution.v1beta1.QueryDelegatorValidatorsResponse"></a>
 
@@ -5857,23 +3211,12 @@ Query/DelegatorValidators RPC method.
 
 
 
-<<<<<<< HEAD
 
 <a name="cosmos.distribution.v1beta1.QueryDelegatorWithdrawAddressRequest"></a>
 
 ### QueryDelegatorWithdrawAddressRequest
 QueryDelegatorWithdrawAddressRequest is the request type for the
 Query/DelegatorWithdrawAddress RPC method.
-=======
-<a name="cosmos.evidence.v1beta1.Msg"></a>
-
-### Msg
-Msg defines the evidence Msg service.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `SubmitEvidence` | [MsgSubmitEvidence](#cosmos.evidence.v1beta1.MsgSubmitEvidence) | [MsgSubmitEvidenceResponse](#cosmos.evidence.v1beta1.MsgSubmitEvidenceResponse) | SubmitEvidence submits an arbitrary Evidence of misbehavior such as equivocation or counterfactual signing. | |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
@@ -5881,7 +3224,6 @@ Msg defines the evidence Msg service.
 | `delegator_address` | [string](#string) |  | delegator_address defines the delegator address to query for. |
 
 
-<<<<<<< HEAD
 
 
 
@@ -5916,210 +3258,111 @@ QueryParamsRequest is the request type for the Query/Params RPC method.
 
 ### QueryParamsResponse
 QueryParamsResponse is the response type for the Query/Params RPC method.
-=======
-<a name="cosmos/feegrant/v1beta1/feegrant.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/feegrant/v1beta1/feegrant.proto
-
-
-
-<a name="cosmos.feegrant.v1beta1.BasicFeeAllowance"></a>
-
-### BasicFeeAllowance
-BasicFeeAllowance implements FeeAllowance with a one-time grant of tokens
-that optionally expires. The delegatee can use up to SpendLimit to cover fees.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `params` | [Params](#cosmos.distribution.v1beta1.Params) |  | params defines the parameters of the module. |
-=======
-| `spend_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | spend_limit specifies the maximum amount of tokens that can be spent by this allowance and will be updated as tokens are spent. If it is empty, there is no spend limit and any amount of coins can be spent. |
-| `expiration` | [ExpiresAt](#cosmos.feegrant.v1beta1.ExpiresAt) |  | expiration specifies an optional time when this allowance expires |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.distribution.v1beta1.QueryValidatorCommissionRequest"></a>
 
 ### QueryValidatorCommissionRequest
 QueryValidatorCommissionRequest is the request type for the
 Query/ValidatorCommission RPC method
-=======
-<a name="cosmos.feegrant.v1beta1.Duration"></a>
-
-### Duration
-Duration is a span of a clock time or number of blocks.
-This is designed to be added to an ExpiresAt struct.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `validator_address` | [string](#string) |  | validator_address defines the validator address to query for. |
-=======
-| `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
-| `blocks` | [uint64](#uint64) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.distribution.v1beta1.QueryValidatorCommissionResponse"></a>
 
 ### QueryValidatorCommissionResponse
 QueryValidatorCommissionResponse is the response type for the
 Query/ValidatorCommission RPC method
-=======
-<a name="cosmos.feegrant.v1beta1.ExpiresAt"></a>
-
-### ExpiresAt
-ExpiresAt is a point in time where something expires.
-It may be *either* block time or block height
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `commission` | [ValidatorAccumulatedCommission](#cosmos.distribution.v1beta1.ValidatorAccumulatedCommission) |  | commission defines the commision the validator received. |
-=======
-| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `height` | [int64](#int64) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.distribution.v1beta1.QueryValidatorOutstandingRewardsRequest"></a>
 
 ### QueryValidatorOutstandingRewardsRequest
 QueryValidatorOutstandingRewardsRequest is the request type for the
 Query/ValidatorOutstandingRewards RPC method.
-=======
-<a name="cosmos.feegrant.v1beta1.FeeAllowanceGrant"></a>
-
-### FeeAllowanceGrant
-FeeAllowanceGrant is stored in the KVStore to record a grant with full context
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `validator_address` | [string](#string) |  | validator_address defines the validator address to query for. |
-=======
-| `granter` | [string](#string) |  |  |
-| `grantee` | [string](#string) |  |  |
-| `allowance` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.distribution.v1beta1.QueryValidatorOutstandingRewardsResponse"></a>
 
 ### QueryValidatorOutstandingRewardsResponse
 QueryValidatorOutstandingRewardsResponse is the response type for the
 Query/ValidatorOutstandingRewards RPC method.
-=======
-<a name="cosmos.feegrant.v1beta1.PeriodicFeeAllowance"></a>
-
-### PeriodicFeeAllowance
-PeriodicFeeAllowance extends FeeAllowance to allow for both a maximum cap,
-as well as a limit per time period.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `rewards` | [ValidatorOutstandingRewards](#cosmos.distribution.v1beta1.ValidatorOutstandingRewards) |  |  |
-=======
-| `basic` | [BasicFeeAllowance](#cosmos.feegrant.v1beta1.BasicFeeAllowance) |  | basic specifies a struct of `BasicFeeAllowance` |
-| `period` | [Duration](#cosmos.feegrant.v1beta1.Duration) |  | period specifies the time duration in which period_spend_limit coins can be spent before that allowance is reset |
-| `period_spend_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | period_spend_limit specifies the maximum number of coins that can be spent in the period |
-| `period_can_spend` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | period_can_spend is the number of coins left to be spent before the period_reset time |
-| `period_reset` | [ExpiresAt](#cosmos.feegrant.v1beta1.ExpiresAt) |  | period_reset is the time at which this period resets and a new one begins, it is calculated from the start time of the first transaction after the last period ended |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
- <!-- end messages -->
 
-<<<<<<< HEAD
 <a name="cosmos.distribution.v1beta1.QueryValidatorSlashesRequest"></a>
 
 ### QueryValidatorSlashesRequest
 QueryValidatorSlashesRequest is the request type for the
 Query/ValidatorSlashes RPC method
-=======
- <!-- end enums -->
 
- <!-- end HasExtensions -->
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
- <!-- end services -->
-
-<<<<<<< HEAD
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `validator_address` | [string](#string) |  | validator_address defines the validator address to query for. |
 | `starting_height` | [uint64](#uint64) |  | starting_height defines the optional starting height to query the slashes. |
 | `ending_height` | [uint64](#uint64) |  | starting_height defines the optional ending height to query the slashes. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
-=======
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-<a name="cosmos/feegrant/v1beta1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/feegrant/v1beta1/genesis.proto
 
 
 
-<<<<<<< HEAD
+
+
+
 <a name="cosmos.distribution.v1beta1.QueryValidatorSlashesResponse"></a>
 
 ### QueryValidatorSlashesResponse
 QueryValidatorSlashesResponse is the response type for the
 Query/ValidatorSlashes RPC method.
-=======
-<a name="cosmos.feegrant.v1beta1.GenesisState"></a>
-
-### GenesisState
-GenesisState contains a set of fee allowances, persisted from the store
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `slashes` | [ValidatorSlashEvent](#cosmos.distribution.v1beta1.ValidatorSlashEvent) | repeated | slashes defines the slashes the validator received. |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
-=======
-| `fee_allowances` | [FeeAllowanceGrant](#cosmos.feegrant.v1beta1.FeeAllowanceGrant) | repeated |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -6153,7 +3396,6 @@ Query defines the gRPC querier service for distribution module.
 
 
 
-<<<<<<< HEAD
 <a name="cosmos/distribution/v1beta1/tx.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -6166,115 +3408,55 @@ Query defines the gRPC querier service for distribution module.
 ### MsgFundCommunityPool
 MsgFundCommunityPool allows an account to directly
 fund the community pool.
-=======
-<a name="cosmos/feegrant/v1beta1/query.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/feegrant/v1beta1/query.proto
-
-
-
-<a name="cosmos.feegrant.v1beta1.QueryFeeAllowanceRequest"></a>
-
-### QueryFeeAllowanceRequest
-QueryFeeAllowanceRequest is the request type for the Query/FeeAllowance RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 | `depositor` | [string](#string) |  |  |
-=======
-| `granter` | [string](#string) |  |  |
-| `grantee` | [string](#string) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.distribution.v1beta1.MsgFundCommunityPoolResponse"></a>
 
 ### MsgFundCommunityPoolResponse
 MsgFundCommunityPoolResponse defines the Msg/FundCommunityPool response type.
-=======
-<a name="cosmos.feegrant.v1beta1.QueryFeeAllowanceResponse"></a>
-
-### QueryFeeAllowanceResponse
-QueryFeeAllowanceResponse is the response type for the Query/FeeAllowance RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `fee_allowance` | [FeeAllowanceGrant](#cosmos.feegrant.v1beta1.FeeAllowanceGrant) |  | fee_allowance is a fee_allowance granted for grantee by granter. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.distribution.v1beta1.MsgSetWithdrawAddress"></a>
 
 ### MsgSetWithdrawAddress
 MsgSetWithdrawAddress sets the withdraw address for
 a delegator (or validator self-delegation).
-=======
-<a name="cosmos.feegrant.v1beta1.QueryFeeAllowancesRequest"></a>
-
-### QueryFeeAllowancesRequest
-QueryFeeAllowancesRequest is the request type for the Query/FeeAllowances RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `delegator_address` | [string](#string) |  |  |
 | `withdraw_address` | [string](#string) |  |  |
-=======
-| `grantee` | [string](#string) |  |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
-
-
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
-<<<<<<< HEAD
 
-=======
-<a name="cosmos.feegrant.v1beta1.QueryFeeAllowancesResponse"></a>
-
-### QueryFeeAllowancesResponse
-QueryFeeAllowancesResponse is the response type for the Query/FeeAllowances RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 <a name="cosmos.distribution.v1beta1.MsgSetWithdrawAddressResponse"></a>
 
-<<<<<<< HEAD
 ### MsgSetWithdrawAddressResponse
 MsgSetWithdrawAddressResponse defines the Msg/SetWithdrawAddress response type.
-=======
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `fee_allowances` | [FeeAllowanceGrant](#cosmos.feegrant.v1beta1.FeeAllowanceGrant) | repeated | fee_allowances are fee_allowance's granted for grantee by granter. |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
- <!-- end messages -->
 
-<<<<<<< HEAD
 <a name="cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward"></a>
 
 ### MsgWithdrawDelegatorReward
@@ -6286,110 +3468,42 @@ from a single validator.
 | ----- | ---- | ----- | ----------- |
 | `delegator_address` | [string](#string) |  |  |
 | `validator_address` | [string](#string) |  |  |
-=======
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="cosmos.feegrant.v1beta1.Query"></a>
-
-### Query
-Query defines the gRPC querier service.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `FeeAllowance` | [QueryFeeAllowanceRequest](#cosmos.feegrant.v1beta1.QueryFeeAllowanceRequest) | [QueryFeeAllowanceResponse](#cosmos.feegrant.v1beta1.QueryFeeAllowanceResponse) | FeeAllowance returns fee granted to the grantee by the granter. | GET|/cosmos/feegrant/v1beta1/fee_allowance/{granter}/{grantee}|
-| `FeeAllowances` | [QueryFeeAllowancesRequest](#cosmos.feegrant.v1beta1.QueryFeeAllowancesRequest) | [QueryFeeAllowancesResponse](#cosmos.feegrant.v1beta1.QueryFeeAllowancesResponse) | FeeAllowances returns all the grants for address. | GET|/cosmos/feegrant/v1beta1/fee_allowances/{grantee}|
-
- <!-- end services -->
-
-
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-<a name="cosmos/feegrant/v1beta1/tx.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/feegrant/v1beta1/tx.proto
 
 
 
-<<<<<<< HEAD
-=======
-<a name="cosmos.feegrant.v1beta1.MsgGrantFeeAllowance"></a>
 
-### MsgGrantFeeAllowance
-MsgGrantFeeAllowance adds permission for Grantee to spend up to Allowance
-of fees from the account of Granter.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
+
 
 <a name="cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse"></a>
 
-<<<<<<< HEAD
 ### MsgWithdrawDelegatorRewardResponse
 MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward response type.
-=======
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `granter` | [string](#string) |  |  |
-| `grantee` | [string](#string) |  |  |
-| `allowance` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission"></a>
 
 ### MsgWithdrawValidatorCommission
 MsgWithdrawValidatorCommission withdraws the full commission to the validator
 address.
-=======
-<a name="cosmos.feegrant.v1beta1.MsgGrantFeeAllowanceResponse"></a>
-
-### MsgGrantFeeAllowanceResponse
-MsgGrantFeeAllowanceResponse defines the Msg/GrantFeeAllowanceResponse response type.
-
-
-
-
-
-
-<a name="cosmos.feegrant.v1beta1.MsgRevokeFeeAllowance"></a>
-
-### MsgRevokeFeeAllowance
-MsgRevokeFeeAllowance removes any existing FeeAllowance from Granter to Grantee.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `validator_address` | [string](#string) |  |  |
-=======
-| `granter` | [string](#string) |  |  |
-| `grantee` | [string](#string) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse"></a>
 
 ### MsgWithdrawValidatorCommissionResponse
 MsgWithdrawValidatorCommissionResponse defines the Msg/WithdrawValidatorCommission response type.
-=======
-<a name="cosmos.feegrant.v1beta1.MsgRevokeFeeAllowanceResponse"></a>
-
-### MsgRevokeFeeAllowanceResponse
-MsgRevokeFeeAllowanceResponse defines the Msg/RevokeFeeAllowanceResponse response type.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -6402,7 +3516,6 @@ MsgRevokeFeeAllowanceResponse defines the Msg/RevokeFeeAllowanceResponse respons
  <!-- end HasExtensions -->
 
 
-<<<<<<< HEAD
 <a name="cosmos.distribution.v1beta1.Msg"></a>
 
 ### Msg
@@ -6414,61 +3527,31 @@ Msg defines the distribution Msg service.
 | `WithdrawDelegatorReward` | [MsgWithdrawDelegatorReward](#cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward) | [MsgWithdrawDelegatorRewardResponse](#cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse) | WithdrawDelegatorReward defines a method to withdraw rewards of delegator from a single validator. | |
 | `WithdrawValidatorCommission` | [MsgWithdrawValidatorCommission](#cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission) | [MsgWithdrawValidatorCommissionResponse](#cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse) | WithdrawValidatorCommission defines a method to withdraw the full commission to the validator address. | |
 | `FundCommunityPool` | [MsgFundCommunityPool](#cosmos.distribution.v1beta1.MsgFundCommunityPool) | [MsgFundCommunityPoolResponse](#cosmos.distribution.v1beta1.MsgFundCommunityPoolResponse) | FundCommunityPool defines a method to allow an account to directly fund the community pool. | |
-=======
-<a name="cosmos.feegrant.v1beta1.Msg"></a>
-
-### Msg
-Msg defines the feegrant msg service.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `GrantFeeAllowance` | [MsgGrantFeeAllowance](#cosmos.feegrant.v1beta1.MsgGrantFeeAllowance) | [MsgGrantFeeAllowanceResponse](#cosmos.feegrant.v1beta1.MsgGrantFeeAllowanceResponse) | GrantFeeAllowance grants fee allowance to the grantee on the granter's account with the provided expiration time. | |
-| `RevokeFeeAllowance` | [MsgRevokeFeeAllowance](#cosmos.feegrant.v1beta1.MsgRevokeFeeAllowance) | [MsgRevokeFeeAllowanceResponse](#cosmos.feegrant.v1beta1.MsgRevokeFeeAllowanceResponse) | RevokeFeeAllowance revokes any fee allowance of granter's account that has been granted to the grantee. | |
-
- <!-- end services -->
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
  <!-- end services -->
 
 
-<a name="cosmos/genutil/v1beta1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
 
-<<<<<<< HEAD
 <a name="cosmos/evidence/v1beta1/evidence.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
-=======
-## cosmos/genutil/v1beta1/genesis.proto
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 ## cosmos/evidence/v1beta1/evidence.proto
 
 
-<<<<<<< HEAD
 
 <a name="cosmos.evidence.v1beta1.Equivocation"></a>
 
 ### Equivocation
 Equivocation implements the Evidence interface and defines evidence of double
 signing misbehavior.
-=======
-<a name="cosmos.genutil.v1beta1.GenesisState"></a>
-
-### GenesisState
-GenesisState defines the raw genesis transaction in JSON.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `height` | [int64](#int64) |  |  |
 | `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `power` | [int64](#int64) |  |  |
 | `consensus_address` | [string](#string) |  |  |
-=======
-| `gen_txs` | [bytes](#bytes) | repeated | gen_txs defines the genesis transactions. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -6484,7 +3567,6 @@ GenesisState defines the raw genesis transaction in JSON.
 
 
 
-<<<<<<< HEAD
 <a name="cosmos/evidence/v1beta1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -6496,50 +3578,26 @@ GenesisState defines the raw genesis transaction in JSON.
 
 ### GenesisState
 GenesisState defines the evidence module's genesis state.
-=======
-<a name="cosmos/gov/v1beta1/gov.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/gov/v1beta1/gov.proto
-
-
-
-<a name="cosmos.gov.v1beta1.Deposit"></a>
-
-### Deposit
-Deposit defines an amount deposited by an account address to an active
-proposal.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `evidence` | [google.protobuf.Any](#google.protobuf.Any) | repeated | evidence defines all the evidence at genesis. |
-=======
-| `proposal_id` | [uint64](#uint64) |  |  |
-| `depositor` | [string](#string) |  |  |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
+ <!-- end messages -->
 
-<a name="cosmos.gov.v1beta1.DepositParams"></a>
+ <!-- end enums -->
 
-### DepositParams
-DepositParams defines the params for deposits on governance proposals.
+ <!-- end HasExtensions -->
 
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `min_deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | Minimum deposit for a proposal to enter voting period. |
-| `max_deposit_period` | [google.protobuf.Duration](#google.protobuf.Duration) |  | Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months. |
+ <!-- end services -->
 
 
-<<<<<<< HEAD
+
 <a name="cosmos/evidence/v1beta1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -6552,56 +3610,26 @@ DepositParams defines the params for deposits on governance proposals.
 ### QueryAllEvidenceRequest
 QueryEvidenceRequest is the request type for the Query/AllEvidence RPC
 method.
-=======
-
-
-
-
-<a name="cosmos.gov.v1beta1.Proposal"></a>
-
-### Proposal
-Proposal defines the core field members of a governance proposal.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
-=======
-| `proposal_id` | [uint64](#uint64) |  |  |
-| `content` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `status` | [ProposalStatus](#cosmos.gov.v1beta1.ProposalStatus) |  |  |
-| `final_tally_result` | [TallyResult](#cosmos.gov.v1beta1.TallyResult) |  |  |
-| `submit_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `deposit_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `total_deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-| `voting_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `voting_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.evidence.v1beta1.QueryAllEvidenceResponse"></a>
 
 ### QueryAllEvidenceResponse
 QueryAllEvidenceResponse is the response type for the Query/AllEvidence RPC
 method.
-=======
-<a name="cosmos.gov.v1beta1.TallyParams"></a>
-
-### TallyParams
-TallyParams defines the params for tallying votes on governance proposals.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `evidence` | [google.protobuf.Any](#google.protobuf.Any) | repeated | evidence returns all evidences. |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
 
@@ -6614,11 +3642,6 @@ TallyParams defines the params for tallying votes on governance proposals.
 
 ### QueryEvidenceRequest
 QueryEvidenceRequest is the request type for the Query/Evidence RPC method.
-=======
-| `quorum` | [bytes](#bytes) |  | Minimum percentage of total stake needed to vote for a result to be considered valid. |
-| `threshold` | [bytes](#bytes) |  | Minimum proportion of Yes votes for proposal to pass. Default value: 0.5. |
-| `veto_threshold` | [bytes](#bytes) |  | Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Default value: 1/3. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
@@ -6628,24 +3651,16 @@ QueryEvidenceRequest is the request type for the Query/Evidence RPC method.
 
 
 
-<<<<<<< HEAD
 
 
 <a name="cosmos.evidence.v1beta1.QueryEvidenceResponse"></a>
 
 ### QueryEvidenceResponse
 QueryEvidenceResponse is the response type for the Query/Evidence RPC method.
-=======
-<a name="cosmos.gov.v1beta1.TallyResult"></a>
-
-### TallyResult
-TallyResult defines a standard tally for a governance proposal.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `evidence` | [google.protobuf.Any](#google.protobuf.Any) |  | evidence returns the requested evidence. |
 
 
@@ -6657,12 +3672,6 @@ TallyResult defines a standard tally for a governance proposal.
  <!-- end enums -->
 
  <!-- end HasExtensions -->
-=======
-| `yes` | [string](#string) |  |  |
-| `abstain` | [string](#string) |  |  |
-| `no` | [string](#string) |  |  |
-| `no_with_veto` | [string](#string) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 <a name="cosmos.evidence.v1beta1.Query"></a>
@@ -6686,69 +3695,44 @@ Query defines the gRPC querier service.
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.evidence.v1beta1.MsgSubmitEvidence"></a>
 
 ### MsgSubmitEvidence
 MsgSubmitEvidence represents a message that supports submitting arbitrary
 Evidence of misbehavior such as equivocation or counterfactual signing.
-=======
-<a name="cosmos.gov.v1beta1.TextProposal"></a>
-
-### TextProposal
-TextProposal defines a standard text proposal whose changes need to be
-manually updated in case of approval.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `submitter` | [string](#string) |  |  |
 | `evidence` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-=======
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.evidence.v1beta1.MsgSubmitEvidenceResponse"></a>
 
 ### MsgSubmitEvidenceResponse
 MsgSubmitEvidenceResponse defines the Msg/SubmitEvidence response type.
-=======
-<a name="cosmos.gov.v1beta1.Vote"></a>
-
-### Vote
-Vote defines a vote on a governance proposal.
-A Vote consists of a proposal ID, the voter, and the vote option.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `hash` | [bytes](#bytes) |  | hash defines the hash of the evidence. |
 
 
 
-=======
-| `proposal_id` | [uint64](#uint64) |  |  |
-| `voter` | [string](#string) |  |  |
-| `option` | [VoteOption](#cosmos.gov.v1beta1.VoteOption) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
 
 
-
-
-<<<<<<< HEAD
 <a name="cosmos.evidence.v1beta1.Msg"></a>
 
 ### Msg
@@ -6757,73 +3741,31 @@ Msg defines the evidence Msg service.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `SubmitEvidence` | [MsgSubmitEvidence](#cosmos.evidence.v1beta1.MsgSubmitEvidence) | [MsgSubmitEvidenceResponse](#cosmos.evidence.v1beta1.MsgSubmitEvidenceResponse) | SubmitEvidence submits an arbitrary Evidence of misbehavior such as equivocation or counterfactual signing. | |
-=======
-<a name="cosmos.gov.v1beta1.VotingParams"></a>
 
-### VotingParams
-VotingParams defines the params for voting on governance proposals.
-
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `voting_period` | [google.protobuf.Duration](#google.protobuf.Duration) |  | Length of the voting period. |
+ <!-- end services -->
 
 
 
-<<<<<<< HEAD
 <a name="cosmos/genutil/v1beta1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## cosmos/genutil/v1beta1/genesis.proto
-=======
-
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
- <!-- end messages -->
 
 
-<<<<<<< HEAD
+
 <a name="cosmos.genutil.v1beta1.GenesisState"></a>
 
 ### GenesisState
 GenesisState defines the raw genesis transaction in JSON.
-=======
-<a name="cosmos.gov.v1beta1.ProposalStatus"></a>
 
-### ProposalStatus
-ProposalStatus enumerates the valid statuses of a proposal.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| PROPOSAL_STATUS_UNSPECIFIED | 0 | PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status. |
-| PROPOSAL_STATUS_DEPOSIT_PERIOD | 1 | PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period. |
-| PROPOSAL_STATUS_VOTING_PERIOD | 2 | PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period. |
-| PROPOSAL_STATUS_PASSED | 3 | PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed. |
-| PROPOSAL_STATUS_REJECTED | 4 | PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected. |
-| PROPOSAL_STATUS_FAILED | 5 | PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed. |
-
-<<<<<<< HEAD
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `gen_txs` | [bytes](#bytes) | repeated | gen_txs defines the genesis transactions. |
-=======
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
-<a name="cosmos.gov.v1beta1.VoteOption"></a>
 
-### VoteOption
-VoteOption enumerates the valid vote options for a given governance proposal.
 
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| VOTE_OPTION_UNSPECIFIED | 0 | VOTE_OPTION_UNSPECIFIED defines a no-op vote option. |
-| VOTE_OPTION_YES | 1 | VOTE_OPTION_YES defines a yes vote option. |
-| VOTE_OPTION_ABSTAIN | 2 | VOTE_OPTION_ABSTAIN defines an abstain vote option. |
-| VOTE_OPTION_NO | 3 | VOTE_OPTION_NO defines a no vote option. |
-| VOTE_OPTION_NO_WITH_VETO | 4 | VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option. |
 
  <!-- end messages -->
 
@@ -6835,7 +3777,6 @@ VoteOption enumerates the valid vote options for a given governance proposal.
 
 
 
-<<<<<<< HEAD
 <a name="cosmos/gov/v1beta1/gov.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -6848,36 +3789,13 @@ VoteOption enumerates the valid vote options for a given governance proposal.
 ### Deposit
 Deposit defines an amount deposited by an account address to an active
 proposal.
-=======
-<a name="cosmos/gov/v1beta1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/gov/v1beta1/genesis.proto
-
-
-
-<a name="cosmos.gov.v1beta1.GenesisState"></a>
-
-### GenesisState
-GenesisState defines the gov module's genesis state.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `proposal_id` | [uint64](#uint64) |  |  |
 | `depositor` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-=======
-| `starting_proposal_id` | [uint64](#uint64) |  | starting_proposal_id is the ID of the starting proposal. |
-| `deposits` | [Deposit](#cosmos.gov.v1beta1.Deposit) | repeated | deposits defines all the deposits present at genesis. |
-| `votes` | [Vote](#cosmos.gov.v1beta1.Vote) | repeated | votes defines all the votes present at genesis. |
-| `proposals` | [Proposal](#cosmos.gov.v1beta1.Proposal) | repeated | proposals defines all the proposals present at genesis. |
-| `deposit_params` | [DepositParams](#cosmos.gov.v1beta1.DepositParams) |  | params defines all the paramaters of related to deposit. |
-| `voting_params` | [VotingParams](#cosmos.gov.v1beta1.VotingParams) |  | params defines all the paramaters of related to voting. |
-| `tally_params` | [TallyParams](#cosmos.gov.v1beta1.TallyParams) |  | params defines all the paramaters of related to tally. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -6896,7 +3814,6 @@ DepositParams defines the params for deposits on governance proposals.
 | `max_deposit_period` | [google.protobuf.Duration](#google.protobuf.Duration) |  | Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months. |
 
 
-<<<<<<< HEAD
 
 
 
@@ -6905,24 +3822,10 @@ DepositParams defines the params for deposits on governance proposals.
 
 ### Proposal
 Proposal defines the core field members of a governance proposal.
-=======
-<a name="cosmos/gov/v1beta1/query.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/gov/v1beta1/query.proto
-
-
-
-<a name="cosmos.gov.v1beta1.QueryDepositRequest"></a>
-
-### QueryDepositRequest
-QueryDepositRequest is the request type for the Query/Deposit RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `proposal_id` | [uint64](#uint64) |  |  |
 | `content` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 | `status` | [ProposalStatus](#cosmos.gov.v1beta1.ProposalStatus) |  |  |
@@ -6932,154 +3835,91 @@ QueryDepositRequest is the request type for the Query/Deposit RPC method.
 | `total_deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 | `voting_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `voting_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-=======
-| `proposal_id` | [uint64](#uint64) |  | proposal_id defines the unique id of the proposal. |
-| `depositor` | [string](#string) |  | depositor defines the deposit addresses from the proposals. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.gov.v1beta1.TallyParams"></a>
 
 ### TallyParams
 TallyParams defines the params for tallying votes on governance proposals.
-=======
-<a name="cosmos.gov.v1beta1.QueryDepositResponse"></a>
-
-### QueryDepositResponse
-QueryDepositResponse is the response type for the Query/Deposit RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `quorum` | [bytes](#bytes) |  | Minimum percentage of total stake needed to vote for a result to be considered valid. |
 | `threshold` | [bytes](#bytes) |  | Minimum proportion of Yes votes for proposal to pass. Default value: 0.5. |
 | `veto_threshold` | [bytes](#bytes) |  | Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Default value: 1/3. |
-=======
-| `deposit` | [Deposit](#cosmos.gov.v1beta1.Deposit) |  | deposit defines the requested deposit. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.gov.v1beta1.TallyResult"></a>
 
 ### TallyResult
 TallyResult defines a standard tally for a governance proposal.
-=======
-<a name="cosmos.gov.v1beta1.QueryDepositsRequest"></a>
-
-### QueryDepositsRequest
-QueryDepositsRequest is the request type for the Query/Deposits RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `yes` | [string](#string) |  |  |
 | `abstain` | [string](#string) |  |  |
 | `no` | [string](#string) |  |  |
 | `no_with_veto` | [string](#string) |  |  |
-=======
-| `proposal_id` | [uint64](#uint64) |  | proposal_id defines the unique id of the proposal. |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.gov.v1beta1.TextProposal"></a>
 
 ### TextProposal
 TextProposal defines a standard text proposal whose changes need to be
 manually updated in case of approval.
-=======
-<a name="cosmos.gov.v1beta1.QueryDepositsResponse"></a>
-
-### QueryDepositsResponse
-QueryDepositsResponse is the response type for the Query/Deposits RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
-=======
-| `deposits` | [Deposit](#cosmos.gov.v1beta1.Deposit) | repeated |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.gov.v1beta1.Vote"></a>
 
 ### Vote
 Vote defines a vote on a governance proposal.
 A Vote consists of a proposal ID, the voter, and the vote option.
-=======
-<a name="cosmos.gov.v1beta1.QueryParamsRequest"></a>
-
-### QueryParamsRequest
-QueryParamsRequest is the request type for the Query/Params RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `proposal_id` | [uint64](#uint64) |  |  |
 | `voter` | [string](#string) |  |  |
 | `option` | [VoteOption](#cosmos.gov.v1beta1.VoteOption) |  |  |
-=======
-| `params_type` | [string](#string) |  | params_type defines which parameters to query for, can be one of "voting", "tallying" or "deposit". |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.gov.v1beta1.VotingParams"></a>
 
 ### VotingParams
 VotingParams defines the params for voting on governance proposals.
-=======
-<a name="cosmos.gov.v1beta1.QueryParamsResponse"></a>
-
-### QueryParamsResponse
-QueryParamsResponse is the response type for the Query/Params RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `voting_period` | [google.protobuf.Duration](#google.protobuf.Duration) |  | Length of the voting period. |
-=======
-| `voting_params` | [VotingParams](#cosmos.gov.v1beta1.VotingParams) |  | voting_params defines the parameters related to voting. |
-| `deposit_params` | [DepositParams](#cosmos.gov.v1beta1.DepositParams) |  | deposit_params defines the parameters related to deposit. |
-| `tally_params` | [TallyParams](#cosmos.gov.v1beta1.TallyParams) |  | tally_params defines the parameters related to tally. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -7087,15 +3927,8 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 
  <!-- end messages -->
 
-<<<<<<< HEAD
 
 <a name="cosmos.gov.v1beta1.ProposalStatus"></a>
-=======
-<a name="cosmos.gov.v1beta1.QueryProposalRequest"></a>
-
-### QueryProposalRequest
-QueryProposalRequest is the request type for the Query/Proposal RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 ### ProposalStatus
 ProposalStatus enumerates the valid statuses of a proposal.
@@ -7109,12 +3942,6 @@ ProposalStatus enumerates the valid statuses of a proposal.
 | PROPOSAL_STATUS_REJECTED | 4 | PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected. |
 | PROPOSAL_STATUS_FAILED | 5 | PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed. |
 
-<<<<<<< HEAD
-=======
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposal_id` | [uint64](#uint64) |  | proposal_id defines the unique id of the proposal. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 <a name="cosmos.gov.v1beta1.VoteOption"></a>
@@ -7131,25 +3958,12 @@ VoteOption enumerates the valid vote options for a given governance proposal.
 | VOTE_OPTION_NO_WITH_VETO | 4 | VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option. |
 
 
-<<<<<<< HEAD
  <!-- end enums -->
 
  <!-- end HasExtensions -->
-=======
-<a name="cosmos.gov.v1beta1.QueryProposalResponse"></a>
-
-### QueryProposalResponse
-QueryProposalResponse is the response type for the Query/Proposal RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
  <!-- end services -->
 
-<<<<<<< HEAD
-=======
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposal` | [Proposal](#cosmos.gov.v1beta1.Proposal) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 <a name="cosmos/gov/v1beta1/genesis.proto"></a>
@@ -7159,22 +3973,14 @@ QueryProposalResponse is the response type for the Query/Proposal RPC method.
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.gov.v1beta1.GenesisState"></a>
 
 ### GenesisState
 GenesisState defines the gov module's genesis state.
-=======
-<a name="cosmos.gov.v1beta1.QueryProposalsRequest"></a>
-
-### QueryProposalsRequest
-QueryProposalsRequest is the request type for the Query/Proposals RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `starting_proposal_id` | [uint64](#uint64) |  | starting_proposal_id is the ID of the starting proposal. |
 | `deposits` | [Deposit](#cosmos.gov.v1beta1.Deposit) | repeated | deposits defines all the deposits present at genesis. |
 | `votes` | [Vote](#cosmos.gov.v1beta1.Vote) | repeated | votes defines all the votes present at genesis. |
@@ -7182,12 +3988,6 @@ QueryProposalsRequest is the request type for the Query/Proposals RPC method.
 | `deposit_params` | [DepositParams](#cosmos.gov.v1beta1.DepositParams) |  | params defines all the paramaters of related to deposit. |
 | `voting_params` | [VotingParams](#cosmos.gov.v1beta1.VotingParams) |  | params defines all the paramaters of related to voting. |
 | `tally_params` | [TallyParams](#cosmos.gov.v1beta1.TallyParams) |  | params defines all the paramaters of related to tally. |
-=======
-| `proposal_status` | [ProposalStatus](#cosmos.gov.v1beta1.ProposalStatus) |  | proposal_status defines the status of the proposals. |
-| `voter` | [string](#string) |  | voter defines the voter address for the proposals. |
-| `depositor` | [string](#string) |  | depositor defines the deposit addresses from the proposals. |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -7195,27 +3995,12 @@ QueryProposalsRequest is the request type for the Query/Proposals RPC method.
 
  <!-- end messages -->
 
-<<<<<<< HEAD
  <!-- end enums -->
 
  <!-- end HasExtensions -->
-=======
-<a name="cosmos.gov.v1beta1.QueryProposalsResponse"></a>
-
-### QueryProposalsResponse
-QueryProposalsResponse is the response type for the Query/Proposals RPC
-method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
  <!-- end services -->
 
-<<<<<<< HEAD
-=======
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposals` | [Proposal](#cosmos.gov.v1beta1.Proposal) | repeated |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 <a name="cosmos/gov/v1beta1/query.proto"></a>
@@ -7225,162 +4010,95 @@ method.
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.gov.v1beta1.QueryDepositRequest"></a>
 
 ### QueryDepositRequest
 QueryDepositRequest is the request type for the Query/Deposit RPC method.
-=======
-<a name="cosmos.gov.v1beta1.QueryTallyResultRequest"></a>
-
-### QueryTallyResultRequest
-QueryTallyResultRequest is the request type for the Query/Tally RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `proposal_id` | [uint64](#uint64) |  | proposal_id defines the unique id of the proposal. |
-<<<<<<< HEAD
 | `depositor` | [string](#string) |  | depositor defines the deposit addresses from the proposals. |
-=======
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.gov.v1beta1.QueryDepositResponse"></a>
 
 ### QueryDepositResponse
 QueryDepositResponse is the response type for the Query/Deposit RPC method.
-=======
-<a name="cosmos.gov.v1beta1.QueryTallyResultResponse"></a>
-
-### QueryTallyResultResponse
-QueryTallyResultResponse is the response type for the Query/Tally RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `deposit` | [Deposit](#cosmos.gov.v1beta1.Deposit) |  | deposit defines the requested deposit. |
-=======
-| `tally` | [TallyResult](#cosmos.gov.v1beta1.TallyResult) |  | tally defines the requested tally. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.gov.v1beta1.QueryDepositsRequest"></a>
 
 ### QueryDepositsRequest
 QueryDepositsRequest is the request type for the Query/Deposits RPC method.
-=======
-<a name="cosmos.gov.v1beta1.QueryVoteRequest"></a>
-
-### QueryVoteRequest
-QueryVoteRequest is the request type for the Query/Vote RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `proposal_id` | [uint64](#uint64) |  | proposal_id defines the unique id of the proposal. |
-<<<<<<< HEAD
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
-=======
-| `voter` | [string](#string) |  | voter defines the oter address for the proposals. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.gov.v1beta1.QueryDepositsResponse"></a>
 
 ### QueryDepositsResponse
 QueryDepositsResponse is the response type for the Query/Deposits RPC method.
-=======
-<a name="cosmos.gov.v1beta1.QueryVoteResponse"></a>
-
-### QueryVoteResponse
-QueryVoteResponse is the response type for the Query/Vote RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `deposits` | [Deposit](#cosmos.gov.v1beta1.Deposit) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
-=======
-| `vote` | [Vote](#cosmos.gov.v1beta1.Vote) |  | vote defined the queried vote. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.gov.v1beta1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
 QueryParamsRequest is the request type for the Query/Params RPC method.
-=======
-<a name="cosmos.gov.v1beta1.QueryVotesRequest"></a>
-
-### QueryVotesRequest
-QueryVotesRequest is the request type for the Query/Votes RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `params_type` | [string](#string) |  | params_type defines which parameters to query for, can be one of "voting", "tallying" or "deposit". |
-=======
-| `proposal_id` | [uint64](#uint64) |  | proposal_id defines the unique id of the proposal. |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.gov.v1beta1.QueryParamsResponse"></a>
 
 ### QueryParamsResponse
 QueryParamsResponse is the response type for the Query/Params RPC method.
-=======
-<a name="cosmos.gov.v1beta1.QueryVotesResponse"></a>
-
-### QueryVotesResponse
-QueryVotesResponse is the response type for the Query/Votes RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `voting_params` | [VotingParams](#cosmos.gov.v1beta1.VotingParams) |  | voting_params defines the parameters related to voting. |
 | `deposit_params` | [DepositParams](#cosmos.gov.v1beta1.DepositParams) |  | deposit_params defines the parameters related to deposit. |
 | `tally_params` | [TallyParams](#cosmos.gov.v1beta1.TallyParams) |  | tally_params defines the parameters related to tally. |
-=======
-| `votes` | [Vote](#cosmos.gov.v1beta1.Vote) | repeated | votes defined the queried votes. |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -7392,7 +4110,6 @@ QueryVotesResponse is the response type for the Query/Votes RPC method.
 ### QueryProposalRequest
 QueryProposalRequest is the request type for the Query/Proposal RPC method.
 
-<<<<<<< HEAD
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -7401,17 +4118,159 @@ QueryProposalRequest is the request type for the Query/Proposal RPC method.
 
 
 
-=======
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
-<a name="cosmos.gov.v1beta1.Query"></a>
 
-<<<<<<< HEAD
 <a name="cosmos.gov.v1beta1.QueryProposalResponse"></a>
 
 ### QueryProposalResponse
 QueryProposalResponse is the response type for the Query/Proposal RPC method.
-=======
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal` | [Proposal](#cosmos.gov.v1beta1.Proposal) |  |  |
+
+
+
+
+
+
+<a name="cosmos.gov.v1beta1.QueryProposalsRequest"></a>
+
+### QueryProposalsRequest
+QueryProposalsRequest is the request type for the Query/Proposals RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal_status` | [ProposalStatus](#cosmos.gov.v1beta1.ProposalStatus) |  | proposal_status defines the status of the proposals. |
+| `voter` | [string](#string) |  | voter defines the voter address for the proposals. |
+| `depositor` | [string](#string) |  | depositor defines the deposit addresses from the proposals. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.gov.v1beta1.QueryProposalsResponse"></a>
+
+### QueryProposalsResponse
+QueryProposalsResponse is the response type for the Query/Proposals RPC
+method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposals` | [Proposal](#cosmos.gov.v1beta1.Proposal) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="cosmos.gov.v1beta1.QueryTallyResultRequest"></a>
+
+### QueryTallyResultRequest
+QueryTallyResultRequest is the request type for the Query/Tally RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal_id` | [uint64](#uint64) |  | proposal_id defines the unique id of the proposal. |
+
+
+
+
+
+
+<a name="cosmos.gov.v1beta1.QueryTallyResultResponse"></a>
+
+### QueryTallyResultResponse
+QueryTallyResultResponse is the response type for the Query/Tally RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `tally` | [TallyResult](#cosmos.gov.v1beta1.TallyResult) |  | tally defines the requested tally. |
+
+
+
+
+
+
+<a name="cosmos.gov.v1beta1.QueryVoteRequest"></a>
+
+### QueryVoteRequest
+QueryVoteRequest is the request type for the Query/Vote RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal_id` | [uint64](#uint64) |  | proposal_id defines the unique id of the proposal. |
+| `voter` | [string](#string) |  | voter defines the oter address for the proposals. |
+
+
+
+
+
+
+<a name="cosmos.gov.v1beta1.QueryVoteResponse"></a>
+
+### QueryVoteResponse
+QueryVoteResponse is the response type for the Query/Vote RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `vote` | [Vote](#cosmos.gov.v1beta1.Vote) |  | vote defined the queried vote. |
+
+
+
+
+
+
+<a name="cosmos.gov.v1beta1.QueryVotesRequest"></a>
+
+### QueryVotesRequest
+QueryVotesRequest is the request type for the Query/Votes RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal_id` | [uint64](#uint64) |  | proposal_id defines the unique id of the proposal. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.gov.v1beta1.QueryVotesResponse"></a>
+
+### QueryVotesResponse
+QueryVotesResponse is the response type for the Query/Votes RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `votes` | [Vote](#cosmos.gov.v1beta1.Vote) | repeated | votes defined the queried votes. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.gov.v1beta1.Query"></a>
+
 ### Query
 Query defines the gRPC querier service for gov module
 
@@ -7425,16 +4284,9 @@ Query defines the gRPC querier service for gov module
 | `Deposit` | [QueryDepositRequest](#cosmos.gov.v1beta1.QueryDepositRequest) | [QueryDepositResponse](#cosmos.gov.v1beta1.QueryDepositResponse) | Deposit queries single deposit information based proposalID, depositAddr. | GET|/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}|
 | `Deposits` | [QueryDepositsRequest](#cosmos.gov.v1beta1.QueryDepositsRequest) | [QueryDepositsResponse](#cosmos.gov.v1beta1.QueryDepositsResponse) | Deposits queries all deposits of a single proposal. | GET|/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits|
 | `TallyResult` | [QueryTallyResultRequest](#cosmos.gov.v1beta1.QueryTallyResultRequest) | [QueryTallyResultResponse](#cosmos.gov.v1beta1.QueryTallyResultResponse) | TallyResult queries the tally of a proposal vote. | GET|/cosmos/gov/v1beta1/proposals/{proposal_id}/tally|
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
  <!-- end services -->
 
-<<<<<<< HEAD
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposal` | [Proposal](#cosmos.gov.v1beta1.Proposal) |  |  |
-=======
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 <a name="cosmos/gov/v1beta1/tx.proto"></a>
@@ -7444,180 +4296,98 @@ Query defines the gRPC querier service for gov module
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.gov.v1beta1.QueryProposalsRequest"></a>
-
-### QueryProposalsRequest
-QueryProposalsRequest is the request type for the Query/Proposals RPC method.
-=======
 <a name="cosmos.gov.v1beta1.MsgDeposit"></a>
 
 ### MsgDeposit
 MsgDeposit defines a message to submit a deposit to an existing proposal.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `proposal_status` | [ProposalStatus](#cosmos.gov.v1beta1.ProposalStatus) |  | proposal_status defines the status of the proposals. |
-| `voter` | [string](#string) |  | voter defines the voter address for the proposals. |
-| `depositor` | [string](#string) |  | depositor defines the deposit addresses from the proposals. |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
-
-
-=======
 | `proposal_id` | [uint64](#uint64) |  |  |
 | `depositor` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.gov.v1beta1.QueryProposalsResponse"></a>
 
-### QueryProposalsResponse
-QueryProposalsResponse is the response type for the Query/Proposals RPC
-method.
-=======
-
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 <a name="cosmos.gov.v1beta1.MsgDepositResponse"></a>
 
-<<<<<<< HEAD
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposals` | [Proposal](#cosmos.gov.v1beta1.Proposal) | repeated |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
-=======
 ### MsgDepositResponse
 MsgDepositResponse defines the Msg/Deposit response type.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.gov.v1beta1.QueryTallyResultRequest"></a>
-
-### QueryTallyResultRequest
-QueryTallyResultRequest is the request type for the Query/Tally RPC method.
-=======
 <a name="cosmos.gov.v1beta1.MsgSubmitProposal"></a>
 
 ### MsgSubmitProposal
 MsgSubmitProposal defines an sdk.Msg type that supports submitting arbitrary
 proposal Content.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `proposal_id` | [uint64](#uint64) |  | proposal_id defines the unique id of the proposal. |
-=======
 | `content` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 | `initial_deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 | `proposer` | [string](#string) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.gov.v1beta1.QueryTallyResultResponse"></a>
-
-### QueryTallyResultResponse
-QueryTallyResultResponse is the response type for the Query/Tally RPC method.
-=======
 <a name="cosmos.gov.v1beta1.MsgSubmitProposalResponse"></a>
 
 ### MsgSubmitProposalResponse
 MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `tally` | [TallyResult](#cosmos.gov.v1beta1.TallyResult) |  | tally defines the requested tally. |
-=======
 | `proposal_id` | [uint64](#uint64) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.gov.v1beta1.QueryVoteRequest"></a>
-
-### QueryVoteRequest
-QueryVoteRequest is the request type for the Query/Vote RPC method.
-=======
 <a name="cosmos.gov.v1beta1.MsgVote"></a>
 
 ### MsgVote
 MsgVote defines a message to cast a vote.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `proposal_id` | [uint64](#uint64) |  | proposal_id defines the unique id of the proposal. |
-| `voter` | [string](#string) |  | voter defines the oter address for the proposals. |
-
-
-=======
 | `proposal_id` | [uint64](#uint64) |  |  |
 | `voter` | [string](#string) |  |  |
 | `option` | [VoteOption](#cosmos.gov.v1beta1.VoteOption) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.gov.v1beta1.QueryVoteResponse"></a>
 
-### QueryVoteResponse
-QueryVoteResponse is the response type for the Query/Vote RPC method.
-=======
-
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 <a name="cosmos.gov.v1beta1.MsgVoteResponse"></a>
 
-<<<<<<< HEAD
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `vote` | [Vote](#cosmos.gov.v1beta1.Vote) |  | vote defined the queried vote. |
-=======
 ### MsgVoteResponse
 MsgVoteResponse defines the Msg/Vote response type.
 
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
+ <!-- end messages -->
 
+ <!-- end enums -->
 
-<a name="cosmos.gov.v1beta1.QueryVotesRequest"></a>
+ <!-- end HasExtensions -->
 
-<<<<<<< HEAD
-### QueryVotesRequest
-QueryVotesRequest is the request type for the Query/Votes RPC method.
-=======
 
 <a name="cosmos.gov.v1beta1.Msg"></a>
 
@@ -7631,25 +4401,9 @@ Msg defines the bank Msg service.
 | `Deposit` | [MsgDeposit](#cosmos.gov.v1beta1.MsgDeposit) | [MsgDepositResponse](#cosmos.gov.v1beta1.MsgDepositResponse) | Deposit defines a method to add deposit on a specific proposal. | |
 
  <!-- end services -->
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposal_id` | [uint64](#uint64) |  | proposal_id defines the unique id of the proposal. |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
-
-<<<<<<< HEAD
 
 
 
-
-
-<a name="cosmos.gov.v1beta1.QueryVotesResponse"></a>
-
-### QueryVotesResponse
-QueryVotesResponse is the response type for the Query/Votes RPC method.
-=======
 <a name="cosmos/mint/v1beta1/mint.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -7661,58 +4415,24 @@ QueryVotesResponse is the response type for the Query/Votes RPC method.
 
 ### Minter
 Minter represents the minting state.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `votes` | [Vote](#cosmos.gov.v1beta1.Vote) | repeated | votes defined the queried votes. |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
-
-=======
 | `inflation` | [string](#string) |  | current annual inflation rate |
 | `annual_provisions` | [string](#string) |  | current annual expected provisions |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
- <!-- end messages -->
 
-<<<<<<< HEAD
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-=======
 
 <a name="cosmos.mint.v1beta1.Params"></a>
 
 ### Params
 Params holds parameters for the mint module.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
-<a name="cosmos.gov.v1beta1.Query"></a>
 
-<<<<<<< HEAD
-### Query
-Query defines the gRPC querier service for gov module
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Proposal` | [QueryProposalRequest](#cosmos.gov.v1beta1.QueryProposalRequest) | [QueryProposalResponse](#cosmos.gov.v1beta1.QueryProposalResponse) | Proposal queries proposal details based on ProposalID. | GET|/cosmos/gov/v1beta1/proposals/{proposal_id}|
-| `Proposals` | [QueryProposalsRequest](#cosmos.gov.v1beta1.QueryProposalsRequest) | [QueryProposalsResponse](#cosmos.gov.v1beta1.QueryProposalsResponse) | Proposals queries all proposals based on given status. | GET|/cosmos/gov/v1beta1/proposals|
-| `Vote` | [QueryVoteRequest](#cosmos.gov.v1beta1.QueryVoteRequest) | [QueryVoteResponse](#cosmos.gov.v1beta1.QueryVoteResponse) | Vote queries voted information based on proposalID, voterAddr. | GET|/cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}|
-| `Votes` | [QueryVotesRequest](#cosmos.gov.v1beta1.QueryVotesRequest) | [QueryVotesResponse](#cosmos.gov.v1beta1.QueryVotesResponse) | Votes queries votes of a given proposal. | GET|/cosmos/gov/v1beta1/proposals/{proposal_id}/votes|
-| `Params` | [QueryParamsRequest](#cosmos.gov.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.gov.v1beta1.QueryParamsResponse) | Params queries all parameters of the gov module. | GET|/cosmos/gov/v1beta1/params/{params_type}|
-| `Deposit` | [QueryDepositRequest](#cosmos.gov.v1beta1.QueryDepositRequest) | [QueryDepositResponse](#cosmos.gov.v1beta1.QueryDepositResponse) | Deposit queries single deposit information based proposalID, depositAddr. | GET|/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}|
-| `Deposits` | [QueryDepositsRequest](#cosmos.gov.v1beta1.QueryDepositsRequest) | [QueryDepositsResponse](#cosmos.gov.v1beta1.QueryDepositsResponse) | Deposits queries all deposits of a single proposal. | GET|/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits|
-| `TallyResult` | [QueryTallyResultRequest](#cosmos.gov.v1beta1.QueryTallyResultRequest) | [QueryTallyResultResponse](#cosmos.gov.v1beta1.QueryTallyResultResponse) | TallyResult queries the tally of a proposal vote. | GET|/cosmos/gov/v1beta1/proposals/{proposal_id}/tally|
-
- <!-- end services -->
-
-=======
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `mint_denom` | [string](#string) |  | type of coin to mint |
@@ -7721,40 +4441,20 @@ Query defines the gRPC querier service for gov module
 | `inflation_min` | [string](#string) |  | minimum inflation rate |
 | `goal_bonded` | [string](#string) |  | goal of percent bonded atoms |
 | `blocks_per_year` | [uint64](#uint64) |  | expected blocks per year |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
-<a name="cosmos/gov/v1beta1/tx.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/gov/v1beta1/tx.proto
 
 
-<<<<<<< HEAD
 
-<a name="cosmos.gov.v1beta1.MsgDeposit"></a>
-
-### MsgDeposit
-MsgDeposit defines a message to submit a deposit to an existing proposal.
-=======
  <!-- end messages -->
 
  <!-- end enums -->
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
  <!-- end HasExtensions -->
 
-<<<<<<< HEAD
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposal_id` | [uint64](#uint64) |  |  |
-| `depositor` | [string](#string) |  |  |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-=======
  <!-- end services -->
 
 
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 <a name="cosmos/mint/v1beta1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
@@ -7763,120 +4463,16 @@ MsgDeposit defines a message to submit a deposit to an existing proposal.
 
 
 
-<<<<<<< HEAD
-=======
 <a name="cosmos.mint.v1beta1.GenesisState"></a>
 
 ### GenesisState
 GenesisState defines the mint module's genesis state.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
-<a name="cosmos.gov.v1beta1.MsgDepositResponse"></a>
 
-<<<<<<< HEAD
-### MsgDepositResponse
-MsgDepositResponse defines the Msg/Deposit response type.
-=======
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `minter` | [Minter](#cosmos.mint.v1beta1.Minter) |  | minter is a space for holding current inflation information. |
 | `params` | [Params](#cosmos.mint.v1beta1.Params) |  | params defines all the paramaters of the module. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta1.MsgSubmitProposal"></a>
-
-### MsgSubmitProposal
-MsgSubmitProposal defines an sdk.Msg type that supports submitting arbitrary
-proposal Content.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `content` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `initial_deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-| `proposer` | [string](#string) |  |  |
-
-
-<<<<<<< HEAD
-
-
-
-
-<a name="cosmos.gov.v1beta1.MsgSubmitProposalResponse"></a>
-
-### MsgSubmitProposalResponse
-MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.
-=======
-<a name="cosmos/mint/v1beta1/query.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/mint/v1beta1/query.proto
-
-
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-<a name="cosmos.mint.v1beta1.QueryAnnualProvisionsRequest"></a>
-
-<<<<<<< HEAD
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `proposal_id` | [uint64](#uint64) |  |  |
-=======
-### QueryAnnualProvisionsRequest
-QueryAnnualProvisionsRequest is the request type for the
-Query/AnnualProvisions RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-
-
-
-
-<<<<<<< HEAD
-<a name="cosmos.gov.v1beta1.MsgVote"></a>
-
-### MsgVote
-MsgVote defines a message to cast a vote.
-=======
-<a name="cosmos.mint.v1beta1.QueryAnnualProvisionsResponse"></a>
-
-### QueryAnnualProvisionsResponse
-QueryAnnualProvisionsResponse is the response type for the
-Query/AnnualProvisions RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `proposal_id` | [uint64](#uint64) |  |  |
-| `voter` | [string](#string) |  |  |
-| `option` | [VoteOption](#cosmos.gov.v1beta1.VoteOption) |  |  |
-=======
-| `annual_provisions` | [bytes](#bytes) |  | annual_provisions is the current minting annual provisions value. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-
-
-
-
-<<<<<<< HEAD
-<a name="cosmos.gov.v1beta1.MsgVoteResponse"></a>
-
-### MsgVoteResponse
-MsgVoteResponse defines the Msg/Vote response type.
-=======
-<a name="cosmos.mint.v1beta1.QueryInflationRequest"></a>
-
-### QueryInflationRequest
-QueryInflationRequest is the request type for the Query/Inflation RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -7884,27 +4480,58 @@ QueryInflationRequest is the request type for the Query/Inflation RPC method.
 
  <!-- end messages -->
 
-<<<<<<< HEAD
  <!-- end enums -->
 
  <!-- end HasExtensions -->
 
-
-<a name="cosmos.gov.v1beta1.Msg"></a>
-
-### Msg
-Msg defines the bank Msg service.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `SubmitProposal` | [MsgSubmitProposal](#cosmos.gov.v1beta1.MsgSubmitProposal) | [MsgSubmitProposalResponse](#cosmos.gov.v1beta1.MsgSubmitProposalResponse) | SubmitProposal defines a method to create new proposal given a content. | |
-| `Vote` | [MsgVote](#cosmos.gov.v1beta1.MsgVote) | [MsgVoteResponse](#cosmos.gov.v1beta1.MsgVoteResponse) | Vote defines a method to add a vote on a specific proposal. | |
-| `Deposit` | [MsgDeposit](#cosmos.gov.v1beta1.MsgDeposit) | [MsgDepositResponse](#cosmos.gov.v1beta1.MsgDepositResponse) | Deposit defines a method to add deposit on a specific proposal. | |
-
  <!-- end services -->
 
 
-=======
+
+<a name="cosmos/mint/v1beta1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/mint/v1beta1/query.proto
+
+
+
+<a name="cosmos.mint.v1beta1.QueryAnnualProvisionsRequest"></a>
+
+### QueryAnnualProvisionsRequest
+QueryAnnualProvisionsRequest is the request type for the
+Query/AnnualProvisions RPC method.
+
+
+
+
+
+
+<a name="cosmos.mint.v1beta1.QueryAnnualProvisionsResponse"></a>
+
+### QueryAnnualProvisionsResponse
+QueryAnnualProvisionsResponse is the response type for the
+Query/AnnualProvisions RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `annual_provisions` | [bytes](#bytes) |  | annual_provisions is the current minting annual provisions value. |
+
+
+
+
+
+
+<a name="cosmos.mint.v1beta1.QueryInflationRequest"></a>
+
+### QueryInflationRequest
+QueryInflationRequest is the request type for the Query/Inflation RPC method.
+
+
+
+
+
+
 <a name="cosmos.mint.v1beta1.QueryInflationResponse"></a>
 
 ### QueryInflationResponse
@@ -7915,65 +4542,31 @@ method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `inflation` | [bytes](#bytes) |  | inflation is the current minting inflation value. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-<a name="cosmos/mint/v1beta1/mint.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/mint/v1beta1/mint.proto
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.mint.v1beta1.Minter"></a>
 
-### Minter
-Minter represents the minting state.
-=======
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
+
 
 <a name="cosmos.mint.v1beta1.QueryParamsRequest"></a>
 
-<<<<<<< HEAD
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `inflation` | [string](#string) |  | current annual inflation rate |
-| `annual_provisions` | [string](#string) |  | current annual expected provisions |
-=======
 ### QueryParamsRequest
 QueryParamsRequest is the request type for the Query/Params RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.mint.v1beta1.Params"></a>
-
-### Params
-Params holds parameters for the mint module.
-=======
 <a name="cosmos.mint.v1beta1.QueryParamsResponse"></a>
 
 ### QueryParamsResponse
 QueryParamsResponse is the response type for the Query/Params RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `mint_denom` | [string](#string) |  | type of coin to mint |
-| `inflation_rate_change` | [string](#string) |  | maximum annual change in inflation rate |
-| `inflation_max` | [string](#string) |  | maximum inflation rate |
-| `inflation_min` | [string](#string) |  | minimum inflation rate |
-| `goal_bonded` | [string](#string) |  | goal of percent bonded atoms |
-| `blocks_per_year` | [uint64](#uint64) |  | expected blocks per year |
-=======
 | `params` | [Params](#cosmos.mint.v1beta1.Params) |  | params defines the parameters of the module. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -7985,7 +4578,6 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 
  <!-- end HasExtensions -->
 
- <!-- end services -->
 
 <a name="cosmos.mint.v1beta1.Query"></a>
 
@@ -7998,23 +4590,10 @@ Query provides defines the gRPC querier service.
 | `Inflation` | [QueryInflationRequest](#cosmos.mint.v1beta1.QueryInflationRequest) | [QueryInflationResponse](#cosmos.mint.v1beta1.QueryInflationResponse) | Inflation returns the current minting inflation value. | GET|/cosmos/mint/v1beta1/inflation|
 | `AnnualProvisions` | [QueryAnnualProvisionsRequest](#cosmos.mint.v1beta1.QueryAnnualProvisionsRequest) | [QueryAnnualProvisionsResponse](#cosmos.mint.v1beta1.QueryAnnualProvisionsResponse) | AnnualProvisions current minting annual provisions value. | GET|/cosmos/mint/v1beta1/annual_provisions|
 
-<<<<<<< HEAD
-<a name="cosmos/mint/v1beta1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-=======
  <!-- end services -->
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-## cosmos/mint/v1beta1/genesis.proto
 
 
-<<<<<<< HEAD
 
-<a name="cosmos.mint.v1beta1.GenesisState"></a>
-
-### GenesisState
-GenesisState defines the mint module's genesis state.
-=======
 <a name="cosmos/params/v1beta1/params.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -8027,38 +4606,24 @@ GenesisState defines the mint module's genesis state.
 ### ParamChange
 ParamChange defines an individual parameter change, for use in
 ParameterChangeProposal.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `minter` | [Minter](#cosmos.mint.v1beta1.Minter) |  | minter is a space for holding current inflation information. |
-| `params` | [Params](#cosmos.mint.v1beta1.Params) |  | params defines all the paramaters of the module. |
-=======
 | `subspace` | [string](#string) |  |  |
 | `key` | [string](#string) |  |  |
 | `value` | [string](#string) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
- <!-- end messages -->
 
-<<<<<<< HEAD
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-=======
 <a name="cosmos.params.v1beta1.ParameterChangeProposal"></a>
 
 ### ParameterChangeProposal
 ParameterChangeProposal defines a proposal to change one or more parameters.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
- <!-- end services -->
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -8068,20 +4633,8 @@ ParameterChangeProposal defines a proposal to change one or more parameters.
 
 
 
-<a name="cosmos/mint/v1beta1/query.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/mint/v1beta1/query.proto
-
-<<<<<<< HEAD
 
 
-<a name="cosmos.mint.v1beta1.QueryAnnualProvisionsRequest"></a>
-
-### QueryAnnualProvisionsRequest
-QueryAnnualProvisionsRequest is the request type for the
-Query/AnnualProvisions RPC method.
-=======
  <!-- end messages -->
 
  <!-- end enums -->
@@ -8089,7 +4642,6 @@ Query/AnnualProvisions RPC method.
  <!-- end HasExtensions -->
 
  <!-- end services -->
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -8100,53 +4652,31 @@ Query/AnnualProvisions RPC method.
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.mint.v1beta1.QueryAnnualProvisionsResponse"></a>
-
-### QueryAnnualProvisionsResponse
-QueryAnnualProvisionsResponse is the response type for the
-Query/AnnualProvisions RPC method.
-=======
 <a name="cosmos.params.v1beta1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
 QueryParamsRequest is request type for the Query/Params RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `annual_provisions` | [bytes](#bytes) |  | annual_provisions is the current minting annual provisions value. |
-=======
 | `subspace` | [string](#string) |  | subspace defines the module to query the parameter for. |
 | `key` | [string](#string) |  | key defines the key of the parameter in the subspace. |
 
 
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
-<<<<<<< HEAD
-
-=======
 <a name="cosmos.params.v1beta1.QueryParamsResponse"></a>
 
 ### QueryParamsResponse
 QueryParamsResponse is response type for the Query/Params RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
-<a name="cosmos.mint.v1beta1.QueryInflationRequest"></a>
 
-<<<<<<< HEAD
-### QueryInflationRequest
-QueryInflationRequest is the request type for the Query/Inflation RPC method.
-=======
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `param` | [ParamChange](#cosmos.params.v1beta1.ParamChange) |  | param defines the queried parameter. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -8154,18 +4684,6 @@ QueryInflationRequest is the request type for the Query/Inflation RPC method.
 
  <!-- end messages -->
 
-<<<<<<< HEAD
-<a name="cosmos.mint.v1beta1.QueryInflationResponse"></a>
-
-### QueryInflationResponse
-QueryInflationResponse is the response type for the Query/Inflation RPC
-method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `inflation` | [bytes](#bytes) |  | inflation is the current minting inflation value. |
-=======
  <!-- end enums -->
 
  <!-- end HasExtensions -->
@@ -8182,7 +4700,6 @@ Query defines the gRPC querier service.
 
  <!-- end services -->
 
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 <a name="cosmos/slashing/v1beta1/slashing.proto"></a>
@@ -8191,21 +4708,13 @@ Query defines the gRPC querier service.
 ## cosmos/slashing/v1beta1/slashing.proto
 
 
-<<<<<<< HEAD
-=======
 
 <a name="cosmos.slashing.v1beta1.Params"></a>
 
 ### Params
 Params represents the parameters used for by the slashing module.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
-<a name="cosmos.mint.v1beta1.QueryParamsRequest"></a>
 
-<<<<<<< HEAD
-### QueryParamsRequest
-QueryParamsRequest is the request type for the Query/Params RPC method.
-=======
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `signed_blocks_window` | [int64](#int64) |  |  |
@@ -8213,39 +4722,27 @@ QueryParamsRequest is the request type for the Query/Params RPC method.
 | `downtime_jail_duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
 | `slash_fraction_double_sign` | [bytes](#bytes) |  |  |
 | `slash_fraction_downtime` | [bytes](#bytes) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.mint.v1beta1.QueryParamsResponse"></a>
-
-### QueryParamsResponse
-QueryParamsResponse is the response type for the Query/Params RPC method.
-=======
 <a name="cosmos.slashing.v1beta1.ValidatorSigningInfo"></a>
 
 ### ValidatorSigningInfo
 ValidatorSigningInfo defines a validator's signing info for monitoring their
 liveness activity.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `params` | [Params](#cosmos.mint.v1beta1.Params) |  | params defines the parameters of the module. |
-=======
 | `address` | [string](#string) |  |  |
-| `start_height` | [int64](#int64) |  | Height at which validator was first a candidate OR was unjailed |
-| `index_offset` | [int64](#int64) |  | Index which is incremented each time the validator was a bonded in a block and may have signed a precommit or not. This in conjunction with the `SignedBlocksWindow` param determines the index in the `MissedBlocksBitArray`. |
-| `jailed_until` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Timestamp until which the validator is jailed due to liveness downtime. |
-| `tombstoned` | [bool](#bool) |  | Whether or not a validator has been tombstoned (killed out of validator set). It is set once the validator commits an equivocation or for any other configured misbehiavor. |
-| `missed_blocks_counter` | [int64](#int64) |  | A counter kept to avoid unnecessary array reads. Note that `Sum(MissedBlocksBitArray)` always equals `MissedBlocksCounter`. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
+| `start_height` | [int64](#int64) |  | height at which validator was first a candidate OR was unjailed |
+| `index_offset` | [int64](#int64) |  | index offset into signed block bit array |
+| `jailed_until` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | timestamp validator cannot be unjailed until |
+| `tombstoned` | [bool](#bool) |  | whether or not a validator has been tombstoned (killed out of validator set) |
+| `missed_blocks_counter` | [int64](#int64) |  | missed blocks counter (to avoid scanning the array every time) |
 
 
 
@@ -8259,18 +4756,6 @@ liveness activity.
 
  <!-- end services -->
 
-<<<<<<< HEAD
-<a name="cosmos.mint.v1beta1.Query"></a>
-
-### Query
-Query provides defines the gRPC querier service.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Params` | [QueryParamsRequest](#cosmos.mint.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.mint.v1beta1.QueryParamsResponse) | Params returns the total set of minting parameters. | GET|/cosmos/mint/v1beta1/params|
-| `Inflation` | [QueryInflationRequest](#cosmos.mint.v1beta1.QueryInflationRequest) | [QueryInflationResponse](#cosmos.mint.v1beta1.QueryInflationResponse) | Inflation returns the current minting inflation value. | GET|/cosmos/mint/v1beta1/inflation|
-| `AnnualProvisions` | [QueryAnnualProvisionsRequest](#cosmos.mint.v1beta1.QueryAnnualProvisionsRequest) | [QueryAnnualProvisionsResponse](#cosmos.mint.v1beta1.QueryAnnualProvisionsResponse) | AnnualProvisions current minting annual provisions value. | GET|/cosmos/mint/v1beta1/annual_provisions|
-=======
 
 
 <a name="cosmos/slashing/v1beta1/genesis.proto"></a>
@@ -8301,7 +4786,6 @@ GenesisState defines the slashing module's genesis state.
 
 ### MissedBlock
 MissedBlock contains height and missed status as boolean.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
@@ -8310,20 +4794,6 @@ MissedBlock contains height and missed status as boolean.
 | `missed` | [bool](#bool) |  | missed is the missed status. |
 
 
-<<<<<<< HEAD
-<a name="cosmos/params/v1beta1/params.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/params/v1beta1/params.proto
-
-
-
-<a name="cosmos.params.v1beta1.ParamChange"></a>
-
-### ParamChange
-ParamChange defines an individual parameter change, for use in
-ParameterChangeProposal.
-=======
 
 
 
@@ -8332,46 +4802,27 @@ ParameterChangeProposal.
 
 ### SigningInfo
 SigningInfo stores validator signing info of corresponding address.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `subspace` | [string](#string) |  |  |
-| `key` | [string](#string) |  |  |
-| `value` | [string](#string) |  |  |
-=======
 | `address` | [string](#string) |  | address is the validator address. |
 | `validator_signing_info` | [ValidatorSigningInfo](#cosmos.slashing.v1beta1.ValidatorSigningInfo) |  | validator_signing_info represents the signing info of this validator. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.params.v1beta1.ParameterChangeProposal"></a>
-
-### ParameterChangeProposal
-ParameterChangeProposal defines a proposal to change one or more parameters.
-=======
 <a name="cosmos.slashing.v1beta1.ValidatorMissedBlocks"></a>
 
 ### ValidatorMissedBlocks
 ValidatorMissedBlocks contains array of missed blocks of corresponding
 address.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
-| `changes` | [ParamChange](#cosmos.params.v1beta1.ParamChange) | repeated |  |
-=======
 | `address` | [string](#string) |  | address is the validator address. |
 | `missed_blocks` | [MissedBlock](#cosmos.slashing.v1beta1.MissedBlock) | repeated | missed_blocks is an array of missed blocks by the validator. |
 
@@ -8400,89 +4851,52 @@ address.
 
 ### QueryParamsRequest
 QueryParamsRequest is the request type for the Query/Params RPC method
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
- <!-- end messages -->
 
-<<<<<<< HEAD
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-=======
 <a name="cosmos.slashing.v1beta1.QueryParamsResponse"></a>
 
 ### QueryParamsResponse
 QueryParamsResponse is the response type for the Query/Params RPC method
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
- <!-- end services -->
 
-<<<<<<< HEAD
-=======
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#cosmos.slashing.v1beta1.Params) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-<a name="cosmos/params/v1beta1/query.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/params/v1beta1/query.proto
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.params.v1beta1.QueryParamsRequest"></a>
 
-### QueryParamsRequest
-QueryParamsRequest is request type for the Query/Params RPC method.
-=======
+
+
 <a name="cosmos.slashing.v1beta1.QuerySigningInfoRequest"></a>
 
 ### QuerySigningInfoRequest
 QuerySigningInfoRequest is the request type for the Query/SigningInfo RPC
 method
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `subspace` | [string](#string) |  | subspace defines the module to query the parameter for. |
-| `key` | [string](#string) |  | key defines the key of the parameter in the subspace. |
-=======
 | `cons_address` | [string](#string) |  | cons_address is the address to query signing info of |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.params.v1beta1.QueryParamsResponse"></a>
-
-### QueryParamsResponse
-QueryParamsResponse is response type for the Query/Params RPC method.
-=======
 <a name="cosmos.slashing.v1beta1.QuerySigningInfoResponse"></a>
 
 ### QuerySigningInfoResponse
 QuerySigningInfoResponse is the response type for the Query/SigningInfo RPC
 method
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `param` | [ParamChange](#cosmos.params.v1beta1.ParamChange) |  | param defines the queried parameter. |
-=======
 | `val_signing_info` | [ValidatorSigningInfo](#cosmos.slashing.v1beta1.ValidatorSigningInfo) |  | val_signing_info is the signing info of requested val cons address |
 
 
@@ -8517,7 +4931,6 @@ method
 | ----- | ---- | ----- | ----------- |
 | `info` | [ValidatorSigningInfo](#cosmos.slashing.v1beta1.ValidatorSigningInfo) | repeated | info is the signing info of all validators |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -8530,16 +4943,6 @@ method
  <!-- end HasExtensions -->
 
 
-<<<<<<< HEAD
-<a name="cosmos.params.v1beta1.Query"></a>
-
-### Query
-Query defines the gRPC querier service.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Params` | [QueryParamsRequest](#cosmos.params.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.params.v1beta1.QueryParamsResponse) | Params queries a specific parameter of a module, given its subspace and key. | GET|/cosmos/params/v1beta1/params|
-=======
 <a name="cosmos.slashing.v1beta1.Query"></a>
 
 ### Query
@@ -8550,7 +4953,6 @@ Query provides defines the gRPC querier service
 | `Params` | [QueryParamsRequest](#cosmos.slashing.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.slashing.v1beta1.QueryParamsResponse) | Params queries the parameters of slashing module | GET|/cosmos/slashing/v1beta1/params|
 | `SigningInfo` | [QuerySigningInfoRequest](#cosmos.slashing.v1beta1.QuerySigningInfoRequest) | [QuerySigningInfoResponse](#cosmos.slashing.v1beta1.QuerySigningInfoResponse) | SigningInfo queries the signing info of given cons address | GET|/cosmos/slashing/v1beta1/signing_infos/{cons_address}|
 | `SigningInfos` | [QuerySigningInfosRequest](#cosmos.slashing.v1beta1.QuerySigningInfosRequest) | [QuerySigningInfosResponse](#cosmos.slashing.v1beta1.QuerySigningInfosResponse) | SigningInfos queries signing info of all validators | GET|/cosmos/slashing/v1beta1/signing_infos|
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
  <!-- end services -->
 
@@ -8607,93 +5009,7 @@ Msg defines the slashing Msg service.
 
 
 
-<<<<<<< HEAD
-<a name="cosmos/slashing/v1beta1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/slashing/v1beta1/genesis.proto
-
-
-
-<a name="cosmos.slashing.v1beta1.GenesisState"></a>
-
-### GenesisState
-GenesisState defines the slashing module's genesis state.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `params` | [Params](#cosmos.slashing.v1beta1.Params) |  | params defines all the paramaters of related to deposit. |
-| `signing_infos` | [SigningInfo](#cosmos.slashing.v1beta1.SigningInfo) | repeated | signing_infos represents a map between validator addresses and their signing infos. |
-| `missed_blocks` | [ValidatorMissedBlocks](#cosmos.slashing.v1beta1.ValidatorMissedBlocks) | repeated | signing_infos represents a map between validator addresses and their missed blocks. |
-
-
-
-
-
-
-<a name="cosmos.slashing.v1beta1.MissedBlock"></a>
-
-### MissedBlock
-MissedBlock contains height and missed status as boolean.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `index` | [int64](#int64) |  | index is the height at which the block was missed. |
-| `missed` | [bool](#bool) |  | missed is the missed status. |
-
-
-
-
-
-
-<a name="cosmos.slashing.v1beta1.SigningInfo"></a>
-
-### SigningInfo
-SigningInfo stores validator signing info of corresponding address.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  | address is the validator address. |
-| `validator_signing_info` | [ValidatorSigningInfo](#cosmos.slashing.v1beta1.ValidatorSigningInfo) |  | validator_signing_info represents the signing info of this validator. |
-
-
-
-
-
-
-<a name="cosmos.slashing.v1beta1.ValidatorMissedBlocks"></a>
-
-### ValidatorMissedBlocks
-ValidatorMissedBlocks contains array of missed blocks of corresponding
-address.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  | address is the validator address. |
-| `missed_blocks` | [MissedBlock](#cosmos.slashing.v1beta1.MissedBlock) | repeated | missed_blocks is an array of missed blocks by the validator. |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="cosmos/slashing/v1beta1/query.proto"></a>
-=======
 <a name="cosmos/staking/v1beta1/staking.proto"></a>
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 <p align="right"><a href="#top">Top</a></p>
 
 ## cosmos/staking/v1beta1/staking.proto
@@ -8908,19 +5224,6 @@ denomination.
 | `bonded_tokens` | [string](#string) |  |  |
 
 
-<<<<<<< HEAD
-<a name="cosmos/staking/v1beta1/staking.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/staking/v1beta1/staking.proto
-
-
-
-<a name="cosmos.staking.v1beta1.Commission"></a>
-
-### Commission
-Commission defines commission parameters for a given validator.
-=======
 
 
 
@@ -8970,47 +5273,28 @@ RedelegationEntry defines a redelegation object with relevant metadata.
 RedelegationEntryResponse is equivalent to a RedelegationEntry except that it
 contains a balance in addition to shares which is more suitable for client
 responses.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `commission_rates` | [CommissionRates](#cosmos.staking.v1beta1.CommissionRates) |  |  |
-| `update_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-=======
 | `redelegation_entry` | [RedelegationEntry](#cosmos.staking.v1beta1.RedelegationEntry) |  |  |
 | `balance` | [string](#string) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.staking.v1beta1.CommissionRates"></a>
-
-### CommissionRates
-CommissionRates defines the initial commission rates to be used for creating
-a validator.
-=======
 <a name="cosmos.staking.v1beta1.RedelegationResponse"></a>
 
 ### RedelegationResponse
 RedelegationResponse is equivalent to a Redelegation except that its entries
 contain a balance in addition to shares which is more suitable for client
 responses.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `rate` | [string](#string) |  |  |
-| `max_rate` | [string](#string) |  |  |
-| `max_change_rate` | [string](#string) |  |  |
-=======
 | `redelegation` | [Redelegation](#cosmos.staking.v1beta1.Redelegation) |  |  |
 | `entries` | [RedelegationEntryResponse](#cosmos.staking.v1beta1.RedelegationEntryResponse) | repeated |  |
 
@@ -9031,7 +5315,6 @@ for a single validator in an time-ordered list.
 | `delegator_address` | [string](#string) |  | delegator_address is the bech32-encoded address of the delegator. |
 | `validator_address` | [string](#string) |  | validator_address is the bech32-encoded address of the validator. |
 | `entries` | [UnbondingDelegationEntry](#cosmos.staking.v1beta1.UnbondingDelegationEntry) | repeated | entries are the unbonding delegation entries.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 unbonding delegation entries |
 
@@ -9039,28 +5322,15 @@ unbonding delegation entries |
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.staking.v1beta1.DVPair"></a>
-
-### DVPair
-DVPair is struct that just has a delegator-validator pair with no other data.
-It is intended to be used as a marshalable pointer. For example, a DVPair can
-be used to construct the key to getting an UnbondingDelegation from state.
-=======
 
 <a name="cosmos.staking.v1beta1.UnbondingDelegationEntry"></a>
 
 ### UnbondingDelegationEntry
 UnbondingDelegationEntry defines an unbonding object with relevant metadata.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `delegator_address` | [string](#string) |  |  |
-| `validator_address` | [string](#string) |  |  |
-=======
 | `creation_height` | [int64](#int64) |  | creation_height is the height which the unbonding took place. |
 | `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | completion_time is the unix time for unbonding completion. |
 | `initial_balance` | [string](#string) |  | initial_balance defines the tokens initially scheduled to receive at completion. |
@@ -9080,19 +5350,12 @@ ValAddresses defines a repeated set of validator addresses.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `addresses` | [string](#string) | repeated |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.staking.v1beta1.DVPairs"></a>
-
-### DVPairs
-DVPairs defines an array of DVPair objects.
-=======
 <a name="cosmos.staking.v1beta1.Validator"></a>
 
 ### Validator
@@ -9104,14 +5367,10 @@ this validator, the validator is credited with a delegation whose number of
 bond shares is based on the amount of coins delegated divided by the current
 exchange rate. Voting power can be calculated as total bonded shares
 multiplied by exchange rate.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `pairs` | [DVPair](#cosmos.staking.v1beta1.DVPair) | repeated |  |
-=======
 | `operator_address` | [string](#string) |  | operator_address defines the address of the validator's operator; bech encoded in JSON. |
 | `consensus_pubkey` | [google.protobuf.Any](#google.protobuf.Any) |  | consensus_pubkey is the consensus public key of the validator, as a Protobuf Any. |
 | `jailed` | [bool](#bool) |  | jailed defined whether the validator has been jailed from bonded status or not. |
@@ -9123,7 +5382,6 @@ multiplied by exchange rate.
 | `unbonding_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | unbonding_time defines, if unbonding, the min time for the validator to complete unbonding. |
 | `commission` | [Commission](#cosmos.staking.v1beta1.Commission) |  | commission defines the commission parameters. |
 | `min_self_delegation` | [string](#string) |  | min_self_delegation is the validator's self declared minimum self delegation. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -9131,36 +5389,18 @@ multiplied by exchange rate.
 
  <!-- end messages -->
 
-<<<<<<< HEAD
-<a name="cosmos.staking.v1beta1.DVVTriplet"></a>
-
-### DVVTriplet
-DVVTriplet is struct that just has a delegator-validator-validator triplet
-with no other data. It is intended to be used as a marshalable pointer. For
-example, a DVVTriplet can be used to construct the key to getting a
-Redelegation from state.
-=======
 
 <a name="cosmos.staking.v1beta1.BondStatus"></a>
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 ### BondStatus
 BondStatus is the status of a validator.
 
-<<<<<<< HEAD
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `delegator_address` | [string](#string) |  |  |
-| `validator_src_address` | [string](#string) |  |  |
-| `validator_dst_address` | [string](#string) |  |  |
-=======
 | Name | Number | Description |
 | ---- | ------ | ----------- |
 | BOND_STATUS_UNSPECIFIED | 0 | UNSPECIFIED defines an invalid validator status. |
 | BOND_STATUS_UNBONDED | 1 | UNBONDED defines a validator that is not bonded. |
 | BOND_STATUS_UNBONDING | 2 | UNBONDING defines a validator that is unbonding. |
 | BOND_STATUS_BONDED | 3 | BONDED defines a validator that is bonded. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
  <!-- end enums -->
@@ -9170,12 +5410,6 @@ BondStatus is the status of a validator.
  <!-- end services -->
 
 
-<<<<<<< HEAD
-<a name="cosmos.staking.v1beta1.DVVTriplets"></a>
-
-### DVVTriplets
-DVVTriplets defines an array of DVVTriplet objects.
-=======
 
 <a name="cosmos/staking/v1beta1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
@@ -9188,14 +5422,10 @@ DVVTriplets defines an array of DVVTriplet objects.
 
 ### GenesisState
 GenesisState defines the staking module's genesis state.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `triplets` | [DVVTriplet](#cosmos.staking.v1beta1.DVVTriplet) | repeated |  |
-=======
 | `params` | [Params](#cosmos.staking.v1beta1.Params) |  | params defines all the paramaters of related to deposit. |
 | `last_total_power` | [bytes](#bytes) |  | last_total_power tracks the total amounts of bonded tokens recorded during the previous end block. |
 | `last_validator_powers` | [LastValidatorPower](#cosmos.staking.v1beta1.LastValidatorPower) | repeated | last_validator_powers is a special index that provides a historical list of the last-block's bonded validators. |
@@ -9204,75 +5434,37 @@ GenesisState defines the staking module's genesis state.
 | `unbonding_delegations` | [UnbondingDelegation](#cosmos.staking.v1beta1.UnbondingDelegation) | repeated | unbonding_delegations defines the unbonding delegations active at genesis. |
 | `redelegations` | [Redelegation](#cosmos.staking.v1beta1.Redelegation) | repeated | redelegations defines the redelegations active at genesis. |
 | `exported` | [bool](#bool) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.staking.v1beta1.Delegation"></a>
-
-### Delegation
-Delegation represents the bond with tokens held by an account. It is
-owned by one delegator, and is associated with the voting power of one
-validator.
-=======
 <a name="cosmos.staking.v1beta1.LastValidatorPower"></a>
 
 ### LastValidatorPower
 LastValidatorPower required for validator set update logic.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `delegator_address` | [string](#string) |  |  |
-| `validator_address` | [string](#string) |  |  |
-| `shares` | [string](#string) |  |  |
-=======
 | `address` | [string](#string) |  | address is the address of the validator. |
 | `power` | [int64](#int64) |  | power defines the power of the validator. |
 
 
 
 
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
+ <!-- end messages -->
 
+ <!-- end enums -->
 
+ <!-- end HasExtensions -->
 
-<<<<<<< HEAD
-
-
-<a name="cosmos.staking.v1beta1.DelegationResponse"></a>
-
-### DelegationResponse
-DelegationResponse is equivalent to Delegation except that it contains a
-balance in addition to shares which is more suitable for client responses.
-
-=======
  <!-- end services -->
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `delegation` | [Delegation](#cosmos.staking.v1beta1.Delegation) |  |  |
-| `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-
-
-<<<<<<< HEAD
 
 
 
-
-<a name="cosmos.staking.v1beta1.Description"></a>
-
-### Description
-Description defines a validator description.
-=======
 <a name="cosmos/staking/v1beta1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -9284,49 +5476,26 @@ Description defines a validator description.
 
 ### QueryDelegationRequest
 QueryDelegationRequest is request type for the Query/Delegation RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `moniker` | [string](#string) |  |  |
-| `identity` | [string](#string) |  |  |
-| `website` | [string](#string) |  |  |
-| `security_contact` | [string](#string) |  |  |
-| `details` | [string](#string) |  |  |
-=======
 | `delegator_addr` | [string](#string) |  | delegator_addr defines the delegator address to query for. |
 | `validator_addr` | [string](#string) |  | validator_addr defines the validator address to query for. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.staking.v1beta1.HistoricalInfo"></a>
-
-### HistoricalInfo
-HistoricalInfo contains header and validator information for a given block.
-It is stored as part of staking module's state, which persists the `n` most
-recent HistoricalInfo
-(`n` is set by the staking module's `historical_entries` parameter).
-=======
 <a name="cosmos.staking.v1beta1.QueryDelegationResponse"></a>
 
 ### QueryDelegationResponse
 QueryDelegationResponse is response type for the Query/Delegation RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `header` | [tendermint.types.Header](#tendermint.types.Header) |  |  |
-| `valset` | [Validator](#cosmos.staking.v1beta1.Validator) | repeated |  |
-=======
 | `delegation_response` | [DelegationResponse](#cosmos.staking.v1beta1.DelegationResponse) |  | delegation_responses defines the delegation info of a delegation. |
 
 
@@ -9345,387 +5514,187 @@ Query/DelegatorDelegations RPC method.
 | ----- | ---- | ----- | ----------- |
 | `delegator_addr` | [string](#string) |  | delegator_addr defines the delegator address to query for. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.staking.v1beta1.Params"></a>
-
-### Params
-Params defines the parameters for the staking module.
-=======
 <a name="cosmos.staking.v1beta1.QueryDelegatorDelegationsResponse"></a>
 
 ### QueryDelegatorDelegationsResponse
 QueryDelegatorDelegationsResponse is response type for the
 Query/DelegatorDelegations RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `unbonding_time` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
-| `max_validators` | [uint32](#uint32) |  |  |
-| `max_entries` | [uint32](#uint32) |  |  |
-| `historical_entries` | [uint32](#uint32) |  |  |
-| `bond_denom` | [string](#string) |  |  |
-=======
 | `delegation_responses` | [DelegationResponse](#cosmos.staking.v1beta1.DelegationResponse) | repeated | delegation_responses defines all the delegations' info of a delegator. |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.staking.v1beta1.Pool"></a>
-
-### Pool
-Pool is used for tracking bonded and not-bonded token supply of the bond
-denomination.
-=======
 <a name="cosmos.staking.v1beta1.QueryDelegatorUnbondingDelegationsRequest"></a>
 
 ### QueryDelegatorUnbondingDelegationsRequest
 QueryDelegatorUnbondingDelegationsRequest is request type for the
 Query/DelegatorUnbondingDelegations RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `not_bonded_tokens` | [string](#string) |  |  |
-| `bonded_tokens` | [string](#string) |  |  |
-=======
 | `delegator_addr` | [string](#string) |  | delegator_addr defines the delegator address to query for. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.staking.v1beta1.Redelegation"></a>
-
-### Redelegation
-Redelegation contains the list of a particular delegator's redelegating bonds
-from a particular source validator to a particular destination validator.
-=======
 <a name="cosmos.staking.v1beta1.QueryDelegatorUnbondingDelegationsResponse"></a>
 
 ### QueryDelegatorUnbondingDelegationsResponse
 QueryUnbondingDelegatorDelegationsResponse is response type for the
 Query/UnbondingDelegatorDelegations RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `delegator_address` | [string](#string) |  |  |
-| `validator_src_address` | [string](#string) |  |  |
-| `validator_dst_address` | [string](#string) |  |  |
-| `entries` | [RedelegationEntry](#cosmos.staking.v1beta1.RedelegationEntry) | repeated | redelegation entries |
-=======
 | `unbonding_responses` | [UnbondingDelegation](#cosmos.staking.v1beta1.UnbondingDelegation) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.staking.v1beta1.RedelegationEntry"></a>
-
-### RedelegationEntry
-RedelegationEntry defines a redelegation object with relevant metadata.
-=======
 <a name="cosmos.staking.v1beta1.QueryDelegatorValidatorRequest"></a>
 
 ### QueryDelegatorValidatorRequest
 QueryDelegatorValidatorRequest is request type for the
 Query/DelegatorValidator RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `creation_height` | [int64](#int64) |  |  |
-| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `initial_balance` | [string](#string) |  |  |
-| `shares_dst` | [string](#string) |  |  |
-=======
 | `delegator_addr` | [string](#string) |  | delegator_addr defines the delegator address to query for. |
 | `validator_addr` | [string](#string) |  | validator_addr defines the validator address to query for. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.staking.v1beta1.RedelegationEntryResponse"></a>
-
-### RedelegationEntryResponse
-RedelegationEntryResponse is equivalent to a RedelegationEntry except that it
-contains a balance in addition to shares which is more suitable for client
-responses.
-=======
 <a name="cosmos.staking.v1beta1.QueryDelegatorValidatorResponse"></a>
 
 ### QueryDelegatorValidatorResponse
 QueryDelegatorValidatorResponse response type for the
 Query/DelegatorValidator RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `redelegation_entry` | [RedelegationEntry](#cosmos.staking.v1beta1.RedelegationEntry) |  |  |
-| `balance` | [string](#string) |  |  |
-=======
 | `validator` | [Validator](#cosmos.staking.v1beta1.Validator) |  | validator defines the the validator info. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.staking.v1beta1.RedelegationResponse"></a>
-
-### RedelegationResponse
-RedelegationResponse is equivalent to a Redelegation except that its entries
-contain a balance in addition to shares which is more suitable for client
-responses.
-=======
 <a name="cosmos.staking.v1beta1.QueryDelegatorValidatorsRequest"></a>
 
 ### QueryDelegatorValidatorsRequest
 QueryDelegatorValidatorsRequest is request type for the
 Query/DelegatorValidators RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `redelegation` | [Redelegation](#cosmos.staking.v1beta1.Redelegation) |  |  |
-| `entries` | [RedelegationEntryResponse](#cosmos.staking.v1beta1.RedelegationEntryResponse) | repeated |  |
-=======
 | `delegator_addr` | [string](#string) |  | delegator_addr defines the delegator address to query for. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.staking.v1beta1.UnbondingDelegation"></a>
-
-### UnbondingDelegation
-UnbondingDelegation stores all of a single delegator's unbonding bonds
-for a single validator in an time-ordered list.
-=======
 <a name="cosmos.staking.v1beta1.QueryDelegatorValidatorsResponse"></a>
 
 ### QueryDelegatorValidatorsResponse
 QueryDelegatorValidatorsResponse is response type for the
 Query/DelegatorValidators RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `delegator_address` | [string](#string) |  |  |
-| `validator_address` | [string](#string) |  |  |
-| `entries` | [UnbondingDelegationEntry](#cosmos.staking.v1beta1.UnbondingDelegationEntry) | repeated | unbonding delegation entries |
-=======
 | `validators` | [Validator](#cosmos.staking.v1beta1.Validator) | repeated | validators defines the the validators' info of a delegator. |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.staking.v1beta1.UnbondingDelegationEntry"></a>
-
-### UnbondingDelegationEntry
-UnbondingDelegationEntry defines an unbonding object with relevant metadata.
-=======
 <a name="cosmos.staking.v1beta1.QueryHistoricalInfoRequest"></a>
 
 ### QueryHistoricalInfoRequest
 QueryHistoricalInfoRequest is request type for the Query/HistoricalInfo RPC
 method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `creation_height` | [int64](#int64) |  |  |
-| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `initial_balance` | [string](#string) |  |  |
-| `balance` | [string](#string) |  |  |
-=======
 | `height` | [int64](#int64) |  | height defines at which height to query the historical info. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.staking.v1beta1.ValAddresses"></a>
-
-### ValAddresses
-ValAddresses defines a repeated set of validator addresses.
-=======
 <a name="cosmos.staking.v1beta1.QueryHistoricalInfoResponse"></a>
 
 ### QueryHistoricalInfoResponse
 QueryHistoricalInfoResponse is response type for the Query/HistoricalInfo RPC
 method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `addresses` | [string](#string) | repeated |  |
-=======
 | `hist` | [HistoricalInfo](#cosmos.staking.v1beta1.HistoricalInfo) |  | hist defines the historical info at the given height. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.staking.v1beta1.Validator"></a>
-
-### Validator
-Validator defines a validator, together with the total amount of the
-Validator's bond shares and their exchange rate to coins. Slashing results in
-a decrease in the exchange rate, allowing correct calculation of future
-undelegations without iterating over delegators. When coins are delegated to
-this validator, the validator is credited with a delegation whose number of
-bond shares is based on the amount of coins delegated divided by the current
-exchange rate. Voting power can be calculated as total bonded shares
-multiplied by exchange rate.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `operator_address` | [string](#string) |  |  |
-| `consensus_pubkey` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `jailed` | [bool](#bool) |  |  |
-| `status` | [BondStatus](#cosmos.staking.v1beta1.BondStatus) |  |  |
-| `tokens` | [string](#string) |  |  |
-| `delegator_shares` | [string](#string) |  |  |
-| `description` | [Description](#cosmos.staking.v1beta1.Description) |  |  |
-| `unbonding_height` | [int64](#int64) |  |  |
-| `unbonding_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `commission` | [Commission](#cosmos.staking.v1beta1.Commission) |  |  |
-| `min_self_delegation` | [string](#string) |  |  |
-=======
 <a name="cosmos.staking.v1beta1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
 QueryParamsRequest is request type for the Query/Params RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
- <!-- end messages -->
 
-<<<<<<< HEAD
-
-<a name="cosmos.staking.v1beta1.BondStatus"></a>
-=======
 <a name="cosmos.staking.v1beta1.QueryParamsResponse"></a>
 
 ### QueryParamsResponse
 QueryParamsResponse is response type for the Query/Params RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
-### BondStatus
-BondStatus is the status of a validator.
 
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| BOND_STATUS_UNSPECIFIED | 0 | UNSPECIFIED defines an invalid validator status. |
-| BOND_STATUS_UNBONDED | 1 | UNBONDED defines a validator that is not bonded. |
-| BOND_STATUS_UNBONDING | 2 | UNBONDING defines a validator that is unbonding. |
-| BOND_STATUS_BONDED | 3 | BONDED defines a validator that is bonded. |
-
-<<<<<<< HEAD
-=======
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#cosmos.staking.v1beta1.Params) |  | params holds all the parameters of this module. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
 
 
 
-<<<<<<< HEAD
-<a name="cosmos/staking/v1beta1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/staking/v1beta1/genesis.proto
 
 
 
-<a name="cosmos.staking.v1beta1.GenesisState"></a>
-
-### GenesisState
-GenesisState defines the staking module's genesis state.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `params` | [Params](#cosmos.staking.v1beta1.Params) |  | params defines all the paramaters of related to deposit. |
-| `last_total_power` | [bytes](#bytes) |  | last_total_power tracks the total amounts of bonded tokens recorded during the previous end block. |
-| `last_validator_powers` | [LastValidatorPower](#cosmos.staking.v1beta1.LastValidatorPower) | repeated | last_validator_powers is a special index that provides a historical list of the last-block's bonded validators. |
-| `validators` | [Validator](#cosmos.staking.v1beta1.Validator) | repeated | delegations defines the validator set at genesis. |
-| `delegations` | [Delegation](#cosmos.staking.v1beta1.Delegation) | repeated | delegations defines the delegations active at genesis. |
-| `unbonding_delegations` | [UnbondingDelegation](#cosmos.staking.v1beta1.UnbondingDelegation) | repeated | unbonding_delegations defines the unbonding delegations active at genesis. |
-| `redelegations` | [Redelegation](#cosmos.staking.v1beta1.Redelegation) | repeated | redelegations defines the redelegations active at genesis. |
-| `exported` | [bool](#bool) |  |  |
-=======
 <a name="cosmos.staking.v1beta1.QueryPoolRequest"></a>
 
 ### QueryPoolRequest
@@ -9737,21 +5706,11 @@ QueryPoolRequest is request type for the Query/Pool RPC method.
 
 
 <a name="cosmos.staking.v1beta1.QueryPoolResponse"></a>
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 ### QueryPoolResponse
 QueryPoolResponse is response type for the Query/Pool RPC method.
 
 
-<<<<<<< HEAD
-
-
-
-<a name="cosmos.staking.v1beta1.LastValidatorPower"></a>
-
-### LastValidatorPower
-LastValidatorPower required for validator set update logic.
-=======
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `pool` | [Pool](#cosmos.staking.v1beta1.Pool) |  | pool defines the pool info. |
@@ -9766,20 +5725,14 @@ LastValidatorPower required for validator set update logic.
 ### QueryRedelegationsRequest
 QueryRedelegationsRequest is request type for the Query/Redelegations RPC
 method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `address` | [string](#string) |  | address is the address of the validator. |
-| `power` | [int64](#int64) |  | power defines the power of the validator. |
-=======
 | `delegator_addr` | [string](#string) |  | delegator_addr defines the delegator address to query for. |
 | `src_validator_addr` | [string](#string) |  | src_validator_addr defines the validator address to redelegate from. |
 | `dst_validator_addr` | [string](#string) |  | dst_validator_addr defines the validator address to redelegate to. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -10329,345 +6282,6 @@ which must be above some miminum to be accepted into the mempool.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.MsgCreateValidator"></a>
-
-### MsgCreateValidator
-MsgCreateValidator defines a SDK message for creating a new validator.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `description` | [Description](#cosmos.staking.v1beta1.Description) |  |  |
-| `commission` | [CommissionRates](#cosmos.staking.v1beta1.CommissionRates) |  |  |
-| `min_self_delegation` | [string](#string) |  |  |
-| `delegator_address` | [string](#string) |  |  |
-| `validator_address` | [string](#string) |  |  |
-| `pubkey` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `value` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.MsgCreateValidatorResponse"></a>
-
-### MsgCreateValidatorResponse
-MsgCreateValidatorResponse defines the Msg/CreateValidator response type.
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.MsgDelegate"></a>
-
-### MsgDelegate
-MsgDelegate defines a SDK message for performing a delegation of coins
-from a delegator to a validator.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `delegator_address` | [string](#string) |  |  |
-| `validator_address` | [string](#string) |  |  |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.MsgDelegateResponse"></a>
-
-### MsgDelegateResponse
-MsgDelegateResponse defines the Msg/Delegate response type.
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.MsgEditValidator"></a>
-
-### MsgEditValidator
-MsgEditValidator defines a SDK message for editing an existing validator.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `description` | [Description](#cosmos.staking.v1beta1.Description) |  |  |
-| `validator_address` | [string](#string) |  |  |
-| `commission_rate` | [string](#string) |  | We pass a reference to the new commission rate and min self delegation as it's not mandatory to update. If not updated, the deserialized rate will be zero with no way to distinguish if an update was intended. REF: #2373 |
-| `min_self_delegation` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.MsgEditValidatorResponse"></a>
-
-### MsgEditValidatorResponse
-MsgEditValidatorResponse defines the Msg/EditValidator response type.
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.MsgUndelegate"></a>
-
-### MsgUndelegate
-MsgUndelegate defines a SDK message for performing an undelegation from a
-delegate and a validator.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `delegator_address` | [string](#string) |  |  |
-| `validator_address` | [string](#string) |  |  |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.MsgUndelegateResponse"></a>
-
-### MsgUndelegateResponse
-MsgUndelegateResponse defines the Msg/Undelegate response type.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="cosmos.staking.v1beta1.Msg"></a>
-
-### Msg
-Msg defines the staking Msg service.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `CreateValidator` | [MsgCreateValidator](#cosmos.staking.v1beta1.MsgCreateValidator) | [MsgCreateValidatorResponse](#cosmos.staking.v1beta1.MsgCreateValidatorResponse) | CreateValidator defines a method for creating a new validator. | |
-| `EditValidator` | [MsgEditValidator](#cosmos.staking.v1beta1.MsgEditValidator) | [MsgEditValidatorResponse](#cosmos.staking.v1beta1.MsgEditValidatorResponse) | EditValidator defines a method for editing an existing validator. | |
-| `Delegate` | [MsgDelegate](#cosmos.staking.v1beta1.MsgDelegate) | [MsgDelegateResponse](#cosmos.staking.v1beta1.MsgDelegateResponse) | Delegate defines a method for performing a delegation of coins from a delegator to a validator. | |
-| `BeginRedelegate` | [MsgBeginRedelegate](#cosmos.staking.v1beta1.MsgBeginRedelegate) | [MsgBeginRedelegateResponse](#cosmos.staking.v1beta1.MsgBeginRedelegateResponse) | BeginRedelegate defines a method for performing a redelegation of coins from a delegator and source validator to a destination validator. | |
-| `Undelegate` | [MsgUndelegate](#cosmos.staking.v1beta1.MsgUndelegate) | [MsgUndelegateResponse](#cosmos.staking.v1beta1.MsgUndelegateResponse) | Undelegate defines a method for performing an undelegation from a delegate and a validator. | |
-
- <!-- end services -->
-
-
-
-<a name="cosmos/tx/signing/v1beta1/signing.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/tx/signing/v1beta1/signing.proto
-
-
-
-<a name="cosmos.tx.signing.v1beta1.SignatureDescriptor"></a>
-
-### SignatureDescriptor
-SignatureDescriptor is a convenience type which represents the full data for
-a signature including the public key of the signer, signing modes and the
-signature itself. It is primarily used for coordinating signatures between
-clients.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `public_key` | [google.protobuf.Any](#google.protobuf.Any) |  | public_key is the public key of the signer |
-| `data` | [SignatureDescriptor.Data](#cosmos.tx.signing.v1beta1.SignatureDescriptor.Data) |  |  |
-| `sequence` | [uint64](#uint64) |  | sequence is the sequence of the account, which describes the number of committed transactions signed by a given address. It is used to prevent replay attacks. |
-
-
-
-
-
-
-<a name="cosmos.tx.signing.v1beta1.SignatureDescriptor.Data"></a>
-
-### SignatureDescriptor.Data
-Data represents signature data
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `single` | [SignatureDescriptor.Data.Single](#cosmos.tx.signing.v1beta1.SignatureDescriptor.Data.Single) |  | single represents a single signer |
-| `multi` | [SignatureDescriptor.Data.Multi](#cosmos.tx.signing.v1beta1.SignatureDescriptor.Data.Multi) |  | multi represents a multisig signer |
-
-
-
-
-
-
-<a name="cosmos.tx.signing.v1beta1.SignatureDescriptor.Data.Multi"></a>
-
-### SignatureDescriptor.Data.Multi
-Multi is the signature data for a multisig public key
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `bitarray` | [cosmos.crypto.multisig.v1beta1.CompactBitArray](#cosmos.crypto.multisig.v1beta1.CompactBitArray) |  | bitarray specifies which keys within the multisig are signing |
-| `signatures` | [SignatureDescriptor.Data](#cosmos.tx.signing.v1beta1.SignatureDescriptor.Data) | repeated | signatures is the signatures of the multi-signature |
-
-
-
-
-
-
-<a name="cosmos.tx.signing.v1beta1.SignatureDescriptor.Data.Single"></a>
-
-### SignatureDescriptor.Data.Single
-Single is the signature data for a single signer
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `mode` | [SignMode](#cosmos.tx.signing.v1beta1.SignMode) |  | mode is the signing mode of the single signer |
-| `signature` | [bytes](#bytes) |  | signature is the raw signature bytes |
-=======
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the amount of coins to be paid as a fee |
-| `gas_limit` | [uint64](#uint64) |  | gas_limit is the maximum gas that can be used in transaction processing before an out of gas error occurs |
-| `payer` | [string](#string) |  | if unset, the first signer is responsible for paying the fees. If set, the specified account must pay the fees. the payer must be a tx signer (and thus have signed this field in AuthInfo). setting this field does *not* change the ordering of required signers for the transaction. |
-| `granter` | [string](#string) |  | if set, the fee payer (either the first signer or the value of the payer field) requests that a fee grant be used to pay fees instead of the fee payer's own balance. If an appropriate fee grant does not exist or the chain does not support fee grants, this will fail |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-
-
-
-
-<<<<<<< HEAD
-<a name="cosmos.tx.signing.v1beta1.SignatureDescriptors"></a>
-
-### SignatureDescriptors
-SignatureDescriptors wraps multiple SignatureDescriptor's.
-=======
-<a name="cosmos.tx.v1beta1.ModeInfo"></a>
-
-### ModeInfo
-ModeInfo describes the signing mode of a single or nested multisig signer.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `signatures` | [SignatureDescriptor](#cosmos.tx.signing.v1beta1.SignatureDescriptor) | repeated | signatures are the signature descriptors |
-
-
-
-
-
- <!-- end messages -->
-
-
-<a name="cosmos.tx.signing.v1beta1.SignMode"></a>
-=======
-| `single` | [ModeInfo.Single](#cosmos.tx.v1beta1.ModeInfo.Single) |  | single represents a single signer |
-| `multi` | [ModeInfo.Multi](#cosmos.tx.v1beta1.ModeInfo.Multi) |  | multi represents a nested multisig signer |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-### SignMode
-SignMode represents a signing mode with its own security guarantees.
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| SIGN_MODE_UNSPECIFIED | 0 | SIGN_MODE_UNSPECIFIED specifies an unknown signing mode and will be rejected |
-| SIGN_MODE_DIRECT | 1 | SIGN_MODE_DIRECT specifies a signing mode which uses SignDoc and is verified with raw bytes from Tx |
-| SIGN_MODE_TEXTUAL | 2 | SIGN_MODE_TEXTUAL is a future signing mode that will verify some human-readable textual representation on top of the binary representation from SIGN_MODE_DIRECT |
-| SIGN_MODE_LEGACY_AMINO_JSON | 127 | SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses Amino JSON and will be removed in the future |
-
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-<<<<<<< HEAD
- <!-- end services -->
-
-
-
-<a name="cosmos/tx/v1beta1/tx.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/tx/v1beta1/tx.proto
-
-
-
-<a name="cosmos.tx.v1beta1.AuthInfo"></a>
-
-### AuthInfo
-AuthInfo describes the fee and signer modes that are used to sign a
-transaction.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `signer_infos` | [SignerInfo](#cosmos.tx.v1beta1.SignerInfo) | repeated | signer_infos defines the signing modes for the required signers. The number and order of elements must match the required signers from TxBody's messages. The first element is the primary signer and the one which pays the fee. |
-| `fee` | [Fee](#cosmos.tx.v1beta1.Fee) |  | Fee is the fee and gas limit for the transaction. The first signer is the primary signer and the one which pays the fee. The fee can be calculated based on the cost of evaluating the body and doing signature verification of the signers. This can be estimated via simulation. |
-=======
-<a name="cosmos.tx.v1beta1.ModeInfo.Multi"></a>
-
-### ModeInfo.Multi
-Multi is the mode info for a multisig public key
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `bitarray` | [cosmos.crypto.multisig.v1beta1.CompactBitArray](#cosmos.crypto.multisig.v1beta1.CompactBitArray) |  | bitarray specifies which keys within the multisig are signing |
-| `mode_infos` | [ModeInfo](#cosmos.tx.v1beta1.ModeInfo) | repeated | mode_infos is the corresponding modes of the signers of the multisig which could include nested multisig public keys |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-
-
-
-
-<<<<<<< HEAD
-<a name="cosmos.tx.v1beta1.Fee"></a>
-
-### Fee
-Fee includes the amount of coins paid in fees and the maximum
-gas to be used by the transaction. The ratio yields an effective "gasprice",
-which must be above some miminum to be accepted into the mempool.
-=======
-<a name="cosmos.tx.v1beta1.ModeInfo.Single"></a>
-
-### ModeInfo.Single
-Single is the mode info for a single signer. It is structured as a message
-to allow for additional fields such as locale for SIGN_MODE_TEXTUAL in the
-future
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the amount of coins to be paid as a fee |
 | `gas_limit` | [uint64](#uint64) |  | gas_limit is the maximum gas that can be used in transaction processing before an out of gas error occurs |
 | `payer` | [string](#string) |  | if unset, the first signer is responsible for paying the fees. If set, the specified account must pay the fees. the payer must be a tx signer (and thus have signed this field in AuthInfo). setting this field does *not* change the ordering of required signers for the transaction. |
@@ -10688,64 +6302,38 @@ ModeInfo describes the signing mode of a single or nested multisig signer.
 | ----- | ---- | ----- | ----------- |
 | `single` | [ModeInfo.Single](#cosmos.tx.v1beta1.ModeInfo.Single) |  | single represents a single signer |
 | `multi` | [ModeInfo.Multi](#cosmos.tx.v1beta1.ModeInfo.Multi) |  | multi represents a nested multisig signer |
-=======
-| `mode` | [cosmos.tx.signing.v1beta1.SignMode](#cosmos.tx.signing.v1beta1.SignMode) |  | mode is the signing mode of the single signer |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.tx.v1beta1.ModeInfo.Multi"></a>
 
 ### ModeInfo.Multi
 Multi is the mode info for a multisig public key
-=======
-<a name="cosmos.tx.v1beta1.SignDoc"></a>
-
-### SignDoc
-SignDoc is the type used for generating sign bytes for SIGN_MODE_DIRECT.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `bitarray` | [cosmos.crypto.multisig.v1beta1.CompactBitArray](#cosmos.crypto.multisig.v1beta1.CompactBitArray) |  | bitarray specifies which keys within the multisig are signing |
 | `mode_infos` | [ModeInfo](#cosmos.tx.v1beta1.ModeInfo) | repeated | mode_infos is the corresponding modes of the signers of the multisig which could include nested multisig public keys |
-=======
-| `body_bytes` | [bytes](#bytes) |  | body_bytes is protobuf serialization of a TxBody that matches the representation in TxRaw. |
-| `auth_info_bytes` | [bytes](#bytes) |  | auth_info_bytes is a protobuf serialization of an AuthInfo that matches the representation in TxRaw. |
-| `chain_id` | [string](#string) |  | chain_id is the unique identifier of the chain this transaction targets. It prevents signed transactions from being used on another chain by an attacker |
-| `account_number` | [uint64](#uint64) |  | account_number is the account number of the account in state |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.tx.v1beta1.ModeInfo.Single"></a>
 
 ### ModeInfo.Single
 Single is the mode info for a single signer. It is structured as a message
 to allow for additional fields such as locale for SIGN_MODE_TEXTUAL in the
 future
-=======
-<a name="cosmos.tx.v1beta1.SignerInfo"></a>
-
-### SignerInfo
-SignerInfo describes the public key and signing mode of a single top-level
-signer.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `mode` | [cosmos.tx.signing.v1beta1.SignMode](#cosmos.tx.signing.v1beta1.SignMode) |  | mode is the signing mode of the single signer |
 
 
@@ -10767,39 +6355,15 @@ SignDoc is the type used for generating sign bytes for SIGN_MODE_DIRECT.
 | `account_number` | [uint64](#uint64) |  | account_number is the account number of the account in state |
 
 
-=======
-| `public_key` | [google.protobuf.Any](#google.protobuf.Any) |  | public_key is the public key of the signer. It is optional for accounts that already exist in state. If unset, the verifier can use the required \ signer address for this position and lookup the public key. |
-| `mode_info` | [ModeInfo](#cosmos.tx.v1beta1.ModeInfo) |  | mode_info describes the signing mode of the signer and is a nested structure to support nested multisig pubkey's |
-| `sequence` | [uint64](#uint64) |  | sequence is the sequence of the account, which describes the number of committed transactions signed by a given address. It is used to prevent replay attacks. |
 
 
 
 
-
-
-<a name="cosmos.tx.v1beta1.Tx"></a>
-
-### Tx
-Tx is the standard type used for broadcasting transactions.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `body` | [TxBody](#cosmos.tx.v1beta1.TxBody) |  | body is the processable content of the transaction |
-| `auth_info` | [AuthInfo](#cosmos.tx.v1beta1.AuthInfo) |  | auth_info is the authorization related content of the transaction, specifically signers, signer modes and fee |
-| `signatures` | [bytes](#bytes) | repeated | signatures is a list of signatures that matches the length and order of AuthInfo's signer_infos to allow connecting signature meta information like public key and signing mode by position. |
-
-
-<<<<<<< HEAD
 <a name="cosmos.tx.v1beta1.SignerInfo"></a>
 
 ### SignerInfo
 SignerInfo describes the public key and signing mode of a single top-level
 signer.
-=======
-
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
@@ -10808,7 +6372,6 @@ signer.
 | `mode_info` | [ModeInfo](#cosmos.tx.v1beta1.ModeInfo) |  | mode_info describes the signing mode of the signer and is a nested structure to support nested multisig pubkey's |
 | `sequence` | [uint64](#uint64) |  | sequence is the sequence of the account, which describes the number of committed transactions signed by a given address. It is used to prevent replay attacks. |
 
-<<<<<<< HEAD
 
 
 
@@ -10818,63 +6381,32 @@ signer.
 
 ### Tx
 Tx is the standard type used for broadcasting transactions.
-=======
-<a name="cosmos.tx.v1beta1.TxBody"></a>
-
-### TxBody
-TxBody is the body of a transaction that all signers sign over.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `body` | [TxBody](#cosmos.tx.v1beta1.TxBody) |  | body is the processable content of the transaction |
 | `auth_info` | [AuthInfo](#cosmos.tx.v1beta1.AuthInfo) |  | auth_info is the authorization related content of the transaction, specifically signers, signer modes and fee |
 | `signatures` | [bytes](#bytes) | repeated | signatures is a list of signatures that matches the length and order of AuthInfo's signer_infos to allow connecting signature meta information like public key and signing mode by position. |
-=======
-| `messages` | [google.protobuf.Any](#google.protobuf.Any) | repeated | messages is a list of messages to be executed. The required signers of those messages define the number and order of elements in AuthInfo's signer_infos and Tx's signatures. Each required signer address is added to the list only the first time it occurs. By convention, the first required signer (usually from the first message) is referred to as the primary signer and pays the fee for the whole transaction. |
-| `memo` | [string](#string) |  | memo is any arbitrary memo to be added to the transaction |
-| `timeout_height` | [uint64](#uint64) |  | timeout is the block height after which this transaction will not be processed by the chain |
-| `extension_options` | [google.protobuf.Any](#google.protobuf.Any) | repeated | extension_options are arbitrary options that can be added by chains when the default options are not sufficient. If any of these are present and can't be handled, the transaction will be rejected |
-| `non_critical_extension_options` | [google.protobuf.Any](#google.protobuf.Any) | repeated | extension_options are arbitrary options that can be added by chains when the default options are not sufficient. If any of these are present and can't be handled, they will be ignored |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.tx.v1beta1.TxBody"></a>
 
 ### TxBody
 TxBody is the body of a transaction that all signers sign over.
-=======
-<a name="cosmos.tx.v1beta1.TxRaw"></a>
-
-### TxRaw
-TxRaw is a variant of Tx that pins the signer's exact binary representation
-of body and auth_info. This is used for signing, broadcasting and
-verification. The binary `serialize(tx: TxRaw)` is stored in Tendermint and
-the hash `sha256(serialize(tx: TxRaw))` becomes the "txhash", commonly used
-as the transaction ID.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `messages` | [google.protobuf.Any](#google.protobuf.Any) | repeated | messages is a list of messages to be executed. The required signers of those messages define the number and order of elements in AuthInfo's signer_infos and Tx's signatures. Each required signer address is added to the list only the first time it occurs. By convention, the first required signer (usually from the first message) is referred to as the primary signer and pays the fee for the whole transaction. |
 | `memo` | [string](#string) |  | memo is any arbitrary memo to be added to the transaction |
 | `timeout_height` | [uint64](#uint64) |  | timeout is the block height after which this transaction will not be processed by the chain |
 | `extension_options` | [google.protobuf.Any](#google.protobuf.Any) | repeated | extension_options are arbitrary options that can be added by chains when the default options are not sufficient. If any of these are present and can't be handled, the transaction will be rejected |
 | `non_critical_extension_options` | [google.protobuf.Any](#google.protobuf.Any) | repeated | extension_options are arbitrary options that can be added by chains when the default options are not sufficient. If any of these are present and can't be handled, they will be ignored |
-=======
-| `body_bytes` | [bytes](#bytes) |  | body_bytes is a protobuf serialization of a TxBody that matches the representation in SignDoc. |
-| `auth_info_bytes` | [bytes](#bytes) |  | auth_info_bytes is a protobuf serialization of an AuthInfo that matches the representation in SignDoc. |
-| `signatures` | [bytes](#bytes) | repeated | signatures is a list of signatures that matches the length and order of AuthInfo's signer_infos to allow connecting signature meta information like public key and signing mode by position. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -10898,39 +6430,17 @@ as the transaction ID.
 | `signatures` | [bytes](#bytes) | repeated | signatures is a list of signatures that matches the length and order of AuthInfo's signer_infos to allow connecting signature meta information like public key and signing mode by position. |
 
 
-<<<<<<< HEAD
 
-=======
-<a name="cosmos/tx/v1beta1/service.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/tx/v1beta1/service.proto
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
  <!-- end messages -->
 
-<<<<<<< HEAD
  <!-- end enums -->
 
  <!-- end HasExtensions -->
-=======
-<a name="cosmos.tx.v1beta1.BroadcastTxRequest"></a>
-
-### BroadcastTxRequest
-BroadcastTxRequest is the request type for the Service.BroadcastTxRequest
-RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
  <!-- end services -->
 
-<<<<<<< HEAD
-=======
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `tx_bytes` | [bytes](#bytes) |  | tx_bytes is the raw transaction. |
-| `mode` | [BroadcastMode](#cosmos.tx.v1beta1.BroadcastMode) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 <a name="cosmos/tx/v1beta1/service.proto"></a>
@@ -10940,244 +6450,138 @@ RPC method.
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.tx.v1beta1.BroadcastTxRequest"></a>
 
 ### BroadcastTxRequest
 BroadcastTxRequest is the request type for the Service.BroadcastTxRequest
 RPC method.
-=======
-<a name="cosmos.tx.v1beta1.BroadcastTxResponse"></a>
-
-### BroadcastTxResponse
-BroadcastTxResponse is the response type for the
-Service.BroadcastTx method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `tx_bytes` | [bytes](#bytes) |  | tx_bytes is the raw transaction. |
 | `mode` | [BroadcastMode](#cosmos.tx.v1beta1.BroadcastMode) |  |  |
-=======
-| `tx_response` | [cosmos.base.abci.v1beta1.TxResponse](#cosmos.base.abci.v1beta1.TxResponse) |  | tx_response is the queried TxResponses. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.tx.v1beta1.BroadcastTxResponse"></a>
 
 ### BroadcastTxResponse
 BroadcastTxResponse is the response type for the
 Service.BroadcastTx method.
-=======
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `tx_response` | [cosmos.base.abci.v1beta1.TxResponse](#cosmos.base.abci.v1beta1.TxResponse) |  | tx_response is the queried TxResponses. |
+
+
+
+
+
+
 <a name="cosmos.tx.v1beta1.GetTxRequest"></a>
 
 ### GetTxRequest
 GetTxRequest is the request type for the Service.GetTx
 RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `tx_response` | [cosmos.base.abci.v1beta1.TxResponse](#cosmos.base.abci.v1beta1.TxResponse) |  | tx_response is the queried TxResponses. |
-=======
 | `hash` | [string](#string) |  | hash is the tx hash to query, encoded as a hex string. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.tx.v1beta1.GetTxRequest"></a>
-
-### GetTxRequest
-GetTxRequest is the request type for the Service.GetTx
-RPC method.
-=======
 <a name="cosmos.tx.v1beta1.GetTxResponse"></a>
 
 ### GetTxResponse
 GetTxResponse is the response type for the Service.GetTx method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `hash` | [string](#string) |  | hash is the tx hash to query, encoded as a hex string. |
-=======
 | `tx` | [Tx](#cosmos.tx.v1beta1.Tx) |  | tx is the queried transaction. |
 | `tx_response` | [cosmos.base.abci.v1beta1.TxResponse](#cosmos.base.abci.v1beta1.TxResponse) |  | tx_response is the queried TxResponses. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.tx.v1beta1.GetTxResponse"></a>
-
-### GetTxResponse
-GetTxResponse is the response type for the Service.GetTx method.
-=======
 <a name="cosmos.tx.v1beta1.GetTxsEventRequest"></a>
 
 ### GetTxsEventRequest
 GetTxsEventRequest is the request type for the Service.TxsByEvents
 RPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `tx` | [Tx](#cosmos.tx.v1beta1.Tx) |  | tx is the queried transaction. |
-| `tx_response` | [cosmos.base.abci.v1beta1.TxResponse](#cosmos.base.abci.v1beta1.TxResponse) |  | tx_response is the queried TxResponses. |
-=======
 | `events` | [string](#string) | repeated | events is the list of transaction event type. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.tx.v1beta1.GetTxsEventRequest"></a>
-
-### GetTxsEventRequest
-GetTxsEventRequest is the request type for the Service.TxsByEvents
-=======
 <a name="cosmos.tx.v1beta1.GetTxsEventResponse"></a>
 
 ### GetTxsEventResponse
 GetTxsEventResponse is the response type for the Service.TxsByEvents
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 RPC method.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `events` | [string](#string) | repeated | events is the list of transaction event type. |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
-=======
 | `txs` | [Tx](#cosmos.tx.v1beta1.Tx) | repeated | txs is the list of queried transactions. |
 | `tx_responses` | [cosmos.base.abci.v1beta1.TxResponse](#cosmos.base.abci.v1beta1.TxResponse) | repeated | tx_responses is the list of queried TxResponses. |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.tx.v1beta1.GetTxsEventResponse"></a>
-
-### GetTxsEventResponse
-GetTxsEventResponse is the response type for the Service.TxsByEvents
-=======
-<a name="cosmos.tx.v1beta1.SimulateRequest"></a>
-
-### SimulateRequest
-SimulateRequest is the request type for the Service.Simulate
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `txs` | [Tx](#cosmos.tx.v1beta1.Tx) | repeated | txs is the list of queried transactions. |
-| `tx_responses` | [cosmos.base.abci.v1beta1.TxResponse](#cosmos.base.abci.v1beta1.TxResponse) | repeated | tx_responses is the list of queried TxResponses. |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
-=======
-| `tx` | [Tx](#cosmos.tx.v1beta1.Tx) |  | tx is the transaction to simulate. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-
-
-
-
-<<<<<<< HEAD
 <a name="cosmos.tx.v1beta1.SimulateRequest"></a>
 
 ### SimulateRequest
 SimulateRequest is the request type for the Service.Simulate
 RPC method.
-=======
-<a name="cosmos.tx.v1beta1.SimulateResponse"></a>
-
-### SimulateResponse
-SimulateResponse is the response type for the
-Service.SimulateRPC method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `tx` | [Tx](#cosmos.tx.v1beta1.Tx) |  | tx is the transaction to simulate. |
-=======
-| `gas_info` | [cosmos.base.abci.v1beta1.GasInfo](#cosmos.base.abci.v1beta1.GasInfo) |  | gas_info is the information about gas used in the simulation. |
-| `result` | [cosmos.base.abci.v1beta1.Result](#cosmos.base.abci.v1beta1.Result) |  | result is the result of the simulation. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
- <!-- end messages -->
 
-<<<<<<< HEAD
 <a name="cosmos.tx.v1beta1.SimulateResponse"></a>
 
 ### SimulateResponse
 SimulateResponse is the response type for the
 Service.SimulateRPC method.
-=======
 
-<a name="cosmos.tx.v1beta1.BroadcastMode"></a>
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
-### BroadcastMode
-BroadcastMode specifies the broadcast mode for the TxService.Broadcast RPC method.
-
-<<<<<<< HEAD
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `gas_info` | [cosmos.base.abci.v1beta1.GasInfo](#cosmos.base.abci.v1beta1.GasInfo) |  | gas_info is the information about gas used in the simulation. |
 | `result` | [cosmos.base.abci.v1beta1.Result](#cosmos.base.abci.v1beta1.Result) |  | result is the result of the simulation. |
-=======
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| BROADCAST_MODE_UNSPECIFIED | 0 | zero-value for mode ordering |
-| BROADCAST_MODE_BLOCK | 1 | BROADCAST_MODE_BLOCK defines a tx broadcasting mode where the client waits for the tx to be committed in a block. |
-| BROADCAST_MODE_SYNC | 2 | BROADCAST_MODE_SYNC defines a tx broadcasting mode where the client waits for a CheckTx execution response only. |
-| BROADCAST_MODE_ASYNC | 3 | BROADCAST_MODE_ASYNC defines a tx broadcasting mode where the client returns immediately. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
- <!-- end enums -->
-
- <!-- end HasExtensions -->
 
 
-<<<<<<< HEAD
+
  <!-- end messages -->
 
 
@@ -11197,7 +6601,8 @@ BroadcastMode specifies the broadcast mode for the TxService.Broadcast RPC metho
  <!-- end enums -->
 
  <!-- end HasExtensions -->
-=======
+
+
 <a name="cosmos.tx.v1beta1.Service"></a>
 
 ### Service
@@ -11218,106 +6623,57 @@ Service defines a gRPC service for interacting with transactions.
 <p align="right"><a href="#top">Top</a></p>
 
 ## cosmos/upgrade/v1beta1/upgrade.proto
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
-<a name="cosmos.tx.v1beta1.Service"></a>
 
-<<<<<<< HEAD
-### Service
-Service defines a gRPC service for interacting with transactions.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Simulate` | [SimulateRequest](#cosmos.tx.v1beta1.SimulateRequest) | [SimulateResponse](#cosmos.tx.v1beta1.SimulateResponse) | Simulate simulates executing a transaction for estimating gas usage. | POST|/cosmos/tx/v1beta1/simulate|
-| `GetTx` | [GetTxRequest](#cosmos.tx.v1beta1.GetTxRequest) | [GetTxResponse](#cosmos.tx.v1beta1.GetTxResponse) | GetTx fetches a tx by hash. | GET|/cosmos/tx/v1beta1/txs/{hash}|
-| `BroadcastTx` | [BroadcastTxRequest](#cosmos.tx.v1beta1.BroadcastTxRequest) | [BroadcastTxResponse](#cosmos.tx.v1beta1.BroadcastTxResponse) | BroadcastTx broadcast transaction. | POST|/cosmos/tx/v1beta1/txs|
-| `GetTxsEvent` | [GetTxsEventRequest](#cosmos.tx.v1beta1.GetTxsEventRequest) | [GetTxsEventResponse](#cosmos.tx.v1beta1.GetTxsEventResponse) | GetTxsEvent fetches txs by event. | GET|/cosmos/tx/v1beta1/txs|
-=======
 <a name="cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal"></a>
 
 ### CancelSoftwareUpgradeProposal
 CancelSoftwareUpgradeProposal is a gov Content type for cancelling a software
 upgrade.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
- <!-- end services -->
 
-<<<<<<< HEAD
-=======
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-<a name="cosmos/upgrade/v1beta1/upgrade.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/upgrade/v1beta1/upgrade.proto
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal"></a>
 
-### CancelSoftwareUpgradeProposal
-CancelSoftwareUpgradeProposal is a gov Content type for cancelling a software
-upgrade.
-=======
+
+
 <a name="cosmos.upgrade.v1beta1.Plan"></a>
 
 ### Plan
 Plan specifies information about a planned upgrade and when it should occur.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
-=======
 | `name` | [string](#string) |  | Sets the name for the upgrade. This name will be used by the upgraded version of the software to apply any special "on-upgrade" commands during the first BeginBlock method after the upgrade is applied. It is also used to detect whether a software version can handle a given upgrade. If no upgrade handler with this name has been set in the software, it will be assumed that the software is out-of-date when the upgrade Time or Height is reached and the software will exit. |
 | `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | The time after which the upgrade must be performed. Leave set to its zero value to use a pre-defined Height instead. |
 | `height` | [int64](#int64) |  | The height at which the upgrade must be performed. Only used if Time is not set. |
 | `info` | [string](#string) |  | Any application specific upgrade info to be included on-chain such as a git commit that validators could automatically upgrade to |
 | `upgraded_client_state` | [google.protobuf.Any](#google.protobuf.Any) |  | IBC-enabled chains can opt-in to including the upgraded client state in its upgrade plan This will make the chain commit to the correct upgraded (self) client state before the upgrade occurs, so that connecting chains can verify that the new upgraded client is valid by verifying a proof on the previous version of the chain. This will allow IBC connections to persist smoothly across planned chain upgrades |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
-<a name="cosmos.upgrade.v1beta1.Plan"></a>
-
-### Plan
-Plan specifies information about a planned upgrade and when it should occur.
-=======
 <a name="cosmos.upgrade.v1beta1.SoftwareUpgradeProposal"></a>
 
 ### SoftwareUpgradeProposal
 SoftwareUpgradeProposal is a gov Content type for initiating a software
 upgrade.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
-| `name` | [string](#string) |  | Sets the name for the upgrade. This name will be used by the upgraded version of the software to apply any special "on-upgrade" commands during the first BeginBlock method after the upgrade is applied. It is also used to detect whether a software version can handle a given upgrade. If no upgrade handler with this name has been set in the software, it will be assumed that the software is out-of-date when the upgrade Time or Height is reached and the software will exit. |
-| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | The time after which the upgrade must be performed. Leave set to its zero value to use a pre-defined Height instead. |
-| `height` | [int64](#int64) |  | The height at which the upgrade must be performed. Only used if Time is not set. |
-| `info` | [string](#string) |  | Any application specific upgrade info to be included on-chain such as a git commit that validators could automatically upgrade to |
-| `upgraded_client_state` | [google.protobuf.Any](#google.protobuf.Any) |  | IBC-enabled chains can opt-in to including the upgraded client state in its upgrade plan This will make the chain commit to the correct upgraded (self) client state before the upgrade occurs, so that connecting chains can verify that the new upgraded client is valid by verifying a proof on the previous version of the chain. This will allow IBC connections to persist smoothly across planned chain upgrades |
-=======
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
 | `plan` | [Plan](#cosmos.upgrade.v1beta1.Plan) |  |  |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
@@ -11325,58 +6681,12 @@ upgrade.
 
  <!-- end messages -->
 
-<<<<<<< HEAD
-<a name="cosmos.upgrade.v1beta1.SoftwareUpgradeProposal"></a>
-
-### SoftwareUpgradeProposal
-SoftwareUpgradeProposal is a gov Content type for initiating a software
-upgrade.
-=======
  <!-- end enums -->
 
  <!-- end HasExtensions -->
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
  <!-- end services -->
 
-<<<<<<< HEAD
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
-| `plan` | [Plan](#cosmos.upgrade.v1beta1.Plan) |  |  |
-=======
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
-
-<a name="cosmos/upgrade/v1beta1/query.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/upgrade/v1beta1/query.proto
-
-
- <!-- end messages -->
-
-<<<<<<< HEAD
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-=======
-<a name="cosmos.upgrade.v1beta1.QueryAppliedPlanRequest"></a>
-
-### QueryAppliedPlanRequest
-QueryCurrentPlanRequest is the request type for the Query/AppliedPlan RPC
-method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
-
- <!-- end services -->
-
-<<<<<<< HEAD
-=======
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `name` | [string](#string) |  | name is the name of the applied plan to query for. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 <a name="cosmos/upgrade/v1beta1/query.proto"></a>
@@ -11386,61 +6696,38 @@ method.
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.upgrade.v1beta1.QueryAppliedPlanRequest"></a>
 
 ### QueryAppliedPlanRequest
 QueryCurrentPlanRequest is the request type for the Query/AppliedPlan RPC
-=======
-<a name="cosmos.upgrade.v1beta1.QueryAppliedPlanResponse"></a>
-
-### QueryAppliedPlanResponse
-QueryAppliedPlanResponse is the response type for the Query/AppliedPlan RPC
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 method.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-<<<<<<< HEAD
 | `name` | [string](#string) |  | name is the name of the applied plan to query for. |
 
 
-=======
-| `height` | [int64](#int64) |  | height is the block height at which the plan was applied. |
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.upgrade.v1beta1.QueryAppliedPlanResponse"></a>
 
 ### QueryAppliedPlanResponse
 QueryAppliedPlanResponse is the response type for the Query/AppliedPlan RPC
 method.
-=======
 
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
-<a name="cosmos.upgrade.v1beta1.QueryCurrentPlanRequest"></a>
-
-<<<<<<< HEAD
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `height` | [int64](#int64) |  | height is the block height at which the plan was applied. |
-=======
-### QueryCurrentPlanRequest
-QueryCurrentPlanRequest is the request type for the Query/CurrentPlan RPC
-method.
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 
 
 
 
 
 
-<<<<<<< HEAD
 <a name="cosmos.upgrade.v1beta1.QueryCurrentPlanRequest"></a>
 
 ### QueryCurrentPlanRequest
@@ -11454,10 +6741,6 @@ method.
 
 <a name="cosmos.upgrade.v1beta1.QueryCurrentPlanResponse"></a>
 
-=======
-<a name="cosmos.upgrade.v1beta1.QueryCurrentPlanResponse"></a>
-
->>>>>>> 896eee213a (docs: Update x/staking spec (#8395))
 ### QueryCurrentPlanResponse
 QueryCurrentPlanResponse is the response type for the Query/CurrentPlan RPC
 method.

@@ -105,6 +105,9 @@ Redelegations affect the delegation, source and destination validators.
   is `Bonded`, transfer the newly delegated tokens from the `NotBondedPool` to the `BondedPool` `ModuleAccount`
 - record the token amount in an new entry in the relevant `Redelegation`
 
+From when a redelegation begins until it completes, the delegator is in a state of "pseudo-unbonding", and can still be
+slashed for infractions that occured before the redelegation began.
+
 ### Complete Redelegation
 
 When a redelegations complete the following occurs:
@@ -119,12 +122,16 @@ When a Validator is slashed, the following occurs:
 
 - The total `slashAmount` is calculated as the `slashFactor` (a chain parameter) \* `TokensFromConsensusPower`,
   the total number of tokens bonded to the validator at the time of the infraction.
-- Every unbonding delegation and redelegation from the validator are slashed by the `slashFactor`
-  percentage of the initialBalance.
+- Every unbonding delegation and pseudo-unbonding redelegation such that the infraction occured before the unbonding or
+  redelegation began from the validator are slashed by the `slashFactor` percentage of the initialBalance.
 - Each amount slashed from redelegations and unbonding delegations is subtracted from the
   total slash amount.
 - The `remaingSlashAmount` is then slashed from the validator's tokens in the `BondedPool` or
   `NonBondedPool` depending on the validator's status. This reduces the total supply of tokens.
+
+In the case of a slash due to any infraction that requires evidence to submitted (for example double-sign), the slash
+occurs at the block where the evidence is included, not at the block where the infraction occured.
+Put otherwise, validators are not slashed retroactively, only when they are caught.
 
 ### Slash Unbonding Delegation
 
@@ -137,8 +144,10 @@ delegation and is capped to prevent a resulting negative balance. Completed (or 
 
 When a validator is slashed, so are all redelegations from the validator that began after the
 infraction. Redelegations are slashed by `slashFactor`.
+Redelegations that began before the infraction are not slashed.
 The amount slashed is calculated from the `InitialBalance` of the delegation and is capped to
-prevent a resulting negative balance. Mature redelegations are not slashed.
+prevent a resulting negative balance.
+Mature redelegations (that have completed pseudo-unbonding) are not slashed.
 
 ## How Shares are calculated
 

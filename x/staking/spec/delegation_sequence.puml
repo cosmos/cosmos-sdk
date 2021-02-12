@@ -13,46 +13,48 @@ SDK -> "handler (staking)": MsgDelegate(Context,  Msg(DelegatorAddress,  Validat
 participant  "keeper (staking)" as keeper
 "msgServer (staking)" -> keeper : Delegate(Context, DelegatorAddress, Amount, Validator)
 
-    group staking module
-    alt perform a new delegation
-        keeper ->  validator : Check exchange rate valid
-        keeper <-- validator :
-        keeper -> keeper : delegation := create delegation object
-        keeper -> keeper : Perform a new delegation
+    keeper ->  validator : Check exchange rate valid
+    keeper <-- validator :
+alt perform a new delegation
+    keeper -> keeper : delegation := create delegation object
+end
+
+keeper -> keeper : BeforeDelegationCreated hook
+note left: Calls IncrementValidatorPeriod (Used to calculate distribution) in keeper/validator.go
+
+keeper -> keeper.bankKeeper : DelegateCoinsFromAccountToModule
+keeper.bankKeeper -> "func:DelegateCoinsFromAccountToModule" as DelegateCoinsFromAccountToModule **
+note left : TODO this should interact with the store, too
+DelegateCoinsFromAccountToModule -->  DelegateCoinsFromAccountToModule  : Check recipient has permission to stake
+DelegateCoinsFromAccountToModule ->  "func:DelegateCoins" as DelegateCoins **
+DelegateCoins --> DelegateCoins : Check the delegator has enough balances of all tokens delegated
+DelegateCoins --> DelegateCoins : Track delegation (register that it exists to keep track of it)
+DelegateCoins --> store : Transfer tokens to staker.
+DelegateCoins --> DelegateCoinsFromAccountToModule : nil
+destroy DelegateCoins
+keeper.bankKeeper <-- DelegateCoinsFromAccountToModule: nil
+destroy DelegateCoinsFromAccountToModule
+keeper <-- keeper.bankKeeper : nil (success)
+keeper -> validator : AddTokensFromDel
+validator -> validator : calculate number of shares to issue
+note left: If there are no shares (validator being created) then 1 token = 1 share.\nIf there are already shares, then\nadded shares =  (added tokens amount) * (current validator shares) / (current validator tokens)
+
+database store
+
+validator -> validator : add delegated tokens to validator
+keeper <-- validator : validator, addedShares
+keeper -> store : update validator state
+keeper -> keeper: calculate new validator's power
+keeper -> store : update validator's power in power index
+note left : the power index has entries shaped as 35 || power || address.\nThis makes the validators sorted by power, high to low.
+alt redelegation
+    keeper -> store : update the delegation object describing this delegation.
+end
+keeper -> keeper : AfterDelegationModified hook
+note left: Calls initializeDelegation\nStore the previous period\nCalculate the number of tokens from shares\n(shares the delegator has) * (tokens in delegation object)/(total tokens delegated to the validator)\nStore delegation starting info.
+"msgServer (staking)" <-- keeper : newShares (ignored by Delegate function)
 
 
-        keeper -> keeper : BeforeDelegationCreated hook
-        note left: Calls IncrementValidatorPeriod (Used to calculate distribution) \nTODO?: Document deeper? keeper/validator.go
-
-        keeper -> keeper.bankKeeper : DelegateCoinsFromAccountToModule
-        keeper.bankKeeper -> "func:DelegateCoinsFromAccountToModule" as DelegateCoinsFromAccountToModule **
-        DelegateCoinsFromAccountToModule -->  DelegateCoinsFromAccountToModule  : Check recipient has permission to stake
-        DelegateCoinsFromAccountToModule ->  "func:DelegateCoins" as DelegateCoins **
-        DelegateCoins --> DelegateCoins : Check the delegator has enough balances of all tokens delegated
-        DelegateCoins --> DelegateCoins : Track delegation (register that it exists to keep track of it)
-        DelegateCoins --> DelegateCoins : Transfer tokens to staker.
-        DelegateCoins --> DelegateCoinsFromAccountToModule : nil
-        destroy DelegateCoins
-        keeper.bankKeeper <-- DelegateCoinsFromAccountToModule: nil
-        destroy DelegateCoinsFromAccountToModule
-        keeper <-- keeper.bankKeeper : nil (success)
-        keeper -> validator : AddTokensFromDel
-        validator -> validator : calculate number of shares to issue
-        note left: If there are no shares (validator being created) then 1 token = 1 share.\nIf there are already shares, then\nadded shares =  (added tokens amount) * (current validator shares) / (current validator tokens)
-
-        database store
-
-        validator -> store : add delegated tokens to validator
-        validator -> store : update validator's PowerIndex back to power index
-        note left : TODO?: staking/types/keys.go, line 72, GetValidatorsByPowerIndexKey\nDocument how a validator's power index is calculated, and kept up to date.
-        keeper -> store : update the delegation object describing this delegation
-        keeper -> keeper : AfterDelegationModified hook
-        <-- keeper : newShares (ignored by Delegate function)
-        note left: Calls initializeDelegation\nStore the previous period\nCalculate the number of tokens from shares\n(shares the delegator has) * (tokens in delegation object)/(total tokens delegated to the validator)\nStore delegation starting info.
-    end
-    end
-
-"msgServer (staking)" <-- keeper : _, err
 "msgServer (staking)" -> "msgServer (staking)" : Emit event: Delegation(ValidatorAddress)
 "msgServer (staking)" -> "msgServer (staking)" : Emit event: Message(DelegatorAddress)
 "msgServer (staking)" -> "msgServer (staking)" : telemetry(Amount, Denom)

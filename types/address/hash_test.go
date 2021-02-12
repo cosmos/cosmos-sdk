@@ -25,7 +25,7 @@ func (suite *AddressSuite) TestHash() {
 
 	received = Hash("other", key)
 	assert.NotEqual(expected[:], received, "must create a correct address")
-	assert.Len(received, Len, "must have correcte length")
+	assert.Len(received, Len, "must have correct length")
 }
 
 func (suite *AddressSuite) TestComposed() {

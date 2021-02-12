@@ -58,10 +58,3 @@ type VoteReq struct {
 	Voter   sdk.AccAddress `json:"voter" yaml:"voter"`   // address of the voter
 	Option  string         `json:"option" yaml:"option"` // option from OptionSet chosen by the voter
 }
-
-// WeightedVoteReq defines the properties of a vote request's body.
-type WeightedVoteReq struct {
-	BaseReq rest.BaseReq   `json:"base_req" yaml:"base_req"`
-	Voter   sdk.AccAddress `json:"voter" yaml:"voter"`     // address of the voter
-	Options string         `json:"options" yaml:"options"` // weighted options from OptionSet chosen by the voter
-}

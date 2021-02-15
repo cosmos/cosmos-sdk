@@ -28,8 +28,7 @@ func (app *BaseApp) RegisterGRPCServer(clientCtx client.Context, server gogogrpc
 		// 2. or we are querying for state, in which case we call ABCI's Query.
 
 		// Case 1. Broadcasting a Tx.
-		if client.IsGRPCBroadcastTx(info.FullMethod) {
-			reqProto, ok := req.(*tx.BroadcastTxRequest)
+		if reqProto, ok := req.(*tx.BroadcastTxRequest); ok {
 			if !ok {
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxRequest)(nil), req)
 			}
@@ -53,9 +52,9 @@ func (app *BaseApp) RegisterGRPCServer(clientCtx client.Context, server gogogrpc
 		// at least once (in the RunGRPCQuery call), so we're sure the
 		// returnType maps is populated for this method. We're retrieving it
 		// for decoding.
-		returnType, found := app.GRPCQueryRouter().returnTypes[info.FullMethod]
-		if !found {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot find %s return type", info.FullMethod)
+		returnType, err := app.GRPCQueryRouter().returnTypeOf(info.FullMethod)
+		if err != nil {
+			return nil, err
 		}
 
 		// returnType is a pointer to a struct. Here, we're creating res which

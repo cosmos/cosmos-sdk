@@ -13,14 +13,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var protoCodec = encoding.GetCodec(proto.Name)
 
 // GRPCQueryRouter routes ABCI Query requests to GRPC handlers
 type GRPCQueryRouter struct {
-	routes            map[string]GRPCQueryHandler
-	returnTypes       map[string]reflect.Type // map of a FQ method name to its return type.
+	routes map[string]GRPCQueryHandler
+	// returnTypes is a map of FQ method name => its return type. It is used
+	// for cache purposes: the first time a method handler is run, we save its
+	// return type in this map. Then, on subsequent method handler calls, we
+	// decode the ABCI response bytes using the cached return type.
+	returnTypes       map[string]reflect.Type
 	interfaceRegistry codectypes.InterfaceRegistry
 	serviceData       []serviceData
 }
@@ -138,4 +143,17 @@ func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry codectypes.In
 		qrt,
 		reflection.NewReflectionServiceServer(interfaceRegistry),
 	)
+}
+
+// returnTypeOf returns the return type of a gRPC method handler. With the way the
+// `returnTypes` cache map is set up, the return type of a method handler is
+// guaranteed to be found if it's retrieved **after** the method handler ran at
+// least once. If not, then a logic error is return.
+func (qrt *GRPCQueryRouter) returnTypeOf(method string) (reflect.Type, error) {
+	returnType, found := qrt.returnTypes[method]
+	if !found {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot find %s return type", method)
+	}
+
+	return returnType, nil
 }

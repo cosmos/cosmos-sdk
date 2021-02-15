@@ -35,8 +35,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 	}
 
 	// Case 1. Broadcasting a Tx.
-	if IsGRPCBroadcastTx(method) {
-		reqProto, ok := req.(*tx.BroadcastTxRequest)
+	if reqProto, ok := req.(*tx.BroadcastTxRequest); ok {
 		if !ok {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxRequest)(nil), req)
 		}
@@ -130,9 +129,4 @@ func RunGRPCQuery(ctx Context, grpcCtx gocontext.Context, method string, req int
 	md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(abciRes.Height, 10))
 
 	return abciRes, md, nil
-}
-
-// IsGRPCBroadcastTx returns true if the gRPC method is broadcasting tx.
-func IsGRPCBroadcastTx(method string) bool {
-	return method == "/cosmos.tx.v1beta1.Service/BroadcastTx"
 }

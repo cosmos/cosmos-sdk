@@ -38,8 +38,10 @@ func LaunchProcess(cfg *Config, args []string, stdout, stderr io.Writer) (bool, 
 
 	scanOut := bufio.NewScanner(io.TeeReader(outpipe, stdout))
 	scanErr := bufio.NewScanner(io.TeeReader(errpipe, stderr))
-
-	// TODO check filename
+	fw, err := newUpgradeFileWatcher(cfg.UpgradeInfoFilePath())
+	if err != nil {
+		return false, err
+	}
 
 	if err := cmd.Start(); err != nil {
 		return false, fmt.Errorf("launching process %s %s: %w", bin, strings.Join(args, " "), err)
@@ -55,7 +57,7 @@ func LaunchProcess(cfg *Config, args []string, stdout, stderr io.Writer) (bool, 
 	}()
 
 	// three ways to exit - command ends, find regexp in scanOut, find regexp in scanErr
-	upgradeInfo, err := WaitForUpgradeOrExit(cmd, scanOut, scanErr)
+	upgradeInfo, err := WaitForUpgradeOrExit(cmd, scanOut, scanErr, fw)
 	if err != nil {
 		return false, err
 	}
@@ -113,15 +115,12 @@ func (u *WaitResult) SetUpgrade(up *UpgradeInfo) {
 // It returns (nil, err) if the process died by itself, or there was an issue reading the pipes
 // It returns (nil, nil) if the process exited normally without triggering an upgrade. This is very unlikely
 // to happened with "start" but may happened with short-lived commands like `gaiad export ...`
-func WaitForUpgradeOrExit(cmd *exec.Cmd, scanOut, scanErr *bufio.Scanner) (*UpgradeInfo, error) {
+func WaitForUpgradeOrExit(cmd *exec.Cmd, scanOut, scanErr *bufio.Scanner, fw fileWatcher) (*UpgradeInfo, error) {
 	var res WaitResult
 
 	waitScan := func(scan *bufio.Scanner) {
-		upgrade, err := WaitForUpdate(scan)
-		if err != nil {
-			res.SetError(err)
-		} else if upgrade != nil {
-			res.SetUpgrade(upgrade)
+		WaitForUpdate(scan, &res)
+		if ui, _ := res.AsResult(); ui != nil {
 			// now we need to kill the process
 			_ = cmd.Process.Kill()
 		}

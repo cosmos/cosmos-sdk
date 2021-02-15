@@ -6,8 +6,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-
-	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
+	//	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 )
 
 const (
@@ -49,11 +48,14 @@ func (cfg *Config) UpgradeDir(upgradeName string) string {
 
 // UpgradeInfoFile is the expecte filenmame used in `x/upgrade/keeper` for dumping
 // upgrade info.
-func (cfg *Config) UpgradeInfoFile() string {
+func (cfg *Config) UpgradeInfoFilePath() string {
 	if cfg.upgradeInfoFile != "" {
 		return cfg.upgradeInfoFile
 	}
-	return filepath.Join(cfg.Home, "data", keeper.UpgradeInfoFileName)
+	// TODO: let's use SDK. But this causes go mod errors:
+	//     github.com/gogo/protobuf@v1.3.3: reading https://proxy.golang.org/github.com/gogo/protobuf/@v/v1.3.3.mod: 410 Gone
+	// return filepath.Join(cfg.Home, "data", keeper.UpgradeInfoFileName)
+	return filepath.Join(cfg.Home, "data", "upgrade-info.json")
 }
 
 // Symlink to genesis

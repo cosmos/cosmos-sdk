@@ -55,7 +55,7 @@ func (app *BaseApp) RegisterGRPCServer(clientCtx client.Context, server gogogrpc
 		// for decoding.
 		returnType, found := app.GRPCQueryRouter().returnTypes[info.FullMethod]
 		if !found {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "cannot find %s return type", info.FullMethod)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot find %s return type", info.FullMethod)
 		}
 
 		// returnType is a pointer to a struct. Here, we're creating res which

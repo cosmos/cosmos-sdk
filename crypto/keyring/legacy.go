@@ -42,7 +42,7 @@ var _ LegacyKeybase = dbKeybase{}
 // dbKeybase combines encryption and storage implementation to provide a
 // full-featured key manager.
 //
-// NOTE: dbKeybase will be deprecated in favor of keyringKeybase.
+// Deprecated: dbKeybase will be removed in favor of keyringKeybase.
 type dbKeybase struct {
 	db dbm.DB
 }

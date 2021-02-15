@@ -41,5 +41,5 @@ func MsgVote(clientCtx client.Context, from, id, vote string, extraArgs ...strin
 
 	args = append(args, extraArgs...)
 
-	return clitestutil.ExecTestCLICmd(clientCtx, govcli.NewCmdVote(), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, govcli.NewCmdWeightedVote(), args)
 }

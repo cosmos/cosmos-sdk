@@ -37,7 +37,7 @@ func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, 
 	for _, msg := range msgs {
 		var msgBytes []byte
 
-		// Here, we're gracefully supporting supporting Amino JSON for service
+		// Here, we're gracefully supporting Amino JSON for service
 		// Msgs.
 		// ref: https://github.com/cosmos/cosmos-sdk/issues/8346
 		// If `msg` is a service Msg, then we cast its `Request` to a sdk.Msg

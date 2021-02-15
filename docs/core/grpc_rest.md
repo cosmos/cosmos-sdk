@@ -24,12 +24,12 @@ Cosmos SDK v0.40 introduced Protobuf as the main [encoding](./encoding) library,
 
 Each module exposes [`Msg` and `Query` Protobuf services](../building-modules/messages-and-queries.md) to define state transitions and state queries. These services are hooked up to gRPC via the following function inside the application:
 
-https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc4/server/types/app.go#L39-L41
+<https://github.com/cosmos/cosmos-sdk/blob/v0.41.0/server/types/app.go#L39-L41>
 
 The `grpc.Server` is a concrete gRPC server, which spawns and serves any gRPC requests. This server can be configured inside `~/.simapp/config/app.toml`:
 
 - `grpc.enable = true|false` field defines if the gRPC server should be enabled. Defaults to `true`.
-- `grpc.address = {string}` field defines the address (really, the port, since the host should be kept at `0.0.0.0`) the server should bind to. Defaults to `0.0.0.0:9000`.
+- `grpc.address = {string}` field defines the address (really, the port, since the host should be kept at `0.0.0.0`) the server should bind to. Defaults to `0.0.0.0:9090`.
 
 ::tip
 `~/.simapp` is the directory where the node's configuration and databases are stored. By default, it's set to `~/.{app_name}`.
@@ -45,7 +45,7 @@ In Cosmos SDK v0.40, the node continues to serve a REST server. However, the exi
 
 All routes are configured under the following fields in `~/.simapp/config/app.toml`:
 
-- `api.enable = true|false` field defines if the REST server should be enabled. Defaults to `true`.
+- `api.enable = true|false` field defines if the REST server should be enabled. Defaults to `false`.
 - `api.address = {string}` field defines the address (really, the port, since the host should be kept at `0.0.0.0`) the server should bind to. Defaults to `tcp://0.0.0.0:1317`.
 - some additional API configuration options are defined in `~/.simapp/config/app.toml`, along with comments, please refer to that file directly.
 
@@ -55,7 +55,7 @@ If, for various reasons, you cannot use gRPC (for example, you are building a we
 
 [gRPC-gateway](https://grpc-ecosystem.github.io/grpc-gateway/) is a tool to expose gRPC endpoints as REST endpoints. For each RPC endpoint defined in a Protobuf service, the SDK offers a REST equivalent. For instance, querying a balance could be done via the `/cosmos.bank.v1beta1.Query/AllBalances` gRPC endpoint, or alternatively via the gRPC-gateway `"/cosmos/bank/v1beta1/balances/{address}"` REST endpoint: both will return the same result. For each RPC method defined in a Protobuf service, the corresponding REST endpoint is defined as an option:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc4/proto/cosmos/bank/v1beta1/query.proto#L19-L22
++++ <https://github.com/cosmos/cosmos-sdk/blob/v0.41.0/proto/cosmos/bank/v1beta1/query.proto#L19-L22>
 
 For application developers, gRPC-gateway REST routes needs to be wired up to the REST server, this is done by calling the `RegisterGRPCGatewayRoutes` function on the ModuleManager.
 

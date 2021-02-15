@@ -2,6 +2,9 @@ package cosmovisor
 
 import (
 	"bufio"
+	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 )
 
@@ -39,4 +42,24 @@ func WaitForUpdate(scanner *bufio.Scanner) (*UpgradeInfo, error) {
 		}
 	}
 	return nil, scanner.Err()
+}
+
+type fileWatcher struct {
+	filename string
+	dirname  string
+	ok       bool
+}
+
+func newUpgradeFileWatcher(filename string) (fileWatcher, error) {
+	if filename == "" {
+		return fileWatcher{}, nil
+	}
+	dirname := filepath.Dir(filename)
+	fw := fileWatcher{filename, dirname, true}
+
+	info, err := os.Stat(dirname)
+	if err != nil || !info.IsDir() {
+		return fw, fmt.Errorf("wrong path, %s must be an existing directory, [%w]", dirname, err)
+	}
+	return fw, nil
 }

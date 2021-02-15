@@ -39,6 +39,8 @@ func LaunchProcess(cfg *Config, args []string, stdout, stderr io.Writer) (bool, 
 	scanOut := bufio.NewScanner(io.TeeReader(outpipe, stdout))
 	scanErr := bufio.NewScanner(io.TeeReader(errpipe, stderr))
 
+	// TODO check filename
+
 	if err := cmd.Start(); err != nil {
 		return false, fmt.Errorf("launching process %s %s: %w", bin, strings.Join(args, " "), err)
 	}

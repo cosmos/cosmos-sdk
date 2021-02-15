@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+
+	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 )
 
 const (
@@ -21,6 +23,7 @@ type Config struct {
 	Name                  string
 	AllowDownloadBinaries bool
 	RestartAfterUpgrade   bool
+	upgradeInfoFile       string
 }
 
 // Root returns the root directory where all info lives
@@ -41,7 +44,16 @@ func (cfg *Config) UpgradeBin(upgradeName string) string {
 // UpgradeDir is the directory named upgrade
 func (cfg *Config) UpgradeDir(upgradeName string) string {
 	safeName := url.PathEscape(upgradeName)
-	return filepath.Join(cfg.Root(), upgradesDir, safeName)
+	return filepath.Join(cfg.Home, upgradesDir, safeName)
+}
+
+// UpgradeInfoFile is the expecte filenmame used in `x/upgrade/keeper` for dumping
+// upgrade info.
+func (cfg *Config) UpgradeInfoFile() string {
+	if cfg.upgradeInfoFile != "" {
+		return cfg.upgradeInfoFile
+	}
+	return filepath.Join(cfg.Home, "data", keeper.UpgradeInfoFileName)
 }
 
 // Symlink to genesis

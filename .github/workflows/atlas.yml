@@ -53,7 +53,7 @@ jobs:
       - uses: marbar3778/atlas_action@main
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
-          path: ./x/capability/atlas/manifest.toml
+          path: ./x/capability/atlas/atlas.toml
           dry-run: ${{ github.event_name != 'pull_request' }}
         if: env.GIT_DIFF
   crisis:
@@ -68,7 +68,7 @@ jobs:
       - uses: marbar3778/atlas_action@main
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
-          path: ./x/crisis/atlas/manifest.toml
+          path: ./x/crisis/atlas/atlas.toml
           dry-run: ${{ github.event_name != 'pull_request' }}
         if: env.GIT_DIFF
   distribution:
@@ -83,7 +83,7 @@ jobs:
       - uses: marbar3778/atlas_action@main
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
-          path: ./x/distribution/atlas/manifest.toml
+          path: ./x/distribution/atlas/atlas.toml
           dry-run: ${{ github.event_name != 'pull_request' }}
         if: env.GIT_DIFF
   evidence:
@@ -113,7 +113,7 @@ jobs:
       - uses: marbar3778/atlas_action@main
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
-          path: ./x/feegrant/atlas/manifest.toml
+          path: ./x/feegrant/atlas/atlas.toml
           dry-run: ${{ github.event_name != 'pull_request' }}
         if: env.GIT_DIFF
   gov:
@@ -128,7 +128,7 @@ jobs:
       - uses: marbar3778/atlas_action@main
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
-          path: ./x/gov/atlas/manifest.toml
+          path: ./x/gov/atlas/atlas.toml
           dry-run: ${{ github.event_name != 'pull_request' }}
         if: env.GIT_DIFF
   mint:
@@ -143,7 +143,7 @@ jobs:
       - uses: marbar3778/atlas_action@main
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
-          path: ./x/mint/atlas/manifest.toml
+          path: ./x/mint/atlas/atlas.toml
           dry-run: ${{ github.event_name != 'pull_request' }}
         if: env.GIT_DIFF
   params:
@@ -158,7 +158,7 @@ jobs:
       - uses: marbar3778/atlas_action@main
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
-          path: ./x/params/atlas/manifest.toml
+          path: ./x/params/atlas/atlas.toml
           dry-run: ${{ github.event_name != 'pull_request' }}
         if: env.GIT_DIFF
   slashing:
@@ -173,7 +173,7 @@ jobs:
       - uses: marbar3778/atlas_action@main
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
-          path: ./x/slashing/atlas/manifest.toml
+          path: ./x/slashing/atlas/atlas.toml
           dry-run: ${{ github.event_name != 'pull_request' }}
         if: env.GIT_DIFF
   staking:
@@ -188,7 +188,7 @@ jobs:
       - uses: marbar3778/atlas_action@main
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
-          path: ./x/staking/atlas/manifest.toml
+          path: ./x/staking/atlas/atlas.toml
           dry-run: ${{ github.event_name != 'pull_request' }}
         if: env.GIT_DIFF
   upgrade:
@@ -203,6 +203,6 @@ jobs:
       - uses: marbar3778/atlas_action@main
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
-          path: ./x/upgrade/atlas/manifest.toml
+          path: ./x/upgrade/atlas/atlas.toml
           dry-run: ${{ github.event_name != 'pull_request' }}
         if: env.GIT_DIFF

@@ -16,7 +16,7 @@ The full-node client of any SDK application is built by running a `main` functio
 
 In general, developers will implement the `main.go` function with the following structure:
 
-- First, an [`appCodec`](./encoding.md) is instanciated for the application.
+- First, an [`appCodec`](./encoding.md) is instantiated for the application.
 - Then, the `config` is retrieved and config parameters are set. This mainly involves setting the bech32 prefixes for [addresses and pubkeys](../basics/accounts.md#addresses-and-pubkeys).
   +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/config.go#L13-L24
 - Using [cobra](https://github.com/spf13/cobra), the root command of the full-node client is created. After that, all the custom commands of the application are added using the `AddCommand()` method of `rootCmd`.

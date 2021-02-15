@@ -33,7 +33,7 @@ func TestDecodeStore(t *testing.T) {
 	proposalIDBz := make([]byte, 8)
 	binary.LittleEndian.PutUint64(proposalIDBz, 1)
 	deposit := types.NewDeposit(1, delAddr1, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())))
-	vote := types.NewVote(1, delAddr1, types.OptionYes)
+	vote := types.NewVote(1, delAddr1, types.NewNonSplitVoteOption(types.OptionYes))
 
 	proposalBz, err := cdc.MarshalBinaryBare(&proposal)
 	require.NoError(t, err)

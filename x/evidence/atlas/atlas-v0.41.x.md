@@ -49,7 +49,7 @@ with particular kinds of accounts.
    }
    ```
 
-5. Create the keeper. Note, the `x/evidence` module depends on the `x/staking` and `x/slashing` modules.
+5. Create the keeper. Note, the `x/evidence` module depends on the `x/staking` and `x/slashing` modules. Evidence has expected interfaces, these interfaces are linked to slashing and staking. You can find these interfaces [here](https://github.com/cosmos/cosmos-sdk/blob/v0.41.0/x/evidence/types/expected_keepers.go)
 
    ```go
    func NewApp(...) *App {
@@ -126,6 +126,8 @@ View supported messages at [docs.cosmos.network/v0.40/modules/evidence](https://
 
 ## Client
 
+Evidence supports querying of old evidence and submission of new evidence. There are two queries. One for all the evidence, and one for a specific piece of evidence.
+
 ### CLI
 
 The evidence module supports the blow command to query evidence.
@@ -148,6 +150,18 @@ Flags:
 
 ### REST
 
+Evidence REST API supports only queries of evidence. To submit evidence please use gRPC or the cli.
+
 ### gRPC
+
+Evidence supports both querying and submitting transactions via gRPC
+
+#### Query
+
+[gRPC query](https://docs.cosmos.network/master/core/proto-docs.html#cosmos/evidence/v1beta1/query.proto)
+
+#### Tx
+
+[gRPC Tx](https://docs.cosmos.network/master/core/proto-docs.html#cosmos-evidence-v1beta1-tx-proto)
 
 View supported messages at [docs.cosmos.network/v0.40/modules/evidence](https://docs.cosmos.network/v0.40/modules/evidence/03_messages.html)

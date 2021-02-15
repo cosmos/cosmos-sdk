@@ -41,6 +41,51 @@ jobs:
           path: ./x/bank/atlas/atlas.toml
           dry-run: ${{ github.event_name != 'pull_request' }}
         if: env.GIT_DIFF
+  capability:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v4
+        id: git_diff
+        with:
+          PATTERNS: |
+            x/capability/atlas/**
+      - uses: marbar3778/atlas_action@main
+        with:
+          token: ${{ secrets.ATLAS_TOKEN }}
+          path: ./x/capability/atlas/manifest.toml
+          dry-run: ${{ github.event_name != 'pull_request' }}
+        if: env.GIT_DIFF
+  crisis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v4
+        id: git_diff
+        with:
+          PATTERNS: |
+            x/crisis/atlas/**
+      - uses: marbar3778/atlas_action@main
+        with:
+          token: ${{ secrets.ATLAS_TOKEN }}
+          path: ./x/crisis/atlas/manifest.toml
+          dry-run: ${{ github.event_name != 'pull_request' }}
+        if: env.GIT_DIFF
+  distribution:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v4
+        id: git_diff
+        with:
+          PATTERNS: |
+            x/distribution/atlas/**
+      - uses: marbar3778/atlas_action@main
+        with:
+          token: ${{ secrets.ATLAS_TOKEN }}
+          path: ./x/distribution/atlas/manifest.toml
+          dry-run: ${{ github.event_name != 'pull_request' }}
+        if: env.GIT_DIFF
   evidence:
     runs-on: ubuntu-latest
     steps:
@@ -54,5 +99,110 @@ jobs:
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
           path: ./x/evidence/atlas/manifest.toml
+          dry-run: ${{ github.event_name != 'pull_request' }}
+        if: env.GIT_DIFF
+  feegrant:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v4
+        id: git_diff
+        with:
+          PATTERNS: |
+            x/feegrant/atlas/**
+      - uses: marbar3778/atlas_action@main
+        with:
+          token: ${{ secrets.ATLAS_TOKEN }}
+          path: ./x/feegrant/atlas/manifest.toml
+          dry-run: ${{ github.event_name != 'pull_request' }}
+        if: env.GIT_DIFF
+  gov:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v4
+        id: git_diff
+        with:
+          PATTERNS: |
+            x/gov/atlas/**
+      - uses: marbar3778/atlas_action@main
+        with:
+          token: ${{ secrets.ATLAS_TOKEN }}
+          path: ./x/gov/atlas/manifest.toml
+          dry-run: ${{ github.event_name != 'pull_request' }}
+        if: env.GIT_DIFF
+  mint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v4
+        id: git_diff
+        with:
+          PATTERNS: |
+            x/mint/atlas/**
+      - uses: marbar3778/atlas_action@main
+        with:
+          token: ${{ secrets.ATLAS_TOKEN }}
+          path: ./x/mint/atlas/manifest.toml
+          dry-run: ${{ github.event_name != 'pull_request' }}
+        if: env.GIT_DIFF
+  params:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v4
+        id: git_diff
+        with:
+          PATTERNS: |
+            x/params/atlas/**
+      - uses: marbar3778/atlas_action@main
+        with:
+          token: ${{ secrets.ATLAS_TOKEN }}
+          path: ./x/params/atlas/manifest.toml
+          dry-run: ${{ github.event_name != 'pull_request' }}
+        if: env.GIT_DIFF
+  slashing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v4
+        id: git_diff
+        with:
+          PATTERNS: |
+            x/slashing/atlas/**
+      - uses: marbar3778/atlas_action@main
+        with:
+          token: ${{ secrets.ATLAS_TOKEN }}
+          path: ./x/slashing/atlas/manifest.toml
+          dry-run: ${{ github.event_name != 'pull_request' }}
+        if: env.GIT_DIFF
+  staking:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v4
+        id: git_diff
+        with:
+          PATTERNS: |
+            x/staking/atlas/**
+      - uses: marbar3778/atlas_action@main
+        with:
+          token: ${{ secrets.ATLAS_TOKEN }}
+          path: ./x/staking/atlas/manifest.toml
+          dry-run: ${{ github.event_name != 'pull_request' }}
+        if: env.GIT_DIFF
+  upgrade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v4
+        id: git_diff
+        with:
+          PATTERNS: |
+            x/upgrade/atlas/**
+      - uses: marbar3778/atlas_action@main
+        with:
+          token: ${{ secrets.ATLAS_TOKEN }}
+          path: ./x/upgrade/atlas/manifest.toml
           dry-run: ${{ github.event_name != 'pull_request' }}
         if: env.GIT_DIFF

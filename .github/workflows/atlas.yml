@@ -98,7 +98,7 @@ jobs:
       - uses: marbar3778/atlas_action@main
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
-          path: ./x/evidence/atlas/manifest.toml
+          path: ./x/evidence/atlas/atlas.toml
           dry-run: ${{ github.event_name != 'pull_request' }}
         if: env.GIT_DIFF
   feegrant:

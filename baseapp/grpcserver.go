@@ -5,12 +5,15 @@ import (
 	"strconv"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
+	grpcmiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
 
@@ -33,6 +36,11 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 		if heightHeaders := md.Get(grpctypes.GRPCBlockHeightHeader); len(heightHeaders) > 0 {
 			height, err = strconv.ParseInt(heightHeaders[0], 10, 64)
 			if err != nil {
+				return nil, sdkerrors.Wrapf(
+					sdkerrors.ErrInvalidRequest,
+					"Baseapp.RegisterGRPCServer: invalid height header %q: %v", grpctypes.GRPCBlockHeightHeader, err)
+			}
+			if err := checkNegativeHeight(height); err != nil {
 				return nil, err
 			}
 		}
@@ -68,7 +76,10 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 			newMethods[i] = grpc.MethodDesc{
 				MethodName: method.MethodName,
 				Handler: func(srv interface{}, ctx context.Context, dec func(interface{}) error, _ grpc.UnaryServerInterceptor) (interface{}, error) {
-					return methodHandler(srv, ctx, dec, interceptor)
+					return methodHandler(srv, ctx, dec, grpcmiddleware.ChainUnaryServer(
+						grpcrecovery.UnaryServerInterceptor(),
+						interceptor,
+					))
 				},
 			}
 		}

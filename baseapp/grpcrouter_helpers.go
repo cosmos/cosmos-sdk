@@ -18,7 +18,7 @@ import (
 // service client.
 type QueryServiceTestHelper struct {
 	*GRPCQueryRouter
-	ctx sdk.Context
+	Ctx sdk.Context
 }
 
 var (
@@ -31,7 +31,7 @@ var (
 func NewQueryServerTestHelper(ctx sdk.Context, interfaceRegistry types.InterfaceRegistry) *QueryServiceTestHelper {
 	qrt := NewGRPCQueryRouter()
 	qrt.SetInterfaceRegistry(interfaceRegistry)
-	return &QueryServiceTestHelper{GRPCQueryRouter: qrt, ctx: ctx}
+	return &QueryServiceTestHelper{GRPCQueryRouter: qrt, Ctx: ctx}
 }
 
 // Invoke implements the grpc ClientConn.Invoke method
@@ -45,7 +45,7 @@ func (q *QueryServiceTestHelper) Invoke(_ gocontext.Context, method string, args
 		return err
 	}
 
-	res, err := querier(q.ctx, abci.RequestQuery{Data: reqBz})
+	res, err := querier(q.Ctx, abci.RequestQuery{Data: reqBz})
 	if err != nil {
 		return err
 	}

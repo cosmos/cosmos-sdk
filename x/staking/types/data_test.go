@@ -1,12 +1,11 @@
-package types
+package types_test
 
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -23,12 +22,12 @@ var (
 	valAddr3 = sdk.ValAddress(pk3.Address())
 
 	emptyAddr   sdk.ValAddress
-	emptyPubkey crypto.PubKey
+	emptyPubkey cryptotypes.PubKey
 )
 
 func init() {
 	var err error
-	pk1Any, err = codectypes.PackAny(pk1)
+	pk1Any, err = codectypes.NewAnyWithValue(pk1)
 	if err != nil {
 		panic(fmt.Sprintf("Can't pack pk1 %t as Any", pk1))
 	}

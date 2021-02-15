@@ -31,9 +31,8 @@ package module
 import (
 	"encoding/json"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -41,6 +40,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 //__________________________________________________________________________________________
@@ -163,17 +163,23 @@ type AppModule interface {
 	// registers
 	RegisterInvariants(sdk.InvariantRegistry)
 
-	// routes
+	// Deprecated: use RegisterServices
 	Route() sdk.Route
 
-	// Deprecated: use RegisterQueryService
+	// Deprecated: use RegisterServices
 	QuerierRoute() string
 
-	// Deprecated: use RegisterQueryService
+	// Deprecated: use RegisterServices
 	LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier
 
 	// RegisterServices allows a module to register services
 	RegisterServices(Configurator)
+
+	// ConsensusVersion is a sequence number for state-breaking change of the
+	// module. It should be incremented on each consensus-breaking change
+	// introduced by the module. To avoid wrong/empty versions, the initial version
+	// should be set to 1.
+	ConsensusVersion() uint64
 
 	// ABCI
 	BeginBlock(sdk.Context, abci.RequestBeginBlock)
@@ -208,6 +214,9 @@ func (gam GenesisOnlyAppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Que
 
 // RegisterServices registers all services.
 func (gam GenesisOnlyAppModule) RegisterServices(Configurator) {}
+
+// ConsensusVersion implements AppModule/ConsensusVersion.
+func (gam GenesisOnlyAppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock returns an empty module begin-block
 func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
@@ -278,11 +287,11 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 // RegisterRoutes registers all module routes and module querier routes
 func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter, legacyQuerierCdc *codec.LegacyAmino) {
 	for _, module := range m.Modules {
-		if !module.Route().Empty() {
-			router.AddRoute(module.Route())
+		if r := module.Route(); !r.Empty() {
+			router.AddRoute(r)
 		}
-		if module.QuerierRoute() != "" {
-			queryRouter.AddRoute(module.QuerierRoute(), module.LegacyQuerierHandler(legacyQuerierCdc))
+		if r := module.QuerierRoute(); r != "" {
+			queryRouter.AddRoute(r, module.LegacyQuerierHandler(legacyQuerierCdc))
 		}
 	}
 }
@@ -327,6 +336,30 @@ func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) map[st
 	}
 
 	return genesisData
+}
+
+// MigrationHandler is the migration function that each module registers.
+type MigrationHandler func(store sdk.Context) error
+
+// MigrationMap is a map of moduleName -> version, where version denotes the
+// version from which we should perform the migration for each module.
+type MigrationMap map[string]uint64
+
+// RunMigrations performs in-place store migrations for all modules.
+func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, migrateFromVersions MigrationMap) error {
+	c, ok := cfg.(configurator)
+	if !ok {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
+	}
+
+	for moduleName, module := range m.Modules {
+		err := c.runModuleMigrations(ctx, moduleName, migrateFromVersions[moduleName], module.ConsensusVersion())
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // BeginBlock performs begin block functionality for all modules. It creates a

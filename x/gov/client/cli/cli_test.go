@@ -4,9 +4,10 @@ package cli_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"strings"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/testutil"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
@@ -265,33 +266,20 @@ func (s *IntegrationTestSuite) TestCmdTally() {
 
 func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 	val := s.network.Validators[0]
-
-	invalidPropFile, err := ioutil.TempFile(s.T().TempDir(), "invalid_text_proposal.*.json")
-	s.Require().NoError(err)
-
 	invalidProp := `{
   "title": "",
 	"description": "Where is the title!?",
 	"type": "Text",
   "deposit": "-324foocoin"
 }`
-
-	_, err = invalidPropFile.WriteString(invalidProp)
-	s.Require().NoError(err)
-
-	validPropFile, err := ioutil.TempFile(s.T().TempDir(), "valid_text_proposal.*.json")
-	s.Require().NoError(err)
-
+	invalidPropFile := testutil.WriteToNewTempFile(s.T(), invalidProp)
 	validProp := fmt.Sprintf(`{
   "title": "Text Proposal",
 	"description": "Hello, World!",
 	"type": "Text",
   "deposit": "%s"
 }`, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)))
-
-	_, err = validPropFile.WriteString(validProp)
-	s.Require().NoError(err)
-
+	validPropFile := testutil.WriteToNewTempFile(s.T(), validProp)
 	testCases := []struct {
 		name         string
 		args         []string

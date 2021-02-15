@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -16,7 +17,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	tmcfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/crypto"
 	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
 	"github.com/tendermint/tendermint/libs/log"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
@@ -32,6 +32,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
@@ -59,6 +60,7 @@ func NewAppConstructor(encodingCfg params.EncodingConfig) AppConstructor {
 		return simapp.NewSimApp(
 			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 			encodingCfg,
+			simapp.EmptyAppOptions{},
 			baseapp.SetPruning(storetypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)
@@ -147,7 +149,7 @@ type (
 		Ctx        *server.Context
 		Dir        string
 		NodeID     string
-		PubKey     crypto.PubKey
+		PubKey     cryptotypes.PubKey
 		Moniker    string
 		APIAddress string
 		RPCAddress string
@@ -156,9 +158,10 @@ type (
 		ValAddress sdk.ValAddress
 		RPCClient  tmclient.Client
 
-		tmNode *node.Node
-		api    *api.Server
-		grpc   *grpc.Server
+		tmNode  *node.Node
+		api     *api.Server
+		grpc    *grpc.Server
+		grpcWeb *http.Server
 	}
 )
 
@@ -183,7 +186,7 @@ func New(t *testing.T, cfg Config) *Network {
 
 	monikers := make([]string, cfg.NumValidators)
 	nodeIDs := make([]string, cfg.NumValidators)
-	valPubKeys := make([]crypto.PubKey, cfg.NumValidators)
+	valPubKeys := make([]cryptotypes.PubKey, cfg.NumValidators)
 
 	var (
 		genAccounts []authtypes.GenesisAccount
@@ -211,6 +214,7 @@ func New(t *testing.T, cfg Config) *Network {
 		apiAddr := ""
 		tmCfg.RPC.ListenAddress = ""
 		appCfg.GRPC.Enable = false
+		appCfg.GRPCWeb.Enable = false
 		if i == 0 {
 			apiListenAddr, _, err := server.FreeTCPAddr()
 			require.NoError(t, err)
@@ -228,6 +232,11 @@ func New(t *testing.T, cfg Config) *Network {
 			require.NoError(t, err)
 			appCfg.GRPC.Address = fmt.Sprintf("0.0.0.0:%s", grpcPort)
 			appCfg.GRPC.Enable = true
+
+			_, grpcWebPort, err := server.FreeTCPAddr()
+			require.NoError(t, err)
+			appCfg.GRPCWeb.Address = fmt.Sprintf("0.0.0.0:%s", grpcWebPort)
+			appCfg.GRPCWeb.Enable = true
 		}
 
 		logger := log.NewNopLogger()
@@ -297,7 +306,7 @@ func New(t *testing.T, cfg Config) *Network {
 		createValMsg, err := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKeys[i],
-			sdk.NewCoin(sdk.DefaultBondDenom, cfg.BondedTokens),
+			sdk.NewCoin(cfg.BondDenom, cfg.BondedTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(commission, sdk.OneDec(), sdk.OneDec()),
 			sdk.OneInt(),
@@ -322,7 +331,7 @@ func New(t *testing.T, cfg Config) *Network {
 			WithKeybase(kb).
 			WithTxConfig(cfg.TxConfig)
 
-		err = tx.Sign(txFactory, nodeDirName, txBuilder)
+		err = tx.Sign(txFactory, nodeDirName, txBuilder, true)
 		require.NoError(t, err)
 
 		txBz, err := cfg.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
@@ -465,6 +474,9 @@ func (n *Network) Cleanup() {
 
 		if v.grpc != nil {
 			v.grpc.Stop()
+			if v.grpcWeb != nil {
+				_ = v.grpcWeb.Close()
+			}
 		}
 	}
 

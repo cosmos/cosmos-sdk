@@ -29,7 +29,25 @@ func (s *StdTxBuilder) GetTx() authsigning.Tx {
 
 // SetMsgs implements TxBuilder.SetMsgs
 func (s *StdTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
-	s.Msgs = msgs
+	stdTxMsgs := make([]sdk.Msg, len(msgs))
+
+	for i, msg := range msgs {
+		switch msg := msg.(type) {
+		case sdk.ServiceMsg:
+			// Since ServiceMsg isn't registered with amino, we unpack msg.Request
+			// into a Msg so that it's handled gracefully for the legacy
+			// GET /txs/{hash} and /txs endpoints.
+			sdkMsg, ok := msg.Request.(sdk.Msg)
+			if !ok {
+				return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "Expecting %T at %d to implement sdk.Msg", msg.Request, i)
+			}
+			stdTxMsgs[i] = sdkMsg
+		default:
+			// legacy sdk.Msg
+			stdTxMsgs[i] = msg
+		}
+	}
+	s.Msgs = stdTxMsgs
 	return nil
 }
 
@@ -65,6 +83,9 @@ func (s *StdTxBuilder) SetMemo(memo string) {
 func (s *StdTxBuilder) SetTimeoutHeight(height uint64) {
 	s.TimeoutHeight = height
 }
+
+// SetFeeGranter does nothing for stdtx
+func (s *StdTxBuilder) SetFeeGranter(_ sdk.AccAddress) {}
 
 // StdTxConfig is a context.TxConfig for StdTx
 type StdTxConfig struct {

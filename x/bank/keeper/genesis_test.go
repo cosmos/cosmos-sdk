@@ -37,8 +37,20 @@ func (suite *IntegrationTestSuite) getTestBalances() []types.Balance {
 	addr2, _ := sdk.AccAddressFromBech32("cosmos1f9xjhxm0plzrh9cskf4qee4pc2xwp0n0556gh0")
 	addr1, _ := sdk.AccAddressFromBech32("cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh")
 	return []types.Balance{
-		{addr2.String(), sdk.Coins{sdk.NewInt64Coin("testcoin1", 32), sdk.NewInt64Coin("testcoin2", 34)}},
-		{addr1.String(), sdk.Coins{sdk.NewInt64Coin("testcoin3", 10)}},
+		{Address: addr2.String(), Coins: sdk.Coins{sdk.NewInt64Coin("testcoin1", 32), sdk.NewInt64Coin("testcoin2", 34)}},
+		{Address: addr1.String(), Coins: sdk.Coins{sdk.NewInt64Coin("testcoin3", 10)}},
 	}
 
+}
+
+func (suite *IntegrationTestSuite) TestInitGenesis() {
+	m := types.Metadata{Description: sdk.DefaultBondDenom, Base: sdk.DefaultBondDenom, Display: sdk.DefaultBondDenom}
+	g := types.DefaultGenesisState()
+	g.DenomMetadata = []types.Metadata{m}
+	bk := suite.app.BankKeeper
+	bk.InitGenesis(suite.ctx, g)
+
+	m2, found := bk.GetDenomMetaData(suite.ctx, m.Base)
+	suite.Require().True(found)
+	suite.Require().Equal(m, m2)
 }

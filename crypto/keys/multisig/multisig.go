@@ -5,10 +5,8 @@ import (
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
-	proto "github.com/gogo/protobuf/proto"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	multisigtypes "github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
@@ -18,7 +16,7 @@ var _ types.UnpackInterfacesMessage = &LegacyAminoPubKey{}
 
 // NewLegacyAminoPubKey returns a new LegacyAminoPubKey.
 // Panics if len(pubKeys) < k or 0 >= k.
-func NewLegacyAminoPubKey(k int, pubKeys []tmcrypto.PubKey) *LegacyAminoPubKey {
+func NewLegacyAminoPubKey(k int, pubKeys []cryptotypes.PubKey) *LegacyAminoPubKey {
 	if k <= 0 {
 		panic("threshold k of n multisignature: k <= 0")
 	}
@@ -32,8 +30,8 @@ func NewLegacyAminoPubKey(k int, pubKeys []tmcrypto.PubKey) *LegacyAminoPubKey {
 	return &LegacyAminoPubKey{Threshold: uint32(k), PubKeys: anyPubKeys}
 }
 
-// Address implements crypto.PubKey Address method
-func (m *LegacyAminoPubKey) Address() tmcrypto.Address {
+// Address implements cryptotypes.PubKey Address method
+func (m *LegacyAminoPubKey) Address() cryptotypes.Address {
 	return tmcrypto.AddressHash(m.Bytes())
 }
 
@@ -91,7 +89,7 @@ func (m *LegacyAminoPubKey) VerifyMultisignature(getSignBytes multisigtypes.GetS
 	return nil
 }
 
-// VerifySignature implements crypto.PubKey VerifySignature method,
+// VerifySignature implements cryptotypes.PubKey VerifySignature method,
 // it panics because it can't handle MultiSignatureData
 // cf. https://github.com/cosmos/cosmos-sdk/issues/7109#issuecomment-686329936
 func (m *LegacyAminoPubKey) VerifySignature(msg []byte, sig []byte) bool {
@@ -99,11 +97,11 @@ func (m *LegacyAminoPubKey) VerifySignature(msg []byte, sig []byte) bool {
 }
 
 // GetPubKeys implements the PubKey.GetPubKeys method
-func (m *LegacyAminoPubKey) GetPubKeys() []tmcrypto.PubKey {
+func (m *LegacyAminoPubKey) GetPubKeys() []cryptotypes.PubKey {
 	if m != nil {
-		pubKeys := make([]tmcrypto.PubKey, len(m.PubKeys))
+		pubKeys := make([]cryptotypes.PubKey, len(m.PubKeys))
 		for i := 0; i < len(m.PubKeys); i++ {
-			pubKeys[i] = m.PubKeys[i].GetCachedValue().(tmcrypto.PubKey)
+			pubKeys[i] = m.PubKeys[i].GetCachedValue().(cryptotypes.PubKey)
 		}
 		return pubKeys
 	}
@@ -113,7 +111,7 @@ func (m *LegacyAminoPubKey) GetPubKeys() []tmcrypto.PubKey {
 
 // Equals returns true if m and other both have the same number of keys, and
 // all constituent keys are the same, and in the same order.
-func (m *LegacyAminoPubKey) Equals(key tmcrypto.PubKey) bool {
+func (m *LegacyAminoPubKey) Equals(key cryptotypes.PubKey) bool {
 	otherKey, ok := key.(multisigtypes.PubKey)
 	if !ok {
 		return false
@@ -145,7 +143,7 @@ func (m *LegacyAminoPubKey) Type() string {
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m *LegacyAminoPubKey) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, any := range m.PubKeys {
-		var pk crypto.PubKey
+		var pk cryptotypes.PubKey
 		err := unpacker.UnpackAny(any, &pk)
 		if err != nil {
 			return err
@@ -154,11 +152,11 @@ func (m *LegacyAminoPubKey) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return nil
 }
 
-func packPubKeys(pubKeys []tmcrypto.PubKey) ([]*types.Any, error) {
+func packPubKeys(pubKeys []cryptotypes.PubKey) ([]*types.Any, error) {
 	anyPubKeys := make([]*types.Any, len(pubKeys))
 
 	for i := 0; i < len(pubKeys); i++ {
-		any, err := types.NewAnyWithValue(pubKeys[i].(proto.Message))
+		any, err := types.NewAnyWithValue(pubKeys[i])
 		if err != nil {
 			return nil, err
 		}

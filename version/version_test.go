@@ -1,4 +1,4 @@
-package version
+package version_test
 
 import (
 	"encoding/json"
@@ -11,10 +11,11 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 func TestNewInfo(t *testing.T) {
-	info := NewInfo()
+	info := version.NewInfo()
 	want := fmt.Sprintf(`: 
 git commit: 
 build tags: 
@@ -23,7 +24,7 @@ build tags:
 }
 
 func TestInfo_String(t *testing.T) {
-	info := Info{
+	info := version.Info{
 		Name:      "testapp",
 		AppName:   "testappd",
 		Version:   "1.0.0",
@@ -39,12 +40,12 @@ go version go1.14 linux/amd64`
 }
 
 func Test_runVersionCmd(t *testing.T) {
-	cmd := NewVersionCommand()
+	cmd := version.NewVersionCommand()
 	_, mockOut := testutil.ApplyMockIO(cmd)
 
 	cmd.SetArgs([]string{
 		fmt.Sprintf("--%s=''", cli.OutputFlag),
-		fmt.Sprintf("--%s=false", flagLong),
+		"--long=false",
 	})
 
 	require.NoError(t, cmd.Execute())
@@ -52,11 +53,10 @@ func Test_runVersionCmd(t *testing.T) {
 	mockOut.Reset()
 
 	cmd.SetArgs([]string{
-		fmt.Sprintf("--%s=json", cli.OutputFlag),
-		fmt.Sprintf("--%s=true", flagLong),
+		fmt.Sprintf("--%s=json", cli.OutputFlag), "--long=true",
 	})
 
-	info := NewInfo()
+	info := version.NewInfo()
 	stringInfo, err := json.Marshal(info)
 	require.NoError(t, err)
 	require.NoError(t, cmd.Execute())

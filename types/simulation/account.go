@@ -1,12 +1,12 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
-
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -14,10 +14,10 @@ import (
 // eventually more useful data can be placed in here.
 // (e.g. number of coins)
 type Account struct {
-	PrivKey crypto.PrivKey
-	PubKey  crypto.PubKey
+	PrivKey cryptotypes.PrivKey
+	PubKey  cryptotypes.PubKey
 	Address sdk.AccAddress
-	ConsKey crypto.PrivKey
+	ConsKey cryptotypes.PrivKey
 }
 
 // Equals returns true if two accounts are equal
@@ -71,11 +71,17 @@ func RandomFees(r *rand.Rand, ctx sdk.Context, spendableCoins sdk.Coins) (sdk.Co
 		return nil, nil
 	}
 
-	denomIndex := r.Intn(len(spendableCoins))
-	randCoin := spendableCoins[denomIndex]
+	perm := r.Perm(len(spendableCoins))
+	var randCoin sdk.Coin
+	for _, index := range perm {
+		randCoin = spendableCoins[index]
+		if !randCoin.Amount.IsZero() {
+			break
+		}
+	}
 
 	if randCoin.Amount.IsZero() {
-		return nil, nil
+		return nil, fmt.Errorf("no coins found for random fees")
 	}
 
 	amt, err := RandPositiveInt(r, randCoin.Amount)

@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -33,7 +31,7 @@ func NewKeeper(cdc codec.BinaryMarshaler, legacyAmino *codec.LegacyAmino, key, t
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", proposal.ModuleName))
+	return ctx.Logger().With("module", "x/"+proposal.ModuleName)
 }
 
 // Allocate subspace used for keepers

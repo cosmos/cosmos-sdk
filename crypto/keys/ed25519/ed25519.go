@@ -7,7 +7,6 @@ import (
 	"io"
 
 	"github.com/tendermint/tendermint/crypto"
-	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -18,8 +17,8 @@ import (
 //-------------------------------------
 
 const (
-	PrivKeyName = "cosmos/PrivKeyEd25519"
-	PubKeyName  = "cosmos/PubKeyEd25519"
+	PrivKeyName = "tendermint/PrivKeyEd25519"
+	PubKeyName  = "tendermint/PubKeyEd25519"
 	// PubKeySize is is the size, in bytes, of public keys as used in this package.
 	PubKeySize = 32
 	// PrivKeySize is the size, in bytes, of private keys as used in this package.
@@ -56,7 +55,7 @@ func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
 // PubKey gets the corresponding public key from the private key.
 //
 // Panics if the private key is not initialized.
-func (privKey *PrivKey) PubKey() crypto.PubKey {
+func (privKey *PrivKey) PubKey() cryptotypes.PubKey {
 	// If the latter 32 bytes of the privkey are all zero, privkey is not
 	// initialized.
 	initialized := false
@@ -78,7 +77,7 @@ func (privKey *PrivKey) PubKey() crypto.PubKey {
 
 // Equals - you probably don't need to use this.
 // Runs in constant time based on length of the keys.
-func (privKey *PrivKey) Equals(other crypto.PrivKey) bool {
+func (privKey *PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
 	if privKey.Type() != other.Type() {
 		return false
 	}
@@ -150,7 +149,6 @@ func GenPrivKeyFromSecret(secret []byte) *PrivKey {
 
 var _ cryptotypes.PubKey = &PubKey{}
 var _ codec.AminoMarshaler = &PubKey{}
-var _ cryptotypes.IntoTmPubKey = &PubKey{}
 
 // Address is the SHA256-20 of the raw pubkey bytes.
 func (pubKey *PubKey) Address() crypto.Address {
@@ -182,7 +180,7 @@ func (pubKey *PubKey) Type() string {
 	return keyType
 }
 
-func (pubKey *PubKey) Equals(other crypto.PubKey) bool {
+func (pubKey *PubKey) Equals(other cryptotypes.PubKey) bool {
 	if pubKey.Type() != other.Type() {
 		return false
 	}
@@ -215,20 +213,4 @@ func (pubKey PubKey) MarshalAminoJSON() ([]byte, error) {
 // UnmarshalAminoJSON overrides Amino JSON marshalling.
 func (pubKey *PubKey) UnmarshalAminoJSON(bz []byte) error {
 	return pubKey.UnmarshalAmino(bz)
-}
-
-// AsTmPubKey converts our own PubKey into a Tendermint ED25519 pubkey.
-func (pubKey *PubKey) AsTmPubKey() crypto.PubKey {
-	return tmed25519.PubKey(pubKey.Key)
-}
-
-// FromTmEd25519 converts a Tendermint ED25519 pubkey into our own ED25519
-// PubKey.
-func FromTmEd25519(pubKey crypto.PubKey) (*PubKey, error) {
-	tmPk, ok := pubKey.(tmed25519.PubKey)
-	if !ok {
-		return nil, fmt.Errorf("expected %T, got %T", tmed25519.PubKey{}, pubKey)
-	}
-
-	return &PubKey{Key: []byte(tmPk)}, nil
 }

@@ -4,19 +4,9 @@ package tendermint.types;
 option go_package = "github.com/tendermint/tendermint/proto/tendermint/types";
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
 import "tendermint/types/types.proto";
-
-// DuplicateVoteEvidence contains evidence a validator signed two conflicting
-// votes.
-message DuplicateVoteEvidence {
-  Vote vote_a = 1;
-  Vote vote_b = 2;
-}
-
-message LightClientAttackEvidence {
-  LightBlock conflicting_block = 1;
-  int64      common_height     = 2;
-}
+import "tendermint/types/validator.proto";
 
 message Evidence {
   oneof sum {
@@ -25,7 +15,24 @@ message Evidence {
   }
 }
 
-// EvidenceData contains any evidence of malicious wrong-doing by validators
-message EvidenceData {
+// DuplicateVoteEvidence contains evidence of a validator signed two conflicting votes.
+message DuplicateVoteEvidence {
+  tendermint.types.Vote       vote_a = 1;
+  tendermint.types.Vote       vote_b = 2;
+  int64                       total_voting_power = 3;
+  int64                       validator_power = 4;
+  google.protobuf.Timestamp   timestamp = 5 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}
+
+// LightClientAttackEvidence contains evidence of a set of validators attempting to mislead a light client.
+message LightClientAttackEvidence {
+  tendermint.types.LightBlock         conflicting_block = 1;
+  int64                               common_height     = 2;
+  repeated tendermint.types.Validator byzantine_validators = 3;
+  int64                               total_voting_power = 4;
+  google.protobuf.Timestamp           timestamp = 5 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}
+
+message EvidenceList {
   repeated Evidence evidence = 1 [(gogoproto.nullable) = false];
 }

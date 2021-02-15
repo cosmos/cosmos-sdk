@@ -4,10 +4,10 @@ import (
 	"bytes"
 
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -81,7 +81,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetMsgs() {
 func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	privKey, pubkey, addr := testdata.KeyTestPubAddr()
 	privKey2, pubkey2, _ := testdata.KeyTestPubAddr()
-	multisigPk := kmultisig.NewLegacyAminoPubKey(2, []crypto.PubKey{pubkey, pubkey2})
+	multisigPk := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pubkey, pubkey2})
 
 	txBuilder := s.TxConfig.NewTxBuilder()
 
@@ -268,7 +268,7 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	tx3Sigs, err := tx3.GetSignaturesV2()
 	s.Require().NoError(err)
 	s.Require().Equal([]signingtypes.SignatureV2{sig}, tx3Sigs)
-	s.Require().Equal([]crypto.PubKey{pubkey}, tx3.GetPubKeys())
+	s.Require().Equal([]cryptotypes.PubKey{pubkey}, tx3.GetPubKeys())
 
 	log("JSON encode transaction")
 	jsonTxBytes, err := s.TxConfig.TxJSONEncoder()(tx)
@@ -287,7 +287,7 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	tx3Sigs, err = tx3.GetSignaturesV2()
 	s.Require().NoError(err)
 	s.Require().Equal([]signingtypes.SignatureV2{sig}, tx3Sigs)
-	s.Require().Equal([]crypto.PubKey{pubkey}, tx3.GetPubKeys())
+	s.Require().Equal([]cryptotypes.PubKey{pubkey}, tx3.GetPubKeys())
 }
 
 func (s *TxConfigTestSuite) TestWrapTxBuilder() {

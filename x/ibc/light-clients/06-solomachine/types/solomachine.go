@@ -1,9 +1,8 @@
 package types
 
 import (
-	"github.com/tendermint/tendermint/crypto"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
@@ -20,17 +19,17 @@ func (cs ClientState) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (cs ConsensusState) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	return unpacker.UnpackAny(cs.PublicKey, new(crypto.PubKey))
+	return unpacker.UnpackAny(cs.PublicKey, new(cryptotypes.PubKey))
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (h Header) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	return unpacker.UnpackAny(h.NewPublicKey, new(crypto.PubKey))
+	return unpacker.UnpackAny(h.NewPublicKey, new(cryptotypes.PubKey))
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (hd HeaderData) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	return unpacker.UnpackAny(hd.NewPubKey, new(crypto.PubKey))
+	return unpacker.UnpackAny(hd.NewPubKey, new(cryptotypes.PubKey))
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method

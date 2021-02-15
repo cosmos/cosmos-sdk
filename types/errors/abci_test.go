@@ -171,7 +171,7 @@ func (s *abciTestSuite) TestRedact() {
 	}{
 		"panic looses message": {
 			err:     Wrap(ErrPanic, "some secret stack trace"),
-			changed: ErrPanic,
+			changed: errPanicWithMsg,
 		},
 		"sdk errors untouched": {
 			err:       Wrap(ErrUnauthorized, "cannot drop db"),
@@ -233,7 +233,7 @@ func (s *abciTestSuite) TestABCIInfoSerializeErr() {
 		},
 		"redact in default encoder": {
 			src: myPanic,
-			exp: "panic",
+			exp: "panic message redacted to hide potentially sensitive system info: panic",
 		},
 		"do not redact in debug encoder": {
 			src:   myPanic,

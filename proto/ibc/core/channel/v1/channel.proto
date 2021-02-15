@@ -114,9 +114,11 @@ message Packet {
   uint64 timeout_timestamp = 8 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
 }
 
-// PacketAckCommitment defines the genesis type necessary to retrieve and store
-// acknowlegements.
-message PacketAckCommitment {
+// PacketState defines the generic type necessary to retrieve and store
+// packet commitments, acknowledgements, and receipts.
+// Caller is responsible for knowing the context necessary to interpret this
+// state as a commitment, acknowledgement, or a receipt.
+message PacketState {
   option (gogoproto.goproto_getters) = false;
 
   // channel port identifier.
@@ -125,8 +127,8 @@ message PacketAckCommitment {
   string channel_id = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
   // packet sequence.
   uint64 sequence = 3;
-  // packet commitment hash.
-  bytes hash = 4;
+  // embedded data that represents packet state.
+  bytes data = 4;
 }
 
 // Acknowledgement is the recommended acknowledgement format to be used by

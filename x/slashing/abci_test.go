@@ -26,7 +26,8 @@ func TestBeginBlocker(t *testing.T) {
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// bond the validator
-	amt := tstaking.CreateValidatorWithValPower(addr, pk, 100, true)
+	power := int64(100)
+	amt := tstaking.CreateValidatorWithValPower(addr, pk, power, true)
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	require.Equal(
 		t, app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr)),
@@ -36,7 +37,7 @@ func TestBeginBlocker(t *testing.T) {
 
 	val := abci.Validator{
 		Address: pk.Address(),
-		Power:   amt.Int64(),
+		Power:   power,
 	}
 
 	// mark the validator as having signed

@@ -1,11 +1,13 @@
 package cli
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 
+	"github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	cfg "github.com/tendermint/tendermint/config"
@@ -16,6 +18,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -25,6 +28,9 @@ import (
 const (
 	// FlagOverwrite defines a flag to overwrite an existing genesis JSON file.
 	FlagOverwrite = "overwrite"
+
+	// FlagSeed defines a flag to initialize the private validator key from a specific seed.
+	FlagRecover = "recover"
 )
 
 type printInfo struct {
@@ -78,7 +84,22 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				chainID = fmt.Sprintf("test-chain-%v", tmrand.Str(6))
 			}
 
-			nodeID, _, err := genutil.InitializeNodeValidatorFiles(config)
+			// Get bip39 mnemonic
+			var mnemonic string
+			recover, _ := cmd.Flags().GetBool(FlagRecover)
+			if recover {
+				inBuf := bufio.NewReader(cmd.InOrStdin())
+				mnemonic, err := input.GetString("Enter your bip39 mnemonic", inBuf)
+				if err != nil {
+					return err
+				}
+
+				if !bip39.IsMnemonicValid(mnemonic) {
+					return errors.New("invalid mnemonic")
+				}
+			}
+
+			nodeID, _, err := genutil.InitializeNodeValidatorFilesFromMnemonic(config, mnemonic)
 			if err != nil {
 				return err
 			}
@@ -124,6 +145,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 	cmd.Flags().String(cli.HomeFlag, defaultNodeHome, "node's home directory")
 	cmd.Flags().BoolP(FlagOverwrite, "o", false, "overwrite the genesis.json file")
+	cmd.Flags().Bool(FlagRecover, false, "provide seed phrase to recover existing key instead of creating")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 
 	return cmd

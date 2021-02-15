@@ -147,19 +147,15 @@ func TestManager_RegisterRoutes(t *testing.T) {
 	require.Equal(t, 2, len(mm.Modules))
 
 	router := mocks.NewMockRouter(mockCtrl)
-	handler1, handler2 := sdk.Handler(func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		return nil, nil
-	}), sdk.Handler(func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		return nil, nil
-	})
-	route1 := sdk.NewRoute("route1", handler1)
-	route2 := sdk.NewRoute("route2", handler2)
-	mockAppModule1.EXPECT().Route().Times(2).Return(route1)
-	mockAppModule2.EXPECT().Route().Times(2).Return(route2)
-	router.EXPECT().AddRoute(gomock.Any()).Times(2) // Use of Any due to limitations to compare Functions as the sdk.Handler
+	noopHandler := sdk.Handler(func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) { return nil, nil })
+	route1 := sdk.NewRoute("route1", noopHandler)
+	route2 := sdk.NewRoute("", noopHandler)
+	mockAppModule1.EXPECT().Route().Times(1).Return(route1)
+	mockAppModule2.EXPECT().Route().Times(1).Return(route2)
+	router.EXPECT().AddRoute(gomock.Any()).Times(1) // Use of Any due to limitations to compare Functions as the sdk.Handler
 
 	queryRouter := mocks.NewMockQueryRouter(mockCtrl)
-	mockAppModule1.EXPECT().QuerierRoute().Times(2).Return("querierRoute1")
+	mockAppModule1.EXPECT().QuerierRoute().Times(1).Return("querierRoute1")
 	mockAppModule2.EXPECT().QuerierRoute().Times(1).Return("")
 	handler3 := sdk.Querier(nil)
 	amino := codec.NewLegacyAmino()

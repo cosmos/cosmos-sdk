@@ -12,7 +12,7 @@ import (
 func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.StakingKeeper, data *types.GenesisState) {
 	stakingKeeper.IterateValidators(ctx,
 		func(index int64, validator stakingtypes.ValidatorI) bool {
-			consPk, err := validator.TmConsPubKey()
+			consPk, err := validator.ConsPubKey()
 			if err != nil {
 				panic(err)
 			}

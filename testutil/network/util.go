@@ -59,10 +59,19 @@ func startInProcess(cfg Config, val *Validator) error {
 		val.RPCClient = local.New(tmNode)
 	}
 
-	if val.APIAddress != "" {
+	// We'll need a RPC client if the validator exposes a gRPC or REST endpoint.
+	if val.APIAddress != "" || val.AppConfig.GRPC.Enable {
 		val.ClientCtx = val.ClientCtx.
 			WithClient(val.RPCClient)
 
+		// Add the tx service in the gRPC router.
+		app.RegisterTxService(val.ClientCtx)
+
+		// Add the tendermint queries service in the gRPC router.
+		app.RegisterTendermintService(val.ClientCtx)
+	}
+
+	if val.APIAddress != "" {
 		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"))
 		app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
 
@@ -90,6 +99,24 @@ func startInProcess(cfg Config, val *Validator) error {
 		}
 
 		val.grpc = grpcSrv
+
+		if val.AppConfig.GRPCWeb.Enable {
+			errCh1 := make(chan error)
+			go func() {
+				grpcWeb, err := servergrpc.StartGRPCWeb(grpcSrv, *val.AppConfig)
+				if err != nil {
+					errCh1 <- err
+				}
+
+				val.grpcWeb = grpcWeb
+			}()
+			select {
+			case err := <-errCh1:
+				return err
+			case <-time.After(5 * time.Second): // assume server started successfully
+			}
+
+		}
 	}
 
 	return nil

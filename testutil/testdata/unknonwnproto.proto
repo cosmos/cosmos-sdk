@@ -42,8 +42,8 @@ message Nested4A {
 }
 
 message Nested3A {
-  int32    id                = 1;
-  string   name              = 2;
+  int32                id    = 1;
+  string               name  = 2;
   repeated Nested4A    a4    = 4;
   map<int64, Nested4A> index = 5;
 }
@@ -66,10 +66,10 @@ message Nested4B {
 }
 
 message Nested3B {
-  int32    id          = 1;
-  int32    age         = 2;
-  string   name        = 3;
-  repeated Nested4B b4 = 4;
+  int32             id   = 1;
+  int32             age  = 2;
+  string            name = 3;
+  repeated Nested4B b4   = 4;
 }
 
 message Nested2B {
@@ -101,32 +101,32 @@ message Customer3 {
 }
 
 message TestVersion1 {
-  int64        x          = 1;
-  TestVersion1 a          = 2;
-  TestVersion1 b          = 3; // [(gogoproto.nullable) = false] generates invalid recursive structs;
+  int64                 x = 1;
+  TestVersion1          a = 2;
+  TestVersion1          b = 3; // [(gogoproto.nullable) = false] generates invalid recursive structs;
   repeated TestVersion1 c = 4;
   repeated TestVersion1 d = 5 [(gogoproto.nullable) = false];
   oneof                 sum {
     int32        e = 6;
     TestVersion1 f = 7;
   }
-  google.protobuf.Any g   = 8;
+  google.protobuf.Any   g = 8;
   repeated TestVersion1 h = 9; // [(gogoproto.castrepeated) = "TestVersion1"];
   // google.protobuf.Timestamp i = 10;
   // google.protobuf.Timestamp j = 11; // [(gogoproto.stdtime) = true];
   Customer1 k = 12 [(gogoproto.embed) = true];
 }
 message TestVersion2 {
-  int64        x          = 1;
-  TestVersion2 a          = 2;
-  TestVersion2 b          = 3; // [(gogoproto.nullable) = false];
+  int64                 x = 1;
+  TestVersion2          a = 2;
+  TestVersion2          b = 3; // [(gogoproto.nullable) = false];
   repeated TestVersion2 c = 4;
   repeated TestVersion2 d = 5; // [(gogoproto.nullable) = false];
   oneof                 sum {
     int32        e = 6;
     TestVersion2 f = 7;
   }
-  google.protobuf.Any g   = 8;
+  google.protobuf.Any   g = 8;
   repeated TestVersion1 h = 9; // [(gogoproto.castrepeated) = "TestVersion1"];
   // google.protobuf.Timestamp i = 10;
   // google.protobuf.Timestamp j = 11; // [(gogoproto.stdtime) = true];
@@ -134,16 +134,16 @@ message TestVersion2 {
   uint64    new_field = 25;
 }
 message TestVersion3 {
-  int64        x          = 1;
-  TestVersion3 a          = 2;
-  TestVersion3 b          = 3; // [(gogoproto.nullable) = false];
+  int64                 x = 1;
+  TestVersion3          a = 2;
+  TestVersion3          b = 3; // [(gogoproto.nullable) = false];
   repeated TestVersion3 c = 4;
   repeated TestVersion3 d = 5; // [(gogoproto.nullable) = false];
   oneof                 sum {
     int32        e = 6;
     TestVersion3 f = 7;
   }
-  google.protobuf.Any g   = 8;
+  google.protobuf.Any   g = 8;
   repeated TestVersion1 h = 9; //[(gogoproto.castrepeated) = "TestVersion1"];
   // google.protobuf.Timestamp i = 10;
   // google.protobuf.Timestamp j = 11; // [(gogoproto.stdtime) = true];
@@ -152,15 +152,15 @@ message TestVersion3 {
 }
 
 message TestVersion3LoneOneOfValue {
-  int64        x          = 1;
-  TestVersion3 a          = 2;
-  TestVersion3 b          = 3; // [(gogoproto.nullable) = false];
+  int64                 x = 1;
+  TestVersion3          a = 2;
+  TestVersion3          b = 3; // [(gogoproto.nullable) = false];
   repeated TestVersion3 c = 4;
   repeated TestVersion3 d = 5; // [(gogoproto.nullable) = false];
   oneof                 sum {
     int32 e = 6;
   }
-  google.protobuf.Any g   = 8;
+  google.protobuf.Any   g = 8;
   repeated TestVersion1 h = 9; //[(gogoproto.castrepeated) = "TestVersion1"];
   // google.protobuf.Timestamp i = 10;
   // google.protobuf.Timestamp j = 11; // [(gogoproto.stdtime) = true];
@@ -169,15 +169,15 @@ message TestVersion3LoneOneOfValue {
 }
 
 message TestVersion3LoneNesting {
-  int64        x          = 1;
-  TestVersion3 a          = 2;
-  TestVersion3 b          = 3; // [(gogoproto.nullable) = false];
+  int64                 x = 1;
+  TestVersion3          a = 2;
+  TestVersion3          b = 3; // [(gogoproto.nullable) = false];
   repeated TestVersion3 c = 4;
   repeated TestVersion3 d = 5; // [(gogoproto.nullable) = false];
   oneof                 sum {
     TestVersion3LoneNesting f = 7;
   }
-  google.protobuf.Any g   = 8;
+  google.protobuf.Any   g = 8;
   repeated TestVersion1 h = 9; //[(gogoproto.castrepeated) = "TestVersion1"];
   // google.protobuf.Timestamp i = 10;
   // google.protobuf.Timestamp j = 11; // [(gogoproto.stdtime) = true];
@@ -210,15 +210,15 @@ message TestVersion3LoneNesting {
 }
 
 message TestVersion4LoneNesting {
-  int64        x          = 1;
-  TestVersion3 a          = 2;
-  TestVersion3 b          = 3; // [(gogoproto.nullable) = false];
+  int64                 x = 1;
+  TestVersion3          a = 2;
+  TestVersion3          b = 3; // [(gogoproto.nullable) = false];
   repeated TestVersion3 c = 4;
   repeated TestVersion3 d = 5; // [(gogoproto.nullable) = false];
   oneof                 sum {
     TestVersion3LoneNesting f = 7;
   }
-  google.protobuf.Any g   = 8;
+  google.protobuf.Any   g = 8;
   repeated TestVersion1 h = 9; //[(gogoproto.castrepeated) = "TestVersion1"];
   // google.protobuf.Timestamp i = 10;
   // google.protobuf.Timestamp j = 11; // [(gogoproto.stdtime) = true];
@@ -257,7 +257,7 @@ message TestVersionFD1 {
     int32        e = 6;
     TestVersion1 f = 7;
   }
-  google.protobuf.Any g   = 8;
+  google.protobuf.Any   g = 8;
   repeated TestVersion1 h = 9; // [(gogoproto.castrepeated) = "TestVersion1"];
 }
 
@@ -268,7 +268,7 @@ message TestVersionFD1WithExtraAny {
     int32        e = 6;
     TestVersion1 f = 7;
   }
-  AnyWithExtra g          = 8;
+  AnyWithExtra          g = 8;
   repeated TestVersion1 h = 9; // [(gogoproto.castrepeated) = "TestVersion1"];
 }
 
@@ -279,11 +279,11 @@ message AnyWithExtra {
 }
 
 message TestUpdatedTxRaw {
-  bytes    body_bytes           = 1;
-  bytes    auth_info_bytes      = 2;
-  repeated bytes signatures     = 3;
-  bytes          new_field_5    = 5;
-  bytes          new_field_1024 = 1024;
+  bytes          body_bytes      = 1;
+  bytes          auth_info_bytes = 2;
+  repeated bytes signatures      = 3;
+  bytes          new_field_5     = 5;
+  bytes          new_field_1024  = 1024;
 }
 
 message TestUpdatedTxBody {

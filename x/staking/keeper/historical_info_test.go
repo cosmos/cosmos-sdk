@@ -31,7 +31,7 @@ func TestHistoricalInfo(t *testing.T) {
 	recv, found := app.StakingKeeper.GetHistoricalInfo(ctx, 2)
 	require.True(t, found, "HistoricalInfo not found after set")
 	require.Equal(t, hi, recv, "HistoricalInfo not equal")
-	require.True(t, sort.IsSorted(types.Validators(recv.Valset)), "HistoricalInfo validators is not sorted")
+	require.True(t, sort.IsSorted(types.ValidatorsByVotingPower(recv.Valset)), "HistoricalInfo validators is not sorted")
 
 	app.StakingKeeper.DeleteHistoricalInfo(ctx, 2)
 
@@ -76,15 +76,16 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, hi5, recv)
 
-	// Set last validators in keeper
+	// Set bonded validators in keeper
 	val1 := teststaking.NewValidator(t, addrVals[2], PKs[2])
 	app.StakingKeeper.SetValidator(ctx, val1)
 	app.StakingKeeper.SetLastValidatorPower(ctx, val1.GetOperator(), 10)
 	val2 := teststaking.NewValidator(t, addrVals[3], PKs[3])
-	vals := []types.Validator{val1, val2}
-	sort.Sort(types.Validators(vals))
 	app.StakingKeeper.SetValidator(ctx, val2)
-	app.StakingKeeper.SetLastValidatorPower(ctx, val2.GetOperator(), 8)
+	app.StakingKeeper.SetLastValidatorPower(ctx, val2.GetOperator(), 80)
+
+	vals := []types.Validator{val1, val2}
+	sort.Sort(types.ValidatorsByVotingPower(vals))
 
 	// Set Header for BeginBlock context
 	header := tmproto.Header{

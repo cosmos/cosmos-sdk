@@ -28,7 +28,7 @@ func ShowNodeIDCmd() *cobra.Command {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
 
-			nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
+			nodeKey, err := p2p.LoadNodeKey(cfg.NodeKeyFile())
 			if err != nil {
 				return err
 			}
@@ -39,7 +39,7 @@ func ShowNodeIDCmd() *cobra.Command {
 	}
 }
 
-// ShowValidator - ported from Tendermint, show this node's validator info
+// ShowValidatorCmd - ported from Tendermint, show this node's validator info
 func ShowValidatorCmd() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "show-validator",
@@ -48,7 +48,7 @@ func ShowValidatorCmd() *cobra.Command {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
 
-			privValidator := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
+			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			valPubKey, err := privValidator.GetPubKey()
 			if err != nil {
 				return err
@@ -59,12 +59,16 @@ func ShowValidatorCmd() *cobra.Command {
 				return printlnJSON(valPubKey)
 			}
 
-			pubkey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey)
+			pubkey, err := cryptocodec.FromTmPubKeyInterface(valPubKey)
+			if err != nil {
+				return err
+			}
+			pubkeyBech32, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pubkey)
 			if err != nil {
 				return err
 			}
 
-			fmt.Println(pubkey)
+			fmt.Println(pubkeyBech32)
 			return nil
 		},
 	}
@@ -82,7 +86,7 @@ func ShowAddressCmd() *cobra.Command {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
 
-			privValidator := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
+			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			valConsAddr := (sdk.ConsAddress)(privValidator.GetAddress())
 
 			output, _ := cmd.Flags().GetString(cli.OutputFlag)
@@ -114,7 +118,7 @@ against which this app has been compiled.
 				BlockProtocol uint64
 				P2PProtocol   uint64
 			}{
-				Tendermint:    tversion.Version,
+				Tendermint:    tversion.TMCoreSemVer,
 				ABCI:          tversion.ABCIVersion,
 				BlockProtocol: tversion.BlockProtocol,
 				P2PProtocol:   tversion.P2PProtocol,

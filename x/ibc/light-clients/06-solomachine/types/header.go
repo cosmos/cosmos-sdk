@@ -3,35 +3,40 @@ package types
 import (
 	"strings"
 
-	tmcrypto "github.com/tendermint/tendermint/crypto"
-
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
-var _ exported.Header = Header{}
+var _ exported.Header = &Header{}
 
 // ClientType defines that the Header is a Solo Machine.
 func (Header) ClientType() string {
-	return SoloMachine
+	return exported.Solomachine
 }
 
 // GetHeight returns the current sequence number as the height.
 // Return clientexported.Height to satisfy interface
-// Version number is always 0 for a solo-machine
+// Revision number is always 0 for a solo-machine
 func (h Header) GetHeight() exported.Height {
 	return clienttypes.NewHeight(0, h.Sequence)
 }
 
-// GetPubKey unmarshals the new public key into a tmcrypto.PubKey type.
-func (h Header) GetPubKey() tmcrypto.PubKey {
-	publicKey, ok := h.NewPublicKey.GetCachedValue().(tmcrypto.PubKey)
-	if !ok {
-		panic("Header NewPublicKey is not crypto.PubKey")
+// GetPubKey unmarshals the new public key into a cryptotypes.PubKey type.
+// An error is returned if the new public key is nil or the cached value
+// is not a PubKey.
+func (h Header) GetPubKey() (cryptotypes.PubKey, error) {
+	if h.NewPublicKey == nil {
+		return nil, sdkerrors.Wrap(ErrInvalidHeader, "header NewPublicKey cannot be nil")
 	}
 
-	return publicKey
+	publicKey, ok := h.NewPublicKey.GetCachedValue().(cryptotypes.PubKey)
+	if !ok {
+		return nil, sdkerrors.Wrap(ErrInvalidHeader, "header NewPublicKey is not cryptotypes.PubKey")
+	}
+
+	return publicKey, nil
 }
 
 // ValidateBasic ensures that the sequence, signature and public key have all
@@ -53,7 +58,8 @@ func (h Header) ValidateBasic() error {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "signature cannot be empty")
 	}
 
-	if h.NewPublicKey == nil || h.GetPubKey() == nil || len(h.GetPubKey().Bytes()) == 0 {
+	newPublicKey, err := h.GetPubKey()
+	if err != nil || newPublicKey == nil || len(newPublicKey.Bytes()) == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "new public key cannot be empty")
 	}
 

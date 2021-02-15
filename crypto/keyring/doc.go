@@ -32,7 +32,7 @@
 // 			that the keyring keyring may be kept unlocked for the whole duration of the user
 // 			session.
 // 	file	This backend more closely resembles the previous keyring storage used prior to
-// 			v0.38.1. It stores the keyring encrypted within the apps configuration directory.
+// 			v0.38.1. It stores the keyring encrypted within the app's configuration directory.
 // 			This keyring will request a password each time it is accessed, which may occur
 // 			multiple times in a single command resulting in repeated password prompts.
 // 	kwallet	This backend uses KDE Wallet Manager as a credentials management application:

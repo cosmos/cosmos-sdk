@@ -1,24 +1,29 @@
-package baseapp
+package baseapp_test
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestGRPCRouter(t *testing.T) {
-	qr := NewGRPCQueryRouter()
+func TestGRPCGatewayRouter(t *testing.T) {
+	qr := baseapp.NewGRPCQueryRouter()
 	interfaceRegistry := testdata.NewTestInterfaceRegistry()
 	qr.SetInterfaceRegistry(interfaceRegistry)
 	testdata.RegisterQueryServer(qr, testdata.QueryImpl{})
-	helper := &QueryServiceTestHelper{
+	helper := &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: qr,
-		ctx:             sdk.Context{}.WithContext(context.Background()),
+		Ctx:             sdk.Context{}.WithContext(context.Background()),
 	}
 	client := testdata.NewQueryClient(helper)
 
@@ -43,4 +48,29 @@ func TestGRPCRouter(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res3)
 	require.Equal(t, spot, res3.HasAnimal.Animal.GetCachedValue())
+}
+
+func TestRegisterQueryServiceTwice(t *testing.T) {
+	// Setup baseapp.
+	db := dbm.NewMemDB()
+	encCfg := simapp.MakeTestEncodingConfig()
+	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
+	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
+
+	// First time registering service shouldn't panic.
+	require.NotPanics(t, func() {
+		testdata.RegisterQueryServer(
+			app.GRPCQueryRouter(),
+			testdata.QueryImpl{},
+		)
+	})
+
+	// Second time should panic.
+	require.Panics(t, func() {
+		testdata.RegisterQueryServer(
+			app.GRPCQueryRouter(),
+			testdata.QueryImpl{},
+		)
+	})
 }

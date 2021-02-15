@@ -51,7 +51,7 @@ message MsgCreateValidator {
 }
 
 // MsgCreateValidatorResponse defines the Msg/CreateValidator response type.
-message MsgCreateValidatorResponse { }
+message MsgCreateValidatorResponse {}
 
 // MsgEditValidator defines a SDK message for editing an existing validator.
 message MsgEditValidator {
@@ -64,7 +64,6 @@ message MsgEditValidator {
   // We pass a reference to the new commission rate and min self delegation as
   // it's not mandatory to update. If not updated, the deserialized rate will be
   // zero with no way to distinguish if an update was intended.
-  //
   // REF: #2373
   string commission_rate = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
@@ -77,7 +76,7 @@ message MsgEditValidator {
 }
 
 // MsgEditValidatorResponse defines the Msg/EditValidator response type.
-message MsgEditValidatorResponse { }
+message MsgEditValidatorResponse {}
 
 // MsgDelegate defines a SDK message for performing a delegation of coins
 // from a delegator to a validator.
@@ -91,7 +90,7 @@ message MsgDelegate {
 }
 
 // MsgDelegateResponse defines the Msg/Delegate response type.
-message MsgDelegateResponse { }
+message MsgDelegateResponse {}
 
 // MsgBeginRedelegate defines a SDK message for performing a redelegation
 // of coins from a delegator and source validator to a destination validator.

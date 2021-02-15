@@ -131,6 +131,13 @@ var (
 	// the same resource and one of them fails.
 	ErrConflict = Register(RootCodespace, 36, "conflict")
 
+	// ErrNotSupported is returned when we call a branch of a code which is currently not
+	// supported.
+	ErrNotSupported = Register(RootCodespace, 37, "feature not supported")
+
+	// ErrNotFound defines an error when requested entity doesn't exist in the state.
+	ErrNotFound = Register(RootCodespace, 38, "not found")
+
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")
@@ -314,12 +321,11 @@ func (e *wrappedError) Cause() error {
 
 // Is reports whether any error in e's chain matches a target.
 func (e *wrappedError) Is(target error) bool {
-	if target == nil {
-		return e == target
+	if e == target {
+		return true
 	}
 
 	w := e.Cause()
-
 	for {
 		if w == target {
 			return true

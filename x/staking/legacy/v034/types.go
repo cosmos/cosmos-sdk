@@ -5,9 +5,8 @@ package v034
 import (
 	"time"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -76,17 +75,17 @@ type (
 	}
 
 	Validator struct {
-		OperatorAddress         sdk.ValAddress `json:"operator_address"`
-		ConsPubKey              crypto.PubKey  `json:"consensus_pubkey"`
-		Jailed                  bool           `json:"jailed"`
-		Status                  BondStatus     `json:"status"`
-		Tokens                  sdk.Int        `json:"tokens"`
-		DelegatorShares         sdk.Dec        `json:"delegator_shares"`
-		Description             Description    `json:"description"`
-		UnbondingHeight         int64          `json:"unbonding_height"`
-		UnbondingCompletionTime time.Time      `json:"unbonding_time"`
-		Commission              Commission     `json:"commission"`
-		MinSelfDelegation       sdk.Int        `json:"min_self_delegation"`
+		OperatorAddress         sdk.ValAddress     `json:"operator_address"`
+		ConsPubKey              cryptotypes.PubKey `json:"consensus_pubkey"`
+		Jailed                  bool               `json:"jailed"`
+		Status                  BondStatus         `json:"status"`
+		Tokens                  sdk.Int            `json:"tokens"`
+		DelegatorShares         sdk.Dec            `json:"delegator_shares"`
+		Description             Description        `json:"description"`
+		UnbondingHeight         int64              `json:"unbonding_height"`
+		UnbondingCompletionTime time.Time          `json:"unbonding_time"`
+		Commission              Commission         `json:"commission"`
+		MinSelfDelegation       sdk.Int            `json:"min_self_delegation"`
 	}
 
 	Validators []Validator
@@ -170,6 +169,7 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
+
 	*v = Validator{
 		OperatorAddress:         bv.OperatorAddress,
 		ConsPubKey:              consPubKey,

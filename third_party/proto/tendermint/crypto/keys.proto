@@ -11,6 +11,7 @@ message PublicKey {
   option (gogoproto.equal)   = true;
 
   oneof sum {
-    bytes ed25519 = 1;
+    bytes ed25519   = 1;
+    bytes secp256k1 = 2;
   }
 }

@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -32,14 +32,14 @@ func NewHelper(t *testing.T, ctx sdk.Context, k keeper.Keeper) *Helper {
 }
 
 // CreateValidator calls handler to create a new staking validator
-func (sh *Helper) CreateValidator(addr sdk.ValAddress, pk crypto.PubKey, stakeAmount int64, ok bool) {
-	coin := sdk.NewCoin(sh.Denom, sdk.NewInt(stakeAmount))
+func (sh *Helper) CreateValidator(addr sdk.ValAddress, pk cryptotypes.PubKey, stakeAmount sdk.Int, ok bool) {
+	coin := sdk.NewCoin(sh.Denom, stakeAmount)
 	sh.createValidator(addr, pk, coin, ok)
 }
 
 // CreateValidatorWithValPower calls handler to create a new staking validator with zero
 // commission
-func (sh *Helper) CreateValidatorWithValPower(addr sdk.ValAddress, pk crypto.PubKey, valPower int64, ok bool) sdk.Int {
+func (sh *Helper) CreateValidatorWithValPower(addr sdk.ValAddress, pk cryptotypes.PubKey, valPower int64, ok bool) sdk.Int {
 	amount := sdk.TokensFromConsensusPower(valPower)
 	coin := sdk.NewCoin(sh.Denom, amount)
 	sh.createValidator(addr, pk, coin, ok)
@@ -47,22 +47,22 @@ func (sh *Helper) CreateValidatorWithValPower(addr sdk.ValAddress, pk crypto.Pub
 }
 
 // CreateValidatorMsg returns a message used to create validator in this service.
-func (sh *Helper) CreateValidatorMsg(addr sdk.ValAddress, pk crypto.PubKey, stakeAmount int64) *stakingtypes.MsgCreateValidator {
-	coin := sdk.NewCoin(sh.Denom, sdk.NewInt(stakeAmount))
+func (sh *Helper) CreateValidatorMsg(addr sdk.ValAddress, pk cryptotypes.PubKey, stakeAmount sdk.Int) *stakingtypes.MsgCreateValidator {
+	coin := sdk.NewCoin(sh.Denom, stakeAmount)
 	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{}, sh.Commission, sdk.OneInt())
 	require.NoError(sh.t, err)
 	return msg
 }
 
-func (sh *Helper) createValidator(addr sdk.ValAddress, pk crypto.PubKey, coin sdk.Coin, ok bool) {
+func (sh *Helper) createValidator(addr sdk.ValAddress, pk cryptotypes.PubKey, coin sdk.Coin, ok bool) {
 	msg, err := stakingtypes.NewMsgCreateValidator(addr, pk, coin, stakingtypes.Description{}, sh.Commission, sdk.OneInt())
 	require.NoError(sh.t, err)
 	sh.Handle(msg, ok)
 }
 
 // Delegate calls handler to delegate stake for a validator
-func (sh *Helper) Delegate(delegator sdk.AccAddress, val sdk.ValAddress, amount int64) {
-	coin := sdk.NewCoin(sh.Denom, sdk.NewInt(amount))
+func (sh *Helper) Delegate(delegator sdk.AccAddress, val sdk.ValAddress, amount sdk.Int) {
+	coin := sdk.NewCoin(sh.Denom, amount)
 	msg := stakingtypes.NewMsgDelegate(delegator, val, coin)
 	sh.Handle(msg, true)
 }

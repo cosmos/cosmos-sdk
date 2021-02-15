@@ -32,11 +32,11 @@ func TestDecodeStore(t *testing.T) {
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
 			{
-				Key:   host.FullKeyClientPath(clientID, host.KeyClientState()),
+				Key:   host.FullClientStateKey(clientID),
 				Value: app.IBCKeeper.ClientKeeper.MustMarshalClientState(clientState),
 			},
 			{
-				Key:   host.FullKeyClientPath(clientID, host.KeyConsensusState(height)),
+				Key:   host.FullConsensusStateKey(clientID, height),
 				Value: app.IBCKeeper.ClientKeeper.MustMarshalConsensusState(consState),
 			},
 			{

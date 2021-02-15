@@ -3,13 +3,11 @@ package ante_test
 import (
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
-	"github.com/tendermint/tendermint/crypto"
-
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
@@ -28,7 +26,7 @@ func (suite *AnteTestSuite) TestValidateBasic() {
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
-	privs, accNums, accSeqs := []crypto.PrivKey{}, []uint64{}, []uint64{}
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{}, []uint64{}, []uint64{}
 	invalidTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
@@ -38,7 +36,7 @@ func (suite *AnteTestSuite) TestValidateBasic() {
 
 	suite.Require().NotNil(err, "Did not error on invalid tx")
 
-	privs, accNums, accSeqs = []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	privs, accNums, accSeqs = []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	validTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
@@ -69,7 +67,7 @@ func (suite *AnteTestSuite) TestValidateMemo() {
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
-	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	suite.txBuilder.SetMemo(strings.Repeat("01234567890", 500))
 	invalidTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
@@ -120,7 +118,7 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 			suite.txBuilder.SetGasLimit(gasLimit)
 			suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
 
-			privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
+			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 			tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 			suite.Require().NoError(err)
 
@@ -214,7 +212,7 @@ func (suite *AnteTestSuite) TestTxHeightTimeoutDecorator() {
 			suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
 			suite.txBuilder.SetTimeoutHeight(tc.timeout)
 
-			privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
+			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 			tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 			suite.Require().NoError(err)
 

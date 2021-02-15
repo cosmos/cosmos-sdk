@@ -1,8 +1,8 @@
 package types_test
 
 import (
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
@@ -92,7 +92,7 @@ func (suite *SoloMachineTestSuite) TestCheckHeaderAndUpdateState() {
 					cs := solomachine.ClientState()
 					h := solomachine.CreateHeader()
 
-					publicKey, err := tx.PubKeyToAny(solomachine.PublicKey)
+					publicKey, err := codectypes.NewAnyWithValue(solomachine.PublicKey)
 					suite.NoError(err)
 
 					data := &types.HeaderData{
@@ -140,6 +140,16 @@ func (suite *SoloMachineTestSuite) TestCheckHeaderAndUpdateState() {
 
 					clientState = cs
 					header = h
+				},
+				false,
+			},
+			{
+				"consensus state public key is nil",
+				func() {
+					cs := solomachine.ClientState()
+					cs.ConsensusState.PublicKey = nil
+					clientState = cs
+					header = solomachine.CreateHeader()
 				},
 				false,
 			},

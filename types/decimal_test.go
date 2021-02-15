@@ -478,7 +478,16 @@ func (s *decimalTestSuite) TestDecEncoding() {
 	}
 }
 
+// Showcase that different orders of operations causes different results.
+func (s *decimalTestSuite) TestOperationOrders() {
+	n1 := sdk.NewDec(10)
+	n2 := sdk.NewDec(1000000010)
+	s.Require().Equal(n1.Mul(n2).Quo(n2), sdk.NewDec(10))
+	s.Require().NotEqual(n1.Mul(n2).Quo(n2), n1.Quo(n2).Mul(n2))
+}
+
 func BenchmarkMarshalTo(b *testing.B) {
+	b.ReportAllocs()
 	bis := []struct {
 		in   sdk.Dec
 		want []byte

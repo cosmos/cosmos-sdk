@@ -21,14 +21,9 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	app := simapp.Setup(false)
 
-	srv := reflection.NewReflectionServiceServer(app.InterfaceRegistry())
-
 	sdkCtx := app.BaseApp.NewContext(false, tmproto.Header{})
 	queryHelper := baseapp.NewQueryServerTestHelper(sdkCtx, app.InterfaceRegistry())
-
-	reflection.RegisterReflectionServiceServer(queryHelper, srv)
 	queryClient := reflection.NewReflectionServiceClient(queryHelper)
-
 	s.queryClient = queryClient
 }
 

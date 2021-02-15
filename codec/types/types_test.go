@@ -9,37 +9,25 @@ import (
 	"github.com/gogo/protobuf/grpc"
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
-	grpc2 "google.golang.org/grpc"
-
 	"github.com/stretchr/testify/require"
+	grpc2 "google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
-func TestPackUnpack(t *testing.T) {
+func TestAnyPackUnpack(t *testing.T) {
 	registry := testdata.NewTestInterfaceRegistry()
 
 	spot := &testdata.Dog{Name: "Spot"}
-	any := types.Any{}
-	err := any.Pack(spot)
-	require.NoError(t, err)
-
-	require.Equal(t, spot, any.GetCachedValue())
-
-	// without cache
-	any.ClearCachedValue()
 	var animal testdata.Animal
-	err = registry.UnpackAny(&any, &animal)
-	require.NoError(t, err)
-	require.Equal(t, spot, animal)
 
 	// with cache
-	err = any.Pack(spot)
-	require.Equal(t, spot, any.GetCachedValue())
+	any, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)
-	err = registry.UnpackAny(&any, &animal)
+	require.Equal(t, spot, any.GetCachedValue())
+	err = registry.UnpackAny(any, &animal)
 	require.NoError(t, err)
 	require.Equal(t, spot, animal)
 }
@@ -48,22 +36,61 @@ type TestI interface {
 	DoSomething()
 }
 
+// A struct that has the same typeURL as testdata.Dog, but is actually another
+// concrete type.
+type FakeDog struct{}
+
+var (
+	_ proto.Message   = &FakeDog{}
+	_ testdata.Animal = &FakeDog{}
+)
+
+// dummy implementation of proto.Message and testdata.Animal
+func (dog FakeDog) Reset()                  {}
+func (dog FakeDog) String() string          { return "fakedog" }
+func (dog FakeDog) ProtoMessage()           {}
+func (dog FakeDog) XXX_MessageName() string { return proto.MessageName(&testdata.Dog{}) }
+func (dog FakeDog) Greet() string           { return "fakedog" }
+
 func TestRegister(t *testing.T) {
 	registry := types.NewInterfaceRegistry()
 	registry.RegisterInterface("Animal", (*testdata.Animal)(nil))
 	registry.RegisterInterface("TestI", (*TestI)(nil))
+
+	// Happy path.
 	require.NotPanics(t, func() {
 		registry.RegisterImplementations((*testdata.Animal)(nil), &testdata.Dog{})
 	})
+
+	// testdata.Dog doesn't implement TestI
 	require.Panics(t, func() {
 		registry.RegisterImplementations((*TestI)(nil), &testdata.Dog{})
 	})
+
+	// nil proto message
 	require.Panics(t, func() {
 		registry.RegisterImplementations((*TestI)(nil), nil)
 	})
+
+	// Not an interface.
 	require.Panics(t, func() {
 		registry.RegisterInterface("not_an_interface", (*testdata.Dog)(nil))
 	})
+
+	// Duplicate registration with same concrete type.
+	require.NotPanics(t, func() {
+		registry.RegisterImplementations((*testdata.Animal)(nil), &testdata.Dog{})
+	})
+
+	// Duplicate registration with different concrete type on same typeURL.
+	require.PanicsWithError(
+		t,
+		"concrete type *testdata.Dog has already been registered under typeURL /testdata.Dog, cannot register *types_test.FakeDog under same typeURL. "+
+			"This usually means that there are conflicting modules registering different concrete types for a same interface implementation",
+		func() {
+			registry.RegisterImplementations((*testdata.Animal)(nil), &FakeDog{})
+		},
+	)
 }
 
 func TestUnpackInterfaces(t *testing.T) {

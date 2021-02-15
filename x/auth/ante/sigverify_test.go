@@ -3,13 +3,12 @@ package ante_test
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -30,7 +29,7 @@ func (suite *AnteTestSuite) TestSetPubKey() {
 	priv3, pub3, addr3 := testdata.KeyTestPubAddr()
 
 	addrs := []sdk.AccAddress{addr1, addr2, addr3}
-	pubs := []crypto.PubKey{pub1, pub2, pub3}
+	pubs := []cryptotypes.PubKey{pub1, pub2, pub3}
 
 	msgs := make([]sdk.Msg, len(addrs))
 	// set accounts and create msg for each address
@@ -47,7 +46,7 @@ func (suite *AnteTestSuite) TestSetPubKey() {
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
-	privs, accNums, accSeqs := []crypto.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
@@ -68,7 +67,7 @@ func (suite *AnteTestSuite) TestSetPubKey() {
 func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 	params := types.DefaultParams()
 	msg := []byte{1, 2, 3, 4}
-	_, cdc := simapp.MakeCodecs()
+	cdc := simapp.MakeTestEncodingConfig().Amino
 
 	pkSet1, sigSet1 := generatePubKeysAndSignatures(5, msg, false)
 	multisigKey1 := kmultisig.NewLegacyAminoPubKey(2, pkSet1)
@@ -85,7 +84,7 @@ func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 	type args struct {
 		meter  sdk.GasMeter
 		sig    signing.SignatureData
-		pubkey crypto.PubKey
+		pubkey cryptotypes.PubKey
 		params types.Params
 	}
 	tests := []struct {
@@ -148,20 +147,20 @@ func (suite *AnteTestSuite) TestSigVerification() {
 
 	type testCase struct {
 		name      string
-		privs     []crypto.PrivKey
+		privs     []cryptotypes.PrivKey
 		accNums   []uint64
 		accSeqs   []uint64
 		recheck   bool
 		shouldErr bool
 	}
 	testCases := []testCase{
-		{"no signers", []crypto.PrivKey{}, []uint64{}, []uint64{}, false, true},
-		{"not enough signers", []crypto.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}, false, true},
-		{"wrong order signers", []crypto.PrivKey{priv3, priv2, priv1}, []uint64{2, 1, 0}, []uint64{0, 0, 0}, false, true},
-		{"wrong accnums", []crypto.PrivKey{priv1, priv2, priv3}, []uint64{7, 8, 9}, []uint64{0, 0, 0}, false, true},
-		{"wrong sequences", []crypto.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{3, 4, 5}, false, true},
-		{"valid tx", []crypto.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}, false, false},
-		{"no err on recheck", []crypto.PrivKey{}, []uint64{}, []uint64{}, true, false},
+		{"no signers", []cryptotypes.PrivKey{}, []uint64{}, []uint64{}, false, true},
+		{"not enough signers", []cryptotypes.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}, false, true},
+		{"wrong order signers", []cryptotypes.PrivKey{priv3, priv2, priv1}, []uint64{2, 1, 0}, []uint64{0, 0, 0}, false, true},
+		{"wrong accnums", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{7, 8, 9}, []uint64{0, 0, 0}, false, true},
+		{"wrong sequences", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{3, 4, 5}, false, true},
+		{"valid tx", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}, false, false},
+		{"no err on recheck", []cryptotypes.PrivKey{}, []uint64{}, []uint64{}, true, false},
 	}
 	for i, tc := range testCases {
 		suite.ctx = suite.ctx.WithIsReCheckTx(tc.recheck)
@@ -233,20 +232,20 @@ func (suite *AnteTestSuite) TestSigVerification_ExplicitAmino() {
 
 	type testCase struct {
 		name      string
-		privs     []crypto.PrivKey
+		privs     []cryptotypes.PrivKey
 		accNums   []uint64
 		accSeqs   []uint64
 		recheck   bool
 		shouldErr bool
 	}
 	testCases := []testCase{
-		{"no signers", []crypto.PrivKey{}, []uint64{}, []uint64{}, false, true},
-		{"not enough signers", []crypto.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}, false, true},
-		{"wrong order signers", []crypto.PrivKey{priv3, priv2, priv1}, []uint64{2, 1, 0}, []uint64{0, 0, 0}, false, true},
-		{"wrong accnums", []crypto.PrivKey{priv1, priv2, priv3}, []uint64{7, 8, 9}, []uint64{0, 0, 0}, false, true},
-		{"wrong sequences", []crypto.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{3, 4, 5}, false, true},
-		{"valid tx", []crypto.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}, false, false},
-		{"no err on recheck", []crypto.PrivKey{}, []uint64{}, []uint64{}, true, false},
+		{"no signers", []cryptotypes.PrivKey{}, []uint64{}, []uint64{}, false, true},
+		{"not enough signers", []cryptotypes.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}, false, true},
+		{"wrong order signers", []cryptotypes.PrivKey{priv3, priv2, priv1}, []uint64{2, 1, 0}, []uint64{0, 0, 0}, false, true},
+		{"wrong accnums", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{7, 8, 9}, []uint64{0, 0, 0}, false, true},
+		{"wrong sequences", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{3, 4, 5}, false, true},
+		{"valid tx", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}, false, false},
+		{"no err on recheck", []cryptotypes.PrivKey{}, []uint64{}, []uint64{}, true, false},
 	}
 	for i, tc := range testCases {
 		suite.ctx = suite.ctx.WithIsReCheckTx(tc.recheck)
@@ -270,7 +269,7 @@ func (suite *AnteTestSuite) TestSigVerification_ExplicitAmino() {
 
 func (suite *AnteTestSuite) TestSigIntegration() {
 	// generate private keys
-	privs := []crypto.PrivKey{
+	privs := []cryptotypes.PrivKey{
 		secp256k1.GenPrivKey(),
 		secp256k1.GenPrivKey(),
 		secp256k1.GenPrivKey(),
@@ -288,7 +287,7 @@ func (suite *AnteTestSuite) TestSigIntegration() {
 	suite.Require().Equal(initialSigCost*uint64(len(privs)), doubleCost-initialCost)
 }
 
-func (suite *AnteTestSuite) runSigDecorators(params types.Params, _ bool, privs ...crypto.PrivKey) (sdk.Gas, error) {
+func (suite *AnteTestSuite) runSigDecorators(params types.Params, _ bool, privs ...cryptotypes.PrivKey) (sdk.Gas, error) {
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -343,7 +342,7 @@ func (suite *AnteTestSuite) TestIncrementSequenceDecorator() {
 
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
-	privs := []crypto.PrivKey{priv}
+	privs := []cryptotypes.PrivKey{priv}
 	accNums := []uint64{suite.app.AccountKeeper.GetAccount(suite.ctx, addr).GetAccountNumber()}
 	accSeqs := []uint64{suite.app.AccountKeeper.GetAccount(suite.ctx, addr).GetSequence()}
 	feeAmount := testdata.NewTestFeeAmount()

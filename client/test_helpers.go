@@ -3,8 +3,7 @@ package client
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto"
-
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -26,7 +25,7 @@ func (t TestAccount) GetAddress() sdk.AccAddress {
 }
 
 // GetPubKey implements client Account.GetPubKey
-func (t TestAccount) GetPubKey() crypto.PubKey {
+func (t TestAccount) GetPubKey() cryptotypes.PubKey {
 	return nil
 }
 

@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -60,8 +59,7 @@ $ %s query gov proposal 1
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -75,14 +73,14 @@ $ %s query gov proposal 1
 
 			// Query the proposal
 			res, err := queryClient.Proposal(
-				context.Background(),
+				cmd.Context(),
 				&types.QueryProposalRequest{ProposalId: proposalID},
 			)
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res.Proposal)
+			return clientCtx.PrintProto(&res.Proposal)
 		},
 	}
 
@@ -138,8 +136,7 @@ $ %s query gov proposals --page=2 --limit=100
 				}
 			}
 
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -151,7 +148,7 @@ $ %s query gov proposals --page=2 --limit=100
 			}
 
 			res, err := queryClient.Proposals(
-				context.Background(),
+				cmd.Context(),
 				&types.QueryProposalsRequest{
 					ProposalStatus: proposalStatus,
 					Voter:          bechVoterAddr,
@@ -167,7 +164,7 @@ $ %s query gov proposals --page=2 --limit=100
 				return fmt.Errorf("no proposals found")
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -197,8 +194,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -211,8 +207,9 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			}
 
 			// check to see if the proposal is in the store
+			ctx := cmd.Context()
 			_, err = queryClient.Proposal(
-				context.Background(),
+				ctx,
 				&types.QueryProposalRequest{ProposalId: proposalID},
 			)
 			if err != nil {
@@ -225,7 +222,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			}
 
 			res, err := queryClient.Vote(
-				context.Background(),
+				ctx,
 				&types.QueryVoteRequest{ProposalId: proposalID, Voter: args[1]},
 			)
 			if err != nil {
@@ -246,7 +243,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				}
 			}
 
-			return clientCtx.PrintOutput(&res.Vote)
+			return clientCtx.PrintProto(&res.Vote)
 		},
 	}
 
@@ -272,8 +269,7 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -286,8 +282,9 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 			}
 
 			// check to see if the proposal is in the store
+			ctx := cmd.Context()
 			proposalRes, err := queryClient.Proposal(
-				context.Background(),
+				ctx,
 				&types.QueryProposalRequest{ProposalId: proposalID},
 			)
 			if err != nil {
@@ -309,7 +306,7 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 				// TODO migrate to use JSONMarshaler (implement MarshalJSONArray
 				// or wrap lists of proto.Message in some other message)
 				clientCtx.LegacyAmino.MustUnmarshalJSON(resByTxQuery, &votes)
-				return clientCtx.PrintOutputLegacy(votes)
+				return clientCtx.PrintObjectLegacy(votes)
 
 			}
 
@@ -319,7 +316,7 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 			}
 
 			res, err := queryClient.Votes(
-				context.Background(),
+				ctx,
 				&types.QueryVotesRequest{ProposalId: proposalID, Pagination: pageReq},
 			)
 
@@ -327,7 +324,7 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 
 		},
 	}
@@ -355,8 +352,7 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -369,8 +365,9 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			}
 
 			// check to see if the proposal is in the store
+			ctx := cmd.Context()
 			_, err = queryClient.Proposal(
-				context.Background(),
+				ctx,
 				&types.QueryProposalRequest{ProposalId: proposalID},
 			)
 			if err != nil {
@@ -383,7 +380,7 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			}
 
 			res, err := queryClient.Deposit(
-				context.Background(),
+				ctx,
 				&types.QueryDepositRequest{ProposalId: proposalID, Depositor: args[1]},
 			)
 			if err != nil {
@@ -400,7 +397,7 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				clientCtx.JSONMarshaler.MustUnmarshalJSON(resByTxQuery, &deposit)
 			}
 
-			return clientCtx.PrintOutput(&deposit)
+			return clientCtx.PrintProto(&deposit)
 		},
 	}
 
@@ -426,8 +423,7 @@ $ %s query gov deposits 1
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -440,8 +436,9 @@ $ %s query gov deposits 1
 			}
 
 			// check to see if the proposal is in the store
+			ctx := cmd.Context()
 			proposalRes, err := queryClient.Proposal(
-				context.Background(),
+				ctx,
 				&types.QueryProposalRequest{ProposalId: proposalID},
 			)
 			if err != nil {
@@ -461,7 +458,7 @@ $ %s query gov deposits 1
 				// or wrap lists of proto.Message in some other message)
 				clientCtx.LegacyAmino.MustUnmarshalJSON(resByTxQuery, &dep)
 
-				return clientCtx.PrintOutputLegacy(dep)
+				return clientCtx.PrintObjectLegacy(dep)
 			}
 
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
@@ -470,7 +467,7 @@ $ %s query gov deposits 1
 			}
 
 			res, err := queryClient.Deposits(
-				context.Background(),
+				ctx,
 				&types.QueryDepositsRequest{ProposalId: proposalID, Pagination: pageReq},
 			)
 
@@ -478,7 +475,7 @@ $ %s query gov deposits 1
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -505,8 +502,7 @@ $ %s query gov tally 1
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -519,8 +515,9 @@ $ %s query gov tally 1
 			}
 
 			// check to see if the proposal is in the store
+			ctx := cmd.Context()
 			_, err = queryClient.Proposal(
-				context.Background(),
+				ctx,
 				&types.QueryProposalRequest{ProposalId: proposalID},
 			)
 			if err != nil {
@@ -529,14 +526,14 @@ $ %s query gov tally 1
 
 			// Query store
 			res, err := queryClient.TallyResult(
-				context.Background(),
+				ctx,
 				&types.QueryTallyResultRequest{ProposalId: proposalID},
 			)
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res.Tally)
+			return clientCtx.PrintProto(&res.Tally)
 		},
 	}
 
@@ -561,16 +558,16 @@ $ %s query gov params
 		),
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
 			// Query store for all 3 params
+			ctx := cmd.Context()
 			votingRes, err := queryClient.Params(
-				context.Background(),
+				ctx,
 				&types.QueryParamsRequest{ParamsType: "voting"},
 			)
 			if err != nil {
@@ -578,7 +575,7 @@ $ %s query gov params
 			}
 
 			tallyRes, err := queryClient.Params(
-				context.Background(),
+				ctx,
 				&types.QueryParamsRequest{ParamsType: "tallying"},
 			)
 			if err != nil {
@@ -586,7 +583,7 @@ $ %s query gov params
 			}
 
 			depositRes, err := queryClient.Params(
-				context.Background(),
+				ctx,
 				&types.QueryParamsRequest{ParamsType: "deposit"},
 			)
 			if err != nil {
@@ -599,7 +596,7 @@ $ %s query gov params
 				depositRes.GetDepositParams(),
 			)
 
-			return clientCtx.PrintOutputLegacy(params)
+			return clientCtx.PrintObjectLegacy(params)
 		},
 	}
 
@@ -626,8 +623,7 @@ $ %s query gov param deposit
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -635,7 +631,7 @@ $ %s query gov param deposit
 
 			// Query store
 			res, err := queryClient.Params(
-				context.Background(),
+				cmd.Context(),
 				&types.QueryParamsRequest{ParamsType: args[0]},
 			)
 			if err != nil {
@@ -654,7 +650,7 @@ $ %s query gov param deposit
 				return fmt.Errorf("argument must be one of (voting|tallying|deposit), was %s", args[0])
 			}
 
-			return clientCtx.PrintOutputLegacy(out)
+			return clientCtx.PrintObjectLegacy(out)
 		},
 	}
 
@@ -679,8 +675,7 @@ $ %s query gov proposer 1
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -696,7 +691,7 @@ $ %s query gov proposer 1
 				return err
 			}
 
-			return clientCtx.PrintOutputLegacy(prop)
+			return clientCtx.PrintObjectLegacy(prop)
 		},
 	}
 

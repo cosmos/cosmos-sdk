@@ -6,12 +6,12 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 type (
@@ -47,12 +47,20 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		stdTx, ok := convertToStdTx(w, clientCtx, txBytes)
-		if !ok {
+		stdTx, err := convertToStdTx(w, clientCtx, txBytes)
+		if err != nil {
+			// Error is already returned by convertToStdTx.
 			return
 		}
 
 		response := DecodeResp(stdTx)
+
+		err = checkAminoMarshalError(clientCtx, response, "/cosmos/tx/v1beta1/txs/decode")
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+
+			return
+		}
 
 		rest.PostProcessResponse(w, clientCtx, response)
 	}
@@ -61,22 +69,22 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 // convertToStdTx converts tx proto binary bytes retrieved from Tendermint into
 // a StdTx. Returns the StdTx, as well as a flag denoting if the function
 // successfully converted or not.
-func convertToStdTx(w http.ResponseWriter, clientCtx client.Context, txBytes []byte) (legacytx.StdTx, bool) {
+func convertToStdTx(w http.ResponseWriter, clientCtx client.Context, txBytes []byte) (legacytx.StdTx, error) {
 	txI, err := clientCtx.TxConfig.TxDecoder()(txBytes)
 	if rest.CheckBadRequestError(w, err) {
-		return legacytx.StdTx{}, false
+		return legacytx.StdTx{}, err
 	}
 
 	tx, ok := txI.(signing.Tx)
 	if !ok {
 		rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("%+v is not backwards compatible with %T", tx, legacytx.StdTx{}))
-		return legacytx.StdTx{}, false
+		return legacytx.StdTx{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (signing.Tx)(nil), txI)
 	}
 
 	stdTx, err := clienttx.ConvertTxToStdTx(clientCtx.LegacyAmino, tx)
 	if rest.CheckBadRequestError(w, err) {
-		return legacytx.StdTx{}, false
+		return legacytx.StdTx{}, err
 	}
 
-	return stdTx, true
+	return stdTx, nil
 }

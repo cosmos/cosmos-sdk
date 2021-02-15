@@ -14,6 +14,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
@@ -27,8 +29,10 @@ func ValidatorCommand() *cobra.Command {
 		Short: "Get the full tendermint validator set at given height",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
 			var height *int64
 
 			// optional height
@@ -46,12 +50,12 @@ func ValidatorCommand() *cobra.Command {
 			page, _ := cmd.Flags().GetInt(flags.FlagPage)
 			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 
-			result, err := GetValidators(clientCtx, height, &page, &limit)
+			result, err := GetValidators(cmd.Context(), clientCtx, height, &page, &limit)
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutputLegacy(result)
+			return clientCtx.PrintObjectLegacy(result)
 		},
 	}
 
@@ -65,10 +69,10 @@ func ValidatorCommand() *cobra.Command {
 
 // Validator output in bech32 format
 type ValidatorOutput struct {
-	Address          sdk.ConsAddress `json:"address"`
-	PubKey           string          `json:"pub_key"`
-	ProposerPriority int64           `json:"proposer_priority"`
-	VotingPower      int64           `json:"voting_power"`
+	Address          sdk.ConsAddress    `json:"address"`
+	PubKey           cryptotypes.PubKey `json:"pub_key"`
+	ProposerPriority int64              `json:"proposer_priority"`
+	VotingPower      int64              `json:"voting_power"`
 }
 
 // Validators at a certain height output in bech32 format
@@ -98,29 +102,29 @@ func (rvo ResultValidatorsOutput) String() string {
 	return b.String()
 }
 
-func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
-	bechValPubkey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, validator.PubKey)
+func validatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
+	pk, err := cryptocodec.FromTmPubKeyInterface(validator.PubKey)
 	if err != nil {
 		return ValidatorOutput{}, err
 	}
 
 	return ValidatorOutput{
 		Address:          sdk.ConsAddress(validator.Address),
-		PubKey:           bechValPubkey,
+		PubKey:           pk,
 		ProposerPriority: validator.ProposerPriority,
 		VotingPower:      validator.VotingPower,
 	}, nil
 }
 
 // GetValidators from client
-func GetValidators(clientCtx client.Context, height *int64, page, limit *int) (ResultValidatorsOutput, error) {
+func GetValidators(ctx context.Context, clientCtx client.Context, height *int64, page, limit *int) (ResultValidatorsOutput, error) {
 	// get the node
 	node, err := clientCtx.GetNode()
 	if err != nil {
 		return ResultValidatorsOutput{}, err
 	}
 
-	validatorsRes, err := node.Validators(context.Background(), height, page, limit)
+	validatorsRes, err := node.Validators(ctx, height, page, limit)
 	if err != nil {
 		return ResultValidatorsOutput{}, err
 	}
@@ -131,7 +135,7 @@ func GetValidators(clientCtx client.Context, height *int64, page, limit *int) (R
 	}
 
 	for i := 0; i < len(validatorsRes.Validators); i++ {
-		outputValidatorsRes.Validators[i], err = bech32ValidatorOutput(validatorsRes.Validators[i])
+		outputValidatorsRes.Validators[i], err = validatorOutput(validatorsRes.Validators[i])
 		if err != nil {
 			return ResultValidatorsOutput{}, err
 		}
@@ -168,7 +172,7 @@ func ValidatorSetRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		output, err := GetValidators(clientCtx, &height, &page, &limit)
+		output, err := GetValidators(r.Context(), clientCtx, &height, &page, &limit)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -185,7 +189,7 @@ func LatestValidatorSetRequestHandlerFn(clientCtx client.Context) http.HandlerFu
 			return
 		}
 
-		output, err := GetValidators(clientCtx, nil, &page, &limit)
+		output, err := GetValidators(r.Context(), clientCtx, nil, &page, &limit)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}

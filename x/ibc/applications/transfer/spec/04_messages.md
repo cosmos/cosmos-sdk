@@ -13,7 +13,7 @@ type MsgTransfer struct {
   SourcePort        string
   SourceChannel     string
   Token             sdk.Coin
-  Sender            sdk.AccAddress
+  Sender            string
   Receiver          string
   TimeoutHeight     ibcexported.Height
   TimeoutTimestamp  uint64
@@ -29,7 +29,7 @@ This message is expected to fail if:
 - `Sender` is empty
 - `Receiver` is empty
 - `TimeoutHeight` and `TimeoutTimestamp` are both zero
-- `Token.Denom` is not a valid IBC denomination as per [ADR 001 - Coin Source Tracing](./../../../docs/architecture/adr-001-coin-source-tracing.md).
+- `Token.Denom` is not a valid IBC denomination as per [ADR 001 - Coin Source Tracing](./../../../../../docs/architecture/adr-001-coin-source-tracing.md).
 
 This message will send a fungible token to the counterparty chain represented
 by the counterparty Channel End connected to the Channel End with the identifiers

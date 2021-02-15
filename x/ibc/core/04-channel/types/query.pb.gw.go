@@ -324,26 +324,26 @@ func request_Query_ChannelConsensusState_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "port_id", err)
 	}
 
-	val, ok = pathParams["version_number"]
+	val, ok = pathParams["revision_number"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version_number")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision_number")
 	}
 
-	protoReq.VersionNumber, err = runtime.Uint64(val)
+	protoReq.RevisionNumber, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version_number", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision_number", err)
 	}
 
-	val, ok = pathParams["version_height"]
+	val, ok = pathParams["revision_height"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version_height")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision_height")
 	}
 
-	protoReq.VersionHeight, err = runtime.Uint64(val)
+	protoReq.RevisionHeight, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version_height", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision_height", err)
 	}
 
 	msg, err := client.ChannelConsensusState(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -384,26 +384,26 @@ func local_request_Query_ChannelConsensusState_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "port_id", err)
 	}
 
-	val, ok = pathParams["version_number"]
+	val, ok = pathParams["revision_number"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version_number")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision_number")
 	}
 
-	protoReq.VersionNumber, err = runtime.Uint64(val)
+	protoReq.RevisionNumber, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version_number", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision_number", err)
 	}
 
-	val, ok = pathParams["version_height"]
+	val, ok = pathParams["revision_height"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version_height")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision_height")
 	}
 
-	protoReq.VersionHeight, err = runtime.Uint64(val)
+	protoReq.RevisionHeight, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version_height", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision_height", err)
 	}
 
 	msg, err := server.ChannelConsensusState(ctx, &protoReq)
@@ -603,6 +603,104 @@ func local_request_Query_PacketCommitments_0(ctx context.Context, marshaler runt
 
 }
 
+func request_Query_PacketReceipt_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryPacketReceiptRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["channel_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "channel_id")
+	}
+
+	protoReq.ChannelId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "channel_id", err)
+	}
+
+	val, ok = pathParams["port_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "port_id")
+	}
+
+	protoReq.PortId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "port_id", err)
+	}
+
+	val, ok = pathParams["sequence"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "sequence")
+	}
+
+	protoReq.Sequence, err = runtime.Uint64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "sequence", err)
+	}
+
+	msg, err := client.PacketReceipt(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Query_PacketReceipt_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryPacketReceiptRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["channel_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "channel_id")
+	}
+
+	protoReq.ChannelId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "channel_id", err)
+	}
+
+	val, ok = pathParams["port_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "port_id")
+	}
+
+	protoReq.PortId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "port_id", err)
+	}
+
+	val, ok = pathParams["sequence"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "sequence")
+	}
+
+	protoReq.Sequence, err = runtime.Uint64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "sequence", err)
+	}
+
+	msg, err := server.PacketReceipt(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_Query_PacketAcknowledgement_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryPacketAcknowledgementRequest
 	var metadata runtime.ServerMetadata
@@ -697,6 +795,100 @@ func local_request_Query_PacketAcknowledgement_0(ctx context.Context, marshaler 
 	}
 
 	msg, err := server.PacketAcknowledgement(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_Query_PacketAcknowledgements_0 = &utilities.DoubleArray{Encoding: map[string]int{"channel_id": 0, "port_id": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
+)
+
+func request_Query_PacketAcknowledgements_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryPacketAcknowledgementsRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["channel_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "channel_id")
+	}
+
+	protoReq.ChannelId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "channel_id", err)
+	}
+
+	val, ok = pathParams["port_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "port_id")
+	}
+
+	protoReq.PortId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "port_id", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_PacketAcknowledgements_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.PacketAcknowledgements(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Query_PacketAcknowledgements_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryPacketAcknowledgementsRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["channel_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "channel_id")
+	}
+
+	protoReq.ChannelId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "channel_id", err)
+	}
+
+	val, ok = pathParams["port_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "port_id")
+	}
+
+	protoReq.PortId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "port_id", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_PacketAcknowledgements_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.PacketAcknowledgements(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -799,8 +991,8 @@ func local_request_Query_UnreceivedPackets_0(ctx context.Context, marshaler runt
 
 }
 
-func request_Query_UnrelayedAcks_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryUnrelayedAcksRequest
+func request_Query_UnreceivedAcks_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryUnreceivedAcksRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -832,24 +1024,24 @@ func request_Query_UnrelayedAcks_0(ctx context.Context, marshaler runtime.Marsha
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "port_id", err)
 	}
 
-	val, ok = pathParams["packet_commitment_sequences"]
+	val, ok = pathParams["packet_ack_sequences"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "packet_commitment_sequences")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "packet_ack_sequences")
 	}
 
-	protoReq.PacketCommitmentSequences, err = runtime.Uint64Slice(val, ",")
+	protoReq.PacketAckSequences, err = runtime.Uint64Slice(val, ",")
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "packet_commitment_sequences", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "packet_ack_sequences", err)
 	}
 
-	msg, err := client.UnrelayedAcks(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.UnreceivedAcks(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Query_UnrelayedAcks_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryUnrelayedAcksRequest
+func local_request_Query_UnreceivedAcks_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryUnreceivedAcksRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -881,18 +1073,18 @@ func local_request_Query_UnrelayedAcks_0(ctx context.Context, marshaler runtime.
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "port_id", err)
 	}
 
-	val, ok = pathParams["packet_commitment_sequences"]
+	val, ok = pathParams["packet_ack_sequences"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "packet_commitment_sequences")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "packet_ack_sequences")
 	}
 
-	protoReq.PacketCommitmentSequences, err = runtime.Uint64Slice(val, ",")
+	protoReq.PacketAckSequences, err = runtime.Uint64Slice(val, ",")
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "packet_commitment_sequences", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "packet_ack_sequences", err)
 	}
 
-	msg, err := server.UnrelayedAcks(ctx, &protoReq)
+	msg, err := server.UnreceivedAcks(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1119,6 +1311,26 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 
 	})
 
+	mux.Handle("GET", pattern_Query_PacketReceipt_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Query_PacketReceipt_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Query_PacketReceipt_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_Query_PacketAcknowledgement_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1136,6 +1348,26 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 		}
 
 		forward_Query_PacketAcknowledgement_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Query_PacketAcknowledgements_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Query_PacketAcknowledgements_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Query_PacketAcknowledgements_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1159,7 +1391,7 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 
 	})
 
-	mux.Handle("GET", pattern_Query_UnrelayedAcks_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Query_UnreceivedAcks_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -1168,14 +1400,14 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Query_UnrelayedAcks_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Query_UnreceivedAcks_0(rctx, inboundMarshaler, server, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Query_UnrelayedAcks_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Query_UnreceivedAcks_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1380,6 +1612,26 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 
 	})
 
+	mux.Handle("GET", pattern_Query_PacketReceipt_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Query_PacketReceipt_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Query_PacketReceipt_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_Query_PacketAcknowledgement_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1397,6 +1649,26 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 		}
 
 		forward_Query_PacketAcknowledgement_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Query_PacketAcknowledgements_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Query_PacketAcknowledgements_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Query_PacketAcknowledgements_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1420,7 +1692,7 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 
 	})
 
-	mux.Handle("GET", pattern_Query_UnrelayedAcks_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Query_UnreceivedAcks_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -1429,14 +1701,14 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Query_UnrelayedAcks_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Query_UnreceivedAcks_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Query_UnrelayedAcks_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Query_UnreceivedAcks_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1464,27 +1736,31 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Channel_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Channel_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Channels_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"ibc", "channel", "v1beta1", "channels"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Channels_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"ibc", "core", "channel", "v1beta1", "channels"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ConnectionChannels_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"ibc", "channel", "v1beta1", "connections", "connection", "channels"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ConnectionChannels_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"ibc", "core", "channel", "v1beta1", "connections", "connection", "channels"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ChannelClientState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "client_state"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ChannelClientState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "client_state"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ChannelConsensusState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 2, 8, 1, 0, 4, 1, 5, 9, 2, 10, 1, 0, 4, 1, 5, 11}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "consensus_state", "version", "version_number", "height", "version_height"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ChannelConsensusState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 2, 9, 1, 0, 4, 1, 5, 10, 2, 11, 1, 0, 4, 1, 5, 12}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "consensus_state", "revision", "revision_number", "height", "revision_height"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_PacketCommitment_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments", "sequence"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_PacketCommitment_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments", "sequence"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_PacketCommitments_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_PacketCommitments_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_PacketAcknowledgement_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_acks", "sequence"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_PacketReceipt_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_receipts", "sequence"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_UnreceivedPackets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments", "packet_commitment_sequences", "unreceived_packets"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_PacketAcknowledgement_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_acks", "sequence"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_UnrelayedAcks_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments", "packet_commitment_sequences", "unrelayed_acks"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_PacketAcknowledgements_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_acknowledgements"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_NextSequenceReceive_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "next_sequence"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_UnreceivedPackets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9, 2, 10}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments", "packet_commitment_sequences", "unreceived_packets"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_Query_UnreceivedAcks_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9, 2, 10}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments", "packet_ack_sequences", "unreceived_acks"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_Query_NextSequenceReceive_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "next_sequence"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
@@ -1502,11 +1778,15 @@ var (
 
 	forward_Query_PacketCommitments_0 = runtime.ForwardResponseMessage
 
+	forward_Query_PacketReceipt_0 = runtime.ForwardResponseMessage
+
 	forward_Query_PacketAcknowledgement_0 = runtime.ForwardResponseMessage
+
+	forward_Query_PacketAcknowledgements_0 = runtime.ForwardResponseMessage
 
 	forward_Query_UnreceivedPackets_0 = runtime.ForwardResponseMessage
 
-	forward_Query_UnrelayedAcks_0 = runtime.ForwardResponseMessage
+	forward_Query_UnreceivedAcks_0 = runtime.ForwardResponseMessage
 
 	forward_Query_NextSequenceReceive_0 = runtime.ForwardResponseMessage
 )

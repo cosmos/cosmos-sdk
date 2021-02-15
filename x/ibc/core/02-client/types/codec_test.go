@@ -30,7 +30,7 @@ func (suite *TypesTestSuite) TestPackClientState() {
 		},
 		{
 			"tendermint client",
-			ibctmtypes.NewClientState(chainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
+			ibctmtypes.NewClientState(chainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
 			true,
 		},
 		{
@@ -175,7 +175,7 @@ func (suite *TypesTestSuite) TestPackMisbehaviour() {
 		},
 		{
 			"tendermint misbehaviour",
-			ibctmtypes.NewMisbehaviour("tendermint", suite.chainA.ChainID, suite.chainA.LastHeader, suite.chainA.LastHeader),
+			ibctmtypes.NewMisbehaviour("tendermint", suite.chainA.LastHeader, suite.chainA.LastHeader),
 			true,
 		},
 		{

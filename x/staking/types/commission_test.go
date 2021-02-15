@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"testing"
@@ -7,27 +7,28 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestCommissionValidate(t *testing.T) {
 	testCases := []struct {
-		input     Commission
+		input     types.Commission
 		expectErr bool
 	}{
 		// invalid commission; max rate < 0%
-		{NewCommission(sdk.ZeroDec(), sdk.MustNewDecFromStr("-1.00"), sdk.ZeroDec()), true},
+		{types.NewCommission(sdk.ZeroDec(), sdk.MustNewDecFromStr("-1.00"), sdk.ZeroDec()), true},
 		// invalid commission; max rate > 100%
-		{NewCommission(sdk.ZeroDec(), sdk.MustNewDecFromStr("2.00"), sdk.ZeroDec()), true},
+		{types.NewCommission(sdk.ZeroDec(), sdk.MustNewDecFromStr("2.00"), sdk.ZeroDec()), true},
 		// invalid commission; rate < 0%
-		{NewCommission(sdk.MustNewDecFromStr("-1.00"), sdk.ZeroDec(), sdk.ZeroDec()), true},
+		{types.NewCommission(sdk.MustNewDecFromStr("-1.00"), sdk.ZeroDec(), sdk.ZeroDec()), true},
 		// invalid commission; rate > max rate
-		{NewCommission(sdk.MustNewDecFromStr("0.75"), sdk.MustNewDecFromStr("0.50"), sdk.ZeroDec()), true},
+		{types.NewCommission(sdk.MustNewDecFromStr("0.75"), sdk.MustNewDecFromStr("0.50"), sdk.ZeroDec()), true},
 		// invalid commission; max change rate < 0%
-		{NewCommission(sdk.OneDec(), sdk.OneDec(), sdk.MustNewDecFromStr("-1.00")), true},
+		{types.NewCommission(sdk.OneDec(), sdk.OneDec(), sdk.MustNewDecFromStr("-1.00")), true},
 		// invalid commission; max change rate > max rate
-		{NewCommission(sdk.OneDec(), sdk.MustNewDecFromStr("0.75"), sdk.MustNewDecFromStr("0.90")), true},
+		{types.NewCommission(sdk.OneDec(), sdk.MustNewDecFromStr("0.75"), sdk.MustNewDecFromStr("0.90")), true},
 		// valid commission
-		{NewCommission(sdk.MustNewDecFromStr("0.20"), sdk.OneDec(), sdk.MustNewDecFromStr("0.10")), false},
+		{types.NewCommission(sdk.MustNewDecFromStr("0.20"), sdk.OneDec(), sdk.MustNewDecFromStr("0.10")), false},
 	}
 
 	for i, tc := range testCases {
@@ -38,11 +39,11 @@ func TestCommissionValidate(t *testing.T) {
 
 func TestCommissionValidateNewRate(t *testing.T) {
 	now := time.Now().UTC()
-	c1 := NewCommission(sdk.MustNewDecFromStr("0.40"), sdk.MustNewDecFromStr("0.80"), sdk.MustNewDecFromStr("0.10"))
+	c1 := types.NewCommission(sdk.MustNewDecFromStr("0.40"), sdk.MustNewDecFromStr("0.80"), sdk.MustNewDecFromStr("0.10"))
 	c1.UpdateTime = now
 
 	testCases := []struct {
-		input     Commission
+		input     types.Commission
 		newRate   sdk.Dec
 		blockTime time.Time
 		expectErr bool

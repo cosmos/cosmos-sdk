@@ -3,7 +3,7 @@
 name = "x/evidence"
 
 # Description of the module. (Optional)
-description = ""
+description = "The evidence module is responsible for storing and handling evidence of misbeaviour."
 
 # Link to where the module is located, it can also be a link to your project. (Optional)
 homepage = "https://github.com/cosmos/cosmos-sdk"

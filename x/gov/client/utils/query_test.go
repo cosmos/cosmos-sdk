@@ -33,7 +33,7 @@ func (mock TxSearchMock) TxSearch(ctx context.Context, query string, prove bool,
 	}
 
 	// Get the `message.action` value from the query.
-	messageAction := regexp.MustCompile(`message\.action='(.*)'$`)
+	messageAction := regexp.MustCompile(`message\.action='(.*)' .*$`)
 	msgType := messageAction.FindStringSubmatch(query)[1]
 
 	// Filter only the txs that match the query

@@ -22,6 +22,7 @@ const (
 	// These are used for querying events by action.
 	TypeSvcMsgDeposit        = "/cosmos.gov.v1beta1.Msg/Deposit"
 	TypeSvcMsgVote           = "/cosmos.gov.v1beta1.Msg/Vote"
+	TypeSvcMsgVoteWeighted   = "/cosmos.gov.v1beta1.Msg/VoteWeighted"
 	TypeSvcMsgSubmitProposal = "/cosmos.gov.v1beta1.Msg/SubmitProposal"
 )
 

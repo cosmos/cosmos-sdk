@@ -37,9 +37,18 @@ func (p Proposer) String() string {
 // NOTE: SearchTxs is used to facilitate the txs query which does not currently
 // support configurable pagination.
 func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposalParams) ([]byte, error) {
-	searchResult, err := searchEvents(
-		clientCtx, types.TypeMsgDeposit, types.TypeSvcMsgDeposit, defaultPage,
-		fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+	searchResult, err := combineEvents(
+		clientCtx, defaultPage,
+		// Query old Msgs
+		[]string{
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgDeposit),
+			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+		},
+		// Query service Msgs
+		[]string{
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeSvcMsgDeposit),
+			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+		},
 	)
 	if err != nil {
 		return nil, err
@@ -52,8 +61,8 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposal
 			var depMsg *types.MsgDeposit
 			if msg.Type() == types.TypeSvcMsgDeposit {
 				depMsg = msg.(sdk.ServiceMsg).Request.(*types.MsgDeposit)
-			} else if msg.Type() == types.TypeMsgDeposit {
-				depMsg = msg.(*types.MsgDeposit)
+			} else if protoDepMsg, ok := msg.(*types.MsgDeposit); ok {
+				depMsg = protoDepMsg
 			}
 
 			if depMsg != nil {
@@ -86,22 +95,41 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 
 	// query interrupted either if we collected enough votes or tx indexer run out of relevant txs
 	for len(votes) < totalLimit {
-		searchResult, err := searchEvents(
-			clientCtx, types.TypeMsgVote, types.TypeSvcMsgVote, nextTxPage,
-			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+		// Search for both (old) votes and weighted votes.
+		searchResult, err := combineEvents(
+			clientCtx, nextTxPage,
+			// Query old Vote Msgs
+			[]string{
+				fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgVote),
+				fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+			},
+			// Query Vote service Msgs
+			[]string{
+				fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeSvcMsgVote),
+				fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+			},
+			// Query old VoteWeighted Msgs
+			[]string{
+				fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgVoteWeighted),
+				fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+			},
+			// Query VoteWeighted service Msgs
+			[]string{
+				fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeSvcMsgVoteWeighted),
+				fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+			},
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		nextTxPage++
 		for _, info := range searchResult.Txs {
 			for _, msg := range info.GetTx().GetMsgs() {
 				var voteMsg *types.MsgVote
 				if msg.Type() == types.TypeSvcMsgVote {
 					voteMsg = msg.(sdk.ServiceMsg).Request.(*types.MsgVote)
-				} else if msg.Type() == types.TypeMsgVote {
-					voteMsg = msg.(*types.MsgVote)
+				} else if protoVoteMsg, ok := msg.(*types.MsgVote); ok {
+					voteMsg = protoVoteMsg
 				}
 
 				if voteMsg != nil {
@@ -110,13 +138,20 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 						ProposalId: params.ProposalID,
 						Options:    types.NewNonSplitVoteOption(voteMsg.Option),
 					})
-				} else if msg.Type() == types.TypeMsgVoteWeighted {
-					voteMsg := msg.(*types.MsgVoteWeighted)
+				}
 
+				var voteWeightedMsg *types.MsgVoteWeighted
+				if msg.Type() == types.TypeSvcMsgVoteWeighted {
+					voteWeightedMsg = msg.(sdk.ServiceMsg).Request.(*types.MsgVoteWeighted)
+				} else if protoVoteWeightedMsg, ok := msg.(*types.MsgVoteWeighted); ok {
+					voteWeightedMsg = protoVoteWeightedMsg
+				}
+
+				if voteWeightedMsg != nil {
 					votes = append(votes, types.Vote{
-						Voter:      voteMsg.Voter,
+						Voter:      voteWeightedMsg.Voter,
 						ProposalId: params.ProposalID,
-						Options:    voteMsg.Options,
+						Options:    voteWeightedMsg.Options,
 					})
 				}
 			}
@@ -124,6 +159,8 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 		if len(searchResult.Txs) != defaultLimit {
 			break
 		}
+
+		nextTxPage++
 	}
 	start, end := client.Paginate(len(votes), params.Page, params.Limit, 100)
 	if start < 0 || end < 0 {
@@ -142,10 +179,32 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 
 // QueryVoteByTxQuery will query for a single vote via a direct txs tags query.
 func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) ([]byte, error) {
-	searchResult, err := searchEvents(
-		clientCtx, types.TypeMsgVote, types.TypeSvcMsgVote, defaultPage,
-		fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
-		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, []byte(params.Voter.String())),
+	searchResult, err := combineEvents(
+		clientCtx, defaultPage,
+		// Query old Vote Msgs
+		[]string{
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgVote),
+			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, []byte(params.Voter.String())),
+		},
+		// Query Vote service Msgs
+		[]string{
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeSvcMsgVote),
+			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, []byte(params.Voter.String())),
+		},
+		// Query old VoteWeighted Msgs
+		[]string{
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgVoteWeighted),
+			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, []byte(params.Voter.String())),
+		},
+		// Query VoteWeighted service Msgs
+		[]string{
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeSvcMsgVoteWeighted),
+			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, []byte(params.Voter.String())),
+		},
 	)
 	if err != nil {
 		return nil, err
@@ -157,8 +216,8 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 			// there should only be a single vote under the given conditions
 			if msg.Type() == types.TypeSvcMsgVote {
 				voteMsg = msg.(sdk.ServiceMsg).Request.(*types.MsgVote)
-			} else if msg.Type() == types.TypeMsgVote {
-				voteMsg = msg.(*types.MsgVote)
+			} else if protoVoteMsg, ok := msg.(*types.MsgVote); ok {
+				voteMsg = protoVoteMsg
 			}
 
 			if voteMsg != nil {
@@ -199,10 +258,20 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 // QueryDepositByTxQuery will query for a single deposit via a direct txs tags
 // query.
 func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositParams) ([]byte, error) {
-	searchResult, err := searchEvents(
-		clientCtx, types.TypeMsgDeposit, types.TypeSvcMsgDeposit, defaultPage,
-		fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
-		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, []byte(params.Depositor.String())),
+	searchResult, err := combineEvents(
+		clientCtx, defaultPage,
+		// Query old Msgs
+		[]string{
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgDeposit),
+			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, []byte(params.Depositor.String())),
+		},
+		// Query service Msgs
+		[]string{
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeSvcMsgDeposit),
+			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, []byte(params.Depositor.String())),
+		},
 	)
 	if err != nil {
 		return nil, err
@@ -214,8 +283,8 @@ func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositPa
 			// there should only be a single deposit under the given conditions
 			if msg.Type() == types.TypeSvcMsgDeposit {
 				depMsg = msg.(sdk.ServiceMsg).Request.(*types.MsgDeposit)
-			} else if msg.Type() == types.TypeMsgDeposit {
-				depMsg = msg.(*types.MsgDeposit)
+			} else if protoDepMsg, ok := msg.(*types.MsgDeposit); ok {
+				depMsg = protoDepMsg
 			}
 
 			if depMsg != nil {
@@ -241,9 +310,19 @@ func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositPa
 // QueryProposerByTxQuery will query for a proposer of a governance proposal by
 // ID.
 func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Proposer, error) {
-	searchResult, err := searchEvents(
-		clientCtx, types.TypeMsgSubmitProposal, types.TypeSvcMsgSubmitProposal, defaultPage,
-		fmt.Sprintf("%s.%s='%s'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", proposalID))),
+	searchResult, err := combineEvents(
+		clientCtx,
+		defaultPage,
+		// Query old Msgs
+		[]string{
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgSubmitProposal),
+			fmt.Sprintf("%s.%s='%s'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", proposalID))),
+		},
+		// Query service Msgs
+		[]string{
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeSvcMsgSubmitProposal),
+			fmt.Sprintf("%s.%s='%s'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", proposalID))),
+		},
 	)
 	if err != nil {
 		return Proposer{}, err
@@ -256,8 +335,8 @@ func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Propos
 				subMsg := msg.(sdk.ServiceMsg).Request.(*types.MsgSubmitProposal)
 
 				return NewProposer(proposalID, subMsg.Proposer), nil
-			} else if msg.Type() == types.TypeMsgSubmitProposal {
-				subMsg := msg.(*types.MsgSubmitProposal)
+			} else if protoSubMsg, ok := msg.(*types.MsgSubmitProposal); ok {
+				subMsg := protoSubMsg
 
 				return NewProposer(proposalID, subMsg.Proposer), nil
 			}
@@ -283,31 +362,24 @@ func QueryProposalByID(proposalID uint64, clientCtx client.Context, queryRoute s
 	return res, err
 }
 
-// searchEvents queries txs by events with both `oldMsgType` and `newMsgtype`,
-// merges the results into one *sdk.SearchTxsResult.
-func searchEvents(clientCtx client.Context, oldMsgType, newMsgType string, page int, otherEvents ...string) (*sdk.SearchTxsResult, error) {
-	// Tx are indexed in tendermint via their Msgs `Type()`, which can be:
-	// - via legacy Msgs (amino or proto), their `Type()` is a custom string,
-	// - via ADR-031 service msgs, their `Type()` is the protobuf FQ method name.
-	// In searching for events, we search for both `Type()`s.
-	oldSearchResults, err := authclient.QueryTxsByEvents(
-		clientCtx,
-		append(otherEvents, fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, oldMsgType)),
-		page, defaultLimit, "")
-	if err != nil {
-		return nil, err
-	}
-	newSearchResults, err := authclient.QueryTxsByEvents(
-		clientCtx,
-		append(otherEvents, fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, newMsgType)),
-		page, defaultLimit, "")
-	if err != nil {
-		return nil, err
+// combineEvents queries txs by events with all events from each event group,
+// and combines all those events together.
+//
+// Tx are indexed in tendermint via their Msgs `Type()`, which can be:
+// - via legacy Msgs (amino or proto), their `Type()` is a custom string,
+// - via ADR-031 service msgs, their `Type()` is the protobuf FQ method name.
+// In searching for events, we search for both `Type()`s, and we use the
+// `combineEvents` function here to merge events.
+func combineEvents(clientCtx client.Context, page int, eventGroups ...[]string) (*sdk.SearchTxsResult, error) {
+	// Only the Txs field will be populated in the final SearchTxsResult.
+	allTxs := []*sdk.TxResponse{}
+	for _, events := range eventGroups {
+		res, err := authclient.QueryTxsByEvents(clientCtx, events, page, defaultLimit, "")
+		if err != nil {
+			return nil, err
+		}
+		allTxs = append(allTxs, res.Txs...)
 	}
 
-	return &sdk.SearchTxsResult{
-		// Only the Txs field will be used by other functions, so we don't need
-		// to populate the other fields.
-		Txs: append(oldSearchResults.Txs, newSearchResults.Txs...),
-	}, nil
+	return &sdk.SearchTxsResult{Txs: allTxs}, nil
 }

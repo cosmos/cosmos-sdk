@@ -30,14 +30,14 @@ func NewCompactBitArray(bits int) *CompactBitArray {
 func (bA *CompactBitArray) Count() int {
 	if bA == nil {
 		return 0
-	} else if bA.ExtraBitsStored == uint32(0) {
+	} else if bA.ExtraBitsStored == 0 {
 		return len(bA.Elems) * 8
 	}
 
 	return (len(bA.Elems)-1)*8 + int(bA.ExtraBitsStored)
 }
 
-// GetIndex returns the bit at index i within the bit array.
+// GetIndex returns true if a bit at index i is set and false otherwise.
 // The behavior is undefined if i >= bA.Count()
 func (bA *CompactBitArray) GetIndex(i int) bool {
 	if bA == nil {
@@ -50,8 +50,8 @@ func (bA *CompactBitArray) GetIndex(i int) bool {
 	return bA.Elems[i>>3]&(uint8(1)<<uint8(7-(i%8))) > 0
 }
 
-// SetIndex sets the bit at index i within the bit array.
-// The behavior is undefined if i >= bA.Count()
+// SetIndex sets the bit at index i within the bit array. Returns true iff the operation
+// succeeded. The behavior is undefined if i >= bA.Count()
 func (bA *CompactBitArray) SetIndex(i int, v bool) bool {
 	if bA == nil {
 		return false
@@ -97,6 +97,18 @@ func (bA *CompactBitArray) Copy() *CompactBitArray {
 		ExtraBitsStored: bA.ExtraBitsStored,
 		Elems:           c,
 	}
+}
+
+// Equal checks if both bit arrays are equal. If both arrays are nil then it returns true.
+func (bA *CompactBitArray) Equal(other *CompactBitArray) bool {
+	if bA == other {
+		return true
+	}
+	if bA == nil || other == nil {
+		return false
+	}
+	return bA.ExtraBitsStored == other.ExtraBitsStored &&
+		bytes.Equal(bA.Elems, other.Elems)
 }
 
 // String returns a string representation of CompactBitArray: BA{<bit-string>},

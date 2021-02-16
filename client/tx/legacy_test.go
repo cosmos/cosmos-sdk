@@ -24,7 +24,7 @@ import (
 const (
 	memo          = "waboom"
 	gas           = uint64(10000)
-	timeoutHeight = 5
+	timeoutHeight = uint64(5)
 )
 
 var (
@@ -164,4 +164,8 @@ func (s *TestSuite) TestConvertAndEncodeStdTx() {
 	decodedTx, err = s.aminoCfg.TxDecoder()(txBz)
 	s.Require().NoError(err)
 	s.Require().Equal(stdTx, decodedTx)
+}
+
+func TestTestSuite(t *testing.T) {
+	suite.Run(t, new(TestSuite))
 }

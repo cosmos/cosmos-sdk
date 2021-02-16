@@ -92,7 +92,7 @@ func TestGetPaginatedVotes(t *testing.T) {
 	}
 	acc2Msgs := []sdk.Msg{
 		types.NewMsgVote(acc2, 0, types.OptionYes),
-		types.NewMsgVote(acc2, 0, types.OptionYes),
+		types.NewMsgVoteWeighted(acc2, 0, types.NewNonSplitVoteOption(types.OptionYes)),
 	}
 	for _, tc := range []testCase{
 		{
@@ -104,8 +104,8 @@ func TestGetPaginatedVotes(t *testing.T) {
 				acc2Msgs[:1],
 			},
 			votes: []types.Vote{
-				types.NewVote(0, acc1, types.OptionYes),
-				types.NewVote(0, acc2, types.OptionYes)},
+				types.NewVote(0, acc1, types.NewNonSplitVoteOption(types.OptionYes)),
+				types.NewVote(0, acc2, types.NewNonSplitVoteOption(types.OptionYes))},
 		},
 		{
 			description: "2MsgPerTx1Chunk",
@@ -116,8 +116,9 @@ func TestGetPaginatedVotes(t *testing.T) {
 				acc2Msgs,
 			},
 			votes: []types.Vote{
-				types.NewVote(0, acc1, types.OptionYes),
-				types.NewVote(0, acc1, types.OptionYes)},
+				types.NewVote(0, acc1, types.NewNonSplitVoteOption(types.OptionYes)),
+				types.NewVote(0, acc1, types.NewNonSplitVoteOption(types.OptionYes)),
+			},
 		},
 		{
 			description: "2MsgPerTx2Chunk",
@@ -128,8 +129,9 @@ func TestGetPaginatedVotes(t *testing.T) {
 				acc2Msgs,
 			},
 			votes: []types.Vote{
-				types.NewVote(0, acc2, types.OptionYes),
-				types.NewVote(0, acc2, types.OptionYes)},
+				types.NewVote(0, acc2, types.NewNonSplitVoteOption(types.OptionYes)),
+				types.NewVote(0, acc2, types.NewNonSplitVoteOption(types.OptionYes)),
+			},
 		},
 		{
 			description: "IncompleteSearchTx",
@@ -138,7 +140,7 @@ func TestGetPaginatedVotes(t *testing.T) {
 			msgs: [][]sdk.Msg{
 				acc1Msgs[:1],
 			},
-			votes: []types.Vote{types.NewVote(0, acc1, types.OptionYes)},
+			votes: []types.Vote{types.NewVote(0, acc1, types.NewNonSplitVoteOption(types.OptionYes))},
 		},
 		{
 			description: "InvalidPage",

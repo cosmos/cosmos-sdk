@@ -108,7 +108,15 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 					votes = append(votes, types.Vote{
 						Voter:      voteMsg.Voter,
 						ProposalId: params.ProposalID,
-						Option:     voteMsg.Option,
+						Options:    types.NewNonSplitVoteOption(voteMsg.Option),
+					})
+				} else if msg.Type() == types.TypeMsgVoteWeighted {
+					voteMsg := msg.(*types.MsgVoteWeighted)
+
+					votes = append(votes, types.Vote{
+						Voter:      voteMsg.Voter,
+						ProposalId: params.ProposalID,
+						Options:    voteMsg.Options,
 					})
 				}
 			}
@@ -157,7 +165,22 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 				vote := types.Vote{
 					Voter:      voteMsg.Voter,
 					ProposalId: params.ProposalID,
-					Option:     voteMsg.Option,
+					Options:    types.NewNonSplitVoteOption(voteMsg.Option),
+				}
+
+				bz, err := clientCtx.JSONMarshaler.MarshalJSON(&vote)
+				if err != nil {
+					return nil, err
+				}
+
+				return bz, nil
+			} else if msg.Type() == types.TypeMsgVoteWeighted {
+				voteMsg := msg.(*types.MsgVoteWeighted)
+
+				vote := types.Vote{
+					Voter:      voteMsg.Voter,
+					ProposalId: params.ProposalID,
+					Options:    voteMsg.Options,
 				}
 
 				bz, err := clientCtx.JSONMarshaler.MarshalJSON(&vote)

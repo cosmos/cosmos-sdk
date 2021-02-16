@@ -68,6 +68,7 @@ func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
 	govTxCmd.AddCommand(
 		NewCmdDeposit(),
 		NewCmdVote(),
+		NewCmdWeightedVote(),
 		cmdSubmitProp,
 	)
 
@@ -205,7 +206,6 @@ func NewCmdVote() *cobra.Command {
 			fmt.Sprintf(`Submit a vote for an active proposal. You can
 find the proposal-id by running "%s query gov proposals".
 
-
 Example:
 $ %s tx gov vote 1 yes --from mykey
 `,
@@ -234,6 +234,59 @@ $ %s tx gov vote 1 yes --from mykey
 
 			// Build vote message and run basic validation
 			msg := types.NewMsgVote(from, proposalID, byteVoteOption)
+			err = msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewCmdWeightedVote implements creating a new weighted vote command.
+func NewCmdWeightedVote() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "weighted-vote [proposal-id] [weighted-options]",
+		Args:  cobra.ExactArgs(2),
+		Short: "Vote for an active proposal, options: yes/no/no_with_veto/abstain",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a vote for an active proposal. You can
+find the proposal-id by running "%s query gov proposals".
+
+Example:
+$ %s tx gov vote 1 yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05 --from mykey
+`,
+				version.AppName, version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			// Get voter address
+			from := clientCtx.GetFromAddress()
+
+			// validate that the proposal id is a uint
+			proposalID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("proposal-id %s not a valid int, please input a valid proposal-id", args[0])
+			}
+
+			// Figure out which vote options user chose
+			options, err := types.WeightedVoteOptionsFromString(govutils.NormalizeWeightedVoteOptions(args[1]))
+			if err != nil {
+				return err
+			}
+
+			// Build vote message and run basic validation
+			msg := types.NewMsgVoteWeighted(from, proposalID, options)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err

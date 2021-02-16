@@ -114,7 +114,6 @@ func TestFundCommunityPool(t *testing.T) {
 	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.ZeroInt())
 
 	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-
 	require.NoError(t, simapp.FundAccount(app, ctx, addr[0], amount))
 
 	initPool := app.DistrKeeper.GetFeePool(ctx)

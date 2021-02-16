@@ -15,6 +15,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
+func TestNewMultiSig(t *testing.T) {
+	pk1 := secp256k1.GenPrivKey().PubKey()
+	pks := []cryptotypes.PubKey{pk1, pk1}
+
+	require.PanicsWithValue(t, "all keys must be unique", func() {
+		kmultisig.NewLegacyAminoPubKey(1, pks)
+	})
+}
+
 func TestAddress(t *testing.T) {
 	msg := []byte{1, 2, 3, 4}
 	pubKeys, _ := generatePubKeysAndSignatures(5, msg)

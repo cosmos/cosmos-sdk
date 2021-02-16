@@ -25,7 +25,7 @@ func TestParseUpgradeInfoFile(t *testing.T) {
 		expectUpgrade: UpgradeInfo{},
 		expectErr:     true,
 	}, {
-		filename:      "f4-empty-obj.json",
+		filename:      "f4-empty-obj.json", // partial or empty objects also work!
 		expectUpgrade: UpgradeInfo{},
 		expectErr:     false,
 	}, {

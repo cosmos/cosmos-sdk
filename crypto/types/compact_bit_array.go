@@ -47,7 +47,7 @@ func (bA *CompactBitArray) GetIndex(i int) bool {
 		return false
 	}
 
-	return bA.Elems[i>>3]&(uint8(1)<<uint8(7-(i%8))) > 0
+	return bA.Elems[i>>3]&(1<<uint8(7-(i%8))) > 0
 }
 
 // SetIndex sets the bit at index i within the bit array. Returns true iff the operation
@@ -62,9 +62,9 @@ func (bA *CompactBitArray) SetIndex(i int, v bool) bool {
 	}
 
 	if v {
-		bA.Elems[i>>3] |= (uint8(1) << uint8(7-(i%8)))
+		bA.Elems[i>>3] |= (1 << uint8(7-(i%8)))
 	} else {
-		bA.Elems[i>>3] &= ^(uint8(1) << uint8(7-(i%8)))
+		bA.Elems[i>>3] &= ^(1 << uint8(7-(i%8)))
 	}
 
 	return true
@@ -75,13 +75,22 @@ func (bA *CompactBitArray) SetIndex(i int, v bool) bool {
 // there are two bits set to true before index 4.
 func (bA *CompactBitArray) NumTrueBitsBefore(index int) int {
 	numTrueValues := 0
-	for i := 0; i < index; i++ {
-		if bA.GetIndex(i) {
-			numTrueValues++
+	max := bA.Count()
+	if index >= max {
+		index = max - 1
+	}
+	var i = 0
+	for elem := 0; ; elem++ {
+		for b := 7; b >= 0; b-- {
+			if i >= index {
+				return numTrueValues
+			}
+			i++
+			if (bA.Elems[elem]>>b)&1 == 1 {
+				numTrueValues++
+			}
 		}
 	}
-
-	return numTrueValues
 }
 
 // Copy returns a copy of the provided bit array.

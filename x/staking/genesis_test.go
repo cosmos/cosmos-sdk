@@ -190,10 +190,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 			ctx,
 			auth.NewModuleAddress(types.BondedPoolName),
 			sdk.NewCoins(
-				sdk.NewCoin(
-					params.BondDenom,
-					bondedPoolAmt,
-				),
+				sdk.NewCoin(params.BondDenom, bondedPoolAmt),
 			),
 		),
 	)

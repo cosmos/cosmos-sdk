@@ -38,10 +38,10 @@ var (
 			Signature: []byte("dummy"),
 		},
 	}
-	msg0 = banktypes.NewMsgSend(addr1, addr2, types.NewCoins(types.NewInt64Coin("wack", 10000)))
+	msg0 = banktypes.NewMsgSend(addr1, addr2, types.NewCoins(types.NewInt64Coin("wack", 1)))
 	msg1 = sdk.ServiceMsg{
 		MethodName: "cosmos.bank.v1beta1.Msg/Send",
-		Request:    banktypes.NewMsgSend(addr1, addr2, types.NewCoins(types.NewInt64Coin("wack", 10000))),
+		Request:    banktypes.NewMsgSend(addr1, addr2, types.NewCoins(types.NewInt64Coin("wack", 2))),
 	}
 )
 
@@ -118,7 +118,7 @@ func (s *TestSuite) TestConvertTxToStdTx() {
 	s.Require().Equal(gas, stdTx.Fee.Gas)
 	s.Require().Equal(fee, stdTx.Fee.Amount)
 	s.Require().Equal(msg0, stdTx.Msgs[0])
-	s.Require().Equal(msg0, stdTx.Msgs[1])
+	s.Require().Equal(msg1.Request, stdTx.Msgs[1])
 	s.Require().Equal(timeoutHeight, stdTx.TimeoutHeight)
 	s.Require().Equal(sig.PubKey, stdTx.Signatures[0].PubKey)
 	s.Require().Equal(sig.Data.(*signing2.SingleSignatureData).Signature, stdTx.Signatures[0].Signature)

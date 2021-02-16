@@ -8,7 +8,7 @@ See the [Cosmos SDK v0.41.1 milestone](https://github.com/cosmos/cosmos-sdk/mile
 
 When Tendermint commits a new block, the `versions` map in IAVL MutableTree is updated. If, at the same time, a concurrent gRPC request is performed, it will read the same `versions` map, causing the node to crash.
 
-The patch consists of routing all gRPC requests through ABCI. The Go implementation of ABCI uses global lock on all requests linearizable (received one at a time), which prevents concurrent map reads and writes.
+The patch consists of routing all gRPC requests through ABCI. The Go implementation of ABCI uses global lock on all requests, making them linearizable (received one at a time) which in turn prevents concurrent map reads and writes.
 
 We are exploring on ways of introducing concurrent gRPC queries in [#8591](https://github.com/cosmos/cosmos-sdk/issues/8591).
 

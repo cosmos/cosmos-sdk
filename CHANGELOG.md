@@ -49,6 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/{bank,distrib,gov,slashing,staking}) [\#8363](https://github.com/cosmos/cosmos-sdk/issues/8363) Store keys have been modified to allow for variable-length addresses.
 * (x/ibc) [\#8266](https://github.com/cosmos/cosmos-sdk/issues/8266) Add amino JSON for IBC messages in order to support Ledger text signing.
 * (x/evidence) [\#8502](https://github.com/cosmos/cosmos-sdk/pull/8502) `HandleEquivocationEvidence` persists the evidence to state.
+* (x/gov) [\#7733](https://github.com/cosmos/cosmos-sdk/pull/7733) ADR 037 Implementation: Governance Split Votes
 
 ### Improvements
 
@@ -67,6 +68,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client/keys) [\#8436](https://github.com/cosmos/cosmos-sdk/pull/8436) Fix key migration issue
 * (server) [\#8481](https://github.com/cosmos/cosmos-sdk/pull/8481) Don't create
   files when running `{appd} tendermint show-*` subcommands
+* (x/staking) [\#8546](https://github.com/cosmos/cosmos-sdk/pull/8546) Fix caching bug where concurrent calls to GetValidator could cause a node to crash
 
 ## [v0.40.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.1) - 2021-01-19
 

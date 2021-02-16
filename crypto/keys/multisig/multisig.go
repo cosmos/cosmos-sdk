@@ -48,7 +48,7 @@ func (m *LegacyAminoPubKey) VerifyMultisignature(getSignBytes multisigtypes.GetS
 	pubKeys := m.GetPubKeys()
 	// ensure bit array is the correct size
 	if len(pubKeys) != size {
-		return fmt.Errorf("bit array size is incorrect %d", len(pubKeys))
+		return fmt.Errorf("bit array size is incorrect, expecting: %d", len(pubKeys))
 	}
 	// ensure size of signature list
 	if len(sigs) < int(m.Threshold) || len(sigs) > size {
@@ -56,7 +56,7 @@ func (m *LegacyAminoPubKey) VerifyMultisignature(getSignBytes multisigtypes.GetS
 	}
 	// ensure at least k signatures are set
 	if bitarray.NumTrueBitsBefore(size) < int(m.Threshold) {
-		return fmt.Errorf("minimum number of signatures not set, have %d, expected %d", bitarray.NumTrueBitsBefore(size), int(m.Threshold))
+		return fmt.Errorf("not enough signatures set, have %d, expected %d", bitarray.NumTrueBitsBefore(size), int(m.Threshold))
 	}
 	// index in the list of signatures which we are concerned with.
 	sigIndex := 0

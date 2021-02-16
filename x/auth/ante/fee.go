@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	authz "github.com/cosmos/cosmos-sdk/x/authz/types"
 )
 
 // MempoolFeeDecorator will check if the transaction's fee is at least as large
@@ -93,8 +94,16 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 		if err != nil {
 			return ctx, err
 		}
+	} else {
+		for _, msg := range tx.GetMsgs() {
+			if msg.Type() == authz.TypeMsgGrantAuthorization {
+				err = DeductFees(dfd.bankKeeper, ctx, feePayerAcc, feeTx.GetFee()) // TODO: charge fixed fee for authz grant authorization
+				if err != nil {
+					return ctx, err
+				}
+			}
+		}
 	}
-
 	return next(ctx, tx, simulate)
 }
 

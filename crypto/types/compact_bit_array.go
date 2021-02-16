@@ -76,8 +76,8 @@ func (bA *CompactBitArray) SetIndex(i int, v bool) bool {
 func (bA *CompactBitArray) NumTrueBitsBefore(index int) int {
 	numTrueValues := 0
 	max := bA.Count()
-	if index >= max {
-		index = max - 1
+	if index > max {
+		index = max
 	}
 	var i = 0
 	for elem := 0; ; elem++ {

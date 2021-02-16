@@ -43,12 +43,13 @@ func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 		}
 		k.SetUpgradedConsensusState(ctx, plan.Height, upgradedConsState)
 	}
+	logger := ctx.Logger()
 	// To make sure clear upgrade is executed at the same block
 	if plan.ShouldExecute(ctx) {
 		// If skip upgrade has been set for current height, we clear the upgrade plan
 		if k.IsSkipHeight(ctx.BlockHeight()) {
 			skipUpgradeMsg := fmt.Sprintf("UPGRADE \"%s\" SKIPPED at %d: %s", plan.Name, plan.Height, plan.Info)
-			ctx.Logger().Info(skipUpgradeMsg)
+			logger.Info(skipUpgradeMsg)
 
 			// Clear the upgrade plan at current height
 			k.ClearUpgradePlan(ctx)
@@ -58,11 +59,11 @@ func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 		if !k.HasHandler(plan.Name) {
 			upgradeMsg := BuildUpgradeNeededMsg(plan)
 			// We don't have an upgrade handler for this upgrade name, meaning this software is out of date so shutdown
-			ctx.Logger().Error(upgradeMsg)
+			logger.Error(upgradeMsg)
 
-			// Write the upgrade info to disk. The UpgradeStoreLoader uses this info to perform or skip
-			// store migrations.
-			err := k.DumpUpgradeInfoToDisk(ctx.BlockHeight(), plan.Name)
+			// Write the upgrade info to disk. The UpgradeStoreLoader uses this info to perform
+			// or skip store migrations.
+			err := k.DumpUpgradeInfoToDisk(ctx.BlockHeight(), plan)
 			if err != nil {
 				panic(fmt.Errorf("unable to write upgrade info to filesystem: %s", err.Error()))
 			}

@@ -55,6 +55,7 @@ type StoreUpgrades struct {
 type UpgradeInfo struct {
 	Name   string `json:"name"`
 	Height int64  `json:"height"`
+	Info   string `json:"info"`
 }
 
 // StoreRename defines a name change of a sub-store.

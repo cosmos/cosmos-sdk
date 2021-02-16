@@ -236,15 +236,16 @@ func (k Keeper) IsSkipHeight(height int64) bool {
 }
 
 // DumpUpgradeInfoToDisk writes upgrade information to UpgradeInfoFileName.
-func (k Keeper) DumpUpgradeInfoToDisk(height int64, name string) error {
+func (k Keeper) DumpUpgradeInfoToDisk(height int64, p types.Plan) error {
 	upgradeInfoFilePath, err := k.GetUpgradeInfoPath()
 	if err != nil {
 		return err
 	}
 
 	upgradeInfo := store.UpgradeInfo{
-		Name:   name,
+		Name:   p.Name,
 		Height: height,
+		Info:   p.Info,
 	}
 	info, err := json.Marshal(upgradeInfo)
 	if err != nil {

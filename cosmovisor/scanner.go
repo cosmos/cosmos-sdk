@@ -1,65 +1,37 @@
 package cosmovisor
 
 import (
-	"bufio"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
-	"regexp"
 
 	"github.com/fsnotify/fsnotify"
 )
 
-// Trim off whitespace around the info - match least greedy, grab as much space on both sides
-// Defined here: https://github.com/cosmos/cosmos-sdk/blob/release/v0.38.2/x/upgrade/abci.go#L38
-//  fmt.Sprintf("UPGRADE \"%s\" NEEDED at %s: %s", plan.Name, plan.DueAt(), plan.Info)
-// DueAt defined here: https://github.com/cosmos/cosmos-sdk/blob/release/v0.38.2/x/upgrade/internal/types/plan.go#L73-L78
-//
-//    if !p.Time.IsZero() {
-//      return fmt.Sprintf("time: %s", p.Time.UTC().Format(time.RFC3339))
-//    }
-//    return fmt.Sprintf("height: %d", p.Height)
-var upgradeRegex = regexp.MustCompile(`UPGRADE "(.*)" NEEDED at ((height): (\d+)|(time): (\S+)):\s+(\S*)`)
-
-// UpgradeInfo is the details from the regexp
+// UpgradeInfo is the update details created by `x/upgrade/keeper.DumpUpgradeInfoToDisk`.
 type UpgradeInfo struct {
 	Name string
 	Info string
 }
 
-// WaitForUpdate will listen to the scanner until a line matches upgradeRegexp.
-// It returns (info, nil) on a matching line
-// It returns (nil, err) if the input stream errored
-// It returns (nil, nil) if the input closed without ever matching the regexp
-func WaitForUpdate(scanner *bufio.Scanner, res *WaitResult) {
-	for scanner.Scan() {
-		line := scanner.Text()
-		if upgradeRegex.MatchString(line) {
-			subs := upgradeRegex.FindStringSubmatch(line)
-			info := UpgradeInfo{
-				Name: subs[1],
-				Info: subs[7],
-			}
-			res.SetUpgrade(&info)
-			return
-		}
-	}
-	res.SetError(scanner.Err())
-}
-
 type fileWatcher struct {
 	filename string
 	dirname  string
-	ok       bool
 }
 
 func newUpgradeFileWatcher(filename string) (fileWatcher, error) {
 	if filename == "" {
 		return fileWatcher{}, nil
 	}
+	filenameAbs, err := filepath.Abs(filename)
+	if err != nil {
+		return fileWatcher{},
+			fmt.Errorf("wrong path, %s must be a valid file path, [%w]", filename, err)
+	}
 	dirname := filepath.Dir(filename)
-	fw := fileWatcher{filename, dirname, true}
+	fw := fileWatcher{filenameAbs, dirname}
 
 	info, err := os.Stat(dirname)
 	if err != nil || !info.IsDir() {
@@ -68,34 +40,57 @@ func newUpgradeFileWatcher(filename string) (fileWatcher, error) {
 	return fw, nil
 }
 
-func (fw fileWatcher) WaitForUpdate(res *WaitResult) error {
+func (fw fileWatcher) MonitorUpdate(res *WaitResult) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		return fmt.Errorf("can't create file watcher: %w", err)
+		res.SetError(fmt.Errorf("can't create file watcher: %w", err))
+		return
 	}
 	defer watcher.Close()
 
-	err = watcher.Add(fw.dirname)
-	if err != nil {
-		return fmt.Errorf("can't add directory '%s', to the file watcher: %w", fw.dirname, err)
+	if err = watcher.Add(fw.dirname); err != nil {
+		res.SetError(fmt.Errorf("can't add directory '%s', to the file watcher: %w", fw.dirname, err))
+		return
 	}
 
+	// we don't stop the process on error - the blockchain node shouldn't be killed if the
+	// watcher stopped working correctly.
 	for {
 		select {
 		case event, ok := <-watcher.Events:
 			if !ok {
-				break
+				return
 			}
-			log.Println("event:", event)
 			if event.Op&fsnotify.Write == fsnotify.Write {
-				log.Println("modified file:", event.Name)
+				fn, err := filepath.Abs(event.Name)
+				if err != nil {
+					log.Printf("ERROR: file watcher can't expand a filename '%s', %v", event.Name, err)
+				} else if fw.filename == fn {
+					ui, err := parseUpgradeInfoFile(fn)
+					if err != nil {
+						log.Printf("ERROR: file watcher can't expand a filename '%s', %v", event.Name, err)
+					} else {
+						res.SetUpgrade(&ui)
+					}
+				}
 			}
 		case err, ok := <-watcher.Errors:
 			if ok {
-				res.SetError(err)
+				log.Println("ERROR: file watcher can't monitor correctly for the update", err)
 			}
-			break
 		}
 	}
-	return nil
+}
+
+func parseUpgradeInfoFile(filename string) (UpgradeInfo, error) {
+	var ui UpgradeInfo
+	f, err := os.Open(filename)
+	if err != nil {
+		return ui, err
+	}
+	defer f.Close()
+	// byteValue, _ := ioutil.ReadAll(jsonFile)
+	d := json.NewDecoder(f)
+	err = d.Decode(&ui)
+	return ui, err
 }

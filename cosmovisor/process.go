@@ -1,7 +1,6 @@
 package cosmovisor
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"log"
@@ -26,18 +25,6 @@ func LaunchProcess(cfg *Config, args []string, stdout, stderr io.Writer) (bool, 
 	}
 
 	cmd := exec.Command(bin, args...)
-	outpipe, err := cmd.StdoutPipe()
-	if err != nil {
-		return false, err
-	}
-
-	errpipe, err := cmd.StderrPipe()
-	if err != nil {
-		return false, err
-	}
-
-	scanOut := bufio.NewScanner(io.TeeReader(outpipe, stdout))
-	scanErr := bufio.NewScanner(io.TeeReader(errpipe, stderr))
 	fw, err := newUpgradeFileWatcher(cfg.UpgradeInfoFilePath())
 	if err != nil {
 		return false, err
@@ -57,7 +44,7 @@ func LaunchProcess(cfg *Config, args []string, stdout, stderr io.Writer) (bool, 
 	}()
 
 	// three ways to exit - command ends, find regexp in scanOut, find regexp in scanErr
-	upgradeInfo, err := WaitForUpgradeOrExit(cmd, scanOut, scanErr, fw)
+	upgradeInfo, err := WaitForUpgradeOrExit(cmd, fw)
 	if err != nil {
 		return false, err
 	}
@@ -115,23 +102,19 @@ func (u *WaitResult) SetUpgrade(up *UpgradeInfo) {
 // It returns (nil, err) if the process died by itself, or there was an issue reading the pipes
 // It returns (nil, nil) if the process exited normally without triggering an upgrade. This is very unlikely
 // to happened with "start" but may happened with short-lived commands like `gaiad export ...`
-func WaitForUpgradeOrExit(cmd *exec.Cmd, scanOut, scanErr *bufio.Scanner, fw fileWatcher) (*UpgradeInfo, error) {
+func WaitForUpgradeOrExit(cmd *exec.Cmd, fw fileWatcher) (*UpgradeInfo, error) {
 	var res WaitResult
 
-	waitScan := func(scan *bufio.Scanner) {
-		WaitForUpdate(scan, &res)
+	go func() {
+		fw.MonitorUpdate(&res)
 		if ui, _ := res.AsResult(); ui != nil {
-			// now we need to kill the process
+			// upgrede - kill the process and restart
 			_ = cmd.Process.Kill()
 		}
-	}
+	}()
 
-	// wait for the scanners, which can trigger upgrade and kill cmd
-	go waitScan(scanOut)
-	go waitScan(scanErr)
-
-	// if the command exits normally (eg. short command like `gaiad version`), just return (nil, nil)
-	// we often get broken read pipes if it runs too fast.
+	// if the command exits normally (eg. short command like `gaiad version`), just
+	// return (nil, nil) we often get broken read pipes if it runs too fast.
 	// if we had upgrade info, we would have killed it, and thus got a non-nil error code
 	err := cmd.Wait()
 	if err == nil {

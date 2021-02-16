@@ -34,7 +34,7 @@ name = "aaronc"
 repo = "https://github.com/cosmos/cosmos-sdk"
 
 # The documentation field specifies a URL to a website hosting the module's documentation. (Optional)
-documentation = "https://docs.cosmos.network/v0.40/modules/crisis/"
+documentation = "https://raw.githubusercontent.com/cosmos/cosmos-sdk/master/x/crisis/atlas/atlas-v0.41.x.md"
 
 # The module version to be published. (Required)
 version = "v0.41.x"

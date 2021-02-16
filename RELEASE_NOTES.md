@@ -26,7 +26,9 @@ Is is important to note that the Security Patch #1 should also fix this bug, as 
 
 Several bug fixes are included in this release.
 
-Tendermint has been bumped to v0.34.4 to address a memory leak. When using the Tendermint subcommands `tendermint show-*` from the CLI, the SDK doesn't create new files anymore.
+Tendermint has been bumped to v0.34.4 to address a memory leak.
+
+Environment variables are not correctly populated to CLI flags. When using the Tendermint subcommands `tendermint show-*` from the CLI, the SDK doesn't create new files anymore.
 
 Keyring imports from older versions are fixed.
 

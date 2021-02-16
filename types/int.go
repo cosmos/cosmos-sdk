@@ -375,7 +375,7 @@ func (i *Int) MarshalTo(data []byte) (n int, err error) {
 	if i.i == nil {
 		i.i = new(big.Int)
 	}
-	if len(i.i.Bytes()) == 0 {
+	if i.i.BitLen() == 0 { // The value 0
 		copy(data, []byte{0x30})
 		return 1, nil
 	}

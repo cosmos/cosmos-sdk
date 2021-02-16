@@ -9,7 +9,7 @@ import (
 )
 
 // AddVote adds a vote on a specific proposal
-func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, option types.VoteOption) error {
+func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, options types.WeightedVoteOptions) error {
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
 		return sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
@@ -18,17 +18,19 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 		return sdkerrors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
 	}
 
-	if !types.ValidVoteOption(option) {
-		return sdkerrors.Wrap(types.ErrInvalidVote, option.String())
+	for _, option := range options {
+		if !types.ValidWeightedVoteOption(option) {
+			return sdkerrors.Wrap(types.ErrInvalidVote, option.String())
+		}
 	}
 
-	vote := types.NewVote(proposalID, voterAddr, option)
+	vote := types.NewVote(proposalID, voterAddr, options)
 	keeper.SetVote(ctx, vote)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeProposalVote,
-			sdk.NewAttribute(types.AttributeKeyOption, option.String()),
+			sdk.NewAttribute(types.AttributeKeyOption, options.String()),
 			sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
 		),
 	)

@@ -1,10 +1,6 @@
 # Cosmosvisor Quick Start
 
-`cosmovisor` is a small process manager around Cosmos SDK binaries that uses the upgrade module to allow
-for smooth and configurable management of upgrading binaries as a live chain is upgraded, and can be
-used to simplify validator operations while doing upgrades or to make syncing a full node for genesis
-simple. The `cosmovisor` program monitors the stdout of Cosmos SDK application's executable to look for
-messages from the upgrade module indicating a pending or required upgrade and act appropriately.
+`cosmovisor` is a small process manager around Cosmos SDK binaries that monitors the governance module via stdout to see if there's a chain upgrade proposal coming in. If it see a proposal that gets approved it can be run manually or automatically to download the new code, stop the node, run the migration script, replace the node binary, and start with the new genesis file.
 
 ## Installation
 

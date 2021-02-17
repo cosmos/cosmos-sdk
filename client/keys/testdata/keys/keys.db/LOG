@@ -1,18 +1,30 @@
-=============== Mar 30, 2020 (CEST) ===============
-02:07:34.137606 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
-02:07:34.144547 db@open opening
-02:07:34.144770 version@stat F·[] S·0B[] Sc·[]
-02:07:34.145843 db@janitor F·2 G·0
-02:07:34.145875 db@open done T·1.315251ms
-02:07:34.335635 db@close closing
-02:07:34.335736 db@close done T·98.95µs
-=============== Mar 30, 2020 (CEST) ===============
-02:08:33.239115 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
-02:08:33.239264 version@stat F·[] S·0B[] Sc·[]
-02:08:33.239281 db@open opening
-02:08:33.239310 journal@recovery F·1
-02:08:33.239398 journal@recovery recovering @1
-02:08:33.322008 memdb@flush created L0@2 N·4 S·391B "cos..ess,v4":"run..nfo,v3"
-02:08:33.323091 version@stat F·[1] S·391B[391B] Sc·[0.25]
-02:08:33.421979 db@janitor F·3 G·0
-02:08:33.422153 db@open done T·182.707962ms
+=============== Feb 2, 2021 (IST) ===============
+00:03:25.348369 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+00:03:25.350695 db@open opening
+00:03:25.350888 version@stat F·[] S·0B[] Sc·[]
+00:03:25.351864 db@janitor F·2 G·0
+00:03:25.351881 db@open done T·1.169825ms
+00:03:25.351895 db@close closing
+00:03:25.351929 db@close done T·33.042µs
+=============== Feb 2, 2021 (IST) ===============
+00:03:34.450638 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+00:03:34.450722 version@stat F·[] S·0B[] Sc·[]
+00:03:34.450737 db@open opening
+00:03:34.450765 journal@recovery F·1
+00:03:34.450851 journal@recovery recovering @1
+00:03:34.451173 version@stat F·[] S·0B[] Sc·[]
+00:03:34.454278 db@janitor F·2 G·0
+00:03:34.454298 db@open done T·3.548046ms
+00:03:34.454307 db@close closing
+00:03:34.454327 db@close done T·19.017µs
+=============== Feb 2, 2021 (IST) ===============
+00:03:42.025705 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+00:03:42.025892 version@stat F·[] S·0B[] Sc·[]
+00:03:42.025907 db@open opening
+00:03:42.025943 journal@recovery F·1
+00:03:42.026790 journal@recovery recovering @2
+00:03:42.026946 version@stat F·[] S·0B[] Sc·[]
+00:03:42.031645 db@janitor F·2 G·0
+00:03:42.031661 db@open done T·5.750008ms
+00:03:42.283102 db@close closing
+00:03:42.283162 db@close done T·58.775µs

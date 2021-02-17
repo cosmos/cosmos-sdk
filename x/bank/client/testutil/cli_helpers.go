@@ -1,13 +1,10 @@
 package testutil
 
 import (
-	"context"
 	"fmt"
 
-	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/libs/cli"
-	grpc "google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -15,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -32,38 +30,6 @@ func QueryBalancesExec(clientCtx client.Context, address fmt.Stringer, extraArgs
 
 	return clitestutil.ExecTestCLICmd(clientCtx, bankcli.GetBalancesCmd(), args)
 }
-
-// serviceMsgClientConn is an instance of grpc.ClientConn that is used to test building
-// transactions with MsgClient's. It is intended to be replaced by the work in
-// https://github.com/cosmos/cosmos-sdk/issues/7541 when that is ready.
-type serviceMsgClientConn struct {
-	msgs []sdk.Msg
-}
-
-func (t *serviceMsgClientConn) Invoke(_ context.Context, method string, args, _ interface{}, _ ...grpc.CallOption) error {
-	req, ok := args.(sdk.MsgRequest)
-	if !ok {
-		return fmt.Errorf("%T should implement %T", args, (*sdk.MsgRequest)(nil))
-	}
-
-	err := req.ValidateBasic()
-	if err != nil {
-		return err
-	}
-
-	t.msgs = append(t.msgs, sdk.ServiceMsg{
-		MethodName: method,
-		Request:    req,
-	})
-
-	return nil
-}
-
-func (t *serviceMsgClientConn) NewStream(context.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
-	return nil, fmt.Errorf("not supported")
-}
-
-var _ gogogrpc.ClientConn = &serviceMsgClientConn{}
 
 // newSendTxMsgServiceCmd is just for the purpose of testing ServiceMsg's in an end-to-end case. It is effectively
 // NewSendTxCmd but using MsgClient.
@@ -90,14 +56,14 @@ ignored as it is implied from [from_key_or_address].`,
 			}
 
 			msg := types.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
-			svcMsgClientConn := &serviceMsgClientConn{}
+			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 			bankMsgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = bankMsgClient.Send(context.Background(), msg)
+			_, err = bankMsgClient.Send(cmd.Context(), msg)
 			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.msgs...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
 		},
 	}
 

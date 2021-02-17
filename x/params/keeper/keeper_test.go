@@ -45,7 +45,7 @@ func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 	return app, ctx
 }
 
-func validateNoOp(_ interface{}) error { return nil }
+func validateNoOp(_, _ interface{}) error { return nil }
 
 func TestKeeper(t *testing.T) {
 	kvs := []struct {

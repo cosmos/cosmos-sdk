@@ -108,26 +108,26 @@ func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err e
 
 // validate a set of params
 func (p Params) Validate() error {
-	if err := validateUnbondingTime(p.UnbondingTime); err != nil {
+	if err := validateUnbondingTime(nil, p.UnbondingTime); err != nil {
 		return err
 	}
 
-	if err := validateMaxValidators(p.MaxValidators); err != nil {
+	if err := validateMaxValidators(nil, p.MaxValidators); err != nil {
 		return err
 	}
 
-	if err := validateMaxEntries(p.MaxEntries); err != nil {
+	if err := validateMaxEntries(nil, p.MaxEntries); err != nil {
 		return err
 	}
 
-	if err := validateBondDenom(p.BondDenom); err != nil {
+	if err := validateBondDenom(nil, p.BondDenom); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func validateUnbondingTime(i interface{}) error {
+func validateUnbondingTime(_, i interface{}) error {
 	v, ok := i.(time.Duration)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -140,7 +140,7 @@ func validateUnbondingTime(i interface{}) error {
 	return nil
 }
 
-func validateMaxValidators(i interface{}) error {
+func validateMaxValidators(_, i interface{}) error {
 	v, ok := i.(uint32)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -153,7 +153,7 @@ func validateMaxValidators(i interface{}) error {
 	return nil
 }
 
-func validateMaxEntries(i interface{}) error {
+func validateMaxEntries(_, i interface{}) error {
 	v, ok := i.(uint32)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -166,7 +166,7 @@ func validateMaxEntries(i interface{}) error {
 	return nil
 }
 
-func validateHistoricalEntries(i interface{}) error {
+func validateHistoricalEntries(_, i interface{}) error {
 	_, ok := i.(uint32)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -175,7 +175,7 @@ func validateHistoricalEntries(i interface{}) error {
 	return nil
 }
 
-func validateBondDenom(i interface{}) error {
+func validateBondDenom(_, i interface{}) error {
 	v, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

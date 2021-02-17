@@ -76,7 +76,7 @@ func (p Params) String() string {
 	return string(out)
 }
 
-func validateTxSigLimit(i interface{}) error {
+func validateTxSigLimit(_, i interface{}) error {
 	v, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -89,7 +89,7 @@ func validateTxSigLimit(i interface{}) error {
 	return nil
 }
 
-func validateSigVerifyCostED25519(i interface{}) error {
+func validateSigVerifyCostED25519(_, i interface{}) error {
 	v, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -102,7 +102,7 @@ func validateSigVerifyCostED25519(i interface{}) error {
 	return nil
 }
 
-func validateSigVerifyCostSecp256k1(i interface{}) error {
+func validateSigVerifyCostSecp256k1(_, i interface{}) error {
 	v, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -115,7 +115,7 @@ func validateSigVerifyCostSecp256k1(i interface{}) error {
 	return nil
 }
 
-func validateMaxMemoCharacters(i interface{}) error {
+func validateMaxMemoCharacters(_, i interface{}) error {
 	v, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -128,7 +128,7 @@ func validateMaxMemoCharacters(i interface{}) error {
 	return nil
 }
 
-func validateTxSizeCostPerByte(i interface{}) error {
+func validateTxSizeCostPerByte(_, i interface{}) error {
 	v, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -143,21 +143,18 @@ func validateTxSizeCostPerByte(i interface{}) error {
 
 // Validate checks that the parameters have valid values.
 func (p Params) Validate() error {
-	if err := validateTxSigLimit(p.TxSigLimit); err != nil {
+	if err := validateTxSigLimit(nil, p.TxSigLimit); err != nil {
 		return err
 	}
-	if err := validateSigVerifyCostED25519(p.SigVerifyCostED25519); err != nil {
+	if err := validateSigVerifyCostED25519(nil, p.SigVerifyCostED25519); err != nil {
 		return err
 	}
-	if err := validateSigVerifyCostSecp256k1(p.SigVerifyCostSecp256k1); err != nil {
+	if err := validateSigVerifyCostSecp256k1(nil, p.SigVerifyCostSecp256k1); err != nil {
 		return err
 	}
-	if err := validateMaxMemoCharacters(p.MaxMemoCharacters); err != nil {
-		return err
-	}
-	if err := validateTxSizeCostPerByte(p.TxSizeCostPerByte); err != nil {
+	if err := validateMaxMemoCharacters(nil, p.MaxMemoCharacters); err != nil {
 		return err
 	}
 
-	return nil
+	return validateTxSizeCostPerByte(nil, p.TxSizeCostPerByte)
 }

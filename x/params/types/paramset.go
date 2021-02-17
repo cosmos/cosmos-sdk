@@ -1,7 +1,7 @@
 package types
 
 type (
-	ValueValidatorFn func(value interface{}) error
+	ValueValidatorFn func(currentValue, newValue interface{}) error
 
 	// ParamSetPair is used for associating paramsubspace key and field of param
 	// structs.

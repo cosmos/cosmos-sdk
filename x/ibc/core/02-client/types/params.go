@@ -35,7 +35,7 @@ func DefaultParams() Params {
 
 // Validate all ibc-transfer module parameters
 func (p Params) Validate() error {
-	return validateClients(p.AllowedClients)
+	return validateClients(nil, p.AllowedClients)
 }
 
 // ParamSetPairs implements params.ParamSet
@@ -55,7 +55,7 @@ func (p Params) IsAllowedClient(clientType string) bool {
 	return false
 }
 
-func validateClients(i interface{}) error {
+func validateClients(_, i interface{}) error {
 	clients, ok := i.([]string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

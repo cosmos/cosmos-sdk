@@ -54,22 +54,22 @@ func DefaultParams() Params {
 
 // validate params
 func (p Params) Validate() error {
-	if err := validateMintDenom(p.MintDenom); err != nil {
+	if err := validateMintDenom(nil, p.MintDenom); err != nil {
 		return err
 	}
-	if err := validateInflationRateChange(p.InflationRateChange); err != nil {
+	if err := validateInflationRateChange(nil, p.InflationRateChange); err != nil {
 		return err
 	}
-	if err := validateInflationMax(p.InflationMax); err != nil {
+	if err := validateInflationMax(nil, p.InflationMax); err != nil {
 		return err
 	}
-	if err := validateInflationMin(p.InflationMin); err != nil {
+	if err := validateInflationMin(nil, p.InflationMin); err != nil {
 		return err
 	}
-	if err := validateGoalBonded(p.GoalBonded); err != nil {
+	if err := validateGoalBonded(nil, p.GoalBonded); err != nil {
 		return err
 	}
-	if err := validateBlocksPerYear(p.BlocksPerYear); err != nil {
+	if err := validateBlocksPerYear(nil, p.BlocksPerYear); err != nil {
 		return err
 	}
 	if p.InflationMax.LT(p.InflationMin) {
@@ -101,7 +101,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	}
 }
 
-func validateMintDenom(i interface{}) error {
+func validateMintDenom(_, i interface{}) error {
 	v, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -117,7 +117,7 @@ func validateMintDenom(i interface{}) error {
 	return nil
 }
 
-func validateInflationRateChange(i interface{}) error {
+func validateInflationRateChange(_, i interface{}) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -133,7 +133,7 @@ func validateInflationRateChange(i interface{}) error {
 	return nil
 }
 
-func validateInflationMax(i interface{}) error {
+func validateInflationMax(_, i interface{}) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -149,7 +149,7 @@ func validateInflationMax(i interface{}) error {
 	return nil
 }
 
-func validateInflationMin(i interface{}) error {
+func validateInflationMin(_, i interface{}) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -165,7 +165,7 @@ func validateInflationMin(i interface{}) error {
 	return nil
 }
 
-func validateGoalBonded(i interface{}) error {
+func validateGoalBonded(_, i interface{}) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -181,7 +181,7 @@ func validateGoalBonded(i interface{}) error {
 	return nil
 }
 
-func validateBlocksPerYear(i interface{}) error {
+func validateBlocksPerYear(_, i interface{}) error {
 	v, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

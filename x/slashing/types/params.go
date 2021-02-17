@@ -68,7 +68,7 @@ func DefaultParams() Params {
 	)
 }
 
-func validateSignedBlocksWindow(i interface{}) error {
+func validateSignedBlocksWindow(_, i interface{}) error {
 	v, ok := i.(int64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -81,7 +81,7 @@ func validateSignedBlocksWindow(i interface{}) error {
 	return nil
 }
 
-func validateMinSignedPerWindow(i interface{}) error {
+func validateMinSignedPerWindow(_, i interface{}) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -97,7 +97,7 @@ func validateMinSignedPerWindow(i interface{}) error {
 	return nil
 }
 
-func validateDowntimeJailDuration(i interface{}) error {
+func validateDowntimeJailDuration(_, i interface{}) error {
 	v, ok := i.(time.Duration)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -110,7 +110,7 @@ func validateDowntimeJailDuration(i interface{}) error {
 	return nil
 }
 
-func validateSlashFractionDoubleSign(i interface{}) error {
+func validateSlashFractionDoubleSign(_, i interface{}) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -126,7 +126,7 @@ func validateSlashFractionDoubleSign(i interface{}) error {
 	return nil
 }
 
-func validateSlashFractionDowntime(i interface{}) error {
+func validateSlashFractionDowntime(_, i interface{}) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

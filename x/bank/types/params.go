@@ -45,10 +45,10 @@ func DefaultParams() Params {
 
 // Validate all bank module parameters
 func (p Params) Validate() error {
-	if err := validateSendEnabledParams(p.SendEnabled); err != nil {
+	if err := validateSendEnabledParams(nil, p.SendEnabled); err != nil {
 		return err
 	}
-	return validateIsBool(p.DefaultSendEnabled)
+	return validateIsBool(nil, p.DefaultSendEnabled)
 }
 
 // String implements the Stringer interface.
@@ -91,7 +91,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 // SendEnabledParams is a collection of parameters indicating if a coin denom is enabled for sending
 type SendEnabledParams []*SendEnabled
 
-func validateSendEnabledParams(i interface{}) error {
+func validateSendEnabledParams(_, i interface{}) error {
 	params, ok := i.([]*SendEnabled)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -102,7 +102,7 @@ func validateSendEnabledParams(i interface{}) error {
 		if _, exists := registered[p.Denom]; exists {
 			return fmt.Errorf("duplicate send enabled parameter found: '%s'", p.Denom)
 		}
-		if err := validateSendEnabled(*p); err != nil {
+		if err := validateSendEnabled(nil, *p); err != nil {
 			return err
 		}
 		registered[p.Denom] = true
@@ -125,7 +125,7 @@ func (se SendEnabled) String() string {
 	return string(out)
 }
 
-func validateSendEnabled(i interface{}) error {
+func validateSendEnabled(_, i interface{}) error {
 	param, ok := i.(SendEnabled)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -133,7 +133,7 @@ func validateSendEnabled(i interface{}) error {
 	return sdk.ValidateDenom(param.Denom)
 }
 
-func validateIsBool(i interface{}) error {
+func validateIsBool(_, i interface{}) error {
 	_, ok := i.(bool)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

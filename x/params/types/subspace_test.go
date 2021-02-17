@@ -196,6 +196,20 @@ func (suite *SubspaceTestSuite) TestSetParamSet() {
 	suite.Require().Equal(a.UnbondingTime, b.UnbondingTime)
 	suite.Require().Equal(a.MaxValidators, b.MaxValidators)
 	suite.Require().Equal(a.BondDenom, b.BondDenom)
+
+	newParams := params{
+		UnbondingTime: time.Hour * 50,
+		MaxValidators: 101,
+		BondDenom:     "uatom",
+	}
+
+	suite.Require().Panics(func() {
+		suite.ss.SetParamSet(suite.ctx, &a)
+	})
+
+	suite.Require().NotPanics(func() {
+		suite.ss.SetParamSet(suite.ctx, &newParams)
+	})
 }
 
 func (suite *SubspaceTestSuite) TestName() {

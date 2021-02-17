@@ -31,7 +31,7 @@ func Test_validateSendEnabledParam(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.wantErr, validateSendEnabled(tt.args.i) != nil)
+			require.Equal(t, tt.wantErr, validateSendEnabled(nil, tt.args.i) != nil)
 		})
 	}
 }
@@ -68,14 +68,14 @@ func Test_validateParams(t *testing.T) {
 	params.DefaultSendEnabled = false
 	params = params.SetSendEnabledParam("foodenom", true)
 
-	require.NoError(t, validateSendEnabledParams(params.SendEnabled))
+	require.NoError(t, validateSendEnabledParams(nil, params.SendEnabled))
 	require.True(t, params.SendEnabledDenom("foodenom"))
 	require.False(t, params.SendEnabledDenom(sdk.DefaultBondDenom))
 
 	params.DefaultSendEnabled = true
 	params = params.SetSendEnabledParam("foodenom", false)
 
-	require.NoError(t, validateSendEnabledParams(params.SendEnabled))
+	require.NoError(t, validateSendEnabledParams(nil, params.SendEnabled))
 	require.False(t, params.SendEnabledDenom("foodenom"))
 	require.True(t, params.SendEnabledDenom(sdk.DefaultBondDenom))
 
@@ -119,7 +119,7 @@ default_send_enabled: true
 	require.Error(t, params.Validate())
 
 	// fails due to invalid type
-	require.Error(t, validateSendEnabledParams(NewSendEnabled("foodenom", true)))
+	require.Error(t, validateSendEnabledParams(nil, NewSendEnabled("foodenom", true)))
 
-	require.Error(t, validateSendEnabledParams(SendEnabledParams{NewSendEnabled("INVALIDDENOM", true)}))
+	require.Error(t, validateSendEnabledParams(nil, SendEnabledParams{NewSendEnabled("INVALIDDENOM", true)}))
 }

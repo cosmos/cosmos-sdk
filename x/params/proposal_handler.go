@@ -1,8 +1,6 @@
 package params
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -30,9 +28,7 @@ func handleParameterChangeProposal(ctx sdk.Context, k keeper.Keeper, p *proposal
 			return sdkerrors.Wrap(proposal.ErrUnknownSubspace, c.Subspace)
 		}
 
-		k.Logger(ctx).Info(
-			fmt.Sprintf("attempt to set new parameter value; key: %s, value: %s", c.Key, c.Value),
-		)
+		k.Logger(ctx).Info("attempt to set new parameter", "key", c.Key, "value", c.Value)
 
 		if err := ss.Update(ctx, []byte(c.Key), []byte(c.Value)); err != nil {
 			return sdkerrors.Wrapf(proposal.ErrSettingParameter, "key: %s, value: %s, err: %s", c.Key, c.Value, err.Error())

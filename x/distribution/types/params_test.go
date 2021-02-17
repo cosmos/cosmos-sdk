@@ -26,9 +26,9 @@ func Test_validateAuxFuncs(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.wantErr, validateCommunityTax(tt.args.i) != nil)
-			require.Equal(t, tt.wantErr, validateBaseProposerReward(tt.args.i) != nil)
-			require.Equal(t, tt.wantErr, validateBonusProposerReward(tt.args.i) != nil)
+			require.Equal(t, tt.wantErr, validateCommunityTax(nil, tt.args.i) != nil)
+			require.Equal(t, tt.wantErr, validateBaseProposerReward(nil, tt.args.i) != nil)
+			require.Equal(t, tt.wantErr, validateBonusProposerReward(nil, tt.args.i) != nil)
 		})
 	}
 }

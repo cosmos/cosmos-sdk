@@ -84,13 +84,16 @@ func (s Subspace) transientStore(ctx sdk.Context) sdk.KVStore {
 
 // Validate attempts to validate a parameter value by its key. If the key is not
 // registered or if the validation of the value fails, an error is returned.
-func (s Subspace) Validate(ctx sdk.Context, key []byte, value interface{}) error {
+func (s Subspace) Validate(ctx sdk.Context, key []byte, newValue interface{}) error {
 	attr, ok := s.table.m[string(key)]
 	if !ok {
 		return fmt.Errorf("parameter %s not registered", string(key))
 	}
 
-	if err := attr.vfn(value); err != nil {
+	currentValue := reflect.Indirect(reflect.ValueOf(newValue)).Interface()
+	s.GetIfExists(ctx, key, currentValue)
+
+	if err := attr.vfn(currentValue, newValue); err != nil {
 		return fmt.Errorf("invalid parameter value: %s", err)
 	}
 
@@ -233,7 +236,12 @@ func (s Subspace) SetParamSet(ctx sdk.Context, ps ParamSet) {
 		// so this method will not be called frequently
 		v := reflect.Indirect(reflect.ValueOf(pair.Value)).Interface()
 
-		if err := pair.ValidatorFn(v); err != nil {
+		currentValue := reflect.Indirect(reflect.ValueOf(pair.Value)).Interface()
+		s.GetIfExists(ctx, pair.Key, currentValue)
+
+		fmt.Println(currentValue)
+
+		if err := pair.ValidatorFn(currentValue, v); err != nil {
 			panic(fmt.Sprintf("value from ParamSetPair is invalid: %s", err))
 		}
 

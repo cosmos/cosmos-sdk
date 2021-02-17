@@ -17,6 +17,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	tmcfg "github.com/tendermint/tendermint/config"
 	tmlog "github.com/tendermint/tendermint/libs/log"
@@ -63,6 +64,37 @@ func NewContext(v *viper.Viper, config *tmcfg.Config, logger tmlog.Logger) *Cont
 	return &Context{v, config, logger}
 }
 
+func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) {
+	defer func() {
+		recover()
+	}()
+
+	cmd.Flags().VisitAll(func(f *pflag.Flag) {
+		// Environment variables can't have dashes in them, so bind them to their equivalent
+		// keys with underscores, e.g. --favorite-color to STING_FAVORITE_COLOR
+		err = v.BindEnv(f.Name, fmt.Sprintf("%s_%s", basename, strings.ToUpper(strings.ReplaceAll(f.Name, "-", "_"))))
+		if err != nil {
+			panic(err)
+		}
+
+		err = v.BindPFlag(f.Name, f)
+		if err != nil {
+			panic(err)
+		}
+
+		// Apply the viper config value to the flag when the flag is not set and viper has a value
+		if !f.Changed && v.IsSet(f.Name) {
+			val := v.Get(f.Name)
+			err = cmd.Flags().Set(f.Name, fmt.Sprintf("%v", val))
+			if err != nil {
+				panic(err)
+			}
+		}
+	})
+
+	return
+}
+
 // InterceptConfigsPreRunHandler performs a pre-run function for the root daemon
 // application command. It will create a Viper literal and a default server
 // Context. The server Tendermint configuration will either be read and parsed
@@ -98,6 +130,9 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 
 	// return value is a tendermint configuration object
 	serverCtx.Config = config
+	if err = bindFlags(basename, cmd, serverCtx.Viper); err != nil {
+		return err
+	}
 
 	var logWriter io.Writer
 	if strings.ToLower(serverCtx.Viper.GetString(flags.FlagLogFormat)) == tmcfg.LogFormatPlain {

@@ -1,5 +1,3 @@
-// +build norace
-
 package cli_test
 
 import (
@@ -40,7 +38,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	}
 
 	cfg := network.DefaultConfig()
-	cfg.NumValidators = 2
+	cfg.NumValidators = 3
 
 	s.cfg = cfg
 	s.network = network.New(s.T(), cfg)
@@ -615,6 +613,112 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 	var resp sdk.TxResponse
 	s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
 	s.Require().Equal(uint32(0), resp.Code)
+}
+
+func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
+	val := s.network.Validators[0]
+
+	granter := val.Address
+	grantee := s.network.Validators[2].Address
+
+	clientCtx := val.ClientCtx
+
+	commonFlags := []string{
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	}
+	spendLimit := "100stake"
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"wrong granter",
+			append(
+				[]string{
+					"wrong granter",
+					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
+					fmt.Sprintf("--%s=%s", cli.FlagAllowedMsgs, "vote"),
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, spendLimit),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				},
+				commonFlags...,
+			),
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"wrong grantee",
+			append(
+				[]string{
+					granter.String(),
+					"wrong grantee",
+					fmt.Sprintf("--%s=%s", cli.FlagAllowedMsgs, "vote"),
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, spendLimit),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				},
+				commonFlags...,
+			),
+			true, &sdk.TxResponse{}, 0,
+		},
+		{
+			"valid filter fee grant",
+			append(
+				[]string{
+					granter.String(),
+					grantee.String(),
+					fmt.Sprintf("--%s=%s", cli.FlagAllowedMsgs, "vote"),
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, spendLimit),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				},
+				commonFlags...,
+			),
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewCmdFeeGrant()
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+
+	args := []string{
+		granter.String(),
+		grantee.String(),
+		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+	}
+
+	cmd := cli.GetCmdQueryFeeGrant()
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	s.Require().NoError(err)
+
+	resp := &types.FeeAllowanceGrant{}
+
+	s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), resp), out.String())
+	s.Require().Equal(resp.Grantee, resp.Grantee)
+	s.Require().Equal(resp.Granter, resp.Granter)
+	s.Require().Equal(
+		resp.GetFeeGrant().(*types.FilteredFeeAllowance).GetAllowance().(*types.BasicFeeAllowance).SpendLimit.String(),
+		spendLimit,
+	)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

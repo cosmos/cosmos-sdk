@@ -125,7 +125,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			require.NoError(t, err)
 
 			// now try to deduct
-			remove, err := tc.allow.Accept(tc.fee, tc.blockTime, tc.blockHeight)
+			remove, err := tc.allow.Accept(tc.fee, tc.blockTime, tc.blockHeight, []string{})
 			if !tc.accept {
 				require.Error(t, err)
 				return

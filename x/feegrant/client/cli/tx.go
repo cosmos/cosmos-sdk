@@ -22,6 +22,7 @@ const (
 	FlagPeriod      = "period"
 	FlagPeriodLimit = "period-limit"
 	FlagSpendLimit  = "spend-limit"
+	FlagAllowedMsgs = "allowed-messages"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -143,6 +144,18 @@ Examples:
 				}
 			}
 
+			allowedMsgs, err := cmd.Flags().GetStringSlice(FlagAllowedMsgs)
+			if err != nil {
+				return err
+			}
+
+			if len(allowedMsgs) > 0 {
+				grant, err = types.NewFilteredFeeAllowance(grant, allowedMsgs)
+				if err != nil {
+					return err
+				}
+			}
+
 			msg, err := types.NewMsgGrantFeeAllowance(grant, granter, grantee)
 			if err != nil {
 				return err
@@ -160,6 +173,7 @@ Examples:
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().StringSlice(FlagAllowedMsgs, []string{}, "Set of allowed messages for fee allowance")
 	cmd.Flags().Int64(FlagExpiration, 0, "The second unit of time duration which the grant is active for the user")
 	cmd.Flags().String(FlagSpendLimit, "", "Spend limit specifies the max limit can be used, if not mentioned there is no limit")
 	cmd.Flags().Int64(FlagPeriod, 0, "period specifies the time duration in which period_spend_limit coins can be spent before that allowance is reset")

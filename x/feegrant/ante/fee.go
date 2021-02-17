@@ -53,7 +53,11 @@ func (d DeductGrantedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 
 	// ensure the grant is allowed, if we request a different fee payer
 	if feeGranter != nil && !feeGranter.Equals(feePayer) {
-		err := d.k.UseGrantedFees(ctx, feeGranter, feePayer, fee)
+		msgTypes := []string{}
+		for _, msg := range tx.GetMsgs() {
+			msgTypes = append(msgTypes, msg.Type())
+		}
+		err := d.k.UseGrantedFees(ctx, feeGranter, feePayer, fee, msgTypes)
 		if err != nil {
 			return ctx, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
 		}

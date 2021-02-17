@@ -11,7 +11,7 @@ pull_request_rules:
   - name: backport patches to v0.41.x branch
     conditions:
       - base=master
-      - label=backport-to-v0.41.x
+      - label=backport/0.41.x (Stargate)
     actions:
       backport:
         branches:

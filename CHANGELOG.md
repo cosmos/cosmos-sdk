@@ -31,25 +31,25 @@ Types of changes (Stanzas):
 "State Machine Breaking" for any changes that result in a different AppState given same genesisState and txList.
 Ref: https://keepachangelog.com/en/1.0.0/
 -->
-# Unreleased
+
+# Changelog
+
+## [v0.41.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.1) - 2021-02-17
+
+### Bug Fixes
+
+* (grpc) [\#8549](https://github.com/cosmos/cosmos-sdk/pull/8549) Make gRPC requests go through ABCI and disallow concurrency.
+* (x/staking) [\#8546](https://github.com/cosmos/cosmos-sdk/pull/8546) Fix caching bug where concurrent calls to GetValidator could cause a node to crash
+* (server) [\#8481](https://github.com/cosmos/cosmos-sdk/pull/8481) Don't create files when running `{appd} tendermint show-*` subcommands.
+* (client/keys) [\#8436](https://github.com/cosmos/cosmos-sdk/pull/8436) Fix keybase->keyring keys migration.
+* (crypto/hd) [\#8607](https://github.com/cosmos/cosmos-sdk/pull/8607) Make DerivePrivateKeyForPath error and not panic on trailing slashes.
 
 ### Improvements
 
 * (x/ibc) [\#8458](https://github.com/cosmos/cosmos-sdk/pull/8458) Add `packet_connection` attribute to ibc events to enable relayer filtering
-
-# Changelog
-
-## Unreleased
-
-### Bug Fixes
-
-* (server) [\#8481](https://github.com/cosmos/cosmos-sdk/pull/8481) Don't create files when running `{appd} tendermint show-*` subcommands.
-* (client/keys) [\#8436](https://github.com/cosmos/cosmos-sdk/pull/8436) Fix keybase->keyring keys migration.
-
-### Improvements
-
 * [\#8396](https://github.com/cosmos/cosmos-sdk/pull/8396) Add support for ARM platform
 * (x/bank) [\#8479](https://github.com/cosmos/cosmos-sdk/pull/8479) Aditional client denom metadata validation for `base` and `display` denoms.
+* (codec/types) [\#8605](https://github.com/cosmos/cosmos-sdk/pull/8605) Avoid unnecessary allocations for NewAnyWithCustomTypeURL on error.
 
 ## [v0.41.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.0) - 2021-01-26
 

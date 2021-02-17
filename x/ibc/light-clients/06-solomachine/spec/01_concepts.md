@@ -129,17 +129,14 @@ If the update is successful:
 
 An update by a governance proposal will only succeed if:
 
-- the header provided is parseable to solo machine header
+- the substitute provided is parseable to solo machine client state
 - the `AllowUpdateAfterProposal` client parameter is set to `true`
-- the new header public key does not equal the consensus state public key
+- the new consensus state public key does not equal the current consensus state public key
 
 If the update is successful:
 
-- the public key is updated
-- the diversifier is updated
-- the timestamp is updated
-- the sequence is updated
-- the new consensus state is set in the client state 
+- the subject client state is updated to the substitute client state
+- the subject consensus state is updated to the substitute consensus state
 - the client is unfrozen (if it was previously frozen)
 
 ## Misbehaviour

@@ -160,8 +160,7 @@ func TestVerifyMultisignature(t *testing.T) {
 				)
 			},
 			true,
-		},
-		{
+		}, {
 			"duplicate signatures",
 			func(require *require.Assertions) {
 				pubKeys, sigs := generatePubKeysAndSignatures(5, msg)
@@ -174,6 +173,19 @@ func TestVerifyMultisignature(t *testing.T) {
 				sig.Signatures = append(sig.Signatures, sigs[0])
 			},
 			false,
+		}, {
+			"duplicated key",
+			func(require *require.Assertions) {
+				// here we test an edge case where we create a multi sig with two same
+				// keys. It  should work.
+				pubkeys, sigs := generatePubKeysAndSignatures(3, msg)
+				pubkeys[1] = pubkeys[0]
+				pk = kmultisig.NewLegacyAminoPubKey(2, pubkeys)
+				sig = multisig.NewMultisig(len(pubkeys))
+				multisig.AddSignature(sig, sigs[0], 0)
+				multisig.AddSignature(sig, sigs[0], 1)
+			},
+			true,
 		}, {
 			"same key used twice",
 			func(require *require.Assertions) {

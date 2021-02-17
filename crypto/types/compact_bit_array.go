@@ -50,8 +50,8 @@ func (bA *CompactBitArray) GetIndex(i int) bool {
 	return bA.Elems[i>>3]&(1<<uint8(7-(i%8))) > 0
 }
 
-// SetIndex sets the bit at index i within the bit array. Returns true iff the operation
-// succeeded. The behavior is undefined if i >= bA.Count()
+// SetIndex sets the bit at index i within the bit array. Returns true if and only if the
+// operation succeeded. The behavior is undefined if i >= bA.Count()
 func (bA *CompactBitArray) SetIndex(i int, v bool) bool {
 	if bA == nil {
 		return false

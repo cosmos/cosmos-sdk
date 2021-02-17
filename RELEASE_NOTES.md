@@ -35,3 +35,5 @@ Keyring imports from older versions are fixed.
 Additional validation for client denom metadata has been added.
 
 On the IBC side, a `packet_connection` attribute has been added to IBC events to enable relayer filtering.
+
+For the full change log, please see the [CHANGELOG](./CHANGELOG.md).

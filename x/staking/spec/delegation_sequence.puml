@@ -4,23 +4,34 @@
 title: Delegating (currently undelegated funds delegator)
 autonumber
 
-actor User
-User -> SDK : Delegate
-SDK -> "handler (staking)": MsgDelegate(Context, \n Msg(DelegatorAddress,  ValidatorAddress, Amount))
-"handler (staking)" -> "msgServer (staking)" : Delegate(Context, Msg)
-"msgServer (staking)" -> "msgServer (staking)" : Check validator address is valid.
-"msgServer (staking)" -> "msgServer (staking)" : Check correct staking denomination
+participant "msgServer (staking)"
 participant  "keeper (staking)" as keeper
-"msgServer (staking)" -> keeper : Delegate(Context, DelegatorAddress, Amount, Validator)
+"msgServer (staking)" -> keeper : Delegate(Context, DelegatorAddress, Amount, Validator, tokenSrc := Unbonded)
 
-    keeper ->  validator : Check exchange rate valid
-    keeper <-- validator :
+alt exchange rate is invalid (tokens in validator is 0)
+    keeper -->  "msgServer (staking)" : error
+end
+
 alt perform a new delegation
     keeper -> keeper : delegation := create delegation object
 end
 
-keeper -> keeper : BeforeDelegationCreated hook
-note left: Calls IncrementValidatorPeriod (Used to calculate distribution) in keeper/validator.go
+alt new delegation
+    keeper -> keeper : BeforeDelegationCreated hook
+    note left: Calls IncrementValidatorPeriod (Used to calculate distribution) in keeper/validator.go
+end
+alt delegation exists, more tokens being added
+    keeper -> keeper : BeforeDelegationModified hook
+    note left: withdraw current delegation rewards (and increment period)
+end
+
+alt delegating from an account (subtractTokens == true)
+    alt validator is currently bonded
+        keeper -> keeper : sendName := BondedPool
+    end
+    alt validator is currently bonded
+        keeper -> keeper : sendName := NotBondedPool
+    end
 
 keeper -> keeper.bankKeeper : DelegateCoinsFromAccountToModule
 keeper.bankKeeper -> "func:DelegateCoinsFromAccountToModule" as DelegateCoinsFromAccountToModule **
@@ -48,9 +59,8 @@ keeper -> keeper: calculate new validator's power
 note left : Number of tokens divided by PowerReduction (default: 1,000,000,000,000,000,000 = 10^18)
 keeper -> store : update validator's power in power index
 note left : the power index has entries shaped as 35 || power || address.\nThis makes the validators sorted by power, high to low.
-alt redelegation
-    keeper -> store : update the delegation object describing this delegation.
 end
+
 keeper -> keeper : AfterDelegationModified hook
 note left: Calls initializeDelegation\nStore the previous period\nCalculate the number of tokens from shares\n(shares the delegator has) * (tokens in delegation object)/(total tokens delegated to the validator)\nStore delegation starting info.
 "msgServer (staking)" <-- keeper : newShares (ignored by Delegate function)

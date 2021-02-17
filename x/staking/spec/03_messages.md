@@ -9,6 +9,7 @@ In this section we describe the processing of the staking messages and the corre
 ## Msg/CreateValidator
 
 A validator is created using the `Msg/CreateValidator` service message.
+The validator must be created with an initial delegation from the operator.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L16-L17
 

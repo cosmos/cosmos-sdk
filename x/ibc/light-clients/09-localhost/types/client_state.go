@@ -107,12 +107,13 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	return nil, sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "cannot submit misbehaviour to localhost client")
 }
 
-// CheckProposedHeaderAndUpdateState returns an error. The localhost cannot be modified by
+// CheckSubstituteAndUpdateState returns an error. The localhost cannot be modified by
 // proposals.
-func (cs ClientState) CheckProposedHeaderAndUpdateState(
-	ctx sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ exported.Header,
-) (exported.ClientState, exported.ConsensusState, error) {
-	return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "cannot update localhost client with a proposal")
+func (cs ClientState) CheckSubstituteAndUpdateState(
+	ctx sdk.Context, _ codec.BinaryMarshaler, _, _ sdk.KVStore,
+	_ exported.ClientState, _ exported.Height,
+) (exported.ClientState, error) {
+	return nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "cannot update localhost client with a proposal")
 }
 
 // VerifyUpgradeAndUpdateState returns an error since localhost cannot be upgraded

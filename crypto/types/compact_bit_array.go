@@ -37,7 +37,7 @@ func (bA *CompactBitArray) Count() int {
 	return (len(bA.Elems)-1)*8 + int(bA.ExtraBitsStored)
 }
 
-// GetIndex returns true if a bit at index i is set and false otherwise.
+// GetIndex returns true if the bit at index i is set; returns false otherwise.
 // The behavior is undefined if i >= bA.Count()
 func (bA *CompactBitArray) GetIndex(i int) bool {
 	if bA == nil {

@@ -2885,7 +2885,8 @@ Msg defines the bank Msg service.
 <a name="cosmos.crypto.ed25519.PrivKey"></a>
 
 ### PrivKey
-PrivKey defines a ed25519 private key.
+Deprecated: PrivKey defines a ed25519 private key.
+NOTE: ed25519 keys must not be used in SDK apps except in a tendermint validator context.
 
 
 | Field | Type | Label | Description |
@@ -2900,11 +2901,11 @@ PrivKey defines a ed25519 private key.
 <a name="cosmos.crypto.ed25519.PubKey"></a>
 
 ### PubKey
-PubKey defines a ed25519 public key
-Key is the compressed form of the pubkey. The first byte depends is a 0x02 byte
-if the y-coordinate is the lexicographically largest of the two associated with
-the x-coordinate. Otherwise the first byte is a 0x03.
-This prefix is followed with the x-coordinate.
+PubKey is an ed25519 public key for handling Tendermint keys in SDK.
+It's needed for Any serialization and SDK compatibility.
+It must not be used in a non Tendermint key context because it doesn't implement
+ADR-28. Nevertheless, you will like to use ed25519 in app user level
+then you must create a new proto message and follow ADR-28 for Address construction.
 
 
 | Field | Type | Label | Description |
@@ -7948,17 +7949,20 @@ client.
 <a name="ibc.core.client.v1.ClientUpdateProposal"></a>
 
 ### ClientUpdateProposal
-ClientUpdateProposal is a governance proposal. If it passes, the client is
-updated with the provided header. The update may fail if the header is not
-valid given certain conditions specified by the client implementation.
+ClientUpdateProposal is a governance proposal. If it passes, the substitute client's
+consensus states starting from the 'initial height' are copied over to the subjects
+client state. The proposal handler may fail if the subject and the substitute do not
+match in client and chain parameters (with exception to latest height, frozen height, and chain-id).
+The updated client must also be valid (cannot be expired).
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  | the title of the update proposal |
 | `description` | [string](#string) |  | the description of the proposal |
-| `client_id` | [string](#string) |  | the client identifier for the client to be updated if the proposal passes |
-| `header` | [google.protobuf.Any](#google.protobuf.Any) |  | the header used to update the client if the proposal passes |
+| `subject_client_id` | [string](#string) |  | the client identifier for the client to be updated if the proposal passes |
+| `substitute_client_id` | [string](#string) |  | the substitute client identifier for the client standing in for the subject client |
+| `initial_height` | [Height](#ibc.core.client.v1.Height) |  | the intital height to copy consensus states from the substitute to the subject |
 
 
 

@@ -84,6 +84,12 @@ func TestPubKeyEquals(t *testing.T) {
 	}
 }
 
+func TestAddressEd25519(t *testing.T) {
+	pk := ed25519.PubKey{[]byte{125, 80, 29, 208, 159, 53, 119, 198, 73, 53, 187, 33, 199, 144, 62, 255, 1, 235, 117, 96, 128, 211, 17, 45, 34, 64, 189, 165, 33, 182, 54, 206}}
+	addr := pk.Address()
+	require.Len(t, addr, 20, "Address must be 20 bytes long")
+}
+
 func TestPrivKeyEquals(t *testing.T) {
 	ed25519PrivKey := ed25519.GenPrivKey()
 

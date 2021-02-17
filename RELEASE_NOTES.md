@@ -22,13 +22,13 @@ The patch removes the `validatorCache` altogether. Benchmarks show that the remo
 
 Is is important to note that the Security Patch #1 should also fix this bug, as it forces synchronous gRPC queries and therefore synchronous map reads/writes. However, it was deemed useful to include this bugfix too in this release.
 
-### Bug Fixes
+### Bug Fixes & Improvements
 
-Several bug fixes are included in this release.
+Several bug fixes and non-breaking improvements are included in this release.
 
 Tendermint has been bumped to v0.34.4 to address a memory leak.
 
-Environment variables are not correctly populated to CLI flags. When using the Tendermint subcommands `tendermint show-*` from the CLI, the SDK doesn't create new files anymore.
+Environment variables are now correctly populated to CLI flags. When using the Tendermint subcommands `tendermint show-*` from the CLI, the SDK doesn't create new files anymore.
 
 Keyring imports from older versions are fixed.
 

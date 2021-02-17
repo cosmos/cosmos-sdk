@@ -23,9 +23,6 @@ func NewLegacyAminoPubKey(k int, pubKeys []cryptotypes.PubKey) *LegacyAminoPubKe
 	if len(pubKeys) < k {
 		panic("threshold k of n multisignature: len(pubKeys) < k")
 	}
-	if !checkKeysUnique(pubKeys) {
-		panic("all keys must be unique")
-	}
 	anyPubKeys, err := packPubKeys(pubKeys)
 	if err != nil {
 		panic(err)
@@ -166,16 +163,4 @@ func packPubKeys(pubKeys []cryptotypes.PubKey) ([]*types.Any, error) {
 		anyPubKeys[i] = any
 	}
 	return anyPubKeys, nil
-}
-
-// checkKeysUnique verifies if all keys in `pks` are different
-func checkKeysUnique(pks []cryptotypes.PubKey) bool {
-	for i := range pks {
-		for j := i + 1; j < len(pks); j++ {
-			if pks[i].Equals(pks[j]) {
-				return false
-			}
-		}
-	}
-	return true
 }

@@ -16,12 +16,12 @@ import (
 )
 
 func TestNewMultiSig(t *testing.T) {
+	require := require.New(t)
 	pk1 := secp256k1.GenPrivKey().PubKey()
 	pks := []cryptotypes.PubKey{pk1, pk1}
 
-	require.PanicsWithValue(t, "all keys must be unique", func() {
-		kmultisig.NewLegacyAminoPubKey(1, pks)
-	})
+	require.NotNil(kmultisig.NewLegacyAminoPubKey(1, pks),
+		"Should support not unique public keys")
 }
 
 func TestAddress(t *testing.T) {

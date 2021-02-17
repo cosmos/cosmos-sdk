@@ -6,6 +6,17 @@ autonumber
 
 participant "msgServer (staking)"
 participant  "keeper (staking)" as keeper
+participant validator
+participant keeper.bankKeeper
+participant vestingAccount
+participant "func:SendCoins" as SendCoins
+participant ctx.EventManager
+participant "func:DelegateCoinsFromAccountToModule" as DelegateCoinsFromAccountToModule
+participant "func:DelegateCoins" as DelegateCoins
+participant trackDelegation
+
+database store
+
 "msgServer (staking)" -> keeper : Delegate(Context, DelegatorAddress, Amount, Validator, tokenSrc := Unbonded)
 
 alt exchange rate is invalid (tokens in validator is 0)
@@ -26,31 +37,51 @@ alt delegation exists, more tokens being added
 end
 
 alt delegating from an account (subtractTokens == true)
-    alt validator is currently bonded
-        keeper -> keeper : sendName := BondedPool
-    end
-    alt validator is currently bonded
-        keeper -> keeper : sendName := NotBondedPool
-    end
+    keeper -> keeper.bankKeeper : DelegateCoinsFromAccountToModule
+    keeper.bankKeeper -> DelegateCoinsFromAccountToModule **
+    DelegateCoinsFromAccountToModule -->  DelegateCoinsFromAccountToModule  : Check recipient has permission to stake
+    DelegateCoinsFromAccountToModule -> DelegateCoins **
 
-keeper -> keeper.bankKeeper : DelegateCoinsFromAccountToModule
-keeper.bankKeeper -> "func:DelegateCoinsFromAccountToModule" as DelegateCoinsFromAccountToModule **
-DelegateCoinsFromAccountToModule -->  DelegateCoinsFromAccountToModule  : Check recipient has permission to stake
-DelegateCoinsFromAccountToModule ->  "func:DelegateCoins" as DelegateCoins **
-DelegateCoins --> DelegateCoins : Check the delegator has enough balances of all tokens delegated
-DelegateCoins --> DelegateCoins : Track delegation (register that it exists to keep track of it)
-DelegateCoins --> store : Transfer tokens to staker.
-DelegateCoins --> DelegateCoinsFromAccountToModule : nil
-destroy DelegateCoins
-keeper.bankKeeper <-- DelegateCoinsFromAccountToModule: nil
-destroy DelegateCoinsFromAccountToModule
-keeper <-- keeper.bankKeeper : nil (success)
+    DelegateCoins --> DelegateCoins : Check the delegator has enough balances of all tokens delegated
+    DelegateCoins --> DelegateCoins : Track delegation (register that it exists to keep track of it)
+    alt validator is currently bonded
+        DelegateCoins --> store : Transfer tokens from delegator to BondedTokensPool.
+    end
+    alt validator is currently unbonded or unbonding
+        DelegateCoins --> store : Transfer tokens from delegator to NotBondedTokensPool.
+    end
+    DelegateCoins ->  trackDelegation ** :
+    alt delegator is a vesting account
+        trackDelegation -> vestingAccount : keep track of this delegation
+    end
+    DelegateCoins <-- trackDelegation  : nil
+    destroy trackDelegation
+    DelegateCoinsFromAccountToModule <-- DelegateCoins : nil
+    destroy DelegateCoins
+    keeper.bankKeeper <-- DelegateCoinsFromAccountToModule: nil
+    destroy DelegateCoinsFromAccountToModule
+    keeper <-- keeper.bankKeeper : nil (success)
+end
+
+alt moving tokens between pools (subtractTokens == false)
+    alt delegator tokens are not bonded but validator is bonded
+       keeper -> keeper.bankKeeper : SendCoinsFromModuleToModule(notBondedPool, bondedPool, coins)
+    end
+    alt delegator tokens are bonded but validator is not bonded
+       keeper -> keeper.bankKeeper : SendCoinsFromModuleToModule(bondedPool, notBondedPool, coins)
+    end
+    keeper.bankKeeper -> SendCoins
+    SendCoins -> ctx.EventManager : Emit TransferEvent(to, from, amount)
+    alt amount of spendable (balance - locked) coins too low
+        keeper.bankKeeper <-- SendCoins : error
+    end
+    SendCoins -> store : subtract balance from sender
+    SendCoins -> store : add balance to recipient
+end
+
 keeper -> validator : AddTokensFromDel
 validator -> validator : calculate number of shares to issue
 note left: If there are no shares (validator being created) then 1 token = 1 share.\nIf there are already shares, then\nadded shares =  (added tokens amount) * (current validator shares) / (current validator tokens)
-
-'TODO: Find right keyword.
-database store
 
 validator -> validator : add delegated tokens to validator
 keeper <-- validator : validator, addedShares
@@ -59,7 +90,6 @@ keeper -> keeper: calculate new validator's power
 note left : Number of tokens divided by PowerReduction (default: 1,000,000,000,000,000,000 = 10^18)
 keeper -> store : update validator's power in power index
 note left : the power index has entries shaped as 35 || power || address.\nThis makes the validators sorted by power, high to low.
-end
 
 keeper -> keeper : AfterDelegationModified hook
 note left: Calls initializeDelegation\nStore the previous period\nCalculate the number of tokens from shares\n(shares the delegator has) * (tokens in delegation object)/(total tokens delegated to the validator)\nStore delegation starting info.
@@ -69,8 +99,6 @@ note left: Calls initializeDelegation\nStore the previous period\nCalculate the 
 "msgServer (staking)" -> "msgServer (staking)" : Emit event: Delegation(ValidatorAddress)
 "msgServer (staking)" -> "msgServer (staking)" : Emit event: Message(DelegatorAddress)
 "msgServer (staking)" -> "msgServer (staking)" : telemetry(Amount, Denom)
-"handler (staking)" <-- "msgServer (staking)" : res := MsgDelegateResponse{}\n(empty struct)
-SDK <-- "handler (staking)": return (Context, res, err)
 
 @enduml
 

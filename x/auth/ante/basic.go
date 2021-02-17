@@ -95,13 +95,14 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 
 	// charge extra gas for authz/MsgGrantAuthorization msgs.
 	extraGasCost := sdk.Gas(0)
+	txLen := len(ctx.TxBytes())
 	for _, msg := range tx.GetMsgs() {
 		if msg.Type() == authz.TypeMsgGrantAuthorization {
-			extraGasCost += uint64(len(msg.GetSignBytes()))
+			extraGasCost += params.TxSizeCostPerByte * uint64(txLen/len(tx.GetMsgs()))
 		}
 	}
 
-	ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(ctx.TxBytes()))+extraGasCost, "txSize")
+	ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(txLen)+extraGasCost, "txSize")
 
 	// simulate gas cost for signatures in simulate mode
 	if simulate {

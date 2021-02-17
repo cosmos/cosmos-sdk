@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authz "github.com/cosmos/cosmos-sdk/x/authz/types"
 )
 
 // ValidateBasicDecorator will call tx.ValidateBasic and return any non-nil error.
@@ -92,7 +93,15 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	}
 	params := cgts.ak.GetParams(ctx)
 
-	ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(ctx.TxBytes())), "txSize")
+	// charge extra gas for authz/MsgGrantAuthorization msgs.
+	extraGasCost := sdk.Gas(0)
+	for _, msg := range tx.GetMsgs() {
+		if msg.Type() == authz.TypeMsgGrantAuthorization {
+			extraGasCost += uint64(len(msg.GetSignBytes()))
+		}
+	}
+
+	ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(ctx.TxBytes()))+extraGasCost, "txSize")
 
 	// simulate gas cost for signatures in simulate mode
 	if simulate {

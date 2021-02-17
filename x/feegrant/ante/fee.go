@@ -7,7 +7,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	authz "github.com/cosmos/cosmos-sdk/x/authz/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
@@ -68,15 +67,8 @@ func (d DeductGrantedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
 	}
 
+	// move on if there is no fee to deduct
 	if fee.IsZero() {
-		for _, msg := range tx.GetMsgs() {
-			if msg.Type() == authz.TypeMsgGrantAuthorization {
-				err = authante.DeductFees(d.bk, ctx, deductFeesFromAcc, fee) // TODO: charge fixed fee for authz grant authorization
-				if err != nil {
-					return ctx, err
-				}
-			}
-		}
 		return next(ctx, tx, simulate)
 	}
 

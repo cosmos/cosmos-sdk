@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
@@ -38,22 +37,7 @@ func ConvertTxToStdTx(codec *codec.LegacyAmino, tx signing.Tx) (legacytx.StdTx, 
 // different transaction formats. If ignoreSignatureError is true, copying will continue
 // tx even if the signature cannot be set in the target builder resulting in an unsigned tx.
 func CopyTx(tx signing.Tx, builder client.TxBuilder, ignoreSignatureError bool) error {
-	// Since the StdTxBuilder doesn't handle service Msgs, we convert all
-	// service Msgs into legacy Msgs.
-	msgs := []sdk.Msg{}
-	for _, msg := range tx.GetMsgs() {
-		if svcMsg, ok := msg.(sdk.ServiceMsg); ok {
-			sdkMsg, ok := svcMsg.Request.(sdk.Msg)
-			if !ok {
-				return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (sdk.Msg)(nil), svcMsg.Request)
-			}
-
-			msgs = append(msgs, sdkMsg)
-		} else {
-			msgs = append(msgs, msg)
-		}
-	}
-	err := builder.SetMsgs(msgs...)
+	err := builder.SetMsgs(tx.GetMsgs()...)
 	if err != nil {
 		return err
 	}

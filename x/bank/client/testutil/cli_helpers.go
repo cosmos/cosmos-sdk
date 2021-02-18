@@ -1,17 +1,20 @@
 package testutil
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -30,53 +33,54 @@ func QueryBalancesExec(clientCtx client.Context, address fmt.Stringer, extraArgs
 	return clitestutil.ExecTestCLICmd(clientCtx, bankcli.GetBalancesCmd(), args)
 }
 
-// newLegacyMsgSendProto is just for the purpose of testing legacy Proto Msg.
-// CLI now generate ADR-031 service Msgs by default.
-func newLegacyMsgSendProto() *cobra.Command {
-	cmd := &cobra.Command{
-		Use: "send [from_key_or_address] [to_address] [amount]",
-		Short: `Send funds from one account to another. Note, the'--from' flag is
-ignored as it is implied from [from_key_or_address].`,
-		Args: cobra.ExactArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.Flags().Set(flags.FlagFrom, args[0])
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-			toAddr, err := sdk.AccAddressFromBech32(args[1])
-			if err != nil {
-				return err
-			}
+// LegacyGRPCProtoMsgSend is a legacy method to broadcast a legacy proto MsgSend.
+//
+// Deprecated.
+func LegacyGRPCProtoMsgSend(clientCtx client.Context, keyName string, from, to sdk.Address, fee, amount []sdk.Coin, extraArgs ...string) (*txtypes.BroadcastTxResponse, error) {
+	// prepare txBuilder with msg
+	txBuilder := clientCtx.TxConfig.NewTxBuilder()
+	feeAmount := fee
+	gasLimit := testdata.NewTestGasLimit()
 
-			coins, err := sdk.ParseCoinsNormalized(args[2])
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
+	// This sets a legacy Proto MsgSend.
+	err := txBuilder.SetMsgs(&types.MsgSend{
+		FromAddress: from.String(),
+		ToAddress:   to.String(),
+		Amount:      amount,
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
+	txBuilder.SetFeeAmount(feeAmount)
+	txBuilder.SetGasLimit(gasLimit)
 
-	return cmd
-}
+	// setup txFactory
+	txFactory := tx.Factory{}.
+		WithChainID(clientCtx.ChainID).
+		WithKeybase(clientCtx.Keyring).
+		WithTxConfig(clientCtx.TxConfig).
+		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 
-// LegacyMsgSendProtoExec is a legacy method to test proto Msg services in CLI.
-// All CLI generate txs with Service Msgs right now, but we are keeping this
-// legacy function to make sure sending proto Msgs works in a backwards-compatible
-// way.
-// Deprecated.
-func LegacyMsgSendProtoExec(clientCtx client.Context, from, to, amount fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
-	args := []string{from.String(), to.String(), amount.String()}
-	args = append(args, extraArgs...)
+	// Sign Tx.
+	err = authclient.SignTx(txFactory, clientCtx, keyName, txBuilder, false, true)
+	if err != nil {
+		return nil, err
+	}
 
-	return clitestutil.ExecTestCLICmd(clientCtx, newLegacyMsgSendProto(), args)
+	txBytes, err := clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	if err != nil {
+		return nil, err
+	}
+
+	// Broadcast the tx via gRPC.
+	queryClient := txtypes.NewServiceClient(clientCtx)
+
+	return queryClient.BroadcastTx(
+		context.Background(),
+		&txtypes.BroadcastTxRequest{
+			Mode:    txtypes.BroadcastMode_BROADCAST_MODE_SYNC,
+			TxBytes: txBytes,
+		},
+	)
 }

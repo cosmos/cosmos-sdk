@@ -231,19 +231,14 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 
 	// Send coins, try both with legacy Msg and with Msg service.
 	// Legacy proto Msg.
-	legacyMsgOut, err := bankcli.LegacyMsgSendProtoExec(
-		val.ClientCtx,
+	legacyTxRes, err := bankcli.LegacyGRPCProtoMsgSend(
+		val.ClientCtx, val.Moniker,
 		val.Address,
 		account2.GetAddress(),
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))),
 		sdk.NewCoins(sendTokens),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 	)
 	s.Require().NoError(err)
-	var legacyMsgTxRes sdk.TxResponse
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(legacyMsgOut.Bytes(), &legacyMsgTxRes))
 
 	// Service Msg.
 	out, err := bankcli.MsgSendExec(
@@ -282,7 +277,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 		},
 		{
 			"happy case (legacy Msg)",
-			[]string{legacyMsgTxRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{legacyTxRes.TxResponse.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			"",
 		},

@@ -52,6 +52,10 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		Use:   "simd",
 		Short: "simulation app",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+			// set the default command outputs
+			cmd.SetOut(cmd.OutOrStdout())
+			cmd.SetErr(cmd.ErrOrStderr())
+
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
 			}
@@ -82,12 +86,6 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 	a := appCreator{encodingConfig}
 	server.AddCommands(rootCmd, simapp.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)
-
-	// set the default command output properly
-	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		cmd.SetOut(cmd.OutOrStdout())
-		cmd.SetErr(cmd.ErrOrStderr())
-	}
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(

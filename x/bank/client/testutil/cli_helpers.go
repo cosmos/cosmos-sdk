@@ -36,6 +36,7 @@ func QueryBalancesExec(clientCtx client.Context, address fmt.Stringer, extraArgs
 // LegacyGRPCProtoMsgSend is a legacy method to broadcast a legacy proto MsgSend.
 //
 // Deprecated.
+//nolint:interfacer
 func LegacyGRPCProtoMsgSend(clientCtx client.Context, keyName string, from, to sdk.Address, fee, amount []sdk.Coin, extraArgs ...string) (*txtypes.BroadcastTxResponse, error) {
 	// prepare txBuilder with msg
 	txBuilder := clientCtx.TxConfig.NewTxBuilder()

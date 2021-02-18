@@ -40,7 +40,7 @@ var (
 	}
 	msg0 = banktypes.NewMsgSend(addr1, addr2, types.NewCoins(types.NewInt64Coin("wack", 1)))
 	msg1 = sdk.ServiceMsg{
-		MethodName: "cosmos.bank.v1beta1.Msg/Send",
+		MethodName: "/cosmos.bank.v1beta1.Msg/Send",
 		Request:    banktypes.NewMsgSend(addr1, addr2, types.NewCoins(types.NewInt64Coin("wack", 2))),
 	}
 )
@@ -80,14 +80,15 @@ func (s *TestSuite) TestCopyTx() {
 	protoBuilder2 := s.protoCfg.NewTxBuilder()
 	err = tx2.CopyTx(aminoBuilder.GetTx(), protoBuilder2, false)
 	s.Require().NoError(err)
-	// Check sigs and signers
+	// Check sigs, signers and msgs.
 	sigsV2_1, err := protoBuilder.GetTx().GetSignaturesV2()
 	s.Require().NoError(err)
 	sigsV2_2, err := protoBuilder2.GetTx().GetSignaturesV2()
 	s.Require().NoError(err)
 	s.Require().Equal(sigsV2_1, sigsV2_2)
 	s.Require().Equal(protoBuilder.GetTx().GetSigners(), protoBuilder2.GetTx().GetSigners())
-	s.Require().Equal(protoBuilder.GetTx().GetPubKeys(), protoBuilder2.GetTx().GetPubKeys())
+	s.Require().Equal(protoBuilder.GetTx().GetMsgs()[0], protoBuilder2.GetTx().GetMsgs()[0])
+	s.Require().Equal(protoBuilder.GetTx().GetMsgs()[1].(sdk.ServiceMsg).Request, protoBuilder2.GetTx().GetMsgs()[1]) // We lose the "ServiceMsg" information
 
 	// amino -> proto -> amino
 	aminoBuilder = s.aminoCfg.NewTxBuilder()
@@ -98,14 +99,15 @@ func (s *TestSuite) TestCopyTx() {
 	aminoBuilder2 := s.aminoCfg.NewTxBuilder()
 	err = tx2.CopyTx(protoBuilder.GetTx(), aminoBuilder2, false)
 	s.Require().NoError(err)
-	// Check sigs and signers
+	// Check sigs, signers, and msgs
 	sigsV2_1, err = aminoBuilder.GetTx().GetSignaturesV2()
 	s.Require().NoError(err)
 	sigsV2_2, err = aminoBuilder2.GetTx().GetSignaturesV2()
 	s.Require().NoError(err)
 	s.Require().Equal(sigsV2_1, sigsV2_2)
 	s.Require().Equal(aminoBuilder.GetTx().GetSigners(), aminoBuilder2.GetTx().GetSigners())
-	s.Require().Equal(aminoBuilder.GetTx().GetPubKeys(), aminoBuilder2.GetTx().GetPubKeys())
+	s.Require().Equal(aminoBuilder.GetTx().GetMsgs()[0], aminoBuilder2.GetTx().GetMsgs()[0])
+	s.Require().Equal(aminoBuilder.GetTx().GetMsgs()[1], aminoBuilder2.GetTx().GetMsgs()[1]) // We lose the "ServiceMsg" information
 }
 
 func (s *TestSuite) TestConvertTxToStdTx() {

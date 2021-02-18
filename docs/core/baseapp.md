@@ -286,7 +286,7 @@ Before the first transaction of a given block is processed, a [volatile state](#
 1. The `AnteHandler` does **not** check that the transaction's `gas-prices` is sufficient. That is because the `min-gas-prices` value `gas-prices` is checked against is local to the node, and therefore what is enough for one full-node might not be for another. This means that the proposer can potentially include transactions for free, although they are not incentivised to do so, as they earn a bonus on the total fee of the block they propose.
 2. For each `Msg` in the transaction, route to the appropriate module's [`Msg` service](../building-modules/msg-services.md). Additional _stateful_ checks are performed, and the branched multistore held in `deliverState`'s `context` is updated by the module's `keeper`. If the `Msg` service returns successfully, the branched multistore held in `context` is written to `deliverState` `CacheMultiStore`.
 
-During additional fifth step outlined in (2), each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation:
+During the additional fifth step outlined in (2), each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/store/types/gas.go#L153-L162
 

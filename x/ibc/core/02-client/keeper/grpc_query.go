@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"sort"
@@ -159,7 +160,7 @@ func (q Keeper) ConsensusStates(c context.Context, req *types.QueryConsensusStat
 
 	pageRes, err := query.FilteredPaginate(store, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
 		// filter any metadata stored under consensus state key
-		if strings.Contains(string(key), "/") {
+		if bytes.Contains(key, []byte("/")) {
 			return false, nil
 		}
 

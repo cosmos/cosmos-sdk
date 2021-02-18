@@ -133,6 +133,9 @@ func (fss *StreamingService) openBeginBlockFile(req abci.RequestBeginBlock) (*os
 	fss.currentBlockNumber = req.GetHeader().Height
 	fss.currentTxIndex = 0
 	fileName := fmt.Sprintf("block-%d-begin", fss.currentBlockNumber)
+	if fss.filePrefix != "" {
+		fileName = fmt.Sprintf("%s-%s", fss.filePrefix, fileName)
+	}
 	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0600)
 }
 
@@ -172,6 +175,9 @@ func (fss *StreamingService) ListenDeliverTx(ctx sdk.Context, req abci.RequestDe
 
 func (fss *StreamingService) openDeliverTxFile() (*os.File, error) {
 	fileName := fmt.Sprintf("block-%d-tx-%d", fss.currentBlockNumber, fss.currentTxIndex)
+	if fss.filePrefix != "" {
+		fileName = fmt.Sprintf("%s-%s", fss.filePrefix, fileName)
+	}
 	fss.currentTxIndex++
 	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0600)
 }
@@ -212,9 +218,14 @@ func (fss *StreamingService) ListenEndBlock(ctx sdk.Context, req abci.RequestEnd
 
 func (fss *StreamingService) openEndBlockFile() (*os.File, error) {
 	fileName := fmt.Sprintf("block-%d-end", fss.currentBlockNumber)
+	if fss.filePrefix != "" {
+		fileName = fmt.Sprintf("%s-%s", fss.filePrefix, fileName)
+	}
 	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0600)
 }
 
+// Do we need this and an intermediate writer? We could just write directly to the buffer on calls to Write
+// But then we don't support a Stream interface, which could be needed for other types of streamers
 // Stream spins up a goroutine select loop which awaits length-prefixed binary encoded KV pairs and caches them in the order they were received
 func (fss *StreamingService) Stream(wg *sync.WaitGroup, quitChan <-chan struct{}) {
 	wg.Add(1)

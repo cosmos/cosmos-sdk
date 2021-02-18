@@ -384,8 +384,8 @@ using the provided `AppOptions` and TOML configuration fields.
 We will add a new method to the `BaseApp` to enable the registration of `StreamingService`s:
 
 ```go
-// RegisterStreamingService is used to register a streaming service with the BaseApp
-func (app *BaseApp) RegisterHooks(s StreamingService) {
+// SetStreamingService is used to register a streaming service with the BaseApp
+func (app *BaseApp) SetStreamingService(s StreamingService) {
 	// set the listeners for each StoreKey
 	for key, lis := range s.Listeners() {
 		app.cms.AddListeners(key, lis)

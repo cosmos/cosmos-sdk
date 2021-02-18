@@ -238,8 +238,8 @@ func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 	app.msgServiceRouter.SetInterfaceRegistry(registry)
 }
 
-// SetHooks is used to set a streaming service into the BaseApp hooks
-func (app *BaseApp) SetHooks(s sdk.StreamingService) {
+// SetStreamingService is used to set a streaming service into the BaseApp hooks and load the listeners into the multistore
+func (app *BaseApp) SetStreamingService(s sdk.StreamingService) {
 	// set the listeners for each StoreKey
 	for key, lis := range s.Listeners() {
 		app.cms.SetListeners(key, lis)

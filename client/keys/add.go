@@ -77,9 +77,6 @@ the flag --nosort is set.
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
 	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 
-	cmd.SetOut(cmd.OutOrStdout())
-	cmd.SetErr(cmd.ErrOrStderr())
-
 	return cmd
 }
 

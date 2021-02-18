@@ -647,7 +647,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 	tokens := sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(12)),
 	)
-	normalGeneratedTx, err := bankcli.ServiceMsgSendExec(
+	normalGeneratedTx, err := bankcli.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		grantee,

@@ -234,7 +234,7 @@ func New(t *testing.T, cfg Config) *Network {
 		logger := log.NewNopLogger()
 		if cfg.EnableLogging {
 			logger = log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-			logger, _ = tmflags.ParseLogLevel("info", logger, tmcfg.DefaultLogLevel())
+			logger, _ = tmflags.ParseLogLevel("info", logger, tmcfg.DefaultLogLevel)
 		}
 
 		ctx.Logger = logger

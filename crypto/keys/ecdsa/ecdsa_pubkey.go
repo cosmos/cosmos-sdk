@@ -64,7 +64,7 @@ type ecdsaPK struct {
 	address tmcrypto.Address
 }
 
-var _ cryptotypes.PubKey = &ecdsaPK{}
+var _ cryptotypes.PubKey = ecdsaPK{}
 
 // String implements PubKey interface
 func (pk ecdsaPK) Address() tmcrypto.Address {

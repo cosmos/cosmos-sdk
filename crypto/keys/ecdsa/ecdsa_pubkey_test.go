@@ -69,3 +69,7 @@ func (suite *EcdsaSuite) TestMarshalAmino() {
 	require.NoError(pk2.UnmarshalAmino(bz))
 	require.True(pk2.Equals(suite.pk))
 }
+
+func (suite *EcdsaSuite) TestMarshalProto() {
+
+}

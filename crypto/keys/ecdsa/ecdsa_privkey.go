@@ -1,9 +1,11 @@
 package ecdsa
 
 import (
+	"crypto"
 	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/sha256"
+	"fmt"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
@@ -43,7 +45,20 @@ func (sk ecdsaSK) Equals(other cryptotypes.LedgerPrivKey) bool {
 	if !ok {
 		return false
 	}
-	return sk.PrivateKey.Equal(sk2.PrivateKey)
+	// return EcEqual(&sk.PrivateKey, &sk2.PrivateKey)
+
+	return sk.PrivateKey.Equal(&sk2.PrivateKey)
+}
+
+// TODO: remove
+// See PublicKey.Equal for details on how Curve is compared.
+func EcEqual(priv *ecdsa.PrivateKey, x crypto.PrivateKey) bool {
+	xx, ok := x.(*ecdsa.PrivateKey)
+	if !ok {
+		fmt.Println("not *ecdsa.PrivateKey")
+		return false
+	}
+	return priv.PublicKey.Equal(&xx.PublicKey) && priv.D.Cmp(xx.D) == 0
 }
 
 // Type returns key type name. Implements sdk.PrivKey interface

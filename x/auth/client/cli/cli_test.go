@@ -239,6 +239,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 		sdk.NewCoins(sendTokens),
 	)
 	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Service Msg.
 	out, err := bankcli.MsgSendExec(
@@ -254,7 +255,6 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 	s.Require().NoError(err)
 	var txRes sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txRes))
-
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	testCases := []struct {

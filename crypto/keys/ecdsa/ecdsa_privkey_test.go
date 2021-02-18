@@ -4,7 +4,7 @@ func (suite *EcdsaSuite) TestSkString() {
 	suite.Require().Equal("secp256r1{-}", suite.sk.String())
 }
 
-func (suite *EcdsaSuite) xTestSkEqual() {
+func (suite *EcdsaSuite) TestSkEqual() {
 	require := suite.Require()
 
 	skOther, err := GenSecp256r1()

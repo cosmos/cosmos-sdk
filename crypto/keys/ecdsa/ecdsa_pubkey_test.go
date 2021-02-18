@@ -41,7 +41,7 @@ func (suite *EcdsaSuite) TestString() {
 	assert.EqualValues(suite.pk.Bytes(), bz)
 }
 
-func (suite *EcdsaSuite) TestEqual() {
+func (suite *EcdsaSuite) TestEquals() {
 	require := suite.Require()
 
 	skOther, err := GenSecp256r1()
@@ -50,7 +50,6 @@ func (suite *EcdsaSuite) TestEqual() {
 	pkOther2 := ecdsaPK{skOther.(ecdsaSK).PublicKey, nil}
 
 	require.False(suite.pk.Equals(pkOther))
-
 	require.True(pkOther.Equals(pkOther2))
 	require.True(pkOther2.Equals(pkOther), "Equals must be reflexive")
 }

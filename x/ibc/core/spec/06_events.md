@@ -32,6 +32,7 @@ callbacks to IBC applications.
 | update_client | client_id        | {clientId}        |
 | update_client | client_type      | {clientType}      |
 | update_client | consensus_height | {consensusHeight} |
+| update_cleint | header           | {header}          |
 | message       | action           | update_client     |
 | message       | module           | ibc_client        |
 

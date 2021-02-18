@@ -269,7 +269,7 @@ func (s *IntegrationTestSuite) TestQueryTxWithStdTx() {
 	s.testQueryTx(s.stdTxRes.Height, s.stdTxRes.TxHash, val0.Address.String())
 }
 
-func (s *IntegrationTestSuite) TestQueryTxWithServiceMessage() {
+func (s *IntegrationTestSuite) TestQueryTxWithServiceMsg() {
 	val := s.network.Validators[0]
 
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
@@ -278,7 +278,7 @@ func (s *IntegrationTestSuite) TestQueryTxWithServiceMessage() {
 	// Might need to wait a block to refresh sequences from previous setups.
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	out, err := bankcli.ServiceMsgSendExec(
+	out, err := bankcli.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		addr,

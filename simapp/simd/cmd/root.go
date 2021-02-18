@@ -83,6 +83,12 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	a := appCreator{encodingConfig}
 	server.AddCommands(rootCmd, simapp.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)
 
+	// set the default command output properly
+	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		cmd.SetOut(cmd.OutOrStdout())
+		cmd.SetErr(cmd.ErrOrStderr())
+	}
+
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),

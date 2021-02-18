@@ -64,9 +64,7 @@ func (suite *GenTxTestSuite) setAccountBalance(addr sdk.AccAddress, amount int64
 	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 
-	err := suite.app.BankKeeper.SetBalances(
-		suite.ctx, addr, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 25)},
-	)
+	err := simapp.FundAccount(suite.app, suite.ctx, addr, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 25)})
 	suite.Require().NoError(err)
 
 	bankGenesisState := suite.app.BankKeeper.ExportGenesis(suite.ctx)

@@ -53,7 +53,7 @@ func (msg ServiceMsg) GetSignBytes() []byte {
 	// and call GetSignBytes on the `Request`.
 	msgRequest, ok := msg.Request.(Msg)
 	if !ok {
-		panic(fmt.Errorf("cannot convert ServiceMsg request to sdk.Msg, got %t", msgRequest))
+		panic(fmt.Errorf("cannot convert ServiceMsg request to sdk.Msg, got %T", msgRequest))
 	}
 
 	return msgRequest.GetSignBytes()

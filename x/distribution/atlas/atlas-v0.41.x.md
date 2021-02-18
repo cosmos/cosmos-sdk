@@ -149,72 +149,16 @@ The distribution module provides interaction via command line, REST and gRPC.
 
 #### Queries
 
-```sh
-app q distribution
-Querying commands for the distribution module
-
-Usage:
-  app query distribution [flags]
-  app query distribution [command]
-
-Available Commands:
-  commission                    Query distribution validator commission
-  community-pool                Query the amount of coins in the community pool
-  params                        Query distribution params
-  rewards                       Query all distribution delegator rewards or rewards from a particular validator
-  slashes                       Query distribution validator slashes
-  validator-outstanding-rewards Query distribution outstanding (un-withdrawn) rewards for a validator and all their delegations
-
-Flags:
-  -h, --help   help for distribution
-
-Global Flags:
-      --chain-id string     The network chain ID
-      --home string         directory for config and data (default "/Users/markobaricevic/.simapp")
-      --log_format string   The logging format (json|plain) (default "plain")
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
-      --trace               print out full stack trace on errors
-
-Use "app query distribution [command] --help" for more information about a command.
-```
-
 #### Transactions
-
-```sh
-app tx distribution
-Distribution transactions subcommands
-
-Usage:
-  app tx distribution [flags]
-  app tx distribution [command]
-
-Available Commands:
-  fund-community-pool  Funds the community pool with the specified amount
-  set-withdraw-addr    change the default withdraw address for rewards associated with an address
-  withdraw-all-rewards withdraw all delegations rewards for a delegator
-  withdraw-rewards     Withdraw rewards from a given delegation address, and optionally withdraw validator commission if the delegation address given is a validator operator
-
-Flags:
-  -h, --help   help for distribution
-
-Global Flags:
-      --chain-id string     The network chain ID
-      --home string         directory for config and data (default "/Users/markobaricevic/.simapp")
-      --log_format string   The logging format (json|plain) (default "plain")
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
-      --trace               print out full stack trace on errors
-
-Use "app tx distribution [command] --help" for more information about a command.
-```
 
 
 ### REST
 
-Evidence REST API supports only queries of evidence. To submit evidence please use gRPC or the cli.
+<!-- todo: -->
 
 ### gRPC
 
-Evidence supports both querying and submitting transactions via gRPC
+Distribution supports both querying and submitting transactions via gRPC
 
 #### Query
 

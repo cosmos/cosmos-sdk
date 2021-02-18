@@ -26,9 +26,10 @@ func Hash(typ string, key []byte) []byte {
 
 	hasher.Reset()
 	_, err := hasher.Write(th)
-	errors.Panic(err)
+	// the error always nil, it's here only to satisfy the io.Writer interface
+	errors.AssertNil(err)
 	_, err = hasher.Write(key)
-	errors.Panic(err)
+	errors.AssertNil(err)
 	return hasher.Sum(nil)
 }
 

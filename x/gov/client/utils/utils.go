@@ -1,6 +1,10 @@
 package utils
 
-import "github.com/cosmos/cosmos-sdk/x/gov/types"
+import (
+	"strings"
+
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
+)
 
 // NormalizeVoteOption - normalize user specified vote option
 func NormalizeVoteOption(option string) string {
@@ -20,6 +24,20 @@ func NormalizeVoteOption(option string) string {
 	default:
 		return option
 	}
+}
+
+// NormalizeWeightedVoteOptions - normalize vote options param string
+func NormalizeWeightedVoteOptions(options string) string {
+	newOptions := []string{}
+	for _, option := range strings.Split(options, ",") {
+		fields := strings.Split(option, "=")
+		fields[0] = NormalizeVoteOption(fields[0])
+		if len(fields) < 2 {
+			fields = append(fields, "1")
+		}
+		newOptions = append(newOptions, strings.Join(fields, "="))
+	}
+	return strings.Join(newOptions, ",")
 }
 
 //NormalizeProposalType - normalize user specified proposal type

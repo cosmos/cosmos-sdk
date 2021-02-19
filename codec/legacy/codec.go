@@ -3,6 +3,7 @@ package legacy
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -26,6 +27,12 @@ func PrivKeyFromBytes(privKeyBytes []byte) (privKey cryptotypes.PrivKey, err err
 
 // PubKeyFromBytes unmarshals public key bytes and returns a PubKey
 func PubKeyFromBytes(pubKeyBytes []byte) (pubKey cryptotypes.PubKey, err error) {
+	err = Cdc.UnmarshalBinaryBare(pubKeyBytes, &pubKey)
+	return
+}
+
+// LegacyAminoPubKeyFromBytes unmarshals public key bytes and returns a PubKey
+func LegacyAminoPubKeyFromBytes(pubKeyBytes []byte) (pubKey multisig.LegacyAminoPubKey, err error) {
 	err = Cdc.UnmarshalBinaryBare(pubKeyBytes, &pubKey)
 	return
 }

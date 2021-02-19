@@ -110,7 +110,7 @@ type Importer interface {
 	ImportPrivKey(uid, armor, passphrase string) error
 
 	// ImportPubKey imports ASCII armored public keys.
-	ImportPubKey(uid string, armor string) error
+	ImportPubKey(uid string, armor string, keyType KeyType) error
 }
 
 // Exporter is implemented by key stores that support export of public and private keys.
@@ -295,7 +295,7 @@ func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
 	return nil
 }
 
-func (ks keystore) ImportPubKey(uid string, armor string) error {
+func (ks keystore) ImportPubKey(uid string, armor string, keyType KeyType) error {
 	if _, err := ks.Key(uid); err == nil {
 		return fmt.Errorf("cannot overwrite key: %s", uid)
 	}
@@ -305,10 +305,19 @@ func (ks keystore) ImportPubKey(uid string, armor string) error {
 		return err
 	}
 
-	pubKey, err := legacy.PubKeyFromBytes(pubBytes)
-	if err != nil {
-		return err
+	fmt.Printf("this is keyType %v", keyType)
+	if keyType == TypeMulti {
+		fmt.Printf("this is in if  %v", keyType)
+
+		pubKey, err := legacy.LegacyAminoPubKeyFromBytes(pubBytes)
+		_, err = ks.writeMultisigKey(uid, &pubKey)
+		if err != nil {
+			return err
+		}
+		return nil
 	}
+	fmt.Printf("this is uid %s", uid)
+	pubKey, err := legacy.PubKeyFromBytes(pubBytes)
 
 	_, err = ks.writeOfflineKey(uid, pubKey, hd.PubKeyType(algo))
 	if err != nil {

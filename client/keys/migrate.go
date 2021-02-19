@@ -112,7 +112,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 				return err
 			}
 
-			if err := migrator.ImportPubKey(keyName, pubkeyArmor); err != nil {
+			if err := migrator.ImportPubKey(keyName, pubkeyArmor, keyType); err != nil {
 				return err
 			}
 

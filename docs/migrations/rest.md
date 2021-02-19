@@ -1,5 +1,5 @@
 <!--
-order: 1
+order: 3
 -->
 
 # REST Endpoints Migration
@@ -32,9 +32,9 @@ Some important information concerning all legacy REST endpoints:
 
 ## Migrating to New REST Endpoints
 
-Thanks to the Protocol Buffers migration in v0.40 we are able to take advantage of a vast number of gRPC tools and solutions. For most of the legacy REST endpoints, Cosmos SDK v0.40 provides new REST endpoints generated from [gRPC `Query` services](../building-modules/query-services.md) using [grpc-gateway](https://grpc-ecosystem.github.io/grpc-gateway/). We usually call them _gGPC-gateway REST endpoints_.
+Thanks to the Protocol Buffers migration in v0.40, we are able to take advantage of a vast number of gRPC tools and solutions. For most of the legacy REST endpoints, Cosmos SDK v0.40 provides new REST endpoints generated from [gRPC `Query` services](../building-modules/query-services.md) using [grpc-gateway](https://grpc-ecosystem.github.io/grpc-gateway/). We usually call them _gGPC-gateway REST endpoints_.
 
-Some modules expose legacy `POST` endpoints to generate unsigned transactions for their `Msg`s. These `POST` endpoints have been removed. We recommend to use [service `Msg`s](../building-modules/msg-services.md) directly, and use Protobuf to do client-side transaction generation. A guide can be found [here (TODO)](https://github.com/cosmos/cosmos-sdk/issues/7657).
+Some modules expose legacy `POST` endpoints to generate unsigned transactions for their `Msg`s. These `POST` endpoints have been removed. We recommend to use [service `Msg`s](../building-modules/msg-services.md) directly, and use Protobuf to do client-side transaction generation. A guide can be found [here](../run-node/txs.md).
 
 | Legacy REST Endpoint                                                            | Description                                                         | New gGPC-gateway REST Endpoint                                                                        |
 | ------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
@@ -98,4 +98,4 @@ Some modules expose legacy `POST` endpoints to generate unsigned transactions fo
 
 ## Migrating to gRPC
 
-Instead of hitting REST endpoints as described in the previous paragraph, the SDK also exposes a gRPC server. Any client can use gRPC instead of REST to interact with the node. An overview of different ways to communicate with a node can be found [here (TODO)](https://github.com/cosmos/cosmos-sdk/issues/7657), and a concrete tutorial for setting up a gRPC client [here (TODO)](https://github.com/cosmos/cosmos-sdk/issues/7657).
+Instead of hitting REST endpoints as described in the previous paragraph, the SDK also exposes a gRPC server. Any client can use gRPC instead of REST to interact with the node. An overview of different ways to communicate with a node can be found [here](../core/grpc_rest.md), and a concrete tutorial for setting up a gRPC client [here](../run-node/txs.md#programmatically-with-go).

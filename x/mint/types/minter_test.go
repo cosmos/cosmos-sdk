@@ -89,6 +89,7 @@ func TestBlockProvision(t *testing.T) {
 // using sdk.Dec operations: (current implementation)
 // BenchmarkBlockProvision-4 3000000 429 ns/op
 func BenchmarkBlockProvision(b *testing.B) {
+	b.ReportAllocs()
 	minter := InitialMinter(sdk.NewDecWithPrec(1, 1))
 	params := DefaultParams()
 
@@ -105,6 +106,7 @@ func BenchmarkBlockProvision(b *testing.B) {
 // Next inflation benchmarking
 // BenchmarkNextInflation-4 1000000 1828 ns/op
 func BenchmarkNextInflation(b *testing.B) {
+	b.ReportAllocs()
 	minter := InitialMinter(sdk.NewDecWithPrec(1, 1))
 	params := DefaultParams()
 	bondedRatio := sdk.NewDecWithPrec(1, 1)
@@ -119,6 +121,7 @@ func BenchmarkNextInflation(b *testing.B) {
 // Next annual provisions benchmarking
 // BenchmarkNextAnnualProvisions-4 5000000 251 ns/op
 func BenchmarkNextAnnualProvisions(b *testing.B) {
+	b.ReportAllocs()
 	minter := InitialMinter(sdk.NewDecWithPrec(1, 1))
 	params := DefaultParams()
 	totalSupply := sdk.NewInt(100000000000000)

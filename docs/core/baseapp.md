@@ -126,15 +126,16 @@ is the canonical state of the application and the volatile states, `checkState` 
 are used to handle state transitions in-between the main state made during [`Commit`](#commit).
 
 Internally, there is only a single `CommitMultiStore` which we refer to as the main or root state.
-From this root state, we derive two volatile state through a mechanism called cache-wrapping. The
-types can be illustrated as follows:
+From this root state, we derive two volatile state through a mechanism called _store branching_ (performed by `CacheWrap` function). 
+The types can be illustrated as follows:
 
 ![Types](./baseapp_state_types.png)
 
 ### InitChain State Updates
 
-During `InitChain`, the two volatile states, `checkState` and `deliverState` are set by cache-wrapping
-the root `CommitMultiStore`. Any subsequent reads and writes happen on cached versions of the `CommitMultiStore`.
+During `InitChain`, the two volatile states, `checkState` and `deliverState` are set by branching
+the root `CommitMultiStore`. Any subsequent reads and writes happen on branched versions of the `CommitMultiStore`.
+To avoid unnecessary roundtrip to the main state, all reads to the branched store are cached.
 
 ![InitChain](./baseapp_state-initchain.png)
 
@@ -142,8 +143,8 @@ the root `CommitMultiStore`. Any subsequent reads and writes happen on cached ve
 
 During `CheckTx`, the `checkState`, which is based off of the last committed state from the root
 store, is used for any reads and writes. Here we only execute the `AnteHandler` and verify a service router
-exists for every message in the transaction. Note, when we execute the `AnteHandler`, we cache-wrap
-the already cache-wrapped `checkState`. This has the side effect that if the `AnteHandler` fails,
+exists for every message in the transaction. Note, when we execute the `AnteHandler`, we branch
+the already branched `checkState`. This has the side effect that if the `AnteHandler` fails,
 the state transitions won't be reflected in the `checkState` -- i.e. `checkState` is only updated on
 success.
 
@@ -152,7 +153,7 @@ success.
 ### BeginBlock State Updates
 
 During `BeginBlock`, the `deliverState` is set for use in subsequent `DeliverTx` ABCI messages. The
-`deliverState` is based off of the last committed state from the root store and is cache-wrapped.
+`deliverState` is based off of the last committed state from the root store and is branched.
 Note, the `deliverState` is set to `nil` on [`Commit`](#commit).
 
 ![BeginBlock](./baseapp_state-begin_block.png)
@@ -161,7 +162,7 @@ Note, the `deliverState` is set to `nil` on [`Commit`](#commit).
 
 The state flow for `DeliverTx` is nearly identical to `CheckTx` except state transitions occur on
 the `deliverState` and messages in a transaction are executed. Similarly to `CheckTx`, state transitions
-occur on a doubly cache-wrapped state -- `deliverState`. Successful message execution results in
+occur on a doubly branched state -- `deliverState`. Successful message execution results in
 writes being committed to `deliverState`. Note, if message execution fails, state transitions from
 the AnteHandler are persisted.
 
@@ -283,9 +284,9 @@ Before the first transaction of a given block is processed, a [volatile state](#
 `DeliverTx` performs the **exact same steps as `CheckTx`**, with a little caveat at step 3 and the addition of a fifth step:
 
 1. The `AnteHandler` does **not** check that the transaction's `gas-prices` is sufficient. That is because the `min-gas-prices` value `gas-prices` is checked against is local to the node, and therefore what is enough for one full-node might not be for another. This means that the proposer can potentially include transactions for free, although they are not incentivised to do so, as they earn a bonus on the total fee of the block they propose.
-2. For each `Msg` in the transaction, route to the appropriate module's [`Msg` service](../building-modules/msg-services.md). Additional _stateful_ checks are performed, and the cache-wrapped multistore held in `deliverState`'s `context` is updated by the module's `keeper`. If the `Msg` service returns successfully, the cache-wrapped multistore held in `context` is written to `deliverState` `CacheMultiStore`.
+2. For each `Msg` in the transaction, route to the appropriate module's [`Msg` service](../building-modules/msg-services.md). Additional _stateful_ checks are performed, and the branched multistore held in `deliverState`'s `context` is updated by the module's `keeper`. If the `Msg` service returns successfully, the branched multistore held in `context` is written to `deliverState` `CacheMultiStore`.
 
-During step 5., each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation:
+During the additional fifth step outlined in (2), each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/store/types/gas.go#L153-L162
 
@@ -308,17 +309,17 @@ At any point, if `GasConsumed > GasWanted`, the function returns with `Code != 0
 
 `RunTx` is called from `CheckTx`/`DeliverTx` to handle the transaction, with `runTxModeCheck` or `runTxModeDeliver` as parameter to differentiate between the two modes of execution. Note that when `RunTx` receives a transaction, it has already been decoded.
 
-The first thing `RunTx` does upon being called is to retrieve the `context`'s `CacheMultiStore` by calling the `getContextForTx()` function with the appropriate mode (either `runTxModeCheck` or `runTxModeDeliver`). This `CacheMultiStore` is a cached version of the main store instantiated during `BeginBlock` for `DeliverTx` and during the `Commit` of the previous block for `CheckTx`. After that, two `defer func()` are called for [`gas`](../basics/gas-fees.md) management. They are executed when `runTx` returns and make sure `gas` is actually consumed, and will throw errors, if any.
+The first thing `RunTx` does upon being called is to retrieve the `context`'s `CacheMultiStore` by calling the `getContextForTx()` function with the appropriate mode (either `runTxModeCheck` or `runTxModeDeliver`). This `CacheMultiStore` is a branch of the main store, with cache functionality (for query requests), instantiated during `BeginBlock` for `DeliverTx` and during the `Commit` of the previous block for `CheckTx`. After that, two `defer func()` are called for [`gas`](../basics/gas-fees.md) management. They are executed when `runTx` returns and make sure `gas` is actually consumed, and will throw errors, if any.
 
 After that, `RunTx()` calls `ValidateBasic()` on each `Msg`in the `Tx`, which runs preliminary _stateless_ validity checks. If any `Msg` fails to pass `ValidateBasic()`, `RunTx()` returns with an error.
 
-Then, the [`anteHandler`](#antehandler) of the application is run (if it exists). In preparation of this step, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are cached-wrapped using the `cacheTxContext()` function.
+Then, the [`anteHandler`](#antehandler) of the application is run (if it exists). In preparation of this step, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are branched using the `cacheTxContext()` function.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/baseapp/baseapp.go#L623-L630
 
 This allows `RunTx` not to commit the changes made to the state during the execution of `anteHandler` if it ends up failing. It also prevents the module implementing the `anteHandler` from writing to state, which is an important part of the [object-capabilities](./ocap.md) of the Cosmos SDK.
 
-Finally, the [`RunMsgs()`](#runmsgs) function is called to process the `Msg`s in the `Tx`. In preparation of this step, just like with the `anteHandler`, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are cached-wrapped using the `cacheTxContext()` function.
+Finally, the [`RunMsgs()`](#runmsgs) function is called to process the `Msg`s in the `Tx`. In preparation of this step, just like with the `anteHandler`, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are branched using the `cacheTxContext()` function.
 
 ### AnteHandler
 
@@ -373,7 +374,7 @@ The [`EndBlock` ABCI message](#https://tendermint.com/docs/app-dev/abci-spec.htm
 
 The [`Commit` ABCI message](https://tendermint.com/docs/app-dev/abci-spec.html#commit) is sent from the underlying Tendermint engine after the full-node has received _precommits_ from 2/3+ of validators (weighted by voting power). On the `BaseApp` end, the `Commit(res abci.ResponseCommit)` function is implemented to commit all the valid state transitions that occured during `BeginBlock`, `DeliverTx` and `EndBlock` and to reset state for the next block.
 
-To commit state-transitions, the `Commit` function calls the `Write()` function on `deliverState.ms`, where `deliverState.ms` is a cached multistore of the main store `app.cms`. Then, the `Commit` function sets `checkState` to the latest header (obtbained from `deliverState.ctx.BlockHeader`) and `deliverState` to `nil`.
+To commit state-transitions, the `Commit` function calls the `Write()` function on `deliverState.ms`, where `deliverState.ms` is a branched multistore of the main store `app.cms`. Then, the `Commit` function sets `checkState` to the latest header (obtbained from `deliverState.ctx.BlockHeader`) and `deliverState` to `nil`.
 
 Finally, `Commit` returns the hash of the commitment of `app.cms` back to the underlying consensus engine. This hash is used as a reference in the header of the next block.
 
@@ -390,7 +391,7 @@ Each Tendermint `query` comes with a `path`, which is a `string` which denotes w
 - Application-related queries like querying the application's version, which are served via the `handleQueryApp` method.
 - Direct queries to the multistore, which are served by the `handlerQueryStore` method. These direct queryeis are different from custom queries which go through `app.queryRouter`, and are mainly used by third-party service provider like block explorers.
 - P2P queries, which are served via the `handleQueryP2P` method. These queries return either `app.addrPeerFilter` or `app.ipPeerFilter` that contain the list of peers filtered by address or IP respectively. These lists are first initialized via `options` in `BaseApp`'s [constructor](#constructor).
-- Custom queries, which encompass legacy queries (before the introduction of gRPC queries), are served via the `handleQueryCustom` method. The `handleQueryCustom` cache-wraps the multistore before using the `queryRoute` obtained from `app.queryRouter` to map the query to the appropriate module's [legacy `querier`](../building-modules/query-services.md#legacy-queriers).
+- Custom queries, which encompass legacy queries (before the introduction of gRPC queries), are served via the `handleQueryCustom` method. The `handleQueryCustom` branches the multistore before using the `queryRoute` obtained from `app.queryRouter` to map the query to the appropriate module's [legacy `querier`](../building-modules/query-services.md#legacy-queriers).
 
 ## Next {hide}
 

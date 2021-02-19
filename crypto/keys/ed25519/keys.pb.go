@@ -24,11 +24,11 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// PubKey defines a ed25519 public key
-// Key is the compressed form of the pubkey. The first byte depends is a 0x02 byte
-// if the y-coordinate is the lexicographically largest of the two associated with
-// the x-coordinate. Otherwise the first byte is a 0x03.
-// This prefix is followed with the x-coordinate.
+// PubKey is an ed25519 public key for handling Tendermint keys in SDK.
+// It's needed for Any serialization and SDK compatibility.
+// It must not be used in a non Tendermint key context because it doesn't implement
+// ADR-28. Nevertheless, you will like to use ed25519 in app user level
+// then you must create a new proto message and follow ADR-28 for Address construction.
 type PubKey struct {
 	Key crypto_ed25519.PublicKey `protobuf:"bytes,1,opt,name=key,proto3,casttype=crypto/ed25519.PublicKey" json:"key,omitempty"`
 }
@@ -72,7 +72,8 @@ func (m *PubKey) GetKey() crypto_ed25519.PublicKey {
 	return nil
 }
 
-// PrivKey defines a ed25519 private key.
+// Deprecated: PrivKey defines a ed25519 private key.
+// NOTE: ed25519 keys must not be used in SDK apps except in a tendermint validator context.
 type PrivKey struct {
 	Key crypto_ed25519.PrivateKey `protobuf:"bytes,1,opt,name=key,proto3,casttype=crypto/ed25519.PrivateKey" json:"key,omitempty"`
 }
@@ -314,10 +315,7 @@ func (m *PubKey) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthKeys
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthKeys
 			}
 			if (iNdEx + skippy) > l {
@@ -401,10 +399,7 @@ func (m *PrivKey) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthKeys
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthKeys
 			}
 			if (iNdEx + skippy) > l {

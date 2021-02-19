@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/subtle"
 	"fmt"
-	"math/big"
 
 	"github.com/tendermint/tendermint/crypto"
 	tmsr25519 "github.com/tendermint/tendermint/crypto/sr25519"

@@ -108,8 +108,8 @@ Examples:
 			}
 
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-			authzMsgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = authzMsgClient.GrantAuthorization(context.Background(), msg)
+			msgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = msgClient.GrantAuthorization(context.Background(), msg)
 			if err != nil {
 				return err
 			}
@@ -153,8 +153,8 @@ Example:
 			msg := types.NewMsgRevokeAuthorization(granter, grantee, msgAuthorized)
 
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-			authzMsgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = authzMsgClient.RevokeAuthorization(context.Background(), &msg)
+			msgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = msgClient.RevokeAuthorization(context.Background(), &msg)
 			if err != nil {
 				return err
 			}
@@ -206,8 +206,8 @@ Example:
 
 			msg := types.NewMsgExecAuthorized(grantee, serviceMsgs)
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-			authzMsgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = authzMsgClient.ExecAuthorized(context.Background(), &msg)
+			msgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = msgClient.ExecAuthorized(context.Background(), &msg)
 			if err != nil {
 				return err
 			}

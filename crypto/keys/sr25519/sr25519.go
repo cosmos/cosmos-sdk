@@ -9,7 +9,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	tmsr25519 "github.com/tendermint/tendermint/crypto/sr25519"
 
-	// nolint: staticcheck // necessary for Bitcoin address format
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
@@ -78,8 +77,6 @@ func (privKey *PrivKey) UnmarshalAminoJSON(bz []byte) error {
 func GenPrivKey() *PrivKey {
 	return &PrivKey{Key: tmsr25519.GenPrivKey().Bytes()}
 }
-
-var one = new(big.Int).SetInt64(1)
 
 // GenPrivKeyFromSecret hashes the secret with SHA2, and uses
 // that 32 byte output to create the private key.

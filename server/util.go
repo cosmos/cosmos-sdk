@@ -236,7 +236,7 @@ func interceptConfigs(rootViper *viper.Viper) (*tmcfg.Config, error) {
 
 	rootViper.SetConfigType("toml")
 	rootViper.SetConfigName("app")
-	rootViper.AddConfigPath(appCfgFilePath)
+	rootViper.AddConfigPath(configPath)
 
 	if err := rootViper.MergeInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to read in %s: %w", appCfgFilePath, err)

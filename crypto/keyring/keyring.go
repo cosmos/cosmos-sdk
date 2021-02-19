@@ -307,6 +307,10 @@ func (ks keystore) ImportPubKey(uid string, armor string, keyType KeyType) error
 
 	if keyType == TypeMulti {
 		pubKey, err := legacy.LegacyAminoPubKeyFromBytes(pubBytes)
+		if err != nil {
+			return err
+		}
+
 		_, err = ks.writeMultisigKey(uid, &pubKey)
 		if err != nil {
 			return err
@@ -314,6 +318,9 @@ func (ks keystore) ImportPubKey(uid string, armor string, keyType KeyType) error
 		return nil
 	}
 	pubKey, err := legacy.PubKeyFromBytes(pubBytes)
+	if err != nil {
+		return err
+	}
 
 	_, err = ks.writeOfflineKey(uid, pubKey, hd.PubKeyType(algo))
 	if err != nil {

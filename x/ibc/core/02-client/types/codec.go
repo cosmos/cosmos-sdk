@@ -3,12 +3,22 @@ package types
 import (
 	proto "github.com/gogo/protobuf/proto"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
+)
+
+var (
+	// SubModuleCdc references the global 02-client sub module codec. Note, the codec
+	// should ONLY be used in certain instances of tests and for JSON encoding.
+	//
+	// The actual codec used for serialization should be provided to 02-client and
+	// defined at the application level.
+	SubModuleCdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 )
 
 // RegisterInterfaces registers the client interfaces to protobuf Any.

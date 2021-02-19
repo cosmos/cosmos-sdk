@@ -1,0 +1,17 @@
+syntax = "proto3";
+package straightedge.crypto;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/heystraightedge/straightedge/crypto/keys/sr25519";
+
+// PubKey defines a sr25519 public key
+message PubKey {
+    option (gogoproto.goproto_stringer) = false;
+    bytes key = 1;
+}
+
+// PrivKey defines a sr25519 private key.
+message PrivKey {
+    bytes key = 1;
+}

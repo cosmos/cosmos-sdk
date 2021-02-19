@@ -228,7 +228,7 @@ func interceptConfigs(rootViper *viper.Viper) (*tmcfg.Config, error) {
 	if _, err := os.Stat(appCfgFilePath); os.IsNotExist(err) {
 		appConf, err := config.ParseConfig(rootViper)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse app.toml: %w", err)
+			return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
 		}
 
 		config.WriteConfigFile(appCfgFilePath, appConf)
@@ -239,7 +239,7 @@ func interceptConfigs(rootViper *viper.Viper) (*tmcfg.Config, error) {
 	rootViper.AddConfigPath(configPath)
 
 	if err := rootViper.MergeInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to read in %s: %w", appCfgFilePath, err)
+		return nil, fmt.Errorf("failed to merge configuration: %w", err)
 	}
 
 	return conf, nil

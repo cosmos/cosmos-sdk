@@ -1,9 +1,9 @@
 syntax = "proto3";
-package straightedge.crypto;
+package cosmos.crypto.sr25519;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/heystraightedge/straightedge/crypto/keys/sr25519";
+option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/sr25519";
 
 // PubKey defines a sr25519 public key
 message PubKey {

@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 )
@@ -161,57 +160,6 @@ func TestInterceptConfigsPreRunHandlerReadsAppToml(t *testing.T) {
 	if testHaltTime != serverCtx.Viper.GetInt("halt-time") {
 		t.Error("Halt time was not set from app.toml")
 	}
-}
-
-// The goal of this test is to make sure that app.toml and config.toml
-// are separate files and that mixing values does not work
-func TestInterceptConfigsPreRunHandlerDoesNotMixConfigFiles(t *testing.T) {
-	testDbBackend := "awesome_test_db"
-	testHaltTime := 1337
-	testHaltHeight := 2001
-
-	tempDir := t.TempDir()
-	err := os.Mkdir(path.Join(tempDir, "config"), os.ModePerm)
-	require.NoError(t, err)
-
-	configTomlPath := path.Join(tempDir, "config", "config.toml")
-	writer, err := os.Create(configTomlPath)
-	require.NoError(t, err)
-
-	// Put a value in config.toml that should be in app.toml
-	_, err = writer.WriteString(fmt.Sprintf("halt-time = %d\ndb_backend = \"%s\"\n", testHaltTime, testDbBackend))
-	require.NoError(t, err)
-
-	require.NoError(t, writer.Close())
-
-	appTomlPath := path.Join(tempDir, "config", "app.toml")
-	writer, err = os.Create(appTomlPath)
-	require.NoError(t, err)
-
-	// Put a different value in app.toml
-	_, err = writer.WriteString(fmt.Sprintf("halt-height = %d\n", testHaltHeight))
-	require.NoError(t, err)
-
-	require.NoError(t, writer.Close())
-
-	cmd := StartCmd(nil, tempDir)
-	cmd.PreRunE = preRunETestImpl
-
-	serverCtx := &Context{}
-	ctx := context.WithValue(context.Background(), ServerContextKey, serverCtx)
-
-	require.Equal(t, CancelledInPreRun, cmd.ExecuteContext(ctx))
-
-	// check that the intended value from config.toml is used
-	require.Equal(t, testDbBackend, serverCtx.Config.DBBackend, "DBPath was not set from config.toml")
-
-	// The value from app.toml should be used for this
-	require.Equal(t, testHaltHeight, serverCtx.Viper.GetInt("halt-height"), "Halt height is not using provided value")
-
-	// The value from config.toml should not be used, default is used instead
-	// if 0 != serverCtx.Viper.GetInt("halt-time") {
-	// 	t.Error("Halt time is not using default")
-	// }
 }
 
 func TestInterceptConfigsPreRunHandlerReadsFlags(t *testing.T) {

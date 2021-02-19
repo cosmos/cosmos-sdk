@@ -230,23 +230,19 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
 
 	// Send coins, try both with legacy Msg and with Msg service.
-	// Legacy Msg.
-	legacyMsgOut, err := bankcli.MsgSendExec(
-		val.ClientCtx,
+	// Legacy proto Msg.
+	legacyTxRes, err := bankcli.LegacyGRPCProtoMsgSend(
+		val.ClientCtx, val.Moniker,
 		val.Address,
 		account2.GetAddress(),
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))),
 		sdk.NewCoins(sendTokens),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 	)
 	s.Require().NoError(err)
-	var legacyMsgTxRes sdk.TxResponse
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(legacyMsgOut.Bytes(), &legacyMsgTxRes))
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Service Msg.
-	out, err := bankcli.ServiceMsgSendExec(
+	out, err := bankcli.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		account2.GetAddress(),
@@ -259,7 +255,6 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 	s.Require().NoError(err)
 	var txRes sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txRes))
-
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	testCases := []struct {
@@ -282,7 +277,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 		},
 		{
 			"happy case (legacy Msg)",
-			[]string{legacyMsgTxRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{legacyTxRes.TxResponse.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			"",
 		},
@@ -737,7 +732,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 	// Does not work in offline mode.
 	_, err = authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), "--offline", sign1File.Name(), sign2File.Name())
-	s.Require().EqualError(err, "couldn't verify signature: unable to verify single signer signature")
+	s.Require().EqualError(err, fmt.Sprintf("couldn't verify signature for address %s", account1.GetAddress()))
 
 	val1.ClientCtx.Offline = false
 	multiSigWith2Signatures, err := authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())

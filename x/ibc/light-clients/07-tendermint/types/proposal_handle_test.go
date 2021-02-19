@@ -307,7 +307,7 @@ func (suite *TendermintTestSuite) TestCheckSubstituteAndUpdateState() {
 				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
 			}
 
-			// get updated substitue
+			// get updated substitute
 			substituteClientState = suite.chainA.GetClientState(substitute).(*types.ClientState)
 
 			subjectClientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), subject)

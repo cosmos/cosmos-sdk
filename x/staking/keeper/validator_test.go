@@ -18,13 +18,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func newMonikerValidator(t *testing.T, operator sdk.ValAddress, pubKey cryptotypes.PubKey, moniker string) types.Validator {
+func newMonikerValidator(t testing.TB, operator sdk.ValAddress, pubKey cryptotypes.PubKey, moniker string) types.Validator {
 	v, err := types.NewValidator(operator, pubKey, types.Description{Moniker: moniker})
 	require.NoError(t, err)
 	return v
 }
 
-func bootstrapValidatorTest(t *testing.T, power int64, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
+func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
 	_, app, ctx := createTestInput()
 
 	addrDels, addrVals := generateAddresses(app, ctx, numAddrs)
@@ -33,21 +33,21 @@ func bootstrapValidatorTest(t *testing.T, power int64, numAddrs int) (*simapp.Si
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), amt.MulRaw(int64(len(addrDels)))))
 
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
-	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), totalSupply)
-	require.NoError(t, err)
-
+	// set bonded pool supply
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
-	app.BankKeeper.SetSupply(ctx, totalSupply)
+
+	require.NoError(t, simapp.FundAccount(app, ctx, notBondedPool.GetAddress(), totalSupply))
 
 	return app, ctx, addrDels, addrVals
 }
 
-func initValidators(t *testing.T, power int64, numAddrs int, powers []int64) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
-	app, ctx, addrs, valAddrs := bootstrapValidatorTest(t, 1000, 20)
+func initValidators(t testing.TB, power int64, numAddrs int, powers []int64) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
+	app, ctx, addrs, valAddrs := bootstrapValidatorTest(t, power, numAddrs)
+	pks := simapp.CreateTestPubKeys(numAddrs)
 
 	vs := make([]types.Validator, len(powers))
 	for i, power := range powers {
-		vs[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i])
+		vs[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), pks[i])
 		tokens := sdk.TokensFromConsensusPower(power)
 		vs[i], _ = vs[i].AddTokensFromDel(tokens)
 	}
@@ -113,11 +113,9 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 
-	err := app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(1234))))
-	require.NoError(t, err)
+	require.NoError(t, simapp.FundAccount(app, ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(1234)))))
 
-	err = app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(10000))))
-	require.NoError(t, err)
+	require.NoError(t, simapp.FundAccount(app, ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(10000)))))
 
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
@@ -165,11 +163,9 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	app.StakingKeeper.SetParams(ctx, params)
 
 	// create a random pool
-	err := app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(1234))))
-	require.NoError(t, err)
+	require.NoError(t, simapp.FundAccount(app, ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(1234)))))
 
-	err = app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(10000))))
-	require.NoError(t, err)
+	require.NoError(t, simapp.FundAccount(app, ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(10000)))))
 
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
@@ -223,8 +219,7 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 
-	err := app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), valTokens)))
-	require.NoError(t, err)
+	require.NoError(t, simapp.FundAccount(app, ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), valTokens))))
 
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
@@ -429,11 +424,9 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 
-	err := app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(501))))
-	require.NoError(t, err)
+	require.NoError(t, simapp.FundAccount(app, ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(501)))))
 
-	err = app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(0))))
-	require.NoError(t, err)
+	require.NoError(t, simapp.FundAccount(app, ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.TokensFromConsensusPower(0)))))
 
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
@@ -507,9 +500,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 		validators[i], _ = validators[i].AddTokensFromDel(tokens)
 
 		notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
-		balances := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
-		require.NoError(t, app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), balances.Add(sdk.NewCoin(params.BondDenom, tokens))))
-
+		require.NoError(t, simapp.FundAccount(app, ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(params.BondDenom, tokens))))
 		app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 		validators[i] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[i], true)
 	}
@@ -527,9 +518,8 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 
 	newTokens := sdk.NewCoins()
-	balances := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
 
-	require.NoError(t, app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), balances.Add(newTokens...)))
+	require.NoError(t, simapp.FundAccount(app, ctx, notBondedPool.GetAddress(), newTokens))
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// test that the two largest validators are
@@ -561,8 +551,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 
 	notBondedPool = app.StakingKeeper.GetNotBondedPool(ctx)
 	newTokens = sdk.NewCoins(sdk.NewCoin(params.BondDenom, sdk.TokensFromConsensusPower(1)))
-	balances = app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
-	require.NoError(t, app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), balances.Add(newTokens...)))
+	require.NoError(t, simapp.FundAccount(app, ctx, notBondedPool.GetAddress(), newTokens))
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	validators[3] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
@@ -577,8 +566,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	validators[3], _ = validators[3].RemoveDelShares(sdk.NewDec(201))
 
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
-	balances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	require.NoError(t, app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), balances.Add(sdk.NewCoin(params.BondDenom, rmTokens))))
+	require.NoError(t, simapp.FundAccount(app, ctx, bondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(params.BondDenom, rmTokens))))
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
 	validators[3] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)
@@ -592,8 +580,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	validators[3], _ = validators[3].AddTokensFromDel(sdk.NewInt(200))
 
 	notBondedPool = app.StakingKeeper.GetNotBondedPool(ctx)
-	balances = app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
-	require.NoError(t, app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), balances.Add(sdk.NewCoin(params.BondDenom, sdk.NewInt(200)))))
+	require.NoError(t, simapp.FundAccount(app, ctx, notBondedPool.GetAddress(), sdk.NewCoins(sdk.NewCoin(params.BondDenom, sdk.NewInt(200)))))
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	validators[3] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[3], true)

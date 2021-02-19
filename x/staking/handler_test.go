@@ -35,12 +35,10 @@ func bootstrapHandlerGenesisTest(t *testing.T, power int64, numAddrs int, accAmo
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), amt.MulRaw(int64(len(addrDels)))))
 
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
-	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), totalSupply)
-	require.NoError(t, err)
 
+	// set non bonded pool balance
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
-	app.BankKeeper.SetSupply(ctx, totalSupply)
-
+	require.NoError(t, simapp.FundAccount(app, ctx, notBondedPool.GetAddress(), totalSupply))
 	return app, ctx, addrDels, addrVals
 }
 

@@ -69,6 +69,7 @@ import (
 	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
 	ibc "github.com/cosmos/cosmos-sdk/x/ibc/core"
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client"
+	ibcclienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/05-port/types"
 	ibchost "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	ibckeeper "github.com/cosmos/cosmos-sdk/x/ibc/core/keeper"
@@ -198,6 +199,9 @@ type SimApp struct {
 
 	// simulation manager
 	sm *module.SimulationManager
+
+	// the configurator
+	configurator module.Configurator
 }
 
 func init() {
@@ -306,7 +310,7 @@ func NewSimApp(
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
-		AddRoute(ibchost.RouterKey, ibcclient.NewClientUpdateProposalHandler(app.IBCKeeper.ClientKeeper))
+		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientUpdateProposalHandler(app.IBCKeeper.ClientKeeper))
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, govRouter,
@@ -393,7 +397,8 @@ func NewSimApp(
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
-	app.mm.RegisterServices(module.NewConfigurator(app.MsgServiceRouter(), app.GRPCQueryRouter()))
+	app.configurator = module.NewConfigurator(app.MsgServiceRouter(), app.GRPCQueryRouter())
+	app.mm.RegisterServices(app.configurator)
 
 	// add test gRPC service for testing gRPC queries in isolation
 	testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})
@@ -596,6 +601,28 @@ func (app *SimApp) RegisterTxService(clientCtx client.Context) {
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
+}
+
+// RunMigrations performs in-place store migrations for all modules. This
+// function MUST be only called by x/upgrade UpgradeHandler.
+//
+// `migrateFromVersions` is a map of moduleName to fromVersion (unit64), where
+// fromVersion denotes the version from which we should migrate the module, the
+// target version being the module's latest ConsensusVersion.
+//
+// Example:
+//   cfg := module.NewConfigurator(...)
+//   app.UpgradeKeeper.SetUpgradeHandler("store-migration", func(ctx sdk.Context, plan upgradetypes.Plan) {
+//       err := app.RunMigrations(ctx, module.MigrationMap{
+//           "bank": 1,     // Migrate x/bank from v1 to current x/bank's ConsensusVersion
+//           "staking": 8,  // Migrate x/staking from v8 to current x/staking's ConsensusVersion
+//      })
+//      if err != nil {
+//           panic(err)
+//      }
+//   })
+func (app *SimApp) RunMigrations(ctx sdk.Context, migrateFromVersions module.MigrationMap) error {
+	return app.mm.RunMigrations(ctx, app.configurator, migrateFromVersions)
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server

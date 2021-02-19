@@ -84,12 +84,6 @@ type SendKeeper interface {
 	InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) error
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 
-	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error
-	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error
-
-	SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) error
-	SetBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error
-
 	GetParams(ctx sdk.Context) types.Params
 	SetParams(ctx sdk.Context, params types.Params)
 

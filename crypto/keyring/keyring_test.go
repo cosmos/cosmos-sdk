@@ -195,7 +195,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, kb.Delete(n2))
 
-	require.NoError(t, kb.ImportPubKey(n3, armor))
+	require.NoError(t, kb.ImportPubKey(n3, armor, TypeLocal))
 	i3, err := kb.Key(n3)
 	require.NoError(t, err)
 	require.Equal(t, i3.GetName(), n3)
@@ -260,7 +260,7 @@ func TestExportImportPubKeyKeyRing(t *testing.T) {
 	require.NoError(t, err)
 
 	// Import it under a different name
-	err = kb.ImportPubKey("john-pubkey-only", armor)
+	err = kb.ImportPubKey("john-pubkey-only", armor, TypeLocal)
 	require.NoError(t, err)
 
 	// Ensure consistency
@@ -271,7 +271,7 @@ func TestExportImportPubKeyKeyRing(t *testing.T) {
 	require.True(t, john.GetPubKey().Equals(john2.GetPubKey()))
 
 	// Ensure keys cannot be overwritten
-	err = kb.ImportPubKey("john-pubkey-only", armor)
+	err = kb.ImportPubKey("john-pubkey-only", armor, TypeLocal)
 	require.NotNil(t, err)
 }
 
@@ -302,11 +302,11 @@ func TestAdvancedKeyManagementKeyRing(t *testing.T) {
 	require.NoError(t, err)
 
 	// import succeeds
-	err = kb.ImportPubKey(n2, exported)
+	err = kb.ImportPubKey(n2, exported, TypeLocal)
 	require.NoError(t, err)
 
 	// second import fails
-	err = kb.ImportPubKey(n2, exported)
+	err = kb.ImportPubKey(n2, exported, TypeLocal)
 	require.NotNil(t, err)
 }
 
@@ -549,7 +549,7 @@ func TestInMemorySignVerify(t *testing.T) {
 	require.Nil(t, err)
 	err = cstore.Delete(n2)
 	require.NoError(t, err)
-	err = cstore.ImportPubKey(n3, armor)
+	err = cstore.ImportPubKey(n3, armor, TypeLocal)
 	require.NoError(t, err)
 	i3, err := cstore.Key(n3)
 	require.NoError(t, err)
@@ -580,7 +580,7 @@ func TestInMemoryExportImport(t *testing.T) {
 	err = cstore.Delete("john")
 	require.NoError(t, err)
 
-	err = cstore.ImportPubKey("john2", armor)
+	err = cstore.ImportPubKey("john2", armor, TypeLocal)
 	require.NoError(t, err)
 
 	john2, err := cstore.Key("john2")
@@ -641,7 +641,7 @@ func TestInMemoryExportImportPubKey(t *testing.T) {
 	require.NoError(t, err)
 
 	// Import it under a different name
-	err = cstore.ImportPubKey("john-pubkey-only", armor)
+	err = cstore.ImportPubKey("john-pubkey-only", armor, TypeLocal)
 	require.NoError(t, err)
 	// Ensure consistency
 	john2, err := cstore.Key("john-pubkey-only")
@@ -650,7 +650,7 @@ func TestInMemoryExportImportPubKey(t *testing.T) {
 	require.True(t, john.GetPubKey().Equals(john2.GetPubKey()))
 
 	// Ensure keys cannot be overwritten
-	err = cstore.ImportPubKey("john-pubkey-only", armor)
+	err = cstore.ImportPubKey("john-pubkey-only", armor, TypeLocal)
 	require.NotNil(t, err)
 }
 
@@ -681,11 +681,11 @@ func TestInMemoryAdvancedKeyManagement(t *testing.T) {
 	require.NoError(t, err)
 
 	// import succeeds
-	err = cstore.ImportPubKey(n2, exported)
+	err = cstore.ImportPubKey(n2, exported, TypeLocal)
 	require.NoError(t, err)
 
 	// second import fails
-	err = cstore.ImportPubKey(n2, exported)
+	err = cstore.ImportPubKey(n2, exported, TypeLocal)
 	require.NotNil(t, err)
 }
 
@@ -1063,11 +1063,11 @@ func TestAltKeyring_ImportExportPubKey(t *testing.T) {
 	require.NoError(t, err)
 
 	newUID := otherID
-	err = keyring.ImportPubKey(newUID, armor)
+	err = keyring.ImportPubKey(newUID, armor, TypeLocal)
 	require.NoError(t, err)
 
 	// Should fail importing private key on existing key.
-	err = keyring.ImportPubKey(newUID, armor)
+	err = keyring.ImportPubKey(newUID, armor, TypeLocal)
 	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", newUID))
 }
 
@@ -1085,11 +1085,11 @@ func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
 	require.NoError(t, err)
 
 	newUID := otherID
-	err = keyring.ImportPubKey(newUID, armor)
+	err = keyring.ImportPubKey(newUID, armor, TypeLocal)
 	require.NoError(t, err)
 
 	// Should fail importing private key on existing key.
-	err = keyring.ImportPubKey(newUID, armor)
+	err = keyring.ImportPubKey(newUID, armor, TypeLocal)
 	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", newUID))
 }
 

@@ -14,6 +14,13 @@ import (
 // KeyProcessedTime is appended to consensus state key to store the processed time
 var KeyProcessedTime = []byte("/processedTime")
 
+// SetConsensusState stores the consensus state at the given height.
+func SetConsensusState(clientStore sdk.KVStore, cdc codec.BinaryMarshaler, consensusState *ConsensusState, height exported.Height) {
+	key := host.ConsensusStateKey(height)
+	val := clienttypes.MustMarshalConsensusState(cdc, consensusState)
+	clientStore.Set(key, val)
+}
+
 // GetConsensusState retrieves the consensus state from the client prefixed
 // store. An error is returned if the consensus state does not exist.
 func GetConsensusState(store sdk.KVStore, cdc codec.BinaryMarshaler, height exported.Height) (*ConsensusState, error) {

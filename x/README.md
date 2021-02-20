@@ -15,7 +15,7 @@ Here are some production-grade modules that can be used in Cosmos SDK applicatio
 - [Distribution](distribution/spec/README.md) - Fee distribution, and staking token provision distribution.
 - [Evidence](evidence/spec/README.md) - Evidence handling for double signing, misbehaviour, etc.
 - [Governance](gov/spec/README.md) - On-chain proposals and voting.
-- [IBC](ibc/spec/README.md) - IBC protocol for transport, authentication adn ordering.
+- [IBC](ibc/spec/README.md) - IBC protocol for transport, authentication and ordering.
 - [IBC Transfer](ibc/spec/README.md) - Cross-chain fungible token transfer implementation through IBC.
 - [Mint](mint/spec/README.md) - Creation of new units of staking token.
 - [Params](params/spec/README.md) - Globally available parameter store.

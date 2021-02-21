@@ -186,8 +186,7 @@ func (s *IntegrationTestSuite) TestBroadcastIBCTxRequest() {
 	res, err := rest.PostRequest(fmt.Sprintf("%s/txs", val.APIAddress), "application/json", []byte(req))
 	s.Require().NoError(err)
 
-	// Make sure the error message is correct.
-	s.Require().Contains(string(res), "this transaction cannot be broadcasted via legacy REST endpoints")
+	s.Require().NotContains(string(res), "this transaction cannot be broadcasted via legacy REST endpoints", string(res))
 }
 
 // Helper function to test querying txs. We will use it to query StdTx and service `Msg`s.
@@ -270,7 +269,7 @@ func (s *IntegrationTestSuite) TestQueryTxWithStdTx() {
 	s.testQueryTx(s.stdTxRes.Height, s.stdTxRes.TxHash, val0.Address.String())
 }
 
-func (s *IntegrationTestSuite) TestQueryTxWithServiceMessage() {
+func (s *IntegrationTestSuite) TestQueryTxWithServiceMsg() {
 	val := s.network.Validators[0]
 
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
@@ -279,7 +278,7 @@ func (s *IntegrationTestSuite) TestQueryTxWithServiceMessage() {
 	// Might need to wait a block to refresh sequences from previous setups.
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	out, err := bankcli.ServiceMsgSendExec(
+	out, err := bankcli.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		addr,

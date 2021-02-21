@@ -71,11 +71,14 @@ func NewAnyWithValue(v proto.Message) (*Any, error) {
 // into the protobuf Any serialization. For simple marshaling you should use NewAnyWithValue.
 func NewAnyWithCustomTypeURL(v proto.Message, typeURL string) (*Any, error) {
 	bz, err := proto.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
 	return &Any{
 		TypeUrl:     typeURL,
 		Value:       bz,
 		cachedValue: v,
-	}, err
+	}, nil
 }
 
 // UnsafePackAny packs the value x in the Any and instead of returning the error
@@ -112,9 +115,4 @@ func (any *Any) pack(x proto.Message) error {
 // GetCachedValue returns the cached value from the Any if present
 func (any *Any) GetCachedValue() interface{} {
 	return any.cachedValue
-}
-
-// ClearCachedValue clears the cached value from the Any
-func (any *Any) ClearCachedValue() {
-	any.cachedValue = nil
 }

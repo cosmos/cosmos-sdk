@@ -36,9 +36,83 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Client Breaking Changes
+
+* [\#8363](https://github.com/cosmos/cosmos-sdk/pull/8363) Addresses no longer have a fixed 20-byte length. From the SDK modules' point of view, any 1-255 bytes-long byte array is a valid address.
+* [\#8346](https://github.com/cosmos/cosmos-sdk/pull/8346) All CLI `tx` commands generate ServiceMsgs by default. Graceful Amino support has been added to ServiceMsgs to support signing legacy Msgs.
+
+### API Breaking Changes
+
+* (x/bank) [\#8473](https://github.com/cosmos/cosmos-sdk/pull/8473) Bank keeper does not expose unsafe balance changing methods such as `SetBalance`, `SetSupply` etc.
+* (x/staking) [\#8473](https://github.com/cosmos/cosmos-sdk/pull/8473) On genesis init, if non bonded pool and bonded pool balance, coming from the bank module, does not match what is saved in the staking state, the initialization will panic.
+* (x/gov) [\#8473](https://github.com/cosmos/cosmos-sdk/pull/8473) On genesis init, if the gov module account balance, coming from bank module state, does not match the one in gov module state, the initialization will panic.
+* (x/distribution) [\#8473](https://github.com/cosmos/cosmos-sdk/pull/8473) On genesis init, if the distribution module account balance, coming from bank module state, does not match the one in distribution module state, the initialization will panic.
+* (client/keys) [\#8500](https://github.com/cosmos/cosmos-sdk/pull/8500) `InfoImporter` interface is removed from legacy keybase.
+
+### State Machine Breaking
+
+* (x/{bank,distrib,gov,slashing,staking}) [\#8363](https://github.com/cosmos/cosmos-sdk/issues/8363) Store keys have been modified to allow for variable-length addresses.
+* (x/ibc) [\#8266](https://github.com/cosmos/cosmos-sdk/issues/8266) Add amino JSON for IBC messages in order to support Ledger text signing.
+* (x/ibc) [\#8405](https://github.com/cosmos/cosmos-sdk/pull/8405) Refactor IBC client update governance proposals to use a substitute client to update a frozen or expired client.
+* (x/evidence) [\#8502](https://github.com/cosmos/cosmos-sdk/pull/8502) `HandleEquivocationEvidence` persists the evidence to state.
+* (x/gov) [\#7733](https://github.com/cosmos/cosmos-sdk/pull/7733) ADR 037 Implementation: Governance Split Votes
+
+### Improvements
+
 ### Bug Fixes
 
-  * (x/auth) [\#8287](https://github.com/cosmos/cosmos-sdk/pull/8287) Fix `tx sign --signature-only` to return correct sequence value in signature.
+* (x/evidence) [#8461](https://github.com/cosmos/cosmos-sdk/pull/8461) Fix bech32 prefix in evidence validator address conversion
+* (x/slashing) [\#8427](https://github.com/cosmos/cosmos-sdk/pull/8427) Fix query signing infos command
+* (server) [\#8399](https://github.com/cosmos/cosmos-sdk/pull/8399) fix gRPC-web flag default value
+
+## [v0.41.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.1) - 2021-02-17
+
+### Bug Fixes
+
+* (grpc) [\#8549](https://github.com/cosmos/cosmos-sdk/pull/8549) Make gRPC requests go through ABCI and disallow concurrency.
+* (x/staking) [\#8546](https://github.com/cosmos/cosmos-sdk/pull/8546) Fix caching bug where concurrent calls to GetValidator could cause a node to crash
+* (server) [\#8481](https://github.com/cosmos/cosmos-sdk/pull/8481) Don't create files when running `{appd} tendermint show-*` subcommands.
+* (client/keys) [\#8436](https://github.com/cosmos/cosmos-sdk/pull/8436) Fix keybase->keyring keys migration.
+* (crypto/hd) [\#8607](https://github.com/cosmos/cosmos-sdk/pull/8607) Make DerivePrivateKeyForPath error and not panic on trailing slashes.
+
+### Improvements
+
+* (x/ibc) [\#8458](https://github.com/cosmos/cosmos-sdk/pull/8458) Add `packet_connection` attribute to ibc events to enable relayer filtering
+* [\#8396](https://github.com/cosmos/cosmos-sdk/pull/8396) Add support for ARM platform
+* (x/bank) [\#8479](https://github.com/cosmos/cosmos-sdk/pull/8479) Aditional client denom metadata validation for `base` and `display` denoms.
+* (codec/types) [\#8605](https://github.com/cosmos/cosmos-sdk/pull/8605) Avoid unnecessary allocations for NewAnyWithCustomTypeURL on error.
+
+## [v0.41.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.0) - 2021-01-26
+
+### State Machine Breaking
+
+* (x/ibc) [\#8266](https://github.com/cosmos/cosmos-sdk/issues/8266) Add amino JSON support for IBC MsgTransfer in order to support Ledger text signing transfer transactions.
+* (x/ibc) [\#8404](https://github.com/cosmos/cosmos-sdk/pull/8404) Reorder IBC `ChanOpenAck` and `ChanOpenConfirm` handler execution to perform core handler first, followed by application callbacks. 
+
+### Bug Fixes
+
+* (simapp) [\#8418](https://github.com/cosmos/cosmos-sdk/pull/8418) Add balance coin to supply when adding a new genesis account
+* (x/bank) [\#8417](https://github.com/cosmos/cosmos-sdk/pull/8417) Validate balances and coin denom metadata on genesis
+
+## [v0.40.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.1) - 2021-01-19
+
+### Improvements
+
+* (x/bank) [\#8302](https://github.com/cosmos/cosmos-sdk/issues/8302) Add gRPC and CLI queries for client denomination metadata.
+* (tendermint) Bump Tendermint version to [v0.34.3](https://github.com/tendermint/tendermint/releases/tag/v0.34.3).
+
+### Bug Fixes
+
+* [\#8085](https://github.com/cosmos/cosmos-sdk/pull/8058) fix zero time checks
+* [\#8280](https://github.com/cosmos/cosmos-sdk/pull/8280) fix GET /upgrade/current query
+* (x/auth) [\#8287](https://github.com/cosmos/cosmos-sdk/pull/8287) Fix `tx sign --signature-only` to return correct sequence value in signature.
+* (build) [\8300](https://github.com/cosmos/cosmos-sdk/pull/8300), [\8301](https://github.com/cosmos/cosmos-sdk/pull/8301) Fix reproducible builds
+* (types/errors) [\#8355][https://github.com/cosmos/cosmos-sdk/pull/8355] Fix errorWrap `Is` method.
+* (x/ibc) [\#8341](https://github.com/cosmos/cosmos-sdk/pull/8341) Fix query latest consensus state.
+* (proto) [\#8350][https://github.com/cosmos/cosmos-sdk/pull/8350], [\#8361](https://github.com/cosmos/cosmos-sdk/pull/8361) Update gogo proto deps with v1.3.2 security fixes
+* (x/ibc) [\#8359](https://github.com/cosmos/cosmos-sdk/pull/8359) Add missing UnpackInterfaces functions to IBC Query Responses. Fixes 'cannot unpack Any' error for IBC types.
+* (x/bank) [\#8317](https://github.com/cosmos/cosmos-sdk/pull/8317) Fix panic when querying for a not found client denomination metadata.
+
 
 ## [v0.40.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0) - 2021-01-08
 
@@ -196,7 +270,7 @@ sure you are aware of any relevant breaking changes.
   * (x/slashing) [\#6212](https://github.com/cosmos/cosmos-sdk/pull/6212) Remove `Get*` prefixes from key construction functions
   * (server) [\#6079](https://github.com/cosmos/cosmos-sdk/pull/6079) Remove `UpgradeOldPrivValFile` (deprecated in Tendermint Core v0.28).
   * [\#5719](https://github.com/cosmos/cosmos-sdk/pull/5719) Bump Go requirement to 1.14+
-    
+
 
 ### State Machine Breaking
 

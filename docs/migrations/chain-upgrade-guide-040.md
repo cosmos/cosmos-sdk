@@ -87,7 +87,7 @@ software and restore to their latest snapshot before restarting their nodes.
 1) If your chain is using IBC, make sure to add IBC initial genesis state to the genesis file. You can use the following command to add IBC initial genesis state to the genesis file.
 
    ```shell
-   cat new_040_genesis.json | jq '.app_state |= . + {"ibc":{"client_genesis":{"clients":[],"clients_consensus":[],"create_localhost":false},"connection_genesis":{"connections":[],"client_connection_paths":[]},"channel_genesis":{"channels":[],"acknowledgements":[],"commitments":[],"receipts":[],"send_sequences":[],"recv_sequences":[],"ack_sequences":[]}},"transfer":{"port_id":"transfer","denom_traces":[],"params":{"send_enabled":false,"receive_enabled":false}},"capability":{"index":"1","owners":[]}}' > new_040_genesis.json
+   cat new_v040_genesis.json | jq '.app_state |= . + {"ibc":{"client_genesis":{"clients":[],"clients_consensus":[],"create_localhost":false},"connection_genesis":{"connections":[],"client_connection_paths":[]},"channel_genesis":{"channels":[],"acknowledgements":[],"commitments":[],"receipts":[],"send_sequences":[],"recv_sequences":[],"ack_sequences":[]}},"transfer":{"port_id":"transfer","denom_traces":[],"params":{"send_enabled":false,"receive_enabled":false}},"capability":{"index":"1","owners":[]}}' > tmp_genesis.json && mv tmp_genesis.json new_v040_genesis.json
    ```
 
    **Note:** This would add IBC state with IBC's `send_enabled: false` and `receive_enabled: false`. Make sure to update them to `true` in the above command if are planning to enable IBC transactions with chain upgrade. Otherwise you can do it via a governance proposal.

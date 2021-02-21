@@ -151,6 +151,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			bankGenState := banktypes.GetGenesisStateFromAppState(depCdc, appState)
 			bankGenState.Balances = append(bankGenState.Balances, balances)
 			bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
+			bankGenState.Supply = bankGenState.Supply.Add(balances.Coins...)
 
 			bankGenStateBz, err := cdc.MarshalJSON(bankGenState)
 			if err != nil {

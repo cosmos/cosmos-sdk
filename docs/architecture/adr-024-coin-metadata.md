@@ -34,7 +34,7 @@ UX and remove the requirement for making any assumptions on the unit of denomina
 The `x/bank` module will be updated to store and index metadata by `denom`, specifically the "base" or
 smallest unit -- the unit the Cosmos SDK state-machine works with.
 
-Metadata may also include a non-zero length list of denominations. Each entry containts the name of
+Metadata may also include a non-zero length list of denominations. Each entry contains the name of
 the denomination `denom`, the exponent to the base and a list of aliases. An entry is to be
 interpreted as `1 denom = 10^exponent base_denom` (e.g. `1 ETH = 10^18 wei` and `1 uatom = 10^0 uatom`).
 
@@ -92,6 +92,7 @@ As an example, the ATOM's metadata can be defined as follows:
 ```
 
 Given the above metadata, a client may infer the following things:
+
 - 4.3atom = 4.3 * (10^6) = 4,300,000uatom
 - The string "atom" can be used as a display name in a list of tokens.
 - The balance 4300000 can be displayed as 4,300,000uatom or 4,300matom or 4.3atom.

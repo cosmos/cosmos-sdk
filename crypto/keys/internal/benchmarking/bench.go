@@ -25,6 +25,7 @@ func (zeroReader) Read(buf []byte) (int, error) {
 // BenchmarkKeyGeneration benchmarks the given key generation algorithm using
 // a dummy reader.
 func BenchmarkKeyGeneration(b *testing.B, generateKey func(reader io.Reader) types.PrivKey) {
+	b.ReportAllocs()
 	var zero zeroReader
 	for i := 0; i < b.N; i++ {
 		generateKey(zero)

@@ -70,10 +70,9 @@ func (msg MsgTransfer) ValidateBasic() error {
 	return ValidateIBCDenom(msg.Token.Denom)
 }
 
-// GetSignBytes implements sdk.Msg. The function will panic since it is used
-// for amino transaction verification which IBC does not support.
+// GetSignBytes implements sdk.Msg.
 func (msg MsgTransfer) GetSignBytes() []byte {
-	panic("IBC messages do not support amino")
+	return sdk.MustSortJSON(AminoCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg

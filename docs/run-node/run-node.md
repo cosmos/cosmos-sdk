@@ -44,7 +44,7 @@ Before starting the chain, you need to populate the state with at least one acco
 Now that you have created a local account, go ahead and grant it some `stake` tokens in your chain's genesis file. Doing so will also make sure your chain is aware of this account's existence:
 
 ```bash
-simd add-genesis-account $MY_VALIDATOR_ADDRESS 100000000stake
+simd add-genesis-account $MY_VALIDATOR_ADDRESS 100000000000stake
 ```
 
 Recall that `$MY_VALIDATOR_ADDRESS` is a variable that holds the address of the `my_validator` key in the [keyring](./keyring.md#adding-keys-to-the-keyring). Also note that the tokens in the SDK have the `{amount}{denom}` format: `amount` is is a 18-digit-precision decimal number, and `denom` is the unique token identifier with its denomination key (e.g. `atom` or `uatom`). Here, we are granting `stake` tokens, as `stake` is the token identifier used for staking in [`simapp`](https://github.com/cosmos/cosmos-sdk/tree/v0.40.0-rc3/simapp). For your own chain with its own staking denom, that token identifier should be used instead.
@@ -53,7 +53,7 @@ Now that your account has some tokens, you need to add a validator to your chain
 
 ```bash
 # Create a gentx.
-simd gentx my_validator 100000stake --chain-id my-test-chain --keyring-backend test
+simd gentx my_validator 100000000stake --chain-id my-test-chain --keyring-backend test
 
 # Add the gentx to the genesis file.
 simd collect-gentxs
@@ -84,6 +84,12 @@ You should see blocks come in.
 The previous command allow you to run a single node. This is enough for the next section on interacting with this node, but you may wish to run multiple nodes at the same time, and see how consensus happens between them.
 
 The naive way would be to run the same commands again in separate terminal windows. This is possible, however in the SDK, we leverage the power of [Docker Compose](https://docs.docker.com/compose/) to run a localnet. If you need inspiration on how to set up your own localnet with Docker Compose, you can have a look at the SDK's [`docker-compose.yml`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/docker-compose.yml).
+
+## Configuring the Node Using `app.toml`
+
+The Cosmos SDK automatically generates an `app.toml` file inside `~/.simapp/config`. This file is used to configure your app, such as state pruning strategies, telemetry, gRPC and REST servers configuration, state sync... The file itself is heavily commented, please refer to it directly to tweak your node.
+
+Make sure to restart your node after modifying `app.toml`.
 
 ## Next {hide}
 

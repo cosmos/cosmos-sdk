@@ -27,8 +27,9 @@ parameters and if applicable will update to the new light client implementation.
 
 ## Client Update Proposal
 
-An Update Client Proposal will unfreeze a client and set an updated `ClientState` and a new
-`ConsensusState`.
+An Update Client Proposal will unfreeze a client (if necessary) and set an updated `ClientState`. 
+The light client may make optional modifications to the client prefixed store of the subject client
+including copying `ConsensusStates` from the substitute to the subject. 
 
 ## Connection Open Init
 

@@ -27,6 +27,10 @@ type UpgradeInfo struct {
 // It returns (nil, err) if the input stream errored
 // It returns (nil, nil) if the input closed without ever matching the regexp
 func WaitForUpdate(scanner *bufio.Scanner) (*UpgradeInfo, error) {
+	// set larger buffer in case the line is too long, the default one is 64*1024
+	const maxCapacity = 512 * 1024
+	buf := make([]byte, maxCapacity)
+	scanner.Buffer(buf, maxCapacity)
 	for scanner.Scan() {
 		line := scanner.Text()
 		if upgradeRegex.MatchString(line) {

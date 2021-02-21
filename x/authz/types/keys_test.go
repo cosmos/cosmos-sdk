@@ -7,11 +7,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 var granter = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 var grantee = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
-var msgType = SendAuthorization{}.MethodName()
+var msgType = bank.SendAuthorization{}.MethodName()
 
 func TestGrantkey(t *testing.T) {
 	granter1, grantee1 := ExtractAddressesFromGrantKey(GetAuthorizationStoreKey(grantee, granter, msgType))

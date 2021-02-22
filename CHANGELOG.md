@@ -65,6 +65,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/evidence) [#8461](https://github.com/cosmos/cosmos-sdk/pull/8461) Fix bech32 prefix in evidence validator address conversion
 * (x/slashing) [\#8427](https://github.com/cosmos/cosmos-sdk/pull/8427) Fix query signing infos command
 * (server) [\#8399](https://github.com/cosmos/cosmos-sdk/pull/8399) fix gRPC-web flag default value
+* (server) [\#8641](https://github.com/cosmos/cosmos-sdk/pull/8641) Fix Tendermint and application configuration reading from file
 
 ## [v0.41.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.1) - 2021-02-17
 

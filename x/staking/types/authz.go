@@ -1,10 +1,11 @@
 package types
 
 import (
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authz "github.com/cosmos/cosmos-sdk/x/authz/exported"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 var (

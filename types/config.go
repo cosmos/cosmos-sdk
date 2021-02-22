@@ -121,7 +121,7 @@ func (config *Config) SetAddressVerifier(addressVerifier func([]byte) error) {
 
 // Set the FullFundraiserPath (BIP44Prefix) on the config.
 //
-// Deprecated: Use SetPurpose and SetCoinType instead
+// Deprecated: This method is supported for backward compatibility only and will be removed in a future release. Use SetPurpose and SetCoinType instead.
 func (config *Config) SetFullFundraiserPath(fullFundraiserPath string) {
 	config.assertNotSealed()
 	config.fullFundraiserPath = fullFundraiserPath

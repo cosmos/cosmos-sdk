@@ -9,7 +9,10 @@ description = ""
 homepage = "https://github.com/cosmos/cosmos-sdk"
 
 #List of key words describing your module (Optional)
-keywords = []
+keywords = [
+  "crisis",
+  "stop-the-world",
+]
 
 
 [bug_tracker]

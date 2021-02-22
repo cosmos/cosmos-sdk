@@ -103,7 +103,7 @@ Mint handles the minting of new tokens. This can be associated with a inflation 
   ``` 
 
 
-11. Add the gov module to the simulation manager (if you have one set).
+11. Add the mint module to the simulation manager (if you have one set).
 
   ```go
    func NewApp(...) *App {

@@ -38,7 +38,7 @@ Gov governs the protocol. There are multiple
       }
   ```
 
-4. Add the <module_name> keeper to your apps struct.
+4. Add the gov keeper to your apps struct.
 
   ```go
     type app struct {

@@ -26,7 +26,7 @@ const (
 	//	config.SetBech32PrefixForAccount(yourBech32PrefixAccAddr, yourBech32PrefixAccPub)
 	//	config.SetBech32PrefixForValidator(yourBech32PrefixValAddr, yourBech32PrefixValPub)
 	//	config.SetBech32PrefixForConsensusNode(yourBech32PrefixConsAddr, yourBech32PrefixConsPub)
-	//  config.SetPurpose(yourPurpose)
+	//	config.SetPurpose(yourPurpose)
 	//	config.SetCoinType(yourCoinType)
 	//	config.Seal()
 

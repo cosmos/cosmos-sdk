@@ -12,13 +12,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestDecodeStore(t *testing.T) {
 	cdc := simapp.MakeTestEncodingConfig().Marshaler
 	dec := simulation.NewDecodeStore(cdc)
 
-	grant, _ := types.NewAuthorizationGrant(types.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("foo", 123))), time.Now().UTC())
+	grant, _ := types.NewAuthorizationGrant(banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("foo", 123))), time.Now().UTC())
 	grantBz, err := cdc.MarshalBinaryBare(&grant)
 	require.NoError(t, err)
 	kvPairs := kv.Pairs{

@@ -238,6 +238,13 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 		var infile = os.Stdin
 		if args[0] != "-" {
 			infile, err = os.Open(args[0])
+			defer func() {
+				err2 := infile.Close()
+				if err == nil {
+					err = err2
+				}
+			}()
+
 			if err != nil {
 				return fmt.Errorf("couldn't open %s: %w", args[0], err)
 			}
@@ -263,7 +270,6 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			signatureBatch = append(signatureBatch, sigs)
 		}
 
-		var sequence = txFactory.Sequence()
 		if !clientCtx.Offline {
 			accnum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
 			if err != nil {
@@ -279,21 +285,20 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 				return err
 			}
 
-			signingData := signing.SignerData{
-				ChainID:       txFactory.ChainID(),
-				AccountNumber: txFactory.AccountNumber(),
-				Sequence:      sequence,
-			}
-
 			multisigPub := multisigInfo.GetPubKey().(*kmultisig.LegacyAminoPubKey)
 			multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 			for _, sig := range signatureBatch {
-				err = signing.VerifySignature(sig[sequence].PubKey, signingData, sig[sequence].Data, txCfg.SignModeHandler(), txBldr.GetTx())
+				signingData := signing.SignerData{
+					ChainID:       txFactory.ChainID(),
+					AccountNumber: txFactory.AccountNumber(),
+					Sequence:      txFactory.Sequence(),
+				}
+				err = signing.VerifySignature(sig[i].PubKey, signingData, sig[i].Data, txCfg.SignModeHandler(), txBldr.GetTx())
 				if err != nil {
-					return fmt.Errorf("couldn't verify signature: %w", err)
+					return fmt.Errorf("couldn't verify signature: %w %v %v", err, signingData, sig)
 				}
 
-				if err := multisig.AddSignatureV2(multisigSig, sig[sequence], multisigPub.GetPubKeys()); err != nil {
+				if err := multisig.AddSignatureV2(multisigSig, sig[i], multisigPub.GetPubKeys()); err != nil {
 					return err
 				}
 			}
@@ -301,7 +306,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			sigV2 := signingtypes.SignatureV2{
 				PubKey:   multisigPub,
 				Data:     multisigSig,
-				Sequence: sequence,
+				Sequence: txFactory.Sequence(),
 			}
 
 			err = txBldr.SetSignatures(sigV2)
@@ -342,7 +347,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			if viper.GetBool(flagNoAutoIncrement) {
 				continue
 			}
-			sequence++
+			sequence := txFactory.Sequence() + 1
 			txFactory = txFactory.WithSequence(sequence)
 		}
 

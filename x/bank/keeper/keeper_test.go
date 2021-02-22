@@ -1002,6 +1002,104 @@ func (suite *IntegrationTestSuite) TestIterateAllDenomMetaData() {
 	}
 }
 
+func (suite *IntegrationTestSuite) TestBalanceTrackingEvents() {
+	// replace account keeper otherwise it won't be aware of the module account... weird
+	maccPerms := simapp.GetMaccPerms()
+	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
+
+	suite.app.AccountKeeper = authkeeper.NewAccountKeeper(
+		suite.app.AppCodec(), suite.app.GetKey(authtypes.StoreKey), suite.app.GetSubspace(authtypes.ModuleName),
+		authtypes.ProtoBaseAccount, maccPerms,
+	)
+
+	suite.app.BankKeeper = keeper.NewBaseKeeper(suite.app.AppCodec(), suite.app.GetKey(types.StoreKey),
+		suite.app.AccountKeeper, suite.app.GetSubspace(types.ModuleName), nil)
+
+	// set account with multiple permissions
+	suite.app.AccountKeeper.SetModuleAccount(suite.ctx, multiPermAcc)
+	// mint coins
+	suite.Require().NoError(
+		suite.app.BankKeeper.MintCoins(
+			suite.ctx,
+			multiPermAcc.Name,
+			sdk.NewCoins(sdk.NewCoin("utxo", sdk.NewInt(100000)))),
+	)
+	// send coins to address
+	addr1 := sdk.AccAddress("addr1_______________")
+	suite.Require().NoError(
+		suite.app.BankKeeper.SendCoinsFromModuleToAccount(
+			suite.ctx,
+			multiPermAcc.Name,
+			addr1,
+			sdk.NewCoins(sdk.NewCoin("utxo", sdk.NewInt(50000))),
+		),
+	)
+
+	// burn coins from module account
+	suite.Require().NoError(
+		suite.app.BankKeeper.BurnCoins(
+			suite.ctx,
+			multiPermAcc.Name,
+			sdk.NewCoins(sdk.NewInt64Coin("utxo", 1000)),
+		),
+	)
+
+	// process balances and supply from events
+	supply := sdk.NewCoins()
+
+	balances := make(map[string]sdk.Coins)
+
+	for _, e := range suite.ctx.EventManager().ABCIEvents() {
+		switch e.Type {
+		case types.EventTypeCoinBurn:
+			burnedCoins, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
+			suite.Require().NoError(err)
+			supply = supply.Sub(burnedCoins)
+
+		case types.EventTypeCoinMint:
+			mintedCoins, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
+			suite.Require().NoError(err)
+			minter, err := sdk.AccAddressFromBech32((string)(e.Attributes[0].Value))
+			suite.Require().NoError(err)
+			balances[minter.String()] = balances[minter.String()].Add(mintedCoins...)
+			supply = supply.Add(mintedCoins...)
+
+		case types.EventTypeCoinSpent:
+			coinsSpent, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
+			suite.Require().NoError(err)
+			spender, err := sdk.AccAddressFromBech32((string)(e.Attributes[0].Value))
+			suite.Require().NoError(err)
+			balances[spender.String()] = balances[spender.String()].Sub(coinsSpent)
+
+		case types.EventTypeCoinReceived:
+			coinsRecv, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
+			suite.Require().NoError(err)
+			receiver, err := sdk.AccAddressFromBech32((string)(e.Attributes[0].Value))
+			suite.Require().NoError(err)
+			balances[receiver.String()] = balances[receiver.String()].Add(coinsRecv...)
+		}
+	}
+
+	// check balance and supply tracking
+	savedSupply := suite.app.BankKeeper.GetSupply(suite.ctx)
+	utxoSupply := savedSupply.GetTotal().AmountOf("utxo")
+	suite.Require().Equal(utxoSupply, supply.AmountOf("utxo"))
+	// iterate accounts and check balances
+	suite.app.BankKeeper.IterateAllBalances(suite.ctx, func(address sdk.AccAddress, coin sdk.Coin) (stop bool) {
+		// if it's not utxo coin then skip
+		if coin.Denom != "utxo" {
+			return false
+		}
+
+		balance, exists := balances[address.String()]
+		suite.Require().True(exists)
+
+		expectedUtxo := sdk.NewCoin("utxo", balance.AmountOf(coin.Denom))
+		suite.Require().Equal(expectedUtxo.String(), coin.String())
+		return false
+	})
+}
+
 func (suite *IntegrationTestSuite) getTestMetadata() []types.Metadata {
 	return []types.Metadata{{
 		Description: "The native staking token of the Cosmos Hub.",

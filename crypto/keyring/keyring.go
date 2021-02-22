@@ -64,13 +64,16 @@ type Keyring interface {
 	Delete(uid string) error
 	DeleteByAddress(address sdk.Address) error
 
-	// NewMnemonic generates a new mnemonic, derives a hierarchical deterministic
-	// key from that, and persists it to the storage. Returns the generated mnemonic and the key
-	// Info. It returns an error if it fails to generate a key for the given algo type, or if
+	// NewMnemonic generates a new mnemonic, derives a hierarchical deterministic key from that, and
+	// persists it to the storage. Returns the generated mnemonic and the key Info secured with the given passphrase.
+	// It returns an error if it fails to generate a key for the given algo type, or if
 	// another key is already stored under the same name.
-	NewMnemonic(uid string, language Language, hdPath string, algo SignatureAlgo) (Info, string, error)
+	//
+	// NOTE: a passphrase set to 'default' will set the passphrase to the DefaultBIP39Passphrase value.
+	NewMnemonic(uid string, language Language, hdPath, passphase string, algo SignatureAlgo) (Info, string, error)
 
 	// NewAccount converts a mnemonic to a private key and BIP-39 HD Path and persists it.
+	// It fails if there is an existing key Info with the same address
 	NewAccount(uid, mnemonic, bip39Passwd, hdPath string, algo SignatureAlgo) (Info, error)
 
 	// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
@@ -477,7 +480,7 @@ func (ks keystore) List() ([]Info, error) {
 	return res, nil
 }
 
-func (ks keystore) NewMnemonic(uid string, language Language, hdPath string, algo SignatureAlgo) (Info, string, error) {
+func (ks keystore) NewMnemonic(uid string, language Language, hdPath, passphrase string, algo SignatureAlgo) (Info, string, error) {
 	if language != English {
 		return nil, "", ErrUnsupportedLanguage
 	}
@@ -498,7 +501,11 @@ func (ks keystore) NewMnemonic(uid string, language Language, hdPath string, alg
 		return nil, "", err
 	}
 
-	info, err := ks.NewAccount(uid, mnemonic, DefaultBIP39Passphrase, hdPath, algo)
+	if passphrase == "default" {
+		passphrase = DefaultBIP39Passphrase
+	}
+
+	info, err := ks.NewAccount(uid, mnemonic, passphrase, hdPath, algo)
 	if err != nil {
 		return nil, "", err
 	}
@@ -518,6 +525,12 @@ func (ks keystore) NewAccount(uid string, mnemonic string, bip39Passphrase strin
 	}
 
 	privKey := algo.Generate()(derivedPriv)
+
+	address := sdk.AccAddress(privKey.PubKey().Address())
+	_, err = ks.KeyByAddress(address)
+	if err == nil {
+		return nil, fmt.Errorf("account with address %s already exists in keyring, delete the key first if you want to recreate it", address)
+	}
 
 	return ks.writeLocalKey(uid, privKey, algo.Name())
 }

@@ -149,8 +149,8 @@ Examples:
 			}
 
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-			feeGrantMsgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = feeGrantMsgClient.GrantFeeAllowance(cmd.Context(), msg)
+			msgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = msgClient.GrantFeeAllowance(cmd.Context(), msg)
 			if err != nil {
 				return err
 			}
@@ -196,8 +196,8 @@ Example:
 
 			msg := types.NewMsgRevokeFeeAllowance(clientCtx.GetFromAddress(), grantee)
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-			feeGrantMsgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = feeGrantMsgClient.RevokeFeeAllowance(cmd.Context(), &msg)
+			msgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = msgClient.RevokeFeeAllowance(cmd.Context(), &msg)
 			if err != nil {
 				return err
 			}

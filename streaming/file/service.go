@@ -46,28 +46,28 @@ type StreamingService struct {
 	currentTxIndex     int64                                  // the index of the current tx
 }
 
-// intermediateWriter is used so that we do not need to update the underlying io.Writer inside the StoreKVPairWriteListener
+// IntermediateWriter is used so that we do not need to update the underlying io.Writer inside the StoreKVPairWriteListener
 // everytime we begin writing to a new file
-type intermediateWriter struct {
+type IntermediateWriter struct {
 	outChan chan<- []byte
 }
 
 // NewIntermediateWriter create an instance of an intermediateWriter that sends to the provided channel
-func NewIntermediateWriter(outChan chan<- []byte) *intermediateWriter {
-	return &intermediateWriter{
+func NewIntermediateWriter(outChan chan<- []byte) *IntermediateWriter {
+	return &IntermediateWriter{
 		outChan: outChan,
 	}
 }
 
 // Write satisfies io.Writer
-func (iw *intermediateWriter) Write(b []byte) (int, error) {
+func (iw *IntermediateWriter) Write(b []byte) (int, error) {
 	iw.outChan <- b
 	return len(b), nil
 }
 
 // NewStreamingService creates a new StreamingService for the provided writeDir, (optional) filePrefix, and storeKeys
 func NewStreamingService(writeDir, filePrefix string, storeKeys []sdk.StoreKey, m codec.BinaryMarshaler) (*StreamingService, error) {
-	listenChan := make(chan []byte, 0)
+	listenChan := make(chan []byte)
 	iw := NewIntermediateWriter(listenChan)
 	listener := types.NewStoreKVPairWriteListener(iw, m)
 	listeners := make(map[sdk.StoreKey][]types.WriteListener, len(storeKeys))
@@ -122,6 +122,9 @@ func (fss *StreamingService) ListenBeginBlock(ctx sdk.Context, req abci.RequestB
 	fss.stateCache = nil
 	// write res to file
 	lengthPrefixedResBytes, err := fss.marshaller.MarshalBinaryLengthPrefixed(&res)
+	if err != nil {
+		return err
+	}
 	if _, err = dstFile.Write(lengthPrefixedResBytes); err != nil {
 		return err
 	}
@@ -166,6 +169,9 @@ func (fss *StreamingService) ListenDeliverTx(ctx sdk.Context, req abci.RequestDe
 	fss.stateCache = nil
 	// write res to file
 	lengthPrefixedResBytes, err := fss.marshaller.MarshalBinaryLengthPrefixed(&res)
+	if err != nil {
+		return err
+	}
 	if _, err = dstFile.Write(lengthPrefixedResBytes); err != nil {
 		return err
 	}
@@ -209,6 +215,9 @@ func (fss *StreamingService) ListenEndBlock(ctx sdk.Context, req abci.RequestEnd
 	fss.stateCache = nil
 	// write res to file
 	lengthPrefixedResBytes, err := fss.marshaller.MarshalBinaryLengthPrefixed(&res)
+	if err != nil {
+		return err
+	}
 	if _, err = dstFile.Write(lengthPrefixedResBytes); err != nil {
 		return err
 	}

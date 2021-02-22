@@ -108,7 +108,7 @@ var (
 func TestIntermediateWriter(t *testing.T) {
 	outChan := make(chan []byte, 0)
 	iw := NewIntermediateWriter(outChan)
-	require.IsType(t, &intermediateWriter{}, iw)
+	require.IsType(t, &IntermediateWriter{}, iw)
 	testBytes := []byte{1, 2, 3, 4, 5}
 	var length int
 	var err error
@@ -152,7 +152,7 @@ func testListenBeginBlock(t *testing.T) {
 	expectedBeginBlockResBytes, err := testMarshaller.MarshalBinaryBare(&testBeginBlockRes)
 	require.Nil(t, err)
 
-	// Write state changes
+	// write state changes
 	testListener1.OnWrite(mockStoreKey1, true, mockKey1, mockValue1)
 	testListener2.OnWrite(mockStoreKey2, true, mockKey2, mockValue2)
 	testListener1.OnWrite(mockStoreKey1, true, mockKey3, mockValue3)
@@ -180,16 +180,16 @@ func testListenBeginBlock(t *testing.T) {
 	})
 	require.Nil(t, err)
 
-	// Send the ABCI messages
+	// send the ABCI messages
 	err = testStreamingService.ListenBeginBlock(emptyContext, testBeginBlockReq, testBeginBlockRes)
 	require.Nil(t, err)
 
-	// Load the file, checking that it was created with the expected name
+	// load the file, checking that it was created with the expected name
 	fileName := fmt.Sprintf("%s-block-%d-begin", testPrefix, testBeginBlockReq.GetHeader().Height)
 	fileBytes, err := readInFile(fileName)
 	require.Nil(t, err)
 
-	// Segment the file into the separate gRPC messages and check the correctness of each
+	// segment the file into the separate gRPC messages and check the correctness of each
 	segments, err := segmentBytes(fileBytes)
 	require.Nil(t, err)
 	require.Equal(t, 5, len(segments))
@@ -206,7 +206,7 @@ func testListenDeliverTx1(t *testing.T) {
 	expectedDeliverTxRes1Bytes, err := testMarshaller.MarshalBinaryBare(&testDeliverTxRes1)
 	require.Nil(t, err)
 
-	// Write state changes
+	// write state changes
 	testListener1.OnWrite(mockStoreKey1, true, mockKey1, mockValue1)
 	testListener2.OnWrite(mockStoreKey2, true, mockKey2, mockValue2)
 	testListener1.OnWrite(mockStoreKey2, true, mockKey3, mockValue3)
@@ -234,16 +234,16 @@ func testListenDeliverTx1(t *testing.T) {
 	})
 	require.Nil(t, err)
 
-	// Send the ABCI messages
+	// send the ABCI messages
 	err = testStreamingService.ListenDeliverTx(emptyContext, testDeliverTxReq1, testDeliverTxRes1)
 	require.Nil(t, err)
 
-	// Load the file, checking that it was created with the expected name
+	// load the file, checking that it was created with the expected name
 	fileName := fmt.Sprintf("%s-block-%d-tx-%d", testPrefix, testBeginBlockReq.GetHeader().Height, 0)
 	fileBytes, err := readInFile(fileName)
 	require.Nil(t, err)
 
-	// Segment the file into the separate gRPC messages and check the correctness of each
+	// segment the file into the separate gRPC messages and check the correctness of each
 	segments, err := segmentBytes(fileBytes)
 	require.Nil(t, err)
 	require.Equal(t, 5, len(segments))
@@ -260,7 +260,7 @@ func testListenDeliverTx2(t *testing.T) {
 	expectedDeliverTxRes2Bytes, err := testMarshaller.MarshalBinaryBare(&testDeliverTxRes2)
 	require.Nil(t, err)
 
-	// Write state changes
+	// write state changes
 	testListener1.OnWrite(mockStoreKey2, true, mockKey1, mockValue1)
 	testListener2.OnWrite(mockStoreKey1, true, mockKey2, mockValue2)
 	testListener1.OnWrite(mockStoreKey2, true, mockKey3, mockValue3)
@@ -288,16 +288,16 @@ func testListenDeliverTx2(t *testing.T) {
 	})
 	require.Nil(t, err)
 
-	// Send the ABCI messages
+	// send the ABCI messages
 	err = testStreamingService.ListenDeliverTx(emptyContext, testDeliverTxReq2, testDeliverTxRes2)
 	require.Nil(t, err)
 
-	// Load the file, checking that it was created with the expected name
+	// load the file, checking that it was created with the expected name
 	fileName := fmt.Sprintf("%s-block-%d-tx-%d", testPrefix, testBeginBlockReq.GetHeader().Height, 1)
 	fileBytes, err := readInFile(fileName)
 	require.Nil(t, err)
 
-	// Segment the file into the separate gRPC messages and check the correctness of each
+	// segment the file into the separate gRPC messages and check the correctness of each
 	segments, err := segmentBytes(fileBytes)
 	require.Nil(t, err)
 	require.Equal(t, 5, len(segments))
@@ -314,7 +314,7 @@ func testListenEndBlock(t *testing.T) {
 	expectedEndBlockResBytes, err := testMarshaller.MarshalBinaryBare(&testEndBlockRes)
 	require.Nil(t, err)
 
-	// Write state changes
+	// write state changes
 	testListener1.OnWrite(mockStoreKey1, true, mockKey1, mockValue1)
 	testListener2.OnWrite(mockStoreKey1, true, mockKey2, mockValue2)
 	testListener1.OnWrite(mockStoreKey2, true, mockKey3, mockValue3)
@@ -342,16 +342,16 @@ func testListenEndBlock(t *testing.T) {
 	})
 	require.Nil(t, err)
 
-	// Send the ABCI messages
+	// send the ABCI messages
 	err = testStreamingService.ListenEndBlock(emptyContext, testEndBlockReq, testEndBlockRes)
 	require.Nil(t, err)
 
-	// Load the file, checking that it was created with the expected name
+	// load the file, checking that it was created with the expected name
 	fileName := fmt.Sprintf("%s-block-%d-end", testPrefix, testEndBlockReq.Height)
 	fileBytes, err := readInFile(fileName)
 	require.Nil(t, err)
 
-	// Segment the file into the separate gRPC messages and check the correctness of each
+	// segment the file into the separate gRPC messages and check the correctness of each
 	segments, err := segmentBytes(fileBytes)
 	require.Nil(t, err)
 	require.Equal(t, 5, len(segments))

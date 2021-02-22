@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	query "github.com/cosmos/cosmos-sdk/types/query"
@@ -412,7 +411,7 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
 				var result tx.BroadcastTxResponse
 				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
-				s.Require().Equal(uint32(0), result.TxResponse.Code)
+				s.Require().Equal(uint32(0), result.TxResponse.Code, "rawlog", result.TxResponse.RawLog)
 			}
 		})
 	}
@@ -429,7 +428,7 @@ func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
 	// prepare txBuilder with msg
 	txBuilder := val.ClientCtx.TxConfig.NewTxBuilder()
 	feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
-	gasLimit := testdata.NewTestGasLimit()
+	gasLimit := uint64(150000)
 	s.Require().NoError(
 		txBuilder.SetMsgs(&banktypes.MsgSend{
 			FromAddress: val.Address.String(),

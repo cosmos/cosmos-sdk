@@ -574,8 +574,10 @@
   
     - [Msg](#ibc.applications.transfer.v1.Msg)
   
-- [ibc/core/channel/v1/channel.proto](#ibc/core/channel/v1/channel.proto)
+- [ibc/core/channel/v1/acknowledgement.proto](#ibc/core/channel/v1/acknowledgement.proto)
     - [Acknowledgement](#ibc.core.channel.v1.Acknowledgement)
+  
+- [ibc/core/channel/v1/channel.proto](#ibc/core/channel/v1/channel.proto)
     - [Channel](#ibc.core.channel.v1.Channel)
     - [Counterparty](#ibc.core.channel.v1.Counterparty)
     - [IdentifiedChannel](#ibc.core.channel.v1.IdentifiedChannel)
@@ -8230,10 +8232,10 @@ Msg defines the ibc/transfer Msg service.
 
 
 
-<a name="ibc/core/channel/v1/channel.proto"></a>
+<a name="ibc/core/channel/v1/acknowledgement.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## ibc/core/channel/v1/channel.proto
+## ibc/core/channel/v1/acknowledgement.proto
 
 
 
@@ -8256,6 +8258,22 @@ https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semant
 
 
 
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="ibc/core/channel/v1/channel.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## ibc/core/channel/v1/channel.proto
 
 
 

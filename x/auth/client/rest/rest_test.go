@@ -158,6 +158,9 @@ func (s *IntegrationTestSuite) TestEncodeDecode() {
 
 func (s *IntegrationTestSuite) TestQueryAccountWithColon() {
 	val := s.network.Validators[0]
+	// This address is not a valid simapp address! It is only used to test that addresses with
+	// colon don't 501. See
+	// https://github.com/cosmos/cosmos-sdk/issues/8650
 	addrWithColon := "cosmos:1m4f6lwd9eh8e5nxt0h00d46d3fr03apfh8qf4g"
 
 	res, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/auth/v1beta1/accounts/%s", val.APIAddress, addrWithColon))

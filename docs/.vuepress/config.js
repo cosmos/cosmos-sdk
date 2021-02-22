@@ -39,12 +39,12 @@ module.exports = {
     },
     versions: [
       {
-        "label": "v0.40",
-        "key": "v0.40"
-      },
-      {
         "label": "v0.39",
         "key": "v0.39"
+      },
+      {
+        "label": "v0.41",
+        "key": "v0.41"
       },
       {
         "label": "master",

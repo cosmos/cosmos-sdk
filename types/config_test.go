@@ -40,18 +40,6 @@ func (s *configTestSuite) TestConfig_SetCoinType() {
 	s.Require().Panics(func() { config.SetCoinType(99) })
 }
 
-func (s *configTestSuite) TestConfig_SetFullFundraiserPath() {
-	config := sdk.NewConfig()
-	config.SetFullFundraiserPath("test/path")
-	s.Require().Equal("test/path", config.GetFullFundraiserPath())
-
-	config.SetFullFundraiserPath("test/poth")
-	s.Require().Equal("test/poth", config.GetFullFundraiserPath())
-
-	config.Seal()
-	s.Require().Panics(func() { config.SetFullFundraiserPath("x/test/path") })
-}
-
 func (s *configTestSuite) TestConfig_SetTxEncoder() {
 	mockErr := errors.New("test")
 	config := sdk.NewConfig()
@@ -63,6 +51,18 @@ func (s *configTestSuite) TestConfig_SetTxEncoder() {
 
 	config.Seal()
 	s.Require().Panics(func() { config.SetTxEncoder(encFunc) })
+}
+
+func (s *configTestSuite) TestConfig_SetFullFundraiserPath() {
+	config := sdk.NewConfig()
+	config.SetFullFundraiserPath("test/path")
+	s.Require().Equal("test/path", config.GetFullFundraiserPath())
+
+	config.SetFullFundraiserPath("test/poth")
+	s.Require().Equal("test/poth", config.GetFullFundraiserPath())
+
+	config.Seal()
+	s.Require().Panics(func() { config.SetFullFundraiserPath("x/test/path") })
 }
 
 func (s *configTestSuite) TestKeyringServiceName() {

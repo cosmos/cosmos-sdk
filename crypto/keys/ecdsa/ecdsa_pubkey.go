@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/gogo/protobuf/proto"
+	gogotypes "github.com/gogo/protobuf/types"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -64,10 +66,8 @@ type ecdsaPK struct {
 	address tmcrypto.Address
 }
 
-var _ cryptotypes.PubKey = ecdsaPK{}
-
 // String implements PubKey interface
-func (pk ecdsaPK) Address() tmcrypto.Address {
+func (pk *ecdsaPK) Address() tmcrypto.Address {
 	if pk.address == nil {
 		pk.address = address.Hash(curveNames[pk.Curve], pk.Bytes())
 	}
@@ -75,13 +75,13 @@ func (pk ecdsaPK) Address() tmcrypto.Address {
 }
 
 // String implements PubKey interface
-func (pk ecdsaPK) String() string {
+func (pk *ecdsaPK) String() string {
 	return fmt.Sprintf("%s{%X}", curveNames[pk.Curve], pk.Bytes())
 }
 
 // Bytes returns the byte representation of the public key using a compressed form
 // specified in section 4.3.6 of ANSI X9.62 with first byte being the curve type.
-func (pk ecdsaPK) Bytes() []byte {
+func (pk *ecdsaPK) Bytes() []byte {
 	compressed := make([]byte, PubKeySize)
 	compressed[0] = curveTypes[pk.Curve]
 	compressed[1] = byte(pk.Y.Bit(0)) | 2
@@ -91,8 +91,8 @@ func (pk ecdsaPK) Bytes() []byte {
 
 // Equals - you probably don't need to use this.
 // Runs in constant time based on length of the keys.
-func (pk ecdsaPK) Equals(other cryptotypes.PubKey) bool {
-	pk2, ok := other.(ecdsaPK)
+func (pk *ecdsaPK) Equals(other cryptotypes.PubKey) bool {
+	pk2, ok := other.(*ecdsaPK)
 	if !ok {
 		return false
 	}
@@ -101,7 +101,7 @@ func (pk ecdsaPK) Equals(other cryptotypes.PubKey) bool {
 }
 
 // VerifySignature implements skd.PubKey interface
-func (pk ecdsaPK) VerifySignature(msg []byte, sig []byte) bool {
+func (pk *ecdsaPK) VerifySignature(msg []byte, sig []byte) bool {
 	s := new(signature)
 	if _, err := asn1.Unmarshal(sig, s); err != nil || s == nil {
 		return false
@@ -112,29 +112,69 @@ func (pk ecdsaPK) VerifySignature(msg []byte, sig []byte) bool {
 }
 
 // Type returns key type name. Implements sdk.PubKey interface
-func (pk ecdsaPK) Type() string {
+func (pk *ecdsaPK) Type() string {
 	return curveNames[pk.Curve]
 }
 
 // **** proto.Message ****
 
-func (pk ecdsaPK) Reset()     {} // TODO: maybe we need to have this?
-func (ecdsaPK) ProtoMessage() {}
+func (pk *ecdsaPK) Reset()     {} // TODO: maybe we need to have this?
+func (*ecdsaPK) ProtoMessage() {}
+
+// **** Proto Marshaler ****
+
+func (pk *ecdsaPK) Marshal() ([]byte, error) {
+	bv := gogotypes.BytesValue{Value: pk.Bytes()}
+	return proto.Marshal(&bv)
+}
+
+func (pk *ecdsaPK) Unmarshal(b []byte) error {
+	bv := gogotypes.BytesValue{}
+	err := proto.Unmarshal(b, &bv)
+	if err != nil {
+		return err
+	}
+	if len(bv.Value) < 2 {
+		return fmt.Errorf("wrong ECDSA PK bytes, expecting at least 2 bytes")
+	}
+
+	curve, ok := curveTypesRev[bv.Value[0]]
+	if !ok {
+		return fmt.Errorf("wrong ECDSA PK bytes, unknown curve type: %d", bv.Value[0])
+	}
+	cpk := ecdsa.PublicKey{Curve: curve}
+	cpk.X, cpk.Y = elliptic.UnmarshalCompressed(curve, bv.Value[1:])
+	if cpk.X == nil || cpk.Y == nil {
+		return fmt.Errorf("wrong ECDSA PK bytes")
+	}
+
+	if pk == nil {
+		*pk = ecdsaPK{cpk, nil}
+	} else {
+		pk.PublicKey = cpk
+	}
+
+	return nil
+	// addrValue := gogotypes.BytesValue{}
+	// bz, err := proto.Marshal(suite.pk)
+	// k.cdc.MustUnmarshalBinaryBare(bz, &addrValue)
+
+}
 
 /*
-ProtoMarshaler interface {
+   ProtoMarshaler interface {
 	Marshal() ([]byte, error)
 	MarshalTo(data []byte) (n int, err error)
 	MarshalToSizedBuffer(dAtA []byte) (int, error)
 	Size() int
 	Unmarshal(data []byte) error
-}
+    }
 */
 
 // **** Amino Marshaler ****
 
 // MarshalAmino overrides Amino binary marshalling.
-func (pk ecdsaPK) MarshalAmino() ([]byte, error) {
+func (pk *ecdsaPK) MarshalAmino() ([]byte, error) {
 	return pk.Bytes(), nil
 }
 
@@ -157,7 +197,7 @@ func (pk *ecdsaPK) UnmarshalAmino(bz []byte) error {
 }
 
 // MarshalAminoJSON overrides Amino JSON marshalling.
-func (pk ecdsaPK) MarshalAminoJSON() ([]byte, error) {
+func (pk *ecdsaPK) MarshalAminoJSON() ([]byte, error) {
 	return pk.MarshalAmino()
 }
 

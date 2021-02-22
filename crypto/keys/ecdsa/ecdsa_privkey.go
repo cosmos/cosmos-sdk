@@ -27,7 +27,7 @@ func GenSecp256r1() (cryptotypes.PrivKey, error) {
 
 // PubKey implements SDK PrivKey interface
 func (sk ecdsaSK) PubKey() cryptotypes.PubKey {
-	return ecdsaPK{sk.PublicKey, nil}
+	return &ecdsaPK{sk.PublicKey, nil}
 }
 
 // Bytes serialize the private key with first byte being the curve type

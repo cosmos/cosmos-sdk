@@ -2,8 +2,10 @@ package ecdsa
 
 import (
 	"encoding/hex"
+	"fmt"
 	"testing"
 
+	proto "github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -47,7 +49,7 @@ func (suite *EcdsaSuite) TestEquals() {
 	skOther, err := GenSecp256r1()
 	require.NoError(err)
 	pkOther := skOther.PubKey()
-	pkOther2 := ecdsaPK{skOther.(ecdsaSK).PublicKey, nil}
+	pkOther2 := &ecdsaPK{skOther.(ecdsaSK).PublicKey, nil}
 
 	require.False(suite.pk.Equals(pkOther))
 	require.True(pkOther.Equals(pkOther2))
@@ -71,5 +73,38 @@ func (suite *EcdsaSuite) TestMarshalAmino() {
 }
 
 func (suite *EcdsaSuite) TestMarshalProto() {
+	require := suite.Require()
+	// registry := types.NewInterfaceRegistry()
+	// cdc := codec.NewProtoCodec(registry)
+
+	bz, err := proto.Marshal(suite.pk)
+	require.NoError(err)
+	fmt.Println("bytes:", bz)
+
+	// bz, err := cdc.MarshalInterface(suite)
+	// require.NoError(t, err)
+
+	// var animal testdata.Animal
+
+	// // empty registry should fail
+	// err = cdc.UnmarshalInterface(bz, &animal)
+	// require.Error(t, err)
+
+	// // wrong type registration should fail
+	// registry.RegisterImplementations((*testdata.Animal)(nil), &testdata.Dog{})
+	// err = cdc.UnmarshalInterface(bz, &animal)
+	// require.Error(t, err)
+
+	// // should pass
+	// registry = NewTestInterfaceRegistry()
+	// cdc = codec.NewProtoCodec(registry)
+	// err = cdc.UnmarshalInterface(bz, &animal)
+	// require.NoError(t, err)
+	// require.Equal(t, kitty, animal)
+
+	// // nil should fail
+	// registry = NewTestInterfaceRegistry()
+	// err = cdc.UnmarshalInterface(bz, nil)
+	// require.Error(t, err)
 
 }

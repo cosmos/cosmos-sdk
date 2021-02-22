@@ -198,7 +198,7 @@ func (s *IntegrationTestSuite) TestCLISign() {
 		sigOnlyFlag, "--overwrite")
 	checkSignatures(require, txCfg, res.Bytes(), valInfo.GetPubKey())
 
-	/****  test FlagAmino  ****/
+	/****  test flagAmino  ****/
 	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
 		"--amino=true")
 	require.NoError(err)

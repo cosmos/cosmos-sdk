@@ -156,6 +156,15 @@ func (s *IntegrationTestSuite) TestEncodeDecode() {
 	require.Equal(stdTx, legacytx.StdTx(decodeResp))
 }
 
+func (s *IntegrationTestSuite) TestQueryAccountWithColon() {
+	val := s.network.Validators[0]
+	addrWithColon := "cosmos:1m4f6lwd9eh8e5nxt0h00d46d3fr03apfh8qf4g"
+
+	res, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/auth/v1beta1/accounts/%s", val.APIAddress, addrWithColon))
+	s.Require().NoError(err)
+	s.Require().Contains(string(res), "decoding bech32 failed")
+}
+
 func (s *IntegrationTestSuite) TestEncodeIBCTx() {
 	val := s.network.Validators[0]
 

@@ -53,11 +53,11 @@ submission.
 
 ## ClientUpdateProposal
 
-A governance proposal may be passed to update a specified client with a provided
-header. This is useful in unfreezing clients or updating expired clients. Each 
-client is expected to implement this functionality. A client may choose to disallow
-an update by a governance proposal by returning an error in the client state function
-'CheckProposedHeaderAndUpdateState'.
+A governance proposal may be passed to update a specified client using another client
+known as the "substitute client". This is useful in unfreezing clients or updating 
+expired clients, thereby making the effected channels active again. Each client is 
+expected to implement this functionality. A client may choose to disallow an update 
+by a governance proposal by returning an error in the client state function 'CheckSubstituteAndUpdateState'.
 
 The localhost client cannot be updated by a governance proposal. 
 
@@ -68,9 +68,21 @@ be updated later.
 The tendermint client has two flags update flags, 'AllowUpdateAfterExpiry' and 
 'AllowUpdateAfterMisbehaviour'. The former flag can only be used to unexpire clients. The
 latter flag can be used to unfreeze a client and if necessary it will also unexpire the client.
-It is advised to let a client expire if it has become frozen before proposing a new header. 
-This is to avoid the client from becoming refrozen if the misbehaviour evidence has not 
-expired. These boolean flags are set upon client creation and cannot be updated later.
+It is best practice to initialize a new substitute client instead of using an existing one
+This avoids potential issues of the substitute becoming frozen due to misbehaviour or the 
+subject client becoming refrozen due to misbehaviour not being expired at the time the
+proposal passes. These boolean flags are set upon client creation and cannot be updated later.
+
+The `CheckSubstituteAndUpdateState` function provides the light client with its own client 
+store, the client store of the substitute, the substitute client state, and the intitial 
+height that should be used when referring to the substitute client. Most light client
+implementations should copy consensus states from the substitute to the subject, but
+are not required to do so. Light clients may copy informationa as they deem necessary.
+
+It is not recommended to use a substitute client in normal operations since the subject
+light client will be given unrestricted access to the substitute client store. Governance
+should not pass votes which enable byzantine light client modules from modifying the state
+of the substitute. 
 
 ## IBC Client Heights
 

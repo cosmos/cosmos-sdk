@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
@@ -257,8 +259,7 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 			trace = types.ParseDenomTrace(sdk.DefaultBondDenom)
 			coin := sdk.NewCoin(sdk.DefaultBondDenom, amount)
 
-			err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(coin))
-			suite.Require().NoError(err)
+			suite.Require().NoError(simapp.FundAccount(suite.chainA.App, suite.chainA.GetContext(), escrow, sdk.NewCoins(coin)))
 		}, false, true},
 		{"unsuccessful refund from source", failedAck,
 			func() {
@@ -270,8 +271,7 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 				trace = types.ParseDenomTrace(types.GetPrefixedDenom(channelA.PortID, channelA.ID, sdk.DefaultBondDenom))
 				coin := sdk.NewCoin(trace.IBCDenom(), amount)
 
-				err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(coin))
-				suite.Require().NoError(err)
+				suite.Require().NoError(simapp.FundAccount(suite.chainA.App, suite.chainA.GetContext(), escrow, sdk.NewCoins(coin)))
 			}, false, true},
 	}
 
@@ -332,8 +332,7 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 				trace = types.ParseDenomTrace(sdk.DefaultBondDenom)
 				coin := sdk.NewCoin(trace.IBCDenom(), amount)
 
-				err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(coin))
-				suite.Require().NoError(err)
+				suite.Require().NoError(simapp.FundAccount(suite.chainA.App, suite.chainA.GetContext(), escrow, sdk.NewCoins(coin)))
 			}, true},
 		{"successful timeout from external chain",
 			func() {
@@ -341,8 +340,7 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 				trace = types.ParseDenomTrace(types.GetPrefixedDenom(channelA.PortID, channelA.ID, sdk.DefaultBondDenom))
 				coin := sdk.NewCoin(trace.IBCDenom(), amount)
 
-				err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(coin))
-				suite.Require().NoError(err)
+				suite.Require().NoError(simapp.FundAccount(suite.chainA.App, suite.chainA.GetContext(), escrow, sdk.NewCoins(coin)))
 			}, true},
 		{"no balance for coin denom",
 			func() {

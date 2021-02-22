@@ -84,6 +84,10 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleAccAddr)
 	}
 
+	if !amt.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
+	}
+
 	balances := sdk.NewCoins()
 
 	for _, coin := range amt {

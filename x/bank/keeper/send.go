@@ -83,7 +83,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 			return err
 		}
 
-		err = k.subUnlockedCoinsWithEvent(ctx, inAddress, in.Coins)
+		err = k.subUnlockedCoins(ctx, inAddress, in.Coins)
 		if err != nil {
 			return err
 		}
@@ -101,7 +101,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 		if err != nil {
 			return err
 		}
-		err = k.addCoinsWithEvent(ctx, outAddress, out.Coins)
+		err = k.addCoins(ctx, outAddress, out.Coins)
 		if err != nil {
 			return err
 		}
@@ -144,12 +144,12 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 		),
 	})
 
-	err := k.subUnlockedCoinsWithEvent(ctx, fromAddr, amt)
+	err := k.subUnlockedCoins(ctx, fromAddr, amt)
 	if err != nil {
 		return err
 	}
 
-	err = k.addCoinsWithEvent(ctx, toAddr, amt)
+	err = k.addCoins(ctx, toAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -167,60 +167,9 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 	return nil
 }
 
-// subUnlockedCoinsWithEvent removes the unlocked amt coins of the given account. An error is
+// subUnlockedCoins removes the unlocked amt coins of the given account. An error is
 // returned if the resulting balance is negative or the initial amount is invalid.
 // A coin_spent event is emitted after.
-func (k BaseSendKeeper) subUnlockedCoinsWithEvent(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
-	err := k.subUnlockedCoins(ctx, addr, amt)
-	if err != nil {
-		return err
-	}
-
-	// emit coin spent event
-	ctx.EventManager().EmitEvent(
-		types.NewCoinSpentEvent(addr, amt),
-	)
-	return nil
-}
-
-// addCoinsWithEvent increase the addr balance by the given amt. It emits a coin received event.
-func (k BaseSendKeeper) addCoinsWithEvent(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
-	if err := k.addCoins(ctx, addr, amt); err != nil {
-		return err
-	}
-
-	// emit coin received event
-	ctx.EventManager().EmitEvent(
-		types.NewCoinReceivedEvent(addr, amt),
-	)
-
-	return nil
-}
-
-// addCoins increases addr balance by the provided amt. An error is returned if
-// the initial amount is invalid or if any resulting new balance is negative. It does
-// not emit any event because it is used by MintCoins and addCoinsWithEvent which need to emit
-// two different events to properly support balance and supply tracking.
-func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
-	if !amt.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
-	}
-
-	for _, coin := range amt {
-		balance := k.GetBalance(ctx, addr, coin.Denom)
-		newBalance := balance.Add(coin)
-
-		err := k.setBalance(ctx, addr, newBalance)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// subUnlockedCoins removes from addr balance the given amt. It does not do any check on coins that are
-// locked or not, and it does not emit any event as it is used by decreaseBalance and BurnCoins
-// which emit two distinguished events to properly support balance and supply tracking via events.
 func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
 	if !amt.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
@@ -239,6 +188,35 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, a
 	if err != nil {
 		return err
 	}
+
+	// emit coin spent event
+	ctx.EventManager().EmitEvent(
+		types.NewCoinSpentEvent(addr, amt),
+	)
+	return nil
+}
+
+// addCoins increase the addr balance by the given amt. Fails if the provided amt is invalid.
+// It emits a coin received event.
+func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
+	if !amt.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
+	}
+
+	for _, coin := range amt {
+		balance := k.GetBalance(ctx, addr, coin.Denom)
+		newBalance := balance.Add(coin)
+
+		err := k.setBalance(ctx, addr, newBalance)
+		if err != nil {
+			return err
+		}
+	}
+
+	// emit coin received event
+	ctx.EventManager().EmitEvent(
+		types.NewCoinReceivedEvent(addr, amt),
+	)
 
 	return nil
 }
@@ -311,6 +289,7 @@ func (k BaseSendKeeper) BlockedAddr(addr sdk.AccAddress) bool {
 	return k.blockedAddrs[addr.String()]
 }
 
+// balanceError computes the error
 func balanceError(ownedCoins, coinsToSpend, afterBalance sdk.Coins) error {
 	for _, coin := range afterBalance {
 		if !coin.IsNegative() {

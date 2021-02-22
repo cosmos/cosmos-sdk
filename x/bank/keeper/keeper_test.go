@@ -557,9 +557,9 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 
 	// events are shifted due to the funding account events
 	events = ctx.EventManager().ABCIEvents()
-	suite.Require().Equal(11, len(events))
-	suite.Require().Equal(abci.Event(event1), events[7])
-	suite.Require().Equal(abci.Event(event2), events[8])
+	suite.Require().Equal(12, len(events))
+	suite.Require().Equal(abci.Event(event1), events[8])
+	suite.Require().Equal(abci.Event(event2), events[9])
 }
 
 func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
@@ -598,7 +598,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	events = ctx.EventManager().ABCIEvents()
-	suite.Require().Equal(7, len(events)) // 7 events because account funding causes extra minting + coin_spent + coin_recv events
+	suite.Require().Equal(8, len(events)) // 7 events because account funding causes extra minting + coin_spent + coin_recv events
 
 	event1 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
@@ -608,7 +608,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 		event1.Attributes,
 		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
 	)
-	suite.Require().Equal(abci.Event(event1), events[6])
+	suite.Require().Equal(abci.Event(event1), events[7])
 
 	// Set addr's coins and addr2's coins
 	suite.Require().NoError(simapp.FundAccount(app, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))))
@@ -620,7 +620,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	suite.Require().NoError(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	events = ctx.EventManager().ABCIEvents()
-	suite.Require().Equal(25, len(events)) // 25 due to account funding + coin_spent + coin_recv events
+	suite.Require().Equal(28, len(events)) // 25 due to account funding + coin_spent + coin_recv events
 
 	event2 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
@@ -654,10 +654,10 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins2.String())},
 	)
 	// events are shifted due to the funding account events
-	suite.Require().Equal(abci.Event(event1), events[18])
-	suite.Require().Equal(abci.Event(event2), events[20])
-	suite.Require().Equal(abci.Event(event3), events[22])
-	suite.Require().Equal(abci.Event(event4), events[24])
+	suite.Require().Equal(abci.Event(event1), events[21])
+	suite.Require().Equal(abci.Event(event2), events[23])
+	suite.Require().Equal(abci.Event(event3), events[25])
+	suite.Require().Equal(abci.Event(event4), events[27])
 }
 
 func (suite *IntegrationTestSuite) TestSpendableCoins() {
@@ -1057,15 +1057,10 @@ func (suite *IntegrationTestSuite) TestBalanceTrackingEvents() {
 			burnedCoins, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
 			suite.Require().NoError(err)
 			supply = supply.Sub(burnedCoins)
-			burner, err := sdk.AccAddressFromBech32((string)(e.Attributes[0].Value))
-			suite.Require().NoError(err)
-			balances[burner.String()] = balances[burner.String()].Sub(burnedCoins)
+
 		case types.EventTypeCoinMint:
 			mintedCoins, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
 			suite.Require().NoError(err)
-			minter, err := sdk.AccAddressFromBech32((string)(e.Attributes[0].Value))
-			suite.Require().NoError(err)
-			balances[minter.String()] = balances[minter.String()].Add(mintedCoins...)
 			supply = supply.Add(mintedCoins...)
 
 		case types.EventTypeCoinSpent:

@@ -136,7 +136,7 @@ func (k BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAdd
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	err := k.subUnlockedCoinsWithEvent(ctx, moduleAccAddr, amt)
+	err := k.subUnlockedCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func (k BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAdd
 		return sdkerrors.Wrap(err, "failed to track undelegation")
 	}
 
-	err = k.addCoinsWithEvent(ctx, delegatorAddr, amt)
+	err = k.addCoins(ctx, delegatorAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -367,7 +367,7 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to burn tokens", moduleName))
 	}
 
-	err := k.subUnlockedCoins(ctx, acc.GetAddress(), amt) // no event, burn suffices
+	err := k.subUnlockedCoins(ctx, acc.GetAddress(), amt)
 	if err != nil {
 		return err
 	}

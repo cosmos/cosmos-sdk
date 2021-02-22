@@ -3,7 +3,7 @@
 name = "x/upgrade"
 
 # Description of the module. (Optional)
-description = ""
+description = "The upgrade module handles live chain upgrades of the application."
 
 # Link to where the module is located, it can also be a link to your project. (Optional)
 homepage = "https://github.com/cosmos/cosmos-sdk"
@@ -31,7 +31,7 @@ name = "aaronc"
 repo = "https://github.com/cosmos/cosmos-sdk"
 
 # The documentation field specifies a URL to a website hosting the module's documentation. (Optional)
-documentation = "https://docs.cosmos.network/v0.40/modules/upgrade/"
+documentation = "https://raw.githubusercontent.com/cosmos/cosmos-sdk/master/x/upgrade/atlas/atlas-v0.41.x.md"
 
 # The module version to be published. (Required)
 version = "v0.41.x"

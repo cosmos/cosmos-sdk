@@ -3,7 +3,7 @@
 name = "x/gov"
 
 # Description of the module. (Optional)
-description = ""
+description = "The gov module is responsible for handling proposals and voting. Changing the parameters of the chain, community fund proposal are all possible with this module"
 
 # Link to where the module is located, it can also be a link to your project. (Optional)
 homepage = "https://github.com/cosmos/cosmos-sdk"
@@ -34,7 +34,7 @@ name = "aaronc"
 repo = "https://github.com/cosmos/cosmos-sdk"
 
 # The documentation field specifies a URL to a website hosting the module's documentation. (Optional)
-documentation = "https://docs.cosmos.network/v0.40/modules/gov/"
+documentation = "https://raw.githubusercontent.com/cosmos/cosmos-sdk/master/x/gov/atlas/atlas-v0.41.x.md"
 
 # The module version to be published. (Required)
 version = "v0.41.x"

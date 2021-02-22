@@ -3,7 +3,7 @@
 name = "x/mint"
 
 # Description of the module. (Optional)
-description = ""
+description = "Mint handles the minting of new tokens. This can be associated with a inflation rate."
 
 # Link to where the module is located, it can also be a link to your project. (Optional)
 homepage = "https://github.com/cosmos/cosmos-sdk"
@@ -34,7 +34,7 @@ name = "aaronc"
 repo = "https://github.com/cosmos/cosmos-sdk"
 
 # The documentation field specifies a URL to a website hosting the module's documentation. (Optional)
-documentation = "https://docs.cosmos.network/v0.40/modules/mint/"
+documentation = "https://raw.githubusercontent.com/cosmos/cosmos-sdk/master/x/mint/atlas/atlas-v0.41.x.md"
 
 # The module version to be published. (Required)
 version = "v0.41.x"

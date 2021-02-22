@@ -14,6 +14,7 @@ const DefaultKeyringServiceName = "cosmos"
 // Config is the structure that holds the SDK configuration parameters.
 // This could be used to initialize certain configuration parameters for the SDK.
 type Config struct {
+	fullFundraiserPath  string
 	bech32AddressPrefix map[string]string
 	txEncoder           TxEncoder
 	addressVerifier     func([]byte) error
@@ -45,6 +46,7 @@ func NewConfig() *Config {
 			"validator_pub":  Bech32PrefixValPub,
 			"consensus_pub":  Bech32PrefixConsPub,
 		},
+		fullFundraiserPath: FullFundraiserPath,
 
 		purpose:   Purpose,
 		coinType:  CoinType,
@@ -115,6 +117,14 @@ func (config *Config) SetTxEncoder(encoder TxEncoder) {
 func (config *Config) SetAddressVerifier(addressVerifier func([]byte) error) {
 	config.assertNotSealed()
 	config.addressVerifier = addressVerifier
+}
+
+// Set the FullFundraiserPath (BIP44Prefix) on the config.
+//
+// Deprecated: Use SetPurpose and SetCoinType instead
+func (config *Config) SetFullFundraiserPath(fullFundraiserPath string) {
+	config.assertNotSealed()
+	config.fullFundraiserPath = fullFundraiserPath
 }
 
 // Set the BIP-0044 Purpose code on the config
@@ -194,6 +204,13 @@ func (config *Config) GetPurpose() uint32 {
 // GetCoinType returns the BIP-0044 CoinType code on the config.
 func (config *Config) GetCoinType() uint32 {
 	return config.coinType
+}
+
+// GetFullFundraiserPath returns the BIP44Prefix.
+//
+// Deprecated: Use GetFullBip44Path instead
+func (config *Config) GetFullFundraiserPath() string {
+	return config.fullFundraiserPath
 }
 
 // GetFullBip44Path returns the BIP44Prefix.

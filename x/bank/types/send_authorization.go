@@ -6,11 +6,12 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authz "github.com/cosmos/cosmos-sdk/x/authz/exported"
 )
 
 var (
-	_ Authorization = &SendAuthorization{}
+	_ authz.Authorization = &SendAuthorization{}
 )
 
 // NewSendAuthorization creates a new SendAuthorization object.
@@ -26,20 +27,20 @@ func (authorization SendAuthorization) MethodName() string {
 }
 
 // Accept implements Authorization.Accept.
-func (authorization SendAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (allow bool, updated Authorization, delete bool) {
-	if reflect.TypeOf(msg.Request) == reflect.TypeOf(&bank.MsgSend{}) {
-		msg, ok := msg.Request.(*bank.MsgSend)
+func (authorization SendAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (updated authz.Authorization, delete bool, err error) {
+	if reflect.TypeOf(msg.Request) == reflect.TypeOf(&MsgSend{}) {
+		msg, ok := msg.Request.(*MsgSend)
 		if ok {
 			limitLeft, isNegative := authorization.SpendLimit.SafeSub(msg.Amount)
 			if isNegative {
-				return false, nil, false
+				return nil, false, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "requested amount is more than spend limit")
 			}
 			if limitLeft.IsZero() {
-				return true, nil, true
+				return nil, true, nil
 			}
 
-			return true, &SendAuthorization{SpendLimit: limitLeft}, false
+			return &SendAuthorization{SpendLimit: limitLeft}, false, nil
 		}
 	}
-	return false, nil, false
+	return nil, false, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "type mismatch")
 }

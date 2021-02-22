@@ -29,6 +29,18 @@ func TestMetadataValidate(t *testing.T) {
 			},
 			false,
 		},
+		{
+			"base coin is display coin",
+			types.Metadata{
+				Description: "The native staking token of the Cosmos Hub.",
+				DenomUnits: []*types.DenomUnit{
+					{"atom", uint32(0), []string{"ATOM"}},
+				},
+				Base:    "atom",
+				Display: "atom",
+			},
+			false,
+		},
 		{"empty metadata", types.Metadata{}, true},
 		{
 			"invalid base denom",

@@ -10,8 +10,11 @@ import (
 
 func (suite *KeeperTestSuite) TestClientUpdateProposal() {
 	var (
-		content *types.ClientUpdateProposal
-		err     error
+		subject, substitute                       string
+		subjectClientState, substituteClientState exported.ClientState
+		initialHeight                             clienttypes.Height
+		content                                   *types.ClientUpdateProposal
+		err                                       error
 	)
 
 	testCases := []struct {
@@ -21,53 +24,63 @@ func (suite *KeeperTestSuite) TestClientUpdateProposal() {
 	}{
 		{
 			"valid update client proposal", func() {
-				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
-				clientState := suite.chainA.GetClientState(clientA)
-
-				tmClientState, ok := clientState.(*ibctmtypes.ClientState)
-				suite.Require().True(ok)
-				tmClientState.AllowUpdateAfterMisbehaviour = true
-				tmClientState.FrozenHeight = tmClientState.LatestHeight
-				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientA, tmClientState)
-
-				// use next header for chainB to update the client on chainA
-				header, err := suite.chainA.ConstructUpdateTMClientHeader(suite.chainB, clientA)
-				suite.Require().NoError(err)
-
-				content, err = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, clientA, header)
-				suite.Require().NoError(err)
+				content = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, subject, substitute, initialHeight)
 			}, true,
 		},
 		{
-			"client type does not exist", func() {
-				content, err = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, ibctesting.InvalidID, &ibctmtypes.Header{})
-				suite.Require().NoError(err)
+			"subject and substitute use different revision numbers", func() {
+				tmClientState, ok := substituteClientState.(*ibctmtypes.ClientState)
+				suite.Require().True(ok)
+				consState, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientConsensusState(suite.chainA.GetContext(), substitute, tmClientState.LatestHeight)
+				suite.Require().True(found)
+				newRevisionNumber := tmClientState.GetLatestHeight().GetRevisionNumber() + 1
+
+				tmClientState.LatestHeight = clienttypes.NewHeight(newRevisionNumber, tmClientState.GetLatestHeight().GetRevisionHeight())
+				initialHeight = clienttypes.NewHeight(newRevisionNumber, initialHeight.GetRevisionHeight())
+				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), substitute, tmClientState.LatestHeight, consState)
+				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), substitute, tmClientState)
+
+				content = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, subject, substitute, initialHeight)
+			}, true,
+		},
+		{
+			"cannot use localhost as subject", func() {
+				content = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, exported.Localhost, substitute, initialHeight)
 			}, false,
 		},
 		{
-			"cannot update localhost", func() {
-				content, err = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, exported.Localhost, &ibctmtypes.Header{})
-				suite.Require().NoError(err)
+			"cannot use localhost as substitute", func() {
+				content = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, subject, exported.Localhost, initialHeight)
 			}, false,
 		},
 		{
-			"client does not exist", func() {
-				content, err = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, ibctesting.InvalidID, &ibctmtypes.Header{})
-				suite.Require().NoError(err)
+			"subject client does not exist", func() {
+				content = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, ibctesting.InvalidID, substitute, initialHeight)
 			}, false,
 		},
 		{
-			"cannot unpack header, header is nil", func() {
-				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
-				content = &clienttypes.ClientUpdateProposal{ibctesting.Title, ibctesting.Description, clientA, nil}
+			"substitute client does not exist", func() {
+				content = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, subject, ibctesting.InvalidID, initialHeight)
 			}, false,
 		},
 		{
-			"update fails", func() {
-				header := &ibctmtypes.Header{}
-				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
-				content, err = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, clientA, header)
-				suite.Require().NoError(err)
+			"subject and substitute have equal latest height", func() {
+				tmClientState, ok := subjectClientState.(*ibctmtypes.ClientState)
+				suite.Require().True(ok)
+				tmClientState.LatestHeight = substituteClientState.GetLatestHeight().(clienttypes.Height)
+				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), subject, tmClientState)
+
+				content = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, subject, substitute, initialHeight)
+			}, false,
+		},
+		{
+			"update fails, client is not frozen or expired", func() {
+				tmClientState, ok := subjectClientState.(*ibctmtypes.ClientState)
+				suite.Require().True(ok)
+				tmClientState.FrozenHeight = clienttypes.ZeroHeight()
+				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), subject, tmClientState)
+
+				content = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, subject, substitute, initialHeight)
 			}, false,
 		},
 	}
@@ -77,6 +90,30 @@ func (suite *KeeperTestSuite) TestClientUpdateProposal() {
 
 		suite.Run(tc.name, func() {
 			suite.SetupTest() // reset
+
+			subject, _ = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+			subjectClientState = suite.chainA.GetClientState(subject)
+			substitute, _ = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+			initialHeight = clienttypes.NewHeight(subjectClientState.GetLatestHeight().GetRevisionNumber(), subjectClientState.GetLatestHeight().GetRevisionHeight()+1)
+
+			// update substitute twice
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, substitute, exported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, substitute, exported.Tendermint)
+			substituteClientState = suite.chainA.GetClientState(substitute)
+
+			tmClientState, ok := subjectClientState.(*ibctmtypes.ClientState)
+			suite.Require().True(ok)
+			tmClientState.AllowUpdateAfterMisbehaviour = true
+			tmClientState.AllowUpdateAfterExpiry = true
+			tmClientState.FrozenHeight = tmClientState.LatestHeight
+			suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), subject, tmClientState)
+
+			tmClientState, ok = substituteClientState.(*ibctmtypes.ClientState)
+			suite.Require().True(ok)
+			tmClientState.AllowUpdateAfterMisbehaviour = true
+			tmClientState.AllowUpdateAfterExpiry = true
+			tmClientState.FrozenHeight = tmClientState.LatestHeight
+			suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), substitute, tmClientState)
 
 			tc.malleate()
 

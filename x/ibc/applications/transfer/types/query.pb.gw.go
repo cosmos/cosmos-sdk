@@ -310,11 +310,11 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_DenomTrace_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"ibc", "applications", "transfer", "v1beta1", "denom_traces", "hash"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_DenomTrace_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"ibc", "applications", "transfer", "v1beta1", "denom_traces", "hash"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_DenomTraces_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"ibc", "applications", "transfer", "v1beta1", "denom_traces"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_DenomTraces_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"ibc", "applications", "transfer", "v1beta1", "denom_traces"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"ibc", "applications", "transfer", "v1beta1", "params"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"ibc", "applications", "transfer", "v1beta1", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

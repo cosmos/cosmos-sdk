@@ -175,14 +175,13 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, a
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	unlockedCoins := k.SpendableCoins(ctx, addr)
-	coinsAfterspend, ok := unlockedCoins.SafeSub(amt)
+	unlockedCoins, currentBalance := k.spendableCoins(ctx, addr)
+	coinsAfterSpend, ok := unlockedCoins.SafeSub(amt)
 	if ok {
-		return balanceError(k.GetAllBalances(ctx, addr), amt, coinsAfterspend)
+		return balanceError(k.GetAllBalances(ctx, addr), amt, coinsAfterSpend)
 	}
 
 	// set new balance
-	currentBalance := k.GetAllBalances(ctx, addr)
 	newBalance := currentBalance.Sub(amt)
 
 	err := k.setBalances(ctx, addr, newBalance)

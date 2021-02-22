@@ -1,0 +1,10 @@
+[store]
+    streamers = [ # if len(streamers) > 0 we are streaming
+        "file",
+    ]
+
+[streamers]
+    [streamers.file]
+        keys = ["list", "of", "store", "keys", "we", "want", "to", "expose", "for", "this", "streaming", "service"]
+        writeDir = "path to the write directory"
+        prefix = "optional prefix to prepend to the generated file names"

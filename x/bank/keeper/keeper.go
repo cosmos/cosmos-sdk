@@ -84,10 +84,6 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleAccAddr)
 	}
 
-	if !amt.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
-	}
-
 	balances := sdk.NewCoins()
 
 	for _, coin := range amt {
@@ -108,6 +104,10 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 	if err := k.trackDelegation(ctx, delegatorAddr, balances, amt); err != nil {
 		return sdkerrors.Wrap(err, "failed to track delegation")
 	}
+	// emit coin spent event
+	ctx.EventManager().EmitEvent(
+		types.NewCoinSpentEvent(delegatorAddr, amt),
+	)
 
 	err := k.addCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
@@ -141,7 +141,7 @@ func (k BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAdd
 		return sdkerrors.Wrap(err, "failed to track undelegation")
 	}
 
-	err = k.addCoins(ctx, delegatorAddr, amt)
+	err = k.addCoinsWithEvent(ctx, delegatorAddr, amt)
 	if err != nil {
 		return err
 	}

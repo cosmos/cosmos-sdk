@@ -2,7 +2,6 @@ package keyring
 
 import (
 	"fmt"
-	"io"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -43,7 +42,7 @@ var _ LegacyKeybase = dbKeybase{}
 // dbKeybase combines encryption and storage implementation to provide a
 // full-featured key manager.
 //
-// NOTE: dbKeybase will be deprecated in favor of keyringKeybase.
+// Deprecated: dbKeybase will be removed in favor of keyringKeybase.
 type dbKeybase struct {
 	db dbm.DB
 }
@@ -184,49 +183,6 @@ func (kb dbKeybase) ExportPrivKey(name string, decryptPassphrase string,
 func (kb dbKeybase) Close() error { return kb.db.Close() }
 
 func infoKey(name string) []byte { return []byte(fmt.Sprintf("%s.%s", name, infoSuffix)) }
-
-// InfoImporter is implemented by those types that want to provide functions necessary
-// to migrate keys from LegacyKeybase types to Keyring types.
-type InfoImporter interface {
-	// Import imports ASCII-armored private keys.
-	Import(uid string, armor string) error
-}
-
-type keyringMigrator struct {
-	kr keystore
-}
-
-func NewInfoImporter(
-	appName, backend, rootDir string, userInput io.Reader, opts ...Option,
-) (InfoImporter, error) {
-	keyring, err := New(appName, backend, rootDir, userInput, opts...)
-	if err != nil {
-		return keyringMigrator{}, err
-	}
-
-	kr := keyring.(keystore)
-
-	return keyringMigrator{kr}, nil
-}
-
-func (m keyringMigrator) Import(uid string, armor string) error {
-	_, err := m.kr.Key(uid)
-	if err == nil {
-		return fmt.Errorf("cannot overwrite key %q", uid)
-	}
-
-	infoBytes, err := crypto.UnarmorInfoBytes(armor)
-	if err != nil {
-		return err
-	}
-
-	info, err := unmarshalInfo(infoBytes)
-	if err != nil {
-		return err
-	}
-
-	return m.kr.writeInfo(info)
-}
 
 // KeybaseOption overrides options for the db.
 type KeybaseOption func(*kbOptions)

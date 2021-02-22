@@ -24,7 +24,7 @@ The actual implementation of `BeginBlocker` and `EndBlocker` in `./abci.go` are 
 
 A specificity of the `EndBlocker` is that it can return validator updates to the underlying consensus engine in the form of an [`[]abci.ValidatorUpdates`](https://tendermint.com/docs/app-dev/abci-spec.html#validatorupdate). This is the preferred way to implement custom validator changes. 
 
-It is possible for developers to defined the order of execution between the `BeginBlocker`/`EndBlocker` functions of each of their application's modules via the module's manager `SetOrderBeginBlocker`/`SetOrderEndBlocker` methods. For more on the module manager, click [here](./module-manager.md#manager). 
+It is possible for developers to define the order of execution between the `BeginBlocker`/`EndBlocker` functions of each of their application's modules via the module's manager `SetOrderBeginBlocker`/`SetOrderEndBlocker` methods. For more on the module manager, click [here](./module-manager.md#manager). 
 
 See an example implementation of `BeginBlocker` from the `distr` module:
 

@@ -510,7 +510,7 @@ func (ks keystore) NewMnemonic(uid string, language Language, hdPath, passphrase
 		return nil, "", err
 	}
 
-	return info, mnemonic, err
+	return info, mnemonic, nil
 }
 
 func (ks keystore) NewAccount(uid string, mnemonic string, bip39Passphrase string, hdPath string, algo SignatureAlgo) (Info, error) {
@@ -526,9 +526,10 @@ func (ks keystore) NewAccount(uid string, mnemonic string, bip39Passphrase strin
 
 	privKey := algo.Generate()(derivedPriv)
 
+	// check if the a key already exists with the same address and return an error
+	// if found
 	address := sdk.AccAddress(privKey.PubKey().Address())
-	_, err = ks.KeyByAddress(address)
-	if err == nil {
+	if _, err := ks.KeyByAddress(address); err == nil {
 		return nil, fmt.Errorf("account with address %s already exists in keyring, delete the key first if you want to recreate it", address)
 	}
 

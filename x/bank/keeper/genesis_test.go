@@ -25,8 +25,6 @@ func (suite *IntegrationTestSuite) TestExportGenesis() {
 			Require().
 			NoError(app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, accAddr, expectedBalances[i].Coins))
 	}
-	// add mint module balance as nil
-	expectedBalances = append(expectedBalances, types.Balance{Address: "cosmos1m3h30wlvsf8llruxtpukdvsy0km2kum8g38c8q", Coins: nil})
 	app.BankKeeper.SetParams(ctx, types.DefaultParams())
 
 	exportGenesis := app.BankKeeper.ExportGenesis(ctx)

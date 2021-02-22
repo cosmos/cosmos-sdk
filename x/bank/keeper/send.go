@@ -83,7 +83,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 			return err
 		}
 
-		err = k.subtractCoins(ctx, inAddress, in.Coins)
+		err = k.subUnlockedCoins(ctx, inAddress, in.Coins)
 		if err != nil {
 			return err
 		}
@@ -101,7 +101,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 		if err != nil {
 			return err
 		}
-		err = k.addCoins(ctx, outAddress, out.Coins)
+		err = k.increaseBalance(ctx, outAddress, out.Coins)
 		if err != nil {
 			return err
 		}
@@ -144,12 +144,12 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 		),
 	})
 
-	err := k.subtractCoins(ctx, fromAddr, amt)
+	err := k.subUnlockedCoins(ctx, fromAddr, amt)
 	if err != nil {
 		return err
 	}
 
-	err = k.addCoins(ctx, toAddr, amt)
+	err = k.increaseBalance(ctx, toAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -167,39 +167,54 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 	return nil
 }
 
-// subtractCoins removes amt coins the account by the given address. An error is
+// subUnlockedCoins removes the unlocked amt coins of the given account. An error is
 // returned if the resulting balance is negative or the initial amount is invalid.
-func (k BaseSendKeeper) subtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
+func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
+
 	if !amt.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	lockedCoins := k.LockedCoins(ctx, addr)
-
-	for _, coin := range amt {
-		balance := k.GetBalance(ctx, addr, coin.Denom)
-		locked := sdk.NewCoin(coin.Denom, lockedCoins.AmountOf(coin.Denom))
-		spendable := balance.Sub(locked)
-
-		_, hasNeg := sdk.Coins{spendable}.SafeSub(sdk.Coins{coin})
-		if hasNeg {
-			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", spendable, coin)
-		}
-
-		newBalance := balance.Sub(coin)
-
-		err := k.setBalance(ctx, addr, newBalance)
-		if err != nil {
-			return err
-		}
+	unlockedCoins := k.SpendableCoins(ctx, addr)
+	coinsAfterspend, ok := unlockedCoins.SafeSub(amt)
+	if ok {
+		return balanceError(k.GetAllBalances(ctx, addr), amt, coinsAfterspend)
 	}
+
+	// set new balance
+	currentBalance := k.GetAllBalances(ctx, addr)
+	newBalance := currentBalance.Sub(amt)
+
+	err := k.setBalances(ctx, addr, newBalance)
+	if err != nil {
+		return err
+	}
+
+	// emit coin spent event
+	ctx.EventManager().EmitEvent(
+		types.NewCoinSpentEvent(addr, amt),
+	)
+	return nil
+}
+
+// increaseBalance increase the addr balance by the given amt. It emits a coin received event.
+func (k BaseSendKeeper) increaseBalance(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
+	if err := k.addCoins(ctx, addr, amt); err != nil {
+		return err
+	}
+
+	// emit coin received event
+	ctx.EventManager().EmitEvent(
+		types.NewCoinReceivedEvent(addr, amt),
+	)
 
 	return nil
 }
 
-// addCoins adds amt to the account balance given by the provided address. An
-// error is returned if the initial amount is invalid or if any resulting new
-// balance is negative.
+// addCoins increases addr balance by the provided amt. An error is returned if
+// the initial amount is invalid or if any resulting new balance is negative. It does
+// not emit any event because it is used by MintCoins and increaseBalance which need to emit
+// two different events to properly support balance and supply tracking.
 func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
 	if !amt.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
@@ -214,12 +229,46 @@ func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.C
 			return err
 		}
 	}
-
 	return nil
 }
 
-// ClearBalances removes all balances for a given account by address.
-func (k BaseSendKeeper) ClearBalances(ctx sdk.Context, addr sdk.AccAddress) {
+// subCoins removes from addr balance the given amt. It does not do any check on coins that are
+// locked or not, and it does not emit any event as it is used by decreaseBalance and BurnCoins
+// which emit two distinguished events to properly support balance and supply tracking via events.
+func (k BaseSendKeeper) subCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
+	if !amt.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
+	}
+
+	balance := k.GetAllBalances(ctx, addr)
+
+	balanceAfterSpend, ok := balance.SafeSub(amt)
+	// if there are no negative coin balances set the new balance
+	if ok {
+		return k.setBalances(ctx, addr, balanceAfterSpend)
+	}
+
+	// find the negative balance
+	for _, coin := range balanceAfterSpend {
+		// skip positive balances
+		if !coin.IsNegative() {
+			continue
+		}
+
+		coinOwned := sdk.NewCoin(coin.Denom, balance.AmountOf(coin.Denom))
+		coinToSpend := sdk.NewCoin(coin.Denom, amt.AmountOf(coin.Denom))
+
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInsufficientFunds,
+			"%s is smaller than %s", coinOwned, coinToSpend,
+		)
+	}
+	// we should not reach this point
+	panic("sub coin operation failed due to negative balance, but no negative coin balance was found")
+}
+
+// clearBalances removes all balances for a given account by address.
+func (k BaseSendKeeper) clearBalances(ctx sdk.Context, addr sdk.AccAddress) {
 	keys := [][]byte{}
 	k.IterateAccountBalances(ctx, addr, func(balance sdk.Coin) bool {
 		keys = append(keys, []byte(balance.Denom))
@@ -237,7 +286,7 @@ func (k BaseSendKeeper) ClearBalances(ctx sdk.Context, addr sdk.AccAddress) {
 // clear out all balances prior to setting the new coins as to set existing balances
 // to zero if they don't exist in amt. An error is returned upon failure.
 func (k BaseSendKeeper) setBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
-	k.ClearBalances(ctx, addr)
+	k.clearBalances(ctx, addr)
 
 	for _, balance := range balances {
 		err := k.setBalance(ctx, addr, balance)
@@ -284,4 +333,22 @@ func (k BaseSendKeeper) SendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool {
 // receiving funds.
 func (k BaseSendKeeper) BlockedAddr(addr sdk.AccAddress) bool {
 	return k.blockedAddrs[addr.String()]
+}
+
+func balanceError(ownedCoins, coinsToSpend, afterBalance sdk.Coins) error {
+	for _, coin := range afterBalance {
+		if !coin.IsNegative() {
+			continue
+		}
+
+		ownedCoin := sdk.NewCoin(coin.Denom, ownedCoins.AmountOf(coin.Denom))
+		spendCoin := sdk.NewCoin(coin.Denom, coinsToSpend.AmountOf(coin.Denom))
+
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInsufficientFunds,
+			"%s is smaller than %s", ownedCoin, spendCoin,
+		)
+	}
+	// we should never reach this point...
+	return nil
 }

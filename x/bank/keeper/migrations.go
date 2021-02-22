@@ -15,6 +15,6 @@ type MigrationKeeper interface {
 var _ MigrationKeeper = (*BaseKeeper)(nil)
 
 // Migrate1 implements MigrationKeeper.Migrate1 method.
-func (keeper BaseKeeper) Migrate1(ctx sdk.Context) error {
-	return v042.MigrateStore(ctx, keeper.storeKey)
+func (k BaseKeeper) Migrate1(ctx sdk.Context) error {
+	return v042.MigrateStore(ctx, k.storeKey)
 }

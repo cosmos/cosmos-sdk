@@ -153,17 +153,17 @@ func (suite *IntegrationTestSuite) TestSupply_SendCoins() {
 	suite.Require().NoError(
 		keeper.SendCoinsFromModuleToModule(ctx, holderAcc.GetName(), authtypes.Burner, initCoins),
 	)
-	suite.Require().Equal(sdk.Coins(nil), getCoinsByName(ctx, keeper, authKeeper, holderAcc.GetName()))
+	suite.Require().Equal(sdk.NewCoins(), getCoinsByName(ctx, keeper, authKeeper, holderAcc.GetName()))
 	suite.Require().Equal(initCoins, getCoinsByName(ctx, keeper, authKeeper, authtypes.Burner))
 
 	suite.Require().NoError(
 		keeper.SendCoinsFromModuleToAccount(ctx, authtypes.Burner, baseAcc.GetAddress(), initCoins),
 	)
-	suite.Require().Equal(sdk.Coins(nil), getCoinsByName(ctx, keeper, authKeeper, authtypes.Burner))
+	suite.Require().Equal(sdk.NewCoins(), getCoinsByName(ctx, keeper, authKeeper, authtypes.Burner))
 	suite.Require().Equal(initCoins, keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
 
 	suite.Require().NoError(keeper.SendCoinsFromAccountToModule(ctx, baseAcc.GetAddress(), authtypes.Burner, initCoins))
-	suite.Require().Equal(sdk.Coins(nil), keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
+	suite.Require().Equal(sdk.NewCoins(), keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
 	suite.Require().Equal(initCoins, getCoinsByName(ctx, keeper, authKeeper, authtypes.Burner))
 }
 
@@ -266,7 +266,7 @@ func (suite *IntegrationTestSuite) TestSupply_BurnCoins() {
 
 	err = keeper.BurnCoins(ctx, authtypes.Burner, initCoins)
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.Coins(nil), getCoinsByName(ctx, keeper, authKeeper, authtypes.Burner))
+	suite.Require().Equal(sdk.NewCoins(), getCoinsByName(ctx, keeper, authKeeper, authtypes.Burner))
 	suite.Require().Equal(supplyAfterInflation.GetTotal().Sub(initCoins), keeper.GetSupply(ctx).GetTotal())
 
 	// test same functionality on module account with multiple permissions
@@ -280,7 +280,7 @@ func (suite *IntegrationTestSuite) TestSupply_BurnCoins() {
 
 	err = keeper.BurnCoins(ctx, multiPermAcc.GetName(), initCoins)
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.Coins(nil), getCoinsByName(ctx, keeper, authKeeper, multiPermAcc.GetName()))
+	suite.Require().Equal(sdk.NewCoins(), getCoinsByName(ctx, keeper, authKeeper, multiPermAcc.GetName()))
 	suite.Require().Equal(supplyAfterInflation.GetTotal().Sub(initCoins), keeper.GetSupply(ctx).GetTotal())
 }
 
@@ -537,6 +537,7 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 		event1.Attributes,
 		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())},
 	)
+
 	event2 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
 		Attributes: []abci.EventAttribute{},
@@ -556,9 +557,9 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 
 	// events are shifted due to the funding account events
 	events = ctx.EventManager().ABCIEvents()
-	suite.Require().Equal(6, len(events))
-	suite.Require().Equal(abci.Event(event1), events[4])
-	suite.Require().Equal(abci.Event(event2), events[5])
+	suite.Require().Equal(11, len(events))
+	suite.Require().Equal(abci.Event(event1), events[7])
+	suite.Require().Equal(abci.Event(event2), events[8])
 }
 
 func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
@@ -597,7 +598,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	events = ctx.EventManager().ABCIEvents()
-	suite.Require().Equal(3, len(events)) // 3 events because minting event is there
+	suite.Require().Equal(7, len(events)) // 7 events because account funding causes extra minting + coin_spent + coin_recv events
 
 	event1 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
@@ -607,7 +608,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 		event1.Attributes,
 		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
 	)
-	suite.Require().Equal(abci.Event(event1), events[2]) // it's the third event since we have the minting event before
+	suite.Require().Equal(abci.Event(event1), events[6])
 
 	// Set addr's coins and addr2's coins
 	suite.Require().NoError(simapp.FundAccount(app, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))))
@@ -619,7 +620,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	suite.Require().NoError(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	events = ctx.EventManager().ABCIEvents()
-	suite.Require().Equal(11, len(events))
+	suite.Require().Equal(25, len(events)) // 25 due to account funding + coin_spent + coin_recv events
 
 	event2 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
@@ -652,12 +653,11 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 		event4.Attributes,
 		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins2.String())},
 	)
-
 	// events are shifted due to the funding account events
-	suite.Require().Equal(abci.Event(event1), events[7])
-	suite.Require().Equal(abci.Event(event2), events[8])
-	suite.Require().Equal(abci.Event(event3), events[9])
-	suite.Require().Equal(abci.Event(event4), events[10])
+	suite.Require().Equal(abci.Event(event1), events[18])
+	suite.Require().Equal(abci.Event(event2), events[20])
+	suite.Require().Equal(abci.Event(event3), events[22])
+	suite.Require().Equal(abci.Event(event4), events[24])
 }
 
 func (suite *IntegrationTestSuite) TestSpendableCoins() {

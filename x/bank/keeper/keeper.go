@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"time"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -107,7 +105,7 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 		}
 	}
 
-	if err := k.trackDelegation(ctx, delegatorAddr, ctx.BlockHeader().Time, balances, amt); err != nil {
+	if err := k.trackDelegation(ctx, delegatorAddr, balances, amt); err != nil {
 		return sdkerrors.Wrap(err, "failed to track delegation")
 	}
 
@@ -134,7 +132,7 @@ func (k BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAdd
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	err := k.subtractCoins(ctx, moduleAccAddr, amt)
+	err := k.subUnlockedCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -345,6 +343,11 @@ func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 	logger := k.Logger(ctx)
 	logger.Info("minted coins from module account", "amount", amt.String(), "from", moduleName)
 
+	// emit mint event
+	ctx.EventManager().EmitEvent(
+		types.NewCoinMintEvent(acc.GetAddress(), amt),
+	)
+
 	return nil
 }
 
@@ -360,7 +363,7 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to burn tokens", moduleName))
 	}
 
-	err := k.subtractCoins(ctx, acc.GetAddress(), amt)
+	err := k.subUnlockedCoins(ctx, acc.GetAddress(), amt)
 	if err != nil {
 		return err
 	}
@@ -373,10 +376,15 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 	logger := k.Logger(ctx)
 	logger.Info("burned tokens from module account", "amount", amt.String(), "from", moduleName)
 
+	// emit burn event
+	ctx.EventManager().EmitEvent(
+		types.NewCoinBurnEvent(acc.GetAddress(), amt),
+	)
+
 	return nil
 }
 
-func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, blockTime time.Time, balance, amt sdk.Coins) error {
+func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, balance, amt sdk.Coins) error {
 	acc := k.ak.GetAccount(ctx, addr)
 	if acc == nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
@@ -385,7 +393,7 @@ func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, blockT
 	vacc, ok := acc.(vestexported.VestingAccount)
 	if ok {
 		// TODO: return error on account.TrackDelegation
-		vacc.TrackDelegation(blockTime, balance, amt)
+		vacc.TrackDelegation(ctx.BlockHeader().Time, balance, amt)
 	}
 
 	return nil

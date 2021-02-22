@@ -119,7 +119,7 @@ func TestRunMigrations(t *testing.T) {
 				app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}),
 				module.MigrationMap{
 					"auth": 1, "authz": 1, "bank": 1, "staking": 1, "mint": 1, "distribution": 1,
-					"slashing": 1, "gov": 1, "params": 1, "ibc": 1, "upgrade": 1, "vesting": 1,
+					"slashing": 1, "gov": 1, "params": 1, "upgrade": 1, "vesting": 1,
 					"feegrant": 1, "transfer": 1, "evidence": 1, "crisis": 1, "genutil": 1, "capability": 1,
 				},
 			)

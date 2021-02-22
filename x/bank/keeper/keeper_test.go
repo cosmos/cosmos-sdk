@@ -1003,7 +1003,9 @@ func (suite *IntegrationTestSuite) TestIterateAllDenomMetaData() {
 }
 
 func (suite *IntegrationTestSuite) TestBalanceTrackingEvents() {
-	// replace account keeper otherwise it won't be aware of the module account... weird
+	// replace account keeper and bank keeper otherwise the account keeper won't be aware of the
+	// existence of the new module account because GetModuleAccount checks for the existence via
+	// permissions map and not via state... weird
 	maccPerms := simapp.GetMaccPerms()
 	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
 

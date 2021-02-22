@@ -79,6 +79,7 @@ func (bA *CompactBitArray) NumTrueBitsBefore(index int) int {
 	if index > max {
 		index = max
 	}
+	// below we iterate over the bytes then over bits (in low endian) and count bits set to 1
 	var i = 0
 	for elem := 0; ; elem++ {
 		for b := 7; b >= 0; b-- {

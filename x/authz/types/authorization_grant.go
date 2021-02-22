@@ -3,10 +3,11 @@ package types
 import (
 	"time"
 
+	proto "github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz/exported"
-	proto "github.com/gogo/protobuf/proto"
 )
 
 // NewAuthorizationGrant returns new AuthrizationGrant

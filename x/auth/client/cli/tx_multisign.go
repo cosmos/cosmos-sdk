@@ -253,17 +253,17 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("%q must be of type %s: %s", args[1], keyring.TypeMulti, multisigInfo.GetType())
 		}
 
-		var signatureBatch []signingtypes.SignatureV2
+		var signatureBatch [][]signingtypes.SignatureV2
 		for i := 2; i < len(args); i++ {
-			sigs, err := unmarshalSignatureJSON(clientCtx, args[i])
+			sigs, err := readSignaturesFromFile(clientCtx, args[i])
 			if err != nil {
 				return err
 			}
 
-			signatureBatch = append(signatureBatch, sigs...)
+			signatureBatch = append(signatureBatch, sigs)
 		}
 
-		var seq = txFactory.Sequence()
+		var sequence = txFactory.Sequence()
 		if !clientCtx.Offline {
 			accnum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
 			if err != nil {
@@ -273,7 +273,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			txFactory = txFactory.WithAccountNumber(accnum).WithSequence(seq)
 		}
 
-		for sequence := seq; scanner.Scan(); {
+		for i := 0; scanner.Scan(); i++ {
 			txBldr, err := txCfg.WrapTxBuilder(scanner.Tx())
 			if err != nil {
 				return err
@@ -288,12 +288,12 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			multisigPub := multisigInfo.GetPubKey().(*kmultisig.LegacyAminoPubKey)
 			multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 			for _, sig := range signatureBatch {
-				err = signing.VerifySignature(sig.PubKey, signingData, sig.Data, txCfg.SignModeHandler(), txBldr.GetTx())
+				err = signing.VerifySignature(sig[sequence].PubKey, signingData, sig[sequence].Data, txCfg.SignModeHandler(), txBldr.GetTx())
 				if err != nil {
-					return fmt.Errorf("couldn't verify signature: %w %d %d %v", err, txFactory.AccountNumber(), txFactory.Sequence(), sig.Data)
+					return fmt.Errorf("couldn't verify signature: %w", err)
 				}
 
-				if err := multisig.AddSignatureV2(multisigSig, sig, multisigPub.GetPubKeys()); err != nil {
+				if err := multisig.AddSignatureV2(multisigSig, sig[sequence], multisigPub.GetPubKeys()); err != nil {
 					return err
 				}
 			}
@@ -342,7 +342,6 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			if viper.GetBool(flagNoAutoIncrement) {
 				continue
 			}
-
 			sequence++
 			txFactory = txFactory.WithSequence(sequence)
 		}
@@ -357,4 +356,24 @@ func unmarshalSignatureJSON(clientCtx client.Context, filename string) (sigs []s
 		return
 	}
 	return clientCtx.TxConfig.UnmarshalSignatureJSON(bytes)
+}
+
+func readSignaturesFromFile(ctx client.Context, filename string) (sigs []signingtypes.SignatureV2, err error) {
+	bz, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	newString := strings.TrimSuffix(string(bz), "\n")
+	lines := strings.Split(newString, "\n")
+
+	for _, bz := range lines {
+		sig, err := ctx.TxConfig.UnmarshalSignatureJSON([]byte(bz))
+		if err != nil {
+			return nil, err
+		}
+
+		sigs = append(sigs, sig...)
+	}
+	return sigs, nil
 }

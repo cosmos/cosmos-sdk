@@ -863,7 +863,6 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	// sign-batch file
 	res, err := authtest.TxSignBatchExec(val.ClientCtx, account1.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
 	s.Require().NoError(err)
-	s.T().Log(res)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	// write sigs to file
 	file1 := testutil.WriteToNewTempFile(s.T(), res.String())
@@ -871,13 +870,11 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	// sign-batch file with account2
 	res, err = authtest.TxSignBatchExec(val.ClientCtx, account2.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
 	s.Require().NoError(err)
-	s.T().Log(res)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
 	// multisign the file
 	file2 := testutil.WriteToNewTempFile(s.T(), res.String())
 	res, err = authtest.TxMultiSignBatchExec(val.ClientCtx, filename.Name(), multisigInfo.GetName(), file1.Name(), file2.Name())
-	s.T().Log(res)
 	s.Require().NoError(err)
 	signedTxs := strings.Split(strings.Trim(res.String(), "\n"), "\n")
 	// Broadcast transactions.

@@ -69,7 +69,7 @@ type Keyring interface {
 	// It returns an error if it fails to generate a key for the given algo type, or if
 	// another key is already stored under the same name.
 	//
-	// NOTE: a passphrase set to 'default' will set the passphrase to the DefaultBIP39Passphrase value.
+	// A passphrase set to the empty string will set the passphrase to the DefaultBIP39Passphrase value.
 	NewMnemonic(uid string, language Language, hdPath, passphase string, algo SignatureAlgo) (Info, string, error)
 
 	// NewAccount converts a mnemonic to a private key and BIP-39 HD Path and persists it.
@@ -501,7 +501,7 @@ func (ks keystore) NewMnemonic(uid string, language Language, hdPath, passphrase
 		return nil, "", err
 	}
 
-	if passphrase == "default" {
+	if passphrase == "" {
 		passphrase = DefaultBIP39Passphrase
 	}
 

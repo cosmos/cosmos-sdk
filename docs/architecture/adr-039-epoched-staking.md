@@ -7,7 +7,7 @@
 ## Authors
 
 - Dev Ojha (@valardragon)
-- Sunny Aggarwall (@sunnya97)
+- Sunny Aggarwal (@sunnya97)
 
 ## Status
 
@@ -23,17 +23,17 @@ The current proof of stake module takes the design decision to apply staking wei
 
 An alternative design choice is to allow buffering staking updates (delegations, unbonds, validators joining) for a number of blocks. This 'epoch'd proof of stake consensus provides the guarantee that the consensus weights for validators will not change mid-epoch, except in the event of a slash condition. 
 
-The decision to have immediate execution of staking changes was primarily done as it was implementationally simplest, and because we at the time believed that this would lead to better UX for clients. The UX hurdle may not be as significant as was previously thought, since it is possible to provide users acknowledgement that their bond was recorded and will be executed.
+Additionally, the UX hurdle may not be as significant as was previously thought. This is because it is possible to provide users immediate acknowledgement that their bond was recorded and will be executed.
 
 Furthermore, it has become clearer over time that immediate execution of staking events comes with limitations, such as:
 
 * Threshold based cryptography. One of the main limitations is that because the validator set can change so regularly, it makes the running of multiparty computation by a fixed validator set difficult. Many threshold-based cryptographic features for blockchains such as randomness beacons and threshold decryption require a computationally-expensive DKG process (will take much longer than 1 block to create). To productively use these, we need to guarantee that the result of the DKG will be used for a reasonably long time. It wouldn't be feasible to rerun the DKG every block. By epoching staking, it guarantees we'll only need to run a new DKG once every epoch.
 
-* Light client efficiency. This would lessen the overhead for IBC. Because of the lite client bisection algorithm, the number of headers you need to verify is related to bounding the validator set diffs between two successively verified headers. By limiting the frequency of validator set changes, we can reduce the size of IBC lite client proofs.
+* Light client efficiency. This would lessen the overhead for IBC. Because of the light client bisection algorithm, the number of headers you need to verify is related to bounding the difference in validator sets between two successively verified headers. By limiting the frequency of validator set changes, we can reduce the size of IBC lite client proofs.
 
-* Fairness of deterministic leader election. Currently we have no ways of reasoning of fairness of deterministic leader election in the presence of staking changes without epochs (tendermint/spec#217). Adding epochs at least makes it easier for our deterministic leader election to match something we can prove secure. (Albeit, we still haven’t proven if our current algorithm is fair with > 2 validators)
+* Fairness of deterministic leader election. Currently we have no ways of reasoning of fairness of deterministic leader election in the presence of staking changes without epochs (tendermint/spec#217). Breaking fairness of leader election is profitable for validators, as they earn additional rewards from being the proposer. Adding epochs at least makes it easier for our deterministic leader election to match something we can prove secure. (Albeit, we still haven’t proven if our current algorithm is fair with > 2 validators in the presence of stake changes) 
 
-* Staking derivative design. Currently, reward distribution is done lazily using the F1 fee distribution. While saving computational complexity, lazy accounting increases “statefulness of staking”. Right now, each delegation entry has to track the time of last withdrawal. Handling this can be a challenge for some staking derivatives designs (see example). Force-withdrawing rewards to users can help solve this, however it is infeasible to force-withdraw rewards to users on a per block basis. With epoching, a chain could more easily alter the design to have rewards be forcefully withdrawn (iterating over delegator accounts only once per-epoch), and thus remove the time of delegation from state. This preliminarily seems like it may be of utility in certain staking derivative designs.
+* Staking derivative design. Currently, reward distribution is done lazily using the F1 fee distribution. While saving computational complexity, lazy accounting requires a more stateful staking implementation. Right now, each delegation entry has to track the time of last withdrawal. Handling this can be a challenge for some staking derivatives designs that seek to provide fungibility for all tokens staked to a single validator. Force-withdrawing rewards to users can help solve this, however it is infeasible to force-withdraw rewards to users on a per block basis. With epochs, a chain could more easily alter the design to have rewards be forcefully withdrawn (iterating over delegator accounts only once per-epoch), and can thus remove delegation timing from state. This may be useful for certain staking derivative designs.
 
 ## Design considerations
 
@@ -43,12 +43,12 @@ There is a design consideration for whether to apply a slash immediately or at t
 
 Applying it immediately can be viewed as offering greater consensus layer security, at potential costs to the aforementioned usecases. The benefits of immediate slashing for consensus layer security can be all be obtained by executing the validator jailing immediately (thus removing it from the validator set), and delaying the actual slash change to the validator's weight until the epoch boundary. For the use cases mentioned above, workarounds can be integrated to avoid problems, as follows:
 
-- For threshold based cryptography, it can keep using the original keep epoch weights for the cryptography thresholds, but allow the underlying finality to benefit from extra security more quickly.
+- For threshold based cryptography, this setting will have the threshold cryptography use the original epoch weights, while consensus has an update that lets it more rapidly benefit from additional security. If the threshold based cryptography blocks liveness of the chain, then we have effectively raised the liveness threshold of the remaining validators for the rest of the epoch. (Alternatively, jailed nodes could still contribute shares) This plan will fail in the extreme case that more than 1/3rd of the validators have been jailed within a single epoch. For such an extreme scenario, the chain already have its own custom incident response plan, and defining how to handle the threshold cryptography should be a part of that.
 - For light client efficiency, there can be a bit included in the header indicating an intra-epoch slash (ala https://github.com/tendermint/spec/issues/199).
-- For fairness of deterministic leader election, this will cause problems with the formalization of it / proximity of implementation to formally provable spec. However, a less formal claim can be made that the amount lost due to the slash should hopefully outweigh slight biases into the leader election process. This claim is dubious with the presence of MEV, but potentially formal upperbounds on MEV for fairness here could be derived.
+- For fairness of deterministic leader election, applying a slash or jailing within an epoch would break the guarantee we were seeking to provide. This then re-introduces a new (but significantly simpler) problem for trying to provide fairness guarantees. Namely, that validators can adversarially elect to remove themself from the set of proposers. From a security perspective, this could potentially be handled by two different mechanisms (or prove to still be too difficult to achieve). One is making a security statement acknowledging the ability for an adversary to force an ahead-of-time fixed threshold of users to drop out of the proposer set within an epoch. The second method would be to  parameterize such that the cost of a slash within the epoch far outweights benefits due to being a proposer. However, this latter criterion is quite dubious, since being a proposer can have many advantageous side-effects in chains with complex state machines. (Namely, DeFi games such as Fomo3D)
 - For staking derivative design, this will not cause problems with the suggested design there, nor does it increase the stateful of staking. (As whether a slash has occured is fully queryable given the validator address)
 
-However, for achieving consensus layer security, it suffices to apply the validator jailing immediately, but still delay the actual slash changes to waiting until the end of the epoch. This largely mitigates the concern for the fairness of deterministic leader election as well, since that validator is removed the set being rotated from immediately.
+However, for achieving consensus layer security, it suffices to apply the validator jailing immediately, but still delay the actual slash changes to waiting until the end of the epoch. This largely mitigates the concern for fairness of deterministic leader election as well, since the validator is removed the set of potential proposers immediately.
 
 ### Token lockup
 
@@ -58,7 +58,11 @@ When someone makes a transaction to delegate, even though they are not immediate
 
 For threshold based cryptography in particular, we need a pipeline for epoch changes. This is because when we are in epoch N, we want the epoch N+1 weights to be fixed so that the validator set can do the DKG accordingly. So if we are currently in epoch N, the stake weights for epoch N+1 should already be fixed, and new stake changes should be getting applied to epoch N + 2.
 
-This can be handled by making a parameter for the epoch pipeline. This parameter should not be alterable except during hard forks, to mitigate implementation complexity of switching the pipeline length.
+This can be handled by making a parameter for the epoch pipeline length. This parameter should not be alterable except during hard forks, to mitigate implementation complexity of switching the pipeline length.
+
+
+With pipeline length 1, if I redelegate during epoch N, then my redelegation is applied prior to the beginning of epoch N+1.
+With pipeline length 2, if I redelegate during epoch N, then my redelegation is applied prior to the beginning of epoch N+2.
 
 ### Rewards
 
@@ -89,7 +93,9 @@ Then we add methods to the end blockers, to ensure that at the epoch boundary th
 
 __Step-2__: Implement querying of queued staking txs. 
 
-When querying the staking activity of a given address, the status should return not only the amount of tokens staked, but also if there are any queued stake events for that address. This will require nodes supporting querying to either do some more indexing to have this be efficiently queryable, or to have transactions 
+When querying the staking activity of a given address, the status should return not only the amount of tokens staked, but also if there are any queued stake events for that address. This will require more work to be done in the querying logic, to trace the queued upcoming staking events. 
+
+As an initial implementation, this can be implemented as a linear search over all queued staking events, but eventually nodes that support querying should maintain an auxilliary hashmap to make these queries constant time.
 
 __Step-3__: Adjust gas
 
@@ -108,3 +114,4 @@ We leave it as out of scope for how to weight future computation versus current 
 ### Negative
 
 * Increases complexity of integrating more complex gas pricing mechanisms, as they now have to consider future execution costs as well.
+* When epoch > 1, validators can no longer leave the network immediately, and must wait until an epoch boundary.

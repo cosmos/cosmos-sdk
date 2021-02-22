@@ -208,13 +208,13 @@ func (config *Config) GetCoinType() uint32 {
 
 // GetFullFundraiserPath returns the BIP44Prefix.
 //
-// Deprecated: Use GetFullBip44Path instead
+// Deprecated: This method is supported for backward compatibility only and will be removed in a future release. Use GetFullBIP44Path instead.
 func (config *Config) GetFullFundraiserPath() string {
 	return config.fullFundraiserPath
 }
 
-// GetFullBip44Path returns the BIP44Prefix.
-func (config *Config) GetFullBip44Path() string {
+// GetFullBIP44Path returns the BIP44Prefix.
+func (config *Config) GetFullBIP44Path() string {
 	return fmt.Sprintf("m/%d'/%d'/0'/0/0", config.purpose, config.coinType)
 }
 

@@ -927,6 +927,20 @@ func (s *IntegrationTestSuite) TestGetAccountCmd() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestGetAccountsCmd() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, authcli.GetAccountsCmd(), []string{
+		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+	})
+	s.Require().NoError(err)
+
+	var res authtypes.QueryAccountsResponse
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &res))
+	s.Require().NotEmpty(res.Accounts)
+}
+
 func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
 	clientCtx := client.Context{}.WithOffline(true)
 	clientCtx = clientCtx.WithTxConfig(simapp.MakeTestEncodingConfig().TxConfig)

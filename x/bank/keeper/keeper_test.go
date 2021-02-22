@@ -1057,7 +1057,7 @@ func (suite *IntegrationTestSuite) TestBalanceTrackingEvents() {
 			burnedCoins, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
 			suite.Require().NoError(err)
 			supply = supply.Sub(burnedCoins)
-
+			// balances[burner.String()] = balances[minter.String()].Sub(burnedCoins)
 		case types.EventTypeCoinMint:
 			mintedCoins, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
 			suite.Require().NoError(err)

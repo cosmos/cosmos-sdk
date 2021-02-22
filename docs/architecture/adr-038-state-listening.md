@@ -482,60 +482,60 @@ We will also provide a mapping of the TOML `store.streamers` "file" configuratio
 streaming service. In the future, as other streaming services are added, their constructors will be added here as well.
 
 ```go
-// StreamingServiceConstructor is used to construct a streaming service
-type StreamingServiceConstructor func(opts servertypes.AppOptions, keys []sdk.StoreKey) (StreamingService, error)
+// ServiceConstructor is used to construct a streaming service
+type ServiceConstructor func(opts serverTypes.AppOptions, keys []sdk.StoreKey, marshaller codec.BinaryMarshaler) (sdk.StreamingService, error)
 
-// StreamingServiceType enum for specifying the type of StreamingService
-type StreamingServiceType int
+// ServiceType enum for specifying the type of StreamingService
+type ServiceType int
 
 const (
-	Unknown StreamingServiceType = iota
-	File
-	// add more in the future
+  Unknown ServiceType = iota
+  File
+  // add more in the future
 )
 
-// NewStreamingServiceType returns the StreamingServiceType corresponding to the provided name
-func NewStreamingServiceType(name string) StreamingServiceType {
-	switch strings.ToLower(name) {
-	case "file", "f":
-		return File
-	default:
-		return Unknown
-	}
+// NewStreamingServiceType returns the streaming.ServiceType corresponding to the provided name
+func NewStreamingServiceType(name string) ServiceType {
+  switch strings.ToLower(name) {
+  case "file", "f":
+    return File
+  default:
+    return Unknown
+  }
 }
 
-// String returns the string name of a StreamingServiceType
-func (sst StreamingServiceType) String() string {
-	switch sst {
-	case File:
-		return "file"
-	default:
-		return ""
-	}
+// String returns the string name of a streaming.ServiceType
+func (sst ServiceType) String() string {
+  switch sst {
+  case File:
+    return "file"
+  default:
+    return ""
+  }
 }
 
-// StreamingServiceConstructorLookupTable is a mapping of StreamingServiceTypes to StreamingServiceConstructors
-var StreamingServiceConstructorLookupTable = map[StreamingServiceType]StreamingServiceConstructor{
-	File: FileStreamingConstructor,
+// ServiceConstructorLookupTable is a mapping of streaming.ServiceTypes to streaming.ServiceConstructors
+var ServiceConstructorLookupTable = map[ServiceType]ServiceConstructor{
+  File: FileStreamingConstructor,
 }
 
-// NewStreamingServiceConstructor returns the StreamingServiceConstructor corresponding to the provided name
-func NewStreamingServiceConstructor(name string) (StreamingServiceConstructor, error) {
-	ssType := NewStreamingServiceType(name)
-	if ssType == Unknown {
-		return nil, fmt.Errorf("unrecognized streaming service name %s", name)
-	}
-	if constructor, ok := StreamingServiceConstructorLookupTable[ssType]; ok {
-		return constructor, nil
-	}
-	return nil, fmt.Errorf("streaming service constructor of type %s not found", ssType.String())
+// NewServiceConstructor returns the streaming.ServiceConstructor corresponding to the provided name
+func NewServiceConstructor(name string) (ServiceConstructor, error) {
+  ssType := NewStreamingServiceType(name)
+  if ssType == Unknown {
+    return nil, fmt.Errorf("unrecognized streaming service name %s", name)
+  }
+  if constructor, ok := ServiceConstructorLookupTable[ssType]; ok {
+    return constructor, nil
+  }
+  return nil, fmt.Errorf("streaming service constructor of type %s not found", ssType.String())
 }
 
-// FileStreamingConstructor is the StreamingServiceConstructor function for creating a FileStreamingService
-func FileStreamingConstructor(opts servertypes.AppOptions, keys []sdk.StoreKey) (StreamingService, error) {
-	filePrefix := cast.ToString(opts.Get("streamers.file.prefix"))
-	fileDir := cast.ToString(opts.Get("streamers.file.writeDir"))
-	return streaming.NewFileStreamingService(fileDir, filePrefix, keys), nil
+// FileStreamingConstructor is the streaming.ServiceConstructor function for creating a FileStreamingService
+func FileStreamingConstructor(opts serverTypes.AppOptions, keys []sdk.StoreKey, marshaller codec.BinaryMarshaler) (sdk.StreamingService, error) {
+  filePrefix := cast.ToString(opts.Get("streamers.file.prefix"))
+  fileDir := cast.ToString(opts.Get("streamers.file.writeDir"))
+  return file.NewStreamingService(fileDir, filePrefix, keys, marshaller)
 }
 ```
 

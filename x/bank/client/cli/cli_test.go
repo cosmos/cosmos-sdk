@@ -246,6 +246,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDenomsMetadata() {
 			expected: &types.QueryDenomsMetadataResponse{
 				Metadatas: []types.Metadata{
 					{
+						Name:        "Cosmos Hub Atom",
+						Symbol:      "ATOM",
 						Description: "The native staking token of the Cosmos Hub.",
 						DenomUnits: []*types.DenomUnit{
 							{
@@ -263,6 +265,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDenomsMetadata() {
 						Display: "atom",
 					},
 					{
+						Name:        "Ethereum",
+						Symbol:      "ETH",
 						Description: "Ethereum mainnet token",
 						DenomUnits: []*types.DenomUnit{
 							{
@@ -293,6 +297,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDenomsMetadata() {
 			respType: &types.QueryDenomMetadataResponse{},
 			expected: &types.QueryDenomMetadataResponse{
 				Metadata: types.Metadata{
+					Name:        "Cosmos Hub Atom",
+					Symbol:      "ATOM",
 					Description: "The native staking token of the Cosmos Hub.",
 					DenomUnits: []*types.DenomUnit{
 						{

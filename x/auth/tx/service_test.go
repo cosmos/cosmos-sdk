@@ -107,7 +107,7 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
 			} else {
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
-				s.Require().Equal(len(res.GetResult().GetEvents()), 6) // 1 transfer, 3 messages.
+				s.Require().Equal(len(res.GetResult().GetEvents()), 6) // 1 coin recv 1 coin spent, 1 transfer, 3 messages.
 				s.Require().True(res.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
 			}
 		})
@@ -144,7 +144,7 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
-				s.Require().Equal(len(result.GetResult().GetEvents()), 6) // 1 transfer, 3 messages.
+				s.Require().Equal(len(result.GetResult().GetEvents()), 6) // 1 coin recv, 1 coin spent,1 transfer, 3 messages.
 				s.Require().True(result.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
 			}
 		})

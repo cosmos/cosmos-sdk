@@ -114,6 +114,36 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 			expPass: false,
 		},
 		{
+			name: "unsuccessful upgrade: committed client does not have zeroed custom fields",
+			setup: func() {
+
+				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
+				upgradedConsState = &types.ConsensusState{
+					NextValidatorsHash: []byte("nextValsHash"),
+				}
+
+				// upgrade Height is at next block
+				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
+
+				// zero custom fields and store in upgrade store
+				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(lastHeight.GetRevisionHeight()), upgradedClient)
+				suite.chainB.App.UpgradeKeeper.SetUpgradedConsensusState(suite.chainB.GetContext(), int64(lastHeight.GetRevisionHeight()), upgradedConsState)
+
+				// commit upgrade store changes and update clients
+
+				suite.coordinator.CommitBlock(suite.chainB)
+				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
+				suite.Require().NoError(err)
+
+				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
+				suite.Require().True(found)
+
+				proofUpgradedClient, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(lastHeight.GetRevisionHeight())), cs.GetLatestHeight().GetRevisionHeight())
+				proofUpgradedConsState, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedConsStateKey(int64(lastHeight.GetRevisionHeight())), cs.GetLatestHeight().GetRevisionHeight())
+			},
+			expPass: false,
+		},
+		{
 			name: "unsuccessful upgrade: chain-specified parameters do not match committed client",
 			setup: func() {
 
@@ -508,5 +538,61 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 			suite.Require().Nil(consensusState, "verify upgrade passed on invalid case: %s", tc.name)
 
 		}
+	}
+}
+
+func (suite *TendermintTestSuite) TestZeroedCustomFields() {
+	var (
+		clientState *types.ClientState
+	)
+
+	testCases := []struct {
+		name     string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"client state is zeroed", func() {
+			}, true,
+		},
+		{
+			"client state has true Allow... booleans", func() {
+				clientState.ZeroCustomFields()
+				clientState.AllowUpdateAfterExpiry = true
+				clientState.AllowUpdateAfterMisbehaviour = true
+			}, false,
+		},
+		{
+			"client state has non-zero trusting period ", func() {
+				clientState.TrustingPeriod = 100
+			}, false,
+		},
+		{
+			"client state has non-zero max clock drift", func() {
+				clientState.MaxClockDrift = 100
+			}, false,
+		},
+		{
+			"client state has non-zero trust level", func() {
+				clientState.TrustLevel = types.DefaultTrustLevel
+			}, false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			suite.SetupTest() // reset
+
+			client, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+			clientState = suite.chainA.GetClientState(client).(*types.ClientState)
+			clientState = clientState.ZeroCustomFields().(*types.ClientState)
+
+			tc.malleate()
+
+			suite.Require().Equal(tc.expPass, types.ZeroedCustomFields(clientState))
+
+		})
 	}
 }

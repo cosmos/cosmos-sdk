@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,9 +41,8 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 			upgradedClient.GetLatestHeight(), lastHeight)
 	}
 
-	// counterparty chain must commit the upgraded client with all client-customizable fields zeroed out
-	// at the upgrade path specified by current client
-	// counterparty must also commit to the upgraded consensus state at a sub-path under the upgrade path specified
+	// upgraded client state and consensus state must be IBC tendermint client state and consensus state
+	// this may be modified in the future to upgrade to a new IBC tendermint type
 	tmUpgradeClient, ok := upgradedClient.(*ClientState)
 	if !ok {
 		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "upgraded client must be Tendermint client. expected: %T got: %T",
@@ -52,6 +52,13 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	if !ok {
 		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "upgraded consensus state must be Tendermint consensus state. expected %T, got: %T",
 			&ConsensusState{}, upgradedConsState)
+	}
+
+	// counterparty chain must commit the upgraded client with all client-customizable fields zeroed out
+	// at the upgrade path specified by current client
+	// counterparty must also commit to the upgraded consensus state at a sub-path under the upgrade path specified
+	if !ZeroedCustomFields(tmUpgradeClient) {
+		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "upgraded client has non-nil custom fields")
 	}
 
 	// unmarshal proofs
@@ -153,4 +160,16 @@ func constructUpgradeConsStateMerklePath(upgradePath []string, lastHeight export
 
 	consPath = append(consPath, appendedKey)
 	return commitmenttypes.NewMerklePath(consPath...)
+}
+
+// ZeroedCustomFields returns true if all the client state fields have
+// been zeroed out.
+func ZeroedCustomFields(clientStateA *ClientState) bool {
+	// construct a zeroed custom fields copy of the client state
+	clientStateB, ok := clientStateA.ZeroCustomFields().(*ClientState)
+	if !ok {
+		return false
+	}
+
+	return reflect.DeepEqual(clientStateA, clientStateB)
 }

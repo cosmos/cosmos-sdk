@@ -2,12 +2,14 @@ package ecdsa
 
 import (
 	"encoding/hex"
-	"fmt"
 	"testing"
 
 	proto "github.com/gogo/protobuf/proto"
+	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -53,7 +55,8 @@ func (suite *EcdsaSuite) TestEquals() {
 
 	require.False(suite.pk.Equals(pkOther))
 	require.True(pkOther.Equals(pkOther2))
-	require.True(pkOther2.Equals(pkOther), "Equals must be reflexive")
+	require.True(pkOther2.Equals(pkOther))
+	require.True(pkOther.Equals(pkOther), "Equals must be reflexive")
 }
 
 func (suite *EcdsaSuite) TestMarshalAmino() {
@@ -72,39 +75,48 @@ func (suite *EcdsaSuite) TestMarshalAmino() {
 	require.True(pk2.Equals(suite.pk))
 }
 
+func (suite *EcdsaSuite) TestSize() {
+	require := suite.Require()
+	bv := gogotypes.BytesValue{Value: suite.pk.Bytes()}
+	require.Equal(bv.Size(), suite.pk.(*ecdsaPK).Size())
+
+	var nilPk *ecdsaPK
+	require.Equal(0, nilPk.Size(), "nil value must have zero size")
+}
+
 func (suite *EcdsaSuite) TestMarshalProto() {
 	require := suite.Require()
-	// registry := types.NewInterfaceRegistry()
-	// cdc := codec.NewProtoCodec(registry)
 
+	/**** test structure marshalling ****/
+
+	var pk ecdsaPK
 	bz, err := proto.Marshal(suite.pk)
 	require.NoError(err)
-	fmt.Println("bytes:", bz)
+	require.NoError(proto.Unmarshal(bz, &pk))
+	require.True(pk.Equals(suite.pk))
 
-	// bz, err := cdc.MarshalInterface(suite)
-	// require.NoError(t, err)
+	/**** test structure marshalling with codec ****/
 
-	// var animal testdata.Animal
+	pk = ecdsaPK{}
+	registry := types.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(registry)
+	bz, err = cdc.MarshalBinaryBare(suite.pk.(*ecdsaPK))
+	require.NoError(err)
+	require.NoError(cdc.UnmarshalBinaryBare(bz, &pk))
+	require.True(pk.Equals(suite.pk))
 
-	// // empty registry should fail
-	// err = cdc.UnmarshalInterface(bz, &animal)
-	// require.Error(t, err)
+	/**** test interface marshalling ****/
 
-	// // wrong type registration should fail
-	// registry.RegisterImplementations((*testdata.Animal)(nil), &testdata.Dog{})
-	// err = cdc.UnmarshalInterface(bz, &animal)
-	// require.Error(t, err)
+	bz, err = cdc.MarshalInterface(suite.pk)
+	require.NoError(err)
+	var pkI cryptotypes.PubKey
+	err = cdc.UnmarshalInterface(bz, &pkI)
+	require.EqualError(err, "no registered implementations of type types.PubKey")
 
-	// // should pass
-	// registry = NewTestInterfaceRegistry()
-	// cdc = codec.NewProtoCodec(registry)
-	// err = cdc.UnmarshalInterface(bz, &animal)
-	// require.NoError(t, err)
-	// require.Equal(t, kitty, animal)
+	registry.RegisterImplementations((*cryptotypes.PubKey)(nil), new(ecdsaPK))
+	require.NoError(cdc.UnmarshalInterface(bz, &pkI))
+	require.True(pkI.Equals(suite.pk))
 
-	// // nil should fail
-	// registry = NewTestInterfaceRegistry()
-	// err = cdc.UnmarshalInterface(bz, nil)
-	// require.Error(t, err)
-
+	cdc.UnmarshalInterface(bz, nil)
+	require.Error(err, "nil should fail")
 }

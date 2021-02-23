@@ -7,8 +7,8 @@ import (
 	"encoding/asn1"
 	"fmt"
 	"math/big"
+	math_bits "math/bits"
 
-	"github.com/gogo/protobuf/proto"
 	gogotypes "github.com/gogo/protobuf/types"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
@@ -32,6 +32,10 @@ var secp256r1 elliptic.Curve
 var curveNames map[elliptic.Curve]string
 var curveTypes map[elliptic.Curve]byte
 var curveTypesRev map[byte]elliptic.Curve
+
+// Protobuf Bytes size - this computation is based on gogotypes.BytesValue.Sizee implementation
+var sovPubKeySize = 1 + PubKeySize + sovKeys(PubKeySize)
+var sovPrivKeySize = 1 + PrivKeySize + sovKeys(PrivKeySize)
 
 func init() {
 	secp256r1 = elliptic.P256()
@@ -123,14 +127,28 @@ func (*ecdsaPK) ProtoMessage() {}
 
 // **** Proto Marshaler ****
 
+// Marshal implements ProtoMarshaler interface
 func (pk *ecdsaPK) Marshal() ([]byte, error) {
 	bv := gogotypes.BytesValue{Value: pk.Bytes()}
-	return proto.Marshal(&bv)
+	return bv.Marshal()
 }
 
+// MarshalTo implements ProtoMarshaler interface
+func (pk *ecdsaPK) MarshalTo(data []byte) (int, error) {
+	bv := gogotypes.BytesValue{Value: pk.Bytes()}
+	return bv.MarshalTo(data)
+}
+
+// MarshalToSizedBuffer implements ProtoMarshaler interface
+func (pk *ecdsaPK) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	bv := gogotypes.BytesValue{Value: pk.Bytes()}
+	return bv.MarshalToSizedBuffer(dAtA)
+}
+
+// Unmarshal implements ProtoMarshaler interface
 func (pk *ecdsaPK) Unmarshal(b []byte) error {
 	bv := gogotypes.BytesValue{}
-	err := proto.Unmarshal(b, &bv)
+	err := bv.Unmarshal(b)
 	if err != nil {
 		return err
 	}
@@ -155,21 +173,15 @@ func (pk *ecdsaPK) Unmarshal(b []byte) error {
 	}
 
 	return nil
-	// addrValue := gogotypes.BytesValue{}
-	// bz, err := proto.Marshal(suite.pk)
-	// k.cdc.MustUnmarshalBinaryBare(bz, &addrValue)
-
 }
 
-/*
-   ProtoMarshaler interface {
-	Marshal() ([]byte, error)
-	MarshalTo(data []byte) (n int, err error)
-	MarshalToSizedBuffer(dAtA []byte) (int, error)
-	Size() int
-	Unmarshal(data []byte) error
-    }
-*/
+// Size implements ProtoMarshaler interface
+func (pk *ecdsaPK) Size() int {
+	if pk == nil {
+		return 0
+	}
+	return sovPubKeySize
+}
 
 // **** Amino Marshaler ****
 
@@ -204,4 +216,8 @@ func (pk *ecdsaPK) MarshalAminoJSON() ([]byte, error) {
 // UnmarshalAminoJSON overrides Amino JSON marshalling.
 func (pk *ecdsaPK) UnmarshalAminoJSON(bz []byte) error {
 	return pk.UnmarshalAmino(bz)
+}
+
+func sovKeys(x uint64) (n int) {
+	return (math_bits.Len64(x|1) + 6) / 7
 }

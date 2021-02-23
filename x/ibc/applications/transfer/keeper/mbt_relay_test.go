@@ -1,14 +1,18 @@
 package keeper_test
 
-
 /// This file is a test driver for model-based tests generated from the TLA+ model of token transfer
 /// Written by Andrey Kuprianov within the scope of IBC Audit performed by Informal Systems.
 /// In case of any questions please don't hesitate to contact andrey@informal.systems.
 
-
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"strconv"
+	"strings"
+
+	"github.com/tendermint/tendermint/crypto"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
@@ -16,53 +20,48 @@ import (
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
-	"github.com/tendermint/tendermint/crypto"
-	"io/ioutil"
-	"strconv"
-	"strings"
 )
 
-
 type TlaBalance struct {
-	Address []string  `json:"address"`
-	Denom []string    `json:"denom"`
-	Amount int64      `json:"amount"`
+	Address []string `json:"address"`
+	Denom   []string `json:"denom"`
+	Amount  int64    `json:"amount"`
 }
 
 type TlaFungibleTokenPacketData struct {
-	Sender string     `json:"sender"`
+	Sender   string   `json:"sender"`
 	Receiver string   `json:"receiver"`
-	Amount int        `json:"amount"`
-	Denom []string    `json:"denom"`
+	Amount   int      `json:"amount"`
+	Denom    []string `json:"denom"`
 }
 
 type TlaFungibleTokenPacket struct {
-	SourceChannel string `json:"sourceChannel"`
-	SourcePort string    `json:"sourcePort"`
-	DestChannel string   `json:"destChannel"`
-	DestPort string      `json:"destPort"`
-	Data TlaFungibleTokenPacketData `json:"data"`
+	SourceChannel string                     `json:"sourceChannel"`
+	SourcePort    string                     `json:"sourcePort"`
+	DestChannel   string                     `json:"destChannel"`
+	DestPort      string                     `json:"destPort"`
+	Data          TlaFungibleTokenPacketData `json:"data"`
 }
 
 type TlaOnRecvPacketTestCase = struct {
 	// The required subset of bank balances
-	BankBefore []TlaBalance        `json:"bankBefore"`
+	BankBefore []TlaBalance `json:"bankBefore"`
 	// The packet to process
-	Packet TlaFungibleTokenPacket  `json:"packet"`
+	Packet TlaFungibleTokenPacket `json:"packet"`
 	// The handler to call
-	Handler string                 `json:"handler"`
+	Handler string `json:"handler"`
 	// The expected changes in the bank
-	BankAfter []TlaBalance        `json:"bankAfter"`
+	BankAfter []TlaBalance `json:"bankAfter"`
 	// Whether OnRecvPacket should fail or not
-	Error bool                     `json:"error"`
+	Error bool `json:"error"`
 }
 
 type FungibleTokenPacket struct {
 	SourceChannel string
-	SourcePort string
-	DestChannel string
-	DestPort string
-	Data types.FungibleTokenPacketData
+	SourcePort    string
+	DestChannel   string
+	DestPort      string
+	Data          types.FungibleTokenPacketData
 }
 
 type OnRecvPacketTestCase = struct {
@@ -81,16 +80,15 @@ type OnRecvPacketTestCase = struct {
 
 type OwnedCoin struct {
 	Address string
-	Denom string
+	Denom   string
 }
 
 type Balance struct {
-	Id string
+	Id      string
 	Address string
-	Denom string
-	Amount sdk.Int
+	Denom   string
+	Amount  sdk.Int
 }
-
 
 func AddressFromString(address string) string {
 	return sdk.AccAddress(crypto.AddressHash([]byte(address))).String()
@@ -104,7 +102,7 @@ func AddressFromTla(addr []string) string {
 	if len(addr[0]) == 0 && len(addr[1]) == 0 {
 		// simple address: id
 		s = addr[2]
-	} else if len(addr[2]) == 0   {
+	} else if len(addr[2]) == 0 {
 		// escrow address: ics20-1\x00port/channel
 		s = fmt.Sprintf("%s\x00%s/%s", types.Version, addr[0], addr[1])
 	} else {
@@ -115,7 +113,7 @@ func AddressFromTla(addr []string) string {
 
 func DenomFromTla(denom []string) string {
 	var i int
-	for i = 0; i+1 < len(denom) && len(denom[i])==0  && len(denom[i+1])==0; i+=2 {
+	for i = 0; i+1 < len(denom) && len(denom[i]) == 0 && len(denom[i+1]) == 0; i += 2 {
 		// skip empty prefixes
 	}
 	return strings.Join(denom[i:], "/")
@@ -123,7 +121,7 @@ func DenomFromTla(denom []string) string {
 
 func BalanceFromTla(balance TlaBalance) Balance {
 	return Balance{
-		Id: AddressFromTla(balance.Address),
+		Id:      AddressFromTla(balance.Address),
 		Address: AddressFromString(AddressFromTla(balance.Address)),
 		Denom:   DenomFromTla(balance.Denom),
 		Amount:  sdk.NewInt(balance.Amount),
@@ -131,7 +129,7 @@ func BalanceFromTla(balance TlaBalance) Balance {
 }
 
 func BalancesFromTla(tla []TlaBalance) []Balance {
-	balances := make([]Balance,0)
+	balances := make([]Balance, 0)
 	for _, b := range tla {
 		balances = append(balances, BalanceFromTla(b))
 	}
@@ -144,7 +142,7 @@ func FungibleTokenPacketFromTla(packet TlaFungibleTokenPacket) FungibleTokenPack
 		SourcePort:    packet.SourcePort,
 		DestChannel:   packet.DestChannel,
 		DestPort:      packet.DestPort,
-		Data:          types.NewFungibleTokenPacketData(
+		Data: types.NewFungibleTokenPacketData(
 			DenomFromTla(packet.Data.Denom),
 			uint64(packet.Data.Amount),
 			AddressFromString(packet.Data.Sender),
@@ -157,15 +155,13 @@ func OnRecvPacketTestCaseFromTla(tc TlaOnRecvPacketTestCase) OnRecvPacketTestCas
 		description: "auto-generated",
 		bankBefore:  BalancesFromTla(tc.BankBefore),
 		packet:      FungibleTokenPacketFromTla(tc.Packet),
-		handler: tc.Handler,
-		bankAfter:  BalancesFromTla(tc.BankAfter), // TODO different semantics
+		handler:     tc.Handler,
+		bankAfter:   BalancesFromTla(tc.BankAfter), // TODO different semantics
 		pass:        !tc.Error,
 	}
 }
 
 var addressMap = make(map[string]string)
-
-
 
 type Bank struct {
 	balances map[OwnedCoin]sdk.Int
@@ -173,7 +169,7 @@ type Bank struct {
 
 // Make an empty bank
 func MakeBank() Bank {
-	return Bank{ balances: make(map[OwnedCoin]sdk.Int) }
+	return Bank{balances: make(map[OwnedCoin]sdk.Int)}
 }
 
 // Subtract other bank from this bank
@@ -216,7 +212,7 @@ func NullCoin() OwnedCoin {
 }
 
 // Set several balances at once
-func BankFromBalances(balances []Balance) Bank{
+func BankFromBalances(balances []Balance) Bank {
 	bank := MakeBank()
 	for _, balance := range balances {
 		coin := OwnedCoin{balance.Address, balance.Denom}
@@ -228,16 +224,16 @@ func BankFromBalances(balances []Balance) Bank{
 	return bank
 }
 
-
 // String representation of all bank balances
 func (bank *Bank) String() string {
 	str := ""
 	for coin, amount := range bank.balances {
-		str += coin.Address;
+		str += coin.Address
 		if addressMap[coin.Address] != "" {
 			str += "(" + addressMap[coin.Address] + ")"
 		}
-		str += " : " + coin.Denom + " = " + amount.String() + "\n"	}
+		str += " : " + coin.Denom + " = " + amount.String() + "\n"
+	}
 	return str
 }
 
@@ -255,7 +251,7 @@ func (bank *Bank) NonZeroString() string {
 // Construct a bank out of the chain bank
 func BankOfChain(chain *ibctesting.TestChain) Bank {
 	bank := MakeBank()
-	chain.App.BankKeeper.IterateAllBalances(chain.GetContext(), func(address sdk.AccAddress, coin sdk.Coin) (stop bool){
+	chain.App.BankKeeper.IterateAllBalances(chain.GetContext(), func(address sdk.AccAddress, coin sdk.Coin) (stop bool) {
 		fullDenom := coin.Denom
 		if strings.HasPrefix(coin.Denom, "ibc/") {
 			fullDenom, _ = chain.App.TransferKeeper.DenomPathFromHash(chain.GetContext(), coin.Denom)
@@ -266,22 +262,6 @@ func BankOfChain(chain *ibctesting.TestChain) Bank {
 	return bank
 }
 
-// Set balances of the chain bank for balances present in the bank
-func (suite *KeeperTestSuite) SetChainBankBalances(chain *ibctesting.TestChain, bank *Bank) error {
-	for coin, amount := range bank.balances {
-		address, err := sdk.AccAddressFromBech32(coin.Address)
-		if err != nil {
-			return err
-		}
-		trace := types.ParseDenomTrace(coin.Denom)
-		err = chain.App.BankKeeper.SetBalance(chain.GetContext(), address, sdk.NewCoin(trace.IBCDenom(), amount))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // Check that the state of the bank is the bankBefore + expectedBankChange
 func (suite *KeeperTestSuite) CheckBankBalances(chain *ibctesting.TestChain, bankBefore *Bank, expectedBankChange *Bank) error {
 	bankAfter := BankOfChain(chain)
@@ -289,21 +269,20 @@ func (suite *KeeperTestSuite) CheckBankBalances(chain *ibctesting.TestChain, ban
 	diff := bankChange.Sub(expectedBankChange)
 	NonZeroString := diff.NonZeroString()
 	if len(NonZeroString) != 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "Unexpected changes in the bank: \n" + NonZeroString)
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "Unexpected changes in the bank: \n"+NonZeroString)
 	}
 	return nil
 }
 
-
 func (suite *KeeperTestSuite) TestModelBasedRelay() {
 	dirname := "model_based_tests/"
-	files,err := ioutil.ReadDir(dirname)
+	files, err := ioutil.ReadDir(dirname)
 	if err != nil {
 		panic(fmt.Errorf("Failed to read model-based test files: %w", err))
 	}
 	for _, file_info := range files {
 		var tlaTestCases = []TlaOnRecvPacketTestCase{}
-		if ! strings.HasSuffix(file_info.Name(), ".json") {
+		if !strings.HasSuffix(file_info.Name(), ".json") {
 			continue
 		}
 		jsonBlob, err := ioutil.ReadFile(dirname + file_info.Name())
@@ -345,15 +324,15 @@ func (suite *KeeperTestSuite) TestModelBasedRelay() {
 				}
 				switch tc.handler {
 				case "SendTransfer":
-					var sender sdk.AccAddress;
-					sender, err = sdk.AccAddressFromBech32(tc.packet.Data.Sender);
+					var sender sdk.AccAddress
+					sender, err = sdk.AccAddressFromBech32(tc.packet.Data.Sender)
 					if err != nil {
 						panic("MBT failed to convert sender address")
 					}
-					registerDenom();
+					registerDenom()
 					denomTrace := types.ParseDenomTrace(tc.packet.Data.Denom)
 					denom := denomTrace.IBCDenom()
-					err = sdk.ValidateDenom(denom);
+					err = sdk.ValidateDenom(denom)
 					if err == nil {
 						err = suite.chainB.App.TransferKeeper.SendTransfer(
 							suite.chainB.GetContext(),
@@ -368,14 +347,14 @@ func (suite *KeeperTestSuite) TestModelBasedRelay() {
 				case "OnRecvPacket":
 					err = suite.chainB.App.TransferKeeper.OnRecvPacket(suite.chainB.GetContext(), packet, tc.packet.Data)
 				case "OnTimeoutPacket":
-					registerDenom();
+					registerDenom()
 					err = suite.chainB.App.TransferKeeper.OnTimeoutPacket(suite.chainB.GetContext(), packet, tc.packet.Data)
 				case "OnRecvAcknowledgementResult":
 					err = suite.chainB.App.TransferKeeper.OnAcknowledgementPacket(
 						suite.chainB.GetContext(), packet, tc.packet.Data,
 						channeltypes.NewResultAcknowledgement(nil))
 				case "OnRecvAcknowledgementError":
-					registerDenom();
+					registerDenom()
 					err = suite.chainB.App.TransferKeeper.OnAcknowledgementPacket(
 						suite.chainB.GetContext(), packet, tc.packet.Data,
 						channeltypes.NewErrorAcknowledgement("MBT Error Acknowledgement"))

@@ -4,24 +4,16 @@ order: 1
 
 # Keeper
 
-In the app initialization stage, `Keeper.Subspace(Paramspace)` is passed to the 
-user modules, and the subspaces are stored in `Keeper.spaces`. Later it can be 
-retrieved with `Keeper.GetSubspace`, so the keepers holding `Keeper` can access 
-to any subspace. For example, Gov module can take `Keeper` as its argument and 
-modify parameter of any subspace when a `ParameterChangeProposal` is accepted.
+In the app initialization stage, [subspaces](02_subspace.md) can be allocated for other modules' keeper using `Keeper.Subspace` and are stored in `Keeper.spaces`. Then, those modules can have a reference to their specific parameter store through `Keeper.GetSubspace`.
 
 Example:
 
 ```go
-type MasterKeeper struct {
-	pk params.Keeper
+type ExampleKeeper struct {
+	paramSpace paramtypes.Subspace
 }
 
-func (k MasterKeeper) SetParam(ctx sdk.Context, space string, key string, param interface{}) {
-	space, ok := k.ps.GetSubspace(space)
-	if !ok {
-		return
-	}
-	space.Set(ctx, key, param)
+func (k ExampleKeeper) SetParams(ctx sdk.Context, params types.Params) {
+	k.paramSpace.SetParamSet(ctx, &params)
 }
 ```

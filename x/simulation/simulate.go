@@ -240,8 +240,6 @@ func SimulateFromSeed(
 	return false, exportedParams, nil
 }
 
-//______________________________________________________________________________
-
 type blockSimFn func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 	accounts []simulation.Account, header tmproto.Header) (opCount int)
 

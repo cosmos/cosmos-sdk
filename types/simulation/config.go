@@ -6,8 +6,8 @@ type Config struct {
 	ParamsFile  string // custom simulation params file which overrides any random params; cannot be used with genesis
 
 	ExportParamsPath   string // custom file path to save the exported params JSON
-	ExportParamsHeight int    //height to which export the randomly generated params
-	ExportStatePath    string //custom file path to save the exported app state JSON
+	ExportParamsHeight int    // height to which export the randomly generated params
+	ExportStatePath    string // custom file path to save the exported app state JSON
 	ExportStatsPath    string // custom file path to save the exported simulation statistics JSON
 
 	Seed               int64  // simulation random seed

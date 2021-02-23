@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -39,7 +38,7 @@ func GetCmdQueryConnections() *cobra.Command {
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.Connections(context.Background(), req)
+			res, err := queryClient.Connections(cmd.Context(), req)
 			if err != nil {
 				return err
 			}

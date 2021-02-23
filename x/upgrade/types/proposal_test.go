@@ -9,8 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -97,9 +95,7 @@ func TestMarshalSoftwareUpdateProposal(t *testing.T) {
 	// create codec
 	ir := codectypes.NewInterfaceRegistry()
 	types.RegisterInterfaces(ir)
-	clienttypes.RegisterInterfaces(ir)
 	gov.RegisterInterfaces(ir)
-	ibctmtypes.RegisterInterfaces(ir)
 	cdc := codec.NewProtoCodec(ir)
 
 	// marshal message

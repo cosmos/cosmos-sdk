@@ -31,8 +31,8 @@ func PubKeyFromBytes(pubKeyBytes []byte) (pubKey cryptotypes.PubKey, err error) 
 	return
 }
 
-// LegacyAminoPubKeyFromBytes unmarshals public key bytes and returns a PubKey
-func LegacyAminoPubKeyFromBytes(pubKeyBytes []byte) (pubKey multisig.LegacyAminoPubKey, err error) {
+// AminoPubKeyFromBytes unmarshals public key bytes and returns a PubKey
+func AminoPubKeyFromBytes(pubKeyBytes []byte) (pubKey multisig.LegacyAminoPubKey, err error) {
 	err = Cdc.UnmarshalBinaryBare(pubKeyBytes, &pubKey)
 	return
 }

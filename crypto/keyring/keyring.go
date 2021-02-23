@@ -306,7 +306,7 @@ func (ks keystore) ImportPubKey(uid string, armor string, keyType KeyType) error
 	}
 
 	if keyType == TypeMulti {
-		pubKey, err := legacy.LegacyAminoPubKeyFromBytes(pubBytes)
+		pubKey, err := legacy.AminoPubKeyFromBytes(pubBytes)
 		if err != nil {
 			return err
 		}

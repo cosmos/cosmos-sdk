@@ -10,8 +10,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,8 +24,7 @@ func mustParseTime(s string) time.Time {
 }
 
 func TestPlanString(t *testing.T) {
-	cs, err := clienttypes.PackClientState(&ibctmtypes.ClientState{})
-	require.NoError(t, err)
+	clientStateBz := []byte("IBC client state")
 
 	cases := map[string]struct {
 		p      types.Plan
@@ -54,9 +51,9 @@ func TestPlanString(t *testing.T) {
 				Name:                "by height",
 				Info:                "https://foo.bar/baz",
 				Height:              7890,
-				UpgradedClientState: cs,
+				UpgradedClientState: clientStateBz,
 			},
-			expect: fmt.Sprintf("Upgrade Plan\n  Name: by height\n  Height: 7890\n  Info: https://foo.bar/baz.\n  Upgraded IBC Client: %s", &ibctmtypes.ClientState{}),
+			expect: fmt.Sprintf("Upgrade Plan\n  Name: by height\n  Height: 7890\n  Info: https://foo.bar/baz.\n  Upgraded IBC Client: %s", clientStateBz),
 		},
 
 		"neither": {
@@ -77,8 +74,7 @@ func TestPlanString(t *testing.T) {
 }
 
 func TestPlanValid(t *testing.T) {
-	cs, err := clienttypes.PackClientState(&ibctmtypes.ClientState{})
-	require.NoError(t, err)
+	clientStateBz := []byte("IBC client state")
 
 	cases := map[string]struct {
 		p     types.Plan
@@ -97,7 +93,7 @@ func TestPlanValid(t *testing.T) {
 				Name:                "ibc-all-good",
 				Info:                "some text here",
 				Height:              123450000,
-				UpgradedClientState: cs,
+				UpgradedClientState: clientStateBz,
 			},
 			valid: true,
 		},
@@ -130,7 +126,7 @@ func TestPlanValid(t *testing.T) {
 				Name:                "ibc-all-good",
 				Info:                "some text here",
 				Time:                mustParseTime("2019-07-08T11:33:55Z"),
-				UpgradedClientState: cs,
+				UpgradedClientState: clientStateBz,
 			},
 			valid: false,
 		},

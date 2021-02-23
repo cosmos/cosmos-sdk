@@ -39,7 +39,7 @@ message Plan {
   // so that connecting chains can verify that the new upgraded client is valid by verifying a proof on the
   // previous version of the chain.
   // This will allow IBC connections to persist smoothly across planned chain upgrades
-  google.protobuf.Any upgraded_client_state = 5 [(gogoproto.moretags) = "yaml:\"upgraded_client_state\""];
+  bytes upgraded_client_state = 5 [(gogoproto.moretags) = "yaml:\"upgraded_client_state\""];
 }
 
 // SoftwareUpgradeProposal is a gov Content type for initiating a software

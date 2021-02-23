@@ -82,14 +82,13 @@ func TestContentAccessors(t *testing.T) {
 // tests a software update proposal can be marshaled and unmarshaled, and the
 // client state can be unpacked
 func TestMarshalSoftwareUpdateProposal(t *testing.T) {
-	cs, err := clienttypes.PackClientState(&ibctmtypes.ClientState{})
-	require.NoError(t, err)
+	clientStateBz := []byte("IBC client state")
 
 	// create proposal
 	plan := types.Plan{
 		Name:                "upgrade ibc",
 		Height:              1000,
-		UpgradedClientState: cs,
+		UpgradedClientState: clientStateBz,
 	}
 	content := types.NewSoftwareUpgradeProposal("title", "description", plan)
 	sup, ok := content.(*types.SoftwareUpgradeProposal)
@@ -110,9 +109,5 @@ func TestMarshalSoftwareUpdateProposal(t *testing.T) {
 	// unmarshal proposal
 	newSup := &types.SoftwareUpgradeProposal{}
 	err = cdc.UnmarshalJSON(bz, newSup)
-	require.NoError(t, err)
-
-	// unpack client state
-	_, err = clienttypes.UnpackClientState(newSup.Plan.UpgradedClientState)
 	require.NoError(t, err)
 }

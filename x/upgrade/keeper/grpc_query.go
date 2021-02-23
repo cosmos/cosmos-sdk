@@ -4,7 +4,6 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -43,12 +42,7 @@ func (k Keeper) UpgradedConsensusState(c context.Context, req *types.QueryUpgrad
 		return nil, err
 	}
 
-	cs, err := clienttypes.PackConsensusState(consState)
-	if err != nil {
-		return nil, err
-	}
-
 	return &types.QueryUpgradedConsensusStateResponse{
-		UpgradedConsensusState: cs,
+		UpgradedConsensusState: consState,
 	}, nil
 }

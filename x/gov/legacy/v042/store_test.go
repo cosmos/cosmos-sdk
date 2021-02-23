@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v040gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v040"
 	v042gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v042"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func TestStoreMigration(t *testing.T) {
@@ -33,32 +34,32 @@ func TestStoreMigration(t *testing.T) {
 		{
 			"ProposalKey",
 			v040gov.ProposalKey(proposalID),
-			v042gov.ProposalKey(proposalID),
+			types.ProposalKey(proposalID),
 		},
 		{
 			"ActiveProposalQueue",
 			v040gov.ActiveProposalQueueKey(proposalID, now),
-			v042gov.ActiveProposalQueueKey(proposalID, now),
+			types.ActiveProposalQueueKey(proposalID, now),
 		},
 		{
 			"InactiveProposalQueue",
 			v040gov.InactiveProposalQueueKey(proposalID, now),
-			v042gov.InactiveProposalQueueKey(proposalID, now),
+			types.InactiveProposalQueueKey(proposalID, now),
 		},
 		{
 			"ProposalIDKey",
 			v040gov.ProposalIDKey,
-			v042gov.ProposalIDKey,
+			types.ProposalIDKey,
 		},
 		{
 			"DepositKey",
 			v040gov.DepositKey(proposalID, addr1),
-			v042gov.DepositKey(proposalID, addr1),
+			types.DepositKey(proposalID, addr1),
 		},
 		{
 			"VotesKeyPrefix",
 			v040gov.VoteKey(proposalID, addr1),
-			v042gov.VoteKey(proposalID, addr1),
+			types.VoteKey(proposalID, addr1),
 		},
 	}
 

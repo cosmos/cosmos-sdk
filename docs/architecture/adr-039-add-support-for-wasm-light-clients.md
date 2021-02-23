@@ -38,7 +38,7 @@ IBC light client implementation. This is both time consuming and error prone.
 Another problem stemming from above process is, if a chain want to upgrade its own consensus, it will need to convince every chain
 or hub connected to it to upgrade its light client in order to stay connected. Due to time consuming process required
 to upgrade light client, a chain with lots of connection need to be disconnected for quite some time after upgrading 
-own consensus, which can be very expensive.
+its consensus, which can be very expensive.
 
 We are proposing simplifying this workflow by integrating a WASM light client module which makes adding support for
 a new light client a simple transaction. The light client bytecode, written in Wasm-compilable Rust, runs inside a Wasmer

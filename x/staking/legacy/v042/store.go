@@ -7,6 +7,7 @@ import (
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v040"
 	v042distribution "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v042"
 	v040staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v040"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // migratePrefixAddressAddressAddress is a helper function that migrates all keys of format:
@@ -45,7 +46,7 @@ func migrateValidatorsByPowerIndexKey(store sdk.KVStore) {
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
 		powerBytes := oldStoreIter.Key()[:powerBytesLen]
 		valAddr := oldStoreIter.Key()[powerBytesLen:]
-		newStoreKey := append(append(ValidatorsByPowerIndexKey, powerBytes...), address.MustLengthPrefix(valAddr)...)
+		newStoreKey := append(append(types.ValidatorsByPowerIndexKey, powerBytes...), address.MustLengthPrefix(valAddr)...)
 
 		// Set new key on store. Values don't change.
 		store.Set(newStoreKey, oldStoreIter.Value())

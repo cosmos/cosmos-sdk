@@ -15,8 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// TxConfigTestSuite provides a test suite that can be used to test that a TxConfig implementation is correct
-//nolint:golint  // type name will be used as tx.TxConfigTestSuite by other packages, and that stutters; consider calling this GeneratorTestSuite
+// TxConfigTestSuite provides a test suite that can be used to test that a TxConfig implementation is correct.
 type TxConfigTestSuite struct {
 	suite.Suite
 	TxConfig client.TxConfig

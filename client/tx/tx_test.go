@@ -132,10 +132,10 @@ func TestSign(t *testing.T) {
 	var from2 = "test_key2"
 
 	// create a new key using a mnemonic generator and test if we can reuse seed to recreate that account
-	_, seed, err := kr.NewMnemonic(from1, keyring.English, path, hd.Secp256k1)
+	_, seed, err := kr.NewMnemonic(from1, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	requireT.NoError(err)
 	requireT.NoError(kr.Delete(from1))
-	info1, _, err := kr.NewMnemonic(from1, keyring.English, path, hd.Secp256k1)
+	info1, _, err := kr.NewMnemonic(from1, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	requireT.NoError(err)
 
 	info2, err := kr.NewAccount(from2, seed, "", path, hd.Secp256k1)

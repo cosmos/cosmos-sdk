@@ -102,9 +102,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
 	m := keeper.NewMigrator(am.keeper.(keeper.BaseKeeper))
-	cfg.RegisterMigration(types.ModuleName, 1, func(ctx sdk.Context) error {
-		return m.Migrate1(ctx)
-	})
+	cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1)
 }
 
 // NewAppModule creates a new AppModule object

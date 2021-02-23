@@ -61,6 +61,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * (x/auth) [\#8522](https://github.com/cosmos/cosmos-sdk/pull/8522) Allow to query all stored accounts
+* (x/ibc) [\#7949](https://github.com/cosmos/cosmos-sdk/issues/7949) Message `Acknowledgement` has been moved from channel.proto to acknowledgement.proto
 
 ### Bug Fixes
 

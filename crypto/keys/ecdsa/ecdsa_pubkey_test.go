@@ -1,7 +1,9 @@
 package ecdsa
 
 import (
+	"crypto/ecdsa"
 	"encoding/hex"
+	"math/big"
 	"testing"
 
 	proto "github.com/gogo/protobuf/proto"
@@ -30,7 +32,7 @@ func (suite *EcdsaSuite) SetupSuite() {
 	suite.pk = sk.PubKey()
 }
 
-func (suite *EcdsaSuite) TestString() {
+func (suite *EcdsaSuite) TestPKString() {
 	assert := suite.Assert()
 	require := suite.Require()
 
@@ -45,14 +47,14 @@ func (suite *EcdsaSuite) TestString() {
 	assert.EqualValues(suite.pk.Bytes(), bz)
 }
 
-func (suite *EcdsaSuite) TestBytes() {
+func (suite *EcdsaSuite) TestPKBytes() {
 	require := suite.Require()
 	var pk *ecdsaPK
 	require.Nil(pk.Bytes())
 	require.Len(suite.pk.Bytes(), PubKeySize)
 }
 
-func (suite *EcdsaSuite) TestEquals() {
+func (suite *EcdsaSuite) TestPKEquals() {
 	require := suite.Require()
 
 	skOther, err := GenSecp256r1()
@@ -66,7 +68,7 @@ func (suite *EcdsaSuite) TestEquals() {
 	require.True(pkOther.Equals(pkOther), "Equals must be reflexive")
 }
 
-func (suite *EcdsaSuite) TestMarshalAmino() {
+func (suite *EcdsaSuite) TestPKMarshalAmino() {
 	require := suite.Require()
 	type AminoPubKey interface {
 		cryptotypes.PubKey
@@ -82,7 +84,7 @@ func (suite *EcdsaSuite) TestMarshalAmino() {
 	require.True(pk2.Equals(suite.pk))
 }
 
-func (suite *EcdsaSuite) TestSize() {
+func (suite *EcdsaSuite) TestPKSize() {
 	require := suite.Require()
 	bv := gogotypes.BytesValue{Value: suite.pk.Bytes()}
 	require.Equal(bv.Size(), suite.pk.(*ecdsaPK).Size())
@@ -91,7 +93,7 @@ func (suite *EcdsaSuite) TestSize() {
 	require.Equal(0, nilPk.Size(), "nil value must have zero size")
 }
 
-func (suite *EcdsaSuite) TestMarshalProto() {
+func (suite *EcdsaSuite) TestPKMarshalProto() {
 	require := suite.Require()
 
 	/**** test structure marshalling ****/
@@ -112,6 +114,20 @@ func (suite *EcdsaSuite) TestMarshalProto() {
 	require.NoError(cdc.UnmarshalBinaryBare(bz, &pk))
 	require.True(pk.Equals(suite.pk))
 
+	const bufSize = 100
+	bz2 := make([]byte, bufSize)
+	pkCpy := suite.pk.(*ecdsaPK)
+	_, err = pkCpy.MarshalTo(bz2)
+	require.NoError(err)
+	require.Len(bz2, bufSize)
+	require.Equal(bz, bz2[:sovPubKeySize])
+
+	bz2 = make([]byte, bufSize)
+	_, err = pkCpy.MarshalToSizedBuffer(bz2)
+	require.NoError(err)
+	require.Len(bz2, bufSize)
+	require.Equal(bz, bz2[(bufSize-sovPubKeySize):])
+
 	/**** test interface marshalling ****/
 
 	bz, err = cdc.MarshalInterface(suite.pk)
@@ -126,4 +142,11 @@ func (suite *EcdsaSuite) TestMarshalProto() {
 
 	cdc.UnmarshalInterface(bz, nil)
 	require.Error(err, "nil should fail")
+}
+
+func (suite *EcdsaSuite) TestPKReset() {
+	pk := &ecdsaPK{ecdsa.PublicKey{X: big.NewInt(1)}, []byte{1}}
+	pk.Reset()
+	suite.Nil(pk.address)
+	suite.Equal(pk.PublicKey, ecdsa.PublicKey{})
 }

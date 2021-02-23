@@ -3,6 +3,7 @@ package ecdsa
 import (
 	"crypto/elliptic"
 	"fmt"
+	math_bits "math/bits"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -48,4 +49,8 @@ func init() {
 // RegisterInterfaces adds ecdsa PubKey to pubkey registry
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*cryptotypes.PubKey)(nil), &ecdsaPK{})
+}
+
+func sovKeys(x uint64) (n int) {
+	return (math_bits.Len64(x|1) + 6) / 7
 }

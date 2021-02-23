@@ -7,7 +7,6 @@ import (
 	"encoding/asn1"
 	"fmt"
 	"math/big"
-	math_bits "math/bits"
 
 	gogotypes "github.com/gogo/protobuf/types"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
@@ -84,7 +83,9 @@ func (pk *ecdsaPK) Type() string {
 
 // **** proto.Message ****
 
-func (pk *ecdsaPK) Reset()     {} // TODO: maybe we need to have this?
+func (pk *ecdsaPK) Reset() {
+	*pk = ecdsaPK{}
+}
 func (*ecdsaPK) ProtoMessage() {}
 
 // **** Proto Marshaler ****
@@ -114,27 +115,7 @@ func (pk *ecdsaPK) Unmarshal(b []byte) error {
 	if err != nil {
 		return err
 	}
-	if len(bv.Value) < 2 {
-		return fmt.Errorf("wrong ECDSA PK bytes, expecting at least 2 bytes")
-	}
-
-	curve, ok := curveTypesRev[bv.Value[0]]
-	if !ok {
-		return fmt.Errorf("wrong ECDSA PK bytes, unknown curve type: %d", bv.Value[0])
-	}
-	cpk := ecdsa.PublicKey{Curve: curve}
-	cpk.X, cpk.Y = elliptic.UnmarshalCompressed(curve, bv.Value[1:])
-	if cpk.X == nil || cpk.Y == nil {
-		return fmt.Errorf("wrong ECDSA PK bytes")
-	}
-
-	if pk == nil {
-		*pk = ecdsaPK{cpk, nil}
-	} else {
-		pk.PublicKey = cpk
-	}
-
-	return nil
+	return pk.UnmarshalAmino(bv.Value)
 }
 
 // Size implements ProtoMarshaler interface
@@ -155,18 +136,22 @@ func (pk *ecdsaPK) MarshalAmino() ([]byte, error) {
 // UnmarshalAmino overrides Amino binary marshalling.
 func (pk *ecdsaPK) UnmarshalAmino(bz []byte) error {
 	if len(bz) != PubKeySize {
-		return errors.Wrap(errors.ErrInvalidPubKey, "invalid pubkey size")
+		return errors.Wrapf(errors.ErrInvalidPubKey, "wrong ECDSA PK bytes, expecting %d bytes", PubKeySize)
 	}
 	curve, ok := curveTypesRev[bz[0]]
 	if !ok {
-		return errors.Wrap(errors.ErrInvalidPubKey, "invalid curve type")
+		return errors.Wrapf(errors.ErrInvalidPubKey, "wrong ECDSA PK bytes, unknown curve type: %d", bz[0])
 	}
-	x, y := elliptic.UnmarshalCompressed(curve, bz[1:])
-	if x == nil || y == nil {
-		return errors.Wrap(errors.ErrInvalidPubKey, "invalid pubkey bytes")
+	cpk := ecdsa.PublicKey{Curve: curve}
+	cpk.X, cpk.Y = elliptic.UnmarshalCompressed(curve, bz[1:])
+	if cpk.X == nil || cpk.Y == nil {
+		return errors.Wrapf(errors.ErrInvalidPubKey, "wrong ECDSA PK bytes, unknown curve type: %d", bz[0])
 	}
-	pk.PublicKey.Curve = curve
-	pk.PublicKey.X, pk.PublicKey.Y = x, y
+	if pk == nil {
+		*pk = ecdsaPK{cpk, nil}
+	} else {
+		pk.PublicKey = cpk
+	}
 	return nil
 }
 
@@ -178,8 +163,4 @@ func (pk *ecdsaPK) MarshalAminoJSON() ([]byte, error) {
 // UnmarshalAminoJSON overrides Amino JSON marshalling.
 func (pk *ecdsaPK) UnmarshalAminoJSON(bz []byte) error {
 	return pk.UnmarshalAmino(bz)
-}
-
-func sovKeys(x uint64) (n int) {
-	return (math_bits.Len64(x|1) + 6) / 7
 }

@@ -45,6 +45,9 @@ func (pk *ecdsaPK) String() string {
 // Bytes returns the byte representation of the public key using a compressed form
 // specified in section 4.3.6 of ANSI X9.62 with first byte being the curve type.
 func (pk *ecdsaPK) Bytes() []byte {
+	if pk == nil {
+		return nil
+	}
 	compressed := make([]byte, PubKeySize)
 	compressed[0] = curveTypes[pk.Curve]
 	compressed[1] = byte(pk.Y.Bit(0)) | 2

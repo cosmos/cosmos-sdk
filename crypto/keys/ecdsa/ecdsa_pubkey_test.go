@@ -45,6 +45,13 @@ func (suite *EcdsaSuite) TestString() {
 	assert.EqualValues(suite.pk.Bytes(), bz)
 }
 
+func (suite *EcdsaSuite) TestBytes() {
+	require := suite.Require()
+	var pk *ecdsaPK
+	require.Nil(pk.Bytes())
+	require.Len(suite.pk.Bytes(), PubKeySize)
+}
+
 func (suite *EcdsaSuite) TestEquals() {
 	require := suite.Require()
 

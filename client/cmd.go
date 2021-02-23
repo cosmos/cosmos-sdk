@@ -102,7 +102,7 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 	if clientCtx.KeyringDir == "" || flagSet.Changed(flags.FlagKeyringDir) {
 		keyringDir, _ := flagSet.GetString(flags.FlagKeyringDir)
 
-		// The keyring directory is optional and falls back to the home directory
+		// The keyring directory is optionakbl and falls back to the home directory
 		// if omitted.
 		if keyringDir == "" {
 			keyringDir = clientCtx.HomeDir

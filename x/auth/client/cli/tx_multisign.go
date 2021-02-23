@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bufio"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -84,20 +83,9 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			return err
 		}
 
-		backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-
-		inBuf := bufio.NewReader(cmd.InOrStdin())
-		kb, err := keyring.New(sdk.KeyringServiceName(), backend, clientCtx.HomeDir, inBuf)
+		multisigInfo, err := getMultisigInfo(clientCtx, args[1])
 		if err != nil {
-			return
-		}
-
-		multisigInfo, err := kb.Key(args[1])
-		if err != nil {
-			return
-		}
-		if multisigInfo.GetType() != keyring.TypeMulti {
-			return fmt.Errorf("%q must be of type %s: %s", args[1], keyring.TypeMulti, multisigInfo.GetType())
+			return err
 		}
 
 		multisigPub := multisigInfo.GetPubKey().(*kmultisig.LegacyAminoPubKey)
@@ -247,13 +235,9 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 		}
 		scanner := authclient.NewBatchScanner(txCfg, infile)
 
-		kb := clientCtx.Keyring
-		multisigInfo, err := kb.Key(args[1])
+		multisigInfo, err := getMultisigInfo(clientCtx, args[1])
 		if err != nil {
-			return errors.Wrap(err, "error getting keybase multisig account")
-		}
-		if multisigInfo.GetType() != keyring.TypeMulti {
-			return fmt.Errorf("%q must be of type %s: %s", args[1], keyring.TypeMulti, multisigInfo.GetType())
+			return err
 		}
 
 		var signatureBatch [][]signingtypes.SignatureV2
@@ -283,15 +267,16 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 
 			multisigPub := multisigInfo.GetPubKey().(*kmultisig.LegacyAminoPubKey)
 			multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
+			signingData := signing.SignerData{
+				ChainID:       txFactory.ChainID(),
+				AccountNumber: txFactory.AccountNumber(),
+				Sequence:      txFactory.Sequence(),
+			}
+
 			for _, sig := range signatureBatch {
-				signingData := signing.SignerData{
-					ChainID:       txFactory.ChainID(),
-					AccountNumber: txFactory.AccountNumber(),
-					Sequence:      txFactory.Sequence(),
-				}
 				err = signing.VerifySignature(sig[i].PubKey, signingData, sig[i].Data, txCfg.SignModeHandler(), txBldr.GetTx())
 				if err != nil {
-					return fmt.Errorf("couldn't verify signature: %w %v %v", err, signingData, sig)
+					return fmt.Errorf("couldn't verify signature: %w %v", err, sig)
 				}
 
 				if err := multisig.AddSignatureV2(multisigSig, sig[i], multisigPub.GetPubKeys()); err != nil {
@@ -377,4 +362,17 @@ func readSignaturesFromFile(ctx client.Context, filename string) (sigs []signing
 		sigs = append(sigs, sig...)
 	}
 	return sigs, nil
+}
+
+func getMultisigInfo(clientCtx client.Context, name string) (keyring.Info, error) {
+	kb := clientCtx.Keyring
+	multisigInfo, err := kb.Key(name)
+	if err != nil {
+		return nil, errors.Wrap(err, "error getting keybase multisig account")
+	}
+	if multisigInfo.GetType() != keyring.TypeMulti {
+		return nil, fmt.Errorf("%q must be of type %s: %s", name, keyring.TypeMulti, multisigInfo.GetType())
+	}
+
+	return multisigInfo, nil
 }

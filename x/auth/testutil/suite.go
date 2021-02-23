@@ -199,16 +199,7 @@ func sigDataEquals(data1, data2 signingtypes.SignatureData) bool {
 		if !ok {
 			return false
 		}
-
-		if data1.BitArray.ExtraBitsStored != data2.BitArray.ExtraBitsStored {
-			return false
-		}
-
-		if !bytes.Equal(data1.BitArray.Elems, data2.BitArray.Elems) {
-			return false
-		}
-
-		if len(data1.Signatures) != len(data2.Signatures) {
+		if !data1.BitArray.Equal(data2.BitArray) || len(data1.Signatures) != len(data2.Signatures) {
 			return false
 		}
 

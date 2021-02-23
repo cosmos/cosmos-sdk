@@ -60,7 +60,7 @@ func (suite *EcdsaSuite) TestPKEquals() {
 	skOther, err := GenSecp256r1()
 	require.NoError(err)
 	pkOther := skOther.PubKey()
-	pkOther2 := &ecdsaPK{skOther.(ecdsaSK).PublicKey, nil}
+	pkOther2 := &ecdsaPK{skOther.(*ecdsaSK).PublicKey, nil}
 
 	require.False(suite.pk.Equals(pkOther))
 	require.True(pkOther.Equals(pkOther2))

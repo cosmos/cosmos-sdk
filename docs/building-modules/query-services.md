@@ -4,7 +4,7 @@ order: 5
 
 # Query Services
 
-A query service processes [`queries`](./messages-and-queries.md#queries). Query services are specific to the module in which they are defined, and only process `queries` defined within said module. They are called from `baseapp`'s [`Query` method](../core/baseapp.md#query). {synopsis}
+A query service processes [`queries`](./messages-and-queries.md#queries). Query services are specific to the module in which they are defined, and only process `queries` defined within said module. They are called from `BaseApp`'s [`Query` method](../core/baseapp.md#query). {synopsis}
 
 ## Pre-requisite Readings
 
@@ -21,8 +21,8 @@ Let us break it down:
 
 - The `path` is an array of `string`s that contains the type of the query, and that can also contain `query` arguments. See [`queries`](./messages-and-queries.md#queries) for more information.
 - The `req` itself is primarily used to retrieve arguments if they are too large to fit in the `path`. This is done using the `Data` field of `req`.
-- The [`Context`](../core/context.md) contains all the necessary information needed to process the `query`, as well as a cache-wrapped copy of the latest state. It is primarily used by the [`keeper`](./keeper.md) to access the state.
-- The result `res` returned to `baseapp`, marshalled using the application's [`codec`](../core/encoding.md).
+- The [`Context`](../core/context.md) contains all the necessary information needed to process the `query`, as well as a branch of the latest state. It is primarily used by the [`keeper`](./keeper.md) to access the state.
+- The result `res` returned to `BaseApp`, marshalled using the application's [`codec`](../core/encoding.md).
 
 ## Implementation of a module query service
 

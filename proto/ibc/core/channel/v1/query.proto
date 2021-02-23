@@ -38,8 +38,8 @@ service Query {
   // associated with the provided channel identifiers.
   rpc ChannelConsensusState(QueryChannelConsensusStateRequest) returns (QueryChannelConsensusStateResponse) {
     option (google.api.http).get =
-        "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/consensus_state/version/"
-        "{version_number}/height/{version_height}";
+        "/ibc/core/channel/v1beta1/channels/{channel_id}/ports/{port_id}/consensus_state/revision/"
+        "{revision_number}/height/{revision_height}";
   }
 
   // PacketCommitment queries a stored packet commitment hash.
@@ -176,10 +176,10 @@ message QueryChannelConsensusStateRequest {
   string port_id = 1;
   // channel unique identifier
   string channel_id = 2;
-  // version number of the consensus state
-  uint64 version_number = 3;
-  // version height of the consensus state
-  uint64 version_height = 4;
+  // revision number of the consensus state
+  uint64 revision_number = 3;
+  // revision height of the consensus state
+  uint64 revision_height = 4;
 }
 
 // QueryChannelClientStateResponse is the Response type for the

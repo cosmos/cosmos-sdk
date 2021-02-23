@@ -67,7 +67,7 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 func TestParseProposal(t *testing.T) {
 	encodingConfig := params.MakeTestEncodingConfig()
 
-	okJSON, cleanup := testutil.WriteToNewTempFile(t, `
+	okJSON := testutil.WriteToNewTempFile(t, `
 {
   "title": "Community Pool Spend",
   "description": "Pay me some Atoms!",
@@ -76,7 +76,6 @@ func TestParseProposal(t *testing.T) {
   "deposit": "1000stake"
 }
 `)
-	t.Cleanup(cleanup)
 
 	proposal, err := ParseCommunityPoolSpendProposalWithDeposit(encodingConfig.Marshaler, okJSON.Name())
 	require.NoError(t, err)

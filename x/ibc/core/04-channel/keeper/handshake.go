@@ -22,66 +22,63 @@ func (k Keeper) CounterpartyHops(ctx sdk.Context, ch types.Channel) ([]string, b
 	if len(ch.ConnectionHops) != 1 {
 		return []string{}, false
 	}
-	counterPartyHops := make([]string, 1)
+	counterpartyHops := make([]string, 1)
 	hop := ch.ConnectionHops[0]
 	conn, found := k.connectionKeeper.GetConnection(ctx, hop)
 	if !found {
 		return []string{}, false
 	}
 
-	counterPartyHops[0] = conn.GetCounterparty().GetConnectionID()
-	return counterPartyHops, true
+	counterpartyHops[0] = conn.GetCounterparty().GetConnectionID()
+	return counterpartyHops, true
 }
 
 // ChanOpenInit is called by a module to initiate a channel opening handshake with
-// a module on another chain.
+// a module on another chain. The counterparty channel identifier is validated to be
+// empty in msg validation.
 func (k Keeper) ChanOpenInit(
 	ctx sdk.Context,
 	order types.Order,
 	connectionHops []string,
-	portID,
-	channelID string,
+	portID string,
 	portCap *capabilitytypes.Capability,
 	counterparty types.Counterparty,
 	version string,
-) (*capabilitytypes.Capability, error) {
-	// channel identifier and connection hop length checked on msg.ValidateBasic()
-	_, found := k.GetChannel(ctx, portID, channelID)
-	if found {
-		return nil, sdkerrors.Wrapf(types.ErrChannelExists, "port ID (%s) channel ID (%s)", portID, channelID)
-	}
-
+) (string, *capabilitytypes.Capability, error) {
+	// connection hop length checked on msg.ValidateBasic()
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
 	if !found {
-		return nil, sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, connectionHops[0])
+		return "", nil, sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, connectionHops[0])
 	}
 
-	if len(connectionEnd.GetVersions()) != 1 {
-		return nil, sdkerrors.Wrapf(
+	getVersions := connectionEnd.GetVersions()
+	if len(getVersions) != 1 {
+		return "", nil, sdkerrors.Wrapf(
 			connectiontypes.ErrInvalidVersion,
 			"single version must be negotiated on connection before opening channel, got: %v",
-			connectionEnd.GetVersions(),
+			getVersions,
 		)
 	}
 
-	if !connectiontypes.VerifySupportedFeature(connectionEnd.GetVersions()[0], order.String()) {
-		return nil, sdkerrors.Wrapf(
+	if !connectiontypes.VerifySupportedFeature(getVersions[0], order.String()) {
+		return "", nil, sdkerrors.Wrapf(
 			connectiontypes.ErrInvalidVersion,
 			"connection version %s does not support channel ordering: %s",
-			connectionEnd.GetVersions()[0], order.String(),
+			getVersions[0], order.String(),
 		)
 	}
 
 	if !k.portKeeper.Authenticate(ctx, portCap, portID) {
-		return nil, sdkerrors.Wrapf(porttypes.ErrInvalidPort, "caller does not own port capability for port ID %s", portID)
+		return "", nil, sdkerrors.Wrapf(porttypes.ErrInvalidPort, "caller does not own port capability for port ID %s", portID)
 	}
 
+	channelID := k.GenerateChannelIdentifier(ctx)
 	channel := types.NewChannel(types.INIT, order, counterparty, connectionHops, version)
 	k.SetChannel(ctx, portID, channelID, channel)
 
 	capKey, err := k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, channelID)
+		return "", nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, channelID)
 	}
 
 	k.SetNextSequenceSend(ctx, portID, channelID, 1)
@@ -94,7 +91,7 @@ func (k Keeper) ChanOpenInit(
 		telemetry.IncrCounter(1, "ibc", "channel", "open-init")
 	}()
 
-	return capKey, nil
+	return channelID, capKey, nil
 }
 
 // ChanOpenTry is called by a module to accept the first step of a channel opening
@@ -104,65 +101,77 @@ func (k Keeper) ChanOpenTry(
 	order types.Order,
 	connectionHops []string,
 	portID,
-	desiredChannelID,
-	counterpartyChosenChannelID string,
+	previousChannelID string,
 	portCap *capabilitytypes.Capability,
 	counterparty types.Counterparty,
 	version,
 	counterpartyVersion string,
 	proofInit []byte,
 	proofHeight exported.Height,
-) (*capabilitytypes.Capability, error) {
-	// channel identifier and connection hop length checked on msg.ValidateBasic()
-	previousChannel, found := k.GetChannel(ctx, portID, desiredChannelID)
-	if found && !(previousChannel.State == types.INIT &&
-		previousChannel.Ordering == order &&
-		previousChannel.Counterparty.PortId == counterparty.PortId &&
-		previousChannel.Counterparty.ChannelId == counterparty.ChannelId &&
-		previousChannel.ConnectionHops[0] == connectionHops[0] &&
-		previousChannel.Version == version) {
-		return nil, sdkerrors.Wrap(types.ErrInvalidChannel, "cannot relay connection attempt")
+) (string, *capabilitytypes.Capability, error) {
+	var (
+		previousChannel      types.Channel
+		previousChannelFound bool
+	)
+
+	channelID := previousChannelID
+
+	// empty channel identifier indicates continuing a previous channel handshake
+	if previousChannelID != "" {
+		// channel identifier and connection hop length checked on msg.ValidateBasic()
+		// ensure that the previous channel exists
+		previousChannel, previousChannelFound = k.GetChannel(ctx, portID, previousChannelID)
+		if !previousChannelFound {
+			return "", nil, sdkerrors.Wrapf(types.ErrInvalidChannel, "previous channel does not exist for supplied previous channelID %s", previousChannelID)
+		}
+		// previous channel must use the same fields
+		if !(previousChannel.Ordering == order &&
+			previousChannel.Counterparty.PortId == counterparty.PortId &&
+			previousChannel.Counterparty.ChannelId == "" &&
+			previousChannel.ConnectionHops[0] == connectionHops[0] &&
+			previousChannel.Version == version) {
+			return "", nil, sdkerrors.Wrap(types.ErrInvalidChannel, "channel fields mismatch previous channel fields")
+		}
+
+		if previousChannel.State != types.INIT {
+			return "", nil, sdkerrors.Wrapf(types.ErrInvalidChannelState, "previous channel state is in %s, expected INIT", previousChannel.State)
+		}
+
+	} else {
+		// generate a new channel
+		channelID = k.GenerateChannelIdentifier(ctx)
 	}
 
 	if !k.portKeeper.Authenticate(ctx, portCap, portID) {
-		return nil, sdkerrors.Wrapf(porttypes.ErrInvalidPort, "caller does not own port capability for port ID %s", portID)
+		return "", nil, sdkerrors.Wrapf(porttypes.ErrInvalidPort, "caller does not own port capability for port ID %s", portID)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
 	if !found {
-		return nil, sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, connectionHops[0])
+		return "", nil, sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, connectionHops[0])
 	}
 
 	if connectionEnd.GetState() != int32(connectiontypes.OPEN) {
-		return nil, sdkerrors.Wrapf(
+		return "", nil, sdkerrors.Wrapf(
 			connectiontypes.ErrInvalidConnectionState,
 			"connection state is not OPEN (got %s)", connectiontypes.State(connectionEnd.GetState()).String(),
 		)
 	}
 
-	if len(connectionEnd.GetVersions()) != 1 {
-		return nil, sdkerrors.Wrapf(
+	getVersions := connectionEnd.GetVersions()
+	if len(getVersions) != 1 {
+		return "", nil, sdkerrors.Wrapf(
 			connectiontypes.ErrInvalidVersion,
 			"single version must be negotiated on connection before opening channel, got: %v",
-			connectionEnd.GetVersions(),
+			getVersions,
 		)
 	}
 
-	if !connectiontypes.VerifySupportedFeature(connectionEnd.GetVersions()[0], order.String()) {
-		return nil, sdkerrors.Wrapf(
+	if !connectiontypes.VerifySupportedFeature(getVersions[0], order.String()) {
+		return "", nil, sdkerrors.Wrapf(
 			connectiontypes.ErrInvalidVersion,
 			"connection version %s does not support channel ordering: %s",
-			connectionEnd.GetVersions()[0], order.String(),
-		)
-	}
-
-	// If the channel id chosen for this channel end by the counterparty is empty then
-	// flexible channel identifier selection is allowed by using the desired channel id.
-	// Otherwise the desiredChannelID must match the counterpartyChosenChannelID.
-	if counterpartyChosenChannelID != "" && counterpartyChosenChannelID != desiredChannelID {
-		return nil, sdkerrors.Wrapf(
-			types.ErrInvalidChannelIdentifier,
-			"counterparty chosen channel ID (%s) must be empty or equal to the desired channel ID (%s)", counterpartyChosenChannelID, desiredChannelID,
+			getVersions[0], order.String(),
 		)
 	}
 
@@ -178,7 +187,7 @@ func (k Keeper) ChanOpenTry(
 
 	// expectedCounterpaty is the counterparty of the counterparty's channel end
 	// (i.e self)
-	expectedCounterparty := types.NewCounterparty(portID, counterpartyChosenChannelID)
+	expectedCounterparty := types.NewCounterparty(portID, "")
 	expectedChannel := types.NewChannel(
 		types.INIT, channel.Ordering, expectedCounterparty,
 		counterpartyHops, counterpartyVersion,
@@ -188,7 +197,7 @@ func (k Keeper) ChanOpenTry(
 		ctx, connectionEnd, proofHeight, proofInit,
 		counterparty.PortId, counterparty.ChannelId, expectedChannel,
 	); err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
 	var (
@@ -196,36 +205,34 @@ func (k Keeper) ChanOpenTry(
 		err    error
 	)
 
-	// Only create a capability and set the sequences if the previous channel does not exist
-	_, found = k.GetChannel(ctx, portID, desiredChannelID)
-	if !found {
-		capKey, err = k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, desiredChannelID))
+	if !previousChannelFound {
+		capKey, err = k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, desiredChannelID)
+			return "", nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, channelID)
 		}
 
-		k.SetNextSequenceSend(ctx, portID, desiredChannelID, 1)
-		k.SetNextSequenceRecv(ctx, portID, desiredChannelID, 1)
-		k.SetNextSequenceAck(ctx, portID, desiredChannelID, 1)
+		k.SetNextSequenceSend(ctx, portID, channelID, 1)
+		k.SetNextSequenceRecv(ctx, portID, channelID, 1)
+		k.SetNextSequenceAck(ctx, portID, channelID, 1)
 	} else {
 		// capability initialized in ChanOpenInit
-		capKey, found = k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, desiredChannelID))
+		capKey, found = k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
 		if !found {
-			return nil, sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound,
-				"capability not found for existing channel, portID (%s) channelID (%s)", portID, desiredChannelID,
+			return "", nil, sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound,
+				"capability not found for existing channel, portID (%s) channelID (%s)", portID, channelID,
 			)
 		}
 	}
 
-	k.SetChannel(ctx, portID, desiredChannelID, channel)
+	k.SetChannel(ctx, portID, channelID, channel)
 
-	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", desiredChannelID, "previous-state", previousChannel.State.String(), "new-state", "TRYOPEN")
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", channelID, "previous-state", previousChannel.State.String(), "new-state", "TRYOPEN")
 
 	defer func() {
 		telemetry.IncrCounter(1, "ibc", "channel", "open-try")
 	}()
 
-	return capKey, nil
+	return channelID, capKey, nil
 }
 
 // ChanOpenAck is called by the handshake-originating module to acknowledge the
@@ -254,16 +261,6 @@ func (k Keeper) ChanOpenAck(
 
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) {
 		return sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel, port ID (%s) channel ID (%s)", portID, channelID)
-	}
-
-	// If the previously set channel end allowed for the counterparty to select its own
-	// channel identifier then we use the counterpartyChannelID. Otherwise the
-	// counterpartyChannelID must match the previously set counterparty channel ID.
-	if channel.Counterparty.ChannelId != "" && counterpartyChannelID != channel.Counterparty.ChannelId {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidChannelIdentifier,
-			"counterparty channel identifier (%s) must be equal to stored channel ID for counterparty (%s)", counterpartyChannelID, channel.Counterparty.ChannelId,
-		)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])

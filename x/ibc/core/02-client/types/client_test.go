@@ -1,6 +1,10 @@
 package types_test
 
 import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
@@ -52,5 +56,32 @@ func (suite *TypesTestSuite) TestMarshalConsensusStateWithHeight() {
 			err = cdc.UnmarshalJSON(bz, newCswh)
 			suite.Require().NoError(err)
 		})
+	}
+}
+
+func TestValidateClientType(t *testing.T) {
+	testCases := []struct {
+		name       string
+		clientType string
+		expPass    bool
+	}{
+		{"valid", "tendermint", true},
+		{"valid solomachine", "solomachine-v1", true},
+		{"too large", "tenderminttenderminttenderminttenderminttendermintt", false},
+		{"too short", "t", false},
+		{"blank id", "               ", false},
+		{"empty id", "", false},
+		{"ends with dash", "tendermint-", false},
+	}
+
+	for _, tc := range testCases {
+
+		err := types.ValidateClientType(tc.clientType)
+
+		if tc.expPass {
+			require.NoError(t, err, tc.name)
+		} else {
+			require.Error(t, err, tc.name)
+		}
 	}
 }

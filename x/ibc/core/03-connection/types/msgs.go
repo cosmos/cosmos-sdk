@@ -10,21 +10,31 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
-var _ sdk.Msg = &MsgConnectionOpenInit{}
+var (
+	_ sdk.Msg = &MsgConnectionOpenInit{}
+	_ sdk.Msg = &MsgConnectionOpenConfirm{}
+	_ sdk.Msg = &MsgConnectionOpenAck{}
+	_ sdk.Msg = &MsgConnectionOpenTry{}
 
-// NewMsgConnectionOpenInit creates a new MsgConnectionOpenInit instance
+	_ codectypes.UnpackInterfacesMessage = MsgConnectionOpenTry{}
+	_ codectypes.UnpackInterfacesMessage = MsgConnectionOpenAck{}
+)
+
+// NewMsgConnectionOpenInit creates a new MsgConnectionOpenInit instance. It sets the
+// counterparty connection identifier to be empty.
 //nolint:interfacer
 func NewMsgConnectionOpenInit(
-	connectionID, clientID, counterpartyConnectionID,
-	counterpartyClientID string, counterpartyPrefix commitmenttypes.MerklePrefix,
-	version *Version, signer sdk.AccAddress,
+	clientID, counterpartyClientID string,
+	counterpartyPrefix commitmenttypes.MerklePrefix,
+	version *Version, delayPeriod uint64, signer sdk.AccAddress,
 ) *MsgConnectionOpenInit {
-	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
+	// counterparty must have the same delay period
+	counterparty := NewCounterparty(counterpartyClientID, "", counterpartyPrefix)
 	return &MsgConnectionOpenInit{
-		ConnectionId: connectionID,
 		ClientId:     clientID,
 		Counterparty: counterparty,
 		Version:      version,
+		DelayPeriod:  delayPeriod,
 		Signer:       signer.String(),
 	}
 }
@@ -41,12 +51,13 @@ func (msg MsgConnectionOpenInit) Type() string {
 
 // ValidateBasic implements sdk.Msg.
 func (msg MsgConnectionOpenInit) ValidateBasic() error {
-	if err := host.ConnectionIdentifierValidator(msg.ConnectionId); err != nil {
-		return sdkerrors.Wrap(err, "invalid connection ID")
-	}
 	if err := host.ClientIdentifierValidator(msg.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "invalid client ID")
 	}
+	if msg.Counterparty.ConnectionId != "" {
+		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty connection identifier must be empty")
+	}
+
 	// NOTE: Version can be nil on MsgConnectionOpenInit
 	if msg.Version != nil {
 		if err := ValidateVersion(msg.Version); err != nil {
@@ -75,32 +86,31 @@ func (msg MsgConnectionOpenInit) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{accAddr}
 }
 
-var _ sdk.Msg = &MsgConnectionOpenTry{}
-
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
 //nolint:interfacer
 func NewMsgConnectionOpenTry(
-	desiredConnectionID, counterpartyChosenConnectionID, clientID, counterpartyConnectionID,
+	previousConnectionID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyClient exported.ClientState,
-	counterpartyPrefix commitmenttypes.MerklePrefix, counterpartyVersions []*Version,
+	counterpartyPrefix commitmenttypes.MerklePrefix,
+	counterpartyVersions []*Version, delayPeriod uint64,
 	proofInit, proofClient, proofConsensus []byte,
 	proofHeight, consensusHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgConnectionOpenTry {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
 	csAny, _ := clienttypes.PackClientState(counterpartyClient)
 	return &MsgConnectionOpenTry{
-		DesiredConnectionId:            desiredConnectionID,
-		CounterpartyChosenConnectionId: counterpartyChosenConnectionID,
-		ClientId:                       clientID,
-		ClientState:                    csAny,
-		Counterparty:                   counterparty,
-		CounterpartyVersions:           counterpartyVersions,
-		ProofInit:                      proofInit,
-		ProofClient:                    proofClient,
-		ProofConsensus:                 proofConsensus,
-		ProofHeight:                    proofHeight,
-		ConsensusHeight:                consensusHeight,
-		Signer:                         signer.String(),
+		PreviousConnectionId: previousConnectionID,
+		ClientId:             clientID,
+		ClientState:          csAny,
+		Counterparty:         counterparty,
+		CounterpartyVersions: counterpartyVersions,
+		DelayPeriod:          delayPeriod,
+		ProofInit:            proofInit,
+		ProofClient:          proofClient,
+		ProofConsensus:       proofConsensus,
+		ProofHeight:          proofHeight,
+		ConsensusHeight:      consensusHeight,
+		Signer:               signer.String(),
 	}
 }
 
@@ -116,14 +126,18 @@ func (msg MsgConnectionOpenTry) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenTry) ValidateBasic() error {
-	if err := host.ConnectionIdentifierValidator(msg.DesiredConnectionId); err != nil {
-		return sdkerrors.Wrap(err, "invalid desired connection ID")
-	}
-	if msg.CounterpartyChosenConnectionId != "" && msg.CounterpartyChosenConnectionId != msg.DesiredConnectionId {
-		return sdkerrors.Wrap(ErrInvalidConnectionIdentifier, "counterparty chosen connection identifier must be empty or equal to desired connection identifier")
+	// an empty connection identifier indicates that a connection identifier should be generated
+	if msg.PreviousConnectionId != "" {
+		if !IsValidConnectionID(msg.PreviousConnectionId) {
+			return sdkerrors.Wrap(ErrInvalidConnectionIdentifier, "invalid previous connection ID")
+		}
 	}
 	if err := host.ClientIdentifierValidator(msg.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "invalid client ID")
+	}
+	// counterparty validate basic allows empty counterparty connection identifiers
+	if err := host.ConnectionIdentifierValidator(msg.Counterparty.ConnectionId); err != nil {
+		return sdkerrors.Wrap(err, "invalid counterparty connection ID")
 	}
 	if msg.ClientState == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidClient, "counterparty client is nil")
@@ -167,13 +181,7 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgConnectionOpenTry) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var clientState exported.ClientState
-	err := unpacker.UnpackAny(msg.ClientState, &clientState)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return unpacker.UnpackAny(msg.ClientState, new(exported.ClientState))
 }
 
 // GetSignBytes implements sdk.Msg. The function will panic since it is used
@@ -190,8 +198,6 @@ func (msg MsgConnectionOpenTry) GetSigners() []sdk.AccAddress {
 	}
 	return []sdk.AccAddress{accAddr}
 }
-
-var _ sdk.Msg = &MsgConnectionOpenAck{}
 
 // NewMsgConnectionOpenAck creates a new MsgConnectionOpenAck instance
 //nolint:interfacer
@@ -234,8 +240,8 @@ func (msg MsgConnectionOpenAck) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenAck) ValidateBasic() error {
-	if err := host.ConnectionIdentifierValidator(msg.ConnectionId); err != nil {
-		return sdkerrors.Wrap(err, "invalid connection ID")
+	if !IsValidConnectionID(msg.ConnectionId) {
+		return ErrInvalidConnectionIdentifier
 	}
 	if err := host.ConnectionIdentifierValidator(msg.CounterpartyConnectionId); err != nil {
 		return sdkerrors.Wrap(err, "invalid counterparty connection ID")
@@ -290,8 +296,6 @@ func (msg MsgConnectionOpenAck) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{accAddr}
 }
 
-var _ sdk.Msg = &MsgConnectionOpenConfirm{}
-
 // NewMsgConnectionOpenConfirm creates a new MsgConnectionOpenConfirm instance
 //nolint:interfacer
 func NewMsgConnectionOpenConfirm(
@@ -318,8 +322,8 @@ func (msg MsgConnectionOpenConfirm) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
-	if err := host.ConnectionIdentifierValidator(msg.ConnectionId); err != nil {
-		return sdkerrors.Wrap(err, "invalid connection ID")
+	if !IsValidConnectionID(msg.ConnectionId) {
+		return ErrInvalidConnectionIdentifier
 	}
 	if len(msg.ProofAck) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof ack")

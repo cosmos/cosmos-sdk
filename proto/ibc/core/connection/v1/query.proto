@@ -38,7 +38,7 @@ service Query {
   // connection.
   rpc ConnectionConsensusState(QueryConnectionConsensusStateRequest) returns (QueryConnectionConsensusStateResponse) {
     option (google.api.http).get = "/ibc/core/connection/v1beta1/connections/{connection_id}/consensus_state/"
-                                   "version/{version_number}/height/{version_height}";
+                                   "revision/{revision_number}/height/{revision_height}";
   }
 }
 
@@ -118,9 +118,9 @@ message QueryConnectionClientStateResponse {
 // Query/ConnectionConsensusState RPC method
 message QueryConnectionConsensusStateRequest {
   // connection identifier
-  string connection_id  = 1 [(gogoproto.moretags) = "yaml:\"connection_id\""];
-  uint64 version_number = 2;
-  uint64 version_height = 3;
+  string connection_id   = 1 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  uint64 revision_number = 2;
+  uint64 revision_height = 3;
 }
 
 // QueryConnectionConsensusStateResponse is the response type for the

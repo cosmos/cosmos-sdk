@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"sort"
@@ -112,11 +113,11 @@ func (q Keeper) ConsensusState(c context.Context, req *types.QueryConsensusState
 		found          bool
 	)
 
-	height := types.NewHeight(req.VersionNumber, req.VersionHeight)
+	height := types.NewHeight(req.RevisionNumber, req.RevisionHeight)
 	if req.LatestHeight {
 		consensusState, found = q.GetLatestClientConsensusState(ctx, req.ClientId)
 	} else {
-		if req.VersionHeight == 0 {
+		if req.RevisionHeight == 0 {
 			return nil, status.Error(codes.InvalidArgument, "consensus state height cannot be 0")
 		}
 
@@ -157,19 +158,24 @@ func (q Keeper) ConsensusStates(c context.Context, req *types.QueryConsensusStat
 	consensusStates := []types.ConsensusStateWithHeight{}
 	store := prefix.NewStore(ctx.KVStore(q.storeKey), host.FullClientKey(req.ClientId, []byte(fmt.Sprintf("%s/", host.KeyConsensusStatePrefix))))
 
-	pageRes, err := query.Paginate(store, req.Pagination, func(key, value []byte) error {
+	pageRes, err := query.FilteredPaginate(store, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
+		// filter any metadata stored under consensus state key
+		if bytes.Contains(key, []byte("/")) {
+			return false, nil
+		}
+
 		height, err := types.ParseHeight(string(key))
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		consensusState, err := q.UnmarshalConsensusState(value)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		consensusStates = append(consensusStates, types.NewConsensusStateWithHeight(height, consensusState))
-		return nil
+		return true, nil
 	})
 
 	if err != nil {

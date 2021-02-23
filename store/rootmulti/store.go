@@ -41,7 +41,7 @@ const (
 )
 
 // Store is composed of many CommitStores. Name contrasts with
-// cacheMultiStore which is for cache-wrapping other MultiStores. It implements
+// cacheMultiStore which is used for branching other MultiStores. It implements
 // the CommitMultiStore interface.
 type Store struct {
 	db             dbm.DB
@@ -404,7 +404,7 @@ func (rs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 	return rs.CacheWrap()
 }
 
-// CacheMultiStore cache-wraps the multi-store and returns a CacheMultiStore.
+// CacheMultiStore creates ephemeral branch of the multi-store and returns a CacheMultiStore.
 // It implements the MultiStore interface.
 func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	stores := make(map[types.StoreKey]types.CacheWrapper)
@@ -549,9 +549,12 @@ func (rs *Store) SetInitialVersion(version int64) error {
 
 	// Loop through all the stores, if it's an IAVL store, then set initial
 	// version on it.
-	for _, commitKVStore := range rs.stores {
-		if storeWithVersion, ok := commitKVStore.(types.StoreWithInitialVersion); ok {
-			storeWithVersion.SetInitialVersion(version)
+	for key, store := range rs.stores {
+		if store.GetStoreType() == types.StoreTypeIAVL {
+			// If the store is wrapped with an inter-block cache, we must first unwrap
+			// it to get the underlying IAVL store.
+			store = rs.GetCommitKVStore(key)
+			store.(*iavl.Store).SetInitialVersion(version)
 		}
 	}
 
@@ -708,9 +711,9 @@ func (rs *Store) Restore(
 	if height == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrLogic, "cannot restore snapshot at height 0")
 	}
-	if height > math.MaxInt64 {
+	if height > uint64(math.MaxInt64) {
 		return sdkerrors.Wrapf(snapshottypes.ErrInvalidMetadata,
-			"snapshot height %v cannot exceed %v", height, math.MaxInt64)
+			"snapshot height %v cannot exceed %v", height, int64(math.MaxInt64))
 	}
 
 	// Signal readiness. Must be done before the readers below are set up, since the zlib
@@ -838,7 +841,7 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		if rs.interBlockCache != nil {
 			// Wrap and get a CommitKVStore with inter-block caching. Note, this should
 			// only wrap the primary CommitKVStore, not any store that is already
-			// cache-wrapped as that will create unexpected behavior.
+			// branched as that will create unexpected behavior.
 			store = rs.interBlockCache.GetStoreCache(key, store)
 		}
 

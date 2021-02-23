@@ -41,7 +41,7 @@ var s TestSuite
 func setupTest(height int64, skip map[int64]bool) TestSuite {
 	db := dbm.NewMemDB()
 	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, skip, simapp.DefaultNodeHome, 0, simapp.MakeTestEncodingConfig(), simapp.EmptyAppOptions{})
-	genesisState := simapp.NewDefaultGenesisState()
+	genesisState := simapp.NewDefaultGenesisState(app.AppCodec())
 	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
 	if err != nil {
 		panic(err)
@@ -118,6 +118,59 @@ func TestCanOverwriteScheduleUpgrade(t *testing.T) {
 	require.Nil(t, err)
 
 	VerifyDoUpgrade(t)
+}
+
+func VerifyDoIBCLastBlock(t *testing.T) {
+	t.Log("Verify that chain committed to consensus state on the last height it will commit")
+	nextValsHash := []byte("nextValsHash")
+	newCtx := s.ctx.WithBlockHeader(tmproto.Header{
+		Height:             s.ctx.BlockHeight(),
+		NextValidatorsHash: nextValsHash,
+	})
+
+	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
+	s.module.BeginBlock(newCtx, req)
+
+	// plan Height is at ctx.BlockHeight+1
+	consState, err := s.keeper.GetUpgradedConsensusState(newCtx, s.ctx.BlockHeight()+1)
+	require.NoError(t, err)
+	require.Equal(t, &ibctmtypes.ConsensusState{Timestamp: newCtx.BlockTime(), NextValidatorsHash: nextValsHash}, consState)
+}
+
+func VerifyDoIBCUpgrade(t *testing.T) {
+	t.Log("Verify that a panic happens at the upgrade time/height")
+	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
+
+	// Check IBC state is set before upgrade using last height: s.ctx.BlockHeight()
+	cs, err := s.keeper.GetUpgradedClient(newCtx, s.ctx.BlockHeight())
+	require.NoError(t, err, "could not retrieve upgraded client before upgrade plan is applied")
+	require.NotNil(t, cs, "IBC client is nil before upgrade")
+
+	consState, err := s.keeper.GetUpgradedConsensusState(newCtx, s.ctx.BlockHeight())
+	require.NoError(t, err, "could not retrieve upgraded consensus state before upgrade plan is applied")
+	require.NotNil(t, consState, "IBC consensus state is nil before upgrade")
+
+	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
+	require.Panics(t, func() {
+		s.module.BeginBlock(newCtx, req)
+	})
+
+	t.Log("Verify that the upgrade can be successfully applied with a handler")
+	s.keeper.SetUpgradeHandler("test", func(ctx sdk.Context, plan types.Plan) {})
+	require.NotPanics(t, func() {
+		s.module.BeginBlock(newCtx, req)
+	})
+
+	VerifyCleared(t, newCtx)
+
+	// Check IBC state is cleared after upgrade using last height: s.ctx.BlockHeight()
+	cs, err = s.keeper.GetUpgradedClient(newCtx, s.ctx.BlockHeight())
+	require.Error(t, err, "retrieved upgraded client after upgrade plan is applied")
+	require.Nil(t, cs, "IBC client is not-nil after upgrade")
+
+	consState, err = s.keeper.GetUpgradedConsensusState(newCtx, s.ctx.BlockHeight())
+	require.Error(t, err, "retrieved upgraded consensus state after upgrade plan is applied")
+	require.Nil(t, consState, "IBC consensus state is not-nil after upgrade")
 }
 
 func VerifyDoUpgrade(t *testing.T) {
@@ -409,6 +462,27 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 	require.Panics(t, func() {
 		s.module.BeginBlock(newCtx, req)
 	})
+
+	VerifyDoUpgrade(t)
+	VerifyDone(t, s.ctx, "test")
+}
+
+func TestIBCUpgradeWithoutSkip(t *testing.T) {
+	s := setupTest(10, map[int64]bool{})
+	cs, err := clienttypes.PackClientState(&ibctmtypes.ClientState{})
+	require.NoError(t, err)
+	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{
+		Title: "prop",
+		Plan: types.Plan{
+			Name:                "test",
+			Height:              s.ctx.BlockHeight() + 1,
+			UpgradedClientState: cs,
+		},
+	})
+	require.Nil(t, err)
+
+	t.Log("Verify if last height stores consensus state")
+	VerifyDoIBCLastBlock(t)
 
 	VerifyDoUpgrade(t)
 	VerifyDone(t, s.ctx, "test")

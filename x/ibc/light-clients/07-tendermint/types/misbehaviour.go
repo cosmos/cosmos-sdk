@@ -2,7 +2,6 @@ package types
 
 import (
 	"bytes"
-	"math"
 	"time"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -14,9 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
-var (
-	_ exported.Misbehaviour = Misbehaviour{}
-)
+var _ exported.Misbehaviour = &Misbehaviour{}
 
 // NewMisbehaviour creates a new Misbehaviour instance.
 func NewMisbehaviour(clientID string, header1, header2 *Header) *Misbehaviour {
@@ -48,8 +45,11 @@ func (misbehaviour Misbehaviour) GetHeight() exported.Height {
 // maximum value from both headers to prevent producing an invalid header outside
 // of the misbehaviour age range.
 func (misbehaviour Misbehaviour) GetTime() time.Time {
-	minTime := int64(math.Max(float64(misbehaviour.Header1.GetTime().UnixNano()), float64(misbehaviour.Header2.GetTime().UnixNano())))
-	return time.Unix(0, minTime)
+	t1, t2 := misbehaviour.Header1.GetTime(), misbehaviour.Header2.GetTime()
+	if t1.After(t2) {
+		return t1
+	}
+	return t2
 }
 
 // ValidateBasic implements Misbehaviour interface
@@ -60,11 +60,11 @@ func (misbehaviour Misbehaviour) ValidateBasic() error {
 	if misbehaviour.Header2 == nil {
 		return sdkerrors.Wrap(ErrInvalidHeader, "misbehaviour Header2 cannot be nil")
 	}
-	if misbehaviour.Header1.TrustedHeight.VersionHeight == 0 {
-		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "misbehaviour Header1 cannot have zero version height")
+	if misbehaviour.Header1.TrustedHeight.RevisionHeight == 0 {
+		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "misbehaviour Header1 cannot have zero revision height")
 	}
-	if misbehaviour.Header2.TrustedHeight.VersionHeight == 0 {
-		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "misbehaviour Header2 cannot have zero version height")
+	if misbehaviour.Header2.TrustedHeight.RevisionHeight == 0 {
+		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "misbehaviour Header2 cannot have zero revision height")
 	}
 	if misbehaviour.Header1.TrustedValidators == nil {
 		return sdkerrors.Wrap(ErrInvalidValidatorSet, "trusted validator set in Header1 cannot be empty")

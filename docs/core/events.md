@@ -1,5 +1,5 @@
 <!--
-order: 7
+order: 9
 -->
 
 # Events
@@ -19,7 +19,7 @@ take the form of: `{eventType}.{eventAttribute}={value}`.
 
 Events contain:
 
-- A `type`, which is meant to categorize an event at a high-level (e.g. by module or action).
+- A `type`, which is meant to categorize an event at a high-level (e.g. by module (e.g. `module=bank`) or action (e.g. `action=/cosmos.bank.v1beta1.Msg/Send`)).
 - A list of `attributes`, which are key-value pairs that give more information about
   the categorized `event`.
   +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/events.go#L51-L56
@@ -32,7 +32,7 @@ Events are returned to the underlying consensus engine in the response of the fo
 - [`DeliverTx`](./baseapp.md#delivertx)
 
 Events, the `type` and `attributes`, are defined on a **per-module basis** in the module's
-`/types/events.go` file, and triggered from the module's [`handler`](../building-modules/handler.md)
+`/types/events.go` file, and triggered from the module's [`Msg` service](../building-modules/msg-services.md)
 via the [`EventManager`](#eventmanager). In addition, each module documents its events under
 `spec/xx_events.md`.
 
@@ -68,7 +68,7 @@ func NewHandler(keeper Keeper) sdk.Handler {
         switch msg := msg.(type) {
 ```
 
-See the [`Handler`](../building-modules/handler.md) concept doc for a more detailed
+See the [`Msg` services](../building-modules/msg-services.md) concept doc for a more detailed
 view on how to typically implement `Events` and use the `EventManager` in modules.
 
 ## Subscribing to Events

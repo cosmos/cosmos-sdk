@@ -12,8 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-const aminoCacheSize = 500
-
 // Implements ValidatorSet interface
 var _ types.ValidatorSet = Keeper{}
 
@@ -28,7 +26,6 @@ type Keeper struct {
 	bankKeeper         types.BankKeeper
 	hooks              types.StakingHooks
 	paramstore         paramtypes.Subspace
-	validatorCache     map[string]cachedValidator
 	validatorCacheList *list.List
 }
 
@@ -58,14 +55,13 @@ func NewKeeper(
 		bankKeeper:         bk,
 		paramstore:         ps,
 		hooks:              nil,
-		validatorCache:     make(map[string]cachedValidator, aminoCacheSize),
 		validatorCacheList: list.New(),
 	}
 }
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // Set the validator hooks

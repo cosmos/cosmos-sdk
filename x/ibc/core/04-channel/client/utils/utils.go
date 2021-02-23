@@ -101,10 +101,10 @@ func QueryChannelConsensusState(
 
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryChannelConsensusStateRequest{
-		PortId:        portID,
-		ChannelId:     channelID,
-		VersionNumber: height.VersionNumber,
-		VersionHeight: height.VersionHeight,
+		PortId:         portID,
+		ChannelId:      channelID,
+		RevisionNumber: height.RevisionNumber,
+		RevisionHeight: height.RevisionHeight,
 	}
 
 	res, err := queryClient.ChannelConsensusState(context.Background(), req)
@@ -133,8 +133,9 @@ func QueryLatestConsensusState(
 	if err != nil {
 		return nil, clienttypes.Height{}, clienttypes.Height{}, err
 	}
-	clientState, err := clienttypes.UnpackClientState(clientRes.IdentifiedClientState.ClientState)
-	if err != nil {
+
+	var clientState exported.ClientState
+	if err := clientCtx.InterfaceRegistry.UnpackAny(clientRes.IdentifiedClientState.ClientState, &clientState); err != nil {
 		return nil, clienttypes.Height{}, clienttypes.Height{}, err
 	}
 
@@ -148,8 +149,8 @@ func QueryLatestConsensusState(
 		return nil, clienttypes.Height{}, clienttypes.Height{}, err
 	}
 
-	consensusState, err := clienttypes.UnpackConsensusState(res.ConsensusState)
-	if err != nil {
+	var consensusState exported.ConsensusState
+	if err := clientCtx.InterfaceRegistry.UnpackAny(res.ConsensusState, &consensusState); err != nil {
 		return nil, clienttypes.Height{}, clienttypes.Height{}, err
 	}
 

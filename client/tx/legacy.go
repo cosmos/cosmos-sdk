@@ -61,6 +61,7 @@ func CopyTx(tx signing.Tx, builder client.TxBuilder, ignoreSignatureError bool) 
 	builder.SetMemo(tx.GetMemo())
 	builder.SetFeeAmount(tx.GetFee())
 	builder.SetGasLimit(tx.GetGas())
+	builder.SetTimeoutHeight(tx.GetTimeoutHeight())
 
 	return nil
 }

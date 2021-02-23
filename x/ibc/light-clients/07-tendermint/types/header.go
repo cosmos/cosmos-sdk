@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
-var _ exported.Header = Header{}
+var _ exported.Header = &Header{}
 
 // ConsensusState returns the updated consensus state associated with the header
 func (h Header) ConsensusState() *ConsensusState {
@@ -32,8 +32,8 @@ func (h Header) ClientType() string {
 // header is nil.
 // NOTE: the header.Header is checked to be non nil in ValidateBasic.
 func (h Header) GetHeight() exported.Height {
-	version := clienttypes.ParseChainID(h.Header.ChainID)
-	return clienttypes.NewHeight(version, uint64(h.Header.Height))
+	revision := clienttypes.ParseChainID(h.Header.ChainID)
+	return clienttypes.NewHeight(revision, uint64(h.Header.Height))
 }
 
 // GetTime returns the current block timestamp. It returns a zero time if

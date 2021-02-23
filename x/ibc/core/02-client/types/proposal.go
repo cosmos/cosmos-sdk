@@ -1,9 +1,8 @@
 package types
 
 import (
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
 const (
@@ -13,19 +12,19 @@ const (
 
 var _ govtypes.Content = &ClientUpdateProposal{}
 
-// NewClientUpdateProposal creates a new client update proposal.
-func NewClientUpdateProposal(title, description, clientID string, header exported.Header) (*ClientUpdateProposal, error) {
-	any, err := PackHeader(header)
-	if err != nil {
-		return nil, err
-	}
+func init() {
+	govtypes.RegisterProposalType(ProposalTypeClientUpdate)
+}
 
+// NewClientUpdateProposal creates a new client update proposal.
+func NewClientUpdateProposal(title, description, subjectClientID, substituteClientID string, initialHeight Height) *ClientUpdateProposal {
 	return &ClientUpdateProposal{
-		Title:       title,
-		Description: description,
-		ClientId:    clientID,
-		Header:      any,
-	}, nil
+		Title:              title,
+		Description:        description,
+		SubjectClientId:    subjectClientID,
+		SubstituteClientId: substituteClientID,
+		InitialHeight:      initialHeight,
+	}
 }
 
 // GetTitle returns the title of a client update proposal.
@@ -47,14 +46,19 @@ func (cup *ClientUpdateProposal) ValidateBasic() error {
 		return err
 	}
 
-	if err := host.ClientIdentifierValidator(cup.ClientId); err != nil {
+	if cup.SubjectClientId == cup.SubstituteClientId {
+		return sdkerrors.Wrap(ErrInvalidSubstitute, "subject and substitute client identifiers are equal")
+	}
+	if _, _, err := ParseClientIdentifier(cup.SubjectClientId); err != nil {
+		return err
+	}
+	if _, _, err := ParseClientIdentifier(cup.SubstituteClientId); err != nil {
 		return err
 	}
 
-	header, err := UnpackHeader(cup.Header)
-	if err != nil {
-		return err
+	if cup.InitialHeight.IsZero() {
+		return sdkerrors.Wrap(ErrInvalidHeight, "initial height cannot be zero height")
 	}
 
-	return header.ValidateBasic()
+	return nil
 }

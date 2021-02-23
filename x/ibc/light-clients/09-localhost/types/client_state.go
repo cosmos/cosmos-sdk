@@ -58,8 +58,8 @@ func (cs ClientState) Validate() error {
 	if strings.TrimSpace(cs.ChainId) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidChainID, "chain id cannot be blank")
 	}
-	if cs.Height.VersionHeight == 0 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "local version height cannot be zero")
+	if cs.Height.RevisionHeight == 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "local revision height cannot be zero")
 	}
 	return nil
 }
@@ -74,14 +74,27 @@ func (cs ClientState) ZeroCustomFields() exported.ClientState {
 	return &cs
 }
 
+// Initialize ensures that initial consensus state for localhost is nil
+func (cs ClientState) Initialize(_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, consState exported.ConsensusState) error {
+	if consState != nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "initial consensus state for localhost must be nil.")
+	}
+	return nil
+}
+
+// ExportMetadata is a no-op for localhost client
+func (cs ClientState) ExportMetadata(_ sdk.KVStore) []exported.GenesisMetadata {
+	return nil
+}
+
 // CheckHeaderAndUpdateState updates the localhost client. It only needs access to the context
 func (cs *ClientState) CheckHeaderAndUpdateState(
 	ctx sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ exported.Header,
 ) (exported.ClientState, exported.ConsensusState, error) {
 	// use the chain ID from context since the localhost client is from the running chain (i.e self).
 	cs.ChainId = ctx.ChainID()
-	version := clienttypes.ParseChainID(cs.ChainId)
-	cs.Height = clienttypes.NewHeight(version, uint64(ctx.BlockHeight()))
+	revision := clienttypes.ParseChainID(cs.ChainId)
+	cs.Height = clienttypes.NewHeight(revision, uint64(ctx.BlockHeight()))
 	return cs, nil, nil
 }
 
@@ -94,18 +107,19 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	return nil, sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "cannot submit misbehaviour to localhost client")
 }
 
-// CheckProposedHeaderAndUpdateState returns an error. The localhost cannot be modified by
+// CheckSubstituteAndUpdateState returns an error. The localhost cannot be modified by
 // proposals.
-func (cs ClientState) CheckProposedHeaderAndUpdateState(
-	ctx sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ exported.Header,
-) (exported.ClientState, exported.ConsensusState, error) {
-	return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "cannot update localhost client with a proposal")
+func (cs ClientState) CheckSubstituteAndUpdateState(
+	ctx sdk.Context, _ codec.BinaryMarshaler, _, _ sdk.KVStore,
+	_ exported.ClientState, _ exported.Height,
+) (exported.ClientState, error) {
+	return nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "cannot update localhost client with a proposal")
 }
 
 // VerifyUpgradeAndUpdateState returns an error since localhost cannot be upgraded
 func (cs ClientState) VerifyUpgradeAndUpdateState(
 	_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore,
-	_ exported.ClientState, _ exported.Height, _ []byte,
+	_ exported.ClientState, _ exported.ConsensusState, _, _ []byte,
 ) (exported.ClientState, exported.ConsensusState, error) {
 	return nil, nil, sdkerrors.Wrap(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade localhost client")
 }
@@ -216,6 +230,8 @@ func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
 	_ exported.Height,
+	_ uint64,
+	_ uint64,
 	_ exported.Prefix,
 	_ []byte,
 	portID,
@@ -246,6 +262,8 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
 	_ exported.Height,
+	_ uint64,
+	_ uint64,
 	_ exported.Prefix,
 	_ []byte,
 	portID,
@@ -277,6 +295,8 @@ func (cs ClientState) VerifyPacketReceiptAbsence(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
 	_ exported.Height,
+	_ uint64,
+	_ uint64,
 	_ exported.Prefix,
 	_ []byte,
 	portID,
@@ -299,6 +319,8 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
 	_ exported.Height,
+	_ uint64,
+	_ uint64,
 	_ exported.Prefix,
 	_ []byte,
 	portID,

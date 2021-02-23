@@ -40,7 +40,7 @@ func NewKeeper(
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // SetRouter sets the Evidence Handler router for the x/evidence module. Note,
@@ -167,21 +167,14 @@ func (k Keeper) MustMarshalEvidence(evidence exported.Evidence) []byte {
 	return bz
 }
 
-// MarshalEvidence marshals an Evidence interface. If the given type implements
-// the Marshaler interface, it is treated as a Proto-defined message and
-// serialized that way. Otherwise, it falls back on the internal Amino codec.
+// MarshalEvidence protobuf serializes an Evidence interface
 func (k Keeper) MarshalEvidence(evidenceI exported.Evidence) ([]byte, error) {
-	return codec.MarshalAny(k.cdc, evidenceI)
+	return k.cdc.MarshalInterface(evidenceI)
 }
 
 // UnmarshalEvidence returns an Evidence interface from raw encoded evidence
-// bytes of a Proto-based Evidence type. An error is returned upon decoding
-// failure.
+// bytes of a Proto-based Evidence type
 func (k Keeper) UnmarshalEvidence(bz []byte) (exported.Evidence, error) {
 	var evi exported.Evidence
-	if err := codec.UnmarshalAny(k.cdc, &evi, bz); err != nil {
-		return nil, err
-	}
-
-	return evi, nil
+	return evi, k.cdc.UnmarshalInterface(bz, &evi)
 }

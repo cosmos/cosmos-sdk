@@ -324,26 +324,26 @@ func request_Query_ChannelConsensusState_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "port_id", err)
 	}
 
-	val, ok = pathParams["version_number"]
+	val, ok = pathParams["revision_number"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version_number")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision_number")
 	}
 
-	protoReq.VersionNumber, err = runtime.Uint64(val)
+	protoReq.RevisionNumber, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version_number", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision_number", err)
 	}
 
-	val, ok = pathParams["version_height"]
+	val, ok = pathParams["revision_height"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version_height")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision_height")
 	}
 
-	protoReq.VersionHeight, err = runtime.Uint64(val)
+	protoReq.RevisionHeight, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version_height", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision_height", err)
 	}
 
 	msg, err := client.ChannelConsensusState(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -384,26 +384,26 @@ func local_request_Query_ChannelConsensusState_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "port_id", err)
 	}
 
-	val, ok = pathParams["version_number"]
+	val, ok = pathParams["revision_number"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version_number")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision_number")
 	}
 
-	protoReq.VersionNumber, err = runtime.Uint64(val)
+	protoReq.RevisionNumber, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version_number", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision_number", err)
 	}
 
-	val, ok = pathParams["version_height"]
+	val, ok = pathParams["revision_height"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version_height")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision_height")
 	}
 
-	protoReq.VersionHeight, err = runtime.Uint64(val)
+	protoReq.RevisionHeight, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version_height", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision_height", err)
 	}
 
 	msg, err := server.ChannelConsensusState(ctx, &protoReq)
@@ -1736,31 +1736,31 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Channel_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Channel_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Channels_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"ibc", "core", "channel", "v1beta1", "channels"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Channels_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"ibc", "core", "channel", "v1beta1", "channels"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ConnectionChannels_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"ibc", "core", "channel", "v1beta1", "connections", "connection", "channels"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ConnectionChannels_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"ibc", "core", "channel", "v1beta1", "connections", "connection", "channels"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ChannelClientState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "client_state"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ChannelClientState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "client_state"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ChannelConsensusState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 2, 9, 1, 0, 4, 1, 5, 10, 2, 11, 1, 0, 4, 1, 5, 12}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "consensus_state", "version", "version_number", "height", "version_height"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ChannelConsensusState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 2, 9, 1, 0, 4, 1, 5, 10, 2, 11, 1, 0, 4, 1, 5, 12}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "consensus_state", "revision", "revision_number", "height", "revision_height"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_PacketCommitment_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments", "sequence"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_PacketCommitment_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments", "sequence"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_PacketCommitments_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_PacketCommitments_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_PacketReceipt_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_receipts", "sequence"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_PacketReceipt_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_receipts", "sequence"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_PacketAcknowledgement_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_acks", "sequence"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_PacketAcknowledgement_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_acks", "sequence"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_PacketAcknowledgements_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_acknowledgements"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_PacketAcknowledgements_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_acknowledgements"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_UnreceivedPackets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9, 2, 10}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments", "packet_commitment_sequences", "unreceived_packets"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_UnreceivedPackets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9, 2, 10}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments", "packet_commitment_sequences", "unreceived_packets"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_UnreceivedAcks_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9, 2, 10}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments", "packet_ack_sequences", "unreceived_acks"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_UnreceivedAcks_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9, 2, 10}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments", "packet_ack_sequences", "unreceived_acks"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_NextSequenceReceive_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "next_sequence"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_NextSequenceReceive_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"ibc", "core", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "next_sequence"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

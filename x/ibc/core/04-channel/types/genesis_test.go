@@ -13,8 +13,8 @@ const (
 	testPort2         = "secondport"
 	testConnectionIDA = "connectionidatob"
 
-	testChannel1 = "firstchannel"
-	testChannel2 = "secondchannel"
+	testChannel1 = "channel-0"
+	testChannel2 = "channel-1"
 
 	testChannelOrder   = types.ORDERED
 	testChannelVersion = "1.0"
@@ -66,6 +66,7 @@ func TestValidateGenesis(t *testing.T) {
 				[]types.PacketSequence{
 					types.NewPacketSequence(testPort2, testChannel2, 1),
 				},
+				2,
 			),
 			expPass: true,
 		},
@@ -134,6 +135,80 @@ func TestValidateGenesis(t *testing.T) {
 					types.NewPacketSequence(testPort1, "(testChannel1)", 1),
 				},
 			},
+			expPass: false,
+		},
+		{
+			name: "invalid channel identifier",
+			genState: types.NewGenesisState(
+				[]types.IdentifiedChannel{
+					types.NewIdentifiedChannel(
+						testPort1, "chan-0", types.NewChannel(
+							types.INIT, testChannelOrder, counterparty2, []string{testConnectionIDA}, testChannelVersion,
+						),
+					),
+					types.NewIdentifiedChannel(
+						testPort2, testChannel2, types.NewChannel(
+							types.INIT, testChannelOrder, counterparty1, []string{testConnectionIDA}, testChannelVersion,
+						),
+					),
+				},
+				[]types.PacketState{
+					types.NewPacketState(testPort2, testChannel2, 1, []byte("ack")),
+				},
+				[]types.PacketState{
+					types.NewPacketState(testPort2, testChannel2, 1, []byte("")),
+				},
+				[]types.PacketState{
+					types.NewPacketState(testPort1, testChannel1, 1, []byte("commit_hash")),
+				},
+				[]types.PacketSequence{
+					types.NewPacketSequence(testPort1, testChannel1, 1),
+				},
+				[]types.PacketSequence{
+					types.NewPacketSequence(testPort2, testChannel2, 1),
+				},
+				[]types.PacketSequence{
+					types.NewPacketSequence(testPort2, testChannel2, 1),
+				},
+				0,
+			),
+			expPass: false,
+		},
+		{
+			name: "next channel sequence is less than maximum channel identifier sequence used",
+			genState: types.NewGenesisState(
+				[]types.IdentifiedChannel{
+					types.NewIdentifiedChannel(
+						testPort1, "channel-10", types.NewChannel(
+							types.INIT, testChannelOrder, counterparty2, []string{testConnectionIDA}, testChannelVersion,
+						),
+					),
+					types.NewIdentifiedChannel(
+						testPort2, testChannel2, types.NewChannel(
+							types.INIT, testChannelOrder, counterparty1, []string{testConnectionIDA}, testChannelVersion,
+						),
+					),
+				},
+				[]types.PacketState{
+					types.NewPacketState(testPort2, testChannel2, 1, []byte("ack")),
+				},
+				[]types.PacketState{
+					types.NewPacketState(testPort2, testChannel2, 1, []byte("")),
+				},
+				[]types.PacketState{
+					types.NewPacketState(testPort1, testChannel1, 1, []byte("commit_hash")),
+				},
+				[]types.PacketSequence{
+					types.NewPacketSequence(testPort1, testChannel1, 1),
+				},
+				[]types.PacketSequence{
+					types.NewPacketSequence(testPort2, testChannel2, 1),
+				},
+				[]types.PacketSequence{
+					types.NewPacketSequence(testPort2, testChannel2, 1),
+				},
+				0,
+			),
 			expPass: false,
 		},
 	}

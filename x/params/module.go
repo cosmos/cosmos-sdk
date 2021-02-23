@@ -72,8 +72,6 @@ func (am AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistr
 	proposal.RegisterInterfaces(registry)
 }
 
-//____________________________________________________________________________
-
 // AppModule implements an application module for the distribution module.
 type AppModule struct {
 	AppModuleBasic

@@ -64,17 +64,17 @@ type Keyring interface {
 	Delete(uid string) error
 	DeleteByAddress(address sdk.Address) error
 
-	// NewMnemonic generates a new mnemonic, derives a hierarchical deterministic key from that, and
-	// persists it to the storage. Returns the generated mnemonic and the key Info secured with the given passphrase.
+	// NewMnemonic generates a new mnemonic, derives a hierarchical deterministic key from it, and
+	// persists the key to storage. Returns the generated mnemonic and the key Info.
 	// It returns an error if it fails to generate a key for the given algo type, or if
-	// another key is already stored under the same name.
+	// another key is already stored under the same name or address.
 	//
 	// A passphrase set to the empty string will set the passphrase to the DefaultBIP39Passphrase value.
-	NewMnemonic(uid string, language Language, hdPath, passphase string, algo SignatureAlgo) (Info, string, error)
+	NewMnemonic(uid string, language Language, hdPath, bip39Passphrase string, algo SignatureAlgo) (Info, string, error)
 
 	// NewAccount converts a mnemonic to a private key and BIP-39 HD Path and persists it.
-	// It fails if there is an existing key Info with the same address
-	NewAccount(uid, mnemonic, bip39Passwd, hdPath string, algo SignatureAlgo) (Info, error)
+	// It fails if there is an existing key Info with the same address.
+	NewAccount(uid, mnemonic, bip39Passphrase, hdPath string, algo SignatureAlgo) (Info, error)
 
 	// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
 	SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (Info, error)
@@ -480,7 +480,7 @@ func (ks keystore) List() ([]Info, error) {
 	return res, nil
 }
 
-func (ks keystore) NewMnemonic(uid string, language Language, hdPath, passphrase string, algo SignatureAlgo) (Info, string, error) {
+func (ks keystore) NewMnemonic(uid string, language Language, hdPath, bip39Passphrase string, algo SignatureAlgo) (Info, string, error) {
 	if language != English {
 		return nil, "", ErrUnsupportedLanguage
 	}
@@ -501,11 +501,11 @@ func (ks keystore) NewMnemonic(uid string, language Language, hdPath, passphrase
 		return nil, "", err
 	}
 
-	if passphrase == "" {
-		passphrase = DefaultBIP39Passphrase
+	if bip39Passphrase == "" {
+		bip39Passphrase = DefaultBIP39Passphrase
 	}
 
-	info, err := ks.NewAccount(uid, mnemonic, passphrase, hdPath, algo)
+	info, err := ks.NewAccount(uid, mnemonic, bip39Passphrase, hdPath, algo)
 	if err != nil {
 		return nil, "", err
 	}

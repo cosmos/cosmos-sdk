@@ -43,8 +43,7 @@ func (gs GenesisState) Validate() error {
 	}
 
 	// NOTE: this errors if supply for any given coin is zero
-	//return NewSupply(gs.Supply).ValidateBasic()
-	return nil
+	return gs.Supply.Validate()
 }
 
 // NewGenesisState creates a new genesis state.

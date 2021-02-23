@@ -25,6 +25,7 @@ type Keeper interface {
 
 	GetSupply(ctx sdk.Context, denom string) sdk.Coin
 	GetTotalSupply(ctx sdk.Context) sdk.Coins
+	IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bool)
 
 	GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool)
 	SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)

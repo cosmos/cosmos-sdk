@@ -47,8 +47,8 @@ just a simple string. So the `x/upgrade` module could mint tokens for the `x/sta
 ## Decision
 
 Based on [ADR-021](./adr-021-protobuf-query-encoding.md) and [ADR-031](./adr-031-msg-service.md), we introduce the
-Inter-Module Communication paradigm for secure module authorization and OCAPS
-framework. When implemented, this could also serve as an alternative to the existing paradigm of passing keepers between
+Inter-Module Communication framework for secure module authorization and OCAPs.
+When implemented, this could also serve as an alternative to the existing paradigm of passing keepers between
 modules. The approach outlined here-in is intended to form the basis of a Cosmos SDK v1.0 that provides the necessary
 stability and encapsulation guarantees that allow a thriving module ecosystem to emerge.
 
@@ -61,7 +61,7 @@ addressed as amendments to this ADR.
 In [ADR 021](./adr-021-protobuf-query-encoding.md), a mechanism for using protobuf service definitions to define queriers
 was introduced and in [ADR 31](./adr-031-msg-service.md), a mechanism for using protobuf service to define `Msg`s was added.
 Protobuf service definitions generate two golang interfaces representing the client and server sides of a service plus
-some helper code. Here is a minimal example for the bank `x/bank.MsgSend` message type:
+some helper code. Here is a minimal example for the bank `cosmos.bank.Msg/Send` message type:
 
 ```go
 package bank
@@ -313,7 +313,7 @@ type Configurator interface {
 As an example, x/slashing's Slash must call x/staking's Slash, but we don't want to expose x/staking's Slash to end users
 and clients.
 
-Internal protobuf services will be defined in a corresponding `internal.proto` files in the given module's
+Internal protobuf services will be defined in a corresponding `internal.proto` file in the given module's
 proto package.
 
 Services registered against `InternalServer` will be callable from other modules but not by external clients.

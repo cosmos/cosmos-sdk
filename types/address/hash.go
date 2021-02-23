@@ -67,8 +67,8 @@ func Module(moduleName string, key []byte) []byte {
 // unsafeStrToByteArray uses unsafe to convert string into byte array. Returned array
 // cannot be altered after this functions is called
 func unsafeStrToByteArray(s string) []byte {
-	sh := *(*reflect.SliceHeader)(unsafe.Pointer(&s)) // nolint
+	sh := *(*reflect.SliceHeader)(unsafe.Pointer(&s))
 	sh.Cap = sh.Len
-	bs := *(*[]byte)(unsafe.Pointer(&sh)) // nolint
+	bs := *(*[]byte)(unsafe.Pointer(&sh))
 	return bs
 }

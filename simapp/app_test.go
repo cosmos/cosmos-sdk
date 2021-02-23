@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -78,7 +77,6 @@ func TestRunMigrations(t *testing.T) {
 	// Create a new baseapp and configurator for the purpose of this test.
 	bApp := baseapp.NewBaseApp(appName, logger, db, encCfg.TxConfig.TxDecoder())
 	bApp.SetCommitMultiStoreTracer(nil)
-	bApp.SetAppVersion(version.Version)
 	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	app.BaseApp = bApp
 	app.configurator = module.NewConfigurator(app.MsgServiceRouter(), app.GRPCQueryRouter())
@@ -158,9 +156,9 @@ func TestRunMigrations(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			// Run migrations for all modules from their current
-			// Consensusversion, except x/bank, which we start from the initial
-			// version 1, as we are specifically testing x/bank.
+			// Run migrations only for bank. That's why we put the initial
+			// version for bank as 1, and for all other modules, we put as
+			// their latest ConsensusVersion.
 			err = app.RunMigrations(
 				app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}),
 				module.MigrationMap{

@@ -317,15 +317,8 @@ func (ks keystore) ImportPubKey(uid string, armor string, keyType KeyType) error
 		}
 	}
 
-	if keyType == TypeOffline {
+	if keyType == TypeOffline || keyType == TypeLedger {
 		_, err = ks.writeOfflineKey(uid, &pubKey, hd.PubKeyType(algo))
-		if err != nil {
-			return err
-		}
-	}
-
-	if keyType == TypeLedger {
-		_, err = ks.writeLedgerKey(uid, &pubKey, hd.PubKeyType(algo))
 		if err != nil {
 			return err
 		}

@@ -317,6 +317,20 @@ func (ks keystore) ImportPubKey(uid string, armor string, keyType KeyType) error
 		}
 		return nil
 	}
+
+	if keyType == TypeOffline {
+		pubKey, err := legacy.AminoPubKeyFromBytes(pubBytes)
+		if err != nil {
+			return err
+		}
+
+		_, err = ks.writeOfflineKey(uid, &pubKey, hd.PubKeyType(algo))
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
 	pubKey, err := legacy.PubKeyFromBytes(pubBytes)
 	if err != nil {
 		return err

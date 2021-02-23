@@ -179,8 +179,6 @@ func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Validato
 	return []abci.ValidatorUpdate{}
 }
 
-//____________________________________________________________________________
-
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the feegrant module.

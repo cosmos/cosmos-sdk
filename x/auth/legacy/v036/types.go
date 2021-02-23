@@ -1,5 +1,4 @@
 // DONTCOVER
-// nolint
 package v036
 
 import v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v034"

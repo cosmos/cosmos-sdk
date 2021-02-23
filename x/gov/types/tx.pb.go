@@ -232,7 +232,7 @@ func (m *MsgVoteResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgVoteResponse proto.InternalMessageInfo
 
-// MsgVoteWeightedResponse defines the MsgVoteWeighted response type.
+// MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.
 type MsgVoteWeightedResponse struct {
 }
 

@@ -207,8 +207,6 @@ func (u *Uint) Size() int {
 func (u Uint) MarshalAmino() ([]byte, error)   { return u.Marshal() }
 func (u *Uint) UnmarshalAmino(bz []byte) error { return u.Unmarshal(bz) }
 
-//__________________________________________________________________________
-
 // UintOverflow returns true if a given unsigned integer overflows and false
 // otherwise.
 func UintOverflow(i *big.Int) error {

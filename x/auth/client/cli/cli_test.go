@@ -732,7 +732,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 	// Does not work in offline mode.
 	_, err = authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), "--offline", sign1File.Name(), sign2File.Name())
-	s.Require().EqualError(err, "couldn't verify signature: unable to verify single signer signature")
+	s.Require().EqualError(err, fmt.Sprintf("couldn't verify signature for address %s", account1.GetAddress()))
 
 	val1.ClientCtx.Offline = false
 	multiSigWith2Signatures, err := authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
@@ -849,6 +849,20 @@ func (s *IntegrationTestSuite) TestGetAccountCmd() {
 			}
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) TestGetAccountsCmd() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, authcli.GetAccountsCmd(), []string{
+		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+	})
+	s.Require().NoError(err)
+
+	var res authtypes.QueryAccountsResponse
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &res))
+	s.Require().NotEmpty(res.Accounts)
 }
 
 func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {

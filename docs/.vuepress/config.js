@@ -43,6 +43,10 @@ module.exports = {
         "key": "v0.39"
       },
       {
+        "label": "v0.41",
+        "key": "v0.41"
+      },
+      {
         "label": "master",
         "key": "master"
       }

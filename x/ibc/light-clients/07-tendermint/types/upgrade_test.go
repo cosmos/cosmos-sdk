@@ -25,12 +25,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "successful upgrade",
 			setup: func() {
-
-				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
-				upgradedConsState = &types.ConsensusState{
-					NextValidatorsHash: []byte("nextValsHash"),
-				}
-
 				// upgrade Height is at next block
 				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
 
@@ -57,9 +51,7 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 			setup: func() {
 				upgradedHeight := clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+2))
 				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, upgradedHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
-				upgradedConsState = &types.ConsensusState{
-					NextValidatorsHash: []byte("nextValsHash"),
-				}
+				upgradedClient = upgradedClient.ZeroCustomFields()
 
 				// upgrade Height is at next block
 				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
@@ -86,12 +78,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: upgrade height revision height is more than the current client revision height",
 			setup: func() {
-
-				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
-				upgradedConsState = &types.ConsensusState{
-					NextValidatorsHash: []byte("nextValsHash"),
-				}
-
 				// upgrade Height is 10 blocks from now
 				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+10))
 
@@ -116,11 +102,8 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: committed client does not have zeroed custom fields",
 			setup: func() {
-
+				// non-zeroed upgrade client
 				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
-				upgradedConsState = &types.ConsensusState{
-					NextValidatorsHash: []byte("nextValsHash"),
-				}
 
 				// upgrade Height is at next block
 				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
@@ -146,12 +129,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: chain-specified parameters do not match committed client",
 			setup: func() {
-
-				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
-				upgradedConsState = &types.ConsensusState{
-					NextValidatorsHash: []byte("nextValsHash"),
-				}
-
 				// upgrade Height is at next block
 				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
 
@@ -177,12 +154,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: client-specified parameters do not match previous client",
 			setup: func() {
-
-				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, lastHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
-				upgradedConsState = &types.ConsensusState{
-					NextValidatorsHash: []byte("nextValsHash"),
-				}
-
 				// zero custom fields and store in upgrade store
 				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(lastHeight.GetRevisionHeight()), upgradedClient)
 				suite.chainB.App.UpgradeKeeper.SetUpgradedConsensusState(suite.chainB.GetContext(), int64(lastHeight.GetRevisionHeight()), upgradedConsState)
@@ -205,12 +176,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: relayer-submitted consensus state does not match counterparty-committed consensus state",
 			setup: func() {
-
-				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
-				upgradedConsState = &types.ConsensusState{
-					NextValidatorsHash: []byte("nextValsHash"),
-				}
-
 				// upgrade Height is at next block
 				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
 
@@ -240,10 +205,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: client proof unmarshal failed",
 			setup: func() {
-				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
-				upgradedConsState = &types.ConsensusState{
-					NextValidatorsHash: []byte("nextValsHash"),
-				}
 				suite.chainB.App.UpgradeKeeper.SetUpgradedConsensusState(suite.chainB.GetContext(), int64(lastHeight.GetRevisionHeight()), upgradedConsState)
 
 				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
@@ -258,11 +219,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: consensus state proof unmarshal failed",
 			setup: func() {
-				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
-				upgradedConsState = &types.ConsensusState{
-					NextValidatorsHash: []byte("nextValsHash"),
-				}
-
 				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(lastHeight.GetRevisionHeight()), upgradedClient)
 
 				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
@@ -277,11 +233,7 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: client proof verification failed",
 			setup: func() {
-				// create but do not store upgraded client
-				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
-				upgradedConsState = &types.ConsensusState{
-					NextValidatorsHash: []byte("nextValsHash"),
-				}
+				// do not store upgraded client
 
 				// upgrade Height is at next block
 				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
@@ -299,11 +251,7 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: consensus state proof verification failed",
 			setup: func() {
-				// create but do not store upgraded client
-				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
-				upgradedConsState = &types.ConsensusState{
-					NextValidatorsHash: []byte("nextValsHash"),
-				}
+				// do not store upgraded client
 
 				// upgrade Height is at next block
 				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
@@ -321,12 +269,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: upgrade path is empty",
 			setup: func() {
-
-				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
-				upgradedConsState = &types.ConsensusState{
-					NextValidatorsHash: []byte("nextValsHash"),
-				}
-
 				// upgrade Height is at next block
 				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
 
@@ -355,12 +297,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: upgraded height is not greater than current height",
 			setup: func() {
-
-				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
-				upgradedConsState = &types.ConsensusState{
-					NextValidatorsHash: []byte("nextValsHash"),
-				}
-
 				// upgrade Height is at next block
 				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
 
@@ -384,12 +320,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: consensus state for upgrade height cannot be found",
 			setup: func() {
-
-				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
-				upgradedConsState = &types.ConsensusState{
-					NextValidatorsHash: []byte("nextValsHash"),
-				}
-
 				// upgrade Height is at next block
 				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+100))
 
@@ -413,12 +343,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: client is expired",
 			setup: func() {
-
-				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, lastHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
-				upgradedConsState = &types.ConsensusState{
-					NextValidatorsHash: []byte("nextValsHash"),
-				}
-
 				// zero custom fields and store in upgrade store
 				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(lastHeight.GetRevisionHeight()), upgradedClient)
 
@@ -442,12 +366,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: updated unbonding period is equal to trusting period",
 			setup: func() {
-
-				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
-				upgradedConsState = &types.ConsensusState{
-					NextValidatorsHash: []byte("nextValsHash"),
-				}
-
 				// upgrade Height is at next block
 				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
 
@@ -471,12 +389,8 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: final client is not valid",
 			setup: func() {
-
 				// new client has smaller unbonding period such that old trusting period is no longer valid
 				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
-				upgradedConsState = &types.ConsensusState{
-					NextValidatorsHash: []byte("nextValsHash"),
-				}
 
 				// upgrade Height is at next block
 				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
@@ -508,6 +422,11 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		suite.SetupTest()
 
 		clientA, _ = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+		upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
+		upgradedClient = upgradedClient.ZeroCustomFields()
+		upgradedConsState = &types.ConsensusState{
+			NextValidatorsHash: []byte("nextValsHash"),
+		}
 
 		tc.setup()
 

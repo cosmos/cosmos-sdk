@@ -240,12 +240,6 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 		{
 			name: "successful upgrade",
 			setup: func() {
-
-				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
-				upgradedConsState = &ibctmtypes.ConsensusState{
-					NextValidatorsHash: []byte("nextValsHash"),
-				}
-
 				// last Height is at next block
 				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
 
@@ -270,12 +264,6 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 		{
 			name: "client state not found",
 			setup: func() {
-
-				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
-				upgradedConsState = &ibctmtypes.ConsensusState{
-					NextValidatorsHash: []byte("nextValsHash"),
-				}
-
 				// last Height is at next block
 				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
 
@@ -302,12 +290,6 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 		{
 			name: "client state frozen",
 			setup: func() {
-
-				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
-				upgradedConsState = &ibctmtypes.ConsensusState{
-					NextValidatorsHash: []byte("nextValsHash"),
-				}
-
 				// last Height is at next block
 				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
 
@@ -338,12 +320,6 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 		{
 			name: "tendermint client VerifyUpgrade fails",
 			setup: func() {
-
-				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
-				upgradedConsState = &ibctmtypes.ConsensusState{
-					NextValidatorsHash: []byte("nextValsHash"),
-				}
-
 				// last Height is at next block
 				lastHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
 
@@ -371,6 +347,11 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 	for _, tc := range testCases {
 		tc := tc
 		clientA, _ = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+		upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
+		upgradedClient = upgradedClient.ZeroCustomFields()
+		upgradedConsState = &ibctmtypes.ConsensusState{
+			NextValidatorsHash: []byte("nextValsHash"),
+		}
 
 		tc.setup()
 

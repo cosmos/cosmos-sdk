@@ -100,8 +100,6 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 func (k Keeper) SetUpgradedClient(ctx sdk.Context, planHeight int64, cs ibcexported.ClientState) error {
 	store := ctx.KVStore(k.storeKey)
 
-	// zero out any custom fields before setting
-	cs = cs.ZeroCustomFields()
 	bz, err := clienttypes.MarshalClientState(k.cdc, cs)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "could not marshal clientstate: %v", err)

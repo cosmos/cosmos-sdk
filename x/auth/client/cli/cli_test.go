@@ -877,6 +877,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	res, err = authtest.TxMultiSignBatchExec(val.ClientCtx, filename.Name(), multisigInfo.GetName(), file1.Name(), file2.Name())
 	s.Require().NoError(err)
 	signedTxs := strings.Split(strings.Trim(res.String(), "\n"), "\n")
+
 	// Broadcast transactions.
 	for _, signedTx := range signedTxs {
 		signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx)

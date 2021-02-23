@@ -127,12 +127,15 @@ type FooMsgServer {
   bankMsg   bank.MsgClient
 }
 
-func NewFooMsgServer(...) MsgServer {
+func NewFooMsgServer(moduleKey, ...) FooMsgServer {
   // ...
 
-  fooMsgServer.bankQuery = bank.NewQueryClient(fooMsgServer.moduleKey)
-  fooMsgServer.bankMsg = bank.NewMsgClient(fooMsgServer.moduleKey)
-  return fooMsgServer
+  return FooMsgServer {
+    // ...
+    modouleKey: moduleKey,
+    bankQuery: bank.NewQueryClient(moduleKey),
+    bankMsg: bank.NewMsgClient(moduleKey),
+  }
 }
 
 func (foo *FooMsgServer) Bar(ctx context.Context, req *MsgBarRequest) (*MsgBarResponse, error) {
@@ -182,8 +185,6 @@ The two `ModuleKey` types are `RootModuleKey` and `DerivedModuleKey`:
 
 ```go
 type Invoker func(callInfo CallInfo) func(ctx context.Context, request, response interface{}, opts ...interface{}) error
-
-func Invoker(callInfo CallInfo) func(ctx context.Context, request, response interface{}, opts ...interface{}) error
 
 type CallInfo {
   Method string

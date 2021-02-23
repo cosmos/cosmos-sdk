@@ -43,20 +43,8 @@ func (k Keeper) VerifyInvariant(goCtx context.Context, msg *types.MsgVerifyInvar
 	}
 
 	if stop {
-		// NOTE currently, because the chain halts here, this transaction will never be included
-		// in the blockchain thus the constant fee will have never been deducted. Thus no
-		// refund is required.
-
-		// TODO uncomment the following code block with implementation of the circuit breaker
-		//// refund constant fee
-		//err := k.distrKeeper.DistributeFromFeePool(ctx, constantFee, msg.Sender)
-		//if err != nil {
-		//// if there are insufficient coins to refund, log the error,
-		//// but still halt the chain.
-		//logger := ctx.Logger().With("module", "x/crisis")
-		//logger.Error(fmt.Sprintf(
-		//"WARNING: insufficient funds to allocate to sender from fee pool, err: %s", err))
-		//}
+		// Currently, because the chain halts here, this transaction will never be included in the
+		// blockchain thus the constant fee will have never been deducted. Thus no refund is required.
 
 		// TODO replace with circuit breaker
 		panic(res)

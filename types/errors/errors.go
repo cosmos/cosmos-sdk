@@ -15,7 +15,6 @@ const UndefinedCodespace = "undefined"
 
 var (
 	// errInternal should never be exposed, but we reserve this code for non-specified errors
-	//nolint
 	errInternal = Register(UndefinedCodespace, 1, "internal")
 
 	// ErrTxDecode is returned if we cannot parse a transaction

@@ -109,8 +109,6 @@ func (a AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry
 	types.RegisterInterfaces(registry)
 }
 
-//____________________________________________________________________________
-
 // AppModule implements an application module for the gov module.
 type AppModule struct {
 	AppModuleBasic
@@ -189,8 +187,6 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 	EndBlocker(ctx, am.keeper)
 	return []abci.ValidatorUpdate{}
 }
-
-//____________________________________________________________________________
 
 // AppModuleSimulation functions
 

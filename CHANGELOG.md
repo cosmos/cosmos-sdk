@@ -38,7 +38,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Client Breaking Changes
 
-* [\#8363](https://github.com/cosmos/cosmos-sdk/issues/8363) Addresses no longer have a fixed 20-byte length. From the SDK modules' point of view, any 1-255 bytes-long byte array is a valid address.
+* [\#8363](https://github.com/cosmos/cosmos-sdk/pull/8363) Addresses no longer have a fixed 20-byte length. From the SDK modules' point of view, any 1-255 bytes-long byte array is a valid address.
+* [\#8346](https://github.com/cosmos/cosmos-sdk/pull/8346) All CLI `tx` commands generate ServiceMsgs by default. Graceful Amino support has been added to ServiceMsgs to support signing legacy Msgs.
 
 ### API Breaking Changes
 
@@ -47,6 +48,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [\#8473](https://github.com/cosmos/cosmos-sdk/pull/8473) On genesis init, if the gov module account balance, coming from bank module state, does not match the one in gov module state, the initialization will panic.
 * (x/distribution) [\#8473](https://github.com/cosmos/cosmos-sdk/pull/8473) On genesis init, if the distribution module account balance, coming from bank module state, does not match the one in distribution module state, the initialization will panic.
 * (client/keys) [\#8500](https://github.com/cosmos/cosmos-sdk/pull/8500) `InfoImporter` interface is removed from legacy keybase.
+* [\#8629](https://github.com/cosmos/cosmos-sdk/pull/8629) Deprecated `SetFullFundraiserPath` from `Config` in favor of `SetPurpose` and `SetCoinType`.
 
 ### State Machine Breaking
 
@@ -58,11 +60,28 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (x/auth) [\#8522](https://github.com/cosmos/cosmos-sdk/pull/8522) Allow to query all stored accounts
+* (crypto/types) [\#8600](https://github.com/cosmos/cosmos-sdk/pull/8600) `CompactBitArray`: optimize the `NumTrueBitsBefore` method and add an `Equal` method.
+
+
 ### Bug Fixes
 
 * (x/evidence) [#8461](https://github.com/cosmos/cosmos-sdk/pull/8461) Fix bech32 prefix in evidence validator address conversion
 * (x/slashing) [\#8427](https://github.com/cosmos/cosmos-sdk/pull/8427) Fix query signing infos command
 * (server) [\#8399](https://github.com/cosmos/cosmos-sdk/pull/8399) fix gRPC-web flag default value
+* (server) [\#8641](https://github.com/cosmos/cosmos-sdk/pull/8641) Fix Tendermint and application configuration reading from file
+
+## [v0.41.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.3) - 2021-02-18
+
+### Bug Fixes
+
+* [\#8617](https://github.com/cosmos/cosmos-sdk/pull/8617) Fix build failures caused by a small API breakage introduced in tendermint v0.34.7.
+
+## [v0.41.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.2) - 2021-02-18
+
+### Improvements
+
+* Bump tendermint dependency to v0.34.7.
 
 ## [v0.41.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.1) - 2021-02-17
 

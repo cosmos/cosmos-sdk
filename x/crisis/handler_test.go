@@ -42,8 +42,6 @@ func createTestApp() (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
 	return app, ctx, addrs
 }
 
-//____________________________________________________________________________
-
 func TestHandleMsgVerifyInvariant(t *testing.T) {
 	app, ctx, addrs := createTestApp()
 	sender := addrs[0]

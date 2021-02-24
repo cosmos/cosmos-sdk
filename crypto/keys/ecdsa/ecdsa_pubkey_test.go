@@ -54,6 +54,13 @@ func (suite *EcdsaSuite) TestPKBytes() {
 	require.Len(suite.pk.Bytes(), PubKeySize)
 }
 
+func (suite *EcdsaSuite) TestPKReset() {
+	pk := &ecdsaPK{ecdsa.PublicKey{X: big.NewInt(1)}, []byte{1}}
+	pk.Reset()
+	suite.Nil(pk.address)
+	suite.Equal(pk.PublicKey, ecdsa.PublicKey{})
+}
+
 func (suite *EcdsaSuite) TestPKEquals() {
 	require := suite.Require()
 
@@ -142,11 +149,4 @@ func (suite *EcdsaSuite) TestPKMarshalProto() {
 
 	cdc.UnmarshalInterface(bz, nil)
 	require.Error(err, "nil should fail")
-}
-
-func (suite *EcdsaSuite) TestPKReset() {
-	pk := &ecdsaPK{ecdsa.PublicKey{X: big.NewInt(1)}, []byte{1}}
-	pk.Reset()
-	suite.Nil(pk.address)
-	suite.Equal(pk.PublicKey, ecdsa.PublicKey{})
 }

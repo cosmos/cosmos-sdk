@@ -32,7 +32,7 @@ In a new file, `store/types/listening.go`, we will create a `WriteListener` inte
 type WriteListener interface {
 	// if value is nil then it was deleted
 	// storeKey indicates the source KVStore, to facilitate using the the same WriteListener across separate KVStores
-	// set bool indicates if it was a set; true: set, false: delete
+	// delete bool indicates if it was a delete; true: delete, false: set
     OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error
 }
 ```

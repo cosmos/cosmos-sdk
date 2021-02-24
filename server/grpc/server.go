@@ -8,13 +8,14 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/types"
 )
 
 // StartGRPCServer starts a gRPC server on the given address.
-func StartGRPCServer(app types.Application, address string) (*grpc.Server, error) {
+func StartGRPCServer(clientCtx client.Context, app types.Application, address string) (*grpc.Server, error) {
 	grpcSrv := grpc.NewServer()
-	app.RegisterGRPCServer(grpcSrv)
+	app.RegisterGRPCServer(clientCtx, grpcSrv)
 
 	// Reflection allows external clients to see what services and methods
 	// the gRPC server exposes.

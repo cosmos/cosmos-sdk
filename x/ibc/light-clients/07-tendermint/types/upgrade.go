@@ -35,8 +35,8 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	// last height of current counterparty chain must be client's latest height
 	lastHeight := cs.GetLatestHeight()
 
-	if upgradedClient.GetLatestHeight().GetRevisionNumber() <= lastHeight.GetRevisionNumber() {
-		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "upgraded client height %s must be at greater revision than current client height %s",
+	if !upgradedClient.GetLatestHeight().GT(lastHeight) {
+		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "upgraded client height %s must be at greater than current client height %s",
 			upgradedClient.GetLatestHeight(), lastHeight)
 	}
 
@@ -76,25 +76,25 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	}
 
 	// Verify client proof
-	bz, err := codec.MarshalAny(cdc, upgradedClient)
+	bz, err := cdc.MarshalInterface(upgradedClient)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "could not marshal client state: %v", err)
 	}
 	// construct clientState Merkle path
 	upgradeClientPath := constructUpgradeClientMerklePath(cs.UpgradePath, lastHeight)
 	if err := merkleProofClient.VerifyMembership(cs.ProofSpecs, consState.GetRoot(), upgradeClientPath, bz); err != nil {
-		return nil, nil, err
+		return nil, nil, sdkerrors.Wrapf(err, "client state proof failed. Path: %s", upgradeClientPath.Pretty())
 	}
 
 	// Verify consensus state proof
-	bz, err = codec.MarshalAny(cdc, upgradedConsState)
+	bz, err = cdc.MarshalInterface(upgradedConsState)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "could not marshal consensus state: %v", err)
 	}
 	// construct consensus state Merkle path
 	upgradeConsStatePath := constructUpgradeConsStateMerklePath(cs.UpgradePath, lastHeight)
 	if err := merkleProofConsState.VerifyMembership(cs.ProofSpecs, consState.GetRoot(), upgradeConsStatePath, bz); err != nil {
-		return nil, nil, err
+		return nil, nil, sdkerrors.Wrapf(err, "consensus state proof failed. Path: %s", upgradeConsStatePath.Pretty())
 	}
 
 	// Construct new client state and consensus state
@@ -116,6 +116,8 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 	// The timestamp and the NextValidatorsHash of the consensus state is the blocktime and NextValidatorsHash
 	// of the last block committed by the old chain. This will allow the first block of the new chain to be verified against
 	// the last validators of the old chain so long as it is submitted within the TrustingPeriod of this client.
+	// NOTE: We do not set processed time for this consensus state since this consensus state should not be used for packet verification
+	// as the root is empty. The next consensus state submitted using update will be usable for packet-verification.
 	newConsState := NewConsensusState(
 		tmUpgradeConsState.Timestamp, commitmenttypes.MerkleRoot{}, tmUpgradeConsState.NextValidatorsHash,
 	)

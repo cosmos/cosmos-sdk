@@ -10,7 +10,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
-var _ sdk.Msg = &MsgConnectionOpenInit{}
+var (
+	_ sdk.Msg = &MsgConnectionOpenInit{}
+	_ sdk.Msg = &MsgConnectionOpenConfirm{}
+	_ sdk.Msg = &MsgConnectionOpenAck{}
+	_ sdk.Msg = &MsgConnectionOpenTry{}
+
+	_ codectypes.UnpackInterfacesMessage = MsgConnectionOpenTry{}
+	_ codectypes.UnpackInterfacesMessage = MsgConnectionOpenAck{}
+)
 
 // NewMsgConnectionOpenInit creates a new MsgConnectionOpenInit instance. It sets the
 // counterparty connection identifier to be empty.
@@ -18,13 +26,15 @@ var _ sdk.Msg = &MsgConnectionOpenInit{}
 func NewMsgConnectionOpenInit(
 	clientID, counterpartyClientID string,
 	counterpartyPrefix commitmenttypes.MerklePrefix,
-	version *Version, signer sdk.AccAddress,
+	version *Version, delayPeriod uint64, signer sdk.AccAddress,
 ) *MsgConnectionOpenInit {
+	// counterparty must have the same delay period
 	counterparty := NewCounterparty(counterpartyClientID, "", counterpartyPrefix)
 	return &MsgConnectionOpenInit{
 		ClientId:     clientID,
 		Counterparty: counterparty,
 		Version:      version,
+		DelayPeriod:  delayPeriod,
 		Signer:       signer.String(),
 	}
 }
@@ -76,14 +86,13 @@ func (msg MsgConnectionOpenInit) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{accAddr}
 }
 
-var _ sdk.Msg = &MsgConnectionOpenTry{}
-
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
 //nolint:interfacer
 func NewMsgConnectionOpenTry(
 	previousConnectionID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyClient exported.ClientState,
-	counterpartyPrefix commitmenttypes.MerklePrefix, counterpartyVersions []*Version,
+	counterpartyPrefix commitmenttypes.MerklePrefix,
+	counterpartyVersions []*Version, delayPeriod uint64,
 	proofInit, proofClient, proofConsensus []byte,
 	proofHeight, consensusHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgConnectionOpenTry {
@@ -95,6 +104,7 @@ func NewMsgConnectionOpenTry(
 		ClientState:          csAny,
 		Counterparty:         counterparty,
 		CounterpartyVersions: counterpartyVersions,
+		DelayPeriod:          delayPeriod,
 		ProofInit:            proofInit,
 		ProofClient:          proofClient,
 		ProofConsensus:       proofConsensus,
@@ -171,13 +181,7 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgConnectionOpenTry) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var clientState exported.ClientState
-	err := unpacker.UnpackAny(msg.ClientState, &clientState)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return unpacker.UnpackAny(msg.ClientState, new(exported.ClientState))
 }
 
 // GetSignBytes implements sdk.Msg. The function will panic since it is used
@@ -194,8 +198,6 @@ func (msg MsgConnectionOpenTry) GetSigners() []sdk.AccAddress {
 	}
 	return []sdk.AccAddress{accAddr}
 }
-
-var _ sdk.Msg = &MsgConnectionOpenAck{}
 
 // NewMsgConnectionOpenAck creates a new MsgConnectionOpenAck instance
 //nolint:interfacer
@@ -293,8 +295,6 @@ func (msg MsgConnectionOpenAck) GetSigners() []sdk.AccAddress {
 	}
 	return []sdk.AccAddress{accAddr}
 }
-
-var _ sdk.Msg = &MsgConnectionOpenConfirm{}
 
 // NewMsgConnectionOpenConfirm creates a new MsgConnectionOpenConfirm instance
 //nolint:interfacer

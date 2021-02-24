@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"fmt"
 	"math/big"
 	"math/rand"
 	"strconv"
@@ -384,4 +385,37 @@ func (s *intTestSuite) TestIntEq() {
 	s.Require().True(resp)
 	_, resp, _, _, _ = sdk.IntEq(s.T(), sdk.OneInt(), sdk.ZeroInt())
 	s.Require().False(resp)
+}
+
+func TestRoundTripMarshalToInt(t *testing.T) {
+	var values = []int64{
+		0,
+		1,
+		1 << 10,
+		1<<10 - 3,
+		1<<63 - 1,
+		1<<32 - 7,
+		1<<22 - 8,
+	}
+
+	for _, value := range values {
+		value := value
+		t.Run(fmt.Sprintf("%d", value), func(t *testing.T) {
+			t.Parallel()
+
+			var scratch [20]byte
+			iv := sdk.NewInt(value)
+			n, err := iv.MarshalTo(scratch[:])
+			if err != nil {
+				t.Fatal(err)
+			}
+			rt := new(sdk.Int)
+			if err := rt.Unmarshal(scratch[:n]); err != nil {
+				t.Fatal(err)
+			}
+			if !rt.Equal(iv) {
+				t.Fatalf("roundtrip=%q != original=%q", rt, iv)
+			}
+		})
+	}
 }

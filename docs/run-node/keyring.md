@@ -31,7 +31,7 @@ is a list of the most popular operating systems and their respective passwords m
 GNU/Linux distributions that use GNOME as default desktop environment typically come with
 [Seahorse](https://wiki.gnome.org/Apps/Seahorse). Users of KDE based distributions are
 commonly provided with [KDE Wallet Manager](https://userbase.kde.org/KDE_Wallet_Manager).
-Whilst the former is in fact a `libsecret` convenient frontend, the former is a `kwallet`
+Whilst the former is in fact a `libsecret` convenient frontend, the latter is a `kwallet`
 client.
 
 `os` is the default option since operating system's default credentials managers are
@@ -121,3 +121,7 @@ MY_VALIDATOR_ADDRESS=$(simd keys show my_validator -a --keyring-backend test)
 This command generates a new 24-word mnemonic phrase, persists it to the relevant backend, and outputs information about the keypair. If this keypair will be used to hold value-bearing tokens, be sure to write down the mnemonic phrase somewhere safe!
 
 By default, the keyring generates a `secp256k1` keypair. The keyring also supports `ed25519` keys, which may be created by passing the `--algo ed25519` flag. A keyring can of course hold both types of keys simultaneously, and the Cosmos SDK's `x/auth` module (in particular its [AnteHandlers](../core/baseapp.md#antehandler)) supports natively these two public key algorithms.
+
+## Next {hide}
+
+Read about [running a node](./run-node.md) {hide}

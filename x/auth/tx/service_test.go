@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -175,14 +175,14 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 		{
 			"without pagination",
 			&tx.GetTxsEventRequest{
-				Events: []string{"message.action=send"},
+				Events: []string{"message.action=/cosmos.bank.v1beta1.Msg/Send"},
 			},
 			false, "",
 		},
 		{
 			"with pagination",
 			&tx.GetTxsEventRequest{
-				Events: []string{"message.action=send"},
+				Events: []string{"message.action=/cosmos.bank.v1beta1.Msg/Send"},
 				Pagination: &query.PageRequest{
 					CountTotal: false,
 					Offset:     0,
@@ -194,7 +194,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 		{
 			"with multi events",
 			&tx.GetTxsEventRequest{
-				Events: []string{"message.action=send", "message.module=bank"},
+				Events: []string{"message.action=/cosmos.bank.v1beta1.Msg/Send", "message.module=bank"},
 			},
 			false, "",
 		},
@@ -231,25 +231,25 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
 		},
 		{
 			"without pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action=send"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action=/cosmos.bank.v1beta1.Msg/Send"),
 			false,
 			"",
 		},
 		{
 			"with pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action=send", 0, 10),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action=/cosmos.bank.v1beta1.Msg/Send", 0, 10),
 			false,
 			"",
 		},
 		{
 			"expect pass with multiple-events",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s", val.APIAddress, "message.action=send", "message.module=bank"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s", val.APIAddress, "message.action=/cosmos.bank.v1beta1.Msg/Send", "message.module=bank"),
 			false,
 			"",
 		},
 		{
 			"expect pass with escape event",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action%3Dsend"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action%3D%2Fcosmos.bank.v1beta1.Msg%2FSend"),
 			false,
 			"",
 		},
@@ -448,7 +448,7 @@ func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
 		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 
 	// Sign Tx.
-	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false)
+	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false, true)
 	s.Require().NoError(err)
 
 	return txBuilder
@@ -456,20 +456,10 @@ func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
 
 // txBuilderToProtoTx converts a txBuilder into a proto tx.Tx.
 func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) { // nolint
-	intoAnyTx, ok := txBuilder.(codectypes.IntoAny)
+	protoProvider, ok := txBuilder.(authtx.ProtoTxProvider)
 	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (codectypes.IntoAny)(nil), intoAnyTx)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected proto tx builder, got %T", txBuilder)
 	}
 
-	any := intoAnyTx.AsAny().GetCachedValue()
-	if any == nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "any's cached value is empty")
-	}
-
-	protoTx, ok := any.(*tx.Tx)
-	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (codectypes.IntoAny)(nil), intoAnyTx)
-	}
-
-	return protoTx, nil
+	return protoProvider.GetProtoTx(), nil
 }

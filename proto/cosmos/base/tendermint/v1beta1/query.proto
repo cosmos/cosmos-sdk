@@ -2,6 +2,7 @@ syntax = "proto3";
 package cosmos.base.tendermint.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 import "tendermint/p2p/types.proto";
 import "tendermint/types/block.proto";
@@ -31,11 +32,11 @@ service Service {
 
   // GetLatestValidatorSet queries latest validator-set.
   rpc GetLatestValidatorSet(GetLatestValidatorSetRequest) returns (GetLatestValidatorSetResponse) {
-    option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/validators/latest";
+    option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/validatorsets/latest";
   }
   // GetValidatorSetByHeight queries validator-set at a given height.
   rpc GetValidatorSetByHeight(GetValidatorSetByHeightRequest) returns (GetValidatorSetByHeightResponse) {
-    option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/validators/{height}";
+    option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/validatorsets/{height}";
   }
 }
 
@@ -70,10 +71,10 @@ message GetLatestValidatorSetResponse {
 
 // Validator is the type for the validator-set.
 message Validator {
-  bytes  address           = 1;
-  string pub_key           = 2;
-  int64  voting_power      = 3;
-  int64  proposer_priority = 4;
+  string              address           = 1;
+  google.protobuf.Any pub_key           = 2;
+  int64               voting_power      = 3;
+  int64               proposer_priority = 4;
 }
 
 // GetBlockByHeightRequest is the request type for the Query/GetBlockByHeight RPC method.
@@ -83,8 +84,8 @@ message GetBlockByHeightRequest {
 
 // GetBlockByHeightResponse is the response type for the Query/GetBlockByHeight RPC method.
 message GetBlockByHeightResponse {
-  tendermint.types.BlockID block_id = 1;
-  tendermint.types.Block   block    = 2;
+  .tendermint.types.BlockID block_id = 1;
+  .tendermint.types.Block   block    = 2;
 }
 
 // GetLatestBlockRequest is the request type for the Query/GetLatestBlock RPC method.
@@ -92,8 +93,8 @@ message GetLatestBlockRequest {}
 
 // GetLatestBlockResponse is the response type for the Query/GetLatestBlock RPC method.
 message GetLatestBlockResponse {
-  tendermint.types.BlockID block_id = 1;
-  tendermint.types.Block   block    = 2;
+  .tendermint.types.BlockID block_id = 1;
+  .tendermint.types.Block   block    = 2;
 }
 
 // GetSyncingRequest is the request type for the Query/GetSyncing RPC method.
@@ -109,8 +110,8 @@ message GetNodeInfoRequest {}
 
 // GetNodeInfoResponse is the request type for the Query/GetNodeInfo RPC method.
 message GetNodeInfoResponse {
-  tendermint.p2p.DefaultNodeInfo default_node_info   = 1;
-  VersionInfo                    application_version = 2;
+  .tendermint.p2p.DefaultNodeInfo default_node_info   = 1;
+  VersionInfo                     application_version = 2;
 }
 
 // VersionInfo is the type for the GetNodeInfoResponse message.

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/armon/go-metrics"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -133,7 +134,7 @@ func (k Keeper) SubmitMisbehaviour(goCtx context.Context, msg *clienttypes.MsgSu
 func (k Keeper) ConnectionOpenInit(goCtx context.Context, msg *connectiontypes.MsgConnectionOpenInit) (*connectiontypes.MsgConnectionOpenInitResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	connectionID, err := k.ConnectionKeeper.ConnOpenInit(ctx, msg.ClientId, msg.Counterparty, msg.Version)
+	connectionID, err := k.ConnectionKeeper.ConnOpenInit(ctx, msg.ClientId, msg.Counterparty, msg.Version, msg.DelayPeriod)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "connection handshake open init failed")
 	}
@@ -165,7 +166,7 @@ func (k Keeper) ConnectionOpenTry(goCtx context.Context, msg *connectiontypes.Ms
 	}
 
 	connectionID, err := k.ConnectionKeeper.ConnOpenTry(
-		ctx, msg.PreviousConnectionId, msg.Counterparty, msg.ClientId, targetClient,
+		ctx, msg.PreviousConnectionId, msg.Counterparty, msg.DelayPeriod, msg.ClientId, targetClient,
 		connectiontypes.ProtoVersionsToExported(msg.CounterpartyVersions), msg.ProofInit, msg.ProofClient, msg.ProofConsensus,
 		msg.ProofHeight, msg.ConsensusHeight,
 	)
@@ -325,13 +326,13 @@ func (k Keeper) ChannelOpenAck(goCtx context.Context, msg *channeltypes.MsgChann
 		return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 	}
 
-	if err = cbs.OnChanOpenAck(ctx, msg.PortId, msg.ChannelId, msg.CounterpartyVersion); err != nil {
-		return nil, sdkerrors.Wrap(err, "channel open ack callback failed")
-	}
-
 	_, err = channel.HandleMsgChannelOpenAck(ctx, k.ChannelKeeper, cap, msg)
 	if err != nil {
 		return nil, err
+	}
+
+	if err = cbs.OnChanOpenAck(ctx, msg.PortId, msg.ChannelId, msg.CounterpartyVersion); err != nil {
+		return nil, sdkerrors.Wrap(err, "channel open ack callback failed")
 	}
 
 	return &channeltypes.MsgChannelOpenAckResponse{}, nil
@@ -353,13 +354,13 @@ func (k Keeper) ChannelOpenConfirm(goCtx context.Context, msg *channeltypes.MsgC
 		return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 	}
 
-	if err = cbs.OnChanOpenConfirm(ctx, msg.PortId, msg.ChannelId); err != nil {
-		return nil, sdkerrors.Wrap(err, "channel open confirm callback failed")
-	}
-
 	_, err = channel.HandleMsgChannelOpenConfirm(ctx, k.ChannelKeeper, cap, msg)
 	if err != nil {
 		return nil, err
+	}
+
+	if err = cbs.OnChanOpenConfirm(ctx, msg.PortId, msg.ChannelId); err != nil {
+		return nil, sdkerrors.Wrap(err, "channel open confirm callback failed")
 	}
 
 	return &channeltypes.MsgChannelOpenConfirmResponse{}, nil

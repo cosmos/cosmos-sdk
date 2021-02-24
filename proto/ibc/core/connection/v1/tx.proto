@@ -32,7 +32,8 @@ message MsgConnectionOpenInit {
   string       client_id    = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   Counterparty counterparty = 2 [(gogoproto.nullable) = false];
   Version      version      = 3;
-  string       signer       = 4;
+  uint64       delay_period = 4 [(gogoproto.moretags) = "yaml:\"delay_period\""];
+  string       signer       = 5;
 }
 
 // MsgConnectionOpenInitResponse defines the Msg/ConnectionOpenInit response type.
@@ -50,19 +51,20 @@ message MsgConnectionOpenTry {
   string                    previous_connection_id = 2 [(gogoproto.moretags) = "yaml:\"previous_connection_id\""];
   google.protobuf.Any       client_state           = 3 [(gogoproto.moretags) = "yaml:\"client_state\""];
   Counterparty              counterparty           = 4 [(gogoproto.nullable) = false];
-  repeated Version          counterparty_versions  = 5 [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
-  ibc.core.client.v1.Height proof_height           = 6
+  uint64                    delay_period           = 5 [(gogoproto.moretags) = "yaml:\"delay_period\""];
+  repeated Version          counterparty_versions  = 6 [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
+  ibc.core.client.v1.Height proof_height           = 7
       [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
   // proof of the initialization the connection on Chain A: `UNITIALIZED ->
   // INIT`
-  bytes proof_init = 7 [(gogoproto.moretags) = "yaml:\"proof_init\""];
+  bytes proof_init = 8 [(gogoproto.moretags) = "yaml:\"proof_init\""];
   // proof of client state included in message
-  bytes proof_client = 8 [(gogoproto.moretags) = "yaml:\"proof_client\""];
+  bytes proof_client = 9 [(gogoproto.moretags) = "yaml:\"proof_client\""];
   // proof of client consensus state
-  bytes                     proof_consensus  = 9 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
-  ibc.core.client.v1.Height consensus_height = 10
+  bytes                     proof_consensus  = 10 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
+  ibc.core.client.v1.Height consensus_height = 11
       [(gogoproto.moretags) = "yaml:\"consensus_height\"", (gogoproto.nullable) = false];
-  string signer = 11;
+  string signer = 12;
 }
 
 // MsgConnectionOpenTryResponse defines the Msg/ConnectionOpenTry response type.

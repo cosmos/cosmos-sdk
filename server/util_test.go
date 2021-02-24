@@ -10,8 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
 var CancelledInPreRun = errors.New("Canelled in prerun")
@@ -158,76 +159,6 @@ func TestInterceptConfigsPreRunHandlerReadsAppToml(t *testing.T) {
 
 	if testHaltTime != serverCtx.Viper.GetInt("halt-time") {
 		t.Error("Halt time was not set from app.toml")
-	}
-}
-
-func TestInterceptConfigsPreRunHandlerDoesNotMixConfigFiles(t *testing.T) {
-	// The goal of this test is to make sure that app.toml and config.toml
-	// are separate files and that mixing values does not work
-	const testDbBackend = "awesome_test_db"
-	const testHaltTime = 1337
-	const testHaltHeight = 2001
-
-	tempDir := t.TempDir()
-	err := os.Mkdir(path.Join(tempDir, "config"), os.ModePerm)
-	if err != nil {
-		t.Fatalf("creating config dir failed: %v", err)
-	}
-	configTomlPath := path.Join(tempDir, "config", "config.toml")
-	writer, err := os.Create(configTomlPath)
-	if err != nil {
-		t.Fatalf("creating config.toml file failed: %v", err)
-	}
-
-	// Put a value in config.toml that should be in app.toml
-	_, err = writer.WriteString(fmt.Sprintf("halt-time = %d\ndb_backend = \"%s\"\n", testHaltTime, testDbBackend))
-	if err != nil {
-		t.Fatalf("Failed writing string to config.toml: %v", err)
-	}
-
-	if err := writer.Close(); err != nil {
-		t.Fatalf("Failed closing config.toml: %v", err)
-	}
-
-	appTomlPath := path.Join(tempDir, "config", "app.toml")
-	writer, err = os.Create(appTomlPath)
-	if err != nil {
-		t.Fatalf("creating app.toml file failed %v", err)
-	}
-
-	// Put a different value in app.toml
-	_, err = writer.WriteString(fmt.Sprintf("halt-height = %d\n", testHaltHeight))
-	if err != nil {
-		t.Fatalf("Failed writing string to app.toml: %v", err)
-	}
-
-	if err := writer.Close(); err != nil {
-		t.Fatalf("Failed closing app.toml: %v", err)
-	}
-
-	cmd := StartCmd(nil, tempDir)
-	cmd.PreRunE = preRunETestImpl
-
-	serverCtx := &Context{}
-	ctx := context.WithValue(context.Background(), ServerContextKey, serverCtx)
-
-	if err := cmd.ExecuteContext(ctx); err != CancelledInPreRun {
-		t.Fatalf("function failed with [%T] %v", err, err)
-	}
-
-	// check that the intended value from config.toml is used
-	if testDbBackend != serverCtx.Config.DBBackend {
-		t.Error("DBPath was not set from config.toml")
-	}
-
-	// The value from app.toml should be used for this
-	if testHaltHeight != serverCtx.Viper.GetInt("halt-height") {
-		t.Error("Halt height is not using provided value")
-	}
-
-	// The value from config.toml should not be used, default is used instead
-	if 0 != serverCtx.Viper.GetInt("halt-time") {
-		t.Error("Halt time is not using default")
 	}
 }
 

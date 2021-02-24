@@ -47,7 +47,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	}
 
 	cs.FrozenSequence = soloMisbehaviour.Sequence
-	return cs, nil
+	return &cs, nil
 }
 
 // verifySignatureAndData verifies that the currently registered public key has signed

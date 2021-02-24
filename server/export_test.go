@@ -21,6 +21,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -157,7 +158,11 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 	serverCtx.Config.RootDir = tempDir
 
 	clientCtx := client.Context{}.WithJSONMarshaler(app.AppCodec())
+<<<<<<< HEAD
 	genDoc := newDefaultGenesisDoc(t)
+=======
+	genDoc := newDefaultGenesisDoc(encCfg.Marshaler)
+>>>>>>> 7969135abc464e3d23a809768ed62f617f20624f
 
 	require.NoError(t, genutil.ExportGenesisFile(genDoc, serverCtx.Config.GenesisFile()))
 	app.InitChain(
@@ -198,8 +203,13 @@ func createConfigFolder(dir string) error {
 	return os.Mkdir(path.Join(dir, "config"), 0700)
 }
 
+<<<<<<< HEAD
 func newDefaultGenesisDoc(t *testing.T) *tmtypes.GenesisDoc {
 	genesisState := simapp.NewDefaultGenesisState()
+=======
+func newDefaultGenesisDoc(cdc codec.Marshaler) *tmtypes.GenesisDoc {
+	genesisState := simapp.NewDefaultGenesisState(cdc)
+>>>>>>> 7969135abc464e3d23a809768ed62f617f20624f
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
 	require.NoError(t, err)

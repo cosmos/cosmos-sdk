@@ -30,6 +30,11 @@ const (
 	// BroadcastAsync defines a tx broadcasting mode where the client returns
 	// immediately.
 	BroadcastAsync = "async"
+
+	// SignModeDirect is the value of the --sign-mode flag for SIGN_MODE_DIRECT
+	SignModeDirect = "direct"
+	// SignModeLegacyAminoJSON is the value of the --sign-mode flag for SIGN_MODE_LEGACY_AMINO_JSON
+	SignModeLegacyAminoJSON = "amino-json"
 )
 
 // List of CLI flags
@@ -65,6 +70,7 @@ const (
 	FlagCountTotal       = "count-total"
 	FlagTimeoutHeight    = "timeout-height"
 	FlagKeyAlgorithm     = "algo"
+	FlagFeeAccount       = "fee-account"
 
 	// Tendermint logging flags
 	FlagLogLevel  = "log_level"
@@ -107,6 +113,7 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().String(FlagKeyringBackend, DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
 	cmd.Flags().String(FlagSignMode, "", "Choose sign mode (direct|amino-json), this is an advanced feature")
 	cmd.Flags().Uint64(FlagTimeoutHeight, 0, "Set a block timeout height to prevent the tx from being committed past a certain height")
+	cmd.Flags().String(FlagFeeAccount, "", "Fee account pays fees for the transaction instead of deducting from the signer")
 
 	// --gas can accept integers and "auto"
 	cmd.Flags().String(FlagGas, "", fmt.Sprintf("gas limit to set per-transaction; set to %q to calculate sufficient gas automatically (default %d)", GasFlagAuto, DefaultGasLimit))

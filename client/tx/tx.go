@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 // GenerateOrBroadcastTxCLI will either generate and print and unsigned transaction
@@ -117,7 +117,8 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		}
 	}
 
-	err = Sign(txf, clientCtx.GetFromName(), tx)
+	tx.SetFeeGranter(clientCtx.GetFeeGranterAddress())
+	err = Sign(txf, clientCtx.GetFromName(), tx, true)
 	if err != nil {
 		return err
 	}
@@ -133,7 +134,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		return err
 	}
 
-	return clientCtx.PrintOutput(res)
+	return clientCtx.PrintProto(res)
 }
 
 // WriteGeneratedTxResponse writes a generated unsigned transaction to the
@@ -263,22 +264,15 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 		},
 		Sequence: txf.Sequence(),
 	}
-
 	if err := txb.SetSignatures(sig); err != nil {
 		return nil, err
 	}
 
-	any, ok := txb.(codectypes.IntoAny)
-	if !ok {
-		return nil, fmt.Errorf("cannot simulate tx that cannot be wrapped into any")
-	}
-	cached := any.AsAny().GetCachedValue()
-	protoTx, ok := cached.(*tx.Tx)
+	protoProvider, ok := txb.(authtx.ProtoTxProvider)
 	if !ok {
 		return nil, fmt.Errorf("cannot simulate amino tx")
 	}
-
-	simReq := tx.SimulateRequest{Tx: protoTx}
+	simReq := tx.SimulateRequest{Tx: protoProvider.GetProtoTx()}
 
 	return simReq.Marshal()
 }
@@ -375,10 +369,21 @@ func SignWithPrivKey(
 	return sigV2, nil
 }
 
-// Sign signs a given tx with the provided name and passphrase. The bytes signed
-// over are canconical. The resulting signature will be set on the transaction.
+func checkMultipleSigners(mode signing.SignMode, tx authsigning.Tx) error {
+	if mode == signing.SignMode_SIGN_MODE_DIRECT &&
+		len(tx.GetSigners()) > 1 {
+		return sdkerrors.Wrap(sdkerrors.ErrNotSupported, "Signing in DIRECT mode is only supported for transactions with one signer only")
+	}
+	return nil
+}
+
+// Sign signs a given tx with a named key. The bytes signed over are canconical.
+// The resulting signature will be added to the transaction builder overwriting the previous
+// ones if overwrite=true (otherwise, the signature will be appended).
+// Signing a transaction with mutltiple signers in the DIRECT mode is not supprted and will
+// return an error.
 // An error is returned upon failure.
-func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
+func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig bool) error {
 	if txf.keybase == nil {
 		return errors.New("keybase must be set prior to signing a transaction")
 	}
@@ -388,12 +393,14 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 		// use the SignModeHandler's default mode if unspecified
 		signMode = txf.txConfig.SignModeHandler().DefaultMode()
 	}
+	if err := checkMultipleSigners(signMode, txBuilder.GetTx()); err != nil {
+		return err
+	}
 
 	key, err := txf.keybase.Key(name)
 	if err != nil {
 		return err
 	}
-
 	pubKey := key.GetPubKey()
 	signerData := authsigning.SignerData{
 		ChainID:       txf.chainID,
@@ -418,18 +425,25 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 		Data:     &sigData,
 		Sequence: txf.Sequence(),
 	}
+	var prevSignatures []signing.SignatureV2
+	if !overwriteSig {
+		prevSignatures, err = txBuilder.GetTx().GetSignaturesV2()
+		if err != nil {
+			return err
+		}
+	}
 	if err := txBuilder.SetSignatures(sig); err != nil {
 		return err
 	}
 
 	// Generate the bytes to be signed.
-	signBytes, err := txf.txConfig.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
+	bytesToSign, err := txf.txConfig.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return err
 	}
 
 	// Sign those bytes
-	sigBytes, _, err := txf.keybase.Sign(name, signBytes)
+	sigBytes, _, err := txf.keybase.Sign(name, bytesToSign)
 	if err != nil {
 		return err
 	}
@@ -445,8 +459,11 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 		Sequence: txf.Sequence(),
 	}
 
-	// And here the tx is populated with the signature
-	return txBuilder.SetSignatures(sig)
+	if overwriteSig {
+		return txBuilder.SetSignatures(sig)
+	}
+	prevSignatures = append(prevSignatures, sig)
+	return txBuilder.SetSignatures(prevSignatures...)
 }
 
 // GasEstimateResponse defines a response definition for tx gas estimation.

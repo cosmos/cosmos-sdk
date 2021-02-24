@@ -24,6 +24,7 @@ func (k Keeper) ConnOpenInit(
 	clientID string,
 	counterparty types.Counterparty, // counterpartyPrefix, counterpartyClientIdentifier
 	version *types.Version,
+	delayPeriod uint64,
 ) (string, error) {
 	versions := types.GetCompatibleVersions()
 	if version != nil {
@@ -36,7 +37,7 @@ func (k Keeper) ConnOpenInit(
 
 	// connection defines chain A's ConnectionEnd
 	connectionID := k.GenerateConnectionIdentifier(ctx)
-	connection := types.NewConnectionEnd(types.INIT, clientID, counterparty, types.ExportedVersionsToProto(versions))
+	connection := types.NewConnectionEnd(types.INIT, clientID, counterparty, types.ExportedVersionsToProto(versions), delayPeriod)
 	k.SetConnection(ctx, connectionID, connection)
 
 	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
@@ -62,6 +63,7 @@ func (k Keeper) ConnOpenTry(
 	ctx sdk.Context,
 	previousConnectionID string, // previousIdentifier
 	counterparty types.Counterparty, // counterpartyConnectionIdentifier, counterpartyPrefix and counterpartyClientIdentifier
+	delayPeriod uint64,
 	clientID string, // clientID of chainA
 	clientState exported.ClientState, // clientState that chainA has for chainB
 	counterpartyVersions []exported.Version, // supported versions of chain A
@@ -89,10 +91,12 @@ func (k Keeper) ConnOpenTry(
 		// counterparty is chainA and connection is on INIT stage.
 		// Check that existing connection versions for initialized connection is equal to compatible
 		// versions for this chain.
+		// ensure that existing connection's delay period is the same as desired delay period.
 		if !(previousConnection.Counterparty.ConnectionId == "" &&
 			bytes.Equal(previousConnection.Counterparty.Prefix.Bytes(), counterparty.Prefix.Bytes()) &&
 			previousConnection.ClientId == clientID &&
-			previousConnection.Counterparty.ClientId == counterparty.ClientId) {
+			previousConnection.Counterparty.ClientId == counterparty.ClientId &&
+			previousConnection.DelayPeriod == delayPeriod) {
 			return "", sdkerrors.Wrap(types.ErrInvalidConnection, "connection fields mismatch previous connection fields")
 		}
 
@@ -128,9 +132,10 @@ func (k Keeper) ConnOpenTry(
 
 	// expectedConnection defines Chain A's ConnectionEnd
 	// NOTE: chain A's counterparty is chain B (i.e where this code is executed)
+	// NOTE: chainA and chainB must have the same delay period
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(clientID, "", commitmenttypes.NewMerklePrefix(prefix.Bytes()))
-	expectedConnection := types.NewConnectionEnd(types.INIT, counterparty.ClientId, expectedCounterparty, types.ExportedVersionsToProto(counterpartyVersions))
+	expectedConnection := types.NewConnectionEnd(types.INIT, counterparty.ClientId, expectedCounterparty, types.ExportedVersionsToProto(counterpartyVersions), delayPeriod)
 
 	supportedVersions := types.GetCompatibleVersions()
 	if len(previousConnection.Versions) != 0 {
@@ -146,7 +151,7 @@ func (k Keeper) ConnOpenTry(
 	}
 
 	// connection defines chain B's ConnectionEnd
-	connection := types.NewConnectionEnd(types.TRYOPEN, clientID, counterparty, []*types.Version{version})
+	connection := types.NewConnectionEnd(types.TRYOPEN, clientID, counterparty, []*types.Version{version}, delayPeriod)
 
 	// Check that ChainA committed expectedConnectionEnd to its state
 	if err := k.VerifyConnectionState(
@@ -252,7 +257,7 @@ func (k Keeper) ConnOpenAck(
 
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientId, connectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
-	expectedConnection := types.NewConnectionEnd(types.TRYOPEN, connection.Counterparty.ClientId, expectedCounterparty, []*types.Version{version})
+	expectedConnection := types.NewConnectionEnd(types.TRYOPEN, connection.Counterparty.ClientId, expectedCounterparty, []*types.Version{version}, connection.DelayPeriod)
 
 	// Ensure that ChainB stored expected connectionEnd in its state during ConnOpenTry
 	if err := k.VerifyConnectionState(
@@ -314,7 +319,7 @@ func (k Keeper) ConnOpenConfirm(
 
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientId, connectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
-	expectedConnection := types.NewConnectionEnd(types.OPEN, connection.Counterparty.ClientId, expectedCounterparty, connection.Versions)
+	expectedConnection := types.NewConnectionEnd(types.OPEN, connection.Counterparty.ClientId, expectedCounterparty, connection.Versions, connection.DelayPeriod)
 
 	// Check that connection on ChainA is open
 	if err := k.VerifyConnectionState(

@@ -48,7 +48,7 @@ func (s *IntegrationTestSuite) TestGetQueryCmd() {
 		expectedOutput string
 		expectErr      bool
 	}{
-		"non-existant evidence": {
+		"non-existent evidence": {
 			[]string{"DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660"},
 			"evidence DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660 not found",
 			true,

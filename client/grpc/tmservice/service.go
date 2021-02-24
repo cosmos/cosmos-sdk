@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -22,6 +23,7 @@ type queryServer struct {
 }
 
 var _ ServiceServer = queryServer{}
+var _ codectypes.UnpackInterfacesMessage = &GetLatestValidatorSetResponse{}
 
 // NewQueryServer creates a new tendermint query server.
 func NewQueryServer(clientCtx client.Context, interfaceRegistry codectypes.InterfaceRegistry) ServiceServer {
@@ -32,8 +34,8 @@ func NewQueryServer(clientCtx client.Context, interfaceRegistry codectypes.Inter
 }
 
 // GetSyncing implements ServiceServer.GetSyncing
-func (s queryServer) GetSyncing(_ context.Context, _ *GetSyncingRequest) (*GetSyncingResponse, error) {
-	status, err := getNodeStatus(s.clientCtx)
+func (s queryServer) GetSyncing(ctx context.Context, _ *GetSyncingRequest) (*GetSyncingResponse, error) {
+	status, err := getNodeStatus(ctx, s.clientCtx)
 	if err != nil {
 		return nil, err
 	}
@@ -43,8 +45,8 @@ func (s queryServer) GetSyncing(_ context.Context, _ *GetSyncingRequest) (*GetSy
 }
 
 // GetLatestBlock implements ServiceServer.GetLatestBlock
-func (s queryServer) GetLatestBlock(context.Context, *GetLatestBlockRequest) (*GetLatestBlockResponse, error) {
-	status, err := getBlock(s.clientCtx, nil)
+func (s queryServer) GetLatestBlock(ctx context.Context, _ *GetLatestBlockRequest) (*GetLatestBlockResponse, error) {
+	status, err := getBlock(ctx, s.clientCtx, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +64,7 @@ func (s queryServer) GetLatestBlock(context.Context, *GetLatestBlockRequest) (*G
 }
 
 // GetBlockByHeight implements ServiceServer.GetBlockByHeight
-func (s queryServer) GetBlockByHeight(_ context.Context, req *GetBlockByHeightRequest) (*GetBlockByHeightResponse, error) {
+func (s queryServer) GetBlockByHeight(ctx context.Context, req *GetBlockByHeightRequest) (*GetBlockByHeightResponse, error) {
 	chainHeight, err := rpc.GetChainHeight(s.clientCtx)
 	if err != nil {
 		return nil, err
@@ -72,7 +74,7 @@ func (s queryServer) GetBlockByHeight(_ context.Context, req *GetBlockByHeightRe
 		return nil, status.Error(codes.InvalidArgument, "requested block height is bigger then the chain length")
 	}
 
-	res, err := getBlock(s.clientCtx, &req.Height)
+	res, err := getBlock(ctx, s.clientCtx, &req.Height)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +96,7 @@ func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *GetLatestVa
 		return nil, err
 	}
 
-	validatorsRes, err := rpc.GetValidators(s.clientCtx, nil, &page, &limit)
+	validatorsRes, err := rpc.GetValidators(ctx, s.clientCtx, nil, &page, &limit)
 	if err != nil {
 		return nil, err
 	}
@@ -102,17 +104,35 @@ func (s queryServer) GetLatestValidatorSet(ctx context.Context, req *GetLatestVa
 	outputValidatorsRes := &GetLatestValidatorSetResponse{
 		BlockHeight: validatorsRes.BlockHeight,
 		Validators:  make([]*Validator, len(validatorsRes.Validators)),
+		Pagination: &qtypes.PageResponse{
+			Total: validatorsRes.Total,
+		},
 	}
 
 	for i, validator := range validatorsRes.Validators {
+		anyPub, err := codectypes.NewAnyWithValue(validator.PubKey)
+		if err != nil {
+			return nil, err
+		}
 		outputValidatorsRes.Validators[i] = &Validator{
-			Address:          validator.Address,
+			Address:          validator.Address.String(),
 			ProposerPriority: validator.ProposerPriority,
-			PubKey:           validator.PubKey,
+			PubKey:           anyPub,
 			VotingPower:      validator.VotingPower,
 		}
 	}
 	return outputValidatorsRes, nil
+}
+
+func (m *GetLatestValidatorSetResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var pubKey cryptotypes.PubKey
+	for _, val := range m.Validators {
+		err := unpacker.UnpackAny(val.PubKey, &pubKey)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // GetValidatorSetByHeight implements ServiceServer.GetValidatorSetByHeight
@@ -130,7 +150,7 @@ func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValida
 		return nil, status.Error(codes.InvalidArgument, "requested block height is bigger then the chain length")
 	}
 
-	validatorsRes, err := rpc.GetValidators(s.clientCtx, &req.Height, &page, &limit)
+	validatorsRes, err := rpc.GetValidators(ctx, s.clientCtx, &req.Height, &page, &limit)
 
 	if err != nil {
 		return nil, err
@@ -139,13 +159,18 @@ func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValida
 	outputValidatorsRes := &GetValidatorSetByHeightResponse{
 		BlockHeight: validatorsRes.BlockHeight,
 		Validators:  make([]*Validator, len(validatorsRes.Validators)),
+		Pagination:  &qtypes.PageResponse{Total: validatorsRes.Total},
 	}
 
 	for i, validator := range validatorsRes.Validators {
+		anyPub, err := codectypes.NewAnyWithValue(validator.PubKey)
+		if err != nil {
+			return nil, err
+		}
 		outputValidatorsRes.Validators[i] = &Validator{
-			Address:          validator.Address,
+			Address:          validator.Address.String(),
 			ProposerPriority: validator.ProposerPriority,
-			PubKey:           validator.PubKey,
+			PubKey:           anyPub,
 			VotingPower:      validator.VotingPower,
 		}
 	}
@@ -154,7 +179,7 @@ func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValida
 
 // GetNodeInfo implements ServiceServer.GetNodeInfo
 func (s queryServer) GetNodeInfo(ctx context.Context, req *GetNodeInfoRequest) (*GetNodeInfoResponse, error) {
-	status, err := getNodeStatus(s.clientCtx)
+	status, err := getNodeStatus(ctx, s.clientCtx)
 	if err != nil {
 		return nil, err
 	}

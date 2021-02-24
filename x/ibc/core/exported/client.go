@@ -2,10 +2,10 @@ package exported
 
 import (
 	ics23 "github.com/confio/ics23/go"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	proto "github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -25,6 +25,8 @@ const (
 
 // ClientState defines the required common functions for light clients.
 type ClientState interface {
+	proto.Message
+
 	ClientType() string
 	GetLatestHeight() Height
 	IsFrozen() bool
@@ -32,11 +34,19 @@ type ClientState interface {
 	Validate() error
 	GetProofSpecs() []*ics23.ProofSpec
 
+	// Initialization function
+	// Clients must validate the initial consensus state, and may store any client-specific metadata
+	// necessary for correct light client operation
+	Initialize(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, ConsensusState) error
+
+	// Genesis function
+	ExportMetadata(sdk.KVStore) []GenesisMetadata
+
 	// Update and Misbehaviour functions
 
 	CheckHeaderAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Header) (ClientState, ConsensusState, error)
 	CheckMisbehaviourAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Misbehaviour) (ClientState, error)
-	CheckProposedHeaderAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Header) (ClientState, ConsensusState, error)
+	CheckSubstituteAndUpdateState(ctx sdk.Context, cdc codec.BinaryMarshaler, subjectClientStore, substituteClientStore sdk.KVStore, substituteClient ClientState, height Height) (ClientState, error)
 
 	// Upgrade functions
 	// NOTE: proof heights are not included as upgrade to a new revision is expected to pass only on the last
@@ -102,6 +112,8 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height Height,
+		currentTimestamp uint64,
+		delayPeriod uint64,
 		prefix Prefix,
 		proof []byte,
 		portID,
@@ -113,6 +125,8 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height Height,
+		currentTimestamp uint64,
+		delayPeriod uint64,
 		prefix Prefix,
 		proof []byte,
 		portID,
@@ -124,6 +138,8 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height Height,
+		currentTimestamp uint64,
+		delayPeriod uint64,
 		prefix Prefix,
 		proof []byte,
 		portID,
@@ -134,6 +150,8 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height Height,
+		currentTimestamp uint64,
+		delayPeriod uint64,
 		prefix Prefix,
 		proof []byte,
 		portID,
@@ -144,6 +162,8 @@ type ClientState interface {
 
 // ConsensusState is the state of the consensus process
 type ConsensusState interface {
+	proto.Message
+
 	ClientType() string // Consensus kind
 
 	// GetRoot returns the commitment root of the consensus state,
@@ -158,6 +178,8 @@ type ConsensusState interface {
 
 // Misbehaviour defines counterparty misbehaviour for a specific consensus type
 type Misbehaviour interface {
+	proto.Message
+
 	ClientType() string
 	GetClientID() string
 	ValidateBasic() error
@@ -168,6 +190,8 @@ type Misbehaviour interface {
 
 // Header is the consensus state update information
 type Header interface {
+	proto.Message
+
 	ClientType() string
 	GetHeight() Height
 	ValidateBasic() error
@@ -184,6 +208,16 @@ type Height interface {
 	GTE(Height) bool
 	GetRevisionNumber() uint64
 	GetRevisionHeight() uint64
+	Increment() Height
 	Decrement() (Height, bool)
 	String() string
+}
+
+// GenesisMetadata is a wrapper interface over clienttypes.GenesisMetadata
+// all clients must use the concrete implementation in types
+type GenesisMetadata interface {
+	// return store key that contains metadata without clientID-prefix
+	GetKey() []byte
+	// returns metadata value
+	GetValue() []byte
 }

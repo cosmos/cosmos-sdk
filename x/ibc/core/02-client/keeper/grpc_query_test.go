@@ -43,7 +43,7 @@ func (suite *KeeperTestSuite) TestQueryClientState() {
 		{
 			"success",
 			func() {
-				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.ZeroHeight(),  commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
+				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.ZeroHeight(), commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
 				suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 
 				var err error
@@ -69,9 +69,11 @@ func (suite *KeeperTestSuite) TestQueryClientState() {
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
-
-				expClientState.ClearCachedValue()
 				suite.Require().Equal(expClientState, res.ClientState)
+
+				// ensure UnpackInterfaces is defined
+				cachedValue := res.ClientState.GetCachedValue()
+				suite.Require().NotNil(cachedValue)
 			} else {
 				suite.Require().Error(err)
 			}
@@ -183,10 +185,10 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 			"invalid height",
 			func() {
 				req = &types.QueryConsensusStateRequest{
-					ClientId:      testClientID,
+					ClientId:       testClientID,
 					RevisionNumber: 0,
 					RevisionHeight: 0,
-					LatestHeight:  false,
+					LatestHeight:   false,
 				}
 			},
 			false,
@@ -204,7 +206,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 		{
 			"success latest height",
 			func() {
-				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight,  commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
+				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
 				cs := ibctmtypes.NewConsensusState(
 					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash1")), nil,
 				)
@@ -235,7 +237,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 				suite.Require().NoError(err)
 
 				req = &types.QueryConsensusStateRequest{
-					ClientId:      testClientID,
+					ClientId:       testClientID,
 					RevisionNumber: 0,
 					RevisionHeight: height,
 				}
@@ -255,9 +257,11 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
-
-				expConsensusState.ClearCachedValue()
 				suite.Require().Equal(expConsensusState, res.ConsensusState)
+
+				// ensure UnpackInterfaces is defined
+				cachedValue := res.ConsensusState.GetCachedValue()
+				suite.Require().NotNil(cachedValue)
 			} else {
 				suite.Require().Error(err)
 			}
@@ -315,16 +319,22 @@ func (suite *KeeperTestSuite) TestQueryConsensusStates() {
 					suite.consensusState.Timestamp.Add(time.Second), commitmenttypes.NewMerkleRoot([]byte("hash2")), nil,
 				)
 
-				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight, cs)
-				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight.Increment(), cs2)
+				clientState := ibctmtypes.NewClientState(
+					testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false,
+				)
+
+				// Use CreateClient to ensure that processedTime metadata gets stored.
+				clientId, err := suite.keeper.CreateClient(suite.ctx, clientState, cs)
+				suite.Require().NoError(err)
+				suite.keeper.SetClientConsensusState(suite.ctx, clientId, testClientHeight.Increment(), cs2)
 
 				// order is swapped because the res is sorted by client id
 				expConsensusStates = []types.ConsensusStateWithHeight{
 					types.NewConsensusStateWithHeight(testClientHeight, cs),
-					types.NewConsensusStateWithHeight(testClientHeight.Increment(), cs2),
+					types.NewConsensusStateWithHeight(testClientHeight.Increment().(types.Height), cs2),
 				}
 				req = &types.QueryConsensusStatesRequest{
-					ClientId: testClientID,
+					ClientId: clientId,
 					Pagination: &query.PageRequest{
 						Limit:      3,
 						CountTotal: true,
@@ -350,8 +360,11 @@ func (suite *KeeperTestSuite) TestQueryConsensusStates() {
 				suite.Require().Equal(len(expConsensusStates), len(res.ConsensusStates))
 				for i := range expConsensusStates {
 					suite.Require().NotNil(res.ConsensusStates[i])
-					expConsensusStates[i].ConsensusState.ClearCachedValue()
 					suite.Require().Equal(expConsensusStates[i], res.ConsensusStates[i])
+
+					// ensure UnpackInterfaces is defined
+					cachedValue := res.ConsensusStates[i].ConsensusState.GetCachedValue()
+					suite.Require().NotNil(cachedValue)
 				}
 			} else {
 				suite.Require().Error(err)

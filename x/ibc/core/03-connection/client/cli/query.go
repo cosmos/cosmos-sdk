@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -24,12 +23,10 @@ func GetCmdQueryConnections() *cobra.Command {
 		Example: fmt.Sprintf("%s query %s %s connections", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			queryClient := types.NewQueryClient(clientCtx)
 
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
@@ -41,12 +38,12 @@ func GetCmdQueryConnections() *cobra.Command {
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.Connections(context.Background(), req)
+			res, err := queryClient.Connections(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -65,12 +62,10 @@ func GetCmdQueryConnection() *cobra.Command {
 		Example: fmt.Sprintf("%s query %s %s end [connection-id]", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			connectionID := args[0]
 			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
 
@@ -80,7 +75,7 @@ func GetCmdQueryConnection() *cobra.Command {
 			}
 
 			clientCtx = clientCtx.WithHeight(int64(connRes.ProofHeight.RevisionHeight))
-			return clientCtx.PrintOutput(connRes)
+			return clientCtx.PrintProto(connRes)
 		},
 	}
 
@@ -99,12 +94,10 @@ func GetCmdQueryClientConnections() *cobra.Command {
 		Example: fmt.Sprintf("%s query  %s %s path [client-id]", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			clientID := args[0]
 			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
 
@@ -114,7 +107,7 @@ func GetCmdQueryClientConnections() *cobra.Command {
 			}
 
 			clientCtx = clientCtx.WithHeight(int64(connPathsRes.ProofHeight.RevisionHeight))
-			return clientCtx.PrintOutput(connPathsRes)
+			return clientCtx.PrintProto(connPathsRes)
 		},
 	}
 

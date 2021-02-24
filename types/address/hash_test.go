@@ -3,6 +3,7 @@ package address
 import (
 	"crypto/sha256"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -73,6 +74,21 @@ func (suite *AddressSuite) TestModule() {
 	addr3 := Module(modName, []byte{1, 2, 3})
 	assert.NotEqual(addr, addr3, "changing key must change address")
 	assert.NotEqual(addr2, addr3, "changing key must change address")
+}
+
+func unsafeConvertABC() []byte {
+	return unsafeStrToByteArray("abc")
+}
+
+func (suite *AddressSuite) TestUnsafeStrToBytes() {
+	// we convert in other function to trigger GC
+	for i := 0; i < 5; i++ {
+		b := unsafeConvertABC()
+		<-time.NewTimer(5 * time.Millisecond).C
+		b2 := append(b, 'd')
+		suite.Equal("abc", string(b))
+		suite.Equal("abcd", string(b2))
+	}
 }
 
 type addrMock struct {

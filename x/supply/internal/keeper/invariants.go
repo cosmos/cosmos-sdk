@@ -31,7 +31,15 @@ func TotalSupply(k Keeper) sdk.Invariant {
 			return false
 		})
 
-		broken := !expectedTotal.IsEqual(supply.GetTotal())
+		var supplyCoins sdk.DecCoins
+		for _, coin := range supply.GetTotal() {
+			if !coin.Amount.IsZero() {
+				supplyCoins = supplyCoins.Add(coin)
+			}
+		}
+
+
+		broken := !expectedTotal.IsEqual(supplyCoins)
 
 		return sdk.FormatInvariant(types.ModuleName, "total supply",
 			fmt.Sprintf(

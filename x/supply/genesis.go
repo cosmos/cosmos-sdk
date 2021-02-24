@@ -28,7 +28,14 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, ak types.AccountKeeper, data Ge
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
 func ExportGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
-	return NewGenesisState(keeper.GetSupply(ctx).GetTotal())
+	var coins sdk.DecCoins
+	for _, coin := range keeper.GetSupply(ctx).GetTotal() {
+		if coin.Amount.IsZero() {
+			continue
+		}
+		coins = coins.Add(coin)
+	}
+	return NewGenesisState(coins)
 }
 
 // ValidateGenesis performs basic validation of supply genesis data returning an

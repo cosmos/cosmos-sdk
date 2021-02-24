@@ -15,24 +15,26 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
-type EcdsaSuite struct {
+func TestPKSuite(t *testing.T) {
+	suite.Run(t, new(PKSuite))
+}
+
+type CommonSuite struct {
 	suite.Suite
 	pk cryptotypes.PubKey
 	sk cryptotypes.PrivKey
 }
 
-func TestEcdsaSuite(t *testing.T) {
-	suite.Run(t, new(EcdsaSuite))
-}
-
-func (suite *EcdsaSuite) SetupSuite() {
+func (suite *CommonSuite) SetupSuite() {
 	sk, err := GenSecp256r1()
 	suite.Require().NoError(err)
 	suite.sk = sk
 	suite.pk = sk.PubKey()
 }
 
-func (suite *EcdsaSuite) TestPKString() {
+type PKSuite struct{ CommonSuite }
+
+func (suite *PKSuite) TestString() {
 	assert := suite.Assert()
 	require := suite.Require()
 
@@ -47,21 +49,21 @@ func (suite *EcdsaSuite) TestPKString() {
 	assert.EqualValues(suite.pk.Bytes(), bz)
 }
 
-func (suite *EcdsaSuite) TestPKBytes() {
+func (suite *PKSuite) TestBytes() {
 	require := suite.Require()
 	var pk *ecdsaPK
 	require.Nil(pk.Bytes())
 	require.Len(suite.pk.Bytes(), PubKeySize)
 }
 
-func (suite *EcdsaSuite) TestPKReset() {
+func (suite *PKSuite) TestReset() {
 	pk := &ecdsaPK{ecdsa.PublicKey{X: big.NewInt(1)}, []byte{1}}
 	pk.Reset()
 	suite.Nil(pk.address)
 	suite.Equal(pk.PublicKey, ecdsa.PublicKey{})
 }
 
-func (suite *EcdsaSuite) TestPKEquals() {
+func (suite *PKSuite) TestEquals() {
 	require := suite.Require()
 
 	skOther, err := GenSecp256r1()
@@ -75,7 +77,7 @@ func (suite *EcdsaSuite) TestPKEquals() {
 	require.True(pkOther.Equals(pkOther), "Equals must be reflexive")
 }
 
-func (suite *EcdsaSuite) TestPKMarshalAmino() {
+func (suite *PKSuite) TestMarshalAmino() {
 	require := suite.Require()
 	type AminoPubKey interface {
 		cryptotypes.PubKey
@@ -91,7 +93,7 @@ func (suite *EcdsaSuite) TestPKMarshalAmino() {
 	require.True(pk2.Equals(suite.pk))
 }
 
-func (suite *EcdsaSuite) TestPKSize() {
+func (suite *PKSuite) TestSize() {
 	require := suite.Require()
 	bv := gogotypes.BytesValue{Value: suite.pk.Bytes()}
 	require.Equal(bv.Size(), suite.pk.(*ecdsaPK).Size())
@@ -100,7 +102,7 @@ func (suite *EcdsaSuite) TestPKSize() {
 	require.Equal(0, nilPk.Size(), "nil value must have zero size")
 }
 
-func (suite *EcdsaSuite) TestPKMarshalProto() {
+func (suite *PKSuite) TestMarshalProto() {
 	require := suite.Require()
 
 	/**** test structure marshalling ****/

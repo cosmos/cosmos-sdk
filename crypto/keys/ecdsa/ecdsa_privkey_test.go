@@ -3,20 +3,28 @@ package ecdsa
 import (
 	"crypto/ecdsa"
 	"math/big"
+	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	proto "github.com/gogo/protobuf/proto"
+	"github.com/stretchr/testify/suite"
 )
 
 var _ cryptotypes.PrivKey = &ecdsaSK{}
 
-func (suite *EcdsaSuite) TestSkString() {
+func TestSKSuite(t *testing.T) {
+	suite.Run(t, new(SKSuite))
+}
+
+type SKSuite struct{ CommonSuite }
+
+func (suite *SKSuite) TestString() {
 	suite.Require().Equal("secp256r1{-}", suite.sk.String())
 }
 
-func (suite *EcdsaSuite) TestSkEquals() {
+func (suite *SKSuite) TestEquals() {
 	require := suite.Require()
 
 	skOther, err := GenSecp256r1()
@@ -28,26 +36,26 @@ func (suite *EcdsaSuite) TestSkEquals() {
 	// require.True(skOther2.Equals(skOther), "Equals must be reflexive")
 }
 
-func (suite *EcdsaSuite) TestSkPubKey() {
+func (suite *SKSuite) TestPubKey() {
 	pk := suite.sk.PubKey()
 	suite.True(suite.sk.(*ecdsaSK).PublicKey.Equal(&pk.(*ecdsaPK).PublicKey))
 }
 
-func (suite *EcdsaSuite) Bytes() {
+func (suite *SKSuite) Bytes() {
 	bz := suite.sk.Bytes()
 	suite.Len(bz, PrivKeySize)
 	var sk *ecdsaSK
 	suite.Nil(sk.Bytes())
 }
 
-func (suite *EcdsaSuite) TestSkReset() {
+func (suite *SKSuite) TestReset() {
 	var sk = &ecdsaSK{PrivateKey: ecdsa.PrivateKey{D: big.NewInt(1)}}
 	sk.Reset()
 	suite.Equal(0, sk.D.Cmp(big.NewInt(0)))
 	suite.Equal(ecdsa.PublicKey{}, sk.PublicKey)
 }
 
-func (suite *EcdsaSuite) TestSkMarshalProto() {
+func (suite *SKSuite) TestMarshalProto() {
 	require := suite.Require()
 
 	/**** test structure marshalling ****/
@@ -83,5 +91,5 @@ func (suite *EcdsaSuite) TestSkMarshalProto() {
 	require.Equal(bz, bz2[(bufSize-sovPrivKeySize):])
 }
 
-func (suite *EcdsaSuite) TestSign() {
+func (suite *SKSuite) TestSign() {
 }

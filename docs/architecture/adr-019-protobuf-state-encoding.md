@@ -7,7 +7,7 @@
 - 2020 Apr 27: Convert usages of `oneof` for interfaces to `Any`
 - 2020 May 15: Describe `cosmos_proto` extensions and amino compatibility
 - 2020 Dec 4: Move and rename `MarshalAny` and `UnmarshalAny` into the `codec.Marshaler` interface.
-- 2021 Jan 6: Remove mentions of `HybridCodec`, which has been abandoned in [#6843](https://github.com/cosmos/cosmos-sdk/pull/6843).
+- 2021 Feb 24: Remove mentions of `HybridCodec`, which has been abandoned in [#6843](https://github.com/cosmos/cosmos-sdk/pull/6843).
 
 ## Status
 

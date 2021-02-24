@@ -5,8 +5,6 @@ import (
 	"errors"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/store/listenkv"
-
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"

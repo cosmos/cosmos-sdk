@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/hdevalence/ed25519consensus"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 
@@ -175,7 +176,7 @@ func (pubKey *PubKey) VerifySignature(msg []byte, sig []byte) bool {
 		return false
 	}
 
-	return ed25519.Verify(pubKey.Key, msg, sig)
+	return ed25519consensus.Verify(pubKey.Key, msg, sig)
 }
 
 func (pubKey *PubKey) String() string {

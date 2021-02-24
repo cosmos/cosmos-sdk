@@ -112,8 +112,8 @@ message specifies required signers with `Msg.GetSigner`). The authentication che
 Here, we extend this process, by allowing modules to be identified in `Msg.GetSigners`. When a module wants to trigger the execution a `Msg` in another module,
 its `ModuleKey` acts as the sender (through the `ClientConn` interface we describe below) and is set as a sole "signer". It's worth to note
 that we don't use any cryptographic signature in this case.
-For example, module `A` could use it's `A.ModuleKey` to create `MsgSend` object for `/cosmos.bank.Msg/Send` transaction. `MsgSend` validation
-will assure that the `from` account (`A.ModuleKey` in this case) is signer.
+For example, module `A` could use its `A.ModuleKey` to create `MsgSend` object for `/cosmos.bank.Msg/Send` transaction. `MsgSend` validation
+will assure that the `from` account (`A.ModuleKey` in this case) is the signer.
 
 Here's an example of a hypothetical module `foo` interacting with `x/bank`:
 ```go

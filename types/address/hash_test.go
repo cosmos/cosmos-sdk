@@ -82,7 +82,8 @@ func unsafeConvertABC() []byte {
 }
 
 func (suite *AddressSuite) TestUnsafeStrToBytes() {
-	// we convert in other function to trigger GC
+	// we convert in other function to trigger GC. We want to check that
+	// the underlying array in []bytes is accessible after GC will finish swapping.
 	for i := 0; i < 5; i++ {
 		b := unsafeConvertABC()
 		runtime.GC()

@@ -162,7 +162,6 @@ func (pubKey *PubKey) Address() crypto.Address {
 	// For ADR-28 compatible address we would need to
 	// return address.Hash(proto.MessageName(pubKey), pubKey.Key)
 	return crypto.Address(tmhash.SumTruncated(pubKey.Key))
-	// TODO use ADR-28: return address.Hash(proto.MessageName(pubKey), pubKey.Key)
 }
 
 // Bytes returns the PubKey byte format.

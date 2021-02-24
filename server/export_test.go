@@ -12,6 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
@@ -25,7 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
@@ -41,7 +42,9 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 
 	var exportedGenDoc tmtypes.GenesisDoc
 	err := tmjson.Unmarshal(output.Bytes(), &exportedGenDoc)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("error unmarshaling exported genesis doc: %s", err)
+	}
 
 	require.Equal(t, genDoc.ConsensusParams.Block.TimeIotaMs, exportedGenDoc.ConsensusParams.Block.TimeIotaMs)
 	require.Equal(t, simapp.DefaultConsensusParams.Block.MaxBytes, exportedGenDoc.ConsensusParams.Block.MaxBytes)
@@ -119,34 +122,9 @@ func TestExportCmd_Height(t *testing.T) {
 
 }
 
-// TestExportCmd_Restart exports a genesis file, and restarts the node.
-// Follows the repro at https://github.com/cosmos/cosmos-sdk/issues/7975
-func TestExportCmd_Restart(t *testing.T) {
-	tempDir := t.TempDir()
-
-	_, ctx, _, cmd := setupApp(t, tempDir)
-
-	// Run the export command.
-	output := &bytes.Buffer{}
-	cmd.SetOut(output)
-	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir)})
-	require.NoError(t, cmd.ExecuteContext(ctx))
-
-	// Write exported tx to file.
-	_, cleanup := testutil.WriteToNewTempFile(t, output.String())
-	defer cleanup()
-
-	// Run "unsafe-reset-all".
-	unsafeResetAllCmd := server.UnsafeResetAllCmd()
-	require.NoError(t, unsafeResetAllCmd.ExecuteContext(ctx))
-
-	// Re-run app from the same dir.
-	_, ctx, _, cmd = setupApp(t, tempDir)
-}
-
 func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *tmtypes.GenesisDoc, *cobra.Command) {
-	if _, err := os.Stat(tempDir); os.IsNotExist(err) {
-		require.NoError(t, createConfigFolder(tempDir))
+	if err := createConfigFolder(tempDir); err != nil {
+		t.Fatalf("error creating config folder: %s", err)
 	}
 
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
@@ -158,13 +136,9 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 	serverCtx.Config.RootDir = tempDir
 
 	clientCtx := client.Context{}.WithJSONMarshaler(app.AppCodec())
-<<<<<<< HEAD
-	genDoc := newDefaultGenesisDoc(t)
-=======
 	genDoc := newDefaultGenesisDoc(encCfg.Marshaler)
->>>>>>> 7969135abc464e3d23a809768ed62f617f20624f
 
-	require.NoError(t, genutil.ExportGenesisFile(genDoc, serverCtx.Config.GenesisFile()))
+	require.NoError(t, saveGenesisFile(genDoc, serverCtx.Config.GenesisFile()))
 	app.InitChain(
 		abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
@@ -203,16 +177,13 @@ func createConfigFolder(dir string) error {
 	return os.Mkdir(path.Join(dir, "config"), 0700)
 }
 
-<<<<<<< HEAD
-func newDefaultGenesisDoc(t *testing.T) *tmtypes.GenesisDoc {
-	genesisState := simapp.NewDefaultGenesisState()
-=======
 func newDefaultGenesisDoc(cdc codec.Marshaler) *tmtypes.GenesisDoc {
 	genesisState := simapp.NewDefaultGenesisState(cdc)
->>>>>>> 7969135abc464e3d23a809768ed62f617f20624f
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
-	require.NoError(t, err)
+	if err != nil {
+		panic(err)
+	}
 
 	genDoc := &tmtypes.GenesisDoc{}
 	genDoc.ChainID = "theChainId"
@@ -220,4 +191,13 @@ func newDefaultGenesisDoc(cdc codec.Marshaler) *tmtypes.GenesisDoc {
 	genDoc.AppState = stateBytes
 
 	return genDoc
+}
+
+func saveGenesisFile(genDoc *tmtypes.GenesisDoc, dir string) error {
+	err := genutil.ExportGenesisFile(genDoc, dir)
+	if err != nil {
+		return errors.Wrap(err, "error creating file")
+	}
+
+	return nil
 }

@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
@@ -44,7 +43,7 @@ func GetCmdQueryClientStates() *cobra.Command {
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.ClientStates(context.Background(), req)
+			res, err := queryClient.ClientStates(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -118,7 +117,7 @@ func GetCmdQueryConsensusStates() *cobra.Command {
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.ConsensusStates(context.Background(), req)
+			res, err := queryClient.ConsensusStates(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -193,12 +192,11 @@ func GetCmdQueryHeader() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			header, height, err := utils.QueryTendermintHeader(clientCtx)
+			header, _, err := utils.QueryTendermintHeader(clientCtx)
 			if err != nil {
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(height)
 			return clientCtx.PrintProto(&header)
 		},
 	}
@@ -222,12 +220,11 @@ func GetCmdNodeConsensusState() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			state, height, err := utils.QueryNodeConsensusState(clientCtx)
+			state, _, err := utils.QueryNodeConsensusState(clientCtx)
 			if err != nil {
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(height)
 			return clientCtx.PrintProto(state)
 		},
 	}
@@ -252,7 +249,7 @@ func GetCmdParams() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, _ := queryClient.ClientParams(context.Background(), &types.QueryClientParamsRequest{})
+			res, _ := queryClient.ClientParams(cmd.Context(), &types.QueryClientParamsRequest{})
 			return clientCtx.PrintProto(res.Params)
 		},
 	}

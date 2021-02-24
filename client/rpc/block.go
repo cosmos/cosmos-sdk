@@ -11,10 +11,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
-//BlockCommand returns the verified block data for a given heights
+// BlockCommand returns the verified block data for a given heights
 func BlockCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "block [height]",
@@ -69,7 +70,7 @@ func getBlock(clientCtx client.Context, height *int64) ([]byte, error) {
 		return nil, err
 	}
 
-	return clientCtx.LegacyAmino.MarshalJSON(res)
+	return legacy.Cdc.MarshalJSON(res)
 }
 
 // get the current blockchain height

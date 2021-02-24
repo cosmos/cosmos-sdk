@@ -15,6 +15,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
+func TestNewMultiSig(t *testing.T) {
+	require := require.New(t)
+	pk1 := secp256k1.GenPrivKey().PubKey()
+	pks := []cryptotypes.PubKey{pk1, pk1}
+
+	require.NotNil(kmultisig.NewLegacyAminoPubKey(1, pks),
+		"Should support not unique public keys")
+}
+
 func TestAddress(t *testing.T) {
 	msg := []byte{1, 2, 3, 4}
 	pubKeys, _ := generatePubKeysAndSignatures(5, msg)
@@ -85,21 +94,20 @@ func TestVerifyMultisignature(t *testing.T) {
 
 	testCases := []struct {
 		msg        string
-		malleate   func()
+		malleate   func(*require.Assertions)
 		expectPass bool
 	}{
 		{
 			"nested multisignature",
-			func() {
+			func(require *require.Assertions) {
 				genPk, genSig := generateNestedMultiSignature(3, msg)
 				sig = genSig
 				pk = genPk
 			},
 			true,
-		},
-		{
+		}, {
 			"wrong size for sig bit array",
-			func() {
+			func(require *require.Assertions) {
 				pubKeys, _ := generatePubKeysAndSignatures(3, msg)
 				pk = kmultisig.NewLegacyAminoPubKey(3, pubKeys)
 				sig = multisig.NewMultisig(1)
@@ -108,7 +116,7 @@ func TestVerifyMultisignature(t *testing.T) {
 		},
 		{
 			"single signature data, expects the first k signatures to be valid",
-			func() {
+			func(require *require.Assertions) {
 				k := 2
 				signingIndices := []int{0, 3, 1}
 				pubKeys, sigs := generatePubKeysAndSignatures(5, msg)
@@ -119,32 +127,26 @@ func TestVerifyMultisignature(t *testing.T) {
 				for i := 0; i < k-1; i++ {
 					signingIndex := signingIndices[i]
 					require.NoError(
-						t,
 						multisig.AddSignatureFromPubKey(sig, sigs[signingIndex], pubKeys[signingIndex], pubKeys),
 					)
 					require.Error(
-						t,
 						pk.VerifyMultisignature(signBytesFn, sig),
 						"multisig passed when i < k, i %d", i,
 					)
 					require.NoError(
-						t,
 						multisig.AddSignatureFromPubKey(sig, sigs[signingIndex], pubKeys[signingIndex], pubKeys),
 					)
 					require.Equal(
-						t,
 						i+1,
 						len(sig.Signatures),
 						"adding a signature for the same pubkey twice increased signature count by 2, index %d", i,
 					)
 				}
 				require.Error(
-					t,
 					pk.VerifyMultisignature(signBytesFn, sig),
 					"multisig passed with k - 1 sigs",
 				)
 				require.NoError(
-					t,
 					multisig.AddSignatureFromPubKey(
 						sig,
 						sigs[signingIndices[k]],
@@ -153,30 +155,50 @@ func TestVerifyMultisignature(t *testing.T) {
 					),
 				)
 				require.NoError(
-					t,
 					pk.VerifyMultisignature(signBytesFn, sig),
 					"multisig failed after k good signatures",
 				)
 			},
 			true,
-		},
-		{
+		}, {
 			"duplicate signatures",
-			func() {
+			func(require *require.Assertions) {
 				pubKeys, sigs := generatePubKeysAndSignatures(5, msg)
 				pk = kmultisig.NewLegacyAminoPubKey(2, pubKeys)
 				sig = multisig.NewMultisig(5)
 
-				require.Error(t, pk.VerifyMultisignature(signBytesFn, sig))
+				require.Error(pk.VerifyMultisignature(signBytesFn, sig))
 				multisig.AddSignatureFromPubKey(sig, sigs[0], pubKeys[0], pubKeys)
 				// Add second signature manually
 				sig.Signatures = append(sig.Signatures, sigs[0])
 			},
 			false,
-		},
-		{
+		}, {
+			"duplicated key",
+			func(require *require.Assertions) {
+				// here we test an edge case where we create a multi sig with two same
+				// keys. It  should work.
+				pubkeys, sigs := generatePubKeysAndSignatures(3, msg)
+				pubkeys[1] = pubkeys[0]
+				pk = kmultisig.NewLegacyAminoPubKey(2, pubkeys)
+				sig = multisig.NewMultisig(len(pubkeys))
+				multisig.AddSignature(sig, sigs[0], 0)
+				multisig.AddSignature(sig, sigs[0], 1)
+			},
+			true,
+		}, {
+			"same key used twice",
+			func(require *require.Assertions) {
+				pubkeys, sigs := generatePubKeysAndSignatures(3, msg)
+				pk = kmultisig.NewLegacyAminoPubKey(2, pubkeys)
+				sig = multisig.NewMultisig(len(pubkeys))
+				multisig.AddSignature(sig, sigs[0], 0)
+				multisig.AddSignature(sig, sigs[0], 1)
+			},
+			false,
+		}, {
 			"unable to verify signature",
-			func() {
+			func(require *require.Assertions) {
 				pubKeys, _ := generatePubKeysAndSignatures(2, msg)
 				_, sigs := generatePubKeysAndSignatures(2, msg)
 				pk = kmultisig.NewLegacyAminoPubKey(2, pubKeys)
@@ -190,7 +212,7 @@ func TestVerifyMultisignature(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.msg, func(t *testing.T) {
-			tc.malleate()
+			tc.malleate(require.New(t))
 			err := pk.VerifyMultisignature(signBytesFn, sig)
 			if tc.expectPass {
 				require.NoError(t, err)

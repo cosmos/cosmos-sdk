@@ -8,7 +8,7 @@ protoc_gen_gocosmos() {
     return 1
   fi
 
-  go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos 2>/dev/null
+  go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos@latest 2>/dev/null
 }
 
 protoc_gen_gocosmos
@@ -20,16 +20,19 @@ for dir in $proto_dirs; do
   -I "third_party/proto" \
   --gocosmos_out=plugins=interfacetype+grpc,\
 Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
-  $(find "${dir}" -maxdepth 1 -name '*.proto')
-
-  # command to generate gRPC gateway (*.pb.gw.go in respective modules) files
-  buf protoc \
-  -I "proto" \
-  -I "third_party/proto" \
-  --grpc-gateway_out=logtostderr=true:. \
+  --grpc-gateway_out=logtostderr=true,allow_colon_final_segments=true:. \
   $(find "${dir}" -maxdepth 1 -name '*.proto')
 
 done
+
+# command to generate docs using protoc-gen-doc
+buf protoc \
+-I "proto" \
+-I "third_party/proto" \
+--doc_out=./docs/core \
+--doc_opt=./docs/protodoc-markdown.tmpl,proto-docs.md \
+$(find "$(pwd)/proto" -maxdepth 5 -name '*.proto')
+go mod tidy
 
 # generate codec/testdata proto code
 buf protoc -I "proto" -I "third_party/proto" -I "testutil/testdata" --gocosmos_out=plugins=interfacetype+grpc,\

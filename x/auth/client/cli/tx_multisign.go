@@ -45,7 +45,7 @@ The --offline flag makes sure that the client will not reach out to an external 
 Thus account number or sequence number lookups will not be performed and it is
 recommended to set such parameters manually.
 
-The current multisig implementation doesn't support sign_mode_direct and defaults 
+The current multisig implementation doesn't support SIGN_MORE_DIRECT and defaults 
 to amino-json sign mode.'
 `,
 				version.AppName,

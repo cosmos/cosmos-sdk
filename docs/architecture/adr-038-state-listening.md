@@ -33,7 +33,7 @@ type WriteListener interface {
 	// if value is nil then it was deleted
 	// storeKey indicates the source KVStore, to facilitate using the the same WriteListener across separate KVStores
 	// set bool indicates if it was a set; true: set, false: delete
-	OnWrite(storeKey types.StoreKey, set bool, key []byte, value []byte)
+	OnWrite(storeKey types.StoreKey, set bool, key []byte, value []byte) error
 }
 ```
 
@@ -72,15 +72,20 @@ func NewStoreKVPairWriteListener(w io.Writer, m codec.BinaryMarshaler) *StoreKVP
 }
 
 // OnWrite satisfies the WriteListener interface by writing length-prefixed protobuf encoded StoreKVPairs
-func (wl *StoreKVPairWriteListener) OnWrite(storeKey types.StoreKey, set bool, key []byte, value []byte) {
+func (wl *StoreKVPairWriteListener) OnWrite(storeKey types.StoreKey, set bool, key []byte, value []byte) error {
 	kvPair := new(types.StoreKVPair)
 	kvPair.StoreKey = storeKey.Name()
 	kvPair.Set = set
 	kvPair.Key = key
 	kvPair.Value = value
-	if by, err := wl.marshaller.MarshalBinaryLengthPrefixed(kvPair); err == nil {
-		wl.writer.Write(by)
+	by, err := wl.marshaller.MarshalBinaryLengthPrefixed(kvPair)
+	if err != nil {
+                return err
 	}
+        if _, err := wl.writer.Write(by); err != nil {
+        	return err
+        }
+        return nil
 }
 ```
 
@@ -123,7 +128,9 @@ func (s *Store) Delete(key []byte) {
 // onWrite writes a KVStore operation to all of the WriteListeners
 func (s *Store) onWrite(set bool, key, value []byte) {
 	for _, l := range s.listeners {
-		l.OnWrite(s.parentStoreKey, set, key, value)
+		if err := l.OnWrite(s.parentStoreKey, set, key, value); err != nil {
+                    // log error
+                }
 	}
 }
 ```
@@ -140,9 +147,9 @@ type MultiStore interface {
 	// ListeningEnabled returns if listening is enabled for the KVStore belonging the provided StoreKey
 	ListeningEnabled(key StoreKey) bool
 
-	// SetListeners sets the WriteListeners for the KVStore belonging to the provided StoreKey
+	// AddListeners adds WriteListeners for the KVStore belonging to the provided StoreKey
 	// It appends the listeners to a current set, if one already exists
-	SetListeners(key StoreKey, listeners []WriteListener)
+	AddListeners(key StoreKey, listeners []WriteListener)
 }
 ```
 
@@ -380,7 +387,7 @@ We will add a new method to the `BaseApp` to enable the registration of `Streami
 func (app *BaseApp) RegisterHooks(s StreamingService) {
 	// set the listeners for each StoreKey
 	for key, lis := range s.Listeners() {
-		app.cms.SetListeners(key, lis)
+		app.cms.AddListeners(key, lis)
 	}
 	// register the streaming service hooks within the BaseApp
 	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context using these hooks

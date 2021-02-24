@@ -47,7 +47,7 @@ func (ms multiStore) SetTracer(w io.Writer) sdk.MultiStore {
 	panic("not implemented")
 }
 
-func (ms multiStore) SetListeners(key store.StoreKey, listeners []store.WriteListener) {
+func (ms multiStore) AddListeners(key store.StoreKey, listeners []store.WriteListener) {
 	panic("not implemented")
 }
 

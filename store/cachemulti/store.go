@@ -112,8 +112,8 @@ func (cms Store) TracingEnabled() bool {
 	return cms.traceWriter != nil
 }
 
-// SetListeners sets the listeners for a specific KVStore
-func (cms Store) SetListeners(key types.StoreKey, listeners []types.WriteListener) {
+// AddListeners adds listeners for a specific KVStore
+func (cms Store) AddListeners(key types.StoreKey, listeners []types.WriteListener) {
 	if ls, ok := cms.listeners[key]; ok {
 		cms.listeners[key] = append(ls, listeners...)
 	} else {

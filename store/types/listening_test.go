@@ -31,7 +31,8 @@ func TestOnWrite(t *testing.T) {
 	testStoreKey := NewKVStoreKey("test_key")
 	testKey := []byte("testing123")
 	testValue := []byte("testing321")
-	wl.OnWrite(testStoreKey, true, testKey, testValue)
+	err := wl.OnWrite(testStoreKey, true, testKey, testValue)
+	require.Nil(t, err)
 
 	outputBytes := testWriter.Bytes()
 	outputKVPair := new(StoreKVPair)

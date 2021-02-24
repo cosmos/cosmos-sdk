@@ -134,9 +134,9 @@ type MultiStore interface {
 	// ListeningEnabled returns if listening is enabled for the KVStore belonging the provided StoreKey
 	ListeningEnabled(key StoreKey) bool
 
-	// SetListeners sets the WriteListeners for the KVStore belonging to the provided StoreKey
+	// AddListeners adds WriteListeners for the KVStore belonging to the provided StoreKey
 	// It appends the listeners to a current set, if one already exists
-	SetListeners(key StoreKey, listeners []WriteListener)
+	AddListeners(key StoreKey, listeners []WriteListener)
 }
 
 // From MultiStore.CacheMultiStore()....

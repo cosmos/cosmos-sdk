@@ -7,8 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/store/listenkv"
-
 	ics23 "github.com/confio/ics23/go"
 	"github.com/cosmos/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -16,6 +14,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"

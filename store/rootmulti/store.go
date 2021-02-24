@@ -316,8 +316,8 @@ func (rs *Store) TracingEnabled() bool {
 	return rs.traceWriter != nil
 }
 
-// SetListeners sets the listeners for a specific KVStore
-func (rs *Store) SetListeners(key types.StoreKey, listeners []types.WriteListener) {
+// AddListeners adds listeners for a specific KVStore
+func (rs *Store) AddListeners(key types.StoreKey, listeners []types.WriteListener) {
 	if ls, ok := rs.listeners[key]; ok {
 		rs.listeners[key] = append(ls, listeners...)
 	} else {

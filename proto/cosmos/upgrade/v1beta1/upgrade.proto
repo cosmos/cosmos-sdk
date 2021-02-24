@@ -34,12 +34,15 @@ message Plan {
   // such as a git commit that validators could automatically upgrade to
   string info = 4;
 
+  reserved 5;
+  reserved "option";
+
   // IBC-enabled chains can opt-in to including the upgraded client state in its upgrade plan
   // This will make the chain commit to the correct upgraded (self) client state before the upgrade occurs,
   // so that connecting chains can verify that the new upgraded client is valid by verifying a proof on the
   // previous version of the chain.
   // This will allow IBC connections to persist smoothly across planned chain upgrades
-  bytes upgraded_client_state = 5 [(gogoproto.moretags) = "yaml:\"upgraded_client_state\""];
+  bytes upgraded_client_state = 6 [(gogoproto.moretags) = "yaml:\"upgraded_client_state\""];
 }
 
 // SoftwareUpgradeProposal is a gov Content type for initiating a software

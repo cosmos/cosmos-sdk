@@ -64,5 +64,8 @@ message QueryUpgradedConsensusStateRequest {
 // QueryUpgradedConsensusStateResponse is the response type for the Query/UpgradedConsensusState
 // RPC method.
 message QueryUpgradedConsensusStateResponse {
-  bytes upgraded_consensus_state = 1;
+  reserved 1;
+  reserved "option";
+
+  bytes upgraded_consensus_state = 2;
 }

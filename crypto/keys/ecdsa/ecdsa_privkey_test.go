@@ -5,6 +5,8 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/tendermint/tendermint/crypto"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -92,4 +94,22 @@ func (suite *SKSuite) TestMarshalProto() {
 }
 
 func (suite *SKSuite) TestSign() {
+	require := suite.Require()
+
+	msg := crypto.CRandBytes(1000)
+	sig, err := suite.sk.Sign(msg)
+	require.NoError(err)
+	sigCpy := make([]byte, len(sig))
+	copy(sigCpy, sig)
+	require.True(suite.pk.VerifySignature(msg, sigCpy))
+
+	// Mutate the signature
+	for i := range sig {
+		sigCpy[i] ^= byte(i + 1)
+		require.False(suite.pk.VerifySignature(msg, sigCpy))
+	}
+
+	// Mutate the message
+	msg[1] ^= byte(2)
+	require.False(suite.pk.VerifySignature(msg, sig))
 }

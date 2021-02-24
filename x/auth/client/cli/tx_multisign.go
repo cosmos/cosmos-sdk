@@ -223,8 +223,10 @@ to amino-json sign mode.'
 }
 
 func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		clientCtx, err := client.GetClientTxContext(cmd)
+	return func(cmd *cobra.Command, args []string) (err error) {
+		var clientCtx client.Context
+
+		clientCtx, err = client.GetClientTxContext(cmd)
 		if err != nil {
 			return err
 		}

@@ -578,15 +578,15 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_ClientState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"ibc", "core", "client", "v1beta1", "client_states", "client_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ClientState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"ibc", "core", "client", "v1beta1", "client_states", "client_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ClientStates_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"ibc", "core", "client", "v1beta1", "client_states"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ClientStates_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"ibc", "core", "client", "v1beta1", "client_states"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ConsensusState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"ibc", "core", "client", "v1beta1", "consensus_states", "client_id", "revision", "revision_number", "height", "revision_height"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ConsensusState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"ibc", "core", "client", "v1beta1", "consensus_states", "client_id", "revision", "revision_number", "height", "revision_height"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ConsensusStates_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"ibc", "core", "client", "v1beta1", "consensus_states", "client_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ConsensusStates_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"ibc", "core", "client", "v1beta1", "consensus_states", "client_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ClientParams_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"ibc", "client", "v1beta1", "params"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ClientParams_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"ibc", "client", "v1beta1", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

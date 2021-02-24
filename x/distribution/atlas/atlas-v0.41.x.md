@@ -143,18 +143,59 @@ type DelegatorWithdrawInfo struct {
 
 ## Messages
 
-The distribution module provides interaction via command line, REST and gRPC.
+View supported messages at [docs.cosmos.network/v0.40/modules/Distribution](https://docs.cosmos.network/v0.40/modules/Distribution/03_messages.html)
+
+## Client
 
 ### CLI
 
-#### Queries
+The distribution module supports the blow command to query information located in the modules store.
 
-#### Transactions
+```sh
+app q distribution                   
+Querying commands for the distribution module
 
+Usage:
+  app query distribution [flags]
+  app query distribution [command]
+
+Available Commands:
+  commission                    Query distribution validator commission
+  community-pool                Query the amount of coins in the community pool
+  params                        Query distribution params
+  rewards                       Query all distribution delegator rewards or rewards from a particular validator
+  slashes                       Query distribution validator slashes
+  validator-outstanding-rewards Query distribution outstanding (un-withdrawn) rewards for a validator and all their delegations
+
+Flags:
+  -h, --help   help for distribution
+
+Global Flags:
+      --chain-id string     The network chain ID
+      --home string         directory for config and data (default "/Users/markobaricevic/.simapp")
+      --log_format string   The logging format (json|plain) (default "plain")
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
+      --trace               print out full stack trace on errors
+
+```
 
 ### REST
 
-<!-- todo: -->
+Evidence REST API supports only queries of evidence. To submit evidence please use gRPC or the cli.
+
+### gRPC
+
+Distribution supports both querying and submitting transactions via gRPC
+
+#### Query
+
+[gRPC query](https://docs.cosmos.network/master/core/proto-docs.html#cosmos/evidence/v1beta1/query.proto)
+
+#### Tx
+
+[gRPC Tx](https://docs.cosmos.network/master/core/proto-docs.html#cosmos-distribution-v1beta1-tx-proto)
+
+View supported messages at [docs.cosmos.network/v0.40/modules/distribution](https://docs.cosmos.network/v0.40/modules/distribution/03_messages.html)
 
 ### gRPC
 

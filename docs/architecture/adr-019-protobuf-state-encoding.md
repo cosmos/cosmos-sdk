@@ -63,13 +63,16 @@ accept a codec interface, `Marshaler`, instead of a concrete Amino codec. Furthe
 will provide two concrete implementations of the `Marshaler` interface: `AminoCodec` and `ProtoCodec`.
 
 - `AminoCodec`: Uses Amino for both binary and JSON encoding.
-- `ProtoCodec`: Uses Protobuf for or both binary and JSON encoding.
+- `ProtoCodec`: Uses Protobuf for both binary and JSON encoding.
 
-Modules will use `ProtoCodec` by default, except 
-Until the client migration landscape is fully understood and designed, modules will use a `HybridCodec`
-as the concrete codec it accepts and/or extends. This means that all client JSON encoding, including
-genesis state, will still use Amino. The ultimate goal will be to replace Amino JSON encoding with
-Protbuf encoding and thus have modules accept and/or extend `ProtoCodec`.
+Modules will use whichever codec that is instantiated in the app. By default, the SDK's `simapp`
+instantiates a `ProtoCodec` as the concrete implementation of `Marshaler`, inside the `MakeTestEncodingConfig`
+function. This can be easily overwritten by app developers if they so desire.
+
+The ultimate goal will be to replace Amino JSON encoding with Protobuf encoding and thus have
+modules accept and/or extend `ProtoCodec`. Until then, Amino JSON is still provided as a fallback.
+A handful of places in the SDK still have Amino JSON hardcoded, such as the Legacy API REST endpoints
+and the `x/params` store. They are planned to be converted to Protobuf in a gradual manner.
 
 ### Module Codecs
 

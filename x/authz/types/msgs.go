@@ -17,7 +17,6 @@ var (
 	_                         sdk.MsgRequest                = &MsgExecAuthorizedRequest{}
 	_                         types.UnpackInterfacesMessage = &MsgGrantAuthorizationRequest{}
 	_                         types.UnpackInterfacesMessage = &MsgExecAuthorizedRequest{}
-	TypeMsgGrantAuthorization                               = "/cosmos.authz.v1beta1.Msg/GrantAuthorization"
 )
 
 // NewMsgGrantAuthorization creates a new MsgGrantAuthorization

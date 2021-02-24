@@ -157,8 +157,6 @@ func (am AppModule) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) []abci.V
 	return []abci.ValidatorUpdate{}
 }
 
-//____________________________________________________________________________
-
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the transfer module.
@@ -185,8 +183,6 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
 	return nil
 }
-
-//____________________________________________________________________________
 
 // ValidateTransferChannelParams does validation of a newly created transfer channel. A transfer
 // channel must be UNORDERED, use the correct port (by default 'transfer'), and use the current

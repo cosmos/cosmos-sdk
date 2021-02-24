@@ -91,8 +91,6 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
 
-//____________________________________________________________________________
-
 // AppModule implements an application module for the slashing module.
 type AppModule struct {
 	AppModuleBasic
@@ -172,8 +170,6 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
-
-//____________________________________________________________________________
 
 // AppModuleSimulation functions
 

@@ -11,10 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
-	ibcexported "github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -61,17 +57,9 @@ func (s *KeeperTestSuite) TestReadUpgradeInfoFromDisk() {
 }
 
 func (s *KeeperTestSuite) TestScheduleUpgrade() {
-	clientState := &ibctmtypes.ClientState{ChainId: "gaiachain"}
-	cs, err := clienttypes.PackClientState(clientState)
-	s.Require().NoError(err)
+	cs := []byte("gaia IBC client state")
 
-	altClientState := &ibctmtypes.ClientState{ChainId: "ethermint"}
-	altCs, err := clienttypes.PackClientState(altClientState)
-	s.Require().NoError(err)
-
-	consState := ibctmtypes.NewConsensusState(time.Now(), commitmenttypes.NewMerkleRoot([]byte("app_hash")), []byte("next_vals_hash"))
-	consAny, err := clienttypes.PackConsensusState(consState)
-	s.Require().NoError(err)
+	altCs := []byte("ethermint IBC client state")
 
 	cases := []struct {
 		name    string
@@ -206,17 +194,6 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 			},
 			expPass: false,
 		},
-		{
-			name: "unsuccessful IBC schedule: UpgradedClientState is not valid client state",
-			plan: types.Plan{
-				Name:                "all-good",
-				Info:                "some text here",
-				Height:              123450000,
-				UpgradedClientState: consAny,
-			},
-			setup:   func() {},
-			expPass: false,
-		},
 	}
 
 	for _, tc := range cases {
@@ -236,7 +213,7 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 				if tc.plan.UpgradedClientState != nil {
 					got, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx, tc.plan.Height)
 					s.Require().NoError(err)
-					s.Require().Equal(clientState, got, "upgradedClient not equal to expected value")
+					s.Require().Equal(tc.plan.UpgradedClientState, got, "upgradedClient not equal to expected value")
 				} else {
 					// check that upgraded client is empty if latest plan does not specify an upgraded client
 					got, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx, tc.plan.Height)
@@ -251,9 +228,8 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 }
 
 func (s *KeeperTestSuite) TestSetUpgradedClient() {
-	var (
-		clientState ibcexported.ClientState
-	)
+	cs := []byte("IBC client state")
+
 	cases := []struct {
 		name   string
 		height int64
@@ -270,8 +246,7 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 			name:   "success",
 			height: 10,
 			setup: func() {
-				clientState = &ibctmtypes.ClientState{ChainId: "gaiachain"}
-				s.app.UpgradeKeeper.SetUpgradedClient(s.ctx, 10, clientState)
+				s.app.UpgradeKeeper.SetUpgradedClient(s.ctx, 10, cs)
 			},
 			exists: true,
 		},
@@ -286,7 +261,7 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 
 		gotCs, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx, tc.height)
 		if tc.exists {
-			s.Require().Equal(clientState, gotCs, "valid case: %s did not retrieve correct client state", tc.name)
+			s.Require().Equal(cs, gotCs, "valid case: %s did not retrieve correct client state", tc.name)
 			s.Require().NoError(err, "valid case: %s returned error")
 		} else {
 			s.Require().Nil(gotCs, "invalid case: %s retrieved valid client state", tc.name)

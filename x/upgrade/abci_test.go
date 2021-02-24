@@ -21,8 +21,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -120,35 +118,19 @@ func TestCanOverwriteScheduleUpgrade(t *testing.T) {
 	VerifyDoUpgrade(t)
 }
 
-func VerifyDoIBCLastBlock(t *testing.T) {
-	t.Log("Verify that chain committed to consensus state on the last height it will commit")
-	nextValsHash := []byte("nextValsHash")
-	newCtx := s.ctx.WithBlockHeader(tmproto.Header{
-		Height:             s.ctx.BlockHeight(),
-		NextValidatorsHash: nextValsHash,
-	})
-
-	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-	s.module.BeginBlock(newCtx, req)
-
-	// plan Height is at ctx.BlockHeight+1
-	consState, err := s.keeper.GetUpgradedConsensusState(newCtx, s.ctx.BlockHeight()+1)
-	require.NoError(t, err)
-	require.Equal(t, &ibctmtypes.ConsensusState{Timestamp: newCtx.BlockTime(), NextValidatorsHash: nextValsHash}, consState)
-}
-
 func VerifyDoIBCUpgrade(t *testing.T) {
 	t.Log("Verify that a panic happens at the upgrade time/height")
 	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
+	consState := []byte("consensus state")
 
 	// Check IBC state is set before upgrade using last height: s.ctx.BlockHeight()
-	cs, err := s.keeper.GetUpgradedClient(newCtx, s.ctx.BlockHeight())
+	cs, err := s.keeper.GetUpgradedClient(newCtx, s.ctx.BlockHeight()+1)
 	require.NoError(t, err, "could not retrieve upgraded client before upgrade plan is applied")
 	require.NotNil(t, cs, "IBC client is nil before upgrade")
 
-	consState, err := s.keeper.GetUpgradedConsensusState(newCtx, s.ctx.BlockHeight())
-	require.NoError(t, err, "could not retrieve upgraded consensus state before upgrade plan is applied")
-	require.NotNil(t, consState, "IBC consensus state is nil before upgrade")
+	// set the consensus state since this happens in IBC 02-client begin blocker
+	err = s.keeper.SetUpgradedConsensusState(newCtx, s.ctx.BlockHeight(), consState)
+	require.NoError(t, err)
 
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	require.Panics(t, func() {
@@ -280,9 +262,7 @@ func TestNoSpuriousUpgrades(t *testing.T) {
 }
 
 func TestPlanStringer(t *testing.T) {
-	clientState := &ibctmtypes.ClientState{ChainId: "gaiachain"}
-	cs, err := clienttypes.PackClientState(clientState)
-	require.NoError(t, err)
+	cs := []byte("IBC client state")
 
 	ti, err := time.Parse(time.RFC3339, "2020-01-01T00:00:00Z")
 	require.Nil(t, err)
@@ -300,7 +280,7 @@ func TestPlanStringer(t *testing.T) {
   Name: test
   Height: 100
   Info: .
-  Upgraded IBC Client: %s`, clientState), types.Plan{Name: "test", Height: 100, UpgradedClientState: cs}.String())
+  Upgraded IBC Client: %s`, cs), types.Plan{Name: "test", Height: 100, UpgradedClientState: cs}.String())
 }
 
 func VerifyNotDone(t *testing.T, newCtx sdk.Context, name string) {
@@ -469,9 +449,8 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 
 func TestIBCUpgradeWithoutSkip(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
-	cs, err := clienttypes.PackClientState(&ibctmtypes.ClientState{})
-	require.NoError(t, err)
-	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{
+	cs := []byte("IBC client state")
+	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{
 		Title: "prop",
 		Plan: types.Plan{
 			Name:                "test",
@@ -481,10 +460,7 @@ func TestIBCUpgradeWithoutSkip(t *testing.T) {
 	})
 	require.Nil(t, err)
 
-	t.Log("Verify if last height stores consensus state")
-	VerifyDoIBCLastBlock(t)
-
-	VerifyDoUpgrade(t)
+	VerifyDoIBCUpgrade(t)
 	VerifyDone(t, s.ctx, "test")
 }
 

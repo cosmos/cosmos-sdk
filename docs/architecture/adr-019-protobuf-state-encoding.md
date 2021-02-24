@@ -70,7 +70,7 @@ instantiates a `ProtoCodec` as the concrete implementation of `Marshaler`, insid
 function. This can be easily overwritten by app developers if they so desire.
 
 The ultimate goal will be to replace Amino JSON encoding with Protobuf encoding and thus have
-modules accept and/or extend `ProtoCodec`. Until then, Amino JSON is still provided as a fallback.
+modules accept and/or extend `ProtoCodec`. Until then, Amino JSON is still provided for legacy use-cases.
 A handful of places in the SDK still have Amino JSON hardcoded, such as the Legacy API REST endpoints
 and the `x/params` store. They are planned to be converted to Protobuf in a gradual manner.
 

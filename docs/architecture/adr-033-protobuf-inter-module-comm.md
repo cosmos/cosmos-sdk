@@ -109,9 +109,9 @@ described in more detail below.
 Blockchain users (external clients) use their account's private key to sign transactions containing `Msg`s where they are listed as signers (each
 message specifies required signers with `Msg.GetSigner`). The authentication checks is performed by `AnteHandler`.
 
-Here, we extend this process, by allowing modules to be identified in `Msg.GetSigners`. When a module creates a `Msg` for another module,
-it's `ModuleKey` is used to send (through the `ClientConn` interface we describe below) and is set as a sole "signer". It's worth to note
-that we don't store any cryptography signature in this case.
+Here, we extend this process, by allowing modules to be identified in `Msg.GetSigners`. When a module wants to trigger the execution a `Msg` in another module,
+its `ModuleKey` acts as the sender (through the `ClientConn` interface we describe below) and is set as a sole "signer". It's worth to note
+that we don't use any cryptographic signature in this case.
 For example, module `A` could use it's `A.ModuleKey` to create `MsgSend` object for `/cosmos.bank.Msg/Send` transaction. `MsgSend` validation
 will assure that the `from` account (`A.ModuleKey` in this case) is signer.
 

@@ -2,6 +2,7 @@ package address
 
 import (
 	"crypto/sha256"
+	"runtime"
 	"testing"
 	"time"
 
@@ -84,7 +85,8 @@ func (suite *AddressSuite) TestUnsafeStrToBytes() {
 	// we convert in other function to trigger GC
 	for i := 0; i < 5; i++ {
 		b := unsafeConvertABC()
-		<-time.NewTimer(5 * time.Millisecond).C
+		runtime.GC()
+		<-time.NewTimer(2 * time.Millisecond).C
 		b2 := append(b, 'd')
 		suite.Equal("abc", string(b))
 		suite.Equal("abcd", string(b2))

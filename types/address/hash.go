@@ -65,7 +65,7 @@ func Module(moduleName string, key []byte) []byte {
 }
 
 // unsafeStrToByteArray uses unsafe to convert string into byte array. Returned bytes
-// MUST NOT be altered after this function is called - this will cause segfault.
+// must not be altered after this function is called as it will cause a segmentation fault.
 func unsafeStrToByteArray(s string) []byte {
 	var buf = *(*[]byte)(unsafe.Pointer(&s))
 	(*reflect.SliceHeader)(unsafe.Pointer(&buf)).Cap = len(s)

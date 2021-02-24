@@ -127,7 +127,7 @@ type FooMsgServer {
   bankMsg   bank.MsgClient
 }
 
-func NewFooMsgServer(moduleKey, ...) FooMsgServer {
+func NewFooMsgServer(moduleKey RootModuleKey, ...) FooMsgServer {
   // ...
 
   return FooMsgServer {

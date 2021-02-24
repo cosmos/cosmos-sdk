@@ -12,7 +12,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -24,14 +26,15 @@ const (
 	//	config.SetBech32PrefixForAccount(yourBech32PrefixAccAddr, yourBech32PrefixAccPub)
 	//	config.SetBech32PrefixForValidator(yourBech32PrefixValAddr, yourBech32PrefixValPub)
 	//	config.SetBech32PrefixForConsensusNode(yourBech32PrefixConsAddr, yourBech32PrefixConsPub)
+	//	config.SetPurpose(yourPurpose)
 	//	config.SetCoinType(yourCoinType)
-	//	config.SetFullFundraiserPath(yourFullFundraiserPath)
 	//	config.Seal()
 
-	// AddrLen defines a valid address length
-	AddrLen = 20
 	// Bech32MainPrefix defines the main SDK Bech32 prefix of an account's address
 	Bech32MainPrefix = "cosmos"
+
+	// Purpose is the ATOM purpose as defined in SLIP44 (https://github.com/satoshilabs/slips/blob/master/slip-0044.md)
+	Purpose = 44
 
 	// CoinType is the ATOM coin type as defined in SLIP44 (https://github.com/satoshilabs/slips/blob/master/slip-0044.md)
 	CoinType = 118
@@ -110,9 +113,15 @@ func VerifyAddressFormat(bz []byte) error {
 	if verifier != nil {
 		return verifier(bz)
 	}
-	if len(bz) != AddrLen {
-		return fmt.Errorf("incorrect address length (expected: %d, actual: %d)", AddrLen, len(bz))
+
+	if len(bz) == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrUnknownAddress, "addresses cannot be empty")
 	}
+
+	if len(bz) > address.MaxAddrLen {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "address max length is %d, got %d", address.MaxAddrLen, len(bz))
+	}
+
 	return nil
 }
 

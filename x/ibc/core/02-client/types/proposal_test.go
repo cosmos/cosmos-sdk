@@ -5,35 +5,15 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
-func (suite *TypesTestSuite) TestNewUpdateClientProposal() {
-	p, err := types.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, clientID, &ibctmtypes.Header{})
-	suite.Require().NoError(err)
-	suite.Require().NotNil(p)
-
-	p, err = types.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, clientID, nil)
-	suite.Require().Error(err)
-	suite.Require().Nil(p)
-}
-
 func (suite *TypesTestSuite) TestValidateBasic() {
-	// use solo machine header for testing
-	solomachine := ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, clientID, "", 2)
-	smHeader := solomachine.CreateHeader()
-	header, err := types.PackHeader(smHeader)
-	suite.Require().NoError(err)
-
-	// use a different pointer so we don't modify 'header'
-	smInvalidHeader := solomachine.CreateHeader()
-
-	// a sequence of 0 will fail basic validation
-	smInvalidHeader.Sequence = 0
-
-	invalidHeader, err := types.PackHeader(smInvalidHeader)
-	suite.Require().NoError(err)
+	subject, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+	subjectClientState := suite.chainA.GetClientState(subject)
+	substitute, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+	initialHeight := types.NewHeight(subjectClientState.GetLatestHeight().GetRevisionNumber(), subjectClientState.GetLatestHeight().GetRevisionHeight()+1)
 
 	testCases := []struct {
 		name     string
@@ -42,22 +22,32 @@ func (suite *TypesTestSuite) TestValidateBasic() {
 	}{
 		{
 			"success",
-			&types.ClientUpdateProposal{ibctesting.Title, ibctesting.Description, clientID, header},
+			types.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, subject, substitute, initialHeight),
 			true,
 		},
 		{
 			"fails validate abstract - empty title",
-			&types.ClientUpdateProposal{"", ibctesting.Description, clientID, header},
+			types.NewClientUpdateProposal("", ibctesting.Description, subject, substitute, initialHeight),
 			false,
 		},
 		{
-			"fails to unpack header",
-			&types.ClientUpdateProposal{ibctesting.Title, ibctesting.Description, clientID, nil},
+			"subject and substitute use the same identifier",
+			types.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, subject, subject, initialHeight),
 			false,
 		},
 		{
-			"fails header validate basic",
-			&types.ClientUpdateProposal{ibctesting.Title, ibctesting.Description, clientID, invalidHeader},
+			"invalid subject clientID",
+			types.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, ibctesting.InvalidID, substitute, initialHeight),
+			false,
+		},
+		{
+			"invalid substitute clientID",
+			types.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, subject, ibctesting.InvalidID, initialHeight),
+			false,
+		},
+		{
+			"initial height is zero",
+			types.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, subject, substitute, types.ZeroHeight()),
 			false,
 		},
 	}
@@ -74,22 +64,15 @@ func (suite *TypesTestSuite) TestValidateBasic() {
 	}
 }
 
-// tests a client update proposal can be marshaled and unmarshaled, and the
-// client state can be unpacked
+// tests a client update proposal can be marshaled and unmarshaled
 func (suite *TypesTestSuite) TestMarshalClientUpdateProposalProposal() {
-	_, err := types.PackHeader(&ibctmtypes.Header{})
-	suite.Require().NoError(err)
-
 	// create proposal
-	header := suite.chainA.CurrentTMClientHeader()
-	proposal, err := types.NewClientUpdateProposal("update IBC client", "description", "client-id", header)
-	suite.Require().NoError(err)
+	proposal := types.NewClientUpdateProposal("update IBC client", "description", "subject", "substitute", types.NewHeight(1, 0))
 
 	// create codec
 	ir := codectypes.NewInterfaceRegistry()
 	types.RegisterInterfaces(ir)
 	govtypes.RegisterInterfaces(ir)
-	ibctmtypes.RegisterInterfaces(ir)
 	cdc := codec.NewProtoCodec(ir)
 
 	// marshal message
@@ -99,9 +82,5 @@ func (suite *TypesTestSuite) TestMarshalClientUpdateProposalProposal() {
 	// unmarshal proposal
 	newProposal := &types.ClientUpdateProposal{}
 	err = cdc.UnmarshalJSON(bz, newProposal)
-	suite.Require().NoError(err)
-
-	// unpack client state
-	_, err = types.UnpackHeader(newProposal.Header)
 	suite.Require().NoError(err)
 }

@@ -49,7 +49,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.network = network.New(s.T(), cfg)
 
 	kb := s.network.Validators[0].ClientCtx.Keyring
-	_, _, err := kb.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	_, _, err := kb.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(1)
@@ -156,6 +156,18 @@ func (s *IntegrationTestSuite) TestEncodeDecode() {
 	require.Equal(stdTx, legacytx.StdTx(decodeResp))
 }
 
+func (s *IntegrationTestSuite) TestQueryAccountWithColon() {
+	val := s.network.Validators[0]
+	// This address is not a valid simapp address! It is only used to test that addresses with
+	// colon don't 501. See
+	// https://github.com/cosmos/cosmos-sdk/issues/8650
+	addrWithColon := "cosmos:1m4f6lwd9eh8e5nxt0h00d46d3fr03apfh8qf4g"
+
+	res, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/auth/v1beta1/accounts/%s", val.APIAddress, addrWithColon))
+	s.Require().NoError(err)
+	s.Require().Contains(string(res), "decoding bech32 failed")
+}
+
 func (s *IntegrationTestSuite) TestEncodeIBCTx() {
 	val := s.network.Validators[0]
 
@@ -186,8 +198,7 @@ func (s *IntegrationTestSuite) TestBroadcastIBCTxRequest() {
 	res, err := rest.PostRequest(fmt.Sprintf("%s/txs", val.APIAddress), "application/json", []byte(req))
 	s.Require().NoError(err)
 
-	// Make sure the error message is correct.
-	s.Require().Contains(string(res), "this transaction cannot be broadcasted via legacy REST endpoints")
+	s.Require().NotContains(string(res), "this transaction cannot be broadcasted via legacy REST endpoints", string(res))
 }
 
 // Helper function to test querying txs. We will use it to query StdTx and service `Msg`s.
@@ -270,7 +281,7 @@ func (s *IntegrationTestSuite) TestQueryTxWithStdTx() {
 	s.testQueryTx(s.stdTxRes.Height, s.stdTxRes.TxHash, val0.Address.String())
 }
 
-func (s *IntegrationTestSuite) TestQueryTxWithServiceMessage() {
+func (s *IntegrationTestSuite) TestQueryTxWithServiceMsg() {
 	val := s.network.Validators[0]
 
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
@@ -279,7 +290,7 @@ func (s *IntegrationTestSuite) TestQueryTxWithServiceMessage() {
 	// Might need to wait a block to refresh sequences from previous setups.
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	out, err := bankcli.ServiceMsgSendExec(
+	out, err := bankcli.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		addr,

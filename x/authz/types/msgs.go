@@ -12,11 +12,11 @@ import (
 )
 
 var (
-	_                         sdk.MsgRequest                = &MsgGrantAuthorizationRequest{}
-	_                         sdk.MsgRequest                = &MsgRevokeAuthorizationRequest{}
-	_                         sdk.MsgRequest                = &MsgExecAuthorizedRequest{}
-	_                         types.UnpackInterfacesMessage = &MsgGrantAuthorizationRequest{}
-	_                         types.UnpackInterfacesMessage = &MsgExecAuthorizedRequest{}
+	_ sdk.MsgRequest                = &MsgGrantAuthorizationRequest{}
+	_ sdk.MsgRequest                = &MsgRevokeAuthorizationRequest{}
+	_ sdk.MsgRequest                = &MsgExecAuthorizedRequest{}
+	_ types.UnpackInterfacesMessage = &MsgGrantAuthorizationRequest{}
+	_ types.UnpackInterfacesMessage = &MsgExecAuthorizedRequest{}
 )
 
 // NewMsgGrantAuthorization creates a new MsgGrantAuthorization

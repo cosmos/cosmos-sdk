@@ -47,9 +47,13 @@ func migrateWeightedVotes(store sdk.KVStore, cdc codec.BinaryMarshaler) error {
 		newVote := &types.Vote{
 			ProposalId: oldVote.ProposalId,
 			Voter:      oldVote.Voter,
-			Options:    []types.WeightedVoteOption{{Option: types.VoteOption(oldVote.Option), Weight: sdk.NewDec(1)}},
+			Options:    []types.WeightedVoteOption{{Option: oldVote.Option, Weight: sdk.NewDec(1)}},
 		}
 		bz, err := cdc.MarshalBinaryBare(newVote)
+		if err != nil {
+			return err
+		}
+
 		store.Set(iterator.Key(), bz)
 	}
 

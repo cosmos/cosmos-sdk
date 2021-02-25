@@ -1,5 +1,5 @@
 // Package v040 is take from:
-// https://github.com/cosmos/cosmos-sdk/blob/v0.41.1/x/gov/types/vote.go
+// https://github.com/cosmos/cosmos-sdk/blob/v0.41.1/x/gov/types/gov.pb.go
 // by copy-pasted only the relevants parts for Vote.
 package v040
 

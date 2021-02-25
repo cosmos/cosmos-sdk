@@ -71,11 +71,11 @@ func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdatePropo
 	return nil
 }
 
-// UpgradeProposal sets the upgraded client state in the upgrade store. It clears
+// HandleUpgradeProposal sets the upgraded client state in the upgrade store. It clears
 // an IBC client state and consensus state if a previous plan was set. Then  it
 // will schedule an upgrade and finally set the upgraded client state in upgrade
 // store.
-func (k Keeper) UpgradeProposal(ctx sdk.Context, p *types.UpgradeProposal) error {
+func (k Keeper) HandleUpgradeProposal(ctx sdk.Context, p *types.UpgradeProposal) error {
 	// clear any old IBC state stored by previous plan
 	oldPlan, exists := k.GetUpgradePlan(ctx)
 	if exists {

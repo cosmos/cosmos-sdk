@@ -15,7 +15,7 @@ func NewClientProposalHandler(k keeper.Keeper) govtypes.Handler {
 		case *types.ClientUpdateProposal:
 			return k.ClientUpdateProposal(ctx, c)
 		case *types.UpgradeProposal:
-			return k.UpgradeProposal(ctx, c)
+			return k.HandleUpgradeProposal(ctx, c)
 
 		default:
 			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ibc proposal content type: %T", c)

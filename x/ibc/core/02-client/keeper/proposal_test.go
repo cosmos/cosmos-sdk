@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
@@ -13,7 +13,7 @@ func (suite *KeeperTestSuite) TestClientUpdateProposal() {
 		subject, substitute                       string
 		subjectClientState, substituteClientState exported.ClientState
 		initialHeight                             clienttypes.Height
-		content                                   *types.ClientUpdateProposal
+		content                                   govtypes.Content
 		err                                       error
 	)
 
@@ -117,7 +117,9 @@ func (suite *KeeperTestSuite) TestClientUpdateProposal() {
 
 			tc.malleate()
 
-			err = suite.chainA.App.IBCKeeper.ClientKeeper.ClientUpdateProposal(suite.chainA.GetContext(), content)
+			updateProp, ok := content.(*clienttypes.ClientUpdateProposal)
+			suite.Require().True(ok)
+			err = suite.chainA.App.IBCKeeper.ClientKeeper.ClientUpdateProposal(suite.chainA.GetContext(), updateProp)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

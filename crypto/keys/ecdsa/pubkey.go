@@ -118,26 +118,8 @@ func (pk *ecdsaPK) Unmarshal(b []byte) error {
 	if err != nil {
 		return err
 	}
-	return pk.UnmarshalAmino(bv.Value)
-}
 
-// Size implements ProtoMarshaler interface.
-func (pk *ecdsaPK) Size() int {
-	if pk == nil {
-		return 0
-	}
-	return sovPubKeySize
-}
-
-// **** Amino Marshaler ****
-
-// MarshalAmino overrides Amino binary marshalling.
-func (pk *ecdsaPK) MarshalAmino() ([]byte, error) {
-	return pk.Bytes(), nil
-}
-
-// UnmarshalAmino overrides Amino binary marshalling.
-func (pk *ecdsaPK) UnmarshalAmino(bz []byte) error {
+	bz := bv.Value
 	if len(bz) != PubKeySize {
 		return errors.Wrapf(errors.ErrInvalidPubKey, "wrong ECDSA PK bytes, expecting %d bytes", PubKeySize)
 	}
@@ -158,12 +140,10 @@ func (pk *ecdsaPK) UnmarshalAmino(bz []byte) error {
 	return nil
 }
 
-// MarshalAminoJSON overrides Amino JSON marshalling.
-func (pk *ecdsaPK) MarshalAminoJSON() ([]byte, error) {
-	return pk.MarshalAmino()
-}
-
-// UnmarshalAminoJSON overrides Amino JSON marshalling.
-func (pk *ecdsaPK) UnmarshalAminoJSON(bz []byte) error {
-	return pk.UnmarshalAmino(bz)
+// Size implements ProtoMarshaler interface.
+func (pk *ecdsaPK) Size() int {
+	if pk == nil {
+		return 0
+	}
+	return sovPubKeySize
 }

@@ -77,22 +77,6 @@ func (suite *PKSuite) TestEquals() {
 	require.True(pkOther.Equals(pkOther), "Equals must be reflexive")
 }
 
-func (suite *PKSuite) TestMarshalAmino() {
-	require := suite.Require()
-	type AminoPubKey interface {
-		cryptotypes.PubKey
-		MarshalAmino() ([]byte, error)
-	}
-
-	pk := suite.pk.(AminoPubKey)
-	bz, err := pk.MarshalAmino()
-	require.NoError(err)
-
-	var pk2 = new(ecdsaPK)
-	require.NoError(pk2.UnmarshalAmino(bz))
-	require.True(pk2.Equals(suite.pk))
-}
-
 func (suite *PKSuite) TestSize() {
 	require := suite.Require()
 	bv := gogotypes.BytesValue{Value: suite.pk.Bytes()}

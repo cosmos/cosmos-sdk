@@ -2,7 +2,6 @@
 'https://plantuml.com/sequence-diagram
 
 title: Delegating (currently undelegated funds delegator)
-autonumber
 
 participant "msgServer (staking)"
 participant  "keeper (staking)" as keeper
@@ -25,13 +24,9 @@ end
 
 alt perform a new delegation
     keeper -> keeper : delegation := create delegation object
-end
-
-alt new delegation
     keeper -> keeper : BeforeDelegationCreated hook
     note left: Calls IncrementValidatorPeriod (Used to calculate distribution) in keeper/validator.go
-end
-alt delegation exists, more tokens being added
+else delegation exists, more tokens being added
     keeper -> keeper : BeforeDelegationModified hook
     note left: withdraw current delegation rewards (and increment period)
 end
@@ -61,13 +56,10 @@ alt delegating from an account (subtractTokens == true)
     keeper.bankKeeper <-- DelegateCoinsFromAccountToModule: nil
     destroy DelegateCoinsFromAccountToModule
     keeper <-- keeper.bankKeeper : nil (success)
-end
-
-alt moving tokens between pools (subtractTokens == false)
+else moving tokens between pools (subtractTokens == false)
     alt delegator tokens are not bonded but validator is bonded
        keeper -> keeper.bankKeeper : SendCoinsFromModuleToModule(notBondedPool, bondedPool, coins)
-    end
-    alt delegator tokens are bonded but validator is not bonded
+    else delegator tokens are bonded but validator is not bonded
        keeper -> keeper.bankKeeper : SendCoinsFromModuleToModule(bondedPool, notBondedPool, coins)
     end
     keeper.bankKeeper -> SendCoins

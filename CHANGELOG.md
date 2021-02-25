@@ -36,7 +36,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## New Features
+## Features
 
 * [\#8559](https://github.com/cosmos/cosmos-sdk/pull/8559) Adding Protobuf compatible secp256r1 ECDSA signatures.
 

@@ -12,17 +12,10 @@ import (
 func (p Plan) String() string {
 	due := p.DueAt()
 	dueUp := strings.ToUpper(due[0:1]) + due[1:]
-	var upgradedClientStr string
-	if len(p.UpgradedClientState) == 0 {
-		upgradedClientStr = "no upgraded client provided"
-	} else {
-		upgradedClientStr = string(p.UpgradedClientState)
-	}
 	return fmt.Sprintf(`Upgrade Plan
   Name: %s
   %s
-  Info: %s.
-  Upgraded IBC Client: %s`, p.Name, dueUp, p.Info, upgradedClientStr)
+  Info: %s`, p.Name, dueUp, p.Info)
 }
 
 // ValidateBasic does basic validation of a Plan
@@ -38,9 +31,6 @@ func (p Plan) ValidateBasic() error {
 	}
 	if p.Time.Unix() > 0 && p.Height != 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "cannot set both time and height")
-	}
-	if p.Time.Unix() > 0 && len(p.UpgradedClientState) != 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "IBC chain upgrades must only set height")
 	}
 
 	return nil
@@ -63,9 +53,4 @@ func (p Plan) DueAt() string {
 		return fmt.Sprintf("time: %s", p.Time.UTC().Format(time.RFC3339))
 	}
 	return fmt.Sprintf("height: %d", p.Height)
-}
-
-// IsIBCPlan will return true if plan includes IBC client information
-func (p Plan) IsIBCPlan() bool {
-	return len(p.UpgradedClientState) != 0
 }

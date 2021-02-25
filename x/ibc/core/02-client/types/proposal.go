@@ -28,7 +28,7 @@ func init() {
 }
 
 // NewClientUpdateProposal creates a new client update proposal.
-func NewClientUpdateProposal(title, description, subjectClientID, substituteClientID string, initialHeight Height) *ClientUpdateProposal {
+func NewClientUpdateProposal(title, description, subjectClientID, substituteClientID string, initialHeight Height) govtypes.Content {
 	return &ClientUpdateProposal{
 		Title:              title,
 		Description:        description,
@@ -75,7 +75,7 @@ func (cup *ClientUpdateProposal) ValidateBasic() error {
 }
 
 // NewUpgradeProposal creates a new IBC breaking upgrade proposal.
-func NewUpgradeProposal(title, description string, plan upgradetypes.Plan, upgradedClientState exported.ClientState) (*UpgradeProposal, error) {
+func NewUpgradeProposal(title, description string, plan upgradetypes.Plan, upgradedClientState exported.ClientState) (govtypes.Content, error) {
 	any, err := PackClientState(upgradedClientState)
 	if err != nil {
 		return nil, err
@@ -115,10 +115,15 @@ func (up *UpgradeProposal) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidUpgradeProposal, "IBC chain upgrades must only set height")
 	}
 
+	cs, err := UnpackClientState(up.UpgradedClientState)
+	if err != nil {
+		return sdkerrors.Wrap(err, "failed to unpack upgraded client state")
+	}
+
 	return nil
 }
 
-// String
+// String returns the string representation of the UpgradeProposal.
 func (up UpgradeProposal) String() string {
 	var upgradedClientStr string
 	upgradedClient, err := UnpackClientState(up.UpgradedClientState)

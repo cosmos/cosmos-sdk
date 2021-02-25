@@ -77,16 +77,12 @@ func TestContentAccessors(t *testing.T) {
 	}
 }
 
-// tests a software update proposal can be marshaled and unmarshaled, and the
-// client state can be unpacked
+// tests a software update proposal can be marshaled and unmarshaled
 func TestMarshalSoftwareUpdateProposal(t *testing.T) {
-	clientStateBz := []byte("IBC client state")
-
 	// create proposal
 	plan := types.Plan{
-		Name:                "upgrade ibc",
-		Height:              1000,
-		UpgradedClientState: clientStateBz,
+		Name:   "upgrade",
+		Height: 1000,
 	}
 	content := types.NewSoftwareUpgradeProposal("title", "description", plan)
 	sup, ok := content.(*types.SoftwareUpgradeProposal)

@@ -47,7 +47,7 @@ require (
 	github.com/tendermint/cosmos-rosetta-gateway v0.3.0-rc2
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.16.0
-	github.com/tendermint/tendermint v0.34.7
+	github.com/tendermint/tendermint v0.34.8
 	github.com/tendermint/tm-db v0.6.4
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	google.golang.org/genproto v0.0.0-20210114201628-6edceaf6022f

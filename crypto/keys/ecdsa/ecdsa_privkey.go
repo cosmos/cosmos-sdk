@@ -11,9 +11,6 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 )
 
-// "github.com/cosmos/cosmos-sdk/codec"
-// "github.com/cosmos/cosmos-sdk/types/errors"
-
 type ecdsaSK struct {
 	ecdsa.PrivateKey
 }
@@ -47,8 +44,6 @@ func (sk *ecdsaSK) Equals(other cryptotypes.LedgerPrivKey) bool {
 	if !ok {
 		return false
 	}
-	// return EcEqual(&sk.PrivateKey, &sk2.PrivateKey)
-
 	return sk.PrivateKey.Equal(&sk2.PrivateKey)
 }
 

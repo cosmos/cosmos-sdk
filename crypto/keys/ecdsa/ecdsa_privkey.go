@@ -18,7 +18,7 @@ type ecdsaSK struct {
 	ecdsa.PrivateKey
 }
 
-// GenSecp256r1 generates a new secp256r1 private key. It uses OS randomness.
+// GenSecp256r1 generates a new secp256r1 private key. It uses operating system randomness.
 func GenSecp256r1() (cryptotypes.PrivKey, error) {
 	key, err := ecdsa.GenerateKey(secp256r1, rand.Reader)
 	return &ecdsaSK{*key}, err

@@ -24,7 +24,7 @@ func GenSecp256r1() (cryptotypes.PrivKey, error) {
 	return &ecdsaSK{*key}, err
 }
 
-// PubKey implements SDK PrivKey interface.
+// PubKey implements Cosmos-SDK PrivKey interface.
 func (sk *ecdsaSK) PubKey() cryptotypes.PubKey {
 	return &ecdsaPK{sk.PublicKey, nil}
 }

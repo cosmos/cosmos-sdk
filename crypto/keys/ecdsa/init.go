@@ -1,3 +1,7 @@
+// ECDSA package implements Cosmos-SDK compatible ECDSA public and private key. The keys
+// can be protobuf serialized and packed in Any.
+// Currently supported keys are:
+// + secp256r1
 package ecdsa
 
 import (

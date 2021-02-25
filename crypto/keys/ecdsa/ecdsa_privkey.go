@@ -24,12 +24,12 @@ func GenSecp256r1() (cryptotypes.PrivKey, error) {
 	return &ecdsaSK{*key}, err
 }
 
-// PubKey implements SDK PrivKey interface
+// PubKey implements SDK PrivKey interface.
 func (sk *ecdsaSK) PubKey() cryptotypes.PubKey {
 	return &ecdsaPK{sk.PublicKey, nil}
 }
 
-// Bytes serialize the private key with first byte being the curve type
+// Bytes serialize the private key with first byte being the curve type.
 func (sk *ecdsaSK) Bytes() []byte {
 	if sk == nil {
 		return nil
@@ -52,12 +52,12 @@ func (sk *ecdsaSK) Equals(other cryptotypes.LedgerPrivKey) bool {
 	return sk.PrivateKey.Equal(&sk2.PrivateKey)
 }
 
-// Type returns key type name. Implements sdk.PrivKey interface
+// Type returns key type name. Implements sdk.PrivKey interface.
 func (sk *ecdsaSK) Type() string {
 	return curveNames[sk.Curve]
 }
 
-// Sign hashes and signs the message usign ECDSA. Implements sdk.PrivKey interface
+// Sign hashes and signs the message usign ECDSA. Implements sdk.PrivKey interface.
 func (sk *ecdsaSK) Sign(msg []byte) ([]byte, error) {
 	digest := sha256.Sum256(msg)
 	return sk.PrivateKey.Sign(rand.Reader, digest[:], nil)
@@ -65,37 +65,41 @@ func (sk *ecdsaSK) Sign(msg []byte) ([]byte, error) {
 
 // **** proto.Message ****
 
+// Reset implements proto.Message interface.
 func (sk *ecdsaSK) Reset() {
 	sk.D = new(big.Int)
 	sk.PublicKey = ecdsa.PublicKey{}
 }
 
+// ProtoMessage implements proto.Message interface.
 func (*ecdsaSK) ProtoMessage() {}
+
+// String implements proto.Message interface.
 func (sk *ecdsaSK) String() string {
 	return curveNames[sk.Curve] + "{-}"
 }
 
 // **** Proto Marshaler ****
 
-// Marshal implements ProtoMarshaler interface
+// Marshal implements ProtoMarshaler interface.
 func (sk *ecdsaSK) Marshal() ([]byte, error) {
 	bv := gogotypes.BytesValue{Value: sk.Bytes()}
 	return bv.Marshal()
 }
 
-// MarshalTo implements ProtoMarshaler interface
+// MarshalTo implements ProtoMarshaler interface.
 func (sk *ecdsaSK) MarshalTo(data []byte) (int, error) {
 	bv := gogotypes.BytesValue{Value: sk.Bytes()}
 	return bv.MarshalTo(data)
 }
 
-// MarshalToSizedBuffer implements ProtoMarshaler interface
+// MarshalToSizedBuffer implements ProtoMarshaler interface.
 func (sk *ecdsaSK) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	bv := gogotypes.BytesValue{Value: sk.Bytes()}
 	return bv.MarshalToSizedBuffer(dAtA)
 }
 
-// Unmarshal implements ProtoMarshaler interface
+// Unmarshal implements ProtoMarshaler interface.
 func (sk *ecdsaSK) Unmarshal(b []byte) error {
 	bv := gogotypes.BytesValue{}
 	err := bv.Unmarshal(b)
@@ -120,7 +124,7 @@ func (sk *ecdsaSK) Unmarshal(b []byte) error {
 	return nil
 }
 
-// Size implements ProtoMarshaler interface
+// Size implements ProtoMarshaler interface.
 func (sk *ecdsaSK) Size() int {
 	if sk == nil {
 		return 0

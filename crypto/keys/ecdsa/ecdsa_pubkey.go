@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// signature holds the r and s values of an ECDSA signature
+// signature holds the r and s values of an ECDSA signature.
 type signature struct {
 	R, S *big.Int
 }
@@ -28,17 +28,12 @@ type ecdsaPK struct {
 	address tmcrypto.Address
 }
 
-// String implements PubKey interface
+// String implements PubKey interface.
 func (pk *ecdsaPK) Address() tmcrypto.Address {
 	if pk.address == nil {
 		pk.address = address.Hash(curveNames[pk.Curve], pk.Bytes())
 	}
 	return pk.address
-}
-
-// String implements PubKey interface
-func (pk *ecdsaPK) String() string {
-	return fmt.Sprintf("%s{%X}", curveNames[pk.Curve], pk.Bytes())
 }
 
 // Bytes returns the byte representation of the public key using a compressed form
@@ -65,7 +60,7 @@ func (pk *ecdsaPK) Equals(other cryptotypes.PubKey) bool {
 	return pk.PublicKey.Equal(&pk2.PublicKey)
 }
 
-// VerifySignature implements skd.PubKey interface
+// VerifySignature implements skd.PubKey interface.
 func (pk *ecdsaPK) VerifySignature(msg []byte, sig []byte) bool {
 	s := new(signature)
 	if _, err := asn1.Unmarshal(sig, s); err != nil || s == nil {
@@ -76,39 +71,47 @@ func (pk *ecdsaPK) VerifySignature(msg []byte, sig []byte) bool {
 	return ecdsa.Verify(&pk.PublicKey, h[:], s.R, s.S)
 }
 
-// Type returns key type name. Implements sdk.PubKey interface
+// Type returns key type name. Implements sdk.PubKey interface.
 func (pk *ecdsaPK) Type() string {
 	return curveNames[pk.Curve]
 }
 
 // **** proto.Message ****
 
+// Reset implements proto.Message interface.
 func (pk *ecdsaPK) Reset() {
 	*pk = ecdsaPK{}
 }
+
+// ProtoMessage implements proto.Message interface.
 func (*ecdsaPK) ProtoMessage() {}
+
+// String implements proto.Message interface
+func (pk *ecdsaPK) String() string {
+	return fmt.Sprintf("%s{%X}", curveNames[pk.Curve], pk.Bytes())
+}
 
 // **** Proto Marshaler ****
 
-// Marshal implements ProtoMarshaler interface
+// Marshal implements ProtoMarshaler interface.
 func (pk *ecdsaPK) Marshal() ([]byte, error) {
 	bv := gogotypes.BytesValue{Value: pk.Bytes()}
 	return bv.Marshal()
 }
 
-// MarshalTo implements ProtoMarshaler interface
+// MarshalTo implements ProtoMarshaler interface.
 func (pk *ecdsaPK) MarshalTo(data []byte) (int, error) {
 	bv := gogotypes.BytesValue{Value: pk.Bytes()}
 	return bv.MarshalTo(data)
 }
 
-// MarshalToSizedBuffer implements ProtoMarshaler interface
+// MarshalToSizedBuffer implements ProtoMarshaler interface.
 func (pk *ecdsaPK) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	bv := gogotypes.BytesValue{Value: pk.Bytes()}
 	return bv.MarshalToSizedBuffer(dAtA)
 }
 
-// Unmarshal implements ProtoMarshaler interface
+// Unmarshal implements ProtoMarshaler interface.
 func (pk *ecdsaPK) Unmarshal(b []byte) error {
 	bv := gogotypes.BytesValue{}
 	err := bv.Unmarshal(b)

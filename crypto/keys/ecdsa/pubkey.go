@@ -91,6 +91,11 @@ func (pk *ecdsaPK) String() string {
 	return fmt.Sprintf("%s{%X}", curveNames[pk.Curve], pk.Bytes())
 }
 
+// XXX_MessageName provides a proto name for proto.MessageName.
+func (pk *ecdsaPK) XXX_MessageName() string { //nolint:golint
+	return "cosmos.crypto.ecdsa.PubKey"
+}
+
 // **** Proto Marshaler ****
 
 // Marshal implements ProtoMarshaler interface.

@@ -331,7 +331,7 @@ func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) map[st
 }
 
 // MigrationHandler is the migration function that each module registers.
-type MigrationHandler func(store sdk.Context) error
+type MigrationHandler func(sdk.Context) error
 
 // MigrationMap is a map of moduleName -> version, where version denotes the
 // version from which we should perform the migration for each module.

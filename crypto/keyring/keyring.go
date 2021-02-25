@@ -113,7 +113,8 @@ type Importer interface {
 	ImportPubKey(uid string, armor string, keyType KeyType) error
 
 	// MigrateInfo takes a keyring.Info (in practise, from an old keyring), and
-	// writes it to the current keyring.
+	// writes it to the current keyring. We use it to migrate Type{Multi,Ledger,Offline}
+	// keyring.Infos.
 	MigrateInfo(oldInfo Info) error
 }
 

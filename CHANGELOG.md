@@ -77,6 +77,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [v0.41.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.3) - 2021-02-18
 
+**IMPORTANT:** Due to a bug in the `v0.41.x` series with how evidence handles validator consensus addresses (#8461), SDK based chains that are not using the default bech32 prefix (`cosmos`, aka all chains except for the Cosmos Hub) **should not** use this release or any release in the `v0.41.x` series. Please see #8668 for tracking & timeline for the v0.42.0 release, which will include a fix for this issue.
+
 ### Bug Fixes
 
 * [\#8617](https://github.com/cosmos/cosmos-sdk/pull/8617) Fix build failures caused by a small API breakage introduced in tendermint v0.34.7.

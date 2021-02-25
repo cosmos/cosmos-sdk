@@ -2,16 +2,16 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v042 "github.com/cosmos/cosmos-sdk/x/bank/legacy/v042"
+	v042 "github.com/cosmos/cosmos-sdk/x/slashing/legacy/v042"
 )
 
 // Migrator is a struct for handling in-place store migrations.
 type Migrator struct {
-	keeper BaseKeeper
+	keeper Keeper
 }
 
 // NewMigrator returns a new Migrator.
-func NewMigrator(keeper BaseKeeper) Migrator {
+func NewMigrator(keeper Keeper) Migrator {
 	return Migrator{keeper: keeper}
 }
 

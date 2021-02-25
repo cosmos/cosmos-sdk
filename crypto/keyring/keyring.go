@@ -120,7 +120,7 @@ type Importer interface {
 
 // Exporter is implemented by key stores that support export of private keys.
 type Exporter interface {
-	// ExportPrivKeyArmor ExportPrivKey returns a private key in ASCII armored format.
+	// ExportPrivKeyArmor returns a private key in ASCII armored format.
 	// It returns an error if the key does not exist or a wrong encryption passphrase is supplied.
 	ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error)
 	ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassphrase string) (armor string, err error)

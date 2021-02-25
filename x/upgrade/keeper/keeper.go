@@ -72,21 +72,9 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 
 	store := ctx.KVStore(k.storeKey)
 
-	// clear any old IBC state stored by previous plan
-	oldPlan, exists := k.GetUpgradePlan(ctx)
-	if exists && oldPlan.IsIBCPlan() {
-		k.ClearIBCState(ctx, oldPlan.Height-1)
-	}
-
 	bz := k.cdc.MustMarshalBinaryBare(&plan)
 	store.Set(types.PlanKey(), bz)
 
-	if plan.IsIBCPlan() {
-		// Set UpgradedClientState in store
-		// sets the new upgraded client in last height committed on this chain is at plan.Height,
-		// since the chain will panic at plan.Height and new chain will resume at plan.Height
-		return k.SetUpgradedClient(ctx, plan.Height, plan.UpgradedClientState)
-	}
 	return nil
 }
 
@@ -98,15 +86,14 @@ func (k Keeper) SetUpgradedClient(ctx sdk.Context, planHeight int64, bz []byte) 
 }
 
 // GetUpgradedClient gets the expected upgraded client for the next version of this chain
-func (k Keeper) GetUpgradedClient(ctx sdk.Context, height int64) ([]byte, error) {
+func (k Keeper) GetUpgradedClient(ctx sdk.Context, height int64) ([]byte, bool) {
 	store := ctx.KVStore(k.storeKey)
-
 	bz := store.Get(types.UpgradedClientKey(height))
 	if len(bz) == 0 {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "upgraded client not found in store for height %d", height)
+		return nil, false
 	}
 
-	return bz, nil
+	return bz, true
 }
 
 // SetUpgradedConsensusState set the expected upgraded consensus state for the next version of this chain
@@ -118,15 +105,14 @@ func (k Keeper) SetUpgradedConsensusState(ctx sdk.Context, planHeight int64, bz 
 }
 
 // GetUpgradedConsensusState set the expected upgraded consensus state for the next version of this chain
-func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) ([]byte, error) {
+func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) ([]byte, bool) {
 	store := ctx.KVStore(k.storeKey)
-
 	bz := store.Get(types.UpgradedConsStateKey(lastHeight))
 	if len(bz) == 0 {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "upgraded consensus state not found in store for height: %d", lastHeight)
+		return nil, false
 	}
 
-	return bz, nil
+	return bz, true
 }
 
 // GetDoneHeight returns the height at which the given upgrade was executed
@@ -197,9 +183,7 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 
 	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.
 	// This will prevent resubmission of upgrade msg after upgrade is already completed.
-	if plan.IsIBCPlan() {
-		k.ClearIBCState(ctx, plan.Height-1)
-	}
+	k.ClearIBCState(ctx, plan.Height-1)
 	k.ClearUpgradePlan(ctx)
 	k.setDone(ctx, plan.Name)
 }

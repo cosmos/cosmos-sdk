@@ -115,7 +115,7 @@ func (up *UpgradeProposal) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidUpgradeProposal, "IBC chain upgrades must only set height")
 	}
 
-	cs, err := UnpackClientState(up.UpgradedClientState)
+	_, err := UnpackClientState(up.UpgradedClientState)
 	if err != nil {
 		return sdkerrors.Wrap(err, "failed to unpack upgraded client state")
 	}

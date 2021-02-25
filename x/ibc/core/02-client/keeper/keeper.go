@@ -334,7 +334,12 @@ func (k Keeper) GetUpgradePlan(ctx sdk.Context) (plan upgradetypes.Plan, havePla
 	return k.upgradeKeeper.GetUpgradePlan(ctx)
 }
 
-// GetUpgradedConsensusState executes the upgrade keeper SetUpgradedConsensusState function.
+// GetUpgradedClient executes the upgrade keeper GetUpgradeClient function.
+func (k Keeper) GetUpgradedClient(ctx sdk.Context, planHeight int64) ([]byte, bool) {
+	return k.upgradeKeeper.GetUpgradedClient(ctx, planHeight)
+}
+
+// SetUpgradedConsensusState executes the upgrade keeper SetUpgradedConsensusState function.
 func (k Keeper) SetUpgradedConsensusState(ctx sdk.Context, planHeight int64, bz []byte) error {
 	return k.upgradeKeeper.SetUpgradedConsensusState(ctx, planHeight, bz)
 }

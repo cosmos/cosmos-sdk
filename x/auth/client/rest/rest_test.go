@@ -49,7 +49,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.network = network.New(s.T(), cfg)
 
 	kb := s.network.Validators[0].ClientCtx.Keyring
-	_, _, err := kb.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	_, _, err := kb.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(1)
@@ -154,6 +154,18 @@ func (s *IntegrationTestSuite) TestEncodeDecode() {
 	err = cdc.UnmarshalJSON(respWithHeight.Result, &decodeResp)
 	require.NoError(err)
 	require.Equal(stdTx, legacytx.StdTx(decodeResp))
+}
+
+func (s *IntegrationTestSuite) TestQueryAccountWithColon() {
+	val := s.network.Validators[0]
+	// This address is not a valid simapp address! It is only used to test that addresses with
+	// colon don't 501. See
+	// https://github.com/cosmos/cosmos-sdk/issues/8650
+	addrWithColon := "cosmos:1m4f6lwd9eh8e5nxt0h00d46d3fr03apfh8qf4g"
+
+	res, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/auth/v1beta1/accounts/%s", val.APIAddress, addrWithColon))
+	s.Require().NoError(err)
+	s.Require().Contains(string(res), "decoding bech32 failed")
 }
 
 func (s *IntegrationTestSuite) TestEncodeIBCTx() {

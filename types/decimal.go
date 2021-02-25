@@ -80,8 +80,6 @@ func precisionMultiplier(prec int64) *big.Int {
 	return precisionMultipliers[prec]
 }
 
-//______________________________________________________________________________________________
-
 // create a new Dec from integer assuming whole number
 func NewDec(i int64) Dec {
 	return NewDecWithPrec(i, 0)
@@ -195,8 +193,6 @@ func MustNewDecFromStr(s string) Dec {
 	return dec
 }
 
-//______________________________________________________________________________________________
-//nolint
 func (d Dec) IsNil() bool       { return d.i == nil }                 // is decimal nil
 func (d Dec) IsZero() bool      { return (d.i).Sign() == 0 }          // is equal to zero
 func (d Dec) IsNegative() bool  { return (d.i).Sign() == -1 }         // is negative
@@ -215,8 +211,8 @@ func (d Dec) BigInt() *big.Int {
 		return nil
 	}
 
-	copy := new(big.Int)
-	return copy.Set(d.i)
+	cp := new(big.Int)
+	return cp.Set(d.i)
 }
 
 // addition
@@ -561,8 +557,6 @@ func (d Dec) RoundInt() Int {
 	return NewIntFromBigInt(chopPrecisionAndRoundNonMutative(d.i))
 }
 
-//___________________________________________________________________________________
-
 // similar to chopPrecisionAndRound, but always rounds down
 func chopPrecisionAndTruncate(d *big.Int) *big.Int {
 	return d.Quo(d, precisionReuse)
@@ -612,8 +606,6 @@ func (d Dec) Ceil() Dec {
 	return NewDecFromBigInt(quo.Add(quo, oneInt))
 }
 
-//___________________________________________________________________________________
-
 // MaxSortableDec is the largest Dec that can be passed into SortableDecBytes()
 // Its negative form is the least Dec that can be passed in.
 var MaxSortableDec = OneDec().Quo(SmallestDec())
@@ -647,8 +639,6 @@ func SortableDecBytes(dec Dec) []byte {
 	}
 	return []byte(fmt.Sprintf(fmt.Sprintf("%%0%ds", Precision*2+1), dec.String()))
 }
-
-//___________________________________________________________________________________
 
 // reuse nil values
 var nilJSON []byte
@@ -758,7 +748,6 @@ func (dp DecProto) String() string {
 	return dp.Dec.String()
 }
 
-//___________________________________________________________________________________
 // helpers
 
 // test if two decimal arrays are equal

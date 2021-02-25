@@ -111,6 +111,11 @@ type Importer interface {
 
 	// ImportPubKey imports ASCII armored public keys.
 	ImportPubKey(uid string, armor string, keyType KeyType) error
+
+	// MigrateInfo takes a keyring.Info (in practise, from an old keyring), and
+	// writes it to the current keyring. We use it to migrate Type{Multi,Ledger,Offline}
+	// keyring.Infos.
+	MigrateInfo(oldInfo Info) error
 }
 
 // Exporter is implemented by key stores that support export of public and private keys.
@@ -305,26 +310,35 @@ func (ks keystore) ImportPubKey(uid string, armor string, keyType KeyType) error
 		return err
 	}
 
-	pubKey, err := legacy.AminoPubKeyFromBytes(pubBytes)
+	pubKey, err := legacy.PubKeyFromBytes(pubBytes)
 	if err != nil {
 		return err
 	}
 
 	if keyType == TypeMulti {
-		_, err = ks.writeMultisigKey(uid, &pubKey)
+		_, err = ks.writeMultisigKey(uid, pubKey)
 		if err != nil {
 			return err
 		}
 	}
 
 	if keyType == TypeOffline || keyType == TypeLedger {
-		_, err = ks.writeOfflineKey(uid, &pubKey, hd.PubKeyType(algo))
+		_, err = ks.writeOfflineKey(uid, pubKey, hd.PubKeyType(algo))
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+// MigrateInfo implements Importer.MigrateInfo.
+func (ks keystore) MigrateInfo(oldInfo Info) error {
+	if _, err := ks.Key(oldInfo.GetName()); err == nil {
+		return fmt.Errorf("cannot overwrite key: %s", oldInfo.GetName())
+	}
+
+	return ks.writeInfo(oldInfo)
 }
 
 func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {

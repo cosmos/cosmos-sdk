@@ -6,6 +6,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
+var (
+	_ codectypes.UnpackInterfacesMessage = QueryChannelClientStateResponse{}
+	_ codectypes.UnpackInterfacesMessage = QueryChannelConsensusStateResponse{}
+)
+
 // NewQueryChannelResponse creates a new QueryChannelResponse instance
 func NewQueryChannelResponse(channel Channel, proof []byte, height clienttypes.Height) *QueryChannelResponse {
 	return &QueryChannelResponse{
@@ -24,6 +29,11 @@ func NewQueryChannelClientStateResponse(identifiedClientState clienttypes.Identi
 	}
 }
 
+// UnpackInterfaces implements UnpackInterfacesMesssage.UnpackInterfaces
+func (qccsr QueryChannelClientStateResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return qccsr.IdentifiedClientState.UnpackInterfaces(unpacker)
+}
+
 // NewQueryChannelConsensusStateResponse creates a newQueryChannelConsensusStateResponse instance
 func NewQueryChannelConsensusStateResponse(clientID string, anyConsensusState *codectypes.Any, consensusStateHeight exported.Height, proof []byte, height clienttypes.Height) *QueryChannelConsensusStateResponse {
 	return &QueryChannelConsensusStateResponse{
@@ -32,6 +42,11 @@ func NewQueryChannelConsensusStateResponse(clientID string, anyConsensusState *c
 		Proof:          proof,
 		ProofHeight:    height,
 	}
+}
+
+// UnpackInterfaces implements UnpackInterfacesMesssage.UnpackInterfaces
+func (qccsr QueryChannelConsensusStateResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return unpacker.UnpackAny(qccsr.ConsensusState, new(exported.ConsensusState))
 }
 
 // NewQueryPacketCommitmentResponse creates a new QueryPacketCommitmentResponse instance

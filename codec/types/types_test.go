@@ -9,16 +9,15 @@ import (
 	"github.com/gogo/protobuf/grpc"
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
-	grpc2 "google.golang.org/grpc"
-
 	"github.com/stretchr/testify/require"
+	grpc2 "google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
-func TestPackUnpack(t *testing.T) {
+func TestAnyPackUnpack(t *testing.T) {
 	registry := testdata.NewTestInterfaceRegistry()
 
 	spot := &testdata.Dog{Name: "Spot"}
@@ -28,12 +27,6 @@ func TestPackUnpack(t *testing.T) {
 	any, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)
 	require.Equal(t, spot, any.GetCachedValue())
-	err = registry.UnpackAny(any, &animal)
-	require.NoError(t, err)
-	require.Equal(t, spot, animal)
-
-	// without cache
-	any.ClearCachedValue()
 	err = registry.UnpackAny(any, &animal)
 	require.NoError(t, err)
 	require.Equal(t, spot, animal)

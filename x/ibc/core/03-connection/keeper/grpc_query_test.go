@@ -308,6 +308,10 @@ func (suite *KeeperTestSuite) TestQueryConnectionClientState() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
 				suite.Require().Equal(&expIdentifiedClientState, res.IdentifiedClientState)
+
+				// ensure UnpackInterfaces is defined
+				cachedValue := res.IdentifiedClientState.ClientState.GetCachedValue()
+				suite.Require().NotNil(cachedValue)
 			} else {
 				suite.Require().Error(err)
 			}
@@ -404,6 +408,10 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 				suite.Require().NoError(err)
 				suite.Require().Equal(expConsensusState, consensusState)
 				suite.Require().Equal(expClientID, res.ClientId)
+
+				// ensure UnpackInterfaces is defined
+				cachedValue := res.ConsensusState.GetCachedValue()
+				suite.Require().NotNil(cachedValue)
 			} else {
 				suite.Require().Error(err)
 			}

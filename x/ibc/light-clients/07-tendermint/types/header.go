@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
-var _ exported.Header = Header{}
+var _ exported.Header = &Header{}
 
 // ConsensusState returns the updated consensus state associated with the header
 func (h Header) ConsensusState() *ConsensusState {

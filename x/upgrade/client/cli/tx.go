@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -29,11 +30,6 @@ func GetTxCmd() *cobra.Command {
 		Use:   types.ModuleName,
 		Short: "Upgrade transaction subcommands",
 	}
-
-	cmd.AddCommand(
-		NewCmdSubmitUpgradeProposal(),
-		NewCmdSubmitCancelUpgradeProposal(),
-	)
 
 	return cmd
 }
@@ -74,11 +70,14 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 				return err
 			}
 
-			if err = msg.ValidateBasic(); err != nil {
+			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
+			msgClient := gov.NewMsgClient(svcMsgClientConn)
+			_, err = msgClient.SubmitProposal(cmd.Context(), msg)
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
 		},
 	}
 
@@ -133,11 +132,14 @@ func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 				return err
 			}
 
-			if err = msg.ValidateBasic(); err != nil {
+			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
+			msgClient := gov.NewMsgClient(svcMsgClientConn)
+			_, err = msgClient.SubmitProposal(cmd.Context(), msg)
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
 		},
 	}
 

@@ -3,6 +3,7 @@
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 VERSION := $(shell echo $(shell git describe --always) | sed 's/^v//')
+TMVERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
@@ -58,7 +59,8 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
 		  -X github.com/cosmos/cosmos-sdk/version.AppName=simd \
 		  -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 		  -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)"
+		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
+			-X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TMVERSION)
 
 # DB backend selection
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
@@ -201,14 +203,7 @@ build-docs:
 		cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
 		cp ~/output/$${path_prefix}/index.html ~/output ; \
 	done < versions ;
-
-sync-docs:
-	cd ~/output && \
-	echo "role_arn = ${DEPLOYMENT_ROLE_ARN}" >> /root/.aws/config ; \
-	echo "CI job = ${CIRCLE_BUILD_URL}" >> version.html ; \
-	aws s3 sync . s3://${WEBSITE_BUCKET} --profile terraform --delete ; \
-	aws cloudfront create-invalidation --distribution-id ${CF_DISTRIBUTION_ID} --profile terraform --path "/*" ;
-.PHONY: sync-docs
+.PHONY: build-docs
 
 ###############################################################################
 ###                           Tests & Simulation                            ###
@@ -315,6 +310,11 @@ test-sim-profile:
 test-cover:
 	@export VERSION=$(VERSION); bash -x contrib/test_cover.sh
 .PHONY: test-cover
+
+test-rosetta:
+	docker build -t rosetta-ci:latest -f contrib/rosetta/node/Dockerfile .
+	docker-compose -f contrib/rosetta/docker-compose.yaml up --abort-on-container-exit --exit-code-from test_rosetta --build
+.PHONY: test-rosetta
 
 benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
@@ -470,3 +470,15 @@ localnet-stop:
 	docker-compose down
 
 .PHONY: localnet-start localnet-stop
+
+###############################################################################
+###                                rosetta                                  ###
+###############################################################################
+# builds rosetta test data dir
+rosetta-data:
+	-docker container rm data_dir_build
+	docker build -t rosetta-ci:latest -f contrib/rosetta/node/Dockerfile .
+	docker run --name data_dir_build -t rosetta-ci:latest sh /rosetta/data.sh
+	docker cp data_dir_build:/tmp/data.tar.gz "$(CURDIR)/contrib/rosetta/node/data.tar.gz"
+	docker container rm data_dir_build
+.PHONY: rosetta-data

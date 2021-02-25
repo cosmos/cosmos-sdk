@@ -8,15 +8,10 @@ protoc_gen_gocosmos() {
     return 1
   fi
 
-  go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos 2>/dev/null
+  go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos@latest 2>/dev/null
 }
 
-protoc_gen_doc() {
-  go get -u github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc 2>/dev/null
-} 
-
 protoc_gen_gocosmos
-protoc_gen_doc
 
 proto_dirs=$(find ./proto -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
 for dir in $proto_dirs; do
@@ -25,13 +20,7 @@ for dir in $proto_dirs; do
   -I "third_party/proto" \
   --gocosmos_out=plugins=interfacetype+grpc,\
 Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
-  $(find "${dir}" -maxdepth 1 -name '*.proto')
-
-  # command to generate gRPC gateway (*.pb.gw.go in respective modules) files
-  buf protoc \
-  -I "proto" \
-  -I "third_party/proto" \
-  --grpc-gateway_out=logtostderr=true:. \
+  --grpc-gateway_out=logtostderr=true,allow_colon_final_segments=true:. \
   $(find "${dir}" -maxdepth 1 -name '*.proto')
 
 done

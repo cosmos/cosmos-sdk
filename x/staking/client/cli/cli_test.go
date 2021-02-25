@@ -82,7 +82,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 	consPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, consPrivKey.PubKey())
 	s.Require().NoError(err)
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
@@ -1037,7 +1037,7 @@ func (s *IntegrationTestSuite) TestNewCmdEditValidator() {
 func (s *IntegrationTestSuite) TestNewCmdDelegate() {
 	val := s.network.Validators[0]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewAccount", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
@@ -1277,7 +1277,7 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 	val := s.network.Validators[0]
 
 	// Create new account in the keyring.
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewDelegator", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewDelegator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(err)
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
 

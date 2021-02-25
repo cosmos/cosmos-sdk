@@ -176,6 +176,7 @@ func (pubKey *PubKey) VerifySignature(msg []byte, sig []byte) bool {
 		return false
 	}
 
+	// uses https://github.com/hdevalence/ed25519consensus.Verify to comply with zip215 verification rules
 	return ed25519consensus.Verify(pubKey.Key, msg, sig)
 }
 

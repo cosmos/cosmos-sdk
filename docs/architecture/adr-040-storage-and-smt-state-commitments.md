@@ -76,7 +76,7 @@ A Sparse Merkle tree is based on the idea of a complete Merkle tree of an intrac
 One of the Stargate core features are snapshots and fast sync delivered in the `/snapshot` package. Currently this feature is implemented through IAVL.
 Many underlying DB engines support snapshotting. Hence, we propose to reuse that functionality and limit the supported DB engines to ones which support snapshots (Badger, RocksDB, ...) using a _copy on write_ mechanism (we can't create a full copy - it would be too big).
 
-The number of snapshots should be configurable by user (eg: 10 past versions - one every 100 blocks).
+New snapshot will be created in every `EndBlocker`. The number of snapshots should be configurable by user (eg: 100 past blocks and one snapshot every 100 blocks for past 2000 blocks).
 
 Pruning old snapshots is effectively done by DB. If DB allows to configure max number of snapshots, then we are done. Otherwise, we need to hook this mechanism into `EndBlocker`.
 
@@ -88,13 +88,11 @@ We can use the same approach for SM Storage.
 
 #### Accessing old, committed state versions
 
-ABCI interface requires a support for querying data in past versions. The version is specified by a block height (so we query for an object by key `K` at a version committed in block height `H`). The query is defined in the `abci.Query` structure. The number of old versions we support for `abci.Query` is configurable.
+One of the functional requirements is to access old state. This is done with `abci.Query` structure.  The version is specified by a block height (so we query for an object by key `K` at a version committed in block height `H`). The number of old versions supported for `abci.Query` is configurable. Moreover, SDK could provide a way to directly access the state. However, a state machines shouldn't do that - since the number of snapshots is configurable, it would lead to a not deterministic execution.
 
-TODO: Verify if we can use same mechanism as for snapshots (offloading it to DB engine):
-+ what's DB storage impact - are snapshots expensive?
+We validated the Snapshot mechanism for querying old state versions.
 
-If this won't work, then we will integrate other mechanism discussed in https://github.com/cosmos/cosmos-sdk/discussions/8297#discussioncomment-309918.
-Pruning custom versions could be done using _mark and sweep GC_: once per defined period, a GC will start, mark old objects and prune them. This will require encoding a version mechanism in a KV store.
+Pruning custom versions could be done using a Garbage Collector: once per defined period, a GC will start, and remove old snapshots. This will require encoding a version mechanism in a KV store.
 
 
 ### Managing versions and pruning

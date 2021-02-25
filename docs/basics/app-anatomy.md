@@ -236,6 +236,18 @@ See an example of an application's main command-line file from the [nameservice 
 
 ## Dependencies and Makefile
 
+::: warning
+A patch introduced in `go-grpc v1.34.0` made gRPC incompatible with the `gogoproto` library, making some [gRPC queries](https://github.com/cosmos/cosmos-sdk/issues/8426) panic. As such, the SDK requires that `go-grpc <=v1.33.2` is installed in your `go.mod`.
+
+To make sure that gRPC is working properly, it is **highly recommended** to add the following line in your application's `go.mod`:
+
+```
+replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
+```
+
+Please see [issue #8392](https://github.com/cosmos/cosmos-sdk/issues/8392) for more info.
+:::
+
 This section is optional, as developers are free to choose their dependency manager and project building method. That said, the current most used framework for versioning control is [`go.mod`](https://github.com/golang/go/wiki/Modules). It ensures each of the libraries used throughout the application are imported with the correct version. See an example from the [nameservice tutorial](https://github.com/cosmos/sdk-tutorials/tree/master/nameservice):
 
 +++ https://github.com/cosmos/sdk-tutorials/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/go.mod#L1-L18

@@ -118,7 +118,7 @@ func (pk *ecdsaPK) Unmarshal(b []byte) error {
 	return pk.UnmarshalAmino(bv.Value)
 }
 
-// Size implements ProtoMarshaler interface
+// Size implements ProtoMarshaler interface.
 func (pk *ecdsaPK) Size() int {
 	if pk == nil {
 		return 0

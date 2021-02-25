@@ -110,8 +110,31 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		err = migrator.MigrateInfo(oldInfo)
+		// TypeLocal needs an additional step to ask password.
+		// The other keyring types are handled by MigrateInfo.
+		if keyType != keyring.TypeLocal {
+			err = migrator.MigrateInfo(oldInfo)
+			if err != nil {
+				return err
+			}
+
+			continue
+		}
+
+		password, err := input.GetPassword("Enter passphrase to decrypt key:", buf)
 		if err != nil {
+			return err
+		}
+
+		// NOTE: A passphrase is not actually needed here as when the key information
+		// is imported into the Keyring-based Keybase it only needs the password
+		// (see: writeLocalKey).
+		armoredPriv, err := legacyKb.ExportPrivKey(keyName, password, migratePassphrase)
+		if err != nil {
+			return err
+		}
+
+		if err := migrator.ImportPrivKey(keyName, armoredPriv, migratePassphrase); err != nil {
 			return err
 		}
 

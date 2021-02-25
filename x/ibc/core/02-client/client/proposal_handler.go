@@ -5,4 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/client/cli"
 )
 
-var ProposalHandler = govclient.NewProposalHandler(cli.NewCmdSubmitUpdateClientProposal, nil)
+var (
+	UpdateClientProposalHandler = govclient.NewProposalHandler(cli.NewCmdSubmitUpdateClientProposal, nil)
+	UpgradeProposalHandler      = govclient.NewProposalHandler(cli.NewCmdSubmitUpgradeProposal, nil)
+)

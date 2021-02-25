@@ -19,6 +19,8 @@ import (
 // is not needed for importing into the Keyring keystore.
 const migratePassphrase = "NOOP_PASSPHRASE"
 
+const flagOldHome = "old-home"
+
 // MigrateCommand migrates key information from legacy keybase to OS secret store.
 func MigrateCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -35,16 +37,18 @@ It is recommended to run in 'dry-run' mode first to verify all key migration mat
 		RunE: runMigrateCmd,
 	}
 
+	cmd.Flags().String(flagOldHome, "", "The root directory of the old keyring")
 	cmd.Flags().Bool(flags.FlagDryRun, false, "Run migration without actually persisting any changes to the new Keybase")
 	return cmd
 }
 
 func runMigrateCmd(cmd *cobra.Command, args []string) error {
+	oldRootDir, _ := cmd.Flags().GetString(flagOldHome)
 	rootDir, _ := cmd.Flags().GetString(flags.FlagHome)
 
 	// instantiate legacy keybase
 	var legacyKb keyring.LegacyKeybase
-	legacyKb, err := NewLegacyKeyBaseFromDir(rootDir)
+	legacyKb, err := NewLegacyKeyBaseFromDir(oldRootDir)
 	if err != nil {
 		return err
 	}
@@ -91,11 +95,11 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	for _, key := range oldKeys {
-		keyName := key.GetName()
-		keyType := key.GetType()
+	for _, oldInfo := range oldKeys {
+		keyName := oldInfo.GetName()
+		keyType := oldInfo.GetType()
 
-		cmd.PrintErrf("Migrating key: '%s (%s)' ...\n", key.GetName(), keyType)
+		cmd.PrintErrf("Migrating key: '%s (%s)' ...\n", keyName, keyType)
 
 		// allow user to skip migrating specific keys
 		ok, err := input.GetConfirmation("Skip key migration?", buf, cmd.ErrOrStderr())
@@ -106,35 +110,11 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		if keyType != keyring.TypeLocal {
-			pubkeyArmor, err := legacyKb.ExportPubKey(keyName)
-			if err != nil {
-				return err
-			}
-
-			if err := migrator.ImportPubKey(keyName, pubkeyArmor, keyType); err != nil {
-				return err
-			}
-
-			continue
-		}
-
-		password, err := input.GetPassword("Enter passphrase to decrypt key:", buf)
+		err = migrator.MigrateInfo(oldInfo)
 		if err != nil {
 			return err
 		}
 
-		// NOTE: A passphrase is not actually needed here as when the key information
-		// is imported into the Keyring-based Keybase it only needs the password
-		// (see: writeLocalKey).
-		armoredPriv, err := legacyKb.ExportPrivKey(keyName, password, migratePassphrase)
-		if err != nil {
-			return err
-		}
-
-		if err := migrator.ImportPrivKey(keyName, armoredPriv, migratePassphrase); err != nil {
-			return err
-		}
 	}
 	cmd.Print("Migration Complete")
 

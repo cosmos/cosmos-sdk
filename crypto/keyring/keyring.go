@@ -112,7 +112,7 @@ type Importer interface {
 	// ImportPrivKey imports ASCII armored passphrase-encrypted private keys.
 	ImportPrivKey(uid, armor, passphrase string) error
 
-	// MigrateInfo takes a keyring.Info (in practise, from an old keyring), and
+	// ImportInfo MigrateInfo takes a keyring.Info (in practise, from an old keyring), and
 	// writes it to the current keyring. We use it to migrate Type{Multi,Ledger,Offline}
 	// keyring.Infos.
 	ImportInfo(oldInfo Info) error

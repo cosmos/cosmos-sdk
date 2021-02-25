@@ -56,7 +56,6 @@ func (v Vote) Empty() bool {
 }
 
 // NewNonSplitVoteOption creates a single option vote with weight 1
-//nolint:interfacer
 func NewNonSplitVoteOption(option VoteOption) WeightedVoteOptions {
 	return WeightedVoteOptions{{option, sdk.NewDec(1)}}
 }

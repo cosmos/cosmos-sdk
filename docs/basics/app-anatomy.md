@@ -33,7 +33,7 @@ The blockchain full-node presents itself as a binary, generally suffixed by `-d`
 Once the main binary is built, the node can be started by running the [`start` command](../core/node.md#start-command). This command function primarily does three things:
 
 1. Create an instance of the state-machine defined in [`app.go`](#core-application-file).
-2. Initialize the state-machine with the latest known state, extracted from the `db` stored in the `~/.appd/data` folder. At this point, the state-machine is at height `appBlockHeight`.
+2. Initialize the state-machine with the latest known state, extracted from the `db` stored in the `~/.app/data` folder. At this point, the state-machine is at height `appBlockHeight`.
 3. Create and start a new Tendermint instance. Among other things, the node will perform a handshake with its peers. It will get the latest `blockHeight` from them, and replay blocks to sync to this height if it is greater than the local `appBlockHeight`. If `appBlockHeight` is `0`, the node is starting from genesis and Tendermint sends an `InitChain` message via the ABCI to the `app`, which triggers the [`InitChainer`](#initchainer).
 
 ## Core Application File
@@ -77,7 +77,7 @@ Here are the main actions performed by this function:
 - Mount the stores.
 - Return the application.
 
-Note that this function only creates an instance of the app, while the actual state is either carried over from the `~/.appd/data` folder if the node is restarted, or generated from the genesis file if the node is started for the first time.
+Note that this function only creates an instance of the app, while the actual state is either carried over from the `~/.app/data` folder if the node is restarted, or generated from the genesis file if the node is started for the first time.
 
 See an example of application constructor from `simapp`:
 
@@ -236,6 +236,18 @@ See an example of an application's main command-line file from the [nameservice 
 +++ https://github.com/cosmos/sdk-tutorials/blob/86a27321cf89cc637581762e953d0c07f8c78ece/nameservice/cmd/nscli/main.go
 
 ## Dependencies and Makefile
+
+::: warning
+A patch introduced in `go-grpc v1.34.0` made gRPC incompatible with the `gogoproto` library, making some [gRPC queries](https://github.com/cosmos/cosmos-sdk/issues/8426) panic. As such, the SDK requires that `go-grpc <=v1.33.2` is installed in your `go.mod`.
+
+To make sure that gRPC is working properly, it is **highly recommended** to add the following line in your application's `go.mod`:
+
+```
+replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
+```
+
+Please see [issue #8392](https://github.com/cosmos/cosmos-sdk/issues/8392) for more info.
+:::
 
 This section is optional, as developers are free to choose their dependency manager and project building method. That said, the current most used framework for versioning control is [`go.mod`](https://github.com/golang/go/wiki/Modules). It ensures each of the libraries used throughout the application are imported with the correct version. See an example from the [nameservice tutorial](https://github.com/cosmos/sdk-tutorials/tree/master/nameservice):
 

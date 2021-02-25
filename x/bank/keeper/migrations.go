@@ -5,16 +5,17 @@ import (
 	v042 "github.com/cosmos/cosmos-sdk/x/bank/legacy/v042"
 )
 
-// MigrationKeeper is an interface that the keeper implements for handling
-// in-place store migrations.
-type MigrationKeeper interface {
-	// Migrate1 migrates the store from version 1 to 2.
-	Migrate1(ctx sdk.Context) error
+// Migrator is a struct for handling in-place store migrations.
+type Migrator struct {
+	keeper BaseKeeper
 }
 
-var _ MigrationKeeper = (*BaseKeeper)(nil)
+// NewMigrator returns a new Migrator.
+func NewMigrator(keeper BaseKeeper) Migrator {
+	return Migrator{keeper: keeper}
+}
 
-// Migrate1 implements MigrationKeeper.Migrate1 method.
-func (k BaseKeeper) Migrate1(ctx sdk.Context) error {
-	return v042.MigrateStore(ctx, k.storeKey)
+// Migrate1to2 migrates from version 1 to 2.
+func (m Migrator) Migrate1to2(ctx sdk.Context) error {
+	return v042.MigrateStore(ctx, m.keeper.storeKey)
 }

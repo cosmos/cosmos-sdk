@@ -57,10 +57,6 @@ func (s *KeeperTestSuite) TestReadUpgradeInfoFromDisk() {
 }
 
 func (s *KeeperTestSuite) TestScheduleUpgrade() {
-	cs := []byte("gaia IBC client state")
-
-	altCs := []byte("ethermint IBC client state")
-
 	cases := []struct {
 		name    string
 		plan    types.Plan
@@ -88,17 +84,6 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 			expPass: true,
 		},
 		{
-			name: "successful ibc schedule",
-			plan: types.Plan{
-				Name:                "all-good",
-				Info:                "some text here",
-				Height:              123450000,
-				UpgradedClientState: cs,
-			},
-			setup:   func() {},
-			expPass: true,
-		},
-		{
 			name: "successful overwrite",
 			plan: types.Plan{
 				Name:   "all-good",
@@ -110,41 +95,6 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 					Name:   "alt-good",
 					Info:   "new text here",
 					Height: 543210000,
-				})
-			},
-			expPass: true,
-		},
-		{
-			name: "successful IBC overwrite",
-			plan: types.Plan{
-				Name:                "all-good",
-				Info:                "some text here",
-				Height:              123450000,
-				UpgradedClientState: cs,
-			},
-			setup: func() {
-				s.app.UpgradeKeeper.ScheduleUpgrade(s.ctx, types.Plan{
-					Name:                "alt-good",
-					Info:                "new text here",
-					Height:              543210000,
-					UpgradedClientState: altCs,
-				})
-			},
-			expPass: true,
-		},
-		{
-			name: "successful IBC overwrite with non IBC plan",
-			plan: types.Plan{
-				Name:   "all-good",
-				Info:   "some text here",
-				Height: 123450000,
-			},
-			setup: func() {
-				s.app.UpgradeKeeper.ScheduleUpgrade(s.ctx, types.Plan{
-					Name:                "alt-good",
-					Info:                "new text here",
-					Height:              543210000,
-					UpgradedClientState: altCs,
 				})
 			},
 			expPass: true,
@@ -210,16 +160,6 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 
 			if tc.expPass {
 				s.Require().NoError(err, "valid test case failed")
-				if tc.plan.UpgradedClientState != nil {
-					got, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx, tc.plan.Height)
-					s.Require().NoError(err)
-					s.Require().Equal(tc.plan.UpgradedClientState, got, "upgradedClient not equal to expected value")
-				} else {
-					// check that upgraded client is empty if latest plan does not specify an upgraded client
-					got, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx, tc.plan.Height)
-					s.Require().Error(err)
-					s.Require().Nil(got)
-				}
 			} else {
 				s.Require().Error(err, "invalid test case passed")
 			}
@@ -259,13 +199,13 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 		// setup test case
 		tc.setup()
 
-		gotCs, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx, tc.height)
+		gotCs, exists := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx, tc.height)
 		if tc.exists {
 			s.Require().Equal(cs, gotCs, "valid case: %s did not retrieve correct client state", tc.name)
-			s.Require().NoError(err, "valid case: %s returned error")
+			s.Require().True(exists, "valid case: %s did not retrieve client state", tc.name)
 		} else {
 			s.Require().Nil(gotCs, "invalid case: %s retrieved valid client state", tc.name)
-			s.Require().Error(err, "invalid case: %s did not return error", tc.name)
+			s.Require().False(exists, "invalid case: %s retrieved valid client state", tc.name)
 		}
 	}
 

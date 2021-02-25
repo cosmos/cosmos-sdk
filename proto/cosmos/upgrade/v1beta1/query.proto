@@ -65,7 +65,6 @@ message QueryUpgradedConsensusStateRequest {
 // RPC method.
 message QueryUpgradedConsensusStateResponse {
   reserved 1;
-  reserved "option";
 
   bytes upgraded_consensus_state = 2;
 }

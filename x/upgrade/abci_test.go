@@ -118,43 +118,6 @@ func TestCanOverwriteScheduleUpgrade(t *testing.T) {
 	VerifyDoUpgrade(t)
 }
 
-func VerifyDoIBCUpgrade(t *testing.T) {
-	t.Log("Verify that a panic happens at the upgrade time/height")
-	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
-	consState := []byte("consensus state")
-
-	// Check IBC state is set before upgrade using last height: s.ctx.BlockHeight()
-	cs, err := s.keeper.GetUpgradedClient(newCtx, s.ctx.BlockHeight()+1)
-	require.NoError(t, err, "could not retrieve upgraded client before upgrade plan is applied")
-	require.NotNil(t, cs, "IBC client is nil before upgrade")
-
-	// set the consensus state since this happens in IBC 02-client begin blocker
-	err = s.keeper.SetUpgradedConsensusState(newCtx, s.ctx.BlockHeight(), consState)
-	require.NoError(t, err)
-
-	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-	require.Panics(t, func() {
-		s.module.BeginBlock(newCtx, req)
-	})
-
-	t.Log("Verify that the upgrade can be successfully applied with a handler")
-	s.keeper.SetUpgradeHandler("test", func(ctx sdk.Context, plan types.Plan) {})
-	require.NotPanics(t, func() {
-		s.module.BeginBlock(newCtx, req)
-	})
-
-	VerifyCleared(t, newCtx)
-
-	// Check IBC state is cleared after upgrade using last height: s.ctx.BlockHeight()
-	cs, err = s.keeper.GetUpgradedClient(newCtx, s.ctx.BlockHeight())
-	require.Error(t, err, "retrieved upgraded client after upgrade plan is applied")
-	require.Nil(t, cs, "IBC client is not-nil after upgrade")
-
-	consState, err = s.keeper.GetUpgradedConsensusState(newCtx, s.ctx.BlockHeight())
-	require.Error(t, err, "retrieved upgraded consensus state after upgrade plan is applied")
-	require.Nil(t, consState, "IBC consensus state is not-nil after upgrade")
-}
-
 func VerifyDoUpgrade(t *testing.T) {
 	t.Log("Verify that a panic happens at the upgrade time/height")
 	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
@@ -262,25 +225,20 @@ func TestNoSpuriousUpgrades(t *testing.T) {
 }
 
 func TestPlanStringer(t *testing.T) {
-	cs := []byte("IBC client state")
-
 	ti, err := time.Parse(time.RFC3339, "2020-01-01T00:00:00Z")
 	require.Nil(t, err)
 	require.Equal(t, `Upgrade Plan
   Name: test
   Time: 2020-01-01T00:00:00Z
-  Info: .
-  Upgraded IBC Client: no upgraded client provided`, types.Plan{Name: "test", Time: ti}.String())
+  Info: `, types.Plan{Name: "test", Time: ti}.String())
 	require.Equal(t, `Upgrade Plan
   Name: test
   Height: 100
-  Info: .
-  Upgraded IBC Client: no upgraded client provided`, types.Plan{Name: "test", Height: 100}.String())
+  Info: `, types.Plan{Name: "test", Height: 100}.String())
 	require.Equal(t, fmt.Sprintf(`Upgrade Plan
   Name: test
   Height: 100
-  Info: .
-  Upgraded IBC Client: %s`, cs), types.Plan{Name: "test", Height: 100, UpgradedClientState: cs}.String())
+  Info: `), types.Plan{Name: "test", Height: 100}.String())
 }
 
 func VerifyNotDone(t *testing.T, newCtx sdk.Context, name string) {
@@ -444,23 +402,6 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 	})
 
 	VerifyDoUpgrade(t)
-	VerifyDone(t, s.ctx, "test")
-}
-
-func TestIBCUpgradeWithoutSkip(t *testing.T) {
-	s := setupTest(10, map[int64]bool{})
-	cs := []byte("IBC client state")
-	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{
-		Title: "prop",
-		Plan: types.Plan{
-			Name:                "test",
-			Height:              s.ctx.BlockHeight() + 1,
-			UpgradedClientState: cs,
-		},
-	})
-	require.Nil(t, err)
-
-	VerifyDoIBCUpgrade(t)
 	VerifyDone(t, s.ctx, "test")
 }
 

@@ -294,22 +294,3 @@ func (k BaseSendKeeper) SendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool {
 func (k BaseSendKeeper) BlockedAddr(addr sdk.AccAddress) bool {
 	return k.blockedAddrs[addr.String()]
 }
-
-// balanceError computes the error
-func balanceError(ownedCoins, coinsToSpend, afterBalance sdk.Coins) error {
-	for _, coin := range afterBalance {
-		if !coin.IsNegative() {
-			continue
-		}
-
-		ownedCoin := sdk.NewCoin(coin.Denom, ownedCoins.AmountOf(coin.Denom))
-		spendCoin := sdk.NewCoin(coin.Denom, coinsToSpend.AmountOf(coin.Denom))
-
-		return sdkerrors.Wrapf(
-			sdkerrors.ErrInsufficientFunds,
-			"%s is smaller than %s", ownedCoin, spendCoin,
-		)
-	}
-	// we should never reach this point...
-	return nil
-}

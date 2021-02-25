@@ -17,7 +17,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		// Set the time to the last block time of the current chain.
 		// In order for a client to upgrade successfully, the first block of the new chain must be committed
 		// within the trusting period of the last block time on this chain.
-		_, exists := k.GetUpgradedClient(ctx, plan.Height-1)
+		_, exists := k.GetUpgradedClient(ctx, plan.Height)
 		if exists && ctx.BlockHeight() == plan.Height-1 {
 			upgradedConsState := &ibctmtypes.ConsensusState{
 				Timestamp:          ctx.BlockTime(),

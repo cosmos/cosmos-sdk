@@ -64,29 +64,29 @@ func (suite *ClientTestSuite) TestBeginBlocker() {
 }
 
 func (suite *ClientTestSuite) TestBeginBlockerConsensusState() {
-	cs := []byte("IBC client state")
 	plan := &upgradetypes.Plan{
-		Name:                "test",
-		Height:              suite.chainA.GetContext().BlockHeight() + 1,
-		UpgradedClientState: cs,
+		Name:   "test",
+		Height: suite.chainA.GetContext().BlockHeight() + 1,
 	}
 	store := suite.chainA.GetContext().KVStore(suite.chainA.App.GetKey(upgradetypes.StoreKey))
 	bz := suite.chainA.App.AppCodec().MustMarshalBinaryBare(plan)
 	store.Set(upgradetypes.PlanKey(), bz)
 
-	suite.T().Log("Verify that chain committed to consensus state on the last height it will commit")
 	nextValsHash := []byte("nextValsHash")
 	newCtx := suite.chainA.GetContext().WithBlockHeader(tmproto.Header{
 		Height:             suite.chainA.GetContext().BlockHeight(),
 		NextValidatorsHash: nextValsHash,
 	})
 
+	err := suite.chainA.App.UpgradeKeeper.SetUpgradedClient(newCtx, plan.Height, []byte("client state"))
+	suite.Require().NoError(err)
+
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	suite.chainA.App.BeginBlock(req)
 
 	// plan Height is at ctx.BlockHeight+1
-	consState, err := suite.chainA.App.UpgradeKeeper.GetUpgradedConsensusState(newCtx, suite.chainA.GetContext().BlockHeight()+1)
-	suite.Require().NoError(err)
+	consState, found := suite.chainA.App.UpgradeKeeper.GetUpgradedConsensusState(newCtx, plan.Height)
+	suite.Require().True(found)
 	bz, err = types.MarshalConsensusState(suite.chainA.App.AppCodec(), &ibctmtypes.ConsensusState{Timestamp: newCtx.BlockTime(), NextValidatorsHash: nextValsHash})
 	suite.Require().NoError(err)
 	suite.Require().Equal(bz, consState)

@@ -1,10 +1,12 @@
 package v042
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	v040gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v040"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 const proposalIDLen = 8
@@ -30,14 +32,37 @@ func migratePrefixProposalAddress(store sdk.KVStore, prefixBz []byte) {
 	}
 }
 
+// migrateWeightedVotes migrates the ADR-037 weighted votes.
+func migrateWeightedVotes(store sdk.KVStore, cdc codec.BinaryMarshaler) error {
+	iterator := sdk.KVStorePrefixIterator(store, v040gov.VotesKeyPrefix)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var oldVote v040gov.Vote
+		err := cdc.UnmarshalBinaryBare(iterator.Value(), &oldVote)
+		if err != nil {
+			return err
+		}
+
+		newVote := &types.Vote{
+			ProposalId: oldVote.ProposalId,
+			Voter:      oldVote.Voter,
+			Options:    []types.WeightedVoteOption{{Option: types.VoteOption(oldVote.Option), Weight: sdk.NewDec(1)}},
+		}
+		bz, err := cdc.MarshalBinaryBare(newVote)
+		store.Set(iterator.Key(), bz)
+	}
+
+	return nil
+}
+
 // MigrateStore performs in-place store migrations from v0.40 to v0.42. The
 // migration includes:
 //
 // - Change addresses to be length-prefixed.
-func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey) error {
+func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryMarshaler) error {
 	store := ctx.KVStore(storeKey)
 	migratePrefixProposalAddress(store, v040gov.DepositsKeyPrefix)
 	migratePrefixProposalAddress(store, v040gov.VotesKeyPrefix)
-
-	return nil
+	return migrateWeightedVotes(store, cdc)
 }

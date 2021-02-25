@@ -8,11 +8,7 @@ participant  "keeper (staking)" as keeper
 participant validator
 participant keeper.bankKeeper
 participant vestingAccount
-participant "func:SendCoins" as SendCoins
 participant ctx.EventManager
-participant "func:DelegateCoinsFromAccountToModule" as DelegateCoinsFromAccountToModule
-participant "func:DelegateCoins" as DelegateCoins
-participant trackDelegation
 
 database store
 
@@ -33,28 +29,28 @@ end
 
 alt delegating from an account (subtractTokens == true)
     keeper -> keeper.bankKeeper : DelegateCoinsFromAccountToModule
-    keeper.bankKeeper -> DelegateCoinsFromAccountToModule **
-    DelegateCoinsFromAccountToModule -->  DelegateCoinsFromAccountToModule  : Check recipient has permission to stake
-    DelegateCoinsFromAccountToModule -> DelegateCoins **
-
-    DelegateCoins --> DelegateCoins : Check the delegator has enough balances of all tokens delegated
-    DelegateCoins --> DelegateCoins : Track delegation (register that it exists to keep track of it)
-    alt validator is currently bonded
-        DelegateCoins --> store : Transfer tokens from delegator to BondedTokensPool.
+    group DelegateCoinsFromAccountToModule function
+        keeper.bankKeeper -> keeper.bankKeeper : DelegateCoinsFromAccountToModule
+        alt recipient does not exist or does not have permission to stake
+            keeper.bankKeeper -> keeper.bankKeeper : panic
+        end
+        keeper.bankKeeper -> keeper.bankKeeper : DelegateCoins
+        group DelegateCoins function
+            keeper.bankKeeper --> keeper.bankKeeper : Check the delegator has enough balances of all tokens delegated
+            keeper.bankKeeper --> keeper.bankKeeper : Track delegation (register that it exists to keep track of it)
+            alt validator is currently bonded
+                keeper.bankKeeper --> store : Transfer tokens from delegator to BondedTokensPool.
+            else validator is currently unbonded or unbonding
+                keeper.bankKeeper --> store : Transfer tokens from delegator to NotBondedTokensPool.
+            end
+            group trackDelegation function
+                keeper.bankKeeper -> keeper.bankKeeper : trackDelegation
+                alt delegator is a vesting account
+                    keeper.bankKeeper -> vestingAccount : keep track of this delegation
+                end
+            end
+        end
     end
-    alt validator is currently unbonded or unbonding
-        DelegateCoins --> store : Transfer tokens from delegator to NotBondedTokensPool.
-    end
-    DelegateCoins ->  trackDelegation ** :
-    alt delegator is a vesting account
-        trackDelegation -> vestingAccount : keep track of this delegation
-    end
-    DelegateCoins <-- trackDelegation  : nil
-    destroy trackDelegation
-    DelegateCoinsFromAccountToModule <-- DelegateCoins : nil
-    destroy DelegateCoins
-    keeper.bankKeeper <-- DelegateCoinsFromAccountToModule: nil
-    destroy DelegateCoinsFromAccountToModule
     keeper <-- keeper.bankKeeper : nil (success)
 else moving tokens between pools (subtractTokens == false)
     alt delegator tokens are not bonded but validator is bonded
@@ -62,13 +58,15 @@ else moving tokens between pools (subtractTokens == false)
     else delegator tokens are bonded but validator is not bonded
        keeper -> keeper.bankKeeper : SendCoinsFromModuleToModule(bondedPool, notBondedPool, coins)
     end
-    keeper.bankKeeper -> SendCoins
-    SendCoins -> ctx.EventManager : Emit TransferEvent(to, from, amount)
-    alt amount of spendable (balance - locked) coins too low
-        keeper.bankKeeper <-- SendCoins : error
+    group SendCoins function
+        keeper.bankKeeper -> keeper.bankKeeper : SendCoins
+        keeper.bankKeeper -> ctx.EventManager : Emit TransferEvent(to, from, amount)
+        alt amount of spendable (balance - locked) coins too low
+            keeper <-- keeper.bankKeeper : error
+        end
+        keeper.bankKeeper -> store : subtract balance from sender
+        keeper.bankKeeper -> store : add balance to recipient
     end
-    SendCoins -> store : subtract balance from sender
-    SendCoins -> store : add balance to recipient
 end
 
 keeper -> validator : AddTokensFromDel

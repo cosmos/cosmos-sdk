@@ -230,15 +230,15 @@ func TestPlanStringer(t *testing.T) {
 	require.Equal(t, `Upgrade Plan
   Name: test
   Time: 2020-01-01T00:00:00Z
-  Info: `, types.Plan{Name: "test", Time: ti}.String())
+  Info: .`, types.Plan{Name: "test", Time: ti}.String())
 	require.Equal(t, `Upgrade Plan
   Name: test
   Height: 100
-  Info: `, types.Plan{Name: "test", Height: 100}.String())
+  Info: .`, types.Plan{Name: "test", Height: 100}.String())
 	require.Equal(t, fmt.Sprintf(`Upgrade Plan
   Name: test
   Height: 100
-  Info: `), types.Plan{Name: "test", Height: 100}.String())
+  Info: .`), types.Plan{Name: "test", Height: 100}.String())
 }
 
 func VerifyNotDone(t *testing.T, newCtx sdk.Context, name string) {

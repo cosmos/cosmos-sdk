@@ -200,7 +200,7 @@ func (suite *AnteTestSuite) TestSigVerification_ExplicitAmino() {
 	suite.clientCtx = client.Context{}.
 		WithTxConfig(txConfig)
 
-	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper, ante.DefaultSigVerificationGasConsumer, txConfig.SignModeHandler())
+	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, &suite.app.FeeGrantKeeper, ante.DefaultSigVerificationGasConsumer, txConfig.SignModeHandler())
 
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 

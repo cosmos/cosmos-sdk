@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
+	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
 
@@ -16,11 +16,11 @@ import (
 // CONTRACT: Tx must implement GrantedFeeTx interface to use DeductGrantedFeeDecorator
 type DeductGrantedFeeDecorator struct {
 	ak types.AccountKeeper
-	k  keeper.Keeper
+	k  *feegrantkeeper.Keeper
 	bk types.BankKeeper
 }
 
-func NewDeductGrantedFeeDecorator(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) DeductGrantedFeeDecorator {
+func NewDeductGrantedFeeDecorator(ak types.AccountKeeper, bk types.BankKeeper, k *feegrantkeeper.Keeper) DeductGrantedFeeDecorator {
 	return DeductGrantedFeeDecorator{
 		ak: ak,
 		k:  k,

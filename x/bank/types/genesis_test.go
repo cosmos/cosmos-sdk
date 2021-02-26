@@ -72,7 +72,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			true,
 		},
 		{
-			"invalid balance",
+			"0  balance",
 			GenesisState{
 				Balances: []Balance{
 					{
@@ -80,7 +80,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					},
 				},
 			},
-			true,
+			false,
 		},
 		{
 			"dup Metadata",

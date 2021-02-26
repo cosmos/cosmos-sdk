@@ -178,7 +178,7 @@ func (suite *TypesTestSuite) TestUpgradeProposalValidateBasic() {
 
 // tests an upgrade proposal can be marshaled and unmarshaled, and the
 // client state can be unpacked
-func (suite *TypesTestSuite) TestMarshalSoftwareUpdateProposal() {
+func (suite *TypesTestSuite) TestMarshalUpgradeProposal() {
 	// create proposal
 	plan := upgradetypes.Plan{
 		Name:   "upgrade ibc",

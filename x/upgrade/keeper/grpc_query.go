@@ -37,8 +37,8 @@ func (k Keeper) AppliedPlan(c context.Context, req *types.QueryAppliedPlanReques
 func (k Keeper) UpgradedConsensusState(c context.Context, req *types.QueryUpgradedConsensusStateRequest) (*types.QueryUpgradedConsensusStateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	consState, exists := k.GetUpgradedConsensusState(ctx, req.LastHeight)
-	if !exists {
+	consState, found := k.GetUpgradedConsensusState(ctx, req.LastHeight)
+	if !found {
 		return &types.QueryUpgradedConsensusStateResponse{}, nil
 	}
 

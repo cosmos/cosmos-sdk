@@ -42,6 +42,7 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 
 	// upgraded client state and consensus state must be IBC tendermint client state and consensus state
 	// this may be modified in the future to upgrade to a new IBC tendermint type
+	// counterparty must also commit to the upgraded consensus state at a sub-path under the upgrade path specified
 	tmUpgradeClient, ok := upgradedClient.(*ClientState)
 	if !ok {
 		return nil, nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "upgraded client must be Tendermint client. expected: %T got: %T",

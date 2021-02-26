@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math/big"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -177,6 +178,9 @@ func ComputeMastersFromSeed(seed []byte) (secret [32]byte, chainCode [32]byte) {
 // DerivePrivateKeyForPath derives the private key by following the BIP 32/44 path from privKeyBytes,
 // using the given chainCode.
 func DerivePrivateKeyForPath(privKeyBytes, chainCode [32]byte, path string) ([]byte, error) {
+	// First step is to trim the right end path separator lest we panic.
+	// See issue https://github.com/cosmos/cosmos-sdk/issues/8557
+	path = strings.TrimRightFunc(path, func(r rune) bool { return r == filepath.Separator })
 	data := privKeyBytes
 	parts := strings.Split(path, "/")
 
@@ -187,7 +191,10 @@ func DerivePrivateKeyForPath(privKeyBytes, chainCode [32]byte, path string) ([]b
 		parts = parts[1:]
 	}
 
-	for _, part := range parts {
+	for i, part := range parts {
+		if part == "" {
+			return nil, fmt.Errorf("path %q with split element #%d is an empty string", part, i)
+		}
 		// do we have an apostrophe?
 		harden := part[len(part)-1:] == "'"
 		// harden == private derivation, else public derivation:
